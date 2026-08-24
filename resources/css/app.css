@@ -1,0 +1,13 @@
+@import 'variables';
+
+@import 'bootstrap/scss/bootstrap';
+
+/* Estilos personalizados para el Punto de Venta */
+.pos-container {
+    min-height: calc(100vh - 100px);
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}

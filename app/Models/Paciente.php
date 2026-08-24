@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Paciente extends Model
+{
+    use HasFactory;
+
+    protected $table = 'pacientes';
+    protected $primaryKey = 'numhistoria';
+    public $incrementing = false;
+
+    protected $fillable = [
+        'numhistoria',
+        'nac',
+        'cedula',
+        'apellidos',
+        'nombres',
+        'sexo',
+        'fnacimiento',
+        'lnacimiento',
+        'codeestado',
+        'direccion',
+        'telefono',
+        'fingreso',
+        'escolaridad',
+        'ocupacion',
+        'codesegemp',
+        'foto_pac',
+        'profesion',
+        'email',
+        'dependencia',
+        'medico',
+        'sms',
+    ];
+
+    protected $casts = [
+        'fnacimiento' => 'date',
+        'fingreso' => 'date',
+    ];
+
+    public function segEmp(): BelongsTo
+    {
+        return $this->belongsTo(SegEmp::class, 'codesegemp', 'codesegemp');
+    }
+
+    public function citas(): HasMany
+    {
+        return $this->hasMany(Cita::class, 'numhistoria', 'numhistoria');
+    }
+
+    public function colas(): HasMany
+    {
+        return $this->hasMany(Cola::class, 'numhistoria', 'numhistoria');
+    }
+}
