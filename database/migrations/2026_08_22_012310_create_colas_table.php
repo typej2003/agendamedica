@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->foreign('numhistoria')
                   ->references('numhistoria')
-                  ->on('pacientes')
+                  ->on('pacientes1')
                   ->onDelete('cascade');
         });
     }
