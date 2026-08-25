@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pacientes', function (Blueprint $table) {
+        Schema::create('pacientes1', function (Blueprint $table) {
             $table->unsignedBigInteger('numhistoria')->primary();
             $table->char('nac', 1)->nullable();
             $table->string('cedula', 10);
