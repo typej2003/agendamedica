@@ -21,4 +21,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 // Ruta para la recepción de lotes/paquetes desde PowerBuilder
-Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch']);
+// En routes/api.php
+Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch'])
+    ->middleware('throttle:1000,1'); // Permite hasta 1000 peticiones por minuto
