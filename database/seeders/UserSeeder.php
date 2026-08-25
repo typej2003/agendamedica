@@ -22,11 +22,7 @@ class UserSeeder extends Seeder
 
         // 1. Definir los roles del sistema
         $roles = [
-            'Administrador',
-            'Supervisión',
-            'Almacén',
-            'Ventas',
-            'Cliente',
+            'Root',
         ];
 
         // 2. Crear los roles si no existen
@@ -40,31 +36,7 @@ class UserSeeder extends Seeder
                 'name'     => 'Usuario Administrador',
                 'email'    => 'admin@admin.com',
                 'password' => Hash::make('password'),
-                'role'     => 'Administrador',
-            ],
-            [
-                'name'     => 'Usuario Supervisor',
-                'email'    => 'supervisor@admin.com',
-                'password' => Hash::make('password'),
-                'role'     => 'Supervisión',
-            ],
-            [
-                'name'     => 'Usuario Almacén',
-                'email'    => 'almacen@admin.com',
-                'password' => Hash::make('password'),
-                'role'     => 'Almacén',
-            ],
-            [
-                'name'     => 'Usuario Ventas',
-                'email'    => 'ventas@admin.com',
-                'password' => Hash::make('password'),
-                'role'     => 'Ventas',
-            ],
-            [
-                'name'     => 'Usuario Cliente',
-                'email'    => 'cliente@admin.com',
-                'password' => Hash::make('password'),
-                'role'     => 'Cliente',
+                'role'     => 'Root',
             ],
         ];
 
