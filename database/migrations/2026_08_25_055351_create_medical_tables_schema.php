@@ -8,12 +8,991 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        // 1. examen_pareja
+        Schema::create('antece_paciente', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->string('codeantecedente', 4);
+            $table->text('detalles')->nullable();
+            $table->string('descripcion', 50)->nullable();
+            $table->string('tipo', 2)->nullable();
+            $table->string('tipo2', 1)->nullable();
+        });
+
+        Schema::create('antecedentes', function (Blueprint $table) {
+            $table->id();
+            $table->string('codantecedente', 4);
+            $table->string('descripcion', 40)->nullable();
+            $table->string('codtipo', 2)->nullable();
+        });
+
+        Schema::create('bancos', function (Blueprint $table) {
+            $table->id();
+            $table->string('cod_banco', 6);
+            $table->string('nombre_banco', 150)->nullable();
+        });
+
+        Schema::create('baremo_quiru', function (Blueprint $table) {
+            $table->id();
+            $table->integer('consecuti');
+            $table->string('cod_inter', 3)->nullable();
+            $table->string('cod_clini', 3)->nullable();
+            $table->string('ced_paciente', 8)->nullable();
+            $table->string('nom_interven', 300)->nullable();
+            $table->string('nom_paciente', 200)->nullable();
+            $table->date('fecha_creado')->nullable();
+            $table->date('fecha_opera')->nullable();
+            $table->time('hora_opera')->nullable();
+            $table->double('monto_opera')->nullable();
+            $table->string('tipo_rol', 1)->nullable();
+            $table->string('pagada', 1)->nullable();
+            $table->integer('medico_prin')->nullable();
+            $table->integer('medico_aux')->nullable();
+            $table->integer('historia')->nullable();
+            $table->string('diagnostico', 100)->nullable();
+            $table->double('monto_abono')->nullable();
+            $table->double('monto_resta')->nullable();
+            $table->string('empre', 30)->nullable();
+            $table->time('hora_fin')->nullable();
+            $table->integer('duracion')->nullable();
+        });
+
+        Schema::create('clinicas', function (Blueprint $table) {
+            $table->id();
+            $table->string('cod_clin', 3);
+            $table->string('nom_clin', 50);
+        });
+
+        Schema::create('cola', function (Blueprint $table) {
+            $table->id();
+            $table->date('fecha');
+            $table->integer('numhistoria')->nullable();
+            $table->integer('numorden')->nullable();
+            $table->decimal('atendido', 1, 0)->nullable();
+            $table->decimal('estado', 1, 0)->nullable();
+            $table->string('turno', 1)->nullable();
+            $table->string('motivo', 100)->nullable();
+            $table->double('monto')->nullable();
+            $table->time('hora_ini');
+            $table->time('hora_fin')->nullable();
+            $table->integer('tiempo')->nullable();
+            $table->string('tipo', 10)->nullable();
+            $table->integer('conse')->nullable();
+            $table->string('sms', 1)->nullable();
+            $table->string('sms_text', 160)->nullable();
+            $table->integer('medico')->nullable();
+        });
+
+        Schema::create('cola_dia_no_labor', function (Blueprint $table) {
+            $table->id();
+            $table->date('dia');
+            $table->string('tipo', 10)->nullable();
+            $table->string('motivo', 100)->nullable();
+            $table->integer('medico');
+        });
+
+        Schema::create('constancia_obs', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->integer('numconsulta');
+            $table->text('observacion')->nullable();
+            $table->string('titulo', 50)->nullable();
+            $table->text('observacion01')->nullable();
+        });
+
+        Schema::create('consultas', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->integer('nroconsulta');
+            $table->date('fecha')->nullable();
+            $table->text('enfermedadactual')->nullable();
+            $table->double('peso')->nullable();
+            $table->double('talla')->nullable();
+            $table->double('fc')->nullable();
+            $table->double('pp')->nullable();
+            $table->double('circcefalica')->nullable();
+            $table->double('circtoraxica')->nullable();
+            $table->double('circabdominal')->nullable();
+            $table->string('tasentado', 7)->nullable();
+            $table->string('taacostado', 7)->nullable();
+            $table->string('tapie', 7)->nullable();
+            $table->text('resultadoexamencomp')->nullable();
+            $table->string('eliminado', 1)->nullable();
+            $table->text('faringe')->nullable();
+            $table->text('nariz')->nullable();
+            $table->text('oido')->nullable();
+            $table->text('laringe')->nullable();
+            $table->text('cuello')->nullable();
+            $table->text('otros')->nullable();
+            $table->text('evolucion')->nullable();
+            $table->text('observaciones')->nullable();
+            $table->integer('medico')->nullable();
+            $table->string('sms', 1)->nullable();
+        });
+
+        Schema::create('consultorios', function (Blueprint $table) {
+            $table->id();
+            $table->string('codigo', 10);
+            $table->string('consultorio', 100)->nullable();
+        });
+
+        Schema::create('cuentas_x_pagar', function (Blueprint $table) {
+            $table->id();
+            $table->double('nro_cxp');
+            $table->string('origen_cxp', 2)->nullable();
+            $table->date('fec_cxp')->nullable();
+            $table->string('edo_cxp', 1)->nullable();
+            $table->string('tipo_cxp', 1)->nullable();
+            $table->string('conc_cxp', 4)->nullable();
+            $table->string('cxp_codigo', 20)->nullable();
+            $table->string('cxp_descripcion', 150)->nullable();
+            $table->date('fec_docum')->nullable();
+            $table->string('cxp_nro_control', 25)->nullable();
+            $table->string('cxp_nro_factura', 25)->nullable();
+            $table->string('cxp_referencia', 25)->nullable();
+            $table->double('cxp_mto_neto')->nullable();
+            $table->double('cxp_ret_isrl')->nullable();
+            $table->double('cxp_m_ret_isrl')->nullable();
+            $table->double('cxp_iva')->nullable();
+            $table->double('cxp_mto_iva')->nullable();
+            $table->double('cxp_mto_total')->nullable();
+            $table->double('cxp_ret_iva')->nullable();
+            $table->double('cxp_m_ret_iva')->nullable();
+            $table->double('cxp_mto_total_pagar')->nullable();
+            $table->double('cxp_saldo_a_pagar')->nullable();
+            $table->string('cxp_chekear', 1)->nullable();
+            $table->string('cxp_forma', 1)->nullable();
+        });
+
+        Schema::create('cuentas_x_pagar_mov', function (Blueprint $table) {
+            $table->id();
+            $table->double('nro_registro');
+            $table->double('nro_cxp')->nullable();
+            $table->double('nro_mov')->nullable();
+            $table->date('fecha_emision')->nullable();
+            $table->string('nro_documento', 100)->nullable();
+            $table->string('tip_documento', 2)->nullable();
+            $table->double('monto_pagar')->nullable();
+        });
+
+        Schema::create('dd_arterial_mi', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->integer('num_consulta');
+            $table->string('indicacion', 100)->nullable();
+            $table->decimal('referido_por', 15, 0)->nullable();
+            $table->string('hc_text', 50)->nullable();
+            $table->double('iliaca_ext_der')->nullable();
+            $table->double('iliaca_ext_izq')->nullable();
+            $table->double('feromonal_comun_der')->nullable();
+            $table->double('feromonal_comun_izq')->nullable();
+            $table->double('fer_superf_prox_der')->nullable();
+            $table->double('fer_superf_prox_izq')->nullable();
+            $table->double('fer_superf_distal_der')->nullable();
+            $table->double('fer_superf_distal_izq')->nullable();
+            $table->double('poplitea_der')->nullable();
+            $table->double('poplitea_izq')->nullable();
+            $table->double('tibial_ante_der')->nullable();
+            $table->double('tibial_ante_izq')->nullable();
+            $table->double('tibial_post_der')->nullable();
+            $table->double('tibial_post_izq')->nullable();
+            $table->double('peronea_der')->nullable();
+            $table->double('peronea_izq')->nullable();
+            $table->text('conclusion')->nullable();
+            $table->string('equipo', 30)->nullable();
+            $table->string('tansductor', 30)->nullable();
+            $table->string('iliaca_ext', 5)->nullable();
+            $table->string('feromonal_comun', 5)->nullable();
+            $table->string('fer_superf_prox', 5)->nullable();
+            $table->string('fer_superf_distal', 5)->nullable();
+            $table->string('poplitea', 5)->nullable();
+            $table->string('tibial_ante', 5)->nullable();
+            $table->string('tibial_post', 5)->nullable();
+            $table->string('peronea', 3)->nullable();
+            $table->text('modo_b')->nullable();
+            $table->text('modo_color')->nullable();
+            $table->string('segunda_armonica', 1)->nullable();
+            $table->string('contraste', 1)->nullable();
+            $table->string('llenado', 1)->nullable();
+            $table->text('full_text')->nullable();
+            $table->text('sugerencia')->nullable();
+            $table->text('puro_texto')->nullable();
+        });
+
+        Schema::create('department', function (Blueprint $table) {
+            $table->id();
+            $table->integer('dept_id');
+            $table->string('dept_name', 40);
+            $table->integer('dept_head_id')->nullable();
+        });
+
+        Schema::create('detalles_factura_cliente', function (Blueprint $table) {
+            $table->id();
+            $table->string('cod_inventario', 2);
+            $table->integer('numfactura');
+            $table->string('tipo_articulo', 25)->nullable();
+            $table->string('nombre', 50)->nullable();
+            $table->double('precio')->nullable();
+            $table->double('descuento')->nullable();
+            $table->integer('cantidad')->nullable();
+            $table->date('fecha_doc')->nullable();
+            $table->string('tipo_precio', 3);
+            $table->double('total_articulo')->nullable();
+        });
+
+        Schema::create('detalles_presupuesto_plantilla', function (Blueprint $table) {
+            $table->id();
+            $table->string('cod_inventario', 2);
+            $table->integer('consecutivo');
+            $table->string('tipo_articulo', 25)->nullable();
+            $table->string('nombre', 50)->nullable();
+            $table->double('precio')->nullable();
+            $table->double('descuento')->nullable();
+            $table->integer('cantidad')->nullable();
+            $table->date('fecha_doc')->nullable();
+            $table->string('tipo_documento', 3)->nullable();
+            $table->double('total_articulo')->nullable();
+        });
+
+        Schema::create('diagnostico_paciente', function (Blueprint $table) {
+            $table->id();
+            $table->integer('nrohistoria');
+            $table->integer('nroconsulta');
+            $table->string('codediagnostico', 5);
+            $table->string('detalle_diagnostco', 100)->nullable();
+            $table->integer('orden')->nullable();
+        });
+
+        Schema::create('diagnosticos', function (Blueprint $table) {
+            $table->id();
+            $table->string('codediagnostico', 5);
+            $table->string('descripcion', 50);
+        });
+
+        Schema::create('dias_semana', function (Blueprint $table) {
+            $table->id();
+            $table->date('fecha');
+            $table->string('dia_semana', 10)->nullable();
+            $table->integer('semana')->nullable();
+            $table->integer('ano')->nullable();
+            $table->string('descripcion', 100)->nullable();
+            $table->string('tipo_dia', 10)->nullable();
+        });
+
+        Schema::create('dieta_paciente', function (Blueprint $table) {
+            $table->id();
+            $table->integer('histroria');
+            $table->integer('consulta');
+            $table->string('cod_dieta', 2)->nullable();
+            $table->text('descripcion')->nullable();
+            $table->string('ejecutada', 1)->nullable();
+            $table->integer('calorias')->nullable();
+            $table->string('dieta', 200)->nullable();
+        });
+
+        Schema::create('doctores', function (Blueprint $table) {
+            $table->id();
+            $table->decimal('cedula', 15, 0);
+            $table->string('apellidos', 30)->nullable();
+            $table->string('nombres', 30)->nullable();
+            $table->string('clinica', 60)->nullable();
+            $table->text('direccion')->nullable();
+            $table->string('telefono', 108)->nullable();
+            $table->string('ciudad', 30)->nullable();
+            $table->text('nota')->nullable();
+            $table->string('codeespecial', 3);
+        });
+
+        Schema::create('DUMMY', function (Blueprint $table) {
+            $table->id();
+            $table->integer('dummy_col');
+        });
+
+        Schema::create('eco_doppler', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->string('arteria_uraina_menor', 20)->nullable();
+            $table->string('arteria_uraina_mayor', 20)->nullable();
+            $table->string('arteria_umbilical_menor', 20)->nullable();
+            $table->string('arteria_umbilical_mayor', 20)->nullable();
+            $table->string('arteria_cerebral_menor', 20)->nullable();
+            $table->string('arteria_cerebral_mayor', 20)->nullable();
+            $table->string('ductos_venosos', 1)->nullable();
+            $table->string('ven_umbilical', 1)->nullable();
+            $table->string('relac_aorta', 1)->nullable();
+            $table->text('texto')->nullable();
+            $table->text('conclusion')->nullable();
+            $table->date('fecha')->nullable();
+            $table->string('arteria_uraina_menor_izq', 20)->nullable();
+            $table->string('arteria_uraina_mayor_izq', 20)->nullable();
+            $table->text('sugerencias')->nullable();
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('relacion_ud', 20)->nullable();
+            $table->string('relacion_ui', 20)->nullable();
+            $table->string('relacion_u', 20)->nullable();
+            $table->string('relacion_cm', 20)->nullable();
+            $table->string('pico_ud', 20)->nullable();
+            $table->string('pico_ui', 20)->nullable();
+            $table->string('pico_u', 20)->nullable();
+            $table->string('pico_cm', 20)->nullable();
+            $table->string('para', 10)->nullable();
+            $table->text('puro_texto')->nullable();
+        });
+
+        Schema::create('eco_obstetrico', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('eg', 40)->nullable();
+            $table->integer('saco_gestacional')->nullable();
+            $table->string('circular_ovuide', 1)->nullable();
+            $table->string('alargado', 1)->nullable();
+            $table->string('retraido', 1)->nullable();
+            $table->string('anormal', 1)->nullable();
+            $table->string('movimiento_embrionario', 1)->nullable();
+            $table->string('actividad_cardiaca', 1)->nullable();
+            $table->integer('lcc')->nullable();
+            $table->integer('dbp')->nullable();
+            $table->string('huevo_anembrionado', 1)->nullable();
+            $table->string('mola', 1)->nullable();
+            $table->string('restos_abortivos', 1)->nullable();
+            $table->string('embarazo_ectopico', 1)->nullable();
+            $table->text('otros')->nullable();
+            $table->text('observacion')->nullable();
+            $table->text('dianostico')->nullable();
+            $table->date('fecha')->nullable();
+            $table->integer('tn')->nullable();
+            $table->string('posicionutreo', 1)->nullable();
+            $table->decimal('cuerpo', 5, 2)->nullable();
+            $table->decimal('transverso', 5, 2)->nullable();
+            $table->decimal('antero', 5, 2)->nullable();
+            $table->decimal('ovarioderlong', 5, 2)->nullable();
+            $table->decimal('ovarioderap', 5, 2)->nullable();
+            $table->decimal('ovariodertras', 5, 2)->nullable();
+            $table->decimal('ovarioizqlong', 5, 2)->nullable();
+            $table->decimal('ovarioizqap', 5, 2)->nullable();
+            $table->decimal('ovarioizqtras', 5, 2)->nullable();
+            $table->string('cuerpo_utero', 1)->nullable();
+            $table->decimal('der', 5, 2)->nullable();
+            $table->decimal('izqu', 5, 2)->nullable();
+            $table->decimal('lcr', 5, 2)->nullable();
+            $table->decimal('sa_vit', 5, 2)->nullable();
+            $table->decimal('t_nucal', 5, 2)->nullable();
+            $table->decimal('dc_venoso', 5, 2)->nullable();
+            $table->string('para', 10)->nullable();
+            $table->text('puro_texto')->nullable();
+            $table->string('posicionavf_d', 1)->nullable();
+            $table->string('posicionrvf_d', 1)->nullable();
+        });
+
+        Schema::create('eco_obstetrico_tercer', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('eg', 40)->nullable();
+            $table->string('gestacion', 1)->nullable();
+            $table->string('situacion', 1)->nullable();
+            $table->string('dorso', 1)->nullable();
+            $table->string('presentacion', 1)->nullable();
+            $table->integer('bio_ca_bp')->nullable();
+            $table->integer('bio_ca_cc')->nullable();
+            $table->integer('bio_ca_of')->nullable();
+            $table->integer('bio_in_ic')->nullable();
+            $table->integer('bio_or_ioe')->nullable();
+            $table->integer('bio_or_io')->nullable();
+            $table->integer('bio_car_apc')->nullable();
+            $table->integer('bio_car_apt')->nullable();
+            $table->integer('bio_aorta')->nullable();
+            $table->integer('bio_abdomen')->nullable();
+            $table->integer('bio_ta')->nullable();
+            $table->integer('bio_ca')->nullable();
+            $table->integer('bio_humero')->nullable();
+            $table->integer('bio_cubito')->nullable();
+            $table->integer('bio_femur')->nullable();
+            $table->integer('bio_tibia')->nullable();
+            $table->integer('bio_sacro')->nullable();
+            $table->integer('bio_peso_fetal')->nullable();
+            $table->integer('bio_talla')->nullable();
+            $table->string('bio_sexo', 1)->nullable();
+            $table->string('ana_polo_cefalico', 1)->nullable();
+            $table->string('ana_ventriculos_cerebrales', 1)->nullable();
+            $table->string('ana_cerebelo', 1)->nullable();
+            $table->string('ana_rostro_fetal', 1)->nullable();
+            $table->string('ana_actitud_fetal', 1)->nullable();
+            $table->string('ana_columna_vertebral', 1)->nullable();
+            $table->string('ana_torax', 1)->nullable();
+            $table->string('ana_relacion', 1)->nullable();
+            $table->string('ana_corazon', 1)->nullable();
+            $table->string('ana_corte_tracameral', 1)->nullable();
+            $table->string('ana_tracto_de_salida', 1)->nullable();
+            $table->string('ana_estomago', 1)->nullable();
+            $table->string('ana_intestino', 1)->nullable();
+            $table->string('ana_paredes_abdominales', 1)->nullable();
+            $table->string('ana_rinone', 1)->nullable();
+            $table->string('ana_vejiga', 1)->nullable();
+            $table->string('ana_ex_brazo_an_md', 1)->nullable();
+            $table->string('ana_ex_brazo_an_mi', 1)->nullable();
+            $table->string('ana_ex_muslo_ppd', 1)->nullable();
+            $table->string('ana_ex_muslo_ppi', 1)->nullable();
+            $table->string('fun_liquido_amniotico', 1)->nullable();
+            $table->integer('fun_indice_la')->nullable();
+            $table->string('fun_dp_ubicacion', 1)->nullable();
+            $table->string('fun_dp_grado', 10)->nullable();
+            $table->integer('fun_dp_grosor')->nullable();
+            $table->string('fun_dp_cordon_umbilical', 1)->nullable();
+            $table->string('fun_dp_movimientos_respiratorios', 1)->nullable();
+            $table->string('fun_dp_tono_fetal', 1)->nullable();
+            $table->text('conclusion')->nullable();
+            $table->text('observacion')->nullable();
+            $table->date('fecha')->nullable();
+            $table->string('movimientos_feto', 1)->nullable();
+            $table->string('reactividad_cardiaca', 1)->nullable();
+            $table->string('liquido_amniotico', 1)->nullable();
+            $table->text('puro_texto')->nullable();
+            $table->integer('gemelo')->nullable();
+        });
+
+        Schema::create('eco_obstetrico_tercer_2', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('eg', 40)->nullable();
+            $table->string('gestacion', 1)->nullable();
+            $table->string('situacion', 1)->nullable();
+            $table->string('dorso', 1)->nullable();
+            $table->string('presentacion', 1)->nullable();
+            $table->integer('bio_ca_bp')->nullable();
+            $table->integer('bio_ca_cc')->nullable();
+            $table->integer('bio_ca_of')->nullable();
+            $table->integer('bio_in_ic')->nullable();
+            $table->integer('bio_or_ioe')->nullable();
+            $table->integer('bio_or_io')->nullable();
+            $table->integer('bio_car_apc')->nullable();
+            $table->integer('bio_car_apt')->nullable();
+            $table->integer('bio_aorta')->nullable();
+            $table->integer('bio_abdomen')->nullable();
+            $table->integer('bio_ta')->nullable();
+            $table->integer('bio_ca')->nullable();
+            $table->integer('bio_humero')->nullable();
+            $table->integer('bio_cubito')->nullable();
+            $table->integer('bio_femur')->nullable();
+            $table->integer('bio_tibia')->nullable();
+            $table->integer('bio_sacro')->nullable();
+            $table->integer('bio_peso_fetal')->nullable();
+            $table->integer('bio_talla')->nullable();
+            $table->string('bio_sexo', 1)->nullable();
+            $table->string('ana_polo_cefalico', 1)->nullable();
+            $table->string('ana_ventriculos_cerebrales', 1)->nullable();
+            $table->string('ana_cerebelo', 1)->nullable();
+            $table->string('ana_rostro_fetal', 1)->nullable();
+            $table->string('ana_actitud_fetal', 1)->nullable();
+            $table->string('ana_columna_vertebral', 1)->nullable();
+            $table->string('ana_torax', 1)->nullable();
+            $table->string('ana_relacion', 1)->nullable();
+            $table->string('ana_corazon', 1)->nullable();
+            $table->string('ana_corte_tracameral', 1)->nullable();
+            $table->string('ana_tracto_de_salida', 1)->nullable();
+            $table->string('ana_estomago', 1)->nullable();
+            $table->string('ana_intestino', 1)->nullable();
+            $table->string('ana_paredes_abdominales', 1)->nullable();
+            $table->string('ana_rinone', 1)->nullable();
+            $table->string('ana_vejiga', 1)->nullable();
+            $table->string('ana_ex_brazo_an_md', 1)->nullable();
+            $table->string('ana_ex_brazo_an_mi', 1)->nullable();
+            $table->string('ana_ex_muslo_ppd', 1)->nullable();
+            $table->string('ana_ex_muslo_ppi', 1)->nullable();
+            $table->string('fun_liquido_amniotico', 1)->nullable();
+            $table->integer('fun_indice_la')->nullable();
+            $table->string('fun_dp_ubicacion', 1)->nullable();
+            $table->string('fun_dp_grado', 10)->nullable();
+            $table->integer('fun_dp_grosor')->nullable();
+            $table->string('fun_dp_cordon_umbilical', 1)->nullable();
+            $table->string('fun_dp_movimientos_respiratorios', 1)->nullable();
+            $table->string('fun_dp_tono_fetal', 1)->nullable();
+            $table->text('conclusion')->nullable();
+            $table->text('observacion')->nullable();
+            $table->date('fecha')->nullable();
+            $table->string('movimientos_feto', 1)->nullable();
+            $table->string('reactividad_cardiaca', 1)->nullable();
+            $table->string('liquido_amniotico', 1)->nullable();
+            $table->text('puro_texto')->nullable();
+            $table->integer('gemelo')->nullable();
+        });
+
+        Schema::create('eco_obstetrico_tercer_2_o', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('eg', 40)->nullable();
+            $table->string('gestacion', 1)->nullable();
+            $table->string('situacion', 1)->nullable();
+            $table->string('dorso', 1)->nullable();
+            $table->string('presentacion', 1)->nullable();
+            $table->integer('bio_ca_bp')->nullable();
+            $table->integer('bio_ca_cc')->nullable();
+            $table->integer('bio_ca_of')->nullable();
+            $table->integer('bio_in_ic')->nullable();
+            $table->integer('bio_or_ioe')->nullable();
+            $table->integer('bio_or_io')->nullable();
+            $table->integer('bio_car_apc')->nullable();
+            $table->integer('bio_car_apt')->nullable();
+            $table->integer('bio_aorta')->nullable();
+            $table->integer('bio_abdomen')->nullable();
+            $table->integer('bio_ta')->nullable();
+            $table->integer('bio_ca')->nullable();
+            $table->integer('bio_humero')->nullable();
+            $table->integer('bio_cubito')->nullable();
+            $table->integer('bio_femur')->nullable();
+            $table->integer('bio_tibia')->nullable();
+            $table->integer('bio_sacro')->nullable();
+            $table->integer('bio_peso_fetal')->nullable();
+            $table->integer('bio_talla')->nullable();
+            $table->string('bio_sexo', 1)->nullable();
+            $table->string('ana_polo_cefalico', 1)->nullable();
+            $table->string('ana_ventriculos_cerebrales', 1)->nullable();
+            $table->string('ana_cerebelo', 1)->nullable();
+            $table->string('ana_rostro_fetal', 1)->nullable();
+            $table->string('ana_actitud_fetal', 1)->nullable();
+            $table->string('ana_columna_vertebral', 1)->nullable();
+            $table->string('ana_torax', 1)->nullable();
+            $table->string('ana_relacion', 1)->nullable();
+            $table->string('ana_corazon', 1)->nullable();
+            $table->string('ana_corte_tracameral', 1)->nullable();
+            $table->string('ana_tracto_de_salida', 1)->nullable();
+            $table->string('ana_estomago', 1)->nullable();
+            $table->string('ana_intestino', 1)->nullable();
+            $table->string('ana_paredes_abdominales', 1)->nullable();
+            $table->string('ana_rinone', 1)->nullable();
+            $table->string('ana_vejiga', 1)->nullable();
+            $table->string('ana_ex_brazo_an_md', 1)->nullable();
+            $table->string('ana_ex_brazo_an_mi', 1)->nullable();
+            $table->string('ana_ex_muslo_ppd', 1)->nullable();
+            $table->string('ana_ex_muslo_ppi', 1)->nullable();
+            $table->string('fun_liquido_amniotico', 1)->nullable();
+            $table->integer('fun_indice_la')->nullable();
+            $table->string('fun_dp_ubicacion', 1)->nullable();
+            $table->string('fun_dp_grado', 10)->nullable();
+            $table->integer('fun_dp_grosor')->nullable();
+            $table->string('fun_dp_cordon_umbilical', 1)->nullable();
+            $table->string('fun_dp_movimientos_respiratorios', 1)->nullable();
+            $table->string('fun_dp_tono_fetal', 1)->nullable();
+            $table->text('conclusion')->nullable();
+            $table->text('observacion')->nullable();
+            $table->date('fecha')->nullable();
+            $table->string('movimientos_feto', 1)->nullable();
+            $table->string('reactividad_cardiaca', 1)->nullable();
+            $table->string('liquido_amniotico', 1)->nullable();
+        });
+
+        Schema::create('eco_obstetrico_tercer_o', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('gesta')->nullable();
+            $table->date('fur')->nullable();
+            $table->string('eg', 40)->nullable();
+            $table->string('gestacion', 1)->nullable();
+            $table->string('situacion', 1)->nullable();
+            $table->string('dorso', 1)->nullable();
+            $table->string('presentacion', 1)->nullable();
+            $table->integer('bio_ca_bp')->nullable();
+            $table->integer('bio_ca_cc')->nullable();
+            $table->integer('bio_ca_of')->nullable();
+            $table->integer('bio_in_ic')->nullable();
+            $table->integer('bio_or_ioe')->nullable();
+            $table->integer('bio_or_io')->nullable();
+            $table->integer('bio_car_apc')->nullable();
+            $table->integer('bio_car_apt')->nullable();
+            $table->integer('bio_aorta')->nullable();
+            $table->integer('bio_abdomen')->nullable();
+            $table->integer('bio_ta')->nullable();
+            $table->integer('bio_ca')->nullable();
+            $table->integer('bio_humero')->nullable();
+            $table->integer('bio_cubito')->nullable();
+            $table->integer('bio_femur')->nullable();
+            $table->integer('bio_tibia')->nullable();
+            $table->integer('bio_sacro')->nullable();
+            $table->integer('bio_peso_fetal')->nullable();
+            $table->integer('bio_talla')->nullable();
+            $table->string('bio_sexo', 1)->nullable();
+            $table->string('ana_polo_cefalico', 1)->nullable();
+            $table->string('ana_ventriculos_cerebrales', 1)->nullable();
+            $table->string('ana_cerebelo', 1)->nullable();
+            $table->string('ana_rostro_fetal', 1)->nullable();
+            $table->string('ana_actitud_fetal', 1)->nullable();
+            $table->string('ana_columna_vertebral', 1)->nullable();
+            $table->string('ana_torax', 1)->nullable();
+            $table->string('ana_relacion', 1)->nullable();
+            $table->string('ana_corazon', 1)->nullable();
+            $table->string('ana_corte_tracameral', 1)->nullable();
+            $table->string('ana_tracto_de_salida', 1)->nullable();
+            $table->string('ana_estomago', 1)->nullable();
+            $table->string('ana_intestino', 1)->nullable();
+            $table->string('ana_paredes_abdominales', 1)->nullable();
+            $table->string('ana_rinone', 1)->nullable();
+            $table->string('ana_vejiga', 1)->nullable();
+            $table->string('ana_ex_brazo_an_md', 1)->nullable();
+            $table->string('ana_ex_brazo_an_mi', 1)->nullable();
+            $table->string('ana_ex_muslo_ppd', 1)->nullable();
+            $table->string('ana_ex_muslo_ppi', 1)->nullable();
+            $table->string('fun_liquido_amniotico', 1)->nullable();
+            $table->integer('fun_indice_la')->nullable();
+            $table->string('fun_dp_ubicacion', 1)->nullable();
+            $table->string('fun_dp_grado', 10)->nullable();
+            $table->integer('fun_dp_grosor')->nullable();
+            $table->string('fun_dp_cordon_umbilical', 1)->nullable();
+            $table->string('fun_dp_movimientos_respiratorios', 1)->nullable();
+            $table->string('fun_dp_tono_fetal', 1)->nullable();
+            $table->text('conclusion')->nullable();
+            $table->text('observacion')->nullable();
+            $table->date('fecha')->nullable();
+            $table->string('movimientos_feto', 1)->nullable();
+            $table->string('reactividad_cardiaca', 1)->nullable();
+            $table->string('liquido_amniotico', 1)->nullable();
+        });
+
+        Schema::create('eco_pelvico', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->date('fecha');
+            $table->string('posicionavf', 1)->nullable();
+            $table->string('centrar', 1)->nullable();
+            $table->string('patron', 1)->nullable();
+            $table->decimal('cuerpo', 5, 2)->nullable();
+            $table->decimal('antero', 5, 2)->nullable();
+            $table->decimal('transverso', 5, 2)->nullable();
+            $table->decimal('cuello', 5, 2)->nullable();
+            $table->decimal('anterocuello', 5, 2)->nullable();
+            $table->decimal('espesor', 5, 2)->nullable();
+            $table->string('linea', 1)->nullable();
+            $table->text('observacion')->nullable();
+            $table->integer('nroconsulta');
+            $table->decimal('ovarioderlong', 5, 2)->nullable();
+            $table->decimal('ovarioderap', 5, 2)->nullable();
+            $table->decimal('ovariodertras', 5, 2)->nullable();
+            $table->decimal('ovarioizqlong', 5, 2)->nullable();
+            $table->decimal('ovarioizqap', 5, 2)->nullable();
+            $table->decimal('ovarioizqtras', 5, 2)->nullable();
+            $table->string('fondosacolibre', 1)->nullable();
+            $table->string('fondosacootro', 80)->nullable();
+            $table->text('idxecografico')->nullable();
+            $table->text('sugerencias')->nullable();
+            $table->string('formautero', 30)->nullable();
+            $table->text('observacionovario')->nullable();
+            $table->string('bordeutero', 1)->nullable();
+            $table->date('fur')->nullable();
+            $table->integer('gesta')->nullable();
+            $table->string('trans_convex', 10)->nullable();
+            $table->string('trans_transvaginal', 10)->nullable();
+            $table->string('vagina', 10)->nullable();
+            $table->double('volumen_der')->nullable();
+            $table->double('volumen_izq')->nullable();
+            $table->string('vagina_llena', 1)->nullable();
+            $table->string('posicionavf_d', 1)->nullable();
+            $table->string('posicionrvf_d', 1)->nullable();
+            $table->string('linea_continuo', 1)->nullable();
+            $table->string('linea_homo', 1)->nullable();
+            $table->string('linea_cavidad_u', 1)->nullable();
+            $table->string('PARA', 10)->nullable();
+            $table->text('puro_texto')->nullable();
+        });
+
+        Schema::create('ecocadiograma_fetal', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('biome_dbp')->nullable();
+            $table->integer('biome_dof')->nullable();
+            $table->integer('biome_cc')->nullable();
+            $table->integer('biome_relacion')->nullable();
+            $table->integer('biome_cardiaca')->nullable();
+            $table->integer('biome_toraxica')->nullable();
+            $table->integer('biome_ca')->nullable();
+            $table->integer('biome_humero')->nullable();
+            $table->integer('biome_femur')->nullable();
+            $table->integer('biome_saco')->nullable();
+            $table->text('anatomi_datos')->nullable();
+            $table->string('pla_funi_placenta', 1)->nullable();
+            $table->string('pla_funi_grado', 10)->nullable();
+            $table->integer('pla_funi_grosor')->nullable();
+            $table->string('pla_funi_cordon_umb', 10)->nullable();
+            $table->string('pla_funi_liquido_anm', 10)->nullable();
+            $table->integer('pla_funi_pef')->nullable();
+            $table->string('pla_funi_sexo', 1)->nullable();
+            $table->text('conclusion')->nullable();
+            $table->text('sugerencia')->nullable();
+            $table->date('fecha')->nullable();
+            $table->integer('gesta')->nullable();
+            $table->integer('cesarea')->nullable();
+            $table->integer('parto')->nullable();
+            $table->integer('aborto')->nullable();
+            $table->string('otros', 20)->nullable();
+            $table->date('fur')->nullable();
+            $table->integer('eg')->nullable();
+            $table->integer('referido')->nullable();
+            $table->text('texto_inicio')->nullable();
+        });
+
+        Schema::create('emision_pagos', function (Blueprint $table) {
+            $table->id();
+            $table->double('nro_emision');
+            $table->date('fecha_emision')->nullable();
+            $table->string('descripcion', 100)->nullable();
+            $table->string('cod_banco', 6)->nullable();
+            $table->string('estado', 1)->nullable();
+            $table->double('monto_pagar')->nullable();
+        });
+
+        Schema::create('emision_pagos_detalle', function (Blueprint $table) {
+            $table->id();
+            $table->double('nro_registro');
+            $table->double('nro_emision')->nullable();
+            $table->double('nro_cxp')->nullable();
+            $table->double('nro_mov')->nullable();
+            $table->string('origen_cxp', 2)->nullable();
+            $table->string('cxp_codigo', 20)->nullable();
+            $table->string('cxp_descripcion', 150)->nullable();
+            $table->date('fecha_emision')->nullable();
+            $table->string('nro_documento', 100)->nullable();
+            $table->string('tip_documento', 2)->nullable();
+            $table->double('saldo_pagar')->nullable();
+            $table->double('monto_pagar')->nullable();
+            $table->string('estado', 1)->nullable();
+        });
+
+        Schema::create('employee', function (Blueprint $table) {
+            $table->id();
+            $table->integer('emp_id');
+            $table->integer('manager_id')->nullable();
+            $table->string('emp_fname', 30);
+            $table->string('emp_lname', 30);
+            $table->integer('dept_id');
+            $table->string('street', 40);
+            $table->string('city', 20);
+            $table->string('state', 4);
+            $table->string('zip_code', 9);
+            $table->string('phone', 10)->nullable();
+            $table->string('status', 1)->nullable();
+            $table->string('ss_number', 11);
+            $table->decimal('salary', 20, 3);
+            $table->date('start_date');
+            $table->date('termination_date')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->string('bene_health_ins', 1)->nullable();
+            $table->string('bene_life_ins', 1)->nullable();
+            $table->string('bene_day_care', 1)->nullable();
+            $table->string('sex', 1)->nullable();
+        });
+
+        Schema::create('especial', function (Blueprint $table) {
+            $table->id();
+            $table->string('codeespecial', 3);
+            $table->string('especialidad', 50)->nullable();
+        });
+
+        Schema::create('evolucion', function (Blueprint $table) {
+            $table->id();
+            $table->string('especialidad', 200)->nullable();
+            $table->string('ciudad', 20)->nullable();
+            $table->string('logo', 500)->nullable();
+            $table->string('linea_1', 90)->nullable();
+            $table->string('linea_2', 90)->nullable();
+            $table->string('linea_3', 90)->nullable();
+            $table->string('lineag_1', 115)->nullable();
+            $table->string('lineag_2', 115)->nullable();
+            $table->integer('clave');
+            $table->date('fecha')->nullable();
+            $table->string('rif', 40)->nullable();
+            $table->string('reporte_vacio', 1)->nullable();
+            $table->string('moneda', 10)->nullable();
+            $table->string('impuesto', 20)->nullable();
+            $table->double('por_impues')->nullable();
+            $table->string('am_pm', 1)->nullable();
+            $table->integer('cantidad_paciente')->nullable();
+            $table->time('lunes_i')->nullable();
+            $table->time('lunes_f')->nullable();
+            $table->time('martes_i')->nullable();
+            $table->time('martes_f')->nullable();
+            $table->time('miercoles_i')->nullable();
+            $table->time('miercoles_f')->nullable();
+            $table->time('jueves_i')->nullable();
+            $table->time('jueves_f')->nullable();
+            $table->time('vienes_i')->nullable();
+            $table->time('viernes_f')->nullable();
+            $table->time('sabado_i')->nullable();
+            $table->time('sabado_f')->nullable();
+            $table->integer('tiempo_paci')->nullable();
+            $table->time('domingo_i')->nullable();
+            $table->time('domigo_f')->nullable();
+            $table->string('lunes', 1)->nullable();
+            $table->string('martes', 1)->nullable();
+            $table->string('miercoles', 1)->nullable();
+            $table->string('jueves', 1)->nullable();
+            $table->string('viernes', 1)->nullable();
+            $table->string('sabado', 1)->nullable();
+            $table->string('domingo', 1)->nullable();
+            $table->string('feriado', 100)->nullable();
+            $table->string('cedula', 20)->nullable();
+            $table->string('min_salud', 20)->nullable();
+            $table->string('col_med', 20)->nullable();
+            $table->string('cita_previa', 1)->nullable();
+            $table->string('telefono', 20)->nullable();
+            $table->string('cobra_honorarios', 1)->nullable();
+            $table->decimal('por_cobranza', 3, 2)->nullable();
+            $table->decimal('por_retencin_seg', 3, 2)->nullable();
+            $table->decimal('por_retencin_part', 3, 2)->nullable();
+            $table->string('accionista', 1)->nullable();
+            $table->string('consultorio', 10)->nullable();
+            $table->string('contrasena', 20)->nullable();
+            $table->string('paga_iva', 1)->nullable();
+            $table->string('sms_user', 20)->nullable();
+            $table->string('sms_clave', 20)->nullable();
+            $table->integer('sms_cantidad_total')->nullable();
+            $table->string('sms_telefono_llamada', 30)->nullable();
+            $table->string('sms_sexo_medico', 1)->nullable();
+            $table->string('sms_proveedor', 1)->nullable();
+            $table->string('correo_med', 100)->nullable();
+            $table->string('pais', 20)->nullable();
+            $table->string('prefi_1', 2)->nullable();
+            $table->string('prefi_2', 2)->nullable();
+            $table->string('prefi_3', 2)->nullable();
+            $table->string('nom_moneda', 20)->nullable();
+            $table->string('nom_impuesto', 20)->nullable();
+            $table->double('impuesto_vale')->nullable();
+        });
+
+        Schema::create('evolucion_copy', function (Blueprint $table) {
+            $table->id();
+            $table->string('especialidad', 200)->nullable();
+            $table->string('ciudad', 20)->nullable();
+            $table->string('logo', 500)->nullable();
+            $table->string('linea_1', 90)->nullable();
+            $table->string('linea_2', 90)->nullable();
+            $table->string('linea_3', 90)->nullable();
+            $table->string('lineag_1', 115)->nullable();
+            $table->string('lineag_2', 115)->nullable();
+            $table->integer('clave');
+            $table->date('fecha')->nullable();
+            $table->string('rif', 40)->nullable();
+            $table->string('reporte_vacio', 1)->nullable();
+            $table->string('moneda', 10)->nullable();
+            $table->string('impuesto', 20)->nullable();
+            $table->double('por_impues')->nullable();
+            $table->string('am_pm', 1)->nullable();
+            $table->integer('cantidad_paciente')->nullable();
+            $table->time('lunes_i')->nullable();
+            $table->time('lunes_f')->nullable();
+            $table->time('martes_i')->nullable();
+            $table->time('martes_f')->nullable();
+            $table->time('miercoles_i')->nullable();
+            $table->time('miercoles_f')->nullable();
+            $table->time('jueves_i')->nullable();
+            $table->time('jueves_f')->nullable();
+            $table->time('vienes_i')->nullable();
+            $table->time('viernes_f')->nullable();
+            $table->time('sabado_i')->nullable();
+            $table->time('sabado_f')->nullable();
+            $table->integer('tiempo_paci')->nullable();
+            $table->time('domingo_i')->nullable();
+            $table->time('domigo_f')->nullable();
+            $table->string('lunes', 1)->nullable();
+            $table->string('martes', 1)->nullable();
+            $table->string('miercoles', 1)->nullable();
+            $table->string('jueves', 1)->nullable();
+            $table->string('viernes', 1)->nullable();
+            $table->string('sabado', 1)->nullable();
+            $table->string('domingo', 1)->nullable();
+            $table->string('feriado', 100)->nullable();
+            $table->string('cedula', 20)->nullable();
+            $table->string('min_salud', 20)->nullable();
+            $table->string('col_med', 20)->nullable();
+            $table->string('cita_previa', 1)->nullable();
+            $table->string('telefono', 20)->nullable();
+            $table->string('cobra_honorarios', 1)->nullable();
+            $table->decimal('por_cobranza', 3, 2)->nullable();
+            $table->decimal('por_retencin_seg', 3, 2)->nullable();
+            $table->decimal('por_retencin_part', 3, 2)->nullable();
+            $table->string('accionista', 1)->nullable();
+            $table->string('consultorio', 10)->nullable();
+            $table->string('contrasena', 20)->nullable();
+            $table->string('paga_iva', 1)->nullable();
+            $table->string('sms_user', 20)->nullable();
+            $table->string('sms_clave', 20)->nullable();
+            $table->integer('sms_cantidad_total')->nullable();
+            $table->string('sms_telefono_llamada', 30)->nullable();
+            $table->string('sms_sexo_medico', 1)->nullable();
+            $table->string('sms_proveedor', 1)->nullable();
+            $table->string('correo_med', 100)->nullable();
+        });
+
+        Schema::create('examen_fisico', function (Blueprint $table) {
+            $table->id();
+            $table->integer('nrohistoria');
+            $table->integer('nroconsulta');
+            $table->text('cardiopulmonal')->nullable();
+            $table->text('abdomen')->nullable();
+            $table->text('extremidades')->nullable();
+            $table->text('otros')->nullable();
+            $table->text('electrocardiograma')->nullable();
+            $table->text('rx_de_torax')->nullable();
+            $table->text('laboratorio')->nullable();
+            $table->text('riesgo_operatorio')->nullable();
+            $table->text('sugerencias')->nullable();
+        });
+
+        Schema::create('examen_fisico_nuevo', function (Blueprint $table) {
+            $table->id();
+            $table->integer('historia');
+            $table->integer('consulta');
+            $table->integer('talla')->nullable();
+            $table->integer('peso')->nullable();
+            $table->text('mamas')->nullable();
+            $table->text('tiroides')->nullable();
+            $table->text('abdomen')->nullable();
+            $table->text('extremidades')->nullable();
+            $table->text('cardiopulmonar')->nullable();
+            $table->text('genitales_externos')->nullable();
+            $table->text('especulos')->nullable();
+            $table->text('tacto_vaginal')->nullable();
+            $table->text('tacto_rectal')->nullable();
+            $table->text('colposcopia')->nullable();
+            $table->string('tension', 8)->nullable();
+            $table->text('general')->nullable();
+            $table->text('neurologico')->nullable();
+            $table->text('mama_derecha')->nullable();
+            $table->text('total_g')->nullable();
+            $table->text('total_f')->nullable();
+            $table->text('total_general')->nullable();
+        });
+
+        Schema::create('examen_obs', function (Blueprint $table) {
+            $table->id();
+            $table->integer('numhistoria');
+            $table->integer('numconsulta');
+            $table->text('observacion')->nullable();
+        });
+
+        Schema::create('examen_paciente', function (Blueprint $table) {
+            $table->id();
+            $table->integer('nrohistoria');
+            $table->integer('nroconsulta');
+            $table->string('codeexamen', 8);
+            $table->string('resultado', 30)->nullable();
+            $table->string('vinculante', 1)->nullable();
+        });
+
         Schema::create('examen_pareja', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -25,7 +1004,6 @@ return new class extends Migration
             $table->string('procedencia', 4)->nullable();
         });
 
-        // 2. examenes
         Schema::create('examenes', function (Blueprint $table) {
             $table->id();
             $table->string('codeexamen', 8);
@@ -33,14 +1011,12 @@ return new class extends Migration
             $table->string('codetipo', 10)->nullable();
         });
 
-        // 3. EXCLUDEOBJECT
         Schema::create('EXCLUDEOBJECT', function (Blueprint $table) {
             $table->id();
             $table->string('name', 128);
             $table->string('type', 1);
         });
 
-        // 4. factura_cliente
         Schema::create('factura_cliente', function (Blueprint $table) {
             $table->id();
             $table->integer('numfactura');
@@ -72,7 +1048,6 @@ return new class extends Migration
             $table->integer('medico')->nullable();
         });
 
-        // 5. facturas_compras
         Schema::create('facturas_compras', function (Blueprint $table) {
             $table->id();
             $table->double('id_factura_compra');
@@ -94,7 +1069,6 @@ return new class extends Migration
             $table->double('mto_total')->nullable();
         });
 
-        // 6. facturas_compras_detalle
         Schema::create('facturas_compras_detalle', function (Blueprint $table) {
             $table->id();
             $table->double('id_registro');
@@ -106,7 +1080,6 @@ return new class extends Migration
             $table->double('id_factura_compra')->nullable();
         });
 
-        // 7. formato_print
         Schema::create('formato_print', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 4);
@@ -115,7 +1088,6 @@ return new class extends Migration
             $table->string('tipo', 10)->nullable();
         });
 
-        // 8. his_con_pre_factura
         Schema::create('his_con_pre_factura', function (Blueprint $table) {
             $table->id();
             $table->double('id_registro');
@@ -127,7 +1099,6 @@ return new class extends Migration
             $table->double('monto')->nullable();
         });
 
-        // 9. hospitalizacion
         Schema::create('hospitalizacion', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -139,7 +1110,6 @@ return new class extends Migration
             $table->string('hospital', 60)->nullable();
         });
 
-        // 10. imagen_consulta
         Schema::create('imagen_consulta', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -149,7 +1119,6 @@ return new class extends Migration
             $table->integer('orden')->nullable();
         });
 
-        // 11. imagen_pacientes
         Schema::create('imagen_pacientes', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -157,7 +1126,6 @@ return new class extends Migration
             $table->string('imagen2', 256)->nullable();
         });
 
-        // 12. imagen_pacientes_2
         Schema::create('imagen_pacientes_2', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -165,14 +1133,12 @@ return new class extends Migration
             $table->string('imagen2', 256)->nullable();
         });
 
-        // 13. imagenes
         Schema::create('imagenes', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion', 30);
             $table->string('imagen', 256);
         });
 
-        // 14. informe
         Schema::create('informe', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -182,7 +1148,6 @@ return new class extends Migration
             $table->date('fe_cha')->nullable();
         });
 
-        // 15. intenven_servi
         Schema::create('intenven_servi', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 3);
@@ -191,14 +1156,12 @@ return new class extends Migration
             $table->double('precio_auxiliar')->nullable();
         });
 
-        // 16. jdbc_function_escapes
         Schema::create('jdbc_function_escapes', function (Blueprint $table) {
             $table->id();
             $table->string('escape_name', 40);
             $table->string('map_string', 40)->nullable();
         });
 
-        // 17. listado
         Schema::create('listado', function (Blueprint $table) {
             $table->id();
             $table->string('tipo', 5);
@@ -206,7 +1169,6 @@ return new class extends Migration
             $table->string('segundo', 5);
         });
 
-        // 18. migrate_remote_fks_list
         Schema::create('migrate_remote_fks_list', function (Blueprint $table) {
             $table->id();
             $table->integer('fk_id');
@@ -224,7 +1186,6 @@ return new class extends Migration
             $table->boolean('created');
         });
 
-        // 19. migrate_remote_table_list
         Schema::create('migrate_remote_table_list', function (Blueprint $table) {
             $table->id();
             $table->integer('table_id');
@@ -239,14 +1200,12 @@ return new class extends Migration
             $table->boolean('data_migrated');
         });
 
-        // 20. migrate_sql_defn
         Schema::create('migrate_sql_defn', function (Blueprint $table) {
             $table->id();
             $table->text('unld_str')->nullable();
             $table->text('et_table_id')->nullable();
         });
 
-        // 21. ml_connection_script
         Schema::create('ml_connection_script', function (Blueprint $table) {
             $table->id();
             $table->integer('version_id');
@@ -254,7 +1213,6 @@ return new class extends Migration
             $table->integer('script_id');
         });
 
-        // 22. ml_script
         Schema::create('ml_script', function (Blueprint $table) {
             $table->id();
             $table->integer('script_id');
@@ -262,7 +1220,6 @@ return new class extends Migration
             $table->string('script_language', 128);
         });
 
-        // 23. ml_script_version
         Schema::create('ml_script_version', function (Blueprint $table) {
             $table->id();
             $table->integer('version_id');
@@ -270,13 +1227,11 @@ return new class extends Migration
             $table->text('description')->nullable();
         });
 
-        // 24. ml_scripts_modified
         Schema::create('ml_scripts_modified', function (Blueprint $table) {
             $table->id();
             $table->dateTime('last_modified');
         });
 
-        // 25. ml_subscription
         Schema::create('ml_subscription', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
@@ -284,14 +1239,12 @@ return new class extends Migration
             $table->decimal('progress', 20, 0);
         });
 
-        // 26. ml_table
         Schema::create('ml_table', function (Blueprint $table) {
             $table->id();
             $table->integer('table_id');
             $table->string('name', 128);
         });
 
-        // 27. ml_table_script
         Schema::create('ml_table_script', function (Blueprint $table) {
             $table->id();
             $table->integer('version_id');
@@ -300,7 +1253,6 @@ return new class extends Migration
             $table->integer('script_id');
         });
 
-        // 28. ml_user
         Schema::create('ml_user', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
@@ -310,14 +1262,12 @@ return new class extends Migration
             $table->binary('hashed_password')->nullable();
         });
 
-        // 29. motivo_cita
         Schema::create('motivo_cita', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 10);
             $table->string('tipo_atencion', 100)->nullable();
         });
 
-        // 30. motivo_consulta_paciente
         Schema::create('motivo_consulta_paciente', function (Blueprint $table) {
             $table->id();
             $table->string('codemotivo', 4);
@@ -327,7 +1277,6 @@ return new class extends Migration
             $table->string('detalle', 300)->nullable();
         });
 
-        // 31. motivo_factura
         Schema::create('motivo_factura', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 8);
@@ -337,7 +1286,6 @@ return new class extends Migration
             $table->string('tipo', 1)->nullable();
         });
 
-        // 32. motivo_factura_prov
         Schema::create('motivo_factura_prov', function (Blueprint $table) {
             $table->id();
             $table->string('id_fac_prov', 6);
@@ -345,14 +1293,12 @@ return new class extends Migration
             $table->double('monto')->nullable();
         });
 
-        // 33. motivos_consulta
         Schema::create('motivos_consulta', function (Blueprint $table) {
             $table->id();
             $table->string('codemotivo', 4);
             $table->string('descripcion', 40);
         });
 
-        // 34. operadores
         Schema::create('operadores', function (Blueprint $table) {
             $table->id();
             $table->string('primera', 15);
@@ -361,7 +1307,6 @@ return new class extends Migration
             $table->string('nivel', 1)->nullable();
         });
 
-        // 35. paciente_no_regi
         Schema::create('paciente_no_regi', function (Blueprint $table) {
             $table->id();
             $table->decimal('registro', 5, 0);
@@ -375,7 +1320,6 @@ return new class extends Migration
             $table->time('hora')->nullable();
         });
 
-        // 36. pacientes
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
             $table->string('nac', 1)->nullable();
@@ -401,7 +1345,6 @@ return new class extends Migration
             $table->string('sms', 1)->nullable();
         });
 
-        // 37. pago_quiru
         Schema::create('pago_quiru', function (Blueprint $table) {
             $table->id();
             $table->integer('cod_pagos');
@@ -414,7 +1357,6 @@ return new class extends Migration
             $table->time('hora_pago')->nullable();
         });
 
-        // 38. pbcatcol
         Schema::create('pbcatcol', function (Blueprint $table) {
             $table->id();
             $table->string('pbc_tnam', 129);
@@ -439,7 +1381,6 @@ return new class extends Migration
             $table->string('pbc_tag', 254)->nullable();
         });
 
-        // 39. pbcatedt
         Schema::create('pbcatedt', function (Blueprint $table) {
             $table->id();
             $table->string('pbe_name', 30);
@@ -451,7 +1392,6 @@ return new class extends Migration
             $table->string('pbe_work', 32)->nullable();
         });
 
-        // 40. pbcatfmt
         Schema::create('pbcatfmt', function (Blueprint $table) {
             $table->id();
             $table->string('pbf_name', 30);
@@ -460,7 +1400,6 @@ return new class extends Migration
             $table->integer('pbf_cntr')->nullable();
         });
 
-        // 41. pbcattbl
         Schema::create('pbcattbl', function (Blueprint $table) {
             $table->id();
             $table->string('pbt_tnam', 129);
@@ -490,7 +1429,6 @@ return new class extends Migration
             $table->string('pbt_cmnt', 254)->nullable();
         });
 
-        // 42. pbcatvld
         Schema::create('pbcatvld', function (Blueprint $table) {
             $table->id();
             $table->string('pbv_name', 30);
@@ -500,7 +1438,6 @@ return new class extends Migration
             $table->string('pbv_msg', 254)->nullable();
         });
 
-        // 43. pre_natal_desarrollo
         Schema::create('pre_natal_desarrollo', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -521,7 +1458,6 @@ return new class extends Migration
             $table->string('plac_grado', 20)->nullable();
         });
 
-        // 44. pre_natal_desarrollo_fino
         Schema::create('pre_natal_desarrollo_fino', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -552,7 +1488,6 @@ return new class extends Migration
             $table->integer('cantidad')->nullable();
         });
 
-        // 45. pre_natal_examenes
         Schema::create('pre_natal_examenes', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -572,7 +1507,6 @@ return new class extends Migration
             $table->string('otros', 20)->nullable();
         });
 
-        // 46. pre_natal_observaciones
         Schema::create('pre_natal_observaciones', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -593,7 +1527,6 @@ return new class extends Migration
             $table->integer('cantidad')->nullable();
         });
 
-        // 47. prena_exames_b
         Schema::create('prena_exames_b', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -634,7 +1567,6 @@ return new class extends Migration
             $table->text('otros')->nullable();
         });
 
-        // 48. presupuesto_operatorio
         Schema::create('presupuesto_operatorio', function (Blueprint $table) {
             $table->id();
             $table->integer('documento');
@@ -671,7 +1603,6 @@ return new class extends Migration
             $table->double('h_artroscopio')->nullable();
         });
 
-        // 49. presupuesto_planti
         Schema::create('presupuesto_planti', function (Blueprint $table) {
             $table->id();
             $table->integer('consecutivo');
@@ -683,7 +1614,6 @@ return new class extends Migration
             $table->string('nom_presupuesto', 100)->nullable();
         });
 
-        // 50. proveedor
         Schema::create('proveedor', function (Blueprint $table) {
             $table->id();
             $table->string('cod_prov', 6);
@@ -695,7 +1625,6 @@ return new class extends Migration
             $table->string('celular', 20)->nullable();
         });
 
-        // 51. radiologia_obs
         Schema::create('radiologia_obs', function (Blueprint $table) {
             $table->id();
             $table->integer('numhistoria');
@@ -703,7 +1632,6 @@ return new class extends Migration
             $table->text('observacion')->nullable();
         });
 
-        // 52. radiologia_paciente
         Schema::create('radiologia_paciente', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -713,7 +1641,6 @@ return new class extends Migration
             $table->integer('orden')->nullable();
         });
 
-        // 53. radiologias
         Schema::create('radiologias', function (Blueprint $table) {
             $table->id();
             $table->string('coderadio', 8);
@@ -723,7 +1650,6 @@ return new class extends Migration
             $table->string('tipo', 40)->nullable();
         });
 
-        // 54. recipe_detalle
         Schema::create('recipe_detalle', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -734,14 +1660,12 @@ return new class extends Migration
             $table->text('nota')->nullable();
         });
 
-        // 55. recipe_grupo
         Schema::create('recipe_grupo', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 4);
             $table->string('tratamiento', 100)->nullable();
         });
 
-        // 56. recipe_grupo_detalle
         Schema::create('recipe_grupo_detalle', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 4);
@@ -761,7 +1685,6 @@ return new class extends Migration
             $table->string('sicome3', 1)->nullable();
         });
 
-        // 57. recipe2
         Schema::create('recipe2', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -776,7 +1699,6 @@ return new class extends Migration
             $table->string('comple', 1)->nullable();
         });
 
-        // 58. recipes
         Schema::create('recipes', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -791,7 +1713,6 @@ return new class extends Migration
             $table->string('comple', 1)->nullable();
         });
 
-        // 59. recipes_pareja
         Schema::create('recipes_pareja', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -806,7 +1727,6 @@ return new class extends Migration
             $table->string('procedencia', 4)->nullable();
         });
 
-        // 60. referencia
         Schema::create('referencia', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -815,21 +1735,18 @@ return new class extends Migration
             $table->text('referencia')->nullable();
         });
 
-        // 61. reg_empl_frec_nomina
         Schema::create('reg_empl_frec_nomina', function (Blueprint $table) {
             $table->id();
             $table->string('frecuencia_nomina', 2);
             $table->string('nombre_frecuencia', 50)->nullable();
         });
 
-        // 62. reg_empl_tipo_nomina
         Schema::create('reg_empl_tipo_nomina', function (Blueprint $table) {
             $table->id();
             $table->string('tipo_nomina', 2);
             $table->string('nombre_nomina', 50)->nullable();
         });
 
-        // 63. registro_empleados
         Schema::create('registro_empleados', function (Blueprint $table) {
             $table->id();
             $table->double('nro_empleado');
@@ -846,7 +1763,6 @@ return new class extends Migration
             $table->double('monto_total')->nullable();
         });
 
-        // 64. registro_empleados_eje
         Schema::create('registro_empleados_eje', function (Blueprint $table) {
             $table->id();
             $table->double('nro_nomina');
@@ -858,7 +1774,6 @@ return new class extends Migration
             $table->double('monto_total')->nullable();
         });
 
-        // 65. registro_empleados_eje_detalle
         Schema::create('registro_empleados_eje_detalle', function (Blueprint $table) {
             $table->id();
             $table->double('nro_nomina');
@@ -867,7 +1782,6 @@ return new class extends Migration
             $table->double('monto_empleado')->nullable();
         });
 
-        // 66. registro_operaciones
         Schema::create('registro_operaciones', function (Blueprint $table) {
             $table->id();
             $table->double('registro');
@@ -883,7 +1797,6 @@ return new class extends Migration
             $table->string('paciente', 70)->nullable();
         });
 
-        // 67. reposo_paciente
         Schema::create('reposo_paciente', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -894,7 +1807,6 @@ return new class extends Migration
             $table->text('obser_reposo')->nullable();
         });
 
-        // 68. representante
         Schema::create('representante', function (Blueprint $table) {
             $table->id();
             $table->integer('numhistoria');
@@ -903,13 +1815,11 @@ return new class extends Migration
             $table->string('direccion', 60)->nullable();
         });
 
-        // 69. RowGenerator
         Schema::create('RowGenerator', function (Blueprint $table) {
             $table->id();
             $table->smallInteger('row_num');
         });
 
-        // 70. rs_lastcommit
         Schema::create('rs_lastcommit', function (Blueprint $table) {
             $table->id();
             $table->integer('origin');
@@ -919,13 +1829,11 @@ return new class extends Migration
             $table->dateTime('commit_time')->nullable();
         });
 
-        // 71. rs_threads
         Schema::create('rs_threads', function (Blueprint $table) {
             $table->id();
             $table->integer('seq')->nullable();
         });
 
-        // 72. seg_emp
         Schema::create('seg_emp', function (Blueprint $table) {
             $table->id();
             $table->string('codesegemp', 3);
@@ -935,7 +1843,6 @@ return new class extends Migration
             $table->string('telef', 50)->nullable();
         });
 
-        // 73. sms_compra
         Schema::create('sms_compra', function (Blueprint $table) {
             $table->id();
             $table->integer('conse_compra');
@@ -944,7 +1851,6 @@ return new class extends Migration
             $table->integer('cantidad_compra')->nullable();
         });
 
-        // 74. sms_enviados
         Schema::create('sms_enviados', function (Blueprint $table) {
             $table->id();
             $table->double('conta');
@@ -959,7 +1865,6 @@ return new class extends Migration
             $table->integer('consulta')->nullable();
         });
 
-        // 75. sms_envio_pac
         Schema::create('sms_envio_pac', function (Blueprint $table) {
             $table->id();
             $table->integer('nrohistoria');
@@ -969,7 +1874,6 @@ return new class extends Migration
             $table->integer('orden')->nullable();
         });
 
-        // 76. spt_collation_map
         Schema::create('spt_collation_map', function (Blueprint $table) {
             $table->id();
             $table->string('collation', 15)->nullable();
@@ -977,7 +1881,6 @@ return new class extends Migration
             $table->integer('number');
         });
 
-        // 77. spt_jdatatype_info
         Schema::create('spt_jdatatype_info', function (Blueprint $table) {
             $table->id();
             $table->tinyInteger('ss_dtype');
@@ -1002,21 +1905,18 @@ return new class extends Migration
             $table->boolean('is_unique');
         });
 
-        // 78. spt_jdbc_conversion
         Schema::create('spt_jdbc_conversion', function (Blueprint $table) {
             $table->id();
             $table->integer('datatype');
             $table->string('conversion', 20)->nullable();
         });
 
-        // 79. spt_jtext
         Schema::create('spt_jtext', function (Blueprint $table) {
             $table->id();
             $table->string('mdinfo', 30);
             $table->text('value')->nullable();
         });
 
-        // 80. spt_mda
         Schema::create('spt_mda', function (Blueprint $table) {
             $table->id();
             $table->string('mdinfo', 30);
@@ -1028,14 +1928,12 @@ return new class extends Migration
             $table->integer('srvver_end');
         });
 
-        // 81. texto_doppler
         Schema::create('texto_doppler', function (Blueprint $table) {
             $table->id();
             $table->string('nivel', 10);
             $table->text('texto');
         });
 
-        // 82. tipo_antecedente
         Schema::create('tipo_antecedente', function (Blueprint $table) {
             $table->id();
             $table->string('codetipo', 2);
@@ -1043,35 +1941,30 @@ return new class extends Migration
             $table->string('tipoantecedente', 1)->nullable();
         });
 
-        // 83. tipos_conceptos
         Schema::create('tipos_conceptos', function (Blueprint $table) {
             $table->id();
             $table->string('id_tipo_concepto', 4);
             $table->string('des_concepto', 100)->nullable();
         });
 
-        // 84. tipos_documentos
         Schema::create('tipos_documentos', function (Blueprint $table) {
             $table->id();
             $table->string('tip_documento', 2);
             $table->string('des_documento', 100)->nullable();
         });
 
-        // 85. tipos_examenes
         Schema::create('tipos_examenes', function (Blueprint $table) {
             $table->id();
             $table->string('codetipo', 10);
             $table->string('tipo', 40)->nullable();
         });
 
-        // 86. tipos_recipe
         Schema::create('tipos_recipe', function (Blueprint $table) {
             $table->id();
             $table->string('codetipo', 10);
             $table->string('tipo', 40)->nullable();
         });
 
-        // 87. ul_file
         Schema::create('ul_file', function (Blueprint $table) {
             $table->id();
             $table->integer('file_id');
@@ -1080,7 +1973,6 @@ return new class extends Migration
             $table->text('filename')->nullable();
         });
 
-        // 88. ul_statement
         Schema::create('ul_statement', function (Blueprint $table) {
             $table->id();
             $table->integer('file_id');
@@ -1097,7 +1989,6 @@ return new class extends Migration
             $table->string('code_segment', 8)->nullable();
         });
 
-        // 89. ul_variable
         Schema::create('ul_variable', function (Blueprint $table) {
             $table->id();
             $table->integer('file_id');
@@ -1111,7 +2002,6 @@ return new class extends Migration
             $table->string('nulls', 1);
         });
 
-        // 90. ultra_abdominal
         Schema::create('ultra_abdominal', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -1136,7 +2026,6 @@ return new class extends Migration
             $table->text('puro_texto')->nullable();
         });
 
-        // 91. ultra_mama
         Schema::create('ultra_mama', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -1156,7 +2045,6 @@ return new class extends Migration
             $table->text('conclusion')->nullable();
         });
 
-        // 92. ultra_prostatico
         Schema::create('ultra_prostatico', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -1197,7 +2085,6 @@ return new class extends Migration
             $table->text('puro_texto')->nullable();
         });
 
-        // 93. ultra_testiculos
         Schema::create('ultra_testiculos', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -1235,7 +2122,6 @@ return new class extends Migration
             $table->text('puro_texto')->nullable();
         });
 
-        // 94. ultra_tiroides_musculo
         Schema::create('ultra_tiroides_musculo', function (Blueprint $table) {
             $table->id();
             $table->integer('historia');
@@ -1248,7 +2134,6 @@ return new class extends Migration
             $table->text('conclusiones')->nullable();
         });
 
-        // 95. vademecum
         Schema::create('vademecum', function (Blueprint $table) {
             $table->id();
             $table->string('codemedicina', 8);
@@ -1274,39 +2159,18 @@ return new class extends Migration
             $table->string('sicome3', 1)->nullable();
         });
 
-        // 96. vademecum_m
         Schema::create('vademecum_m', function (Blueprint $table) {
             $table->id();
             $table->string('codemedicina', 200);
             $table->string('nombregenerico', 35)->nullable();
             $table->string('nombrecomercial', 35)->nullable();
-            $table->text('dosificacion')->nullable();
-            $table->text('uso')->nullable();
-            $table->string('presentacion', 35)->nullable();
-            $table->double('concentracion')->nullable();
-            $table->double('cada')->nullable();
-            $table->integer('durante')->nullable();
-            $table->double('pvc')->nullable();
-            $table->double('pvs')->nullable();
-            $table->double('dosis')->nullable();
-            $table->string('sico', 1)->nullable();
-            $table->string('nombrecomercial1', 40)->nullable();
-            $table->string('nombrecomercial2', 40)->nullable();
-            $table->string('nombrecomercial3', 40)->nullable();
-            $table->text('totalre')->nullable();
-            $table->string('sicome', 1)->nullable();
-            $table->string('sicome1', 1)->nullable();
-            $table->string('sicome2', 1)->nullable();
-            $table->string('sicome3', 1)->nullable();
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('vademecum_m');
         Schema::dropIfExists('vademecum');
@@ -1404,5 +2268,45 @@ return new class extends Migration
         Schema::dropIfExists('EXCLUDEOBJECT');
         Schema::dropIfExists('examenes');
         Schema::dropIfExists('examen_pareja');
+        Schema::dropIfExists('examen_paciente');
+        Schema::dropIfExists('examen_obs');
+        Schema::dropIfExists('examen_fisico_nuevo');
+        Schema::dropIfExists('examen_fisico');
+        Schema::dropIfExists('evolucion_copy');
+        Schema::dropIfExists('evolucion');
+        Schema::dropIfExists('especial');
+        Schema::dropIfExists('employee');
+        Schema::dropIfExists('emision_pagos_detalle');
+        Schema::dropIfExists('emision_pagos');
+        Schema::dropIfExists('ecocadiograma_fetal');
+        Schema::dropIfExists('eco_pelvico');
+        Schema::dropIfExists('eco_obstetrico_tercer_o');
+        Schema::dropIfExists('eco_obstetrico_tercer_2_o');
+        Schema::dropIfExists('eco_obstetrico_tercer_2');
+        Schema::dropIfExists('eco_obstetrico_tercer');
+        Schema::dropIfExists('eco_obstetrico');
+        Schema::dropIfExists('eco_doppler');
+        Schema::dropIfExists('DUMMY');
+        Schema::dropIfExists('doctores');
+        Schema::dropIfExists('dieta_paciente');
+        Schema::dropIfExists('dias_semana');
+        Schema::dropIfExists('diagnosticos');
+        Schema::dropIfExists('diagnostico_paciente');
+        Schema::dropIfExists('detalles_presupuesto_plantilla');
+        Schema::dropIfExists('detalles_factura_cliente');
+        Schema::dropIfExists('department');
+        Schema::dropIfExists('dd_arterial_mi');
+        Schema::dropIfExists('cuentas_x_pagar_mov');
+        Schema::dropIfExists('cuentas_x_pagar');
+        Schema::dropIfExists('consultorios');
+        Schema::dropIfExists('consultas');
+        Schema::dropIfExists('constancia_obs');
+        Schema::dropIfExists('cola_dia_no_labor');
+        Schema::dropIfExists('cola');
+        Schema::dropIfExists('clinicas');
+        Schema::dropIfExists('baremo_quiru');
+        Schema::dropIfExists('bancos');
+        Schema::dropIfExists('antecedentes');
+        Schema::dropIfExists('antece_paciente');
     }
 };
