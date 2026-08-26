@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Office extends Model
 {
-    protected $fillable = ['medical_center_id', 'office_number', 'phone', 'schedule'];
+    protected $fillable = ['medical_center_id', 'a', 'phone', 'schedule'];
 
     public function medicalCenter()
     {

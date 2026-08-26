@@ -1549,9 +1549,6 @@ return new class extends Migration
 
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
-            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
-            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('nac', 1)->nullable();
             $table->string('cedula', 10)->nullable();
             $table->string('apellidos', 25)->nullable();

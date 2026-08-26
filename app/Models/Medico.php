@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Medico extends Model
 {
@@ -39,5 +40,10 @@ class Medico extends Model
     public function medicalCenters()
     {
         return $this->belongsToMany(MedicalCenter::class, 'medico_medical_center', 'medico_id', 'medical_center_id');
+    }
+
+    public function pacientes(): BelongsToMany
+    {
+        return $this->belongsToMany(Paciente::class, 'medico_pacientes', 'medico_id', 'paciente_id');
     }
 }

@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\Api\PacienteSyncController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,3 +25,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 // En routes/api.php
 Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch'])
     ->middleware('throttle:1000,1'); // Permite hasta 1000 peticiones por minuto
+
+    Route::post('/pacientes/sincronizar', [PacienteSyncController::class, 'sincronizar']);
