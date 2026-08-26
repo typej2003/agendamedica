@@ -87,11 +87,9 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Vincular el médico con el paciente en la tabla pivote evitando duplicados
-                MedicoPaciente::firstOrCreate([
-                    'medico_id'   => $medico->id,
-                    'paciente_id' => $paciente->numhistoria,
-                ]);
+                // 2. Vincular el médico con el paciente evitando duplicados
+                // Si la columna en tu tabla pivot no se llama "medico_id", especifica las columnas en la relación del Modelo Medico o ajusta la migración.
+                $medico->pacientes()->syncWithoutDetaching([$paciente->numhistoria]);
 
                 $registrosProcesados++;
             }
