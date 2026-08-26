@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\Medico;
-use App\Models\MedicalCenter;
-use App\Models\Office;
+use App\Models\MedicoPaciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,23 +28,17 @@ class PacienteSyncController extends Controller
         // Tomar referencias del request o del primer objeto del payload
         $primerRegistro = is_array($data) && isset($data[0]) ? $data[0] : $data;
         $regMedico = $primerRegistro['reg_medico'] ?? $request->input('reg_medico');
-        $medicalcenterName = $primerRegistro['medicalcenter'] ?? $request->input('medicalcenter');
-        $officeNumber = $primerRegistro['office'] ?? $request->input('office');
 
-        // Búsquedas previas fuera del foreach
+        // Búsqueda del médico por reg-medico
         $medico = Medico::where('reg-medico', $regMedico)->first();
-        $medicalCenter = MedicalCenter::where('name', $medicalcenterName)->first();
-        $office = Office::where('office_number', $officeNumber)->first();
 
-        // Validar que existan las entidades requeridas para autenticar el origen del lote
-        if (!$medico || !$medicalCenter || !$office) {
+        // Validar existencia del médico
+        if (!$medico) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se encontraron las referencias requeridas.',
                 'errores' => [
-                    'medico' => $medico ? null : 'Médico no encontrado con reg_medico: ' . $regMedico,
-                    'medicalcenter' => $medicalCenter ? null : 'Centro médico no encontrado con name: ' . $medicalcenterName,
-                    'office' => $office ? null : 'Oficina no encontrada con office_number: ' . $officeNumber,
+                    'medico' => 'Médico no encontrado con reg_medico: ' . $regMedico,
                 ]
             ], 404);
         }
@@ -94,8 +87,11 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Vincular con el médico en la tabla pivote medico_pacientes (sin duplicar)
-                $medico->pacientes()->syncWithoutDetaching([$paciente->numhistoria]);
+                // 2. Vincular el médico con el paciente en la tabla pivote evitando duplicados
+                MedicoPaciente::firstOrCreate([
+                    'medico_id'   => $medico->id,
+                    'paciente_id' => $paciente->numhistoria,
+                ]);
 
                 $registrosProcesados++;
             }

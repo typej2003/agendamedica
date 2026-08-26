@@ -1567,6 +1567,7 @@ return new class extends Migration
             $table->string('foto_pac', 300)->nullable();
             $table->string('profesion', 50)->nullable();
             $table->string('email', 100)->nullable();
+            $table->string('password')->nullable();
             $table->string('dependencia', 30)->nullable();
             $table->integer('medico')->nullable();
             $table->string('sms', 1)->nullable();

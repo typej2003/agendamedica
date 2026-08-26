@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('license_number', 100)->nullable();
             $table->string('phone', 50)->nullable();
             $table->string('email', 150)->unique()->nullable();
+            $table->string('password')->nullable();
             $table->text('biography')->nullable();
             $table->string('photo_path')->nullable();
             $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('set null');

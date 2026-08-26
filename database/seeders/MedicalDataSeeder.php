@@ -51,12 +51,13 @@ class MedicalDataSeeder extends Seeder
         ];
 
         $doctorsData = [
-            ['first_name' => 'Carlos', 'last_name' => 'Mendoza', 'email' => 'carlos.mendoza@example.com', 'phone' => '04141112233'],
-            ['first_name' => 'María', 'last_name' => 'Delgado', 'email' => 'maria.delgado@example.com', 'phone' => '04122223344'],
-            ['first_name' => 'Alejandro', 'last_name' => 'Rojas', 'email' => 'alejandro.rojas@example.com', 'phone' => '04243334455'],
-            ['first_name' => 'Elena', 'last_name' => 'Benítez', 'email' => 'elena.benitez@example.com', 'phone' => '04164445566'],
-            ['first_name' => 'Roberto', 'last_name' => 'Gómez', 'email' => 'roberto.gomez@example.com', 'phone' => '04145556677'],
-            ['first_name' => 'Sofia', 'last_name' => 'Castillo', 'email' => 'sofia.castillo@example.com', 'phone' => '04126667788'],
+            ['first_name' => 'Carlos', 'last_name' => 'Mendoza', 'email' => 'carlos@gmail.com', 'phone' => '04141112233', 'password' => bcrypt('12345678'), 'reg_medico' => 'gineco-00001'],
+            ['first_name' => 'Ana', 'last_name' => 'Pérez', 'email' => 'ana.perez@example.com', 'phone' => '04121112233', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-54321'],
+            ['first_name' => 'María', 'last_name' => 'Delgado', 'email' => 'maria.delgado@example.com', 'phone' => '04122223344', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-98765'],
+            ['first_name' => 'Alejandro', 'last_name' => 'Rojas', 'email' => 'alejandro.rojas@example.com', 'phone' => '04243334455', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-56789'],
+            ['first_name' => 'Elena', 'last_name' => 'Benítez', 'email' => 'elena.benitez@example.com', 'phone' => '04164445566', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-13579'],
+            ['first_name' => 'Roberto', 'last_name' => 'Gómez', 'email' => 'roberto.gomez@example.com', 'phone' => '04145556677', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-24680'],
+            ['first_name' => 'Sofía', 'last_name' => 'López', 'email' => 'sofia.lopez@example.com', 'phone' => '04126667788', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-13579'],
         ];
 
         $doctorIndex = 0;
