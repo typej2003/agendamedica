@@ -21,6 +21,7 @@ return new class extends Migration {
             $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('set null');
             $table->decimal('consultation_fee', 10, 2)->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('reg-medico', 20)->nullable();
             $table->timestamps();
         });
     }
