@@ -21,8 +21,19 @@ class SyncController extends Controller
         $tableName = strtolower($request->input('table'));
         $rows = $request->input('data');
 
+        // 2. Validar parámetros recibidos con Log de diagnóstico para HTTP 400
         if (!$tableName || !is_array($rows)) {
-            return response()->json(['status' => 'error', 'message' => 'Parámetros inválidos.'], 400);
+            Log::channel('single')->error("Error 400 Bad Request en SyncController", [
+                'table_param' => $request->input('table'),
+                'data_is_array' => is_array($rows),
+                'json_last_error' => json_last_error_msg(),
+                'raw_body_preview' => substr($request->getContent(), 0, 500)
+            ]);
+
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Parámetros inválidos.'
+            ], 400);
         }
 
         if (!Schema::hasTable($tableName)) {
@@ -33,7 +44,7 @@ class SyncController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Lote vacío procesado.']);
         }
 
-        // 2. Insertar el lote en la base de datos
+        // 3. Insertar el lote en la base de datos
         DB::beginTransaction();
         try {
             $cleanRows = array_map(function ($row) {
@@ -45,7 +56,7 @@ class SyncController extends Controller
 
             DB::commit();
             return response()->json([
-                'status'  => 'success',
+                'status'   => 'success',
                 'inserted' => count($cleanRows)
             ], 200);
 
