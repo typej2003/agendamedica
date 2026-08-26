@@ -13,11 +13,8 @@ class Paciente extends Model
     use HasFactory;
 
     protected $table = 'pacientes';
-    protected $primaryKey = 'numhistoria';
-    public $incrementing = false;
 
     protected $fillable = [
-        'numhistoria',
         'nac',
         'cedula',
         'apellidos',
@@ -47,7 +44,9 @@ class Paciente extends Model
 
     public function medicos(): BelongsToMany
     {
-        return $this->belongsToMany(Medico::class, 'medico_pacientes', 'paciente_id', 'medico_id');
+        return $this->belongsToMany(Medico::class, 'medico_pacientes', 'paciente_id', 'medico_id')
+                    ->withPivot('numhistoria')
+                    ->withTimestamps();
     }
 
     public function segEmp(): BelongsTo
@@ -57,11 +56,11 @@ class Paciente extends Model
 
     public function citas(): HasMany
     {
-        return $this->hasMany(Cita::class, 'numhistoria', 'numhistoria');
+        return $this->hasMany(Cita::class, 'paciente_id', 'id');
     }
 
     public function colas(): HasMany
     {
-        return $this->hasMany(Cola::class, 'numhistoria', 'numhistoria');
+        return $this->hasMany(Cola::class, 'paciente_id', 'id');
     }
 }

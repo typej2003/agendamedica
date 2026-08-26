@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\Medico;
-use App\Models\MedicoPaciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,19 +49,21 @@ class PacienteSyncController extends Controller
 
         try {
             foreach ($pacientes as $index => $item) {
-                if (!isset($item['numhistoria'])) {
+                if (!isset($item['cedula']) && !isset($item['numhistoria'])) {
                     $errores[] = [
                         'posicion' => $index,
-                        'error' => 'El registro no contiene el campo primario numhistoria.'
+                        'error' => 'El registro no contiene identificador (cedula o numhistoria).'
                     ];
                     continue;
                 }
 
-                // 1. Crear o actualizar el paciente por numhistoria
+                // 1. Crear o actualizar el paciente por cédula (o por numhistoria si no hay cédula)
+                $criterioBusqueda = isset($item['cedula']) && !empty($item['cedula'])
+                    ? ['cedula' => $item['cedula']]
+                    : ['id' => $item['id'] ?? null];
+
                 $paciente = Paciente::updateOrCreate(
-                    [
-                        'numhistoria' => $item['numhistoria']
-                    ],
+                    $criterioBusqueda,
                     [
                         'nac'         => $item['nac'] ?? null,
                         'cedula'      => $item['cedula'] ?? null,
@@ -87,9 +88,12 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Vincular el médico con el paciente evitando duplicados
-                // Si la columna en tu tabla pivot no se llama "medico_id", especifica las columnas en la relación del Modelo Medico o ajusta la migración.
-                $medico->pacientes()->syncWithoutDetaching([$paciente->numhistoria]);
+                // 2. Sincronizar la relación agregando el numhistoria en la tabla pivote
+                $medico->pacientes()->syncWithoutDetaching([
+                    $paciente->id => [
+                        'numhistoria' => $item['numhistoria'] ?? null
+                    ]
+                ]);
 
                 $registrosProcesados++;
             }

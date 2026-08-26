@@ -6,33 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateMedicoPacientesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('medico_pacientes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('medico_id')->constrained('medicos')->onDelete('cascade');
-            
-            // numhistoria como clave foránea hacia la tabla pacientes
-            $table->string('paciente_id');
-            $table->foreign('paciente_id')->references('numhistoria')->on('pacientes')->onDelete('cascade');
-
+            $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
+            $table->string('numhistoria')->nullable(); // El número de historia para este médico específico
             $table->timestamps();
 
-            // Evitar registros duplicados de la misma combinación médico-paciente
             $table->unique(['medico_id', 'paciente_id']);
+            $table->index(['medico_id', 'numhistoria']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('medico_pacientes');
