@@ -23,6 +23,31 @@
             </a>
         </li>
 
+        @if(auth()->user()->hasRole('Root'))
+            <li class="nav-header">AGENDA MÉDICA</li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos') ? 'active' : '' }}">
+                    <i class="bi bi-person-badge"></i>
+                    <span class="link-text">Médicos</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.pacientes') }}" class="nav-link {{ request()->routeIs('admin.pacientes') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.centros-medicos') }}" class="nav-link {{ request()->routeIs('admin.centros-medicos') ? 'active' : '' }}">
+                    <i class="bi bi-hospital"></i>
+                    <span class="link-text">Centros Médicos</span>
+                </a>
+            </li>
+        @endif
+
         <li class="nav-header">ADMINISTRACIÓN</li>
 
         @if(auth()->user()->can('ver-usuarios') || auth()->user()->hasRole('Root'))
@@ -43,28 +68,6 @@
         </li>
         @endif
 
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-person-rolodex"></i>
-                <span class="link-text">Clientes</span>
-            </a>
-        </li>
-
-        <li class="nav-header">INVENTARIO</li>
-
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-box-seam"></i>
-                <span class="link-text">Productos</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-tags"></i>
-                <span class="link-text">Categorías</span>
-            </a>
-        </li>
-
         <li class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -76,6 +79,6 @@
     </ul>
     <hr class="m-0">
     <div class="sidebar-footer p-3 text-center">
-        <small class="text-muted">© {{ date('Y') }} WifiExprés</small>
+        <small class="text-muted">© {{ date('Y') }} Agenda Médica</small>
     </div>
 </div>
