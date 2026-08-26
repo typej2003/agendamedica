@@ -21,6 +21,7 @@ class CreateMedicosTable extends Migration
             $table->string('license_number')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
+            $table->string('password')->nullable();
             $table->text('biography')->nullable();
             $table->string('photo_path')->nullable();
             $table->unsignedBigInteger('office_id')->nullable();
