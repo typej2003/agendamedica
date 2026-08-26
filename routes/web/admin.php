@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Admin\ListMedicos;
-use App\Livewire\Admin\ListPacientes;
-use App\Livewire\Admin\ListCentroMedicos;
+use App\Http\Livewire\Admin\ListMedicos;
+use App\Http\Livewire\Admin\ListPacientes;
+use App\Http\Livewire\Admin\ListCentroMedicos;
 
 /*
 |--------------------------------------------------------------------------
