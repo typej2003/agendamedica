@@ -94,6 +94,8 @@ class MedicalDataSeeder extends Seeder
                         'photo_path' => null,
                         'office_id' => $office->id,
                         'consultation_fee' => 50.00,
+                        'password' => $docData['password'],
+                        'reg-medico' => $docData['reg_medico'],
                         'is_active' => true,
                     ]);
 
