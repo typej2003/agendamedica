@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class MedicoPaciente extends Model
+class MedicoPaciente extends Pivot
 {
     use HasFactory;
 
@@ -14,5 +14,6 @@ class MedicoPaciente extends Model
     protected $fillable = [
         'medico_id',
         'paciente_id',
+        'numhistoria',
     ];
 }

@@ -45,6 +45,7 @@ class Paciente extends Model
     public function medicos(): BelongsToMany
     {
         return $this->belongsToMany(Medico::class, 'medico_pacientes', 'paciente_id', 'medico_id')
+                    ->using(MedicoPaciente::class)
                     ->withPivot('numhistoria')
                     ->withTimestamps();
     }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 class PacienteSyncController extends Controller
 {
     /**
-     * Sincroniza y guarda los registros de pacientes enviados desde el cliente.
+     * Sincroniza y guarda los registros de pacientes enviados desde PowerBuilder.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -57,16 +57,13 @@ class PacienteSyncController extends Controller
                     continue;
                 }
 
-                // 1. Crear o actualizar el paciente por cédula
-                $criterioBusqueda = isset($item['cedula']) && !empty($item['cedula'])
-                    ? ['cedula' => $item['cedula']]
-                    : ['id' => $item['id'] ?? null];
-
+                // 1. Crear o actualizar la ficha general del paciente por cédula (sin numhistoria)
                 $paciente = Paciente::updateOrCreate(
-                    $criterioBusqueda,
+                    [
+                        'cedula' => $item['cedula']
+                    ],
                     [
                         'nac'         => $item['nac'] ?? null,
-                        'cedula'      => $item['cedula'] ?? null,
                         'apellidos'   => $item['apellidos'] ?? null,
                         'nombres'     => $item['nombres'] ?? null,
                         'sexo'        => $item['sexo'] ?? null,
@@ -88,10 +85,12 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Sincronizar la relación agregandoen la tabla pivote
+                // 2. Asociar paciente con el médico guardando el numhistoria enviado de PowerBuilder en la tabla pivote
+                $numHistoriaPowerBuilder = $item['numhistoria'] ?? null;
+
                 $medico->pacientes()->syncWithoutDetaching([
                     $paciente->id => [
-                        'numhistoria' => $item['numhistoria'] ?? null
+                        'numhistoria' => $numHistoriaPowerBuilder
                     ]
                 ]);
 

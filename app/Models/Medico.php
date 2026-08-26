@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Medico extends Model
@@ -27,17 +28,17 @@ class Medico extends Model
         'reg-medico',
     ];
 
-    public function office()
+    public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class, 'office_id');
     }
 
-    public function specialties()
+    public function specialties(): BelongsToMany
     {
         return $this->belongsToMany(Specialty::class, 'medico_specialty', 'medico_id', 'specialty_id');
     }
 
-    public function medicalCenters()
+    public function medicalCenters(): BelongsToMany
     {
         return $this->belongsToMany(MedicalCenter::class, 'medico_medical_center', 'medico_id', 'medical_center_id');
     }
@@ -45,6 +46,7 @@ class Medico extends Model
     public function pacientes(): BelongsToMany
     {
         return $this->belongsToMany(Paciente::class, 'medico_pacientes', 'medico_id', 'paciente_id')
+                    ->using(MedicoPaciente::class)
                     ->withPivot('numhistoria')
                     ->withTimestamps();
     }
