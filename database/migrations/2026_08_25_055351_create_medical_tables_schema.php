@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('antece_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->string('codeantecedente', 4);
             $table->text('detalles')->nullable();
@@ -23,6 +26,9 @@ return new class extends Migration
 
         Schema::create('antecedentes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codantecedente', 4);
             $table->string('descripcion', 40)->nullable();
             $table->string('codtipo', 2)->nullable();
@@ -30,12 +36,18 @@ return new class extends Migration
 
         Schema::create('bancos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('cod_banco', 6);
             $table->string('nombre_banco', 150)->nullable();
         });
 
         Schema::create('baremo_quiru', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('consecuti');
             $table->string('cod_inter', 3)->nullable();
             $table->string('cod_clini', 3)->nullable();
@@ -61,12 +73,18 @@ return new class extends Migration
 
         Schema::create('clinicas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('cod_clin', 3);
             $table->string('nom_clin', 50);
         });
 
         Schema::create('cola', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->date('fecha');
             $table->integer('numhistoria')->nullable();
             $table->integer('numorden')->nullable();
@@ -87,6 +105,9 @@ return new class extends Migration
 
         Schema::create('cola_dia_no_labor', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->date('dia');
             $table->string('tipo', 10)->nullable();
             $table->string('motivo', 100)->nullable();
@@ -95,6 +116,9 @@ return new class extends Migration
 
         Schema::create('constancia_obs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->integer('numconsulta');
             $table->text('observacion')->nullable();
@@ -104,6 +128,9 @@ return new class extends Migration
 
         Schema::create('consultas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->integer('nroconsulta');
             $table->date('fecha')->nullable();
@@ -134,12 +161,18 @@ return new class extends Migration
 
         Schema::create('consultorios', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 10);
             $table->string('consultorio', 100)->nullable();
         });
 
         Schema::create('cuentas_x_pagar', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_cxp');
             $table->string('origen_cxp', 2)->nullable();
             $table->date('fec_cxp')->nullable();
@@ -168,6 +201,9 @@ return new class extends Migration
 
         Schema::create('cuentas_x_pagar_mov', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_registro');
             $table->double('nro_cxp')->nullable();
             $table->double('nro_mov')->nullable();
@@ -179,6 +215,9 @@ return new class extends Migration
 
         Schema::create('dd_arterial_mi', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->integer('num_consulta');
             $table->string('indicacion', 100)->nullable();
@@ -223,6 +262,9 @@ return new class extends Migration
 
         Schema::create('department', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('dept_id');
             $table->string('dept_name', 40);
             $table->integer('dept_head_id')->nullable();
@@ -230,6 +272,9 @@ return new class extends Migration
 
         Schema::create('detalles_factura_cliente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('cod_inventario', 2);
             $table->integer('numfactura');
             $table->string('tipo_articulo', 25)->nullable();
@@ -244,6 +289,9 @@ return new class extends Migration
 
         Schema::create('detalles_presupuesto_plantilla', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('cod_inventario', 2);
             $table->integer('consecutivo');
             $table->string('tipo_articulo', 25)->nullable();
@@ -258,6 +306,9 @@ return new class extends Migration
 
         Schema::create('diagnostico_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codediagnostico', 5);
@@ -267,12 +318,18 @@ return new class extends Migration
 
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codediagnostico', 5);
             $table->string('descripcion', 50);
         });
 
         Schema::create('dias_semana', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->date('fecha');
             $table->string('dia_semana', 10)->nullable();
             $table->integer('semana')->nullable();
@@ -283,6 +340,9 @@ return new class extends Migration
 
         Schema::create('dieta_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('histroria');
             $table->integer('consulta');
             $table->string('cod_dieta', 2)->nullable();
@@ -294,6 +354,9 @@ return new class extends Migration
 
         Schema::create('doctores', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->decimal('cedula', 15, 0);
             $table->string('apellidos', 30)->nullable();
             $table->string('nombres', 30)->nullable();
@@ -307,11 +370,17 @@ return new class extends Migration
 
         Schema::create('DUMMY', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('dummy_col');
         });
 
         Schema::create('eco_doppler', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->string('arteria_uraina_menor', 20)->nullable();
@@ -345,6 +414,9 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -393,6 +465,9 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -462,6 +537,9 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_2', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -531,6 +609,9 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_2_o', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -598,6 +679,9 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_o', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -665,6 +749,9 @@ return new class extends Migration
 
         Schema::create('eco_pelvico', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->date('fecha');
             $table->string('posicionavf', 1)->nullable();
@@ -711,6 +798,9 @@ return new class extends Migration
 
         Schema::create('ecocadiograma_fetal', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('biome_dbp')->nullable();
@@ -747,6 +837,9 @@ return new class extends Migration
 
         Schema::create('emision_pagos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_emision');
             $table->date('fecha_emision')->nullable();
             $table->string('descripcion', 100)->nullable();
@@ -757,6 +850,9 @@ return new class extends Migration
 
         Schema::create('emision_pagos_detalle', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_registro');
             $table->double('nro_emision')->nullable();
             $table->double('nro_cxp')->nullable();
@@ -774,6 +870,9 @@ return new class extends Migration
 
         Schema::create('employee', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('emp_id');
             $table->integer('manager_id')->nullable();
             $table->string('emp_fname', 30);
@@ -798,12 +897,18 @@ return new class extends Migration
 
         Schema::create('especial', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codeespecial', 3);
             $table->string('especialidad', 50)->nullable();
         });
 
         Schema::create('evolucion', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('especialidad', 200)->nullable();
             $table->string('ciudad', 20)->nullable();
             $table->string('logo', 500)->nullable();
@@ -871,10 +976,15 @@ return new class extends Migration
             $table->string('nom_moneda', 20)->nullable();
             $table->string('nom_impuesto', 20)->nullable();
             $table->double('impuesto_vale')->nullable();
+            $table->string('reg-medico', 20)->nullable();
+            $table->string('slug', 255)->nullable();
         });
 
         Schema::create('evolucion_copy', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('especialidad', 200)->nullable();
             $table->string('ciudad', 20)->nullable();
             $table->string('logo', 500)->nullable();
@@ -939,6 +1049,9 @@ return new class extends Migration
 
         Schema::create('examen_fisico', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('cardiopulmonal')->nullable();
@@ -954,6 +1067,9 @@ return new class extends Migration
 
         Schema::create('examen_fisico_nuevo', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('talla')->nullable();
@@ -979,6 +1095,9 @@ return new class extends Migration
 
         Schema::create('examen_obs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->integer('numconsulta');
             $table->text('observacion')->nullable();
@@ -986,6 +1105,9 @@ return new class extends Migration
 
         Schema::create('examen_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codeexamen', 8);
@@ -995,6 +1117,9 @@ return new class extends Migration
 
         Schema::create('examen_pareja', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codeexamen', 8);
@@ -1006,6 +1131,9 @@ return new class extends Migration
 
         Schema::create('examenes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codeexamen', 8);
             $table->string('examen', 45)->nullable();
             $table->string('codetipo', 10)->nullable();
@@ -1013,12 +1141,18 @@ return new class extends Migration
 
         Schema::create('EXCLUDEOBJECT', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('name', 128);
             $table->string('type', 1);
         });
 
         Schema::create('factura_cliente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numfactura');
             $table->string('cedu_rif', 15)->nullable();
             $table->date('fecha_factura')->nullable();
@@ -1050,6 +1184,9 @@ return new class extends Migration
 
         Schema::create('facturas_compras', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('id_factura_compra');
             $table->string('cod_prov', 6)->nullable();
             $table->string('id_tipo_concepto', 4)->nullable();
@@ -1071,6 +1208,9 @@ return new class extends Migration
 
         Schema::create('facturas_compras_detalle', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('id_registro');
             $table->string('id_fac_prov', 6)->nullable();
             $table->string('des_concepto', 100)->nullable();
@@ -1082,6 +1222,9 @@ return new class extends Migration
 
         Schema::create('formato_print', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 4);
             $table->string('titulo', 200)->nullable();
             $table->text('descripcion')->nullable();
@@ -1090,6 +1233,9 @@ return new class extends Migration
 
         Schema::create('his_con_pre_factura', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('id_registro');
             $table->integer('numhistoria')->nullable();
             $table->integer('nroconsulta')->nullable();
@@ -1101,6 +1247,9 @@ return new class extends Migration
 
         Schema::create('hospitalizacion', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('diagprev')->nullable();
@@ -1112,6 +1261,9 @@ return new class extends Migration
 
         Schema::create('imagen_consulta', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('observacion')->nullable();
@@ -1121,6 +1273,9 @@ return new class extends Migration
 
         Schema::create('imagen_pacientes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->string('imagen', 256);
             $table->string('imagen2', 256)->nullable();
@@ -1128,6 +1283,9 @@ return new class extends Migration
 
         Schema::create('imagen_pacientes_2', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->string('imagen', 256)->nullable();
             $table->string('imagen2', 256)->nullable();
@@ -1135,12 +1293,18 @@ return new class extends Migration
 
         Schema::create('imagenes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('descripcion', 30);
             $table->string('imagen', 256);
         });
 
         Schema::create('informe', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('para', 50)->nullable();
@@ -1150,6 +1314,9 @@ return new class extends Migration
 
         Schema::create('intenven_servi', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 3);
             $table->string('nombre', 300)->nullable();
             $table->double('precio_principal')->nullable();
@@ -1158,12 +1325,18 @@ return new class extends Migration
 
         Schema::create('jdbc_function_escapes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('escape_name', 40);
             $table->string('map_string', 40)->nullable();
         });
 
         Schema::create('listado', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('tipo', 5);
             $table->string('descripcion_tipo', 30);
             $table->string('segundo', 5);
@@ -1171,6 +1344,9 @@ return new class extends Migration
 
         Schema::create('migrate_remote_fks_list', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('fk_id');
             $table->string('pk_database', 255)->nullable();
             $table->string('pk_owner', 255)->nullable();
@@ -1188,6 +1364,9 @@ return new class extends Migration
 
         Schema::create('migrate_remote_table_list', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('table_id');
             $table->string('server_name', 255);
             $table->string('database_name', 255)->nullable();
@@ -1202,12 +1381,18 @@ return new class extends Migration
 
         Schema::create('migrate_sql_defn', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->text('unld_str')->nullable();
             $table->text('et_table_id')->nullable();
         });
 
         Schema::create('ml_connection_script', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('version_id');
             $table->string('event', 128);
             $table->integer('script_id');
@@ -1215,6 +1400,9 @@ return new class extends Migration
 
         Schema::create('ml_script', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('script_id');
             $table->text('script');
             $table->string('script_language', 128);
@@ -1222,6 +1410,9 @@ return new class extends Migration
 
         Schema::create('ml_script_version', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('version_id');
             $table->string('name', 128);
             $table->text('description')->nullable();
@@ -1229,11 +1420,17 @@ return new class extends Migration
 
         Schema::create('ml_scripts_modified', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->dateTime('last_modified');
         });
 
         Schema::create('ml_subscription', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('user_id');
             $table->string('publication_name', 128);
             $table->decimal('progress', 20, 0);
@@ -1241,12 +1438,18 @@ return new class extends Migration
 
         Schema::create('ml_table', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('table_id');
             $table->string('name', 128);
         });
 
         Schema::create('ml_table_script', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('version_id');
             $table->integer('table_id');
             $table->string('event', 128);
@@ -1255,6 +1458,9 @@ return new class extends Migration
 
         Schema::create('ml_user', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('user_id');
             $table->string('name', 128);
             $table->integer('commit_state');
@@ -1264,12 +1470,18 @@ return new class extends Migration
 
         Schema::create('motivo_cita', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 10);
             $table->string('tipo_atencion', 100)->nullable();
         });
 
         Schema::create('motivo_consulta_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codemotivo', 4);
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
@@ -1279,6 +1491,9 @@ return new class extends Migration
 
         Schema::create('motivo_factura', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 8);
             $table->string('descripcion', 45)->nullable();
             $table->double('monto');
@@ -1288,6 +1503,9 @@ return new class extends Migration
 
         Schema::create('motivo_factura_prov', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('id_fac_prov', 6);
             $table->string('des_concepto', 100)->nullable();
             $table->double('monto')->nullable();
@@ -1295,12 +1513,18 @@ return new class extends Migration
 
         Schema::create('motivos_consulta', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codemotivo', 4);
             $table->string('descripcion', 40);
         });
 
         Schema::create('operadores', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('primera', 15);
             $table->string('segunda', 10);
             $table->string('nonbre', 50)->nullable();
@@ -1309,6 +1533,9 @@ return new class extends Migration
 
         Schema::create('paciente_no_regi', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->decimal('registro', 5, 0);
             $table->string('apellidos', 100)->nullable();
             $table->string('nombres', 100)->nullable();
@@ -1322,6 +1549,9 @@ return new class extends Migration
 
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('nac', 1)->nullable();
             $table->string('cedula', 10)->nullable();
             $table->string('apellidos', 25)->nullable();
@@ -1347,6 +1577,9 @@ return new class extends Migration
 
         Schema::create('pago_quiru', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('cod_pagos');
             $table->integer('consecuti');
             $table->date('fecha')->nullable();
@@ -1359,6 +1592,9 @@ return new class extends Migration
 
         Schema::create('pbcatcol', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('pbc_tnam', 129);
             $table->integer('pbc_tid')->nullable();
             $table->string('pbc_ownr', 129);
@@ -1383,6 +1619,9 @@ return new class extends Migration
 
         Schema::create('pbcatedt', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('pbe_name', 30);
             $table->string('pbe_edit', 254)->nullable();
             $table->smallInteger('pbe_type')->nullable();
@@ -1394,6 +1633,9 @@ return new class extends Migration
 
         Schema::create('pbcatfmt', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('pbf_name', 30);
             $table->string('pbf_frmt', 254)->nullable();
             $table->smallInteger('pbf_type')->nullable();
@@ -1402,6 +1644,9 @@ return new class extends Migration
 
         Schema::create('pbcattbl', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('pbt_tnam', 129);
             $table->integer('pbt_tid')->nullable();
             $table->string('pbt_ownr', 129);
@@ -1431,6 +1676,9 @@ return new class extends Migration
 
         Schema::create('pbcatvld', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('pbv_name', 30);
             $table->string('pbv_vald', 254)->nullable();
             $table->smallInteger('pbv_type')->nullable();
@@ -1440,6 +1688,9 @@ return new class extends Migration
 
         Schema::create('pre_natal_desarrollo', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->date('fecha');
             $table->string('eg_fur', 20)->nullable();
@@ -1460,6 +1711,9 @@ return new class extends Migration
 
         Schema::create('pre_natal_desarrollo_fino', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->date('fecha');
             $table->string('eg_fur', 20)->nullable();
@@ -1490,6 +1744,9 @@ return new class extends Migration
 
         Schema::create('pre_natal_examenes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->date('fecha');
             $table->string('hemoglobina', 20)->nullable();
@@ -1509,6 +1766,9 @@ return new class extends Migration
 
         Schema::create('pre_natal_observaciones', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->date('fur')->nullable();
             $table->string('menarquia', 10)->nullable();
@@ -1529,6 +1789,9 @@ return new class extends Migration
 
         Schema::create('prena_exames_b', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->date('fecha');
             $table->integer('gesta_clave');
@@ -1569,6 +1832,9 @@ return new class extends Migration
 
         Schema::create('presupuesto_operatorio', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('documento');
             $table->integer('historia')->nullable();
             $table->string('diagnostico', 300)->nullable();
@@ -1605,6 +1871,9 @@ return new class extends Migration
 
         Schema::create('presupuesto_planti', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('consecutivo');
             $table->string('tipo_precio', 1)->nullable();
             $table->double('total_costo')->nullable();
@@ -1616,6 +1885,9 @@ return new class extends Migration
 
         Schema::create('proveedor', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('cod_prov', 6);
             $table->string('proveedor', 150)->nullable();
             $table->string('rif', 20)->nullable();
@@ -1627,6 +1899,9 @@ return new class extends Migration
 
         Schema::create('radiologia_obs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->integer('numconsulta');
             $table->text('observacion')->nullable();
@@ -1634,6 +1909,9 @@ return new class extends Migration
 
         Schema::create('radiologia_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('coderadio', 8);
@@ -1643,6 +1921,9 @@ return new class extends Migration
 
         Schema::create('radiologias', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('coderadio', 8);
             $table->string('estudio', 45)->nullable();
             $table->string('codetipo', 10)->nullable();
@@ -1652,6 +1933,9 @@ return new class extends Migration
 
         Schema::create('recipe_detalle', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->integer('recipe');
@@ -1662,12 +1946,18 @@ return new class extends Migration
 
         Schema::create('recipe_grupo', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 4);
             $table->string('tratamiento', 100)->nullable();
         });
 
         Schema::create('recipe_grupo_detalle', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codigo', 4);
             $table->string('codemedicina', 8);
             $table->string('descripcion', 100)->nullable();
@@ -1687,6 +1977,9 @@ return new class extends Migration
 
         Schema::create('recipe2', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codemedicina', 8);
@@ -1701,6 +1994,9 @@ return new class extends Migration
 
         Schema::create('recipes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codemedicina', 8);
@@ -1715,6 +2011,9 @@ return new class extends Migration
 
         Schema::create('recipes_pareja', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codemedicina', 8);
@@ -1729,6 +2028,9 @@ return new class extends Migration
 
         Schema::create('referencia', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->decimal('ceduladoctor', 15, 0);
@@ -1737,18 +2039,27 @@ return new class extends Migration
 
         Schema::create('reg_empl_frec_nomina', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('frecuencia_nomina', 2);
             $table->string('nombre_frecuencia', 50)->nullable();
         });
 
         Schema::create('reg_empl_tipo_nomina', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('tipo_nomina', 2);
             $table->string('nombre_nomina', 50)->nullable();
         });
 
         Schema::create('registro_empleados', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_empleado');
             $table->date('fecha_creacion')->nullable();
             $table->string('status', 1)->nullable();
@@ -1765,6 +2076,9 @@ return new class extends Migration
 
         Schema::create('registro_empleados_eje', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_nomina');
             $table->string('descripcion', 100)->nullable();
             $table->date('fecha_aplicacion')->nullable();
@@ -1776,6 +2090,9 @@ return new class extends Migration
 
         Schema::create('registro_empleados_eje_detalle', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('nro_nomina');
             $table->double('nro_empleado');
             $table->double('nro_cxp')->nullable();
@@ -1784,6 +2101,9 @@ return new class extends Migration
 
         Schema::create('registro_operaciones', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('registro');
             $table->date('dia_registro')->nullable();
             $table->time('hora_registro')->nullable();
@@ -1799,6 +2119,9 @@ return new class extends Migration
 
         Schema::create('reposo_paciente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codereposo', 1)->nullable();
@@ -1809,6 +2132,9 @@ return new class extends Migration
 
         Schema::create('representante', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('numhistoria');
             $table->string('nombre', 40)->nullable();
             $table->string('codeparentesco', 1)->nullable();
@@ -1817,11 +2143,17 @@ return new class extends Migration
 
         Schema::create('RowGenerator', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->smallInteger('row_num');
         });
 
         Schema::create('rs_lastcommit', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('origin');
             $table->binary('origin_qid')->nullable();
             $table->binary('secondary_qid')->nullable();
@@ -1831,11 +2163,17 @@ return new class extends Migration
 
         Schema::create('rs_threads', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('seq')->nullable();
         });
 
         Schema::create('seg_emp', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codesegemp', 3);
             $table->string('nombre', 150)->nullable();
             $table->string('rif', 50)->nullable();
@@ -1845,6 +2183,9 @@ return new class extends Migration
 
         Schema::create('sms_compra', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('conse_compra');
             $table->date('fecha_compra')->nullable();
             $table->double('monto_compra')->nullable();
@@ -1853,6 +2194,9 @@ return new class extends Migration
 
         Schema::create('sms_enviados', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->double('conta');
             $table->string('usuario', 10)->nullable();
             $table->string('medico', 60)->nullable();
@@ -1867,6 +2211,9 @@ return new class extends Migration
 
         Schema::create('sms_envio_pac', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('numero_cel', 14)->nullable();
@@ -1876,6 +2223,9 @@ return new class extends Migration
 
         Schema::create('spt_collation_map', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('collation', 15)->nullable();
             $table->string('charsetn', 10)->nullable();
             $table->integer('number');
@@ -1883,6 +2233,9 @@ return new class extends Migration
 
         Schema::create('spt_jdatatype_info', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->tinyInteger('ss_dtype');
             $table->string('TYPE_NAME', 30);
             $table->smallInteger('DATA_TYPE');
@@ -1907,18 +2260,27 @@ return new class extends Migration
 
         Schema::create('spt_jdbc_conversion', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('datatype');
             $table->string('conversion', 20)->nullable();
         });
 
         Schema::create('spt_jtext', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('mdinfo', 30);
             $table->text('value')->nullable();
         });
 
         Schema::create('spt_mda', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('mdinfo', 30);
             $table->tinyInteger('querytype')->nullable();
             $table->string('query', 255)->nullable();
@@ -1930,12 +2292,18 @@ return new class extends Migration
 
         Schema::create('texto_doppler', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('nivel', 10);
             $table->text('texto');
         });
 
         Schema::create('tipo_antecedente', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codetipo', 2);
             $table->string('descripcion', 40)->nullable();
             $table->string('tipoantecedente', 1)->nullable();
@@ -1943,30 +2311,45 @@ return new class extends Migration
 
         Schema::create('tipos_conceptos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('id_tipo_concepto', 4);
             $table->string('des_concepto', 100)->nullable();
         });
 
         Schema::create('tipos_documentos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('tip_documento', 2);
             $table->string('des_documento', 100)->nullable();
         });
 
         Schema::create('tipos_examenes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codetipo', 10);
             $table->string('tipo', 40)->nullable();
         });
 
         Schema::create('tipos_recipe', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->string('codetipo', 10);
             $table->string('tipo', 40)->nullable();
         });
 
         Schema::create('ul_file', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('file_id');
             $table->string('name', 128);
             $table->string('project', 128);
@@ -1975,6 +2358,9 @@ return new class extends Migration
 
         Schema::create('ul_statement', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('file_id');
             $table->integer('statement_id');
             $table->integer('line');
@@ -1991,6 +2377,9 @@ return new class extends Migration
 
         Schema::create('ul_variable', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('file_id');
             $table->integer('statement_id');
             $table->string('output', 1);
@@ -2004,6 +2393,9 @@ return new class extends Migration
 
         Schema::create('ultra_abdominal', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->date('fecha')->nullable();
@@ -2028,6 +2420,9 @@ return new class extends Migration
 
         Schema::create('ultra_mama', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->date('fecha')->nullable();
@@ -2047,6 +2442,9 @@ return new class extends Migration
 
         Schema::create('ultra_prostatico', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('medico_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('medicalcenter_id')->nullable()->constrained('medical_centers')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->integer('historia');
             $table->integer('consulta');
             $table->date('fecha')->nullable();
@@ -2060,110 +2458,8 @@ return new class extends Migration
             $table->double('diametro_trans')->nullable();
             $table->double('diametro_anterop')->nullable();
             $table->double('volumen')->nullable();
-            $table->double('densidad')->nullable();
-            $table->string('capsula', 10)->nullable();
-            $table->string('nodulos', 10)->nullable();
-            $table->string('nodulos_ubicacion', 10)->nullable();
-            $table->string('nodulos_caracteristicas', 300)->nullable();
-            $table->double('protocolo_biopsia_cilindros_de')->nullable();
-            $table->double('protocolo_biopsia_cilindros_iz')->nullable();
-            $table->text('conclusion')->nullable();
-            $table->integer('medico_1')->nullable();
-            $table->integer('medico_2')->nullable();
-            $table->string('equipo', 20)->nullable();
-            $table->string('trasductor', 20)->nullable();
-            $table->double('frecuencia')->nullable();
-            $table->string('diametro_ld', 10)->nullable();
-            $table->string('diametro_li', 10)->nullable();
-            $table->double('diametro_long_ld')->nullable();
-            $table->double('diametro_long_li')->nullable();
-            $table->double('diametro_trans_ld')->nullable();
-            $table->double('diametro_trans_li')->nullable();
-            $table->double('diametro_anterop_ld')->nullable();
-            $table->double('diametro_anterop_li')->nullable();
-            $table->text('vesiculas_s')->nullable();
-            $table->text('puro_texto')->nullable();
-        });
-
-        Schema::create('ultra_testiculos', function (Blueprint $table) {
-            $table->id();
-            $table->integer('historia');
-            $table->integer('consulta');
-            $table->date('fecha')->nullable();
-            $table->string('equipo', 20)->nullable();
-            $table->string('transductor', 20)->nullable();
-            $table->double('frecuencia')->nullable();
-            $table->text('motivo_estudio')->nullable();
-            $table->double('td_long')->nullable();
-            $table->double('td_tranv')->nullable();
-            $table->double('td_post')->nullable();
-            $table->text('td_parequima')->nullable();
-            $table->text('td_epididimo')->nullable();
-            $table->double('td_epididimo_med_1')->nullable();
-            $table->double('td_epididimo_med_2')->nullable();
-            $table->string('td_hidrocele', 50)->nullable();
-            $table->double('td_diametro_plexo')->nullable();
-            $table->double('ti_long')->nullable();
-            $table->double('ti_tranv')->nullable();
-            $table->double('ti_post')->nullable();
-            $table->text('ti_parequima')->nullable();
-            $table->text('ti_epididimo')->nullable();
-            $table->double('ti_epididimo_med_1')->nullable();
-            $table->double('ti_epididimo_med_2')->nullable();
-            $table->string('ti_hidrocele', 50)->nullable();
-            $table->double('ti_diametro_plexo')->nullable();
-            $table->text('conclusion')->nullable();
-            $table->text('hallazgos')->nullable();
-            $table->integer('medico_1')->nullable();
-            $table->integer('medico_2')->nullable();
-            $table->text('doppler_td')->nullable();
-            $table->text('doppler_ti')->nullable();
-            $table->text('observaciones')->nullable();
-            $table->text('puro_texto')->nullable();
-        });
-
-        Schema::create('ultra_tiroides_musculo', function (Blueprint $table) {
-            $table->id();
-            $table->integer('historia');
-            $table->integer('consulta');
-            $table->date('fecha')->nullable();
-            $table->string('transductor', 30)->nullable();
-            $table->integer('referido')->nullable();
-            $table->text('texto')->nullable();
-            $table->text('puro_texto')->nullable();
             $table->text('conclusiones')->nullable();
-        });
-
-        Schema::create('vademecum', function (Blueprint $table) {
-            $table->id();
-            $table->string('codemedicina', 8);
-            $table->string('nombregenerico', 35)->nullable();
-            $table->string('nombrecomercial', 35)->nullable();
-            $table->text('dosificacion')->nullable();
-            $table->text('uso')->nullable();
-            $table->string('presentacion', 50)->nullable();
-            $table->double('concentracion')->nullable();
-            $table->double('cada')->nullable();
-            $table->integer('durante')->nullable();
-            $table->double('pvc')->nullable();
-            $table->double('pvs')->nullable();
-            $table->double('dosis')->nullable();
-            $table->string('sico', 1)->nullable();
-            $table->string('nombrecomercial1', 40)->nullable();
-            $table->string('nombrecomercial2', 40)->nullable();
-            $table->string('nombrecomercial3', 40)->nullable();
-            $table->text('totalre')->nullable();
-            $table->string('sicome', 1)->nullable();
-            $table->string('sicome1', 1)->nullable();
-            $table->string('sicome2', 1)->nullable();
-            $table->string('sicome3', 1)->nullable();
-        });
-
-        Schema::create('vademecum_m', function (Blueprint $table) {
-            $table->id();
-            $table->string('codemedicina', 200);
-            $table->string('nombregenerico', 35)->nullable();
-            $table->string('nombrecomercial', 35)->nullable();
+            $table->text('puro_texto')->nullable();
         });
     }
 
@@ -2172,10 +2468,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vademecum_m');
-        Schema::dropIfExists('vademecum');
-        Schema::dropIfExists('ultra_tiroides_musculo');
-        Schema::dropIfExists('ultra_testiculos');
         Schema::dropIfExists('ultra_prostatico');
         Schema::dropIfExists('ultra_mama');
         Schema::dropIfExists('ultra_abdominal');

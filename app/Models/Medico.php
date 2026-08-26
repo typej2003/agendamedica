@@ -23,6 +23,7 @@ class Medico extends Model
         'office_id',
         'consultation_fee',
         'is_active',
+        'reg-medico',
     ];
 
     public function office()
