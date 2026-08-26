@@ -11,24 +11,19 @@ use App\Http\Controllers\DashboardController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
-
-// Route::get('/', function () {
-//     return view('welcome');
-// });
 
 Route::get('/', Welcome::class)->name('welcome');
 
-// Rutas de autenticación predeterminadas de Laravel
-Auth::routes();
+// 1. Deshabilitamos las rutas de login por defecto de Auth::routes()
+Auth::routes(['login' => false]);
 
-// Sobrescribimos el POST de Login para utilizar el CustomLoginController (Médico / Paciente)
-Route::post('/login', [CustomLoginController::class, 'login'])->name('login');
+// 2. Definimos las rutas de Login personalizada (GET para mostrar el form y POST para autenticar)
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::post('/login', [CustomLoginController::class, 'login']);
 
 // Redirige la antigua ruta /home a la nueva /dashboard
 Route::redirect('/home', '/dashboard');
