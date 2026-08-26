@@ -1638,7 +1638,6 @@ return new class extends Migration
             $table->string('escolaridad', 100)->nullable();
             $table->string('ocupacion', 100)->nullable();
             $table->string('codesegemp', 3)->nullable();
-            $table->integer('numhistoria');
             $table->string('foto_pac', 300)->nullable();
             $table->string('profesion', 50)->nullable();
             $table->string('email', 100)->nullable();
