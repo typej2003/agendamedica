@@ -49,15 +49,15 @@ class PacienteSyncController extends Controller
 
         try {
             foreach ($pacientes as $index => $item) {
-                if (!isset($item['cedula']) && !isset($item['numhistoria'])) {
+                if (!isset($item['cedula'])) {
                     $errores[] = [
                         'posicion' => $index,
-                        'error' => 'El registro no contiene identificador (cedula o numhistoria).'
+                        'error' => 'El registro no contiene identificador (cedula).'
                     ];
                     continue;
                 }
 
-                // 1. Crear o actualizar el paciente por cédula (o por numhistoria si no hay cédula)
+                // 1. Crear o actualizar el paciente por cédula
                 $criterioBusqueda = isset($item['cedula']) && !empty($item['cedula'])
                     ? ['cedula' => $item['cedula']]
                     : ['id' => $item['id'] ?? null];
@@ -88,7 +88,7 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Sincronizar la relación agregando el numhistoria en la tabla pivote
+                // 2. Sincronizar la relación agregandoen la tabla pivote
                 $medico->pacientes()->syncWithoutDetaching([
                     $paciente->id => [
                         'numhistoria' => $item['numhistoria'] ?? null
