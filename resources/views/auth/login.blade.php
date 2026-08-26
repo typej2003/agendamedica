@@ -110,13 +110,20 @@
             color: var(--accent-hover);
             text-decoration: underline;
         }
+
+        /* Selector del tipo de usuario */
+        .user-type-selector .btn-check:checked + .btn-outline-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
 
     <div class="container d-flex justify-content-center align-items-center py-5">
         <div class="card login-card p-4 p-md-5">
-            <!-- Título y Logotipo con Enlace a la Raíz / Welcome -->
+            <!-- Título y Logotipo -->
             <div class="text-center mb-4">
                 <a href="{{ url('/') }}" class="brand-link">
                     <div class="login-header-icon">
@@ -131,6 +138,25 @@
 
             <form action="{{ route('login') }}" method="post">
                 @csrf
+
+                <!-- Selector del Tipo de Usuario -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold d-block text-center mb-2" style="color: var(--dark-color);">Acceder como:</label>
+                    <div class="btn-group w-100 user-type-selector" role="group">
+                        <input type="radio" class="btn-check" name="user_type" id="type_paciente" value="Paciente" {{ old('user_type', 'Paciente') == 'Paciente' ? 'checked' : '' }}>
+                        <label class="btn btn-outline-primary fw-semibold" for="type_paciente">
+                            <i class="bi bi-person me-1"></i> Paciente
+                        </label>
+
+                        <input type="radio" class="btn-check" name="user_type" id="type_medico" value="Medico" {{ old('user_type') == 'Medico' ? 'checked' : '' }}>
+                        <label class="btn btn-outline-primary fw-semibold" for="type_medico">
+                            <i class="bi bi-person-badge me-1"></i> Médico
+                        </label>
+                    </div>
+                    @error('user_type')
+                        <small class="text-danger d-block text-center mt-1">{{ $message }}</small>
+                    @enderror
+                </div>
 
                 <!-- Campo Email -->
                 <div class="mb-3">
@@ -213,7 +239,7 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Script para Alternar Ocultar/Mostrar Contraseña -->
+    <!-- Script Alternar Contraseña -->
     <script>
         document.getElementById('togglePassword').addEventListener('click', function () {
             const passwordInput = document.getElementById('password');
