@@ -19,7 +19,7 @@
         <li class="nav-item">
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i>
-                <span class="link-text">Dashboard</span>
+                <span class="link-text">Escritorio</span>
             </a>
         </li>
 
@@ -70,10 +70,15 @@
 
         <li class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
-               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="bi bi-box-arrow-left"></i>
                 <span class="link-text">Cerrar Sesión</span>
             </a>
+
+            <!-- Formulario oculto necesario para procesar la petición POST con CSRF -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                @csrf
+            </form>
         </li>
 
     </ul>
