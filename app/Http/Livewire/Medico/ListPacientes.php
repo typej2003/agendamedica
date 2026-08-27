@@ -28,7 +28,7 @@ class ListPacientes extends Component
         'telefono' => 'nullable|string|max:50',
         'email' => 'nullable|email|max:255',
         'direccion' => 'nullable|string',
-        'numhistoria' => 'nullable|string|max:50',
+        'numhistoria' => 'nullable|string|max:50', // Se mantiene para el v-model del input, pero no se guarda
         'fnacimiento' => 'nullable|date',
         'lnacimiento' => 'nullable|string|max:255',
         'escolaridad' => 'nullable|string|max:255',
@@ -64,7 +64,6 @@ class ListPacientes extends Component
     public function create()
     {
         $this->resetFields();
-        // En Livewire v2 se usa dispatchBrowserEvent para emitir eventos a JS
         $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
@@ -80,12 +79,12 @@ class ListPacientes extends Component
         $this->telefono = $paciente->telefono;
         $this->email = $paciente->email;
         $this->direccion = $paciente->direccion;
-        $this->numhistoria = $paciente->numhistoria;
         $this->fnacimiento = $paciente->fnacimiento;
         $this->lnacimiento = $paciente->lnacimiento;
         $this->escolaridad = $paciente->escolaridad;
         $this->ocupacion = $paciente->ocupacion;
         $this->profesion = $paciente->profesion;
+        // $this->numhistoria = $paciente->numhistoria; // Desactivado temporalmente
 
         $this->dispatchBrowserEvent('open-modal-paciente');
     }
@@ -108,12 +107,12 @@ class ListPacientes extends Component
                 'telefono' => $this->telefono,
                 'email' => $this->email,
                 'direccion' => $this->direccion,
-                'numhistoria' => $this->numhistoria,
                 'fnacimiento' => $this->fnacimiento,
                 'lnacimiento' => $this->lnacimiento,
                 'escolaridad' => $this->escolaridad,
                 'ocupacion' => $this->ocupacion,
                 'profesion' => $this->profesion,
+                // 'numhistoria' => $this->numhistoria, // Desactivado temporalmente
             ]
         );
 
@@ -133,7 +132,7 @@ class ListPacientes extends Component
         $pacientes = Paciente::where('nombres', 'like', '%' . $this->search . '%')
             ->orWhere('apellidos', 'like', '%' . $this->search . '%')
             ->orWhere('cedula', 'like', '%' . $this->search . '%')
-            ->orWhere('numhistoria', 'like', '%' . $this->search . '%')
+            // ->orWhere('numhistoria', 'like', '%' . $this->search . '%') // Eliminado de la consulta SQL
             ->orderBy('id', 'desc')
             ->paginate(15);
 
