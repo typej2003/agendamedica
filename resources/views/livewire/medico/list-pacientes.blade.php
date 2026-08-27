@@ -161,7 +161,7 @@
 
     <!-- Modal Formulario Paciente -->
     <div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold fs-6">
@@ -172,7 +172,8 @@
                 </div>
                 
                 <form wire:submit.prevent="save">
-                    <div class="modal-body p-3">
+                    <!-- Contenedor con scroll propio ajustado a pantalla -->
+                    <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
                         
                         <!-- Identificación -->
                         <div class="bg-light p-2 rounded mb-3">
