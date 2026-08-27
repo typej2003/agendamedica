@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Admin\ListMedicos;
 use App\Http\Livewire\Admin\ListPacientes;
 use App\Http\Livewire\Admin\ListCentroMedicos;
+use App\Http\Livewire\Admin\ListHistorias;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/medicos', ListMedicos::class)->name('medicos');
         Route::get('/pacientes', ListPacientes::class)->name('pacientes');
         Route::get('/centros-medicos', ListCentroMedicos::class)->name('centros-medicos');
+        Route::get('/historias', ListHistorias::class)->name('historias');
     });
 
 });

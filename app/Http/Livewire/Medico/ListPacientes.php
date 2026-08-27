@@ -6,7 +6,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Paciente;
 use App\Models\Medico;
+use App\Models\MedicalCenter;
+use App\Models\Historia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ListPacientes extends Component
 {
@@ -16,10 +20,13 @@ class ListPacientes extends Component
 
     public $search = '';
     public $paciente_id;
+    public $reg_medico_filtro = ''; // Mantendremos compatibilidad o se puede usar por medical_center_id
+    public $medical_center_id_filtro = ''; 
     
     // Propiedades del formulario
     public $nac = 'V', $cedula, $nombres, $apellidos, $sexo, $telefono, $email, $direccion;
     public $numhistoria, $fnacimiento, $lnacimiento, $escolaridad, $ocupacion, $profesion;
+    public $medical_center_id; // Centro médico seleccionado en el formulario
 
     protected $rules = [
         'nac' => 'nullable|string|max:2',
@@ -36,9 +43,15 @@ class ListPacientes extends Component
         'escolaridad' => 'nullable|string|max:255',
         'ocupacion' => 'nullable|string|max:255',
         'profesion' => 'nullable|string|max:255',
+        'medical_center_id' => 'nullable|exists:medical_centers,id',
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingMedicalCenterIdFiltro()
     {
         $this->resetPage();
     }
@@ -60,6 +73,7 @@ class ListPacientes extends Component
         $this->escolaridad = '';
         $this->ocupacion = '';
         $this->profesion = '';
+        $this->medical_center_id = '';
         $this->resetValidation();
     }
 
@@ -71,9 +85,7 @@ class ListPacientes extends Component
 
     public function edit($id)
     {
-        $medico = Medico::where('user_id', Auth::id())->first();
-
-        // Se busca el paciente y se obtiene la relación pivote con el médico actual
+        $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
         $paciente = Paciente::findOrFail($id);
         
         $this->paciente_id = $paciente->id;
@@ -91,10 +103,17 @@ class ListPacientes extends Component
         $this->ocupacion = $paciente->ocupacion;
         $this->profesion = $paciente->profesion;
 
-        // Cargar el número de historia registrado en la pivote para este médico
         if ($medico) {
-            $pivotData = $medico->pacientes()->where('paciente_id', $id)->first();
-            $this->numhistoria = $pivotData ? $pivotData->pivot->numhistoria : '';
+            $historiaQuery = Historia::where('medico_id', $medico->id)
+                ->where('paciente_id', $id);
+
+            if (!empty($this->medical_center_id_filtro)) {
+                $historiaQuery->where('medical_center_id', $this->medical_center_id_filtro);
+            }
+
+            $historia = $historiaQuery->first();
+            $this->numhistoria = $historia ? $historia->numhistoria : '';
+            $this->medical_center_id = $historia ? $historia->medical_center_id : '';
         }
 
         $this->dispatchBrowserEvent('open-modal-paciente');
@@ -126,15 +145,35 @@ class ListPacientes extends Component
             ]
         );
 
-        // Vincular o actualizar datos en la tabla pivote medico_pacientes
-        $medico = Medico::where('user_id', Auth::id())->first();
+        $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
+        
         if ($medico) {
-            $medico->pacientes()->syncWithoutDetaching([
-                $paciente->id => [
+            $centroId = !empty($this->medical_center_id) ? $this->medical_center_id : null;
+
+            // Sincronizar en la tabla Historias
+            Historia::updateOrCreate(
+                [
+                    'medico_id' => $medico->id,
+                    'paciente_id' => $paciente->id,
+                    'medical_center_id' => $centroId,
+                ],
+                [
                     'numhistoria' => $this->numhistoria,
-                    'reg-medico' => $medico->{'reg-medico'} ?? null,
                 ]
-            ]);
+            );
+
+            // Mantener compatibilidad con tabla pivote clásica si se usa en paralelo
+            DB::table('medico_pacientes')->updateOrInsert(
+                [
+                    'medico_id' => $medico->id,
+                    'paciente_id' => $paciente->id,
+                ],
+                [
+                    'numhistoria' => $this->numhistoria,
+                    'updated_at' => now(),
+                    'created_at' => now()
+                ]
+            );
         }
 
         $this->dispatchBrowserEvent('close-modal-paciente');
@@ -144,34 +183,76 @@ class ListPacientes extends Component
 
     public function delete($id)
     {
-        $medico = Medico::where('user_id', Auth::id())->first();
+        $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
         if ($medico) {
-            // Desvincular al paciente de este médico en la tabla pivote
-            $medico->pacientes()->detach($id);
+            $query = Historia::where('medico_id', $medico->id)
+                ->where('paciente_id', $id);
+
+            if (!empty($this->medical_center_id_filtro)) {
+                $query->where('medical_center_id', $this->medical_center_id_filtro);
+            }
+
+            $query->delete();
         }
-        
-        session()->flash('message', 'Paciente removido de su lista correctamente.');
+        session()->flash('message', 'Paciente removido del centro médico correctamente.');
     }
 
     public function render()
     {
-        $medico = Medico::where('user_id', Auth::id())->first();
+        $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
+        $centrosSalud = collect();
 
         if ($medico) {
-            $pacientes = $medico->pacientes()
-                ->withPivot('numhistoria', 'reg-medico')
-                ->where(function ($query) {
-                    $query->where('nombres', 'like', '%' . $this->search . '%')
-                        ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                        ->orWhere('cedula', 'like', '%' . $this->search . '%')
-                        ->orWhere('medico_pacientes.numhistoria', 'like', '%' . $this->search . '%');
-                })
-                ->orderBy('pacientes.id', 'desc')
-                ->paginate(15);
+            // Obtener los centros médicos asociados al médico a través de sus historias o relaciones
+            $centroIds = Historia::where('medico_id', $medico->id)
+                ->whereNotNull('medical_center_id')
+                ->distinct()
+                ->pluck('medical_center_id');
+
+            $centrosSalud = MedicalCenter::whereIn('id', $centroIds)->get();
+
+            $query = $medico->pacientes();
+
+            // Filtrar por el centro médico seleccionado
+            if (!empty($this->medical_center_id_filtro)) {
+                $query->whereHas('historias', function($q) use ($medico) {
+                    $q->where('medico_id', $medico->id)
+                      ->where('medical_center_id', $this->medical_center_id_filtro);
+                });
+            }
+
+            if (!empty(trim($this->search))) {
+                $term = '%' . trim($this->search) . '%';
+                $query->where(function ($q) use ($term) {
+                    $q->where('pacientes.nombres', 'like', $term)
+                      ->orWhere('pacientes.apellidos', 'like', $term)
+                      ->orWhere('pacientes.cedula', 'like', $term);
+                });
+            }
+
+            $pacientes = $query->orderBy('pacientes.id', 'desc')->paginate(15);
+            
+            // Añadir información de la historia correspondiente al centro actual para cada paciente
+            foreach ($pacientes as $paciente) {
+                $historiaQuery = Historia::where('medico_id', $medico->id)
+                    ->where('paciente_id', $paciente->id);
+                if (!empty($this->medical_center_id_filtro)) {
+                    $historiaQuery->where('medical_center_id', $this->medical_center_id_filtro);
+                }
+                $h = $historiaQuery->first();
+                $paciente->num_historia_actual = $h ? $h->numhistoria : 'S/H';
+                
+                $centroAsociado = $h && $h->medical_center_id ? MedicalCenter::find($h->medical_center_id) : null;
+                $paciente->centro_medico_actual = $centroAsociado ? $centroAsociado->name : 'N/A';
+            }
+
         } else {
-            $pacientes = collect([])->paginate(15);
+            $pacientes = new LengthAwarePaginator([], 0, 15);
         }
 
-        return view('livewire.medico.list-pacientes', compact('pacientes'));
+        // Listado completo de centros médicos disponibles para asignar en el modal
+        $allMedicalCenters = MedicalCenter::all();
+
+        return view('livewire.medico.list-pacientes', compact('pacientes', 'centrosSalud', 'allMedicalCenters'));
     }
 }

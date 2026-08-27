@@ -16,7 +16,10 @@ class CreateHistoriasTable extends Migration
         Schema::create('historias', function (Blueprint $table) {
             $table->id();
             $table->string('numhistoria')->unique();
-            $table->string('reg-medico');
+            $table->string('reg-medico')->nullable();
+            $table->bigInteger('paciente_id')->unsigned()->nullable();
+            $table->bigInteger('medico_id')->unsigned()->nullable();
+            $table->bigInteger('medical_center_id')->unsigned()->nullable();
             $table->timestamps();
         });
     }

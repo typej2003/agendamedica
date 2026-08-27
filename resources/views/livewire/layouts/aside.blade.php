@@ -46,6 +46,13 @@
                     <span class="link-text">Centros Médicos</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.historias') }}" class="nav-link {{ request()->routeIs('admin.historias') ? 'active' : '' }}">
+                    <i class="bi bi-journal-medical"></i>
+                    <span class="link-text">Historias Médicas</span>
+                </a>
+            </li>
         @endif
 
         @if(auth()->user()->hasRole('Medico'))

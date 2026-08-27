@@ -17,6 +17,10 @@ class ListMedicos extends Component
     public $name, $lastname, $license_number, $phone, $email, $reg_medico;
     public $is_active = true;
 
+    protected $listeners = [
+        'confirmDeleteMedico' => 'delete'
+    ];
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'lastname' => 'required|string|max:255',
@@ -48,12 +52,14 @@ class ListMedicos extends Component
     public function create()
     {
         $this->resetFields();
-        $this->dispatch('open-modal-medico');
+        $this->dispatchBrowserEvent('open-modal-medico');
     }
 
     public function edit($id)
     {
+        $this->resetValidation();
         $medico = Medico::findOrFail($id);
+
         $this->medico_id = $medico->id;
         $this->name = $medico->name;
         $this->lastname = $medico->lastname;
@@ -63,7 +69,7 @@ class ListMedicos extends Component
         $this->reg_medico = $medico->{'reg-medico'};
         $this->is_active = (bool) $medico->is_active;
 
-        $this->dispatch('open-modal-medico');
+        $this->dispatchBrowserEvent('open-modal-medico');
     }
 
     public function save()
@@ -86,9 +92,14 @@ class ListMedicos extends Component
             ]
         );
 
-        $this->dispatch('close-modal-medico');
+        $this->dispatchBrowserEvent('close-modal-medico');
         session()->flash('message', $this->medico_id ? 'Médico actualizado exitosamente.' : 'Médico registrado exitosamente.');
         $this->resetFields();
+    }
+
+    public function triggerDeleteConfirm($id)
+    {
+        $this->dispatchBrowserEvent('show-delete-confirmation-medico', ['id' => $id]);
     }
 
     public function delete($id)
@@ -99,9 +110,11 @@ class ListMedicos extends Component
 
     public function render()
     {
-        $medicos = Medico::where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('lastname', 'like', '%' . $this->search . '%')
-            ->orWhere('reg-medico', 'like', '%' . $this->search . '%')
+        $medicos = Medico::where(function($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('lastname', 'like', '%' . $this->search . '%')
+                      ->orWhere('reg-medico', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('id', 'desc')
             ->paginate(15);
 

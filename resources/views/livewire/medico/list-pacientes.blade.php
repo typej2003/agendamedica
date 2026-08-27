@@ -1,13 +1,13 @@
 <div>
     <div class="card shadow-sm border-0 mb-4">
-        <!-- Cabecera Limpia -->
+        <!-- Cabecera -->
         <div class="card-header bg-white py-3 border-bottom-0">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
                 <div>
                     <h5 class="mb-0 text-primary fw-bold">
                         <i class="bi bi-people-fill me-2"></i>Pacientes
                     </h5>
-                    <small class="text-muted">Gestión de historias y datos de contacto</small>
+                    <small class="text-muted">Gestión de historias y datos de contacto por centro médico</small>
                 </div>
                 <div>
                     <button class="btn btn-primary btn-sm w-100 w-sm-auto px-3" wire:click="create">
@@ -25,8 +25,8 @@
                 </div>
             @endif
 
-            <!-- Buscador -->
-            <div class="row mb-3">
+            <!-- Filtros: Buscador + Selección de Centro de Salud -->
+            <div class="row g-2 mb-3">
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light border-end-0">
@@ -37,9 +37,22 @@
                             wire:model="search">
                     </div>
                 </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-hospital text-muted"></i>
+                        </span>
+                        <select class="form-select border-start-0" wire:model="medical_center_id_filtro">
+                            <option value="">Todos los Centros / Consultorios</option>
+                            @foreach($centrosSalud as $centro)
+                                <option value="{{ $centro->id }}">Centro: {{ $centro->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <!-- 1. VISTA MÓVIL (Tarjetas compactas en pantallas pequeñas) -->
+            <!-- 1. VISTA MÓVIL (Tarjetas compactas) -->
             <div class="d-block d-md-none">
                 @forelse($pacientes as $paciente)
                     <div class="card mb-2 border shadow-none bg-light">
@@ -47,17 +60,20 @@
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <span class="badge bg-primary me-1">
-                                        {{ $paciente->nac }}-{{ $paciente->cedula }}
+                                        {{ $paciente->nac ?? 'V' }}-{{ $paciente->cedula }}
                                     </span>
-                                    <span class="badge bg-secondary">
-                                        {{ $paciente->pivot->numhistoria ?? 'S/H' }}
+                                    <span class="badge bg-secondary font-monospace">
+                                        {{ $paciente->num_historia_actual }}
+                                    </span>
+                                    <span class="badge bg-info text-dark ms-1">
+                                        {{ $paciente->centro_medico_actual }}
                                     </span>
                                 </div>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente?') || event.stopImmediatePropagation()">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente del centro actual?') || event.stopImmediatePropagation()">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -76,19 +92,20 @@
                 @empty
                     <div class="text-center py-4 text-muted border rounded bg-light">
                         <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-                        <small>No se encontraron pacientes.</small>
+                        <small>No se encontraron pacientes para el filtro seleccionado.</small>
                     </div>
                 @endforelse
             </div>
 
-            <!-- 2. VISTA ESCRITORIO (Tabla limpia para pantallas medianas y grandes) -->
+            <!-- 2. VISTA ESCRITORIO (Tabla) -->
             <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 110px;">N° Historia</th>
-                            <th scope="col" style="width: 130px;">Cédula</th>
+                            <th scope="col" style="width: 130px;">N° Historia</th>
+                            <th scope="col" style="width: 140px;">Cédula</th>
                             <th scope="col">Paciente</th>
+                            <th scope="col">Centro Médico</th>
                             <th scope="col">Teléfono</th>
                             <th scope="col">Email</th>
                             <th scope="col" class="text-center" style="width: 100px;">Acciones</th>
@@ -99,14 +116,19 @@
                             <tr>
                                 <td>
                                     <span class="badge bg-secondary font-monospace">
-                                        {{ $paciente->pivot->numhistoria ?? 'S/H' }}
+                                        {{ $paciente->num_historia_actual }}
                                     </span>
                                 </td>
                                 <td class="fw-bold text-nowrap">
-                                    {{ $paciente->nac }}-{{ $paciente->cedula }}
+                                    {{ $paciente->nac ?? 'V' }}-{{ $paciente->cedula }}
                                 </td>
                                 <td class="fw-semibold">
                                     {{ $paciente->nombres }} {{ $paciente->apellidos }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ $paciente->centro_medico_actual }}
+                                    </span>
                                 </td>
                                 <td class="small">
                                     {{ $paciente->telefono ?? 'N/A' }}
@@ -120,7 +142,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            onclick="confirm('¿Está seguro de remover este paciente?') || event.stopImmediatePropagation()" title="Eliminar">
+                                            onclick="confirm('¿Está seguro de remover este paciente del centro actual?') || event.stopImmediatePropagation()" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -128,9 +150,9 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-muted">
                                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                    No se encontraron pacientes registrados.
+                                    No se encontraron pacientes registrados para la selección actual.
                                 </td>
                             </tr>
                         @endforelse
@@ -140,18 +162,6 @@
 
             <!-- Paginación -->
             <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                <div class="d-flex justify-content-between w-100 d-md-none">
-                    <button class="btn btn-outline-primary btn-sm px-3" wire:click="previousPage" @if($pacientes->onFirstPage()) disabled @endif>
-                        <i class="bi bi-chevron-left me-1"></i> Anterior
-                    </button>
-                    <span class="small text-muted align-self-center">
-                        Página {{ $pacientes->currentPage() }} de {{ $pacientes->lastPage() }}
-                    </span>
-                    <button class="btn btn-outline-primary btn-sm px-3" wire:click="nextPage" @if(!$pacientes->hasMorePages()) disabled @endif>
-                        Siguiente <i class="bi bi-chevron-right ms-1"></i>
-                    </button>
-                </div>
-
                 <div class="d-none d-md-block ms-auto">
                     {{ $pacientes->links() }}
                 </div>
@@ -172,20 +182,29 @@
                 </div>
                 
                 <form wire:submit.prevent="save">
-                    <!-- Contenedor con scroll propio ajustado a pantalla -->
                     <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
                         
-                        <!-- Identificación -->
+                        <!-- Identificación y Centro Médico -->
                         <div class="bg-light p-2 rounded mb-3">
-                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación</span>
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación e Historia</span>
                         </div>
                         <div class="row g-2 mb-3">
-                            <div class="col-6 col-md-3">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Centro Médico / Consultorio</label>
+                                <select class="form-select form-select-sm" wire:model="medical_center_id">
+                                    <option value="">Seleccione centro...</option>
+                                    @foreach($allMedicalCenters as $center)
+                                        <option value="{{ $center->id }}">{{ $center->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('medical_center_id') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-6 col-md-2">
                                 <label class="form-label small fw-semibold">N° Historia</label>
                                 <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
                                 @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-6 col-md-3">
+                            <div class="col-6 col-md-2">
                                 <label class="form-label small fw-semibold">Nac.</label>
                                 <select class="form-select form-select-sm" wire:model="nac">
                                     <option value="V">V</option>
@@ -193,7 +212,7 @@
                                     <option value="P">P</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control form-control-sm" wire:model="cedula">
                                 @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
@@ -276,7 +295,7 @@
         </div>
     </div>
 
-    <!-- Script Corregido para Bootstrap 5 y Livewire 2 -->
+    <!-- Script para Bootstrap 5 y Livewire -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modalElement = document.getElementById('modalPaciente');

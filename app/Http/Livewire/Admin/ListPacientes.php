@@ -16,6 +16,10 @@ class ListPacientes extends Component
     public $paciente_id;
     public $nac = 'V', $cedula, $nombres, $apellidos, $sexo, $telefono, $email, $direccion;
 
+    protected $listeners = [
+        'confirmDeletePaciente' => 'delete'
+    ];
+
     protected $rules = [
         'nac' => 'nullable|string|max:2',
         'cedula' => 'required|string|max:20',
@@ -49,12 +53,14 @@ class ListPacientes extends Component
     public function create()
     {
         $this->resetFields();
-        $this->dispatch('open-modal-paciente');
+        $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
     public function edit($id)
     {
+        $this->resetValidation();
         $paciente = Paciente::findOrFail($id);
+
         $this->paciente_id = $paciente->id;
         $this->nac = $paciente->nac;
         $this->cedula = $paciente->cedula;
@@ -65,7 +71,7 @@ class ListPacientes extends Component
         $this->email = $paciente->email;
         $this->direccion = $paciente->direccion;
 
-        $this->dispatch('open-modal-paciente');
+        $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
     public function save()
@@ -89,9 +95,14 @@ class ListPacientes extends Component
             ]
         );
 
-        $this->dispatch('close-modal-paciente');
+        $this->dispatchBrowserEvent('close-modal-paciente');
         session()->flash('message', $this->paciente_id ? 'Paciente actualizado correctamente.' : 'Paciente registrado correctamente.');
         $this->resetFields();
+    }
+
+    public function triggerDeleteConfirm($id)
+    {
+        $this->dispatchBrowserEvent('show-delete-confirmation-paciente', ['id' => $id]);
     }
 
     public function delete($id)
@@ -102,9 +113,11 @@ class ListPacientes extends Component
 
     public function render()
     {
-        $pacientes = Paciente::where('nombres', 'like', '%' . $this->search . '%')
-            ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-            ->orWhere('cedula', 'like', '%' . $this->search . '%')
+        $pacientes = Paciente::where(function($query) {
+                $query->where('nombres', 'like', '%' . $this->search . '%')
+                      ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                      ->orWhere('cedula', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('id', 'desc')
             ->paginate(15);
 
