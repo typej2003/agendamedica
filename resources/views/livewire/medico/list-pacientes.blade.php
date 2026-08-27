@@ -138,25 +138,8 @@
                 </table>
             </div>
 
-            <!-- Paginación con estilo Bootstrap Responsive -->
-            <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                <!-- Botones Ant/Sig personalizados para móvil -->
-                <div class="d-flex justify-content-between w-100 d-md-none">
-                    <button class="btn btn-outline-primary btn-sm px-3" wire:click="previousPage" @if($pacientes->onFirstPage()) disabled @endif>
-                        <i class="bi bi-chevron-left me-1"></i> Anterior
-                    </button>
-                    <span class="small text-muted align-self-center">
-                        Página {{ $pacientes->currentPage() }} de {{ $pacientes->lastPage() }}
-                    </span>
-                    <button class="btn btn-outline-primary btn-sm px-3" wire:click="nextPage" @if(!$pacientes->hasMorePages()) disabled @endif>
-                        Siguiente <i class="bi bi-chevron-right ms-1"></i>
-                    </button>
-                </div>
-
-                <!-- Paginación Estándar para escritorio -->
-                <div class="d-none d-md-block ms-auto">
-                    {{ $pacientes->links() }}
-                </div>
+            <div class="mt-3">
+                {{ $pacientes->links() }}
             </div>
         </div>
     </div>
