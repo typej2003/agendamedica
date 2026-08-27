@@ -164,7 +164,7 @@
     <!-- Modal Formulario Paciente -->
     <div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true" wire:ignore.self>
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <form wire:submit.prevent="save" class="modal-content border-0 shadow">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold fs-6">
                         <i class="bi bi-person-lines-fill me-2"></i>
@@ -173,115 +173,126 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
+                <!-- El scroll funciona correctamente al mantener la estructura nativa modal-body/modal-footer -->
                 <div class="modal-body p-3">
-                    
-                    <!-- Identificación -->
-                    <div class="bg-light p-2 rounded mb-3">
-                        <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación</span>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-semibold">N° Historia</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
-                            @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                    <form id="formPaciente" wire:submit.prevent="save">
+                        
+                        <!-- Identificación -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación</span>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-semibold">Nac.</label>
-                            <select class="form-select form-select-sm" wire:model="nac">
-                                <option value="V">V</option>
-                                <option value="E">E</option>
-                                <option value="P">P</option>
-                            </select>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-semibold">N° Historia</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
+                                @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-semibold">Nac.</label>
+                                <select class="form-select form-select-sm" wire:model="nac">
+                                    <option value="V">V</option>
+                                    <option value="E">E</option>
+                                    <option value="P">P</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="cedula">
+                                @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" wire:model="cedula">
-                            @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
 
-                    <!-- Datos Personales -->
-                    <div class="bg-light p-2 rounded mb-3">
-                        <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-person me-1"></i> Datos Personales</span>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" wire:model="nombres">
-                            @error('nombres') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                        <!-- Datos Personales -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-person me-1"></i> Datos Personales</span>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" wire:model="apellidos">
-                            @error('apellidos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Nombres <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="nombres">
+                                @error('nombres') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Apellidos <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="apellidos">
+                                @error('apellidos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-semibold">Sexo</label>
+                                <select class="form-select form-select-sm" wire:model="sexo">
+                                    <option value="">Seleccione...</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-semibold">Fecha Nacimiento</label>
+                                <input type="date" class="form-control form-control-sm" wire:model="fnacimiento">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Lugar Nacimiento</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="lnacimiento">
+                            </div>
                         </div>
-                        <div class="col-6 col-md-4">
-                            <label class="form-label small fw-semibold">Sexo</label>
-                            <select class="form-select form-select-sm" wire:model="sexo">
-                                <option value="">Seleccione...</option>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <label class="form-label small fw-semibold">Fecha Nacimiento</label>
-                            <input type="date" class="form-control form-control-sm" wire:model="fnacimiento">
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label class="form-label small fw-semibold">Lugar Nacimiento</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="lnacimiento">
-                        </div>
-                    </div>
 
-                    <!-- Contacto y Detalles -->
-                    <div class="bg-light p-2 rounded mb-3">
-                        <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-telephone me-1"></i> Contacto y Perfil</span>
-                    </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold">Teléfono</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="telefono" placeholder="0414-0000000">
+                        <!-- Contacto y Detalles -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-telephone me-1"></i> Contacto y Perfil</span>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold">Email</label>
-                            <input type="email" class="form-control form-control-sm" wire:model="email">
-                            @error('email') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                        <div class="row g-2 mb-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Teléfono</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="telefono" placeholder="0414-0000000">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Email</label>
+                                <input type="email" class="form-control form-control-sm" wire:model="email">
+                                @error('email') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Escolaridad</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="escolaridad">
+                            </div>
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Ocupación</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="ocupacion">
+                            </div>
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Profesión</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="profesion">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Dirección</label>
+                                <textarea class="form-control form-control-sm" rows="2" wire:model="direccion"></textarea>
+                            </div>
                         </div>
-                        <div class="col-4 col-md-4">
-                            <label class="form-label small fw-semibold">Escolaridad</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="escolaridad">
-                        </div>
-                        <div class="col-4 col-md-4">
-                            <label class="form-label small fw-semibold">Ocupación</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="ocupacion">
-                        </div>
-                        <div class="col-4 col-md-4">
-                            <label class="form-label small fw-semibold">Profesión</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="profesion">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-semibold">Dirección</label>
-                            <textarea class="form-control form-control-sm" rows="2" wire:model="direccion"></textarea>
-                        </div>
-                    </div>
 
+                    </form>
                 </div>
                 
                 <div class="modal-footer bg-light py-2">
                     <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-3">Guardar</button>
+                    <!-- Vinculado al id del form mediante la propiedad HTML form -->
+                    <button type="submit" form="formPaciente" class="btn btn-primary btn-sm px-3">Guardar</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('livewire:initialized', () => {
-            const modalElement = document.getElementById('modalPaciente');
-            const modal = new bootstrap.Modal(modalElement);
-            
-            Livewire.on('open-modal-paciente', () => modal.show());
-            Livewire.on('close-modal-paciente', () => modal.hide());
+            const getModalInstance = () => {
+                const modalElement = document.getElementById('modalPaciente');
+                return bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+            };
+
+            Livewire.on('open-modal-paciente', () => {
+                getModalInstance().show();
+            });
+
+            Livewire.on('close-modal-paciente', () => {
+                getModalInstance().hide();
+            });
         });
     </script>
 </div>
