@@ -1,76 +1,117 @@
 <div>
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3">
-            <div class="row align-items-center g-2">
-                <div class="col-12 col-md-6">
-                    <h4 class="mb-0 text-primary fw-bold">
-                        <i class="bi bi-people-fill me-2"></i>Listado de Pacientes
-                    </h4>
+        <!-- Cabecera Limpia -->
+        <div class="card-header bg-white py-3 border-bottom-0">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                <div>
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="bi bi-people-fill me-2"></i>Pacientes
+                    </h5>
+                    <small class="text-muted">Gestión de historias y datos de contacto</small>
                 </div>
-                <div class="col-12 col-md-6 text-md-end">
-                    <button class="btn btn-primary w-100 w-md-auto" wire:click="create">
+                <div>
+                    <button class="btn btn-primary btn-sm w-100 w-sm-auto px-3" wire:click="create">
                         <i class="bi bi-plus-lg me-1"></i> Nuevo Paciente
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body pt-0">
             @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                    <i class="bi bi-check-circle me-1"></i> {{ session('message') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-success alert-dismissible fade show mb-3 py-2" role="alert">
+                    <small><i class="bi bi-check-circle me-1"></i> {{ session('message') }}</small>
+                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
-            <!-- Filtros y Búsqueda -->
+            <!-- Buscador -->
             <div class="row mb-3">
-                <div class="col-12 col-md-6">
-                    <div class="input-group">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light border-end-0">
                             <i class="bi bi-search text-muted"></i>
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
-                            placeholder="Buscar por cédula, nombre, apellido o N° historia..." 
+                            placeholder="Buscar por cédula, nombre o N° historia..." 
                             wire:model.live="search">
                     </div>
                 </div>
             </div>
 
-            <!-- Tabla de Pacientes -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle border-top">
+            <!-- 1. VISTA MÓVIL (Tarjetas compactas en pantallas pequeñas) -->
+            <div class="d-block d-md-none">
+                @forelse($pacientes as $paciente)
+                    <div class="card mb-2 border shadow-none bg-light">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-primary me-1">
+                                        {{ $paciente->nac }}-{{ $paciente->cedula }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        {{ $paciente->pivot->numhistoria ?? 'S/H' }}
+                                    </span>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" wire:confirm="¿Desea eliminar este paciente?">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-dark">{{ $paciente->nombres }} {{ $paciente->apellidos }}</h6>
+                            <div class="text-muted small">
+                                @if($paciente->telefono)
+                                    <div><i class="bi bi-telephone me-1"></i>{{ $paciente->telefono }}</div>
+                                @endif
+                                @if($paciente->email)
+                                    <div><i class="bi bi-envelope me-1"></i>{{ $paciente->email }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-4 text-muted border rounded bg-light">
+                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                        <small>No se encontraron pacientes.</small>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- 2. VISTA ESCRITORIO (Tabla limpia para pantallas medianas y grandes) -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 100px;">Historia</th>
+                            <th scope="col" style="width: 110px;">N° Historia</th>
                             <th scope="col" style="width: 130px;">Cédula</th>
                             <th scope="col">Paciente</th>
-                            <th scope="col" class="d-none d-md-table-cell">Teléfono</th>
-                            <th scope="col" class="d-none d-lg-table-cell">Email</th>
-                            <th scope="col" class="text-center" style="width: 120px;">Acciones</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Email</th>
+                            <th scope="col" class="text-center" style="width: 100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($pacientes as $paciente)
                             <tr>
                                 <td>
-                                    <span class="badge bg-secondary">
+                                    <span class="badge bg-secondary font-monospace">
                                         {{ $paciente->pivot->numhistoria ?? 'S/H' }}
                                     </span>
                                 </td>
                                 <td class="fw-bold text-nowrap">
                                     {{ $paciente->nac }}-{{ $paciente->cedula }}
                                 </td>
-                                <td>
-                                    <div class="fw-bold">{{ $paciente->nombres }} {{ $paciente->apellidos }}</div>
-                                    <small class="text-muted d-block d-md-none">
-                                        <i class="bi bi-telephone"></i> {{ $paciente->telefono ?? 'N/A' }}
-                                    </small>
+                                <td class="fw-semibold">
+                                    {{ $paciente->nombres }} {{ $paciente->apellidos }}
                                 </td>
-                                <td class="d-none d-md-table-cell">
+                                <td class="small">
                                     {{ $paciente->telefono ?? 'N/A' }}
                                 </td>
-                                <td class="d-none d-lg-table-cell">
+                                <td class="small">
                                     {{ $paciente->email ?? 'N/A' }}
                                 </td>
                                 <td class="text-center">
@@ -79,7 +120,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            wire:confirm="¿Está seguro de remover este paciente de su lista?" title="Eliminar">
+                                            wire:confirm="¿Está seguro de remover este paciente?" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -103,12 +144,12 @@
         </div>
     </div>
 
-    <!-- Modal Formulario Paciente Completo -->
+    <!-- Modal Formulario Paciente -->
     <div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true" wire:ignore.self>
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold">
+                    <h5 class="modal-title fw-bold fs-6">
                         <i class="bi bi-person-lines-fill me-2"></i>
                         {{ $paciente_id ? 'Editar Paciente' : 'Nuevo Paciente' }}
                     </h5>
@@ -116,102 +157,103 @@
                 </div>
                 
                 <form wire:submit.prevent="save">
-                    <div class="modal-body">
+                    <div class="modal-body p-3">
                         
-                        <!-- Sección 1: Datos de Historia y Documento -->
-                        <h6 class="text-primary fw-bold mb-3"><i class="bi bi-card-heading me-1"></i> Identificación</h6>
+                        <!-- Identificación -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación</span>
+                        </div>
                         <div class="row g-2 mb-3">
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">N° Historia Médica</label>
-                                <input type="text" class="form-control" wire:model="numhistoria" placeholder="Ej: H-1002">
-                                @error('numhistoria') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-semibold">N° Historia</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
+                                @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Nacionalidad</label>
-                                <select class="form-select" wire:model="nac">
-                                    <option value="V">V - Venezolano</option>
-                                    <option value="E">E - Extranjero</option>
-                                    <option value="P">P - Pasaporte</option>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-semibold">Nac.</label>
+                                <select class="form-select form-select-sm" wire:model="nac">
+                                    <option value="V">V</option>
+                                    <option value="E">E</option>
+                                    <option value="P">P</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="cedula" placeholder="Número de documento">
-                                @error('cedula') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="cedula">
+                                @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <!-- Sección 2: Datos Personales -->
-                        <h6 class="text-primary fw-bold mb-3"><i class="bi bi-person me-1"></i> Datos Personales</h6>
+                        <!-- Datos Personales -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-person me-1"></i> Datos Personales</span>
+                        </div>
                         <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Nombres <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="nombres">
-                                @error('nombres') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Nombres <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="nombres">
+                                @error('nombres') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Apellidos <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="apellidos">
-                                @error('apellidos') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Apellidos <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" wire:model="apellidos">
+                                @error('apellidos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Sexo</label>
-                                <select class="form-select" wire:model="sexo">
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-semibold">Sexo</label>
+                                <select class="form-select form-select-sm" wire:model="sexo">
                                     <option value="">Seleccione...</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Fecha Nacimiento</label>
-                                <input type="date" class="form-control" wire:model="fnacimiento">
-                                @error('fnacimiento') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-semibold">Fecha Nacimiento</label>
+                                <input type="date" class="form-control form-control-sm" wire:model="fnacimiento">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Lugar Nacimiento</label>
-                                <input type="text" class="form-control" wire:model="lnacimiento">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Lugar Nacimiento</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="lnacimiento">
                             </div>
                         </div>
 
-                        <!-- Sección 3: Datos de Contacto y Ubicación -->
-                        <h6 class="text-primary fw-bold mb-3"><i class="bi bi-telephone me-1"></i> Contacto y Profesión</h6>
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Teléfono</label>
-                                <input type="text" class="form-control" wire:model="telefono" placeholder="0414-0000000">
+                        <!-- Contacto y Detalles -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-telephone me-1"></i> Contacto y Perfil</span>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Teléfono</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="telefono" placeholder="0414-0000000">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Correo Electrónico</label>
-                                <input type="email" class="form-control" wire:model="email" placeholder="correo@dominio.com">
-                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Email</label>
+                                <input type="email" class="form-control form-control-sm" wire:model="email">
+                                @error('email') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Escolaridad</label>
-                                <input type="text" class="form-control" wire:model="escolaridad">
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Escolaridad</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="escolaridad">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Ocupación</label>
-                                <input type="text" class="form-control" wire:model="ocupacion">
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Ocupación</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="ocupacion">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Profesión</label>
-                                <input type="text" class="form-control" wire:model="profesion">
+                            <div class="col-4 col-md-4">
+                                <label class="form-label small fw-semibold">Profesión</label>
+                                <input type="text" class="form-control form-control-sm" wire:model="profesion">
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Dirección</label>
-                                <textarea class="form-control" rows="2" wire:model="direccion" placeholder="Dirección de habitación"></textarea>
+                                <label class="form-label small fw-semibold">Dirección</label>
+                                <textarea class="form-control form-control-sm" rows="2" wire:model="direccion"></textarea>
                             </div>
                         </div>
 
                     </div>
                     
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i> Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save me-1"></i> Guardar Paciente
-                        </button>
+                    <div class="modal-footer bg-light py-2">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-3">Guardar</button>
                     </div>
                 </form>
             </div>
