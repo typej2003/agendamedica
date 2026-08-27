@@ -15,5 +15,6 @@ class MedicoPaciente extends Pivot
         'medico_id',
         'paciente_id',
         'numhistoria',
+        'reg-medico',
     ];
 }

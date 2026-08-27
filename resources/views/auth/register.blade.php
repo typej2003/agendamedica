@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'GinecoReport') }} | Registro</title>
+    <title>{{ config('app.name', 'AgendaMédica') }} | Registro</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
-    <!-- Estilos Personalizados GinecoReport -->
+    <!-- Estilos Personalizados Agenda Médica -->
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
 
     <style>
@@ -196,7 +196,7 @@
                         <i class="bi bi-heart-pulse-fill"></i>
                     </div>
                     <h3 class="fw-bold m-0" style="color: var(--dark-color);">
-                        Gineco<span style="color: var(--primary-color);">Report</span>
+                        Agenda<span style="color: var(--primary-color);">Médica</span>
                     </h3>
                 </a>
                 <p class="text-muted small mt-2">Crea tu cuenta seleccionando tu perfil</p>

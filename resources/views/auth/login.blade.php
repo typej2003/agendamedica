@@ -136,7 +136,7 @@
                         <i class="bi bi-heart-pulse-fill"></i>
                     </div>
                     <h3 class="fw-bold mb-1" style="color: var(--dark-color);">
-                        Gineco<span style="color: var(--primary-color);">Report</span>
+                        Agenda<span style="color: var(--primary-color);">Médica</span>
                     </h3>
                 </a>
                 <p class="text-muted small mt-1">Inicia sesión para acceder al sistema</p>
@@ -180,7 +180,7 @@
                     <label for="email" class="form-label small fw-bold" style="color: var(--dark-color);">Correo electrónico</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        <input type="email" name="email" id="email" value="{{ old('email', 'root@admin.com') }}" 
+                        <input type="email" name="email" id="email" value="{{ old('email', 'carlos@gmail.com') }}" 
                                class="form-control @error('email') is-invalid @enderror" 
                                placeholder="ejemplo@correo.com" required autocomplete="email" autofocus>
                         @error('email')
