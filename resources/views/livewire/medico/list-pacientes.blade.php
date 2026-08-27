@@ -33,8 +33,8 @@
                             <i class="bi bi-search text-muted"></i>
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
-                            placeholder="Buscar por cédula, nombre o N° historia..." 
-                            wire:model.live="search">
+                            placeholder="Buscar por cédula o nombre..." 
+                            wire:model="search">
                     </div>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" wire:confirm="¿Desea eliminar este paciente?">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente?') || event.stopImmediatePropagation()">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -120,7 +120,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            wire:confirm="¿Está seguro de remover este paciente?" title="Eliminar">
+                                            onclick="confirm('¿Está seguro de remover este paciente?') || event.stopImmediatePropagation()" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -138,9 +138,8 @@
                 </table>
             </div>
 
-            <!-- Paginación con estilo Bootstrap Responsive -->
+            <!-- Paginación -->
             <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                <!-- Botones Ant/Sig personalizados para móvil -->
                 <div class="d-flex justify-content-between w-100 d-md-none">
                     <button class="btn btn-outline-primary btn-sm px-3" wire:click="previousPage" @if($pacientes->onFirstPage()) disabled @endif>
                         <i class="bi bi-chevron-left me-1"></i> Anterior
@@ -153,7 +152,6 @@
                     </button>
                 </div>
 
-                <!-- Paginación Estándar para escritorio -->
                 <div class="d-none d-md-block ms-auto">
                     {{ $pacientes->links() }}
                 </div>
@@ -277,13 +275,19 @@
         </div>
     </div>
 
+    <!-- Script Corregido para Bootstrap 5 y Livewire 2 -->
     <script>
-        document.addEventListener('livewire:initialized', () => {
+        document.addEventListener('DOMContentLoaded', function () {
             const modalElement = document.getElementById('modalPaciente');
-            const modal = new bootstrap.Modal(modalElement);
-            
-            Livewire.on('open-modal-paciente', () => modal.show());
-            Livewire.on('close-modal-paciente', () => modal.hide());
+            const bsModal = new bootstrap.Modal(modalElement);
+
+            window.addEventListener('open-modal-paciente', () => {
+                bsModal.show();
+            });
+
+            window.addEventListener('close-modal-paciente', () => {
+                bsModal.hide();
+            });
         });
     </script>
 </div>
