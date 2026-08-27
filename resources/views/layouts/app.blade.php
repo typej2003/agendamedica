@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <title>@yield('title', 'GinecoReport - Bienvenidos')</title>
+    <title>@yield('title', 'Agenda Médica - Bienvenidos')</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -14,7 +14,7 @@
         :root {
             --sidebar-width: 260px;
             --sidebar-collapsed-width: 80px;
-            --navbar-height: 110px; /* Sincronizado con el alto de tu navbar */
+            --navbar-height: 80px; /* Sincronizado con el alto de tu navbar */
             --purple-wifiexpres: #6500da;
             --orange-wifiexpres: #ff572f;
         }

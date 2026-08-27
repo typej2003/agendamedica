@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-gineco fixed-top py-3 shadow-sm bg-white">
     <div class="container">
         <a class="navbar-brand fs-3 fw-bold" href="{{ url('/') }}">
-            <i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>Gineco<span style="color: #6500da;">Report</span>
+            <i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>Agenda<span style="color: #6500da;">Médica</span>
         </a>
 
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">

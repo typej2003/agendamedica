@@ -15,6 +15,7 @@ class CustomLoginController extends Controller
 {
     public function login(Request $request)
     {
+        
         $request->validate([
             'email'     => 'required|email',
             'password'  => 'required|string',
@@ -45,7 +46,6 @@ class CustomLoginController extends Controller
         // 2. Caso Médico (Modelo Medico)
         if ($userType === 'Medico') {
             $medico = Medico::where('email', $email)->first();
-
             if (!$medico) {
                 throw ValidationException::withMessages([
                     'email' => ["No existe ningún médico registrado con el correo {$email}."],

@@ -48,6 +48,25 @@
             </li>
         @endif
 
+        @if(auth()->user()->hasRole('Medico'))
+            <li class="nav-header">AGENDA MÉDICA</li>
+
+            <li class="nav-item">
+                <a href="{{ route('medico.medicos') }}" class="nav-link {{ request()->routeIs('medico.medicos') ? 'active' : '' }}">
+                    <i class="bi bi-person-badge"></i>
+                    <span class="link-text">Médicos</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('medico.pacientes') }}" class="nav-link {{ request()->routeIs('medico.pacientes') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Pacientes</span>
+                </a>
+            </li>
+
+        @endif
+
         <li class="nav-header">ADMINISTRACIÓN</li>
 
         @if(auth()->user()->can('ver-usuarios') || auth()->user()->hasRole('Root'))

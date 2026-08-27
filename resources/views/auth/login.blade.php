@@ -117,6 +117,12 @@
             border-color: var(--primary-color);
             color: #ffffff;
         }
+
+        /* Estilo para deshabilitar visualmente el grupo de botones */
+        .disabled-group {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -136,19 +142,30 @@
                 <p class="text-muted small mt-1">Inicia sesión para acceder al sistema</p>
             </div>
 
-            <form action="{{ route('login') }}" method="post">
+            <form action="{{ route('login') }}" method="post" id="loginForm">
                 @csrf
 
-                <!-- Selector del Tipo de Usuario -->
-                <div class="mb-4">
+                <!-- Campo Hidden para enviar la opción de usuario cuando esté deshabilitado el radio -->
+                <input type="hidden" name="user_type" id="hidden_user_type" value="{{ old('user_type', 'Paciente') }}">
+
+                <!-- Toggle para acceso de Administración/Sistema -->
+                <div class="form-check form-switch mb-3 d-flex justify-content-center align-items-center gap-2 ps-0">
+                    <input class="form-check-input ms-0" type="checkbox" role="switch" id="systemAccessCheck" {{ old('user_type') == 'Root' ? 'checked' : '' }}>
+                    <label class="form-check-label small fw-bold" for="systemAccessCheck" style="color: var(--dark-color);">
+                        Acceso de Administración / Sistema
+                    </label>
+                </div>
+
+                <!-- Selector del Tipo de Usuario (Paciente / Médico) -->
+                <div class="mb-4" id="userTypeContainer">
                     <label class="form-label small fw-bold d-block text-center mb-2" style="color: var(--dark-color);">Acceder como:</label>
-                    <div class="btn-group w-100 user-type-selector" role="group">
-                        <input type="radio" class="btn-check" name="user_type" id="type_paciente" value="Paciente" {{ old('user_type', 'Paciente') == 'Paciente' ? 'checked' : '' }}>
+                    <div class="btn-group w-100 user-type-selector" role="group" id="btnGroupUserType">
+                        <input type="radio" class="btn-check user-type-radio" name="user_type_option" id="type_paciente" value="Paciente" {{ old('user_type', 'Paciente') == 'Paciente' ? 'checked' : '' }}>
                         <label class="btn btn-outline-primary fw-semibold" for="type_paciente">
                             <i class="bi bi-person me-1"></i> Paciente
                         </label>
 
-                        <input type="radio" class="btn-check" name="user_type" id="type_medico" value="Medico" {{ old('user_type') == 'Medico' ? 'checked' : '' }}>
+                        <input type="radio" class="btn-check user-type-radio" name="user_type_option" id="type_medico" value="Medico" {{ old('user_type') == 'Medico' ? 'checked' : '' }}>
                         <label class="btn btn-outline-primary fw-semibold" for="type_medico">
                             <i class="bi bi-person-badge me-1"></i> Médico
                         </label>
@@ -239,21 +256,56 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Script Alternar Contraseña -->
+    <!-- Lógica JavaScript para el control de la interfaz -->
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function () {
-            const passwordInput = document.getElementById('password');
-            const icon = document.getElementById('toggleIcon');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
+        document.addEventListener('DOMContentLoaded', function () {
+            const systemCheck = document.getElementById('systemAccessCheck');
+            const btnGroupUserType = document.getElementById('btnGroupUserType');
+            const radios = document.querySelectorAll('.user-type-radio');
+            const hiddenUserType = document.getElementById('hidden_user_type');
+
+            function toggleUserTypeSelector() {
+                if (systemCheck.checked) {
+                    btnGroupUserType.classList.add('disabled-group');
+                    radios.forEach(radio => radio.disabled = true);
+                    hiddenUserType.value = 'Root';
+                } else {
+                    btnGroupUserType.classList.remove('disabled-group');
+                    radios.forEach(radio => radio.disabled = false);
+                    
+                    const checkedRadio = document.querySelector('.user-type-radio:checked');
+                    hiddenUserType.value = checkedRadio ? checkedRadio.value : 'Paciente';
+                }
             }
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (!systemCheck.checked) {
+                        hiddenUserType.value = this.value;
+                    }
+                });
+            });
+
+            systemCheck.addEventListener('change', toggleUserTypeSelector);
+
+            // Inicialización según el estado precargado
+            toggleUserTypeSelector();
+
+            // Toggle para mostrar/ocultar contraseña
+            document.getElementById('togglePassword').addEventListener('click', function () {
+                const passwordInput = document.getElementById('password');
+                const icon = document.getElementById('toggleIcon');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                }
+            });
         });
     </script>
 </body>
