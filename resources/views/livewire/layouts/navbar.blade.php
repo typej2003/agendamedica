@@ -23,8 +23,9 @@
                 <li class="nav-item ms-lg-2">
                     @if (Route::has('login'))
                         @auth
-                            <div class="dropdown">
-                                <a href="#" class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <!-- wire:ignore.self evita que Livewire destruya la instancia JS del dropdown al actualizar -->
+                            <div class="dropdown" wire:ignore.self>
+                                <a href="#" class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                                     <i class="bi bi-person-circle fs-5"></i>
                                     <span>{{ Auth::user()->name }}</span>
                                 </a>
@@ -38,7 +39,7 @@
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
-                                            <button type="submit" class="dropdown-item text-danger">
+                                            <button type="submit" class="dropdown-item text-danger w-100 text-start">
                                                 <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
                                             </button>
                                         </form>

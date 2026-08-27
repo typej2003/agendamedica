@@ -6,15 +6,19 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <title>@yield('title', 'Agenda Médica - Bienvenidos')</title>
     
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- Estilos Personalizados Gineco -->
+    <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
+
     @livewireStyles
     <style>
         :root {
             --sidebar-width: 260px;
             --sidebar-collapsed-width: 80px;
-            --navbar-height: 80px; /* Sincronizado con el alto de tu navbar */
+            --navbar-height: 80px;
             --purple-wifiexpres: #6500da;
             --orange-wifiexpres: #ff572f;
         }
@@ -30,7 +34,6 @@
             min-height: calc(100vh - var(--navbar-height));
         }
 
-        /* Sidebar y Contenido */
         #sidebarMenu {
             width: var(--sidebar-width);
             background: white;
@@ -38,9 +41,9 @@
             transition: width 0.3s ease-in-out;
             z-index: 1000;
             position: sticky;
-            top: var(--navbar-height); /* Lo mantiene fijo debajo del navbar */
-            height: calc(100vh - var(--navbar-height)); /* Ocupa el alto restante */
-            overflow-y: auto; /* Muestra scrollbar vertical solo si es necesario */
+            top: var(--navbar-height);
+            height: calc(100vh - var(--navbar-height));
+            overflow-y: auto;
         }
 
         #sidebarMenu:has(.minimized) {
@@ -53,7 +56,6 @@
             min-width: 0; 
         }
 
-        /* Estilos personalizados para el Dropdown */
         .custom-dropdown {
             border-top: 4px solid var(--purple-wifiexpres) !important;
             border-radius: 8px !important;
@@ -68,7 +70,6 @@
 
         .text-purple { color: var(--purple-wifiexpres) !important; }
 
-        /* Estilos del nuevo Sidebar */
         .sidebar-nav .nav-link {
             display: flex;
             align-items: center;
@@ -103,7 +104,7 @@
             text-transform: uppercase;
             letter-spacing: .5px;
         }
-        /* Estilos para el modo minimizado */
+
         #sidebarMenu:has(.minimized) .sidebar-nav .link-text,
         #sidebarMenu:has(.minimized) .nav-header {
             display: none;
@@ -126,11 +127,7 @@
 </head>
 <body>
 
-    @auth
-        @livewire('layouts.navbar')
-    @else
-        @livewire('layouts.navbar')
-    @endauth
+    @livewire('layouts.navbar')
 
     <div id="wrapper">
         @auth
@@ -140,8 +137,8 @@
         @endauth
 
         <main class="main-content">
-            {{-- $slot es para componentes Livewire de página completa, @yield es para vistas Blade --}}
-            {{ $slot ?? '' }} @yield('content')
+            {{ $slot ?? '' }}
+            @yield('content')
         </main>
     </div>
 
@@ -149,40 +146,43 @@
 
     @livewireScripts
     
+    <!-- Bootstrap 5 JS Bundle (Debe ir DESPUÉS de Livewire Scripts) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/gineco.js') }}"></script>
 
     <script>
-        // Función para inicializar dropdowns
         function initDropdowns() {
-            const dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
-            dropdownElementList.map(function (dropdownToggleEl) {
-                // Limpiar instancia previa para evitar que se bloquee
+            const dropdownElementList = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+            dropdownElementList.forEach(dropdownToggleEl => {
                 const existing = bootstrap.Dropdown.getInstance(dropdownToggleEl);
-                if(existing) existing.dispose();
-                return new bootstrap.Dropdown(dropdownToggleEl);
+                if (existing) {
+                    existing.dispose();
+                }
+                new bootstrap.Dropdown(dropdownToggleEl);
             });
         }
 
-        // Ejecución inicial
         document.addEventListener("DOMContentLoaded", initDropdowns);
 
-        // Gancho para Livewire 2: Reinicia tras cada actualización
+        // Soporte tanto para Livewire v2 como v3
         document.addEventListener("livewire:load", function() {
-            window.livewire.hook('message.processed', () => {
-                initDropdowns();
-            });
+            if (window.livewire) {
+                window.livewire.hook('message.processed', () => initDropdowns());
+            }
+        });
+        document.addEventListener("livewire:initialized", function () {
+            if (typeof Livewire !== 'undefined') {
+                Livewire.hook('morph.updated', () => initDropdowns());
+            }
         });
 
-        // Lógica Sidebar
         window.addEventListener('toggleSidebar', () => {
             const sidebar = document.getElementById('sidebarMenu');
             if(sidebar) sidebar.classList.toggle('show');
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @livewireScripts
-    @stack('js') {{-- ESTA LÍNEA ES VITAL --}}
-</body>
+    @stack('js')
 </body>
 </html>
