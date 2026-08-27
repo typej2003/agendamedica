@@ -2,7 +2,7 @@
     <div class="container">
         <div class="d-flex align-items-center">
             @auth
-                <!-- Botón para alternar el Sidebar en pantallas móviles (max-width: 991px) -->
+                <!-- Botón exclusivo para alternar el Sidebar en móviles -->
                 <button class="btn btn-link text-dark p-0 me-3 d-lg-none" type="button" onclick="window.dispatchEvent(new CustomEvent('toggleSidebar'))" aria-label="Toggle Sidebar">
                     <i class="bi bi-list fs-2"></i>
                 </button>
@@ -13,9 +13,12 @@
             </a>
         </div>
 
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        @guest
+            <!-- El botón hamburguesa del Navbar solo se muestra a visitantes no autenticados en móvil -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        @endguest
 
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
@@ -32,6 +35,7 @@
                 <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
                     @if (Route::has('login'))
                         @auth
+                            <!-- En móviles, el acceso de usuario se mantiene visible en el Navbar sin necesidad de colapsar -->
                             <div class="dropdown" wire:ignore.self>
                                 <a href="#" class="btn btn-outline-primary dropdown-toggle d-flex align-items-center justify-content-between justify-content-lg-start gap-2 w-100 w-lg-auto" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                                     <div class="d-flex align-items-center gap-2">
