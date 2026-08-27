@@ -138,8 +138,14 @@
                 </table>
             </div>
 
-            <div class="mt-3">
-                {{ $pacientes->links() }}
+            <!-- Paginación Simplificada y Adaptable -->
+            <div class="mt-3 d-flex justify-content-center justify-content-md-end">
+                <div class="d-block d-md-none w-100">
+                    {{ $pacientes->links('pagination::simple-bootstrap-5') }}
+                </div>
+                <div class="d-none d-md-block">
+                    {{ $pacientes->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         </div>
     </div>
