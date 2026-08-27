@@ -5,6 +5,8 @@ namespace App\Http\Livewire\Medico;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Paciente;
+use App\Models\Medico;
+use Illuminate\Support\Facades\Auth;
 
 class ListPacientes extends Component
 {
@@ -69,7 +71,11 @@ class ListPacientes extends Component
 
     public function edit($id)
     {
+        $medico = Medico::where('user_id', Auth::id())->first();
+
+        // Se busca el paciente y se obtiene la relación pivote con el médico actual
         $paciente = Paciente::findOrFail($id);
+        
         $this->paciente_id = $paciente->id;
         $this->nac = $paciente->nac;
         $this->cedula = $paciente->cedula;
@@ -85,6 +91,12 @@ class ListPacientes extends Component
         $this->ocupacion = $paciente->ocupacion;
         $this->profesion = $paciente->profesion;
 
+        // Cargar el número de historia registrado en la pivote para este médico
+        if ($medico) {
+            $pivotData = $medico->pacientes()->where('paciente_id', $id)->first();
+            $this->numhistoria = $pivotData ? $pivotData->pivot->numhistoria : '';
+        }
+
         $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
@@ -95,7 +107,7 @@ class ListPacientes extends Component
 
         $this->validate($rules);
 
-        Paciente::updateOrCreate(
+        $paciente = Paciente::updateOrCreate(
             ['id' => $this->paciente_id],
             [
                 'nac' => $this->nac,
@@ -114,6 +126,17 @@ class ListPacientes extends Component
             ]
         );
 
+        // Vincular o actualizar datos en la tabla pivote medico_pacientes
+        $medico = Medico::where('user_id', Auth::id())->first();
+        if ($medico) {
+            $medico->pacientes()->syncWithoutDetaching([
+                $paciente->id => [
+                    'numhistoria' => $this->numhistoria,
+                    'reg-medico' => $medico->{'reg-medico'} ?? null,
+                ]
+            ]);
+        }
+
         $this->dispatchBrowserEvent('close-modal-paciente');
         session()->flash('message', $this->paciente_id ? 'Paciente actualizado correctamente.' : 'Paciente registrado correctamente.');
         $this->resetFields();
@@ -121,17 +144,33 @@ class ListPacientes extends Component
 
     public function delete($id)
     {
-        Paciente::findOrFail($id)->delete();
-        session()->flash('message', 'Paciente eliminado correctamente.');
+        $medico = Medico::where('user_id', Auth::id())->first();
+        if ($medico) {
+            // Desvincular al paciente de este médico en la tabla pivote
+            $medico->pacientes()->detach($id);
+        }
+        
+        session()->flash('message', 'Paciente removido de su lista correctamente.');
     }
 
     public function render()
     {
-        $pacientes = Paciente::where('nombres', 'like', '%' . $this->search . '%')
-            ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-            ->orWhere('cedula', 'like', '%' . $this->search . '%')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $medico = Medico::where('user_id', Auth::id())->first();
+
+        if ($medico) {
+            $pacientes = $medico->pacientes()
+                ->withPivot('numhistoria', 'reg-medico')
+                ->where(function ($query) {
+                    $query->where('nombres', 'like', '%' . $this->search . '%')
+                        ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                        ->orWhere('cedula', 'like', '%' . $this->search . '%')
+                        ->orWhere('medico_pacientes.numhistoria', 'like', '%' . $this->search . '%');
+                })
+                ->orderBy('pacientes.id', 'desc')
+                ->paginate(15);
+        } else {
+            $pacientes = collect([])->paginate(15);
+        }
 
         return view('livewire.medico.list-pacientes', compact('pacientes'));
     }
