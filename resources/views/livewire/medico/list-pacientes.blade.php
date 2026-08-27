@@ -34,12 +34,12 @@
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
                             placeholder="Buscar por cédula, nombre o N° historia..." 
-                            wire:model.live="search">
+                            wire:model="search">
                     </div>
                 </div>
             </div>
 
-            <!-- 1. VISTA MÓVIL (Tarjetas compactas en pantallas pequeñas) -->
+            <!-- 1. VISTA MÓVIL (Tarjetas compactas) -->
             <div class="d-block d-md-none">
                 @forelse($pacientes as $paciente)
                     <div class="card mb-2 border shadow-none bg-light">
@@ -50,14 +50,14 @@
                                         {{ $paciente->nac }}-{{ $paciente->cedula }}
                                     </span>
                                     <span class="badge bg-secondary">
-                                        {{ $paciente->pivot->numhistoria ?? 'S/H' }}
+                                        {{ $paciente->numhistoria ?? ($paciente->pivot->numhistoria ?? 'S/H') }}
                                     </span>
                                 </div>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" wire:confirm="¿Desea eliminar este paciente?">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="confirm('¿Desea eliminar este paciente?') || event.stopImmediatePropagation()" wire:click="delete({{ $paciente->id }})">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -81,7 +81,7 @@
                 @endforelse
             </div>
 
-            <!-- 2. VISTA ESCRITORIO (Tabla limpia para pantallas medianas y grandes) -->
+            <!-- 2. VISTA ESCRITORIO -->
             <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
@@ -99,7 +99,7 @@
                             <tr>
                                 <td>
                                     <span class="badge bg-secondary font-monospace">
-                                        {{ $paciente->pivot->numhistoria ?? 'S/H' }}
+                                        {{ $paciente->numhistoria ?? ($paciente->pivot->numhistoria ?? 'S/H') }}
                                     </span>
                                 </td>
                                 <td class="fw-bold text-nowrap">
@@ -119,8 +119,7 @@
                                         <button class="btn btn-outline-warning" wire:click="edit({{ $paciente->id }})" title="Editar">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            wire:confirm="¿Está seguro de remover este paciente?" title="Eliminar">
+                                        <button class="btn btn-outline-danger" onclick="confirm('¿Está seguro de remover este paciente?') || event.stopImmediatePropagation()" wire:click="delete({{ $paciente->id }})" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -140,7 +139,6 @@
 
             <!-- Paginación con estilo Bootstrap Responsive -->
             <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                <!-- Botones Ant/Sig personalizados para móvil -->
                 <div class="d-flex justify-content-between w-100 d-md-none">
                     <button class="btn btn-outline-primary btn-sm px-3" wire:click="previousPage" @if($pacientes->onFirstPage()) disabled @endif>
                         <i class="bi bi-chevron-left me-1"></i> Anterior
@@ -153,7 +151,6 @@
                     </button>
                 </div>
 
-                <!-- Paginación Estándar para escritorio -->
                 <div class="d-none d-md-block ms-auto">
                     {{ $pacientes->links() }}
                 </div>
@@ -278,12 +275,17 @@
     </div>
 
     <script>
-        document.addEventListener('livewire:initialized', () => {
+        document.addEventListener('DOMContentLoaded', function () {
             const modalElement = document.getElementById('modalPaciente');
             const modal = new bootstrap.Modal(modalElement);
             
-            Livewire.on('open-modal-paciente', () => modal.show());
-            Livewire.on('close-modal-paciente', () => modal.hide());
+            window.addEventListener('open-modal-paciente', event => {
+                modal.show();
+            });
+
+            window.addEventListener('close-modal-paciente', event => {
+                modal.hide();
+            });
         });
     </script>
 </div>

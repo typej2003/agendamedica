@@ -14,7 +14,10 @@ class ListPacientes extends Component
 
     public $search = '';
     public $paciente_id;
+    
+    // Propiedades del formulario
     public $nac = 'V', $cedula, $nombres, $apellidos, $sexo, $telefono, $email, $direccion;
+    public $numhistoria, $fnacimiento, $lnacimiento, $escolaridad, $ocupacion, $profesion;
 
     protected $rules = [
         'nac' => 'nullable|string|max:2',
@@ -25,6 +28,12 @@ class ListPacientes extends Component
         'telefono' => 'nullable|string|max:50',
         'email' => 'nullable|email|max:255',
         'direccion' => 'nullable|string',
+        'numhistoria' => 'nullable|string|max:50',
+        'fnacimiento' => 'nullable|date',
+        'lnacimiento' => 'nullable|string|max:255',
+        'escolaridad' => 'nullable|string|max:255',
+        'ocupacion' => 'nullable|string|max:255',
+        'profesion' => 'nullable|string|max:255',
     ];
 
     public function updatingSearch()
@@ -43,13 +52,20 @@ class ListPacientes extends Component
         $this->telefono = '';
         $this->email = '';
         $this->direccion = '';
+        $this->numhistoria = '';
+        $this->fnacimiento = '';
+        $this->lnacimiento = '';
+        $this->escolaridad = '';
+        $this->ocupacion = '';
+        $this->profesion = '';
         $this->resetValidation();
     }
 
     public function create()
     {
         $this->resetFields();
-        $this->dispatch('open-modal-paciente');
+        // En Livewire v2 se usa dispatchBrowserEvent para emitir eventos a JS
+        $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
     public function edit($id)
@@ -64,8 +80,14 @@ class ListPacientes extends Component
         $this->telefono = $paciente->telefono;
         $this->email = $paciente->email;
         $this->direccion = $paciente->direccion;
+        $this->numhistoria = $paciente->numhistoria;
+        $this->fnacimiento = $paciente->fnacimiento;
+        $this->lnacimiento = $paciente->lnacimiento;
+        $this->escolaridad = $paciente->escolaridad;
+        $this->ocupacion = $paciente->ocupacion;
+        $this->profesion = $paciente->profesion;
 
-        $this->dispatch('open-modal-paciente');
+        $this->dispatchBrowserEvent('open-modal-paciente');
     }
 
     public function save()
@@ -86,10 +108,16 @@ class ListPacientes extends Component
                 'telefono' => $this->telefono,
                 'email' => $this->email,
                 'direccion' => $this->direccion,
+                'numhistoria' => $this->numhistoria,
+                'fnacimiento' => $this->fnacimiento,
+                'lnacimiento' => $this->lnacimiento,
+                'escolaridad' => $this->escolaridad,
+                'ocupacion' => $this->ocupacion,
+                'profesion' => $this->profesion,
             ]
         );
 
-        $this->dispatch('close-modal-paciente');
+        $this->dispatchBrowserEvent('close-modal-paciente');
         session()->flash('message', $this->paciente_id ? 'Paciente actualizado correctamente.' : 'Paciente registrado correctamente.');
         $this->resetFields();
     }
@@ -105,6 +133,7 @@ class ListPacientes extends Component
         $pacientes = Paciente::where('nombres', 'like', '%' . $this->search . '%')
             ->orWhere('apellidos', 'like', '%' . $this->search . '%')
             ->orWhere('cedula', 'like', '%' . $this->search . '%')
+            ->orWhere('numhistoria', 'like', '%' . $this->search . '%')
             ->orderBy('id', 'desc')
             ->paginate(15);
 
