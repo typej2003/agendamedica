@@ -34,7 +34,7 @@
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
                             placeholder="Buscar por cédula, nombre o N° historia..." 
-                            wire:model.live="search">
+                            wire:model="search">
                     </div>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" wire:confirm="¿Desea eliminar este paciente?">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente?') || event.stopImmediatePropagation()">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -120,7 +120,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            wire:confirm="¿Está seguro de remover este paciente?" title="Eliminar">
+                                            onclick="confirm('¿Está seguro de remover este paciente?') || event.stopImmediatePropagation()" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -173,7 +173,6 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <!-- El scroll funciona correctamente al mantener la estructura nativa modal-body/modal-footer -->
                 <div class="modal-body p-3">
                     <form id="formPaciente" wire:submit.prevent="save">
                         
@@ -272,7 +271,6 @@
                 
                 <div class="modal-footer bg-light py-2">
                     <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
-                    <!-- Vinculado al id del form mediante la propiedad HTML form -->
                     <button type="submit" form="formPaciente" class="btn btn-primary btn-sm px-3">Guardar</button>
                 </div>
             </div>
@@ -280,18 +278,16 @@
     </div>
 
     <script>
-        document.addEventListener('livewire:initialized', () => {
-            const getModalInstance = () => {
-                const modalElement = document.getElementById('modalPaciente');
-                return bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-            };
+        document.addEventListener('livewire:load', function () {
+            var modalElement = document.getElementById('modalPaciente');
+            var modalPaciente = new bootstrap.Modal(modalElement);
 
-            Livewire.on('open-modal-paciente', () => {
-                getModalInstance().show();
+            Livewire.on('open-modal-paciente', function () {
+                modalPaciente.show();
             });
 
-            Livewire.on('close-modal-paciente', () => {
-                getModalInstance().hide();
+            Livewire.on('close-modal-paciente', function () {
+                modalPaciente.hide();
             });
         });
     </script>
