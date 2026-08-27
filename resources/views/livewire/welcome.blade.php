@@ -17,7 +17,10 @@
 
         @livewireStyles
     </head>
-    <body>
+    <body class="pt-5 mt-4">
+
+        <!-- Navbar Integrada -->
+        @livewire('layouts.navbar')
 
         <!-- Hero Section con Componente Livewire Integrado -->
         <section class="hero-section" id="inicio">
@@ -122,13 +125,33 @@
             </div>
         </footer>
 
+        @livewireScripts
+
         <!-- Bootstrap 5 JS Bundle -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         
         <!-- JS Personalizado Gineco -->
         <script src="{{ asset('js/gineco.js') }}"></script>
 
-        @livewireScripts
+        <script>
+            // Función para re-inicializar Dropdowns de Bootstrap en Livewire
+            function initDropdowns() {
+                const dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+                dropdownElementList.map(function (dropdownToggleEl) {
+                    const existing = bootstrap.Dropdown.getInstance(dropdownToggleEl);
+                    if(existing) existing.dispose();
+                    return new bootstrap.Dropdown(dropdownToggleEl);
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", initDropdowns);
+
+            // Re-vincular eventos al actualizar componentes Livewire (v2/v3)
+            document.addEventListener("livewire:navigated", initDropdowns);
+            document.addEventListener("livewire:initialized", function () {
+                Livewire.hook('morph.updated', () => { initDropdowns(); });
+            });
+        </script>
     </body>
     </html>
 </div>
