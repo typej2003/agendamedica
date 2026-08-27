@@ -34,7 +34,7 @@
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
                             placeholder="Buscar por cédula, nombre o N° historia..." 
-                            wire:model="search">
+                            wire:model.live="search">
                     </div>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente?') || event.stopImmediatePropagation()">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" wire:confirm="¿Desea eliminar este paciente?">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -120,7 +120,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            onclick="confirm('¿Está seguro de remover este paciente?') || event.stopImmediatePropagation()" title="Eliminar">
+                                            wire:confirm="¿Está seguro de remover este paciente?" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -173,8 +173,8 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <div class="modal-body p-3">
-                    <form id="formPaciente" wire:submit.prevent="save">
+                <form wire:submit.prevent="save">
+                    <div class="modal-body p-3">
                         
                         <!-- Identificación -->
                         <div class="bg-light p-2 rounded mb-3">
@@ -266,29 +266,24 @@
                             </div>
                         </div>
 
-                    </form>
-                </div>
-                
-                <div class="modal-footer bg-light py-2">
-                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formPaciente" class="btn btn-primary btn-sm px-3">Guardar</button>
-                </div>
+                    </div>
+                    
+                    <div class="modal-footer bg-light py-2">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-3">Guardar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('livewire:load', function () {
-            var modalElement = document.getElementById('modalPaciente');
-            var modalPaciente = new bootstrap.Modal(modalElement);
-
-            Livewire.on('open-modal-paciente', function () {
-                modalPaciente.show();
-            });
-
-            Livewire.on('close-modal-paciente', function () {
-                modalPaciente.hide();
-            });
+        document.addEventListener('livewire:initialized', () => {
+            const modalElement = document.getElementById('modalPaciente');
+            const modal = new bootstrap.Modal(modalElement);
+            
+            Livewire.on('open-modal-paciente', () => modal.show());
+            Livewire.on('close-modal-paciente', () => modal.hide());
         });
     </script>
 </div>
