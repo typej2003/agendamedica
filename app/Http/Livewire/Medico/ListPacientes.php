@@ -118,11 +118,11 @@ class ListPacientes extends Component
     {
         $paciente = Paciente::findOrFail($id);
         
-        // Obtenemos el registro del médico a través de user_id
+        // 1. Obtener el ID del Médico utilizando el user_id del Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
         $medicoId = $medico ? $medico->id : null;
 
-        // Obtener el registro pivot correspondiente a este médico y paciente
+        // 2. Obtener el numhistoria del pivote MedicoPaciente
         $relacionMedico = MedicoPaciente::where('paciente_id', $paciente->id)
             ->where('medico_id', $medicoId)
             ->first();
@@ -154,11 +154,11 @@ class ListPacientes extends Component
         try {
             DB::beginTransaction();
 
-            // Obtenemos el ID del registro medico correspondiente al user_id conectado
+            // Obtener el registro del médico a través del ID del usuario autenticado
             $medico = Medico::where('user_id', Auth::id())->first();
-            
+
             if (!$medico) {
-                throw new \Exception('No se encontró el perfil de médico para este usuario.');
+                throw new \Exception('No se encontró el registro de médico asociado a este usuario.');
             }
 
             $medicoId = $medico->id;
@@ -187,7 +187,7 @@ class ListPacientes extends Component
                 $paciente = Paciente::findOrFail($this->paciente_id);
                 $paciente->update($data);
 
-                // Actualizar la relación pivot MedicoPaciente
+                // Guardar o actualizar la relación en medico_pacientes
                 MedicoPaciente::updateOrCreate(
                     [
                         'medico_id'   => $medicoId,
@@ -202,7 +202,7 @@ class ListPacientes extends Component
             } else {
                 $paciente = Paciente::create($data);
 
-                // Crear la relación pivot MedicoPaciente
+                // Crear el registro de la relación en medico_pacientes
                 MedicoPaciente::create([
                     'medico_id'   => $medicoId,
                     'paciente_id' => $paciente->id,
@@ -236,12 +236,12 @@ class ListPacientes extends Component
             $medico = Medico::where('user_id', Auth::id())->first();
             $medicoId = $medico ? $medico->id : null;
 
-            // Desvincular de la relación MedicoPaciente
+            // Eliminar la relación pivot MedicoPaciente
             MedicoPaciente::where('paciente_id', $id)
                 ->where('medico_id', $medicoId)
                 ->delete();
 
-            // Eliminar el registro de paciente si aplica
+            // Eliminar el paciente
             $paciente->delete();
 
             $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
@@ -254,20 +254,21 @@ class ListPacientes extends Component
     {
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
 
-        // Buscamos el médico asociado al usuario logueado (user_id = Auth::id())
+        // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
 
         if ($medico) {
+            // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
             $pacientes = $medico->pacientes()
                 ->with(['historias.medicalCenter'])
                 ->withPivot('numhistoria')
-                // Filtro por Centro Médico (mediante las historias asociadas)
+                // Filtro por Centro Médico si se seleccionó alguno
                 ->when($this->medical_center_id_filtro, function ($query) {
                     $query->whereHas('historias', function ($q) {
                         $q->where('medical_center_id', $this->medical_center_id_filtro);
                     });
                 })
-                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
+                // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
                         $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
@@ -278,7 +279,7 @@ class ListPacientes extends Component
                 })
                 ->paginate(10);
         } else {
-            // Genera una paginación vacía válida para evitar errores con $pacientes->links() en Blade
+            // Devolver un Paginador vacío para mantener la compatibilidad con el renderizado de la vista
             $pacientes = Paciente::whereRaw('1 = 0')->paginate(10);
         }
 
