@@ -18,7 +18,7 @@ class RootDashboard extends Component
         $totalPacientes = Paciente::count();
         $totalMedicos = Medico::count();
 
-        // Obtener todos los usuarios y filtrar los activos en Caché
+        // Obtener usuarios activos en Caché
         $todosLosUsuarios = User::all();
         
         $listaUsuariosConectados = $todosLosUsuarios->filter(function ($user) {
@@ -27,7 +27,7 @@ class RootDashboard extends Component
 
         $usuariosConectados = $listaUsuariosConectados->count();
 
-        // Métricas de Citas Globales usando la tabla 'cola'
+        // Métricas de Citas usando la tabla 'cola'
         $fechaHoy = Carbon::today()->toDateString();
         $fechaManana = Carbon::tomorrow()->toDateString();
 

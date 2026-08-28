@@ -76,89 +76,38 @@
             </div>
         </div>
 
-        <!-- Médicos Registrados -->
+        <!-- Tarjeta Única Consolidada de Citas Globales -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-info text-white h-100">
+            <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 d-flex flex-column justify-content-between">
                 <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Médicos</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ number_format($totalMedicos) }}</h2>
-                        </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-person-badge fs-3 text-white"></i>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-white-50 text-uppercase fw-semibold small">Citas Globales</span>
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-calendar-event fs-5 text-white"></i>
                         </div>
                     </div>
-                </div>
-                <a href="{{ route('admin.medicos') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
-                    <small class="text-white-50">Gestionar médicos</small>
-                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <!-- Indicadores de Citas Globales (Tabla: cola) -->
-    <div class="row g-3 mb-4">
-        <!-- Citas Totales del Sistema -->
-        <div class="col-12 col-sm-4">
-            <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 position-relative overflow-hidden">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas Totales (Global)</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
+                    <!-- Total de Citas -->
+                    <div class="mb-3">
+                        <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
+                        <span class="text-white-50 small">Registradas en total</span>
+                    </div>
+
+                    <!-- Detalle Hoy / Mañana -->
+                    <div class="row g-2 pt-2 border-top border-secondary border-opacity-50">
+                        <div class="col-6">
+                            <span class="text-white-50 d-block extra-small text-uppercase">Hoy</span>
+                            <span class="fw-bold fs-5 text-success">+{{ number_format($citasHoy) }}</span>
                         </div>
-                        <div class="bg-white bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-calendar-check fs-3 text-white"></i>
+                        <div class="col-6 border-start border-secondary border-opacity-50 ps-2">
+                            <span class="text-white-50 d-block extra-small text-uppercase">Mañana</span>
+                            <span class="fw-bold fs-5 text-warning">+{{ number_format($citasManana) }}</span>
                         </div>
                     </div>
                 </div>
                 <a href="#" class="card-footer bg-black bg-opacity-25 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
-                    <small class="text-white-50">Ver listado de citas</small>
+                    <small class="text-white-50">Ver agendamiento general</small>
                     <i class="bi bi-chevron-right text-white small"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Citas Hoy del Sistema -->
-        <div class="col-12 col-sm-4">
-            <div class="card border-0 shadow-sm rounded-3 bg-secondary text-white h-100 position-relative overflow-hidden">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas Globales Hoy</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ number_format($citasHoy) }}</h2>
-                        </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-calendar-day fs-3 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-                <a href="#" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
-                    <small class="text-white-50">Ver agendamiento general hoy</small>
-                    <i class="bi bi-chevron-right text-white small"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Citas Mañana del Sistema -->
-        <div class="col-12 col-sm-4">
-            <div class="card border-0 shadow-sm rounded-3 bg-warning text-dark h-100 position-relative overflow-hidden">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-dark-50 text-uppercase fw-semibold small d-block mb-1">Citas Globales Mañana</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ number_format($citasManana) }}</h2>
-                        </div>
-                        <div class="bg-dark bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-calendar-plus fs-3 text-dark"></i>
-                        </div>
-                    </div>
-                </div>
-                <a href="#" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-dark text-decoration-none">
-                    <small class="text-dark">Ver agendamiento general mañana</small>
-                    <i class="bi bi-chevron-right text-dark small"></i>
                 </a>
             </div>
         </div>
