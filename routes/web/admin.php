@@ -5,7 +5,7 @@ use App\Http\Livewire\Admin\ListMedicos;
 use App\Http\Livewire\Admin\ListPacientes;
 use App\Http\Livewire\Admin\ListCentroMedicos;
 use App\Http\Livewire\Admin\ListHistorias;
-use App\Http\Livewire\Admin\ListUsuarios;
+use App\Http\Livewire\Admin\ListUsers;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +17,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Rutas de Administración de Agenda Médica (Acceso exclusivo Root)
     Route::middleware(['role:Root'])->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/users', ListUsuarios::class)->name('users');
+        Route::get('/users', ListUsers::class)->name('users');
         Route::get('/medicos', ListMedicos::class)->name('medicos');
         Route::get('/pacientes', ListPacientes::class)->name('pacientes');
         Route::get('/centros-medicos', ListCentroMedicos::class)->name('centros-medicos');
