@@ -118,13 +118,13 @@ class ListPacientes extends Component
         $paciente = Paciente::findOrFail($id);
         $medicoId = Auth::user()->medico->id ?? Auth::id();
 
-        // Se obtiene el número de historia registrado en la relación MedicoPaciente
+        // Obtener el registro pivot correspondiente a este médico y paciente
         $relacionMedico = MedicoPaciente::where('paciente_id', $paciente->id)
             ->where('medico_id', $medicoId)
             ->first();
 
         $this->paciente_id = $paciente->id;
-        $this->numhistoria  = $relacionMedico->numhistoria ?? $paciente->numhistoria ?? '';
+        $this->numhistoria  = $relacionMedico->numhistoria ?? '';
         $this->nac          = $paciente->nac ?? 'V';
         $this->cedula       = $paciente->cedula;
         $this->nombres      = $paciente->nombres;
@@ -176,7 +176,7 @@ class ListPacientes extends Component
                 $paciente = Paciente::findOrFail($this->paciente_id);
                 $paciente->update($data);
 
-                // Actualizar o crear el registro en la tabla MedicoPaciente
+                // Actualizar la relación pivot MedicoPaciente
                 MedicoPaciente::updateOrCreate(
                     [
                         'medico_id'   => $medicoId,
@@ -191,7 +191,7 @@ class ListPacientes extends Component
             } else {
                 $paciente = Paciente::create($data);
 
-                // Crear la relación en la tabla pivot MedicoPaciente
+                // Crear la relación pivot MedicoPaciente
                 MedicoPaciente::create([
                     'medico_id'   => $medicoId,
                     'paciente_id' => $paciente->id,
@@ -224,15 +224,15 @@ class ListPacientes extends Component
             $paciente = Paciente::findOrFail($id);
             $medicoId = Auth::user()->medico->id ?? Auth::id();
 
-            // Desvincular la relación en MedicoPaciente
+            // Desvincular de la relación MedicoPaciente
             MedicoPaciente::where('paciente_id', $id)
                 ->where('medico_id', $medicoId)
                 ->delete();
 
-            // Opcional: Eliminar el paciente si ya no tiene otras relaciones
+            // Eliminar el registro de paciente si aplica
             $paciente->delete();
 
-            $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado/desvinculado correctamente.']);
+            $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a registros asociados.']);
         }
@@ -244,32 +244,34 @@ class ListPacientes extends Component
         $medicoId = Auth::user()->medico->id ?? Auth::id();
 
         $pacientes = Paciente::query()
-            ->with(['historia.medicalCenter'])
-            // Subquery para extraer el numhistoria directo de la relación MedicoPaciente
+            ->select('pacientes.*') // Asegura que se seleccionen todas las columnas del paciente
+            ->with(['historias.medicalCenter', 'medicos'])
+            // Subselect para obtener el numhistoria asignado por este médico en la pivot
             ->addSelect([
                 'numhistoria' => MedicoPaciente::select('numhistoria')
-                    ->whereColumn('medico_paciente.paciente_id', 'pacientes.id')
-                    ->where('medico_paciente.medico_id', $medicoId)
+                    ->whereColumn('medico_pacientes.paciente_id', 'pacientes.id')
+                    ->where('medico_pacientes.medico_id', $medicoId)
                     ->limit(1)
             ])
-            // Filtrar solo los pacientes pertenecientes al médico actual
+            // Filtrar solo pacientes pertenecientes al Médico actual
             ->whereHas('medicos', function ($q) use ($medicoId) {
                 $q->where('medico_id', $medicoId);
             })
-            // Filtrar por Centro Médico a través de la relación de Historia
+            // Filtrar por Centro Médico mediante la relación Historias -> MedicalCenter
             ->when($this->medical_center_id_filtro, function ($query) {
-                $query->whereHas('historia', function ($q) {
+                $query->whereHas('historias', function ($q) {
                     $q->where('medical_center_id', $this->medical_center_id_filtro);
                 });
             })
-            // Filtro de búsqueda por Cédula, Nombres, Apellidos o N° de Historia
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
+            // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
+            ->when($this->search, function ($query) use ($medicoId) {
+                $query->where(function ($q) use ($medicoId) {
                     $q->where('cedula', 'like', '%' . $this->search . '%')
                       ->orWhere('nombres', 'like', '%' . $this->search . '%')
                       ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('medicoPacientes', function ($mp) {
-                          $mp->where('numhistoria', 'like', '%' . $this->search . '%');
+                      ->orWhereHas('medicos', function ($m) use ($medicoId) {
+                          $m->where('medico_id', $medicoId)
+                            ->where('numhistoria', 'like', '%' . $this->search . '%');
                       });
                 });
             })
