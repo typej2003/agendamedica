@@ -117,7 +117,10 @@ class ListPacientes extends Component
     public function edit($id)
     {
         $paciente = Paciente::findOrFail($id);
-        $medicoId = Auth::user()->medico->id ?? Auth::id();
+        
+        // Obtenemos el registro del médico a través de user_id
+        $medico = Medico::where('user_id', Auth::id())->first();
+        $medicoId = $medico ? $medico->id : null;
 
         // Obtener el registro pivot correspondiente a este médico y paciente
         $relacionMedico = MedicoPaciente::where('paciente_id', $paciente->id)
@@ -151,7 +154,14 @@ class ListPacientes extends Component
         try {
             DB::beginTransaction();
 
-            $medicoId = Auth::user()->medico->id ?? Auth::id();
+            // Obtenemos el ID del registro medico correspondiente al user_id conectado
+            $medico = Medico::where('user_id', Auth::id())->first();
+            
+            if (!$medico) {
+                throw new \Exception('No se encontró el perfil de médico para este usuario.');
+            }
+
+            $medicoId = $medico->id;
 
             $data = [
                 'nac'         => $this->nac,
@@ -223,7 +233,8 @@ class ListPacientes extends Component
     {
         try {
             $paciente = Paciente::findOrFail($id);
-            $medicoId = Auth::user()->medico->id ?? Auth::id();
+            $medico = Medico::where('user_id', Auth::id())->first();
+            $medicoId = $medico ? $medico->id : null;
 
             // Desvincular de la relación MedicoPaciente
             MedicoPaciente::where('paciente_id', $id)
@@ -235,7 +246,6 @@ class ListPacientes extends Component
 
             $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a registros asociados.']);
         }
     }
@@ -243,23 +253,22 @@ class ListPacientes extends Component
     public function render()
     {
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
-        $medicoId = Auth::user()->medico->id ?? Auth::id();
 
-        // 1. Instanciamos o buscamos el modelo Medico conectado
-        $medico = Medico::find($medicoId);
+        // 1. Buscamos la instancia del modelo Medico que corresponda al usuario logueado (user_id)
+        $medico = Medico::where('user_id', Auth::id())->first();
 
         if ($medico) {
-            // 2. Traemos a sus Pacientes usando el modelo Medico y la relación BelongsToMany
+            // 2. Traemos a los pacientes del medico recuperando el pivot
             $pacientes = $medico->pacientes()
                 ->with(['historias.medicalCenter'])
                 ->withPivot('numhistoria')
-                // Filtro por Centro Médico mediante la relación Historias -> MedicalCenter
+                // Filtro opcional por Centro Médico (mediante historias del paciente)
                 ->when($this->medical_center_id_filtro, function ($query) {
                     $query->whereHas('historias', function ($q) {
                         $q->where('medical_center_id', $this->medical_center_id_filtro);
                     });
                 })
-                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
+                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia (en la pivot)
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
                         $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
