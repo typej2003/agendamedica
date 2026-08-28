@@ -42,16 +42,20 @@
                         @foreach($calendarWeeks as $week)
                             <tr>
                                 @foreach($week as $day)
-                                    <td class="{{ !$day['isCurrentMonth'] ? 'bg-light text-muted opacity-50' : $day['bgColor'] }}" 
-                                        style="height: 48px; vertical-align: top; cursor: pointer; padding: 2px;"
-                                        onclick="window.location.href='{{ route('agendar.dia', ['medicoId' => $medicoId, 'fecha' => $day['dateString']]) }}'">
+                                    @php
+                                        $isDisabled = !$day['isCurrentMonth'] || $day['isPastDay'];
+                                    @endphp
+                                    <td class="{{ $isDisabled ? 'bg-light text-muted opacity-50' : $day['bgColor'] }}" 
+                                        style="height: 48px; vertical-align: top; {{ $isDisabled ? 'cursor: not-allowed;' : 'cursor: pointer;' }} padding: 2px;"
+                                        @if(!$isDisabled)
+                                            onclick="window.location.href='{{ route('agendar.dia', ['medicoId' => $medicoId, 'fecha' => $day['dateString']]) }}'"
+                                        @endif>
                                         
                                         <div class="d-flex justify-content-between align-items-center p-1">
                                             <span class="fw-bold" style="font-size: 0.8rem; {{ $day['isToday'] ? 'color: #0d6efd;' : '' }}">
                                                 {{ $day['date']->day }}
                                             </span>
                                             
-                                            <!-- Badge siempre visible (Muestra número de pacientes o 0) -->
                                             <span class="badge {{ $day['badgeColor'] }}" style="font-size: 0.65rem; padding: 2px 5px;">
                                                 {{ $day['citasCount'] }}
                                             </span>

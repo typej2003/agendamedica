@@ -25,7 +25,6 @@ class ViewCalendar extends Component
 
     public function mount($medicoId, $medicalCenterId = null)
     {
-        // Forzar idioma español en Carbon para este componente
         Carbon::setLocale('es');
 
         $this->medicoId = $medicoId;
@@ -50,14 +49,15 @@ class ViewCalendar extends Component
     private function buildCalendar()
     {
         Carbon::setLocale('es');
+        $today = Carbon::today();
         $startOfMonth = Carbon::parse($this->currentDate)->startOfMonth();
         $endOfMonth = Carbon::parse($this->currentDate)->endOfMonth();
 
         $citas = Cola::where('medico_id', $this->medicoId)
             ->whereBetween('fecha', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-            ->selectRaw('fecha, COUNT(*) as total')
-            ->groupBy('fecha')
-            ->pluck('total', 'fecha')
+            ->selectRaw('DATE(fecha) as fecha_corta, COUNT(*) as total')
+            ->groupBy('fecha_corta')
+            ->pluck('total', 'fecha_corta')
             ->toArray();
 
         $this->citasPorDia = $citas;
@@ -73,12 +73,14 @@ class ViewCalendar extends Component
             for ($i = 0; $i < 7; $i++) {
                 $dateString = $currentDay->format('Y-m-d');
                 $count = $this->citasPorDia[$dateString] ?? 0;
+                $isPastDay = $currentDay->lt($today);
 
-                // Definición de Colores según requerimiento
                 $bgColor = 'bg-white';
                 $badgeColor = 'bg-light text-dark border';
 
-                if ($count >= $this->maxPacientesPorDia) {
+                if ($isPastDay) {
+                    $bgColor = 'bg-light text-muted opacity-50';
+                } elseif ($count >= $this->maxPacientesPorDia) {
                     $bgColor = 'bg-danger bg-opacity-25'; // Rojo (Completo)
                     $badgeColor = 'bg-danger text-white';
                 } elseif ($count >= ($this->maxPacientesPorDia - $this->alertaFaltan) && $count > 0) {
@@ -94,6 +96,7 @@ class ViewCalendar extends Component
                     'dateString' => $dateString,
                     'isCurrentMonth' => $currentDay->month === $startOfMonth->month,
                     'isToday' => $currentDay->isToday(),
+                    'isPastDay' => $isPastDay,
                     'citasCount' => $count,
                     'bgColor' => $bgColor,
                     'badgeColor' => $badgeColor,
