@@ -19,6 +19,10 @@ class ViewCalendar extends Component
     public $calendarWeeks = [];
     public $citasPorDia = [];
 
+    // Configuración de Topes y Capacidad
+    public $maxPacientesPorDia = 20; // Límite tope por día
+    public $alertaFaltan = 3;       // Umbral para mostrar Amarillo (Faltan N o menos)
+
     public function mount($medicoId, $medicalCenterId = null)
     {
         $this->medicoId = $medicoId;
@@ -33,12 +37,6 @@ class ViewCalendar extends Component
         $this->buildCalendar();
     }
 
-    public function previousMonth()
-    {
-        $this->currentDate = Carbon::parse($this->currentDate)->subMonth()->startOfMonth();
-        $this->buildCalendar();
-    }
-
     public function nextMonth()
     {
         $this->currentDate = Carbon::parse($this->currentDate)->addMonth()->startOfMonth();
@@ -50,7 +48,6 @@ class ViewCalendar extends Component
         $startOfMonth = Carbon::parse($this->currentDate)->startOfMonth();
         $endOfMonth = Carbon::parse($this->currentDate)->endOfMonth();
 
-        // Obtener la cantidad de citas por día agrupadas para el médico en el mes actual
         $citas = Cola::where('medico_id', $this->medicoId)
             ->whereBetween('fecha', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->selectRaw('fecha, COUNT(*) as total')
@@ -60,7 +57,6 @@ class ViewCalendar extends Component
 
         $this->citasPorDia = $citas;
 
-        // Construir la matriz del calendario (semanas y días)
         $startDayOfWeek = $startOfMonth->copy()->startOfWeek(Carbon::MONDAY);
         $endDayOfWeek = $endOfMonth->copy()->endOfWeek(Carbon::SUNDAY);
 
@@ -71,11 +67,31 @@ class ViewCalendar extends Component
             $week = [];
             for ($i = 0; $i < 7; $i++) {
                 $dateString = $currentDay->format('Y-m-d');
+                $count = $this->citasPorDia[$dateString] ?? 0;
+
+                // Definición de Colores de Fondo según requerimiento
+                $bgColor = 'bg-white';
+                $badgeColor = 'bg-secondary';
+
+                if ($count >= $this->maxPacientesPorDia) {
+                    $bgColor = 'bg-danger bg-opacity-25'; // Rojo (Completo)
+                    $badgeColor = 'bg-danger';
+                } elseif ($count >= ($this->maxPacientesPorDia - $this->alertaFaltan) && $count > 0) {
+                    $bgColor = 'bg-warning bg-opacity-25'; // Amarillo (Falta 3 o menos del tope)
+                    $badgeColor = 'bg-warning text-dark';
+                } elseif ($count > 0) {
+                    $bgColor = 'bg-white'; // Con pacientes
+                    $badgeColor = 'bg-primary';
+                }
+
                 $week[] = [
                     'date' => $currentDay->copy(),
+                    'dateString' => $dateString,
                     'isCurrentMonth' => $currentDay->month === $startOfMonth->month,
                     'isToday' => $currentDay->isToday(),
-                    'citasCount' => $this->citasPorDia[$dateString] ?? 0,
+                    'citasCount' => $count,
+                    'bgColor' => $bgColor,
+                    'badgeColor' => $badgeColor,
                 ];
                 $currentDay->addDay();
             }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Livewire\Welcome;
 use App\Http\Livewire\Components\ListSearch;
 use App\Http\Livewire\Components\ViewCalendar;
+use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\DashboardController;
 
@@ -47,4 +48,5 @@ Route::get('/register/doctor', ListSearch::class)->name('register.doctor');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/agendar/{medicoId}/{medicalCenterId?}', ViewCalendar::class)->name('agendar.cita');
+    Route::get('/agendar/{medicoId}/dia/{fecha}', DaySchedule::class)->name('agendar.dia');
 });
