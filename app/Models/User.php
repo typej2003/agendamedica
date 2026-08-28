@@ -42,4 +42,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Comprueba si el usuario tiene una sesión activa en los últimos 5 minutos.
+     */
+    public function isOnline(): bool
+    {
+        return Cache::has('user-is-online-' . $this->id);
+    }
 }
