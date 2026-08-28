@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\PacienteSyncController;
+use App\Http\Controllers\Api\ConsultaSyncController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,9 +22,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Ruta para la recepción de lotes/paquetes desde PowerBuilder
-// En routes/api.php
-Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch'])
-    ->middleware('throttle:1000,1'); // Permite hasta 1000 peticiones por minuto
-
+// Rutas con límite de tasa para la recepción de lotes/paquetes desde PowerBuilder
+Route::middleware('throttle:1000,1')->group(function () {
+    Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch']);
     Route::post('/pacientes/sincronizar', [PacienteSyncController::class, 'sincronizar']);
+    Route::post('/consultas/sincronizar', [ConsultaSyncController::class, 'sincronizar']);
+});
