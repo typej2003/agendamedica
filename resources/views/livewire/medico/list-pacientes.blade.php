@@ -7,7 +7,7 @@
                     <h5 class="mb-0 text-primary fw-bold">
                         <i class="bi bi-people-fill me-2"></i>Pacientes
                     </h5>
-                    <small class="text-muted">Gestión de historias y datos de contacto por centro médico</small>
+                    <small class="text-muted">Gestión de historias clínicas y datos de contacto</small>
                 </div>
                 <div>
                     <button class="btn btn-primary btn-sm w-100 w-sm-auto px-3" wire:click="create">
@@ -63,11 +63,13 @@
                                         {{ $paciente->nac ?? 'V' }}-{{ $paciente->cedula }}
                                     </span>
                                     <span class="badge bg-secondary font-monospace">
-                                        {{ $paciente->num_historia_actual }}
+                                        {{ $paciente->numhistoria ?? ($paciente->pivot->numhistoria ?? 'N/A') }}
                                     </span>
-                                    <span class="badge bg-info text-dark ms-1">
-                                        {{ $paciente->centro_medico_actual }}
-                                    </span>
+                                    @if(isset($paciente->historia->medicalCenter) || isset($paciente->medicalCenter))
+                                        <span class="badge bg-info text-dark ms-1">
+                                            {{ $paciente->historia->medicalCenter->name ?? ($paciente->medicalCenter->name ?? 'N/A') }}
+                                        </span>
+                                    @endif
                                 </div>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
@@ -92,7 +94,7 @@
                 @empty
                     <div class="text-center py-4 text-muted border rounded bg-light">
                         <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-                        <small>No se encontraron pacientes para el filtro seleccionado.</small>
+                        <small>No se encontraron pacientes registrados.</small>
                     </div>
                 @endforelse
             </div>
@@ -102,8 +104,8 @@
                 <table class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 130px;">N° Historia</th>
-                            <th scope="col" style="width: 140px;">Cédula</th>
+                            <th scope="col" style="width: 140px;">N° Historia</th>
+                            <th scope="col" style="width: 130px;">Cédula</th>
                             <th scope="col">Paciente</th>
                             <th scope="col">Centro Médico</th>
                             <th scope="col">Teléfono</th>
@@ -115,8 +117,9 @@
                         @forelse($pacientes as $paciente)
                             <tr>
                                 <td>
-                                    <span class="badge bg-secondary font-monospace">
-                                        {{ $paciente->num_historia_actual }}
+                                    <!-- numhistoria proveniente de la relación MedicoPaciente / Pivot -->
+                                    <span class="badge bg-secondary font-monospace fs-6">
+                                        {{ $paciente->numhistoria ?? ($paciente->pivot->numhistoria ?? 'Sin N°') }}
                                     </span>
                                 </td>
                                 <td class="fw-bold text-nowrap">
@@ -126,8 +129,9 @@
                                     {{ $paciente->nombres }} {{ $paciente->apellidos }}
                                 </td>
                                 <td>
+                                    <!-- Centro de salud obtenido mediante la relación de Historia -->
                                     <span class="badge bg-light text-dark border">
-                                        {{ $paciente->centro_medico_actual }}
+                                        {{ $paciente->historia->medicalCenter->name ?? ($paciente->medicalCenter->name ?? 'N/A') }}
                                     </span>
                                 </td>
                                 <td class="small">
@@ -183,27 +187,17 @@
                 <form wire:submit.prevent="save">
                     <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
                         
-                        <!-- Identificación y Centro Médico -->
+                        <!-- Identificación y N° de Historia -->
                         <div class="bg-light p-2 rounded mb-3">
                             <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-card-heading me-1"></i> Identificación e Historia</span>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold">Centro Médico / Consultorio</label>
-                                <select class="form-select form-select-sm" wire:model="medical_center_id">
-                                    <option value="">Seleccione centro...</option>
-                                    @foreach($allMedicalCenters as $center)
-                                        <option value="{{ $center->id }}">{{ $center->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('medical_center_id') <span class="text-danger small d-block">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <label class="form-label small fw-semibold">N° Historia</label>
+                                <label class="form-label small fw-semibold">N° Historia <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
                                 @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-6 col-md-2">
+                            <div class="col-4 col-md-2">
                                 <label class="form-label small fw-semibold">Nac.</label>
                                 <select class="form-select form-select-sm" wire:model="nac">
                                     <option value="V">V</option>
@@ -211,7 +205,7 @@
                                     <option value="P">P</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-8 col-md-6">
                                 <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control form-control-sm" wire:model="cedula">
                                 @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
