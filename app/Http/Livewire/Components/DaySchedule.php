@@ -43,7 +43,7 @@ class DaySchedule extends Component
 
         $this->medicoId = $medicoId;
         $this->fecha = $fecha;
-        $this->medico = Medico::findOrFail($medicoId);
+        $this->medico = Medico::find($medicoId) ?? User::find($medicoId);
 
         /** @var User $user */
         $user = Auth::user();
@@ -52,9 +52,16 @@ class DaySchedule extends Component
                 $this->esPersonalAutorizado = true;
             }
 
-            // Validar si el usuario logueado es el Médico correspondiente a esta agenda
-            if ($user->hasRole('Medico') && ($user->medico_id == $this->medicoId || $user->id == $this->medicoId)) {
-                $this->esMedicoPropietario = true;
+            // Flexibilizar la verificación para determinar si el usuario autenticado es el médico
+            if ($user->hasRole('Medico')) {
+                if (
+                    (isset($user->medico_id) && $user->medico_id == $this->medicoId) ||
+                    ($user->id == $this->medicoId) ||
+                    ($this->medico && isset($this->medico->user_id) && $this->medico->user_id == $user->id) ||
+                    ($this->medico && isset($this->medico->email) && $this->medico->email == $user->email)
+                ) {
+                    $this->esMedicoPropietario = true;
+                }
             }
         }
 
@@ -74,37 +81,38 @@ class DaySchedule extends Component
 
         $this->miCitaDelDia = $citas->firstWhere('numhistoria', $numHistoriaUser);
 
-        // Mapear información sensible del paciente a través de MedicoPaciente y User solo si es el médico autorizado
+        // Mapear información sensible del paciente
         $pacientesData = [];
-        if ($this->esMedicoPropietario) {
-            $numHistorias = $citas->pluck('numhistoria')->unique()->toArray();
-            
-            // Obtener relaciones desde la tabla pivot MedicoPaciente
-            $relaciones = MedicoPaciente::where('medico_id', $this->medicoId)
-                ->whereIn('numhistoria', $numHistorias)
-                ->get()
-                ->keyBy('numhistoria');
+        
+        // Cargar datos de pacientes si es el médico propietario O personal autorizado (Root/Secretaria/Medico)
+        if ($this->esPersonalAutorizado) {
+            $numHistorias = $citas->pluck('numhistoria')->filter()->unique()->toArray();
 
-            // Obtener la información personal de los usuarios correspondientes
-            $usuarios = User::whereIn('numhistoria', $numHistorias)
-                ->orWhereIn('id', $numHistorias)
-                ->get();
+            if (!empty($numHistorias)) {
+                // Obtener usuarios cuyos IDs o numhistoria coincidan
+                $usuarios = User::whereIn('numhistoria', $numHistorias)
+                    ->orWhereIn('id', $numHistorias)
+                    ->get();
 
-            foreach ($citas as $cita) {
-                $pacienteUser = $usuarios->first(function ($u) use ($cita) {
-                    return $u->numhistoria == $cita->numhistoria || $u->id == $cita->numhistoria;
-                });
+                foreach ($citas as $cita) {
+                    $pacienteUser = $usuarios->first(function ($u) use ($cita) {
+                        return $u->numhistoria == $cita->numhistoria || $u->id == $cita->numhistoria;
+                    });
 
-                if ($pacienteUser) {
-                    $pacientesData[$cita->numhistoria] = [
-                        'cedula' => $pacienteUser->cedula ?? $pacienteUser->dni ?? 'N/A',
-                        'nombre_completo' => trim(($pacienteUser->name ?? '') . ' ' . ($pacienteUser->lastname ?? $pacienteUser->apellido ?? ''))
-                    ];
-                } else {
-                    $pacientesData[$cita->numhistoria] = [
-                        'cedula' => 'N/A',
-                        'nombre_completo' => 'Paciente ' . $cita->numhistoria
-                    ];
+                    if ($pacienteUser) {
+                        $nombre = trim(($pacienteUser->name ?? '') . ' ' . ($pacienteUser->lastname ?? $pacienteUser->apellido ?? ''));
+                        $cedula = $pacienteUser->cedula ?? $pacienteUser->dni ?? $pacienteUser->ci ?? 'N/A';
+
+                        $pacientesData[$cita->numhistoria] = [
+                            'cedula' => $cedula,
+                            'nombre_completo' => !empty($nombre) ? $nombre : 'Usuario #' . $pacienteUser->id
+                        ];
+                    } else {
+                        $pacientesData[$cita->numhistoria] = [
+                            'cedula' => 'N/A',
+                            'nombre_completo' => 'Paciente N° ' . $cita->numhistoria
+                        ];
+                    }
                 }
             }
         }
@@ -131,9 +139,12 @@ class DaySchedule extends Component
             $citaArray = null;
             if ($cita) {
                 $citaArray = $cita->toArray();
-                if ($this->esMedicoPropietario && isset($pacientesData[$cita->numhistoria])) {
+                if (isset($pacientesData[$cita->numhistoria])) {
                     $citaArray['paciente_cedula'] = $pacientesData[$cita->numhistoria]['cedula'];
                     $citaArray['paciente_nombre'] = $pacientesData[$cita->numhistoria]['nombre_completo'];
+                } else {
+                    $citaArray['paciente_cedula'] = 'N/A';
+                    $citaArray['paciente_nombre'] = 'N/A';
                 }
             }
 
@@ -175,9 +186,12 @@ class DaySchedule extends Component
             $citaArray = null;
             if ($cita) {
                 $citaArray = $cita->toArray();
-                if ($this->esMedicoPropietario && isset($pacientesData[$cita->numhistoria])) {
+                if (isset($pacientesData[$cita->numhistoria])) {
                     $citaArray['paciente_cedula'] = $pacientesData[$cita->numhistoria]['cedula'];
                     $citaArray['paciente_nombre'] = $pacientesData[$cita->numhistoria]['nombre_completo'];
+                } else {
+                    $citaArray['paciente_cedula'] = 'N/A';
+                    $citaArray['paciente_nombre'] = 'N/A';
                 }
             }
 
@@ -212,7 +226,7 @@ class DaySchedule extends Component
             ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
             ->exists();
 
-        if ($tieneCitaEnMes) {
+        if ($tieneCitaEnMes && !$this->esPersonalAutorizado) {
             session()->flash('error', 'Solo tiene permitido agendar 1 cita al mes con este médico.');
             return;
         }
@@ -246,32 +260,35 @@ class DaySchedule extends Component
             $turno = 'M';
         }
 
+        $regMedico = $this->medico->license_number ?? $this->medico->reg_medico ?? 'REG-000';
+        $monto = $this->medico->consultation_fee ?? $this->medico->monto ?? 0.00;
+
         // Guardar cita ajustada a los campos de la tabla `cola`
         Cola::create([
             'medico_id'   => $this->medicoId,
-            'reg-medico'  => $this->medico->license_number ?? 'REG-000',
+            'reg-medico'  => $regMedico,
             'fecha'       => $this->fecha,
             'numhistoria' => $numHistoriaUser,
             'numorden'    => $numorden,
             'atendido'    => 0,
-            'estado'      => 0, // 0 = Pendiente (decimal 1,0)
-            'turno'       => $turno, // 'M' o 'T' (1 solo carácter)
+            'estado'      => 0, // 0 = Pendiente
+            'turno'       => $turno, // 'M' o 'T'
             'motivo'      => 'Consulta Médica Generada por Sistema',
-            'monto'       => $this->medico->consultation_fee ?? 0.00,
+            'monto'       => $monto,
             'hora_ini'    => $horaIniFinal,
             'hora_fin'    => $horaFinCalculada,
             'tiempo'      => $this->intervaloMinutos,
             'tipo'        => 'Cita',
-            'medico'      => $this->medicoId, // ID entero según esquema de la tabla
+            'medico'      => $this->medicoId,
         ]);
 
-        // Registrar o verificar la relación en MedicoPaciente
+        // Registrar relación en MedicoPaciente
         MedicoPaciente::firstOrCreate([
             'medico_id'   => $this->medicoId,
             'paciente_id' => $user->id,
         ], [
             'numhistoria' => $numHistoriaUser,
-            'reg-medico'  => $this->medico->license_number ?? 'REG-000',
+            'reg-medico'  => $regMedico,
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');

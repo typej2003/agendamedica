@@ -5,7 +5,7 @@
             <h5 class="fw-bold mb-0 text-capitalize text-primary">
                 Agenda del {{ \Carbon\Carbon::parse($fecha)->locale('es')->translatedFormat('l d \d\e F \d\e Y') }}
             </h5>
-            <small class="text-muted">Dr(a). {{ $medico->name }} {{ $medico->lastname }}</small>
+            <small class="text-muted">Dr(a). {{ $medico->name ?? $medico->nombre ?? 'Atención Médica' }} {{ $medico->lastname ?? $medico->apellido ?? '' }}</small>
         </div>
         <a href="{{ route('agendar.cita', ['medicoId' => $medicoId]) }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i> Volver al Calendario
@@ -31,7 +31,7 @@
     @if($esPersonalAutorizado)
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-primary text-white py-2 fw-bold small d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-shield-lock me-1"></i> Administración de Citas</span>
+                <span><i class="bi bi-shield-lock me-1"></i> Administración de Citas Médicas</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -41,10 +41,8 @@
                                 <th>#</th>
                                 <th>Cupo</th>
                                 <th>N° Historia</th>
-                                @if($esMedicoPropietario)
-                                    <th>Cédula</th>
-                                    <th>Paciente</th>
-                                @endif
+                                <th>Cédula</th>
+                                <th>Paciente</th>
                                 <th>Estado</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
@@ -56,13 +54,8 @@
                                     <td>{{ $slot['display'] }}</td>
                                     @if($slot['ocupada'])
                                         <td class="fw-bold text-primary">Historia: {{ $slot['cita']['numhistoria'] }}</td>
-                                        
-                                        {{-- Mostrar cédula y nombre solo al médico de la consulta --}}
-                                        @if($esMedicoPropietario)
-                                            <td>{{ $slot['cita']['paciente_cedula'] ?? 'N/A' }}</td>
-                                            <td class="fw-bold">{{ $slot['cita']['paciente_nombre'] ?? 'N/A' }}</td>
-                                        @endif
-
+                                        <td>{{ $slot['cita']['paciente_cedula'] ?? 'N/A' }}</td>
+                                        <td class="fw-bold">{{ $slot['cita']['paciente_nombre'] ?? 'N/A' }}</td>
                                         <td>
                                             @if($slot['cita']['atendido'] == 1)
                                                 <span class="badge bg-success">Atendido</span>
@@ -78,7 +71,7 @@
                                             </button>
                                         </td>
                                     @else
-                                        <td colspan="{{ $esMedicoPropietario ? '4' : '2' }}" class="text-muted fst-italic">Disponible</td>
+                                        <td colspan="4" class="text-muted fst-italic">Disponible</td>
                                         <td class="text-end">
                                             @if(!$slot['pasado'])
                                                 <button wire:click="agendarCupo({{ $slot['numorden'] }}, '{{ $slot['hora_ini'] }}')" 
@@ -98,7 +91,7 @@
             </div>
         </div>
     @else
-        <!-- VISTA PÚBLICA PARA PACIENTES (FIJO EN MODO CUPOS) -->
+        <!-- VISTA PÚBLICA PARA PACIENTES -->
         <div class="card border-0 shadow-sm p-3">
             <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">
                 Seleccione un cupo disponible (Atención por Orden de Llegada):
