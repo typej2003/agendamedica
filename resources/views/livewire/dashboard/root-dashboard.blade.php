@@ -27,10 +27,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
-                    <small class="text-white-50">Actividad en los últimos 5 min</small>
-                    <i class="bi bi-circle-fill text-warning fs-6"></i>
-                </div>
+                <a href="{{ route('admin.users') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                    <small class="text-white-50">Ver usuarios activos</small>
+                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
+                </a>
             </div>
         </div>
 
@@ -48,10 +48,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
-                    <small class="text-white-50">Total de cuentas</small>
-                    <i class="bi bi-arrow-right-short text-white fs-5"></i>
-                </div>
+                <a href="{{ route('admin.users') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                    <small class="text-white-50">Gestionar usuarios</small>
+                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
+                </a>
             </div>
         </div>
 
@@ -69,10 +69,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
-                    <small class="text-white-50">Pacientes en sistema</small>
-                    <i class="bi bi-arrow-right-short text-white fs-5"></i>
-                </div>
+                <a href="{{ route('admin.pacientes') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                    <small class="text-white-50">Gestionar pacientes</small>
+                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
+                </a>
             </div>
         </div>
 
@@ -90,10 +90,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
-                    <small class="text-white-50">Personal médico</small>
-                    <i class="bi bi-arrow-right-short text-white fs-5"></i>
-                </div>
+                <a href="{{ route('admin.medicos') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                    <small class="text-white-50">Gestionar médicos</small>
+                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
+                </a>
             </div>
         </div>
     </div>
