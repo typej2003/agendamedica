@@ -18,7 +18,7 @@
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
             <h6 class="fw-bold mb-0 text-capitalize text-primary">
-                {{ \Carbon\Carbon::parse($currentDate)->translatedFormat('F Y') }}
+                {{ \Carbon\Carbon::parse($currentDate)->locale('es')->translatedFormat('F Y') }}
             </h6>
             <button class="btn btn-primary btn-sm px-3" wire:click="nextMonth">
                 Mes Siguiente <i class="bi bi-chevron-right ms-1"></i>

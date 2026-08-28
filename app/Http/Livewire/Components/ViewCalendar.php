@@ -25,6 +25,9 @@ class ViewCalendar extends Component
 
     public function mount($medicoId, $medicalCenterId = null)
     {
+        // Forzar idioma español en Carbon para este componente
+        Carbon::setLocale('es');
+
         $this->medicoId = $medicoId;
         $this->medicalCenterId = $medicalCenterId;
 
@@ -39,12 +42,14 @@ class ViewCalendar extends Component
 
     public function nextMonth()
     {
+        Carbon::setLocale('es');
         $this->currentDate = Carbon::parse($this->currentDate)->addMonth()->startOfMonth();
         $this->buildCalendar();
     }
 
     private function buildCalendar()
     {
+        Carbon::setLocale('es');
         $startOfMonth = Carbon::parse($this->currentDate)->startOfMonth();
         $endOfMonth = Carbon::parse($this->currentDate)->endOfMonth();
 
@@ -69,9 +74,7 @@ class ViewCalendar extends Component
                 $dateString = $currentDay->format('Y-m-d');
                 $count = $this->citasPorDia[$dateString] ?? 0;
 
-                // Definición de Colores según requerimiento:
-                // Sin pacientes: fondo blanco, badge cero
-                // Con pacientes: amarillo (si faltan 3 o menos del tope), rojo (si está completo), blanco (si tiene pacientes pero aún no llega a la alerta)
+                // Definición de Colores según requerimiento
                 $bgColor = 'bg-white';
                 $badgeColor = 'bg-light text-dark border';
 
