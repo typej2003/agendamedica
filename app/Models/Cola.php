@@ -4,29 +4,47 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cola extends Model
 {
     use HasFactory;
 
-    protected $table = 'colas';
-    
-    public $incrementing = false;
-    protected $primaryKey = ['fecha', 'numhistoria'];
+    protected $table = 'cola';
 
     protected $fillable = [
+        'medico_id',
+        'reg-medico',
         'fecha',
-        'hora_ini',
         'numhistoria',
+        'numorden',
+        'atendido',
+        'estado',
+        'turno',
+        'motivo',
+        'monto',
+        'hora_ini',
+        'hora_fin',
+        'tiempo',
+        'tipo',
+        'conse',
+        'sms',
+        'sms_text',
+        'medico',
     ];
 
     protected $casts = [
         'fecha' => 'date',
     ];
 
+    public function medicoUser()
+    {
+        return $this->belongsTo(User::class, 'medico_id');
+    }
+
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'numhistoria', 'numhistoria');
     }
+
 }
+ 

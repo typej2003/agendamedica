@@ -103,7 +103,11 @@
                             <span class="text-muted extra-small d-block">Consulta desde:</span>
                             <strong>${{ number_format($medico->consultation_fee, 2) }}</strong>
                         </div>
-                        <a href="#" class="btn btn-sm btn-primary">Agendar Cita</a>
+                        @auth
+                            <a href="{{ route('agendar.cita', ['medicoId' => $medico->id, 'medicalCenterId' => $medico->office->medicalCenter->id ?? 0]) }}" class="btn btn-sm btn-primary">Agendar Cita</a>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-sm btn-primary">Agendar Cita</a>
+                        @endauth
                     </div>
                 </div>
             </div>

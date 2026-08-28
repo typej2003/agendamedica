@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Livewire\Welcome;
 use App\Http\Livewire\Components\ListSearch;
+use App\Http\Livewire\Components\ViewCalendar;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\DashboardController;
 
@@ -43,3 +44,7 @@ Route::get('/medicos/buscar', ListSearch::class)->name('medicos.search');
 
 Route::get('/register/patient', ListSearch::class)->name('register.patient');
 Route::get('/register/doctor', ListSearch::class)->name('register.doctor');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/agendar/{medicoId}/{medicalCenterId?}', ViewCalendar::class)->name('agendar.cita');
+});
