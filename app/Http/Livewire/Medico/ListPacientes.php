@@ -15,11 +15,11 @@ class ListPacientes extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // Filtros
+    // Filtros de búsqueda
     public $search = '';
     public $medical_center_id_filtro = '';
 
-    // Campos del Formulario
+    // Campos del Formulario (Modal Paciente)
     public $paciente_id;
     public $medical_center_id;
     public $numhistoria;
@@ -38,6 +38,7 @@ class ListPacientes extends Component
     public $profesion;
     public $direccion;
 
+    // Eventos escuchados desde JavaScript / SweetAlert2
     protected $listeners = [
         'confirmDeletePaciente' => 'delete'
     ];
@@ -66,7 +67,7 @@ class ListPacientes extends Component
             'lnacimiento'        => 'nullable|string|max:150',
             'telefono'           => 'nullable|string|max:20',
             'email'              => 'nullable|email|max:150|unique:pacientes,email,' . $this->paciente_id,
-            'password'           => $this->paciente_id ? 'nullable|min:6' : 'nullable|min:6',
+            'password'           => 'nullable|string|min:6',
             'escolaridad'        => 'nullable|string|max:100',
             'ocupacion'          => 'nullable|string|max:100',
             'profesion'          => 'nullable|string|max:100',
@@ -117,18 +118,18 @@ class ListPacientes extends Component
         $paciente = Paciente::findOrFail($id);
 
         $this->paciente_id       = $paciente->id;
-        $this->medical_center_id = $paciente->medical_center_id;
-        $this->numhistoria       = $paciente->numhistoria ?? $paciente->num_historia_actual;
+        $this->medical_center_id = $paciente->medical_center_id ?? null;
+        $this->numhistoria       = $paciente->numhistoria ?? $paciente->num_historia_actual ?? '';
         $this->nac                = $paciente->nac ?? 'V';
         $this->cedula             = $paciente->cedula;
         $this->nombres            = $paciente->nombres;
         $this->apellidos          = $paciente->apellidos;
         $this->sexo               = $paciente->sexo;
-        $this->fnacimiento        = $paciente->fnacimiento;
+        $this->fnacimiento        = $paciente->fnacimiento ? $paciente->fnacimiento->format('Y-m-d') : null;
         $this->lnacimiento        = $paciente->lnacimiento;
         $this->telefono           = $paciente->telefono;
         $this->email              = $paciente->email;
-        $this->password           = '';
+        $this->password           = ''; // Se deja vacío al editar para no reemplazarlo salvo que se ingrese uno nuevo
         $this->escolaridad        = $paciente->escolaridad;
         $this->ocupacion          = $paciente->ocupacion;
         $this->profesion          = $paciente->profesion;
@@ -145,34 +146,31 @@ class ListPacientes extends Component
             DB::beginTransaction();
 
             $data = [
-                'medical_center_id' => $this->medical_center_id ?: null,
-                'numhistoria'       => $this->numhistoria,
-                'nac'               => $this->nac,
-                'cedula'            => $this->cedula,
-                'nombres'           => $this->nombres,
-                'apellidos'         => $this->apellidos,
-                'sexo'              => $this->sexo ?: null,
-                'fnacimiento'       => $this->fnacimiento ?: null,
-                'lnacimiento'       => $this->lnacimiento,
-                'telefono'          => $this->telefono,
-                'email'             => $this->email ?: null,
-                'escolaridad'       => $this->escolaridad,
-                'ocupacion'         => $this->ocupacion,
-                'profesion'         => $this->profesion,
-                'direccion'         => $this->direccion,
+                'nac'         => $this->nac,
+                'cedula'      => $this->cedula,
+                'nombres'     => $this->nombres,
+                'apellidos'   => $this->apellidos,
+                'sexo'        => $this->sexo ?: null,
+                'fnacimiento' => $this->fnacimiento ?: null,
+                'lnacimiento' => $this->lnacimiento,
+                'telefono'    => $this->telefono,
+                'email'       => $this->email ?: null,
+                'escolaridad' => $this->escolaridad,
+                'ocupacion'   => $this->ocupacion,
+                'profesion'   => $this->profesion,
+                'direccion'   => $this->direccion,
             ];
+
+            // Encriptar y asignar la contraseña únicamente si fue provista en el formulario
+            if (!empty($this->password)) {
+                $data['password'] = Hash::make($this->password);
+            }
 
             if ($this->paciente_id) {
                 $paciente = Paciente::findOrFail($this->paciente_id);
-                if (!empty($this->password)) {
-                    $data['password'] = Hash::make($this->password);
-                }
                 $paciente->update($data);
                 $mensaje = 'Paciente actualizado correctamente.';
             } else {
-                if (!empty($this->password)) {
-                    $data['password'] = Hash::make($this->password);
-                }
                 Paciente::create($data);
                 $mensaje = 'Paciente registrado correctamente.';
             }
@@ -202,14 +200,13 @@ class ListPacientes extends Component
 
             $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
         } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a que tiene registros vinculados.']);
+            $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a relaciones vinculadas.']);
         }
     }
 
     public function render()
     {
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
-        $allMedicalCenters = $centrosSalud;
 
         $pacientes = Paciente::query()
             ->when($this->search, function ($query) {
@@ -219,16 +216,13 @@ class ListPacientes extends Component
                       ->orWhere('apellidos', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->medical_center_id_filtro, function ($query) {
-                $query->where('medical_center_id', $this->medical_center_id_filtro);
-            })
             ->latest()
             ->paginate(10);
 
         return view('livewire.medico.list-pacientes', [
             'pacientes' => $pacientes,
             'centrosSalud' => $centrosSalud,
-            'allMedicalCenters' => $allMedicalCenters,
+            'allMedicalCenters' => $centrosSalud,
         ]);
     }
 }

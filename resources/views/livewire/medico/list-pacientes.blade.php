@@ -251,19 +251,31 @@
                             </div>
                         </div>
 
-                        <!-- Contacto y Detalles -->
+                        <!-- Contacto y Acceso -->
                         <div class="bg-light p-2 rounded mb-3">
-                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-telephone me-1"></i> Contacto y Perfil</span>
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-telephone me-1"></i> Contacto y Acceso</span>
                         </div>
                         <div class="row g-2 mb-2">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Teléfono</label>
                                 <input type="text" class="form-control form-control-sm" wire:model="telefono" placeholder="0414-0000000">
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Email</label>
                                 <input type="email" class="form-control form-control-sm" wire:model="email">
                                 @error('email') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">
+                                    Contraseña {{ $paciente_id ? '(Opcional)' : '' }}
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <input type="password" id="inputPasswordModal" class="form-control form-control-sm border-end-0" wire:model="password" placeholder="{{ $paciente_id ? 'Sin cambios' : 'Mín. 6 caracteres' }}">
+                                    <button class="btn btn-outline-secondary border-start-0" type="button" id="togglePasswordBtn">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                </div>
+                                @error('password') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-4 col-md-4">
                                 <label class="form-label small fw-semibold">Escolaridad</label>
@@ -309,6 +321,29 @@
 
             window.addEventListener('close-modal-paciente', () => {
                 bsModal.hide();
+            });
+
+            // Conmutador (toggle) para mostrar/ocultar contraseña
+            const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+            const passwordInput = document.getElementById('inputPasswordModal');
+            const passwordIcon = document.getElementById('togglePasswordIcon');
+
+            if (togglePasswordBtn && passwordInput && passwordIcon) {
+                togglePasswordBtn.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    passwordIcon.classList.toggle('bi-eye');
+                    passwordIcon.classList.toggle('bi-eye-slash');
+                });
+            }
+
+            // Restablecer el campo de contraseña a tipo "password" e icono al cerrar el modal
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                if (passwordInput && passwordIcon) {
+                    passwordInput.setAttribute('type', 'password');
+                    passwordIcon.classList.add('bi-eye');
+                    passwordIcon.classList.remove('bi-eye-slash');
+                }
             });
 
             // SweetAlert2 para Confirmación de Eliminación
