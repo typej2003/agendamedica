@@ -27,25 +27,27 @@
         </div>
     @endif
 
-    <!-- Selector de Modo de Atención -->
-    <div class="d-flex justify-content-end mb-3">
-        <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn {{ $modoAtencion === 'cupos' ? 'btn-primary' : 'btn-outline-primary' }}" 
-                    wire:click="cambiarModo('cupos')">
-                <i class="bi bi-list-ol me-1"></i> Modo Cupos (Orden LLegada)
-            </button>
-            <button type="button" class="btn {{ $modoAtencion === 'horario' ? 'btn-primary' : 'btn-outline-primary' }}" 
-                    wire:click="cambiarModo('horario')">
-                <i class="bi bi-clock me-1"></i> Modo Horarios
-            </button>
+    <!-- Selector de Modo de Atención (EXCLUSIVO PARA PERSONAL AUTORIZADO) -->
+    @if($esPersonalAutorizado)
+        <div class="d-flex justify-content-end mb-3">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn {{ $modoAtencion === 'cupos' ? 'btn-primary' : 'btn-outline-primary' }}" 
+                        wire:click="cambiarModo('cupos')">
+                    <i class="bi bi-list-ol me-1"></i> Modo Cupos (Orden Llegada)
+                </button>
+                <button type="button" class="btn {{ $modoAtencion === 'horario' ? 'btn-primary' : 'btn-outline-primary' }}" 
+                        wire:click="cambiarModo('horario')">
+                    <i class="bi bi-clock me-1"></i> Modo Horarios
+                </button>
+            </div>
         </div>
-    </div>
+    @endif
 
     <!-- VISTA PARA PERSONAL AUTORIZADO (Root, Medico, Secretaria) -->
     @if($esPersonalAutorizado)
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-primary text-white py-2 fw-bold small">
-                <i class="bi bi-shield-lock me-1"></i> Administración de Citas del Día ({{ strtoupper($modoAtencion) }})
+            <div class="card-header bg-primary text-white py-2 fw-bold small d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-lock me-1"></i> Administración de Citas ({{ strtoupper($modoAtencion) }})</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -101,7 +103,7 @@
             </div>
         </div>
     @else
-        <!-- VISTA PARA PACIENTES -->
+        <!-- VISTA PÚBLICA PARA PACIENTES (POR DEFECTO EN MODO CUPOS) -->
         <div class="card border-0 shadow-sm p-3">
             <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">
                 @if($modoAtencion === 'cupos')
@@ -149,7 +151,7 @@
                             </button>
                         @else
                             <button wire:click="agendarCupo({{ $slot['numorden'] }}, '{{ $slot['hora_ini'] }}')" 
-                                    wire:confirm="¿Confirma que desea agendar en el {{ $slot['display'] }}?"
+                                    wire:confirm="¿Confirms que desea agendar el {{ $slot['display'] }}?"
                                     class="btn btn-outline-primary w-100 py-2 fw-bold">
                                 <i class="bi bi-calendar-check me-1"></i> {{ $slot['display'] }}
                                 <span class="d-block extra-small text-success">Disponible</span>

@@ -54,8 +54,11 @@ class DaySchedule extends Component
 
     public function cambiarModo($nuevoModo)
     {
-        $this->modoAtencion = $nuevoModo;
-        $this->cargarAgenda();
+        // Solo el personal autorizado puede cambiar el modo
+        if ($this->esPersonalAutorizado) {
+            $this->modoAtencion = $nuevoModo;
+            $this->cargarAgenda();
+        }
     }
 
     public function cargarAgenda()
@@ -69,7 +72,6 @@ class DaySchedule extends Component
             ->orderBy('numorden', 'asc')
             ->get();
 
-        // Corrección: Usar el método firstWhere() directamente sobre la instancia de la colección $citas
         $this->miCitaDelDia = $citas->firstWhere('numhistoria', $numHistoriaUser);
 
         if ($this->modoAtencion === 'cupos') {
@@ -182,10 +184,15 @@ class DaySchedule extends Component
             return;
         }
 
-        $horaFinCalculada = $horaIni ? Carbon::createFromFormat('H:i:s', $horaIni)->addMinutes($this->intervaloMinutos)->format('H:i:s') : null;
-        $turno = $horaIni ? Carbon::createFromFormat('H:i:s', $horaIni)->format('A') : 'AM';
+        // Definir hora de inicio y fin válidos para la BD (hora_ini es NOT NULL)
+        $horaIniFinal = $horaIni ?? '08:00:00';
+        $horaFinCalculada = $horaIni ? Carbon::createFromFormat('H:i:s', $horaIni)->addMinutes($this->intervaloMinutos)->format('H:i:s') : '08:30:00';
+        
+        // M = Mañana, T = Tarde (1 solo carácter para la columna 'turno' string(1))
+        $horaComparar = Carbon::createFromFormat('H:i:s', $horaIniFinal)->hour;
+        $turno = ($horaComparar < 12) ? 'M' : 'T';
 
-        // Guardar cita en el modelo Cola (estado = 0 por defecto decimal)
+        // Guardar cita ajustada a la estructura exacta de la tabla
         Cola::create([
             'medico_id'   => $this->medicoId,
             'reg-medico'  => $this->medico->license_number ?? 'REG-000',
@@ -193,15 +200,15 @@ class DaySchedule extends Component
             'numhistoria' => $numHistoriaUser,
             'numorden'    => $numorden,
             'atendido'    => 0,
-            'estado'      => 0, // 0 = Pendiente (Decimal/Entero)
-            'turno'       => $turno,
+            'estado'      => 0, // 0 = Pendiente (decimal 1,0)
+            'turno'       => $turno, // 'M' o 'T' (1 carácter)
             'motivo'      => 'Consulta Médica Generada por Sistema',
             'monto'       => $this->medico->consultation_fee ?? 0.00,
-            'hora_ini'    => $horaIni,
+            'hora_ini'    => $horaIniFinal,
             'hora_fin'    => $horaFinCalculada,
             'tiempo'      => $this->intervaloMinutos,
             'tipo'        => 'Cita',
-            'medico'      => $this->medico->name . ' ' . $this->medico->lastname,
+            'medico'      => $this->medicoId, // ID entero según esquema de BD
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');
