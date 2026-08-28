@@ -46,7 +46,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end custom-dropdown w-100 w-lg-auto">
                                     <li>
                                         <a class="dropdown-item py-2" href="{{ url('/dashboard') }}">
-                                            <i class="bi bi-speedometer2 me-2"></i>Mi Panel
+                                            <i class="bi bi-speedometer2 me-2"></i>Escritorio
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>

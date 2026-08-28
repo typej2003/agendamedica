@@ -65,7 +65,7 @@
                             <h2 class="display-6 fw-bold mb-0">{{ number_format($totalPacientes) }}</h2>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-person-heart fs-3 text-white"></i>
+                            <i class="bi bi-people fs-3 text-white"></i>
                         </div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                             <h2 class="display-6 fw-bold mb-0">{{ number_format($totalMedicos) }}</h2>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-hospital fs-3 text-white"></i>
+                            <i class="bi bi-person-badge fs-3 text-white"></i>
                         </div>
                     </div>
                 </div>
