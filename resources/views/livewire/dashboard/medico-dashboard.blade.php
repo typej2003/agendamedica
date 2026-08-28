@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Indicadores de Citas Agendadas -->
+            <!-- Indicadores de Citas Agendadas (Cola) -->
             <div class="row g-3 mb-4">
                 <!-- Citas Totales -->
                 <div class="col-12 col-sm-4">
@@ -150,6 +150,77 @@
                             </div>
                         </div>
                     </a>
+                </div>
+            </div>
+
+            <!-- Tabla Detallada de Citas / Turnos en Cola del Médico -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-calendar2-range text-primary me-2"></i>Mis Citas Agendadas Recientes
+                    </h6>
+                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1">
+                        Solo mi consulta
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha y Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Cédula</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($proximasCitas as $item)
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold text-dark">
+                                                <i class="bi bi-clock me-1 text-muted"></i>
+                                                {{ isset($item->fecha) ? \Carbon\Carbon::parse($item->fecha)->format('d/m/Y h:i A') : 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="fw-semibold text-primary">
+                                            {{ optional($item->paciente)->nombre ?? 'N/A' }} {{ optional($item->paciente)->apellido ?? '' }}
+                                        </td>
+                                        <td class="text-muted">
+                                            {{ optional($item->paciente)->cedula ?? 'Sin Cédula' }}
+                                        </td>
+                                        <td>
+                                            @php
+                                                $estado = strtolower($item->estado ?? 'pendiente');
+                                                $badgeClass = match($estado) {
+                                                    'atendido', 'completada' => 'bg-success-subtle text-success border-success',
+                                                    'cancelado', 'cancelada' => 'bg-danger-subtle text-danger border-danger',
+                                                    'en_proceso', 'llamado' => 'bg-info-subtle text-info border-info',
+                                                    default => 'bg-warning-subtle text-warning border-warning'
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $badgeClass }} border px-2 py-1">
+                                                {{ ucfirst($item->estado ?? 'Pendiente') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => isset($item->fecha) ? \Carbon\Carbon::parse($item->fecha)->toDateString() : $fechaHoy]) }}" class="btn btn-sm btn-outline-primary rounded-2">
+                                                <i class="bi bi-eye me-1"></i>Ver en Agenda
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="bi bi-calendar-x fs-4 d-block mb-1"></i>
+                                            No tienes citas registradas en la cola actualmente.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

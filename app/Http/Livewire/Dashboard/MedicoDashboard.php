@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Dashboard;
 use Livewire\Component;
 use App\Models\Medico;
 use App\Models\User;
+use App\Models\Cola;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,16 +46,22 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
-            // 5. Métricas de Citas / Agendamientos del Médico
+            // 5. Métricas de Citas / Agendamientos usando el modelo Cola
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
 
-            $queryCitas = DB::table('appointments')
-                ->where('medico_id', $medico->id);
+            $queryCola = Cola::where('medico_id', $medico->id);
 
-            $citasTotales = (clone $queryCitas)->count();
-            $citasHoy = (clone $queryCitas)->whereDate('date', $fechaHoy)->count();
-            $citasManana = (clone $queryCitas)->whereDate('date', $fechaManana)->count();
+            $citasTotales = (clone $queryCola)->count();
+            $citasHoy = (clone $queryCola)->whereDate('fecha', $fechaHoy)->count();
+            $citasManana = (clone $queryCola)->whereDate('fecha', $fechaManana)->count();
+
+            // 6. Obtener listado reciente de citas/turnos en cola con su relación de paciente
+            $proximasCitas = Cola::with('paciente')
+                ->where('medico_id', $medico->id)
+                ->orderBy('fecha', 'desc')
+                ->limit(10)
+                ->get();
 
         } else {
             $totalPacientes = 0;
@@ -68,6 +75,7 @@ class MedicoDashboard extends Component
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
             $medico = (object)['id' => 0];
+            $proximasCitas = collect();
         }
 
         return view('livewire.dashboard.medico-dashboard', compact(
@@ -80,7 +88,8 @@ class MedicoDashboard extends Component
             'citasManana',
             'fechaHoy',
             'fechaManana',
-            'medico'
+            'medico',
+            'proximasCitas'
         ));
     }
 }
