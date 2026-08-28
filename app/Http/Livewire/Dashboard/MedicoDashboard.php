@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class MedicoDashboard extends Component
 {
@@ -26,8 +27,7 @@ class MedicoDashboard extends Component
             // Total de pacientes asignados a este médico
             $totalPacientes = count($pacientesIds);
 
-            // 3. Buscar usuarios (User) asociados a dichos pacientes (filtrando por email o cedula si aplica)
-            // Si tus pacientes se vinculan con la tabla users o deseas contar sus usuarios asociados:
+            // 3. Buscar usuarios (User) asociados a dichos pacientes
             $pacientesUsuarios = DB::table('pacientes')
                 ->whereIn('id', $pacientesIds)
                 ->whereNotNull('email')
@@ -45,18 +45,42 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
+            // 5. Métricas de Citas / Agendamientos del Médico
+            $fechaHoy = Carbon::today()->toDateString();
+            $fechaManana = Carbon::tomorrow()->toDateString();
+
+            $queryCitas = DB::table('appointments')
+                ->where('medico_id', $medico->id);
+
+            $citasTotales = (clone $queryCitas)->count();
+            $citasHoy = (clone $queryCitas)->whereDate('date', $fechaHoy)->count();
+            $citasManana = (clone $queryCitas)->whereDate('date', $fechaManana)->count();
+
         } else {
             $totalPacientes = 0;
             $totalUsuarios = 0;
             $usuariosConectados = 0;
             $listaUsuariosConectados = collect();
+            
+            $citasTotales = 0;
+            $citasHoy = 0;
+            $citasManana = 0;
+            $fechaHoy = Carbon::today()->toDateString();
+            $fechaManana = Carbon::tomorrow()->toDateString();
+            $medico = (object)['id' => 0];
         }
 
         return view('livewire.dashboard.medico-dashboard', compact(
             'totalUsuarios',
             'totalPacientes',
             'usuariosConectados',
-            'listaUsuariosConectados'
+            'listaUsuariosConectados',
+            'citasTotales',
+            'citasHoy',
+            'citasManana',
+            'fechaHoy',
+            'fechaManana',
+            'medico'
         ));
     }
 }

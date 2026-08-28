@@ -12,7 +12,7 @@
 
     @section('content')
         <div wire:poll.10s>
-            <!-- Indicadores / Cards Estadísticas -->
+            <!-- Indicadores / Cards Estadísticas Principales -->
             <div class="row g-3 mb-4">
                 <!-- Mis Pacientes En Línea -->
                 <div class="col-12 col-sm-6 col-xl-4">
@@ -78,6 +78,78 @@
                             <i class="bi bi-arrow-right-short text-white fs-5"></i>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Indicadores de Citas Agendadas -->
+            <div class="row g-3 mb-4">
+                <!-- Citas Totales -->
+                <div class="col-12 col-sm-4">
+                    <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 position-relative overflow-hidden">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas Agendadas Totales</span>
+                                        <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
+                                    </div>
+                                    <div class="bg-white bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                                        <i class="bi bi-calendar-check fs-3 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-black bg-opacity-25 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                                <small class="text-white-50">Ver agenda global</small>
+                                <i class="bi bi-chevron-right text-white small"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Citas Hoy -->
+                <div class="col-12 col-sm-4">
+                    <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm rounded-3 bg-info text-white h-100 position-relative overflow-hidden">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas para Hoy</span>
+                                        <h2 class="display-6 fw-bold mb-0">{{ number_format($citasHoy) }}</h2>
+                                    </div>
+                                    <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                                        <i class="bi bi-calendar-day fs-3 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                                <small class="text-white-50">Ver agendamiento de hoy</small>
+                                <i class="bi bi-chevron-right text-white small"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Citas Mañana -->
+                <div class="col-12 col-sm-4">
+                    <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaManana]) }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm rounded-3 bg-warning text-dark h-100 position-relative overflow-hidden">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="text-dark-50 text-uppercase fw-semibold small d-block mb-1">Citas para Mañana</span>
+                                        <h2 class="display-6 fw-bold mb-0">{{ number_format($citasManana) }}</h2>
+                                    </div>
+                                    <div class="bg-dark bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                                        <i class="bi bi-calendar-plus fs-3 text-dark"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                                <small class="text-dark">Ver agendamiento de mañana</small>
+                                <i class="bi bi-chevron-right text-dark small"></i>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
 
