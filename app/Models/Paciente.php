@@ -42,6 +42,22 @@ class Paciente extends Model
         'fingreso' => 'date',
     ];
 
+    /**
+     * Relación con las historias médicas del paciente.
+     */
+    public function historias(): HasMany
+    {
+        return $this->hasMany(Historia::class, 'paciente_id', 'id');
+    }
+
+    /**
+     * Relación con las consultas médicas del paciente.
+     */
+    public function consultas(): HasMany
+    {
+        return $this->hasMany(Consulta::class, 'paciente_id', 'id');
+    }
+
     public function medicos(): BelongsToMany
     {
         return $this->belongsToMany(Medico::class, 'medico_pacientes', 'paciente_id', 'medico_id')

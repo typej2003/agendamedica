@@ -1,4 +1,4 @@
-<div>
+<div class="mt-4">
     <div class="card shadow-sm border-0 mb-4">
         <!-- Cabecera -->
         <div class="card-header bg-white py-3 border-bottom-0">
@@ -73,7 +73,7 @@
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" wire:click="edit({{ $paciente->id }})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="delete({{ $paciente->id }})" onclick="confirm('¿Desea eliminar este paciente del centro actual?') || event.stopImmediatePropagation()">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" wire:click="triggerDeleteConfirm({{ $paciente->id }})">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -141,8 +141,7 @@
                                         <button class="btn btn-outline-warning" wire:click="edit({{ $paciente->id }})" title="Editar">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <button class="btn btn-outline-danger" wire:click="delete({{ $paciente->id }})" 
-                                            onclick="confirm('¿Está seguro de remover este paciente del centro actual?') || event.stopImmediatePropagation()" title="Eliminar">
+                                        <button class="btn btn-outline-danger" wire:click="triggerDeleteConfirm({{ $paciente->id }})" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -295,7 +294,10 @@
         </div>
     </div>
 
-    <!-- Script para Bootstrap 5 y Livewire -->
+    <!-- CDN SweetAlert2 por si no está cargado globalmente -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Scripts Bootstrap 5, SweetAlert2 y Livewire -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modalElement = document.getElementById('modalPaciente');
@@ -307,6 +309,51 @@
 
             window.addEventListener('close-modal-paciente', () => {
                 bsModal.hide();
+            });
+
+            // SweetAlert2 para Confirmación de Eliminación
+            window.addEventListener('show-delete-confirm', event => {
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "Se procederá a evaluar los registros asociados del paciente.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar/desvincular',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.emit('confirmDeletePaciente', event.detail.id);
+                    }
+                });
+            });
+
+            // SweetAlert2 para Notificaciones
+            window.addEventListener('swal-success', event => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: event.detail.message,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            });
+
+            window.addEventListener('swal-warning', event => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: event.detail.message
+                });
+            });
+
+            window.addEventListener('swal-error', event => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: event.detail.message
+                });
             });
         });
     </script>

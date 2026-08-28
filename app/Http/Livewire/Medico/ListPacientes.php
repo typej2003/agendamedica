@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
 use App\Models\Historia;
+use App\Models\Consulta;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -20,13 +21,15 @@ class ListPacientes extends Component
 
     public $search = '';
     public $paciente_id;
-    public $reg_medico_filtro = ''; // Mantendremos compatibilidad o se puede usar por medical_center_id
+    public $reg_medico_filtro = ''; 
     public $medical_center_id_filtro = ''; 
     
     // Propiedades del formulario
     public $nac = 'V', $cedula, $nombres, $apellidos, $sexo, $telefono, $email, $direccion;
     public $numhistoria, $fnacimiento, $lnacimiento, $escolaridad, $ocupacion, $profesion;
-    public $medical_center_id; // Centro médico seleccionado en el formulario
+    public $medical_center_id;
+
+    protected $listeners = ['confirmDeletePaciente' => 'delete'];
 
     protected $rules = [
         'nac' => 'nullable|string|max:2',
@@ -150,7 +153,6 @@ class ListPacientes extends Component
         if ($medico) {
             $centroId = !empty($this->medical_center_id) ? $this->medical_center_id : null;
 
-            // Sincronizar en la tabla Historias
             Historia::updateOrCreate(
                 [
                     'medico_id' => $medico->id,
@@ -162,7 +164,6 @@ class ListPacientes extends Component
                 ]
             );
 
-            // Mantener compatibilidad con tabla pivote clásica si se usa en paralelo
             DB::table('medico_pacientes')->updateOrInsert(
                 [
                     'medico_id' => $medico->id,
@@ -181,20 +182,62 @@ class ListPacientes extends Component
         $this->resetFields();
     }
 
+    public function triggerDeleteConfirm($id)
+    {
+        $this->dispatchBrowserEvent('show-delete-confirm', ['id' => $id]);
+    }
+
     public function delete($id)
     {
         $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
-        if ($medico) {
-            $query = Historia::where('medico_id', $medico->id)
-                ->where('paciente_id', $id);
 
-            if (!empty($this->medical_center_id_filtro)) {
-                $query->where('medical_center_id', $this->medical_center_id_filtro);
-            }
-
-            $query->delete();
+        if (!$medico) {
+            $this->dispatchBrowserEvent('swal-error', ['message' => 'Médico no autenticado.']);
+            return;
         }
-        session()->flash('message', 'Paciente removido del centro médico correctamente.');
+
+        // 1. Verificar si existen registros asociados (Historia o Consulta) para EL MÉDICO ACTIVO
+        $tieneHistoriasMedico = Historia::where('medico_id', $medico->id)
+            ->where('paciente_id', $id)
+            ->exists();
+
+        $tieneConsultasMedico = Consulta::where('medico_id', $medico->id)
+            ->where('paciente_id', $id)
+            ->exists();
+
+        // Regla: Si tiene registros asociados al médico activo, NO se puede eliminar de la tabla Paciente
+        if ($tieneHistoriasMedico || $tieneConsultasMedico) {
+            $this->dispatchBrowserEvent('swal-warning', [
+                'message' => 'No se puede eliminar el paciente porque posee Historias o Consultas asociadas a su cuenta médica.'
+            ]);
+            return;
+        }
+
+        // 2. Si no tiene asociación/registros con este médico, desvincular del modelo MedicoPaciente
+        DB::table('medico_pacientes')
+            ->where('medico_id', $medico->id)
+            ->where('paciente_id', $id)
+            ->delete();
+
+        // 3. Evaluar si el paciente sigue vinculado a algún otro médico o a registros globales
+        $asociacionesRestantesMedico = DB::table('medico_pacientes')
+            ->where('paciente_id', $id)
+            ->exists();
+
+        $historiasTotales = Historia::where('paciente_id', $id)->exists();
+        $consultasTotales = Consulta::where('paciente_id', $id)->exists();
+
+        // Si no existe ninguna relación con otro médico ni registros en el sistema, se elimina completamente del modelo Paciente
+        if (!$asociacionesRestantesMedico && !$historiasTotales && !$consultasTotales) {
+            Paciente::where('id', $id)->delete();
+            $this->dispatchBrowserEvent('swal-success', [
+                'message' => 'El paciente fue eliminado definitivamente de la base de datos.'
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('swal-success', [
+                'message' => 'El paciente fue desvinculado de su lista médica correctamente.'
+            ]);
+        }
     }
 
     public function render()
@@ -203,7 +246,6 @@ class ListPacientes extends Component
         $centrosSalud = collect();
 
         if ($medico) {
-            // Obtener los centros médicos asociados al médico a través de sus historias o relaciones
             $centroIds = Historia::where('medico_id', $medico->id)
                 ->whereNotNull('medical_center_id')
                 ->distinct()
@@ -211,15 +253,14 @@ class ListPacientes extends Component
 
             $centrosSalud = MedicalCenter::whereIn('id', $centroIds)->get();
 
-            $query = $medico->pacientes();
-
-            // Filtrar por el centro médico seleccionado
-            if (!empty($this->medical_center_id_filtro)) {
-                $query->whereHas('historias', function($q) use ($medico) {
-                    $q->where('medico_id', $medico->id)
-                      ->where('medical_center_id', $this->medical_center_id_filtro);
-                });
-            }
+            // Filtrar pacientes considerando el centro médico mediante la tabla historias
+            $query = Paciente::whereHas('historias', function ($q) use ($medico) {
+                $q->where('medico_id', $medico->id);
+                
+                if (!empty($this->medical_center_id_filtro)) {
+                    $q->where('medical_center_id', $this->medical_center_id_filtro);
+                }
+            });
 
             if (!empty(trim($this->search))) {
                 $term = '%' . trim($this->search) . '%';
@@ -232,7 +273,6 @@ class ListPacientes extends Component
 
             $pacientes = $query->orderBy('pacientes.id', 'desc')->paginate(15);
             
-            // Añadir información de la historia correspondiente al centro actual para cada paciente
             foreach ($pacientes as $paciente) {
                 $historiaQuery = Historia::where('medico_id', $medico->id)
                     ->where('paciente_id', $paciente->id);
@@ -250,7 +290,6 @@ class ListPacientes extends Component
             $pacientes = new LengthAwarePaginator([], 0, 15);
         }
 
-        // Listado completo de centros médicos disponibles para asignar en el modal
         $allMedicalCenters = MedicalCenter::all();
 
         return view('livewire.medico.list-pacientes', compact('pacientes', 'centrosSalud', 'allMedicalCenters'));
