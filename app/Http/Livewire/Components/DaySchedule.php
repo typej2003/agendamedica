@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Medico;
 use App\Models\Cola;
 use App\Models\User;
+use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +27,7 @@ class DaySchedule extends Component
 
     public $itemsSlots = [];
     public $esPersonalAutorizado = false;
+    public $esMedicoPropietario = false;
     public $miCitaDelDia = null;
 
     public function mount($medicoId, $fecha)
@@ -45,8 +47,15 @@ class DaySchedule extends Component
 
         /** @var User $user */
         $user = Auth::user();
-        if ($user && ($user->hasRole('Root') || $user->hasRole('Medico') || $user->hasRole('Secretaria'))) {
-            $this->esPersonalAutorizado = true;
+        if ($user) {
+            if ($user->hasRole('Root') || $user->hasRole('Medico') || $user->hasRole('Secretaria')) {
+                $this->esPersonalAutorizado = true;
+            }
+
+            // Validar si el usuario logueado es el Médico correspondiente a esta agenda
+            if ($user->hasRole('Medico') && ($user->medico_id == $this->medicoId || $user->id == $this->medicoId)) {
+                $this->esMedicoPropietario = true;
+            }
         }
 
         $this->cargarAgenda();
@@ -56,7 +65,7 @@ class DaySchedule extends Component
     {
         /** @var User $user */
         $user = Auth::user();
-        $numHistoriaUser = $user->numhistoria ?? $user->id;
+        $numHistoriaUser = $user ? ($user->numhistoria ?? $user->id) : null;
 
         $citas = Cola::where('medico_id', $this->medicoId)
             ->whereDate('fecha', $this->fecha)
@@ -65,14 +74,49 @@ class DaySchedule extends Component
 
         $this->miCitaDelDia = $citas->firstWhere('numhistoria', $numHistoriaUser);
 
+        // Mapear información sensible del paciente a través de MedicoPaciente y User solo si es el médico autorizado
+        $pacientesData = [];
+        if ($this->esMedicoPropietario) {
+            $numHistorias = $citas->pluck('numhistoria')->unique()->toArray();
+            
+            // Obtener relaciones desde la tabla pivot MedicoPaciente
+            $relaciones = MedicoPaciente::where('medico_id', $this->medicoId)
+                ->whereIn('numhistoria', $numHistorias)
+                ->get()
+                ->keyBy('numhistoria');
+
+            // Obtener la información personal de los usuarios correspondientes
+            $usuarios = User::whereIn('numhistoria', $numHistorias)
+                ->orWhereIn('id', $numHistorias)
+                ->get();
+
+            foreach ($citas as $cita) {
+                $pacienteUser = $usuarios->first(function ($u) use ($cita) {
+                    return $u->numhistoria == $cita->numhistoria || $u->id == $cita->numhistoria;
+                });
+
+                if ($pacienteUser) {
+                    $pacientesData[$cita->numhistoria] = [
+                        'cedula' => $pacienteUser->cedula ?? $pacienteUser->dni ?? 'N/A',
+                        'nombre_completo' => trim(($pacienteUser->name ?? '') . ' ' . ($pacienteUser->lastname ?? $pacienteUser->apellido ?? ''))
+                    ];
+                } else {
+                    $pacientesData[$cita->numhistoria] = [
+                        'cedula' => 'N/A',
+                        'nombre_completo' => 'Paciente ' . $cita->numhistoria
+                    ];
+                }
+            }
+        }
+
         if ($this->modoAtencion === 'cupos') {
-            $this->generarAgendaPorCupos($citas);
+            $this->generarAgendaPorCupos($citas, $pacientesData);
         } else {
-            $this->generarAgendaPorHorarios($citas);
+            $this->generarAgendaPorHorarios($citas, $pacientesData);
         }
     }
 
-    private function generarAgendaPorCupos($citas)
+    private function generarAgendaPorCupos($citas, $pacientesData)
     {
         $citasPorOrden = $citas->keyBy('numorden');
         $slots = [];
@@ -82,9 +126,16 @@ class DaySchedule extends Component
         for ($i = 1; $i <= $this->maxCupos; $i++) {
             $cita = $citasPorOrden->get($i);
             $ocupada = !is_null($cita);
-
-            // En modo cupos, si es hoy y ya pasó la jornada (ej. 6:00 PM), deshabilitar
             $pasado = $esHoy && $now->hour >= 18;
+
+            $citaArray = null;
+            if ($cita) {
+                $citaArray = $cita->toArray();
+                if ($this->esMedicoPropietario && isset($pacientesData[$cita->numhistoria])) {
+                    $citaArray['paciente_cedula'] = $pacientesData[$cita->numhistoria]['cedula'];
+                    $citaArray['paciente_nombre'] = $pacientesData[$cita->numhistoria]['nombre_completo'];
+                }
+            }
 
             $slots[] = [
                 'numorden' => $i,
@@ -92,14 +143,14 @@ class DaySchedule extends Component
                 'display' => "Cupo #{$i}",
                 'ocupada' => $ocupada,
                 'pasado'  => $pasado,
-                'cita'    => $cita,
+                'cita'    => $citaArray,
             ];
         }
 
         $this->itemsSlots = $slots;
     }
 
-    private function generarAgendaPorHorarios($citas)
+    private function generarAgendaPorHorarios($citas, $pacientesData)
     {
         $citasPorHora = $citas->keyBy(function ($item) {
             return $item->hora_ini ? Carbon::parse($item->hora_ini)->format('H:i:s') : null;
@@ -119,9 +170,16 @@ class DaySchedule extends Component
 
             $cita = $citasPorHora->get($horaStr);
             $ocupada = !is_null($cita);
-
-            // Validar si el horario ya pasó en el día en curso
             $pasado = $esHoy && $inicio->format('H:i') < $now->format('H:i');
+
+            $citaArray = null;
+            if ($cita) {
+                $citaArray = $cita->toArray();
+                if ($this->esMedicoPropietario && isset($pacientesData[$cita->numhistoria])) {
+                    $citaArray['paciente_cedula'] = $pacientesData[$cita->numhistoria]['cedula'];
+                    $citaArray['paciente_nombre'] = $pacientesData[$cita->numhistoria]['nombre_completo'];
+                }
+            }
 
             $slots[] = [
                 'numorden' => $orden,
@@ -129,7 +187,7 @@ class DaySchedule extends Component
                 'display' => $horaDisplay,
                 'ocupada' => $ocupada,
                 'pasado'  => $pasado,
-                'cita'    => $cita,
+                'cita'    => $citaArray,
             ];
 
             $inicio->addMinutes($this->intervaloMinutos);
@@ -205,6 +263,15 @@ class DaySchedule extends Component
             'tiempo'      => $this->intervaloMinutos,
             'tipo'        => 'Cita',
             'medico'      => $this->medicoId, // ID entero según esquema de la tabla
+        ]);
+
+        // Registrar o verificar la relación en MedicoPaciente
+        MedicoPaciente::firstOrCreate([
+            'medico_id'   => $this->medicoId,
+            'paciente_id' => $user->id,
+        ], [
+            'numhistoria' => $numHistoriaUser,
+            'reg-medico'  => $this->medico->license_number ?? 'REG-000',
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');
