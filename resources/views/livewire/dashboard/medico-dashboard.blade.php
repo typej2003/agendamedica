@@ -81,35 +81,35 @@
                 </div>
             </div>
 
-            <!-- UNICA TARJETA CONSOLIDAD DE CITAS -->
+            <!-- TARJETA ÚNICA DE CITAS -->
             <div class="card border-0 shadow-sm rounded-3 mb-4">
-                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="bi bi-calendar-check text-primary me-2"></i>Resumen General de Citas Agendadas
-                    </h6>
-                    <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="btn btn-sm btn-outline-primary rounded-2">
-                        <i class="bi bi-calendar3 me-1"></i> Ir a la Agenda
-                    </a>
-                </div>
-                <div class="card-body p-4">
+                <div class="card-body py-4 px-3">
                     <div class="row text-center g-3 align-items-center">
                         <!-- Citas Agendadas Totales -->
-                        <div class="col-12 col-md-4 border-end-md">
+                        <div class="col-12 col-md-4">
                             <div class="p-2">
-                                <span class="text-muted text-uppercase fw-semibold small d-block mb-1">Citas Agendadas Totales</span>
-                                <h1 class="display-5 fw-bold text-dark mb-0">{{ number_format($citasTotales) }}</h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none small text-muted d-inline-block mt-2">
+                                <span class="text-secondary fw-bold small d-block mb-2 text-uppercase" style="letter-spacing: 0.5px;">
+                                    CITAS AGENDADAS TOTALES
+                                </span>
+                                <h1 class="display-4 fw-bold text-dark mb-2" style="font-weight: 800;">
+                                    {{ number_format($citasTotales) }}
+                                </h1>
+                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none text-secondary small">
                                     Ver historico completo <i class="bi bi-chevron-right small"></i>
                                 </a>
                             </div>
                         </div>
 
                         <!-- Citas para Hoy -->
-                        <div class="col-12 col-md-4 border-end-md">
+                        <div class="col-12 col-md-4">
                             <div class="p-2">
-                                <span class="text-info text-uppercase fw-semibold small d-block mb-1">Citas para Hoy</span>
-                                <h1 class="display-5 fw-bold text-info mb-0">{{ number_format($citasHoy) }}</h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none small text-info d-inline-block mt-2">
+                                <span class="fw-bold small d-block mb-2 text-uppercase" style="color: #00c0ef; letter-spacing: 0.5px;">
+                                    CITAS PARA HOY
+                                </span>
+                                <h1 class="display-4 fw-bold mb-2" style="color: #00c0ef; font-weight: 800;">
+                                    {{ number_format($citasHoy) }}
+                                </h1>
+                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none small" style="color: #00c0ef;">
                                     Ver agenda de hoy <i class="bi bi-chevron-right small"></i>
                                 </a>
                             </div>
@@ -118,9 +118,13 @@
                         <!-- Citas para Mañana -->
                         <div class="col-12 col-md-4">
                             <div class="p-2">
-                                <span class="text-warning text-uppercase fw-semibold small d-block mb-1">Citas para Mañana</span>
-                                <h1 class="display-5 fw-bold text-warning mb-0">{{ number_format($citasManana) }}</h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaManana]) }}" class="text-decoration-none small text-warning d-inline-block mt-2">
+                                <span class="fw-bold small d-block mb-2 text-uppercase" style="color: #f39c12; letter-spacing: 0.5px;">
+                                    CITAS PARA MAÑANA
+                                </span>
+                                <h1 class="display-4 fw-bold mb-2" style="color: #f39c12; font-weight: 800;">
+                                    {{ number_format($citasManana) }}
+                                </h1>
+                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaManana]) }}" class="text-decoration-none small" style="color: #f39c12;">
                                     Ver agenda de mañana <i class="bi bi-chevron-right small"></i>
                                 </a>
                             </div>
