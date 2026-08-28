@@ -20,6 +20,7 @@ class Medico extends Model
         'license_number',
         'phone',
         'email',
+        'password',
         'biography',
         'photo_path',
         'office_id',

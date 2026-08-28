@@ -32,6 +32,7 @@ class Paciente extends Model
         'foto_pac',
         'profesion',
         'email',
+        'password',
         'dependencia',
         'medico',
         'sms',
