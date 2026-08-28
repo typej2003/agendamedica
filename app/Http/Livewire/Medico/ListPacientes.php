@@ -254,21 +254,20 @@ class ListPacientes extends Component
     {
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
 
-        // 1. Buscamos la instancia del modelo Medico que corresponda al usuario logueado (user_id)
+        // Buscamos el médico asociado al usuario logueado (user_id = Auth::id())
         $medico = Medico::where('user_id', Auth::id())->first();
 
         if ($medico) {
-            // 2. Traemos a los pacientes del medico recuperando el pivot
             $pacientes = $medico->pacientes()
                 ->with(['historias.medicalCenter'])
                 ->withPivot('numhistoria')
-                // Filtro opcional por Centro Médico (mediante historias del paciente)
+                // Filtro por Centro Médico (mediante las historias asociadas)
                 ->when($this->medical_center_id_filtro, function ($query) {
                     $query->whereHas('historias', function ($q) {
                         $q->where('medical_center_id', $this->medical_center_id_filtro);
                     });
                 })
-                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia (en la pivot)
+                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
                         $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
@@ -279,7 +278,8 @@ class ListPacientes extends Component
                 })
                 ->paginate(10);
         } else {
-            $pacientes = collect();
+            // Genera una paginación vacía válida para evitar errores con $pacientes->links() en Blade
+            $pacientes = Paciente::whereRaw('1 = 0')->paginate(10);
         }
 
         return view('livewire.medico.list-pacientes', [
