@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Medico;
 use App\Models\Cola;
 use App\Models\User;
+use App\Models\Paciente;
 use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -81,36 +82,44 @@ class DaySchedule extends Component
 
         $this->miCitaDelDia = $citas->firstWhere('numhistoria', $numHistoriaUser);
 
-        // Mapear información sensible del paciente
+        // Mapear información de los pacientes
         $pacientesData = [];
         
-        // Cargar datos de pacientes si es el médico propietario O personal autorizado (Root/Secretaria/Medico)
         if ($this->esPersonalAutorizado) {
             $numHistorias = $citas->pluck('numhistoria')->filter()->unique()->toArray();
 
             if (!empty($numHistorias)) {
-                // Obtener usuarios cuyos IDs o numhistoria coincidan
-                $usuarios = User::whereIn('numhistoria', $numHistorias)
-                    ->orWhereIn('id', $numHistorias)
-                    ->get();
+                // Relacionar mediante la tabla pivot MedicoPaciente
+                $relaciones = MedicoPaciente::where('medico_id', $this->medicoId)
+                    ->whereIn('numhistoria', $numHistorias)
+                    ->get()
+                    ->keyBy('numhistoria');
+
+                $pacienteIds = $relaciones->pluck('paciente_id')->unique()->toArray();
+
+                // Buscar pacientes en la tabla `pacientes` mediante sus IDs directos o por `id` = `numhistoria`
+                $pacientes = Paciente::whereIn('id', array_merge($numHistorias, $pacienteIds))->get();
 
                 foreach ($citas as $cita) {
-                    $pacienteUser = $usuarios->first(function ($u) use ($cita) {
-                        return $u->numhistoria == $cita->numhistoria || $u->id == $cita->numhistoria;
-                    });
+                    // Buscar relación pivot o directamente por id de paciente
+                    $relacion = $relaciones->get($cita->numhistoria);
+                    $pacienteIdBuscado = $relacion ? $relacion->paciente_id : $cita->numhistoria;
 
-                    if ($pacienteUser) {
-                        $nombre = trim(($pacienteUser->name ?? '') . ' ' . ($pacienteUser->lastname ?? $pacienteUser->apellido ?? ''));
-                        $cedula = $pacienteUser->cedula ?? $pacienteUser->dni ?? $pacienteUser->ci ?? 'N/A';
+                    $pacienteObj = $pacientes->firstWhere('id', $pacienteIdBuscado);
+
+                    if ($pacienteObj) {
+                        $nombreCompleto = trim(($pacienteObj->nombres ?? '') . ' ' . ($pacienteObj->apellidos ?? ''));
+                        $nac = $pacienteObj->nac ? $pacienteObj->nac . '-' : '';
+                        $cedula = $nac . ($pacienteObj->cedula ?? 'N/A');
 
                         $pacientesData[$cita->numhistoria] = [
                             'cedula' => $cedula,
-                            'nombre_completo' => !empty($nombre) ? $nombre : 'Usuario #' . $pacienteUser->id
+                            'nombre_completo' => !empty($nombreCompleto) ? $nombreCompleto : 'Paciente #' . $pacienteObj->id
                         ];
                     } else {
                         $pacientesData[$cita->numhistoria] = [
                             'cedula' => 'N/A',
-                            'nombre_completo' => 'Paciente N° ' . $cita->numhistoria
+                            'nombre_completo' => 'Historia N° ' . $cita->numhistoria
                         ];
                     }
                 }
@@ -247,14 +256,13 @@ class DaySchedule extends Component
             return;
         }
 
-        // Cálculo seguro de hora_ini, hora_fin y turno
+        // Cálculo de hora_ini, hora_fin y turno
         if (!empty($horaIni)) {
             $dtHoraIni = Carbon::parse($horaIni);
             $horaIniFinal = $dtHoraIni->format('H:i:s');
             $horaFinCalculada = $dtHoraIni->copy()->addMinutes($this->intervaloMinutos)->format('H:i:s');
             $turno = ($dtHoraIni->hour < 12) ? 'M' : 'T';
         } else {
-            // Modo cupos (sin hora asignada)
             $horaIniFinal = '08:00:00';
             $horaFinCalculada = '08:30:00';
             $turno = 'M';
@@ -263,7 +271,7 @@ class DaySchedule extends Component
         $regMedico = $this->medico->license_number ?? $this->medico->reg_medico ?? 'REG-000';
         $monto = $this->medico->consultation_fee ?? $this->medico->monto ?? 0.00;
 
-        // Guardar cita ajustada a los campos de la tabla `cola`
+        // Guardar cita en la tabla `cola`
         Cola::create([
             'medico_id'   => $this->medicoId,
             'reg-medico'  => $regMedico,
@@ -271,8 +279,8 @@ class DaySchedule extends Component
             'numhistoria' => $numHistoriaUser,
             'numorden'    => $numorden,
             'atendido'    => 0,
-            'estado'      => 0, // 0 = Pendiente
-            'turno'       => $turno, // 'M' o 'T'
+            'estado'      => 0,
+            'turno'       => $turno,
             'motivo'      => 'Consulta Médica Generada por Sistema',
             'monto'       => $monto,
             'hora_ini'    => $horaIniFinal,
@@ -300,7 +308,6 @@ class DaySchedule extends Component
         $cita = Cola::findOrFail($colaId);
         $esMismoDia = Carbon::parse($cita->fecha)->isToday();
 
-        // Reglas de Eliminación: Paciente no puede eliminar si es el mismo día
         if (!$this->esPersonalAutorizado && $esMismoDia) {
             session()->flash('error', 'Los pacientes no pueden cancelar o eliminar citas el mismo día de la atención. Por favor contacte al consultorio.');
             return;

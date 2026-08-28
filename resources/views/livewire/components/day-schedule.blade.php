@@ -5,7 +5,7 @@
             <h5 class="fw-bold mb-0 text-capitalize text-primary">
                 Agenda del {{ \Carbon\Carbon::parse($fecha)->locale('es')->translatedFormat('l d \d\e F \d\e Y') }}
             </h5>
-            <small class="text-muted">Dr(a). {{ $medico->name ?? $medico->nombre ?? 'Atención Médica' }} {{ $medico->lastname ?? $medico->apellido ?? '' }}</small>
+            <small class="text-muted">Dr(a). {{ $medico->name ?? $medico->nombres ?? 'Atención Médica' }} {{ $medico->lastname ?? $medico->apellidos ?? '' }}</small>
         </div>
         <a href="{{ route('agendar.cita', ['medicoId' => $medicoId]) }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i> Volver al Calendario
