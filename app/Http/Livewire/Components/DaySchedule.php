@@ -69,8 +69,8 @@ class DaySchedule extends Component
             ->orderBy('numorden', 'asc')
             ->get();
 
-        // Verificar si el usuario ya tiene cita agendada hoy
-        $this->miCitaDelDia = $citas::where('numhistoria', $numHistoriaUser)->first();
+        // Corrección: Usar el método firstWhere() directamente sobre la instancia de la colección $citas
+        $this->miCitaDelDia = $citas->firstWhere('numhistoria', $numHistoriaUser);
 
         if ($this->modoAtencion === 'cupos') {
             $this->generarAgendaPorCupos($citas);
