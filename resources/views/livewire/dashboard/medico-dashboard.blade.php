@@ -12,10 +12,8 @@
 
     @section('content')
         <div wire:poll.10s>
-            <!-- Cards Estadísticas de Pacientes -->
             <div class="row g-3 mb-4">
-                <!-- Mis Pacientes En Línea -->
-                <div class="col-12 col-sm-6 col-xl-4">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-danger text-white h-100">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -26,20 +24,19 @@
                                         <span class="spinner-grow spinner-grow-sm text-light" role="status" aria-hidden="true"></span>
                                     </h2>
                                 </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                                    <i class="bi bi-wifi fs-3 text-white"></i>
+                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-wifi fs-4 text-white"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
                             <small class="text-white-50">Actividad en los últimos 5 min</small>
-                            <i class="bi bi-circle-fill text-warning fs-6"></i>
+                            <i class="bi bi-circle-fill text-warning extra-small"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mis Usuarios Pacientes -->
-                <div class="col-12 col-sm-6 col-xl-4">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -47,20 +44,19 @@
                                     <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Usuarios Asignados</span>
                                     <h2 class="display-6 fw-bold mb-0">{{ number_format($totalUsuarios) }}</h2>
                                 </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                                    <i class="bi bi-people-fill fs-3 text-white"></i>
+                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-people-fill fs-4 text-white"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
                             <small class="text-white-50">Cuentas creadas de mis pacientes</small>
-                            <i class="bi bi-arrow-right-short text-white fs-5"></i>
+                            <i class="bi bi-arrow-right-short text-white fs-4"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mis Pacientes Totales -->
-                <div class="col-12 col-sm-6 col-xl-4">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -68,72 +64,52 @@
                                     <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Mis Pacientes</span>
                                     <h2 class="display-6 fw-bold mb-0">{{ number_format($totalPacientes) }}</h2>
                                 </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                                    <i class="bi bi-person-heart fs-3 text-white"></i>
+                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person-heart fs-4 text-white"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
                             <small class="text-white-50">Pacientes asignados a mi consulta</small>
-                            <i class="bi bi-arrow-right-short text-white fs-5"></i>
+                            <i class="bi bi-arrow-right-short text-white fs-4"></i>
                         </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 d-flex flex-column justify-content-between">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="text-white-50 text-uppercase fw-semibold small">Mis Citas</span>
+                                <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-calendar-event fs-5 text-white"></i>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
+                                <span class="text-white-50 extra-small">Registradas en total</span>
+                            </div>
+
+                            <div class="row g-2 pt-2 border-top border-secondary border-opacity-50">
+                                <div class="col-6">
+                                    <span class="text-white-50 d-block extra-small text-uppercase">Hoy</span>
+                                    <span class="fw-bold fs-6 text-success">+{{ number_format($citasHoy) }}</span>
+                                </div>
+                                <div class="col-6 border-start border-secondary border-opacity-50 ps-2">
+                                    <span class="text-white-50 d-block extra-small text-uppercase">Mañana</span>
+                                    <span class="fw-bold fs-6 text-warning">+{{ number_format($citasManana) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="card-footer bg-black bg-opacity-25 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                            <small class="text-white-50">Ver agendamiento</small>
+                            <i class="bi bi-chevron-right text-white small"></i>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- TARJETA ÚNICA DE CITAS (Igual al estilo de la imagen) -->
-            <div class="card border-0 shadow-sm rounded-3 mb-4">
-                <div class="card-body py-4 px-3">
-                    <div class="row text-center g-3 align-items-center">
-                        <!-- Citas Agendadas Totales -->
-                        <div class="col-12 col-md-4">
-                            <div class="p-2">
-                                <span class="text-secondary fw-bold small d-block mb-2 text-uppercase" style="letter-spacing: 0.5px;">
-                                    CITAS AGENDADAS TOTALES
-                                </span>
-                                <h1 class="display-4 fw-bold text-dark mb-2" style="font-weight: 800;">
-                                    {{ number_format($citasTotales) }}
-                                </h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none text-secondary small">
-                                    Ver historico completo <i class="bi bi-chevron-right small"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Citas para Hoy -->
-                        <div class="col-12 col-md-4">
-                            <div class="p-2">
-                                <span class="fw-bold small d-block mb-2 text-uppercase" style="color: #00c0ef; letter-spacing: 0.5px;">
-                                    CITAS PARA HOY
-                                </span>
-                                <h1 class="display-4 fw-bold mb-2" style="color: #00c0ef; font-weight: 800;">
-                                    {{ number_format($citasHoy) }}
-                                </h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none small" style="color: #00c0ef;">
-                                    Ver agenda de hoy <i class="bi bi-chevron-right small"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Citas para Mañana -->
-                        <div class="col-12 col-md-4">
-                            <div class="p-2">
-                                <span class="fw-bold small d-block mb-2 text-uppercase" style="color: #f39c12; letter-spacing: 0.5px;">
-                                    CITAS PARA MAÑANA
-                                </span>
-                                <h1 class="display-4 fw-bold mb-2" style="color: #f39c12; font-weight: 800;">
-                                    {{ number_format($citasManana) }}
-                                </h1>
-                                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaManana]) }}" class="text-decoration-none small" style="color: #f39c12;">
-                                    Ver agenda de mañana <i class="bi bi-chevron-right small"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabla Detallada de Mis Usuarios Activos -->
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white py-3 border-bottom-0">
                     <h6 class="mb-0 fw-bold text-dark">
@@ -179,3 +155,9 @@
         </div>
     @endsection
 </div>
+
+<style>
+.extra-small {
+    font-size: 0.75rem;
+}
+</style>
