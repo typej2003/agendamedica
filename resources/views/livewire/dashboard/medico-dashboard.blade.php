@@ -12,7 +12,7 @@
 
     @section('content')
         <div wire:poll.10s>
-            <!-- Indicadores / Cards Estadísticas Principales -->
+            <!-- Cards Estadísticas de Pacientes -->
             <div class="row g-3 mb-4">
                 <!-- Mis Pacientes En Línea -->
                 <div class="col-12 col-sm-6 col-xl-4">
@@ -81,114 +81,62 @@
                 </div>
             </div>
 
-            <!-- TARJETA UNIFICADA DE CITAS / COLA -->
+            <!-- TARJETA ÚNICA DE CITAS AGENDADAS (TOTAL, HOY Y MAÑANA) -->
             <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-dark">
-                        <i class="bi bi-calendar-event text-primary me-2"></i>Gestión de Citas y Turnos en Cola
+                        <i class="bi bi-calendar-event-fill text-primary me-2"></i>Resumen General de Citas
                     </h6>
-                    <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1">
-                        Módulo en desarrollo
+                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1">
+                        <i class="bi bi-clock-history me-1"></i>Agenda
                     </span>
                 </div>
-                
-                <div class="card-body border-bottom bg-light bg-opacity-50">
-                    <!-- Resumen de Métricas Internas -->
+                <div class="card-body p-3">
                     <div class="row g-3">
+                        <!-- Total Citas Agendadas -->
                         <div class="col-12 col-md-4">
                             <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none">
-                                <div class="p-3 bg-dark text-white rounded-3 shadow-sm d-flex align-items-center justify-content-between">
+                                <div class="p-3 bg-dark text-white rounded-3 shadow-sm d-flex align-items-center justify-content-between h-100">
                                     <div>
-                                        <span class="text-white-50 text-uppercase fw-semibold small d-block">Totales Agendadas</span>
-                                        <h3 class="fw-bold mb-0">{{ number_format($citasTotales) }}</h3>
+                                        <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas Agendadas</span>
+                                        <h2 class="display-6 fw-bold mb-0 text-white">{{ number_format($citasTotales) }}</h2>
                                     </div>
-                                    <i class="bi bi-calendar-check fs-2 text-white-50"></i>
+                                    <div class="bg-white bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                        <i class="bi bi-calendar-check fs-3 text-white"></i>
+                                    </div>
                                 </div>
                             </a>
                         </div>
+
+                        <!-- Citas para Hoy -->
                         <div class="col-12 col-md-4">
                             <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="text-decoration-none">
-                                <div class="p-3 bg-info text-white rounded-3 shadow-sm d-flex align-items-center justify-content-between">
+                                <div class="p-3 bg-info text-white rounded-3 shadow-sm d-flex align-items-center justify-content-between h-100">
                                     <div>
-                                        <span class="text-white-50 text-uppercase fw-semibold small d-block">Citas para Hoy</span>
-                                        <h3 class="fw-bold mb-0">{{ number_format($citasHoy) }}</h3>
+                                        <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Citas para Hoy</span>
+                                        <h2 class="display-6 fw-bold mb-0 text-white">{{ number_format($citasHoy) }}</h2>
                                     </div>
-                                    <i class="bi bi-calendar-day fs-2 text-white-50"></i>
+                                    <div class="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                        <i class="bi bi-calendar-day fs-3 text-white"></i>
+                                    </div>
                                 </div>
                             </a>
                         </div>
+
+                        <!-- Citas para Mañana -->
                         <div class="col-12 col-md-4">
                             <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaManana]) }}" class="text-decoration-none">
-                                <div class="p-3 bg-warning text-dark rounded-3 shadow-sm d-flex align-items-center justify-content-between">
+                                <div class="p-3 bg-warning text-dark rounded-3 shadow-sm d-flex align-items-center justify-content-between h-100">
                                     <div>
-                                        <span class="text-dark-50 text-uppercase fw-semibold small d-block">Citas para Mañana</span>
-                                        <h3 class="fw-bold mb-0">{{ number_format($citasManana) }}</h3>
+                                        <span class="text-dark-50 text-uppercase fw-semibold small d-block mb-1">Citas para Mañana</span>
+                                        <h2 class="display-6 fw-bold mb-0 text-dark">{{ number_format($citasManana) }}</h2>
                                     </div>
-                                    <i class="bi bi-calendar-plus fs-2 text-dark-50"></i>
+                                    <div class="bg-black bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                        <i class="bi bi-calendar-plus fs-3 text-dark"></i>
+                                    </div>
                                 </div>
                             </a>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Tabla Interna de la misma tarjeta -->
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Fecha y Hora</th>
-                                    <th>Paciente</th>
-                                    <th>Cédula</th>
-                                    <th>Estado</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($proximasCitas as $item)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-semibold text-dark">
-                                                <i class="bi bi-clock me-1 text-muted"></i>
-                                                {{ isset($item->fecha) ? \Carbon\Carbon::parse($item->fecha)->format('d/m/Y h:i A') : 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="fw-semibold text-primary">
-                                            {{ optional($item->paciente)->nombre ?? 'N/A' }} {{ optional($item->paciente)->apellido ?? '' }}
-                                        </td>
-                                        <td class="text-muted">
-                                            {{ optional($item->paciente)->cedula ?? 'Sin Cédula' }}
-                                        </td>
-                                        <td>
-                                            @php
-                                                $estado = strtolower($item->estado ?? 'pendiente');
-                                                $badgeClass = match($estado) {
-                                                    'atendido', 'completada' => 'bg-success-subtle text-success border-success',
-                                                    'cancelado', 'cancelada' => 'bg-danger-subtle text-danger border-danger',
-                                                    'en_proceso', 'llamado' => 'bg-info-subtle text-info border-info',
-                                                    default => 'bg-warning-subtle text-warning border-warning'
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }} border px-2 py-1">
-                                                {{ ucfirst($item->estado ?? 'Pendiente') }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => isset($item->fecha) ? \Carbon\Carbon::parse($item->fecha)->toDateString() : $fechaHoy]) }}" class="btn btn-sm btn-outline-primary rounded-2">
-                                                <i class="bi bi-eye me-1"></i>Ver en Agenda
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="bi bi-clock-history fs-4 d-block mb-1"></i>
-                                            La consulta de la cola de atención está en proceso de configuración.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>

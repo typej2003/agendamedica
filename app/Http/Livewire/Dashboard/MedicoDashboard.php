@@ -5,7 +5,6 @@ namespace App\Http\Livewire\Dashboard;
 use Livewire\Component;
 use App\Models\Medico;
 use App\Models\User;
-use App\Models\Cola;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -46,16 +45,13 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
-            // 5. Métricas Simbólicas de Citas / Agendamientos (Pendiente de lógica final)
+            // 5. Métricas de Citas / Agendamientos
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
 
             $citasTotales = 0;
             $citasHoy = 0;
             $citasManana = 0;
-
-            // 6. Colección vacía simbólica mientras defines la lógica del modelo Cola
-            $proximasCitas = collect();
 
         } else {
             $totalPacientes = 0;
@@ -69,7 +65,6 @@ class MedicoDashboard extends Component
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
             $medico = (object)['id' => 0];
-            $proximasCitas = collect();
         }
 
         return view('livewire.dashboard.medico-dashboard', compact(
@@ -82,8 +77,7 @@ class MedicoDashboard extends Component
             'citasManana',
             'fechaHoy',
             'fechaManana',
-            'medico',
-            'proximasCitas'
+            'medico'
         ));
     }
 }
