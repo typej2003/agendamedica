@@ -1,4 +1,4 @@
-<div>
+<div class="mt-4">
     <div class="row mb-3 align-items-center">
         <div class="col-md-6">
             <h4 class="fw-bold mb-0">Gestión de Usuarios</h4>
