@@ -55,10 +55,10 @@
                                     @endif
                                 </div>
 
-                                {{-- Si tiene un registro en Cola con estado pendiente (0), tomamos el ID del médico --}}
+                                {{-- Si tiene un registro activo en Cola, usamos el ID del médico guardado en el registro --}}
                                 @if(!empty($proximaCita->medico_id))
                                     <a href="{{ route('agendar.cita', ['medicoId' => $proximaCita->medico_id]) }}" class="btn btn-outline-primary btn-sm px-3 fw-bold">
-                                        <i class="bi bi-calendar-event me-1"></i> Ver Cita
+                                        <i class="bi bi-calendar-event me-1"></i> Ver / Reagendar Cita
                                     </a>
                                 @endif
                             </div>
@@ -75,9 +75,9 @@
                         <h6 class="fw-bold text-dark mb-1">No tienes citas agendadas</h6>
                         <p class="text-muted small mb-3">Agenda una consulta médica con nuestros especialistas en pocos pasos.</p>
                         
-                        {{-- Sin registro activo en Cola, se debe redirigir al catálogo/lista general de médicos --}}
-                        <a href="{{ route('medicos.list') }}" class="btn btn-primary btn-sm px-4 fw-bold">
-                            <i class="bi bi-plus-circle me-1"></i> Buscar Médico para Agendar
+                        {{-- Enviamos un valor neutro 0 para cumplir con la firma requerida por la ruta 'agendar.cita' --}}
+                        <a href="{{ route('agendar.cita', ['medicoId' => 0]) }}" class="btn btn-primary btn-sm px-4 fw-bold">
+                            <i class="bi bi-plus-circle me-1"></i> Agendar Cita
                         </a>
                     </div>
                 </div>
