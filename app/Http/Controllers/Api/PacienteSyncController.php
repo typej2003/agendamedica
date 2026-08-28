@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\Medico;
+use App\Models\Historia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -85,14 +86,28 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Asociar paciente con el médico guardando el numhistoria enviado de PowerBuilder en la tabla pivote
+                // 2. Asociar paciente con el médico guardando el numhistoria y reg-medico en la tabla pivote
                 $numHistoriaPowerBuilder = $item['numhistoria'] ?? null;
 
                 $medico->pacientes()->syncWithoutDetaching([
                     $paciente->id => [
-                        'numhistoria' => $numHistoriaPowerBuilder
+                        'numhistoria' => $numHistoriaPowerBuilder,
+                        'reg-medico'  => $regMedico,
                     ]
                 ]);
+
+                // 3. Crear o actualizar la Historia del paciente
+                Historia::updateOrCreate(
+                    [
+                        'paciente_id' => $paciente->id,
+                        'medico_id'   => $medico->id,
+                    ],
+                    [
+                        'numhistoria'       => $numHistoriaPowerBuilder,
+                        'reg-medico'        => $regMedico,
+                        'medical_center_id' => null,
+                    ]
+                );
 
                 $registrosProcesados++;
             }
