@@ -29,8 +29,8 @@
                                     </h5>
                                     <p class="text-muted mb-0 small">
                                         Dr(a). 
-                                        @if(isset($proximaCita->medico_relation))
-                                            {{ $proximaCita->medico_relation->name }} {{ $proximaCita->medico_relation->lastname }}
+                                        @if(isset($proximaCita->medicoUser))
+                                            {{ $proximaCita->medicoUser->name }} {{ $proximaCita->medicoUser->lastname }}
                                         @else
                                             {{ $proximaCita->medico }}
                                         @endif
@@ -38,19 +38,28 @@
                                 </div>
                             </div>
 
-                            <div class="text-md-end border-start border-md-0 ps-3 ps-md-0">
-                                @if($esModoHorario)
-                                    <div class="text-primary fw-bold fs-5">
-                                        <i class="bi bi-clock me-1"></i>
-                                        {{ \Carbon\Carbon::parse($proximaCita->hora_ini)->format('h:i A') }}
-                                    </div>
-                                    <span class="badge bg-info text-dark extra-small">Cita por Horario</span>
-                                @else
-                                    <div class="text-success fw-bold fs-5">
-                                        <i class="bi bi-list-ol me-1"></i>
-                                        Cupo #{{ $proximaCita->numorden }}
-                                    </div>
-                                    <span class="badge bg-secondary extra-small">Orden de Llegada</span>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="text-md-end border-start border-md-0 ps-3 ps-md-0">
+                                    @if($esModoHorario)
+                                        <div class="text-primary fw-bold fs-5">
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{ \Carbon\Carbon::parse($proximaCita->hora_ini)->format('h:i A') }}
+                                        </div>
+                                        <span class="badge bg-info text-dark extra-small">Cita por Horario</span>
+                                    @else
+                                        <div class="text-success fw-bold fs-5">
+                                            <i class="bi bi-list-ol me-1"></i>
+                                            Cupo #{{ $proximaCita->numorden }}
+                                        </div>
+                                        <span class="badge bg-secondary extra-small">Orden de Llegada</span>
+                                    @endif
+                                </div>
+
+                                {{-- Si tiene un registro en Cola con estado pendiente (0), tomamos el ID del médico --}}
+                                @if(!empty($proximaCita->medico_id))
+                                    <a href="{{ route('agendar.cita', ['medicoId' => $proximaCita->medico_id]) }}" class="btn btn-outline-primary btn-sm px-3 fw-bold">
+                                        <i class="bi bi-calendar-event me-1"></i> Ver Cita
+                                    </a>
                                 @endif
                             </div>
                         </div>
@@ -65,8 +74,10 @@
                         </div>
                         <h6 class="fw-bold text-dark mb-1">No tienes citas agendadas</h6>
                         <p class="text-muted small mb-3">Agenda una consulta médica con nuestros especialistas en pocos pasos.</p>
-                        <a href="{{ route('agendar.cita') }}" class="btn btn-primary btn-sm px-4 fw-bold">
-                            <i class="bi bi-plus-circle me-1"></i> Agendar Cita
+                        
+                        {{-- Sin registro activo en Cola, se debe redirigir al catálogo/lista general de médicos --}}
+                        <a href="{{ route('medicos.list') }}" class="btn btn-primary btn-sm px-4 fw-bold">
+                            <i class="bi bi-plus-circle me-1"></i> Buscar Médico para Agendar
                         </a>
                     </div>
                 </div>
