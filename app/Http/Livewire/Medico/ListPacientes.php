@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Medico;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Medico;
 use App\Models\Paciente;
 use App\Models\MedicalCenter;
 use App\Models\MedicoPaciente;
@@ -234,6 +235,7 @@ class ListPacientes extends Component
 
             $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a registros asociados.']);
         }
     }
@@ -243,40 +245,33 @@ class ListPacientes extends Component
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
         $medicoId = Auth::user()->medico->id ?? Auth::id();
 
-        $pacientes = Paciente::query()
-            ->select('pacientes.*') // Asegura que se seleccionen todas las columnas del paciente
-            ->with(['historias.medicalCenter', 'medicos'])
-            // Subselect para obtener el numhistoria asignado por este médico en la pivot
-            ->addSelect([
-                'numhistoria' => MedicoPaciente::select('numhistoria')
-                    ->whereColumn('medico_pacientes.paciente_id', 'pacientes.id')
-                    ->where('medico_pacientes.medico_id', $medicoId)
-                    ->limit(1)
-            ])
-            // Filtrar solo pacientes pertenecientes al Médico actual
-            ->whereHas('medicos', function ($q) use ($medicoId) {
-                $q->where('medico_id', $medicoId);
-            })
-            // Filtrar por Centro Médico mediante la relación Historias -> MedicalCenter
-            ->when($this->medical_center_id_filtro, function ($query) {
-                $query->whereHas('historias', function ($q) {
-                    $q->where('medical_center_id', $this->medical_center_id_filtro);
-                });
-            })
-            // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
-            ->when($this->search, function ($query) use ($medicoId) {
-                $query->where(function ($q) use ($medicoId) {
-                    $q->where('cedula', 'like', '%' . $this->search . '%')
-                      ->orWhere('nombres', 'like', '%' . $this->search . '%')
-                      ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('medicos', function ($m) use ($medicoId) {
-                          $m->where('medico_id', $medicoId)
-                            ->where('numhistoria', 'like', '%' . $this->search . '%');
-                      });
-                });
-            })
-            ->latest()
-            ->paginate(10);
+        // 1. Instanciamos o buscamos el modelo Medico conectado
+        $medico = Medico::find($medicoId);
+
+        if ($medico) {
+            // 2. Traemos a sus Pacientes usando el modelo Medico y la relación BelongsToMany
+            $pacientes = $medico->pacientes()
+                ->with(['historias.medicalCenter'])
+                ->withPivot('numhistoria')
+                // Filtro por Centro Médico mediante la relación Historias -> MedicalCenter
+                ->when($this->medical_center_id_filtro, function ($query) {
+                    $query->whereHas('historias', function ($q) {
+                        $q->where('medical_center_id', $this->medical_center_id_filtro);
+                    });
+                })
+                // Búsqueda por Cédula, Nombres, Apellidos o N° de Historia
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
+                          ->orWhere('pacientes.nombres', 'like', '%' . $this->search . '%')
+                          ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
+                          ->orWhere('medico_pacientes.numhistoria', 'like', '%' . $this->search . '%');
+                    });
+                })
+                ->paginate(10);
+        } else {
+            $pacientes = collect();
+        }
 
         return view('livewire.medico.list-pacientes', [
             'pacientes'    => $pacientes,
