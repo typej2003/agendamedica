@@ -12,7 +12,9 @@
 
     @section('content')
         <div wire:poll.10s>
+            <!-- Cards Estadísticas Principales -->
             <div class="row g-3 mb-4">
+                <!-- 1. Mis Pacientes En Línea -->
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-danger text-white h-100">
                         <div class="card-body p-3">
@@ -36,6 +38,7 @@
                     </div>
                 </div>
 
+                <!-- 2. Mis Usuarios Pacientes -->
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
                         <div class="card-body p-3">
@@ -56,6 +59,7 @@
                     </div>
                 </div>
 
+                <!-- 3. Mis Pacientes Totales -->
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
                         <div class="card-body p-3">
@@ -76,6 +80,7 @@
                     </div>
                 </div>
 
+                <!-- 4. Tarjeta Única Consolidada de Citas (Desde Modelo Cola) -->
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 d-flex flex-column justify-content-between">
                         <div class="card-body p-3">
@@ -86,11 +91,13 @@
                                 </div>
                             </div>
 
+                            <!-- Total de Citas -->
                             <div class="mb-2">
                                 <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
                                 <span class="text-white-50 extra-small">Registradas en total</span>
                             </div>
 
+                            <!-- Detalle Hoy / Mañana -->
                             <div class="row g-2 pt-2 border-top border-secondary border-opacity-50">
                                 <div class="col-6">
                                     <span class="text-white-50 d-block extra-small text-uppercase">Hoy</span>
@@ -110,6 +117,7 @@
                 </div>
             </div>
 
+            <!-- Tabla Detallada de Mis Usuarios Activos -->
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white py-3 border-bottom-0">
                     <h6 class="mb-0 fw-bold text-dark">

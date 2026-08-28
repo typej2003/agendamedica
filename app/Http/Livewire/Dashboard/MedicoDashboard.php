@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Dashboard;
 use Livewire\Component;
 use App\Models\Medico;
 use App\Models\User;
+use App\Models\Cola;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,13 +46,25 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
-            // 5. Métricas de Citas / Agendamientos
+            // 5. Métricas de Citas / Agendamientos desde el modelo Cola
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
 
-            $citasTotales = 0;
-            $citasHoy = 0;
-            $citasManana = 0;
+            // Consulta base filtrando por el médico en la tabla cola
+            $queryCitasMedico = Cola::where('medico_id', $medico->id);
+
+            // Conteo total de citas agendadas para el médico
+            $citasTotales = (clone $queryCitasMedico)->count();
+
+            // Conteo de citas programadas para hoy
+            $citasHoy = (clone $queryCitasMedico)
+                ->whereDate('fecha', $fechaHoy)
+                ->count();
+
+            // Conteo de citas programadas para mañana
+            $citasManana = (clone $queryCitasMedico)
+                ->whereDate('fecha', $fechaManana)
+                ->count();
 
         } else {
             $totalPacientes = 0;
