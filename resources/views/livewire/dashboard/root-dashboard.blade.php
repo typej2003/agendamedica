@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    <!-- Indicadores de Citas Globales -->
+    <!-- Indicadores de Citas Globales (Tabla: cola) -->
     <div class="row g-3 mb-4">
         <!-- Citas Totales del Sistema -->
         <div class="col-12 col-sm-4">

@@ -27,13 +27,13 @@ class RootDashboard extends Component
 
         $usuariosConectados = $listaUsuariosConectados->count();
 
-        // Métricas de Citas Globales (Todos los médicos)
+        // Métricas de Citas Globales usando la tabla 'cola'
         $fechaHoy = Carbon::today()->toDateString();
         $fechaManana = Carbon::tomorrow()->toDateString();
 
-        $citasTotales = DB::table('appointments')->count();
-        $citasHoy = DB::table('appointments')->whereDate('date', $fechaHoy)->count();
-        $citasManana = DB::table('appointments')->whereDate('date', $fechaManana)->count();
+        $citasTotales = DB::table('cola')->count();
+        $citasHoy = DB::table('cola')->whereDate('fecha', $fechaHoy)->count();
+        $citasManana = DB::table('cola')->whereDate('fecha', $fechaManana)->count();
 
         return view('livewire.dashboard.root-dashboard', compact(
             'totalUsuarios',
