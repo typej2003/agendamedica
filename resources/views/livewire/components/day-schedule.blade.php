@@ -27,27 +27,11 @@
         </div>
     @endif
 
-    <!-- Selector de Modo de Atención (EXCLUSIVO PARA PERSONAL AUTORIZADO) -->
-    @if($esPersonalAutorizado)
-        <div class="d-flex justify-content-end mb-3">
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn {{ $modoAtencion === 'cupos' ? 'btn-primary' : 'btn-outline-primary' }}" 
-                        wire:click="cambiarModo('cupos')">
-                    <i class="bi bi-list-ol me-1"></i> Modo Cupos (Orden Llegada)
-                </button>
-                <button type="button" class="btn {{ $modoAtencion === 'horario' ? 'btn-primary' : 'btn-outline-primary' }}" 
-                        wire:click="cambiarModo('horario')">
-                    <i class="bi bi-clock me-1"></i> Modo Horarios
-                </button>
-            </div>
-        </div>
-    @endif
-
     <!-- VISTA PARA PERSONAL AUTORIZADO (Root, Medico, Secretaria) -->
     @if($esPersonalAutorizado)
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-primary text-white py-2 fw-bold small d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-shield-lock me-1"></i> Administración de Citas ({{ strtoupper($modoAtencion) }})</span>
+                <span><i class="bi bi-shield-lock me-1"></i> Administración de Citas</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -55,7 +39,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
-                                <th>Identificador / Hora</th>
+                                <th>Cupo</th>
                                 <th>N° Historia</th>
                                 <th>Estado</th>
                                 <th class="text-end">Acciones</th>
@@ -103,14 +87,10 @@
             </div>
         </div>
     @else
-        <!-- VISTA PÚBLICA PARA PACIENTES (POR DEFECTO EN MODO CUPOS) -->
+        <!-- VISTA PÚBLICA PARA PACIENTES (FIJO EN MODO CUPOS) -->
         <div class="card border-0 shadow-sm p-3">
             <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">
-                @if($modoAtencion === 'cupos')
-                    Seleccione un cupo disponible (Atención por Orden de Llegada):
-                @else
-                    Seleccione una hora disponible para su cita:
-                @endif
+                Seleccione un cupo disponible (Atención por Orden de Llegada):
             </h6>
 
             <div class="row g-2">

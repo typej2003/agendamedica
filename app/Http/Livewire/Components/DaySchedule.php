@@ -52,15 +52,6 @@ class DaySchedule extends Component
         $this->cargarAgenda();
     }
 
-    public function cambiarModo($nuevoModo)
-    {
-        // Solo el personal autorizado puede cambiar el modo
-        if ($this->esPersonalAutorizado) {
-            $this->modoAtencion = $nuevoModo;
-            $this->cargarAgenda();
-        }
-    }
-
     public function cargarAgenda()
     {
         /** @var User $user */
@@ -111,7 +102,7 @@ class DaySchedule extends Component
     private function generarAgendaPorHorarios($citas)
     {
         $citasPorHora = $citas->keyBy(function ($item) {
-            return Carbon::parse($item->hora_ini)->format('H:i:s');
+            return $item->hora_ini ? Carbon::parse($item->hora_ini)->format('H:i:s') : null;
         });
 
         $inicio = Carbon::createFromFormat('H:i', $this->horaInicio);
@@ -184,15 +175,20 @@ class DaySchedule extends Component
             return;
         }
 
-        // Definir hora de inicio y fin válidos para la BD (hora_ini es NOT NULL)
-        $horaIniFinal = $horaIni ?? '08:00:00';
-        $horaFinCalculada = $horaIni ? Carbon::createFromFormat('H:i:s', $horaIni)->addMinutes($this->intervaloMinutos)->format('H:i:s') : '08:30:00';
-        
-        // M = Mañana, T = Tarde (1 solo carácter para la columna 'turno' string(1))
-        $horaComparar = Carbon::createFromFormat('H:i:s', $horaIniFinal)->hour;
-        $turno = ($horaComparar < 12) ? 'M' : 'T';
+        // Cálculo seguro de hora_ini, hora_fin y turno
+        if (!empty($horaIni)) {
+            $dtHoraIni = Carbon::parse($horaIni);
+            $horaIniFinal = $dtHoraIni->format('H:i:s');
+            $horaFinCalculada = $dtHoraIni->copy()->addMinutes($this->intervaloMinutos)->format('H:i:s');
+            $turno = ($dtHoraIni->hour < 12) ? 'M' : 'T';
+        } else {
+            // Modo cupos (sin hora asignada)
+            $horaIniFinal = '08:00:00';
+            $horaFinCalculada = '08:30:00';
+            $turno = 'M';
+        }
 
-        // Guardar cita ajustada a la estructura exacta de la tabla
+        // Guardar cita ajustada a los campos de la tabla `cola`
         Cola::create([
             'medico_id'   => $this->medicoId,
             'reg-medico'  => $this->medico->license_number ?? 'REG-000',
@@ -201,14 +197,14 @@ class DaySchedule extends Component
             'numorden'    => $numorden,
             'atendido'    => 0,
             'estado'      => 0, // 0 = Pendiente (decimal 1,0)
-            'turno'       => $turno, // 'M' o 'T' (1 carácter)
+            'turno'       => $turno, // 'M' o 'T' (1 solo carácter)
             'motivo'      => 'Consulta Médica Generada por Sistema',
             'monto'       => $this->medico->consultation_fee ?? 0.00,
             'hora_ini'    => $horaIniFinal,
             'hora_fin'    => $horaFinCalculada,
             'tiempo'      => $this->intervaloMinutos,
             'tipo'        => 'Cita',
-            'medico'      => $this->medicoId, // ID entero según esquema de BD
+            'medico'      => $this->medicoId, // ID entero según esquema de la tabla
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');
