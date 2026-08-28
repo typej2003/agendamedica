@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Paciente;
 use App\Models\Medico;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RootDashboard extends Component
 {
@@ -25,12 +27,23 @@ class RootDashboard extends Component
 
         $usuariosConectados = $listaUsuariosConectados->count();
 
+        // Métricas de Citas Globales (Todos los médicos)
+        $fechaHoy = Carbon::today()->toDateString();
+        $fechaManana = Carbon::tomorrow()->toDateString();
+
+        $citasTotales = DB::table('appointments')->count();
+        $citasHoy = DB::table('appointments')->whereDate('date', $fechaHoy)->count();
+        $citasManana = DB::table('appointments')->whereDate('date', $fechaManana)->count();
+
         return view('livewire.dashboard.root-dashboard', compact(
             'totalUsuarios',
             'totalPacientes',
             'totalMedicos',
             'usuariosConectados',
-            'listaUsuariosConectados'
+            'listaUsuariosConectados',
+            'citasTotales',
+            'citasHoy',
+            'citasManana'
         ));
     }
 }
