@@ -89,7 +89,7 @@ class DaySchedule extends Component
             $numHistorias = $citas->pluck('numhistoria')->filter()->unique()->toArray();
 
             if (!empty($numHistorias)) {
-                // Relacionar mediante la tabla pivot MedicoPaciente
+                // 1. Obtener la relación desde MedicoPaciente por medico_id y numhistoria
                 $relaciones = MedicoPaciente::where('medico_id', $this->medicoId)
                     ->whereIn('numhistoria', $numHistorias)
                     ->get()
@@ -97,11 +97,10 @@ class DaySchedule extends Component
 
                 $pacienteIds = $relaciones->pluck('paciente_id')->unique()->toArray();
 
-                // Buscar pacientes en la tabla `pacientes` mediante sus IDs directos o por `id` = `numhistoria`
+                // 2. Consultar únicamente el modelo Paciente mediante los IDs obtenidos o por coincidencia directa de numhistoria
                 $pacientes = Paciente::whereIn('id', array_merge($numHistorias, $pacienteIds))->get();
 
                 foreach ($citas as $cita) {
-                    // Buscar relación pivot o directamente por id de paciente
                     $relacion = $relaciones->get($cita->numhistoria);
                     $pacienteIdBuscado = $relacion ? $relacion->paciente_id : $cita->numhistoria;
 
