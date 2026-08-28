@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- TARJETA ÚNICA DE CITAS -->
+            <!-- TARJETA ÚNICA DE CITAS (Igual al estilo de la imagen) -->
             <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-body py-4 px-3">
                     <div class="row text-center g-3 align-items-center">
