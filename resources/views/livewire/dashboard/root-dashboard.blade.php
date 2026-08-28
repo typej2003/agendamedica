@@ -10,8 +10,8 @@
 
     <!-- Indicadores / Cards Estadísticas Principales -->
     <div class="row g-3 mb-4">
-        <!-- Usuarios Conectados Ahora -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 1. Usuarios Conectados Ahora -->
+        <div class="col-12 col-sm-6 col-xl-2-4">
             <div class="card border-0 shadow-sm rounded-3 bg-danger text-white h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
@@ -22,8 +22,8 @@
                                 <span class="spinner-grow spinner-grow-sm text-light" role="status" aria-hidden="true"></span>
                             </h2>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-wifi fs-3 text-white"></i>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-wifi fs-4 text-white"></i>
                         </div>
                     </div>
                 </div>
@@ -34,8 +34,8 @@
             </div>
         </div>
 
-        <!-- Usuarios Registrados -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 2. Usuarios Registrados -->
+        <div class="col-12 col-sm-6 col-xl-2-4">
             <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
@@ -43,8 +43,8 @@
                             <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Usuarios Totales</span>
                             <h2 class="display-6 fw-bold mb-0">{{ number_format($totalUsuarios) }}</h2>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-people-fill fs-3 text-white"></i>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-people-fill fs-4 text-white"></i>
                         </div>
                     </div>
                 </div>
@@ -55,8 +55,8 @@
             </div>
         </div>
 
-        <!-- Pacientes Registrados -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 3. Pacientes Registrados -->
+        <div class="col-12 col-sm-6 col-xl-2-4">
             <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
@@ -64,8 +64,8 @@
                             <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Pacientes</span>
                             <h2 class="display-6 fw-bold mb-0">{{ number_format($totalPacientes) }}</h2>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                            <i class="bi bi-people fs-3 text-white"></i>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person-heart fs-4 text-white"></i>
                         </div>
                     </div>
                 </div>
@@ -76,37 +76,58 @@
             </div>
         </div>
 
-        <!-- Tarjeta Única Consolidada de Citas Globales -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 4. Médicos Registrados -->
+        <div class="col-12 col-sm-6 col-xl-2-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-info text-white h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Médicos</span>
+                            <h2 class="display-6 fw-bold mb-0">{{ number_format($totalMedicos) }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-hospital fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('admin.medicos') }}" class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
+                    <small class="text-white-50">Gestionar médicos</small>
+                    <i class="bi bi-arrow-right-short text-white fs-4"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 5. Tarjeta Única Consolidada de Citas Globales (de la tabla 'cola') -->
+        <div class="col-12 col-sm-6 col-xl-2-4">
             <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 d-flex flex-column justify-content-between">
                 <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
                         <span class="text-white-50 text-uppercase fw-semibold small">Citas Globales</span>
-                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                             <i class="bi bi-calendar-event fs-5 text-white"></i>
                         </div>
                     </div>
 
                     <!-- Total de Citas -->
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
-                        <span class="text-white-50 small">Registradas en total</span>
+                        <span class="text-white-50 extra-small">Registradas en total</span>
                     </div>
 
                     <!-- Detalle Hoy / Mañana -->
                     <div class="row g-2 pt-2 border-top border-secondary border-opacity-50">
                         <div class="col-6">
                             <span class="text-white-50 d-block extra-small text-uppercase">Hoy</span>
-                            <span class="fw-bold fs-5 text-success">+{{ number_format($citasHoy) }}</span>
+                            <span class="fw-bold fs-6 text-success">+{{ number_format($citasHoy) }}</span>
                         </div>
                         <div class="col-6 border-start border-secondary border-opacity-50 ps-2">
                             <span class="text-white-50 d-block extra-small text-uppercase">Mañana</span>
-                            <span class="fw-bold fs-5 text-warning">+{{ number_format($citasManana) }}</span>
+                            <span class="fw-bold fs-6 text-warning">+{{ number_format($citasManana) }}</span>
                         </div>
                     </div>
                 </div>
                 <a href="#" class="card-footer bg-black bg-opacity-25 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
-                    <small class="text-white-50">Ver agendamiento general</small>
+                    <small class="text-white-50">Ver agendamiento</small>
                     <i class="bi bi-chevron-right text-white small"></i>
                 </a>
             </div>
@@ -157,3 +178,16 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Clase responsiva de Bootstrap para ajustar 5 columnas en monitores grandes */
+@media (min-width: 1200px) {
+    .col-xl-2-4 {
+        flex: 0 0 auto;
+        width: 20%;
+    }
+}
+.extra-small {
+    font-size: 0.75rem;
+}
+</style>
