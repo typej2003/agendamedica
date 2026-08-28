@@ -19,9 +19,9 @@ class ViewCalendar extends Component
     public $calendarWeeks = [];
     public $citasPorDia = [];
 
-    // Configuración de Topes y Capacidad
+    // Configuración de Topes y Capacidad por día
     public $maxPacientesPorDia = 20; // Límite tope por día
-    public $alertaFaltan = 3;       // Umbral para mostrar Amarillo (Faltan N o menos)
+    public $alertaFaltan = 3;       // Umbral para mostrar Amarillo (Faltan N o menos para el tope)
 
     public function mount($medicoId, $medicalCenterId = null)
     {
@@ -69,19 +69,21 @@ class ViewCalendar extends Component
                 $dateString = $currentDay->format('Y-m-d');
                 $count = $this->citasPorDia[$dateString] ?? 0;
 
-                // Definición de Colores de Fondo según requerimiento
+                // Definición de Colores según requerimiento:
+                // Sin pacientes: fondo blanco, badge cero
+                // Con pacientes: amarillo (si faltan 3 o menos del tope), rojo (si está completo), blanco (si tiene pacientes pero aún no llega a la alerta)
                 $bgColor = 'bg-white';
-                $badgeColor = 'bg-secondary';
+                $badgeColor = 'bg-light text-dark border';
 
                 if ($count >= $this->maxPacientesPorDia) {
                     $bgColor = 'bg-danger bg-opacity-25'; // Rojo (Completo)
-                    $badgeColor = 'bg-danger';
+                    $badgeColor = 'bg-danger text-white';
                 } elseif ($count >= ($this->maxPacientesPorDia - $this->alertaFaltan) && $count > 0) {
                     $bgColor = 'bg-warning bg-opacity-25'; // Amarillo (Falta 3 o menos del tope)
                     $badgeColor = 'bg-warning text-dark';
                 } elseif ($count > 0) {
                     $bgColor = 'bg-white'; // Con pacientes
-                    $badgeColor = 'bg-primary';
+                    $badgeColor = 'bg-primary text-white';
                 }
 
                 $week[] = [
