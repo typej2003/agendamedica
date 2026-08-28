@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cola extends Model
 {
@@ -37,7 +36,7 @@ class Cola extends Model
         'fecha' => 'date',
     ];
 
-    public function medicoUser(): BelongsTo
+    public function medicoUser()
     {
         return $this->belongsTo(User::class, 'medico_id');
     }
@@ -46,4 +45,6 @@ class Cola extends Model
     {
         return $this->belongsTo(Paciente::class, 'numhistoria', 'numhistoria');
     }
+
 }
+ 

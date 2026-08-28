@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Indicadores de Citas Agendadas (Cola) -->
+            <!-- Indicadores Simbólicos de Citas Agendadas (Cola en Desarrollo) -->
             <div class="row g-3 mb-4">
                 <!-- Citas Totales -->
                 <div class="col-12 col-sm-4">
@@ -153,14 +153,14 @@
                 </div>
             </div>
 
-            <!-- Tabla Detallada de Citas / Turnos en Cola del Médico -->
+            <!-- Tabla Detallada de Citas / Turnos en Cola del Médico (Simbólica / Estado Pendiente) -->
             <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-dark">
                         <i class="bi bi-calendar2-range text-primary me-2"></i>Mis Citas Agendadas Recientes
                     </h6>
-                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1">
-                        Solo mi consulta
+                    <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1">
+                        Módulo en desarrollo
                     </span>
                 </div>
                 <div class="card-body p-0">
@@ -213,8 +213,8 @@
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="bi bi-calendar-x fs-4 d-block mb-1"></i>
-                                            No tienes citas registradas en la cola actualmente.
+                                            <i class="bi bi-clock-history fs-4 d-block mb-1"></i>
+                                            La consulta de la cola de atención está en proceso de configuración.
                                         </td>
                                     </tr>
                                 @endforelse

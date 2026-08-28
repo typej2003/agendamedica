@@ -46,22 +46,16 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
-            // 5. Métricas de Citas / Agendamientos usando el modelo Cola
+            // 5. Métricas Simbólicas de Citas / Agendamientos (Pendiente de lógica final)
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
 
-            $queryCola = Cola::where('medico_id', $medico->id);
+            $citasTotales = 0;
+            $citasHoy = 0;
+            $citasManana = 0;
 
-            $citasTotales = (clone $queryCola)->count();
-            $citasHoy = (clone $queryCola)->whereDate('fecha', $fechaHoy)->count();
-            $citasManana = (clone $queryCola)->whereDate('fecha', $fechaManana)->count();
-
-            // 6. Obtener listado reciente de citas/turnos en cola con su relación de paciente
-            $proximasCitas = Cola::with('paciente')
-                ->where('medico_id', $medico->id)
-                ->orderBy('fecha', 'desc')
-                ->limit(10)
-                ->get();
+            // 6. Colección vacía simbólica mientras defines la lógica del modelo Cola
+            $proximasCitas = collect();
 
         } else {
             $totalPacientes = 0;
