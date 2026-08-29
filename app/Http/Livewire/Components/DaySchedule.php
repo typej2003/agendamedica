@@ -222,6 +222,7 @@ class DaySchedule extends Component
     public function agendarCupo($numorden, $horaIni = null)
     {
         /** @var User $user */
+        $pacienteSinhistoriaId = null;
         $user = Auth::user();
         $paciente = Paciente::where('user_id', $user->id)->first();
         $numHistoriaUser = $paciente ? $paciente->numhistoria : '';
