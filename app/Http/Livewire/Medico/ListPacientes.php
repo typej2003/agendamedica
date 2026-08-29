@@ -259,6 +259,7 @@ class ListPacientes extends Component
 
         if ($medico) {
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
+            dd('entro');
             $pacientes = $medico->pacientes()
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
                 ->paginate(10);
