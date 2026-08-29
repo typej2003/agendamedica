@@ -255,7 +255,7 @@ class ListPacientes extends Component
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
 
         // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
-        $medico = Medico::where('id', Auth::id())->first();
+        $medico = Medico::where('user_id', Auth::id())->first();
         dd($medico); // Depuración para verificar el valor de $medico
 
         if ($medico) {
