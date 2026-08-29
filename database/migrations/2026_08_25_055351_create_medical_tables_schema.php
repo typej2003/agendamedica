@@ -1548,6 +1548,7 @@ return new class extends Migration
 
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('nac', 1)->nullable();
             $table->string('cedula', 10)->nullable();
             $table->string('apellidos', 25)->nullable();

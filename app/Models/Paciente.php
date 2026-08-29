@@ -15,6 +15,8 @@ class Paciente extends Model
     protected $table = 'pacientes';
 
     protected $fillable = [
+        'user_id', // Relación con la tabla de usuarios modelo User, cuando ya tiene un registro en User
+        'numhistoria',
         'nac',
         'cedula',
         'apellidos',

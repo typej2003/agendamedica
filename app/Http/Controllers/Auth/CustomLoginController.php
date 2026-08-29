@@ -106,6 +106,8 @@ class CustomLoginController extends Controller
                     'email'    => $paciente->email,
                     'password' => $paciente->password, // Mismo hash ya encriptado
                 ]);
+                $paciente->user_id = $user->id;
+                $paciente->save();
             }
 
             if (!$user->hasRole('Paciente')) {

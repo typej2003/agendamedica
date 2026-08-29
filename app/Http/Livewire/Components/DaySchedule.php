@@ -223,7 +223,8 @@ class DaySchedule extends Component
     {
         /** @var User $user */
         $user = Auth::user();
-        $numHistoriaUser = $user->numhistoria ?? $user->id;
+        $paciente = Paciente::where('user_id', $user->id)->first();
+        $numHistoriaUser = $paciente ? $paciente->numhistoria : '';
 
         // Validar que el paciente solo tome UNA cita al mes con este médico
         $startOfMonth = Carbon::parse($this->fecha)->startOfMonth()->toDateString();
