@@ -261,14 +261,6 @@ class ListPacientes extends Component
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
             $pacientes = $medico->pacientes()
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
-                ->when($this->search, function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
-                          ->orWhere('pacientes.nombres', 'like', '%' . $this->search . '%')
-                          ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
-                          ->orWhere('medico_pacientes.numhistoria', 'like', '%' . $this->search . '%');
-                    });
-                })
                 ->paginate(10);
         } else {
             // Devolver un Paginador vacío para mantener la compatibilidad con el renderizado de la vista
