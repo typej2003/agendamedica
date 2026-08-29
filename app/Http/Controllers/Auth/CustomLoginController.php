@@ -102,7 +102,7 @@ class CustomLoginController extends Controller
             $user = User::where('email', $email)->first();
             if (!$user) {
                 $user = User::create([
-                    'name'     => $paciente->nombre ?? $paciente->name ?? 'Paciente ' . $paciente->apellido,
+                    'name'     => $paciente->nombres ?? $paciente->nombres ??  $paciente->apellidos,
                     'email'    => $paciente->email,
                     'password' => $paciente->password, // Mismo hash ya encriptado
                 ]);
