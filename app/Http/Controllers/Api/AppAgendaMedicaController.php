@@ -62,7 +62,7 @@ class AppAgendaMedicaController extends Controller
             
             $roles = $hasSpatieTrait ? $user->getRoleNames() : \collect([$userType]);
             $hasSpatieRole = $hasSpatieTrait ? $user->hasAnyRole(['aliado', 'aliadoSmartData', 'medico', 'paciente', 'root', 'admin']) : false;
-            $hasLegacyRole = \isset($user->role) && \in_array($user->role, ['aliado', 'aliadoSmartData']);
+            $hasLegacyRole = isset($user->role) && \in_array($user->role, ['aliado', 'aliadoSmartData']);
 
             // Permitir el acceso si tiene rol de Spatie, rol legacy, o si pertenece directamente a las entidades Medico/Paciente
             if (!$hasSpatieRole && !$hasLegacyRole && !\in_array($userType, ['medico', 'paciente'])) {
