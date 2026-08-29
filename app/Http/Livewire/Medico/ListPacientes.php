@@ -256,8 +256,6 @@ class ListPacientes extends Component
 
         // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
-        dd($medico); // Depuración para verificar el valor de $medico
-
         if ($medico) {
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
             $pacientes = $medico->pacientes()
