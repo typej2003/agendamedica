@@ -37,7 +37,7 @@ Route::middleware('throttle:1000,1')->group(function () {
 // ** App para notificacion medica ** //
 Route::post('/auth-citamedica', function (Request $request) {
     // 1. Capturar y limpiar datos
-    $email = trim($request->input('email'));
+    $email = \trim($request->input('email'));
     $password = $request->input('password');
 
     $user = null;
@@ -70,14 +70,16 @@ Route::post('/auth-citamedica', function (Request $request) {
     // 3. Validación de credenciales
     if ($user && Hash::check($password, $user->password)) {
         
-        // Verificación de roles utilizando Spatie (laravel-permission)
-        // Permite acceso si tiene rol de Spatie o si se valida el atributo de rol en caso de usar el modelo User antiguo
-        $roles = $user->getRoleNames();
-        $hasSpatieRole = $user->hasAnyRole(['aliado', 'aliadoSmartData', 'medico', 'paciente', 'root', 'admin']);
-        $hasLegacyRole = isset($user->role) && in_array($user->role, ['aliado', 'aliadoSmartData']);
+        // Verificación de roles utilizando Spatie (laravel-permission) de manera segura
+        $hasSpatieTrait = \method_exists($user, 'getRoleNames');
+        
+        $roles = $hasSpatieTrait ? $user->getRoleNames() : \collect([$userType]);
+        $hasSpatieRole = $hasSpatieTrait ? $user->hasAnyRole(['aliado', 'aliadoSmartData', 'medico', 'paciente', 'root', 'admin']) : false;
+        $hasLegacyRole = isset($user->role) && \in_array($user->role, ['aliado', 'aliadoSmartData']);
 
-        if (!$hasSpatieRole && !$hasLegacyRole) {
-            return response()->json(['message' => 'No autorizado: El usuario no posee un rol válido.'], 403);
+        // Permitir el acceso si tiene rol de Spatie, rol legacy, o si pertenece directamente a las entidades Medico/Paciente
+        if (!$hasSpatieRole && !$hasLegacyRole && !\in_array($userType, ['medico', 'paciente'])) {
+            return \response()->json(['message' => 'No autorizado: El usuario no posee un rol válido.'], 403);
         }
 
         try {
@@ -96,10 +98,12 @@ Route::post('/auth-citamedica', function (Request $request) {
             $pacientes = Paciente::select('id', 'name', 'lastname', 'phonecell')
                 ->get();
 
-            // Obtener roles y permisos formateados con Spatie
-            $permissions = $user->getAllPermissions()->pluck('name');
+            // Obtener roles y permisos formateados con Spatie de manera segura
+            $permissions = \method_exists($user, 'getAllPermissions') 
+                ? $user->getAllPermissions()->pluck('name') 
+                : \collect([]);
 
-            return response()->json([
+            return \response()->json([
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
                 'user_type'    => $userType,
@@ -116,9 +120,9 @@ Route::post('/auth-citamedica', function (Request $request) {
             ], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error en el servidor: ' . $e->getMessage()], 500);
+            return \response()->json(['message' => 'Error en el servidor: ' . $e->getMessage()], 500);
         }
     }
 
-    return response()->json(['message' => 'Credenciales incorrectas'], 401);
+    return \response()->json(['message' => 'Credenciales incorrectas'], 401);
 });
