@@ -265,6 +265,7 @@ class ListPacientes extends Component
                 ->paginate(10);
         } else {
             // Devolver un Paginador vacío para mantener la compatibilidad con el renderizado de la vista
+            dd('no entro');
             $pacientes = Paciente::whereRaw('1 = 0')->paginate(10);
         }
 
