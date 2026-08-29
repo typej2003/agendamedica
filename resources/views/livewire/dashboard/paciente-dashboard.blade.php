@@ -76,7 +76,7 @@
                         <p class="text-muted small mb-3">Agenda una consulta médica con nuestros especialistas en pocos pasos.</p>
                         
                         {{-- Enviamos un valor neutro 0 para cumplir con la firma requerida por la ruta 'agendar.cita' --}}
-                        <a href="{{ route('agendar.cita', ['medicoId' => 0]) }}" class="btn btn-primary btn-sm px-4 fw-bold">
+                        <a href="{{ route('medicos.search', ['medicoId' => 0]) }}" class="btn btn-primary btn-sm px-4 fw-bold">
                             <i class="bi bi-plus-circle me-1"></i> Agendar Cita
                         </a>
                     </div>
