@@ -260,15 +260,6 @@ class ListPacientes extends Component
         if ($medico) {
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
             $pacientes = $medico->pacientes()
-                ->with(['historias.medicalCenter'])
-                ->withPivot('numhistoria')
-                // Filtro por Centro Médico si se seleccionó alguno
-                ->when($this->medical_center_id_filtro, function ($query) {
-                        $query->whereHas('historias', function ($q) {
-                            $q->where('medical_center_id', $this->medical_center_id_filtro)
-                            ->orWhereNull('medical_center_id'); // Muestra historias aunque tengan medical_center_id en NULL
-                        });
-                    })
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
