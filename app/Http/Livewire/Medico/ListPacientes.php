@@ -20,7 +20,6 @@ class ListPacientes extends Component
 
     // Filtros de búsqueda
     public $search = '';
-    public $medical_center_id_filtro = '';
 
     // Campos del Formulario (Modal Paciente)
     public $paciente_id;
@@ -46,11 +45,6 @@ class ListPacientes extends Component
     ];
 
     public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingMedicalCenterIdFiltro()
     {
         $this->resetPage();
     }
@@ -251,8 +245,6 @@ class ListPacientes extends Component
 
     public function render()
     {
-        $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
-
         // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
 
@@ -266,14 +258,6 @@ class ListPacientes extends Component
             $pacientes = $medico->pacientes()
                 ->with(['historias.medicalCenter'])
                 ->withPivot('numhistoria')
-                
-                // Filtro por Centro Médico SOLO si se ha seleccionado un valor distinto de vacío
-                ->when(!empty($this->medical_center_id_filtro), function ($query) {
-                    $query->whereHas('historias', function ($q) {
-                        $q->where('medical_center_id', $this->medical_center_id_filtro);
-                    });
-                })
-                
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
@@ -290,8 +274,7 @@ class ListPacientes extends Component
         }
 
         return view('livewire.medico.list-pacientes', [
-            'pacientes'    => $pacientes,
-            'centrosSalud' => $centrosSalud,
+            'pacientes' => $pacientes,
         ]);
     }
 }
