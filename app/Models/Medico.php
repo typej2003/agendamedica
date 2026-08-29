@@ -48,6 +48,7 @@ class Medico extends Model
     {
         return $this->belongsToMany(Paciente::class, 'medico_pacientes', 'medico_id', 'paciente_id')
                     ->using(MedicoPaciente::class)
+                    ->withPivot('medico_id', 'paciente_id')
                     ->withTimestamps();
     }
 }
