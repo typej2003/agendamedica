@@ -86,6 +86,7 @@ return new class extends Migration
             $table->string('reg-medico', 20)->nullable();
             $table->date('fecha');
             $table->integer('numhistoria')->nullable();
+            $table->integer('paciente_sinhistoria_id')->nullable();
             $table->integer('numorden')->nullable();
             $table->decimal('atendido', 1, 0)->nullable();
             $table->decimal('estado', 1, 0)->nullable();

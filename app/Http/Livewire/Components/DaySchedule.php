@@ -225,6 +225,9 @@ class DaySchedule extends Component
         $user = Auth::user();
         $paciente = Paciente::where('user_id', $user->id)->first();
         $numHistoriaUser = $paciente ? $paciente->numhistoria : '';
+        if($numHistoriaUser === '') {
+            $pacienteSinhistoriaId = $paciente->id; // Usar el ID del paciente como referencia para pacientes sin historia
+        }
 
         // Validar que el paciente solo tome UNA cita al mes con este médico
         $startOfMonth = Carbon::parse($this->fecha)->startOfMonth()->toDateString();
@@ -277,6 +280,7 @@ class DaySchedule extends Component
             'reg-medico'  => $regMedico,
             'fecha'       => $this->fecha,
             'numhistoria' => $numHistoriaUser,
+            'paciente_sinhistoria_id' => $pacienteSinhistoriaId,
             'numorden'    => $numorden,
             'atendido'    => 0,
             'estado'      => 0,
