@@ -44,9 +44,7 @@
                         </span>
                         <select class="form-select border-start-0" wire:model="medical_center_id_filtro">
                             <option value="">Seleccione un Centro / Consultorio</option>
-                            @foreach($centrosSalud as $centro)
-                                <option value="{{ $centro->id }}">Centro: {{ $centro->name }}</option>
-                            @endforeach
+                            
                         </select>
                     </div>
                 </div>
