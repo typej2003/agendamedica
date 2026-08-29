@@ -44,7 +44,9 @@
                         </span>
                         <select class="form-select border-start-0" wire:model="medical_center_id_filtro">
                             <option value="">Seleccione un Centro / Consultorio</option>
-                            
+                            @foreach($centrosSalud as $centro)
+                                <option value="{{ $centro->id }}">Centro: {{ $centro->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -129,6 +131,7 @@
                                 <td>
                                     <!-- Centro de salud obtenido mediante la relación de Historia -->
                                     <span class="badge bg-light text-dark border">
+                                        {{ $paciente->historia->medicalCenter->name ?? ($paciente->medicalCenter->name ?? 'N/A') }}
                                     </span>
                                 </td>
                                 <td class="small">

@@ -20,6 +20,7 @@ class ListPacientes extends Component
 
     // Filtros de búsqueda
     public $search = '';
+    public $medical_center_id_filtro = '';
 
     // Campos del Formulario (Modal Paciente)
     public $paciente_id;
@@ -45,6 +46,11 @@ class ListPacientes extends Component
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingMedicalCenterIdFiltro()
     {
         $this->resetPage();
     }
@@ -114,7 +120,7 @@ class ListPacientes extends Component
         
         // 1. Obtener el ID del Médico utilizando el user_id del Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
-        $medicoId = $medico ? $medico->id : Auth::id();
+        $medicoId = $medico ? $medico->id : null;
 
         // 2. Obtener el numhistoria del pivote MedicoPaciente
         $relacionMedico = MedicoPaciente::where('paciente_id', $paciente->id)
@@ -150,11 +156,12 @@ class ListPacientes extends Component
 
             // Obtener el registro del médico a través del ID del usuario autenticado
             $medico = Medico::where('user_id', Auth::id())->first();
-            $medicoId = $medico ? $medico->id : Auth::id();
 
-            if (!$medicoId) {
+            if (!$medico) {
                 throw new \Exception('No se encontró el registro de médico asociado a este usuario.');
             }
+
+            $medicoId = $medico->id;
 
             $data = [
                 'nac'         => $this->nac,
@@ -227,7 +234,7 @@ class ListPacientes extends Component
         try {
             $paciente = Paciente::findOrFail($id);
             $medico = Medico::where('user_id', Auth::id())->first();
-            $medicoId = $medico ? $medico->id : Auth::id();
+            $medicoId = $medico ? $medico->id : null;
 
             // Eliminar la relación pivot MedicoPaciente
             MedicoPaciente::where('paciente_id', $id)
@@ -245,19 +252,23 @@ class ListPacientes extends Component
 
     public function render()
     {
+        $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
+
         // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
         $medico = Medico::where('user_id', Auth::id())->first();
-
-        // Si no se encuentra por user_id, se verifica si el id autenticado es directamente el del modelo Medico
-        if (!$medico) {
-            $medico = Medico::find(Auth::id());
-        }
 
         if ($medico) {
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
             $pacientes = $medico->pacientes()
                 ->with(['historias.medicalCenter'])
                 ->withPivot('numhistoria')
+                // Filtro por Centro Médico si se seleccionó alguno
+                ->when($this->medical_center_id_filtro, function ($query) {
+                        $query->whereHas('historias', function ($q) {
+                            $q->where('medical_center_id', $this->medical_center_id_filtro)
+                            ->orWhereNull('medical_center_id'); // Muestra historias aunque tengan medical_center_id en NULL
+                        });
+                    })
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
@@ -274,7 +285,8 @@ class ListPacientes extends Component
         }
 
         return view('livewire.medico.list-pacientes', [
-            'pacientes' => $pacientes,
+            'pacientes'    => $pacientes,
+            'centrosSalud' => $centrosSalud,
         ]);
     }
 }
