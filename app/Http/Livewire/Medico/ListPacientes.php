@@ -255,17 +255,31 @@ class ListPacientes extends Component
         $centrosSalud = MedicalCenter::orderBy('name', 'asc')->get();
 
         // 1. Obtener el Modelo del Médico autenticado buscando por la relación user_id -> Auth::id()
-        $medico = Medico::where('user_id', Auth::id())->first();
+        $medico = Medico::where('id', Auth::id())->first();
 
         if ($medico) {
             // 2. Con el ID del Medico encontrado ($medico->id), obtenemos la lista de Pacientes asociados mediante su relación BelongsToMany
-            dd('entro');
             $pacientes = $medico->pacientes()
+                ->with(['historias.medicalCenter'])
+                ->withPivot('numhistoria')
+                // Filtro por Centro Médico si se seleccionó alguno
+                ->when($this->medical_center_id_filtro, function ($query) {
+                    $query->whereHas('historias', function ($q) {
+                        $q->where('medical_center_id', $this->medical_center_id_filtro);
+                    });
+                })
                 // Búsqueda general en la tabla de Pacientes y en la tabla Pivote MedicoPaciente
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('pacientes.cedula', 'like', '%' . $this->search . '%')
+                          ->orWhere('pacientes.nombres', 'like', '%' . $this->search . '%')
+                          ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
+                          ->orWhere('medico_pacientes.numhistoria', 'like', '%' . $this->search . '%');
+                    });
+                })
                 ->paginate(10);
         } else {
             // Devolver un Paginador vacío para mantener la compatibilidad con el renderizado de la vista
-            dd('no entro');
             $pacientes = Paciente::whereRaw('1 = 0')->paginate(10);
         }
 
