@@ -30,71 +30,84 @@ class AppAgendaMedicaController extends Controller
         $user = null;
         $userType = null;
 
-        // 2. Búsqueda progresiva en las 3 tablas (User, Medico, Paciente)
-        
-        // A. Buscar en Usuarios del Sistema (Root / Admin)
-        $user = User::where('email', $email)->first();
-        if ($user) {
-            $userType = 'root';
+        // 2. Intentar autenticar contra la tabla `users` (Caso Root / Admin)
+        $rootUser = User::where('email', $email)->first();
+        if ($rootUser && Hash::check($password, $rootUser->password)) {
+            $user = $rootUser;
+            $userType = 'Root';
         }
 
-        // B. Buscar en Médicos
+        // 3. Caso Médico
         if (!$user) {
-            $user = Medico::where('email', $email)->first();
-            if ($user) {
-                $userType = 'medico';
-            }
-        }
+            $medico = Medico::where('email', $email)->first();
+            if ($medico && Hash::check($password, $medico->password)) {
+                $userType = 'Medico';
 
-        // C. Buscar en Pacientes
-        if (!$user) {
-            $user = Paciente::where('email', $email)->first();
-            if ($user) {
-                $userType = 'paciente';
-            }
-        }
+                // Buscar o sincronizar con la tabla `users`
+                $user = User::where('email', $email)->first();
+                if (!$user) {
+                    $user = User::create([
+                        'name'     => $medico->nombre ?? $medico->name ?? ('Dr. ' . ($medico->apellido ?? '')),
+                        'email'    => $medico->email,
+                        'password' => $medico->password,
+                    ]);
+                    $medico->user_id = $user->id;
+                    $medico->save();
+                }
 
-        // 3. Validación de credenciales
-        if ($user && Hash::check($password, $user->password)) {
-            
-            // Verificación de roles utilizando Spatie de manera segura
-            $hasSpatieTrait = \method_exists($user, 'getRoleNames');
-            
-            $roles = $hasSpatieTrait ? $user->getRoleNames() : \collect([$userType]);
-            
-            $hasSpatieRole = false;
-            if ($hasSpatieTrait) {
-                try {
-                    $hasSpatieRole = $user->hasAnyRole(['medico', 'paciente', 'root', 'admin']);
-                } catch (\Throwable $e) {
-                    $hasSpatieRole = false;
+                // Asignación explícita del rol Spatie "Medico"
+                if (\method_exists($user, 'hasRole') && !$user->hasRole('Medico')) {
+                    $user->assignRole('Medico');
                 }
             }
+        }
 
-            // Permitir el acceso si el usuario es directamente Medico/Paciente o si tiene un rol asignado en Spatie
-            $isDirectEntity = \in_array($userType, ['medico', 'paciente']);
+        // 4. Caso Paciente
+        if (!$user) {
+            $paciente = Paciente::where('email', $email)->first();
+            if ($paciente && Hash::check($password, $paciente->password)) {
+                $userType = 'Paciente';
 
-            if (!$isDirectEntity && !$hasSpatieRole) {
-                return \response()->json(['message' => 'No autorizado: El usuario no posee un rol válido.'], 403);
+                // Buscar o sincronizar con la tabla `users`
+                $user = User::where('email', $email)->first();
+                if (!$user) {
+                    $user = User::create([
+                        'name'     => $paciente->nombres ?? $paciente->name ?? ($paciente->apellidos ?? ''),
+                        'email'    => $paciente->email,
+                        'password' => $paciente->password,
+                    ]);
+                    $paciente->user_id = $user->id;
+                    $paciente->save();
+                }
+
+                // Asignación explícita del rol Spatie "Paciente"
+                if (\method_exists($user, 'hasRole') && !$user->hasRole('Paciente')) {
+                    $user->assignRole('Paciente');
+                }
             }
+        }
 
+        // 5. Respuesta JSON si se validó y creó/obtuvo el $user
+        if ($user) {
             try {
-                // Generar Token Sanctum si existe el método; si no, generar un token alternativo seguro en string
+                // Token Sanctum
                 $token = \method_exists($user, 'createToken')
                     ? $user->createToken('agenda-token')->plainTextToken
                     : \base64_encode(Str::random(40) . '|' . $user->id);
+
+                // Roles y Permisos de Spatie
+                $roles = \method_exists($user, 'getRoleNames') ? $user->getRoleNames() : \collect([$userType]);
+                $permissions = \method_exists($user, 'getAllPermissions') 
+                    ? $user->getAllPermissions()->pluck('name') 
+                    : \collect([]);
 
                 // Citas del mes actual
                 $inicioMes = Carbon::now()->startOfMonth()->toDateString();
                 $finMes = Carbon::now()->endOfMonth()->toDateString();
 
-                // Obtener consultas del mes
                 $consultas = Consulta::whereBetween('fecha', [$inicioMes, $finMes])->get();
-
-                // Obtener pacientes para cruce manual sin requerir la relación Eloquent
                 $pacientesRaw = Paciente::all();
-                
-                // Mapear pacientes para ajustar columnas nombres/apellidos/telefono a name/lastname/phonecell
+
                 $pacientes = $pacientesRaw->map(function ($p) {
                     return [
                         'id'        => $p->id,
@@ -104,9 +117,7 @@ class AppAgendaMedicaController extends Controller
                     ];
                 });
 
-                // Asignar el paciente mapeado a cada cita manualmente
                 $citas = $consultas->map(function ($consulta) use ($pacientes) {
-                    // Buscar coincidencia por numhistoria o por paciente_id
                     $pacienteId = $consulta->paciente_id ?? $consulta->numhistoria;
                     $pacienteEncontrado = $pacientes->firstWhere('id', $pacienteId);
 
@@ -116,31 +127,20 @@ class AppAgendaMedicaController extends Controller
                     return $consultaArray;
                 });
 
-                // Obtener permisos formateados con Spatie de manera segura
-                $permissions = \method_exists($user, 'getAllPermissions') 
-                    ? $user->getAllPermissions()->pluck('name') 
-                    : \collect([]);
-
-                // Determinar el nombre a mostrar según los campos presentes en el objeto
-                $nombreUsuario = $user->name 
-                    ?? ($user->nombres ? \trim($user->nombres . ' ' . ($user->apellidos ?? '')) : null)
-                    ?? $user->nombre 
-                    ?? '';
-
                 return \response()->json([
                     'access_token' => $token,
                     'token_type'   => 'Bearer',
                     'user_type'    => $userType,
                     'user'         => [
                         'id'          => $user->id,
-                        'name'        => $nombreUsuario,
+                        'name'        => $user->name,
                         'email'       => $user->email,
                         'roles'       => $roles,
                         'permissions' => $permissions,
                     ],
                     'citas'                   => $citas,
                     'pacientes'               => $pacientes->values(),
-                    'capacidad_diaria_maxima' => 8 // Límite de citas diarias para alternar color Verde/Rojo
+                    'capacidad_diaria_maxima' => 8
                 ], 200);
 
             } catch (\Exception $e) {
@@ -148,6 +148,6 @@ class AppAgendaMedicaController extends Controller
             }
         }
 
-        return \response()->json(['message' => 'Credenciales incorrectas'], 401);
+        return \response()->json(['message' => 'Credenciales incorrectas o usuario no registrado.'], 401);
     }
 }
