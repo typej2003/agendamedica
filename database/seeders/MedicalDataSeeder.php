@@ -7,6 +7,7 @@ use App\Models\Medico;
 use App\Models\MedicalCenter;
 use App\Models\Office;
 use App\Models\Specialty;
+use App\Models\MedicoRegistro;
 use Illuminate\Database\Seeder;
 
 class MedicalDataSeeder extends Seeder
@@ -97,6 +98,12 @@ class MedicalDataSeeder extends Seeder
                         'password' => $docData['password'],
                         'reg-medico' => $docData['reg_medico'],
                         'is_active' => true,
+                    ]);
+
+                    // Registrar en la tabla MedicoRegistro asociando el id del médico y el reg-medico
+                    MedicoRegistro::create([
+                        'medico_id' => $medico->id,
+                        'reg-medico' => $docData['reg_medico'],
                     ]);
 
                     // Asociar al centro médico a través de la tabla pivote
