@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Medico;
 use App\Models\Paciente;
 use App\Models\Consulta;
+use App\Models\MotivoCita;
 
 class AppAgendaMedicaController extends Controller
 {
@@ -127,6 +128,9 @@ class AppAgendaMedicaController extends Controller
                     return $consultaArray;
                 });
 
+                // Obtención de la tabla de motivos de cita
+                $motivos = MotivoCita::all();
+
                 return \response()->json([
                     'access_token' => $token,
                     'token_type'   => 'Bearer',
@@ -140,6 +144,7 @@ class AppAgendaMedicaController extends Controller
                     ],
                     'citas'                   => $citas,
                     'pacientes'               => $pacientes->values(),
+                    'motivos'                 => $motivos,
                     'capacidad_diaria_maxima' => 8
                 ], 200);
 

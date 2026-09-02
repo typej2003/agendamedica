@@ -4,24 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MotivoCita extends Model
 {
     use HasFactory;
 
-    protected $table = 'motivo_citas';
-    protected $primaryKey = 'codigo';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    /**
+     * Nombre de la tabla asociada al modelo.
+     *
+     * @var string
+     */
+    protected $table = 'motivo_cita';
 
+    /**
+     * Atributos asignables en masa.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
+        'medico_id',
+        'reg-medico',
         'codigo',
         'tipo_atencion',
     ];
 
-    public function citas(): HasMany
+    /**
+     * Relación con el usuario/médico.
+     */
+    public function medico()
     {
-        return $this->hasMany(Cita::class, 'tipo', 'codigo');
+        return $this->belongsTo(User::class, 'medico_id');
     }
 }
