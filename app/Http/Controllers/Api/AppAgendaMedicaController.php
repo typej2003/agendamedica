@@ -57,15 +57,24 @@ class AppAgendaMedicaController extends Controller
         // 3. Validación de credenciales
         if ($user && Hash::check($password, $user->password)) {
             
-            // Verificación de roles utilizando Spatie (laravel-permission) de manera segura
+            // Verificación de roles utilizando Spatie de manera segura
             $hasSpatieTrait = \method_exists($user, 'getRoleNames');
             
             $roles = $hasSpatieTrait ? $user->getRoleNames() : \collect([$userType]);
-            $hasSpatieRole = $hasSpatieTrait ? $user->hasAnyRole(['aliado', 'aliadoSmartData', 'medico', 'paciente', 'root', 'admin']) : false;
-            $hasLegacyRole = isset($user->role) && \in_array($user->role, ['aliado', 'aliadoSmartData']);
+            
+            $hasSpatieRole = false;
+            if ($hasSpatieTrait) {
+                try {
+                    $hasSpatieRole = $user->hasAnyRole(['medico', 'paciente', 'root', 'admin']);
+                } catch (\Throwable $e) {
+                    $hasSpatieRole = false;
+                }
+            }
 
-            // Permitir el acceso si tiene rol de Spatie, rol legacy, o si pertenece directamente a las entidades Medico/Paciente
-            if (!$hasSpatieRole && !$hasLegacyRole && !\in_array($userType, ['medico', 'paciente'])) {
+            // Permitir el acceso si el usuario es directamente Medico/Paciente o si tiene un rol asignado en Spatie
+            $isDirectEntity = \in_array($userType, ['medico', 'paciente']);
+
+            if (!$isDirectEntity && !$hasSpatieRole) {
                 return \response()->json(['message' => 'No autorizado: El usuario no posee un rol válido.'], 403);
             }
 
@@ -114,7 +123,7 @@ class AppAgendaMedicaController extends Controller
 
                 // Determinar el nombre a mostrar según los campos presentes en el objeto
                 $nombreUsuario = $user->name 
-                    ?? ($user->nombres ? \trim($user->nombres . ' ' . ($user->apellidos ?? '')) : '')
+                    ?? ($user->nombres ? \trim($user->nombres . ' ' . ($user->apellidos ?? '')) : null)
                     ?? $user->nombre 
                     ?? '';
 
