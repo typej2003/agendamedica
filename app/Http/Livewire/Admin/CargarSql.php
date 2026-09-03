@@ -95,7 +95,7 @@ class CargarSql extends Component
                         ?? (string)$medico->id;
 
         try {
-            // Desactivar temporalmente revisión de llaves foráneas fuera de la transacción
+            // Desactivar temporalmente revisión de llaves foráneas antes de iniciar la transacción
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             DB::beginTransaction();
@@ -147,19 +147,19 @@ class CargarSql extends Component
 
             DB::commit();
 
-            // Reactivar verificación de llaves foráneas después del commit
+            // Reactivar verificación de llaves foráneas al finalizar correctamente
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
             session()->flash('message', '¡Los archivos SQL fueron procesados e integrados exitosamente con el médico seleccionado!');
 
         } catch (\Exception $e) {
-            // Si la transacción sigue abierta, hacer rollback
+            // Si la transacción sigue abierta, hacer rollback de manera segura
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
 
-            // Reactivar verificación de llaves foráneas siempre de forma segura
+            // Reactivar verificación de llaves foráneas de forma segura fuera de la transacción
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             session()->flash('error', 'Ocurrió un error al procesar las consultas SQL: ' . $e->getMessage());
