@@ -154,6 +154,8 @@ class AppAgendaMedicaController extends Controller
                 $pacientes = $pacientesRaw->map(function ($p) {
                     return [
                         'id'          => $p->id,
+                        'cedula'          => $p->cedula,
+                        'email'          => $p->email,
                         'name'        => $p->nombres ?? $p->name ?? '',
                         'lastname'    => $p->apellidos ?? $p->lastname ?? '',
                         'phonecell'   => $p->telefono ?? $p->phonecell ?? '',
