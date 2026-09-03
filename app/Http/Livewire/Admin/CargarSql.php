@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Admin;
+namespace App\Http\Livewire\Admin;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
