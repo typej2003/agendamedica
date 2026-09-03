@@ -92,7 +92,7 @@ class MedicalDataSeeder extends Seeder
                         'name' => $docData['first_name'] . ' ' . $docData['last_name'],
                         'email' => $docData['email'],
                         'password' => $hashedPassword,
-                        'reg-medico' => $docData['reg_medico'],
+                        'reg_medico' => $docData['reg_medico'],
                     ]);
 
                     // Asignar rol de médico si utilizas Spatie Permissions (Opcional)
@@ -113,14 +113,14 @@ class MedicalDataSeeder extends Seeder
                         'office_id' => $office->id,
                         'consultation_fee' => 50.00,
                         'password' => $hashedPassword,
-                        'reg-medico' => $docData['reg_medico'],
+                        'reg_medico' => $docData['reg_medico'],
                         'is_active' => true,
                     ]);
 
                     // 3. Registrar en la tabla MedicoRegistro
                     MedicoRegistro::create([
                         'medico_id' => $medico->id,
-                        'reg-medico' => $docData['reg_medico'],
+                        'reg_medico' => $docData['reg_medico'],
                     ]);
 
                     // 4. Asociar al centro médico a través de la tabla pivote
