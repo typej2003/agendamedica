@@ -43,10 +43,12 @@ class CargarSql extends Component
         // 1. Obtener el registro médico desde MedicoRegistro
         $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
         
-        // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID de usuario
+        // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID del médico
         $regMedicoVal = $medicoRegistro->{'reg-medico'} 
+                        ?? $medicoRegistro->reg_medico 
                         ?? $medico->{'reg-medico'} 
-                        ?? '';
+                        ?? $medico->reg_medico 
+                        ?? (string)$medico->id;
 
         DB::beginTransaction();
 
@@ -80,7 +82,7 @@ class CargarSql extends Component
 
                         $sqlBuffer .= $linea . "\n";
 
-                        // Cuando finaliza la sentencia SQL (;)
+                        // Cuando finaliza la sentencia SQL con punto y coma (;)
                         if (str_ends_with($lineaLimpia, ';')) {
                             $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
 
@@ -117,24 +119,43 @@ class CargarSql extends Component
     }
 
     /**
-     * Reemplaza el registro médico, ID de médico e ID de usuario dentro de las sentencias SQL.
+     * Reemplaza el registro médico en las tuplas de INSERT o sustituye marcadores dinámicos.
      */
     private function reemplazarDatosMedico(string $sql, string $regMedicoVal, int $medicoId, ?int $userId): string
     {
-        // Reemplazar la primera ocurrencia del valor del registro médico en las tuplas ( 'VALOR', ...
-        if (!empty($regMedicoVal)) {
-            $sql = preg_replace("/'\s*([A-Za-z0-9_ -]*)\s*',/i", "'{$regMedicoVal}',", $sql, 1);
-        }
-
-        // Reemplazar marcadores dinámicos o columnas clave
+        // 1. Reemplazo para marcadores explícitos si existen
         $replacements = [
             ':reg_medico' => $regMedicoVal,
             ':reg-medico' => $regMedicoVal,
             ':medico_id'   => $medicoId,
             ':user_id'     => $userId ?? 'NULL',
         ];
+        $sql = str_replace(array_keys($replacements), array_values($replacements), $sql);
 
-        return str_replace(array_keys($replacements), array_values($replacements), $sql);
+        // 2. Si la sentencia es un INSERT INTO con columna reg_medico como primer valor de tupla
+        if (preg_match('/INSERT\s+INTO\s+[`\w`\.]+\s*\(([^)]+)\)\s*VALUES/i', $sql, $matches)) {
+            $columnas = array_map(fn($col) => trim($col, " `\t\n\r\0\x0B"), explode(',', $matches[1]));
+            $posicionRegMedico = array_search('reg_medico', $columnas);
+
+            if ($posicionRegMedico !== false) {
+                // Reemplaza el valor en la posición correspondiente dentro de cada tupla VALUES (...)
+                $sql = preg_replace_callback(
+                    '/\(([^)]+)\)/s',
+                    function ($tuplaMatch) use ($posicionRegMedico, $regMedicoVal) {
+                        $valores = explode(',', $tuplaMatch[1]);
+                        
+                        if (isset($valores[$posicionRegMedico])) {
+                            $valores[$posicionRegMedico] = " '" . addslashes($regMedicoVal) . "'";
+                        }
+
+                        return '(' . implode(',', $valores) . ')';
+                    },
+                    $sql
+                );
+            }
+        }
+
+        return $sql;
     }
 
     public function render()
