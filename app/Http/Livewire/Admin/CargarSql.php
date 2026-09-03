@@ -80,10 +80,11 @@ class CargarSql extends Component
         $this->validate();
 
         $archivosProcesados = 0;
+        $consultasEjecutadas = 0;
 
         try {
+            // Desactivar restricciones de llaves foráneas y autocommit
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::beginTransaction();
 
             foreach ($this->archivosSql as $archivo) {
                 if (!$archivo || !$archivo->getRealPath() || !file_exists($archivo->getRealPath())) {
@@ -99,7 +100,7 @@ class CargarSql extends Component
                     while (($linea = fgets($handle)) !== false) {
                         $lineaLimpia = trim($linea);
 
-                        // Omitir líneas vacías o comentarios de encabezado básicos
+                        // Omitir líneas vacías y comentarios simples
                         if (
                             empty($lineaLimpia) ||
                             str_starts_with($lineaLimpia, '--') ||
@@ -111,16 +112,18 @@ class CargarSql extends Component
 
                         $sqlBuffer .= $linea;
 
-                        // Ejecutar cuando la consulta termina en ;
+                        // Ejecutar la sentencia cuando se encuentra el ';' final
                         if (str_ends_with($lineaLimpia, ';')) {
                             DB::unprepared($sqlBuffer);
+                            $consultasEjecutadas++;
                             $sqlBuffer = '';
                         }
                     }
 
-                    // Ejecutar remanente al final del archivo si existe
+                    // Procesar remanente si no terminó en ';'
                     if (!empty(trim($sqlBuffer))) {
                         DB::unprepared($sqlBuffer);
+                        $consultasEjecutadas++;
                     }
 
                     fclose($handle);
@@ -128,7 +131,7 @@ class CargarSql extends Component
                 }
             }
 
-            DB::commit();
+            // Reactivar restricciones de llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             if ($archivosProcesados === 0) {
@@ -137,14 +140,13 @@ class CargarSql extends Component
             }
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
-            session()->flash('message', "¡Proceso completado con éxito! Se procesaron {$archivosProcesados} archivos SQL sin problemas.");
+            session()->flash('message', "¡Proceso completado con éxito! Se procesaron {$archivosProcesados} archivos SQL e insertaron {$consultasEjecutadas} sentencias.");
 
         } catch (\Throwable $e) {
-            DB::rollBack();
             try {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             } catch (\Throwable $ex) {
-                // Silenciar en caso de fallo al restablecer FK
+                // Ignorar si falla la reactivación en caso de error
             }
 
             session()->flash('error', 'Error en la importación SQL: ' . $e->getMessage());
