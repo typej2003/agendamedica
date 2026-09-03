@@ -80,10 +80,9 @@ class CargarSql extends Component
         $this->validate();
 
         $archivosProcesados = 0;
-        $consultasEjecutadas = 0;
 
         try {
-            // Desactivar restricciones de llaves foráneas y autocommit
+            // Desactivar restricciones para facilitar inserción directa
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             foreach ($this->archivosSql as $archivo) {
@@ -92,61 +91,31 @@ class CargarSql extends Component
                 }
 
                 $rutaReal = $archivo->getRealPath();
-                $handle = fopen($rutaReal, 'r');
+                $contenidoSql = file_get_contents($rutaReal);
 
-                if ($handle) {
-                    $sqlBuffer = '';
-
-                    while (($linea = fgets($handle)) !== false) {
-                        $lineaLimpia = trim($linea);
-
-                        // Omitir líneas vacías y comentarios simples
-                        if (
-                            empty($lineaLimpia) ||
-                            str_starts_with($lineaLimpia, '--') ||
-                            str_starts_with($lineaLimpia, '/*') ||
-                            str_starts_with($lineaLimpia, '#')
-                        ) {
-                            continue;
-                        }
-
-                        $sqlBuffer .= $linea;
-
-                        // Ejecutar la sentencia cuando se encuentra el ';' final
-                        if (str_ends_with($lineaLimpia, ';')) {
-                            DB::unprepared($sqlBuffer);
-                            $consultasEjecutadas++;
-                            $sqlBuffer = '';
-                        }
-                    }
-
-                    // Procesar remanente si no terminó en ';'
-                    if (!empty(trim($sqlBuffer))) {
-                        DB::unprepared($sqlBuffer);
-                        $consultasEjecutadas++;
-                    }
-
-                    fclose($handle);
+                if (!empty(trim($contenidoSql))) {
+                    // Ejecución directa mediante PDO sin transacciones manuales
+                    DB::connection()->getPdo()->exec($contenidoSql);
                     $archivosProcesados++;
                 }
             }
 
-            // Reactivar restricciones de llaves foráneas
+            // Reactivar llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             if ($archivosProcesados === 0) {
-                session()->flash('error', 'No se pudieron leer los archivos seleccionados.');
+                session()->flash('error', 'No se pudieron procesar los archivos seleccionados.');
                 return;
             }
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
-            session()->flash('message', "¡Proceso completado con éxito! Se procesaron {$archivosProcesados} archivos SQL e insertaron {$consultasEjecutadas} sentencias.");
+            session()->flash('message', "¡Proceso completado con éxito! Se importaron {$archivosProcesados} archivos SQL correctamente.");
 
         } catch (\Throwable $e) {
             try {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             } catch (\Throwable $ex) {
-                // Ignorar si falla la reactivación en caso de error
+                // Ignorar error al restaurar FK
             }
 
             session()->flash('error', 'Error en la importación SQL: ' . $e->getMessage());
