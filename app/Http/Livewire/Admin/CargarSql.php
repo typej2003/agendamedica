@@ -2,7 +2,8 @@
 
 namespace App\Http\Livewire\Admin;
 
-use App\Models\User;
+use App\Models\Medico;
+use App\Models\MedicoRegistro;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -13,10 +14,9 @@ class CargarSql extends Component
 
     public $archivosSql = [];
     public $medico_id = '';
-    public $procesando = false;
 
     protected $rules = [
-        'medico_id' => 'required|exists:users,id',
+        'medico_id' => 'required|exists:medicos,id',
         'archivosSql' => 'required|array|min:1',
         'archivosSql.*' => 'required|file|max:51200', // Máximo 50MB por archivo SQL
     ];
@@ -33,21 +33,25 @@ class CargarSql extends Component
     {
         $this->validate();
 
-        $medico = User::find($this->medico_id);
+        $medico = Medico::with('office')->find($this->medico_id);
 
         if (!$medico) {
             session()->flash('error', 'El médico seleccionado no fue encontrado.');
             return;
         }
 
-        // Obtener identificadores del médico para reemplazo
-        $regMedico = $medico->reg_medico ?? $medico->id;
-        $userId = $medico->id;
+        // 1. Obtener el registro médico desde MedicoRegistro
+        $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
+        
+        // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID de usuario
+        $regMedicoVal = $medicoRegistro->{'reg-medico'} 
+                        ?? $medico->{'reg-medico'} 
+                        ?? '';
 
         DB::beginTransaction();
 
         try {
-            // Desactivar temporalmente revisión de llaves foráneas para evitar conflictos de orden al insertar
+            // Desactivar temporalmente revisión de llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             foreach ($this->archivosSql as $archivo) {
@@ -57,7 +61,6 @@ class CargarSql extends Component
                     continue;
                 }
 
-                // Procesamiento por lectura de stream en buffer para optimizar memoria en archivos pesados
                 $handle = fopen($rutaReal, 'r');
                 if ($handle) {
                     $sqlBuffer = '';
@@ -77,10 +80,9 @@ class CargarSql extends Component
 
                         $sqlBuffer .= $linea . "\n";
 
-                        // Cuando se encuentra el final de una sentencia SQL (;)
+                        // Cuando finaliza la sentencia SQL (;)
                         if (str_ends_with($lineaLimpia, ';')) {
-                            // Reemplazos clave de información del médico
-                            $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedico, $userId);
+                            $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
 
                             if (!empty(trim($sqlEjecutar))) {
                                 DB::unprepared($sqlEjecutar);
@@ -90,9 +92,8 @@ class CargarSql extends Component
                         }
                     }
 
-                    // En caso de quedar alguna consulta residual sin punto y coma final
                     if (!empty(trim($sqlBuffer))) {
-                        $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedico, $userId);
+                        $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
                         DB::unprepared($sqlEjecutar);
                     }
 
@@ -100,40 +101,45 @@ class CargarSql extends Component
                 }
             }
 
-            // Volver a activar la verificación de llaves foráneas
+            // Reactivar verificación de llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             DB::commit();
 
-            // Limpiar formulario tras éxito
             $this->reset(['archivosSql', 'medico_id']);
-            session()->flash('message', '¡Todos los archivos SQL fueron procesados y los datos del médico fueron actualizados exitosamente!');
+            session()->flash('message', '¡Los archivos SQL fueron procesados e integrados exitosamente con el médico seleccionado!');
 
         } catch (\Exception $e) {
             DB::rollBack();
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-            session()->flash('error', 'Ocurrió un error durante la ejecución del SQL: ' . $e->getMessage());
+            session()->flash('error', 'Ocurrió un error al procesar las consultas SQL: ' . $e->getMessage());
         }
     }
 
     /**
-     * Reemplaza el registro médico o id de usuario en las consultas
+     * Reemplaza el registro médico, ID de médico e ID de usuario dentro de las sentencias SQL.
      */
-    private function reemplazarDatosMedico(string $sql, string $regMedico, int $userId): string
+    private function reemplazarDatosMedico(string $sql, string $regMedicoVal, int $medicoId, ?int $userId): string
     {
-        // Reemplaza patrones de registro médico entre comillas si vienen vacíos o con valores genéricos
-        $sql = preg_replace("/'([A-Za-z0-9_ -]*)',/i", "'{$regMedico}',", $sql, 1);
-        
-        // Si tienes campos específicos de relación como user_id o reg_medico explícitos
-        $sql = str_replace([':reg_medico', ':user_id'], [$regMedico, $userId], $sql);
+        // Reemplazar la primera ocurrencia del valor del registro médico en las tuplas ( 'VALOR', ...
+        if (!empty($regMedicoVal)) {
+            $sql = preg_replace("/'\s*([A-Za-z0-9_ -]*)\s*',/i", "'{$regMedicoVal}',", $sql, 1);
+        }
 
-        return $sql;
+        // Reemplazar marcadores dinámicos o columnas clave
+        $replacements = [
+            ':reg_medico' => $regMedicoVal,
+            ':reg-medico' => $regMedicoVal,
+            ':medico_id'   => $medicoId,
+            ':user_id'     => $userId ?? 'NULL',
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), $sql);
     }
 
     public function render()
     {
-        // Se asume la presencia de médicos según la estructura del sistema
-        $medicos = User::orderBy('name', 'asc')->get();
+        $medicos = Medico::orderBy('name', 'asc')->get();
 
         return view('livewire.admin.cargar-sql', [
             'medicos' => $medicos
