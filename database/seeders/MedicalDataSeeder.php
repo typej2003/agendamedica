@@ -8,7 +8,9 @@ use App\Models\MedicalCenter;
 use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\MedicoRegistro;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class MedicalDataSeeder extends Seeder
 {
@@ -52,16 +54,17 @@ class MedicalDataSeeder extends Seeder
         ];
 
         $doctorsData = [
-            ['first_name' => 'Carlos', 'last_name' => 'Mendoza', 'email' => 'carlos@gmail.com', 'phone' => '04141112233', 'password' => bcrypt('12345678'), 'reg_medico' => 'gineco-00001'],
-            ['first_name' => 'Ana', 'last_name' => 'Pérez', 'email' => 'ana.perez@example.com', 'phone' => '04121112233', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-54321'],
-            ['first_name' => 'María', 'last_name' => 'Delgado', 'email' => 'maria.delgado@example.com', 'phone' => '04122223344', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-98765'],
-            ['first_name' => 'Alejandro', 'last_name' => 'Rojas', 'email' => 'alejandro.rojas@example.com', 'phone' => '04243334455', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-56789'],
-            ['first_name' => 'Elena', 'last_name' => 'Benítez', 'email' => 'elena.benitez@example.com', 'phone' => '04164445566', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-13578'],
-            ['first_name' => 'Roberto', 'last_name' => 'Gómez', 'email' => 'roberto.gomez@example.com', 'phone' => '04145556677', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-24680'],
-            ['first_name' => 'Sofía', 'last_name' => 'López', 'email' => 'sofia.lopez@example.com', 'phone' => '04126667788', 'password' => bcrypt('12345678'), 'reg_medico' => 'MPPS-13579'],
+            ['first_name' => 'Carlos', 'last_name' => 'Mendoza', 'email' => 'carlos@gmail.com', 'phone' => '04141112233', 'reg_medico' => 'gineco-00001'],
+            ['first_name' => 'Ana', 'last_name' => 'Pérez', 'email' => 'ana.perez@example.com', 'phone' => '04121112233', 'reg_medico' => 'MPPS-54321'],
+            ['first_name' => 'María', 'last_name' => 'Delgado', 'email' => 'maria.delgado@example.com', 'phone' => '04122223344', 'reg_medico' => 'MPPS-98765'],
+            ['first_name' => 'Alejandro', 'last_name' => 'Rojas', 'email' => 'alejandro.rojas@example.com', 'phone' => '04243334455', 'reg_medico' => 'MPPS-56789'],
+            ['first_name' => 'Elena', 'last_name' => 'Benítez', 'email' => 'elena.benitez@example.com', 'phone' => '04164445566', 'reg_medico' => 'MPPS-13578'],
+            ['first_name' => 'Roberto', 'last_name' => 'Gómez', 'email' => 'roberto.gomez@example.com', 'phone' => '04145556677', 'reg_medico' => 'MPPS-24680'],
+            ['first_name' => 'Sofía', 'last_name' => 'López', 'email' => 'sofia.lopez@example.com', 'phone' => '04126667788', 'reg_medico' => 'MPPS-13579'],
         ];
 
         $doctorIndex = 0;
+        $hashedPassword = Hash::make('12345678');
 
         foreach ($centers as $centerData) {
             $center = MedicalCenter::create([
@@ -84,8 +87,22 @@ class MedicalDataSeeder extends Seeder
                 if (isset($doctorsData[$doctorIndex])) {
                     $docData = $doctorsData[$doctorIndex];
 
+                    // 1. Crear el usuario asociado al médico
+                    $user = User::create([
+                        'name' => $docData['first_name'] . ' ' . $docData['last_name'],
+                        'email' => $docData['email'],
+                        'password' => $hashedPassword,
+                        'reg-medico' => $docData['reg_medico'],
+                    ]);
+
+                    // Asignar rol de médico si utilizas Spatie Permissions (Opcional)
+                    if (method_exists($user, 'assignRole')) {
+                        $user->assignRole('medico');
+                    }
+
+                    // 2. Crear el médico vinculando el user_id registrado
                     $medico = Medico::create([
-                        'user_id' => null,
+                        'user_id' => $user->id,
                         'name' => $docData['first_name'],
                         'lastname' => $docData['last_name'],
                         'license_number' => 'MPPS-' . rand(10000, 99999),
@@ -95,21 +112,21 @@ class MedicalDataSeeder extends Seeder
                         'photo_path' => null,
                         'office_id' => $office->id,
                         'consultation_fee' => 50.00,
-                        'password' => $docData['password'],
+                        'password' => $hashedPassword,
                         'reg-medico' => $docData['reg_medico'],
                         'is_active' => true,
                     ]);
 
-                    // Registrar en la tabla MedicoRegistro asociando el id del médico y el reg-medico
+                    // 3. Registrar en la tabla MedicoRegistro
                     MedicoRegistro::create([
                         'medico_id' => $medico->id,
                         'reg-medico' => $docData['reg_medico'],
                     ]);
 
-                    // Asociar al centro médico a través de la tabla pivote
+                    // 4. Asociar al centro médico a través de la tabla pivote
                     $medico->medicalCenters()->attach($center->id);
 
-                    // Asignar especialidades aleatorias
+                    // 5. Asignar especialidades aleatorias
                     $assignedSpecialties = $specialties->random(rand(1, 2))->pluck('id');
                     $medico->specialties()->attach($assignedSpecialties);
 

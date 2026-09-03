@@ -14,6 +14,7 @@ class CargarSql extends Component
 
     public $archivosSql = [];
     public $medico_id = '';
+    public $regMedicoSeleccionado = '';
 
     protected $rules = [
         'medico_id' => 'required|exists:medicos,id',
@@ -29,6 +30,24 @@ class CargarSql extends Component
         'archivosSql.*.max' => 'Los archivos SQL no deben superar los 50MB cada uno.',
     ];
 
+    public function updatedMedicoId($value)
+    {
+        $this->regMedicoSeleccionado = '';
+
+        if (!empty($value)) {
+            $medico = Medico::find($value);
+            if ($medico) {
+                $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
+
+                $this->regMedicoSeleccionado = $medicoRegistro->{'reg-medico'} 
+                                            ?? $medicoRegistro->reg_medico 
+                                            ?? $medico->{'reg-medico'} 
+                                            ?? $medico->reg_medico 
+                                            ?? (string)$medico->id;
+            }
+        }
+    }
+
     public function procesarSql()
     {
         $this->validate();
@@ -42,7 +61,7 @@ class CargarSql extends Component
 
         // 1. Obtener el registro médico desde MedicoRegistro
         $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
-        
+
         // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID del médico
         $regMedicoVal = $medicoRegistro->{'reg-medico'} 
                         ?? $medicoRegistro->reg_medico 
@@ -108,7 +127,7 @@ class CargarSql extends Component
 
             DB::commit();
 
-            $this->reset(['archivosSql', 'medico_id']);
+            $this->reset(['archivosSql', 'medico_id', 'regMedicoSeleccionado']);
             session()->flash('message', '¡Los archivos SQL fueron procesados e integrados exitosamente con el médico seleccionado!');
 
         } catch (\Exception $e) {
@@ -132,7 +151,7 @@ class CargarSql extends Component
         ];
         $sql = str_replace(array_keys($replacements), array_values($replacements), $sql);
 
-        // 2. Si la sentencia es un INSERT INTO con columna reg_medico como primer valor de tupla
+        // 2. Si la sentencia es un INSERT INTO con columna reg_medico
         if (preg_match('/INSERT\s+INTO\s+[`\w`\.]+\s*\(([^)]+)\)\s*VALUES/i', $sql, $matches)) {
             $columnas = array_map(fn($col) => trim($col, " `\t\n\r\0\x0B"), explode(',', $matches[1]));
             $posicionRegMedico = array_search('reg_medico', $columnas);
@@ -160,7 +179,16 @@ class CargarSql extends Component
 
     public function render()
     {
-        $medicos = Medico::orderBy('name', 'asc')->get();
+        $medicos = Medico::orderBy('name', 'asc')->get()->map(function ($medico) {
+            $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
+
+            $medico->reg_medico_calculado = $medicoRegistro->{'reg-medico'} 
+                                            ?? $medicoRegistro->reg_medico 
+                                            ?? $medico->{'reg-medico'} 
+                                            ?? $medico->reg_medico 
+                                            ?? null;
+            return $medico;
+        });
 
         return view('livewire.admin.cargar-sql', [
             'medicos' => $medicos

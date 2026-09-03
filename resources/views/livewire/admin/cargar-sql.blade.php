@@ -31,13 +31,24 @@
                                 <option value="">-- Seleccione un Médico --</option>
                                 @foreach($medicos as $medico)
                                     <option value="{{ $medico->id }}">
-                                        {{ $medico->name }} {{ $medico->lastname ?? '' }} {{ !empty($medico->reg_medico) ? '('.$medico->reg_medico.')' : '' }}
+                                        {{ $medico->name }} {{ $medico->lastname ?? '' }} {{ !empty($medico->reg_medico_calculado) ? '[Reg: '.$medico->reg_medico_calculado.']' : '' }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('medico_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+
+                            {{-- Muestra información detallada del Reg-Medico al seleccionar un médico --}}
+                            @if(!empty($regMedicoSeleccionado))
+                                <div class="mt-2 p-2 bg-light rounded border d-flex align-items-center">
+                                    <i class="bi bi-person-badge-fill text-primary fs-5 me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Reg-Médico asociado para la importación:</small>
+                                        <span class="fw-bold text-dark fs-6">{{ $regMedicoSeleccionado }}</span>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Carga de archivos SQL --}}
