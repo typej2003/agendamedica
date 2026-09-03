@@ -38,6 +38,7 @@ class Paciente extends Model
         'dependencia',
         'medico',
         'sms',
+        'updated_at',
     ];
 
     protected $casts = [
