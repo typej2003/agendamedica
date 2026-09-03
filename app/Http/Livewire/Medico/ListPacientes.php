@@ -173,6 +173,7 @@ class ListPacientes extends Component
                 'lnacimiento' => $this->lnacimiento,
                 'telefono'    => $this->telefono,
                 'email'       => $this->email ?: null,
+                'password'    => $this->password ?: null,
                 'escolaridad' => $this->escolaridad,
                 'ocupacion'   => $this->ocupacion,
                 'profesion'   => $this->profesion,
