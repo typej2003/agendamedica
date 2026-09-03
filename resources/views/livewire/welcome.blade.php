@@ -15,6 +15,77 @@
         </div>
     </section>
 
+    <!-- Sección de Especialidades y Especialistas -->
+    <section class="py-5 bg-light" id="especialidades">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Nuestras Especialidades Médicas</h2>
+                <p class="text-muted">Selecciona una especialidad para conocer a los profesionales disponibles</p>
+            </div>
+
+            <!-- Chips de Especialidades -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
+                <button type="button" 
+                        wire:click="limpiarFiltro" 
+                        class="btn btn-sm {{ is_null($especialidadSeleccionada) ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill px-3">
+                    Todas
+                </button>
+                @foreach($especialidades as $esp)
+                    <button type="button" 
+                            wire:click="seleccionarEspecialidad('{{ $esp->slug }}')" 
+                            class="btn btn-sm {{ optional($especialidadSeleccionada)->id === $esp->id ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill px-3">
+                        {{ $esp->name }}
+                        @if($esp->medicos_count > 0)
+                            <span class="badge bg-white text-primary ms-1">{{ $esp->medicos_count }}</span>
+                        @endif
+                    </button>
+                @endforeach
+            </div>
+
+            <!-- Resultados de Médicos por Especialidad -->
+            @if($especialidadSeleccionada)
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Especialistas en {{ $especialidadSeleccionada->name }}</h4>
+                    <button class="btn btn-link text-decoration-none" wire:click="limpiarFiltro">
+                        <i class="bi bi-x-circle me-1"></i> Quitar filtro
+                    </button>
+                </div>
+
+                @if($especialidadSeleccionada->medicos->count() > 0)
+                    <div class="row g-4">
+                        @foreach($especialidadSeleccionada->medicos as $medico)
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 border-0 shadow-sm rounded-3">
+                                    <div class="card-body p-4 text-center">
+                                        <div class="avatar-container mb-3 mx-auto">
+                                            <i class="bi bi-person-badge display-4 text-secondary"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-1">{{ $medico->name }}</h5>
+                                        <p class="text-primary small mb-2">{{ $especialidadSeleccionada->name }}</p>
+                                        
+                                        @if($medico->medicalCenter)
+                                            <p class="text-muted small mb-3">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ $medico->medicalCenter->name ?? 'Centro Médico' }}
+                                            </p>
+                                        @endif
+
+                                        <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm rounded-pill w-100">
+                                            Agendar Cita
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-info text-center py-4">
+                        <i class="bi bi-info-circle me-2"></i> No hay especialistas registrados actualmente en {{ $especialidadSeleccionada->name }}.
+                    </div>
+                @endif
+            @endif
+        </div>
+    </section>
+
     <!-- Características Rápidas -->
     <section class="py-5 bg-white">
         <div class="container">
@@ -79,8 +150,8 @@
                 <div class="col-lg-2 col-6">
                     <h6 class="fw-bold mb-3">Plataforma</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="#">Buscar Doctores</a></li>
-                        <li class="mb-2"><a href="#">Especialidades</a></li>
+                        <li class="mb-2"><a href="{{ url('/') }}#busqueda">Buscar Doctores</a></li>
+                        <li class="mb-2"><a href="{{ url('/') }}#especialidades">Especialidades</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-2 col-6">

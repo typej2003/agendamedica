@@ -26,6 +26,9 @@
                     <a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#inicio">Inicio</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#especialidades">Especialidades</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#busqueda">Especialistas</a>
                 </li>
                 <li class="nav-item">
