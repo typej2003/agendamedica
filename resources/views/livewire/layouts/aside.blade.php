@@ -53,6 +53,13 @@
                     <span class="link-text">Historias Médicas</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.cargar-sql') }}" class="nav-link {{ request()->routeIs('admin.cargar-sql') ? 'active' : '' }}">
+                    <i class="bi bi-journal-medical"></i>
+                    <span class="link-text">Cargar SQL</span>
+                </a>
+            </li>
         @endif
 
         @if(auth()->user()->hasRole('Medico'))
