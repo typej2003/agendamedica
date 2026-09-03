@@ -95,7 +95,6 @@ class CargarSql extends Component
                         ?? (string)$medico->id;
 
         try {
-            // Deshabilitar la verificación de claves foráneas globalmente durante el script
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             foreach ($this->archivosSql as $archivo) {
@@ -143,17 +142,20 @@ class CargarSql extends Component
                 }
             }
 
-            // Restaurar siempre la verificación de claves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
             session()->flash('message', '¡Los archivos SQL fueron procesados e integrados exitosamente con el médico seleccionado!');
 
-        } catch (\Exception $e) {
-            // Asegurar restaurar llaves foráneas incluso si falla un query individual
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        } catch (\Throwable $e) {
+            try {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            } catch (\Throwable $ex) {
+                // Ignorar si falla el reset de llaves foráneas en el catch
+            }
 
-            session()->flash('error', 'Ocurrió un error al procesar las consultas SQL: ' . $e->getMessage());
+            $mensajeError = !empty($e->getMessage()) ? $e->getMessage() : 'Error desconocido de la base de datos o codificación.';
+            session()->flash('error', $mensajeError);
         }
     }
 
