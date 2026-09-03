@@ -8,6 +8,7 @@ use App\Models\Cola;
 use App\Models\User;
 use App\Models\Paciente;
 use App\Models\MedicoPaciente;
+use App\Models\MedicoRegistro;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,6 +17,7 @@ class DaySchedule extends Component
     public $medicoId;
     public $fecha;
     public $medico;
+    public $regMedico;
     
     // Configuración de Modos de Atención: 'cupos' (por defecto) u 'horario'
     public $modoAtencion = 'cupos'; 
@@ -46,6 +48,10 @@ class DaySchedule extends Component
         $this->fecha = $fecha;
         $this->medico = Medico::find($medicoId) ?? User::find($medicoId);
 
+        // Obtener la clave reg_medico del registro medico vinculante
+        $registro = MedicoRegistro::where('medico_id', $medicoId)->first();
+        $this->regMedico = $registro ? $registro->reg_medico : ($this->medico->license_number ?? $this->medico->reg_medico ?? 'REG-000');
+
         /** @var User $user */
         $user = Auth::user();
         if ($user) {
@@ -75,7 +81,7 @@ class DaySchedule extends Component
         $user = Auth::user();
         $numHistoriaUser = $user ? ($user->numhistoria ?? $user->id) : null;
 
-        $citas = Cola::where('medico_id', $this->medicoId)
+        $citas = Cola::where('reg_medico', $this->regMedico)
             ->whereDate('fecha', $this->fecha)
             ->orderBy('numorden', 'asc')
             ->get();
@@ -89,8 +95,8 @@ class DaySchedule extends Component
             $numHistorias = $citas->pluck('numhistoria')->filter()->unique()->toArray();
 
             if (!empty($numHistorias)) {
-                // 1. Obtener la relación desde MedicoPaciente por medico_id y numhistoria
-                $relaciones = MedicoPaciente::where('medico_id', $this->medicoId)
+                // 1. Obtener la relación desde MedicoPaciente por reg_medico y numhistoria
+                $relaciones = MedicoPaciente::where('reg_medico', $this->regMedico)
                     ->whereIn('numhistoria', $numHistorias)
                     ->get()
                     ->keyBy('numhistoria');
@@ -227,14 +233,14 @@ class DaySchedule extends Component
         $paciente = Paciente::where('user_id', $user->id)->first();
         $numHistoriaUser = $paciente ? $paciente->numhistoria : '';
         if($numHistoriaUser === '') {
-            $pacienteSinhistoriaId = $paciente->id; // Usar el ID del paciente como referencia para pacientes sin historia
+            $pacienteSinhistoriaId = $paciente ? $paciente->id : null; // Usar el ID del paciente como referencia para pacientes sin historia
         }
 
         // Validar que el paciente solo tome UNA cita al mes con este médico
         $startOfMonth = Carbon::parse($this->fecha)->startOfMonth()->toDateString();
         $endOfMonth = Carbon::parse($this->fecha)->endOfMonth()->toDateString();
 
-        $tieneCitaEnMes = Cola::where('medico_id', $this->medicoId)
+        $tieneCitaEnMes = Cola::where('reg_medico', $this->regMedico)
             ->where('numhistoria', $numHistoriaUser)
             ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
             ->exists();
@@ -245,7 +251,7 @@ class DaySchedule extends Component
         }
 
         // Validar disponibilidad
-        $query = Cola::where('medico_id', $this->medicoId)
+        $query = Cola::where('reg_medico', $this->regMedico)
             ->whereDate('fecha', $this->fecha);
 
         if ($horaIni) {
@@ -272,13 +278,11 @@ class DaySchedule extends Component
             $turno = 'M';
         }
 
-        $regMedico = $this->medico->license_number ?? $this->medico->reg_medico ?? 'REG-000';
         $monto = $this->medico->consultation_fee ?? $this->medico->monto ?? 0.00;
 
         // Guardar cita en la tabla `cola`
         Cola::create([
-            'medico_id'   => $this->medicoId,
-            'reg_medico'  => $regMedico,
+            'reg_medico'  => $this->regMedico,
             'fecha'       => $this->fecha,
             'numhistoria' => $numHistoriaUser,
             'paciente_sinhistoria_id' => $pacienteSinhistoriaId,
@@ -301,7 +305,7 @@ class DaySchedule extends Component
             'paciente_id' => $user->id,
         ], [
             'numhistoria' => $numHistoriaUser,
-            'reg_medico'  => $regMedico,
+            'reg_medico'  => $this->regMedico,
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');

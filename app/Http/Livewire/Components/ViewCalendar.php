@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
 use App\Models\Cola;
+use App\Models\MedicoRegistro;
 use Carbon\Carbon;
 
 class ViewCalendar extends Component
@@ -14,6 +15,7 @@ class ViewCalendar extends Component
     public $medicalCenterId;
     public $medico;
     public $medicalCenter;
+    public $regMedico;
     
     public $currentDate;
     public $calendarWeeks = [];
@@ -31,6 +33,11 @@ class ViewCalendar extends Component
         $this->medicalCenterId = $medicalCenterId;
 
         $this->medico = Medico::findOrFail($medicoId);
+        
+        // Obtener el reg_medico del médico a través de MedicoRegistro o del mismo objeto medico
+        $registro = MedicoRegistro::where('medico_id', $medicoId)->first();
+        $this->regMedico = $registro ? $registro->reg_medico : ($this->medico->reg_medico ?? null);
+
         if ($medicalCenterId) {
             $this->medicalCenter = MedicalCenter::find($medicalCenterId);
         }
@@ -53,7 +60,7 @@ class ViewCalendar extends Component
         $startOfMonth = Carbon::parse($this->currentDate)->startOfMonth();
         $endOfMonth = Carbon::parse($this->currentDate)->endOfMonth();
 
-        $citas = Cola::where('medico_id', $this->medicoId)
+        $citas = Cola::where('reg_medico', $this->regMedico)
             ->whereBetween('fecha', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->selectRaw('DATE(fecha) as fecha_corta, COUNT(*) as total')
             ->groupBy('fecha_corta')
