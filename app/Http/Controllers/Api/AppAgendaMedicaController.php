@@ -12,6 +12,7 @@ use App\Models\Medico;
 use App\Models\Paciente;
 use App\Models\Consulta;
 use App\Models\MotivoCita;
+use App\Models\MedicoPaciente;
 
 class AppAgendaMedicaController extends Controller
 {
@@ -111,37 +112,48 @@ class AppAgendaMedicaController extends Controller
                 $inicioMes = Carbon::now()->startOfMonth()->toDateString();
                 $finMes = Carbon::now()->endOfMonth()->toDateString();
 
-                // 6. Filtrar Pacientes vinculados mediante MedicoPaciente
+                // 6. Obtener Pacientes y Consultas según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
-                    // Obtener los pacientes asociados al médico usando la relación BelongsToMany
-                    $pacientesRaw = $medicoModel->pacientes()->get();
-                    
-                    // Filtrar consultas pertenecientes únicamente a este médico y en el rango del mes
-                    $consultas = Consulta::where('medico_id', $medicoModel->id)
+                    // Buscar los registros pivote directamente por medico_id
+                    $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+                    $pacienteIds = $relaciones->pluck('paciente_id')->unique()->toArray();
+                    $historiasMap = $relaciones->pluck('numhistoria', 'paciente_id')->toArray();
+
+                    // Consultar únicamente los pacientes vinculados
+                    $pacientesRaw = Paciente::whereIn('id', $pacienteIds)->get();
+
+                    // Mapear número de historia desde la pivote
+                    $pacientesRaw->each(function ($p) use ($historiasMap) {
+                        $p->numhistoria_pivote = $historiasMap[$p->id] ?? $p->numhistoria ?? '';
+                    });
+
+                    // Obtener consultas filtrando por los pacientes del médico
+                    $consultas = Consulta::whereIn('paciente_id', $pacienteIds)
                         ->whereBetween('fecha', [$inicioMes, $finMes])
                         ->get();
+
                 } elseif ($userType === 'Paciente') {
-                    // Si entra un paciente, solo obtiene sus propios datos de paciente
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
                     $pacientesRaw = $pacienteModel ? \collect([$pacienteModel]) : \collect([]);
 
                     $consultas = $pacienteModel 
                         ? Consulta::where('paciente_id', $pacienteModel->id)->whereBetween('fecha', [$inicioMes, $finMes])->get() 
                         : \collect([]);
+
                 } else {
-                    // Caso Root sin modelo médico asociado: Trae todos los pacientes y consultas
+                    // Caso Root sin modelo médico específico
                     $pacientesRaw = Paciente::all();
                     $consultas = Consulta::whereBetween('fecha', [$inicioMes, $finMes])->get();
                 }
 
-                // Mapear los pacientes
+                // Mapear los pacientes para la respuesta JSON
                 $pacientes = $pacientesRaw->map(function ($p) {
                     return [
-                        'id'        => $p->id,
-                        'name'      => $p->nombres ?? $p->name ?? '',
-                        'lastname'  => $p->apellidos ?? $p->lastname ?? '',
-                        'phonecell' => $p->telefono ?? $p->phonecell ?? '',
-                        'numhistoria' => $p->pivot->numhistoria ?? $p->numhistoria ?? '',
+                        'id'          => $p->id,
+                        'name'        => $p->nombres ?? $p->name ?? '',
+                        'lastname'    => $p->apellidos ?? $p->lastname ?? '',
+                        'phonecell'   => $p->telefono ?? $p->phonecell ?? '',
+                        'numhistoria' => $p->numhistoria_pivote ?? $p->numhistoria ?? '',
                     ];
                 });
 
