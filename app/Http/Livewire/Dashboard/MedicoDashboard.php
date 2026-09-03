@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Dashboard;
 
 use Livewire\Component;
 use App\Models\Medico;
+use App\Models\MedicoRegistro;
 use App\Models\User;
 use App\Models\Cola;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,15 @@ class MedicoDashboard extends Component
         $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
 
         if ($medico) {
+            // Obtener el registro médico asociado (reg-medico / reg_medico)
+            $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
+
+            $regMedico = $medicoRegistro->{'reg-medico'} 
+                        ?? $medicoRegistro->reg_medico 
+                        ?? $medico->{'reg-medico'} 
+                        ?? $medico->reg_medico 
+                        ?? null;
+
             // 2. Obtener IDs de pacientes asociados al médico
             $pacientesIds = DB::table('medico_pacientes')
                 ->where('medico_id', $medico->id)
@@ -46,12 +56,18 @@ class MedicoDashboard extends Component
 
             $usuariosConectados = $listaUsuariosConectados->count();
 
-            // 5. Métricas de Citas / Agendamientos desde el modelo Cola
+            // 5. Métricas de Citas / Agendamientos desde la tabla cola usando reg_medico
             $fechaHoy = Carbon::today()->toDateString();
             $fechaManana = Carbon::tomorrow()->toDateString();
 
-            // Consulta base filtrando por el médico en la tabla cola
-            $queryCitasMedico = Cola::where('medico_id', $medico->id);
+            // Consulta base filtrando por reg_medico
+            $queryCitasMedico = Cola::query();
+
+            if (!empty($regMedico)) {
+                $queryCitasMedico->where('reg_medico', $regMedico);
+            } else {
+                $queryCitasMedico->whereRaw('1 = 0');
+            }
 
             // Conteo total de citas agendadas para el médico
             $citasTotales = (clone $queryCitasMedico)->count();
