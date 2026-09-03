@@ -14,6 +14,6 @@ class MedicoMedicalCenter extends Pivot
     protected $fillable = [
         'medico_id',
         'medical_center_id',
-        'reg-medico',
+        'reg_medico',
     ];
 }

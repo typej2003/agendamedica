@@ -28,8 +28,8 @@ class ConsultaSyncController extends Controller
         $primerRegistro = is_array($data) && isset($data[0]) ? $data[0] : $data;
         $regMedico = $primerRegistro['reg_medico'] ?? $request->input('reg_medico');
 
-        // Búsqueda del médico por reg-medico
-        $medico = Medico::where('reg-medico', $regMedico)->first();
+        // Búsqueda del médico por reg_medico
+        $medico = Medico::where('reg_medico', $regMedico)->first();
 
         if (!$medico) {
             return response()->json([
@@ -56,12 +56,12 @@ class ConsultaSyncController extends Controller
                     continue;
                 }
 
-                // Crear o actualizar la consulta según numhistoria, nroconsulta y reg-medico
+                // Crear o actualizar la consulta según numhistoria, nroconsulta y reg_medico
                 Consulta::updateOrCreate(
                     [
                         'numhistoria' => $item['numhistoria'],
                         'nroconsulta' => $item['nroconsulta'],
-                        'reg-medico'   => $regMedico,
+                        'reg_medico'   => $regMedico,
                     ],
                     [
                         'medico_id'           => $medico->id,

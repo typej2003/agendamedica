@@ -11,7 +11,7 @@ class Historia extends Model
 
     protected $fillable = [
         'numhistoria',    
-        'reg-medico',
+        'reg_medico',
         'paciente_id',
         'medico_id',
         'medical_center_id',

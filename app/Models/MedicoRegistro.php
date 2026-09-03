@@ -11,6 +11,6 @@ class MedicoRegistro extends Model
 
     protected $fillable = [
         'medico_id',
-        'reg-medico',
+        'reg_medico',
     ];
 }

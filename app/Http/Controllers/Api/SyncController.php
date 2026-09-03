@@ -24,7 +24,7 @@ class SyncController extends Controller
 
         $tableName = strtolower((string) $request->input('table'));
         $rows = $request->input('data');
-        $regMedico = $request->input('reg-medico') ?? $request->input('reg_medico');
+        $regMedico = $request->input('reg_medico') ?? $request->input('reg_medico');
 
         // 2. Validar parámetros recibidos con Log de diagnóstico
         if (empty($tableName) || !is_array($rows)) {
@@ -49,13 +49,13 @@ class SyncController extends Controller
         // TRATAMIENTO ESPECIAL: TABLA PACIENTE / PACIENTES
         // =========================================================================
         if (in_array($tableName, ['paciente', 'pacientes'], true)) {
-            // Si el reg-medico no viene en la raíz, intentamos tomarlo del primer ítem del lote
+            // Si el reg_medico no viene en la raíz, intentamos tomarlo del primer ítem del lote
             if (empty($regMedico) && isset($rows[0]) && is_array($rows[0])) {
-                $regMedico = $rows[0]['reg_medico'] ?? $rows[0]['reg-medico'] ?? null;
+                $regMedico = $rows[0]['reg_medico'] ?? $rows[0]['reg_medico'] ?? null;
             }
 
             // Buscar medico_id utilizando el modelo MedicoRegistro
-            $medicoRegistro = MedicoRegistro::where('reg-medico', $regMedico)
+            $medicoRegistro = MedicoRegistro::where('reg_medico', $regMedico)
                 ->orWhere('reg_medico', $regMedico)
                 ->first();
 
@@ -63,7 +63,7 @@ class SyncController extends Controller
                 return response()->json([
                     'status'  => 'error',
                     'message' => 'Médico no encontrado para la sincronización de pacientes.',
-                    'errors'  => ['reg_medico' => 'Registro no encontrado con reg-medico: ' . $regMedico]
+                    'errors'  => ['reg_medico' => 'Registro no encontrado con reg_medico: ' . $regMedico]
                 ], 404);
             }
 
@@ -115,7 +115,7 @@ class SyncController extends Controller
                         $paciente->medicos()->syncWithoutDetaching([
                             $medicoId => [
                                 'numhistoria' => $numHistoriaPowerBuilder,
-                                'reg-medico'  => $regMedico,
+                                'reg_medico'  => $regMedico,
                             ]
                         ]);
                     }
@@ -128,7 +128,7 @@ class SyncController extends Controller
                         ],
                         [
                             'numhistoria'       => $numHistoriaPowerBuilder,
-                            'reg-medico'        => $regMedico,
+                            'reg_medico'        => $regMedico,
                             'medical_center_id' => null,
                         ]
                     );
@@ -180,8 +180,8 @@ class SyncController extends Controller
             if (!is_null($regMedico)) {
                 if (in_array('reg_medico', $tableColumns, true)) {
                     $row['reg_medico'] = $regMedico;
-                } elseif (in_array('reg-medico', $tableColumns, true)) {
-                    $row['reg-medico'] = $regMedico;
+                } elseif (in_array('reg_medico', $tableColumns, true)) {
+                    $row['reg_medico'] = $regMedico;
                 }
             }
 

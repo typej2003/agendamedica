@@ -92,7 +92,7 @@ class ListHistorias extends Component
         $historia = Historia::with(['medicalCenter', 'paciente', 'medico'])->findOrFail($id);
 
         $this->historia_id       = $historia->id;
-        $this->reg_medico        = $historia->getAttribute('reg-medico');
+        $this->reg_medico        = $historia->getAttribute('reg_medico');
         $this->numhistoria       = $historia->numhistoria;
         $this->medical_center_id = $historia->medical_center_id;
         $this->paciente_id       = $historia->paciente_id;
@@ -158,7 +158,7 @@ class ListHistorias extends Component
         $this->validate();
 
         $data = [
-            'reg-medico'        => $this->reg_medico ?: null,
+            'reg_medico'        => $this->reg_medico ?: null,
             'numhistoria'       => $this->numhistoria ?: null,
             'medical_center_id' => $this->medical_center_id ?: null,
             'paciente_id'       => $this->paciente_id ?: null,
@@ -188,13 +188,13 @@ class ListHistorias extends Component
         session()->flash('message', 'Historia médica eliminada correctamente.');
     }
 
-    // Modal para ver Historias asociadas al reg-medico
+    // Modal para ver Historias asociadas al reg_medico
     public function showByRegMedico($regMedico)
     {
         $this->detailType = 'historias_list';
         $this->detailTitle = "Historias del Registro Médico: {$regMedico}";
         $this->historiasDetalle = Historia::with(['paciente', 'medico', 'medicalCenter'])
-            ->where('reg-medico', $regMedico)
+            ->where('reg_medico', $regMedico)
             ->get();
 
         $this->dispatchBrowserEvent('open-modal-detail');
@@ -215,13 +215,13 @@ class ListHistorias extends Component
         $this->dispatchBrowserEvent('open-modal-detail');
     }
 
-    // Modal para ver Pacientes asociados a ese reg-medico
+    // Modal para ver Pacientes asociados a ese reg_medico
     public function showPacientesByRegMedico($regMedico)
     {
         $this->detailType = 'pacientes_list';
         $this->detailTitle = "Pacientes del Registro Médico: {$regMedico}";
 
-        $pacienteIds = Historia::where('reg-medico', $regMedico)
+        $pacienteIds = Historia::where('reg_medico', $regMedico)
             ->whereNotNull('paciente_id')
             ->pluck('paciente_id')
             ->unique();
@@ -252,7 +252,7 @@ class ListHistorias extends Component
             // Si hay búsqueda activa: Mostrar TODOS los registros detallados uno por uno
             $term = '%' . $searchTerm . '%';
             $query->where(function ($q) use ($term) {
-                $q->where('reg-medico', 'like', $term)
+                $q->where('reg_medico', 'like', $term)
                   ->orWhere('numhistoria', 'like', $term)
                   ->orWhereHas('paciente', function ($qp) use ($term) {
                       $qp->where('nombres', 'like', $term)
@@ -271,22 +271,22 @@ class ListHistorias extends Component
                   });
             });
         } else {
-            // Si NO hay búsqueda: Agrupar por reg-medico (mostrar 1 fila principal por código)
+            // Si NO hay búsqueda: Agrupar por reg_medico (mostrar 1 fila principal por código)
             $query->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')
                   ->from('historias')
-                  ->groupBy('reg-medico');
+                  ->groupBy('reg_medico');
             });
         }
 
         $historias = $query->orderBy('id', 'desc')->paginate(15);
 
-        // Agregamos el conteo de registros por cada reg-medico
-        $regMedicos = $historias->pluck('reg-medico')->filter()->unique();
-        $countsByReg = Historia::whereIn('reg-medico', $regMedicos)
-            ->selectRaw('`reg-medico`, COUNT(*) as total')
-            ->groupBy('reg-medico')
-            ->pluck('total', 'reg-medico');
+        // Agregamos el conteo de registros por cada reg_medico
+        $regMedicos = $historias->pluck('reg_medico')->filter()->unique();
+        $countsByReg = Historia::whereIn('reg_medico', $regMedicos)
+            ->selectRaw('`reg_medico`, COUNT(*) as total')
+            ->groupBy('reg_medico')
+            ->pluck('total', 'reg_medico');
 
         // Autocompletado del Modal
         $centrosResult = [];

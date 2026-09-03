@@ -66,9 +66,9 @@ class CargarSql extends Component
             if ($medico) {
                 $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
 
-                $this->regMedicoSeleccionado = $medicoRegistro->{'reg-medico'} 
+                $this->regMedicoSeleccionado = $medicoRegistro->{'reg_medico'} 
                                             ?? $medicoRegistro->reg_medico 
-                                            ?? $medico->{'reg-medico'} 
+                                            ?? $medico->{'reg_medico'} 
                                             ?? $medico->reg_medico 
                                             ?? (string)$medico->id;
             }
@@ -103,7 +103,7 @@ class CargarSql extends Component
                 }
             }
 
-            // Poblado post-importación desde la tabla pacientes usando reg-medico
+            // Poblado post-importación desde la tabla pacientes usando reg_medico
             if ($archivosProcesados > 0 && !empty($this->medico_id)) {
                 $this->sincronizarDesdePacientes();
             }
@@ -131,19 +131,19 @@ class CargarSql extends Component
     }
 
     /**
-     * Poblado directo de MedicoPaciente e Historia utilizando el modelo Paciente y reg-medico
+     * Poblado directo de MedicoPaciente e Historia utilizando el modelo Paciente y reg_medico
      */
     private function sincronizarDesdePacientes()
     {
         $medicoId = $this->medico_id;
         $regMedico = $this->regMedicoSeleccionado;
 
-        // Buscar los pacientes que tengan asignado este reg-medico (o consultar todos si no traen la columna filtrada)
-        $pacientes = Paciente::where('reg-medico', $regMedico)
+        // Buscar los pacientes que tengan asignado este reg_medico (o consultar todos si no traen la columna filtrada)
+        $pacientes = Paciente::where('reg_medico', $regMedico)
             ->orWhere('reg_medico', $regMedico)
             ->get();
 
-        // En caso de que en la tabla 'pacientes' los registros importados no traigan aún el reg-medico
+        // En caso de que en la tabla 'pacientes' los registros importados no traigan aún el reg_medico
         if ($pacientes->isEmpty()) {
             $pacientes = Paciente::all();
         }
@@ -159,7 +159,7 @@ class CargarSql extends Component
                 ],
                 [
                     'numhistoria' => $numHistoria,
-                    'reg-medico'  => $regMedico,
+                    'reg_medico'  => $regMedico,
                 ]
             );
 
@@ -171,7 +171,7 @@ class CargarSql extends Component
                     'paciente_id' => $paciente->id,
                 ],
                 [
-                    'reg-medico'        => $regMedico,
+                    'reg_medico'        => $regMedico,
                     'medical_center_id' => 1,
                 ]
             );
@@ -183,9 +183,9 @@ class CargarSql extends Component
         $medicos = Medico::orderBy('name', 'asc')->get()->map(function ($medico) {
             $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
 
-            $medico->reg_medico_calculado = $medicoRegistro->{'reg-medico'} 
+            $medico->reg_medico_calculado = $medicoRegistro->{'reg_medico'} 
                                             ?? $medicoRegistro->reg_medico 
-                                            ?? $medico->{'reg-medico'} 
+                                            ?? $medico->{'reg_medico'} 
                                             ?? $medico->reg_medico 
                                             ?? null;
             return $medico;

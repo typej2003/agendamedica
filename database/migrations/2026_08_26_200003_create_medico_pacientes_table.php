@@ -13,7 +13,7 @@ class CreateMedicoPacientesTable extends Migration
             $table->foreignId('medico_id')->constrained('medicos')->onDelete('cascade');
             $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             $table->string('numhistoria')->nullable(); // El número de historia para este médico específico
-            $table->string('reg-medico')->nullable(); // El registro del médico para este paciente específico   
+            $table->string('reg_medico')->nullable(); // El registro del médico para este paciente específico   
             $table->timestamps();
 
             $table->unique(['medico_id', 'paciente_id']);

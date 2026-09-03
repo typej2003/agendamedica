@@ -66,7 +66,7 @@ class ListMedicos extends Component
         $this->license_number = $medico->license_number;
         $this->phone = $medico->phone;
         $this->email = $medico->email;
-        $this->reg_medico = $medico->{'reg-medico'};
+        $this->reg_medico = $medico->{'reg_medico'};
         $this->is_active = (bool) $medico->is_active;
 
         $this->dispatchBrowserEvent('open-modal-medico');
@@ -75,7 +75,7 @@ class ListMedicos extends Component
     public function save()
     {
         $rules = $this->rules;
-        $rules['reg_medico'] = 'required|string|max:100|unique:medicos,reg-medico,' . $this->medico_id;
+        $rules['reg_medico'] = 'required|string|max:100|unique:medicos,reg_medico,' . $this->medico_id;
 
         $this->validate($rules);
 
@@ -87,7 +87,7 @@ class ListMedicos extends Component
                 'license_number' => $this->license_number,
                 'phone' => $this->phone,
                 'email' => $this->email,
-                'reg-medico' => $this->reg_medico,
+                'reg_medico' => $this->reg_medico,
                 'is_active' => $this->is_active,
             ]
         );
@@ -113,7 +113,7 @@ class ListMedicos extends Component
         $medicos = Medico::where(function($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
                       ->orWhere('lastname', 'like', '%' . $this->search . '%')
-                      ->orWhere('reg-medico', 'like', '%' . $this->search . '%');
+                      ->orWhere('reg_medico', 'like', '%' . $this->search . '%');
             })
             ->orderBy('id', 'desc')
             ->paginate(15);

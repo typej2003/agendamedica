@@ -23,7 +23,7 @@ class MotivoCita extends Model
      */
     protected $fillable = [
         'medico_id',
-        'reg-medico',
+        'reg_medico',
         'codigo',
         'tipo_atencion',
     ];

@@ -13,7 +13,7 @@ class Consulta extends Model
 
     protected $fillable = [
         'medico_id',
-        'reg-medico',
+        'reg_medico',
         'numhistoria',
         'nroconsulta',
         'fecha',

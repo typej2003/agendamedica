@@ -33,9 +33,9 @@ class UserSeeder extends Seeder
         // 3. Crear un usuario para cada rol disponible
         $usersData = [
             [
-                'name'     => 'Usuario Administrador',
-                'email'    => 'admin@admin.com',
-                'password' => Hash::make('password'),
+                'name'     => 'Usuario Root',
+                'email'    => 'admin@gmail.com',
+                'password' => Hash::make('12345678'),
                 'role'     => 'Root',
             ],
         ];

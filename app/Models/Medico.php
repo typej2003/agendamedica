@@ -26,7 +26,7 @@ class Medico extends Model
         'office_id',
         'consultation_fee',
         'is_active',
-        'reg-medico', // temporal, tiende a cambiar no usar
+        'reg_medico', // temporal, tiende a cambiar no usar
     ];
 
     public function office(): BelongsTo

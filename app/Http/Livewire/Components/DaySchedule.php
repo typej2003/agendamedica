@@ -278,7 +278,7 @@ class DaySchedule extends Component
         // Guardar cita en la tabla `cola`
         Cola::create([
             'medico_id'   => $this->medicoId,
-            'reg-medico'  => $regMedico,
+            'reg_medico'  => $regMedico,
             'fecha'       => $this->fecha,
             'numhistoria' => $numHistoriaUser,
             'paciente_sinhistoria_id' => $pacienteSinhistoriaId,
@@ -301,7 +301,7 @@ class DaySchedule extends Component
             'paciente_id' => $user->id,
         ], [
             'numhistoria' => $numHistoriaUser,
-            'reg-medico'  => $regMedico,
+            'reg_medico'  => $regMedico,
         ]);
 
         session()->flash('message', '¡Cita agendada exitosamente!');

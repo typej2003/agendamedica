@@ -27,7 +27,7 @@ class CreateMedicosTable extends Migration
             $table->unsignedBigInteger('office_id')->nullable();
             $table->decimal('consultation_fee', 10, 2)->nullable();
             $table->boolean('is_active')->default(true);
-            $table->string('reg-medico')->unique();
+            $table->string('reg_medico')->unique();
             $table->timestamps();
         });
     }

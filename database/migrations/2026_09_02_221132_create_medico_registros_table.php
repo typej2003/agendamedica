@@ -15,7 +15,7 @@ class CreateMedicoRegistrosTable extends Migration
     {
         Schema::create('medico_registros', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico')->nullable();
+            $table->string('reg_medico')->nullable();
             $table->bigInteger('medico_id')->unsigned()->nullable();
             $table->timestamps();
         });

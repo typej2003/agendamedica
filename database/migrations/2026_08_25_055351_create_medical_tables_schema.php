@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('antece_paciente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->string('codeantecedente', 4);
             $table->text('detalles')->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
 
         Schema::create('antecedentes', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codantecedente', 4);
             $table->string('descripcion', 40)->nullable();
             $table->string('codtipo', 2)->nullable();
@@ -34,7 +34,7 @@ return new class extends Migration
 
         Schema::create('bancos', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('cod_banco', 6);
             $table->string('nombre_banco', 150)->nullable();
             $table->timestamps();
@@ -42,7 +42,7 @@ return new class extends Migration
 
         Schema::create('baremo_quiru', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('consecuti');
             $table->string('cod_inter', 3)->nullable();
             $table->string('cod_clini', 3)->nullable();
@@ -69,7 +69,7 @@ return new class extends Migration
 
         Schema::create('clinicas', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('cod_clin', 3);
             $table->string('nom_clin', 50);
             $table->timestamps();
@@ -77,7 +77,7 @@ return new class extends Migration
 
         Schema::create('cola', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->date('fecha');
             $table->integer('numhistoria')->nullable();
             $table->integer('paciente_sinhistoria_id')->nullable();
@@ -100,7 +100,7 @@ return new class extends Migration
 
         Schema::create('cola_dia_no_labor', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->date('dia');
             $table->string('tipo', 10)->nullable();
             $table->string('motivo', 100)->nullable();
@@ -110,7 +110,7 @@ return new class extends Migration
 
         Schema::create('constancia_obs', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->integer('numconsulta');
             $table->text('observacion')->nullable();
@@ -121,7 +121,7 @@ return new class extends Migration
 
         Schema::create('consultas', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->integer('nroconsulta');
             $table->date('fecha')->nullable();
@@ -153,7 +153,7 @@ return new class extends Migration
 
         Schema::create('consultorios', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codigo', 10);
             $table->string('consultorio', 100)->nullable();
             $table->timestamps();
@@ -161,7 +161,7 @@ return new class extends Migration
 
         Schema::create('cuentas_x_pagar', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('nro_cxp');
             $table->string('origen_cxp', 2)->nullable();
             $table->date('fec_cxp')->nullable();
@@ -191,7 +191,7 @@ return new class extends Migration
 
         Schema::create('cuentas_x_pagar_mov', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('nro_registro');
             $table->double('nro_cxp')->nullable();
             $table->double('nro_mov')->nullable();
@@ -204,7 +204,7 @@ return new class extends Migration
 
         Schema::create('dd_arterial_mi', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->integer('num_consulta');
             $table->string('indicacion', 100)->nullable();
@@ -250,7 +250,7 @@ return new class extends Migration
 
         Schema::create('department', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('dept_id');
             $table->string('dept_name', 40);
             $table->integer('dept_head_id')->nullable();
@@ -259,7 +259,7 @@ return new class extends Migration
 
         Schema::create('detalles_factura_cliente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('cod_inventario', 2);
             $table->integer('numfactura');
             $table->string('tipo_articulo', 25)->nullable();
@@ -275,7 +275,7 @@ return new class extends Migration
 
         Schema::create('detalles_presupuesto_plantilla', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('cod_inventario', 2);
             $table->integer('consecutivo');
             $table->string('tipo_articulo', 25)->nullable();
@@ -291,7 +291,7 @@ return new class extends Migration
 
         Schema::create('diagnostico_paciente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codediagnostico', 5);
@@ -302,7 +302,7 @@ return new class extends Migration
 
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codediagnostico', 5);
             $table->string('descripcion', 50);
             $table->timestamps();
@@ -310,7 +310,7 @@ return new class extends Migration
 
         Schema::create('dias_semana', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->date('fecha');
             $table->string('dia_semana', 10)->nullable();
             $table->integer('semana')->nullable();
@@ -322,7 +322,7 @@ return new class extends Migration
 
         Schema::create('dieta_paciente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('histroria');
             $table->integer('consulta');
             $table->string('cod_dieta', 2)->nullable();
@@ -335,7 +335,7 @@ return new class extends Migration
 
         Schema::create('doctores', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->decimal('cedula', 15, 0);
             $table->string('apellidos', 30)->nullable();
             $table->string('nombres', 30)->nullable();
@@ -350,14 +350,14 @@ return new class extends Migration
 
         Schema::create('DUMMY', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('dummy_col');
             $table->timestamps();
         });
 
         Schema::create('eco_doppler', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->string('arteria_uraina_menor', 20)->nullable();
@@ -392,7 +392,7 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -442,7 +442,7 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -513,7 +513,7 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_2', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -584,7 +584,7 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_2_o', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -653,7 +653,7 @@ return new class extends Migration
 
         Schema::create('eco_obstetrico_tercer_o', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('gesta')->nullable();
@@ -722,7 +722,7 @@ return new class extends Migration
 
         Schema::create('eco_pelvico', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->date('fecha');
             $table->string('posicionavf', 1)->nullable();
@@ -770,7 +770,7 @@ return new class extends Migration
 
         Schema::create('ecocadiograma_fetal', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('biome_dbp')->nullable();
@@ -808,7 +808,7 @@ return new class extends Migration
 
         Schema::create('emision_pagos', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('nro_emision');
             $table->date('fecha_emision')->nullable();
             $table->string('descripcion', 100)->nullable();
@@ -820,7 +820,7 @@ return new class extends Migration
 
         Schema::create('emision_pagos_detalle', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('nro_registro');
             $table->double('nro_emision')->nullable();
             $table->double('nro_cxp')->nullable();
@@ -839,7 +839,7 @@ return new class extends Migration
 
         Schema::create('employee', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('emp_id');
             $table->integer('manager_id')->nullable();
             $table->string('emp_fname', 30);
@@ -865,7 +865,7 @@ return new class extends Migration
 
         Schema::create('especial', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codeespecial', 3);
             $table->string('especialidad', 50)->nullable();
             $table->timestamps();
@@ -873,7 +873,7 @@ return new class extends Migration
 
         Schema::create('evolucion', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('especialidad', 200)->nullable();
             $table->string('ciudad', 20)->nullable();
             $table->string('logo', 500)->nullable();
@@ -947,7 +947,7 @@ return new class extends Migration
 
         Schema::create('evolucion_copy', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('especialidad', 200)->nullable();
             $table->string('ciudad', 20)->nullable();
             $table->string('logo', 500)->nullable();
@@ -1013,7 +1013,7 @@ return new class extends Migration
 
         Schema::create('examen_fisico', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('cardiopulmonal')->nullable();
@@ -1030,7 +1030,7 @@ return new class extends Migration
 
         Schema::create('examen_fisico_nuevo', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->integer('consulta');
             $table->integer('talla')->nullable();
@@ -1057,7 +1057,7 @@ return new class extends Migration
 
         Schema::create('examen_obs', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numhistoria');
             $table->integer('numconsulta');
             $table->text('observacion')->nullable();
@@ -1066,7 +1066,7 @@ return new class extends Migration
 
         Schema::create('examen_paciente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codeexamen', 8);
@@ -1077,7 +1077,7 @@ return new class extends Migration
 
         Schema::create('examen_pareja', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('codeexamen', 8);
@@ -1090,7 +1090,7 @@ return new class extends Migration
 
         Schema::create('examenes', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codeexamen', 8);
             $table->string('examen', 45)->nullable();
             $table->string('codetipo', 10)->nullable();
@@ -1099,7 +1099,7 @@ return new class extends Migration
 
         Schema::create('EXCLUDEOBJECT', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('name', 128);
             $table->string('type', 1);
             $table->timestamps();
@@ -1107,7 +1107,7 @@ return new class extends Migration
 
         Schema::create('factura_cliente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('numfactura');
             $table->string('cedu_rif', 15)->nullable();
             $table->date('fecha_factura')->nullable();
@@ -1140,7 +1140,7 @@ return new class extends Migration
 
         Schema::create('facturas_compras', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('id_factura_compra');
             $table->string('cod_prov', 6)->nullable();
             $table->string('id_tipo_concepto', 4)->nullable();
@@ -1163,7 +1163,7 @@ return new class extends Migration
 
         Schema::create('facturas_compras_detalle', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('id_registro');
             $table->string('id_fac_prov', 6)->nullable();
             $table->string('des_concepto', 100)->nullable();
@@ -1176,7 +1176,7 @@ return new class extends Migration
 
         Schema::create('formato_print', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codigo', 4);
             $table->string('titulo', 200)->nullable();
             $table->text('descripcion')->nullable();
@@ -1186,7 +1186,7 @@ return new class extends Migration
 
         Schema::create('his_con_pre_factura', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->double('id_registro');
             $table->integer('numhistoria')->nullable();
             $table->integer('nroconsulta')->nullable();
@@ -1199,7 +1199,7 @@ return new class extends Migration
 
         Schema::create('hospitalizacion', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('diagprev')->nullable();
@@ -1212,7 +1212,7 @@ return new class extends Migration
 
         Schema::create('imagen_consulta', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->text('observacion')->nullable();
@@ -1223,7 +1223,7 @@ return new class extends Migration
 
         Schema::create('imagen_pacientes', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->string('imagen', 256);
             $table->string('imagen2', 256)->nullable();
@@ -1232,7 +1232,7 @@ return new class extends Migration
 
         Schema::create('imagen_pacientes_2', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->string('imagen', 256)->nullable();
             $table->string('imagen2', 256)->nullable();
@@ -1241,7 +1241,7 @@ return new class extends Migration
 
         Schema::create('imagenes', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('descripcion', 30);
             $table->string('imagen', 256);
             $table->timestamps();
@@ -1249,7 +1249,7 @@ return new class extends Migration
 
         Schema::create('informe', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
             $table->string('para', 50)->nullable();
@@ -1260,7 +1260,7 @@ return new class extends Migration
 
         Schema::create('intenven_servi', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codigo', 3);
             $table->string('nombre', 300)->nullable();
             $table->double('precio_principal')->nullable();
@@ -1270,7 +1270,7 @@ return new class extends Migration
 
         Schema::create('jdbc_function_escapes', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('escape_name', 40);
             $table->string('map_string', 40)->nullable();
             $table->timestamps();
@@ -1278,7 +1278,7 @@ return new class extends Migration
 
         Schema::create('listado', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('tipo', 5);
             $table->string('descripcion_tipo', 30);
             $table->string('segundo', 5);
@@ -1287,7 +1287,7 @@ return new class extends Migration
 
         Schema::create('migrate_remote_fks_list', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('fk_id');
             $table->string('pk_database', 255)->nullable();
             $table->string('pk_owner', 255)->nullable();
@@ -1306,7 +1306,7 @@ return new class extends Migration
 
         Schema::create('migrate_remote_table_list', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('table_id');
             $table->string('server_name', 255);
             $table->string('database_name', 255)->nullable();
@@ -1322,7 +1322,7 @@ return new class extends Migration
 
         Schema::create('migrate_sql_defn', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->text('unld_str')->nullable();
             $table->text('et_table_id')->nullable();
             $table->timestamps();
@@ -1330,7 +1330,7 @@ return new class extends Migration
 
         Schema::create('ml_connection_script', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('version_id');
             $table->string('event', 128);
             $table->integer('script_id');
@@ -1339,7 +1339,7 @@ return new class extends Migration
 
         Schema::create('ml_script', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('script_id');
             $table->text('script');
             $table->string('script_language', 128);
@@ -1348,7 +1348,7 @@ return new class extends Migration
 
         Schema::create('ml_script_version', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('version_id');
             $table->string('name', 128);
             $table->text('description')->nullable();
@@ -1357,14 +1357,14 @@ return new class extends Migration
 
         Schema::create('ml_scripts_modified', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->dateTime('last_modified');
             $table->timestamps();
         });
 
         Schema::create('ml_subscription', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('user_id');
             $table->string('publication_name', 128);
             $table->decimal('progress', 20, 0);
@@ -1373,7 +1373,7 @@ return new class extends Migration
 
         Schema::create('ml_table', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('table_id');
             $table->string('name', 128);
             $table->timestamps();
@@ -1381,7 +1381,7 @@ return new class extends Migration
 
         Schema::create('ml_table_script', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('version_id');
             $table->integer('table_id');
             $table->string('event', 128);
@@ -1391,7 +1391,7 @@ return new class extends Migration
 
         Schema::create('ml_user', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('user_id');
             $table->string('name', 128);
             $table->integer('commit_state');
@@ -1402,7 +1402,7 @@ return new class extends Migration
 
         Schema::create('motivo_cita', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codigo', 10);
             $table->string('tipo_atencion', 100)->nullable();
             $table->timestamps();
@@ -1410,7 +1410,7 @@ return new class extends Migration
 
         Schema::create('motivo_consulta_paciente', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codemotivo', 4);
             $table->integer('nrohistoria');
             $table->integer('nroconsulta');
@@ -1421,7 +1421,7 @@ return new class extends Migration
 
         Schema::create('motivo_factura', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codigo', 8);
             $table->string('descripcion', 45)->nullable();
             $table->double('monto');
@@ -1432,7 +1432,7 @@ return new class extends Migration
 
         Schema::create('motivo_factura_prov', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('id_fac_prov', 6);
             $table->string('des_concepto', 100)->nullable();
             $table->double('monto')->nullable();
@@ -1441,7 +1441,7 @@ return new class extends Migration
 
         Schema::create('motivos_consulta', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('codemotivo', 4);
             $table->string('descripcion', 40);
             $table->timestamps();
@@ -1449,7 +1449,7 @@ return new class extends Migration
 
         Schema::create('operadores', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('primera', 15);
             $table->string('segunda', 10);
             $table->string('nonbre', 50)->nullable();
@@ -1459,7 +1459,7 @@ return new class extends Migration
 
         Schema::create('paciente_no_regi', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->decimal('registro', 5, 0);
             $table->string('apellidos', 100)->nullable();
             $table->string('nombres', 100)->nullable();
@@ -1501,7 +1501,7 @@ return new class extends Migration
 
         Schema::create('pago_quiru', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('cod_pagos');
             $table->integer('consecuti');
             $table->date('fecha')->nullable();
@@ -1515,7 +1515,7 @@ return new class extends Migration
 
         Schema::create('pbcatcol', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('pbc_tnam', 129);
             $table->integer('pbc_tid')->nullable();
             $table->string('pbc_ownr', 129);
@@ -1541,7 +1541,7 @@ return new class extends Migration
 
         Schema::create('pbcatedt', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('pbe_name', 30);
             $table->string('pbe_edit', 254)->nullable();
             $table->smallInteger('pbe_type')->nullable();
@@ -1554,7 +1554,7 @@ return new class extends Migration
 
         Schema::create('pbcatfmt', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('pbf_name', 30);
             $table->string('pbf_frmt', 254)->nullable();
             $table->smallInteger('pbf_type')->nullable();
@@ -1564,7 +1564,7 @@ return new class extends Migration
 
         Schema::create('pbcattbl', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('pbt_tnam', 129);
             $table->integer('pbt_tid')->nullable();
             $table->string('pbt_ownr', 129);
@@ -1595,7 +1595,7 @@ return new class extends Migration
 
         Schema::create('pbcatvld', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->string('pbv_name', 30);
             $table->string('pbv_vald', 254)->nullable();
             $table->smallInteger('pbv_type')->nullable();
@@ -1606,7 +1606,7 @@ return new class extends Migration
 
         Schema::create('pre_natal_desarrollo', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->date('fecha');
             $table->string('eg_fur', 20)->nullable();
@@ -1628,7 +1628,7 @@ return new class extends Migration
 
         Schema::create('pre_natal_desarrollo_fino', function (Blueprint $table) {
             $table->id();
-            $table->string('reg-medico', 20)->nullable();
+            $table->string('reg_medico', 20)->nullable();
             $table->integer('historia');
             $table->date('fecha');
             $table->string('eg_fur', 20)->nullable();

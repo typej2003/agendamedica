@@ -29,8 +29,8 @@ class PacienteSyncController extends Controller
         $primerRegistro = is_array($data) && isset($data[0]) ? $data[0] : $data;
         $regMedico = $primerRegistro['reg_medico'] ?? $request->input('reg_medico');
 
-        // Búsqueda del médico por reg-medico
-        $medico = Medico::where('reg-medico', $regMedico)->first();
+        // Búsqueda del médico por reg_medico
+        $medico = Medico::where('reg_medico', $regMedico)->first();
 
         // Validar existencia del médico
         if (!$medico) {
@@ -86,13 +86,13 @@ class PacienteSyncController extends Controller
                     ]
                 );
 
-                // 2. Asociar paciente con el médico guardando el numhistoria y reg-medico en la tabla pivote
+                // 2. Asociar paciente con el médico guardando el numhistoria y reg_medico en la tabla pivote
                 $numHistoriaPowerBuilder = $item['numhistoria'] ?? null;
 
                 $medico->pacientes()->syncWithoutDetaching([
                     $paciente->id => [
                         'numhistoria' => $numHistoriaPowerBuilder,
-                        'reg-medico'  => $regMedico,
+                        'reg_medico'  => $regMedico,
                     ]
                 ]);
 
@@ -104,7 +104,7 @@ class PacienteSyncController extends Controller
                     ],
                     [
                         'numhistoria'       => $numHistoriaPowerBuilder,
-                        'reg-medico'        => $regMedico,
+                        'reg_medico'        => $regMedico,
                         'medical_center_id' => null,
                     ]
                 );

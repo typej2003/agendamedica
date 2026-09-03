@@ -13,7 +13,7 @@ class Cola extends Model
 
     protected $fillable = [
         'medico_id',
-        'reg-medico',
+        'reg_medico',
         'fecha',
         'numhistoria',
         'paciente_sinhistoria_id',

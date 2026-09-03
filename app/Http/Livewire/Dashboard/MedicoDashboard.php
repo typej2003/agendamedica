@@ -20,12 +20,12 @@ class MedicoDashboard extends Component
         $medico = Medico::where('user_id', Auth::id())->first() ?? Medico::first();
 
         if ($medico) {
-            // Obtener el registro médico asociado (reg-medico / reg_medico)
+            // Obtener el registro médico asociado (reg_medico / reg_medico)
             $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
 
-            $regMedico = $medicoRegistro->{'reg-medico'} 
+            $regMedico = $medicoRegistro->{'reg_medico'} 
                         ?? $medicoRegistro->reg_medico 
-                        ?? $medico->{'reg-medico'} 
+                        ?? $medico->{'reg_medico'} 
                         ?? $medico->reg_medico 
                         ?? null;
 
