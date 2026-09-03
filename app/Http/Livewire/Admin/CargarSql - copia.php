@@ -2,11 +2,8 @@
 
 namespace App\Http\Livewire\Admin;
 
-use App\Models\Historia;
 use App\Models\Medico;
-use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
-use App\Models\Paciente;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -97,15 +94,10 @@ class CargarSql extends Component
                 $contenidoSql = file_get_contents($rutaReal);
 
                 if (!empty(trim($contenidoSql))) {
-                    // Ejecución directa mediante PDO
+                    // Ejecución directa mediante PDO sin transacciones manuales
                     DB::connection()->getPdo()->exec($contenidoSql);
                     $archivosProcesados++;
                 }
-            }
-
-            // Poblado post-importación desde la tabla pacientes usando reg-medico
-            if ($archivosProcesados > 0 && !empty($this->medico_id)) {
-                $this->sincronizarDesdePacientes();
             }
 
             // Reactivar llaves foráneas
@@ -117,7 +109,7 @@ class CargarSql extends Component
             }
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
-            session()->flash('message', "¡Proceso completado con éxito! Se importaron {$archivosProcesados} archivos SQL y se poblaron medico_pacientes e historias correctamente.");
+            session()->flash('message', "¡Proceso completado con éxito! Se importaron {$archivosProcesados} archivos SQL correctamente.");
 
         } catch (\Throwable $e) {
             try {
@@ -127,54 +119,6 @@ class CargarSql extends Component
             }
 
             session()->flash('error', 'Error en la importación SQL: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Poblado directo de MedicoPaciente e Historia utilizando el modelo Paciente y reg-medico
-     */
-    private function sincronizarDesdePacientes()
-    {
-        $medicoId = $this->medico_id;
-        $regMedico = $this->regMedicoSeleccionado;
-
-        // Buscar los pacientes que tengan asignado este reg-medico (o consultar todos si no traen la columna filtrada)
-        $pacientes = Paciente::where('reg-medico', $regMedico)
-            ->orWhere('reg_medico', $regMedico)
-            ->get();
-
-        // En caso de que en la tabla 'pacientes' los registros importados no traigan aún el reg-medico
-        if ($pacientes->isEmpty()) {
-            $pacientes = Paciente::all();
-        }
-
-        foreach ($pacientes as $paciente) {
-            $numHistoria = $paciente->numhistoria ?? $paciente->num_historia ?? $paciente->id;
-
-            // 1. Poblar MedicoPaciente
-            MedicoPaciente::firstOrCreate(
-                [
-                    'medico_id'  => $medicoId,
-                    'paciente_id' => $paciente->id,
-                ],
-                [
-                    'numhistoria' => $numHistoria,
-                    'reg-medico'  => $regMedico,
-                ]
-            );
-
-            // 2. Poblar Historia con los datos del paciente y médico
-            Historia::firstOrCreate(
-                [
-                    'numhistoria' => $numHistoria,
-                    'medico_id'   => $medicoId,
-                    'paciente_id' => $paciente->id,
-                ],
-                [
-                    'reg-medico'        => $regMedico,
-                    'medical_center_id' => 1,
-                ]
-            );
         }
     }
 
