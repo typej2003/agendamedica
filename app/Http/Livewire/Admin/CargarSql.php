@@ -19,15 +19,15 @@ class CargarSql extends Component
     protected $rules = [
         'medico_id' => 'required|exists:medicos,id',
         'archivosSql' => 'required|array|min:1',
-        'archivosSql.*' => 'required|file|max:51200', // Máximo 50MB por archivo SQL
+        'archivosSql.*' => 'required|max:102400', // Aumentado a 100MB por archivo
     ];
 
     protected $messages = [
         'medico_id.required' => 'Debe seleccionar un médico.',
         'medico_id.exists' => 'El médico seleccionado no existe en el sistema.',
         'archivosSql.required' => 'Debe adjuntar al menos un archivo SQL.',
-        'archivosSql.*.file' => 'Uno de los archivos adjuntados no es válido.',
-        'archivosSql.*.max' => 'Los archivos SQL no deben superar los 50MB cada uno.',
+        'archivosSql.*.required' => 'Uno de los archivos adjuntados no es válido.',
+        'archivosSql.*.max' => 'Los archivos SQL no deben superar los 100MB cada uno.',
     ];
 
     public function updatedMedicoId($value)
@@ -50,6 +50,10 @@ class CargarSql extends Component
 
     public function procesarSql()
     {
+        // Elevar límites para scripts de ejecución masiva
+        @set_time_limit(0);
+        @ini_set('memory_limit', '512M');
+
         $this->validate();
 
         $medico = Medico::with('office')->find($this->medico_id);
@@ -59,7 +63,7 @@ class CargarSql extends Component
             return;
         }
 
-        // 1. Obtener el registro médico desde MedicoRegistro
+        // Obtener el registro médico desde MedicoRegistro
         $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
 
         // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID del médico

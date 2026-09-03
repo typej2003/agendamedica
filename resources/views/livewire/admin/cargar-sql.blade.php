@@ -78,7 +78,7 @@
                             <div class="card bg-light border-0 mb-4">
                                 <div class="card-body">
                                     <h6 class="fw-bold mb-2">Archivos seleccionados ({{ count($archivosSql) }}):</h6>
-                                    <ul class="list-group list-group-flush small">
+                                    <ul class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
                                         @foreach($archivosSql as $file)
                                             <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1">
                                                 <span><i class="bi bi-filetype-sql text-primary me-2"></i>{{ $file->getClientOriginalName() }}</span>
