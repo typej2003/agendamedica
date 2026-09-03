@@ -114,21 +114,23 @@ class AppAgendaMedicaController extends Controller
 
                 // 6. Obtener Pacientes y Consultas según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
-                    // Buscar los registros pivote directamente por medico_id
+                    // Buscar las relaciones pivote asociadas al medico_id
                     $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
-                    $pacienteIds = $relaciones->pluck('paciente_id')->unique()->toArray();
+                    
+                    $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+                    $historias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
                     $historiasMap = $relaciones->pluck('numhistoria', 'paciente_id')->toArray();
 
-                    // Consultar únicamente los pacientes vinculados
+                    // Consultar los pacientes usando los IDs obtenidos
                     $pacientesRaw = Paciente::whereIn('id', $pacienteIds)->get();
 
-                    // Mapear número de historia desde la pivote
+                    // Mapear el número de historia proveniente de la tabla pivote
                     $pacientesRaw->each(function ($p) use ($historiasMap) {
                         $p->numhistoria_pivote = $historiasMap[$p->id] ?? $p->numhistoria ?? '';
                     });
 
-                    // Obtener consultas filtrando por los pacientes del médico
-                    $consultas = Consulta::whereIn('paciente_id', $pacienteIds)
+                    // Consultar la tabla `consultas` filtrando por numhistoria
+                    $consultas = Consulta::whereIn('numhistoria', $historias)
                         ->whereBetween('fecha', [$inicioMes, $finMes])
                         ->get();
 
@@ -136,8 +138,10 @@ class AppAgendaMedicaController extends Controller
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
                     $pacientesRaw = $pacienteModel ? \collect([$pacienteModel]) : \collect([]);
 
-                    $consultas = $pacienteModel 
-                        ? Consulta::where('paciente_id', $pacienteModel->id)->whereBetween('fecha', [$inicioMes, $finMes])->get() 
+                    $numHistoriaPac = $pacienteModel ? ($pacienteModel->numhistoria ?? '') : '';
+
+                    $consultas = !empty($numHistoriaPac)
+                        ? Consulta::where('numhistoria', $numHistoriaPac)->whereBetween('fecha', [$inicioMes, $finMes])->get() 
                         : \collect([]);
 
                 } else {
@@ -157,10 +161,10 @@ class AppAgendaMedicaController extends Controller
                     ];
                 });
 
-                // Mapear las citas/consultas asociando el paciente
+                // Mapear las citas/consultas asociando el paciente mediante numhistoria
                 $citas = $consultas->map(function ($consulta) use ($pacientes) {
-                    $pacienteId = $consulta->paciente_id ?? $consulta->numhistoria;
-                    $pacienteEncontrado = $pacientes->firstWhere('id', $pacienteId);
+                    $numHistoriaConsulta = $consulta->numhistoria ?? null;
+                    $pacienteEncontrado = $pacientes->firstWhere('numhistoria', $numHistoriaConsulta);
 
                     $consultaArray = $consulta->toArray();
                     $consultaArray['paciente'] = $pacienteEncontrado ?? null;
