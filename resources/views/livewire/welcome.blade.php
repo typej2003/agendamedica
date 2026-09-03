@@ -24,7 +24,7 @@
                 <p class="text-muted">Selecciona una especialidad para conocer los médicos especialistas disponibles</p>
             </div>
 
-            <!-- Cards de Especialidades -->
+            <!-- Cards de Especialidades dentro de Forms -->
             <div class="row g-4 mb-5">
                 @foreach($especialidades as $esp)
                     @php
@@ -44,19 +44,20 @@
                         };
                     @endphp
                     <div class="col-6 col-md-4 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm text-center p-3 {{ $esActiva ? 'bg-primary text-white shadow' : 'bg-white text-dark' }}"
-                             wire:click="seleccionarEspecialidad('{{ $esp->slug }}')"
-                             style="cursor: pointer; border-radius: 1rem; transition: all 0.25s ease-in-out;">
-                            <div class="card-body d-flex flex-column align-items-center justify-content-center p-2">
-                                <div class="rounded-circle p-3 mb-3 d-flex align-items-center justify-content-center {{ $esActiva ? 'bg-white text-primary' : 'bg-light text-primary' }}" style="width: 65px; height: 65px;">
-                                    <i class="bi {{ $icono }} fs-2"></i>
+                        <form wire:submit.prevent="buscarPorEspecialidad({{ $esp->id }})">
+                            <button type="submit" class="card h-100 border-0 shadow-sm text-center p-3 w-100 {{ $esActiva ? 'bg-primary text-white shadow' : 'bg-white text-dark' }}"
+                                    style="cursor: pointer; border-radius: 1rem; transition: all 0.25s ease-in-out; text-decoration: none;">
+                                <div class="card-body d-flex flex-column align-items-center justify-content-center p-2 w-100">
+                                    <div class="rounded-circle p-3 mb-3 d-flex align-items-center justify-content-center {{ $esActiva ? 'bg-white text-primary' : 'bg-light text-primary' }}" style="width: 65px; height: 65px;">
+                                        <i class="bi {{ $icono }} fs-2"></i>
+                                    </div>
+                                    <h5 class="fw-bold fs-6 mb-2 {{ $esActiva ? 'text-white' : 'text-dark' }}">{{ $esp->name }}</h5>
+                                    <span class="badge {{ $esActiva ? 'bg-white text-primary' : 'bg-light text-secondary border' }} rounded-pill px-3 py-1">
+                                        {{ $esp->medicos_count }} {{ Str::plural('médico', $esp->medicos_count) }}
+                                    </span>
                                 </div>
-                                <h5 class="fw-bold fs-6 mb-2 {{ $esActiva ? 'text-white' : 'text-dark' }}">{{ $esp->name }}</h5>
-                                <span class="badge {{ $esActiva ? 'bg-white text-primary' : 'bg-light text-secondary border' }} rounded-pill px-3 py-1">
-                                    {{ $esp->medicos_count }} {{ Str::plural('médico', $esp->medicos_count) }}
-                                </span>
-                            </div>
-                        </div>
+                            </button>
+                        </form>
                     </div>
                 @endforeach
             </div>

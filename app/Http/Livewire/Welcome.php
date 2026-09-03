@@ -16,7 +16,7 @@ class Welcome extends Component
 
     public function mount()
     {
-        $this->especialidades = Specialty::withCount('medicos')->get();
+        $this->especialidades = Specialty::withCount('medicos')->orderBy('name')->get();
 
         if (request()->has('especialidad')) {
             $this->seleccionarEspecialidad(request()->get('especialidad'));
@@ -28,6 +28,13 @@ class Welcome extends Component
         $this->especialidadSeleccionada = Specialty::with(['medicos' => function ($query) {
             $query->with(['medicalCenter', 'medicoRegistro']);
         }])->where('slug', $slug)->first();
+    }
+
+    public function buscarPorEspecialidad($specialtyId)
+    {
+        return redirect()->route('medicos.search', [
+            'specialty' => $specialtyId,
+        ]);
     }
 
     public function limpiarFiltro()
