@@ -111,6 +111,7 @@ class CargarSql extends Component
                     while (($linea = fgets($handle)) !== false) {
                         $lineaLimpia = trim($linea);
 
+                        // Omitir líneas vacías y comentarios de SQL
                         if (
                             empty($lineaLimpia) ||
                             str_starts_with($lineaLimpia, '--') ||
@@ -120,22 +121,18 @@ class CargarSql extends Component
                             continue;
                         }
 
-                        $sqlBuffer .= $linea . "\n";
+                        $sqlBuffer .= $linea;
 
+                        // Cuando se encuentra el punto y coma, procesamos la sentencia completa acumulada
                         if (str_ends_with($lineaLimpia, ';')) {
-                            $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
-
-                            if (!empty(trim($sqlEjecutar))) {
-                                DB::unprepared($sqlEjecutar);
-                            }
-
+                            $this->ejecutarSentenciaSql($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
                             $sqlBuffer = '';
                         }
                     }
 
+                    // Procesar cualquier buffer sobrante al final del archivo
                     if (!empty(trim($sqlBuffer))) {
-                        $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
-                        DB::unprepared($sqlEjecutar);
+                        $this->ejecutarSentenciaSql($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
                     }
 
                     fclose($handle);
@@ -151,16 +148,21 @@ class CargarSql extends Component
             try {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             } catch (\Throwable $ex) {
-                // Ignorar si falla el reset de llaves foráneas en el catch
+                // Silenciar en caso de fallo al restablecer llaves foráneas
             }
 
-            $mensajeError = !empty($e->getMessage()) ? $e->getMessage() : 'Error desconocido de la base de datos o codificación.';
-            session()->flash('error', $mensajeError);
+            session()->flash('error', 'Error durante el procesamiento SQL: ' . $e->getMessage());
         }
     }
 
-    private function reemplazarDatosMedico(string $sql, string $regMedicoVal, int $medicoId, ?int $userId): string
+    private function ejecutarSentenciaSql(string $sql, string $regMedicoVal, int $medicoId, ?int $userId): void
     {
+        $sql = trim($sql);
+        if (empty($sql)) {
+            return;
+        }
+
+        // Reemplazo de marcadores genéricos si existen en el SQL
         $replacements = [
             ':reg_medico' => $regMedicoVal,
             ':reg-medico' => $regMedicoVal,
@@ -169,28 +171,8 @@ class CargarSql extends Component
         ];
         $sql = str_replace(array_keys($replacements), array_values($replacements), $sql);
 
-        if (preg_match('/INSERT\s+INTO\s+[`\w`\.]+\s*\(([^)]+)\)\s*VALUES/i', $sql, $matches)) {
-            $columnas = array_map(fn($col) => trim($col, " `\t\n\r\0\x0B"), explode(',', $matches[1]));
-            $posicionRegMedico = array_search('reg_medico', $columnas);
-
-            if ($posicionRegMedico !== false) {
-                $sql = preg_replace_callback(
-                    '/\(([^)]+)\)/s',
-                    function ($tuplaMatch) use ($posicionRegMedico, $regMedicoVal) {
-                        $valores = explode(',', $tuplaMatch[1]);
-                        
-                        if (isset($valores[$posicionRegMedico])) {
-                            $valores[$posicionRegMedico] = " '" . addslashes($regMedicoVal) . "'";
-                        }
-
-                        return '(' . implode(',', $valores) . ')';
-                    },
-                    $sql
-                );
-            }
-        }
-
-        return $sql;
+        // Se ejecuta directamente usando DB::unprepared
+        DB::unprepared($sql);
     }
 
     public function render()
