@@ -39,7 +39,6 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
 
-                            {{-- Muestra información detallada del Reg-Medico al seleccionar un médico --}}
                             @if(!empty($regMedicoSeleccionado))
                                 <div class="mt-2 p-2 bg-light rounded border d-flex align-items-center">
                                     <i class="bi bi-person-badge-fill text-primary fs-5 me-2"></i>
@@ -53,36 +52,47 @@
 
                         {{-- Carga de archivos SQL --}}
                         <div class="mb-4">
-                            <label for="archivosSql" class="form-label fw-bold">2. Adjuntar Archivos SQL (.sql)</label>
-                            <input type="file" id="archivosSql" class="form-control @error('archivosSql') is-invalid @enderror @error('archivosSql.*') is-invalid @enderror" wire:model="archivosSql" multiple accept=".sql">
-                            <div class="form-text">Puedes seleccionar varios archivos SQL exportados correlativamente (ej. export_parte_1.sql, export_parte_2.sql).</div>
+                            <label for="nuevosArchivos" class="form-label fw-bold">2. Adjuntar Archivos SQL (.sql)</label>
+                            <input type="file" id="nuevosArchivos" class="form-control @error('archivosSql') is-invalid @enderror @error('nuevosArchivos.*') is-invalid @enderror" wire:model="nuevosArchivos" multiple accept=".sql">
+                            <div class="form-text">Puedes agregar uno o varios archivos progresivamente sin perder los seleccionados previamente.</div>
                             
                             @error('archivosSql')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
-                            @error('archivosSql.*')
+                            @error('nuevosArchivos.*')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         {{-- Indicador de subida de archivos --}}
-                        <div wire:loading wire:target="archivosSql" class="mb-3">
+                        <div wire:loading wire:target="nuevosArchivos" class="mb-3">
                             <div class="spinner-border spinner-border-sm text-primary" role="status">
                                 <span class="visually-hidden">Cargando archivos...</span>
                             </div>
                             <span class="text-primary ms-2 fw-bold">Cargando y validando archivos en el servidor...</span>
                         </div>
 
-                        {{-- Previsualización de archivos seleccionados --}}
+                        {{-- Previsualización y eliminación de archivos seleccionados --}}
                         @if(!empty($archivosSql))
                             <div class="card bg-light border-0 mb-4">
                                 <div class="card-body">
-                                    <h6 class="fw-bold mb-2">Archivos seleccionados ({{ count($archivosSql) }}):</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold mb-0">Archivos acumulados para procesar ({{ count($archivosSql) }}):</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="$set('archivosSql', [])">
+                                            <i class="bi bi-trash me-1"></i> Limpiar todos
+                                        </button>
+                                    </div>
                                     <ul class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
-                                        @foreach($archivosSql as $file)
-                                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1">
-                                                <span><i class="bi bi-filetype-sql text-primary me-2"></i>{{ $file->getClientOriginalName() }}</span>
-                                                <span class="badge bg-secondary">{{ number_format($file->getSize() / 1024, 2) }} KB</span>
+                                        @foreach($archivosSql as $index => $file)
+                                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 border-bottom">
+                                                <div>
+                                                    <i class="bi bi-filetype-sql text-primary me-2 fs-6"></i>
+                                                    <span class="fw-semibold">{{ $file->getClientOriginalName() }}</span>
+                                                    <span class="badge bg-secondary ms-2">{{ number_format($file->getSize() / 1024, 2) }} KB</span>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger py-0 px-2" wire:click="eliminarArchivo({{ $index }})" title="Eliminar este archivo">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -92,7 +102,7 @@
 
                         {{-- Botón para procesar --}}
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" wire:loading.attr="disabled" wire:target="procesarSql, archivosSql">
+                            <button type="submit" class="btn btn-primary btn-lg" wire:loading.attr="disabled" wire:target="procesarSql, nuevosArchivos">
                                 <span wire:loading.remove wire:target="procesarSql">
                                     <i class="bi bi-arrow-repeat me-1"></i> Actualizar e Importar Datos
                                 </span>

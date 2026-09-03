@@ -13,13 +13,14 @@ class CargarSql extends Component
     use WithFileUploads;
 
     public $archivosSql = [];
+    public $nuevosArchivos = [];
     public $medico_id = '';
     public $regMedicoSeleccionado = '';
 
     protected $rules = [
         'medico_id' => 'required|exists:medicos,id',
         'archivosSql' => 'required|array|min:1',
-        'archivosSql.*' => 'required|max:102400', // Aumentado a 100MB por archivo
+        'archivosSql.*' => 'required|max:102400', // Máximo 100MB por archivo
     ];
 
     protected $messages = [
@@ -29,6 +30,29 @@ class CargarSql extends Component
         'archivosSql.*.required' => 'Uno de los archivos adjuntados no es válido.',
         'archivosSql.*.max' => 'Los archivos SQL no deben superar los 100MB cada uno.',
     ];
+
+    public function updatedNuevosArchivos()
+    {
+        $this->validate([
+            'nuevosArchivos.*' => 'required|max:102400',
+        ], [
+            'nuevosArchivos.*.max' => 'Los archivos SQL no deben superar los 100MB cada uno.',
+        ]);
+
+        foreach ($this->nuevosArchivos as $archivo) {
+            $this->archivosSql[] = $archivo;
+        }
+
+        $this->reset('nuevosArchivos');
+    }
+
+    public function eliminarArchivo($index)
+    {
+        if (isset($this->archivosSql[$index])) {
+            unset($this->archivosSql[$index]);
+            $this->archivosSql = array_values($this->archivosSql);
+        }
+    }
 
     public function updatedMedicoId($value)
     {
@@ -50,7 +74,6 @@ class CargarSql extends Component
 
     public function procesarSql()
     {
-        // Elevar límites para scripts de ejecución masiva
         @set_time_limit(0);
         @ini_set('memory_limit', '512M');
 
@@ -63,10 +86,8 @@ class CargarSql extends Component
             return;
         }
 
-        // Obtener el registro médico desde MedicoRegistro
         $medicoRegistro = MedicoRegistro::where('medico_id', $medico->id)->first();
 
-        // Prioridad: 1. Tabla MedicoRegistro | 2. Campo directo en Medico | 3. ID del médico
         $regMedicoVal = $medicoRegistro->{'reg-medico'} 
                         ?? $medicoRegistro->reg_medico 
                         ?? $medico->{'reg-medico'} 
@@ -76,7 +97,6 @@ class CargarSql extends Component
         DB::beginTransaction();
 
         try {
-            // Desactivar temporalmente revisión de llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             foreach ($this->archivosSql as $archivo) {
@@ -93,7 +113,6 @@ class CargarSql extends Component
                     while (($linea = fgets($handle)) !== false) {
                         $lineaLimpia = trim($linea);
 
-                        // Omitir comentarios de SQL
                         if (
                             empty($lineaLimpia) ||
                             str_starts_with($lineaLimpia, '--') ||
@@ -105,7 +124,6 @@ class CargarSql extends Component
 
                         $sqlBuffer .= $linea . "\n";
 
-                        // Cuando finaliza la sentencia SQL con punto y coma (;)
                         if (str_ends_with($lineaLimpia, ';')) {
                             $sqlEjecutar = $this->reemplazarDatosMedico($sqlBuffer, $regMedicoVal, $medico->id, $medico->user_id);
 
@@ -126,12 +144,11 @@ class CargarSql extends Component
                 }
             }
 
-            // Reactivar verificación de llaves foráneas
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             DB::commit();
 
-            $this->reset(['archivosSql', 'medico_id', 'regMedicoSeleccionado']);
+            $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
             session()->flash('message', '¡Los archivos SQL fueron procesados e integrados exitosamente con el médico seleccionado!');
 
         } catch (\Exception $e) {
@@ -141,12 +158,8 @@ class CargarSql extends Component
         }
     }
 
-    /**
-     * Reemplaza el registro médico en las tuplas de INSERT o sustituye marcadores dinámicos.
-     */
     private function reemplazarDatosMedico(string $sql, string $regMedicoVal, int $medicoId, ?int $userId): string
     {
-        // 1. Reemplazo para marcadores explícitos si existen
         $replacements = [
             ':reg_medico' => $regMedicoVal,
             ':reg-medico' => $regMedicoVal,
@@ -155,13 +168,11 @@ class CargarSql extends Component
         ];
         $sql = str_replace(array_keys($replacements), array_values($replacements), $sql);
 
-        // 2. Si la sentencia es un INSERT INTO con columna reg_medico
         if (preg_match('/INSERT\s+INTO\s+[`\w`\.]+\s*\(([^)]+)\)\s*VALUES/i', $sql, $matches)) {
             $columnas = array_map(fn($col) => trim($col, " `\t\n\r\0\x0B"), explode(',', $matches[1]));
             $posicionRegMedico = array_search('reg_medico', $columnas);
 
             if ($posicionRegMedico !== false) {
-                // Reemplaza el valor en la posición correspondiente dentro de cada tupla VALUES (...)
                 $sql = preg_replace_callback(
                     '/\(([^)]+)\)/s',
                     function ($tuplaMatch) use ($posicionRegMedico, $regMedicoVal) {
