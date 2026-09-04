@@ -158,7 +158,7 @@ class AppAgendaMedicaController extends Controller
                         'email'          => $p->email,
                         'name'        => $p->nombres ?? $p->name ?? '',
                         'lastname'    => $p->apellidos ?? $p->lastname ?? '',
-                        'phonecell'   => $p->telefono ?? $p->phonecell ?? '',
+                        'telefono'   => $p->telefono ?? $p->phonecell ?? '',
                         'numhistoria' => $p->numhistoria_pivote ?? $p->numhistoria ?? '',
                     ];
                 });
