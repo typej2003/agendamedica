@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Medico;
 use App\Models\Paciente;
 use App\Models\Consulta;
+use App\Models\Cola;
 use App\Models\MotivoCita;
 use App\Models\MedicoPaciente;
 
@@ -133,6 +134,9 @@ class AppAgendaMedicaController extends Controller
                     $consultas = Consulta::whereIn('numhistoria', $historias)
                         ->whereBetween('fecha', [$inicioMes, $finMes])
                         ->get();
+                    $colas = Cola::whereIn('numhistoria', $historias)
+                        ->whereBetween('fecha', [$inicioMes, $finMes])
+                        ->get();
 
                 } elseif ($userType === 'Paciente') {
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
@@ -148,6 +152,7 @@ class AppAgendaMedicaController extends Controller
                     // Caso Root sin modelo médico específico
                     $pacientesRaw = Paciente::all();
                     $consultas = Consulta::whereBetween('fecha', [$inicioMes, $finMes])->get();
+                    $colas = Cola::whereBetween('fecha', [$inicioMes, $finMes])->get();
                 }
 
                 // Mapear los pacientes para la respuesta JSON
@@ -189,6 +194,7 @@ class AppAgendaMedicaController extends Controller
                         'permissions' => $permissions,
                     ],
                     'citas'                   => $citas,
+                    'colas'                  => $colas,
                     'pacientes'               => $pacientes->values(),
                     'motivos'                 => $motivos,
                     'capacidad_diaria_maxima' => 8
