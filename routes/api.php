@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
+use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\AppAgendaMedicaController;
 
 use App\Http\Controllers\UploadServerController;
@@ -30,6 +31,7 @@ Route::middleware('throttle:1000,1')->group(function () {
     Route::post('/sync/upload-batch', [SyncController::class, 'uploadBatch']);
     Route::post('/pacientes/sincronizar', [PacienteSyncController::class, 'sincronizar']);
     Route::post('/consultas/sincronizar', [ConsultaSyncController::class, 'sincronizar']);
+    Route::post('/cola/sincronizar', [ColaSyncController::class, 'sincronizar']);
 });
 
 // ** App para notificacion medica ** //
