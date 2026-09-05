@@ -8,8 +8,7 @@ use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\AppAgendaMedicaController;
-
-use App\Http\Controllers\UploadServerController;
+use App\Http\Controllers\Api\UploadServerController; // <- Corrección aquí
 
 /*
 |--------------------------------------------------------------------------
@@ -36,8 +35,6 @@ Route::middleware('throttle:1000,1')->group(function () {
 
 // ** App para notificacion medica ** //
 Route::post('/auth-citamedica', [AppAgendaMedicaController::class, 'authCitaMedica']);
-
-
 
 Route::prefix('upload-servers')->group(function () {
     // Listar todos los registros de subida
