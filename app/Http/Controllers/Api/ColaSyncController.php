@@ -66,7 +66,6 @@ class ColaSyncController extends Controller
                         'paciente_sinhistoria_id' => $item['paciente_sinhistoria_id'] ?? null,
                     ],
                     [
-                        'medico_id'               => $medico->id,
                         'numorden'                => $item['numorden'] ?? null,
                         'atendido'                => $item['atendido'] ?? null,
                         'estado'                  => $item['estado'] ?? null,
