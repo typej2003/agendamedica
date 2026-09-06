@@ -113,7 +113,7 @@ class AppAgendaMedicaController extends Controller
                 $inicioMes = Carbon::now()->startOfMonth()->toDateString();
                 $finMes = Carbon::now()->endOfMonth()->toDateString();
 
-                // 6. Obtener Pacientes y Consultas según el tipo de usuario
+                // 6. Obtener Pacientes, Consultas y Cola según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
                     // Buscar las relaciones pivote asociadas al medico_id
                     $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
@@ -134,9 +134,19 @@ class AppAgendaMedicaController extends Controller
                     $consultas = Consulta::whereIn('numhistoria', $historias)
                         ->whereBetween('fecha', [$inicioMes, $finMes])
                         ->get();
-                    $colas = Cola::whereIn('numhistoria', $historias)
-                        ->whereBetween('fecha', [$inicioMes, $finMes])
-                        ->get();
+
+                    // Consultar la tabla `cola` filtrando directamente por reg_medico
+                    $regMedico = $medicoModel->reg_medico ?? null;
+
+                    if ($regMedico) {
+                        $colas = Cola::where('reg_medico', $regMedico)
+                            ->whereBetween('fecha', [$inicioMes, $finMes])
+                            ->get();
+                    } else {
+                        $colas = Cola::whereIn('numhistoria', $historias)
+                            ->whereBetween('fecha', [$inicioMes, $finMes])
+                            ->get();
+                    }
 
                 } elseif ($userType === 'Paciente') {
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
@@ -146,6 +156,10 @@ class AppAgendaMedicaController extends Controller
 
                     $consultas = !empty($numHistoriaPac)
                         ? Consulta::where('numhistoria', $numHistoriaPac)->whereBetween('fecha', [$inicioMes, $finMes])->get() 
+                        : \collect([]);
+
+                    $colas = !empty($numHistoriaPac)
+                        ? Cola::where('numhistoria', $numHistoriaPac)->whereBetween('fecha', [$inicioMes, $finMes])->get()
                         : \collect([]);
 
                 } else {
@@ -159,11 +173,11 @@ class AppAgendaMedicaController extends Controller
                 $pacientes = $pacientesRaw->map(function ($p) {
                     return [
                         'id'          => $p->id,
-                        'cedula'          => $p->cedula,
-                        'email'          => $p->email,
+                        'cedula'      => $p->cedula,
+                        'email'       => $p->email,
                         'name'        => $p->nombres ?? $p->name ?? '',
                         'lastname'    => $p->apellidos ?? $p->lastname ?? '',
-                        'cellphone'   => $p->telefono ?? $p->telefono ?? '',
+                        'cellphone'   => $p->telefono ?? '',
                         'numhistoria' => $p->numhistoria_pivote ?? $p->numhistoria ?? '',
                     ];
                 });
@@ -183,10 +197,10 @@ class AppAgendaMedicaController extends Controller
                 $motivos = MotivoCita::all();
 
                 return \response()->json([
-                    'access_token' => $token,
-                    'token_type'   => 'Bearer',
-                    'user_type'    => $userType,
-                    'user'         => [
+                    'access_token'            => $token,
+                    'token_type'              => 'Bearer',
+                    'user_type'               => $userType,
+                    'user'                    => [
                         'id'          => $user->id,
                         'name'        => $user->name,
                         'email'       => $user->email,
@@ -194,7 +208,7 @@ class AppAgendaMedicaController extends Controller
                         'permissions' => $permissions,
                     ],
                     'citas'                   => $citas,
-                    'colas'                  => $colas,
+                    'colas'                   => $colas,
                     'pacientes'               => $pacientes->values(),
                     'motivos'                 => $motivos,
                     'capacidad_diaria_maxima' => 8
