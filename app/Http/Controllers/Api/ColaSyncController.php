@@ -81,7 +81,6 @@ class ColaSyncController extends Controller
 
                 // Si no existe, se registra como nuevo item en la tabla
                 $nuevaCola = Cola::create([
-                    'medico_id'               => $medico->id,
                     'reg_medico'              => $regMedico,
                     'fecha'                   => $item['fecha'],
                     'numhistoria'             => $numHistoria,
