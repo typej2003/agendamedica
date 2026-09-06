@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\AppAgendaMedicaController;
-use App\Http\Controllers\Api\UploadServerController; // <- Corrección aquí
+use App\Http\Controllers\Api\UploadServerController;
 
 /*
 |--------------------------------------------------------------------------
