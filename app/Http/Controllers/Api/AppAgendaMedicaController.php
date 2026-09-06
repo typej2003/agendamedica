@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Medico;
+use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use App\Models\Consulta;
 use App\Models\Cola;
@@ -109,12 +110,34 @@ class AppAgendaMedicaController extends Controller
                     ? $user->getAllPermissions()->pluck('name') 
                     : \collect([]);
 
-                // Fechas para la consulta del mes actual
-                $inicioMes = Carbon::now()->startOfMonth()->toDateString();
-                $finMes = Carbon::now()->endOfMonth()->toDateString();
+                // Determinar el rango de fechas dinámicamente o por defecto el mes actual
+                $mes = $request->input('mes');
+                $anio = $request->input('anio', Carbon::now()->year);
 
-                // 6. Obtener Pacientes, Consultas y Cola según el tipo de usuario
+                if ($mes) {
+                    $fechaBase = Carbon::createFromDate($anio, $mes, 1);
+                    $inicioMes = $fechaBase->copy()->startOfMonth()->format('Y-m-d');
+                    $finMes = $fechaBase->copy()->endOfMonth()->format('Y-m-d');
+                } else {
+                    $inicioMes = Carbon::now()->startOfMonth()->format('Y-m-d');
+                    $finMes = Carbon::now()->endOfMonth()->format('Y-m-d');
+                }
+
+                // 6. Obtener Pacientes, Consultas y Colas según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
+                    
+                    // Recopilar reg_medico desde MedicoRegistro y el modelo Medico
+                    $registrosMedicos = MedicoRegistro::where('medico_id', $medicoModel->id)
+                        ->pluck('reg_medico')
+                        ->filter()
+                        ->toArray();
+
+                    if (!empty($medicoModel->reg_medico)) {
+                        $registrosMedicos[] = $medicoModel->reg_medico;
+                    }
+
+                    $registrosMedicos = array_values(array_unique($registrosMedicos));
+
                     // Buscar las relaciones pivote asociadas al medico_id
                     $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
                     
@@ -130,23 +153,21 @@ class AppAgendaMedicaController extends Controller
                         $p->numhistoria_pivote = $historiasMap[$p->id] ?? $p->numhistoria ?? '';
                     });
 
-                    // Consultar la tabla `consultas` filtrando por numhistoria
+                    // Consultar la tabla `consultas`
                     $consultas = Consulta::whereIn('numhistoria', $historias)
                         ->whereBetween('fecha', [$inicioMes, $finMes])
                         ->get();
 
-                    // Consultar la tabla `cola` filtrando directamente por reg_medico
-                    $regMedico = $medicoModel->reg_medico ?? null;
+                    // Consultar la tabla `cola` por reg_medico filtrando por rango de fechas
+                    $colasQuery = Cola::query();
 
-                    if ($regMedico) {
-                        $colas = Cola::where('reg_medico', $regMedico)
-                            ->whereBetween('fecha', [$inicioMes, $finMes])
-                            ->get();
-                    } else {
-                        $colas = Cola::whereIn('numhistoria', $historias)
-                            ->whereBetween('fecha', [$inicioMes, $finMes])
-                            ->get();
+                    if (!empty($registrosMedicos)) {
+                        $colasQuery->whereIn('reg_medico', $registrosMedicos);
+                    } else if (!empty($historias)) {
+                        $colasQuery->whereIn('numhistoria', $historias);
                     }
+
+                    $colas = $colasQuery->whereBetween('fecha', [$inicioMes, $finMes])->get();
 
                 } elseif ($userType === 'Paciente') {
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
