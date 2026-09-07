@@ -190,14 +190,22 @@ class AppAgendaMedicaController extends Controller
                     $colas = Cola::whereBetween('fecha', [$inicioMes, $finMes])->get();
                 }
 
-                // Mapear los pacientes para la respuesta JSON
+                // Mapear los pacientes para la respuesta JSON (extraer primer nombre, primer apellido e incluir nac)
                 $pacientes = $pacientesRaw->map(function ($p) {
+                    $rawName = \trim($p->nombres ?? $p->name ?? '');
+                    $rawLastname = \trim($p->apellidos ?? $p->lastname ?? '');
+
+                    // Obtener primer nombre y primer apellido únicamente
+                    $firstName = !empty($rawName) ? \explode(' ', $rawName)[0] : '';
+                    $firstLastName = !empty($rawLastname) ? \explode(' ', $rawLastname)[0] : '';
+
                     return [
                         'id'          => $p->id,
+                        'nac'         => $p->nac ?? $p->nacionalidad ?? 'V',
                         'cedula'      => $p->cedula,
                         'email'       => $p->email,
-                        'name'        => $p->nombres ?? $p->name ?? '',
-                        'lastname'    => $p->apellidos ?? $p->lastname ?? '',
+                        'name'        => $firstName,
+                        'lastname'    => $firstLastName,
                         'cellphone'   => $p->telefono ?? '',
                         'numhistoria' => $p->numhistoria_pivote ?? $p->numhistoria ?? '',
                     ];
