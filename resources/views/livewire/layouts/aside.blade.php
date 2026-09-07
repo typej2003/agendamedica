@@ -48,6 +48,13 @@
             </li>
 
             <li class="nav-item">
+                <a href="{{ route('admin.medico-centro-medico') }}" class="nav-link {{ request()->routeIs('admin.medico-centro-medico') ? 'active' : '' }}">
+                    <i class="bi bi-link-45deg"></i>
+                    <span class="link-text">Asignar Médico a Centro</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="{{ route('admin.historias') }}" class="nav-link {{ request()->routeIs('admin.historias') ? 'active' : '' }}">
                     <i class="bi bi-journal-medical"></i>
                     <span class="link-text">Historias Médicas</span>
@@ -56,7 +63,7 @@
 
             <li class="nav-item">
                 <a href="{{ route('admin.cargar-sql') }}" class="nav-link {{ request()->routeIs('admin.cargar-sql') ? 'active' : '' }}">
-                    <i class="bi bi-journal-medical"></i>
+                    <i class="bi bi-filetype-sql"></i>
                     <span class="link-text">Cargar SQL</span>
                 </a>
             </li>
@@ -71,7 +78,6 @@
                     <span class="link-text">Pacientes</span>
                 </a>
             </li>
-
         @endif
 
         <li class="nav-header">ADMINISTRACIÓN</li>

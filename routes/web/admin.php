@@ -7,6 +7,7 @@ use App\Http\Livewire\Admin\ListCentroMedicos;
 use App\Http\Livewire\Admin\ListHistorias;
 use App\Http\Livewire\Admin\ListUsers;
 use App\Http\Livewire\Admin\CargarSql;
+use App\Http\Livewire\Medico\ListMedicoCenterMedical;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/medicos', ListMedicos::class)->name('medicos');
         Route::get('/pacientes', ListPacientes::class)->name('pacientes');
         Route::get('/centros-medicos', ListCentroMedicos::class)->name('centros-medicos');
+        Route::get('/medico-centro-medico', ListMedicoCenterMedical::class)->name('medico-centro-medico');
         Route::get('/historias', ListHistorias::class)->name('historias');
         Route::get('/cargar-sql', CargarSql::class)->name('cargar-sql');
     });
