@@ -57,9 +57,9 @@
                                                 </p>
                                             </td>
                                             <td>
-                                                <span class="badge badge-sm bg-gradient-info">
+                                                <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->reg_medico_val ?? 'Sin Registro' }}
-                                                </span>
+                                                </p>
                                             </td>
                                             <td class="align-middle text-center">
                                                 <button wire:click="edit({{ $item->id }})" class="btn btn-link text-dark px-2 mb-0" title="Editar">
