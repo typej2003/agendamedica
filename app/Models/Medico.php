@@ -47,10 +47,7 @@ class Medico extends Model
 
     public function medicalCenters(): BelongsToMany
     {
-        return $this->belongsToMany(MedicalCenter::class, 'medico_medical_center', 'medico_id', 'medical_center_id')
-                    ->using(MedicoMedicalCenter::class)
-                    ->withPivot('reg_medico')
-                    ->withTimestamps();
+        return $this->belongsToMany(MedicalCenter::class, 'medico_medical_center', 'medico_id', 'medical_center_id');
     }
 
     public function pacientes(): BelongsToMany
