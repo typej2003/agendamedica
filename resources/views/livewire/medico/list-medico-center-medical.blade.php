@@ -17,7 +17,7 @@
                         <div class="row px-4 mb-3">
                             <div class="col-md-4">
                                 <div class="input-group input-group-outline">
-                                    <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por médico, N° Licencia o Centro...">
+                                    <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por médico, N° Licencia, Centro o Reg. Médico...">
                                 </div>
                             </div>
                         </div>
@@ -62,7 +62,7 @@
                                             </td>
                                             <td>
                                                 <span class="badge badge-sm bg-gradient-info">
-                                                    {{ $item->reg_medico ?? 'Sin Registro' }}
+                                                    {{ $item->reg_medico_val ?? 'Sin Registro' }}
                                                 </span>
                                             </td>
                                             <td class="align-middle text-center">

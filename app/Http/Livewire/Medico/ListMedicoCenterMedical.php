@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\MedicoMedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
+use App\Models\MedicoRegistro;
 
 class ListMedicoCenterMedical extends Component
 {
@@ -81,9 +82,12 @@ class ListMedicoCenterMedical extends Component
             $this->searchMedicoModal = '';
             $this->medicosSearchResults = [];
 
-            // Asignar el registro médico por defecto si existe
-            if (!empty($medico->reg_medico) && !$this->isEdit) {
-                $this->reg_medico = $medico->reg_medico;
+            // Buscar si ya posee un reg_medico en la tabla medico_registros
+            $registro = MedicoRegistro::where('medico_id', $medico->id)->first();
+            if ($registro) {
+                $this->reg_medico = $registro->reg_medico;
+            } else {
+                $this->reg_medico = '';
             }
         }
     }
@@ -94,24 +98,29 @@ class ListMedicoCenterMedical extends Component
         $this->selectedMedicoText = '';
         $this->searchMedicoModal = '';
         $this->medicosSearchResults = [];
+        $this->reg_medico = '';
     }
 
     public function render()
     {
         $searchTerm = '%' . \trim($this->search) . '%';
 
-        // Consulta de relaciones filtrando por nombre, apellido, licencia o centro
+        // Consulta de relaciones haciendo JOIN con medico_registros para obtener reg_medico
         $relaciones = MedicoMedicalCenter::query()
             ->leftJoin('medicos', 'medico_medical_center.medico_id', '=', 'medicos.id')
             ->leftJoin('medical_centers', 'medico_medical_center.medical_center_id', '=', 'medical_centers.id')
+            ->leftJoin('medico_registros', 'medico_medical_center.medico_id', '=', 'medico_registros.medico_id')
             ->where(function ($query) use ($searchTerm) {
                 $query->where('medicos.name', 'like', $searchTerm)
                       ->orWhere('medicos.lastname', 'like', $searchTerm)
                       ->orWhere('medicos.license_number', 'like', $searchTerm)
                       ->orWhere('medical_centers.name', 'like', $searchTerm)
-                      ->orWhere('medico_medical_center.reg_medico', 'like', $searchTerm);
+                      ->orWhere('medico_registros.reg_medico', 'like', $searchTerm);
             })
-            ->select('medico_medical_center.*')
+            ->select(
+                'medico_medical_center.*',
+                'medico_registros.reg_medico as reg_medico_val'
+            )
             ->orderBy('medico_medical_center.id', 'desc')
             ->paginate(10);
 
@@ -165,11 +174,19 @@ class ListMedicoCenterMedical extends Component
             return;
         }
 
+        // Crear asignación de centro médico
         MedicoMedicalCenter::create([
             'medico_id'         => $this->medico_id,
             'medical_center_id' => $this->medical_center_id,
-            'reg_medico'         => $this->reg_medico,
         ]);
+
+        // Guardar o actualizar reg_medico en la tabla medico_registros si fue proporcionado
+        if (!empty($this->reg_medico)) {
+            MedicoRegistro::updateOrCreate(
+                ['medico_id' => $this->medico_id],
+                ['reg_medico' => $this->reg_medico]
+            );
+        }
 
         $this->closeModal();
 
@@ -188,12 +205,16 @@ class ListMedicoCenterMedical extends Component
         $this->relation_id       = $relacion->id;
         $this->medico_id         = $relacion->medico_id;
         $this->medical_center_id = $relacion->medical_center_id;
-        $this->reg_medico         = $relacion->reg_medico;
         $this->isEdit            = true;
 
         $medico = Medico::find($relacion->medico_id);
         if ($medico) {
             $this->selectedMedicoText = $medico->name . ' ' . $medico->lastname . ($medico->license_number ? ' (Lic: ' . $medico->license_number . ')' : '');
+        }
+
+        $registro = MedicoRegistro::where('medico_id', $relacion->medico_id)->first();
+        if ($registro) {
+            $this->reg_medico = $registro->reg_medico;
         }
 
         $this->dispatchBrowserEvent('open-modal');
@@ -221,8 +242,14 @@ class ListMedicoCenterMedical extends Component
         $relacion->update([
             'medico_id'         => $this->medico_id,
             'medical_center_id' => $this->medical_center_id,
-            'reg_medico'         => $this->reg_medico,
         ]);
+
+        if (!empty($this->reg_medico)) {
+            MedicoRegistro::updateOrCreate(
+                ['medico_id' => $this->medico_id],
+                ['reg_medico' => $this->reg_medico]
+            );
+        }
 
         $this->closeModal();
 
