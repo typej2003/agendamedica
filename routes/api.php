@@ -7,7 +7,8 @@ use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
-use App\Http\Controllers\Api\AppAgendaMedicaController;
+use App\Http\Controllers\Api\LoginAppController;
+use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\UploadServerController;
 
 /*
@@ -33,8 +34,12 @@ Route::middleware('throttle:1000,1')->group(function () {
     Route::post('/cola/sincronizar', [ColaSyncController::class, 'sincronizar']);
 });
 
-// ** App para notificacion medica ** //
-Route::post('/auth-citamedica', [AppAgendaMedicaController::class, 'authCitaMedica']);
+// ** App para notificación médica ** //
+Route::post('/app/login', [LoginAppController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
+});
 
 Route::prefix('upload-servers')->group(function () {
     // Listar todos los registros de subida
