@@ -123,17 +123,9 @@ class AppAgendaMedicaController extends Controller
                     $finMes = Carbon::now()->endOfMonth()->format('Y-m-d');
                 }
 
-                // Inicializar colección de centros médicos vacía
-                $centrosMedicos = \collect([]);
-
-                // 6. Obtener Pacientes, Consultas, Colas y Centros Médicos según el tipo de usuario
+                // 6. Obtener Pacientes, Consultas y Colas según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
                     
-                    // Cargar los centros médicos vinculados al médico
-                    if ($medicoModel) {
-                        $centrosMedicos = $medicoModel->medicalCenters()->withPivot('reg_medico')->get();
-                    }
-
                     // Recopilar reg_medico desde MedicoRegistro y el modelo Medico
                     $registrosMedicos = MedicoRegistro::where('medico_id', $medicoModel->id)
                         ->pluck('reg_medico')
@@ -196,7 +188,6 @@ class AppAgendaMedicaController extends Controller
                     $pacientesRaw = Paciente::all();
                     $consultas = Consulta::whereBetween('fecha', [$inicioMes, $finMes])->get();
                     $colas = Cola::whereBetween('fecha', [$inicioMes, $finMes])->get();
-                    $centrosMedicos = \App\Models\MedicalCenter::all();
                 }
 
                 // Mapear los pacientes para la respuesta JSON
@@ -253,7 +244,6 @@ class AppAgendaMedicaController extends Controller
                     'colas'                   => $colas,
                     'pacientes'               => $pacientes->values(),
                     'motivos'                 => $motivos,
-                    'centros_medicos'         => $centrosMedicos,
                     'capacidad_diaria_maxima' => 8
                 ], 200);
 
