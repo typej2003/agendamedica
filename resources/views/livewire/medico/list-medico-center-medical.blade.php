@@ -17,7 +17,7 @@
                         <div class="row px-4 mb-3">
                             <div class="col-md-4">
                                 <div class="input-group input-group-outline">
-                                    <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por médico, N° Licencia, Centro o Reg. Médico...">
+                                    <input type="text" wire:model.debounce.300ms="search" class="form-control text-dark" placeholder="Buscar por médico, N° Licencia, Centro o Reg. Médico...">
                                 </div>
                             </div>
                         </div>
@@ -39,20 +39,20 @@
                                     @forelse ($relaciones as $item)
                                         <tr>
                                             <td class="ps-4">
-                                                <p class="text-xs font-weight-bold mb-0">{{ $item->id }}</p>
+                                                <p class="text-xs font-weight-bold mb-0 text-dark">{{ $item->id }}</p>
                                             </td>
                                             <td>
-                                                <p class="text-xs font-weight-bold mb-0">
+                                                <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->medico_name }} {{ $item->medico_lastname }}
                                                 </p>
                                             </td>
                                             <td>
-                                                <span class="text-xs font-weight-bold">
+                                                <span class="text-xs font-weight-bold text-dark">
                                                     {{ $item->medico_license ?? 'S/L' }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <p class="text-xs font-weight-bold mb-0">
+                                                <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->center_name ?? 'N/A' }}
                                                 </p>
                                             </td>
@@ -96,7 +96,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalMedicoCenterLabel">
+                    <h5 class="modal-title text-dark" id="modalMedicoCenterLabel">
                         {{ $isEdit ? 'Editar Asignación' : 'Nueva Asignación' }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal"></button>
@@ -105,24 +105,24 @@
                     <form>
                         <!-- Autocompletado de Médico -->
                         <div class="mb-3 position-relative">
-                            <label class="form-label font-weight-bold text-xs">Médico <span class="text-danger">*</span></label>
+                            <label class="form-label font-weight-bold text-xs text-dark">Médico <span class="text-danger">*</span></label>
                             
                             @if($selectedMedicoText)
                                 <div class="input-group">
-                                    <input type="text" class="form-control border px-2 bg-light" value="{{ $selectedMedicoText }}" readonly>
+                                    <input type="text" class="form-control border px-2 bg-light text-dark font-weight-bold" value="{{ $selectedMedicoText }}" readonly>
                                     <button class="btn btn-outline-danger mb-0 px-3" type="button" wire:click="clearSelectedMedico">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                             @else
-                                <input type="text" wire:model.debounce.300ms="searchMedicoModal" class="form-control border px-2 @error('medico_id') is-invalid @enderror" placeholder="Escriba nombre, apellido o N° licencia...">
+                                <input type="text" wire:model.debounce.300ms="searchMedicoModal" class="form-control border px-2 text-dark @error('medico_id') is-invalid @enderror" placeholder="Escriba nombre, apellido o N° licencia...">
                                 
                                 @if(!empty($medicosSearchResults) && count($medicosSearchResults) > 0)
                                     <ul class="list-group position-absolute w-100 shadow-lg mt-1" style="z-index: 1050; max-height: 200px; overflow-y: auto;">
                                         @foreach($medicosSearchResults as $m)
-                                            <li class="list-group-item list-group-item-action cursor-pointer py-2 px-3" wire:click="selectMedico({{ $m->id }})">
+                                            <li class="list-group-item list-group-item-action cursor-pointer py-2 px-3 bg-white" wire:click="selectMedico({{ $m->id }})">
                                                 <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="text-xs font-weight-bold">{{ $m->name }} {{ $m->lastname }}</span>
+                                                    <span class="text-xs font-weight-bold text-dark">{{ $m->name }} {{ $m->lastname }}</span>
                                                     <span class="badge bg-secondary text-xxs">Lic: {{ $m->license_number ?? 'S/L' }}</span>
                                                 </div>
                                             </li>
@@ -136,11 +136,11 @@
 
                         <!-- Selección de Centro Médico -->
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold text-xs">Centro Médico <span class="text-danger">*</span></label>
-                            <select wire:model="medical_center_id" class="form-select border px-2 @error('medical_center_id') is-invalid @enderror">
-                                <option value="">-- Seleccione Centro Médico --</option>
+                            <label class="form-label font-weight-bold text-xs text-dark">Centro Médico <span class="text-danger">*</span></label>
+                            <select wire:model="medical_center_id" class="form-select border px-2 text-dark @error('medical_center_id') is-invalid @enderror">
+                                <option value="" class="text-dark">-- Seleccione Centro Médico --</option>
                                 @foreach ($centrosMedicos as $centro)
-                                    <option value="{{ $centro->id }}">{{ $centro->name }}</option>
+                                    <option value="{{ $centro->id }}" class="text-dark">{{ $centro->name }}</option>
                                 @endforeach
                             </select>
                             @error('medical_center_id') <span class="text-danger text-xs">{{ $message }}</span> @enderror
@@ -148,8 +148,8 @@
 
                         <!-- Registro Médico -->
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold text-xs">Reg. Médico</label>
-                            <input type="text" wire:model="reg_medico" class="form-control border px-2 @error('reg_medico') is-invalid @enderror" placeholder="Número de Registro Médico">
+                            <label class="form-label font-weight-bold text-xs text-dark">Reg. Médico</label>
+                            <input type="text" wire:model="reg_medico" class="form-control border px-2 text-dark @error('reg_medico') is-invalid @enderror" placeholder="Número de Registro Médico">
                             @error('reg_medico') <span class="text-danger text-xs">{{ $message }}</span> @enderror
                         </div>
                     </form>

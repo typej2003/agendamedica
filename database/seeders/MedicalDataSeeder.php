@@ -123,8 +123,10 @@ class MedicalDataSeeder extends Seeder
                         'reg_medico' => $docData['reg_medico'],
                     ]);
 
-                    // 4. Asociar al centro médico a través de la tabla pivote
-                    $medico->medicalCenters()->attach($center->id);
+                    // 4. Asociar al centro médico a través de la tabla pivote guardando reg_medico
+                    $medico->medicalCenters()->attach($center->id, [
+                        'reg_medico' => $docData['reg_medico'],
+                    ]);
 
                     // 5. Asignar especialidades aleatorias
                     $assignedSpecialties = $specialties->random(rand(1, 2))->pluck('id');
