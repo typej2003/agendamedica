@@ -15,6 +15,9 @@ use App\Models\Consulta;
 use App\Models\Cola;
 use App\Models\MotivoCita;
 use App\Models\MedicoPaciente;
+use App\Models\MedicalCenter;
+use App\Models\MedicoMedicalCenter;
+use App\Models\Historia;
 
 class AppAgendaMedicaController extends Controller
 {
@@ -123,7 +126,10 @@ class AppAgendaMedicaController extends Controller
                     $finMes = Carbon::now()->endOfMonth()->format('Y-m-d');
                 }
 
-                // 6. Obtener Pacientes, Consultas y Colas según el tipo de usuario
+                // Variable para almacenar historias
+                $historiasMedicas = \collect([]);
+
+                // 6. Obtener Pacientes, Consultas, Colas, Centros Médicos e Historias según el tipo de usuario
                 if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
                     
                     // Recopilar reg_medico desde MedicoRegistro y el modelo Medico
@@ -169,6 +175,29 @@ class AppAgendaMedicaController extends Controller
 
                     $colas = $colasQuery->whereBetween('fecha', [$inicioMes, $finMes])->get();
 
+                    // Obtener centros médicos asociados específicamente a este médico
+                    $medicalCenterIds = MedicoMedicalCenter::where('medico_id', $medicoModel->id)
+                        ->pluck('medical_center_id')
+                        ->filter()
+                        ->unique()
+                        ->toArray();
+
+                    $centrosMedicos = MedicalCenter::with(['country', 'estado', 'city', 'offices'])
+                        ->whereIn('id', $medicalCenterIds)
+                        ->get();
+
+                    // Obtener historias asociadas al médico por medico_id o por reg_medico
+                    $historiasQuery = Historia::query()->with(['medicalCenter', 'paciente', 'medico']);
+
+                    $historiasQuery->where(function ($query) use ($medicoModel, $registrosMedicos) {
+                        $query->where('medico_id', $medicoModel->id);
+                        if (!empty($registrosMedicos)) {
+                            $query->orWhereIn('reg_medico', $registrosMedicos);
+                        }
+                    });
+
+                    $historiasMedicas = $historiasQuery->get();
+
                 } elseif ($userType === 'Paciente') {
                     $pacienteModel = Paciente::where('user_id', $user->id)->orWhere('email', $email)->first();
                     $pacientesRaw = $pacienteModel ? \collect([$pacienteModel]) : \collect([]);
@@ -183,11 +212,23 @@ class AppAgendaMedicaController extends Controller
                         ? Cola::where('numhistoria', $numHistoriaPac)->whereBetween('fecha', [$inicioMes, $finMes])->get()
                         : \collect([]);
 
+                    // Obtener todos los centros médicos disponibles
+                    $centrosMedicos = MedicalCenter::with(['country', 'estado', 'city', 'offices'])->get();
+
+                    // Historias médicas correspondientes al paciente
+                    $historiasMedicas = $pacienteModel 
+                        ? Historia::with(['medicalCenter', 'paciente', 'medico'])->where('paciente_id', $pacienteModel->id)->get()
+                        : \collect([]);
+
                 } else {
                     // Caso Root sin modelo médico específico
                     $pacientesRaw = Paciente::all();
                     $consultas = Consulta::whereBetween('fecha', [$inicioMes, $finMes])->get();
                     $colas = Cola::whereBetween('fecha', [$inicioMes, $finMes])->get();
+                    
+                    // Obtener todos los centros médicos y todas las historias
+                    $centrosMedicos = MedicalCenter::with(['country', 'estado', 'city', 'offices'])->get();
+                    $historiasMedicas = Historia::with(['medicalCenter', 'paciente', 'medico'])->get();
                 }
 
                 // Mapear los pacientes para la respuesta JSON
@@ -244,6 +285,8 @@ class AppAgendaMedicaController extends Controller
                     'colas'                   => $colas,
                     'pacientes'               => $pacientes->values(),
                     'motivos'                 => $motivos,
+                    'centros_medicos'         => $centrosMedicos,
+                    'historias'               => $historiasMedicas,
                     'capacidad_diaria_maxima' => 8
                 ], 200);
 
