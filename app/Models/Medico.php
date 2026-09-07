@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Medico extends Model
 {
@@ -28,6 +29,11 @@ class Medico extends Model
         'is_active',
         'reg_medico', // temporal, tiende a cambiar no usar
     ];
+
+    public function registro(): HasOne
+    {
+        return $this->hasOne(MedicoRegistro::class, 'medico_id', 'id');
+    }
 
     public function office(): BelongsTo
     {

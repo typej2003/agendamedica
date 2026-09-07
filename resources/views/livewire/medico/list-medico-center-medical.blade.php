@@ -37,27 +37,23 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($relaciones as $item)
-                                        @php
-                                            $medicoObj = \App\Models\Medico::find($item->medico_id);
-                                            $centroObj = \App\Models\MedicalCenter::find($item->medical_center_id);
-                                        @endphp
                                         <tr>
                                             <td class="ps-4">
                                                 <p class="text-xs font-weight-bold mb-0">{{ $item->id }}</p>
                                             </td>
                                             <td>
                                                 <p class="text-xs font-weight-bold mb-0">
-                                                    {{ $medicoObj ? ($medicoObj->name . ' ' . $medicoObj->lastname) : 'N/A' }}
+                                                    {{ $item->medico_name }} {{ $item->medico_lastname }}
                                                 </p>
                                             </td>
                                             <td>
                                                 <span class="text-xs font-weight-bold">
-                                                    {{ $medicoObj->license_number ?? 'S/L' }}
+                                                    {{ $item->medico_license ?? 'S/L' }}
                                                 </span>
                                             </td>
                                             <td>
                                                 <p class="text-xs font-weight-bold mb-0">
-                                                    {{ $centroObj->name ?? 'N/A' }}
+                                                    {{ $item->center_name ?? 'N/A' }}
                                                 </p>
                                             </td>
                                             <td>

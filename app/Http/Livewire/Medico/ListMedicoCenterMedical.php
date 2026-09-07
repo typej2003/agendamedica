@@ -56,7 +56,6 @@ class ListMedicoCenterMedical extends Component
         $this->resetPage();
     }
 
-    // Lógica de búsqueda de autocompletado en el modal
     public function updatedSearchMedicoModal($value)
     {
         if (strlen(\trim($value)) >= 2) {
@@ -82,7 +81,7 @@ class ListMedicoCenterMedical extends Component
             $this->searchMedicoModal = '';
             $this->medicosSearchResults = [];
 
-            // Buscar si ya posee un reg_medico en la tabla medico_registros
+            // Buscar el registro médico en la tabla medico_registros
             $registro = MedicoRegistro::where('medico_id', $medico->id)->first();
             if ($registro) {
                 $this->reg_medico = $registro->reg_medico;
@@ -105,7 +104,6 @@ class ListMedicoCenterMedical extends Component
     {
         $searchTerm = '%' . \trim($this->search) . '%';
 
-        // Consulta de relaciones haciendo JOIN con medico_registros para obtener reg_medico
         $relaciones = MedicoMedicalCenter::query()
             ->leftJoin('medicos', 'medico_medical_center.medico_id', '=', 'medicos.id')
             ->leftJoin('medical_centers', 'medico_medical_center.medical_center_id', '=', 'medical_centers.id')
@@ -118,7 +116,13 @@ class ListMedicoCenterMedical extends Component
                       ->orWhere('medico_registros.reg_medico', 'like', $searchTerm);
             })
             ->select(
-                'medico_medical_center.*',
+                'medico_medical_center.id',
+                'medico_medical_center.medico_id',
+                'medico_medical_center.medical_center_id',
+                'medicos.name as medico_name',
+                'medicos.lastname as medico_lastname',
+                'medicos.license_number as medico_license',
+                'medical_centers.name as center_name',
                 'medico_registros.reg_medico as reg_medico_val'
             )
             ->orderBy('medico_medical_center.id', 'desc')
@@ -174,13 +178,11 @@ class ListMedicoCenterMedical extends Component
             return;
         }
 
-        // Crear asignación de centro médico
         MedicoMedicalCenter::create([
             'medico_id'         => $this->medico_id,
             'medical_center_id' => $this->medical_center_id,
         ]);
 
-        // Guardar o actualizar reg_medico en la tabla medico_registros si fue proporcionado
         if (!empty($this->reg_medico)) {
             MedicoRegistro::updateOrCreate(
                 ['medico_id' => $this->medico_id],
