@@ -35,16 +35,15 @@ return [
     |
     */
 
-    'guards' => [
+        'guards' => [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
 
         'api' => [
-            'driver' => 'token',
+            'driver' => 'sanctum', // <--- CAMBIA 'token' POR 'sanctum'
             'provider' => 'users',
-            'hash' => false,
         ],
 
         'sanctum' => [
