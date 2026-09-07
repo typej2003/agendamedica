@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
@@ -27,10 +28,16 @@ class RefreshAppController extends Controller
     public function refreshData(Request $request)
     {
         try {
+            // Intenta obtener el usuario autenticado por token
             $user = $request->user();
 
+            // Si el guard no retorna usuario, intenta buscar por el parámetro user_id si fue enviado
+            if (!$user && $request->has('user_id')) {
+                $user = User::find($request->input('user_id'));
+            }
+
             if (!$user) {
-                return \response()->json(['message' => 'Usuario no autenticado.'], 401);
+                return \response()->json(['message' => 'Usuario no autenticado o no encontrado.'], 401);
             }
 
             // Determinación del tipo de usuario y modelo de médico asociado

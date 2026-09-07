@@ -37,7 +37,7 @@ Route::middleware('throttle:1000,1')->group(function () {
 // ** App para notificación médica ** //
 Route::post('/app/login', [LoginAppController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
 });
 
