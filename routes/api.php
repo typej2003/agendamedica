@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\LoginAppController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\UploadServerController;
 
+use App\Http\Controllers\WhatsAppWebhookController;
+use App\Services\WhatsAppService;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -53,4 +55,25 @@ Route::prefix('upload-servers')->group(function () {
 
     // Consultar el detalle de una subida por ID
     Route::get('/{id}', [UploadServerController::class, 'show']);
+});
+
+// Rutas de Webhook para Meta
+Route::get('/whatsapp/webhook', [WhatsAppWebhookController::class, 'verify']);
+Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
+
+// Ruta endpoint para enviar recordatorio a un paciente
+Route::post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
+    $request->validate([
+        'phone' => 'required|string',
+        'patient_name' => 'required|string',
+    ]);
+
+    // Enviar plantilla "notificacion_paciente" con el nombre como parámetro {{1}}
+    $result = $whatsAppService->sendTemplate(
+        $request->input('phone'),
+        'notificacion_paciente',
+        [$request->input('patient_name')]
+    );
+
+    return response()->json($result);
 });

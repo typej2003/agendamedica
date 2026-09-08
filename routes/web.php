@@ -9,6 +9,8 @@ use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\DashboardController;
 
+use App\Services\WhatsAppService;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -49,4 +51,33 @@ Route::get('/register/doctor', ListSearch::class)->name('register.doctor');
 Route::middleware(['auth'])->group(function () {
     Route::get('/agendar/{medicoId}/{medicalCenterId?}', ViewCalendar::class)->name('agendar.cita');
     Route::get('/agendar/{medicoId}/dia/{fecha}', DaySchedule::class)->name('agendar.dia');
+});
+
+
+
+
+Route::get('/test-whatsapp', function (WhatsAppService $whatsAppService) {
+    // Reemplaza con tu número de teléfono en formato internacional (sin el signo +)
+    // Ejemplo para Venezuela: 58412XXXXXXX o 58424XXXXXXX
+    $numeroPaciente = '584165800403'; 
+
+    // Opción A: Probar con la plantilla por defecto de Meta 'hello_world' (sin parámetros)
+    $respuesta = $whatsAppService->sendTemplate(
+        $numeroPaciente,
+        'hello_world',
+        [],
+        'en_US' // El idioma por defecto de hello_world suele ser en_US
+    );
+
+    /* 
+    // Opción B: Probar con tu plantilla personalizada 'notificacion_paciente'
+    $respuesta = $whatsAppService->sendTemplate(
+        $numeroPaciente,
+        'notificacion_paciente',
+        ['Juan Pérez'], // Parámetro {{1}}
+        'es'
+    );
+    */
+
+    return response()->json($respuesta);
 });
