@@ -73,7 +73,7 @@ Route::get('/test-whatsapp', function (WhatsAppService $whatsAppService) {
     // Opción B: Probar con tu plantilla personalizada 'notificacion_paciente'
     $respuesta = $whatsAppService->sendTemplate(
         $numeroPaciente,
-        'notificacion_paciente',
+        'plantilla_1',
         ['Juan Pérez'], // Parámetro {{1}}
         'es'
     );
