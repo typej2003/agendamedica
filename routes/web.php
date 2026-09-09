@@ -62,14 +62,14 @@ Route::get('/test-whatsapp', function (WhatsAppService $whatsAppService) {
     $numeroPaciente = '584165800403'; 
 
     // Opción A: Probar con la plantilla por defecto de Meta 'hello_world' (sin parámetros)
-    $respuesta = $whatsAppService->sendTemplate(
-        $numeroPaciente,
-        'hello_world',
-        [],
-        'en_US' // El idioma por defecto de hello_world suele ser en_US
-    );
+    // $respuesta = $whatsAppService->sendTemplate(
+    //     $numeroPaciente,
+    //     'hello_world',
+    //     [],
+    //     'en_US' // El idioma por defecto de hello_world suele ser en_US
+    // );
 
-    /* 
+     
     // Opción B: Probar con tu plantilla personalizada 'notificacion_paciente'
     $respuesta = $whatsAppService->sendTemplate(
         $numeroPaciente,
@@ -77,7 +77,7 @@ Route::get('/test-whatsapp', function (WhatsAppService $whatsAppService) {
         ['Juan Pérez'], // Parámetro {{1}}
         'es'
     );
-    */
+    
 
     return response()->json($respuesta);
 });
