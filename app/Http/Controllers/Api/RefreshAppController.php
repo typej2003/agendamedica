@@ -16,6 +16,7 @@ use App\Models\MedicoPaciente;
 use App\Models\MedicalCenter;
 use App\Models\MedicoMedicalCenter;
 use App\Models\Historia;
+use App\Models\Evolucion;
 
 class RefreshAppController extends Controller
 {
@@ -75,6 +76,7 @@ class RefreshAppController extends Controller
             }
 
             $historiasMedicas = collect([]);
+            $evoluciones = collect([]);
 
             // Obtención de datos según el tipo de usuario
             if ($userType === 'Medico' || ($userType === 'Root' && $medicoModel)) {
@@ -113,6 +115,11 @@ class RefreshAppController extends Controller
                         }
                     })
                     ->get();
+
+                // Consultar registros de evolución asociados a los registros médicos del doctor
+                if (!empty($registrosMedicos)) {
+                    $evoluciones = Evolucion::whereIn('reg_medico', $registrosMedicos)->get();
+                }
 
                 // Mapa de historias para asociar rápidamente medical_center_id y centro médico por numhistoria o combinación (numhistoria + reg_medico)
                 $historiaByNumMap = $historiasMedicas->keyBy('numhistoria');
@@ -187,6 +194,12 @@ class RefreshAppController extends Controller
                         ->get()
                     : collect([]);
 
+                // Para paciente, obtenemos la evolución según los registros médicos presentes en sus historias
+                $regsMedicosPaciente = $historiasMedicas->pluck('reg_medico')->filter()->unique()->toArray();
+                if (!empty($regsMedicosPaciente)) {
+                    $evoluciones = Evolucion::whereIn('reg_medico', $regsMedicosPaciente)->get();
+                }
+
                 $historiaByNumMap = $historiasMedicas->keyBy('numhistoria');
                 $historiaByKeyMap = $historiasMedicas->keyBy(function ($item) {
                     return $item->numhistoria . '_' . $item->reg_medico;
@@ -230,6 +243,7 @@ class RefreshAppController extends Controller
 
                 $centrosMedicos = MedicalCenter::with(['country', 'estado', 'city', 'offices'])->get();
                 $historiasMedicas = Historia::with(['medicalCenter.country', 'medicalCenter.estado', 'medicalCenter.city', 'medicalCenter.offices', 'paciente', 'medico'])->get();
+                $evoluciones = Evolucion::all();
 
                 $historiaByNumMap = $historiasMedicas->keyBy('numhistoria');
                 $historiaByKeyMap = $historiasMedicas->keyBy(function ($item) {
@@ -305,6 +319,7 @@ class RefreshAppController extends Controller
                 'motivos'                 => $motivos,
                 'centros_medicos'         => $centrosMedicos,
                 'historias'               => $historiasMedicas,
+                'evoluciones'             => $evoluciones,
                 'capacidad_diaria_maxima' => 8
             ], 200);
 
