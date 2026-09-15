@@ -19,6 +19,7 @@ class UploadServer extends Model
         'last_record_timestamp',
         'status',
         'payload',
+        'reg_medico'
     ];
 
     protected $casts = [
@@ -32,13 +33,17 @@ class UploadServer extends Model
      *
      * @param string $entityType
      * @param string|null $batchType
+     * @param string|null $regMedico
      * @return \App\Models\UploadServer|null
      */
-    public static function getLastSuccessfulUpload(string $entityType, ?string $batchType = null)
+    public static function getLastSuccessfulUpload(string $entityType, ?string $batchType = null, ?string $regMedico = null)
     {
         return self::where('entity_type', $entityType)
             ->when($batchType, function ($query) use ($batchType) {
                 return $query->where('batch_type', $batchType);
+            })
+            ->when($regMedico, function ($query) use ($regMedico) {
+                return $query->where('reg_medico', $regMedico);
             })
             ->where('status', 'completed')
             ->latest('id')

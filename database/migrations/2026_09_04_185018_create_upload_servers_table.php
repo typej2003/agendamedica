@@ -33,7 +33,9 @@ return new class extends Migration
             $table->string('status')->default('completed'); 
 
             // Información adicional en JSON (ej: errores, IDs procesados, respuesta del API)
-            $table->json('payload')->nullable(); 
+            $table->json('payload')->nullable();
+            
+            $table->string('reg_medico')->nullable();
 
             // Muestra la fecha y hora exacta en que se registró la subida
             $table->timestamps(); 

@@ -12,7 +12,7 @@ class UploadServerController extends Controller
 {
     /**
      * Muestra una lista de los registros de subidas paginados.
-     * Permite filtrar por tipo de entidad (entity_type), tipo de lote (batch_type) o estado (status).
+     * Permite filtrar por tipo de entidad (entity_type) o estado (status).
      *
      * @param Request $request
      * @return JsonResponse
@@ -31,10 +31,6 @@ class UploadServerController extends Controller
 
         if ($request->has('status')) {
             $query->where('status', $request->input('status'));
-        }
-
-        if ($request->has('reg_medico')) {
-            $query->where('reg_medico', $request->input('reg_medico'));
         }
 
         $uploads = $query->latest('id')->paginate(15);
@@ -61,7 +57,6 @@ class UploadServerController extends Controller
             'last_record_timestamp' => 'nullable|date',
             'status'                => 'nullable|string|in:completed,failed,in_progress',
             'payload'               => 'nullable|array',
-            'reg_medico'            => 'nullable|string|max:255', // Ajusta el tipo de dato si es numérico (ej: integer)
         ]);
 
         if ($validator->fails()) {
@@ -79,7 +74,6 @@ class UploadServerController extends Controller
             'last_record_timestamp' => $request->input('last_record_timestamp'),
             'status'                => $request->input('status', 'completed'),
             'payload'               => $request->input('payload'),
-            'reg_medico'            => $request->input('reg_medico'),
         ]);
 
         return response()->json([
@@ -122,9 +116,8 @@ class UploadServerController extends Controller
     public function getLastUpload(Request $request, string $entityType): JsonResponse
     {
         $batchType = $request->query('batch_type');
-        $regMedico = $request->query('reg_medico');
 
-        $lastUpload = UploadServer::getLastSuccessfulUpload($entityType, $batchType, $regMedico);
+        $lastUpload = UploadServer::getLastSuccessfulUpload($entityType, $batchType);
 
         if (!$lastUpload) {
             return response()->json([
