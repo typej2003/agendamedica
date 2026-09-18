@@ -11,6 +11,34 @@ class Cola extends Model
 {
     use HasFactory;
 
+    /**
+     * Estados de una cita, sobre la columna legada `estado` (DECIMAL(1,0)).
+     *
+     * El campo existe en el esquema legado pero estaba prácticamente sin usar (4 filas con `1`
+     * de 19.906 en el dump real), así que se le fija acá la convención. Son **mutuamente
+     * excluyentes** a propósito: el manual de Agenda Integral pinta un solo color por cita
+     * (ver Docs/Wiki/02-modulo-agenda.md §5), o sea el legado ya las trataba como un estado
+     * único, no como banderas combinables.
+     *
+     * "Atendida" (blanco en ese mismo cuadro) NO va acá: vive en `atendido`, que el legado sí
+     * usa de verdad, y es una dimensión independiente — una cita puede estar pagada y atendida.
+     *
+     * ⚠️ `monto` es lo que se cobra por la cita. No hay "monto pagado"/"monto pendiente" para
+     * citas en el esquema legado: los abonos parciales son de cirugías (`baremo_quiru`,
+     * `pago_quiru`) y la facturación real es `factura_cliente` (Fase 3 del roadmap).
+     */
+    public const ESTADO_NO_CONFIRMADA = 0;       // amarillo
+    public const ESTADO_CONFIRMADA = 1;          // azul — confirmada por el consultorio
+    public const ESTADO_CONFIRMADA_PACIENTE = 2; // celeste — la confirmó el paciente
+    public const ESTADO_PAGADA = 3;              // verde
+
+    public const ESTADOS = [
+        self::ESTADO_NO_CONFIRMADA,
+        self::ESTADO_CONFIRMADA,
+        self::ESTADO_CONFIRMADA_PACIENTE,
+        self::ESTADO_PAGADA,
+    ];
+
     protected $table = 'cola';
 
     protected $fillable = [

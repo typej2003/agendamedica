@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\LoginAppController;
+use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\UploadServerController;
@@ -43,6 +44,11 @@ Route::post('/app/login', [LoginAppController::class, 'login']);
 Route::middleware('auth:api')->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
     Route::post('/app/sync-app-data', [SyncAppDataController::class, 'sync']);
+
+    // Notificar al paciente de una cita. No va por `sync-app-data` a propósito: mandar un
+    // mensaje es irreversible y la cola de sync reintenta — ver NotificacionCitaController.
+    Route::post('/app/citas/{cola}/notificar', [NotificacionCitaController::class, 'enviar'])
+        ->middleware('throttle:60,1');
 });
 
 Route::prefix('upload-servers')->group(function () {
@@ -63,8 +69,13 @@ Route::prefix('upload-servers')->group(function () {
 Route::get('/whatsapp/webhook', [WhatsAppWebhookController::class, 'verify']);
 Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
 
-// Ruta endpoint para enviar recordatorio a un paciente
-Route::post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
+// Ruta endpoint para enviar recordatorio a un paciente.
+//
+// ⚠️ Estaba fuera de `auth:api`: era pública, así que cualquiera con la URL podía disparar
+// mensajes con el token de Meta del consultorio (y gastar su cupo). Ahora exige autenticación y
+// tiene throttle propio. No la usa ninguno de los dos apps (se verificó en el Kotlin y en el
+// Flutter) — el app usa `/app/citas/{cola}/notificar`, que además valida la cita y deja registro.
+Route::middleware(['auth:api', 'throttle:60,1'])->post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
     $request->validate([
         'phone' => 'required|string',
         'patient_name' => 'required|string',

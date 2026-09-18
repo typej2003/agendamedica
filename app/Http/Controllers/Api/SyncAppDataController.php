@@ -67,6 +67,18 @@ class SyncAppDataController extends Controller
         'cola' => ['fecha', 'hora_ini'],
     ];
 
+    /**
+     * Columnas con dominio cerrado. Un valor fuera de rango se descarta (no se guarda): el
+     * cliente se entera solo, porque siempre sobreescribe su copia con el delta que vuelve y
+     * ahí va a ver el valor viejo. Ver la convención de estados en `App\Models\Cola`.
+     */
+    private const ALLOWED_VALUES = [
+        'cola' => [
+            'estado' => Cola::ESTADOS,
+            'atendido' => [0, 1],
+        ],
+    ];
+
     public function sync(Request $request)
     {
         $user = $request->user();
@@ -234,6 +246,10 @@ class SyncAppDataController extends Controller
                 }
 
                 $valor = $change['value'] ?? null;
+                if (!$this->valorPermitido($table, $column, $valor)) {
+                    continue;
+                }
+
                 $model->{$column} = $valor;
                 $model->save();
 
@@ -303,6 +319,13 @@ class SyncAppDataController extends Controller
             }
         }
 
+        foreach ($columnas as $columna => $valor) {
+            if (!$this->valorPermitido($table, $columna, $valor)) {
+                $rechazar("El valor de '{$columna}' no es válido.");
+                return;
+            }
+        }
+
         $numhistoria = $columnas['numhistoria'] ?? null;
         if ($numhistoria === null) {
             $rechazar('La cita no indica número de historia.');
@@ -334,6 +357,18 @@ class SyncAppDataController extends Controller
         ]);
 
         $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $cola->id];
+    }
+
+    /** Ver `ALLOWED_VALUES`. Una columna sin dominio declarado acepta cualquier valor. */
+    private function valorPermitido(string $table, string $column, $valor): bool
+    {
+        $permitidos = self::ALLOWED_VALUES[$table][$column] ?? null;
+
+        if ($permitidos === null || $valor === null) {
+            return true;
+        }
+
+        return is_numeric($valor) && in_array((int) $valor, $permitidos, true);
     }
 
     private function regMedicoDePaciente($relaciones, int $pacienteId): ?string
