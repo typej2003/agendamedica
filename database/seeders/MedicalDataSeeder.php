@@ -97,7 +97,7 @@ class MedicalDataSeeder extends Seeder
 
                     // Asignar rol de médico si utilizas Spatie Permissions (Opcional)
                     if (method_exists($user, 'assignRole')) {
-                        $user->assignRole('medico');
+                        $user->assignRole('Medico');
                     }
 
                     // 2. Crear el médico vinculando el user_id registrado
