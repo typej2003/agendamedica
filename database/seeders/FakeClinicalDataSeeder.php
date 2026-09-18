@@ -45,7 +45,7 @@ class FakeClinicalDataSeeder extends Seeder
 
         $this->crearColas($faker, $pacientes, $motivos);
         $this->crearConsultas($faker, $pacientes);
-        $this->crearRecipes($faker, $pacientes, $medico->id);
+        $this->crearRecipes($faker, $pacientes);
     }
 
     /** @return list<array{codigo: string, tipo_atencion: string}> */
@@ -160,7 +160,7 @@ class FakeClinicalDataSeeder extends Seeder
         }
     }
 
-    private function crearRecipes($faker, array $pacientes, int $medicoId): void
+    private function crearRecipes($faker, array $pacientes): void
     {
         $medicamentos = [
             ['codigo' => 'MED001', 'descripcion' => 'Ácido fólico 5mg', 'indicaciones' => 'Tomar 1 tableta vía oral cada 24 horas'],
@@ -178,14 +178,13 @@ class FakeClinicalDataSeeder extends Seeder
 
             Recipe::create([
                 'reg_medico' => self::REG_MEDICO,
-                'numhistoria' => (int) $paciente['numhistoria'],
+                'nrohistoria' => (int) $paciente['numhistoria'],
                 'nroconsulta' => $i + 1,
                 'fecha' => $fecha->format('Y-m-d'),
                 'codemedicina' => $medicamento['codigo'],
                 'descripcion' => $medicamento['descripcion'],
                 'indicaciones' => $medicamento['indicaciones'],
                 'cantidad' => $faker->numberBetween(1, 3),
-                'medico' => $medicoId,
             ]);
         }
     }

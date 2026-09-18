@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Versión mínima del récipe médico — ver la nota en la migración
- * `create_recipes_table` sobre lo que se deja fuera a propósito.
+ * Récipe médico — tabla legada real (`nrohistoria`, no `numhistoria`; ver la
+ * migración `create_recipes_table`). Versión mínima: ver esa misma migración
+ * para lo que se deja fuera a propósito.
  */
 class Recipe extends Model
 {
@@ -17,20 +18,24 @@ class Recipe extends Model
 
     protected $fillable = [
         'reg_medico',
-        'numhistoria',
+        'nrohistoria',
         'nroconsulta',
-        'fecha',
         'codemedicina',
-        'descripcion',
         'indicaciones',
         'cantidad',
-        'medico',
+        'orden',
+        'descripcion',
+        'fecha',
+        'recipe',
+        'comple',
     ];
 
     protected $casts = [
         'fecha' => 'date',
-        'numhistoria' => 'integer',
+        'nrohistoria' => 'integer',
         'nroconsulta' => 'integer',
         'cantidad' => 'integer',
+        'orden' => 'integer',
+        'recipe' => 'integer',
     ];
 }

@@ -100,7 +100,7 @@ class SyncAppDataController extends Controller
         $consultas = $this->deltaQuery(Consulta::whereIn('numhistoria', $numHistorias), $since)->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
         // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
-        $recipes = $this->deltaQuery(Recipe::whereIn('numhistoria', $numHistorias), $since)->get();
+        $recipes = $this->deltaQuery(Recipe::whereIn('nrohistoria', $numHistorias), $since)->get();
 
         $medicalCenterIds = $historias->pluck('medical_center_id')->filter()->unique()->toArray();
         $centrosMedicos = $this->deltaQuery(MedicalCenter::whereIn('id', $medicalCenterIds), $since)->get();
