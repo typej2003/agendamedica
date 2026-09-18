@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             SpecialtySeeder::class,
             MedicalDataSeeder::class,
+            FakeClinicalDataSeeder::class,
         ]);
     }
 }
