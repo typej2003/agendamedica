@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\LoginAppController;
 use App\Http\Controllers\Api\RefreshAppController;
+use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\UploadServerController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
@@ -41,6 +42,7 @@ Route::post('/app/login', [LoginAppController::class, 'login']);
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
+    Route::post('/app/sync-app-data', [SyncAppDataController::class, 'sync']);
 });
 
 Route::prefix('upload-servers')->group(function () {

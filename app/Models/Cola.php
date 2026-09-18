@@ -39,6 +39,24 @@ class Cola extends Model
     ];
 
     /**
+     * Deja rastro en `sync_changes` antes de borrarse — es lo que le permite a
+     * `SyncAppDataController::pull()` avisarle al cliente que esta fila ya no existe.
+     */
+    protected static function booted()
+    {
+        static::deleting(function (Cola $cola) {
+            SyncChange::create([
+                'reg_medico' => $cola->reg_medico,
+                'table_name' => 'cola',
+                'record_id' => $cola->id,
+                'operation' => 'deleted',
+                'occurred_at' => now(),
+                'source' => 'api',
+            ]);
+        });
+    }
+
+    /**
      * Relación con el modelo MedicoRegistro mediante la clave reg_medico.
      */
     public function medicoRegistro(): BelongsTo
