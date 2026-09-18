@@ -12,32 +12,32 @@ class Cola extends Model
     use HasFactory;
 
     /**
-     * Estados de una cita, sobre la columna legada `estado` (DECIMAL(1,0)).
+     * Una cita tiene **tres dimensiones independientes**, no un estado único: confirmación, pago
+     * y atención. La pantalla del sistema legado las muestra como tres etiquetas separadas
+     * ("Confirmado | No atendida | Pagado"), o sea una cita puede estar confirmada *y* pagada *y*
+     * sin atender al mismo tiempo. Cada una vive en su propio campo:
      *
-     * El campo existe en el esquema legado pero estaba prácticamente sin usar (4 filas con `1`
-     * de 19.906 en el dump real), así que se le fija acá la convención. Son **mutuamente
-     * excluyentes** a propósito: el manual de Agenda Integral pinta un solo color por cita
-     * (ver Docs/Wiki/02-modulo-agenda.md §5), o sea el legado ya las trataba como un estado
-     * único, no como banderas combinables.
-     *
-     * "Atendida" (blanco en ese mismo cuadro) NO va acá: vive en `atendido`, que el legado sí
-     * usa de verdad, y es una dimensión independiente — una cita puede estar pagada y atendida.
-     *
-     * ⚠️ `monto` es lo que se cobra por la cita. No hay "monto pagado"/"monto pendiente" para
-     * citas en el esquema legado: los abonos parciales son de cirugías (`baremo_quiru`,
-     * `pago_quiru`) y la facturación real es `factura_cliente` (Fase 3 del roadmap).
+     * - **Confirmación** → `estado` (esta constante). La columna existe en el legado pero estaba
+     *   prácticamente sin usar (4 filas con `1` de 19.906 en el dump real), así que se le fija
+     *   acá la convención.
+     * - **Atención** → `atendido` (0/1), que el legado sí usa de verdad.
+     * - **Pago** → `monto` vs. `monto_pagado`, ver `estadoPago()`.
      */
-    public const ESTADO_NO_CONFIRMADA = 0;       // amarillo
-    public const ESTADO_CONFIRMADA = 1;          // azul — confirmada por el consultorio
-    public const ESTADO_CONFIRMADA_PACIENTE = 2; // celeste — la confirmó el paciente
-    public const ESTADO_PAGADA = 3;              // verde
+    public const ESTADO_NO_CONFIRMADA = 0;       // no confirmada
+    public const ESTADO_CONFIRMADA = 1;          // la confirmó el consultorio
+    public const ESTADO_CONFIRMADA_PACIENTE = 2; // la confirmó el propio paciente
 
     public const ESTADOS = [
         self::ESTADO_NO_CONFIRMADA,
         self::ESTADO_CONFIRMADA,
         self::ESTADO_CONFIRMADA_PACIENTE,
-        self::ESTADO_PAGADA,
     ];
+
+    /** Resultados posibles de `estadoPago()`. */
+    public const PAGO_SIN_MONTO = 'sin_monto';
+    public const PAGO_PENDIENTE = 'pendiente';
+    public const PAGO_ABONADA = 'abonada';
+    public const PAGO_PAGADA = 'pagada';
 
     protected $table = 'cola';
 
@@ -52,6 +52,7 @@ class Cola extends Model
         'turno',
         'motivo',
         'monto',
+        'monto_pagado',
         'hora_ini',
         'hora_fin',
         'tiempo',
@@ -65,6 +66,36 @@ class Cola extends Model
     protected $casts = [
         'fecha' => 'date',
     ];
+
+    /** Lo que falta por cobrar de esta cita. */
+    public function montoPendiente(): float
+    {
+        return max(0.0, (float) ($this->monto ?? 0) - (float) ($this->monto_pagado ?? 0));
+    }
+
+    /**
+     * Estado de pago derivado de los montos, no guardado — así un abono parcial no necesita un
+     * campo aparte que se pueda desincronizar de las cifras.
+     *
+     * `sin_monto` existe porque en los datos reales `monto` viene NULL en casi todas las filas
+     * (el médico no siempre le pone precio a la cita). Sin esta distinción, 19.900 citas legadas
+     * se pintarían como deuda pendiente.
+     */
+    public function estadoPago(): string
+    {
+        $monto = (float) ($this->monto ?? 0);
+        $pagado = (float) ($this->monto_pagado ?? 0);
+
+        if ($monto <= 0) {
+            return $pagado > 0 ? self::PAGO_PAGADA : self::PAGO_SIN_MONTO;
+        }
+
+        if ($pagado >= $monto) {
+            return self::PAGO_PAGADA;
+        }
+
+        return $pagado > 0 ? self::PAGO_ABONADA : self::PAGO_PENDIENTE;
+    }
 
     /**
      * Deja rastro en `sync_changes` antes de borrarse — es lo que le permite a

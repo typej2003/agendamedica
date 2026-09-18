@@ -34,7 +34,7 @@ class SyncAppDataController extends Controller
     /** Tablas y columnas que se pueden escribir por `changes` — todo lo demás se ignora. */
     private const WRITABLE_COLUMNS = [
         'cola' => [
-            'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto',
+            'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
             'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text',
         ],
         'pacientes' => [
@@ -58,7 +58,7 @@ class SyncAppDataController extends Controller
     private const CREATABLE_COLUMNS = [
         'cola' => [
             'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'numorden', 'atendido',
-            'estado', 'turno', 'motivo', 'monto', 'tiempo', 'tipo', 'sms_text',
+            'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo', 'sms_text',
         ],
     ];
 

@@ -8,6 +8,7 @@ use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\NotificacionCita;
+use App\Services\TwilioSmsService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 
@@ -57,12 +58,6 @@ class NotificacionCitaController extends Controller
             return response()->json(['message' => 'La cita no existe o no pertenece a este médico.'], 404);
         }
 
-        if ($canal === NotificacionCita::CANAL_SMS) {
-            // No hay proveedor de SMS implementado en el API todavía (el legado usaba uno propio,
-            // ver `medicos.sms_proveedor`). Mejor decirlo que fingir que se envió.
-            return response()->json(['message' => 'El envío por SMS todavía no está disponible.'], 501);
-        }
-
         $historia = Historia::where('numhistoria', $cola->numhistoria)
             ->whereIn('reg_medico', $registrosMedicos)
             ->first();
@@ -80,36 +75,33 @@ class NotificacionCitaController extends Controller
             ], 422);
         }
 
-        // Se verifica antes de instanciar el servicio: su constructor tipa las credenciales como
-        // `string`, así que sin configurar devolvería un 500 ilegible en vez de esto.
-        if (!config('services.whatsapp.token') || !config('services.whatsapp.phone_number_id')) {
-            return response()->json([
-                'message' => 'El envío por WhatsApp no está configurado en el servidor.',
-            ], 503);
-        }
-
         $nombrePaciente = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
+        $mensaje = "Recordatorio de cita para {$nombrePaciente} "
+            . "({$cola->fecha?->format('d/m/Y')} {$cola->hora_ini}).";
 
-        $respuesta = app(WhatsAppService::class)->sendTemplate(
-            $destino,
-            self::PLANTILLA_RECORDATORIO,
-            [$nombrePaciente],
-        );
+        $envio = $canal === NotificacionCita::CANAL_SMS
+            ? $this->enviarPorSms($destino, $mensaje)
+            : $this->enviarPorWhatsApp($destino, $nombrePaciente);
 
-        $enviada = isset($respuesta['messages']);
+        // El proveedor no está listo (sin credenciales, o sin implementar): no se registra nada,
+        // porque no hubo intento real de envío que valga la pena guardar.
+        if (isset($envio['http_status'])) {
+            return response()->json(['message' => $envio['message']], $envio['http_status']);
+        }
 
         $notificacion = NotificacionCita::create([
             'reg_medico' => $cola->reg_medico,
             'cola_id' => $cola->id,
-            'canal' => NotificacionCita::CANAL_WHATSAPP,
+            'canal' => $canal,
             'destino' => $destino,
-            'plantilla' => self::PLANTILLA_RECORDATORIO,
-            'mensaje' => "Recordatorio de cita para {$nombrePaciente} "
-                . "({$cola->fecha?->format('d/m/Y')} {$cola->hora_ini}).",
-            'estado' => $enviada ? NotificacionCita::ESTADO_ENVIADA : NotificacionCita::ESTADO_FALLIDA,
-            'respuesta' => json_encode($respuesta),
+            'plantilla' => $canal === NotificacionCita::CANAL_WHATSAPP ? self::PLANTILLA_RECORDATORIO : null,
+            'mensaje' => $mensaje,
+            'estado' => $envio['ok'] ? NotificacionCita::ESTADO_ENVIADA : NotificacionCita::ESTADO_FALLIDA,
+            'respuesta' => json_encode($envio['respuesta']),
             'enviada_por' => $user->id,
         ]);
+
+        $enviada = $envio['ok'];
 
         if (!$enviada) {
             return response()->json([
@@ -131,7 +123,59 @@ class NotificacionCitaController extends Controller
     }
 
     /**
+     * Un `http_status` en el resultado significa "ni siquiera se intentó": el proveedor no está
+     * listo, así que el que llama corta ahí y no registra el envío.
+     *
+     * @return array{ok?: bool, respuesta?: array, http_status?: int, message?: string}
+     */
+    private function enviarPorWhatsApp(string $destino, string $nombrePaciente): array
+    {
+        // Se verifica antes de instanciar el servicio: su constructor tipa las credenciales como
+        // `string`, así que sin configurar devolvería un 500 ilegible en vez de esto.
+        if (!config('services.whatsapp.token') || !config('services.whatsapp.phone_number_id')) {
+            return [
+                'http_status' => 503,
+                'message' => 'El envío por WhatsApp no está configurado en el servidor.',
+            ];
+        }
+
+        $respuesta = app(WhatsAppService::class)->sendTemplate(
+            $destino,
+            self::PLANTILLA_RECORDATORIO,
+            [$nombrePaciente],
+        );
+
+        return ['ok' => isset($respuesta['messages']), 'respuesta' => $respuesta];
+    }
+
+    /** @return array{ok?: bool, respuesta?: array, http_status?: int, message?: string} */
+    private function enviarPorSms(string $destino, string $mensaje): array
+    {
+        $twilio = app(TwilioSmsService::class);
+
+        if (!$twilio->estaImplementado()) {
+            return [
+                'http_status' => 501,
+                'message' => 'El envío de SMS por Twilio todavía no está implementado.',
+            ];
+        }
+
+        if (!$twilio->estaConfigurado()) {
+            return [
+                'http_status' => 503,
+                'message' => 'El envío por SMS no está configurado en el servidor.',
+            ];
+        }
+
+        // Twilio pide el destino con `+`; Meta lo pide sin él.
+        return $twilio->enviar('+' . $destino, $mensaje);
+    }
+
+    /**
      * Normaliza a formato internacional sin `+`, que es lo que pide la API de Meta.
+     *
+     * TODO: parametrizar el código de país por médico — el legado ya lo guarda en `evolucion`
+     *       (`pais`, `prefi_1`, `prefi_2`, `prefi_3`), y el proyecto contempla multi-país.
      *
      * ⚠️ Asume **Venezuela (+58)** para los números locales, que es como están guardados los
      * teléfonos del legado (`04121234567`). El proyecto contempla multi-país
