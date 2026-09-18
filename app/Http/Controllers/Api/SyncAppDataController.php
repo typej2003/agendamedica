@@ -46,6 +46,27 @@ class SyncAppDataController extends Controller
 
     private const DELETABLE_TABLES = ['cola', 'pacientes'];
 
+    /**
+     * Columnas aceptadas al *crear* una fila. Es una lista aparte de `WRITABLE_COLUMNS` porque
+     * hay campos que solo tienen sentido al nacer la cita (`fecha`, `numhistoria`): editarlos
+     * después es "reagendar" o "cambiar de paciente", que son acciones con reglas propias
+     * todavía sin definir (ver Docs/Wiki/02-modulo-agenda.md, hueco de "reagendar").
+     *
+     * `reg_medico` y `medico` no se aceptan del cliente a propósito — los resuelve el servidor
+     * desde el médico autenticado, que es lo único que marca el tenant.
+     */
+    private const CREATABLE_COLUMNS = [
+        'cola' => [
+            'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'numorden', 'atendido',
+            'estado', 'turno', 'motivo', 'monto', 'tiempo', 'tipo', 'sms_text',
+        ],
+    ];
+
+    /** Columnas `NOT NULL` en el esquema — sin ellas el INSERT explota, mejor rechazar antes. */
+    private const REQUIRED_COLUMNS = [
+        'cola' => ['fecha', 'hora_ini'],
+    ];
+
     public function sync(Request $request)
     {
         $user = $request->user();
@@ -73,8 +94,9 @@ class SyncAppDataController extends Controller
         $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
         $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
 
-        $this->applyChanges(
+        $resultadoChanges = $this->applyChanges(
             $request->input('changes', []),
+            $medicoModel,
             $registrosMedicos,
             $relaciones,
         );
@@ -123,21 +145,37 @@ class SyncAppDataController extends Controller
             'recipes' => $recipes,
             'centros_medicos' => $centrosMedicos,
             'eliminados' => $eliminados,
+            // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
+            'creados' => $resultadoChanges['creados'],
+            // Creaciones que no se aplicaron (y no se van a aplicar reintentando): el cliente las
+            // saca de su cola en vez de reintentarlas para siempre, y le avisa al usuario.
+            'rechazados' => $resultadoChanges['rechazados'],
         ]);
     }
 
     /**
-     * Aplica las operaciones que mandó el cliente. No devuelve nada — el resultado se ve
-     * reflejado en el delta que se calcula después, usando el `since` viejo.
+     * Aplica las operaciones que mandó el cliente. Lo único que devuelve es lo que el cliente no
+     * puede deducir solo: qué id real le tocó a cada fila que creó offline, y qué creaciones se
+     * rechazaron. El resto del resultado se ve reflejado en el delta que se calcula después,
+     * usando el `since` viejo.
+     *
+     * @return array{creados: list<array{table: string, temp_id: int, id: int}>, rechazados: list<array{table: string, temp_id: int, motivo: string}>}
      */
-    private function applyChanges(array $changes, array $registrosMedicos, $relaciones): void
+    private function applyChanges(array $changes, Medico $medico, array $registrosMedicos, $relaciones): array
     {
         $pacienteIdsDelMedico = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+        $creados = [];
+        $rechazados = [];
 
         foreach ($changes as $change) {
             $table = $change['table'] ?? null;
             $recordId = $change['record_id'] ?? null;
             $operation = $change['operation'] ?? null;
+
+            if ($operation === 'created') {
+                $this->applyCreated($change, $medico, $registrosMedicos, $creados, $rechazados);
+                continue;
+            }
 
             if (!in_array($table, self::DELETABLE_TABLES, true) || !$recordId || !$operation) {
                 continue;
@@ -211,6 +249,91 @@ class SyncAppDataController extends Controller
                 ]);
             }
         }
+
+        return ['creados' => $creados, 'rechazados' => $rechazados];
+    }
+
+    /**
+     * Crea una fila que el cliente ya venía mostrando localmente con un id temporal (negativo).
+     *
+     * Tres cosas que no son obvias:
+     * 1. **Idempotencia por `client_temp_id`**: si la respuesta anterior se perdió, el reintento
+     *    devuelve el mismo id real en vez de crear una cita duplicada.
+     * 2. **El tenant no se acepta del cliente**: `reg_medico` sale de la historia del paciente
+     *    (verificada contra este médico), no de lo que haya mandado el teléfono.
+     * 3. **Rechazo explícito**: descartar en silencio dejaría al cliente reintentando para
+     *    siempre una cita que nunca va a entrar, y al médico viéndola como "pendiente" sin fin.
+     */
+    private function applyCreated(array $change, Medico $medico, array $registrosMedicos, array &$creados, array &$rechazados): void
+    {
+        $table = $change['table'] ?? null;
+        $tempId = $change['temp_id'] ?? null;
+
+        // Sin `temp_id` no hay forma de contestarle al cliente cuál fila es cuál, así que no se
+        // crea nada: aplicarla sería dejarle una fila fantasma imposible de reconciliar.
+        if (!isset(self::CREATABLE_COLUMNS[$table]) || $tempId === null || !is_numeric($tempId)) {
+            return;
+        }
+        $tempId = (int) $tempId;
+
+        $yaCreado = SyncChange::where('table_name', $table)
+            ->where('client_temp_id', $tempId)
+            ->where('operation', 'created')
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->first();
+
+        if ($yaCreado) {
+            $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $yaCreado->record_id];
+            return;
+        }
+
+        $rechazar = function (string $motivo) use ($table, $tempId, &$rechazados) {
+            $rechazados[] = ['table' => $table, 'temp_id' => $tempId, 'motivo' => $motivo];
+        };
+
+        $columnas = array_intersect_key(
+            (array) ($change['columns'] ?? []),
+            array_flip(self::CREATABLE_COLUMNS[$table]),
+        );
+
+        foreach (self::REQUIRED_COLUMNS[$table] ?? [] as $obligatoria) {
+            if (($columnas[$obligatoria] ?? null) === null) {
+                $rechazar("Falta el campo obligatorio '{$obligatoria}'.");
+                return;
+            }
+        }
+
+        $numhistoria = $columnas['numhistoria'] ?? null;
+        if ($numhistoria === null) {
+            $rechazar('La cita no indica número de historia.');
+            return;
+        }
+
+        $historia = Historia::where('numhistoria', $numhistoria)
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->first();
+
+        if (!$historia) {
+            $rechazar('El número de historia no pertenece a este médico.');
+            return;
+        }
+
+        $columnas['reg_medico'] = $historia->reg_medico;
+        $columnas['medico'] = $medico->id;
+
+        $cola = Cola::create($columnas);
+
+        SyncChange::create([
+            'reg_medico' => $historia->reg_medico,
+            'table_name' => $table,
+            'record_id' => $cola->id,
+            'client_temp_id' => $tempId,
+            'operation' => 'created',
+            'occurred_at' => Carbon::parse($change['occurred_at'] ?? now()),
+            'source' => 'mobile',
+        ]);
+
+        $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $cola->id];
     }
 
     private function regMedicoDePaciente($relaciones, int $pacienteId): ?string

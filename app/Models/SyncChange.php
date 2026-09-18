@@ -21,6 +21,7 @@ class SyncChange extends Model
         'reg_medico',
         'table_name',
         'record_id',
+        'client_temp_id',
         'operation',
         'column_name',
         'value',
@@ -30,6 +31,7 @@ class SyncChange extends Model
 
     protected $casts = [
         'record_id' => 'integer',
+        'client_temp_id' => 'integer',
         'occurred_at' => 'datetime',
     ];
 }
