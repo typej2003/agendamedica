@@ -12,6 +12,7 @@ use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MotivoCita;
 use App\Models\Paciente;
+use App\Models\Recipe;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -98,6 +99,8 @@ class SyncAppDataController extends Controller
         $colas = $this->deltaQuery(Cola::whereIn('reg_medico', $registrosMedicos), $since)->get();
         $consultas = $this->deltaQuery(Consulta::whereIn('numhistoria', $numHistorias), $since)->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
+        $recipes = $this->deltaQuery(Recipe::whereIn('numhistoria', $numHistorias), $since)->get();
 
         $medicalCenterIds = $historias->pluck('medical_center_id')->filter()->unique()->toArray();
         $centrosMedicos = $this->deltaQuery(MedicalCenter::whereIn('id', $medicalCenterIds), $since)->get();
@@ -117,6 +120,7 @@ class SyncAppDataController extends Controller
             'colas' => $colas,
             'consultas' => $consultas,
             'motivos' => $motivos,
+            'recipes' => $recipes,
             'centros_medicos' => $centrosMedicos,
             'eliminados' => $eliminados,
         ]);
