@@ -8,6 +8,8 @@ use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoMedicalCenter;
+use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\MedicoPaciente;
 use App\Models\MotivoCita;
 use App\Models\Paciente;
@@ -43,9 +45,10 @@ class FakeClinicalDataSeeder extends Seeder
 
         $this->crearConfiguracion();
         $motivos = $this->crearMotivos();
+        $sedes = $this->crearSedes($medico->id);
         $pacientes = $this->crearPacientes($faker, $medico->id, $medicalCenterId);
 
-        $this->crearColas($faker, $pacientes, $motivos);
+        $this->crearColas($faker, $pacientes, $motivos, $sedes);
         $this->crearConsultas($faker, $pacientes);
         $this->crearRecipes($faker, $pacientes);
     }
@@ -61,10 +64,10 @@ class FakeClinicalDataSeeder extends Seeder
         Evolucion::firstOrCreate(
             ['reg_medico' => self::REG_MEDICO],
             [
-                // `clave` es NOT NULL en el esquema legado: toda fila de configuración carga una
-                // credencial sí o sí. Valor de relleno obvio — es una base de desarrollo, y esta
-                // columna no sale nunca al cliente (ver ConfiguracionMedicoResource).
-                'clave' => 'seed-no-usar',
+                // `clave` es un entero NOT NULL y **no es una credencial**: en los datos reales
+                // vale 1 y 2, es el número de profesional dentro del `reg_medico` (que es la
+                // instancia de PowerBuilder, compartida por varios doctores).
+                'clave' => 1,
                 'especialidad' => 'Ginecología y Obstetricia',
                 'ciudad' => 'Barquisimeto',
                 'cita_previa' => 'S',
@@ -87,6 +90,91 @@ class FakeClinicalDataSeeder extends Seeder
                 'viernes_f' => '13:00',
             ],
         );
+    }
+
+    /**
+     * Las sedes donde atiende el médico, con sus bloques de trabajo. Está calcado del caso real
+     * que planteó el usuario (el "Dr. Parra"), porque es el que rompe todos los supuestos viejos:
+     * **dos sedes el mismo día** con modalidades distintas, y una tercera con doble jornada.
+     *
+     * Sin datos así no se puede probar lo que importa — que el número de paciente reinicie en
+     * cada jornada y que el cupo se mire contra el bloque, no contra el día.
+     *
+     * @return array<int, array{office: Office, centro_id: int}>
+     */
+    private function crearSedes(int $medicoId): array
+    {
+        $definiciones = [
+            [
+                'centro_id' => 1, // Centro Médico San José
+                'numero' => 'Consultorio 701',
+                'modalidad' => Office::MODALIDAD_ORDEN,
+                'duracion' => 20,
+                // Mañanas de lunes a jueves: es la sede "de hospital", con cupo.
+                'bloques' => [
+                    [1, '08:00', '12:00', 20],
+                    [2, '08:00', '12:00', 20],
+                    [3, '08:00', '12:00', 20],
+                    [4, '08:00', '12:00', 20],
+                ],
+            ],
+            [
+                'centro_id' => 2, // Clínica Especializada Metropolitana
+                'numero' => 'Consultorio 3-B',
+                'modalidad' => Office::MODALIDAD_HORA,
+                'duracion' => 30,
+                // Tardes de lunes a viernes: con hora de cita, sin cupo.
+                'bloques' => [
+                    [1, '14:00', '18:00', null],
+                    [2, '14:00', '18:00', null],
+                    [3, '14:00', '18:00', null],
+                    [4, '14:00', '18:00', null],
+                    [5, '14:00', '18:00', null],
+                ],
+            ],
+            [
+                'centro_id' => 3, // Hospital Privado Santa María
+                'numero' => 'Consultorio 12',
+                'modalidad' => Office::MODALIDAD_ORDEN,
+                'duracion' => 15,
+                // Sábados, doble jornada en la misma sede: es el caso donde el correlativo tiene
+                // que reiniciar aunque no se cambie de lugar.
+                'bloques' => [
+                    [6, '08:00', '12:00', 25],
+                    [6, '14:00', '17:00', 15],
+                ],
+            ],
+        ];
+
+        $sedes = [];
+        foreach ($definiciones as $definicion) {
+            $office = Office::updateOrCreate(
+                ['medico_id' => $medicoId, 'medical_center_id' => $definicion['centro_id']],
+                [
+                    'reg_medico' => self::REG_MEDICO,
+                    'office_number' => $definicion['numero'],
+                    'modalidad' => $definicion['modalidad'],
+                    'duracion_cita' => $definicion['duracion'],
+                    'activo' => true,
+                ],
+            );
+
+            $office->schedules()->delete();
+            foreach ($definicion['bloques'] as [$dia, $inicio, $fin, $cupo]) {
+                OfficeSchedule::create([
+                    'office_id' => $office->id,
+                    'reg_medico' => self::REG_MEDICO,
+                    'dia_semana' => $dia,
+                    'hora_inicio' => $inicio,
+                    'hora_fin' => $fin,
+                    'cupo' => $cupo,
+                ]);
+            }
+
+            $sedes[] = ['office' => $office, 'centro_id' => $definicion['centro_id']];
+        }
+
+        return $sedes;
     }
 
     /** @return list<array{codigo: string, tipo_atencion: string}> */
@@ -157,22 +245,59 @@ class FakeClinicalDataSeeder extends Seeder
         return $pacientes;
     }
 
-    private function crearColas($faker, array $pacientes, array $motivos): void
+    /**
+     * Las citas se reparten **en los bloques de las sedes**, no en horas al azar: una cita que no
+     * cae en ninguna jornada configurada no sirve para probar ni el correlativo ni el cupo.
+     *
+     * El `numorden` se lleva por jornada (sede + bloque + fecha), igual que lo hace el legado
+     * dentro de su día: arranca en 1 y sube. Lo que el app muestra es la **posición**, pero
+     * sembrar datos coherentes evita perseguir fantasmas después.
+     */
+    private function crearColas($faker, array $pacientes, array $motivos, array $sedes): void
     {
+        // Todos los bloques posibles, aplanados: [centro, día de la semana, inicio, fin, turno].
+        $bloques = [];
+        foreach ($sedes as $sede) {
+            foreach ($sede['office']->schedules as $indice => $bloque) {
+                $bloques[] = [
+                    'centro_id' => $sede['centro_id'],
+                    'dia_semana' => $bloque->dia_semana,
+                    'inicio' => OfficeSchedule::aMinutos($bloque->hora_inicio),
+                    'fin' => OfficeSchedule::aMinutos($bloque->hora_fin),
+                    // El legado usa 'D' para la jornada de la mañana y 'T' para la tarde
+                    // (17.043 y 2.863 filas del dump real), no 'M'.
+                    'turno' => OfficeSchedule::aMinutos($bloque->hora_inicio) < 12 * 60 ? 'D' : 'T',
+                ];
+            }
+        }
+
+        $ordenPorJornada = [];
+
         for ($i = 0; $i < self::TOTAL_COLAS; $i++) {
             $paciente = $faker->randomElement($pacientes);
             $motivo = $faker->randomElement($motivos);
+            $bloque = $faker->randomElement($bloques);
+
+            // Una fecha del rango que caiga en el día de la semana de ese bloque.
             $fecha = $faker->dateTimeBetween('-45 days', '+15 days');
-            $horaIni = sprintf('%02d:%02d:00', $faker->numberBetween(8, 16), $faker->randomElement([0, 15, 30, 45]));
+            $corrimiento = ($bloque['dia_semana'] - (int) $fecha->format('N') + 7) % 7;
+            $fecha = (clone $fecha)->modify("+{$corrimiento} days");
+
+            $minutos = $faker->numberBetween($bloque['inicio'], max($bloque['inicio'], $bloque['fin'] - 15));
+            $horaIni = sprintf('%02d:%02d:00', intdiv($minutos, 60), $minutos % 60 - ($minutos % 15));
+
+            $clave = $fecha->format('Y-m-d') . '#' . $bloque['centro_id'] . '#' . $bloque['turno'];
+            $ordenPorJornada[$clave] = ($ordenPorJornada[$clave] ?? 0) + 1;
 
             Cola::create([
                 'reg_medico' => self::REG_MEDICO,
                 'fecha' => $fecha->format('Y-m-d'),
                 'numhistoria' => $paciente['numhistoria'],
-                'numorden' => $i + 1,
+                'medical_center_id' => $bloque['centro_id'],
+                'numorden' => $ordenPorJornada[$clave],
                 'atendido' => $faker->numberBetween(0, 1),
                 'estado' => $faker->numberBetween(0, 1),
-                'turno' => $faker->randomElement(['M', 'T']),
+                'turno' => $bloque['turno'],
                 'motivo' => $motivo['tipo_atencion'],
                 'monto' => $faker->randomElement([0, 30, 50, 80]),
                 'hora_ini' => $horaIni,

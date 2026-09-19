@@ -26,7 +26,7 @@ class SyncAppDataRequest extends FormRequest
     public const WRITABLE_COLUMNS = [
         'cola' => [
             'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
-            'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text',
+            'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text', 'medical_center_id',
         ],
         'pacientes' => [
             'nac', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento',
@@ -45,8 +45,9 @@ class SyncAppDataRequest extends FormRequest
      */
     public const CREATABLE_COLUMNS = [
         'cola' => [
-            'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'numorden', 'atendido',
-            'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo', 'sms_text',
+            'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'medical_center_id', 'numorden',
+            'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo',
+            'sms_text',
         ],
         // Un paciente creado desde el app **nace sin `numhistoria`**: ese número lo asigna el
         // sistema de escritorio y no se puede mintear acá sin arriesgar un choque con él (la

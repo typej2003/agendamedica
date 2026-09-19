@@ -14,6 +14,8 @@ use App\Models\MedicalCenter;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MotivoCita;
+use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\SyncChange;
@@ -101,7 +103,31 @@ class SyncAppDataController extends Controller
         // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
         $recipes = $this->deltaQuery(Recipe::whereIn('nrohistoria', $numHistorias), $since)->get();
 
-        $medicalCenterIds = $historias->pluck('medical_center_id')->filter()->unique()->toArray();
+        // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
+        // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
+        // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
+        // la cita (ver la migración de `cola.medical_center_id`).
+        $offices = $this->deltaQuery(
+            Office::where('medico_id', $medicoModel->id)
+                ->orWhere(function ($query) use ($registrosMedicos) {
+                    $query->whereNull('medico_id')->whereIn('reg_medico', $registrosMedicos);
+                }),
+            $since,
+        )->get();
+
+        $officeSchedules = $this->deltaQuery(
+            OfficeSchedule::whereIn('office_id', Office::where('medico_id', $medicoModel->id)->select('id')),
+            $since,
+        )->get();
+
+        // Los centros que necesita el teléfono son los de las historias **y** los de las sedes
+        // donde atiende: sin esto, una sede recién configurada llegaría sin nombre ni dirección.
+        $medicalCenterIds = $historias->pluck('medical_center_id')
+            ->merge($offices->pluck('medical_center_id'))
+            ->merge($colas->pluck('medical_center_id'))
+            ->filter()
+            ->unique()
+            ->toArray();
         $centrosMedicos = $this->deltaQuery(MedicalCenter::whereIn('id', $medicalCenterIds), $since)->get();
 
         // Sin `since` (primera sincronización) el cliente no tiene nada que borrar todavía.
@@ -121,6 +147,8 @@ class SyncAppDataController extends Controller
             'motivos' => $motivos,
             'recipes' => $recipes,
             'centros_medicos' => $centrosMedicos,
+            'offices' => $offices,
+            'office_schedules' => $officeSchedules,
             // La configuración va completa en cada respuesta, no por delta: son un puñado de
             // campos y el cliente la necesita entera para decidir cómo dibujar la agenda.
             // Si el médico no tiene fila de configuración (pasa: en el dump real está vacía),

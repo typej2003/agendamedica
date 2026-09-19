@@ -45,6 +45,7 @@ class Cola extends Model
         'reg_medico',
         'fecha',
         'numhistoria',
+        'medical_center_id',
         'paciente_sinhistoria_id',
         'numorden',
         'atendido',
