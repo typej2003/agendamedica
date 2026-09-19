@@ -48,11 +48,27 @@ class SyncAppDataRequest extends FormRequest
             'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'numorden', 'atendido',
             'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo', 'sms_text',
         ],
+        // Un paciente creado desde el app **nace sin `numhistoria`**: ese número lo asigna el
+        // sistema de escritorio y no se puede mintear acá sin arriesgar un choque con él (la
+        // columna es única global en `historias`). El vínculo con el médico queda en el pivote
+        // `medico_pacientes`, que admite `numhistoria` nulo, y la cita lo referencia por
+        // `paciente_sinhistoria_id` — columna que el esquema legado ya trae para este caso.
+        'pacientes' => [
+            'nac', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento',
+            'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
+            'profesion', 'email', 'dependencia', 'sms',
+        ],
     ];
 
-    /** Columnas `NOT NULL` en el esquema — sin ellas el INSERT explota. */
+    /**
+     * Sin estas columnas la fila no se crea. En `cola` son las `NOT NULL` del esquema (sin ellas
+     * el INSERT explota); en `pacientes` son las que hacen identificable a la persona: la cédula
+     * es además la clave por la que el legado reconoce al mismo paciente entre médicos, así que
+     * sin ella se crearían fichas duplicadas.
+     */
     public const REQUIRED_COLUMNS = [
         'cola' => ['fecha', 'hora_ini'],
+        'pacientes' => ['cedula', 'nombres', 'apellidos'],
     ];
 
     /** Columnas con dominio cerrado. Ver la convención de estados en `App\Models\Cola`. */
@@ -97,6 +113,12 @@ class SyncAppDataRequest extends FormRequest
 
             'changes.*.column' => ['required_if:changes.*.operation,updated', 'string', 'max:64'],
             'changes.*.columns' => ['required_if:changes.*.operation,created', 'array'],
+
+            // Cita de un paciente creado en este mismo lote, que todavía no tiene id real ni
+            // `numhistoria`: viaja la referencia al id temporal del paciente y el servidor la
+            // resuelve. Sin esto, crear paciente y cita sin señal sería imposible — el teléfono
+            // no puede saber con qué id quedó el paciente hasta que sincroniza.
+            'changes.*.paciente_temp_id' => ['sometimes', 'nullable', 'integer'],
 
             // `reorder`: mover una fila dentro de su grupo. En vez de mandar un `updated` por
             // cada fila desplazada, se manda el movimiento y el servidor corre el resto con un

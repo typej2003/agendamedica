@@ -68,6 +68,16 @@ class SyncAppDataController extends Controller
             $relaciones,
         );
 
+        // Se relee el pivote **después** de aplicar los cambios: un paciente creado en este mismo
+        // lote no estaba en `$relaciones` cuando se cargó arriba, y sin esto el delta no se lo
+        // devolvería al teléfono — la ficha que el usuario acaba de crear desaparecería de su
+        // pantalla en la primera sincronización.
+        if ($resultadoChanges['creo_pacientes']) {
+            $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+            $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+            $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
+        }
+
         $syncedAt = Carbon::now();
 
         $pacientes = $this->deltaQuery(Paciente::whereIn('id', $pacienteIds), $since)->get();
@@ -140,6 +150,13 @@ class SyncAppDataController extends Controller
         $pacienteIdsDelMedico = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
         $creados = [];
         $rechazados = [];
+        // Id temporal del cliente → id real, para las citas del mismo lote que referencian a un
+        // paciente recién creado (ver `paciente_temp_id`).
+        $pacientesCreados = [];
+
+        // Las creaciones de pacientes van primero: una cita del mismo lote puede depender de una
+        // de ellas, y el cliente no tiene forma de garantizar el orden del arreglo.
+        $changes = $this->pacientesPrimero($changes);
 
         foreach ($changes as $change) {
             $table = $change['table'] ?? null;
@@ -147,7 +164,14 @@ class SyncAppDataController extends Controller
             $operation = $change['operation'] ?? null;
 
             if ($operation === 'created') {
-                $this->applyCreated($change, $medico, $registrosMedicos, $creados, $rechazados);
+                $this->applyCreated(
+                    $change,
+                    $medico,
+                    $registrosMedicos,
+                    $creados,
+                    $rechazados,
+                    $pacientesCreados,
+                );
                 continue;
             }
 
@@ -233,22 +257,52 @@ class SyncAppDataController extends Controller
             }
         }
 
-        return ['creados' => $creados, 'rechazados' => $rechazados];
+        return [
+            'creados' => $creados,
+            'rechazados' => $rechazados,
+            'creo_pacientes' => $pacientesCreados !== [],
+        ];
+    }
+
+    /** @param list<array> $changes @return list<array> */
+    private function pacientesPrimero(array $changes): array
+    {
+        $pacientes = [];
+        $resto = [];
+        foreach ($changes as $change) {
+            $esPacienteNuevo = ($change['operation'] ?? null) === 'created'
+                && ($change['table'] ?? null) === 'pacientes';
+            if ($esPacienteNuevo) {
+                $pacientes[] = $change;
+            } else {
+                $resto[] = $change;
+            }
+        }
+
+        return [...$pacientes, ...$resto];
     }
 
     /**
-     * Crea una fila que el cliente ya venía mostrando localmente con un id temporal (negativo).
+     * Crea una fila que el cliente ya venía mostrando localmente con su propio id.
      *
      * Tres cosas que no son obvias:
      * 1. **Idempotencia por `client_temp_id`**: si la respuesta anterior se perdió, el reintento
-     *    devuelve el mismo id real en vez de crear una cita duplicada.
-     * 2. **El tenant no se acepta del cliente**: `reg_medico` sale de la historia del paciente
-     *    (verificada contra este médico), no de lo que haya mandado el teléfono.
+     *    devuelve el mismo id real en vez de crear una fila duplicada.
+     * 2. **El tenant no se acepta del cliente**: `reg_medico` sale del médico autenticado (o de
+     *    la historia del paciente), no de lo que haya mandado el teléfono.
      * 3. **Rechazo explícito**: descartar en silencio dejaría al cliente reintentando para
-     *    siempre una cita que nunca va a entrar, y al médico viéndola como "pendiente" sin fin.
+     *    siempre una fila que nunca va a entrar, y al médico viéndola como "pendiente" sin fin.
+     *
+     * @param array<int, int> $pacientesCreados id temporal -> id real de los pacientes del lote
      */
-    private function applyCreated(array $change, Medico $medico, array $registrosMedicos, array &$creados, array &$rechazados): void
-    {
+    private function applyCreated(
+        array $change,
+        Medico $medico,
+        array $registrosMedicos,
+        array &$creados,
+        array &$rechazados,
+        array &$pacientesCreados
+    ): void {
         $table = $change['table'] ?? null;
         $tempId = $change['temp_id'] ?? null;
 
@@ -267,6 +321,11 @@ class SyncAppDataController extends Controller
 
         if ($yaCreado) {
             $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $yaCreado->record_id];
+            // El reintento de una cita puede venir con el paciente ya creado en un lote anterior:
+            // la referencia tiene que seguir resolviendo.
+            if ($table === 'pacientes') {
+                $pacientesCreados[$tempId] = $yaCreado->record_id;
+            }
             return;
         }
 
@@ -293,37 +352,182 @@ class SyncAppDataController extends Controller
             }
         }
 
+        $occurredAt = Carbon::parse($change['occurred_at'] ?? now());
+
+        if ($table === 'pacientes') {
+            $this->crearPaciente(
+                $columnas,
+                $medico,
+                $registrosMedicos,
+                $tempId,
+                $occurredAt,
+                $creados,
+                $pacientesCreados,
+                $rechazar,
+            );
+
+            return;
+        }
+
+        $this->crearCola(
+            $columnas,
+            $change,
+            $medico,
+            $registrosMedicos,
+            $tempId,
+            $occurredAt,
+            $creados,
+            $pacientesCreados,
+            $rechazar,
+        );
+    }
+
+    /**
+     * Alta de paciente desde el app. Replica lo que hace `PacienteSyncController` con lo que sube
+     * el escritorio, con una diferencia que importa: **acá no hay `numhistoria`**.
+     *
+     * La ficha se busca por cédula antes de crearla porque en este esquema un paciente es uno
+     * solo para todos los médicos (`pacientes`) y lo que cambia por médico es la relación
+     * (`medico_pacientes`): si la secretaria da de alta a alguien que ya existe, corresponde
+     * enlazarlo, no duplicarle la ficha.
+     *
+     * **No se crea `Historia`** justamente porque su `numhistoria` es único global y obligatorio:
+     * ese número lo asigna el escritorio, y cuando lo haga, su propio sync crea la historia
+     * (`Historia::updateOrCreate` por paciente + médico). Hasta entonces el paciente le llega al
+     * teléfono igual, porque el delta de pacientes se calcula por el pivote, no por la historia.
+     */
+    private function crearPaciente(
+        array $columnas,
+        Medico $medico,
+        array $registrosMedicos,
+        int $tempId,
+        Carbon $occurredAt,
+        array &$creados,
+        array &$pacientesCreados,
+        callable $rechazar
+    ): void {
+        $regMedico = $medico->reg_medico ?: ($registrosMedicos[0] ?? null);
+        if ($regMedico === null) {
+            $rechazar('Este médico no tiene registro asignado.');
+            return;
+        }
+
+        $paciente = DB::transaction(function () use ($columnas, $medico, $regMedico) {
+            $paciente = Paciente::where('cedula', $columnas['cedula'])->first();
+
+            if ($paciente) {
+                // Ya existe (lo atiende otro médico, o el escritorio lo subió antes): se enlaza y
+                // solo se completan los campos vacíos. Pisar los datos de una ficha ajena con lo
+                // que escribió la secretaria en el teléfono sería perder información de otro.
+                $completar = [];
+                foreach ($columnas as $columna => $valor) {
+                    if ($valor !== null && $paciente->{$columna} === null) {
+                        $completar[$columna] = $valor;
+                    }
+                }
+                if ($completar !== []) {
+                    $paciente->fill($completar)->save();
+                }
+            } else {
+                $paciente = Paciente::create($columnas);
+            }
+
+            MedicoPaciente::firstOrCreate(
+                ['medico_id' => $medico->id, 'paciente_id' => $paciente->id],
+                ['reg_medico' => $regMedico, 'numhistoria' => null],
+            );
+
+            return $paciente;
+        });
+
+        SyncChange::create([
+            'reg_medico' => $regMedico,
+            'table_name' => 'pacientes',
+            'record_id' => $paciente->id,
+            'client_temp_id' => $tempId,
+            'operation' => 'created',
+            'occurred_at' => $occurredAt,
+            'source' => 'mobile',
+        ]);
+
+        $pacientesCreados[$tempId] = $paciente->id;
+        $creados[] = ['table' => 'pacientes', 'temp_id' => $tempId, 'id' => $paciente->id];
+    }
+
+    /**
+     * Alta de cita. El paciente llega de una de dos formas, nunca de las dos:
+     *
+     * - **`numhistoria`**: el camino normal. Se verifica contra `historias` que sea de este médico.
+     * - **`paciente_temp_id`**: el paciente se creó en este mismo lote (o en uno anterior que el
+     *   cliente todavía no vio resuelto) y no tiene número de historia. La cita se ancla con
+     *   `paciente_sinhistoria_id`, la columna que el esquema legado ya trae para este caso.
+     */
+    private function crearCola(
+        array $columnas,
+        array $change,
+        Medico $medico,
+        array $registrosMedicos,
+        int $tempId,
+        Carbon $occurredAt,
+        array &$creados,
+        array $pacientesCreados,
+        callable $rechazar
+    ): void {
         $numhistoria = $columnas['numhistoria'] ?? null;
-        if ($numhistoria === null) {
-            $rechazar('La cita no indica número de historia.');
+        $pacienteTempId = $change['paciente_temp_id'] ?? null;
+
+        if ($numhistoria !== null) {
+            $historia = Historia::where('numhistoria', $numhistoria)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->first();
+
+            if (!$historia) {
+                $rechazar('El número de historia no pertenece a este médico.');
+                return;
+            }
+
+            $columnas['reg_medico'] = $historia->reg_medico;
+        } elseif ($pacienteTempId !== null) {
+            $pacienteId = $pacientesCreados[(int) $pacienteTempId] ?? null;
+            if ($pacienteId === null) {
+                // O la creación del paciente venía en este lote y fue rechazada, o la referencia
+                // no corresponde a nada. Reintentar no lo va a arreglar: dejarla en la cola
+                // sería tener una cita pendiente para siempre.
+                $rechazar('El paciente de esta cita no se pudo crear.');
+                return;
+            }
+
+            $relacion = MedicoPaciente::where('medico_id', $medico->id)
+                ->where('paciente_id', $pacienteId)
+                ->first();
+            if (!$relacion) {
+                $rechazar('Ese paciente no es de este médico.');
+                return;
+            }
+
+            $columnas['paciente_sinhistoria_id'] = $pacienteId;
+            $columnas['reg_medico'] = $relacion->reg_medico
+                ?: ($medico->reg_medico ?: ($registrosMedicos[0] ?? null));
+        } else {
+            $rechazar('La cita no indica a qué paciente pertenece.');
             return;
         }
 
-        $historia = Historia::where('numhistoria', $numhistoria)
-            ->whereIn('reg_medico', $registrosMedicos)
-            ->first();
-
-        if (!$historia) {
-            $rechazar('El número de historia no pertenece a este médico.');
-            return;
-        }
-
-        $columnas['reg_medico'] = $historia->reg_medico;
         $columnas['medico'] = $medico->id;
 
         $cola = Cola::create($columnas);
 
         SyncChange::create([
-            'reg_medico' => $historia->reg_medico,
-            'table_name' => $table,
+            'reg_medico' => $cola->reg_medico,
+            'table_name' => 'cola',
             'record_id' => $cola->id,
             'client_temp_id' => $tempId,
             'operation' => 'created',
-            'occurred_at' => Carbon::parse($change['occurred_at'] ?? now()),
+            'occurred_at' => $occurredAt,
             'source' => 'mobile',
         ]);
 
-        $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $cola->id];
+        $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
     }
 
     /** Ver `ALLOWED_VALUES`. Una columna sin dominio declarado acepta cualquier valor. */

@@ -7,6 +7,7 @@ use App\Models\Cola;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Paciente;
 use App\Models\NotificacionCita;
 use App\Services\TwilioSmsService;
 use App\Services\WhatsAppService;
@@ -58,10 +59,21 @@ class NotificacionCitaController extends Controller
             return response()->json(['message' => 'La cita no existe o no pertenece a este médico.'], 404);
         }
 
-        $historia = Historia::where('numhistoria', $cola->numhistoria)
-            ->whereIn('reg_medico', $registrosMedicos)
-            ->first();
-        $paciente = $historia?->paciente;
+        // Una cita creada desde el app para un paciente nuevo **no tiene `numhistoria`** (ese
+        // número lo asigna el escritorio): en ese caso el paciente cuelga de
+        // `paciente_sinhistoria_id`, que es como lo resuelve el propio esquema legado. Sin este
+        // camino, mandarle el recordatorio a un paciente recién dado de alta fallaría con "la
+        // cita no tiene un paciente asociado".
+        if ($cola->numhistoria !== null) {
+            $historia = Historia::where('numhistoria', $cola->numhistoria)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->first();
+            $paciente = $historia?->paciente;
+        } else {
+            $paciente = $cola->paciente_sinhistoria_id
+                ? Paciente::find($cola->paciente_sinhistoria_id)
+                : null;
+        }
 
         if (!$paciente) {
             return response()->json(['message' => 'La cita no tiene un paciente asociado.'], 422);

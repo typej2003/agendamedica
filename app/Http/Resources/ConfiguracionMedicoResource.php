@@ -39,6 +39,12 @@ class ConfiguracionMedicoResource extends JsonResource
             'correo' => $this->correo_med,
             'telefono' => $this->telefono,
             'horario' => $this->horario(),
+            // Cupo de la jornada, para la modalidad por orden de llegada. Se manda tal cual,
+            // **sin default**: viene NULL en los datos reales, y un tope inventado haría que el
+            // app avise "el día está lleno" con un número que nadie configuró.
+            'cantidad_paciente' => $this->cantidad_paciente === null
+                ? null
+                : (int) $this->cantidad_paciente,
             // Se manda la convención de estados para que el cliente no la tenga duplicada a mano.
             'estados_cita' => [
                 'no_confirmada' => Cola::ESTADO_NO_CONFIRMADA,
