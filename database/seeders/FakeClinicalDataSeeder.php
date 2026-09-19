@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Cola;
+use App\Models\Evolucion;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -40,12 +41,52 @@ class FakeClinicalDataSeeder extends Seeder
         $medicalCenterId = MedicoMedicalCenter::where('medico_id', $medico->id)->value('medical_center_id');
         $faker = FakerFactory::create('es_VE');
 
+        $this->crearConfiguracion();
         $motivos = $this->crearMotivos();
         $pacientes = $this->crearPacientes($faker, $medico->id, $medicalCenterId);
 
         $this->crearColas($faker, $pacientes, $motivos);
         $this->crearConsultas($faker, $pacientes);
         $this->crearRecipes($faker, $pacientes);
+    }
+
+    /**
+     * La configuración del médico vive en `evolucion` (sí, ese nombre — ver ROADMAP.md).
+     * En el dump legado real la fila existe pero está **toda en NULL**, así que acá se siembra
+     * con valores reales para poder desarrollar contra algo representativo de un consultorio
+     * ya configurado.
+     */
+    private function crearConfiguracion(): void
+    {
+        Evolucion::firstOrCreate(
+            ['reg_medico' => self::REG_MEDICO],
+            [
+                // `clave` es NOT NULL en el esquema legado: toda fila de configuración carga una
+                // credencial sí o sí. Valor de relleno obvio — es una base de desarrollo, y esta
+                // columna no sale nunca al cliente (ver ConfiguracionMedicoResource).
+                'clave' => 'seed-no-usar',
+                'especialidad' => 'Ginecología y Obstetricia',
+                'ciudad' => 'Barquisimeto',
+                'cita_previa' => 'S',
+                'tiempo_paci' => 30,
+                'pais' => 'Venezuela',
+                'prefi_1' => '0414',
+                'prefi_2' => '0424',
+                'prefi_3' => '0412',
+                'correo_med' => 'carlos@gmail.com',
+                'telefono' => '02515551234',
+                'lunes_i' => '08:00',
+                'lunes_f' => '16:00',
+                'martes_i' => '08:00',
+                'martes_f' => '16:00',
+                'miercoles_i' => '08:00',
+                'miercoles_f' => '16:00',
+                'jueves_i' => '08:00',
+                'jueves_f' => '16:00',
+                'vienes_i' => '08:00',
+                'viernes_f' => '13:00',
+            ],
+        );
     }
 
     /** @return list<array{codigo: string, tipo_atencion: string}> */

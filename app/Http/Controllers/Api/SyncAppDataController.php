@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SyncAppDataRequest;
+use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Models\Cola;
 use App\Models\Consulta;
+use App\Models\Evolucion;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
@@ -15,7 +18,7 @@ use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\SyncChange;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Sync delta de AppDDR (ver ROADMAP.md "Decisión de arquitectura: sync offline delta"). No
@@ -31,55 +34,7 @@ use Illuminate\Http\Request;
  */
 class SyncAppDataController extends Controller
 {
-    /** Tablas y columnas que se pueden escribir por `changes` — todo lo demás se ignora. */
-    private const WRITABLE_COLUMNS = [
-        'cola' => [
-            'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
-            'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text',
-        ],
-        'pacientes' => [
-            'nac', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento',
-            'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
-            'profesion', 'email', 'dependencia', 'sms',
-        ],
-    ];
-
-    private const DELETABLE_TABLES = ['cola', 'pacientes'];
-
-    /**
-     * Columnas aceptadas al *crear* una fila. Es una lista aparte de `WRITABLE_COLUMNS` porque
-     * hay campos que solo tienen sentido al nacer la cita (`fecha`, `numhistoria`): editarlos
-     * después es "reagendar" o "cambiar de paciente", que son acciones con reglas propias
-     * todavía sin definir (ver Docs/Wiki/02-modulo-agenda.md, hueco de "reagendar").
-     *
-     * `reg_medico` y `medico` no se aceptan del cliente a propósito — los resuelve el servidor
-     * desde el médico autenticado, que es lo único que marca el tenant.
-     */
-    private const CREATABLE_COLUMNS = [
-        'cola' => [
-            'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'numorden', 'atendido',
-            'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo', 'sms_text',
-        ],
-    ];
-
-    /** Columnas `NOT NULL` en el esquema — sin ellas el INSERT explota, mejor rechazar antes. */
-    private const REQUIRED_COLUMNS = [
-        'cola' => ['fecha', 'hora_ini'],
-    ];
-
-    /**
-     * Columnas con dominio cerrado. Un valor fuera de rango se descarta (no se guarda): el
-     * cliente se entera solo, porque siempre sobreescribe su copia con el delta que vuelve y
-     * ahí va a ver el valor viejo. Ver la convención de estados en `App\Models\Cola`.
-     */
-    private const ALLOWED_VALUES = [
-        'cola' => [
-            'estado' => Cola::ESTADOS,
-            'atendido' => [0, 1],
-        ],
-    ];
-
-    public function sync(Request $request)
+    public function sync(SyncAppDataRequest $request)
     {
         $user = $request->user();
         if (!$user) {
@@ -107,7 +62,7 @@ class SyncAppDataController extends Controller
         $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
 
         $resultadoChanges = $this->applyChanges(
-            $request->input('changes', []),
+            $request->cambios(),
             $medicoModel,
             $registrosMedicos,
             $relaciones,
@@ -156,6 +111,13 @@ class SyncAppDataController extends Controller
             'motivos' => $motivos,
             'recipes' => $recipes,
             'centros_medicos' => $centrosMedicos,
+            // La configuración va completa en cada respuesta, no por delta: son un puñado de
+            // campos y el cliente la necesita entera para decidir cómo dibujar la agenda.
+            // Si el médico no tiene fila de configuración (pasa: en el dump real está vacía),
+            // el Resource resuelve los defaults sobre un modelo en blanco.
+            'configuracion' => new ConfiguracionMedicoResource(
+                Evolucion::whereIn('reg_medico', $registrosMedicos)->first() ?? new Evolucion(),
+            ),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],
@@ -189,7 +151,12 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            if (!in_array($table, self::DELETABLE_TABLES, true) || !$recordId || !$operation) {
+            if ($operation === 'reorder') {
+                $this->applyReorder($change, $registrosMedicos);
+                continue;
+            }
+
+            if (!in_array($table, SyncAppDataRequest::DELETABLE_TABLES, true) || !$recordId || !$operation) {
                 continue;
             }
 
@@ -222,7 +189,7 @@ class SyncAppDataController extends Controller
                 }
 
                 $column = $change['column'] ?? null;
-                if (!in_array($column, self::WRITABLE_COLUMNS[$table] ?? [], true)) {
+                if (!in_array($column, SyncAppDataRequest::WRITABLE_COLUMNS[$table] ?? [], true)) {
                     continue;
                 }
 
@@ -287,7 +254,7 @@ class SyncAppDataController extends Controller
 
         // Sin `temp_id` no hay forma de contestarle al cliente cuál fila es cuál, así que no se
         // crea nada: aplicarla sería dejarle una fila fantasma imposible de reconciliar.
-        if (!isset(self::CREATABLE_COLUMNS[$table]) || $tempId === null || !is_numeric($tempId)) {
+        if (!isset(SyncAppDataRequest::CREATABLE_COLUMNS[$table]) || $tempId === null || !is_numeric($tempId)) {
             return;
         }
         $tempId = (int) $tempId;
@@ -309,10 +276,10 @@ class SyncAppDataController extends Controller
 
         $columnas = array_intersect_key(
             (array) ($change['columns'] ?? []),
-            array_flip(self::CREATABLE_COLUMNS[$table]),
+            array_flip(SyncAppDataRequest::CREATABLE_COLUMNS[$table]),
         );
 
-        foreach (self::REQUIRED_COLUMNS[$table] ?? [] as $obligatoria) {
+        foreach (SyncAppDataRequest::REQUIRED_COLUMNS[$table] ?? [] as $obligatoria) {
             if (($columnas[$obligatoria] ?? null) === null) {
                 $rechazar("Falta el campo obligatorio '{$obligatoria}'.");
                 return;
@@ -362,13 +329,84 @@ class SyncAppDataController extends Controller
     /** Ver `ALLOWED_VALUES`. Una columna sin dominio declarado acepta cualquier valor. */
     private function valorPermitido(string $table, string $column, $valor): bool
     {
-        $permitidos = self::ALLOWED_VALUES[$table][$column] ?? null;
+        $permitidos = SyncAppDataRequest::ALLOWED_VALUES[$table][$column] ?? null;
 
         if ($permitidos === null || $valor === null) {
             return true;
         }
 
         return is_numeric($valor) && in_array((int) $valor, $permitidos, true);
+    }
+
+    /**
+     * Mueve una fila dentro de su grupo (una cita dentro de su día) corriendo las demás.
+     *
+     * **Por qué una operación propia y no N `updated`**: el cliente podría mandar el número de
+     * orden nuevo de cada fila desplazada, pero mover una cita en un día de 20 son 20 cambios
+     * para un gesto, 20 UPDATE, y —lo importante— 20 resoluciones de conflicto independientes:
+     * dos secretarias reordenando a la vez se pisan fila por fila y el resultado no es el de
+     * ninguna de las dos. Mandando **el movimiento** en vez del resultado, el desplazamiento son
+     * dos sentencias (`UPDATE … WHERE … BETWEEN`) y dos reordenamientos concurrentes se componen
+     * en vez de destruirse.
+     *
+     * - Hacia arriba (`to < from`): la fila movida pasa a `to` y las que estaban entre medio
+     *   **suben uno**.
+     * - Hacia abajo (`to > from`): la fila movida pasa a `to` y las de en medio **bajan uno**.
+     *
+     * Funciona con numeraciones con huecos (los datos legados las tienen): la fila movida libera
+     * su lugar, así que el corrimiento nunca colisiona.
+     */
+    private function applyReorder(array $change, array $registrosMedicos): void
+    {
+        $table = $change['table'] ?? null;
+        $columna = SyncAppDataRequest::ORDER_COLUMN[$table] ?? null;
+        $columnaGrupo = SyncAppDataRequest::ORDER_SCOPE_COLUMN[$table] ?? null;
+        if ($columna === null || $columnaGrupo === null) {
+            return;
+        }
+
+        $recordId = (int) $change['record_id'];
+        $desde = (int) $change['from'];
+        $hasta = (int) $change['to'];
+        if ($desde === $hasta) {
+            return;
+        }
+
+        $modelo = $this->modelFor($table);
+
+        // Tenancy: la fila tiene que ser de este médico, igual que en el resto del endpoint.
+        $fila = $modelo::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->first();
+        if (!$fila) {
+            return;
+        }
+
+        $grupo = fn () => $modelo::whereIn('reg_medico', $registrosMedicos)
+            ->whereDate($columnaGrupo, $change['scope_date'])
+            ->where('id', '!=', $recordId);
+
+        // En una transacción: entre el corrimiento y el movimiento de la fila, el orden está a
+        // medio aplicar y nadie debería leerlo así.
+        DB::transaction(function () use ($grupo, $fila, $columna, $desde, $hasta) {
+            if ($hasta < $desde) {
+                $grupo()->whereBetween($columna, [$hasta, $desde])->increment($columna);
+            } else {
+                $grupo()->whereBetween($columna, [$desde, $hasta])->decrement($columna);
+            }
+
+            $fila->{$columna} = $hasta;
+            $fila->save();
+        });
+
+        SyncChange::create([
+            'reg_medico' => $fila->reg_medico,
+            'table_name' => $table,
+            'record_id' => $recordId,
+            'operation' => 'reorder',
+            'column_name' => $columna,
+            'value' => "{$desde}->{$hasta}",
+            'occurred_at' => Carbon::parse($change['occurred_at'] ?? now()),
+            'source' => 'mobile',
+        ]);
     }
 
     private function regMedicoDePaciente($relaciones, int $pacienteId): ?string
