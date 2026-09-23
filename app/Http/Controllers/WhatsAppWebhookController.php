@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class WhatsAppWebhookController extends Controller
 {
@@ -13,14 +14,14 @@ class WhatsAppWebhookController extends Controller
      */
     public function verify(Request $request)
     {
-        $mode = $request->query('hub_mode');
-        $token = $request->query('hub_verify_token');
-        $challenge = $request->query('hub_challenge');
+        $mode = $request->query('hub_mode', $request->query('hub.mode'));
+        $token = $request->query('hub_verify_token', $request->query('hub.verify_token'));
+        $challenge = $request->query('hub_challenge', $request->query('hub.challenge'));
 
-        $verifyToken = config('services.whatsapp.verify_token');
+        $verifyToken = config('services.whatsapp.verify_token') ?: env('WHATSAPP_VERIFY_TOKEN');
 
         if ($mode === 'subscribe' && $token === $verifyToken) {
-            return response($challenge, 200);
+            return response($challenge, 200)->header('Content-Type', 'text/plain');
         }
 
         return response()->json(['error' => 'Token de verificación no válido'], 403);
@@ -37,14 +38,23 @@ class WhatsAppWebhookController extends Controller
 
         if (isset($body['entry'][0]['changes'][0]['value']['messages'][0])) {
             $messageData = $body['entry'][0]['changes'][0]['value']['messages'][0];
-            $senderPhone = $messageData['from']; // Número del paciente
-            $messageType = $messageData['type'];
+
+            $id              = $messageData['id'] ?? null;
+            $telefonoCliente = $messageData['from'] ?? null;
+            $timestamp       = $messageData['timestamp'] ?? null;
+            $messageType     = $messageData['type'] ?? null;
 
             if ($messageType === 'text') {
-                $textBody = $messageData['text']['body'];
+                $mensaje = $messageData['text']['body'] ?? null;
 
-                // AQUÍ: Procesar el mensaje con tu lógica de IA o responder al paciente
-                Log::info("Mensaje recibido de {$senderPhone}: {$textBody}");
+                if ($mensaje !== null) {
+                    // Usamos 'append' en lugar de 'put' para mantener un historial.
+                    // También agregamos fecha y número para saber quién escribe.
+                    $lineaTexto = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}";
+                    Storage::disk('local')->append('text.txt', $lineaTexto);
+
+                    Log::info("Mensaje recibido de {$telefonoCliente} (ID: {$id}, Time: {$timestamp}): {$mensaje}");
+                }
             }
         }
 

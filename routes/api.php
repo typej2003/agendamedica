@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\UploadServerController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Services\WhatsAppService;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -95,3 +96,4 @@ Route::middleware(['auth:api', 'throttle:60,1'])->post('/whatsapp/send-reminder'
 
     return response()->json($result);
 });
+
