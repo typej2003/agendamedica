@@ -12,21 +12,22 @@ class WhatsAppWebhookController extends Controller
     /**
      * Validación inicial del Webhook requerida por Meta.
      */
-    public function verify(Request $request)
+        public function verify(Request $request)
     {
-        // Soporta tanto hub_mode / hub.mode como hub_verify_token / hub.verify_token
         $mode = $request->query('hub_mode', $request->query('hub.mode'));
         $token = $request->query('hub_verify_token', $request->query('hub.verify_token'));
         $challenge = $request->query('hub_challenge', $request->query('hub.challenge'));
 
-        // Obtiene el token configurado con fallback directo a env y 'HolaNovato'
         $verifyToken = config('services.whatsapp.verify_token') ?: env('WHATSAPP_VERIFY_TOKEN', 'HolaNovato');
 
-        if ($mode === 'subscribe' && $token === $verifyToken) {
-            return response($challenge, 200)->header('Content-Type', 'text/plain');
-        }
-
-        return response()->json(['error' => 'Token de verificación no válido'], 403);
+        // Retorna todos los valores para depurar exactamente qué está fallando
+        return response()->json([
+            'token_recibido_en_url' => $token,
+            'token_esperado_laravel' => $verifyToken,
+            'mode_recibido'          => $mode,
+            'challenge_recibido'     => $challenge,
+            'todos_los_parametros'   => $request->all(),
+        ]);
     }
 
     /**
