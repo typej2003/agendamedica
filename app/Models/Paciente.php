@@ -47,6 +47,25 @@ class Paciente extends Model
     ];
 
     /**
+     * Deja rastro en `sync_changes` antes de borrarse — es lo que le permite a
+     * `SyncAppDataController::pull()` avisarle al cliente que esta fila ya no existe.
+     * `reg_medico` no vive en esta tabla (ver ROADMAP.md), se resuelve por su historia.
+     */
+    protected static function booted()
+    {
+        static::deleting(function (Paciente $paciente) {
+            SyncChange::create([
+                'reg_medico' => $paciente->historias()->value('reg_medico'),
+                'table_name' => 'pacientes',
+                'record_id' => $paciente->id,
+                'operation' => 'deleted',
+                'occurred_at' => now(),
+                'source' => 'api',
+            ]);
+        });
+    }
+
+    /**
      * Relación con las historias médicas del paciente.
      */
     public function historias(): HasMany
