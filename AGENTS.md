@@ -22,7 +22,7 @@ composer install
 Copy-Item .env.example .env
 php artisan key:generate
 # editar .env: DB_DATABASE / DB_USERNAME / DB_PASSWORD (SQLite local o el MySQL con el esquema migrado)
-php artisan storage:link   # necesario para servir el logo de "Diseño de reportes" (Paso 17)
+php artisan storage:link   # necesario para servir el logo (Paso 17) y la firma/sello del récipe (Paso 18.A)
 php artisan route:list
 ```
 
@@ -92,6 +92,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. |
 | `POST` | `/api/app/citas/{cola}/notificar` | `NotificacionCitaController@enviar` — WhatsApp, online-only, no pasa por la cola de sync. |
 | `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe); online-only, misma razón que el de notificar. |
+| `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 
 **Sync del sistema legado PowerBuilder** (grupo con `throttle:1000,1`)
 

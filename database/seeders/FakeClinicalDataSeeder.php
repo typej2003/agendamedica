@@ -52,6 +52,7 @@ class FakeClinicalDataSeeder extends Seeder
         $this->crearColas($faker, $pacientes, $motivos, $sedes);
         $this->crearConsultas($faker, $pacientes);
         $this->crearRecipes($faker, $pacientes);
+        $this->call(VademecumDePruebaSeeder::class);
     }
 
     /**

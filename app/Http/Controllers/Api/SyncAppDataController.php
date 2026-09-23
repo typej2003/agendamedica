@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Http\Resources\ConfiguracionMedicoResource;
+use App\Http\Resources\RecipeFormatoResource;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Evolucion;
@@ -18,7 +19,9 @@ use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
+use App\Models\RecipeFormato;
 use App\Models\SyncChange;
+use App\Models\Vademecum;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -102,6 +105,9 @@ class SyncAppDataController extends Controller
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
         // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
         $recipes = $this->deltaQuery(Recipe::whereIn('nrohistoria', $numHistorias), $since)->get();
+        // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
+        // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
+        $vademecum = $this->deltaQuery(Vademecum::whereIn('reg_medico', $registrosMedicos), $since)->get();
 
         // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
         // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
@@ -146,6 +152,7 @@ class SyncAppDataController extends Controller
             'consultas' => $consultas,
             'motivos' => $motivos,
             'recipes' => $recipes,
+            'vademecum' => $vademecum,
             'centros_medicos' => $centrosMedicos,
             'offices' => $offices,
             'office_schedules' => $officeSchedules,
@@ -155,6 +162,12 @@ class SyncAppDataController extends Controller
             // el Resource resuelve los defaults sobre un modelo en blanco.
             'configuracion' => new ConfiguracionMedicoResource(
                 Evolucion::whereIn('reg_medico', $registrosMedicos)->first() ?? new Evolucion(),
+            ),
+            // Completo en cada respuesta, por el mismo motivo que `configuracion`. Se busca por el
+            // registro principal, que es bajo el que lo guarda `RecipeFormatoController`.
+            'formato_recipe' => new RecipeFormatoResource(
+                RecipeFormato::where('reg_medico', $medicoModel->regMedicoPrincipal())->first()
+                    ?? new RecipeFormato(),
             ),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.

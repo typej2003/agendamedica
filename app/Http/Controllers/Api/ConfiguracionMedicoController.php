@@ -48,10 +48,8 @@ class ConfiguracionMedicoController extends Controller
 
         // `evolucion` no tiene `medico_id`: la clave de negocio es `reg_medico`, igual que en el
         // resto del backend (ver MedicAPI/AGENTS.md). Un médico con varios registros (`MedicoRegistro`)
-        // guarda su reporte bajo el registro "principal" — se prefiere la relación `registro()`
-        // sobre `medico.reg_medico` porque ese campo está marcado en el propio modelo como
-        // "temporal, tiende a cambiar, no usar".
-        $regMedicoClave = $medico->registro?->reg_medico ?? $medico->reg_medico;
+        // guarda su reporte bajo el registro "principal" (ver `Medico::regMedicoPrincipal`).
+        $regMedicoClave = $medico->regMedicoPrincipal();
         if (!$regMedicoClave) {
             return response()->json([
                 'message' => 'Esta cuenta no tiene un número de registro médico principal configurado.',

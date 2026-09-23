@@ -35,6 +35,16 @@ class Medico extends Model
         return $this->hasOne(MedicoRegistro::class, 'medico_id', 'id');
     }
 
+    /**
+     * Registro médico bajo el que se guardan las filas "una por médico" (`evolucion`,
+     * `recipe_formatos`). Se prefiere la relación `registro()` sobre la columna `reg_medico`
+     * porque esa está marcada como temporal ("tiende a cambiar, no usar").
+     */
+    public function regMedicoPrincipal(): ?string
+    {
+        return $this->registro?->reg_medico ?? $this->reg_medico;
+    }
+
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class, 'office_id');
