@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\UploadServerController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Services\WhatsAppService;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -77,3 +78,4 @@ Route::post('/whatsapp/send-reminder', function (Request $request, WhatsAppServi
 
     return response()->json($result);
 });
+
