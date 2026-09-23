@@ -31,9 +31,14 @@ pero no aparecen en el ejemplo — hay que agregarlas a mano. Y **`sync_api_key`
 ## Qué es
 
 Backend / API en la nube de AppDDR, y a la vez el **receptor de la sincronización del sistema legado**
-(PowerBuilder). Fuente de verdad del cliente Android
-([../DoctorisimoApp/AGENTS.md](../DoctorisimoApp/AGENTS.md)). El backend desplegado al que apunta el app
-es `https://mercadoexpres.com/api/`.
+(PowerBuilder). Fuente de verdad de la **app activa**, [`../DoctorisimoMobile/`](../DoctorisimoMobile/AGENTS.md)
+(Flutter), que sincroniza contra `POST /app/sync-app-data` (`SyncAppDataController`) y por defecto apunta
+a una instancia local de este backend (`http://10.0.2.2:8000/api` desde el emulador).
+
+También existe [`../DoctorisimoApp/`](../DoctorisimoApp/AGENTS.md), la app Android **antigua y
+discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend debe exponer hoy: apunta a
+un backend ya **desplegado** (`https://mercadoexpres.com/api/`) que puede divergir de este código, y usa
+endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
 **Stack:** Laravel 8 (`laravel/framework ^8.0`), PHP `^8.0` (composer configurado con `platform 8.2.12`),
 MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 2.15**, roles/permisos con

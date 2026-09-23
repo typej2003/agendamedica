@@ -10,3 +10,7 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# IDE (PhpStorm/Android Studio): config de cada máquina, no de este repo.
+# dataSources.xml en particular puede traer datos de conexión a la base local.
+/.idea/

@@ -46,6 +46,7 @@ class FakeClinicalDataSeeder extends Seeder
         $this->crearConfiguracion();
         $motivos = $this->crearMotivos();
         $sedes = $this->crearSedes($medico->id);
+        $this->crearMotivosPorSede($sedes);
         $pacientes = $this->crearPacientes($faker, $medico->id, $medicalCenterId);
 
         $this->crearColas($faker, $pacientes, $motivos, $sedes);
@@ -197,6 +198,50 @@ class FakeClinicalDataSeeder extends Seeder
         }
 
         return $motivos;
+    }
+
+    /**
+     * Motivos **de una sede en particular**, con precio propio — a diferencia de los de
+     * `crearMotivos()`, que son globales del médico y sin precio (así era antes de que el usuario
+     * aclarara que un motivo puede no estar disponible, o costar distinto, según la sede).
+     *
+     * Calcado del ejemplo real de `Manual agenda.pdf` (pág. 7): mismo tipo de motivo, precio
+     * distinto según la "Agenda" (sede) elegida. Solo se siembra en dos de las tres sedes de
+     * prueba, a propósito: la tercera queda sin motivos propios para poder probar el fallback a
+     * los motivos sin sede (`office_id` nulo) desde el picker de Nueva Cita.
+     *
+     * @param array<int, array{office: Office, centro_id: int}> $sedes
+     */
+    private function crearMotivosPorSede(array $sedes): void
+    {
+        if (count($sedes) < 2) {
+            return;
+        }
+
+        // Los `tipo_atencion` repiten el nombre de la sede a propósito, y hay un
+        // código exclusivo de San José (`ECO4D`): así se ve a simple vista, al
+        // cambiar de sede en Nueva Cita, tanto el precio (antes invisible) como
+        // qué motivos aparecen o desaparecen — no solo cambia un número.
+        $porSede = [
+            $sedes[0]['office']->id => [
+                ['codigo' => 'PRIM', 'tipo_atencion' => 'Primera cita (San José)', 'precio' => 100.0],
+                ['codigo' => 'CTRL', 'tipo_atencion' => 'Control (San José)', 'precio' => 150.0],
+                // Exclusivo de esta sede: el ecógrafo 4D no está en las otras dos.
+                ['codigo' => 'ECO4D', 'tipo_atencion' => 'Ecografía 4D (San José)', 'precio' => 200.0],
+            ],
+            $sedes[1]['office']->id => [
+                ['codigo' => 'PRIM', 'tipo_atencion' => 'Primera cita (Metropolitana)', 'precio' => 80.0],
+            ],
+        ];
+
+        foreach ($porSede as $officeId => $motivos) {
+            foreach ($motivos as $motivo) {
+                MotivoCita::updateOrCreate(
+                    ['reg_medico' => self::REG_MEDICO, 'office_id' => $officeId, 'codigo' => $motivo['codigo']],
+                    ['tipo_atencion' => $motivo['tipo_atencion'], 'precio' => $motivo['precio']],
+                );
+            }
+        }
     }
 
     /** @return list<array{paciente: Paciente, numhistoria: string}> */

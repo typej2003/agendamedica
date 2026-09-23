@@ -24,8 +24,14 @@ class MotivoCita extends Model
     protected $fillable = [
         'medico_id',
         'reg_medico',
+        'office_id',
         'codigo',
         'tipo_atencion',
+        'precio',
+    ];
+
+    protected $casts = [
+        'precio' => 'float',
     ];
 
     /**
@@ -34,5 +40,14 @@ class MotivoCita extends Model
     public function medico()
     {
         return $this->belongsTo(User::class, 'medico_id');
+    }
+
+    /**
+     * La sede a la que pertenece este motivo. Nula en los motivos que vienen del sync de
+     * PowerBuilder, que no conoce el concepto de sede (ver migración de `office_id`).
+     */
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'office_id');
     }
 }
