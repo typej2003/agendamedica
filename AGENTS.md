@@ -12,16 +12,27 @@ El working tree está en la rama **`desarrollo`** y el código está presente. D
 - Remoto: `github.com/typej2003/agendamedica` — es el repo compartido con el sistema legado, de ahí el
   nombre.
 
-**`vendor/` y `.env` no existen todavía**, así que ningún comando `php artisan` va a funcionar hasta
-armar el entorno (PHP 8.2.1 y Composer 2.9.7 ya están instalados en la máquina):
+**`vendor/` y `.env` ya existen (verificado 2026-09-23)**, con un entorno local funcional: SQLite
+(`DB_CONNECTION=sqlite`, `database/database.sqlite`, con datos de prueba ya sembrados — 7 médicos, 9
+usuarios) en vez del MySQL con el esquema migrado que se usaría en producción. `php artisan serve`
+corre tal cual. Si en una máquina nueva no existen:
 
 ```powershell
 composer install
 Copy-Item .env.example .env
 php artisan key:generate
-# editar .env: DB_DATABASE / DB_USERNAME / DB_PASSWORD contra el MySQL con el esquema migrado
+# editar .env: DB_DATABASE / DB_USERNAME / DB_PASSWORD (SQLite local o el MySQL con el esquema migrado)
+php artisan storage:link   # necesario para servir el logo de "Diseño de reportes" (Paso 17)
 php artisan route:list
 ```
+
+⚠️ **No hay `.env.testing`**: correr `php artisan test`/PHPUnit con `RefreshDatabase` pisaría con
+migraciones la base SQLite de desarrollo local (la que trae los datos de prueba de arriba). Los tests
+que sí tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
+`tests/Feature/ConfiguracionMedicoTest.php` como referencia. Además, correr la suite completa
+(`php artisan test` sin filtro) falla al cargar clases por un bug preexistente no relacionado
+(`ListMedicos.php` declara `class ListPacientes`, choca con el archivo real) — filtrar por test
+mientras eso no se arregle.
 
 Dos datos del entorno que no están en `.env.example`: las variables de **WhatsApp**
 (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`) las lee `config/services.php`
@@ -78,6 +89,9 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 |---|---|---|
 | `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos. |
 | `POST` | `/api/app/refresh-data` | `RefreshAppController@refreshData` — protegido por `auth:api`; acepta `mes`/`anio` y devuelve citas, colas, pacientes, motivos, centros médicos, historias y evoluciones del médico (o del paciente). |
+| `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. |
+| `POST` | `/api/app/citas/{cola}/notificar` | `NotificacionCitaController@enviar` — WhatsApp, online-only, no pasa por la cola de sync. |
+| `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe); online-only, misma razón que el de notificar. |
 
 **Sync del sistema legado PowerBuilder** (grupo con `throttle:1000,1`)
 

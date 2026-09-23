@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\LoginAppController;
 use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
+use App\Http\Controllers\Api\ConfiguracionMedicoController;
 use App\Http\Controllers\Api\UploadServerController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
@@ -49,6 +50,10 @@ Route::middleware('auth:api')->group(function () {
     // mensaje es irreversible y la cola de sync reintenta — ver NotificacionCitaController.
     Route::post('/app/citas/{cola}/notificar', [NotificacionCitaController::class, 'enviar'])
         ->middleware('throttle:60,1');
+
+    // Datos de reporte (Diseño de reportes). Tampoco va por `sync-app-data` — ver
+    // ConfiguracionMedicoController.
+    Route::post('/app/configuracion', [ConfiguracionMedicoController::class, 'actualizar']);
 });
 
 Route::prefix('upload-servers')->group(function () {
