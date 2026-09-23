@@ -9,12 +9,15 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use App\Models\NotificacionCita;
-use App\Services\TwilioSmsService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 
 /**
- * Envío de una notificación al paciente por una cita (recordatorio de cita).
+ * Envío de una notificación al paciente por una cita (recordatorio de cita) **desde el servidor**.
+ *
+ * Hoy el único canal que sale de acá es **WhatsApp**. El SMS lo manda el teléfono con el SMS nativo
+ * y la línea que el médico eligió en la configuración de SIM (ver ROADMAP.md, Paso 14): no hay
+ * proveedor de SMS en el servidor ni endpoint para eso. Por eso `canal: sms` se rechaza acá.
  *
  * **Por qué esto no va por la cola de sync** como el resto de las escrituras del app: mandar un
  * WhatsApp es una acción con efecto externo e irreversible. La cola de sync reintenta cuando hay
@@ -28,8 +31,11 @@ class NotificacionCitaController extends Controller
 
     public function enviar(Request $request, int $colaId)
     {
+        // Solo los canales que salen del **servidor**. El SMS ya no se manda desde acá: lo manda el
+        // teléfono con el SMS nativo (ver ROADMAP.md, Paso 14), así que pedirlo por este endpoint se
+        // rechaza en vez de fingir un envío.
         $request->validate([
-            'canal' => 'sometimes|in:whatsapp,sms',
+            'canal' => 'sometimes|in:whatsapp',
         ]);
 
         $canal = $request->input('canal', NotificacionCita::CANAL_WHATSAPP);
@@ -91,9 +97,7 @@ class NotificacionCitaController extends Controller
         $mensaje = "Recordatorio de cita para {$nombrePaciente} "
             . "({$cola->fecha?->format('d/m/Y')} {$cola->hora_ini}).";
 
-        $envio = $canal === NotificacionCita::CANAL_SMS
-            ? $this->enviarPorSms($destino, $mensaje)
-            : $this->enviarPorWhatsApp($destino, $nombrePaciente);
+        $envio = $this->enviarPorWhatsApp($destino, $nombrePaciente);
 
         // El proveedor no está listo (sin credenciales, o sin implementar): no se registra nada,
         // porque no hubo intento real de envío que valga la pena guardar.
@@ -106,7 +110,7 @@ class NotificacionCitaController extends Controller
             'cola_id' => $cola->id,
             'canal' => $canal,
             'destino' => $destino,
-            'plantilla' => $canal === NotificacionCita::CANAL_WHATSAPP ? self::PLANTILLA_RECORDATORIO : null,
+            'plantilla' => self::PLANTILLA_RECORDATORIO,
             'mensaje' => $mensaje,
             'estado' => $envio['ok'] ? NotificacionCita::ESTADO_ENVIADA : NotificacionCita::ESTADO_FALLIDA,
             'respuesta' => json_encode($envio['respuesta']),
@@ -158,29 +162,6 @@ class NotificacionCitaController extends Controller
         );
 
         return ['ok' => isset($respuesta['messages']), 'respuesta' => $respuesta];
-    }
-
-    /** @return array{ok?: bool, respuesta?: array, http_status?: int, message?: string} */
-    private function enviarPorSms(string $destino, string $mensaje): array
-    {
-        $twilio = app(TwilioSmsService::class);
-
-        if (!$twilio->estaImplementado()) {
-            return [
-                'http_status' => 501,
-                'message' => 'El envío de SMS por Twilio todavía no está implementado.',
-            ];
-        }
-
-        if (!$twilio->estaConfigurado()) {
-            return [
-                'http_status' => 503,
-                'message' => 'El envío por SMS no está configurado en el servidor.',
-            ];
-        }
-
-        // Twilio pide el destino con `+`; Meta lo pide sin él.
-        return $twilio->enviar('+' . $destino, $mensaje);
     }
 
     /**

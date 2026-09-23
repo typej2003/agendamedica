@@ -36,12 +36,4 @@ return [
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
     ],
 
-    // TODO: cargar estas variables en el `.env` de cada entorno — el servicio ya está contratado,
-    //       falta implementarlo (ver App\Services\TwilioSmsService).
-    'twilio' => [
-        'account_sid' => env('TWILIO_ACCOUNT_SID'),
-        'auth_token' => env('TWILIO_AUTH_TOKEN'),
-        'from' => env('TWILIO_FROM'),
-    ],
-
 ];
