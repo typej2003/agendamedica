@@ -48,8 +48,10 @@ class WhatsAppWebhookController extends Controller
                 $mensaje = $messageData['text']['body'] ?? null;
 
                 if ($mensaje !== null) {
-                    // Guarda en storage/app/text.txt
-                    Storage::disk('local')->put('text.txt', $mensaje);
+                    // Usamos 'append' en lugar de 'put' para mantener un historial.
+                    // También agregamos fecha y número para saber quién escribe.
+                    $lineaTexto = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}";
+                    Storage::disk('local')->append('text.txt', $lineaTexto);
 
                     Log::info("Mensaje recibido de {$telefonoCliente} (ID: {$id}, Time: {$timestamp}): {$mensaje}");
                 }
