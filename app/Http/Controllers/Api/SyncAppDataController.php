@@ -571,9 +571,21 @@ class SyncAppDataController extends Controller
         $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
     }
 
-    /** Ver `ALLOWED_VALUES`. Una columna sin dominio declarado acepta cualquier valor. */
+    /**
+     * Ver `ALLOWED_VALUES` y `DATE_COLUMNS`. Una columna sin dominio declarado acepta cualquier
+     * valor.
+     */
     private function valorPermitido(string $table, string $column, $valor): bool
     {
+        if (in_array($column, SyncAppDataRequest::DATE_COLUMNS[$table] ?? [], true)) {
+            // Una cita sin fecha no existe en la agenda: nulo tampoco vale.
+            if (!is_string($valor)) {
+                return false;
+            }
+            $fecha = \DateTime::createFromFormat('!Y-m-d', $valor);
+            return $fecha !== false && $fecha->format('Y-m-d') === $valor;
+        }
+
         $permitidos = SyncAppDataRequest::ALLOWED_VALUES[$table][$column] ?? null;
 
         if ($permitidos === null || $valor === null) {

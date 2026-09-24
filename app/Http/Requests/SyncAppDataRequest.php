@@ -22,10 +22,16 @@ use Illuminate\Validation\Rule;
  */
 class SyncAppDataRequest extends FormRequest
 {
-    /** Columnas editables por `changes`, por tabla. */
+    /**
+     * Columnas editables por `changes`, por tabla.
+     *
+     * `cola.fecha` es editable desde el Paso 19.C: **reagendar es editar la misma cita**, no
+     * cancelar y crear otra (así conserva lo cobrado y su historial de cambios). Cambiar de
+     * paciente (`numhistoria`) sigue sin estar permitido.
+     */
     public const WRITABLE_COLUMNS = [
         'cola' => [
-            'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
+            'fecha', 'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
             'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text', 'medical_center_id',
         ],
         'pacientes' => [
@@ -37,8 +43,8 @@ class SyncAppDataRequest extends FormRequest
 
     /**
      * Columnas aceptadas al *crear*. Lista aparte porque hay campos que solo tienen sentido al
-     * nacer la cita (`fecha`, `numhistoria`): editarlos después es "reagendar" o "cambiar de
-     * paciente", acciones con reglas propias todavía sin definir.
+     * nacer la cita (`numhistoria`): editarlo después sería "cambiar de paciente", una acción con
+     * reglas propias todavía sin definir.
      *
      * `reg_medico` y `medico` no se aceptan nunca del cliente — los resuelve el servidor desde el
      * médico autenticado, que es lo único que marca el tenant.
@@ -78,6 +84,11 @@ class SyncAppDataRequest extends FormRequest
             'estado' => Cola::ESTADOS,
             'atendido' => [0, 1],
         ],
+    ];
+
+    /** Columnas que tienen que venir como fecha `YYYY-MM-DD`: una fecha mal formada se descarta. */
+    public const DATE_COLUMNS = [
+        'cola' => ['fecha'],
     ];
 
     public const DELETABLE_TABLES = ['cola', 'pacientes'];
