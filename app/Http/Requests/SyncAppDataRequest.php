@@ -55,11 +55,11 @@ class SyncAppDataRequest extends FormRequest
             'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo',
             'sms_text',
         ],
-        // Un paciente creado desde el app **nace sin `numhistoria`**: ese número lo asigna el
-        // sistema de escritorio y no se puede mintear acá sin arriesgar un choque con él (la
-        // columna es única global en `historias`). El vínculo con el médico queda en el pivote
-        // `medico_pacientes`, que admite `numhistoria` nulo, y la cita lo referencia por
-        // `paciente_sinhistoria_id` — columna que el esquema legado ya trae para este caso.
+        // Un paciente creado desde el app **nace sin `numhistoria`**: el alta rápida (la secretaria
+        // por teléfono) no la pide. El vínculo con el médico queda en el pivote `medico_pacientes`,
+        // que admite `numhistoria` nulo, y la cita lo referencia por `paciente_sinhistoria_id`,
+        // columna que el esquema legado ya trae para este caso. La historia se llena después con
+        // una creación de `historias` (Paso 18.B), con el correlativo que asigna el servidor.
         'pacientes' => [
             'nac', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento',
             'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
@@ -94,6 +94,17 @@ class SyncAppDataRequest extends FormRequest
     public const DELETABLE_TABLES = ['cola', 'pacientes'];
 
     /**
+     * Creaciones clínicas del Paso 18.B (Atender → consulta → récipe). No van por
+     * `CREATABLE_COLUMNS`: el número de cada una (historia, consulta, récipe) **lo asigna el
+     * servidor** con el correlativo vigente, y el cliente solo manda a qué cuelga. Ver
+     * `SyncAppDataController::crearHistoria` y siguientes.
+     */
+    public const CLINICAL_TABLES = ['historias', 'consultas', 'recipes'];
+
+    /** Tablas que pueden aparecer en `changes`, con cualquier operación. */
+    public const SYNC_TABLES = ['cola', 'pacientes', 'historias', 'consultas', 'recipes'];
+
+    /**
      * Columna de ordenamiento por tabla, y el campo que delimita el grupo dentro del cual se
      * ordena. Reordenar es relativo: mover una cita "al segundo lugar" solo tiene sentido
      * dentro de un día concreto.
@@ -115,7 +126,7 @@ class SyncAppDataRequest extends FormRequest
             'since' => ['sometimes', 'nullable', 'date'],
 
             'changes' => ['sometimes', 'array'],
-            'changes.*.table' => ['required', Rule::in(self::DELETABLE_TABLES)],
+            'changes.*.table' => ['required', Rule::in(self::SYNC_TABLES)],
             'changes.*.operation' => ['required', Rule::in(['created', 'updated', 'deleted', 'reorder'])],
 
             // `record_id` identifica una fila que ya existe; `temp_id`, una que el cliente creó
@@ -124,13 +135,27 @@ class SyncAppDataRequest extends FormRequest
             'changes.*.temp_id' => ['required_if:changes.*.operation,created', 'integer'],
 
             'changes.*.column' => ['required_if:changes.*.operation,updated', 'string', 'max:64'],
-            'changes.*.columns' => ['required_if:changes.*.operation,created', 'array'],
+            // Opcional: las creaciones clínicas no traen columnas propias. Una cita o un paciente
+            // sin ellas los rechaza el controlador por `REQUIRED_COLUMNS`, sin trabar el lote.
+            'changes.*.columns' => ['sometimes', 'array'],
 
             // Cita de un paciente creado en este mismo lote, que todavía no tiene id real ni
             // `numhistoria`: viaja la referencia al id temporal del paciente y el servidor la
             // resuelve. Sin esto, crear paciente y cita sin señal sería imposible — el teléfono
             // no puede saber con qué id quedó el paciente hasta que sincroniza.
             'changes.*.paciente_temp_id' => ['sometimes', 'nullable', 'integer'],
+
+            // Paso 18.B: cada creación clínica cuelga de la anterior, que puede haberse creado en
+            // este mismo lote (id temporal) o ya existir en el servidor (id real / número). La
+            // `fecha` y los `items` se validan en el controlador, que rechaza **esa** creación: acá
+            // un 422 trabaría el lote entero (ver el comentario de la clase).
+            'changes.*.paciente_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.historia_temp_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.numhistoria' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.consulta_temp_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.consulta_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.fecha' => ['sometimes', 'nullable', 'string'],
+            'changes.*.items' => ['sometimes', 'array'],
 
             // `reorder`: mover una fila dentro de su grupo. En vez de mandar un `updated` por
             // cada fila desplazada, se manda el movimiento y el servidor corre el resto con un

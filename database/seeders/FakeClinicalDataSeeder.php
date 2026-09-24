@@ -13,7 +13,6 @@ use App\Models\OfficeSchedule;
 use App\Models\MedicoPaciente;
 use App\Models\MotivoCita;
 use App\Models\Paciente;
-use App\Models\Recipe;
 use Faker\Factory as FakerFactory;
 use Illuminate\Database\Seeder;
 
@@ -31,7 +30,6 @@ class FakeClinicalDataSeeder extends Seeder
     private const TOTAL_PACIENTES = 50;
     private const TOTAL_COLAS = 150;
     private const TOTAL_CONSULTAS = 80;
-    private const TOTAL_RECIPES = 40;
 
     public function run(): void
     {
@@ -51,8 +49,10 @@ class FakeClinicalDataSeeder extends Seeder
 
         $this->crearColas($faker, $pacientes, $motivos, $sedes);
         $this->crearConsultas($faker, $pacientes);
-        $this->crearRecipes($faker, $pacientes);
+        // Los récipes y tratamientos, con la forma del legado (consultas numeradas por historia,
+        // varios medicamentos por récipe), los arma `RecipesDePruebaSeeder` sobre estas consultas.
         $this->call(VademecumDePruebaSeeder::class);
+        $this->call(RecipesDePruebaSeeder::class);
     }
 
     /**
@@ -355,48 +355,24 @@ class FakeClinicalDataSeeder extends Seeder
 
     private function crearConsultas($faker, array $pacientes): void
     {
+        // `nroconsulta` es correlativo **por historia**, como en el legado ("Historia # 00001 ·
+        // Consulta #1"); `RecipesDePruebaSeeder` además las renumera por fecha.
+        $siguiente = [];
         for ($i = 0; $i < self::TOTAL_CONSULTAS; $i++) {
             $paciente = $faker->randomElement($pacientes);
             $fecha = $faker->dateTimeBetween('-45 days', 'now');
+            $numhistoria = (int) $paciente['numhistoria'];
+            $siguiente[$numhistoria] = ($siguiente[$numhistoria] ?? 0) + 1;
 
             Consulta::create([
                 'reg_medico' => self::REG_MEDICO,
-                'numhistoria' => (int) $paciente['numhistoria'],
-                'nroconsulta' => $i + 1,
+                'numhistoria' => $numhistoria,
+                'nroconsulta' => $siguiente[$numhistoria],
                 'fecha' => $fecha->format('Y-m-d'),
                 'enfermedadactual' => $faker->sentence(10),
                 'peso' => $faker->randomFloat(1, 45, 95),
                 'talla' => $faker->randomFloat(2, 1.5, 1.9),
                 'eliminado' => '0',
-            ]);
-        }
-    }
-
-    private function crearRecipes($faker, array $pacientes): void
-    {
-        $medicamentos = [
-            ['codigo' => 'MED001', 'descripcion' => 'Ácido fólico 5mg', 'indicaciones' => 'Tomar 1 tableta vía oral cada 24 horas'],
-            ['codigo' => 'MED002', 'descripcion' => 'Amoxicilina 500mg', 'indicaciones' => 'Tomar 1 cápsula vía oral cada 8 horas por 7 días'],
-            ['codigo' => 'MED003', 'descripcion' => 'Ibuprofeno 400mg', 'indicaciones' => 'Tomar 1 tableta vía oral cada 8 horas si hay dolor'],
-            ['codigo' => 'MED004', 'descripcion' => 'Complejo B', 'indicaciones' => 'Tomar 1 tableta vía oral cada 24 horas por 30 días'],
-            ['codigo' => 'MED005', 'descripcion' => 'Metronidazol 500mg', 'indicaciones' => 'Tomar 1 tableta vía oral cada 12 horas por 7 días'],
-            ['codigo' => 'MED006', 'descripcion' => 'Sulfato ferroso', 'indicaciones' => 'Tomar 1 tableta vía oral cada 24 horas con las comidas'],
-        ];
-
-        for ($i = 0; $i < self::TOTAL_RECIPES; $i++) {
-            $paciente = $faker->randomElement($pacientes);
-            $medicamento = $faker->randomElement($medicamentos);
-            $fecha = $faker->dateTimeBetween('-45 days', 'now');
-
-            Recipe::create([
-                'reg_medico' => self::REG_MEDICO,
-                'nrohistoria' => (int) $paciente['numhistoria'],
-                'nroconsulta' => $i + 1,
-                'fecha' => $fecha->format('Y-m-d'),
-                'codemedicina' => $medicamento['codigo'],
-                'descripcion' => $medicamento['descripcion'],
-                'indicaciones' => $medicamento['indicaciones'],
-                'cantidad' => $faker->numberBetween(1, 3),
             ]);
         }
     }

@@ -21,7 +21,10 @@ use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\RecipeFormato;
 use App\Models\SyncChange;
+use App\Models\RecipeGrupo;
+use App\Models\RecipeGrupoDetalle;
 use App\Models\Vademecum;
+use App\Sync\CreacionesClinicas;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -77,7 +80,9 @@ class SyncAppDataController extends Controller
         // lote no estaba en `$relaciones` cuando se cargó arriba, y sin esto el delta no se lo
         // devolvería al teléfono — la ficha que el usuario acaba de crear desaparecería de su
         // pantalla en la primera sincronización.
-        if ($resultadoChanges['creo_pacientes']) {
+        // Lo mismo con una historia recién llenada: sin releer, el número nuevo no estaría en
+        // `$numHistorias` y la consulta y el récipe que colgaron de ella no bajarían.
+        if ($resultadoChanges['creo_pacientes'] || $resultadoChanges['creo_clinicas']) {
             $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
             $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
             $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
@@ -101,13 +106,28 @@ class SyncAppDataController extends Controller
         )->get();
 
         $colas = $this->deltaQuery(Cola::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $consultas = $this->deltaQuery(Consulta::whereIn('numhistoria', $numHistorias), $since)->get();
+        // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
+        // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
+        $consultas = $this->deltaQuery(
+            Consulta::whereIn('numhistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
-        $recipes = $this->deltaQuery(Recipe::whereIn('nrohistoria', $numHistorias), $since)->get();
+        // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
+        // filtro doble que `consultas`.
+        $recipes = $this->deltaQuery(
+            Recipe::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
         // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
         // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
         $vademecum = $this->deltaQuery(Vademecum::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
+        $tratamientos = $this->deltaQuery(RecipeGrupo::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $tratamientosDetalle = $this->deltaQuery(
+            RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
 
         // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
         // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
@@ -153,6 +173,8 @@ class SyncAppDataController extends Controller
             'motivos' => $motivos,
             'recipes' => $recipes,
             'vademecum' => $vademecum,
+            'tratamientos' => $tratamientos,
+            'tratamientos_detalle' => $tratamientosDetalle,
             'centros_medicos' => $centrosMedicos,
             'offices' => $offices,
             'office_schedules' => $officeSchedules,
@@ -195,14 +217,24 @@ class SyncAppDataController extends Controller
         // paciente recién creado (ver `paciente_temp_id`).
         $pacientesCreados = [];
 
-        // Las creaciones de pacientes van primero: una cita del mismo lote puede depender de una
-        // de ellas, y el cliente no tiene forma de garantizar el orden del arreglo.
-        $changes = $this->pacientesPrimero($changes);
+        // Las creaciones van en orden de dependencia: una cita o una historia puede colgar de un
+        // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
+        // cliente no tiene forma de garantizar el orden del arreglo.
+        $changes = $this->enOrdenDeDependencia($changes);
+        $clinicas = new CreacionesClinicas($medico, $registrosMedicos);
+        $creadosAntes = count($creados);
 
         foreach ($changes as $change) {
             $table = $change['table'] ?? null;
             $recordId = $change['record_id'] ?? null;
             $operation = $change['operation'] ?? null;
+
+            if ($operation === 'created' && in_array($table, SyncAppDataRequest::CLINICAL_TABLES, true)) {
+                if (isset($change['temp_id']) && is_numeric($change['temp_id'])) {
+                    $clinicas->aplicar($change, $pacientesCreados, $creados, $rechazados);
+                }
+                continue;
+            }
 
             if ($operation === 'created') {
                 $this->applyCreated(
@@ -302,25 +334,27 @@ class SyncAppDataController extends Controller
             'creados' => $creados,
             'rechazados' => $rechazados,
             'creo_pacientes' => $pacientesCreados !== [],
+            'creo_clinicas' => collect($creados)->skip($creadosAntes)
+                ->contains(fn ($c) => in_array($c['table'], SyncAppDataRequest::CLINICAL_TABLES, true)),
         ];
     }
 
-    /** @param list<array> $changes @return list<array> */
-    private function pacientesPrimero(array $changes): array
+    /**
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, récipes); el
+     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
+     *
+     * @param list<array> $changes @return list<array>
+     */
+    private function enOrdenDeDependencia(array $changes): array
     {
-        $pacientes = [];
-        $resto = [];
+        $prioridad = ['pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'recipes' => 3];
+        $grupos = [[], [], [], [], []];
         foreach ($changes as $change) {
-            $esPacienteNuevo = ($change['operation'] ?? null) === 'created'
-                && ($change['table'] ?? null) === 'pacientes';
-            if ($esPacienteNuevo) {
-                $pacientes[] = $change;
-            } else {
-                $resto[] = $change;
-            }
+            $esCreacion = ($change['operation'] ?? null) === 'created';
+            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? 4) : 4][] = $change;
         }
 
-        return [...$pacientes, ...$resto];
+        return array_merge(...$grupos);
     }
 
     /**
