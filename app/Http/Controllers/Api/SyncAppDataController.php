@@ -164,6 +164,8 @@ class SyncAppDataController extends Controller
                 ->get(['table_name', 'record_id', 'occurred_at'])
             : collect([]);
 
+        $medicos = $this->medicosDelTenant($registrosMedicos);
+
         return response()->json([
             'synced_at' => $syncedAt->toIso8601String(),
             'pacientes' => $pacientes,
@@ -191,6 +193,10 @@ class SyncAppDataController extends Controller
                 RecipeFormato::where('reg_medico', $medicoModel->regMedicoPrincipal())->first()
                     ?? new RecipeFormato(),
             ),
+            // Catálogo de médicos del tenant (Paso 22.B), completo en cada respuesta por el mismo
+            // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
+            // no por delta.
+            'medicos' => $medicos,
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],
@@ -198,6 +204,43 @@ class SyncAppDataController extends Controller
             // saca de su cola en vez de reintentarlas para siempre, y le avisa al usuario.
             'rechazados' => $resultadoChanges['rechazados'],
         ]);
+    }
+
+    /**
+     * Médicos del tenant, para el filtro de agenda y (a futuro) el selector de Nueva Cita.
+     *
+     * `cola.medico` no es `medicos.id`: es la `clave` de `evolucion`, un correlativo (1, 2, 3…)
+     * que identifica al médico **dentro de la instancia** de PowerBuilder (aclarado por Alexander,
+     * ver ROADMAP.md Paso 22). El nombre se resuelve cruzando `evolucion.correo_med` con
+     * `medicos.email` — no hay otra columna en común entre las dos tablas. Si una fila de
+     * `evolucion` no tiene correo, o el correo no matchea a ningún `Medico`, el cliente igual
+     * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
+     *
+     * @param list<string> $registrosMedicos
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     */
+    private function medicosDelTenant(array $registrosMedicos): array
+    {
+        $evoluciones = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->whereNotNull('clave')
+            ->get();
+
+        $correos = $evoluciones->pluck('correo_med')->filter()->unique()->values()->toArray();
+        $medicosPorCorreo = Medico::whereIn('email', $correos)
+            ->get()
+            ->keyBy('email');
+
+        return $evoluciones->map(function (Evolucion $evolucion) use ($medicosPorCorreo) {
+            $medico = $evolucion->correo_med ? $medicosPorCorreo->get($evolucion->correo_med) : null;
+
+            return [
+                'clave' => (int) $evolucion->clave,
+                'id' => $medico?->id,
+                'name' => $medico?->name,
+                'lastname' => $medico?->lastname,
+                'especialidad' => $evolucion->especialidad,
+            ];
+        })->values()->all();
     }
 
     /**
