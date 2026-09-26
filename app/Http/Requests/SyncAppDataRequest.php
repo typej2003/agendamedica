@@ -46,14 +46,17 @@ class SyncAppDataRequest extends FormRequest
      * nacer la cita (`numhistoria`): editarlo después sería "cambiar de paciente", una acción con
      * reglas propias todavía sin definir.
      *
-     * `reg_medico` y `medico` no se aceptan nunca del cliente — los resuelve el servidor desde el
-     * médico autenticado, que es lo único que marca el tenant.
+     * `reg_medico` no se acepta nunca del cliente — lo resuelve el servidor desde el médico
+     * autenticado, que es lo único que marca el tenant. `medico` (la `clave` de `evolucion`, Paso
+     * 22.B) sí, desde el Paso 22.C: en un tenant con más de un médico, quien agenda elige para
+     * cuál es la cita. Si no lo manda (el caso común, un solo médico en la instancia), el servidor
+     * resuelve la del médico autenticado (`SyncAppDataController::claveDelMedico`).
      */
     public const CREATABLE_COLUMNS = [
         'cola' => [
             'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'medical_center_id', 'numorden',
             'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo',
-            'sms_text',
+            'sms_text', 'medico',
         ],
         // Un paciente creado desde el app **nace sin `numhistoria`**: el alta rápida (la secretaria
         // por teléfono) no la pide. El vínculo con el médico queda en el pivote `medico_pacientes`,

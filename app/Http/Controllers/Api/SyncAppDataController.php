@@ -133,16 +133,18 @@ class SyncAppDataController extends Controller
         // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
         // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
         // la cita (ver la migración de `cola.medical_center_id`).
-        $offices = $this->deltaQuery(
-            Office::where('medico_id', $medicoModel->id)
-                ->orWhere(function ($query) use ($registrosMedicos) {
-                    $query->whereNull('medico_id')->whereIn('reg_medico', $registrosMedicos);
-                }),
-            $since,
-        )->get();
+        //
+        // Todas las sedes del **tenant**, no solo las del médico logueado (Paso 22.C): quien
+        // sincroniza puede agendar para cualquier médico del mismo consultorio, así que necesita
+        // ver dónde atiende cada uno. `Office.medico_id` sigue distinguiendo de quién es cada
+        // sede (o ninguno, si es compartida) — eso lo resuelve el cliente al elegir médico.
+        $offices = $this->deltaQuery(Office::whereIn('reg_medico', $registrosMedicos), $since)->get();
 
         $officeSchedules = $this->deltaQuery(
-            OfficeSchedule::whereIn('office_id', Office::where('medico_id', $medicoModel->id)->select('id')),
+            OfficeSchedule::whereIn(
+                'office_id',
+                Office::whereIn('reg_medico', $registrosMedicos)->select('id'),
+            ),
             $since,
         )->get();
 
@@ -207,7 +209,7 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Médicos del tenant, para el filtro de agenda y (a futuro) el selector de Nueva Cita.
+     * Médicos del tenant, para el filtro de agenda y el selector de Nueva Cita (Paso 22.C).
      *
      * `cola.medico` no es `medicos.id`: es la `clave` de `evolucion`, un correlativo (1, 2, 3…)
      * que identifica al médico **dentro de la instancia** de PowerBuilder (aclarado por Alexander,
@@ -241,6 +243,26 @@ class SyncAppDataController extends Controller
                 'especialidad' => $evolucion->especialidad,
             ];
         })->values()->all();
+    }
+
+    /**
+     * La `clave` de `evolucion` que le corresponde a [medico] dentro de este tenant — el mismo
+     * cruce que `medicosDelTenant`, pero al revés (por su propio correo). Es el default cuando el
+     * cliente crea una cita sin elegir médico explícitamente (Paso 22.C): el caso común, de un
+     * solo médico en la instancia. Nula si no hay fila de `evolucion` para él (pasa en los datos
+     * reales, que casi nunca tienen configuración).
+     */
+    private function claveDelMedico(Medico $medico, array $registrosMedicos): ?int
+    {
+        if (!$medico->email) {
+            return null;
+        }
+
+        $clave = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->where('correo_med', $medico->email)
+            ->value('clave');
+
+        return $clave === null ? null : (int) $clave;
     }
 
     /**
@@ -631,7 +653,14 @@ class SyncAppDataController extends Controller
             return;
         }
 
-        $columnas['medico'] = $medico->id;
+        // `cola.medico` es la `clave` de `evolucion` (Paso 22.B), no `medicos.id` — son dos
+        // numeraciones distintas que solo coinciden por casualidad en los datos de prueba de un
+        // solo médico. Si el cliente ya la mandó (Paso 22.C: eligió un médico en el selector), se
+        // respeta esa; si no (el caso común, un solo médico en la instancia), se resuelve la del
+        // médico autenticado.
+        if (!isset($columnas['medico'])) {
+            $columnas['medico'] = $this->claveDelMedico($medico, $registrosMedicos);
+        }
 
         $cola = Cola::create($columnas);
 
