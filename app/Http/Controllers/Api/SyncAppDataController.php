@@ -241,6 +241,14 @@ class SyncAppDataController extends Controller
                 'name' => $medico?->name,
                 'lastname' => $medico?->lastname,
                 'especialidad' => $evolucion->especialidad,
+                // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
+                // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un
+                // recordatorio se usa la del médico **de la cita**, no la de quien tiene la sesión
+                // abierta (una secretaria puede mandar recordatorios de citas de varios médicos del
+                // mismo tenant) — de ahí que viajen acá, en el catálogo completo, y no solo en
+                // `ConfiguracionMedicoResource`.
+                'plantilla_cita' => $evolucion->plantilla_cita,
+                'plantilla_cumple' => $evolucion->plantilla_cumple,
             ];
         })->values()->all();
     }

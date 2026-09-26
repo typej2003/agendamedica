@@ -118,6 +118,28 @@ class ConfiguracionMedicoTest extends TestCase
         Storage::disk('public')->assertMissing($rutaGuardada1);
     }
 
+    public function test_guarda_las_plantillas_de_mensaje_sin_tocar_el_resto(): void
+    {
+        // Paso 23: el médico solo edita su propia plantilla — la resolución es la misma que ya usa
+        // el resto de "Configuración" (la cuenta logueada), sin nada nuevo que agregar acá.
+        $medico = $this->medicoAutenticado();
+        Evolucion::create([
+            'reg_medico' => $medico->reg_medico,
+            'especialidad' => 'Pediatria',
+            'clave' => 0,
+        ]);
+
+        $response = $this->postJson('/api/app/configuracion', [
+            'plantilla_cita' => 'Hola {paciente}, recuerde su cita el {fecha} a las {hora}.',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('data.plantilla_cita', 'Hola {paciente}, recuerde su cita el {fecha} a las {hora}.');
+        $response->assertJsonPath('data.plantilla_cumple', null);
+        // Lo que no se mandó en esta petición sigue como estaba (misma regla que el resto de campos).
+        $response->assertJsonPath('data.especialidad', 'Pediatria');
+    }
+
     public function test_rechaza_sin_autenticacion(): void
     {
         $response = $this->postJson('/api/app/configuracion', ['rif' => 'J-33333333-3']);

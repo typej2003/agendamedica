@@ -66,6 +66,8 @@ class MedicosDelTenantTest extends TestCase
             'name' => 'Carlos',
             'lastname' => 'De Prueba',
             'especialidad' => 'Ginecología',
+            'plantilla_cita' => null,
+            'plantilla_cumple' => null,
         ]], $response->json('medicos'));
     }
 
@@ -108,6 +110,38 @@ class MedicosDelTenantTest extends TestCase
         $this->assertNull($fila['id']);
         $this->assertNull($fila['name']);
         $this->assertSame('Neurología', $fila['especialidad']);
+    }
+
+    public function test_cada_medico_lleva_su_propia_plantilla_en_el_catalogo(): void
+    {
+        // Paso 23: la plantilla viaja en el catálogo completo (no solo en `ConfiguracionMedicoResource`
+        // del médico logueado) porque al enviar un recordatorio se usa la del médico de la cita, no la
+        // de quien tiene la sesión abierta.
+        $regMedicoCompartido = 'test-mdt-' . uniqid();
+        $medicoA = $this->medico($regMedicoCompartido, autenticar: true, name: 'Carlos');
+        $medicoB = $this->medico('test-mdt-b-' . uniqid(), name: 'Nersa');
+        MedicoRegistro::create(['medico_id' => $medicoB->id, 'reg_medico' => $regMedicoCompartido]);
+
+        Evolucion::create([
+            'reg_medico' => $regMedicoCompartido,
+            'clave' => 1,
+            'correo_med' => $medicoA->email,
+            'plantilla_cita' => 'Hola {paciente}, cita el {fecha}.',
+        ]);
+        Evolucion::create([
+            'reg_medico' => $regMedicoCompartido,
+            'clave' => 2,
+            'correo_med' => $medicoB->email,
+            'plantilla_cumple' => 'Feliz cumpleaños {paciente}.',
+        ]);
+
+        $response = $this->postJson('/api/app/sync-app-data', [])->assertOk();
+
+        $porClave = collect($response->json('medicos'))->keyBy('clave');
+        $this->assertSame('Hola {paciente}, cita el {fecha}.', $porClave[1]['plantilla_cita']);
+        $this->assertNull($porClave[1]['plantilla_cumple']);
+        $this->assertNull($porClave[2]['plantilla_cita']);
+        $this->assertSame('Feliz cumpleaños {paciente}.', $porClave[2]['plantilla_cumple']);
     }
 
     public function test_otro_tenant_no_aparece_en_el_catalogo(): void

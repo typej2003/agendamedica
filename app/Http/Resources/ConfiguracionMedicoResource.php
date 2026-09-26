@@ -53,6 +53,11 @@ class ConfiguracionMedicoResource extends JsonResource
                 'direccion' => $this->lineag_1,
                 'consultorio' => $this->lineag_2,
             ],
+            // Plantillas de mensaje (Paso 23) — ver "Plantilla de citas"/"Plantilla de cumpleaños"
+            // en ConfiguracionScreen. `null` hasta que el médico las edite: el cliente usa su propio
+            // texto por defecto en ese caso (`recordatorio.dart`).
+            'plantilla_cita' => $this->plantilla_cita,
+            'plantilla_cumple' => $this->plantilla_cumple,
             // Se manda la convención de estados para que el cliente no la tenga duplicada a mano.
             'estados_cita' => [
                 'no_confirmada' => Cola::ESTADO_NO_CONFIRMADA,

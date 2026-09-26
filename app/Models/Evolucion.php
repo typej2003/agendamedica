@@ -23,7 +23,8 @@ class Evolucion extends Model
         'por_retencin_part', 'accionista', 'consultorio', 'contrasena', 'paga_iva',
         'sms_user', 'sms_clave', 'sms_cantidad_total', 'sms_telefono_llamada',
         'sms_sexo_medico', 'sms_proveedor', 'correo_med', 'pais', 'prefi_1',
-        'prefi_2', 'prefi_3', 'nom_moneda', 'nom_impuesto', 'impuesto_vale', 'slug'
+        'prefi_2', 'prefi_3', 'nom_moneda', 'nom_impuesto', 'impuesto_vale', 'slug',
+        'plantilla_cita', 'plantilla_cumple',
     ];
 
     /**
