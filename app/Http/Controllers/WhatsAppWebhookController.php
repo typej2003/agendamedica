@@ -6,9 +6,20 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Services\WhatsAppService;
+use App\Services\WhatsAppAIService;
 
 class WhatsAppWebhookController extends Controller
 {
+    protected WhatsAppService $whatsAppService;
+    protected WhatsAppAIService $aiService;
+
+    public function __construct(WhatsAppService $whatsAppService, WhatsAppAIService $aiService)
+    {
+        $this->whatsAppService = $whatsAppService;
+        $this->aiService = $aiService;
+    }
+
     /**
      * Validación inicial del Webhook requerida por Meta.
      */
@@ -48,13 +59,22 @@ class WhatsAppWebhookController extends Controller
             if ($messageType === 'text') {
                 $mensaje = $messageData['text']['body'] ?? null;
 
-                if ($mensaje !== null) {
-                    // Usamos 'append' en lugar de 'put' para mantener un historial.
-                    // También agregamos fecha y número para saber quién escribe.
-                    $lineaTexto = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}" . PHP_EOL;
-                    Storage::disk('local')->append('text.txt', $lineaTexto);
+                if ($mensaje !== null && $telefonoCliente !== null) {
+                    // 1. Guardar registro del mensaje entrante
+                    $lineaEntrante = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}" . PHP_EOL;
+                    Storage::disk('local')->append('text.txt', $lineaEntrante);
 
                     Log::info("Mensaje recibido de {$telefonoCliente} (ID: {$id}, Time: {$timestamp}): {$mensaje}");
+
+                    // 2. Procesar respuesta con Inteligencia Artificial y consulta a DB
+                    $respuestaIA = $this->aiService->responderMensaje($telefonoCliente, $mensaje);
+
+                    // 3. Responder al cliente por WhatsApp
+                    $this->whatsAppService->sendMessage($telefonoCliente, $respuestaIA);
+
+                    // 4. Guardar registro de la respuesta enviada por la IA
+                    $lineaSalida = "[" . date('Y-m-d H:i:s') . "] Para {$telefonoCliente} (IA): {$respuestaIA}" . PHP_EOL;
+                    Storage::disk('local')->append('text.txt', $lineaSalida);
                 }
             }
         }

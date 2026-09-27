@@ -36,6 +36,8 @@ return [
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
     ],
 
-    
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
 
 ];
