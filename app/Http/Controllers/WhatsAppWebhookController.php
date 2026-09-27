@@ -14,6 +14,7 @@ class WhatsAppWebhookController extends Controller
      */
     public function verify(Request $request)
     {
+        // PHP convierte los puntos en los parámetros GET a guiones bajos.
         $mode = $request->query('hub_mode', $request->query('hub.mode'));
         $token = $request->query('hub_verify_token', $request->query('hub.verify_token'));
         $challenge = $request->query('hub_challenge', $request->query('hub.challenge'));
@@ -50,7 +51,7 @@ class WhatsAppWebhookController extends Controller
                 if ($mensaje !== null) {
                     // Usamos 'append' en lugar de 'put' para mantener un historial.
                     // También agregamos fecha y número para saber quién escribe.
-                    $lineaTexto = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}";
+                    $lineaTexto = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}" . PHP_EOL;
                     Storage::disk('local')->append('text.txt', $lineaTexto);
 
                     Log::info("Mensaje recibido de {$telefonoCliente} (ID: {$id}, Time: {$timestamp}): {$mensaje}");
@@ -58,6 +59,7 @@ class WhatsAppWebhookController extends Controller
             }
         }
 
+        // Meta siempre espera un código 200 para no reintentar el envío
         return response()->json(['status' => 'EVENT_RECEIVED'], 200);
     }
 }
