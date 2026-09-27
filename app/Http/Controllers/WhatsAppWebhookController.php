@@ -5,81 +5,116 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use App\Services\WhatsAppService;
-use App\Services\WhatsAppAIService;
 
 class WhatsAppWebhookController extends Controller
 {
     protected WhatsAppService $whatsAppService;
-    protected WhatsAppAIService $aiService;
 
-    public function __construct(WhatsAppService $whatsAppService, WhatsAppAIService $aiService)
+    public function __construct(WhatsAppService $whatsAppService)
     {
         $this->whatsAppService = $whatsAppService;
-        $this->aiService = $aiService;
     }
 
     /**
-     * Validación inicial del Webhook requerida por Meta.
+     * Verificación del Webhook de WhatsApp (GET)
      */
     public function verify(Request $request)
     {
-        // PHP convierte los puntos en los parámetros GET a guiones bajos.
-        $mode = $request->query('hub_mode', $request->query('hub.mode'));
-        $token = $request->query('hub_verify_token', $request->query('hub.verify_token'));
-        $challenge = $request->query('hub_challenge', $request->query('hub.challenge'));
+        $verifyToken = config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN'));
 
-        $verifyToken = config('services.whatsapp.verify_token') ?: env('WHATSAPP_VERIFY_TOKEN');
+        $mode = $request->query('hub_mode');
+        $token = $request->query('hub_verify_token');
+        $challenge = $request->query('hub_challenge');
 
         if ($mode === 'subscribe' && $token === $verifyToken) {
-            return response($challenge, 200)->header('Content-Type', 'text/plain');
+            return response($challenge, 200);
         }
 
-        return response()->json(['error' => 'Token de verificación no válido'], 403);
+        return response('Token de verificación inválido', 403);
     }
 
     /**
-     * Recepción de mensajes e interacciones de usuarios en tiempo real.
+     * Recepción y procesamiento de eventos/mensajes (POST)
      */
     public function handle(Request $request): JsonResponse
     {
-        $body = $request->all();
+        $data = $request->all();
 
-        Log::info('Webhook recibido de WhatsApp:', $body);
+        Log::info('Webhook recibido de WhatsApp: ' . json_encode($data));
 
-        if (isset($body['entry'][0]['changes'][0]['value']['messages'][0])) {
-            $messageData = $body['entry'][0]['changes'][0]['value']['messages'][0];
+        try {
+            if (isset($data['entry'][0]['changes'][0]['value']['messages'][0])) {
+                $messageData = $data['entry'][0]['changes'][0]['value']['messages'][0];
 
-            $id              = $messageData['id'] ?? null;
-            $telefonoCliente = $messageData['from'] ?? null;
-            $timestamp       = $messageData['timestamp'] ?? null;
-            $messageType     = $messageData['type'] ?? null;
+                $from = $messageData['from'] ?? null;
+                $messageId = $messageData['id'] ?? null;
+                $timestamp = $messageData['timestamp'] ?? null;
+                $messageType = $messageData['type'] ?? null;
 
-            if ($messageType === 'text') {
-                $mensaje = $messageData['text']['body'] ?? null;
+                if ($messageType === 'text') {
+                    $bodyText = $messageData['text']['body'] ?? '';
 
-                if ($mensaje !== null && $telefonoCliente !== null) {
-                    // 1. Guardar registro del mensaje entrante
-                    $lineaEntrante = "[" . date('Y-m-d H:i:s') . "] De {$telefonoCliente}: {$mensaje}" . PHP_EOL;
-                    Storage::disk('local')->append('text.txt', $lineaEntrante);
+                    Log::info("Mensaje recibido de {$from} (ID: {$messageId}, Time: {$timestamp}): {$bodyText}");
 
-                    Log::info("Mensaje recibido de {$telefonoCliente} (ID: {$id}, Time: {$timestamp}): {$mensaje}");
+                    // Procesamiento con OpenAI API
+                    $aiReply = $this->getOpenAIResponse($bodyText);
 
-                    // 2. Procesar respuesta con Inteligencia Artificial y consulta a DB
-                    $respuestaIA = $this->aiService->responderMensaje($telefonoCliente, $mensaje);
-
-                    // 3. Responder al cliente por WhatsApp
-                    $this->whatsAppService->sendMessage($telefonoCliente, $respuestaIA);
-
-                    // 4. Guardar registro de la respuesta enviada por la IA
-                    $lineaSalida = "[" . date('Y-m-d H:i:s') . "] Para {$telefonoCliente} (IA): {$respuestaIA}" . PHP_EOL;
-                    Storage::disk('local')->append('text.txt', $lineaSalida);
+                    if ($aiReply) {
+                        $this->whatsAppService->sendMessage($from, $aiReply);
+                    } else {
+                        $this->whatsAppService->sendMessage($from, 'Lo siento, no pude procesar tu solicitud en este momento.');
+                    }
                 }
             }
+        } catch (\Throwable $e) {
+            Log::error('Excepción general en WhatsAppWebhookController: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
-        // Meta siempre espera un código 200 para no reintentar el envío
+        // Siempre responder 200 a WhatsApp para evitar bucles de reintento
         return response()->json(['status' => 'EVENT_RECEIVED'], 200);
+    }
+
+    /**
+     * Consulta a la API de OpenAI
+     */
+    protected function getOpenAIResponse(string $prompt): ?string
+    {
+        $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
+
+        if (empty($apiKey)) {
+            Log::error('API Key de OpenAI no configurada.');
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'Eres un asistente virtual atento y conciso.'],
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'temperature' => 0.7,
+            ]);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+                return $responseData['choices'][0]['message']['content'] ?? null;
+            }
+
+            Log::error('Error consumiendo OpenAI API: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Excepción al conectar con OpenAI: ' . $e->getMessage());
+            return null;
+        }
     }
 }
