@@ -22,10 +22,16 @@ use Illuminate\Validation\Rule;
  */
 class SyncAppDataRequest extends FormRequest
 {
-    /** Columnas editables por `changes`, por tabla. */
+    /**
+     * Columnas editables por `changes`, por tabla.
+     *
+     * `cola.fecha` es editable desde el Paso 19.C: **reagendar es editar la misma cita**, no
+     * cancelar y crear otra (así conserva lo cobrado y su historial de cambios). Cambiar de
+     * paciente (`numhistoria`) sigue sin estar permitido.
+     */
     public const WRITABLE_COLUMNS = [
         'cola' => [
-            'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
+            'fecha', 'numorden', 'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado',
             'hora_ini', 'hora_fin', 'tiempo', 'tipo', 'sms_text', 'medical_center_id',
         ],
         'pacientes' => [
@@ -37,23 +43,26 @@ class SyncAppDataRequest extends FormRequest
 
     /**
      * Columnas aceptadas al *crear*. Lista aparte porque hay campos que solo tienen sentido al
-     * nacer la cita (`fecha`, `numhistoria`): editarlos después es "reagendar" o "cambiar de
-     * paciente", acciones con reglas propias todavía sin definir.
+     * nacer la cita (`numhistoria`): editarlo después sería "cambiar de paciente", una acción con
+     * reglas propias todavía sin definir.
      *
-     * `reg_medico` y `medico` no se aceptan nunca del cliente — los resuelve el servidor desde el
-     * médico autenticado, que es lo único que marca el tenant.
+     * `reg_medico` no se acepta nunca del cliente — lo resuelve el servidor desde el médico
+     * autenticado, que es lo único que marca el tenant. `medico` (la `clave` de `evolucion`, Paso
+     * 22.B) sí, desde el Paso 22.C: en un tenant con más de un médico, quien agenda elige para
+     * cuál es la cita. Si no lo manda (el caso común, un solo médico en la instancia), el servidor
+     * resuelve la del médico autenticado (`SyncAppDataController::claveDelMedico`).
      */
     public const CREATABLE_COLUMNS = [
         'cola' => [
             'fecha', 'hora_ini', 'hora_fin', 'numhistoria', 'medical_center_id', 'numorden',
             'atendido', 'estado', 'turno', 'motivo', 'monto', 'monto_pagado', 'tiempo', 'tipo',
-            'sms_text',
+            'sms_text', 'medico',
         ],
-        // Un paciente creado desde el app **nace sin `numhistoria`**: ese número lo asigna el
-        // sistema de escritorio y no se puede mintear acá sin arriesgar un choque con él (la
-        // columna es única global en `historias`). El vínculo con el médico queda en el pivote
-        // `medico_pacientes`, que admite `numhistoria` nulo, y la cita lo referencia por
-        // `paciente_sinhistoria_id` — columna que el esquema legado ya trae para este caso.
+        // Un paciente creado desde el app **nace sin `numhistoria`**: el alta rápida (la secretaria
+        // por teléfono) no la pide. El vínculo con el médico queda en el pivote `medico_pacientes`,
+        // que admite `numhistoria` nulo, y la cita lo referencia por `paciente_sinhistoria_id`,
+        // columna que el esquema legado ya trae para este caso. La historia se llena después con
+        // una creación de `historias` (Paso 18.B), con el correlativo que asigna el servidor.
         'pacientes' => [
             'nac', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento',
             'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
@@ -80,7 +89,23 @@ class SyncAppDataRequest extends FormRequest
         ],
     ];
 
+    /** Columnas que tienen que venir como fecha `YYYY-MM-DD`: una fecha mal formada se descarta. */
+    public const DATE_COLUMNS = [
+        'cola' => ['fecha'],
+    ];
+
     public const DELETABLE_TABLES = ['cola', 'pacientes'];
+
+    /**
+     * Creaciones clínicas del Paso 18.B (Atender → consulta → récipe). No van por
+     * `CREATABLE_COLUMNS`: el número de cada una (historia, consulta, récipe) **lo asigna el
+     * servidor** con el correlativo vigente, y el cliente solo manda a qué cuelga. Ver
+     * `SyncAppDataController::crearHistoria` y siguientes.
+     */
+    public const CLINICAL_TABLES = ['historias', 'consultas', 'recipes'];
+
+    /** Tablas que pueden aparecer en `changes`, con cualquier operación. */
+    public const SYNC_TABLES = ['cola', 'pacientes', 'historias', 'consultas', 'recipes'];
 
     /**
      * Columna de ordenamiento por tabla, y el campo que delimita el grupo dentro del cual se
@@ -104,7 +129,7 @@ class SyncAppDataRequest extends FormRequest
             'since' => ['sometimes', 'nullable', 'date'],
 
             'changes' => ['sometimes', 'array'],
-            'changes.*.table' => ['required', Rule::in(self::DELETABLE_TABLES)],
+            'changes.*.table' => ['required', Rule::in(self::SYNC_TABLES)],
             'changes.*.operation' => ['required', Rule::in(['created', 'updated', 'deleted', 'reorder'])],
 
             // `record_id` identifica una fila que ya existe; `temp_id`, una que el cliente creó
@@ -113,13 +138,27 @@ class SyncAppDataRequest extends FormRequest
             'changes.*.temp_id' => ['required_if:changes.*.operation,created', 'integer'],
 
             'changes.*.column' => ['required_if:changes.*.operation,updated', 'string', 'max:64'],
-            'changes.*.columns' => ['required_if:changes.*.operation,created', 'array'],
+            // Opcional: las creaciones clínicas no traen columnas propias. Una cita o un paciente
+            // sin ellas los rechaza el controlador por `REQUIRED_COLUMNS`, sin trabar el lote.
+            'changes.*.columns' => ['sometimes', 'array'],
 
             // Cita de un paciente creado en este mismo lote, que todavía no tiene id real ni
             // `numhistoria`: viaja la referencia al id temporal del paciente y el servidor la
             // resuelve. Sin esto, crear paciente y cita sin señal sería imposible — el teléfono
             // no puede saber con qué id quedó el paciente hasta que sincroniza.
             'changes.*.paciente_temp_id' => ['sometimes', 'nullable', 'integer'],
+
+            // Paso 18.B: cada creación clínica cuelga de la anterior, que puede haberse creado en
+            // este mismo lote (id temporal) o ya existir en el servidor (id real / número). La
+            // `fecha` y los `items` se validan en el controlador, que rechaza **esa** creación: acá
+            // un 422 trabaría el lote entero (ver el comentario de la clase).
+            'changes.*.paciente_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.historia_temp_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.numhistoria' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.consulta_temp_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.consulta_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.fecha' => ['sometimes', 'nullable', 'string'],
+            'changes.*.items' => ['sometimes', 'array'],
 
             // `reorder`: mover una fila dentro de su grupo. En vez de mandar un `updated` por
             // cada fila desplazada, se manda el movimiento y el servidor corre el resto con un

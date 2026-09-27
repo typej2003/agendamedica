@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\ConfiguracionMedicoController;
+use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
@@ -55,6 +56,9 @@ Route::middleware('auth:api')->group(function () {
     // Datos de reporte (Diseño de reportes). Tampoco va por `sync-app-data` — ver
     // ConfiguracionMedicoController.
     Route::post('/app/configuracion', [ConfiguracionMedicoController::class, 'actualizar']);
+
+    // Formato de impresión del récipe + firma/sello (ROADMAP.md Paso 18.A). Mismo criterio: online-only.
+    Route::post('/app/configuracion/formato-recipe', [RecipeFormatoController::class, 'actualizar']);
 });
 
 Route::prefix('upload-servers')->group(function () {

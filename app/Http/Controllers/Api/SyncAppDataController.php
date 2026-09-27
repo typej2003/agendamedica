@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Http\Resources\ConfiguracionMedicoResource;
+use App\Http\Resources\RecipeFormatoResource;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Evolucion;
@@ -18,7 +19,12 @@ use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
+use App\Models\RecipeFormato;
 use App\Models\SyncChange;
+use App\Models\RecipeGrupo;
+use App\Models\RecipeGrupoDetalle;
+use App\Models\Vademecum;
+use App\Sync\CreacionesClinicas;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -74,7 +80,9 @@ class SyncAppDataController extends Controller
         // lote no estaba en `$relaciones` cuando se cargó arriba, y sin esto el delta no se lo
         // devolvería al teléfono — la ficha que el usuario acaba de crear desaparecería de su
         // pantalla en la primera sincronización.
-        if ($resultadoChanges['creo_pacientes']) {
+        // Lo mismo con una historia recién llenada: sin releer, el número nuevo no estaría en
+        // `$numHistorias` y la consulta y el récipe que colgaron de ella no bajarían.
+        if ($resultadoChanges['creo_pacientes'] || $resultadoChanges['creo_clinicas']) {
             $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
             $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
             $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
@@ -98,25 +106,45 @@ class SyncAppDataController extends Controller
         )->get();
 
         $colas = $this->deltaQuery(Cola::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $consultas = $this->deltaQuery(Consulta::whereIn('numhistoria', $numHistorias), $since)->get();
+        // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
+        // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
+        $consultas = $this->deltaQuery(
+            Consulta::whereIn('numhistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        // Fase 1: récipes es solo lectura desde el app, no hay `changes` que aplicarle.
-        $recipes = $this->deltaQuery(Recipe::whereIn('nrohistoria', $numHistorias), $since)->get();
+        // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
+        // filtro doble que `consultas`.
+        $recipes = $this->deltaQuery(
+            Recipe::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
+        // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
+        // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
+        $vademecum = $this->deltaQuery(Vademecum::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
+        $tratamientos = $this->deltaQuery(RecipeGrupo::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $tratamientosDetalle = $this->deltaQuery(
+            RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
 
         // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
         // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
         // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
         // la cita (ver la migración de `cola.medical_center_id`).
-        $offices = $this->deltaQuery(
-            Office::where('medico_id', $medicoModel->id)
-                ->orWhere(function ($query) use ($registrosMedicos) {
-                    $query->whereNull('medico_id')->whereIn('reg_medico', $registrosMedicos);
-                }),
-            $since,
-        )->get();
+        //
+        // Todas las sedes del **tenant**, no solo las del médico logueado (Paso 22.C): quien
+        // sincroniza puede agendar para cualquier médico del mismo consultorio, así que necesita
+        // ver dónde atiende cada uno. `Office.medico_id` sigue distinguiendo de quién es cada
+        // sede (o ninguno, si es compartida) — eso lo resuelve el cliente al elegir médico.
+        $offices = $this->deltaQuery(Office::whereIn('reg_medico', $registrosMedicos), $since)->get();
 
         $officeSchedules = $this->deltaQuery(
-            OfficeSchedule::whereIn('office_id', Office::where('medico_id', $medicoModel->id)->select('id')),
+            OfficeSchedule::whereIn(
+                'office_id',
+                Office::whereIn('reg_medico', $registrosMedicos)->select('id'),
+            ),
             $since,
         )->get();
 
@@ -138,6 +166,8 @@ class SyncAppDataController extends Controller
                 ->get(['table_name', 'record_id', 'occurred_at'])
             : collect([]);
 
+        $medicos = $this->medicosDelTenant($registrosMedicos);
+
         return response()->json([
             'synced_at' => $syncedAt->toIso8601String(),
             'pacientes' => $pacientes,
@@ -146,6 +176,9 @@ class SyncAppDataController extends Controller
             'consultas' => $consultas,
             'motivos' => $motivos,
             'recipes' => $recipes,
+            'vademecum' => $vademecum,
+            'tratamientos' => $tratamientos,
+            'tratamientos_detalle' => $tratamientosDetalle,
             'centros_medicos' => $centrosMedicos,
             'offices' => $offices,
             'office_schedules' => $officeSchedules,
@@ -156,6 +189,16 @@ class SyncAppDataController extends Controller
             'configuracion' => new ConfiguracionMedicoResource(
                 Evolucion::whereIn('reg_medico', $registrosMedicos)->first() ?? new Evolucion(),
             ),
+            // Completo en cada respuesta, por el mismo motivo que `configuracion`. Se busca por el
+            // registro principal, que es bajo el que lo guarda `RecipeFormatoController`.
+            'formato_recipe' => new RecipeFormatoResource(
+                RecipeFormato::where('reg_medico', $medicoModel->regMedicoPrincipal())->first()
+                    ?? new RecipeFormato(),
+            ),
+            // Catálogo de médicos del tenant (Paso 22.B), completo en cada respuesta por el mismo
+            // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
+            // no por delta.
+            'medicos' => $medicos,
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],
@@ -163,6 +206,71 @@ class SyncAppDataController extends Controller
             // saca de su cola en vez de reintentarlas para siempre, y le avisa al usuario.
             'rechazados' => $resultadoChanges['rechazados'],
         ]);
+    }
+
+    /**
+     * Médicos del tenant, para el filtro de agenda y el selector de Nueva Cita (Paso 22.C).
+     *
+     * `cola.medico` no es `medicos.id`: es la `clave` de `evolucion`, un correlativo (1, 2, 3…)
+     * que identifica al médico **dentro de la instancia** de PowerBuilder (aclarado por Alexander,
+     * ver ROADMAP.md Paso 22). El nombre se resuelve cruzando `evolucion.correo_med` con
+     * `medicos.email` — no hay otra columna en común entre las dos tablas. Si una fila de
+     * `evolucion` no tiene correo, o el correo no matchea a ningún `Medico`, el cliente igual
+     * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
+     *
+     * @param list<string> $registrosMedicos
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     */
+    private function medicosDelTenant(array $registrosMedicos): array
+    {
+        $evoluciones = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->whereNotNull('clave')
+            ->get();
+
+        $correos = $evoluciones->pluck('correo_med')->filter()->unique()->values()->toArray();
+        $medicosPorCorreo = Medico::whereIn('email', $correos)
+            ->get()
+            ->keyBy('email');
+
+        return $evoluciones->map(function (Evolucion $evolucion) use ($medicosPorCorreo) {
+            $medico = $evolucion->correo_med ? $medicosPorCorreo->get($evolucion->correo_med) : null;
+
+            return [
+                'clave' => (int) $evolucion->clave,
+                'id' => $medico?->id,
+                'name' => $medico?->name,
+                'lastname' => $medico?->lastname,
+                'especialidad' => $evolucion->especialidad,
+                // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
+                // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un
+                // recordatorio se usa la del médico **de la cita**, no la de quien tiene la sesión
+                // abierta (una secretaria puede mandar recordatorios de citas de varios médicos del
+                // mismo tenant) — de ahí que viajen acá, en el catálogo completo, y no solo en
+                // `ConfiguracionMedicoResource`.
+                'plantilla_cita' => $evolucion->plantilla_cita,
+                'plantilla_cumple' => $evolucion->plantilla_cumple,
+            ];
+        })->values()->all();
+    }
+
+    /**
+     * La `clave` de `evolucion` que le corresponde a [medico] dentro de este tenant — el mismo
+     * cruce que `medicosDelTenant`, pero al revés (por su propio correo). Es el default cuando el
+     * cliente crea una cita sin elegir médico explícitamente (Paso 22.C): el caso común, de un
+     * solo médico en la instancia. Nula si no hay fila de `evolucion` para él (pasa en los datos
+     * reales, que casi nunca tienen configuración).
+     */
+    private function claveDelMedico(Medico $medico, array $registrosMedicos): ?int
+    {
+        if (!$medico->email) {
+            return null;
+        }
+
+        $clave = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->where('correo_med', $medico->email)
+            ->value('clave');
+
+        return $clave === null ? null : (int) $clave;
     }
 
     /**
@@ -182,14 +290,24 @@ class SyncAppDataController extends Controller
         // paciente recién creado (ver `paciente_temp_id`).
         $pacientesCreados = [];
 
-        // Las creaciones de pacientes van primero: una cita del mismo lote puede depender de una
-        // de ellas, y el cliente no tiene forma de garantizar el orden del arreglo.
-        $changes = $this->pacientesPrimero($changes);
+        // Las creaciones van en orden de dependencia: una cita o una historia puede colgar de un
+        // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
+        // cliente no tiene forma de garantizar el orden del arreglo.
+        $changes = $this->enOrdenDeDependencia($changes);
+        $clinicas = new CreacionesClinicas($medico, $registrosMedicos);
+        $creadosAntes = count($creados);
 
         foreach ($changes as $change) {
             $table = $change['table'] ?? null;
             $recordId = $change['record_id'] ?? null;
             $operation = $change['operation'] ?? null;
+
+            if ($operation === 'created' && in_array($table, SyncAppDataRequest::CLINICAL_TABLES, true)) {
+                if (isset($change['temp_id']) && is_numeric($change['temp_id'])) {
+                    $clinicas->aplicar($change, $pacientesCreados, $creados, $rechazados);
+                }
+                continue;
+            }
 
             if ($operation === 'created') {
                 $this->applyCreated(
@@ -289,25 +407,27 @@ class SyncAppDataController extends Controller
             'creados' => $creados,
             'rechazados' => $rechazados,
             'creo_pacientes' => $pacientesCreados !== [],
+            'creo_clinicas' => collect($creados)->skip($creadosAntes)
+                ->contains(fn ($c) => in_array($c['table'], SyncAppDataRequest::CLINICAL_TABLES, true)),
         ];
     }
 
-    /** @param list<array> $changes @return list<array> */
-    private function pacientesPrimero(array $changes): array
+    /**
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, récipes); el
+     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
+     *
+     * @param list<array> $changes @return list<array>
+     */
+    private function enOrdenDeDependencia(array $changes): array
     {
-        $pacientes = [];
-        $resto = [];
+        $prioridad = ['pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'recipes' => 3];
+        $grupos = [[], [], [], [], []];
         foreach ($changes as $change) {
-            $esPacienteNuevo = ($change['operation'] ?? null) === 'created'
-                && ($change['table'] ?? null) === 'pacientes';
-            if ($esPacienteNuevo) {
-                $pacientes[] = $change;
-            } else {
-                $resto[] = $change;
-            }
+            $esCreacion = ($change['operation'] ?? null) === 'created';
+            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? 4) : 4][] = $change;
         }
 
-        return [...$pacientes, ...$resto];
+        return array_merge(...$grupos);
     }
 
     /**
@@ -541,7 +661,14 @@ class SyncAppDataController extends Controller
             return;
         }
 
-        $columnas['medico'] = $medico->id;
+        // `cola.medico` es la `clave` de `evolucion` (Paso 22.B), no `medicos.id` — son dos
+        // numeraciones distintas que solo coinciden por casualidad en los datos de prueba de un
+        // solo médico. Si el cliente ya la mandó (Paso 22.C: eligió un médico en el selector), se
+        // respeta esa; si no (el caso común, un solo médico en la instancia), se resuelve la del
+        // médico autenticado.
+        if (!isset($columnas['medico'])) {
+            $columnas['medico'] = $this->claveDelMedico($medico, $registrosMedicos);
+        }
 
         $cola = Cola::create($columnas);
 
@@ -558,9 +685,21 @@ class SyncAppDataController extends Controller
         $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
     }
 
-    /** Ver `ALLOWED_VALUES`. Una columna sin dominio declarado acepta cualquier valor. */
+    /**
+     * Ver `ALLOWED_VALUES` y `DATE_COLUMNS`. Una columna sin dominio declarado acepta cualquier
+     * valor.
+     */
     private function valorPermitido(string $table, string $column, $valor): bool
     {
+        if (in_array($column, SyncAppDataRequest::DATE_COLUMNS[$table] ?? [], true)) {
+            // Una cita sin fecha no existe en la agenda: nulo tampoco vale.
+            if (!is_string($valor)) {
+                return false;
+            }
+            $fecha = \DateTime::createFromFormat('!Y-m-d', $valor);
+            return $fecha !== false && $fecha->format('Y-m-d') === $valor;
+        }
+
         $permitidos = SyncAppDataRequest::ALLOWED_VALUES[$table][$column] ?? null;
 
         if ($permitidos === null || $valor === null) {

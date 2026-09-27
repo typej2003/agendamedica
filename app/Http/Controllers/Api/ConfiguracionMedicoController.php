@@ -44,14 +44,15 @@ class ConfiguracionMedicoController extends Controller
             'pie_informe.direccion' => 'sometimes|nullable|string|max:115',
             'pie_informe.consultorio' => 'sometimes|nullable|string|max:115',
             'logo' => 'sometimes|nullable|image|max:2048',
+            // Plantillas de mensaje (Paso 23): "Plantilla de citas" y "Plantilla de cumpleaños".
+            'plantilla_cita' => 'sometimes|nullable|string|max:500',
+            'plantilla_cumple' => 'sometimes|nullable|string|max:500',
         ]);
 
         // `evolucion` no tiene `medico_id`: la clave de negocio es `reg_medico`, igual que en el
         // resto del backend (ver MedicAPI/AGENTS.md). Un médico con varios registros (`MedicoRegistro`)
-        // guarda su reporte bajo el registro "principal" — se prefiere la relación `registro()`
-        // sobre `medico.reg_medico` porque ese campo está marcado en el propio modelo como
-        // "temporal, tiende a cambiar, no usar".
-        $regMedicoClave = $medico->registro?->reg_medico ?? $medico->reg_medico;
+        // guarda su reporte bajo el registro "principal" (ver `Medico::regMedicoPrincipal`).
+        $regMedicoClave = $medico->regMedicoPrincipal();
         if (!$regMedicoClave) {
             return response()->json([
                 'message' => 'Esta cuenta no tiene un número de registro médico principal configurado.',
@@ -78,6 +79,8 @@ class ConfiguracionMedicoController extends Controller
         if ($request->has('pie_recipe.correo')) $evolucion->linea_3 = $datos['pie_recipe']['correo'] ?? null;
         if ($request->has('pie_informe.direccion')) $evolucion->lineag_1 = $datos['pie_informe']['direccion'] ?? null;
         if ($request->has('pie_informe.consultorio')) $evolucion->lineag_2 = $datos['pie_informe']['consultorio'] ?? null;
+        if ($request->has('plantilla_cita')) $evolucion->plantilla_cita = $datos['plantilla_cita'] ?? null;
+        if ($request->has('plantilla_cumple')) $evolucion->plantilla_cumple = $datos['plantilla_cumple'] ?? null;
 
         if ($request->hasFile('logo')) {
             // Se borra la anterior para no acumular archivos huérfanos: acá no hay historial de
