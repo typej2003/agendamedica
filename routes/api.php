@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\ConfiguracionMedicoController;
+use App\Http\Controllers\Api\CargaInicialController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
 
@@ -40,6 +41,18 @@ Route::middleware('throttle:1000,1')->group(function () {
     Route::post('/consultas/sincronizar', [ConsultaSyncController::class, 'sincronizar']);
     Route::post('/cola/sincronizar', [ColaSyncController::class, 'sincronizar']);
 });
+
+// Carga inicial completa desde el escritorio PowerBuilder (botón "Sincronización completa").
+// Sin el `throttle:api` del grupo (60/min por IP): una carga son cientos de lotes seguidos y ese
+// límite la frenaba con 429. Tiene su propio límite, más amplio.
+Route::prefix('sync/carga-inicial')
+    ->withoutMiddleware('throttle:api')
+    ->middleware('throttle:600,1')
+    ->group(function () {
+        Route::post('/iniciar', [CargaInicialController::class, 'iniciar']);
+        Route::post('/lote', [CargaInicialController::class, 'lote']);
+        Route::post('/finalizar', [CargaInicialController::class, 'finalizar']);
+    });
 
 // ** App para notificación médica ** //
 Route::post('/app/login', [LoginAppController::class, 'login']);

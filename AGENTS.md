@@ -29,15 +29,14 @@ php artisan route:list
 ⚠️ **No hay `.env.testing`**: correr `php artisan test`/PHPUnit con `RefreshDatabase` pisaría con
 migraciones la base SQLite de desarrollo local (la que trae los datos de prueba de arriba). Los tests
 que sí tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
-`tests/Feature/ConfiguracionMedicoTest.php` como referencia. Además, correr la suite completa
-(`php artisan test` sin filtro) falla al cargar clases por un bug preexistente no relacionado
-(`ListMedicos.php` declara `class ListPacientes`, choca con el archivo real) — filtrar por test
-mientras eso no se arregle.
+`tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
+corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`).
 
 Dos datos del entorno que no están en `.env.example`: las variables de **WhatsApp**
 (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`) las lee `config/services.php`
-pero no aparecen en el ejemplo — hay que agregarlas a mano. Y **`sync_api_key` no existe ni en
-`.env.example` ni en `config/app.php`** (ver trampas conocidas).
+pero no aparecen en el ejemplo — hay que agregarlas a mano. Y **`SYNC_API_KEY`** (clave de sync del
+escritorio) tampoco está en el ejemplo: `config/app.php` la lee con un default de transición (ver trampas
+conocidas).
 
 ## Qué es
 
@@ -79,7 +78,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos). |
 | `database/seeders/` | Países / estados / ciudades / especialidades / roles / datos médicos de ejemplo. |
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
-| `tests/` | Solo las plantillas de Laravel (`ExampleTest` en `Feature/` y `Unit/`, `CreatesApplication`, `TestCase`): no hay cobertura real. |
+| `tests/` | `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
 ## Endpoints principales (estado en la rama `desarrollo`)
 
@@ -94,11 +93,27 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe) y desde el Paso 23 las plantillas de mensaje (`plantilla_cita`/`plantilla_cumple`); online-only, misma razón que el de notificar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 
-**Sync del sistema legado PowerBuilder** (grupo con `throttle:1000,1`)
+**Sync del sistema legado PowerBuilder**
+
+Todos autentican con `App\Services\SyncAuthService`: `X-API-KEY` (clave estática de transición) o
+`Authorization: Bearer` (credencial por equipo, `php artisan sync:credencial emitir|listar|revocar`).
+Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación.
+
+*Carga inicial* (botón "Sincronización completa" del escritorio; sin el `throttle:api` de 60/min, con
+`throttle:600,1` propio). Reglas en `App\Services\CargaInicialService`; tablas aceptadas en
+**`config/sync_legado.php`** (lista blanca, 102 tablas); tests en `tests/Feature/CargaInicialTest.php`.
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/upload-batch` | `SyncController@uploadBatch` — subida genérica por nombre de tabla; valida `X-API-KEY`, sanea el nombre de tabla, inserta en chunks de 500. Caso especial para `paciente(s)`. |
+| `POST` | `/api/sync/carga-inicial/iniciar` | `CargaInicialController@iniciar` — solo si el `reg_medico` no tiene datos (primera carga); si hay una carga cortada, la retoma y devuelve cuántas filas tiene de cada tabla. |
+| `POST` | `/api/sync/carga-inicial/lote` | `@lote` — idempotente por posición (`desde`): reenviar un lote no duplica; `409 posicion_incorrecta` + `esperado` si hay hueco. `pacientes` crea paciente + `medico_pacientes` + `historias`; el resto se inserta con el `reg_medico` de la carga. |
+| `POST` | `/api/sync/carga-inicial/finalizar` | `@finalizar` — cierra solo si llegaron todas las filas anunciadas. Después, `iniciar` para ese médico da `409 carga_ya_completa`. |
+
+*Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
+
+| Método | Ruta | Controlador |
+|---|---|---|
+| `POST` | `/api/sync/upload-batch` | `SyncController@uploadBatch` — subida genérica por nombre de tabla, inserta en chunks de 500 **sin deduplicar** y en **cualquier** tabla que exista (no usa la lista blanca). Caso especial para `paciente(s)`. |
 | `POST` | `/api/pacientes/sincronizar` | `PacienteSyncController@sincronizar`. |
 | `POST` | `/api/consultas/sincronizar` | `ConsultaSyncController@sincronizar`. |
 | `POST` | `/api/cola/sincronizar` | `ColaSyncController@sincronizar` — inserta solo colas inexistentes; con `es_ultimo_lote` deja bitácora en `upload_servers`. |
@@ -139,28 +154,33 @@ sistema legado).
    campo, del tipo `$request->input('reg_medico') ?? $request->input('reg_medico')` y
    `->orWhere('reg_medico', …)->orWhere('reg_medico', …)`. Releé el archivo completo antes de editar y no
    copies ese patrón.
-2. **`SyncController` valida la API key contra un default hardcodeado:**
-   `config('app.sync_api_key', 'MiClaveSecreta123!')`. Esa clave **no está definida ni en `.env.example`
-   ni en `config/app.php`**, así que el valor por defecto es el que rige hoy. No lo versiones ni lo
-   repitas en otros archivos.
-3. **El app Android espera `evolucion` (objeto) y este backend devuelve `evoluciones` (array)** —
+2. **La clave estática de sync tiene un default público:** `config/app.php` →
+   `'sync_api_key' => env('SYNC_API_KEY', ...)`, con el mismo valor que tenía hardcodeado el `.pbl`
+   (se dejó para no cortar las instalaciones durante la transición). Hasta definir `SYNC_API_KEY` en el
+   `.env` (o `php artisan sync:clave-estatica --rotar`), cualquiera que conozca ese valor puede subir
+   datos. No lo repitas en otros archivos.
+3. **Laravel convierte `""` en `null`** (middleware global `ConvertEmptyStringsToNull`) y recorta
+   espacios (`TrimStrings`). Para datos del legado eso rompe columnas `NOT NULL` (p. ej.
+   `imagen_pacientes.imagen`, vacía en casi todas las filas) y altera los textos: los endpoints de la
+   carga inicial leen el JSON crudo (`$request->getContent()`) a propósito.
+4. **El app Android espera `evolucion` (objeto) y este backend devuelve `evoluciones` (array)** —
    `RefreshAppController`. Confirmá contra el backend desplegado antes de tocar cualquiera de los dos
    lados.
-4. **El endpoint `POST /api/request-date`** que llama el app (pantalla vieja `AgendaActivity`) **no
+5. **El endpoint `POST /api/request-date`** que llama el app (pantalla vieja `AgendaActivity`) **no
    existe** en `routes/api.php` de esta rama: el backend desplegado y el repo divergen.
    El flujo vivo del app es `POST /api/app/refresh-data`.
-5. **Archivos muertos** que parecen vivos y engañan al leer: los que terminan en `" - copia.php"`
+6. **Archivos muertos** que parecen vivos y engañan al leer: los que terminan en `" - copia.php"`
    (`UploadServerController - copia.php`, `CargarSql - copia.php`), y
    **`AppAgendaMedicaController`** (300 líneas, método `authCitaMedica`): es una versión anterior del
    login + agenda que **no está enganchada en ninguna ruta**. No lo edites ni lo tomes de modelo; el
    camino vivo es `LoginAppController` + `RefreshAppController`.
-6. **`RefreshAppController`** resuelve el usuario con `$request->user()` y, si no hay, con `user_id` del
+7. **`RefreshAppController`** resuelve el usuario con `$request->user()` y, si no hay, con `user_id` del
    body. Tenelo presente al depurar 401.
-7. **El rol `Administrador` no existe en el seeder pero sí en las rutas**: `routes/web.php` y
+8. **El rol `Administrador` no existe en el seeder pero sí en las rutas**: `routes/web.php` y
    `DashboardController` lo referencian (`role:Root|Administrador`), mientras que `RoleAndUserSeeder`
    solo crea `Root`, `Medico`, `Secretaria`, `Paciente` y `Representante`. Si tocás permisos, verificá
    cuál de los dos lados es el que manda.
-8. **`RoleAndUserSeeder` crea un usuario Root por defecto con contraseña conocida**
+9. **`RoleAndUserSeeder` crea un usuario Root por defecto con contraseña conocida**
    (`root@admin.com` / `12345678`). No lo dejes habilitado en un entorno publicado.
 
 ## Dónde está el detalle funcional

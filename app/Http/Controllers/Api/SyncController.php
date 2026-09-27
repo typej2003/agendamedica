@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\Historia;
 use App\Models\MedicoRegistro;
+use App\Services\SyncAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -16,15 +17,28 @@ class SyncController extends Controller
 {
     public function uploadBatch(Request $request)
     {
-        // 1. Validar la clave API
-        $apiKey = $request->header('X-API-KEY');
-        if ($apiKey !== config('app.sync_api_key', 'MiClaveSecreta123!')) {
-            return response()->json(['status' => 'error', 'message' => 'API Key inválida.'], 401);
+        // 1. Autenticación: acepta X-API-KEY (transición) o Authorization: Bearer (credencial por
+        //    equipo, con vencimiento y revocación). Ver App\Services\SyncAuthService.
+        $auth = app(SyncAuthService::class)->validar($request);
+        if ($auth['status'] !== SyncAuthService::OK) {
+            return app(SyncAuthService::class)->respuestaError($auth);
         }
 
         $tableName = strtolower((string) $request->input('table'));
         $rows = $request->input('data');
         $regMedico = $request->input('reg_medico') ?? $request->input('reg_medico');
+
+        // Si vino con credencial de equipo, el médico SALE DE LA CREDENCIAL, no del payload:
+        // así un equipo no puede escribir datos de otro médico.
+        if (! empty($auth['reg_medico'])) {
+            if (! empty($regMedico) && $regMedico !== $auth['reg_medico']) {
+                Log::warning('Sync: el payload intentó usar otro reg_medico', [
+                    'credencial' => $auth['reg_medico'],
+                    'payload'    => $regMedico,
+                ]);
+            }
+            $regMedico = $auth['reg_medico'];
+        }
 
         // 2. Validar parámetros recibidos con Log de diagnóstico
         if (empty($tableName) || !is_array($rows)) {

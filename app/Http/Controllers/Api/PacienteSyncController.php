@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\Medico;
 use App\Models\Historia;
+use App\Services\SyncAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,14 @@ class PacienteSyncController extends Controller
      */
     public function sincronizar(Request $request)
     {
+        // Autenticación: X-API-KEY (transición) o credencial por equipo (Bearer). Este endpoint
+        // estaba SIN autenticación hasta 2026-09-27: cualquiera podía insertar pacientes de
+        // cualquier médico mandando su reg_medico en el payload.
+        $auth = app(SyncAuthService::class)->validar($request);
+        if ($auth['status'] !== SyncAuthService::OK) {
+            return app(SyncAuthService::class)->respuestaError($auth);
+        }
+
         $data = $request->all();
 
         // Extraer pacientes ya sea que vengan en un array o como objeto único
@@ -28,6 +37,11 @@ class PacienteSyncController extends Controller
         // Tomar referencias del request o del primer objeto del payload
         $primerRegistro = is_array($data) && isset($data[0]) ? $data[0] : $data;
         $regMedico = $primerRegistro['reg_medico'] ?? $request->input('reg_medico');
+
+        // Con credencial de equipo el médico lo manda la CREDENCIAL, no el payload.
+        if (! empty($auth['reg_medico'])) {
+            $regMedico = $auth['reg_medico'];
+        }
 
         // Búsqueda del médico por reg_medico
         $medico = Medico::where('reg_medico', $regMedico)->first();

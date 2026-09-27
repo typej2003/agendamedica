@@ -17,6 +17,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Clave estática de sincronización del escritorio (PowerBuilder)
+    |--------------------------------------------------------------------------
+    |
+    | La usan SOLO los endpoints de subida del legado (`/api/sync/upload-batch`,
+    | `/api/pacientes/sincronizar`, `/api/consultas/sincronizar`, `/api/cola/sincronizar`)
+    | vía el header `X-API-KEY`, a través de App\Services\SyncAuthService.
+    |
+    | El valor por defecto `MiClaveSecreta123!` estaba HARDCODEADO en el `.pbl` del
+    | escritorio: cualquiera con los `.pbl` podía escribir en el API. Está acá para no
+    | romper las instalaciones existentes mientras se migra a credenciales por equipo
+    | (`php artisan sync:credencial`), pero hay que rotarla:
+    |
+    |     php artisan sync:clave-estatica --rotar
+    |
+    | IMPORTANTE: dejar esto en `env(...)` sin default obliga a definirlo en el `.env`.
+    | Se mantiene el default a propósito, para que un despliegue sin la variable no
+    | deje el escritorio sin sincronizar de golpe.
+    |
+    */
+
+    'sync_api_key' => env('SYNC_API_KEY', 'MiClaveSecreta123!'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
