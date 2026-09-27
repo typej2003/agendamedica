@@ -10,6 +10,7 @@ use App\Http\Livewire\Admin\CargarSql;
 use App\Http\Livewire\Medico\ListMedicoCenterMedical;
 use App\Http\Livewire\Admin\Privacidad;
 use App\Http\Livewire\Admin\Servicio;
+use App\Http\Livewire\Admin\DatosClientes;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,3 +35,4 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/privacidad', Privacidad::class)->name('privacidad');
 Route::get('/servicio', Servicio::class)->name('servicio');
+Route::get('/datos-clientes', DatosClientes::class)->name('datos-clientes');
