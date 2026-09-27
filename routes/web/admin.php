@@ -9,6 +9,7 @@ use App\Http\Livewire\Admin\ListUsers;
 use App\Http\Livewire\Admin\CargarSql;
 use App\Http\Livewire\Medico\ListMedicoCenterMedical;
 use App\Http\Livewire\Admin\Privacidad;
+use App\Http\Livewire\Admin\Servicio;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,3 +33,4 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::get('/privacidad', Privacidad::class)->name('privacidad');
+Route::get('/servicio', Servicio::class)->name('servicio');
