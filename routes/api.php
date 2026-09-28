@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\ConfiguracionMedicoController;
 use App\Http\Controllers\Api\CargaInicialController;
+use App\Http\Controllers\Api\CambiosEscritorioController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
 
@@ -52,6 +53,15 @@ Route::prefix('sync/carga-inicial')
         Route::post('/iniciar', [CargaInicialController::class, 'iniciar']);
         Route::post('/lote', [CargaInicialController::class, 'lote']);
         Route::post('/finalizar', [CargaInicialController::class, 'finalizar']);
+    });
+
+// Sincronización incremental del escritorio (Fase 2). Mismo criterio de límites que la carga.
+Route::prefix('sync/cambios')
+    ->withoutMiddleware('throttle:api')
+    ->middleware('throttle:600,1')
+    ->group(function () {
+        Route::post('/estado', [CambiosEscritorioController::class, 'estado']);
+        Route::post('/subir', [CambiosEscritorioController::class, 'subir']);
     });
 
 // ** App para notificación médica ** //

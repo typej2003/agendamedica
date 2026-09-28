@@ -109,6 +109,14 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 | `POST` | `/api/sync/carga-inicial/lote` | `@lote` — idempotente por posición (`desde`): reenviar un lote no duplica; `409 posicion_incorrecta` + `esperado` si hay hueco. `pacientes` crea paciente + `medico_pacientes` + `historias`; el resto se inserta con el `reg_medico` de la carga. |
 | `POST` | `/api/sync/carga-inicial/finalizar` | `@finalizar` — cierra solo si llegaron todas las filas anunciadas. Después, `iniciar` para ese médico da `409 carga_ya_completa`. |
 
+*Sincronización de cambios* (Fase 2, mismos límites; `App\Sync\Escritorio\CambiosEscritorio`, tests en
+`tests/Feature/CambiosEscritorioTest.php`, diseño en `../bridge/DISENO-FASE-2.md`):
+
+| Método | Ruta | Controlador |
+|---|---|---|
+| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar. |
+| `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
+
 *Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
 
 | Método | Ruta | Controlador |

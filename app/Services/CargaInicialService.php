@@ -2,13 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Historia;
 use App\Models\Medico;
-use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
-use App\Models\Paciente;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
+use App\Sync\Escritorio\PacientesLegado;
+use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -31,8 +30,9 @@ class CargaInicialService
     /** Tablas del API (no del legado) que también indican que el médico ya tiene datos. */
     private const TABLAS_DEL_API_CON_DATOS = ['medico_pacientes', 'historias'];
 
-    /** @var array<string, string[]> cache de columnas por tabla */
-    private array $columnas = [];
+    public function __construct(private TablasLegado $tablas)
+    {
+    }
 
     /* ------------------------------------------------------------------ */
     /* Médico y limpieza                                                   */
@@ -63,7 +63,7 @@ class CargaInicialService
 
         $conDatos = [];
         foreach ($tablas as $tabla) {
-            if (! Schema::hasTable($tabla) || ! in_array('reg_medico', $this->columnasDe($tabla), true)) {
+            if (! Schema::hasTable($tabla) || ! in_array('reg_medico', $this->tablas->columnasDe($tabla), true)) {
                 continue;
             }
             if (DB::table($tabla)->where('reg_medico', $regMedico)->exists()) {
@@ -118,7 +118,7 @@ class CargaInicialService
         $aceptadas = [];
         $ignoradas = [];
         foreach ($anunciadas as $tabla => $filas) {
-            $tabla = $this->normalizar((string) $tabla);
+            $tabla = $this->tablas->normalizar((string) $tabla);
             if (in_array($tabla, $permitidas, true) && Schema::hasTable($tabla)) {
                 $aceptadas[$tabla] = max(0, (int) $filas);
             } elseif ((int) $filas > 0) {
@@ -162,7 +162,7 @@ class CargaInicialService
      */
     public function recibirLote(SyncCarga $carga, string $tabla, int $desde, array $filas): array
     {
-        $tabla = $this->normalizar($tabla);
+        $tabla = $this->tablas->normalizar($tabla);
 
         if ($carga->estado !== SyncCarga::EN_CURSO) {
             return $this->error(409, 'carga_cerrada', 'La carga inicial ya está cerrada.');
@@ -267,7 +267,7 @@ class CargaInicialService
      */
     private function insertarGenerico(SyncCarga $carga, string $tabla, array $filas, array &$ignoradas): void
     {
-        $columnas = $this->columnasDe($tabla);
+        $columnas = $this->tablas->columnasDe($tabla);
         $ahora = now();
         $limpias = [];
 
@@ -275,8 +275,13 @@ class CargaInicialService
             if (! is_array($fila)) {
                 continue;
             }
-            $limpia = $this->filtrarColumnas($tabla, $fila, $ignoradas);
+            $limpia = $this->tablas->filtrar($tabla, $fila, $ignoradas);
             $limpia['reg_medico'] = $carga->reg_medico;
+            // Clave de la fila en el escritorio: con ella la sincronización de cambios reconoce
+            // consultas y citas aunque sus números o su hora cambien (bridge/DISENO-FASE-2.md § 4).
+            if (in_array('clave_escritorio', $columnas, true)) {
+                $limpia['clave_escritorio'] = $this->claveEscritorio($tabla, $limpia);
+            }
             if (in_array('medico_id', $columnas, true)) {
                 $limpia['medico_id'] = $carga->medico_id;
             }
@@ -313,12 +318,12 @@ class CargaInicialService
      */
     private function guardarEvolucion(SyncCarga $carga, array $filas, array &$ignoradas): void
     {
-        $columnas = $this->columnasDe('evolucion');
+        $columnas = $this->tablas->columnasDe('evolucion');
         foreach ($filas as $fila) {
             if (! is_array($fila) || ! isset($fila['clave'])) {
                 continue;
             }
-            $datos = $this->filtrarColumnas('evolucion', $fila, $ignoradas);
+            $datos = $this->tablas->filtrar('evolucion', $fila, $ignoradas);
             unset($datos['clave']);
             if (in_array('updated_at', $columnas, true)) {
                 $datos['updated_at'] = now();
@@ -335,17 +340,14 @@ class CargaInicialService
     }
 
     /**
-     * Pacientes del legado -> paciente (compartido entre médicos, por cédula) + relación con el
-     * médico + historia. Mismo modelo que usa el app (ver PacienteSyncController y
-     * SyncAppDataController).
-     *
-     * A diferencia de PacienteSyncController, un paciente SIN cédula no se descarta ni se mezcla
-     * con otros sin cédula: se reconoce por su historia con este médico, o se crea uno nuevo.
+     * Pacientes del legado -> paciente + relación con el médico + historia (ver PacientesLegado).
+     * En la carga el número de historia es el mismo en los dos lados.
      *
      * @return int filas omitidas
      */
     private function guardarPacientes(SyncCarga $carga, array $filas, array &$ignoradas): int
     {
+        $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
 
         foreach ($filas as $fila) {
@@ -353,89 +355,28 @@ class CargaInicialService
                 $omitidas++;
                 continue;
             }
-
-            $numHistoria = $fila['numhistoria'];
-            // `numhistoria` vive en la relación con el médico y en la historia. En algunas bases del
-            // API `pacientes` todavía tiene esa columna (NOT NULL, heredada del dump del legado):
-            // si existe se llena; si no, no se informa como columna perdida.
-            $sinUsar = [];
-            $datos = $this->filtrarColumnas('pacientes', $fila, $sinUsar);
-            foreach (array_diff($sinUsar, ['numhistoria']) as $columna) {
-                if (! in_array($columna, $ignoradas, true)) {
-                    $ignoradas[] = $columna;
-                }
-            }
-            unset($datos['id'], $datos['user_id'], $datos['password']);
-
-            $cedula = trim((string) ($fila['cedula'] ?? ''));
-            $paciente = null;
-            if ($cedula !== '' && $cedula !== '0') {
-                $paciente = Paciente::where('cedula', $cedula)->first();
-            } else {
-                $historia = Historia::where('medico_id', $carga->medico_id)->where('numhistoria', $numHistoria)->first();
-                $paciente = $historia ? Paciente::find($historia->paciente_id) : null;
-                $datos['cedula'] = null;
-            }
-
-            $paciente = $paciente ?? new Paciente();
-            $paciente->forceFill($datos)->save();
-
-            MedicoPaciente::updateOrCreate(
-                ['medico_id' => $carga->medico_id, 'paciente_id' => $paciente->id],
-                ['numhistoria' => $numHistoria, 'reg_medico' => $carga->reg_medico]
-            );
-
-            Historia::updateOrCreate(
-                ['paciente_id' => $paciente->id, 'medico_id' => $carga->medico_id],
-                ['numhistoria' => $numHistoria, 'reg_medico' => $carga->reg_medico, 'medical_center_id' => null]
-            );
+            $pacientes->guardar($carga, $fila, $fila['numhistoria'], TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
         }
 
         return $omitidas;
     }
 
+    /** `clave_escritorio` de una fila recién llegada del escritorio (consultas y cola). */
+    private function claveEscritorio(string $tabla, array $fila): ?string
+    {
+        if ($tabla === 'consultas' && isset($fila['numhistoria'], $fila['nroconsulta'])) {
+            return TablasLegado::claveConsulta($fila['numhistoria'], $fila['nroconsulta']);
+        }
+        if ($tabla === 'cola' && isset($fila['fecha'], $fila['hora_ini'])) {
+            return TablasLegado::claveCola($fila['fecha'], $fila['hora_ini']);
+        }
+
+        return null;
+    }
+
     /* ------------------------------------------------------------------ */
     /* Utilidades                                                          */
     /* ------------------------------------------------------------------ */
-
-    /**
-     * Deja solo las columnas que existen en la tabla del API. Los nombres del legado se
-     * normalizan igual que los migró el esquema: minúsculas, sin acentos ni símbolos
-     * (`por_retención_seg` -> `por_retencin_seg`, `PARA` -> `para`).
-     */
-    private function filtrarColumnas(string $tabla, array $fila, array &$ignoradas): array
-    {
-        $columnas = $this->columnasDe($tabla);
-        $excluidas = config("sync_legado.columnas_excluidas.{$tabla}", []);
-        $limpia = [];
-
-        foreach ($fila as $columna => $valor) {
-            $columna = $this->normalizar((string) $columna);
-            if ($columna === 'id' || $columna === 'reg_medico' || in_array($columna, $excluidas, true)) {
-                continue;
-            }
-            if (! in_array($columna, $columnas, true)) {
-                if (! in_array($columna, $ignoradas, true)) {
-                    $ignoradas[] = $columna;
-                }
-                continue;
-            }
-            $limpia[$columna] = is_array($valor) ? json_encode($valor) : $valor;
-        }
-
-        return $limpia;
-    }
-
-    /** @return string[] */
-    private function columnasDe(string $tabla): array
-    {
-        return $this->columnas[$tabla] ??= array_map('strtolower', Schema::getColumnListing($tabla));
-    }
-
-    private function normalizar(string $nombre): string
-    {
-        return preg_replace('/[^a-z0-9_]/', '', strtolower(trim($nombre)));
-    }
 
     private function okLote(string $tabla, int $recibidas, int $duplicado): array
     {

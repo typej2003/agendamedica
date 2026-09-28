@@ -13,13 +13,15 @@
 | tablas del API (2026-09-27). Quedaron afuera las que no son datos del médico: catálogos internos
 | de PowerBuilder (`pbcat*`), tablas de ejemplo de Sybase (`employee`, `department`), las de
 | MobiLink/sistema (dueño `dbo`/`SYS`), `upload_servers` (bitácora del botón viejo),
-| `registro_operaciones` y `consultas_subida` (bitácoras) y `evolucion_copy` (copia de respaldo de `evolucion`).
+| `registro_operaciones` y `consultas_subida` (bitácoras), `evolucion_copy` (copia de respaldo de `evolucion`)
+| y `operadores`: son los USUARIOS del escritorio, con la contraseña en texto plano (sacada el
+| 2026-09-28; la carga inicial la había subido).
 |
 */
 
 return [
 
-    // Tablas que se aceptan (102). 35 se crearon el 2026-09-27 desde el dump del legado porque el
+    // Tablas que se aceptan (101). 35 se crearon el 2026-09-27 desde el dump del legado porque el
     // API no las tenía (ver la migración create_tablas_legado_faltantes).
     'tablas' => [
         // `pacientes` va siempre primero (crea el paciente, la relación con el médico y la historia,
@@ -37,7 +39,7 @@ return [
         'facturas_compras_detalle', 'formato_print', 'his_con_pre_factura', 'hospitalizacion',
         'imagen_consulta', 'imagen_pacientes', 'imagen_pacientes_2', 'imagenes', 'informe',
         'intenven_servi', 'listado', 'motivo_cita', 'motivo_consulta_paciente', 'motivo_factura',
-        'motivo_factura_prov', 'motivos_consulta', 'operadores', 'paciente_no_regi', 'pago_quiru',
+        'motivo_factura_prov', 'motivos_consulta', 'paciente_no_regi', 'pago_quiru',
         'pre_natal_desarrollo', 'pre_natal_desarrollo_fino', 'pre_natal_examenes',
         'pre_natal_observaciones', 'prena_exames_b', 'presupuesto_operatorio', 'presupuesto_planti',
         'proveedor', 'radiologia_obs', 'radiologia_paciente', 'radiologias', 'recipe2',
@@ -56,6 +58,14 @@ return [
     //    (ver PENDIENTES-POWERBUILDER.md, "Logo del membrete").
     'columnas_excluidas' => [
         'evolucion' => ['contrasena', 'sms_user', 'sms_clave', 'logo'],
+    ],
+
+    // Tablas SIN clave primaria en el escritorio en las que el app TAMBIÉN crea filas. Cuando cambian
+    // en el escritorio, el escritorio manda la tabla entera y el API reemplaza la del médico: estas filas
+    // del app (anotadas en `sync_changes` como `created` con este `table_name`) no se borran.
+    // tabla del legado => table_name con que el app anota la creación.
+    'sin_clave_con_altas_del_app' => [
+        'recipe_detalle' => 'recipes', // récipes creados desde "Atender" (App\Sync\CreacionesClinicas)
     ],
 
     // Tablas que NO cuentan para decidir si el médico está "limpio" (primera carga). `evolucion`
