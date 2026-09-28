@@ -275,6 +275,16 @@ class CambiosEscritorio
             return 'aplicado';
         }
         DB::table('consultas')->where('id', $consulta->id)->delete();
+        // El app guarda las consultas en su copia local y agrupa por consulta los documentos que
+        // imprime (Paso 25): sin esto, una consulta borrada en el escritorio seguiría en el teléfono.
+        SyncChange::create([
+            'reg_medico'  => $carga->reg_medico,
+            'table_name'  => 'consultas',
+            'record_id'   => $consulta->id,
+            'operation'   => 'deleted',
+            'occurred_at' => now(),
+            'source'      => 'escritorio',
+        ]);
 
         return 'aplicado';
     }
@@ -380,6 +390,22 @@ class CambiosEscritorio
     private function borrarGenerico(SyncCarga $carga, string $tabla, array $clave, Carbon $fecha): string
     {
         $clave = $this->traducir($carga, $clave);
+
+        // Las tablas que el app guarda en su copia local se enteran del borrado por `sync_changes`
+        // (como `pacientes` y `cola`). Sin esto, un reposo borrado en el escritorio se seguiría
+        // imprimiendo en el teléfono (Paso 25).
+        if (in_array($tabla, config('sync_legado.borrados_al_app', []), true)) {
+            foreach ($this->filasPorClave($carga, $tabla, $clave)->pluck('id') as $id) {
+                SyncChange::create([
+                    'reg_medico'  => $carga->reg_medico,
+                    'table_name'  => $tabla,
+                    'record_id'   => $id,
+                    'operation'   => 'deleted',
+                    'occurred_at' => now(),
+                    'source'      => 'escritorio',
+                ]);
+            }
+        }
         $this->filasPorClave($carga, $tabla, $clave)->delete();
 
         return 'aplicado';

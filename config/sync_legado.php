@@ -68,6 +68,17 @@ return [
         'recipe_detalle' => 'recipes', // récipes creados desde "Atender" (App\Sync\CreacionesClinicas)
     ],
 
+    // Tablas del escritorio que el app guarda en su copia local con el mismo nombre. Cuando el
+    // escritorio borra una fila de estas, el API lo anota en `sync_changes` para que el teléfono
+    // también la borre. Solo estas: un `eliminados` de una tabla que el app no tiene no le sirve.
+    // (`pacientes`, `consultas` y `cola` tienen su propio camino en `CambiosEscritorio`.)
+    'borrados_al_app' => [
+        'recipes', 'vademecum',
+        // Documentos que el app imprime (Paso 25) y los catálogos que usan.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'diagnostico_paciente',
+        'diagnosticos', 'doctores', 'especial',
+    ],
+
     // Tablas que NO cuentan para decidir si el médico está "limpio" (primera carga). `evolucion`
     // es la configuración del médico y puede existir desde que se registró en el app.
     'no_cuentan_para_limpieza' => ['evolucion'],

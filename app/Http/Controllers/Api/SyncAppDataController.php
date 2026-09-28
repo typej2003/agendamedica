@@ -7,9 +7,15 @@ use App\Http\Requests\SyncAppDataRequest;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
 use App\Models\Cola;
+use App\Models\ConstanciaObs;
 use App\Models\Consulta;
+use App\Models\Diagnostico;
+use App\Models\DiagnosticoPaciente;
+use App\Models\Doctor;
+use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\Historia;
+use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
 use App\Models\MedicoPaciente;
@@ -20,6 +26,8 @@ use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\RecipeFormato;
+use App\Models\Referencia;
+use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
@@ -129,6 +137,39 @@ class SyncAppDataController extends Controller
             $since,
         )->get();
 
+        // Documentos de la consulta que el app solo imprime (Paso 25): los carga el escritorio y bajan
+        // por delta, con el mismo filtro doble que `consultas`. `constancia_obs` nombra sus columnas
+        // `numhistoria`/`numconsulta`; las demás, `nrohistoria`/`nroconsulta`.
+        //
+        // Al abrir cada consulta, el legado crea filas plantilla (constancia sin observación, informe
+        // con el texto ".", reposo de 1 día sin observación): son casi todas las filas y no son
+        // documentos. La constancia se imprime igual en cualquier consulta (su texto es fijo); de
+        // `constancia_obs` solo hace falta la observación. En la descarga
+        // completa no se mandan (con datos reales, ~13 MB menos); por delta se manda todo, así el
+        // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
+        $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $this->deltaQuery(
+            $modelo::whereIn($columnaHistoria, $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($since === null && $conContenido !== null, $conContenido),
+            $since,
+        )->get();
+        $constancias = $porConsulta(ConstanciaObs::class, 'numhistoria', fn ($q) => $q
+            ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''"));
+        // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
+        // (decisión del usuario, 2026-09-27).
+        $reposos = $porConsulta(ReposoPaciente::class, 'nrohistoria', fn ($q) => $q->where(fn ($q) => $q
+            ->where('numdias', '>', 1)
+            ->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''")));
+        $referencias = $porConsulta(Referencia::class, 'nrohistoria');
+        $informes = $porConsulta(Informe::class, 'nrohistoria', fn ($q) => $q
+            ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')"));
+        $diagnosticosPaciente = $porConsulta(DiagnosticoPaciente::class, 'nrohistoria');
+        // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
+        // (constancia), el médico al que se refiere y su especialidad (referencia).
+        $diagnosticos = $this->deltaQuery(Diagnostico::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $doctores = $this->deltaQuery(Doctor::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $especialidades = $this->deltaQuery(Especialidad::whereIn('reg_medico', $registrosMedicos), $since)->get();
+
         // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
         // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
         // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
@@ -179,6 +220,14 @@ class SyncAppDataController extends Controller
             'vademecum' => $vademecum,
             'tratamientos' => $tratamientos,
             'tratamientos_detalle' => $tratamientosDetalle,
+            'constancia_obs' => $constancias,
+            'reposo_paciente' => $reposos,
+            'referencia' => $referencias,
+            'informe' => $informes,
+            'diagnostico_paciente' => $diagnosticosPaciente,
+            'diagnosticos' => $diagnosticos,
+            'doctores' => $doctores,
+            'especial' => $especialidades,
             'centros_medicos' => $centrosMedicos,
             'offices' => $offices,
             'office_schedules' => $officeSchedules,

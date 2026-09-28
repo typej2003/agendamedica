@@ -114,6 +114,32 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame(1, DB::table('antece_paciente')->where('reg_medico', self::REG)->count());
     }
 
+    public function test_borrar_una_fila_que_el_app_guarda_se_anota_para_el_telefono_y_una_que_no_no(): void
+    {
+        $this->subir([['id' => 13, 'tabla' => 'reposo_paciente', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['nrohistoria' => '1', 'nroconsulta' => '1'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 1, 'numdias' => 3]]]);
+        $reposo = DB::table('reposo_paciente')->where('reg_medico', self::REG)->value('id');
+
+        $this->subir([
+            ['id' => 14, 'tabla' => 'reposo_paciente', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '1']],
+            ['id' => 15, 'tabla' => 'antece_paciente', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['numhistoria' => '1', 'codeantecedente' => 'A1']],
+        ]);
+
+        $borrados = SyncChange::where('reg_medico', self::REG)->where('operation', 'deleted')->get();
+        $this->assertSame([['reposo_paciente', $reposo]], $borrados->map(fn ($c) => [$c->table_name, (int) $c->record_id])->all());
+    }
+
+    public function test_borrar_una_consulta_en_el_escritorio_se_anota_para_el_telefono(): void
+    {
+        $consulta = DB::table('consultas')->where('reg_medico', self::REG)->value('id');
+
+        $this->subir([['id' => 16, 'tabla' => 'consultas', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['numhistoria' => '1', 'nroconsulta' => '1']]]);
+
+        $this->assertTrue(SyncChange::where('reg_medico', self::REG)->where('table_name', 'consultas')
+            ->where('record_id', $consulta)->where('operation', 'deleted')->exists());
+    }
+
     public function test_historia_nueva_del_escritorio_conserva_su_numero_si_esta_libre(): void
     {
         $this->subir([['id' => 1, 'tabla' => 'pacientes', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
