@@ -39,10 +39,9 @@ use Illuminate\Support\Facades\DB;
  * que el día que el sync del PowerBuilder las baje las va a encontrar como si las hubiera creado él
  * (ver PENDIENTES-POWERBUILDER.md).
  *
- * Paso 18.B2 suma los **motivos de consulta**: crear uno nuevo en el catálogo del médico
- * (`motivos_consulta`, el servidor le pone el código) y agregar un motivo a una consulta
- * (`motivo_consulta_paciente`). Quitar uno de la consulta es el borrado de
- * [self::quitarMotivoDeConsulta].
+ * Paso 18.B2 suma los **motivos de una consulta**: agregar uno del catálogo
+ * (`motivo_consulta_paciente`) y quitarlo ([self::quitarMotivoDeConsulta]). El catálogo en sí lo
+ * ampliaría un endpoint online-only aparte, no esta cola.
  */
 class CreacionesClinicas
 {
@@ -51,9 +50,6 @@ class CreacionesClinicas
 
     /** @var array<int, int> id temporal → id real de las consultas creadas en este lote */
     private array $consultas = [];
-
-    /** @var array<int, int> id temporal → id real de los motivos del catálogo creados en este lote */
-    private array $motivos = [];
 
     public function __construct(
         private Medico $medico,
@@ -86,7 +82,6 @@ class CreacionesClinicas
             'historias' => $this->crearHistoria($change, $tempId, $pacientesCreados, $rechazar),
             'consultas' => $this->crearConsulta($change, $tempId, $rechazar),
             'recipes' => $this->crearRecipe($change, $tempId, $rechazar),
-            'motivos_consulta' => $this->crearMotivo($change, $tempId, $rechazar),
             'motivo_consulta_paciente' => $this->crearMotivoDeConsulta($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
@@ -291,62 +286,10 @@ class CreacionesClinicas
     }
 
     /**
-     * Un motivo nuevo en el catálogo del médico. El código es el correlativo de 4 dígitos del legado
-     * (último + 1) y la descripción va en mayúsculas, como la captura el escritorio (límite de 40).
-     *
-     * Si ya existe un motivo con esa descripción (sin distinguir mayúsculas ni espacios de más) no se
-     * crea otro: se devuelve el existente, porque dos teléfonos —o el médico y su asistente— que
-     * escriban el mismo motivo no deben dejar el catálogo con repetidos.
-     *
-     * Límite conocido: dos teléfonos que creen motivos *distintos* en el mismo instante podrían
-     * calcular el mismo código (la tabla no tiene unicidad por `(reg_medico, codemotivo)` y el legado
-     * podría tener repetidos que impidan agregarla).
-     */
-    private function crearMotivo(array $change, int $tempId, callable $rechazar): ?array
-    {
-        $columnas = is_array($change['columns'] ?? null) ? $change['columns'] : [];
-        $descripcion = $columnas['descripcion'] ?? null;
-        $descripcion = is_string($descripcion) ? mb_strtoupper(trim(preg_replace('/\s+/u', ' ', $descripcion))) : '';
-
-        if ($descripcion === '') {
-            $rechazar('El motivo no tiene descripción.');
-            return null;
-        }
-        if (mb_strlen($descripcion) > 40) {
-            $rechazar('La descripción del motivo no puede pasar de 40 caracteres.');
-            return null;
-        }
-
-        $catalogo = MotivoConsulta::whereIn('reg_medico', $this->registrosMedicos)->get();
-
-        $motivo = $catalogo->first(fn (MotivoConsulta $m) => mb_strtoupper(trim($m->descripcion)) === $descripcion);
-        if (!$motivo) {
-            $siguiente = ((int) $catalogo->pluck('codemotivo')
-                ->filter(fn ($c) => is_numeric($c))
-                ->map(fn ($c) => (int) $c)
-                ->max()) + 1;
-            if ($siguiente > 9999) {
-                $rechazar('El catálogo de motivos está lleno.');
-                return null;
-            }
-
-            $motivo = MotivoConsulta::create([
-                'reg_medico' => $this->medico->regMedicoPrincipal(),
-                'codemotivo' => str_pad((string) $siguiente, 4, '0', STR_PAD_LEFT),
-                'descripcion' => $descripcion,
-            ]);
-        }
-
-        $this->anotar('motivos_consulta', $motivo->id, $tempId, $motivo->reg_medico);
-        $this->motivos[$tempId] = $motivo->id;
-
-        return $this->respuestaMotivo($tempId, $motivo);
-    }
-
-    /**
      * Agregar un motivo a una consulta. Cuelga de la consulta (existente o del mismo lote) y de un
-     * motivo del catálogo: uno que ya existe (`codemotivo`) o uno creado en este lote (`motivo_temp_id`).
-     * Agregar dos veces el mismo motivo a la misma consulta devuelve la fila que ya estaba.
+     * motivo que **ya está** en el catálogo (`codemotivo`): el catálogo no se crea por acá sino con
+     * `POST /app/motivos-consulta` (online-only, ver `MotivoConsultaController`). Agregar dos veces el
+     * mismo motivo a la misma consulta devuelve la fila que ya estaba.
      */
     private function crearMotivoDeConsulta(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -383,12 +326,6 @@ class CreacionesClinicas
     private function resolverCodigoDeMotivo(array $change): ?string
     {
         $catalogo = MotivoConsulta::whereIn('reg_medico', $this->registrosMedicos);
-
-        if (isset($change['motivo_temp_id'])) {
-            $tempId = (int) $change['motivo_temp_id'];
-            $id = $this->motivos[$tempId] ?? $this->yaCreado('motivos_consulta', $tempId);
-            return $id === null ? null : $catalogo->find($id)?->codemotivo;
-        }
 
         $codigo = $change['codemotivo'] ?? null;
         if (!is_string($codigo) || trim($codigo) === '') {
@@ -520,11 +457,6 @@ class CreacionesClinicas
             $consulta = Consulta::find($recordId);
             return $consulta ? $this->respuestaConsulta($tempId, $consulta) : null;
         }
-        if ($table === 'motivos_consulta') {
-            $this->motivos[$tempId] = $recordId;
-            $motivo = MotivoConsulta::find($recordId);
-            return $motivo ? $this->respuestaMotivo($tempId, $motivo) : null;
-        }
         if ($table === 'motivo_consulta_paciente') {
             // Aunque la fila ya no exista (otro teléfono la quitó después), el teléfono necesita
             // la respuesta para soltar su id temporal: el `eliminados` siguiente la limpia.
@@ -561,17 +493,6 @@ class CreacionesClinicas
             'id' => $consulta->id,
             'numhistoria' => (int) $consulta->numhistoria,
             'nroconsulta' => (int) $consulta->nroconsulta,
-        ];
-    }
-
-    private function respuestaMotivo(int $tempId, MotivoConsulta $motivo): array
-    {
-        return [
-            'table' => 'motivos_consulta',
-            'temp_id' => $tempId,
-            'id' => $motivo->id,
-            'codemotivo' => $motivo->codemotivo,
-            'descripcion' => $motivo->descripcion,
         ];
     }
 

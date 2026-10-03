@@ -18,7 +18,8 @@ use Tests\TestCase;
 
 /**
  * Motivos de consulta desde el app (ROADMAP.md Paso 18.B2): el catálogo y los de cada consulta bajan
- * en `sync-app-data`, y el app puede crear un motivo nuevo, agregar uno a la consulta y quitarlo.
+ * en `sync-app-data`, y el app puede agregar un motivo del catálogo a la consulta y quitarlo. Crear un
+ * motivo nuevo en el catálogo es otro endpoint (ver `MotivoConsultaCatalogoTest`).
  *
  * `DatabaseTransactions`, no `RefreshDatabase`: mismo motivo que `CreacionesClinicasTest`.
  */
@@ -183,113 +184,37 @@ class MotivosConsultaTest extends TestCase
         $this->assertSame(1, MotivoConsultaPaciente::where('reg_medico', $medico->reg_medico)->count());
     }
 
-    public function test_un_motivo_nuevo_recibe_el_siguiente_codigo_en_mayusculas(): void
-    {
-        $medico = $this->medico();
-        $this->motivo($medico, '0001', 'UNO');
-        $this->motivo($medico, '0007', 'SIETE');
-
-        $response = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1,
-                'columns' => ['descripcion' => '  dolor   de cabeza ']],
-        ]);
-
-        $creado = $this->creado($response, 'motivos_consulta', -1);
-        $this->assertSame('0008', $creado['codemotivo']);
-        $this->assertSame('DOLOR DE CABEZA', $creado['descripcion']);
-        $this->assertSame($medico->reg_medico, MotivoConsulta::find($creado['id'])->reg_medico);
-        $this->assertTrue(collect($response->json('motivos_consulta'))->contains('id', $creado['id']));
-    }
-
-    public function test_el_primer_motivo_de_un_catalogo_vacio_es_el_0001(): void
-    {
-        $this->medico();
-
-        $response = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => 'Control']],
-        ]);
-
-        $this->assertSame('0001', $this->creado($response, 'motivos_consulta', -1)['codemotivo']);
-    }
-
-    public function test_un_motivo_con_la_misma_descripcion_no_se_duplica_en_el_catalogo(): void
-    {
-        $medico = $this->medico();
-        $existente = $this->motivo($medico, '0003', 'DOLOR PELVICO');
-
-        $response = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => 'dolor pelvico']],
-        ]);
-
-        $this->assertSame($existente->id, $this->creado($response, 'motivos_consulta', -1)['id']);
-        $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
-    }
-
-    public function test_dos_telefonos_que_crean_el_mismo_motivo_reciben_el_mismo_id_y_codigo(): void
-    {
-        $medico = $this->medico();
-
-        // Cada teléfono manda su propio `temp_id` y escribe el nombre a su manera.
-        $primero = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => 111, 'columns' => ['descripcion' => 'Dolor pélvico']],
-        ]);
-        $segundo = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => 987, 'columns' => ['descripcion' => ' DOLOR  PÉLVICO ']],
-        ]);
-
-        $a = $this->creado($primero, 'motivos_consulta', 111);
-        $b = $this->creado($segundo, 'motivos_consulta', 987);
-        $this->assertSame($a['id'], $b['id']);
-        $this->assertSame($a['codemotivo'], $b['codemotivo']);
-        $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
-    }
-
-    public function test_reintentar_la_creacion_de_un_motivo_no_numera_de_nuevo(): void
-    {
-        $medico = $this->medico();
-        $cambio = [['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => 'Nuevo']]];
-
-        $primera = $this->sync($cambio);
-        $segunda = $this->sync($cambio);
-
-        $this->assertSame($this->creado($primera, 'motivos_consulta', -1), $this->creado($segunda, 'motivos_consulta', -1));
-        $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
-    }
-
-    public function test_motivo_nuevo_consulta_nueva_y_vinculo_en_un_lote_desordenado(): void
+    public function test_el_motivo_se_agrega_a_una_consulta_nueva_del_mismo_lote_aunque_llegue_desordenado(): void
     {
         $medico = $this->medico();
         $this->consulta($medico, 9);
+        $this->motivo($medico, '0004', 'PRURITO');
 
         $response = $this->sync([
             // Desordenados a propósito: el servidor tiene que resolver las dependencias.
             ['table' => 'motivo_consulta_paciente', 'operation' => 'created', 'temp_id' => -3,
-                'consulta_temp_id' => -2, 'motivo_temp_id' => -1],
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => 'Prurito']],
+                'consulta_temp_id' => -2, 'codemotivo' => '0004'],
             ['table' => 'consultas', 'operation' => 'created', 'temp_id' => -2, 'numhistoria' => 9],
         ]);
 
         $this->assertSame([], $response->json('rechazados'));
         $consulta = $this->creado($response, 'consultas', -2);
-        $motivo = $this->creado($response, 'motivos_consulta', -1);
         $fila = MotivoConsultaPaciente::findOrFail($this->creado($response, 'motivo_consulta_paciente', -3)['id']);
-        $this->assertSame($motivo['codemotivo'], $fila->codemotivo);
+        $this->assertSame('0004', $fila->codemotivo);
         $this->assertSame(9, $fila->nrohistoria);
         $this->assertSame($consulta['nroconsulta'], $fila->nroconsulta);
     }
 
-    public function test_un_motivo_de_un_lote_posterior_encuentra_el_motivo_y_la_consulta_por_su_id_temporal(): void
+    public function test_un_motivo_de_un_lote_posterior_encuentra_la_consulta_por_su_id_temporal(): void
     {
         $medico = $this->medico();
         $this->consulta($medico, 2);
+        $this->motivo($medico, '0004', 'PRURITO');
 
-        $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => 'Prurito']],
-            ['table' => 'consultas', 'operation' => 'created', 'temp_id' => -2, 'numhistoria' => 2],
-        ]);
+        $this->sync([['table' => 'consultas', 'operation' => 'created', 'temp_id' => -2, 'numhistoria' => 2]]);
         $response = $this->sync([
             ['table' => 'motivo_consulta_paciente', 'operation' => 'created', 'temp_id' => -3,
-                'consulta_temp_id' => -2, 'motivo_temp_id' => -1],
+                'consulta_temp_id' => -2, 'codemotivo' => '0004'],
         ]);
 
         $this->assertNotNull($this->creado($response, 'motivo_consulta_paciente', -3));
@@ -303,8 +228,6 @@ class MotivosConsultaTest extends TestCase
         $this->motivo($medico, '0001', 'VALIDO');
 
         $response = $this->sync([
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -1, 'columns' => ['descripcion' => '   ']],
-            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => -2, 'columns' => ['descripcion' => str_repeat('A', 41)]],
             ['table' => 'motivo_consulta_paciente', 'operation' => 'created', 'temp_id' => -3,
                 'consulta_id' => $consulta->id, 'codemotivo' => '9999'],
             ['table' => 'motivo_consulta_paciente', 'operation' => 'created', 'temp_id' => -4,
@@ -313,9 +236,8 @@ class MotivosConsultaTest extends TestCase
                 'consulta_id' => $consulta->id, 'codemotivo' => '0001'],
         ]);
 
-        $this->assertCount(4, $response->json('rechazados'));
+        $this->assertCount(2, $response->json('rechazados'));
         $this->assertNotNull($this->creado($response, 'motivo_consulta_paciente', -5));
-        $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
     }
 
     public function test_no_se_puede_usar_la_consulta_ni_el_catalogo_de_otro_medico(): void

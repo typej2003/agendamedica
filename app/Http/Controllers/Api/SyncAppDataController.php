@@ -483,9 +483,9 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos del
-     * catálogo, motivos de la consulta y récipes); el resto (ediciones, borrados, reordenamientos,
-     * citas nuevas) después, en el orden en que llegó.
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos de
+     * la consulta y récipes); el resto (ediciones, borrados, reordenamientos, citas nuevas)
+     * después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
