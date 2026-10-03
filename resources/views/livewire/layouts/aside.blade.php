@@ -89,6 +89,12 @@
                 <span class="link-text">Usuarios</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}">
+                <i class="bi bi-key-fill"></i>
+                <span class="link-text">API Keys</span>
+            </a>
+        </li>
         @endif
 
         @if(auth()->user()->hasRole(['Root', 'Administrador']))

@@ -114,6 +114,11 @@ doctor, como ya era. Lo nuevo se apoya en eso:
   Root; el `ListUsers` viejo (`/users`, `/admin/users`) sigue existiendo pero ya no está enlazado (reemplaza TODOS
   los roles de un usuario al editarlo y fija claves sin marcarlas como temporales). Cada acción de Livewire vuelve a
   comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página.
+- **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
+  revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
+  y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
+  los conteos de pacientes e historias (`SyncResumenService`, en lote por página). El token en claro se muestra una
+  sola vez (copiar o descargar `sync-token.txt`); en la base solo queda su SHA-256.
 
 **Sync del sistema legado PowerBuilder**
 

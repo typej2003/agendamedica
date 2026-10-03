@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Medico;
 use App\Models\SyncCredential;
+use App\Services\SyncCredencialService;
 use Illuminate\Console\Command;
+use DomainException;
 
 /**
  * Emite, lista y revoca credenciales de sincronización por equipo.
@@ -87,32 +89,27 @@ class SyncCredencialCommand extends Command
             return self::FAILURE;
         }
 
-        $previas = SyncCredential::where('reg_medico', $regMedico)
-            ->where('machine_label', $equipo)
-            ->whereNull('revoked_at')
-            ->get();
+        $servicio = app(SyncCredencialService::class);
 
-        if ($previas->isNotEmpty()) {
-            if (! $this->option('forzar')) {
-                $this->error("Ya hay {$previas->count()} credencial(es) activa(s) para '{$equipo}'. "
-                    . 'Usá --forzar para revocarlas y emitir una nueva.');
-                return self::FAILURE;
-            }
-            foreach ($previas as $p) {
-                $p->forceFill(['revoked_at' => now()])->save();
-            }
-            $this->warn("Revocadas {$previas->count()} credencial(es) previas de '{$equipo}'.");
+        $previas = $servicio->previasDelEquipo($regMedico, $equipo);
+        if ($previas->isNotEmpty() && ! $this->option('forzar')) {
+            $this->error("Ya hay {$previas->count()} credencial(es) activa(s) para '{$equipo}'. "
+                . 'Usá --forzar para revocarlas y emitir una nueva.');
+            return self::FAILURE;
         }
 
-        $token = SyncCredential::generarToken();
-        $cred  = SyncCredential::create([
-            'reg_medico'       => $regMedico,
-            'machine_label'    => $equipo,
-            'machine_host'     => $host !== '' ? $host : null,
-            'bound_to_machine' => $atar,
-            'token_hash'       => SyncCredential::hashToken($token),
-            'expires_at'       => now()->addYears($anios),
-        ]);
+        try {
+            $emitida = $servicio->emitir($regMedico, $equipo, $anios, $atar, $host !== '' ? $host : null, revocarPrevias: true);
+        } catch (DomainException $e) {
+            $this->error($e->getMessage());
+            return self::FAILURE;
+        }
+
+        $cred  = $emitida['credencial'];
+        $token = $emitida['token'];
+        if ($emitida['revocadas'] > 0) {
+            $this->warn("Revocadas {$emitida['revocadas']} credencial(es) previas de '{$equipo}'.");
+        }
 
         $this->newLine();
         $this->info('Credencial emitida.');
@@ -203,7 +200,7 @@ class SyncCredencialCommand extends Command
         }
 
         foreach ($creds as $c) {
-            $c->forceFill(['revoked_at' => now()])->save();
+            app(SyncCredencialService::class)->revocar($c);
             $this->info("Revocada id={$c->id} equipo='{$c->machine_label}' ({$c->reg_medico}).");
         }
 
