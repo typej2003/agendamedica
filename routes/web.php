@@ -7,6 +7,7 @@ use App\Http\Livewire\Components\ListSearch;
 use App\Http\Livewire\Components\ViewCalendar;
 use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
+use App\Http\Controllers\Auth\CambiarPasswordWebController;
 use App\Http\Controllers\DashboardController;
 
 use App\Services\WhatsAppService;
@@ -35,6 +36,10 @@ Route::redirect('/home', '/dashboard');
 Route::middleware(['auth'])->group(function () {
     // Usamos un controlador para la vista del dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Cambio de contraseña (obligatorio si la clave es temporal — ver EnsurePasswordChanged).
+    Route::get('/cambiar-password', [CambiarPasswordWebController::class, 'formulario'])->name('cuenta.password');
+    Route::post('/cambiar-password', [CambiarPasswordWebController::class, 'actualizar'])->name('cuenta.password.update');
 
     // Ruta para la gestión de usuarios (protegida por permiso)
     Route::get('/users', \App\Http\Livewire\Admin\ListUsers::class)->name('users.index')->middleware('role:Root|Administrador');

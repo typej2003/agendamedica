@@ -57,7 +57,7 @@ class SyncAppDataController extends Controller
             return response()->json(['message' => 'Usuario no autenticado.'], 401);
         }
 
-        $medicoModel = Medico::where('user_id', $user->id)->orWhere('email', $user->email)->first();
+        $medicoModel = $user->medico;
         if (!$medicoModel) {
             return response()->json(['message' => 'Esta cuenta no tiene un médico asociado.'], 403);
         }

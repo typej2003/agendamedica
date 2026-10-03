@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
 use App\Http\Controllers\Api\LoginAppController;
+use App\Http\Controllers\Api\CambiarPasswordController;
 use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
@@ -31,7 +32,9 @@ use App\Services\WhatsAppService;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
+// Devuelve la cuenta tal cual (incluye `must_change_password`): el app la usa al reabrir para saber si debe
+// mostrar la pantalla de cambio de clave. Por eso queda abierta con clave temporal (ver EnsurePasswordChanged).
+Route::middleware(['auth:api', 'account.active'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -67,7 +70,10 @@ Route::prefix('sync/cambios')
 // ** App para notificación médica ** //
 Route::post('/app/login', [LoginAppController::class, 'login']);
 
-Route::middleware('auth:api')->group(function () {
+// Cambio de clave: vive FUERA del grupo con `password.changed`, que bloquea todo lo demás mientras la clave sea temporal.
+Route::middleware(['auth:api', 'account.active'])->post('/app/cambiar-password', [CambiarPasswordController::class, 'cambiar']);
+
+Route::middleware(['auth:api', 'account.active', 'password.changed'])->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
     Route::post('/app/sync-app-data', [SyncAppDataController::class, 'sync']);
 
@@ -108,7 +114,7 @@ Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
 // mensajes con el token de Meta del consultorio (y gastar su cupo). Ahora exige autenticación y
 // tiene throttle propio. No la usa ninguno de los dos apps (se verificó en el Kotlin y en el
 // Flutter) — el app usa `/app/citas/{cola}/notificar`, que además valida la cita y deja registro.
-Route::middleware(['auth:api', 'throttle:60,1'])->post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
+Route::middleware(['auth:api', 'account.active', 'password.changed', 'throttle:60,1'])->post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
     $request->validate([
         'phone' => 'required|string',
         'patient_name' => 'required|string',

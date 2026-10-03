@@ -21,6 +21,7 @@ class RoleAndUserSeeder extends Seeder
 
         // 1. Crear o recuperar los Roles para el Área de Salud
         $roleRoot         = Role::firstOrCreate(['name' => 'Root', 'guard_name' => 'web']);
+        $roleAdministrador = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
         $roleMedico       = Role::firstOrCreate(['name' => 'Medico', 'guard_name' => 'web']);
         $roleSecretaria   = Role::firstOrCreate(['name' => 'Secretaria', 'guard_name' => 'web']);
         $rolePaciente     = Role::firstOrCreate(['name' => 'Paciente', 'guard_name' => 'web']);

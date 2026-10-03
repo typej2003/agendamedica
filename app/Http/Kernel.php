@@ -38,6 +38,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\UserOnlineMiddleware::class, // Middleware para marcar al usuario como activo
+            \App\Http\Middleware\EnsureAccountActive::class,
+            \App\Http\Middleware\EnsurePasswordChanged::class,
         ],
 
         'api' => [
@@ -63,6 +65,11 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+
+        // Cuentas (dashboard de administración): bloqueo y clave temporal. En web ya corren dentro del grupo
+        // `web`; para el API se agregan a mano en las rutas autenticadas.
+        'account.active' => \App\Http\Middleware\EnsureAccountActive::class,
+        'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
 
         // Middlewares de Spatie/laravel-permission
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
