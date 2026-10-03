@@ -82,9 +82,9 @@
 
         <li class="nav-header">ADMINISTRACIÓN</li>
 
-        @if(auth()->user()->can('ver-usuarios') || auth()->user()->hasRole('Root'))
+        @if(auth()->user()->esAdministrador())
         <li class="nav-item">
-            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}">
+            <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}">
                 <i class="bi bi-people-fill"></i>
                 <span class="link-text">Usuarios</span>
             </a>

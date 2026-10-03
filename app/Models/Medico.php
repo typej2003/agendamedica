@@ -45,6 +45,12 @@ class Medico extends Model
         return $this->registro?->reg_medico ?? $this->reg_medico;
     }
 
+    /** Cuenta de acceso del médico (`medicos.user_id`); null si todavía no tiene. */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class, 'office_id');

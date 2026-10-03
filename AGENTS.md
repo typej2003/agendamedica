@@ -107,6 +107,13 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - `User::esAdministrador()` (rol Root o Administrador), `User::administradores()` (scope; no usar `User::role([...])`
   de Spatie con roles que pueden no existir: lanza excepción) y `User::medico()`.
 - El primer administrador se crea con `php artisan cuentas:admin {email}`.
+- **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
+  `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
+  (se muestra una sola vez), crear acceso a un médico sin cuenta, resetear clave, bloquear/desbloquear y sumar o
+  quitar el rol Administrador. **Sustituye** al enlace "Usuarios" del panel lateral y a las tarjetas del escritorio
+  Root; el `ListUsers` viejo (`/users`, `/admin/users`) sigue existiendo pero ya no está enlazado (reemplaza TODOS
+  los roles de un usuario al editarlo y fija claves sin marcarlas como temporales). Cada acción de Livewire vuelve a
+  comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página.
 
 **Sync del sistema legado PowerBuilder**
 
