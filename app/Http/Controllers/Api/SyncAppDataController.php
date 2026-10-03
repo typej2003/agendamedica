@@ -21,6 +21,8 @@ use App\Models\MedicalCenter;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MotivoCita;
+use App\Models\MotivoConsulta;
+use App\Models\MotivoConsultaPaciente;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
@@ -121,6 +123,14 @@ class SyncAppDataController extends Controller
             $since,
         )->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
+        // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
+        // los lee y puede agregar o quitar los de la consulta que está atendiendo.
+        $motivosConsulta = $this->deltaQuery(MotivoConsulta::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $motivosDeConsulta = $this->deltaQuery(
+            MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
         // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
         // filtro doble que `consultas`.
         $recipes = $this->deltaQuery(
@@ -216,6 +226,8 @@ class SyncAppDataController extends Controller
             'colas' => $colas,
             'consultas' => $consultas,
             'motivos' => $motivos,
+            'motivos_consulta' => $motivosConsulta,
+            'motivo_consulta_paciente' => $motivosDeConsulta,
             'recipes' => $recipes,
             'vademecum' => $vademecum,
             'tratamientos' => $tratamientos,
@@ -358,6 +370,15 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
+            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `DELETABLE_TABLES`: esa lista
+            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`).
+            if ($operation === 'deleted' && $table === 'motivo_consulta_paciente') {
+                if ($recordId) {
+                    $clinicas->quitarMotivoDeConsulta((int) $recordId);
+                }
+                continue;
+            }
+
             if ($operation === 'created') {
                 $this->applyCreated(
                     $change,
@@ -462,18 +483,23 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, récipes); el
-     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos del
+     * catálogo, motivos de la consulta y récipes); el resto (ediciones, borrados, reordenamientos,
+     * citas nuevas) después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
     private function enOrdenDeDependencia(array $changes): array
     {
-        $prioridad = ['pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'recipes' => 3];
-        $grupos = [[], [], [], [], []];
+        $prioridad = [
+            'pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'motivos_consulta' => 3,
+            'motivo_consulta_paciente' => 4, 'recipes' => 4,
+        ];
+        $resto = 5; // el grupo de todo lo que no es una creación clínica
+        $grupos = array_fill(0, $resto + 1, []);
         foreach ($changes as $change) {
             $esCreacion = ($change['operation'] ?? null) === 'created';
-            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? 4) : 4][] = $change;
+            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? $resto) : $resto][] = $change;
         }
 
         return array_merge(...$grupos);

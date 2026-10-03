@@ -102,10 +102,21 @@ class SyncAppDataRequest extends FormRequest
      * servidor** con el correlativo vigente, y el cliente solo manda a qué cuelga. Ver
      * `SyncAppDataController::crearHistoria` y siguientes.
      */
-    public const CLINICAL_TABLES = ['historias', 'consultas', 'recipes'];
+    public const CLINICAL_TABLES = [
+        'historias', 'consultas', 'recipes',
+        // Paso 18.B2: un motivo nuevo en el catálogo y un motivo de una consulta. El código del
+        // motivo también lo asigna el servidor (correlativo de 4 dígitos por médico).
+        'motivos_consulta', 'motivo_consulta_paciente',
+    ];
 
-    /** Tablas que pueden aparecer en `changes`, con cualquier operación. */
-    public const SYNC_TABLES = ['cola', 'pacientes', 'historias', 'consultas', 'recipes'];
+    /**
+     * Tablas que pueden aparecer en `changes`, con cualquier operación. `motivo_consulta_paciente`
+     * además acepta `deleted` (quitar un motivo de la consulta; el catálogo nunca se borra desde el app).
+     */
+    public const SYNC_TABLES = [
+        'cola', 'pacientes', 'historias', 'consultas', 'recipes',
+        'motivos_consulta', 'motivo_consulta_paciente',
+    ];
 
     /**
      * Columna de ordenamiento por tabla, y el campo que delimita el grupo dentro del cual se
@@ -157,6 +168,10 @@ class SyncAppDataRequest extends FormRequest
             'changes.*.numhistoria' => ['sometimes', 'nullable', 'integer'],
             'changes.*.consulta_temp_id' => ['sometimes', 'nullable', 'integer'],
             'changes.*.consulta_id' => ['sometimes', 'nullable', 'integer'],
+            // Paso 18.B2: un motivo de consulta cuelga de una consulta (arriba) y de un motivo del
+            // catálogo, que puede ser uno existente (`codemotivo`) o uno creado en este lote.
+            'changes.*.motivo_temp_id' => ['sometimes', 'nullable', 'integer'],
+            'changes.*.codemotivo' => ['sometimes', 'nullable', 'string', 'max:20'],
             'changes.*.fecha' => ['sometimes', 'nullable', 'string'],
             'changes.*.items' => ['sometimes', 'array'],
 

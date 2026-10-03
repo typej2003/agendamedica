@@ -77,6 +77,8 @@ return [
         // Documentos que el app imprime (Paso 25) y los catálogos que usan.
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'diagnostico_paciente',
         'diagnosticos', 'doctores', 'especial',
+        // Motivos de consulta (Paso 18.B2): el catálogo y los de cada consulta.
+        'motivos_consulta', 'motivo_consulta_paciente',
     ],
 
     // Tablas que NO cuentan para decidir si el médico está "limpio" (primera carga). `evolucion`
