@@ -131,7 +131,8 @@ class CuentaService
         }
 
         $email = $this->normalizarCorreo($medico->email);
-        $this->exigirCorreoLibre($email);
+        // El correo ya figura en la ficha de este mismo médico: eso no cuenta como repetido.
+        $this->exigirCorreoLibre($email, null, $medico);
         $clave = $this->claveParaAlta($clave);
 
         $user = DB::transaction(function () use ($medico, $email, $clave) {
@@ -203,6 +204,68 @@ class CuentaService
     }
 
     /* ------------------------------------------------------------------ */
+    /* Edición de datos                                                    */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Edita los datos de un médico: nombre, apellido, correo, teléfono y licencia. NO el `reg_medico`: es la
+     * llave con la que están guardados todos sus datos clínicos en la nube, cambiarlo los dejaría huérfanos.
+     * Si tiene cuenta de acceso, nombre y correo se actualizan también ahí (el correo es con el que inicia sesión).
+     *
+     * @param  array{name:string, lastname:string, email:string, phone?:?string, license_number?:?string}  $datos
+     */
+    public function actualizarMedico(Medico $medico, array $datos): Medico
+    {
+        $nombre = trim((string) ($datos['name'] ?? ''));
+        $apellido = trim((string) ($datos['lastname'] ?? ''));
+        if ($nombre === '' || $apellido === '') {
+            throw ValidationException::withMessages(['name' => 'El nombre y el apellido son obligatorios.']);
+        }
+        $email = $this->normalizarCorreo((string) ($datos['email'] ?? ''));
+        $this->exigirCorreoLibre($email, $medico->user_id ? User::find($medico->user_id) : null, $medico);
+
+        return DB::transaction(function () use ($medico, $datos, $nombre, $apellido, $email) {
+            $medico->forceFill([
+                'name'           => $nombre,
+                'lastname'       => $apellido,
+                'email'          => $email,
+                'phone'          => $this->vacioANull($datos['phone'] ?? null),
+                'license_number' => $this->vacioANull($datos['license_number'] ?? null),
+            ])->save();
+
+            if ($medico->user_id) {
+                User::whereKey($medico->user_id)->update(['name' => trim("{$nombre} {$apellido}"), 'email' => $email]);
+            }
+
+            return $medico->fresh();
+        });
+    }
+
+    /**
+     * Edita nombre y correo de una cuenta de acceso (administrador, o médico visto desde la lista de
+     * administradores). Si la cuenta tiene ficha de médico, el correo se copia ahí (el login del legado lo usa).
+     */
+    public function actualizarUsuario(User $user, array $datos): User
+    {
+        $nombre = trim((string) ($datos['name'] ?? ''));
+        if ($nombre === '') {
+            throw ValidationException::withMessages(['name' => 'El nombre es obligatorio.']);
+        }
+        $email = $this->normalizarCorreo((string) ($datos['email'] ?? ''));
+        $ficha = Medico::where('user_id', $user->id)->first();
+        $this->exigirCorreoLibre($email, $user, $ficha);
+
+        return DB::transaction(function () use ($user, $nombre, $email, $ficha) {
+            $user->forceFill(['name' => $nombre, 'email' => $email])->save();
+            if ($ficha) {
+                $ficha->forceFill(['email' => $email])->save();
+            }
+
+            return $user->fresh();
+        });
+    }
+
+    /* ------------------------------------------------------------------ */
     /* Bloqueo y roles                                                     */
     /* ------------------------------------------------------------------ */
 
@@ -244,6 +307,53 @@ class CuentaService
         $this->exigirOtroAdministradorActivo($user, 'quitar el rol de administrador a');
 
         $user->removeRole('Administrador');
+    }
+
+    /** Roles que se pueden asignar desde el panel. Se crean si faltan (en una base nueva solo existen los que ya se usaron). */
+    public const ROLES_BASE = ['Root', 'Administrador', 'Medico', 'Secretaria', 'Paciente', 'Representante'];
+
+    /** @return string[] */
+    public function rolesDisponibles(): array
+    {
+        foreach (self::ROLES_BASE as $nombre) {
+            $this->rol($nombre);
+        }
+
+        return Role::where('guard_name', 'web')->orderBy('name')->pluck('name')->all();
+    }
+
+    /**
+     * Deja a la cuenta con EXACTAMENTE estos roles (agrega los nuevos y quita los que falten).
+     *
+     * Protecciones: solo un usuario Root puede dar o quitar el rol Root (un Administrador no se asciende solo);
+     * nadie se quita a sí mismo el acceso de administración; y el sistema no puede quedar sin un administrador activo.
+     *
+     * @param  string[]  $roles
+     */
+    public function asignarRoles(User $user, array $roles, ?User $actor = null): void
+    {
+        $roles = collect($roles)->map(fn ($r) => trim((string) $r))->filter()->unique()->values();
+        $validos = collect($this->rolesDisponibles());
+        if ($desconocidos = $roles->diff($validos)->all()) {
+            throw ValidationException::withMessages(['roles' => 'Rol desconocido: ' . implode(', ', $desconocidos) . '.']);
+        }
+
+        $actuales = $user->roles()->pluck('name');
+        $cambiaRoot = $actuales->contains('Root') !== $roles->contains('Root');
+        if ($cambiaRoot && ! ($actor && $actor->hasRole('Root'))) {
+            throw ValidationException::withMessages(['roles' => 'Solo un usuario Root puede dar o quitar el rol Root.']);
+        }
+
+        $eraAdmin = $actuales->intersect(User::ROLES_ADMIN)->isNotEmpty();
+        $seraAdmin = $roles->intersect(User::ROLES_ADMIN)->isNotEmpty();
+        if ($eraAdmin && ! $seraAdmin) {
+            if ($actor && $actor->is($user)) {
+                throw ValidationException::withMessages(['roles' => 'No puedes quitarte a ti mismo el acceso de administración.']);
+            }
+            $this->exigirOtroAdministradorActivo($user, 'quitar el acceso de administración al');
+        }
+
+        $user->syncRoles($roles->all());
     }
 
     /** Nunca puede quedar el sistema sin un administrador activo. */
@@ -292,11 +402,22 @@ class CuentaService
         return $email;
     }
 
-    private function exigirCorreoLibre(string $email): void
+    /** El correo no puede estar en otra cuenta ni en otra ficha de médico (se ignoran las propias). */
+    private function exigirCorreoLibre(string $email, ?User $propia = null, ?Medico $propiaFicha = null): void
     {
-        if (User::where('email', $email)->exists()) {
+        $enUsers = User::where('email', $email)->when($propia, fn ($q) => $q->where('id', '!=', $propia->id))->exists();
+        $enFichas = Medico::where('email', $email)->when($propiaFicha, fn ($q) => $q->where('id', '!=', $propiaFicha->id))->exists();
+
+        if ($enUsers || $enFichas) {
             throw ValidationException::withMessages(['email' => 'Ya existe una cuenta con ese correo.']);
         }
+    }
+
+    private function vacioANull($valor): ?string
+    {
+        $valor = $valor === null ? '' : trim((string) $valor);
+
+        return $valor === '' ? null : $valor;
     }
 
     private function exigirRegMedicoLibre(string $regMedico): void

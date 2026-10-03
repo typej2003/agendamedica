@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Livewire\Admin\Cuentas;
 use App\Models\Medico;
+use App\Models\SyncCredential;
 use App\Models\User;
 use App\Services\CuentaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -79,9 +80,12 @@ class CuentasPanelTest extends TestCase
     {
         $this->actingAs($this->admin());
         // El enlace viejo (`/users`) ya no está: se busca con las comillas del href porque `/users/permissions` sigue existiendo.
+        // "Permisos de Usuario" tampoco: nunca funcionó y los roles se cambian desde la fila (menú de 3 puntos).
         Livewire::test('layouts.aside')
             ->assertSee(route('admin.cuentas'))
-            ->assertDontSee('href="' . route('users.index') . '"', false);
+            ->assertDontSee('href="' . route('users.index') . '"', false)
+            ->assertDontSee('Permisos de Usuario')
+            ->assertDontSee(route('users.permissions'));
 
         $this->app['auth']->forgetGuards();
         $this->actingAs($this->medicoSinPermisos());
@@ -282,34 +286,330 @@ class CuentasPanelTest extends TestCase
             ->assertHasErrors(['cuenta'])
             ->assertSet('modal', 'bloquear')
             ->call('cerrarModal')
-            ->call('abrirQuitarAdmin', $admin->id)
-            ->call('confirmarQuitarAdmin')
-            ->assertHasErrors(['cuenta']);
+            // Quitarse el acceso de administración por la ventana de roles tampoco (único administrador activo).
+            ->call('abrirRoles', $admin->id)
+            ->set('rolesSeleccionados', ['Medico'])
+            ->call('guardarRoles')
+            ->assertHasErrors(['roles']);
 
         $this->assertTrue($admin->fresh()->is_active);
         $this->assertTrue($admin->fresh()->esAdministrador());
     }
 
-    public function test_hacer_y_quitar_administrador_conservando_otros_roles(): void
+    /* ------------------------------------------------------------------ */
+    /* Menú de 3 puntos                                                    */
+    /* ------------------------------------------------------------------ */
+
+    public function test_cada_fila_trae_editar_y_un_menu_con_el_resto_de_acciones(): void
+    {
+        $r = $this->cuentas->crearMedico([
+            'name' => 'Menu', 'lastname' => 'Fila', 'email' => 'menu-' . uniqid() . '@example.com', 'reg_medico' => 'test-menu-' . uniqid(),
+        ]);
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(Cuentas::class)->set('search', $r['medico']->reg_medico);
+
+        $panel->assertSee('Editar')
+            ->assertSee('bi-three-dots-vertical', false)
+            ->assertSee('Roles')
+            ->assertSee('Resetear clave')
+            ->assertSee('Generar API key')
+            ->assertSee('Bloquear')
+            // Los botones sueltos de antes ya no están.
+            ->assertDontSee('Hacer admin')
+            ->assertDontSee('Quitar admin');
+    }
+
+    public function test_un_medico_sin_cuenta_tiene_crear_acceso_y_el_menu_solo_con_api_key(): void
+    {
+        $medico = Medico::create([
+            'name' => 'Sin', 'lastname' => 'Menu', 'email' => 'sinmenu-' . uniqid() . '@example.com', 'reg_medico' => 'test-sm-' . uniqid(),
+        ]);
+        $this->actingAs($this->admin());
+
+        Livewire::test(Cuentas::class)->set('search', $medico->reg_medico)
+            ->assertSee('Crear acceso')
+            ->assertSee('Generar API key')
+            ->assertDontSee('Resetear clave')
+            ->assertDontSee('Bloquear');
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Editar datos                                                        */
+    /* ------------------------------------------------------------------ */
+
+    public function test_editar_medico_abre_el_formulario_con_sus_datos_y_los_guarda(): void
+    {
+        $r = $this->cuentas->crearMedico([
+            'name' => 'Ana', 'lastname' => 'Vieja', 'email' => 'ana-' . uniqid() . '@example.com',
+            'reg_medico' => 'test-ed-' . uniqid(), 'phone' => '0212-1111111', 'license_number' => 'LIC-1',
+        ]);
+        $r['medico']->forceFill(['phone' => '0212-1111111', 'license_number' => 'LIC-1'])->save();
+        $this->actingAs($this->admin());
+        $nuevoCorreo = 'ana-nueva-' . uniqid() . '@example.com';
+
+        $panel = Livewire::test(Cuentas::class)
+            ->call('abrirEditar', 'medico', $r['medico']->id)
+            ->assertSet('modal', 'editar')
+            ->assertSet('name', 'Ana')
+            ->assertSet('lastname', 'Vieja')
+            ->assertSet('email', $r['medico']->email)
+            ->assertSet('phone', '0212-1111111')
+            ->assertSet('license_number', 'LIC-1')
+            ->assertSet('reg_medico', $r['medico']->reg_medico)
+            ->set('name', 'Ana María')->set('lastname', 'Nueva')->set('email', strtoupper($nuevoCorreo))
+            ->set('phone', '')->set('license_number', 'LIC-2')
+            ->call('guardarEdicion')
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
+
+        $m = $r['medico']->fresh();
+        $this->assertSame('Ana María', $m->name);
+        $this->assertSame('Nueva', $m->lastname);
+        $this->assertSame($nuevoCorreo, $m->email, 'El correo se guarda en minúsculas.');
+        $this->assertNull($m->phone, 'Un campo vaciado queda en null.');
+        $this->assertSame('LIC-2', $m->license_number);
+        // El reg_medico (llave de sus datos en la nube) no cambia.
+        $this->assertSame($r['medico']->reg_medico, $m->reg_medico);
+        // La cuenta de acceso sigue a la ficha: nombre y correo de inicio de sesión.
+        $this->assertSame('Ana María Nueva', $r['user']->fresh()->name);
+        $this->assertSame($nuevoCorreo, $r['user']->fresh()->email);
+    }
+
+    public function test_editar_no_deja_repetir_correo_ni_dejar_campos_obligatorios_vacios(): void
+    {
+        $a = $this->cuentas->crearMedico(['name' => 'A', 'lastname' => 'A', 'email' => 'a-' . uniqid() . '@example.com', 'reg_medico' => 'test-a-' . uniqid()]);
+        $b = $this->cuentas->crearMedico(['name' => 'B', 'lastname' => 'B', 'email' => 'b-' . uniqid() . '@example.com', 'reg_medico' => 'test-b-' . uniqid()]);
+        $this->actingAs($this->admin());
+
+        Livewire::test(Cuentas::class)
+            ->call('abrirEditar', 'medico', $a['medico']->id)
+            ->set('email', $b['user']->email)
+            ->call('guardarEdicion')
+            ->assertHasErrors(['email'])
+            ->assertSet('modal', 'editar')
+            ->set('email', $a['user']->email)->set('name', '')->set('lastname', '')
+            ->call('guardarEdicion')
+            ->assertHasErrors(['name', 'lastname']);
+
+        // Dejar su propio correo tal cual NO es "repetido".
+        Livewire::test(Cuentas::class)
+            ->call('abrirEditar', 'medico', $a['medico']->id)
+            ->set('name', 'A2')
+            ->call('guardarEdicion')
+            ->assertHasNoErrors();
+        $this->assertSame('A2', $a['medico']->fresh()->name);
+    }
+
+    public function test_editar_un_medico_sin_cuenta_solo_toca_la_ficha(): void
+    {
+        $medico = Medico::create([
+            'name' => 'Sin', 'lastname' => 'Cuenta', 'email' => 'sc-' . uniqid() . '@example.com', 'reg_medico' => 'test-sc-' . uniqid(),
+        ]);
+        $this->actingAs($this->admin());
+
+        Livewire::test(Cuentas::class)
+            ->call('abrirEditar', 'medico', $medico->id)
+            ->set('name', 'Con')
+            ->call('guardarEdicion')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Con', $medico->fresh()->name);
+        $this->assertNull($medico->fresh()->user_id);
+    }
+
+    public function test_editar_administrador_cambia_nombre_y_correo_tambien_en_su_ficha_de_medico(): void
+    {
+        $r = $this->cuentas->crearMedico(['name' => 'Doble', 'lastname' => 'Rol', 'email' => 'doble-' . uniqid() . '@example.com', 'reg_medico' => 'test-d-' . uniqid()]);
+        $this->cuentas->hacerAdministrador($r['user']);
+        $this->actingAs($this->admin());
+        $nuevo = 'doble-nuevo-' . uniqid() . '@example.com';
+
+        Livewire::test(Cuentas::class)
+            ->set('pestana', 'administradores')
+            ->call('abrirEditar', 'administrador', $r['user']->id)
+            ->assertSet('name', 'Doble Rol')
+            ->assertSet('email', $r['user']->email)
+            ->set('name', 'Doble R.')->set('email', $nuevo)
+            ->call('guardarEdicion')
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
+
+        $this->assertSame('Doble R.', $r['user']->fresh()->name);
+        $this->assertSame($nuevo, $r['user']->fresh()->email);
+        $this->assertSame($nuevo, $r['medico']->fresh()->email, 'El login del legado usa el correo de la ficha: se mantiene igual.');
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Roles                                                               */
+    /* ------------------------------------------------------------------ */
+
+    public function test_la_ventana_de_roles_lista_todos_y_marca_los_actuales(): void
     {
         $medico = $this->medicoSinPermisos();
         $this->actingAs($this->admin());
 
         Livewire::test(Cuentas::class)
-            ->call('hacerAdministrador', $medico->id)
-            ->assertHasNoErrors();
+            ->call('abrirRoles', $medico->id)
+            ->assertSet('modal', 'roles')
+            ->assertSet('rolesSeleccionados', ['Medico'])
+            ->assertSee('Root')
+            ->assertSee('Administrador')
+            ->assertSee('Medico')
+            ->assertSee('Secretaria')
+            ->assertSee('Paciente')
+            ->assertSee('Representante');
+    }
 
-        $this->assertTrue($medico->fresh()->esAdministrador());
-        $this->assertTrue($medico->fresh()->hasRole('Medico'));
+    public function test_agregar_y_quitar_roles_deja_exactamente_los_marcados(): void
+    {
+        $medico = $this->medicoSinPermisos();
+        $this->actingAs($this->admin());
 
         Livewire::test(Cuentas::class)
-            ->call('abrirQuitarAdmin', $medico->id)
-            ->call('confirmarQuitarAdmin')
+            ->call('abrirRoles', $medico->id)
+            ->set('rolesSeleccionados', ['Medico', 'Administrador', 'Secretaria'])
+            ->call('guardarRoles')
             ->assertHasNoErrors()
             ->assertSet('modal', null);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertEqualsCanonicalizing(['Medico', 'Administrador', 'Secretaria'], $medico->fresh()->getRoleNames()->all());
+        $this->assertTrue($medico->fresh()->esAdministrador());
+
+        // Se quitan dos y se conserva uno.
+        Livewire::test(Cuentas::class)
+            ->call('abrirRoles', $medico->id)
+            ->set('rolesSeleccionados', ['Medico'])
+            ->call('guardarRoles')
+            ->assertHasNoErrors();
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertSame(['Medico'], $medico->fresh()->getRoleNames()->all());
         $this->assertFalse($medico->fresh()->esAdministrador());
-        $this->assertTrue($medico->fresh()->hasRole('Medico'));
+    }
+
+    public function test_un_administrador_no_puede_dar_ni_quitar_el_rol_root_pero_un_root_si(): void
+    {
+        $objetivo = $this->medicoSinPermisos();
+
+        $this->actingAs($this->admin()); // Administrador, no Root
+        Livewire::test(Cuentas::class)
+            ->call('abrirRoles', $objetivo->id)
+            ->set('rolesSeleccionados', ['Medico', 'Root'])
+            ->call('guardarRoles')
+            ->assertHasErrors(['roles'])
+            ->assertSet('modal', 'roles');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertFalse($objetivo->fresh()->hasRole('Root'));
+
+        // Un Root sí.
+        $this->app['auth']->forgetGuards();
+        $root = $this->admin();
+        $root->syncRoles(['Root']);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->actingAs($root->fresh());
+        Livewire::test(Cuentas::class)
+            ->call('abrirRoles', $objetivo->id)
+            ->set('rolesSeleccionados', ['Medico', 'Root'])
+            ->call('guardarRoles')
+            ->assertHasNoErrors();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertTrue($objetivo->fresh()->hasRole('Root'));
+    }
+
+    public function test_los_roles_no_dejan_quitarse_el_propio_acceso_ni_dejar_sin_administradores_ni_inventar_roles(): void
+    {
+        User::administradores()->update(['is_active' => false]);
+        $admin = $this->admin();
+        $this->actingAs($admin);
+
+        // A sí mismo.
+        Livewire::test(Cuentas::class)
+            ->call('abrirRoles', $admin->id)
+            ->set('rolesSeleccionados', ['Medico'])
+            ->call('guardarRoles')
+            ->assertHasErrors(['roles'])
+            ->assertSet('modal', 'roles');
+        $this->assertTrue($admin->fresh()->esAdministrador());
+
+        // Un rol que no existe.
+        Livewire::test(Cuentas::class)
+            ->call('abrirRoles', $admin->id)
+            ->set('rolesSeleccionados', ['Administrador', 'SuperPoder'])
+            ->call('guardarRoles')
+            ->assertHasErrors(['roles']);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Generar API key desde el menú                                       */
+    /* ------------------------------------------------------------------ */
+
+    public function test_generar_api_key_desde_la_fila_del_medico(): void
+    {
+        $r = $this->cuentas->crearMedico(['name' => 'Key', 'lastname' => 'Menu', 'email' => 'km-' . uniqid() . '@example.com', 'reg_medico' => 'test-km-' . uniqid()]);
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(Cuentas::class)
+            ->call('abrirEmitir', $r['medico']->id)
+            ->assertSet('modal', 'emitir')
+            ->assertSee('Generar API key')
+            ->set('equipo', 'CONSULTORIO-MENU')
+            ->call('emitir')
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
+
+        $mostrada = $panel->get('tokenGenerado');
+        $this->assertStringStartsWith('ddr_sync_', $mostrada['token']);
+        $this->assertSame($r['medico']->reg_medico, $mostrada['reg_medico']);
+        $this->assertSame(1, SyncCredential::where('reg_medico', $r['medico']->reg_medico)->count());
+
+        // El aviso con la clave se muestra una sola vez.
+        $panel->assertSee('API key generada')->call('cerrarToken')->assertSet('tokenGenerado', null);
+    }
+
+    public function test_generar_api_key_desde_la_fila_de_un_administrador_que_tambien_es_medico(): void
+    {
+        $r = $this->cuentas->crearMedico(['name' => 'Adm', 'lastname' => 'Med', 'email' => 'am-' . uniqid() . '@example.com', 'reg_medico' => 'test-am-' . uniqid()]);
+        $this->cuentas->hacerAdministrador($r['user']);
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(Cuentas::class)
+            ->set('pestana', 'administradores')
+            ->set('search', $r['user']->email)
+            ->assertSee('Generar API key');
+
+        $panel->call('abrirEmitir', $r['medico']->id)->set('equipo', 'EQ-ADM')->call('emitir')->assertHasNoErrors();
+        $this->assertSame(1, SyncCredential::where('reg_medico', $r['medico']->reg_medico)->count());
+    }
+
+    public function test_un_administrador_sin_ficha_de_medico_no_ofrece_api_key(): void
+    {
+        $solo = $this->admin();
+        $this->actingAs($this->admin());
+
+        Livewire::test(Cuentas::class)
+            ->set('pestana', 'administradores')
+            ->set('search', $solo->email)
+            ->assertSee('Roles')
+            ->assertDontSee('Generar API key');
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Cerrar sesión pide confirmación                                     */
+    /* ------------------------------------------------------------------ */
+
+    public function test_cerrar_sesion_pide_confirmacion_en_el_panel_lateral_y_en_el_menu_del_usuario(): void
+    {
+        $this->actingAs($this->admin());
+
+        $pagina = $this->get('/admin/cuentas')->assertOk();
+
+        // La función que muestra la confirmación está en el layout...
+        $pagina->assertSee('function confirmarCierreSesion', false);
+        // ...y los dos controles de "Cerrar sesión" la usan, en vez de enviar el formulario directo.
+        $pagina->assertSee("onclick=\"return confirmarCierreSesion(event, document.getElementById('logout-form'));\"", false);
+        $pagina->assertSee('onsubmit="return confirmarCierreSesion(event, this);"', false);
+        $pagina->assertDontSee("document.getElementById('logout-form').submit();\">", false);
     }
 }

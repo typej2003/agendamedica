@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Admin;
 
+use App\Http\Livewire\Admin\Concerns\EmiteApiKeys;
 use App\Models\Medico;
 use App\Models\User;
 use App\Services\CuentaService;
@@ -11,7 +12,8 @@ use Livewire\WithPagination;
 
 /**
  * Sección "Usuarios" del panel (Paso 26): ver administradores y médicos, darlos de alta con clave temporal,
- * resetear claves, bloquear/desbloquear y sumar o quitar el rol Administrador.
+ * editar sus datos, resetear claves, bloquear/desbloquear, cambiar sus roles y generar la API key de sync.
+ * Cada fila tiene un botón "Editar" y un menú de 3 puntos con el resto de acciones.
  *
  * Toda la lógica de cuentas vive en `CuentaService`; acá solo hay pantalla. Las claves en claro se muestran UNA
  * sola vez (`$claveGenerada`) y no se guardan en ningún lado.
@@ -22,6 +24,7 @@ use Livewire\WithPagination;
 class Cuentas extends Component
 {
     use WithPagination;
+    use EmiteApiKeys;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -31,7 +34,7 @@ class Cuentas extends Component
     public $pestana = 'medicos';
     public $search = '';
 
-    // Qué ventana está abierta: alta | reset | bloquear | acceso | quitar-admin | null
+    // Qué ventana está abierta: alta | editar | acceso | reset | bloquear | roles | emitir (API key) | null
     public $modal = null;
 
     // Formulario de alta / acceso
@@ -40,7 +43,13 @@ class Cuentas extends Component
     public $lastname = '';
     public $email = '';
     public $reg_medico = '';
+    public $phone = '';
+    public $license_number = '';
     public $clave = '';
+
+    // Edición: de qué es la ficha que se edita ('medico' | 'administrador') y roles marcados en la ventana de roles
+    public $tipoEdicion = 'medico';
+    public $rolesSeleccionados = [];
 
     // Cuenta o médico sobre el que se actúa, y motivo de bloqueo
     public $userId = null;
@@ -107,7 +116,12 @@ class Cuentas extends Component
                 ->paginate(10);
         }
 
-        return view('livewire.admin.cuentas', ['filas' => $filas]);
+        return view('livewire.admin.cuentas', [
+            'filas'         => $filas,
+            // Para la ventana "Generar API key" (ver Concerns\EmiteApiKeys)
+            'seleccionado'  => $this->modal === 'emitir' && $this->medicoId ? Medico::find($this->medicoId) : null,
+            'rolesDisponibles' => $this->modal === 'roles' ? app(CuentaService::class)->rolesDisponibles() : [],
+        ]);
     }
 
     /* ------------------------------------------------------------------ */
@@ -171,6 +185,67 @@ class Cuentas extends Component
     }
 
     /* ------------------------------------------------------------------ */
+    /* Edición                                                             */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * @param  string  $tipo  'medico' (por id de ficha, desde la pestaña Médicos) o 'administrador' (por id de cuenta)
+     */
+    public function abrirEditar(string $tipo, int $id)
+    {
+        $this->limpiarFormulario();
+
+        if ($tipo === 'administrador') {
+            $user = User::findOrFail($id);
+            $this->tipoEdicion = 'administrador';
+            $this->userId = $user->id;
+            $this->name = (string) $user->name;
+            $this->email = (string) $user->email;
+        } else {
+            $medico = Medico::findOrFail($id);
+            $this->tipoEdicion = 'medico';
+            $this->medicoId = $medico->id;
+            $this->name = (string) $medico->name;
+            $this->lastname = (string) $medico->lastname;
+            $this->email = (string) $medico->email;
+            $this->phone = (string) $medico->phone;
+            $this->license_number = (string) $medico->license_number;
+            // Solo para mostrarlo: no se edita (es la llave de todos sus datos clínicos en la nube).
+            $this->reg_medico = (string) $medico->reg_medico;
+        }
+
+        $this->modal = 'editar';
+    }
+
+    public function guardarEdicion(CuentaService $cuentas)
+    {
+        $this->ejecutar(function () use ($cuentas) {
+            if ($this->tipoEdicion === 'administrador') {
+                $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255']);
+                $cuentas->actualizarUsuario(User::findOrFail($this->userId), ['name' => $this->name, 'email' => $this->email]);
+            } else {
+                $this->validate([
+                    'name'           => 'required|string|max:255',
+                    'lastname'       => 'required|string|max:255',
+                    'email'          => 'required|email|max:255',
+                    'phone'          => 'nullable|string|max:50',
+                    'license_number' => 'nullable|string|max:100',
+                ]);
+                $cuentas->actualizarMedico(Medico::findOrFail($this->medicoId), [
+                    'name'           => $this->name,
+                    'lastname'       => $this->lastname,
+                    'email'          => $this->email,
+                    'phone'          => $this->phone,
+                    'license_number' => $this->license_number,
+                ]);
+            }
+
+            session()->flash('message', 'Datos actualizados.');
+            $this->cerrarModal();
+        });
+    }
+
+    /* ------------------------------------------------------------------ */
     /* Reseteo, bloqueo y roles                                            */
     /* ------------------------------------------------------------------ */
 
@@ -216,26 +291,24 @@ class Cuentas extends Component
         });
     }
 
-    public function hacerAdministrador(int $userId, CuentaService $cuentas)
-    {
-        $this->ejecutar(function () use ($userId, $cuentas) {
-            $cuentas->hacerAdministrador(User::findOrFail($userId));
-            session()->flash('message', 'Ahora es administrador. Conserva sus otros roles.');
-        });
-    }
+    /* ------------------------------------------------------------------ */
+    /* Roles                                                               */
+    /* ------------------------------------------------------------------ */
 
-    public function abrirQuitarAdmin(int $userId)
+    public function abrirRoles(int $userId)
     {
+        $user = User::findOrFail($userId);
         $this->limpiarFormulario();
-        $this->userId = User::findOrFail($userId)->id;
-        $this->modal = 'quitar-admin';
+        $this->userId = $user->id;
+        $this->rolesSeleccionados = $user->roles()->pluck('name')->all();
+        $this->modal = 'roles';
     }
 
-    public function confirmarQuitarAdmin(CuentaService $cuentas)
+    public function guardarRoles(CuentaService $cuentas)
     {
         $this->ejecutar(function () use ($cuentas) {
-            $cuentas->quitarAdministrador(User::findOrFail($this->userId), auth()->user());
-            session()->flash('message', 'Se quitó el rol de administrador.');
+            $cuentas->asignarRoles(User::findOrFail($this->userId), (array) $this->rolesSeleccionados, auth()->user());
+            session()->flash('message', 'Roles actualizados.');
             $this->cerrarModal();
         });
     }
@@ -262,8 +335,9 @@ class Cuentas extends Component
 
     private function limpiarFormulario(): void
     {
-        $this->reset(['name', 'lastname', 'email', 'reg_medico', 'clave', 'userId', 'medicoId', 'motivo']);
+        $this->reset(['name', 'lastname', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados']);
         $this->tipoAlta = 'medico';
+        $this->tipoEdicion = 'medico';
         $this->resetErrorBag();
     }
 

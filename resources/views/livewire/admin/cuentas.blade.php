@@ -51,7 +51,9 @@
             </div>
         </div>
 
-        <div class="card-body p-0">
+        <div class="card-body p-0 tabla-cuentas">
+            {{-- En pantallas medianas y grandes la tabla no hace scroll: si no, el menú de 3 puntos queda cortado. --}}
+            <style>@media (min-width: 768px) { .tabla-cuentas .table-responsive { overflow: visible; } }</style>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
@@ -106,30 +108,57 @@
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
                                         </button>
-                                    @else
-                                        <button wire:click="abrirReset({{ $u->id }})" class="btn btn-sm btn-outline-secondary" title="Poner una clave temporal nueva">
-                                            <i class="bi bi-arrow-repeat me-1"></i> Resetear clave
-                                        </button>
+                                    @endif
 
-                                        @if ($u->is_active === false)
-                                            <button wire:click="desbloquear({{ $u->id }})" class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-unlock me-1"></i> Desbloquear
-                                            </button>
-                                        @else
-                                            <button wire:click="abrirBloqueo({{ $u->id }})" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-lock me-1"></i> Bloquear
-                                            </button>
-                                        @endif
+                                    <button wire:click="abrirEditar('{{ $pestana === 'medicos' ? 'medico' : 'administrador' }}', {{ $fila->id }})"
+                                            class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil-square me-1"></i> Editar
+                                    </button>
 
-                                        @if ($u->esAdministrador())
-                                            <button wire:click="abrirQuitarAdmin({{ $u->id }})" class="btn btn-sm btn-outline-dark" title="Quitar el rol de administrador">
-                                                <i class="bi bi-shield-x me-1"></i> Quitar admin
+                                    @if ($u || $m)
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
+                                                    aria-expanded="false" title="Más acciones" aria-label="Más acciones">
+                                                <i class="bi bi-three-dots-vertical"></i>
                                             </button>
-                                        @else
-                                            <button wire:click="hacerAdministrador({{ $u->id }})" class="btn btn-sm btn-outline-dark" title="Sumar el rol de administrador (conserva los demás)">
-                                                <i class="bi bi-shield-check me-1"></i> Hacer admin
-                                            </button>
-                                        @endif
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                @if ($u)
+                                                    <li>
+                                                        <button type="button" class="dropdown-item" wire:click="abrirRoles({{ $u->id }})">
+                                                            <i class="bi bi-shield-lock me-2"></i> Roles
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item" wire:click="abrirReset({{ $u->id }})">
+                                                            <i class="bi bi-arrow-repeat me-2"></i> Resetear clave
+                                                        </button>
+                                                    </li>
+                                                @endif
+
+                                                @if ($m)
+                                                    <li>
+                                                        <button type="button" class="dropdown-item" wire:click="abrirEmitir({{ $m->id }})">
+                                                            <i class="bi bi-key-fill me-2"></i> Generar API key
+                                                        </button>
+                                                    </li>
+                                                @endif
+
+                                                @if ($u)
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        @if ($u->is_active === false)
+                                                            <button type="button" class="dropdown-item text-success" wire:click="desbloquear({{ $u->id }})">
+                                                                <i class="bi bi-unlock me-2"></i> Desbloquear
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="dropdown-item text-danger" wire:click="abrirBloqueo({{ $u->id }})">
+                                                                <i class="bi bi-lock me-2"></i> Bloquear
+                                                            </button>
+                                                        @endif
+                                                    </li>
+                                                @endif
+                                            </ul>
+                                        </div>
                                     @endif
                                 </td>
                             </tr>
@@ -294,27 +323,117 @@
         </div>
     @endif
 
-    {{-- Quitar el rol de administrador --}}
-    @if ($modal === 'quitar-admin')
+    {{-- Editar los datos --}}
+    @if ($modal === 'editar')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Quitar rol de administrador</h5>
-                        <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        @error('cuenta') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-                        <p class="mb-0">Dejará de ver esta sección. Conserva sus otros roles (por ejemplo, médico).</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
-                        <button type="button" class="btn btn-dark" wire:click="confirmarQuitarAdmin">Quitar rol</button>
-                    </div>
+                    <form wire:submit.prevent="guardarEdicion">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ $tipoEdicion === 'administrador' ? 'Editar administrador' : 'Editar médico' }}</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="{{ $tipoEdicion === 'administrador' ? 'col-12' : 'col-md-6' }} mb-3">
+                                    <label class="form-label">{{ $tipoEdicion === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.defer="name">
+                                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+
+                                @if ($tipoEdicion === 'medico')
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Apellidos <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" wire:model.defer="lastname">
+                                        @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Correo <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" wire:model.defer="email" autocomplete="off">
+                                    <div class="form-text">Es el correo con el que inicia sesión.</div>
+                                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+
+                                @if ($tipoEdicion === 'medico')
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Teléfono</label>
+                                        <input type="text" class="form-control" wire:model.defer="phone">
+                                        @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Número de licencia</label>
+                                        <input type="text" class="form-control" wire:model.defer="license_number">
+                                        @error('license_number') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-12 mb-1">
+                                        <label class="form-label">Registro médico (reg_medico)</label>
+                                        <input type="text" class="form-control" value="{{ $reg_medico }}" disabled>
+                                        <div class="form-text">No se puede cambiar: con él están guardados todos los datos del médico en la nube.</div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     @endif
+
+    {{-- Roles --}}
+    @if ($modal === 'roles')
+        @php
+            $descripciones = [
+                'Root'          => 'Control total. Solo otro Root puede darlo o quitarlo.',
+                'Administrador' => 'Ve y usa las secciones Usuarios y API Keys.',
+                'Medico'        => 'Usa la agenda y el app como médico.',
+                'Secretaria'    => 'Asistente de un consultorio.',
+                'Paciente'      => 'Acceso de paciente.',
+                'Representante' => 'Representante de un paciente.',
+            ];
+        @endphp
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form wire:submit.prevent="guardarRoles">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Roles</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            @error('roles') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+                            @error('cuenta') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+                            <p class="text-muted small">Marca todos los que correspondan: una cuenta puede tener varios (por ejemplo, médico y administrador).</p>
+
+                            @foreach ($rolesDisponibles as $rol)
+                                <div class="form-check mb-2" wire:key="rol-{{ $rol }}">
+                                    <input class="form-check-input" type="checkbox" id="rol-{{ $rol }}" value="{{ $rol }}" wire:model.defer="rolesSeleccionados">
+                                    <label class="form-check-label" for="rol-{{ $rol }}">
+                                        <span class="fw-semibold">{{ $rol }}</span>
+                                        @if (isset($descripciones[$rol]))
+                                            <br><small class="text-muted">{{ $descripciones[$rol] }}</small>
+                                        @endif
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar roles</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Generar API key (la misma ventana que en la sección "API Keys") --}}
+    @include('livewire.admin.partials.api-key-emitir')
 
     {{-- Clave generada: se muestra UNA sola vez --}}
     @if ($claveGenerada)
@@ -347,4 +466,6 @@
             </div>
         </div>
     @endif
+
+    @include('livewire.admin.partials.api-key-generada')
 </div>

@@ -97,18 +97,9 @@
         </li>
         @endif
 
-        @if(auth()->user()->hasRole(['Root', 'Administrador']))
-        <li class="nav-item">
-            <a href="{{ route('users.permissions') }}" class="nav-link {{ request()->routeIs('users.permissions') ? 'active' : '' }}">
-                <i class="bi bi-shield-lock-fill"></i>
-                <span class="link-text">Permisos de Usuario</span>
-            </a>
-        </li>
-        @endif
-
         <li class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
-            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
                 <i class="bi bi-box-arrow-left"></i>
                 <span class="link-text">Cerrar Sesión</span>
             </a>

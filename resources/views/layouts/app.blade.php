@@ -152,6 +152,30 @@
     <script src="{{ asset('js/gineco.js') }}"></script>
 
     <script>
+        // Cerrar sesión pide confirmación: un toque por error ya no saca a nadie (lo usan el panel lateral y el
+        // menú del usuario). Sin SweetAlert (si el CDN no cargó) cae al confirm() del navegador.
+        function confirmarCierreSesion(evento, formulario) {
+            evento.preventDefault();
+            if (!formulario) return false;
+            if (typeof Swal === 'undefined') {
+                if (window.confirm('¿Cerrar sesión?')) formulario.submit();
+                return false;
+            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: 'Tendrás que iniciar sesión de nuevo para volver a entrar.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                focusCancel: true,
+            }).then(function (resultado) {
+                if (resultado.isConfirmed) formulario.submit();
+            });
+            return false;
+        }
+
         function initDropdowns() {
             const dropdownElementList = document.querySelectorAll('[data-bs-toggle="dropdown"]');
             dropdownElementList.forEach(dropdownToggleEl => {

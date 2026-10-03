@@ -48,7 +48,7 @@
                 <button type="submit" class="btn btn-primary w-100">Guardar contraseña</button>
             </form>
 
-            <form method="POST" action="{{ route('logout') }}" class="text-center mt-3">
+            <form method="POST" action="{{ route('logout') }}" class="text-center mt-3" onsubmit="return confirm('¿Cerrar sesión?');">
                 @csrf
                 <button type="submit" class="btn btn-link btn-sm text-muted">Cerrar sesión</button>
             </form>

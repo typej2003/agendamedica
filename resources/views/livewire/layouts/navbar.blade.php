@@ -51,7 +51,7 @@
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form method="POST" action="{{ route('logout') }}">
+                                        <form method="POST" action="{{ route('logout') }}" onsubmit="return confirmarCierreSesion(event, this);">
                                             @csrf
                                             <button type="submit" class="dropdown-item text-danger w-100 text-start py-2">
                                                 <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión

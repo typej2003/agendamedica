@@ -109,11 +109,17 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - El primer administrador se crea con `php artisan cuentas:admin {email}`.
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
-  (se muestra una sola vez), crear acceso a un médico sin cuenta, resetear clave, bloquear/desbloquear y sumar o
-  quitar el rol Administrador. **Sustituye** al enlace "Usuarios" del panel lateral y a las tarjetas del escritorio
+  (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
+  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Cada fila trae "Editar" y un **menú de 3
+  puntos** con Roles (los marcados quedan exactamente así: `CuentaService::asignarRoles`; solo un Root da o quita
+  Root; nadie se quita su propio acceso ni deja sin administradores), Resetear clave, Generar API key (el mismo
+  trait `Concerns\EmiteApiKeys` que usa "API Keys") y Bloquear/Desbloquear. **Sustituye** al enlace "Usuarios" del
+  panel lateral y a las tarjetas del escritorio
   Root; el `ListUsers` viejo (`/users`, `/admin/users`) sigue existiendo pero ya no está enlazado (reemplaza TODOS
   los roles de un usuario al editarlo y fija claves sin marcarlas como temporales). Cada acción de Livewire vuelve a
-  comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página.
+  comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página. "Permisos de Usuario" se quitó del panel lateral
+  (no funcionaba; `/users/permissions` sigue en `routes/web.php`, sin enlace). **Cerrar sesión** pide confirmación
+  en el panel lateral y en el menú del usuario (`confirmarCierreSesion` en `layouts/app.blade.php`, SweetAlert2).
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
