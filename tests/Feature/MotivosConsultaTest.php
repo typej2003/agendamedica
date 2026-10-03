@@ -225,6 +225,25 @@ class MotivosConsultaTest extends TestCase
         $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
     }
 
+    public function test_dos_telefonos_que_crean_el_mismo_motivo_reciben_el_mismo_id_y_codigo(): void
+    {
+        $medico = $this->medico();
+
+        // Cada teléfono manda su propio `temp_id` y escribe el nombre a su manera.
+        $primero = $this->sync([
+            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => 111, 'columns' => ['descripcion' => 'Dolor pélvico']],
+        ]);
+        $segundo = $this->sync([
+            ['table' => 'motivos_consulta', 'operation' => 'created', 'temp_id' => 987, 'columns' => ['descripcion' => ' DOLOR  PÉLVICO ']],
+        ]);
+
+        $a = $this->creado($primero, 'motivos_consulta', 111);
+        $b = $this->creado($segundo, 'motivos_consulta', 987);
+        $this->assertSame($a['id'], $b['id']);
+        $this->assertSame($a['codemotivo'], $b['codemotivo']);
+        $this->assertSame(1, MotivoConsulta::where('reg_medico', $medico->reg_medico)->count());
+    }
+
     public function test_reintentar_la_creacion_de_un_motivo_no_numera_de_nuevo(): void
     {
         $medico = $this->medico();
