@@ -153,8 +153,12 @@ class CuentasTest extends TestCase
     {
         $r = $this->nuevoMedico('Temporal123');
 
-        // El login es el de siempre: entra y da token.
-        $token = $this->loginApi($r['user']->email, 'Temporal123')->assertOk()->json('access_token');
+        // El login es el de siempre: entra y da token. Además avisa que la clave es temporal, para que el app
+        // muestre la pantalla de cambio sin tener que preguntar a otro endpoint.
+        $login = $this->loginApi($r['user']->email, 'Temporal123')->assertOk();
+        $login->assertJsonPath('must_change_password', true);
+        $login->assertJsonPath('user.must_change_password', true);
+        $token = $login->json('access_token');
 
         // Pero todo lo demás está cerrado, con un código que el app reconoce.
         $this->conToken('POST', '/api/app/sync-app-data', $token, [])
@@ -204,7 +208,10 @@ class CuentasTest extends TestCase
 
         // Y la clave temporal ya no entra, la nueva sí.
         $this->loginApi($r['user']->email, 'Temporal123')->assertStatus(401);
-        $this->loginApi($r['user']->email, 'NuevaClave99')->assertOk();
+        $this->loginApi($r['user']->email, 'NuevaClave99')
+            ->assertOk()
+            ->assertJsonPath('must_change_password', false)
+            ->assertJsonPath('user.must_change_password', false);
     }
 
     /* ------------------------------------------------------------------ */
@@ -233,7 +240,8 @@ class CuentasTest extends TestCase
 
         $this->loginApi($user->email, 'ClaveDelMedico1')->assertStatus(401);
         $this->loginApi($user->email, 'Temporal123')->assertStatus(401);
-        $this->loginApi($user->email, $nueva)->assertOk();
+        // Tras el reseteo el login vuelve a avisar que la clave es temporal.
+        $this->loginApi($user->email, $nueva)->assertOk()->assertJsonPath('must_change_password', true);
     }
 
     /* ------------------------------------------------------------------ */

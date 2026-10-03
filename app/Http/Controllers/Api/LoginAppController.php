@@ -102,12 +102,16 @@ class LoginAppController extends Controller
                     'access_token' => $token,
                     'token_type'   => 'Bearer',
                     'user_type'    => $userType,
+                    // Clave temporal (Paso 26): el app muestra la pantalla de cambio obligatorio. Hasta que la
+                    // cambie, el resto del API responde 403 `password_change_required` (EnsurePasswordChanged).
+                    'must_change_password' => (bool) $user->must_change_password,
                     'user'         => [
                         'id'          => $user->id,
                         'name'        => $user->name,
                         'email'       => $user->email,
                         'roles'       => $roles,
                         'permissions' => $permissions,
+                        'must_change_password' => (bool) $user->must_change_password,
                     ],
                 ], 200);
 

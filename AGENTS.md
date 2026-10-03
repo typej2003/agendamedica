@@ -86,7 +86,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos. (Sin cambios en el Paso 26: si la clave es temporal o la cuenta está bloqueada, el login igual da token y lo que se corta es el resto del API, ver abajo.) |
+| `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos. Desde el Paso 26.D también `must_change_password` (en la raíz y dentro de `user`): `true` si la clave es temporal. Es lo único que se agregó; si la clave es temporal o la cuenta está bloqueada, el login igual da token y lo que se corta es el resto del API (ver abajo). |
 | `POST` | `/api/app/cambiar-password` | `CambiarPasswordController@cambiar` — `password_actual`, `password_nueva` (+`_confirmation`, mín. 8). Es lo único (junto a `GET /api/user`) que deja pasar `EnsurePasswordChanged` mientras la clave es temporal; las demás rutas `auth:api` responden 403 `password_change_required`. |
 | `POST` | `/api/app/refresh-data` | `RefreshAppController@refreshData` — protegido por `auth:api`; acepta `mes`/`anio` y devuelve citas, colas, pacientes, motivos, centros médicos, historias y evoluciones del médico (o del paciente). |
 | `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. Desde el Paso 18.B también crea historia, consulta y récipe (`App\Sync\CreacionesClinicas`, número asignado por el servidor). |
