@@ -9,12 +9,15 @@ use App\Services\CuentaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
  * Cuentas de acceso: alta con clave temporal, cambio obligatorio, reseteo, bloqueo y rol Administrador.
+ *
+ * El inicio de sesión (API y web) NO se modificó: estos tests lo usan tal cual es. Lo nuevo vive en
+ * `CuentaService` y en dos middlewares (`EnsureAccountActive`, `EnsurePasswordChanged`) que actúan DESPUÉS
+ * de iniciar sesión.
  *
  * `DatabaseTransactions`, no `RefreshDatabase` (ver MedicAPI/AGENTS.md): la base sqlite de desarrollo
  * trae datos reales y sin `.env.testing` las migraciones la pisarían. Por eso el test del "último
@@ -22,9 +25,8 @@ use Tests\TestCase;
  *
  * Lo que fijan, y que es lo importante del diseño:
  *  - una clave temporal NO da acceso a nada salvo cambiarla (aunque el token sea válido),
- *  - después de un reseteo hay UNA sola clave válida (antes `users` y `medicos` podían diferir),
- *  - bloquear corta el acceso y las sesiones, pero no puede dejar al sistema sin administradores,
- *  - la ficha del médico se resuelve por `medicos.user_id`, nunca por coincidencia de correo.
+ *  - después de un reseteo hay UNA sola clave válida (`users` y `medicos` se escriben juntas),
+ *  - bloquear corta el acceso y las sesiones, pero no puede dejar al sistema sin administradores.
  */
 class CuentasTest extends TestCase
 {
@@ -74,7 +76,6 @@ class CuentasTest extends TestCase
     {
         $r = $this->nuevoMedico('Temporal123');
 
-        $this->assertSame('medico', $r['user']->tipo);
         $this->assertTrue($r['user']->must_change_password);
         $this->assertTrue($r['user']->is_active);
         $this->assertTrue($r['user']->hasRole('Medico'));
@@ -91,7 +92,6 @@ class CuentasTest extends TestCase
     {
         $r = $this->cuentas->crearAdministrador('Admin Prueba', 'admin-' . uniqid() . '@example.com');
 
-        $this->assertSame('administrador', $r['user']->tipo);
         $this->assertTrue($r['user']->must_change_password);
         $this->assertTrue($r['user']->esAdministrador());
         $this->assertGreaterThanOrEqual(CuentaService::LARGO_MINIMO_CLAVE, strlen($r['clave']));
@@ -153,17 +153,15 @@ class CuentasTest extends TestCase
     {
         $r = $this->nuevoMedico('Temporal123');
 
-        $login = $this->loginApi($r['user']->email, 'Temporal123')->assertOk();
-        $login->assertJsonPath('must_change_password', true);
-        $login->assertJsonPath('user.must_change_password', true);
-        $token = $login->json('access_token');
+        // El login es el de siempre: entra y da token.
+        $token = $this->loginApi($r['user']->email, 'Temporal123')->assertOk()->json('access_token');
 
-        // Todo lo demás está cerrado, con un código que el app reconoce.
+        // Pero todo lo demás está cerrado, con un código que el app reconoce.
         $this->conToken('POST', '/api/app/sync-app-data', $token, [])
             ->assertStatus(403)
             ->assertJsonPath('code', 'password_change_required');
 
-        // Excepto leer la propia cuenta (el app la usa al reabrir para saber si debe mostrar la pantalla).
+        // Excepto leer la propia cuenta: así el app sabe que debe mostrar la pantalla de cambio.
         $this->conToken('GET', '/api/user', $token)
             ->assertOk()
             ->assertJsonPath('must_change_password', true);
@@ -206,7 +204,7 @@ class CuentasTest extends TestCase
 
         // Y la clave temporal ya no entra, la nueva sí.
         $this->loginApi($r['user']->email, 'Temporal123')->assertStatus(401);
-        $this->loginApi($r['user']->email, 'NuevaClave99')->assertOk()->assertJsonPath('must_change_password', false);
+        $this->loginApi($r['user']->email, 'NuevaClave99')->assertOk();
     }
 
     /* ------------------------------------------------------------------ */
@@ -228,31 +226,21 @@ class CuentasTest extends TestCase
         $this->assertTrue($user->must_change_password, 'Tras un reseteo vuelve a ser temporal, igual que el primer inicio.');
         $this->assertSame(0, $user->tokens()->count(), 'El reseteo cierra todas las sesiones.');
 
-        // Una sola clave válida, en las dos tablas.
+        // Una sola clave válida, en las dos tablas (el login del legado prueba `users` y luego `medicos`).
         $this->assertTrue(Hash::check($nueva, $user->password));
         $this->assertTrue(Hash::check($nueva, $user->medico->password));
         $this->assertFalse(Hash::check('ClaveDelMedico1', $user->medico->password));
 
         $this->loginApi($user->email, 'ClaveDelMedico1')->assertStatus(401);
         $this->loginApi($user->email, 'Temporal123')->assertStatus(401);
-        $this->loginApi($user->email, $nueva)->assertOk()->assertJsonPath('must_change_password', true);
-    }
-
-    public function test_si_hay_cuenta_la_clave_vieja_de_medicos_no_abre_la_puerta(): void
-    {
-        // El defecto de antes: login probaba `users` y, si fallaba, `medicos.password`.
-        $r = $this->nuevoMedico('Temporal123');
-        $r['medico']->forceFill(['password' => Hash::make('ClaveVieja123')])->save();
-
-        $this->loginApi($r['user']->email, 'ClaveVieja123')->assertStatus(401);
-        $this->loginApi($r['user']->email, 'Temporal123')->assertOk();
+        $this->loginApi($user->email, $nueva)->assertOk();
     }
 
     /* ------------------------------------------------------------------ */
     /* Bloqueo                                                             */
     /* ------------------------------------------------------------------ */
 
-    public function test_bloquear_corta_login_y_sesiones_y_desbloquear_lo_restituye(): void
+    public function test_bloquear_corta_sesiones_y_el_acceso_y_desbloquear_lo_restituye(): void
     {
         $r = $this->nuevoMedico('Temporal123');
         $token = $this->loginApi($r['user']->email, 'Temporal123')->json('access_token');
@@ -265,31 +253,19 @@ class CuentasTest extends TestCase
         $this->assertFalse((bool) $r['medico']->fresh()->is_active, 'Se espeja en la ficha del médico.');
         $this->assertSame(0, $user->tokens()->count());
 
+        // La sesión que tenía deja de existir.
         $this->conToken('GET', '/api/user', $token)->assertStatus(401);
 
-        $this->loginApi($user->email, 'Temporal123')
+        // Si vuelve a iniciar sesión (el login es el de siempre y le da token), no puede usar el API.
+        $nuevoToken = $this->loginApi($user->email, 'Temporal123')->assertOk()->json('access_token');
+        $this->conToken('GET', '/api/user', $nuevoToken)
             ->assertStatus(403)
             ->assertJsonPath('code', 'account_blocked');
-        // Con la clave equivocada no se revela que la cuenta existe.
-        $this->loginApi($user->email, 'Equivocada1')->assertStatus(401);
 
         $this->cuentas->desbloquear($user);
         $this->assertTrue($user->fresh()->is_active);
         $this->assertNull($user->fresh()->blocked_reason);
-        $this->loginApi($user->email, 'Temporal123')->assertOk();
-    }
-
-    public function test_un_token_emitido_antes_del_bloqueo_tampoco_pasa_por_el_middleware(): void
-    {
-        // Defensa extra: aunque algo dejara vivo un token, EnsureAccountActive responde 403 en el API.
-        $r = $this->nuevoMedico('Temporal123');
-        $token = $this->loginApi($r['user']->email, 'Temporal123')->json('access_token');
-
-        $r['user']->forceFill(['is_active' => false])->save();
-
-        $this->conToken('GET', '/api/user', $token)
-            ->assertStatus(403)
-            ->assertJsonPath('code', 'account_blocked');
+        $this->conToken('GET', '/api/user', $nuevoToken)->assertOk();
     }
 
     public function test_no_se_puede_bloquear_al_ultimo_administrador_ni_a_uno_mismo(): void
@@ -331,7 +307,7 @@ class CuentasTest extends TestCase
     /* Médico ⇄ cuenta, y rol Administrador                                */
     /* ------------------------------------------------------------------ */
 
-    public function test_un_medico_puede_ser_tambien_administrador_sin_cambiar_su_tipo(): void
+    public function test_un_medico_puede_ser_tambien_administrador(): void
     {
         $r = $this->nuevoMedico();
         $this->assertFalse($r['user']->esAdministrador());
@@ -340,30 +316,12 @@ class CuentasTest extends TestCase
 
         $user = $r['user']->fresh();
         $this->assertTrue($user->esAdministrador());
-        $this->assertSame('medico', $user->tipo, 'Administrador es un rol, no un tipo: sigue entrando como médico.');
+        $this->assertTrue($user->hasRole('Medico'), 'Sumar el rol no quita el de médico.');
         $this->assertNotNull($user->medico);
     }
 
-    public function test_la_ficha_se_resuelve_por_user_id_y_nunca_por_correo(): void
+    public function test_todo_medico_de_la_base_con_user_id_resuelve_a_su_ficha(): void
     {
-        // Antes el app hacía `user_id = ? OR email = ?`: bastaba un correo igual para quedarse con la ficha.
-        $sufijo = uniqid();
-        $user = User::create(['name' => 'Intruso', 'email' => "intruso-{$sufijo}@example.com", 'password' => Hash::make('Temporal123')]);
-        Medico::create([
-            'name' => 'Ajeno', 'lastname' => 'Ajeno', 'email' => $user->email, 'reg_medico' => "test-ajeno-{$sufijo}",
-        ]);
-
-        $this->assertNull($user->medico);
-
-        $this->app['auth']->forgetGuards();
-        $this->actingAs($user, 'api')->postJson('/api/app/sync-app-data', [])
-            ->assertStatus(403)
-            ->assertJsonPath('message', 'Esta cuenta no tiene un médico asociado.');
-    }
-
-    public function test_todo_medico_de_la_base_resuelve_a_su_ficha_por_user_id(): void
-    {
-        // Lo que dejó la migración de relleno: ningún médico enlazado quedó sin su cuenta.
         $medicos = Medico::whereNotNull('user_id')->get();
         $this->assertNotEmpty($medicos);
 
@@ -371,7 +329,6 @@ class CuentasTest extends TestCase
             $user = User::find($medico->user_id);
             $this->assertNotNull($user, "El médico {$medico->id} apunta a un usuario que no existe.");
             $this->assertSame($medico->id, $user->medico->id);
-            $this->assertSame('medico', $user->tipo, "La cuenta {$user->email} debió quedar con tipo 'medico'.");
         }
     }
 
@@ -385,13 +342,13 @@ class CuentasTest extends TestCase
         $r['user']->forceFill(['must_change_password' => false])->save();
 
         $this->artisan('cuentas:admin', ['email' => strtoupper($r['user']->email)])
-            ->expectsOutput($r['user']->email . ' ahora es administrador (tipo de cuenta: medico).')
+            ->expectsOutput($r['user']->email . ' ahora es administrador.')
             ->assertExitCode(0);
 
         $user = $r['user']->fresh();
         $this->assertTrue($user->esAdministrador());
+        $this->assertTrue($user->hasRole('Medico'));
         $this->assertTrue($user->must_change_password);
-        $this->assertSame('medico', $user->tipo);
 
         // Idempotente.
         $this->artisan('cuentas:admin', ['email' => $user->email])
@@ -419,15 +376,14 @@ class CuentasTest extends TestCase
     }
 
     /* ------------------------------------------------------------------ */
-    /* Web                                                                 */
+    /* Web (con el login de siempre)                                       */
     /* ------------------------------------------------------------------ */
 
     public function test_login_web_con_clave_temporal_manda_a_cambiarla_y_luego_entra(): void
     {
         $r = $this->nuevoMedico('Temporal123');
 
-        // `user_type=Root` enviado a mano se ignora: manda la cuenta, no el selector.
-        $this->post('/login', ['email' => $r['user']->email, 'password' => 'Temporal123', 'user_type' => 'Root'])
+        $this->post('/login', ['email' => $r['user']->email, 'password' => 'Temporal123', 'user_type' => 'Medico'])
             ->assertRedirect();
         $this->assertAuthenticatedAs($r['user']);
 
@@ -442,25 +398,17 @@ class CuentasTest extends TestCase
         $this->get('/dashboard')->assertOk();
     }
 
-    public function test_login_web_rechaza_clave_incorrecta_y_cuenta_bloqueada(): void
+    public function test_una_cuenta_bloqueada_es_sacada_de_la_web(): void
     {
         $r = $this->nuevoMedico('Temporal123');
-
-        $this->from('/login')->post('/login', ['email' => $r['user']->email, 'password' => 'Equivocada1'])
-            ->assertSessionHasErrors('password');
-        $this->assertGuest();
+        $this->post('/login', ['email' => $r['user']->email, 'password' => 'Temporal123', 'user_type' => 'Medico'])->assertRedirect();
+        $this->assertAuthenticatedAs($r['user']);
 
         $r['user']->forceFill(['is_active' => false])->save();
+        // En producción cada petición lee al usuario de la base; en un test el guard conserva el anterior.
+        $this->app['auth']->forgetGuards();
 
-        $this->from('/login')->post('/login', ['email' => $r['user']->email, 'password' => 'Temporal123'])
-            ->assertSessionHasErrors('email');
+        $this->get('/dashboard')->assertRedirect(route('login'));
         $this->assertGuest();
-    }
-
-    public function test_el_formulario_de_login_ya_no_ofrece_acceso_root(): void
-    {
-        $this->get('/login')->assertOk()
-            ->assertDontSee('systemAccessCheck')
-            ->assertDontSee('Acceso de Administración');
     }
 }

@@ -114,7 +114,7 @@ Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
 // mensajes con el token de Meta del consultorio (y gastar su cupo). Ahora exige autenticación y
 // tiene throttle propio. No la usa ninguno de los dos apps (se verificó en el Kotlin y en el
 // Flutter) — el app usa `/app/citas/{cola}/notificar`, que además valida la cita y deja registro.
-Route::middleware(['auth:api', 'account.active', 'password.changed', 'throttle:60,1'])->post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
+Route::middleware(['auth:api', 'throttle:60,1'])->post('/whatsapp/send-reminder', function (Request $request, WhatsAppService $whatsAppService) {
     $request->validate([
         'phone' => 'required|string',
         'patient_name' => 'required|string',

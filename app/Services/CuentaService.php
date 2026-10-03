@@ -18,8 +18,9 @@ use Spatie\Permission\Models\Role;
  * cada pantalla escribiera una sola de las dos quedarían dos claves válidas a la vez. Acá `users` manda y
  * `medicos` se espeja siempre.
  *
- * Modelo (decidido con José Rosales): `users` = cuentas de acceso; `medicos` = los doctores, unidos por
- * `medicos.user_id`. Ser administrador es un ROL (Root/Administrador), no un `tipo`: un médico puede serlo.
+ * Modelo (el que ya existía): `users` = cuentas de acceso, con roles Spatie (`Root`, `Administrador`,
+ * `Medico`…); `medicos` = los doctores, unidos por `medicos.user_id`. Un médico puede ser también
+ * administrador: una cuenta con varios roles.
  */
 class CuentaService
 {
@@ -58,7 +59,6 @@ class CuentaService
                 'name'                 => trim($nombre),
                 'email'                => $email,
                 'password'             => Hash::make($clave),
-                'tipo'                 => User::TIPO_ADMINISTRADOR,
                 'must_change_password' => true,
                 'is_active'            => true,
             ]);
@@ -93,7 +93,6 @@ class CuentaService
                 'email'                => $email,
                 'password'             => $hash,
                 'reg_medico'           => $regMedico,
-                'tipo'                 => User::TIPO_MEDICO,
                 'must_change_password' => true,
                 'is_active'            => true,
             ]);
@@ -142,7 +141,6 @@ class CuentaService
                 'email'                => $email,
                 'password'             => $hash,
                 'reg_medico'           => $medico->reg_medico,
-                'tipo'                 => User::TIPO_MEDICO,
                 'must_change_password' => true,
                 'is_active'            => (bool) ($medico->is_active ?? true),
             ]);

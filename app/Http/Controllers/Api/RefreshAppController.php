@@ -43,7 +43,7 @@ class RefreshAppController extends Controller
 
             // Determinación del tipo de usuario y modelo de médico asociado
             $userType = 'Root';
-            $medicoModel = $user->medico;
+            $medicoModel = Medico::where('user_id', $user->id)->orWhere('email', $user->email)->first();
 
             if (method_exists($user, 'hasRole')) {
                 if ($user->hasRole('Medico')) {

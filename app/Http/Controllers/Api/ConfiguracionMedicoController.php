@@ -28,7 +28,7 @@ class ConfiguracionMedicoController extends Controller
             return response()->json(['message' => 'Usuario no autenticado.'], 401);
         }
 
-        $medico = $user->medico;
+        $medico = Medico::where('user_id', $user->id)->orWhere('email', $user->email)->first();
         if (!$medico) {
             return response()->json(['message' => 'Esta cuenta no tiene un médico asociado.'], 403);
         }

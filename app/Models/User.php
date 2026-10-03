@@ -25,7 +25,6 @@ class User extends Authenticatable
         'email',
         'password',
         'reg_medico',
-        'tipo',
         'must_change_password',
         'is_active',
         'blocked_reason',
@@ -52,17 +51,10 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-    public const TIPO_ADMINISTRADOR = 'administrador';
-    public const TIPO_MEDICO = 'medico';
-    public const TIPO_PACIENTE = 'paciente';
-
     /** Roles Spatie que dan acceso al dashboard de administración. */
     public const ROLES_ADMIN = ['Root', 'Administrador'];
 
-    /**
-     * Ficha de médico de esta cuenta (vínculo `medicos.user_id`). Un solo lugar para resolverla: antes cada
-     * controlador hacía `user_id = ? OR email = ?`, y el fallback por correo permitía suplantar una ficha.
-     */
+    /** Ficha de médico de esta cuenta (vínculo `medicos.user_id`). */
     public function medico(): HasOne
     {
         return $this->hasOne(Medico::class, 'user_id');
@@ -78,7 +70,7 @@ class User extends Authenticatable
         return $query->whereHas('roles', fn ($roles) => $roles->whereIn('name', self::ROLES_ADMIN));
     }
 
-    /** Administrador = rol Root o Administrador (no es un `tipo`: un médico puede serlo también). */
+    /** Administrador = rol Root o Administrador. Un médico puede serlo también (una cuenta, varios roles). */
     public function esAdministrador(): bool
     {
         return $this->hasAnyRole(self::ROLES_ADMIN);

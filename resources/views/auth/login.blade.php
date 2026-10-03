@@ -148,6 +148,14 @@
                 <!-- Campo Hidden para enviar la opción de usuario cuando esté deshabilitado el radio -->
                 <input type="hidden" name="user_type" id="hidden_user_type" value="{{ old('user_type', 'Paciente') }}">
 
+                <!-- Toggle para acceso de Administración/Sistema -->
+                <div class="form-check form-switch mb-3 d-flex justify-content-center align-items-center gap-2 ps-0">
+                    <input class="form-check-input ms-0" type="checkbox" role="switch" id="systemAccessCheck" {{ old('user_type') == 'Root' ? 'checked' : '' }}>
+                    <label class="form-check-label small fw-bold" for="systemAccessCheck" style="color: var(--dark-color);">
+                        Acceso de Administración / Sistema
+                    </label>
+                </div>
+
                 <!-- Selector del Tipo de Usuario (Paciente / Médico) -->
                 <div class="mb-4" id="userTypeContainer">
                     <label class="form-label small fw-bold d-block text-center mb-2" style="color: var(--dark-color);">Acceder como:</label>
@@ -251,19 +259,37 @@
     <!-- Lógica JavaScript para el control de la interfaz -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Los administradores NO tienen acceso propio en el login: entran como médico (o paciente) y, si lo son,
-            // ven el botón "Modo Administrador" en el menú. Este selector solo sirve para desambiguar cuentas
-            // legado que todavía no tienen fila en `users`.
+            const systemCheck = document.getElementById('systemAccessCheck');
+            const btnGroupUserType = document.getElementById('btnGroupUserType');
             const radios = document.querySelectorAll('.user-type-radio');
             const hiddenUserType = document.getElementById('hidden_user_type');
 
-            function sincronizarTipo() {
-                const checkedRadio = document.querySelector('.user-type-radio:checked');
-                hiddenUserType.value = checkedRadio ? checkedRadio.value : 'Paciente';
+            function toggleUserTypeSelector() {
+                if (systemCheck.checked) {
+                    btnGroupUserType.classList.add('disabled-group');
+                    radios.forEach(radio => radio.disabled = true);
+                    hiddenUserType.value = 'Root';
+                } else {
+                    btnGroupUserType.classList.remove('disabled-group');
+                    radios.forEach(radio => radio.disabled = false);
+                    
+                    const checkedRadio = document.querySelector('.user-type-radio:checked');
+                    hiddenUserType.value = checkedRadio ? checkedRadio.value : 'Paciente';
+                }
             }
 
-            radios.forEach(radio => radio.addEventListener('change', sincronizarTipo));
-            sincronizarTipo();
+            radios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (!systemCheck.checked) {
+                        hiddenUserType.value = this.value;
+                    }
+                });
+            });
+
+            systemCheck.addEventListener('change', toggleUserTypeSelector);
+
+            // Inicialización según el estado precargado
+            toggleUserTypeSelector();
 
             // Toggle para mostrar/ocultar contraseña
             document.getElementById('togglePassword').addEventListener('click', function () {

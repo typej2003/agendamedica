@@ -13,9 +13,9 @@ use Illuminate\Console\Command;
  *   php artisan cuentas:admin carlos@gmail.com
  *   php artisan cuentas:admin carlos@gmail.com --sin-cambio-de-clave   (no obliga a cambiar la clave)
  *
- * Idempotente. No toca el `tipo` de la cuenta: un médico sigue siendo médico y además administrador (entra
- * como médico y ve el botón "Modo Administrador"). Por defecto obliga a cambiar la clave en el próximo
- * inicio de sesión, porque las cuentas de semilla traen una clave conocida.
+ * Idempotente. Suma el rol `Administrador` sin quitar los que ya tiene (un médico sigue siendo médico). Por
+ * defecto obliga a cambiar la clave en el próximo inicio de sesión, porque las cuentas de semilla traen una
+ * clave conocida.
  */
 class CuentasAdminCommand extends Command
 {
@@ -46,7 +46,7 @@ class CuentasAdminCommand extends Command
 
         $this->info($yaEra
             ? "{$email} ya era administrador."
-            : "{$email} ahora es administrador (tipo de cuenta: " . ($user->tipo ?? 'sin definir') . ').');
+            : "{$email} ahora es administrador.");
 
         return self::SUCCESS;
     }

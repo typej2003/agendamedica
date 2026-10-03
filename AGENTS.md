@@ -86,7 +86,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos + `must_change_password`. Valida la clave solo contra `users` si la cuenta existe; cuenta bloqueada → 403 `account_blocked`. |
+| `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos. (Sin cambios en el Paso 26: si la clave es temporal o la cuenta está bloqueada, el login igual da token y lo que se corta es el resto del API, ver abajo.) |
 | `POST` | `/api/app/cambiar-password` | `CambiarPasswordController@cambiar` — `password_actual`, `password_nueva` (+`_confirmation`, mín. 8). Es lo único (junto a `GET /api/user`) que deja pasar `EnsurePasswordChanged` mientras la clave es temporal; las demás rutas `auth:api` responden 403 `password_change_required`. |
 | `POST` | `/api/app/refresh-data` | `RefreshAppController@refreshData` — protegido por `auth:api`; acepta `mes`/`anio` y devuelve citas, colas, pacientes, motivos, centros médicos, historias y evoluciones del médico (o del paciente). |
 | `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. Desde el Paso 18.B también crea historia, consulta y récipe (`App\Sync\CreacionesClinicas`, número asignado por el servidor). |
@@ -94,13 +94,19 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe) y desde el Paso 23 las plantillas de mensaje (`plantilla_cita`/`plantilla_cumple`); online-only, misma razón que el de notificar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 
-**Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`): `users` es la única tabla de acceso y
-`medicos.user_id` el vínculo con el doctor (decisión con José Rosales). `users.tipo` = `administrador` |
-`medico` | `paciente`; **ser administrador es un rol Spatie** (`Root`/`Administrador`, `User::esAdministrador()`),
-no un tipo: un médico puede serlo también. La ficha de médico se resuelve con `$user->medico`, nunca por
-correo. Toda escritura de claves, roles y bloqueos pasa por `CuentaService` (escribe `users` y espeja
-`medicos.password`). Bloquear = cortar app y panel; no toca las credenciales de sync del escritorio. El primer
-administrador se crea con `php artisan cuentas:admin {email}`.
+**Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El inicio de sesión (API y web) no se
+tocó**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medicos.user_id` como vínculo con el
+doctor, como ya era. Lo nuevo se apoya en eso:
+- `users.must_change_password`, `users.is_active`, `users.blocked_reason` (migración `2026_10_03_200000`).
+- Toda escritura de claves, roles y bloqueos pasa por `CuentaService`, que escribe `users.password` **y** espeja
+  `medicos.password` (el login prueba `users` y, si falla, `medicos`: escribir una sola dejaría dos claves válidas).
+- Dos middlewares que actúan **después** de iniciar sesión: `EnsurePasswordChanged` (con clave temporal solo pasan
+  `POST /api/app/cambiar-password` y `GET /api/user`; el resto responde 403 `password_change_required`; en web
+  redirige a `/cambiar-password`) y `EnsureAccountActive` (cuenta bloqueada → 403 `account_blocked` / cierra la
+  sesión web). Bloquear borra los tokens y **no** toca las credenciales de sync del escritorio.
+- `User::esAdministrador()` (rol Root o Administrador), `User::administradores()` (scope; no usar `User::role([...])`
+  de Spatie con roles que pueden no existir: lanza excepción) y `User::medico()`.
+- El primer administrador se crea con `php artisan cuentas:admin {email}`.
 
 **Sync del sistema legado PowerBuilder**
 

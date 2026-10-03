@@ -11,109 +11,113 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Login web.
- *
- * Reglas (las mismas que `Api\LoginAppController`):
- *  - Los administradores NO tienen un acceso aparte: entran como médico (o paciente) y, si lo son, ven el
- *    botón "Modo Administrador" en el menú. El formulario ya no ofrece "Root / acceso al sistema" y un
- *    `user_type=Root` enviado a mano se ignora.
- *  - Si existe la fila en `users`, la clave se valida SOLO contra `users`. `user_type` (Paciente/Médico) queda
- *    para desambiguar cuentas legado que todavía no tienen fila en `users`.
- *  - Una cuenta bloqueada no entra. Una clave temporal manda a `/cambiar-password` (EnsurePasswordChanged).
- */
 class CustomLoginController extends Controller
 {
     public function login(Request $request)
     {
+        
         $request->validate([
             'email'     => 'required|email',
             'password'  => 'required|string',
-            'user_type' => 'nullable|string',
+            'user_type' => 'required|in:Medico,Paciente,Root',
         ]);
 
-        $email    = trim($request->email);
+        $email    = $request->email;
         $password = $request->password;
+        $userType = $request->user_type;
         $remember = $request->has('remember');
 
-        $user = User::whereRaw('LOWER(email) = ?', [mb_strtolower($email)])->first();
+        // 1. Caso Root / Administrador (Modelo User)
+        if ($userType === 'Root') {
+            $user = User::where('email', $email)->first();
 
-        if ($user) {
-            if (! Hash::check($password, $user->password)) {
-                $this->credencialesIncorrectas();
+            if (!$user || !Hash::check($password, $user->password)) {
+                throw ValidationException::withMessages([
+                    'email' => ['Las credenciales ingresadas son incorrectas para el usuario Root.'],
+                ]);
             }
-        } else {
-            $user = $this->crearCuentaDesdeLegado($email, $password, (string) $request->user_type);
-            if (! $user) {
-                $this->credencialesIncorrectas();
-            }
+
+            Auth::login($user, $remember);
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('dashboard'));
         }
 
-        if ($user->is_active === false) {
-            throw ValidationException::withMessages([
-                'email' => ['Tu cuenta está bloqueada. Comunícate con soporte.'],
-            ]);
-        }
-
-        Auth::login($user, $remember);
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard'));
-    }
-
-    /**
-     * Médico o paciente con clave en su tabla del legado y sin fila en `users`: se le crea la cuenta (mismo
-     * hash ya encriptado) con su `tipo` y su rol. Solo se busca en la tabla que eligió en el formulario.
-     */
-    private function crearCuentaDesdeLegado(string $email, string $password, string $tipoElegido): ?User
-    {
-        if ($tipoElegido === 'Medico') {
+        // 2. Caso Médico (Modelo Medico)
+        if ($userType === 'Medico') {
             $medico = Medico::where('email', $email)->first();
-            if (! $medico || ! $medico->password || ! Hash::check($password, $medico->password)) {
-                return null;
+            if (!$medico) {
+                throw ValidationException::withMessages([
+                    'email' => ["No existe ningún médico registrado con el correo {$email}."],
+                ]);
             }
 
-            $user = User::create([
-                'name'      => $medico->nombre ?? $medico->name ?? 'Dr. ' . $medico->apellido,
-                'email'     => $medico->email,
-                'password'  => $medico->password,
-                'tipo'      => User::TIPO_MEDICO,
-                'is_active' => (bool) ($medico->is_active ?? true),
-            ]);
-            $medico->user_id = $user->id;
-            $medico->save();
-            $user->assignRole('Medico');
+            // Validar la contraseña directamente contra el modelo Medico
+            if (!Hash::check($password, $medico->password)) {
+                throw ValidationException::withMessages([
+                    'password' => ['La contraseña ingresada es incorrecta.'],
+                ]);
+            }
 
-            return $user;
+            // Sincronizar o vincular con la tabla `users` para el Auth de Laravel / Spatie
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                $user = User::create([
+                    'name'     => $medico->nombre ?? $medico->name ?? 'Dr. ' . $medico->apellido,
+                    'email'    => $medico->email,
+                    'password' => $medico->password, // Mismo hash ya encriptado
+                ]);
+                $medico->user_id = $user->id;
+                $medico->save();
+            }
+
+            if (!$user->hasRole('Medico')) {
+                $user->assignRole('Medico');
+            }
+
+            Auth::login($user, $remember);
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('dashboard'));
         }
 
-        if ($tipoElegido === 'Paciente') {
+        // 3. Caso Paciente (Modelo Paciente)
+        if ($userType === 'Paciente') {
             $paciente = Paciente::where('email', $email)->first();
-            if (! $paciente || ! $paciente->password || ! Hash::check($password, $paciente->password)) {
-                return null;
+
+            if (!$paciente) {
+                throw ValidationException::withMessages([
+                    'email' => ["No existe ningún paciente registrado con el correo {$email}."],
+                ]);
             }
 
-            $user = User::create([
-                'name'     => $paciente->nombres ?? $paciente->apellidos,
-                'email'    => $paciente->email,
-                'password' => $paciente->password,
-                'tipo'     => User::TIPO_PACIENTE,
-            ]);
-            $paciente->user_id = $user->id;
-            $paciente->save();
-            $user->assignRole('Paciente');
+            // Validar la contraseña directamente contra el modelo Paciente
+            if (!Hash::check($password, $paciente->password)) {
+                throw ValidationException::withMessages([
+                    'password' => ['La contraseña ingresada es incorrecta.'],
+                ]);
+            }
 
-            return $user;
+            // Sincronizar o vincular con la tabla `users` para el Auth de Laravel / Spatie
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                $user = User::create([
+                    'name'     => $paciente->nombres ?? $paciente->nombres ??  $paciente->apellidos,
+                    'email'    => $paciente->email,
+                    'password' => $paciente->password, // Mismo hash ya encriptado
+                ]);
+                $paciente->user_id = $user->id;
+                $paciente->save();
+            }
+
+            if (!$user->hasRole('Paciente')) {
+                $user->assignRole('Paciente');
+            }
+
+            Auth::login($user, $remember);
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('dashboard'));
         }
-
-        return null;
-    }
-
-    /** Mensaje único: no revela si el correo existe. */
-    private function credencialesIncorrectas(): void
-    {
-        throw ValidationException::withMessages([
-            'password' => ['Las credenciales ingresadas son incorrectas.'],
-        ]);
     }
 }
