@@ -117,4 +117,26 @@ class WhatsAppWebhookController extends Controller
             return null;
         }
     }
+
+    public function handleWebhook(Request $request, GeminiService $gemini, WhatsAppService $whatsApp)
+    {
+        $body = $request->all();
+        $entry = $body['entry'][0]['changes'][0]['value'] ?? null;
+
+        if (!empty($entry['messages'][0])) {
+            $message = $entry['messages'][0];
+            $from = $message['from']; // Teléfono del paciente
+            $text = $message['text']['body'] ?? '';
+
+            if (!empty($text)) {
+                // Procesar con Gemini y obtener la respuesta
+                $respuesta = $gemini->procesarMensaje($text, $from);
+
+                // Responder al paciente por WhatsApp
+                $whatsApp->sendTextMessage($from, $respuesta);
+            }
+        }
+
+        return response()->json(['status' => 'EVENT_RECEIVED'], 200);
+    }
 }
