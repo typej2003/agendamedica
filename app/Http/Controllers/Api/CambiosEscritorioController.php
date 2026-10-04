@@ -26,6 +26,10 @@ class CambiosEscritorioController extends Controller
     /**
      * Lo que el escritorio necesita para arrancar: si la carga inicial está completa (recién ahí se
      * sincronizan cambios) y la lista de tablas en las que tiene que registrar cambios.
+     *
+     * Devuelve también el `reg_medico` con el que el API identifica a quien llama (el de la credencial
+     * del equipo): hay consultorios cuya tabla `evolucion` no tiene esa columna, y el instalador lo
+     * toma de acá para dejarlo en bridge\sync.ini.
      */
     public function estado(Request $request): JsonResponse
     {
@@ -38,6 +42,7 @@ class CambiosEscritorioController extends Controller
 
         return response()->json([
             'ok'     => true,
+            'reg_medico' => $regMedico,
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),

@@ -9,6 +9,7 @@ use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use App\Models\SyncChange;
+use App\Models\SyncCredential;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,19 @@ class CambiosEscritorioTest extends TestCase
 
         $r = $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['carga' => 'completa']);
         $this->assertContains('pacientes', explode(',', $r->json('tablas')));
+    }
+
+    public function test_estado_con_credencial_de_equipo_devuelve_el_reg_medico_de_la_credencial(): void
+    {
+        $token = SyncCredential::generarToken();
+        SyncCredential::create([
+            'reg_medico' => self::REG, 'machine_label' => 'EQUIPO-' . uniqid(), 'machine_host' => 'PC-TEST',
+            'bound_to_machine' => false, 'token_hash' => SyncCredential::hashToken($token), 'expires_at' => now()->addYear(),
+        ]);
+
+        // Sin reg_medico en el cuerpo: el instalador del consultorio lo toma de acá (su evolucion puede no tenerlo).
+        $this->postJson('/api/sync/cambios/estado', [], ['Authorization' => 'Bearer ' . $token])
+            ->assertOk()->assertJson(['reg_medico' => self::REG, 'carga' => 'completa']);
     }
 
     public function test_sin_carga_inicial_completa_no_se_suben_cambios(): void
