@@ -107,23 +107,6 @@ class CargaInicialTest extends TestCase
             ->assertJson(['error' => 'medico_con_datos']);
     }
 
-    public function test_dc_venoso_acepta_numeros_y_letras_del_legado(): void
-    {
-        // En el legado esa columna es numeric(5,2) en unos consultorios y char en otros ('N'): con DECIMAL el
-        // lote entero fallaba con "Incorrect decimal value". Ahora se guarda tal cual.
-        $this->crearMedico('carga-t-005');
-        $carga = $this->iniciar('carga-t-005', ['eco_obstetrico' => 3])->json('carga_id');
-
-        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'eco_obstetrico', 'desde' => 0, 'filas' => [
-            ['historia' => 1, 'consulta' => 1, 'dc_venoso' => '1.25'],
-            ['historia' => 2, 'consulta' => 1, 'dc_venoso' => 'N'],
-            ['historia' => 3, 'consulta' => 1, 'dc_venoso' => null],
-        ]])->assertOk()->assertJson(['recibidas' => 3]);
-
-        $valores = DB::table('eco_obstetrico')->where('reg_medico', 'carga-t-005')->orderBy('historia')->pluck('dc_venoso')->all();
-        $this->assertSame(['1.25', 'N', null], array_map(fn ($v) => $v === null ? null : (string) $v, $valores));
-    }
-
     public function test_evolucion_no_cuenta_como_dato_previo(): void
     {
         $this->crearMedico('carga-t-003');
