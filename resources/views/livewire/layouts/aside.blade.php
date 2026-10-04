@@ -113,6 +113,6 @@
     </ul>
     <hr class="m-0">
     <div class="sidebar-footer p-3 text-center">
-        <small class="text-muted">© {{ date('Y') }} Agenda Médica</small>
+        <small class="text-muted">© {{ date('Y') }} Doctorisimo App</small>
     </div>
 </div>
