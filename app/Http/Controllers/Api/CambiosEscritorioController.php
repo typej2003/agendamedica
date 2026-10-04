@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Medico;
 use App\Models\SyncCarga;
 use App\Services\SyncAuthService;
 use App\Sync\Escritorio\CambiosEscritorio;
@@ -30,6 +31,9 @@ class CambiosEscritorioController extends Controller
      * Devuelve también el `reg_medico` con el que el API identifica a quien llama (el de la credencial
      * del equipo): hay consultorios cuya tabla `evolucion` no tiene esa columna, y el instalador lo
      * toma de acá para dejarlo en bridge\sync.ini.
+     *
+     * Y el nombre del médico dueño de esa credencial (`medico_nombre`): GinecoReport lo muestra en su
+     * pantalla de inicio en lugar de uno escrito en el código (lo cachea sync.exe --medico en sync.ini).
      */
     public function estado(Request $request): JsonResponse
     {
@@ -43,6 +47,7 @@ class CambiosEscritorioController extends Controller
         return response()->json([
             'ok'     => true,
             'reg_medico' => $regMedico,
+            'medico_nombre' => $this->nombreMedico($regMedico),
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
@@ -73,6 +78,15 @@ class CambiosEscritorioController extends Controller
     }
 
     /* ------------------------------------------------------------------ */
+
+    /** Nombre del médico dueño del `reg_medico`; '' si no hay un médico registrado con él. */
+    private function nombreMedico(string $regMedico): string
+    {
+        $medico = Medico::whereHas('registro', fn ($q) => $q->where('reg_medico', $regMedico))->first()
+            ?? Medico::where('reg_medico', $regMedico)->first();
+
+        return $medico ? trim($medico->name . ' ' . $medico->lastname) : '';
+    }
 
     /** @return array{0:?string, 1:?JsonResponse} */
     private function medico(Request $request): array

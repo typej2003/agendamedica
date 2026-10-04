@@ -103,6 +103,14 @@ class CambiosEscritorioTest extends TestCase
             ->assertOk()->assertJson(['reg_medico' => self::REG, 'carga' => 'completa']);
     }
 
+    public function test_estado_devuelve_el_nombre_del_medico_dueño_del_reg_medico(): void
+    {
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['medico_nombre' => 'Médico Cambios']);
+
+        // Un reg_medico sin médico registrado: el campo viene vacío, no falla.
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()->assertJson(['medico_nombre' => '']);
+    }
+
     public function test_sin_carga_inicial_completa_no_se_suben_cambios(): void
     {
         $this->post_('cambios/subir', ['reg_medico' => 'nadie-' . uniqid(), 'cambios' => []])
