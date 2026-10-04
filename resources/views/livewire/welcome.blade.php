@@ -170,7 +170,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>GinecoReport</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>DoctorisimoApp</h5>
                     <p class="small text-muted mb-3">Plataforma integral para la gestión y reserva de citas médicas especializadas.</p>
                 </div>
                 <div class="col-lg-2 col-6">
