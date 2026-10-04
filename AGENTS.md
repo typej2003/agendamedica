@@ -111,7 +111,10 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
   (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
-  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Cada fila trae "Editar" y un **menú de 3
+  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Alta y edición llevan también el **prefijo**
+  (`medicos.prefix`, texto libre de hasta 20 caracteres: "Dr", "Dra", "Ing"…; el modelo le agrega el punto y
+  lo deja en `null` si queda vacío). `cambios/estado` lo devuelve como `medico_prefix` junto a `medico_nombre`
+  (sin prefijo): GinecoReport arma con ellos su `Doct`. Cada fila trae "Editar" y un **menú de 3
   puntos** con Roles (los marcados quedan exactamente así: `CuentaService::asignarRoles`; solo un Root da o quita
   Root; nadie se quita su propio acceso ni deja sin administradores), Resetear clave, Generar API key (el mismo
   trait `Concerns\EmiteApiKeys` que usa "API Keys") y Bloquear/Desbloquear. **Sustituye** al enlace "Usuarios" del

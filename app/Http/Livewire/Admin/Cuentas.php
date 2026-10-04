@@ -41,6 +41,7 @@ class Cuentas extends Component
     public $tipoAlta = 'medico';
     public $name = '';
     public $lastname = '';
+    public $prefix = '';
     public $email = '';
     public $reg_medico = '';
     public $phone = '';
@@ -146,12 +147,14 @@ class Cuentas extends Component
                 $this->validate([
                     'name'       => 'required|string|max:255',
                     'lastname'   => 'required|string|max:255',
+                    'prefix'     => 'nullable|string|max:20',
                     'email'      => 'required|email|max:255',
                     'reg_medico' => 'required|string|max:100',
                 ]);
                 $r = $cuentas->crearMedico([
                     'name'       => $this->name,
                     'lastname'   => $this->lastname,
+                    'prefix'     => $this->prefix,
                     'email'      => $this->email,
                     'reg_medico' => $this->reg_medico,
                 ], $this->clave ?: null);
@@ -207,6 +210,7 @@ class Cuentas extends Component
             $this->medicoId = $medico->id;
             $this->name = (string) $medico->name;
             $this->lastname = (string) $medico->lastname;
+            $this->prefix = (string) $medico->prefix;
             $this->email = (string) $medico->email;
             $this->phone = (string) $medico->phone;
             $this->license_number = (string) $medico->license_number;
@@ -227,6 +231,7 @@ class Cuentas extends Component
                 $this->validate([
                     'name'           => 'required|string|max:255',
                     'lastname'       => 'required|string|max:255',
+                    'prefix'         => 'nullable|string|max:20',
                     'email'          => 'required|email|max:255',
                     'phone'          => 'nullable|string|max:50',
                     'license_number' => 'nullable|string|max:100',
@@ -234,6 +239,7 @@ class Cuentas extends Component
                 $cuentas->actualizarMedico(Medico::findOrFail($this->medicoId), [
                     'name'           => $this->name,
                     'lastname'       => $this->lastname,
+                    'prefix'         => $this->prefix,
                     'email'          => $this->email,
                     'phone'          => $this->phone,
                     'license_number' => $this->license_number,
@@ -335,7 +341,7 @@ class Cuentas extends Component
 
     private function limpiarFormulario(): void
     {
-        $this->reset(['name', 'lastname', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados']);
+        $this->reset(['name', 'lastname', 'prefix', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados']);
         $this->tipoAlta = 'medico';
         $this->tipoEdicion = 'medico';
         $this->resetErrorBag();

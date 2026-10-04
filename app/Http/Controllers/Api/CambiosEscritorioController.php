@@ -32,8 +32,9 @@ class CambiosEscritorioController extends Controller
      * del equipo): hay consultorios cuya tabla `evolucion` no tiene esa columna, y el instalador lo
      * toma de acá para dejarlo en bridge\sync.ini.
      *
-     * Y el nombre del médico dueño de esa credencial (`medico_nombre`): GinecoReport lo muestra en su
-     * pantalla de inicio en lugar de uno escrito en el código (lo cachea sync.exe --medico en sync.ini).
+     * Y el médico dueño de esa credencial: `medico_nombre` (nombre y apellido, sin prefijo) y `medico_prefix`
+     * ("Dr.", "Dra."…; null si no tiene). GinecoReport arma con ellos su `Doct`, que muestra en la pantalla de
+     * inicio y usa en los reportes (los cachea sync.exe --medico en sync.ini).
      */
     public function estado(Request $request): JsonResponse
     {
@@ -43,11 +44,13 @@ class CambiosEscritorioController extends Controller
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
+        $medico = $this->medicoDe($regMedico);
 
         return response()->json([
             'ok'     => true,
             'reg_medico' => $regMedico,
-            'medico_nombre' => $this->nombreMedico($regMedico),
+            'medico_nombre' => $medico ? trim($medico->name . ' ' . $medico->lastname) : '',
+            'medico_prefix' => $medico ? $medico->prefix : null,
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
@@ -79,13 +82,11 @@ class CambiosEscritorioController extends Controller
 
     /* ------------------------------------------------------------------ */
 
-    /** Nombre del médico dueño del `reg_medico`; '' si no hay un médico registrado con él. */
-    private function nombreMedico(string $regMedico): string
+    /** Médico dueño del `reg_medico`; null si no hay uno registrado con él. */
+    private function medicoDe(string $regMedico): ?Medico
     {
-        $medico = Medico::whereHas('registro', fn ($q) => $q->where('reg_medico', $regMedico))->first()
+        return Medico::whereHas('registro', fn ($q) => $q->where('reg_medico', $regMedico))->first()
             ?? Medico::where('reg_medico', $regMedico)->first();
-
-        return $medico ? trim($medico->name . ' ' . $medico->lastname) : '';
     }
 
     /** @return array{0:?string, 1:?JsonResponse} */

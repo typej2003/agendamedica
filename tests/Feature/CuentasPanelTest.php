@@ -612,4 +612,66 @@ class CuentasPanelTest extends TestCase
         $pagina->assertSee('onsubmit="return confirmarCierreSesion(event, this);"', false);
         $pagina->assertDontSee("document.getElementById('logout-form').submit();\">", false);
     }
+
+    public function test_el_prefijo_se_escribe_libre_y_se_guarda_con_punto(): void
+    {
+        $this->actingAs($this->admin());
+        $sufijo = uniqid();
+
+        // Alta: "Dra" -> "Dra."
+        Livewire::test(Cuentas::class)
+            ->call('abrirAlta', 'medico')
+            ->set('prefix', ' Dra ')->set('name', 'Con')->set('lastname', 'Prefijo')
+            ->set('email', "pref-{$sufijo}@example.com")->set('reg_medico', "test-pref-{$sufijo}")
+            ->call('guardarAlta')
+            ->assertHasNoErrors();
+        $medico = Medico::where('reg_medico', "test-pref-{$sufijo}")->firstOrFail();
+        $this->assertSame('Dra.', $medico->prefix);
+
+        // Edición: el formulario trae el prefijo, uno que ya termina en punto no se duplica y vaciarlo lo deja en null.
+        $panel = Livewire::test(Cuentas::class)
+            ->call('abrirEditar', 'medico', $medico->id)
+            ->assertSet('prefix', 'Dra.')
+            ->set('prefix', 'Ing.')->call('guardarEdicion')->assertHasNoErrors();
+        $this->assertSame('Ing.', $medico->fresh()->prefix);
+
+        $panel->call('abrirEditar', 'medico', $medico->id)->set('prefix', '')->call('guardarEdicion')->assertHasNoErrors();
+        $this->assertNull($medico->fresh()->prefix);
+    }
+
+    public function test_el_prefijo_admite_hasta_20_caracteres(): void
+    {
+        $this->actingAs($this->admin());
+        $sufijo = uniqid();
+
+        Livewire::test(Cuentas::class)
+            ->call('abrirAlta', 'medico')
+            ->set('prefix', str_repeat('a', 21))->set('name', 'Largo')->set('lastname', 'Prefijo')
+            ->set('email', "largo-{$sufijo}@example.com")->set('reg_medico', "test-largo-{$sufijo}")
+            ->call('guardarAlta')
+            ->assertHasErrors(['prefix']);
+        $this->assertNull(Medico::where('reg_medico', "test-largo-{$sufijo}")->first());
+    }
+
+    public function test_actualizar_un_medico_sin_mandar_prefijo_no_se_lo_borra(): void
+    {
+        $r = $this->cuentas->crearMedico([
+            'name' => 'Sin', 'lastname' => 'Tocar', 'email' => 'sin-' . uniqid() . '@example.com',
+            'reg_medico' => 'test-sintocar-' . uniqid(), 'prefix' => 'Lic',
+        ]);
+        $this->assertSame('Lic.', $r['medico']->fresh()->prefix);
+
+        $this->cuentas->actualizarMedico($r['medico'], ['name' => 'Sin', 'lastname' => 'Tocar Mas', 'email' => $r['medico']->email]);
+
+        $this->assertSame('Lic.', $r['medico']->fresh()->prefix);
+    }
+
+    public function test_normalizar_prefijo(): void
+    {
+        $this->assertNull(Medico::normalizarPrefijo(null));
+        $this->assertNull(Medico::normalizarPrefijo('   '));
+        $this->assertSame('Dr.', Medico::normalizarPrefijo('Dr'));
+        $this->assertSame('Dr.', Medico::normalizarPrefijo(' Dr. '));
+        $this->assertSame('Lic.', Medico::normalizarPrefijo('Lic'));
+    }
 }

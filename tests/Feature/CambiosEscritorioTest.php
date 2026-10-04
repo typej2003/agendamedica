@@ -308,4 +308,19 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame([], $this->confirmados($r));
         $this->assertSame(0, DB::table('operadores')->where('reg_medico', self::REG)->count());
     }
+
+    public function test_estado_devuelve_el_prefijo_del_medico_o_null(): void
+    {
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()
+            ->assertJson(['medico_nombre' => 'Médico Cambios', 'medico_prefix' => null]);
+
+        $this->medico->update(['prefix' => 'Dra']);
+
+        // El nombre no lleva el prefijo: el escritorio los une (Doct) y usa el nombre solo (docti).
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()
+            ->assertJson(['medico_nombre' => 'Médico Cambios', 'medico_prefix' => 'Dra.']);
+
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()
+            ->assertJson(['medico_nombre' => '', 'medico_prefix' => null]);
+    }
 }
