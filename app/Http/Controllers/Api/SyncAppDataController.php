@@ -102,14 +102,16 @@ class SyncAppDataController extends Controller
 
         $pacientes = $this->deltaQuery(Paciente::whereIn('id', $pacienteIds), $since)->get();
 
+        // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también entraban
+        // las que tuvieran un número del pivote, pero el número es por médico desde el Paso 18.B1 (cada
+        // instalación del legado arranca en 1), así que un médico recibía las historias de cualquier otro con
+        // el mismo número, y el teléfono las mezclaba con las suyas. Una historia sin `medico_id` ni
+        // `reg_medico` no es de nadie y no se manda (no hay ninguna en los datos cargados).
         $historias = $this->deltaQuery(
-            Historia::where(function ($query) use ($medicoModel, $registrosMedicos, $numHistorias) {
+            Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
                 $query->where('medico_id', $medicoModel->id);
                 if (!empty($registrosMedicos)) {
                     $query->orWhereIn('reg_medico', $registrosMedicos);
-                }
-                if (!empty($numHistorias)) {
-                    $query->orWhereIn('numhistoria', $numHistorias);
                 }
             }),
             $since,
