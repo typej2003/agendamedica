@@ -194,7 +194,7 @@
             </div>
             <hr class="my-4 border-secondary">
             <div class="text-center small text-muted">
-                <p class="mb-0">&copy; {{ date('Y') }} GinecoReport. Todos los derechos reservados.</p>
+                <p class="mb-0">&copy; {{ date('Y') }} Doctorisimo.<span style="color: #6500da;">App</span> Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
