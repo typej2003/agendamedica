@@ -1,0 +1,118 @@
+<div class="d-flex flex-column flex-shrink-0 h-100 {{ $isMinimized ? 'minimized' : '' }}">
+    <div class="sidebar-header d-flex align-items-center justify-content-between p-3">
+        @if(!$isMinimized)
+        <div class="user-info d-flex align-items-center">
+            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=6500da&color=fff&rounded=true" alt="User" class="me-2" width="40">
+            <div class="d-flex flex-column">
+                <span class="fw-bold fs-6">{{ Auth::user()->name }}</span>
+                <small class="text-muted">{{ Auth::user()->getRoleNames()->first() }}</small>
+            </div>
+        </div>
+        @endif
+        <button class="btn btn-link text-purple d-none d-lg-block" wire:click="toggleMinimize">
+            <i class="bi {{ $isMinimized ? 'bi-arrow-right-square' : 'bi-arrow-left-square' }} fs-4"></i>
+        </button>
+    </div>
+    <hr class="m-0">
+
+    <ul class="nav nav-pills flex-column mb-auto p-2 sidebar-nav">
+        <li class="nav-item">
+            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i>
+                <span class="link-text">Escritorio</span>
+            </a>
+        </li>
+
+        @if(auth()->user()->hasRole('Root'))
+            <li class="nav-header">AGENDA MÉDICA</li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos') ? 'active' : '' }}">
+                    <i class="bi bi-person-badge"></i>
+                    <span class="link-text">Médicos</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.pacientes') }}" class="nav-link {{ request()->routeIs('admin.pacientes') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.centros-medicos') }}" class="nav-link {{ request()->routeIs('admin.centros-medicos') ? 'active' : '' }}">
+                    <i class="bi bi-hospital"></i>
+                    <span class="link-text">Centros Médicos</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.medico-centro-medico') }}" class="nav-link {{ request()->routeIs('admin.medico-centro-medico') ? 'active' : '' }}">
+                    <i class="bi bi-link-45deg"></i>
+                    <span class="link-text">Asignar Médico a Centro</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.historias') }}" class="nav-link {{ request()->routeIs('admin.historias') ? 'active' : '' }}">
+                    <i class="bi bi-journal-medical"></i>
+                    <span class="link-text">Historias Médicas</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.cargar-sql') }}" class="nav-link {{ request()->routeIs('admin.cargar-sql') ? 'active' : '' }}">
+                    <i class="bi bi-filetype-sql"></i>
+                    <span class="link-text">Cargar SQL</span>
+                </a>
+            </li>
+        @endif
+
+        @if(auth()->user()->hasRole('Medico'))
+            <li class="nav-header">AGENDA MÉDICA</li>
+
+            <li class="nav-item">
+                <a href="{{ route('medico.pacientes') }}" class="nav-link {{ request()->routeIs('medico.pacientes') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Pacientes</span>
+                </a>
+            </li>
+        @endif
+
+        <li class="nav-header">ADMINISTRACIÓN</li>
+
+        @if(auth()->user()->esAdministrador())
+        <li class="nav-item">
+            <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i>
+                <span class="link-text">Usuarios</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}">
+                <i class="bi bi-key-fill"></i>
+                <span class="link-text">API Keys</span>
+            </a>
+        </li>
+        @endif
+
+        <li class="nav-item mt-auto">
+            <a href="{{ route('logout') }}" class="nav-link"
+            onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
+                <i class="bi bi-box-arrow-left"></i>
+                <span class="link-text">Cerrar Sesión</span>
+            </a>
+
+            <!-- Formulario oculto necesario para procesar la petición POST con CSRF -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                @csrf
+            </form>
+        </li>
+
+    </ul>
+    <hr class="m-0">
+    <div class="sidebar-footer p-3 text-center">
+        <small class="text-muted">© {{ date('Y') }} Doctorisimo App</small>
+    </div>
+</div>

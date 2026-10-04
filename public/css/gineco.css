@@ -1,0 +1,199 @@
+/* ==========================================
+   Variables de Paleta de Colores
+   ========================================== */
+:root {
+    --primary-color: #c28fd6;
+    --primary-hover: #b072c7;
+    --primary-light: #f7effa;
+    --primary-border: #ebd3f5;
+    
+    --accent-color: #3bb39e;
+    --accent-hover: #329887;
+    --accent-light: #eaf8f5;
+
+    --dark-color: #2e1f38;
+    --muted-color: #6c757d;
+    --bg-light: #fdf8ff;
+    --bg-surface: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--dark-color);
+    background-color: var(--bg-surface);
+}
+
+/* ==========================================
+   Header / Navbar
+   ========================================== */
+.navbar-gineco {
+    background-color: var(--bg-surface);
+    box-shadow: 0 2px 15px rgba(194, 143, 214, 0.15);
+}
+
+.navbar-gineco .navbar-brand {
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.navbar-gineco .navbar-brand span {
+    color: var(--primary-color);
+}
+
+.nav-link {
+    color: var(--dark-color);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary-hover);
+}
+
+/* ==========================================
+   Botones Personalizados
+   ========================================== */
+.btn-primary-gineco {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-gineco:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(194, 143, 214, 0.4);
+}
+
+.btn-accent-gineco {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn-accent-gineco:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 179, 158, 0.4);
+}
+
+.btn-outline-gineco {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 8px 22px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gineco:hover {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+/* ==========================================
+   Hero Section
+   ========================================== */
+.hero-section {
+    background: linear-gradient(135deg, var(--bg-light) 0%, #ffffff 100%);
+    padding: 80px 0 60px 0;
+    border-bottom: 1px solid var(--primary-border);
+}
+
+.hero-title {
+    font-weight: 800;
+    color: var(--dark-color);
+}
+
+.hero-title span {
+    color: var(--primary-color);
+}
+
+.search-box-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(194, 143, 214, 0.2);
+    border: 1px solid var(--primary-border);
+}
+
+/* ==========================================
+   Cards de Servicios / Especialidades
+   ========================================== */
+.service-card {
+    background: #ffffff;
+    border: 1px solid #f0e6f5;
+    border-radius: 12px;
+    padding: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(194, 143, 214, 0.2);
+    border-color: var(--primary-color);
+}
+
+.service-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 15px;
+}
+
+.accent-icon {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+}
+
+/* ==========================================
+   Sección Banner Promocional / Telemedicina
+   ========================================== */
+.banner-telemedicina {
+    background-color: var(--primary-light);
+    border-radius: 20px;
+    border: 1px solid var(--primary-border);
+}
+
+.badge-gineco {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+/* ==========================================
+   Footer
+   ========================================== */
+.footer-gineco {
+    background-color: var(--dark-color);
+    color: #ffffff;
+}
+
+.footer-gineco a {
+    color: #d1c4db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-gineco a:hover {
+    color: var(--primary-color);
+}

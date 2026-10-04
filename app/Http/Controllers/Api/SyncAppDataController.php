@@ -1,0 +1,878 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\SyncAppDataRequest;
+use App\Http\Resources\ConfiguracionMedicoResource;
+use App\Http\Resources\RecipeFormatoResource;
+use App\Models\Cola;
+use App\Models\ConstanciaObs;
+use App\Models\Consulta;
+use App\Models\Diagnostico;
+use App\Models\DiagnosticoPaciente;
+use App\Models\Doctor;
+use App\Models\Especialidad;
+use App\Models\Evolucion;
+use App\Models\Historia;
+use App\Models\Informe;
+use App\Models\Medico;
+use App\Models\MedicalCenter;
+use App\Models\MedicoPaciente;
+use App\Models\MedicoRegistro;
+use App\Models\MotivoCita;
+use App\Models\MotivoConsulta;
+use App\Models\MotivoConsultaPaciente;
+use App\Models\Office;
+use App\Models\OfficeSchedule;
+use App\Models\Paciente;
+use App\Models\Recipe;
+use App\Models\RecipeFormato;
+use App\Models\Referencia;
+use App\Models\ReposoPaciente;
+use App\Models\SyncChange;
+use App\Models\RecipeGrupo;
+use App\Models\RecipeGrupoDetalle;
+use App\Models\Vademecum;
+use App\Sync\CreacionesClinicas;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Sync delta de AppDDR (ver ROADMAP.md "Decisión de arquitectura: sync offline delta"). No
+ * reemplaza `/app/refresh-data`. Un solo endpoint para *pull* y *push*:
+ *
+ * 1. Aplica `changes` (si vienen) contra las tablas editables, con last-write-wins por columna
+ *    y la regla de que un eliminado le gana a cualquier update posterior.
+ * 2. Calcula el delta usando el `since` que llegó en la petición (el viejo, no el de ahora) —
+ *    así la respuesta incluye lo que el cliente acaba de mandar, más lo de terceros.
+ *
+ * El cliente no necesita saber qué pasó con cada cambio que mandó: siempre sobreescribe su
+ * copia local con lo que vuelve acá, gane o pierda su propio cambio el conflicto.
+ */
+class SyncAppDataController extends Controller
+{
+    public function sync(SyncAppDataRequest $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no autenticado.'], 401);
+        }
+
+        $medicoModel = Medico::where('user_id', $user->id)->orWhere('email', $user->email)->first();
+        if (!$medicoModel) {
+            return response()->json(['message' => 'Esta cuenta no tiene un médico asociado.'], 403);
+        }
+
+        $since = $request->filled('since') ? Carbon::parse($request->input('since')) : null;
+
+        $registrosMedicos = MedicoRegistro::where('medico_id', $medicoModel->id)
+            ->pluck('reg_medico')
+            ->filter()
+            ->toArray();
+        if (!empty($medicoModel->reg_medico)) {
+            $registrosMedicos[] = $medicoModel->reg_medico;
+        }
+        $registrosMedicos = array_values(array_unique($registrosMedicos));
+
+        $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+        $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+        $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
+
+        $resultadoChanges = $this->applyChanges(
+            $request->cambios(),
+            $medicoModel,
+            $registrosMedicos,
+            $relaciones,
+        );
+
+        // Se relee el pivote **después** de aplicar los cambios: un paciente creado en este mismo
+        // lote no estaba en `$relaciones` cuando se cargó arriba, y sin esto el delta no se lo
+        // devolvería al teléfono — la ficha que el usuario acaba de crear desaparecería de su
+        // pantalla en la primera sincronización.
+        // Lo mismo con una historia recién llenada: sin releer, el número nuevo no estaría en
+        // `$numHistorias` y la consulta y el récipe que colgaron de ella no bajarían.
+        if ($resultadoChanges['creo_pacientes'] || $resultadoChanges['creo_clinicas']) {
+            $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+            $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+            $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
+        }
+
+        $syncedAt = Carbon::now();
+
+        $pacientes = $this->deltaQuery(Paciente::whereIn('id', $pacienteIds), $since)->get();
+
+        // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también entraban
+        // las que tuvieran un número del pivote, pero el número es por médico desde el Paso 18.B1 (cada
+        // instalación del legado arranca en 1), así que un médico recibía las historias de cualquier otro con
+        // el mismo número, y el teléfono las mezclaba con las suyas. Una historia sin `medico_id` ni
+        // `reg_medico` no es de nadie y no se manda (no hay ninguna en los datos cargados).
+        $historias = $this->deltaQuery(
+            Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
+                $query->where('medico_id', $medicoModel->id);
+                if (!empty($registrosMedicos)) {
+                    $query->orWhereIn('reg_medico', $registrosMedicos);
+                }
+            }),
+            $since,
+        )->get();
+
+        $colas = $this->deltaQuery(Cola::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
+        // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
+        $consultas = $this->deltaQuery(
+            Consulta::whereIn('numhistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
+        $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
+        // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
+        // los lee y puede agregar o quitar los de la consulta que está atendiendo.
+        $motivosConsulta = $this->deltaQuery(MotivoConsulta::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $motivosDeConsulta = $this->deltaQuery(
+            MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
+        // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
+        // filtro doble que `consultas`.
+        $recipes = $this->deltaQuery(
+            Recipe::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
+        // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
+        // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
+        $vademecum = $this->deltaQuery(Vademecum::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
+        $tratamientos = $this->deltaQuery(RecipeGrupo::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $tratamientosDetalle = $this->deltaQuery(
+            RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
+
+        // Documentos de la consulta que el app solo imprime (Paso 25): los carga el escritorio y bajan
+        // por delta, con el mismo filtro doble que `consultas`. `constancia_obs` nombra sus columnas
+        // `numhistoria`/`numconsulta`; las demás, `nrohistoria`/`nroconsulta`.
+        //
+        // Al abrir cada consulta, el legado crea filas plantilla (constancia sin observación, informe
+        // con el texto ".", reposo de 1 día sin observación): son casi todas las filas y no son
+        // documentos. La constancia se imprime igual en cualquier consulta (su texto es fijo); de
+        // `constancia_obs` solo hace falta la observación. En la descarga
+        // completa no se mandan (con datos reales, ~13 MB menos); por delta se manda todo, así el
+        // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
+        $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $this->deltaQuery(
+            $modelo::whereIn($columnaHistoria, $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($since === null && $conContenido !== null, $conContenido),
+            $since,
+        )->get();
+        $constancias = $porConsulta(ConstanciaObs::class, 'numhistoria', fn ($q) => $q
+            ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''"));
+        // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
+        // (decisión del usuario, 2026-09-27).
+        $reposos = $porConsulta(ReposoPaciente::class, 'nrohistoria', fn ($q) => $q->where(fn ($q) => $q
+            ->where('numdias', '>', 1)
+            ->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''")));
+        $referencias = $porConsulta(Referencia::class, 'nrohistoria');
+        $informes = $porConsulta(Informe::class, 'nrohistoria', fn ($q) => $q
+            ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')"));
+        $diagnosticosPaciente = $porConsulta(DiagnosticoPaciente::class, 'nrohistoria');
+        // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
+        // (constancia), el médico al que se refiere y su especialidad (referencia).
+        $diagnosticos = $this->deltaQuery(Diagnostico::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $doctores = $this->deltaQuery(Doctor::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $especialidades = $this->deltaQuery(Especialidad::whereIn('reg_medico', $registrosMedicos), $since)->get();
+
+        // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
+        // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
+        // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
+        // la cita (ver la migración de `cola.medical_center_id`).
+        //
+        // Todas las sedes del **tenant**, no solo las del médico logueado (Paso 22.C): quien
+        // sincroniza puede agendar para cualquier médico del mismo consultorio, así que necesita
+        // ver dónde atiende cada uno. `Office.medico_id` sigue distinguiendo de quién es cada
+        // sede (o ninguno, si es compartida) — eso lo resuelve el cliente al elegir médico.
+        $offices = $this->deltaQuery(Office::whereIn('reg_medico', $registrosMedicos), $since)->get();
+
+        $officeSchedules = $this->deltaQuery(
+            OfficeSchedule::whereIn(
+                'office_id',
+                Office::whereIn('reg_medico', $registrosMedicos)->select('id'),
+            ),
+            $since,
+        )->get();
+
+        // Los centros que necesita el teléfono son los de las historias **y** los de las sedes
+        // donde atiende: sin esto, una sede recién configurada llegaría sin nombre ni dirección.
+        $medicalCenterIds = $historias->pluck('medical_center_id')
+            ->merge($offices->pluck('medical_center_id'))
+            ->merge($colas->pluck('medical_center_id'))
+            ->filter()
+            ->unique()
+            ->toArray();
+        $centrosMedicos = $this->deltaQuery(MedicalCenter::whereIn('id', $medicalCenterIds), $since)->get();
+
+        // Sin `since` (primera sincronización) el cliente no tiene nada que borrar todavía.
+        $eliminados = $since
+            ? SyncChange::where('operation', 'deleted')
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->where('occurred_at', '>', $since)
+                ->get(['table_name', 'record_id', 'occurred_at'])
+            : collect([]);
+
+        $medicos = $this->medicosDelTenant($registrosMedicos);
+
+        return response()->json([
+            'synced_at' => $syncedAt->toIso8601String(),
+            'pacientes' => $pacientes,
+            'historias' => $historias,
+            'colas' => $colas,
+            'consultas' => $consultas,
+            'motivos' => $motivos,
+            'motivos_consulta' => $motivosConsulta,
+            'motivo_consulta_paciente' => $motivosDeConsulta,
+            'recipes' => $recipes,
+            'vademecum' => $vademecum,
+            'tratamientos' => $tratamientos,
+            'tratamientos_detalle' => $tratamientosDetalle,
+            'constancia_obs' => $constancias,
+            'reposo_paciente' => $reposos,
+            'referencia' => $referencias,
+            'informe' => $informes,
+            'diagnostico_paciente' => $diagnosticosPaciente,
+            'diagnosticos' => $diagnosticos,
+            'doctores' => $doctores,
+            'especial' => $especialidades,
+            'centros_medicos' => $centrosMedicos,
+            'offices' => $offices,
+            'office_schedules' => $officeSchedules,
+            // La configuración va completa en cada respuesta, no por delta: son un puñado de
+            // campos y el cliente la necesita entera para decidir cómo dibujar la agenda.
+            // Si el médico no tiene fila de configuración (pasa: en el dump real está vacía),
+            // el Resource resuelve los defaults sobre un modelo en blanco.
+            'configuracion' => new ConfiguracionMedicoResource(
+                Evolucion::whereIn('reg_medico', $registrosMedicos)->first() ?? new Evolucion(),
+            ),
+            // Completo en cada respuesta, por el mismo motivo que `configuracion`. Se busca por el
+            // registro principal, que es bajo el que lo guarda `RecipeFormatoController`.
+            'formato_recipe' => new RecipeFormatoResource(
+                RecipeFormato::where('reg_medico', $medicoModel->regMedicoPrincipal())->first()
+                    ?? new RecipeFormato(),
+            ),
+            // Catálogo de médicos del tenant (Paso 22.B), completo en cada respuesta por el mismo
+            // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
+            // no por delta.
+            'medicos' => $medicos,
+            'eliminados' => $eliminados,
+            // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
+            'creados' => $resultadoChanges['creados'],
+            // Creaciones que no se aplicaron (y no se van a aplicar reintentando): el cliente las
+            // saca de su cola en vez de reintentarlas para siempre, y le avisa al usuario.
+            'rechazados' => $resultadoChanges['rechazados'],
+        ]);
+    }
+
+    /**
+     * Médicos del tenant, para el filtro de agenda y el selector de Nueva Cita (Paso 22.C).
+     *
+     * `cola.medico` no es `medicos.id`: es la `clave` de `evolucion`, un correlativo (1, 2, 3…)
+     * que identifica al médico **dentro de la instancia** de PowerBuilder (aclarado por Alexander,
+     * ver ROADMAP.md Paso 22). El nombre se resuelve cruzando `evolucion.correo_med` con
+     * `medicos.email` — no hay otra columna en común entre las dos tablas. Si una fila de
+     * `evolucion` no tiene correo, o el correo no matchea a ningún `Medico`, el cliente igual
+     * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
+     *
+     * @param list<string> $registrosMedicos
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     */
+    private function medicosDelTenant(array $registrosMedicos): array
+    {
+        $evoluciones = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->whereNotNull('clave')
+            ->get();
+
+        $correos = $evoluciones->pluck('correo_med')->filter()->unique()->values()->toArray();
+        $medicosPorCorreo = Medico::whereIn('email', $correos)
+            ->get()
+            ->keyBy('email');
+
+        return $evoluciones->map(function (Evolucion $evolucion) use ($medicosPorCorreo) {
+            $medico = $evolucion->correo_med ? $medicosPorCorreo->get($evolucion->correo_med) : null;
+
+            return [
+                'clave' => (int) $evolucion->clave,
+                'id' => $medico?->id,
+                'name' => $medico?->name,
+                'lastname' => $medico?->lastname,
+                'especialidad' => $evolucion->especialidad,
+                // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
+                // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un
+                // recordatorio se usa la del médico **de la cita**, no la de quien tiene la sesión
+                // abierta (una secretaria puede mandar recordatorios de citas de varios médicos del
+                // mismo tenant) — de ahí que viajen acá, en el catálogo completo, y no solo en
+                // `ConfiguracionMedicoResource`.
+                'plantilla_cita' => $evolucion->plantilla_cita,
+                'plantilla_cumple' => $evolucion->plantilla_cumple,
+            ];
+        })->values()->all();
+    }
+
+    /**
+     * La `clave` de `evolucion` que le corresponde a [medico] dentro de este tenant — el mismo
+     * cruce que `medicosDelTenant`, pero al revés (por su propio correo). Es el default cuando el
+     * cliente crea una cita sin elegir médico explícitamente (Paso 22.C): el caso común, de un
+     * solo médico en la instancia. Nula si no hay fila de `evolucion` para él (pasa en los datos
+     * reales, que casi nunca tienen configuración).
+     */
+    private function claveDelMedico(Medico $medico, array $registrosMedicos): ?int
+    {
+        if (!$medico->email) {
+            return null;
+        }
+
+        $clave = Evolucion::whereIn('reg_medico', $registrosMedicos)
+            ->where('correo_med', $medico->email)
+            ->value('clave');
+
+        return $clave === null ? null : (int) $clave;
+    }
+
+    /**
+     * Aplica las operaciones que mandó el cliente. Lo único que devuelve es lo que el cliente no
+     * puede deducir solo: qué id real le tocó a cada fila que creó offline, y qué creaciones se
+     * rechazaron. El resto del resultado se ve reflejado en el delta que se calcula después,
+     * usando el `since` viejo.
+     *
+     * @return array{creados: list<array{table: string, temp_id: int, id: int}>, rechazados: list<array{table: string, temp_id: int, motivo: string}>}
+     */
+    private function applyChanges(array $changes, Medico $medico, array $registrosMedicos, $relaciones): array
+    {
+        $pacienteIdsDelMedico = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
+        $creados = [];
+        $rechazados = [];
+        // Id temporal del cliente → id real, para las citas del mismo lote que referencian a un
+        // paciente recién creado (ver `paciente_temp_id`).
+        $pacientesCreados = [];
+
+        // Las creaciones van en orden de dependencia: una cita o una historia puede colgar de un
+        // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
+        // cliente no tiene forma de garantizar el orden del arreglo.
+        $changes = $this->enOrdenDeDependencia($changes);
+        $clinicas = new CreacionesClinicas($medico, $registrosMedicos);
+        $creadosAntes = count($creados);
+
+        foreach ($changes as $change) {
+            $table = $change['table'] ?? null;
+            $recordId = $change['record_id'] ?? null;
+            $operation = $change['operation'] ?? null;
+
+            if ($operation === 'created' && in_array($table, SyncAppDataRequest::CLINICAL_TABLES, true)) {
+                if (isset($change['temp_id']) && is_numeric($change['temp_id'])) {
+                    $clinicas->aplicar($change, $pacientesCreados, $creados, $rechazados);
+                }
+                continue;
+            }
+
+            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `DELETABLE_TABLES`: esa lista
+            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`).
+            if ($operation === 'deleted' && $table === 'motivo_consulta_paciente') {
+                if ($recordId) {
+                    $clinicas->quitarMotivoDeConsulta((int) $recordId);
+                }
+                continue;
+            }
+
+            if ($operation === 'created') {
+                $this->applyCreated(
+                    $change,
+                    $medico,
+                    $registrosMedicos,
+                    $creados,
+                    $rechazados,
+                    $pacientesCreados,
+                );
+                continue;
+            }
+
+            if ($operation === 'reorder') {
+                $this->applyReorder($change, $registrosMedicos);
+                continue;
+            }
+
+            if (!in_array($table, SyncAppDataRequest::DELETABLE_TABLES, true) || !$recordId || !$operation) {
+                continue;
+            }
+
+            // Autorización: el registro tiene que pertenecer al tenant de este médico.
+            if ($table === 'cola') {
+                $pertenece = Cola::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->exists();
+            } else {
+                $pertenece = in_array($recordId, $pacienteIdsDelMedico, true);
+            }
+            if (!$pertenece) {
+                continue;
+            }
+
+            $yaEliminado = SyncChange::where('table_name', $table)
+                ->where('record_id', $recordId)
+                ->where('operation', 'deleted')
+                ->exists();
+
+            if ($operation === 'deleted') {
+                if (!$yaEliminado) {
+                    $this->modelFor($table)::find($recordId)?->delete();
+                }
+                continue;
+            }
+
+            if ($operation === 'updated') {
+                // Regla: un eliminado le gana a cualquier update posterior, sin importar timestamp.
+                if ($yaEliminado) {
+                    continue;
+                }
+
+                $column = $change['column'] ?? null;
+                if (!in_array($column, SyncAppDataRequest::WRITABLE_COLUMNS[$table] ?? [], true)) {
+                    continue;
+                }
+
+                $occurredAt = Carbon::parse($change['occurred_at'] ?? now());
+
+                // Last-write-wins por columna: si ya hay un cambio más nuevo registrado para
+                // esta columna puntual, se descarta el que llegó (alguien escribió después).
+                $ultimoCambio = SyncChange::where('table_name', $table)
+                    ->where('record_id', $recordId)
+                    ->where('column_name', $column)
+                    ->orderByDesc('occurred_at')
+                    ->first();
+
+                if ($ultimoCambio && $ultimoCambio->occurred_at->greaterThanOrEqualTo($occurredAt)) {
+                    continue;
+                }
+
+                $model = $this->modelFor($table)::find($recordId);
+                if (!$model) {
+                    continue;
+                }
+
+                $valor = $change['value'] ?? null;
+                if (!$this->valorPermitido($table, $column, $valor)) {
+                    continue;
+                }
+
+                $model->{$column} = $valor;
+                $model->save();
+
+                SyncChange::create([
+                    'reg_medico' => $table === 'cola' ? $model->reg_medico : $this->regMedicoDePaciente($relaciones, $recordId),
+                    'table_name' => $table,
+                    'record_id' => $recordId,
+                    'operation' => 'updated',
+                    'column_name' => $column,
+                    'value' => $valor,
+                    'occurred_at' => $occurredAt,
+                    'source' => 'mobile',
+                ]);
+            }
+        }
+
+        return [
+            'creados' => $creados,
+            'rechazados' => $rechazados,
+            'creo_pacientes' => $pacientesCreados !== [],
+            'creo_clinicas' => collect($creados)->skip($creadosAntes)
+                ->contains(fn ($c) => in_array($c['table'], SyncAppDataRequest::CLINICAL_TABLES, true)),
+        ];
+    }
+
+    /**
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos de
+     * la consulta y récipes); el resto (ediciones, borrados, reordenamientos, citas nuevas)
+     * después, en el orden en que llegó.
+     *
+     * @param list<array> $changes @return list<array>
+     */
+    private function enOrdenDeDependencia(array $changes): array
+    {
+        $prioridad = [
+            'pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'motivos_consulta' => 3,
+            'motivo_consulta_paciente' => 4, 'recipes' => 4,
+        ];
+        $resto = 5; // el grupo de todo lo que no es una creación clínica
+        $grupos = array_fill(0, $resto + 1, []);
+        foreach ($changes as $change) {
+            $esCreacion = ($change['operation'] ?? null) === 'created';
+            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? $resto) : $resto][] = $change;
+        }
+
+        return array_merge(...$grupos);
+    }
+
+    /**
+     * Crea una fila que el cliente ya venía mostrando localmente con su propio id.
+     *
+     * Tres cosas que no son obvias:
+     * 1. **Idempotencia por `client_temp_id`**: si la respuesta anterior se perdió, el reintento
+     *    devuelve el mismo id real en vez de crear una fila duplicada.
+     * 2. **El tenant no se acepta del cliente**: `reg_medico` sale del médico autenticado (o de
+     *    la historia del paciente), no de lo que haya mandado el teléfono.
+     * 3. **Rechazo explícito**: descartar en silencio dejaría al cliente reintentando para
+     *    siempre una fila que nunca va a entrar, y al médico viéndola como "pendiente" sin fin.
+     *
+     * @param array<int, int> $pacientesCreados id temporal -> id real de los pacientes del lote
+     */
+    private function applyCreated(
+        array $change,
+        Medico $medico,
+        array $registrosMedicos,
+        array &$creados,
+        array &$rechazados,
+        array &$pacientesCreados
+    ): void {
+        $table = $change['table'] ?? null;
+        $tempId = $change['temp_id'] ?? null;
+
+        // Sin `temp_id` no hay forma de contestarle al cliente cuál fila es cuál, así que no se
+        // crea nada: aplicarla sería dejarle una fila fantasma imposible de reconciliar.
+        if (!isset(SyncAppDataRequest::CREATABLE_COLUMNS[$table]) || $tempId === null || !is_numeric($tempId)) {
+            return;
+        }
+        $tempId = (int) $tempId;
+
+        $yaCreado = SyncChange::where('table_name', $table)
+            ->where('client_temp_id', $tempId)
+            ->where('operation', 'created')
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->first();
+
+        if ($yaCreado) {
+            $creados[] = ['table' => $table, 'temp_id' => $tempId, 'id' => $yaCreado->record_id];
+            // El reintento de una cita puede venir con el paciente ya creado en un lote anterior:
+            // la referencia tiene que seguir resolviendo.
+            if ($table === 'pacientes') {
+                $pacientesCreados[$tempId] = $yaCreado->record_id;
+            }
+            return;
+        }
+
+        $rechazar = function (string $motivo) use ($table, $tempId, &$rechazados) {
+            $rechazados[] = ['table' => $table, 'temp_id' => $tempId, 'motivo' => $motivo];
+        };
+
+        $columnas = array_intersect_key(
+            (array) ($change['columns'] ?? []),
+            array_flip(SyncAppDataRequest::CREATABLE_COLUMNS[$table]),
+        );
+
+        foreach (SyncAppDataRequest::REQUIRED_COLUMNS[$table] ?? [] as $obligatoria) {
+            if (($columnas[$obligatoria] ?? null) === null) {
+                $rechazar("Falta el campo obligatorio '{$obligatoria}'.");
+                return;
+            }
+        }
+
+        foreach ($columnas as $columna => $valor) {
+            if (!$this->valorPermitido($table, $columna, $valor)) {
+                $rechazar("El valor de '{$columna}' no es válido.");
+                return;
+            }
+        }
+
+        $occurredAt = Carbon::parse($change['occurred_at'] ?? now());
+
+        if ($table === 'pacientes') {
+            $this->crearPaciente(
+                $columnas,
+                $medico,
+                $registrosMedicos,
+                $tempId,
+                $occurredAt,
+                $creados,
+                $pacientesCreados,
+                $rechazar,
+            );
+
+            return;
+        }
+
+        $this->crearCola(
+            $columnas,
+            $change,
+            $medico,
+            $registrosMedicos,
+            $tempId,
+            $occurredAt,
+            $creados,
+            $pacientesCreados,
+            $rechazar,
+        );
+    }
+
+    /**
+     * Alta de paciente desde el app. Replica lo que hace `PacienteSyncController` con lo que sube
+     * el escritorio, con una diferencia que importa: **acá no hay `numhistoria`**.
+     *
+     * La ficha se busca por cédula antes de crearla porque en este esquema un paciente es uno
+     * solo para todos los médicos (`pacientes`) y lo que cambia por médico es la relación
+     * (`medico_pacientes`): si la secretaria da de alta a alguien que ya existe, corresponde
+     * enlazarlo, no duplicarle la ficha.
+     *
+     * **No se crea `Historia`** justamente porque su `numhistoria` es único global y obligatorio:
+     * ese número lo asigna el escritorio, y cuando lo haga, su propio sync crea la historia
+     * (`Historia::updateOrCreate` por paciente + médico). Hasta entonces el paciente le llega al
+     * teléfono igual, porque el delta de pacientes se calcula por el pivote, no por la historia.
+     */
+    private function crearPaciente(
+        array $columnas,
+        Medico $medico,
+        array $registrosMedicos,
+        int $tempId,
+        Carbon $occurredAt,
+        array &$creados,
+        array &$pacientesCreados,
+        callable $rechazar
+    ): void {
+        $regMedico = $medico->reg_medico ?: ($registrosMedicos[0] ?? null);
+        if ($regMedico === null) {
+            $rechazar('Este médico no tiene registro asignado.');
+            return;
+        }
+
+        $paciente = DB::transaction(function () use ($columnas, $medico, $regMedico) {
+            $paciente = Paciente::where('cedula', $columnas['cedula'])->first();
+
+            if ($paciente) {
+                // Ya existe (lo atiende otro médico, o el escritorio lo subió antes): se enlaza y
+                // solo se completan los campos vacíos. Pisar los datos de una ficha ajena con lo
+                // que escribió la secretaria en el teléfono sería perder información de otro.
+                $completar = [];
+                foreach ($columnas as $columna => $valor) {
+                    if ($valor !== null && $paciente->{$columna} === null) {
+                        $completar[$columna] = $valor;
+                    }
+                }
+                if ($completar !== []) {
+                    $paciente->fill($completar)->save();
+                }
+            } else {
+                $paciente = Paciente::create($columnas);
+            }
+
+            MedicoPaciente::firstOrCreate(
+                ['medico_id' => $medico->id, 'paciente_id' => $paciente->id],
+                ['reg_medico' => $regMedico, 'numhistoria' => null],
+            );
+
+            return $paciente;
+        });
+
+        SyncChange::create([
+            'reg_medico' => $regMedico,
+            'table_name' => 'pacientes',
+            'record_id' => $paciente->id,
+            'client_temp_id' => $tempId,
+            'operation' => 'created',
+            'occurred_at' => $occurredAt,
+            'source' => 'mobile',
+        ]);
+
+        $pacientesCreados[$tempId] = $paciente->id;
+        $creados[] = ['table' => 'pacientes', 'temp_id' => $tempId, 'id' => $paciente->id];
+    }
+
+    /**
+     * Alta de cita. El paciente llega de una de dos formas, nunca de las dos:
+     *
+     * - **`numhistoria`**: el camino normal. Se verifica contra `historias` que sea de este médico.
+     * - **`paciente_temp_id`**: el paciente se creó en este mismo lote (o en uno anterior que el
+     *   cliente todavía no vio resuelto) y no tiene número de historia. La cita se ancla con
+     *   `paciente_sinhistoria_id`, la columna que el esquema legado ya trae para este caso.
+     */
+    private function crearCola(
+        array $columnas,
+        array $change,
+        Medico $medico,
+        array $registrosMedicos,
+        int $tempId,
+        Carbon $occurredAt,
+        array &$creados,
+        array $pacientesCreados,
+        callable $rechazar
+    ): void {
+        $numhistoria = $columnas['numhistoria'] ?? null;
+        $pacienteTempId = $change['paciente_temp_id'] ?? null;
+
+        if ($numhistoria !== null) {
+            $historia = Historia::where('numhistoria', $numhistoria)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->first();
+
+            if (!$historia) {
+                $rechazar('El número de historia no pertenece a este médico.');
+                return;
+            }
+
+            $columnas['reg_medico'] = $historia->reg_medico;
+        } elseif ($pacienteTempId !== null) {
+            $pacienteId = $pacientesCreados[(int) $pacienteTempId] ?? null;
+            if ($pacienteId === null) {
+                // O la creación del paciente venía en este lote y fue rechazada, o la referencia
+                // no corresponde a nada. Reintentar no lo va a arreglar: dejarla en la cola
+                // sería tener una cita pendiente para siempre.
+                $rechazar('El paciente de esta cita no se pudo crear.');
+                return;
+            }
+
+            $relacion = MedicoPaciente::where('medico_id', $medico->id)
+                ->where('paciente_id', $pacienteId)
+                ->first();
+            if (!$relacion) {
+                $rechazar('Ese paciente no es de este médico.');
+                return;
+            }
+
+            $columnas['paciente_sinhistoria_id'] = $pacienteId;
+            $columnas['reg_medico'] = $relacion->reg_medico
+                ?: ($medico->reg_medico ?: ($registrosMedicos[0] ?? null));
+        } else {
+            $rechazar('La cita no indica a qué paciente pertenece.');
+            return;
+        }
+
+        // `cola.medico` es la `clave` de `evolucion` (Paso 22.B), no `medicos.id` — son dos
+        // numeraciones distintas que solo coinciden por casualidad en los datos de prueba de un
+        // solo médico. Si el cliente ya la mandó (Paso 22.C: eligió un médico en el selector), se
+        // respeta esa; si no (el caso común, un solo médico en la instancia), se resuelve la del
+        // médico autenticado.
+        if (!isset($columnas['medico'])) {
+            $columnas['medico'] = $this->claveDelMedico($medico, $registrosMedicos);
+        }
+
+        $cola = Cola::create($columnas);
+
+        SyncChange::create([
+            'reg_medico' => $cola->reg_medico,
+            'table_name' => 'cola',
+            'record_id' => $cola->id,
+            'client_temp_id' => $tempId,
+            'operation' => 'created',
+            'occurred_at' => $occurredAt,
+            'source' => 'mobile',
+        ]);
+
+        $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
+    }
+
+    /**
+     * Ver `ALLOWED_VALUES` y `DATE_COLUMNS`. Una columna sin dominio declarado acepta cualquier
+     * valor.
+     */
+    private function valorPermitido(string $table, string $column, $valor): bool
+    {
+        if (in_array($column, SyncAppDataRequest::DATE_COLUMNS[$table] ?? [], true)) {
+            // Una cita sin fecha no existe en la agenda: nulo tampoco vale.
+            if (!is_string($valor)) {
+                return false;
+            }
+            $fecha = \DateTime::createFromFormat('!Y-m-d', $valor);
+            return $fecha !== false && $fecha->format('Y-m-d') === $valor;
+        }
+
+        $permitidos = SyncAppDataRequest::ALLOWED_VALUES[$table][$column] ?? null;
+
+        if ($permitidos === null || $valor === null) {
+            return true;
+        }
+
+        return is_numeric($valor) && in_array((int) $valor, $permitidos, true);
+    }
+
+    /**
+     * Mueve una fila dentro de su grupo (una cita dentro de su día) corriendo las demás.
+     *
+     * **Por qué una operación propia y no N `updated`**: el cliente podría mandar el número de
+     * orden nuevo de cada fila desplazada, pero mover una cita en un día de 20 son 20 cambios
+     * para un gesto, 20 UPDATE, y —lo importante— 20 resoluciones de conflicto independientes:
+     * dos secretarias reordenando a la vez se pisan fila por fila y el resultado no es el de
+     * ninguna de las dos. Mandando **el movimiento** en vez del resultado, el desplazamiento son
+     * dos sentencias (`UPDATE … WHERE … BETWEEN`) y dos reordenamientos concurrentes se componen
+     * en vez de destruirse.
+     *
+     * - Hacia arriba (`to < from`): la fila movida pasa a `to` y las que estaban entre medio
+     *   **suben uno**.
+     * - Hacia abajo (`to > from`): la fila movida pasa a `to` y las de en medio **bajan uno**.
+     *
+     * Funciona con numeraciones con huecos (los datos legados las tienen): la fila movida libera
+     * su lugar, así que el corrimiento nunca colisiona.
+     */
+    private function applyReorder(array $change, array $registrosMedicos): void
+    {
+        $table = $change['table'] ?? null;
+        $columna = SyncAppDataRequest::ORDER_COLUMN[$table] ?? null;
+        $columnaGrupo = SyncAppDataRequest::ORDER_SCOPE_COLUMN[$table] ?? null;
+        if ($columna === null || $columnaGrupo === null) {
+            return;
+        }
+
+        $recordId = (int) $change['record_id'];
+        $desde = (int) $change['from'];
+        $hasta = (int) $change['to'];
+        if ($desde === $hasta) {
+            return;
+        }
+
+        $modelo = $this->modelFor($table);
+
+        // Tenancy: la fila tiene que ser de este médico, igual que en el resto del endpoint.
+        $fila = $modelo::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->first();
+        if (!$fila) {
+            return;
+        }
+
+        $grupo = fn () => $modelo::whereIn('reg_medico', $registrosMedicos)
+            ->whereDate($columnaGrupo, $change['scope_date'])
+            ->where('id', '!=', $recordId);
+
+        // En una transacción: entre el corrimiento y el movimiento de la fila, el orden está a
+        // medio aplicar y nadie debería leerlo así.
+        DB::transaction(function () use ($grupo, $fila, $columna, $desde, $hasta) {
+            if ($hasta < $desde) {
+                $grupo()->whereBetween($columna, [$hasta, $desde])->increment($columna);
+            } else {
+                $grupo()->whereBetween($columna, [$desde, $hasta])->decrement($columna);
+            }
+
+            $fila->{$columna} = $hasta;
+            $fila->save();
+        });
+
+        SyncChange::create([
+            'reg_medico' => $fila->reg_medico,
+            'table_name' => $table,
+            'record_id' => $recordId,
+            'operation' => 'reorder',
+            'column_name' => $columna,
+            'value' => "{$desde}->{$hasta}",
+            'occurred_at' => Carbon::parse($change['occurred_at'] ?? now()),
+            'source' => 'mobile',
+        ]);
+    }
+
+    private function regMedicoDePaciente($relaciones, int $pacienteId): ?string
+    {
+        return $relaciones->firstWhere('paciente_id', $pacienteId)?->reg_medico;
+    }
+
+    private function modelFor(string $table): string
+    {
+        return $table === 'cola' ? Cola::class : Paciente::class;
+    }
+
+    private function deltaQuery($query, ?Carbon $since)
+    {
+        if ($since) {
+            $query->where('updated_at', '>', $since);
+        }
+
+        return $query;
+    }
+}
