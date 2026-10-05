@@ -54,4 +54,45 @@ class WhatsAppService
             return false;
         }
     }
+
+        /**
+     * Envía un mensaje de texto libre por WhatsApp.
+     *
+     * @param string $to Número de teléfono del destinatario con código de país
+     * @param string $message Texto del mensaje
+     * @return array
+     */
+    public function sendTextMessage(string $to, string $message): array
+    {
+        $url = "https://graph.facebook.com/v19.0/{$this->phoneNumberId}/messages";
+
+        // Limpiar número (solo dígitos)
+        $cleanTo = preg_replace('/[^0-9]/', '', $to);
+
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $cleanTo,
+            'type' => 'text',
+            'text' => [
+                'preview_url' => false,
+                'body' => $message
+            ]
+        ];
+
+        try {
+            $response = Http::withToken($this->token)->post($url, $payload);
+            return [
+                'success' => $response->successful(),
+                'status' => $response->status(),
+                'data' => $response->json()
+            ];
+        } catch (\Throwable $e) {
+            Log::error('WhatsAppService sendTextMessage error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }
