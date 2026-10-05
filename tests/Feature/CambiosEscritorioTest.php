@@ -9,6 +9,7 @@ use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use App\Models\SyncChange;
+use App\Models\SyncCredential;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,27 @@ class CambiosEscritorioTest extends TestCase
 
         $r = $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['carga' => 'completa']);
         $this->assertContains('pacientes', explode(',', $r->json('tablas')));
+    }
+
+    public function test_estado_con_credencial_de_equipo_devuelve_el_reg_medico_de_la_credencial(): void
+    {
+        $token = SyncCredential::generarToken();
+        SyncCredential::create([
+            'reg_medico' => self::REG, 'machine_label' => 'EQUIPO-' . uniqid(), 'machine_host' => 'PC-TEST',
+            'bound_to_machine' => false, 'token_hash' => SyncCredential::hashToken($token), 'expires_at' => now()->addYear(),
+        ]);
+
+        // Sin reg_medico en el cuerpo: el instalador del consultorio lo toma de acá (su evolucion puede no tenerlo).
+        $this->postJson('/api/sync/cambios/estado', [], ['Authorization' => 'Bearer ' . $token])
+            ->assertOk()->assertJson(['reg_medico' => self::REG, 'carga' => 'completa']);
+    }
+
+    public function test_estado_devuelve_el_nombre_del_medico_dueño_del_reg_medico(): void
+    {
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['medico_nombre' => 'Médico Cambios']);
+
+        // Un reg_medico sin médico registrado: el campo viene vacío, no falla.
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()->assertJson(['medico_nombre' => '']);
     }
 
     public function test_sin_carga_inicial_completa_no_se_suben_cambios(): void
@@ -285,5 +307,20 @@ class CambiosEscritorioTest extends TestCase
             'clave' => ['primera' => 'x'], 'fila' => ['primera' => 'x', 'segunda' => 'secreto']]]);
         $this->assertSame([], $this->confirmados($r));
         $this->assertSame(0, DB::table('operadores')->where('reg_medico', self::REG)->count());
+    }
+
+    public function test_estado_devuelve_el_prefijo_del_medico_o_null(): void
+    {
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()
+            ->assertJson(['medico_nombre' => 'Médico Cambios', 'medico_prefix' => null]);
+
+        $this->medico->update(['prefix' => 'Dra']);
+
+        // El nombre no lleva el prefijo: el escritorio los une (Doct) y usa el nombre solo (docti).
+        $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()
+            ->assertJson(['medico_nombre' => 'Médico Cambios', 'medico_prefix' => 'Dra.']);
+
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()
+            ->assertJson(['medico_nombre' => '', 'medico_prefix' => null]);
     }
 }

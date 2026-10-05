@@ -18,6 +18,7 @@ class Medico extends Model
         'user_id', // Relación con la tabla de usuarios modelo User, cuando ya tiene un registro en User
         'name',
         'lastname',
+        'prefix', // tratamiento libre y opcional ("Dr.", "Dra.", "Ing."...), 20 caracteres como máximo
         'license_number',
         'phone',
         'email',
@@ -29,6 +30,25 @@ class Medico extends Model
         'is_active',
         'reg_medico', // temporal, tiende a cambiar no usar
     ];
+
+    /**
+     * Deja el prefijo listo para guardar: sin espacios, `null` si quedó vacío y con punto final ("Dr" -> "Dr.").
+     * Va como mutador para que valga igual en el panel de Usuarios, en el listado viejo y en cualquier alta.
+     */
+    public static function normalizarPrefijo($valor): ?string
+    {
+        $prefijo = trim((string) $valor);
+        if ($prefijo === '') {
+            return null;
+        }
+
+        return substr($prefijo, -1) === '.' ? $prefijo : $prefijo . '.';
+    }
+
+    public function setPrefixAttribute($valor): void
+    {
+        $this->attributes['prefix'] = self::normalizarPrefijo($valor);
+    }
 
     public function registro(): HasOne
     {

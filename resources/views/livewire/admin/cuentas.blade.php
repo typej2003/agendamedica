@@ -193,14 +193,23 @@
                         </div>
                         <div class="modal-body">
                             <div class="row">
-                                <div class="{{ $tipoAlta === 'administrador' ? 'col-12' : 'col-md-6' }} mb-3">
+                                @if ($tipoAlta === 'medico')
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Prefijo</label>
+                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
+                                        @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
+
+                                <div class="{{ $tipoAlta === 'administrador' ? 'col-12' : 'col-md-4' }} mb-3">
                                     <label class="form-label">{{ $tipoAlta === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" wire:model.defer="name">
                                     @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
                                 @if ($tipoAlta === 'medico')
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label class="form-label">Apellidos <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" wire:model.defer="lastname">
                                         @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -335,14 +344,23 @@
                         </div>
                         <div class="modal-body">
                             <div class="row">
-                                <div class="{{ $tipoEdicion === 'administrador' ? 'col-12' : 'col-md-6' }} mb-3">
+                                @if ($tipoEdicion === 'medico')
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Prefijo</label>
+                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
+                                        @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
+
+                                <div class="{{ $tipoEdicion === 'administrador' ? 'col-12' : 'col-md-4' }} mb-3">
                                     <label class="form-label">{{ $tipoEdicion === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" wire:model.defer="name">
                                     @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
                                 @if ($tipoEdicion === 'medico')
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label class="form-label">Apellidos <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" wire:model.defer="lastname">
                                         @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
