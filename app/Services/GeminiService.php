@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Cola;
-use App\Models\Medico;
 use App\Models\Paciente;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -22,10 +21,6 @@ class GeminiService
 
     /**
      * Procesa y genera una respuesta médica/asistencial personalizada para el paciente.
-     *
-     * @param string $mensajeUsuario
-     * @param string|null $telefono
-     * @return string
      */
     public function generarRespuesta(string $mensajeUsuario, ?string $telefono = null): string
     {
@@ -37,57 +32,91 @@ class GeminiService
         // Obtener contexto del paciente si se cuenta con el teléfono
         $contexto = $telefono ? $this->obtenerContextoPaciente($telefono) : [];
 
-        $nombreSaludo = !empty($contexto['nombre']) ? " {$contexto['nombre']}" : "";
+        $pacienteEncontrado = !empty($contexto['nombre']);
+        $nombreSaludo = $pacienteEncontrado ? " {$contexto['nombre']}" : '';
 
-        $systemInstruction = "Eres el asistente virtual oficial de Doctorisimo, la plataforma de gestión médica y clínica.\n" .
-            "Tu objetivo es brindar una atención cálida, humana, respetuosa, clara y eficiente a través de WhatsApp.\n\n" .
-            "REGLAS DE INTERACCIÓN SEGÚN EL MENSAJE:\n" .
-            "1. SI EL USUARIO SALUDA (ej: 'hola', 'buenas', 'buen día', 'saludos', etc.):\n" .
-            "   - Salúdalo cordialmente por su nombre si está disponible (ej: '¡Hola{$nombreSaludo}! 👋 Bienvenido a Doctorisimo').\n" .
-            "   - Ofrécele tu ayuda presentando un menú claro y ordenado con viñetas o números con las opciones disponibles:\n" .
-            "     ¿En qué te puedo colaborar hoy?\n" .
-            "     1️⃣ Agendar o consultar una cita médica\n" .
-            "     2️⃣ Conocer nuestros médicos y especialidades disponibles\n" .
-            "     3️⃣ Horarios de atención y ubicación del consultorio\n" .
-            "     4️⃣ Dudas sobre récipes o indicaciones médicas\n" .
-            "     5️⃣ Hablar con un asistente del personal\n" .
-            "   - Invítalo amablemente a escribir el número de la opción o su duda directamente.\n\n" .
-            "2. SI EL USUARIO PREGUNTA POR UN SERVICIO ESPECÍFICO (ej: citas, doctores, precios, horarios, etc.):\n" .
-            "   - Responde directamente y con amabilidad a lo que necesita sin abrumarlo con texto innecesario.\n" .
-            "   - Si pregunta por citas y tiene citas pendientes registradas, infórmaselas amablemente.\n\n" .
-            "3. REGLAS MÉDICAS Y DE SEGURIDAD OBLIGATORIAS:\n" .
-            "   - NO diagnostiques enfermedades ni recetes medicamentos para situaciones delicadas o de urgencia.\n" .
-            "   - Si el paciente describe síntomas graves (dolor en el pecho, dificultad para respirar, sangrado severo, etc.), indícale con prioridad acudir de urgencia al centro de salud más cercano.\n" .
-            "   - Utiliza emojis apropiados para que la lectura sea amigable y visualmente atractiva en WhatsApp.\n";
+        // Obtener especialidades reales desde la base de datos
+        $especialidades    = $this->obtenerEspecialidades();
+        $listaEspecialidades = !empty($especialidades)
+            ? implode(', ', $especialidades)
+            : 'Medicina General, Ginecología, Pediatría, Cardiología';
 
-        if (!empty($contexto['nombre'])) {
-            $systemInstruction .= "\nContexto: El paciente registrado se llama: {$contexto['nombre']}.\n";
-        }
-        if (!empty($contexto['citas'])) {
-            $systemInstruction .= "Citas médicas del paciente en el sistema: " . json_encode($contexto['citas'], JSON_UNESCAPED_UNICODE) . ".\n";
+        // ----------------------------------------------------------------
+        // System instruction diferenciada según si el paciente existe o no
+        // ----------------------------------------------------------------
+        if ($pacienteEncontrado) {
+            $systemInstruction =
+                "Eres el asistente virtual oficial de Doctorisimo, la plataforma de gestión médica y clínica.\n"
+                . "Tu objetivo es brindar una atención cálida, humana, respetuosa, clara y eficiente a través de WhatsApp.\n\n"
+                . "CONTEXTO DEL PACIENTE:\n"
+                . "- El paciente registrado se llama: {$contexto['nombre']}.\n";
+
+            if (!empty($contexto['citas'])) {
+                $systemInstruction .= '- Tiene las siguientes citas médicas próximas registradas en el sistema: '
+                    . json_encode($contexto['citas'], JSON_UNESCAPED_UNICODE) . ".\n";
+            } else {
+                $systemInstruction .= "- No tiene citas médicas próximas registradas.\n";
+            }
+
+            $systemInstruction .=
+                "\nREGLAS DE INTERACCIÓN:\n"
+                . "1. SI EL PACIENTE SALUDA: Salúdalo cordialmente por su nombre "
+                . "(ej: '¡Hola, {$contexto['nombre']}! 👋 Bienvenido a Doctorisimo').\n"
+                . "   Si tiene citas pendientes, menciónaselas brevemente. Luego ofrécele este menú:\n"
+                . "     ¿En qué te puedo colaborar hoy?\n"
+                . "     1️⃣ Consultar o agendar una cita médica\n"
+                . "     2️⃣ Conocer las especialidades disponibles\n"
+                . "     3️⃣ Horarios de atención y ubicación\n"
+                . "     4️⃣ Dudas sobre récipes o indicaciones médicas\n"
+                . "     5️⃣ Hablar con un asistente del personal\n\n"
+                . "2. SI PREGUNTA POR ESPECIALIDADES: Menciona la lista real: {$listaEspecialidades}.\n\n"
+                . "3. REGLAS MÉDICAS OBLIGATORIAS:\n"
+                . "   - NO diagnostiques enfermedades ni recetes medicamentos.\n"
+                . "   - Ante síntomas graves (dolor en el pecho, dificultad para respirar, sangrado severo, etc.) "
+                . "indica acudir de urgencia al centro de salud más cercano.\n"
+                . "   - Usa emojis apropiados para WhatsApp.\n";
+        } else {
+            $systemInstruction =
+                "Eres el asistente virtual oficial de Doctorisimo, la plataforma de gestión médica y clínica.\n"
+                . "Tu objetivo es brindar una atención cálida, humana, respetuosa, clara y eficiente a través de WhatsApp.\n\n"
+                . "CONTEXTO: El número de teléfono del usuario NO está registrado como paciente en el sistema.\n\n"
+                . "REGLAS DE INTERACCIÓN:\n"
+                . "1. SI EL USUARIO SALUDA: Salúdalo cordialmente de forma genérica "
+                . "(ej: '¡Hola! 👋 Bienvenido a Doctorisimo'). Luego ofrécele este menú:\n"
+                . "     ¿En qué te puedo colaborar hoy?\n"
+                . "     1️⃣ Preguntar por la Agenda (citas disponibles)\n"
+                . "     2️⃣ Preguntar por nuestras Especialidades médicas\n"
+                . "   Invítalo a escribir el número de la opción o su consulta directamente.\n\n"
+                . "2. SI ELIGE LA OPCIÓN 2 O PREGUNTA POR ESPECIALIDADES:\n"
+                . "   Responde con la lista real de especialidades disponibles en Doctorisimo: {$listaEspecialidades}.\n"
+                . "   Invítalo a indicar cuál le interesa para obtener más información o agendar.\n\n"
+                . "3. SI ELIGE LA OPCIÓN 1 O PREGUNTA POR AGENDA/CITAS:\n"
+                . "   Indícale que para consultar disponibilidad necesita proporcionar su nombre completo "
+                . "y la especialidad o médico de interés, y que un asistente le confirmará los horarios.\n\n"
+                . "4. REGLAS MÉDICAS OBLIGATORIAS:\n"
+                . "   - NO diagnostiques enfermedades ni recetes medicamentos.\n"
+                . "   - Ante síntomas graves (dolor en el pecho, dificultad para respirar, sangrado severo, etc.) "
+                . "indica acudir de urgencia al centro de salud más cercano.\n"
+                . "   - Usa emojis apropiados para WhatsApp.\n";
         }
 
         $payload = [
             'system_instruction' => [
-                'parts' => [
-                    ['text' => $systemInstruction]
-                ]
+                'parts' => [['text' => $systemInstruction]],
             ],
             'contents' => [
                 [
-                    'role' => 'user',
-                    'parts' => [
-                        ['text' => $mensajeUsuario]
-                    ]
-                ]
+                    'role'  => 'user',
+                    'parts' => [['text' => $mensajeUsuario]],
+                ],
             ],
             'generationConfig' => [
-                'temperature' => 0.35,
+                'temperature'     => 0.35,
                 'maxOutputTokens' => 600,
-            ]
+            ],
         ];
 
-        // Lista de modelos activos comprobados
+        // Modelos a probar en orden (fallback automático)
         $modelosFallback = array_unique([$this->model, 'gemini-3.8-flash', 'gemini-3.5-flash']);
 
         foreach ($modelosFallback as $modeloActual) {
@@ -98,40 +127,100 @@ class GeminiService
                     ->timeout(20)
                     ->withHeaders([
                         'x-goog-api-key' => $this->apiKey,
-                        'Content-Type' => 'application/json',
+                        'Content-Type'   => 'application/json',
                     ])
                     ->post($url, $payload);
 
                 if ($response->successful()) {
-                    $data = $response->json();
-                    $texto = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    $texto = $response->json('candidates.0.content.parts.0.text');
                     if ($texto) {
                         return $texto;
                     }
                 }
 
-                $status = $response->status();
-                Log::warning("GeminiService: Falló el modelo {$modeloActual} con HTTP {$status}. Reintentando con alternativo si existe.", [
-                    'body' => $response->body()
+                Log::warning("GeminiService: modelo {$modeloActual} respondió HTTP {$response->status()}.", [
+                    'body' => $response->body(),
                 ]);
 
-                usleep(250000); // 250ms de espera antes del reintento
-                continue;
+                usleep(250_000); // 250 ms antes del siguiente intento
 
             } catch (\Throwable $e) {
                 Log::error("GeminiService Exception con modelo {$modeloActual}: " . $e->getMessage());
             }
         }
 
-        return "¡Hola{$nombreSaludo}! 👋 Bienvenido a Doctorisimo.\n\n¿En qué te podemos ayudar hoy?\n1️⃣ Consultar o agendar cita\n2️⃣ Especialidades y médicos\n3️⃣ Horarios de atención\n4️⃣ Hablar con un asesor";
+        // Fallback de texto si todos los modelos fallan
+        if ($pacienteEncontrado) {
+            return "¡Hola{$nombreSaludo}! 👋 Bienvenido a Doctorisimo.\n\n"
+                . "¿En qué te podemos ayudar hoy?\n"
+                . "1️⃣ Consultar o agendar cita\n"
+                . "2️⃣ Especialidades y médicos\n"
+                . "3️⃣ Horarios de atención\n"
+                . "4️⃣ Hablar con un asesor";
+        }
+
+        return "¡Hola! 👋 Bienvenido a Doctorisimo.\n\n"
+            . "¿En qué te puedo colaborar hoy?\n"
+            . "1️⃣ Preguntar por la Agenda (citas disponibles)\n"
+            . "2️⃣ Preguntar por nuestras Especialidades médicas\n\n"
+            . "Escribe el número de tu opción o tu consulta directamente.";
     }
 
     /**
-     * Busca información de perfil y citas del paciente.
+     * Obtiene la lista de especialidades reales.
+     * Intenta primero con el modelo Specialty (tabla nueva); si falla o está vacío,
+     * cae en el modelo Especialidad del sistema legado.
+     */
+    protected function obtenerEspecialidades(): array
+    {
+        // 1) Tabla specialties (sistema nuevo)
+        try {
+            if (class_exists(\App\Models\Specialty::class)) {
+                $lista = \App\Models\Specialty::select('name')
+                    ->orderBy('name')
+                    ->get()
+                    ->pluck('name')
+                    ->filter()
+                    ->values()
+                    ->toArray();
+
+                if (!empty($lista)) {
+                    return $lista;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('GeminiService: error al cargar Specialty: ' . $e->getMessage());
+        }
+
+        // 2) Tabla especial (legado PowerBuilder)
+        try {
+            if (class_exists(\App\Models\Especialidad::class)) {
+                $lista = \App\Models\Especialidad::select('especialidad')
+                    ->distinct()
+                    ->orderBy('especialidad')
+                    ->get()
+                    ->pluck('especialidad')
+                    ->filter()
+                    ->values()
+                    ->toArray();
+
+                if (!empty($lista)) {
+                    return $lista;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('GeminiService: error al cargar Especialidad legado: ' . $e->getMessage());
+        }
+
+        return [];
+    }
+
+    /**
+     * Busca el perfil y las próximas citas del paciente por número de teléfono.
      */
     protected function obtenerContextoPaciente(string $telefono): array
     {
-        $contexto = [];
+        $contexto      = [];
         $ultimosDigitos = substr(preg_replace('/\D/', '', $telefono), -8);
 
         if (empty($ultimosDigitos)) {
