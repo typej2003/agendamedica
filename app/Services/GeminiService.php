@@ -37,19 +37,34 @@ class GeminiService
         // Obtener contexto del paciente si se cuenta con el teléfono
         $contexto = $telefono ? $this->obtenerContextoPaciente($telefono) : [];
 
-        $systemInstruction = "Eres el asistente virtual inteligente de la clínica y consultorio médico Doctorisimo.\n" .
-            "Tu objetivo es atender a los pacientes por WhatsApp de forma empática, educada, clara y profesional.\n" .
-            "Puedes responder dudas sobre citas, horarios, médicos y orientación general.\n" .
-            "REGLAS OBLIGATORIAS:\n" .
-            "1. NO diagnostiques enfermedades ni recetes tratamientos para casos graves.\n" .
-            "2. En caso de síntomas de alarma o urgencias, aconseja de inmediato acudir al centro de salud más cercano.\n" .
-            "3. Responde de forma concisa y amigable adaptada a WhatsApp (mensajes claros, sin párrafos excesivamente largos).\n";
+        $nombreSaludo = !empty($contexto['nombre']) ? " {$contexto['nombre']}" : "";
+
+        $systemInstruction = "Eres el asistente virtual oficial de Doctorisimo, la plataforma de gestión médica y clínica.\n" .
+            "Tu objetivo es brindar una atención cálida, humana, respetuosa, clara y eficiente a través de WhatsApp.\n\n" .
+            "REGLAS DE INTERACCIÓN SEGÚN EL MENSAJE:\n" .
+            "1. SI EL USUARIO SALUDA (ej: 'hola', 'buenas', 'buen día', 'saludos', etc.):\n" .
+            "   - Salúdalo cordialmente por su nombre si está disponible (ej: '¡Hola{$nombreSaludo}! 👋 Bienvenido a Doctorisimo').\n" .
+            "   - Ofrécele tu ayuda presentando un menú claro y ordenado con viñetas o números con las opciones disponibles:\n" .
+            "     ¿En qué te puedo colaborar hoy?\n" .
+            "     1️⃣ Agendar o consultar una cita médica\n" .
+            "     2️⃣ Conocer nuestros médicos y especialidades disponibles\n" .
+            "     3️⃣ Horarios de atención y ubicación del consultorio\n" .
+            "     4️⃣ Dudas sobre récipes o indicaciones médicas\n" .
+            "     5️⃣ Hablar con un asistente del personal\n" .
+            "   - Invítalo amablemente a escribir el número de la opción o su duda directamente.\n\n" .
+            "2. SI EL USUARIO PREGUNTA POR UN SERVICIO ESPECÍFICO (ej: citas, doctores, precios, horarios, etc.):\n" .
+            "   - Responde directamente y con amabilidad a lo que necesita sin abrumarlo con texto innecesario.\n" .
+            "   - Si pregunta por citas y tiene citas pendientes registradas, infórmaselas amablemente.\n\n" .
+            "3. REGLAS MÉDICAS Y DE SEGURIDAD OBLIGATORIAS:\n" .
+            "   - NO diagnostiques enfermedades ni recetes medicamentos para situaciones delicadas o de urgencia.\n" .
+            "   - Si el paciente describe síntomas graves (dolor en el pecho, dificultad para respirar, sangrado severo, etc.), indícale con prioridad acudir de urgencia al centro de salud más cercano.\n" .
+            "   - Utiliza emojis apropiados para que la lectura sea amigable y visualmente atractiva en WhatsApp.\n";
 
         if (!empty($contexto['nombre'])) {
-            $systemInstruction .= "El paciente se llama: " . $contexto['nombre'] . ".\n";
+            $systemInstruction .= "\nContexto: El paciente registrado se llama: {$contexto['nombre']}.\n";
         }
         if (!empty($contexto['citas'])) {
-            $systemInstruction .= "Citas del paciente: " . json_encode($contexto['citas'], JSON_UNESCAPED_UNICODE) . ".\n";
+            $systemInstruction .= "Citas médicas del paciente en el sistema: " . json_encode($contexto['citas'], JSON_UNESCAPED_UNICODE) . ".\n";
         }
 
         $payload = [
@@ -67,13 +82,13 @@ class GeminiService
                 ]
             ],
             'generationConfig' => [
-                'temperature' => 0.4,
-                'maxOutputTokens' => 500,
+                'temperature' => 0.35,
+                'maxOutputTokens' => 600,
             ]
         ];
 
-        // Lista de modelos a intentar en orden de preferencia (fallback si hay 503 o sobrecarga)
-        $modelosFallback = array_unique([$this->model, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash-lite']);
+        // Lista de modelos activos comprobados
+        $modelosFallback = array_unique([$this->model, 'gemini-3.8-flash', 'gemini-3.5-flash']);
 
         foreach ($modelosFallback as $modeloActual) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modeloActual}:generateContent";
@@ -100,18 +115,15 @@ class GeminiService
                     'body' => $response->body()
                 ]);
 
-                // Si fue 503 (servidor saturado) o 429 (cuota de ese modelo), prueba el siguiente modelo
-                if (in_array($status, [503, 429])) {
-                    usleep(300000); // 300ms de espera antes del reintento
-                    continue;
-                }
+                usleep(250000); // 250ms de espera antes del reintento
+                continue;
 
             } catch (\Throwable $e) {
                 Log::error("GeminiService Exception con modelo {$modeloActual}: " . $e->getMessage());
             }
         }
 
-        return 'Hola, gracias por comunicarte con Doctorisimo. En este momento nuestros sistemas presentan alta demanda. Un asesor se comunicará contigo a la brevedad.';
+        return "¡Hola{$nombreSaludo}! 👋 Bienvenido a Doctorisimo.\n\n¿En qué te podemos ayudar hoy?\n1️⃣ Consultar o agendar cita\n2️⃣ Especialidades y médicos\n3️⃣ Horarios de atención\n4️⃣ Hablar con un asesor";
     }
 
     /**
@@ -127,7 +139,6 @@ class GeminiService
         }
 
         try {
-            // La tabla pacientes sólo tiene columna 'telefono' (no 'celular')
             $paciente = Paciente::where('telefono', 'like', "%{$ultimosDigitos}%")->first();
 
             if ($paciente) {
