@@ -64,6 +64,8 @@ class WhatsAppWebhookController extends Controller
                         // Procesar con Gemini AI inyectando el número para contexto del paciente
                         $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
 
+                        Log::info("Respuesta generada por Gemini para {$from}: {$aiReply}");
+
                         // Enviar la respuesta vía WhatsApp
                         $this->whatsAppService->sendMessage($from, $aiReply);
                     }
