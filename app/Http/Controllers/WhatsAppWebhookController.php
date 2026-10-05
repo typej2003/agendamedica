@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use App\Services\GeminiService;
 use App\Services\WhatsAppService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
     protected WhatsAppService $whatsAppService;
+    protected GeminiService $geminiService;
 
-    public function __construct(WhatsAppService $whatsAppService)
+    public function __construct(WhatsAppService $whatsAppService, GeminiService $geminiService)
     {
         $this->whatsAppService = $whatsAppService;
+        $this->geminiService = $geminiService;
     }
 
     /**
@@ -54,17 +56,16 @@ class WhatsAppWebhookController extends Controller
                 $messageType = $messageData['type'] ?? null;
 
                 if ($messageType === 'text') {
-                    $bodyText = $messageData['text']['body'] ?? '';
+                    $bodyText = trim($messageData['text']['body'] ?? '');
 
                     Log::info("Mensaje recibido de {$from} (ID: {$messageId}, Time: {$timestamp}): {$bodyText}");
 
-                    // Procesamiento con OpenAI API
-                    $aiReply = $this->getOpenAIResponse($bodyText);
+                    if (!empty($bodyText)) {
+                        // Procesar con Gemini AI inyectando el número para contexto del paciente
+                        $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
 
-                    if ($aiReply) {
+                        // Enviar la respuesta vía WhatsApp
                         $this->whatsAppService->sendMessage($from, $aiReply);
-                    } else {
-                        $this->whatsAppService->sendMessage($from, 'Lo siento, no pude procesar tu solicitud en este momento.');
                     }
                 }
             }
@@ -76,67 +77,7 @@ class WhatsAppWebhookController extends Controller
             ]);
         }
 
-        // Siempre responder 200 a WhatsApp para evitar bucles de reintento
-        return response()->json(['status' => 'EVENT_RECEIVED'], 200);
-    }
-
-    /**
-     * Consulta a la API de OpenAI
-     */
-    protected function getOpenAIResponse(string $prompt): ?string
-    {
-        $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
-
-        if (empty($apiKey)) {
-            Log::error('API Key de OpenAI no configurada.');
-            return null;
-        }
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    ['role' => 'system', 'content' => 'Eres un asistente virtual atento y conciso.'],
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-                'temperature' => 0.7,
-            ]);
-
-            if ($response->successful()) {
-                $responseData = $response->json();
-                return $responseData['choices'][0]['message']['content'] ?? null;
-            }
-
-            Log::error('Error consumiendo OpenAI API: ' . $response->body());
-            return null;
-        } catch (\Exception $e) {
-            Log::error('Excepción al conectar con OpenAI: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function handleWebhook(Request $request, GeminiService $gemini, WhatsAppService $whatsApp)
-    {
-        $body = $request->all();
-        $entry = $body['entry'][0]['changes'][0]['value'] ?? null;
-
-        if (!empty($entry['messages'][0])) {
-            $message = $entry['messages'][0];
-            $from = $message['from']; // Teléfono del paciente
-            $text = $message['text']['body'] ?? '';
-
-            if (!empty($text)) {
-                // Procesar con Gemini y obtener la respuesta
-                $respuesta = $gemini->procesarMensaje($text, $from);
-
-                // Responder al paciente por WhatsApp
-                $whatsApp->sendTextMessage($from, $respuesta);
-            }
-        }
-
+        // Siempre responder 200 a WhatsApp para evitar bucles de reintento de Meta
         return response()->json(['status' => 'EVENT_RECEIVED'], 200);
     }
 }
