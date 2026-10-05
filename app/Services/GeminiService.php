@@ -82,4 +82,52 @@ class GeminiService
             return 'Estimado paciente, hemos recibido su mensaje. Nos pondremos en contacto con usted a la brevedad.';
         }
     }
+
+    public function generarRespuesta($mensaje, $contexto = [])
+{
+    $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
+    // 1. Diagnóstico: Verificar si la clave existe
+    if (empty($apiKey)) {
+        Log::error('GEMINI DEBUG: La API KEY está vacía o no se está leyendo.');
+        return 'Lo siento, no pude procesar tu solicitud en este momento.';
+    }
+    $model = config('services.gemini.model', 'gemini-1.5-flash');
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+    Log::info('GEMINI DEBUG: Enviando petición a: ' . "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent");
+    try {
+        $response = Http::withoutVerifying() // Evita problemas de certificados SSL en local
+            ->timeout(20)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->post($url, [
+                'contents' => [
+                    [
+                        'role' => 'user',
+                        'parts' => [
+                            ['text' => $mensaje]
+                        ]
+                    ]
+                ]
+            ]);
+        // 2. Diagnóstico: Si Google responde con error (400, 403, 404, etc.)
+        if (!$response->successful()) {
+            Log::error('GEMINI DEBUG ERROR HTTP ' . $response->status(), [
+                'body' => $response->body()
+            ]);
+            return 'Lo siento, no pude procesar tu solicitud en este momento.';
+        }
+        $data = $response->json();
+        
+        return $data['candidates'][0]['content']['parts'][0]['text'] 
+            ?? 'Lo siento, no pude procesar tu solicitud en este momento.';
+    } catch (\Throwable $e) {
+        // 3. Diagnóstico: Si ocurre una excepción de red o código
+        Log::error('GEMINI DEBUG EXCEPTION: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+        return 'Lo siento, no pude procesar tu solicitud en este momento.';
+    }
+}
 }
