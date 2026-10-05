@@ -13,13 +13,11 @@ class GeminiService
 {
     protected string $apiKey;
     protected string $model;
-    protected string $baseUrl;
 
     public function __construct()
     {
         $this->apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY', '');
         $this->model  = config('services.gemini.model') ?? env('GEMINI_MODEL', 'gemini-3.8-flash');
-        $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
     }
 
     /**
@@ -74,33 +72,46 @@ class GeminiService
             ]
         ];
 
-        try {
-            $response = Http::withoutVerifying()
-                ->timeout(25)
-                ->withHeaders([
-                    'x-goog-api-key' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($this->baseUrl, $payload);
+        // Lista de modelos a intentar en orden de preferencia (fallback si hay 503 o sobrecarga)
+        $modelosFallback = array_unique([$this->model, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash-lite']);
 
-            if (!$response->successful()) {
-                Log::error('GeminiService HTTP ' . $response->status(), [
+        foreach ($modelosFallback as $modeloActual) {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modeloActual}:generateContent";
+
+            try {
+                $response = Http::withoutVerifying()
+                    ->timeout(20)
+                    ->withHeaders([
+                        'x-goog-api-key' => $this->apiKey,
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post($url, $payload);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $texto = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if ($texto) {
+                        return $texto;
+                    }
+                }
+
+                $status = $response->status();
+                Log::warning("GeminiService: Falló el modelo {$modeloActual} con HTTP {$status}. Reintentando con alternativo si existe.", [
                     'body' => $response->body()
                 ]);
-                return 'Disculpa, ocurrió un inconveniente al procesar tu consulta. En breve te responderemos.';
+
+                // Si fue 503 (servidor saturado) o 429 (cuota de ese modelo), prueba el siguiente modelo
+                if (in_array($status, [503, 429])) {
+                    usleep(300000); // 300ms de espera antes del reintento
+                    continue;
+                }
+
+            } catch (\Throwable $e) {
+                Log::error("GeminiService Exception con modelo {$modeloActual}: " . $e->getMessage());
             }
-
-            $data = $response->json();
-            return $data['candidates'][0]['content']['parts'][0]['text'] 
-                ?? 'Gracias por comunicarte con nosotros. En breve te responderemos.';
-
-        } catch (\Throwable $e) {
-            Log::error('GeminiService Exception: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return 'Disculpa, no pude procesar tu mensaje en este momento. Te contactaremos a la brevedad.';
         }
+
+        return 'Hola, gracias por comunicarte con Doctorisimo. En este momento nuestros sistemas presentan alta demanda. Un asesor se comunicará contigo a la brevedad.';
     }
 
     /**
@@ -116,9 +127,8 @@ class GeminiService
         }
 
         try {
-            $paciente = Paciente::where('telefono', 'like', "%{$ultimosDigitos}%")
-                ->orWhere('celular', 'like', "%{$ultimosDigitos}%")
-                ->first();
+            // La tabla pacientes sólo tiene columna 'telefono' (no 'celular')
+            $paciente = Paciente::where('telefono', 'like', "%{$ultimosDigitos}%")->first();
 
             if ($paciente) {
                 $contexto['nombre'] = trim("{$paciente->nombres} {$paciente->apellidos}");
