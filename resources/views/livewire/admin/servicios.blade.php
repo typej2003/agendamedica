@@ -110,9 +110,32 @@
                                         @endif
                                     </td>
                                     <td class="text-end text-nowrap">
-                                        <button wire:click="abrirRenovar({{ $medico->id }})" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-arrow-repeat me-1"></i> Renovar
-                                        </button>
+                                        @php $conServicio = $e['estado'] !== 'sin_servicio'; @endphp
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-pencil-square me-1"></i> Modificar
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li>
+                                                    <button type="button" class="dropdown-item" wire:click="abrirRenovar({{ $medico->id }})">
+                                                        <i class="bi bi-arrow-repeat me-2"></i> Renovar
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" class="dropdown-item" wire:click="abrirReemplazar({{ $medico->id }})"
+                                                            @unless ($conServicio) disabled title="No tiene servicio que reemplazar: usa Renovar" @endunless>
+                                                        <i class="bi bi-arrow-left-right me-2"></i> Reemplazar
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-danger" wire:click="abrirCancelar({{ $medico->id }})"
+                                                            @unless ($conServicio) disabled title="Ya no tiene servicio" @endunless>
+                                                        <i class="bi bi-x-circle me-2"></i> Cancelar
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                         <button wire:click="verHistorial({{ $medico->id }})" class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-clock-history me-1"></i> Historial
                                         </button>
@@ -270,6 +293,117 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Renovar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Reemplazar --}}
+    @if ($modal === 'reemplazar' && $seleccionado)
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form wire:submit.prevent="reemplazar">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reemplazar plan</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-2">
+                                Para <strong>{{ trim($seleccionado->name . ' ' . $seleccionado->lastname) }}</strong>
+                                <small class="text-muted">({{ $seleccionado->reg_medico }})</small>.
+                                Hoy tiene <strong>{{ $actual['plan'] ?? '—' }}</strong>
+                                @if ($actual['vence_el'])
+                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format('d/m/Y') }}.
+                                @endif
+                            </p>
+                            <div class="alert alert-warning py-2 small">
+                                El plan nuevo empieza <strong>hoy</strong> y <strong>no conserva el tiempo</strong> que quedaba del actual.
+                                El plan anterior queda cancelado en el historial.
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Plan nuevo <span class="text-danger">*</span></label>
+                                <select class="form-select" wire:model="planElegido">
+                                    @foreach ($planesActivos as $plan)
+                                        <option value="{{ $plan->id }}">
+                                            {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} · USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('planElegido') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Meses de servicio</label>
+                                    <input type="number" min="1" max="60" class="form-control" wire:model.defer="meses">
+                                    @error('meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Monto cobrado (USD)</label>
+                                    <input type="number" min="0" step="0.01" class="form-control" wire:model.defer="monto">
+                                    <div class="form-text">0 = cortesía, no cuenta como compra.</div>
+                                    @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="mb-1">
+                                <label class="form-label">Motivo <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model.defer="motivo" maxlength="150" autocomplete="off"
+                                       placeholder="Por ejemplo: se asignó el plan equivocado">
+                                <div class="form-text">Queda escrito en el historial, con tu nombre y la fecha.</div>
+                                @error('motivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Volver</button>
+                            <button type="submit" class="btn btn-primary">Reemplazar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Cancelar --}}
+    @if ($modal === 'cancelar' && $seleccionado)
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form wire:submit.prevent="cancelarPlan">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Cancelar servicio</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-2">
+                                Para <strong>{{ trim($seleccionado->name . ' ' . $seleccionado->lastname) }}</strong>
+                                <small class="text-muted">({{ $seleccionado->reg_medico }})</small>.
+                                Hoy tiene <strong>{{ $actual['plan'] ?? '—' }}</strong>
+                                @if ($actual['vence_el'])
+                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format('d/m/Y') }}.
+                                @endif
+                            </p>
+                            <div class="alert alert-danger py-2 small">
+                                Se cancelan <strong>todos</strong> sus períodos activos y se queda <strong>sin servicio: deja de sincronizar ahora mismo</strong>
+                                (escritorio, app y API). No se puede deshacer; para devolvérselo hay que asignarle un plan con Renovar.
+                                Lo que ya tiene en el teléfono o en el escritorio no se borra.
+                            </div>
+
+                            <div class="mb-1">
+                                <label class="form-label">Motivo <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model.defer="motivo" maxlength="150" autocomplete="off"
+                                       placeholder="Por ejemplo: pago revertido">
+                                <div class="form-text">Queda escrito en el historial, con tu nombre y la fecha.</div>
+                                @error('motivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Volver</button>
+                            <button type="submit" class="btn btn-danger">Cancelar servicio</button>
                         </div>
                     </form>
                 </div>

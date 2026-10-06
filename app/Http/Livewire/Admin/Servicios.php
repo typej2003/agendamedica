@@ -35,15 +35,16 @@ class Servicios extends Component
     public $search = '';
     public $filtro = 'todos';
 
-    // Ventana abierta: renovar | historial | plan | null
+    // Ventana abierta: renovar | reemplazar | cancelar | historial | plan | null
     public $modal = null;
 
-    // Renovar
+    // Renovar / reemplazar / cancelar el servicio de un médico
     public $medicoId = null;
     public $planElegido = null;
     public $meses = 1;
     public $monto = 0;
     public $nota = '';
+    public $motivo = ''; // obligatorio al reemplazar o cancelar: queda en el historial
 
     // Plan (alta o edición)
     public $planId = null;
@@ -138,7 +139,10 @@ class Servicios extends Component
             $inicio = $servicios->inicioDeRenovacion((string) $seleccionado->reg_medico);
             $datos['inicioRenovacion'] = $inicio ? $inicio->format('d/m/Y') . ' (cuando termina el actual)' : 'hoy';
         }
-        $datos['planesActivos'] = $this->modal === 'renovar' ? Plan::where('activo', true)->orderBy('orden')->orderBy('id')->get() : collect();
+        if ($seleccionado && in_array($this->modal, ['reemplazar', 'cancelar'], true)) {
+            $datos['actual'] = $servicios->estado((string) $seleccionado->reg_medico);
+        }
+        $datos['planesActivos'] = in_array($this->modal, ['renovar', 'reemplazar'], true) ? Plan::where('activo', true)->orderBy('orden')->orderBy('id')->get() : collect();
 
         return view('livewire.admin.servicios', $datos);
     }
@@ -222,6 +226,89 @@ class Servicios extends Component
         );
 
         session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': servicio hasta el ' . $nuevo->vence_el->format('d/m/Y') . '.');
+        $this->cerrarModal();
+    }
+
+    /**
+     * "Modificar → Reemplazar": otro plan **desde hoy**, sin conservar el tiempo que quedaba. Para corregir una
+     * incidencia o un fraude sin esperar a que termine el período actual.
+     */
+    public function abrirReemplazar(int $medicoId, ServicioService $servicios)
+    {
+        $medico = Medico::findOrFail($medicoId);
+        $actual = $servicios->actual((string) $medico->reg_medico);
+        if (! $actual) {
+            session()->flash('error', 'Este médico no tiene servicio que reemplazar: usa Renovar para asignarle un plan.');
+
+            return;
+        }
+        $plan = ($actual->plan_id ? Plan::where('activo', true)->find($actual->plan_id) : null)
+            ?? Plan::where('activo', true)->where('visible', true)->orderBy('orden')->first()
+            ?? Plan::porDefecto();
+
+        $this->resetErrorBag();
+        $this->medicoId = $medico->id;
+        $this->motivo = '';
+        $this->modal = 'reemplazar';
+        $this->aplicarPlan($plan);
+    }
+
+    public function reemplazar(ServicioService $servicios)
+    {
+        $this->validate([
+            'planElegido' => ['required', Rule::exists('planes', 'id')->where('activo', true)],
+            'meses' => 'required|integer|min:1|max:60',
+            'monto' => 'required|numeric|min:0|max:99999',
+            'motivo' => 'required|string|min:3|max:150',
+        ], [], ['planElegido' => 'plan', 'meses' => 'meses', 'monto' => 'monto', 'motivo' => 'motivo']);
+
+        $medico = Medico::findOrFail($this->medicoId);
+        if (! $servicios->actual((string) $medico->reg_medico)) {
+            session()->flash('error', 'Este médico no tiene servicio que reemplazar: usa Renovar para asignarle un plan.');
+            $this->cerrarModal();
+
+            return;
+        }
+
+        $nuevo = $servicios->reemplazar(
+            (string) $medico->reg_medico,
+            Plan::findOrFail($this->planElegido),
+            (float) $this->monto,
+            $this->motivo,
+            (int) $this->meses,
+            auth()->user()->name,
+        );
+
+        session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': plan reemplazado, servicio hasta el ' . $nuevo->vence_el->format('d/m/Y') . '.');
+        $this->cerrarModal();
+    }
+
+    /** "Modificar → Cancelar": le quita el servicio a ese médico (una sola persona; no hay cancelación en lote). */
+    public function abrirCancelar(int $medicoId, ServicioService $servicios)
+    {
+        $medico = Medico::findOrFail($medicoId);
+        if (! $servicios->actual((string) $medico->reg_medico)) {
+            session()->flash('error', 'Este médico ya no tiene servicio.');
+
+            return;
+        }
+
+        $this->resetErrorBag();
+        $this->medicoId = $medico->id;
+        $this->motivo = '';
+        $this->modal = 'cancelar';
+    }
+
+    public function cancelarPlan(ServicioService $servicios)
+    {
+        $this->validate(['motivo' => 'required|string|min:3|max:150'], [], ['motivo' => 'motivo']);
+
+        $medico = Medico::findOrFail($this->medicoId);
+        $cancelados = $servicios->cancelarActivos((string) $medico->reg_medico, $this->motivo, auth()->user()->name);
+
+        session()->flash('message', $cancelados === 0
+            ? trim($medico->name . ' ' . $medico->lastname) . ' ya no tenía servicio.'
+            : trim($medico->name . ' ' . $medico->lastname) . ': servicio cancelado, ya no sincroniza. Para devolvérselo, asígnale un plan con Renovar.');
         $this->cerrarModal();
     }
 

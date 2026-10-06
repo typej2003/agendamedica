@@ -167,8 +167,11 @@ mes** (evento `MedicoRegistrado`, lo dispara el modelo `Medico`; el default pued
 el escritorio, **1 año gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
 `php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. **Sección "Planes y servicios" del
 panel** (`/admin/servicios`, `Admin\Servicios`, Root o Administrador): pestaña *Servicios por médico* (plan, vencimiento y
-estado; contadores que filtran; **Renovar** con plan/meses/monto/nota, que continúa donde termina el actual; **Historial**
-con cancelar un período) y pestaña *Planes* (alta/edición: frecuencia, monto, tachado con el ahorro, orden, visible,
+estado; contadores que filtran; botón **Modificar** con **Renovar** (plan/meses/monto/nota, continúa donde termina el
+actual), **Reemplazar** (otro plan **desde hoy**, sin conservar el tiempo; cancela todo lo activo y crea el nuevo en una
+transacción) y **Cancelar** (cancela todos los períodos activos: sin servicio y sin sincronizar ya; sin deshacer, se
+arregla asignando un plan); Reemplazar y Cancelar piden **motivo** y lo dejan en `nota` con quién y cuándo
+(`ServicioService::reemplazar`/`cancelarActivos`); y **Historial** con cancelar un período) y pestaña *Planes* (alta/edición: frecuencia, monto, tachado con el ahorro, orden, visible,
 activo, predeterminado; no se borran, se desactivan; el predeterminado no se desmarca ni se desactiva, se marca otro).
 Los planes **todavía no tienen restricciones editables** en el panel. Falta: límites (`max_medicos`,
 `max_historico_meses`) y el manejo del 402 en el app.

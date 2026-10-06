@@ -7,6 +7,7 @@ use App\Models\RegMedicoServicio;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio contratado por `reg_medico`: cuál es el vigente, en qué estado está y si deja sincronizar.
@@ -110,6 +111,60 @@ class ServicioService
             'estado' => RegMedicoServicio::CANCELADO,
             'nota' => trim(($servicio->nota ? $servicio->nota . ' · ' : '') . 'Cancelado' . ($nota ? ': ' . $nota : '')),
         ])->save();
+    }
+
+    /**
+     * Quita el servicio a un `reg_medico` (una incidencia, un fraude): cancela **todos** sus períodos activos —no
+     * solo el vigente, o al cancelar uno aparecería el siguiente— y se queda sin servicio, o sea sin sincronizar,
+     * desde ya. Las filas quedan en el historial con el motivo, quién lo hizo y cuándo; no se vuelve a regalar una
+     * prueba (`otorgarPrueba` mira cualquier fila, cancelada o no). Se arregla asignándole un plan nuevo.
+     *
+     * @return int cuántos períodos se cancelaron
+     */
+    public function cancelarActivos(string $regMedico, string $motivo, ?string $por = null): int
+    {
+        $nota = $this->notaDeAuditoria($motivo, $por);
+
+        return DB::transaction(function () use ($regMedico, $nota) {
+            $activos = RegMedicoServicio::where('reg_medico', $regMedico)->where('estado', RegMedicoServicio::ACTIVO)->get();
+            $activos->each(fn (RegMedicoServicio $s) => $this->cancelar($s, $nota));
+
+            return $activos->count();
+        });
+    }
+
+    /**
+     * Cambia el plan de un `reg_medico` **desde hoy** y sin conservar el tiempo que le quedaba: cancela todo lo
+     * activo y crea el período nuevo en la misma operación (si algo falla, no queda sin servicio a medias).
+     *
+     * @param  float  $monto  lo cobrado; 0 = cortesía
+     * @param  int|null  $meses  por defecto, los del plan
+     */
+    public function reemplazar(
+        string $regMedico,
+        Plan $plan,
+        float $monto,
+        string $motivo,
+        ?int $meses = null,
+        ?string $por = null
+    ): RegMedicoServicio {
+        $nota = $this->notaDeAuditoria($motivo, $por);
+
+        return DB::transaction(function () use ($regMedico, $plan, $monto, $meses, $nota) {
+            RegMedicoServicio::where('reg_medico', $regMedico)->where('estado', RegMedicoServicio::ACTIVO)->get()
+                ->each(fn (RegMedicoServicio $s) => $this->cancelar($s, 'reemplazado. ' . $nota));
+
+            return $this->otorgar(
+                $regMedico, $plan, $monto > 0 ? RegMedicoServicio::ORIGEN_COMPRA : RegMedicoServicio::ORIGEN_MANUAL,
+                meses: $meses, monto: $monto, nota: 'Reemplaza el plan anterior. ' . $nota,
+            );
+        });
+    }
+
+    /** "Motivo (por Fulano, 06/10/2026)": lo que queda escrito en el historial de quien cambió el servicio. */
+    private function notaDeAuditoria(string $motivo, ?string $por): string
+    {
+        return trim($motivo) . ' (' . ($por ? "por {$por}, " : '') . Carbon::today()->format('d/m/Y') . ')';
     }
 
     /**
