@@ -9,7 +9,7 @@
             @endauth
 
             <a class="navbar-brand fs-3 fw-bold m-0" href="{{ url('/') }}">
-                <i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>DoctoririsimoAgenda<span style="color: #6500da;">Médica</span>
+                <i class="bi bi-heart-pulse-fill me-2" style="color: #c28fd6;"></i>Doctorisimo.<span style="color: #6500da;">App</span>
             </a>
         </div>
 

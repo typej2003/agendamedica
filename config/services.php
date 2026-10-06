@@ -34,6 +34,7 @@ return [
         'token' => env('WHATSAPP_TOKEN'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'version' => env('WHATSAPP_API_VERSION', 'v19.0'),
     ],
 
     'openai' => [
@@ -42,7 +43,7 @@ return [
 
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model'   => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+        'model' => env('GEMINI_MODEL', 'gemini-3.8-flash'),
     ],
 
 ];

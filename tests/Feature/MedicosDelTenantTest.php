@@ -65,10 +65,25 @@ class MedicosDelTenantTest extends TestCase
             'id' => $medico->id,
             'name' => 'Carlos',
             'lastname' => 'De Prueba',
+            'prefix' => null,
+            'user_id' => $medico->user_id,
             'especialidad' => 'Ginecología',
             'plantilla_cita' => null,
             'plantilla_cumple' => null,
         ]], $response->json('medicos'));
+    }
+
+    public function test_el_catalogo_trae_el_prefijo_y_la_cuenta_para_el_titulo_de_la_agenda(): void
+    {
+        $regMedico = 'test-mdt-' . uniqid();
+        $medico = $this->medico($regMedico, autenticar: true, name: 'Sonia');
+        $medico->update(['prefix' => 'Dra']);
+        Evolucion::create(['reg_medico' => $regMedico, 'clave' => 1, 'correo_med' => $medico->email]);
+
+        $fila = $this->postJson('/api/app/sync-app-data', [])->assertOk()->json('medicos.0');
+
+        $this->assertSame('Dra.', $fila['prefix']);
+        $this->assertSame($medico->user_id, $fila['user_id']);
     }
 
     public function test_dos_medicos_del_mismo_tenant_aparecen_los_dos_con_su_propia_clave(): void

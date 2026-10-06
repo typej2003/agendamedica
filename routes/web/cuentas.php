@@ -2,6 +2,7 @@
 
 use App\Http\Livewire\Admin\ApiKeys;
 use App\Http\Livewire\Admin\Cuentas;
+use App\Http\Livewire\Admin\Servicios;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
     Route::get('/api-keys', ApiKeys::class)->name('api-keys');
+    // Planes de servicio y vencimiento por médico (Paso 27).
+    Route::get('/servicios', Servicios::class)->name('servicios');
 });

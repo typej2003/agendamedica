@@ -21,6 +21,8 @@ use App\Models\MedicalCenter;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MotivoCita;
+use App\Models\MotivoConsulta;
+use App\Models\MotivoConsultaPaciente;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
@@ -32,6 +34,7 @@ use App\Models\SyncChange;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\Vademecum;
+use App\Services\ServicioService;
 use App\Sync\CreacionesClinicas;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +76,18 @@ class SyncAppDataController extends Controller
         }
         $registrosMedicos = array_values(array_unique($registrosMedicos));
 
+        // Servicio contratado: vencido (pasada la gracia) no se sincroniza, ni subir ni bajar. El app sigue
+        // funcionando con lo que ya tiene en el teléfono y deja sus cambios en la cola. Un médico que por
+        // alguna vía quedó sin ninguna fila recibe aquí su mes de prueba en vez de quedar sin sincronizar.
+        $servicio = app(ServicioService::class);
+        if ($medicoModel->reg_medico && collect($registrosMedicos)->every(fn ($r) => $servicio->actual($r) === null)) {
+            $servicio->otorgarPrueba($medicoModel->reg_medico);
+        }
+        $estadoServicio = $servicio->mejorEstado($registrosMedicos);
+        if ($bloqueo = $servicio->bloqueo($estadoServicio)) {
+            return $bloqueo;
+        }
+
         $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
         $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
         $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
@@ -100,14 +115,16 @@ class SyncAppDataController extends Controller
 
         $pacientes = $this->deltaQuery(Paciente::whereIn('id', $pacienteIds), $since)->get();
 
+        // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también entraban
+        // las que tuvieran un número del pivote, pero el número es por médico desde el Paso 18.B1 (cada
+        // instalación del legado arranca en 1), así que un médico recibía las historias de cualquier otro con
+        // el mismo número, y el teléfono las mezclaba con las suyas. Una historia sin `medico_id` ni
+        // `reg_medico` no es de nadie y no se manda (no hay ninguna en los datos cargados).
         $historias = $this->deltaQuery(
-            Historia::where(function ($query) use ($medicoModel, $registrosMedicos, $numHistorias) {
+            Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
                 $query->where('medico_id', $medicoModel->id);
                 if (!empty($registrosMedicos)) {
                     $query->orWhereIn('reg_medico', $registrosMedicos);
-                }
-                if (!empty($numHistorias)) {
-                    $query->orWhereIn('numhistoria', $numHistorias);
                 }
             }),
             $since,
@@ -121,6 +138,14 @@ class SyncAppDataController extends Controller
             $since,
         )->get();
         $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
+        // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
+        // los lee y puede agregar o quitar los de la consulta que está atendiendo.
+        $motivosConsulta = $this->deltaQuery(MotivoConsulta::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $motivosDeConsulta = $this->deltaQuery(
+            MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
+            $since,
+        )->get();
         // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
         // filtro doble que `consultas`.
         $recipes = $this->deltaQuery(
@@ -216,6 +241,8 @@ class SyncAppDataController extends Controller
             'colas' => $colas,
             'consultas' => $consultas,
             'motivos' => $motivos,
+            'motivos_consulta' => $motivosConsulta,
+            'motivo_consulta_paciente' => $motivosDeConsulta,
             'recipes' => $recipes,
             'vademecum' => $vademecum,
             'tratamientos' => $tratamientos,
@@ -248,6 +275,11 @@ class SyncAppDataController extends Controller
             // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
             // no por delta.
             'medicos' => $medicos,
+            // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
+            // venza (y no intente sincronizar cuando ya venció).
+            'servicio' => collect($estadoServicio)->only(
+                ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones']
+            )->all(),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],
@@ -268,7 +300,7 @@ class SyncAppDataController extends Controller
      * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
      *
      * @param list<string> $registrosMedicos
-     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, prefix: ?string, user_id: ?int, especialidad: ?string}>
      */
     private function medicosDelTenant(array $registrosMedicos): array
     {
@@ -289,6 +321,10 @@ class SyncAppDataController extends Controller
                 'id' => $medico?->id,
                 'name' => $medico?->name,
                 'lastname' => $medico?->lastname,
+                // Tratamiento ("Dr.", "Dra.") para el título de la agenda, y la cuenta de acceso para
+                // saber cuál de estos médicos es quien tiene la sesión abierta (`users.id`).
+                'prefix' => $medico?->prefix,
+                'user_id' => $medico?->user_id,
                 'especialidad' => $evolucion->especialidad,
                 // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
                 // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un
@@ -354,6 +390,15 @@ class SyncAppDataController extends Controller
             if ($operation === 'created' && in_array($table, SyncAppDataRequest::CLINICAL_TABLES, true)) {
                 if (isset($change['temp_id']) && is_numeric($change['temp_id'])) {
                     $clinicas->aplicar($change, $pacientesCreados, $creados, $rechazados);
+                }
+                continue;
+            }
+
+            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `DELETABLE_TABLES`: esa lista
+            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`).
+            if ($operation === 'deleted' && $table === 'motivo_consulta_paciente') {
+                if ($recordId) {
+                    $clinicas->quitarMotivoDeConsulta((int) $recordId);
                 }
                 continue;
             }
@@ -462,18 +507,23 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, récipes); el
-     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos de
+     * la consulta y récipes); el resto (ediciones, borrados, reordenamientos, citas nuevas)
+     * después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
     private function enOrdenDeDependencia(array $changes): array
     {
-        $prioridad = ['pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'recipes' => 3];
-        $grupos = [[], [], [], [], []];
+        $prioridad = [
+            'pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'motivos_consulta' => 3,
+            'motivo_consulta_paciente' => 4, 'recipes' => 4,
+        ];
+        $resto = 5; // el grupo de todo lo que no es una creación clínica
+        $grupos = array_fill(0, $resto + 1, []);
         foreach ($changes as $change) {
             $esCreacion = ($change['operation'] ?? null) === 'created';
-            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? 4) : 4][] = $change;
+            $grupos[$esCreacion ? ($prioridad[$change['table'] ?? ''] ?? $resto) : $resto][] = $change;
         }
 
         return array_merge(...$grupos);

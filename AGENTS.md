@@ -26,9 +26,11 @@ php artisan storage:link   # necesario para servir el logo (Paso 17) y la firma/
 php artisan route:list
 ```
 
-⚠️ **No hay `.env.testing`**: correr `php artisan test`/PHPUnit con `RefreshDatabase` pisaría con
-migraciones la base SQLite de desarrollo local (la que trae los datos de prueba de arriba). Los tests
-que sí tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
+✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
+`database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
+sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.
+Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
+Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`).
 
@@ -78,7 +80,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos). |
 | `database/seeders/` | Países / estados / ciudades / especialidades / roles / datos médicos de ejemplo. |
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
-| `tests/` | `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
+| `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
 ## Endpoints principales (estado en la rama `desarrollo`)
 
@@ -89,9 +91,10 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/login` | `LoginAppController@login` — devuelve `access_token` Sanctum + `user_type` + roles/permisos. Desde el Paso 26.D también `must_change_password` (en la raíz y dentro de `user`): `true` si la clave es temporal. Es lo único que se agregó; si la clave es temporal o la cuenta está bloqueada, el login igual da token y lo que se corta es el resto del API (ver abajo). |
 | `POST` | `/api/app/cambiar-password` | `CambiarPasswordController@cambiar` — `password_actual`, `password_nueva` (+`_confirmation`, mín. 8). Es lo único (junto a `GET /api/user`) que deja pasar `EnsurePasswordChanged` mientras la clave es temporal; las demás rutas `auth:api` responden 403 `password_change_required`. |
 | `POST` | `/api/app/refresh-data` | `RefreshAppController@refreshData` — protegido por `auth:api`; acepta `mes`/`anio` y devuelve citas, colas, pacientes, motivos, centros médicos, historias y evoluciones del médico (o del paciente). |
-| `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. Desde el Paso 18.B también crea historia, consulta y récipe (`App\Sync\CreacionesClinicas`, número asignado por el servidor). |
+| `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. Desde el Paso 18.B también crea historia, consulta y récipe (`App\Sync\CreacionesClinicas`, número asignado por el servidor); desde el 18.B2, además, motivos de consulta: baja `motivos_consulta` y `motivo_consulta_paciente`, acepta la creación `motivo_consulta_paciente` (agrega un motivo del catálogo a una consulta) y `deleted` sobre ella lo quita. |
 | `POST` | `/api/app/citas/{cola}/notificar` | `NotificacionCitaController@enviar` — WhatsApp, online-only, no pasa por la cola de sync. |
 | `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe) y desde el Paso 23 las plantillas de mensaje (`plantilla_cita`/`plantilla_cumple`); online-only, misma razón que el de notificar. |
+| `POST` | `/api/app/motivos-consulta` | `MotivoConsultaController@crear` — alta en el catálogo de motivos de consulta del médico (Paso 18.B2), online-only: `descripcion` → `id`, `codemotivo` (correlativo de 4 dígitos); si ya hay una igual devuelve la existente (200) en vez de duplicar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 
 **Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El inicio de sesión (API y web) no se
@@ -110,7 +113,10 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
   (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
-  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Cada fila trae "Editar" y un **menú de 3
+  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Alta y edición llevan también el **prefijo**
+  (`medicos.prefix`, texto libre de hasta 20 caracteres: "Dr", "Dra", "Ing"…; el modelo le agrega el punto y
+  lo deja en `null` si queda vacío). `cambios/estado` lo devuelve como `medico_prefix` junto a `medico_nombre`
+  (sin prefijo): GinecoReport arma con ellos su `Doct`. Cada fila trae "Editar" y un **menú de 3
   puntos** con Roles (los marcados quedan exactamente así: `CuentaService::asignarRoles`; solo un Root da o quita
   Root; nadie se quita su propio acceso ni deja sin administradores), Resetear clave, Generar API key (el mismo
   trait `Concerns\EmiteApiKeys` que usa "API Keys") y Bloquear/Desbloquear. **Sustituye** al enlace "Usuarios" del
@@ -147,8 +153,25 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar. |
+| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
+
+**Planes de servicio y vencimiento** (ROADMAP Paso 27). Tablas `planes` (catálogo; `restricciones` en JSON leído con
+`App\Support\RestriccionesPlan`, que completa con valores por defecto lo que falte) y `reg_medico_servicio` (una fila
+por contratación/renovación, copia restricciones y monto del plan; el vigente es la activa de mayor `vence_el`).
+**No toca `medicos`.** `App\Services\ServicioService` resuelve el estado: `vigente`, `gracia` (5 días, todavía
+sincroniza), `vencido` y `sin_servicio`. **Solo bloquea la sincronización**: 402 `servicio_vencido`/`sin_servicio`
+(`error` y `code`) en `sync/cambios/subir`, `sync/carga-inicial/*` y `app/sync-app-data`; `cambios/estado` no se
+bloquea, y `sync-app-data` devuelve un bloque `servicio`. Un médico nuevo recibe el plan `es_default` **gratis por 1
+mes** (evento `MedicoRegistrado`, lo dispara el modelo `Medico`; el default puede ser de pago); quien sincroniza desde
+el escritorio, **1 año gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
+`php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. **Sección "Planes y servicios" del
+panel** (`/admin/servicios`, `Admin\Servicios`, Root o Administrador): pestaña *Servicios por médico* (plan, vencimiento y
+estado; contadores que filtran; **Renovar** con plan/meses/monto/nota, que continúa donde termina el actual; **Historial**
+con cancelar un período) y pestaña *Planes* (alta/edición: frecuencia, monto, tachado con el ahorro, orden, visible,
+activo, predeterminado; no se borran, se desactivan; el predeterminado no se desmarca ni se desactiva, se marca otro).
+Los planes **todavía no tienen restricciones editables** en el panel. Falta: límites (`max_medicos`,
+`max_historico_meses`) y el manejo del 402 en el app.
 
 *Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
 

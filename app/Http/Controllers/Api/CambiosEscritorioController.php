@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Medico;
 use App\Models\SyncCarga;
+use App\Events\EscritorioSincronizo;
+use App\Services\ServicioService;
 use App\Services\SyncAuthService;
 use App\Sync\Escritorio\CambiosEscritorio;
 use Illuminate\Http\JsonResponse;
@@ -19,13 +22,21 @@ use Illuminate\Http\Request;
  */
 class CambiosEscritorioController extends Controller
 {
-    public function __construct(private SyncAuthService $auth)
+    public function __construct(private SyncAuthService $auth, private ServicioService $servicio)
     {
     }
 
     /**
      * Lo que el escritorio necesita para arrancar: si la carga inicial está completa (recién ahí se
      * sincronizan cambios) y la lista de tablas en las que tiene que registrar cambios.
+     *
+     * Devuelve también el `reg_medico` con el que el API identifica a quien llama (el de la credencial
+     * del equipo): hay consultorios cuya tabla `evolucion` no tiene esa columna, y el instalador lo
+     * toma de acá para dejarlo en bridge\sync.ini.
+     *
+     * Y el médico dueño de esa credencial: `medico_nombre` (nombre y apellido, sin prefijo) y `medico_prefix`
+     * ("Dr.", "Dra."…; null si no tiene). GinecoReport arma con ellos su `Doct`, que muestra en la pantalla de
+     * inicio y usa en los reportes (los cachea sync.exe --medico en sync.ini).
      */
     public function estado(Request $request): JsonResponse
     {
@@ -34,13 +45,30 @@ class CambiosEscritorioController extends Controller
             return $error;
         }
 
+        // Habló el escritorio: si es la primera vez, recibe su año de cortesía (antes de leer el estado).
+        EscritorioSincronizo::dispatch($regMedico);
+
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
+        $medico = $this->medicoDe($regMedico);
+        $servicio = $this->servicio->estado($regMedico);
 
         return response()->json([
             'ok'     => true,
+            'reg_medico' => $regMedico,
+            'medico_nombre' => $medico ? trim($medico->name . ' ' . $medico->lastname) : '',
+            'medico_prefix' => $medico ? $medico->prefix : null,
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
+            // Servicio contratado (se muestra en la pantalla de sincronización). Esta respuesta nunca se bloquea:
+            // con el servicio vencido el escritorio tiene que poder enterarse para avisarlo.
+            // `servicio_estado`: vigente | gracia | vencido | sin_servicio. `servicio_dias`: días que faltan
+            // (negativo si ya venció). Las fechas van como AAAA-MM-DD.
+            'servicio_estado' => $servicio['estado'],
+            'servicio_plan'   => $servicio['plan'] ?? '',
+            'servicio_vence'  => $servicio['vence_el'] ?? '',
+            'servicio_dias'   => $servicio['dias_restantes'] ?? '',
+            'servicio_gracia_hasta' => $servicio['gracia_hasta'] ?? '',
         ]);
     }
 
@@ -49,6 +77,11 @@ class CambiosEscritorioController extends Controller
         [$regMedico, $error] = $this->medico($request);
         if ($error) {
             return $error;
+        }
+
+        EscritorioSincronizo::dispatch($regMedico);
+        if ($bloqueo = $this->servicio->bloqueo($this->servicio->estado($regMedico))) {
+            return $bloqueo;
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
@@ -68,6 +101,13 @@ class CambiosEscritorioController extends Controller
     }
 
     /* ------------------------------------------------------------------ */
+
+    /** Médico dueño del `reg_medico`; null si no hay uno registrado con él. */
+    private function medicoDe(string $regMedico): ?Medico
+    {
+        return Medico::whereHas('registro', fn ($q) => $q->where('reg_medico', $regMedico))->first()
+            ?? Medico::where('reg_medico', $regMedico)->first();
+    }
 
     /** @return array{0:?string, 1:?JsonResponse} */
     private function medico(Request $request): array

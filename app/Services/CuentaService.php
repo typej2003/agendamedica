@@ -73,7 +73,7 @@ class CuentaService
     /**
      * Crea la ficha de médico y su cuenta de acceso.
      *
-     * @param  array{name:string, lastname:string, email:string, reg_medico:string, phone?:?string, license_number?:?string}  $datos
+     * @param  array{name:string, lastname:string, email:string, reg_medico:string, prefix?:?string, phone?:?string, license_number?:?string}  $datos
      * @return array{user: User, medico: Medico, clave: string}
      */
     public function crearMedico(array $datos, ?string $clave = null): array
@@ -102,6 +102,7 @@ class CuentaService
                 'user_id'        => $user->id,
                 'name'           => trim($datos['name']),
                 'lastname'       => trim($datos['lastname']),
+                'prefix'         => $datos['prefix'] ?? null,
                 'email'          => $email,
                 'password'       => $hash,
                 'phone'          => $datos['phone'] ?? null,
@@ -212,7 +213,7 @@ class CuentaService
      * llave con la que están guardados todos sus datos clínicos en la nube, cambiarlo los dejaría huérfanos.
      * Si tiene cuenta de acceso, nombre y correo se actualizan también ahí (el correo es con el que inicia sesión).
      *
-     * @param  array{name:string, lastname:string, email:string, phone?:?string, license_number?:?string}  $datos
+     * @param  array{name:string, lastname:string, email:string, prefix?:?string, phone?:?string, license_number?:?string}  $datos
      */
     public function actualizarMedico(Medico $medico, array $datos): Medico
     {
@@ -231,7 +232,12 @@ class CuentaService
                 'email'          => $email,
                 'phone'          => $this->vacioANull($datos['phone'] ?? null),
                 'license_number' => $this->vacioANull($datos['license_number'] ?? null),
-            ])->save();
+            ]);
+            // El prefijo solo se toca si viene: quien llama sin él (otra pantalla) no debe borrarlo.
+            if (array_key_exists('prefix', $datos)) {
+                $medico->prefix = $datos['prefix'];
+            }
+            $medico->save();
 
             if ($medico->user_id) {
                 User::whereKey($medico->user_id)->update(['name' => trim("{$nombre} {$apellido}"), 'email' => $email]);

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\NotificacionCitaController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\ConfiguracionMedicoController;
+use App\Http\Controllers\Api\MotivoConsultaController;
 use App\Http\Controllers\Api\CargaInicialController;
 use App\Http\Controllers\Api\CambiosEscritorioController;
 use App\Http\Controllers\Api\RecipeFormatoController;
@@ -88,6 +89,11 @@ Route::middleware(['auth:api', 'account.active', 'password.changed'])->group(fun
 
     // Formato de impresión del récipe + firma/sello (ROADMAP.md Paso 18.A). Mismo criterio: online-only.
     Route::post('/app/configuracion/formato-recipe', [RecipeFormatoController::class, 'actualizar']);
+
+    // Alta de un motivo en el catálogo de motivos de consulta (ROADMAP.md Paso 18.B2). Online-only:
+    // crear motivos es poco frecuente, así que no pasa por la cola de sync. Ver MotivoConsultaController.
+    Route::post('/app/motivos-consulta', [MotivoConsultaController::class, 'crear'])
+        ->middleware('throttle:60,1');
 });
 
 Route::prefix('upload-servers')->group(function () {

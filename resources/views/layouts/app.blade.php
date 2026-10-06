@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <title>@yield('title', 'Agenda Médica - Bienvenidos')</title>
+    <title>@yield('title', 'DoctorisimoApp - Bienvenidos')</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">

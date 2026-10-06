@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -21,8 +21,11 @@
         <server name="APP_ENV" value="testing"/>
         <server name="BCRYPT_ROUNDS" value="4"/>
         <server name="CACHE_DRIVER" value="array"/>
-        <!-- <server name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <server name="DB_DATABASE" value=":memory:"/> -->
+        <!-- Los tests corren contra una base aparte (database/database.testing.sqlite), nunca contra la
+             de desarrollo: la arma sola tests/bootstrap.php antes de la primera prueba.
+             `database/.gitignore` ya ignora *.sqlite, asi que ese archivo no se versiona. -->
+        <server name="DB_CONNECTION" value="sqlite"/>
+        <server name="DB_DATABASE" value="database/database.testing.sqlite"/>
         <server name="MAIL_MAILER" value="array"/>
         <server name="QUEUE_CONNECTION" value="sync"/>
         <server name="SESSION_DRIVER" value="array"/>
