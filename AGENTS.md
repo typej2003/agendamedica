@@ -248,7 +248,11 @@ sistema legado).
    solo crea `Root`, `Medico`, `Secretaria`, `Paciente` y `Representante`. Si tocás permisos, verificá
    cuál de los dos lados es el que manda.
 9. **`RoleAndUserSeeder` crea un usuario Root por defecto con contraseña conocida**
-   (`root@admin.com` / `12345678`). No lo dejes habilitado en un entorno publicado.
+   (`root@admin.com` / `12345678`), igual que `UserSeeder`, `MedicalDataSeeder` y `FakeClinicalDataSeeder`
+   (médicos de ejemplo, también con `12345678`). Con `APP_ENV=production` ya **no** se siembran. Si una base
+   publicada los tiene de antes: crea tu administrador con `php artisan cuentas:admin` y corre
+   `php artisan produccion:limpiar-pruebas` (simula por defecto; `--confirmar` borra; `--conservar=correo`;
+   ver el Paso 28 del `ROADMAP.md`).
 
 ## Dónde está el detalle funcional
 
