@@ -76,6 +76,10 @@
                                     @if ($pestana === 'medicos')
                                         <div class="fw-semibold">{{ trim($fila->name . ' ' . $fila->lastname) }}</div>
                                         <small class="text-muted">{{ $fila->reg_medico }}</small>
+                                        @php $extras = $fila->registros->where('reg_medico', '!=', $fila->reg_medico)->count(); @endphp
+                                        @if ($extras > 0)
+                                            <span class="badge bg-light text-dark border" title="Además ve los datos de otros {{ $extras }} reg_medico">+{{ $extras }} registro{{ $extras > 1 ? 's' : '' }}</span>
+                                        @endif
                                     @else
                                         <div class="fw-semibold">{{ $fila->name }}</div>
                                         @if ($m)
@@ -136,6 +140,11 @@
                                                 @endif
 
                                                 @if ($m)
+                                                    <li>
+                                                        <button type="button" class="dropdown-item" wire:click="abrirRegistros({{ $m->id }})">
+                                                            <i class="bi bi-database-lock me-2"></i> Registros de datos
+                                                        </button>
+                                                    </li>
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirEmitir({{ $m->id }})">
                                                             <i class="bi bi-key-fill me-2"></i> Generar API key
@@ -445,6 +454,68 @@
                             <button type="submit" class="btn btn-primary">Guardar roles</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Registros de datos (reg_medico) de un médico --}}
+    @if ($modal === 'registros' && $medicoRegistros)
+        @php
+            $regsDelMedico = app(\App\Services\CuentaService::class)->registrosDe($medicoRegistros);
+            $asignables = app(\App\Services\CuentaService::class)->registrosAsignables($medicoRegistros);
+        @endphp
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Registros de datos · {{ trim($medicoRegistros->name . ' ' . $medicoRegistros->lastname) }}</h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if ($avisoRegistros) <div class="alert alert-success py-2">{{ $avisoRegistros }}</div> @endif
+                        @error('regNuevo') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+
+                        <p class="text-muted small">
+                            Los <code>reg_medico</code> cuyos datos (agenda, pacientes, consultas, récipes) ve este médico. Sirve para que un
+                            colega o una asistente compartan un consultorio, o para depurar con otra cuenta. <strong>Mirar es seguro</strong>;
+                            si edita algo que ya existe (confirmar o cobrar una cita), el cambio queda en los datos de ese registro.
+                            Quitar un registro no borra ningún dato: solo el acceso de este médico.
+                        </p>
+
+                        <ul class="list-group mb-3">
+                            @foreach ($regsDelMedico as $reg)
+                                <li class="list-group-item d-flex justify-content-between align-items-center" wire:key="reg-{{ $reg }}">
+                                    <span>
+                                        <code>{{ $reg }}</code>
+                                        @if ($reg === $medicoRegistros->reg_medico) <span class="badge bg-secondary ms-1">propio</span> @endif
+                                    </span>
+                                    @if ($reg !== $medicoRegistros->reg_medico)
+                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="quitarRegistro({{ json_encode($reg) }})"
+                                                wire:loading.attr="disabled">
+                                            <i class="bi bi-x-circle me-1"></i> Quitar
+                                        </button>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <form wire:submit.prevent="asignarRegistro" class="d-flex gap-2">
+                            <select class="form-select" wire:model.defer="regNuevo" aria-label="reg_medico a asignar">
+                                <option value="">Asignar un reg_medico…</option>
+                                @foreach ($asignables as $reg => $etiqueta)
+                                    <option value="{{ $reg }}">{{ $etiqueta }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="asignarRegistro">Asignar</span>
+                                <span wire:loading wire:target="asignarRegistro">Asignando…</span>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cerrar</button>
+                    </div>
                 </div>
             </div>
         </div>

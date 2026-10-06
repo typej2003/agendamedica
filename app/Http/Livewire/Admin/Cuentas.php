@@ -34,7 +34,7 @@ class Cuentas extends Component
     public $pestana = 'medicos';
     public $search = '';
 
-    // Qué ventana está abierta: alta | editar | acceso | reset | bloquear | roles | emitir (API key) | null
+    // Qué ventana está abierta: alta | editar | acceso | reset | bloquear | roles | registros | emitir (API key) | null
     public $modal = null;
 
     // Formulario de alta / acceso
@@ -56,6 +56,10 @@ class Cuentas extends Component
     public $userId = null;
     public $medicoId = null;
     public $motivo = '';
+
+    // Ventana de registros de datos: el reg_medico elegido para asignar y el resultado de la última acción
+    public $regNuevo = '';
+    public $avisoRegistros = null;
 
     /** Se muestra una sola vez tras crear una cuenta o resetear una clave: ['titulo','correo','clave']. */
     public $claveGenerada = null;
@@ -106,7 +110,7 @@ class Cuentas extends Component
                 ->orderBy('name')
                 ->paginate(10);
         } else {
-            $filas = Medico::with(['user.roles'])
+            $filas = Medico::with(['user.roles', 'registros'])
                 ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w
                     ->where('name', 'like', "%{$busqueda}%")
                     ->orWhere('lastname', 'like', "%{$busqueda}%")
@@ -122,6 +126,7 @@ class Cuentas extends Component
             // Para la ventana "Generar API key" (ver Concerns\EmiteApiKeys)
             'seleccionado'  => $this->modal === 'emitir' && $this->medicoId ? Medico::find($this->medicoId) : null,
             'rolesDisponibles' => $this->modal === 'roles' ? app(CuentaService::class)->rolesDisponibles() : [],
+            'medicoRegistros'  => $this->modal === 'registros' && $this->medicoId ? Medico::find($this->medicoId) : null,
         ]);
     }
 
@@ -320,6 +325,37 @@ class Cuentas extends Component
     }
 
     /* ------------------------------------------------------------------ */
+    /* Registros de datos (reg_medico)                                     */
+    /* ------------------------------------------------------------------ */
+
+    public function abrirRegistros(int $medicoId)
+    {
+        $medico = Medico::findOrFail($medicoId);
+        $this->limpiarFormulario();
+        $this->medicoId = $medico->id;
+        $this->modal = 'registros';
+    }
+
+    public function asignarRegistro(CuentaService $cuentas)
+    {
+        $this->ejecutar(function () use ($cuentas) {
+            $this->avisoRegistros = null;
+            $vinculados = $cuentas->asignarRegistro(Medico::findOrFail($this->medicoId), (string) $this->regNuevo);
+            $this->avisoRegistros = "Registro {$this->regNuevo} asignado: {$vinculados} pacientes vinculados.";
+            $this->regNuevo = '';
+        });
+    }
+
+    public function quitarRegistro(string $regMedico, CuentaService $cuentas)
+    {
+        $this->ejecutar(function () use ($regMedico, $cuentas) {
+            $this->avisoRegistros = null;
+            $cuentas->quitarRegistro(Medico::findOrFail($this->medicoId), $regMedico);
+            $this->avisoRegistros = "Registro {$regMedico} quitado.";
+        });
+    }
+
+    /* ------------------------------------------------------------------ */
     /* Ventanas                                                            */
     /* ------------------------------------------------------------------ */
 
@@ -341,7 +377,7 @@ class Cuentas extends Component
 
     private function limpiarFormulario(): void
     {
-        $this->reset(['name', 'lastname', 'prefix', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados']);
+        $this->reset(['name', 'lastname', 'prefix', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados', 'regNuevo', 'avisoRegistros']);
         $this->tipoAlta = 'medico';
         $this->tipoEdicion = 'medico';
         $this->resetErrorBag();

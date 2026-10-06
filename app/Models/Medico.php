@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Medico extends Model
@@ -54,6 +55,12 @@ class Medico extends Model
     public function setPrefixAttribute($valor): void
     {
         $this->attributes['prefix'] = self::normalizarPrefijo($valor);
+    }
+
+    /** Todos los `reg_medico` a los que tiene acceso (el suyo y los que se le asignaron desde el panel). */
+    public function registros(): HasMany
+    {
+        return $this->hasMany(MedicoRegistro::class, 'medico_id', 'id');
     }
 
     public function registro(): HasOne
