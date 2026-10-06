@@ -26,9 +26,11 @@ php artisan storage:link   # necesario para servir el logo (Paso 17) y la firma/
 php artisan route:list
 ```
 
-⚠️ **No hay `.env.testing`**: correr `php artisan test`/PHPUnit con `RefreshDatabase` pisaría con
-migraciones la base SQLite de desarrollo local (la que trae los datos de prueba de arriba). Los tests
-que sí tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
+✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
+`database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
+sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.
+Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
+Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`).
 
@@ -78,7 +80,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos). |
 | `database/seeders/` | Países / estados / ciudades / especialidades / roles / datos médicos de ejemplo. |
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
-| `tests/` | `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
+| `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
 ## Endpoints principales (estado en la rama `desarrollo`)
 
@@ -111,7 +113,10 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
   (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
-  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Cada fila trae "Editar" y un **menú de 3
+  (el `reg_medico` no se edita: es la llave de sus datos en la nube). Alta y edición llevan también el **prefijo**
+  (`medicos.prefix`, texto libre de hasta 20 caracteres: "Dr", "Dra", "Ing"…; el modelo le agrega el punto y
+  lo deja en `null` si queda vacío). `cambios/estado` lo devuelve como `medico_prefix` junto a `medico_nombre`
+  (sin prefijo): GinecoReport arma con ellos su `Doct`. Cada fila trae "Editar" y un **menú de 3
   puntos** con Roles (los marcados quedan exactamente así: `CuentaService::asignarRoles`; solo un Root da o quita
   Root; nadie se quita su propio acceso ni deja sin administradores), Resetear clave, Generar API key (el mismo
   trait `Concerns\EmiteApiKeys` que usa "API Keys") y Bloquear/Desbloquear. **Sustituye** al enlace "Usuarios" del

@@ -14,7 +14,7 @@ class ListMedicos extends Component
 
     public $search = '';
     public $medico_id;
-    public $name, $lastname, $license_number, $phone, $email, $reg_medico;
+    public $name, $lastname, $prefix, $license_number, $phone, $email, $reg_medico;
     public $is_active = true;
 
     protected $listeners = [
@@ -24,6 +24,7 @@ class ListMedicos extends Component
     protected $rules = [
         'name' => 'required|string|max:255',
         'lastname' => 'required|string|max:255',
+        'prefix' => 'nullable|string|max:20',
         'license_number' => 'nullable|string|max:100',
         'phone' => 'nullable|string|max:50',
         'email' => 'nullable|email|max:255',
@@ -41,6 +42,7 @@ class ListMedicos extends Component
         $this->medico_id = null;
         $this->name = '';
         $this->lastname = '';
+        $this->prefix = '';
         $this->license_number = '';
         $this->phone = '';
         $this->email = '';
@@ -63,6 +65,7 @@ class ListMedicos extends Component
         $this->medico_id = $medico->id;
         $this->name = $medico->name;
         $this->lastname = $medico->lastname;
+        $this->prefix = $medico->prefix;
         $this->license_number = $medico->license_number;
         $this->phone = $medico->phone;
         $this->email = $medico->email;
@@ -84,6 +87,7 @@ class ListMedicos extends Component
             [
                 'name' => $this->name,
                 'lastname' => $this->lastname,
+                'prefix' => $this->prefix,
                 'license_number' => $this->license_number,
                 'phone' => $this->phone,
                 'email' => $this->email,

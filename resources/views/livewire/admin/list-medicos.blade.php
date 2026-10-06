@@ -79,6 +79,14 @@
                 <div class="modal-body">
                     <form wire:submit.prevent="save">
                         <div class="row">
+                            <!-- Prefijo -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Prefijo</label>
+                                <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                <small class="text-muted">Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
+                                @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+
                             <!-- Nombre -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombres <span class="text-danger">*</span></label>

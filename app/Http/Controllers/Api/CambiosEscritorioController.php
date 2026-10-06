@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Medico;
 use App\Models\SyncCarga;
 use App\Services\SyncAuthService;
 use App\Sync\Escritorio\CambiosEscritorio;
@@ -26,6 +27,14 @@ class CambiosEscritorioController extends Controller
     /**
      * Lo que el escritorio necesita para arrancar: si la carga inicial está completa (recién ahí se
      * sincronizan cambios) y la lista de tablas en las que tiene que registrar cambios.
+     *
+     * Devuelve también el `reg_medico` con el que el API identifica a quien llama (el de la credencial
+     * del equipo): hay consultorios cuya tabla `evolucion` no tiene esa columna, y el instalador lo
+     * toma de acá para dejarlo en bridge\sync.ini.
+     *
+     * Y el médico dueño de esa credencial: `medico_nombre` (nombre y apellido, sin prefijo) y `medico_prefix`
+     * ("Dr.", "Dra."…; null si no tiene). GinecoReport arma con ellos su `Doct`, que muestra en la pantalla de
+     * inicio y usa en los reportes (los cachea sync.exe --medico en sync.ini).
      */
     public function estado(Request $request): JsonResponse
     {
@@ -35,9 +44,13 @@ class CambiosEscritorioController extends Controller
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
+        $medico = $this->medicoDe($regMedico);
 
         return response()->json([
             'ok'     => true,
+            'reg_medico' => $regMedico,
+            'medico_nombre' => $medico ? trim($medico->name . ' ' . $medico->lastname) : '',
+            'medico_prefix' => $medico ? $medico->prefix : null,
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
@@ -68,6 +81,13 @@ class CambiosEscritorioController extends Controller
     }
 
     /* ------------------------------------------------------------------ */
+
+    /** Médico dueño del `reg_medico`; null si no hay uno registrado con él. */
+    private function medicoDe(string $regMedico): ?Medico
+    {
+        return Medico::whereHas('registro', fn ($q) => $q->where('reg_medico', $regMedico))->first()
+            ?? Medico::where('reg_medico', $regMedico)->first();
+    }
 
     /** @return array{0:?string, 1:?JsonResponse} */
     private function medico(Request $request): array
