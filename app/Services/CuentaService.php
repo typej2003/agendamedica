@@ -362,6 +362,101 @@ class CuentaService
         $user->syncRoles($roles->all());
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Registros de datos (reg_medico) de un médico                        */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Qué `reg_medico` ve un médico. El sync lee la agenda, las consultas y los récipes por `medico_registros` y la
+     * lista de pacientes por `medico_pacientes`, así que dar acceso a un registro hace las dos cosas: suma la fila de
+     * `medico_registros` y vincula al médico con los pacientes de ese registro (y quitarlo, lo contrario).
+     *
+     * El `reg_medico` propio (`medicos.reg_medico`) no se puede quitar. Escrituras: lo que el médico CREE cuelga de su
+     * propio `reg_medico`; lo que EDITE de un registro ajeno (confirmar o cobrar una cita) queda en los datos de ese
+     * registro. Y el servicio contratado se mide por el mejor estado entre sus registros (`ServicioService::mejorEstado`).
+     *
+     * @return string[] el propio primero, luego los asignados
+     */
+    public function registrosDe(Medico $medico): array
+    {
+        return collect([$medico->reg_medico])
+            ->merge(MedicoRegistro::where('medico_id', $medico->id)->orderBy('id')->pluck('reg_medico'))
+            ->filter()->unique()->values()->all();
+    }
+
+    /**
+     * Los `reg_medico` que se le pueden asignar: los de otros médicos que existen (no se inventan a mano, para que un
+     * error de tipeo no abra acceso a un registro vacío), menos los que ya tiene.
+     *
+     * @return array<string, string> reg_medico => "Nombre (reg_medico)"
+     */
+    public function registrosAsignables(Medico $medico): array
+    {
+        return Medico::whereNotNull('reg_medico')
+            ->whereNotIn('reg_medico', $this->registrosDe($medico))
+            ->orderBy('name')->orderBy('lastname')
+            ->get(['name', 'lastname', 'reg_medico'])
+            ->mapWithKeys(fn (Medico $m) => [$m->reg_medico => trim($m->name . ' ' . $m->lastname) . " ({$m->reg_medico})"])
+            ->all();
+    }
+
+    /** @return int cuántos pacientes se le vincularon */
+    public function asignarRegistro(Medico $medico, string $regMedico): int
+    {
+        $regMedico = trim($regMedico);
+        if ($regMedico === '') {
+            throw ValidationException::withMessages(['regNuevo' => 'Elige el reg_medico a asignar.']);
+        }
+        if (! Medico::where('reg_medico', $regMedico)->exists()) {
+            throw ValidationException::withMessages(['regNuevo' => 'Ese reg_medico no existe.']);
+        }
+        if (in_array($regMedico, $this->registrosDe($medico), true)) {
+            throw ValidationException::withMessages(['regNuevo' => 'Este médico ya tiene acceso a ese reg_medico.']);
+        }
+
+        return DB::transaction(function () use ($medico, $regMedico) {
+            MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+            $yaTiene = DB::table('medico_pacientes')->where('medico_id', $medico->id)->pluck('paciente_id')->flip();
+            $vinculados = 0;
+            DB::table('medico_pacientes')->where('reg_medico', $regMedico)->where('medico_id', '!=', $medico->id)
+                ->orderBy('id')->get(['paciente_id', 'numhistoria'])
+                ->unique('paciente_id')
+                ->reject(fn ($f) => $yaTiene->has($f->paciente_id))
+                ->chunk(500)
+                ->each(function ($lote) use ($medico, $regMedico, &$vinculados) {
+                    DB::table('medico_pacientes')->insert($lote->map(fn ($f) => [
+                        'medico_id'   => $medico->id,
+                        'paciente_id' => $f->paciente_id,
+                        'numhistoria' => $f->numhistoria,
+                        'reg_medico'  => $regMedico,
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ])->all());
+                    $vinculados += $lote->count();
+                });
+
+            return $vinculados;
+        });
+    }
+
+    /** Quita el acceso a un registro asignado. No borra ningún dato: solo los vínculos de este médico. */
+    public function quitarRegistro(Medico $medico, string $regMedico): void
+    {
+        $regMedico = trim($regMedico);
+        if ($regMedico === (string) $medico->reg_medico) {
+            throw ValidationException::withMessages(['regNuevo' => 'El reg_medico propio del médico no se puede quitar.']);
+        }
+        if (! MedicoRegistro::where('medico_id', $medico->id)->where('reg_medico', $regMedico)->exists()) {
+            throw ValidationException::withMessages(['regNuevo' => 'Este médico no tiene acceso a ese reg_medico.']);
+        }
+
+        DB::transaction(function () use ($medico, $regMedico) {
+            DB::table('medico_registros')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
+            DB::table('medico_pacientes')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
+        });
+    }
+
     /** Nunca puede quedar el sistema sin un administrador activo. */
     private function exigirOtroAdministradorActivo(User $user, string $accion): void
     {

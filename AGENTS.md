@@ -110,6 +110,12 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - `User::esAdministrador()` (rol Root o Administrador), `User::administradores()` (scope; no usar `User::role([...])`
   de Spatie con roles que pueden no existir: lanza excepción) y `User::medico()`.
 - El primer administrador se crea con `php artisan cuentas:admin {email}`.
+- **Registros de datos** (menú de 3 puntos de un médico → "Registros de datos"; `CuentaService::registrosDe/registrosAsignables/asignarRegistro/quitarRegistro`):
+  un administrador le da o le quita acceso a los datos de otro `reg_medico`. El sync lee agenda/consultas/récipes por `medico_registros`
+  y pacientes por `medico_pacientes`, así que asignar hace las dos cosas (y quitar las deshace, sin borrar datos). Solo se asignan `reg_medico`
+  que ya existen; el propio no se quita. Sirve para compartir consultorio y para **depurar**: crea un médico de prueba ("Nuevo médico"), asígnale el
+  `reg_medico` del doctor, entra con él y quítalo al terminar. Mirar es seguro; editar algo existente (confirmar/cobrar una cita) queda en los datos
+  del registro ajeno, y el servicio contratado se mide por el mejor estado entre sus registros.
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
   (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
