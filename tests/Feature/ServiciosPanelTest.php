@@ -229,6 +229,162 @@ class ServiciosPanelTest extends TestCase
         $this->assertSame('activo', $ajeno->fresh()->estado);
     }
 
+    /* ---------------- modificar: renovar / reemplazar / cancelar ---------------- */
+
+    public function test_modificar_ofrece_renovar_reemplazar_y_quitar_plan_en_ese_orden_junto_al_historial(): void
+    {
+        $medico = $this->medico('ConMenu');
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(Servicios::class)->set('search', $medico->reg_medico)->assertSee('Modificar')->assertSee('Historial');
+        $html = $panel->payload['effects']['html'];
+
+        $this->assertLessThan(strpos($html, 'Reemplazar'), strpos($html, 'Renovar'));
+        $this->assertLessThan(strpos($html, 'Quitar plan'), strpos($html, 'Reemplazar'));
+        $this->assertStringNotContainsString('Deshacer', $html);
+    }
+
+    public function test_sin_servicio_reemplazar_y_quitar_plan_aparecen_deshabilitados(): void
+    {
+        $medico = $this->medico('SinNada');
+        RegMedicoServicio::where('reg_medico', $medico->reg_medico)->delete();
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)->set('search', $medico->reg_medico)
+            ->assertSee('No tiene servicio que reemplazar')
+            ->assertSee('Ya no tiene servicio');
+    }
+
+    public function test_reemplazar_empieza_hoy_sin_conservar_el_tiempo_y_deja_quien_cuando_y_por_que(): void
+    {
+        Carbon::setTestNow('2026-10-05');
+        $medico = $this->medico();
+        $viejo = RegMedicoServicio::where('reg_medico', $medico->reg_medico)->first(); // prueba: hasta 05/11
+        $anual = $this->plan(['frecuencia' => 'anual', 'precio_usd' => 120, 'nombre' => 'Anual 12']);
+        $admin = $this->admin();
+        $this->actingAs($admin);
+
+        Livewire::test(Servicios::class)
+            ->call('abrirReemplazar', $medico->id)
+            ->assertSet('modal', 'reemplazar')
+            ->assertSee('no conserva el tiempo')
+            ->set('planElegido', $anual->id)
+            ->assertSet('meses', 12)->assertSet('monto', 120.0)
+            ->set('motivo', 'Plan equivocado')
+            ->call('reemplazar')
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
+
+        $this->assertSame('cancelado', $viejo->fresh()->estado);
+        $this->assertStringContainsString('Plan equivocado', $viejo->fresh()->nota);
+        $this->assertStringContainsString('por Admin Serv', $viejo->fresh()->nota);
+        $this->assertStringContainsString('05/10/2026', $viejo->fresh()->nota);
+
+        $nuevo = app(ServicioService::class)->actual($medico->reg_medico);
+        $this->assertSame('Anual 12', $nuevo->plan_nombre);
+        $this->assertSame('compra', $nuevo->origen);
+        $this->assertSame('2026-10-05', $nuevo->inicia_el->toDateString()); // hoy, no el 05/11
+        $this->assertSame('2027-10-05', $nuevo->vence_el->toDateString()); // 12 meses desde hoy: el tiempo viejo no se suma
+        $this->assertStringContainsString('Plan equivocado', $nuevo->nota);
+        $this->assertSame(2, RegMedicoServicio::where('reg_medico', $medico->reg_medico)->count()); // nada se borra
+    }
+
+    public function test_reemplazar_cancela_todos_los_periodos_activos_no_solo_el_vigente(): void
+    {
+        Carbon::setTestNow('2026-10-05');
+        $medico = $this->medico();
+        app(ServicioService::class)->renovar($medico->reg_medico, $this->plan(['frecuencia' => 'anual'])); // renovó por adelantado
+        $plan = $this->plan(['nombre' => 'Mensual nuevo']);
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)
+            ->call('abrirReemplazar', $medico->id)
+            ->set('planElegido', $plan->id)->set('motivo', 'Fraude')
+            ->call('reemplazar')->assertHasNoErrors();
+
+        $this->assertSame(2, RegMedicoServicio::where('reg_medico', $medico->reg_medico)->where('estado', 'cancelado')->count());
+        $this->assertSame('2026-11-05', app(ServicioService::class)->estado($medico->reg_medico)['vence_el']);
+    }
+
+    public function test_reemplazar_con_monto_cero_es_cortesia_y_exige_motivo_y_datos_validos(): void
+    {
+        Carbon::setTestNow('2026-10-05');
+        $medico = $this->medico();
+        $plan = $this->plan();
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(Servicios::class)->call('abrirReemplazar', $medico->id)->set('planElegido', $plan->id);
+
+        $panel->set('motivo', '')->call('reemplazar')->assertHasErrors(['motivo'])->assertSet('modal', 'reemplazar');
+        $panel->set('motivo', 'ab')->call('reemplazar')->assertHasErrors(['motivo']);
+        $panel->set('motivo', 'Cortesía')->set('meses', 0)->set('monto', -1)->call('reemplazar')->assertHasErrors(['meses', 'monto']);
+        $this->assertSame('activo', app(ServicioService::class)->actual($medico->reg_medico)->estado); // no cambió nada
+
+        $panel->set('meses', 2)->set('monto', 0)->call('reemplazar')->assertHasNoErrors();
+        $this->assertSame('manual', app(ServicioService::class)->actual($medico->reg_medico)->origen);
+    }
+
+    public function test_quitar_plan_quita_todo_el_servicio_y_deja_de_sincronizar_sin_regalar_otra_prueba(): void
+    {
+        Carbon::setTestNow('2026-10-05');
+        $medico = $this->medico();
+        $servicios = app(ServicioService::class);
+        $servicios->renovar($medico->reg_medico, $this->plan(['frecuencia' => 'anual']));
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)
+            ->call('abrirQuitar', $medico->id)
+            ->assertSet('modal', 'quitar')
+            ->assertSee('deja de sincronizar ahora mismo')
+            ->set('motivo', 'Pago revertido')
+            ->call('quitarPlan')
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
+
+        $estado = $servicios->estado($medico->reg_medico);
+        $this->assertSame('sin_servicio', $estado['estado']);
+        $this->assertFalse($estado['permite_sync']);
+        $this->assertSame(0, RegMedicoServicio::where('reg_medico', $medico->reg_medico)->where('estado', 'activo')->count());
+        $this->assertSame(2, RegMedicoServicio::where('reg_medico', $medico->reg_medico)->count()); // el historial queda
+        $this->assertNull($servicios->otorgarPrueba($medico->reg_medico)); // no se le vuelve a regalar un mes
+
+        Livewire::test(Servicios::class)->call('verHistorial', $medico->id)
+            ->assertSee('Pago revertido')->assertSee('por Admin Serv')->assertSee('Cancelado');
+    }
+
+    public function test_quitar_plan_exige_motivo_y_no_toca_a_otros_medicos(): void
+    {
+        $uno = $this->medico('Uno');
+        $otro = $this->medico('Otro');
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)->call('abrirQuitar', $uno->id)->call('quitarPlan')->assertHasErrors(['motivo'])->assertSet('modal', 'quitar');
+        $this->assertSame('activo', app(ServicioService::class)->actual($uno->reg_medico)->estado);
+
+        Livewire::test(Servicios::class)->call('abrirQuitar', $uno->id)->set('motivo', 'Incidencia')->call('quitarPlan');
+        $this->assertNotNull(app(ServicioService::class)->actual($otro->reg_medico));
+    }
+
+    public function test_reemplazar_o_quitar_plan_sin_servicio_avisa_y_no_abre_la_ventana(): void
+    {
+        $medico = $this->medico();
+        RegMedicoServicio::where('reg_medico', $medico->reg_medico)->delete();
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)->call('abrirReemplazar', $medico->id)->assertSet('modal', null)->assertSee('usa Renovar');
+        Livewire::test(Servicios::class)->call('abrirQuitar', $medico->id)->assertSet('modal', null)->assertSee('ya no tiene servicio');
+    }
+
+    public function test_las_acciones_nuevas_tambien_vuelven_a_comprobar_el_permiso(): void
+    {
+        $medico = $this->medico();
+        $panel = Livewire::actingAs($this->admin())->test(Servicios::class);
+
+        auth()->user()->forceFill(['is_active' => false])->save();
+        $panel->call('abrirQuitar', $medico->id)->assertForbidden();
+        $this->assertSame('activo', app(ServicioService::class)->actual($medico->reg_medico)->estado);
+    }
+
     /* -------------------------------- planes ------------------------------ */
 
     public function test_crear_un_plan_con_tachado_muestra_el_ahorro(): void

@@ -27,7 +27,12 @@ class RoleAndUserSeeder extends Seeder
         $rolePaciente     = Role::firstOrCreate(['name' => 'Paciente', 'guard_name' => 'web']);
         $roleRepresentante = Role::firstOrCreate(['name' => 'Representante', 'guard_name' => 'web']);
 
-        // 2. Crear o recuperar Usuario Root por Defecto
+        // 2. Usuario Root por defecto, con clave conocida: nunca en producción (ahí el primer
+        // administrador sale de `php artisan cuentas:admin`).
+        if (app()->environment('production')) {
+            return;
+        }
+
         $rootUser = User::firstOrCreate(
             ['email' => 'root@admin.com'],
             [
