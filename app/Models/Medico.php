@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\MedicoRegistrado;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,11 @@ class Medico extends Model
         'consultation_fee',
         'is_active',
         'reg_medico', // temporal, tiende a cambiar no usar
+    ];
+
+    /** Al crearse un médico (por cualquier camino) recibe su mes de prueba: ver App\Listeners\OtorgarServicioDePrueba. */
+    protected $dispatchesEvents = [
+        'created' => MedicoRegistrado::class,
     ];
 
     /**
