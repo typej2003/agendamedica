@@ -47,27 +47,53 @@ class WhatsAppWebhookController extends Controller
         Log::info('Webhook recibido de WhatsApp: ' . json_encode($data));
 
         try {
-            if (isset($data['entry'][0]['changes'][0]['value']['messages'][0])) {
-                $messageData = $data['entry'][0]['changes'][0]['value']['messages'][0];
+            $entry = $data['entry'][0] ?? null;
+            $changes = $entry['changes'][0] ?? null;
+            $value = $changes['value'] ?? null;
 
-                $from = $messageData['from'] ?? null;
-                $messageId = $messageData['id'] ?? null;
-                $timestamp = $messageData['timestamp'] ?? null;
-                $messageType = $messageData['type'] ?? null;
+            if ($value) {
+                // 1. Manejo y registro de eventos de estado (sent, delivered, read, failed)
+                if (!empty($value['statuses']) && is_array($value['statuses'])) {
+                    foreach ($value['statuses'] as $statusData) {
+                        $recipientId = $statusData['recipient_id'] ?? null;
+                        $status = $statusData['status'] ?? null;
+                        $statusId = $statusData['id'] ?? null;
 
-                if ($messageType === 'text') {
-                    $bodyText = trim($messageData['text']['body'] ?? '');
+                        if ($status === 'failed') {
+                            $errors = $statusData['errors'] ?? [];
+                            Log::error("WhatsApp status FAILED para {$recipientId} (Msg ID: {$statusId}): " . json_encode($errors));
+                        } else {
+                            Log::info("WhatsApp status [{$status}] para {$recipientId} (Msg ID: {$statusId})");
+                        }
+                    }
+                }
 
-                    Log::info("Mensaje recibido de {$from} (ID: {$messageId}, Time: {$timestamp}): {$bodyText}");
+                // 2. Manejo de mensajes entrantes
+                if (!empty($value['messages']) && is_array($value['messages'])) {
+                    $metadata = $value['metadata'] ?? [];
+                    $incomingPhoneNumberId = $metadata['phone_number_id'] ?? null;
 
-                    if (!empty($bodyText)) {
-                        // Procesar con Gemini AI inyectando el número para contexto del paciente
-                        $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
+                    foreach ($value['messages'] as $messageData) {
+                        $from = $messageData['from'] ?? null;
+                        $messageId = $messageData['id'] ?? null;
+                        $timestamp = $messageData['timestamp'] ?? null;
+                        $messageType = $messageData['type'] ?? null;
 
-                        Log::info("Respuesta generada por Gemini para {$from}: {$aiReply}");
+                        if ($messageType === 'text') {
+                            $bodyText = trim($messageData['text']['body'] ?? '');
 
-                        // Enviar la respuesta vía WhatsApp
-                        $this->whatsAppService->sendMessage($from, $aiReply);
+                            Log::info("Mensaje recibido de {$from} (ID: {$messageId}, Time: {$timestamp}): {$bodyText}");
+
+                            if (!empty($bodyText)) {
+                                // Procesar con Gemini AI inyectando el número para contexto del paciente
+                                $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
+
+                                Log::info("Respuesta generada por Gemini para {$from}: {$aiReply}");
+
+                                // Enviar la respuesta vía WhatsApp asegurando el phone_number_id del destinatario original
+                                $this->whatsAppService->sendMessage($from, $aiReply, $incomingPhoneNumberId);
+                            }
+                        }
                     }
                 }
             }
