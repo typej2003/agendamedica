@@ -153,8 +153,20 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar. |
+| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
+
+**Planes de servicio y vencimiento** (ROADMAP Paso 27). Tablas `planes` (catálogo; `restricciones` en JSON leído con
+`App\Support\RestriccionesPlan`, que completa con valores por defecto lo que falte) y `reg_medico_servicio` (una fila
+por contratación/renovación, copia restricciones y monto del plan; el vigente es la activa de mayor `vence_el`).
+**No toca `medicos`.** `App\Services\ServicioService` resuelve el estado: `vigente`, `gracia` (5 días, todavía
+sincroniza), `vencido` y `sin_servicio`. **Solo bloquea la sincronización**: 402 `servicio_vencido`/`sin_servicio`
+(`error` y `code`) en `sync/cambios/subir`, `sync/carga-inicial/*` y `app/sync-app-data`; `cambios/estado` no se
+bloquea, y `sync-app-data` devuelve un bloque `servicio`. Un médico nuevo recibe el plan `es_default` **gratis por 1
+mes** (evento `MedicoRegistrado`, lo dispara el modelo `Medico`; el default puede ser de pago); quien sincroniza desde
+el escritorio, **1 año gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
+`php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. Falta: pantalla en el panel, límites
+(`max_medicos`, `max_historico_meses`) y el manejo del 402 en el app.
 
 *Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
 
