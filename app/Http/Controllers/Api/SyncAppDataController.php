@@ -282,7 +282,7 @@ class SyncAppDataController extends Controller
      * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
      *
      * @param list<string> $registrosMedicos
-     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, prefix: ?string, user_id: ?int, especialidad: ?string}>
      */
     private function medicosDelTenant(array $registrosMedicos): array
     {
@@ -303,6 +303,10 @@ class SyncAppDataController extends Controller
                 'id' => $medico?->id,
                 'name' => $medico?->name,
                 'lastname' => $medico?->lastname,
+                // Tratamiento ("Dr.", "Dra.") para el título de la agenda, y la cuenta de acceso para
+                // saber cuál de estos médicos es quien tiene la sesión abierta (`users.id`).
+                'prefix' => $medico?->prefix,
+                'user_id' => $medico?->user_id,
                 'especialidad' => $evolucion->especialidad,
                 // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
                 // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un
