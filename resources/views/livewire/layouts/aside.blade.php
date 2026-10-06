@@ -95,6 +95,12 @@
                 <span class="link-text">API Keys</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}">
+                <i class="bi bi-card-checklist"></i>
+                <span class="link-text">Planes y servicios</span>
+            </a>
+        </li>
         @endif
 
         <li class="nav-item mt-auto">

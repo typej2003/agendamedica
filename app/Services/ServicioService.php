@@ -52,26 +52,64 @@ class ServicioService
             ];
         }
 
-        $hoy = ($hoy ?? Carbon::today())->copy()->startOfDay();
-        $vence = $servicio->vence_el->copy()->startOfDay();
-        $dias = (int) $hoy->diffInDays($vence, false); // negativo si ya venció
-        $graciaHasta = $vence->copy()->addDays(config('servicios.dias_gracia'));
-
-        $estado = $dias >= 0 ? self::VIGENTE : ($hoy->lte($graciaHasta) ? self::GRACIA : self::VENCIDO);
+        $c = $this->clasificar($servicio->vence_el, $hoy);
 
         return [
-            'estado' => $estado,
-            'permite_sync' => $estado !== self::VENCIDO,
+            'estado' => $c['estado'],
+            'permite_sync' => $c['estado'] !== self::VENCIDO,
             'reg_medico' => $regMedico,
             'plan' => $servicio->plan_nombre,
             'plan_codigo' => $servicio->plan?->codigo,
             'origen' => $servicio->origen,
             'inicia_el' => $servicio->inicia_el->toDateString(),
-            'vence_el' => $vence->toDateString(),
-            'dias_restantes' => $dias,
-            'gracia_hasta' => $graciaHasta->toDateString(),
+            'vence_el' => $servicio->vence_el->toDateString(),
+            'dias_restantes' => $c['dias'],
+            'gracia_hasta' => $c['gracia_hasta'],
             'restricciones' => $servicio->restricciones->toArray(),
         ];
+    }
+
+    /**
+     * Estado según la fecha de vencimiento (la única regla, la usan la API y el panel).
+     *
+     * @return array{estado:string, dias:int, gracia_hasta:string} `dias` es negativo si ya venció
+     */
+    public function clasificar(Carbon $venceEl, ?Carbon $hoy = null): array
+    {
+        $hoy = ($hoy ?? Carbon::today())->copy()->startOfDay();
+        $vence = $venceEl->copy()->startOfDay();
+        $dias = (int) $hoy->diffInDays($vence, false);
+        $graciaHasta = $vence->copy()->addDays(config('servicios.dias_gracia'));
+
+        return [
+            'estado' => $dias >= 0 ? self::VIGENTE : ($hoy->lte($graciaHasta) ? self::GRACIA : self::VENCIDO),
+            'dias' => $dias,
+            'gracia_hasta' => $graciaHasta->toDateString(),
+        ];
+    }
+
+    /**
+     * El vencimiento vigente de cada `reg_medico` con servicio, en una sola consulta (para listados).
+     *
+     * @return array<string, Carbon> reg_medico => `vence_el`
+     */
+    public function vencimientos(): array
+    {
+        return RegMedicoServicio::where('estado', RegMedicoServicio::ACTIVO)
+            ->selectRaw('reg_medico, max(vence_el) as vence_el')
+            ->groupBy('reg_medico')
+            ->pluck('vence_el', 'reg_medico')
+            ->map(fn ($fecha) => Carbon::parse($fecha))
+            ->all();
+    }
+
+    /** Anula una fila del historial (p. ej. una renovación cargada por error): deja de contar, no se borra. */
+    public function cancelar(RegMedicoServicio $servicio, ?string $nota = null): void
+    {
+        $servicio->forceFill([
+            'estado' => RegMedicoServicio::CANCELADO,
+            'nota' => trim(($servicio->nota ? $servicio->nota . ' · ' : '') . 'Cancelado' . ($nota ? ': ' . $nota : '')),
+        ])->save();
     }
 
     /**
@@ -174,13 +212,31 @@ class ServicioService
      * termina ese (no se pierde nada de lo ya pagado); si no, empieza hoy.
      *
      * @param  float|null  $monto  lo cobrado; por defecto, el precio del plan
+     * @param  int|null  $meses  por defecto, los del plan (así se puede dar de más: "paga 10, disfruta 12")
      */
-    public function renovar(string $regMedico, Plan $plan, ?float $monto = null, ?string $nota = null, string $origen = RegMedicoServicio::ORIGEN_COMPRA): RegMedicoServicio
+    public function renovar(
+        string $regMedico,
+        Plan $plan,
+        ?float $monto = null,
+        ?string $nota = null,
+        string $origen = RegMedicoServicio::ORIGEN_COMPRA,
+        ?int $meses = null
+    ): RegMedicoServicio {
+        return $this->otorgar(
+            $regMedico, $plan, $origen,
+            meses: $meses, monto: $monto ?? (float) $plan->precio_usd, desde: $this->inicioDeRenovacion($regMedico), nota: $nota,
+        );
+    }
+
+    /**
+     * Desde cuándo empezaría un período nuevo: donde termina el servicio actual si todavía no venció (no se
+     * pierde nada de lo ya pagado); null = hoy.
+     */
+    public function inicioDeRenovacion(string $regMedico): ?Carbon
     {
         $actual = $this->actual($regMedico);
-        $desde = $actual && $actual->vence_el->gte(Carbon::today()) ? $actual->vence_el->copy() : null;
 
-        return $this->otorgar($regMedico, $plan, $origen, monto: $monto ?? (float) $plan->precio_usd, desde: $desde, nota: $nota);
+        return $actual && $actual->vence_el->gte(Carbon::today()) ? $actual->vence_el->copy() : null;
     }
 
     /**

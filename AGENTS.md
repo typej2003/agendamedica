@@ -165,8 +165,13 @@ sincroniza), `vencido` y `sin_servicio`. **Solo bloquea la sincronización**: 40
 bloquea, y `sync-app-data` devuelve un bloque `servicio`. Un médico nuevo recibe el plan `es_default` **gratis por 1
 mes** (evento `MedicoRegistrado`, lo dispara el modelo `Medico`; el default puede ser de pago); quien sincroniza desde
 el escritorio, **1 año gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
-`php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. Falta: pantalla en el panel, límites
-(`max_medicos`, `max_historico_meses`) y el manejo del 402 en el app.
+`php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. **Sección "Planes y servicios" del
+panel** (`/admin/servicios`, `Admin\Servicios`, Root o Administrador): pestaña *Servicios por médico* (plan, vencimiento y
+estado; contadores que filtran; **Renovar** con plan/meses/monto/nota, que continúa donde termina el actual; **Historial**
+con cancelar un período) y pestaña *Planes* (alta/edición: frecuencia, monto, tachado con el ahorro, orden, visible,
+activo, predeterminado; no se borran, se desactivan; el predeterminado no se desmarca ni se desactiva, se marca otro).
+Los planes **todavía no tienen restricciones editables** en el panel. Falta: límites (`max_medicos`,
+`max_historico_meses`) y el manejo del 402 en el app.
 
 *Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
 
