@@ -129,9 +129,9 @@
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
-                                                    <button type="button" class="dropdown-item text-danger" wire:click="abrirCancelar({{ $medico->id }})"
+                                                    <button type="button" class="dropdown-item text-danger" wire:click="abrirQuitar({{ $medico->id }})"
                                                             @unless ($conServicio) disabled title="Ya no tiene servicio" @endunless>
-                                                        <i class="bi bi-x-circle me-2"></i> Cancelar
+                                                        <i class="bi bi-x-circle me-2"></i> Quitar plan
                                                     </button>
                                                 </li>
                                             </ul>
@@ -368,14 +368,14 @@
         </div>
     @endif
 
-    {{-- Cancelar --}}
-    @if ($modal === 'cancelar' && $seleccionado)
+    {{-- Quitar plan --}}
+    @if ($modal === 'quitar' && $seleccionado)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form wire:submit.prevent="cancelarPlan">
+                    <form wire:submit.prevent="quitarPlan">
                         <div class="modal-header">
-                            <h5 class="modal-title">Cancelar servicio</h5>
+                            <h5 class="modal-title">Quitar plan</h5>
                             <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
@@ -403,7 +403,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Volver</button>
-                            <button type="submit" class="btn btn-danger">Cancelar servicio</button>
+                            <button type="submit" class="btn btn-danger">Quitar plan</button>
                         </div>
                     </form>
                 </div>

@@ -231,7 +231,7 @@ class ServiciosPanelTest extends TestCase
 
     /* ---------------- modificar: renovar / reemplazar / cancelar ---------------- */
 
-    public function test_modificar_ofrece_renovar_reemplazar_y_cancelar_en_ese_orden_junto_al_historial(): void
+    public function test_modificar_ofrece_renovar_reemplazar_y_quitar_plan_en_ese_orden_junto_al_historial(): void
     {
         $medico = $this->medico('ConMenu');
         $this->actingAs($this->admin());
@@ -240,12 +240,11 @@ class ServiciosPanelTest extends TestCase
         $html = $panel->payload['effects']['html'];
 
         $this->assertLessThan(strpos($html, 'Reemplazar'), strpos($html, 'Renovar'));
-        $this->assertLessThan(strpos($html, 'Cancelar'), strpos($html, 'Reemplazar'));
-        $this->assertStringNotContainsString('Quitar', $html);
+        $this->assertLessThan(strpos($html, 'Quitar plan'), strpos($html, 'Reemplazar'));
         $this->assertStringNotContainsString('Deshacer', $html);
     }
 
-    public function test_sin_servicio_reemplazar_y_cancelar_aparecen_deshabilitados(): void
+    public function test_sin_servicio_reemplazar_y_quitar_plan_aparecen_deshabilitados(): void
     {
         $medico = $this->medico('SinNada');
         RegMedicoServicio::where('reg_medico', $medico->reg_medico)->delete();
@@ -325,7 +324,7 @@ class ServiciosPanelTest extends TestCase
         $this->assertSame('manual', app(ServicioService::class)->actual($medico->reg_medico)->origen);
     }
 
-    public function test_cancelar_quita_todo_el_servicio_y_deja_de_sincronizar_sin_regalar_otra_prueba(): void
+    public function test_quitar_plan_quita_todo_el_servicio_y_deja_de_sincronizar_sin_regalar_otra_prueba(): void
     {
         Carbon::setTestNow('2026-10-05');
         $medico = $this->medico();
@@ -334,11 +333,11 @@ class ServiciosPanelTest extends TestCase
         $this->actingAs($this->admin());
 
         Livewire::test(Servicios::class)
-            ->call('abrirCancelar', $medico->id)
-            ->assertSet('modal', 'cancelar')
+            ->call('abrirQuitar', $medico->id)
+            ->assertSet('modal', 'quitar')
             ->assertSee('deja de sincronizar ahora mismo')
             ->set('motivo', 'Pago revertido')
-            ->call('cancelarPlan')
+            ->call('quitarPlan')
             ->assertHasNoErrors()
             ->assertSet('modal', null);
 
@@ -353,27 +352,27 @@ class ServiciosPanelTest extends TestCase
             ->assertSee('Pago revertido')->assertSee('por Admin Serv')->assertSee('Cancelado');
     }
 
-    public function test_cancelar_exige_motivo_y_no_toca_a_otros_medicos(): void
+    public function test_quitar_plan_exige_motivo_y_no_toca_a_otros_medicos(): void
     {
         $uno = $this->medico('Uno');
         $otro = $this->medico('Otro');
         $this->actingAs($this->admin());
 
-        Livewire::test(Servicios::class)->call('abrirCancelar', $uno->id)->call('cancelarPlan')->assertHasErrors(['motivo'])->assertSet('modal', 'cancelar');
+        Livewire::test(Servicios::class)->call('abrirQuitar', $uno->id)->call('quitarPlan')->assertHasErrors(['motivo'])->assertSet('modal', 'quitar');
         $this->assertSame('activo', app(ServicioService::class)->actual($uno->reg_medico)->estado);
 
-        Livewire::test(Servicios::class)->call('abrirCancelar', $uno->id)->set('motivo', 'Incidencia')->call('cancelarPlan');
+        Livewire::test(Servicios::class)->call('abrirQuitar', $uno->id)->set('motivo', 'Incidencia')->call('quitarPlan');
         $this->assertNotNull(app(ServicioService::class)->actual($otro->reg_medico));
     }
 
-    public function test_reemplazar_o_cancelar_sin_servicio_avisa_y_no_abre_la_ventana(): void
+    public function test_reemplazar_o_quitar_plan_sin_servicio_avisa_y_no_abre_la_ventana(): void
     {
         $medico = $this->medico();
         RegMedicoServicio::where('reg_medico', $medico->reg_medico)->delete();
         $this->actingAs($this->admin());
 
         Livewire::test(Servicios::class)->call('abrirReemplazar', $medico->id)->assertSet('modal', null)->assertSee('usa Renovar');
-        Livewire::test(Servicios::class)->call('abrirCancelar', $medico->id)->assertSet('modal', null)->assertSee('ya no tiene servicio');
+        Livewire::test(Servicios::class)->call('abrirQuitar', $medico->id)->assertSet('modal', null)->assertSee('ya no tiene servicio');
     }
 
     public function test_las_acciones_nuevas_tambien_vuelven_a_comprobar_el_permiso(): void
@@ -382,7 +381,7 @@ class ServiciosPanelTest extends TestCase
         $panel = Livewire::actingAs($this->admin())->test(Servicios::class);
 
         auth()->user()->forceFill(['is_active' => false])->save();
-        $panel->call('abrirCancelar', $medico->id)->assertForbidden();
+        $panel->call('abrirQuitar', $medico->id)->assertForbidden();
         $this->assertSame('activo', app(ServicioService::class)->actual($medico->reg_medico)->estado);
     }
 

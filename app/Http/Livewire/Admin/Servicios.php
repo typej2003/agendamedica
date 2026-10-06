@@ -35,7 +35,7 @@ class Servicios extends Component
     public $search = '';
     public $filtro = 'todos';
 
-    // Ventana abierta: renovar | reemplazar | cancelar | historial | plan | null
+    // Ventana abierta: renovar | reemplazar | quitar | historial | plan | null
     public $modal = null;
 
     // Renovar / reemplazar / cancelar el servicio de un médico
@@ -139,7 +139,7 @@ class Servicios extends Component
             $inicio = $servicios->inicioDeRenovacion((string) $seleccionado->reg_medico);
             $datos['inicioRenovacion'] = $inicio ? $inicio->format('d/m/Y') . ' (cuando termina el actual)' : 'hoy';
         }
-        if ($seleccionado && in_array($this->modal, ['reemplazar', 'cancelar'], true)) {
+        if ($seleccionado && in_array($this->modal, ['reemplazar', 'quitar'], true)) {
             $datos['actual'] = $servicios->estado((string) $seleccionado->reg_medico);
         }
         $datos['planesActivos'] = in_array($this->modal, ['renovar', 'reemplazar'], true) ? Plan::where('activo', true)->orderBy('orden')->orderBy('id')->get() : collect();
@@ -283,8 +283,8 @@ class Servicios extends Component
         $this->cerrarModal();
     }
 
-    /** "Modificar → Cancelar": le quita el servicio a ese médico (una sola persona; no hay cancelación en lote). */
-    public function abrirCancelar(int $medicoId, ServicioService $servicios)
+    /** "Modificar → Quitar plan": le quita el servicio a ese médico (una sola persona; no hay cancelación en lote). */
+    public function abrirQuitar(int $medicoId, ServicioService $servicios)
     {
         $medico = Medico::findOrFail($medicoId);
         if (! $servicios->actual((string) $medico->reg_medico)) {
@@ -296,10 +296,10 @@ class Servicios extends Component
         $this->resetErrorBag();
         $this->medicoId = $medico->id;
         $this->motivo = '';
-        $this->modal = 'cancelar';
+        $this->modal = 'quitar';
     }
 
-    public function cancelarPlan(ServicioService $servicios)
+    public function quitarPlan(ServicioService $servicios)
     {
         $this->validate(['motivo' => 'required|string|min:3|max:150'], [], ['motivo' => 'motivo']);
 
@@ -308,7 +308,7 @@ class Servicios extends Component
 
         session()->flash('message', $cancelados === 0
             ? trim($medico->name . ' ' . $medico->lastname) . ' ya no tenía servicio.'
-            : trim($medico->name . ' ' . $medico->lastname) . ': servicio cancelado, ya no sincroniza. Para devolvérselo, asígnale un plan con Renovar.');
+            : trim($medico->name . ' ' . $medico->lastname) . ': plan quitado, ya no sincroniza. Para devolvérselo, asígnale un plan con Renovar.');
         $this->cerrarModal();
     }
 
