@@ -110,6 +110,12 @@ doctor, como ya era. Lo nuevo se apoya en eso:
 - `User::esAdministrador()` (rol Root o Administrador), `User::administradores()` (scope; no usar `User::role([...])`
   de Spatie con roles que pueden no existir: lanza excepción) y `User::medico()`.
 - El primer administrador se crea con `php artisan cuentas:admin {email}`.
+- **Registros de datos** (menú de 3 puntos de un médico → "Registros de datos"; `CuentaService::registrosDe/registrosAsignables/asignarRegistro/quitarRegistro`):
+  un administrador le da o le quita acceso a los datos de otro `reg_medico`. El sync lee agenda/consultas/récipes por `medico_registros`
+  y pacientes por `medico_pacientes`, así que asignar hace las dos cosas (y quitar las deshace, sin borrar datos). Solo se asignan `reg_medico`
+  que ya existen; el propio no se quita. Sirve para compartir consultorio y para **depurar**: crea un médico de prueba ("Nuevo médico"), asígnale el
+  `reg_medico` del doctor, entra con él y quítalo al terminar. Mirar es seguro; editar algo existente (confirmar/cobrar una cita) queda en los datos
+  del registro ajeno, y el servicio contratado se mide por el mejor estado entre sus registros.
 - **Sección "Usuarios" del panel** (`/admin/cuentas`, componente Livewire `Admin\Cuentas`, ruta en
   `routes/web/cuentas.php`; Root o Administrador): lista de médicos y de administradores, alta con clave temporal
   (se muestra una sola vez), crear acceso a un médico sin cuenta y **editar** nombre, correo, teléfono y licencia
@@ -153,8 +159,28 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar. |
+| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
+
+**Planes de servicio y vencimiento** (ROADMAP Paso 27). Tablas `planes` (catálogo; `restricciones` en JSON leído con
+`App\Support\RestriccionesPlan`, que completa con valores por defecto lo que falte) y `reg_medico_servicio` (una fila
+por contratación/renovación, copia restricciones y monto del plan; el vigente es la activa de mayor `vence_el`).
+**No toca `medicos`.** `App\Services\ServicioService` resuelve el estado: `vigente`, `gracia` (5 días, todavía
+sincroniza), `vencido` y `sin_servicio`. **Solo bloquea la sincronización**: 402 `servicio_vencido`/`sin_servicio`
+(`error` y `code`) en `sync/cambios/subir`, `sync/carga-inicial/*` y `app/sync-app-data`; `cambios/estado` no se
+bloquea, y `sync-app-data` devuelve un bloque `servicio`. Un médico nuevo recibe el plan `es_default` **gratis por 1
+mes** (evento `MedicoRegistrado`, lo dispara el modelo `Medico`; el default puede ser de pago); quien sincroniza desde
+el escritorio, **1 año gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
+`php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`. **Sección "Planes y servicios" del
+panel** (`/admin/servicios`, `Admin\Servicios`, Root o Administrador): pestaña *Servicios por médico* (plan, vencimiento y
+estado; contadores que filtran; botón **Modificar** con **Renovar** (plan/meses/monto/nota, continúa donde termina el
+actual), **Reemplazar** (otro plan **desde hoy**, sin conservar el tiempo; cancela todo lo activo y crea el nuevo en una
+transacción) y **Quitar plan** (cancela todos los períodos activos: sin servicio y sin sincronizar ya; sin deshacer, se
+arregla asignando un plan); Reemplazar y Quitar plan piden **motivo** y lo dejan en `nota` con quién y cuándo
+(`ServicioService::reemplazar`/`cancelarActivos`); y **Historial** con cancelar un período) y pestaña *Planes* (alta/edición: frecuencia, monto, tachado con el ahorro, orden, visible,
+activo, predeterminado; no se borran, se desactivan; el predeterminado no se desmarca ni se desactiva, se marca otro).
+Los planes **todavía no tienen restricciones editables** en el panel. Falta: límites (`max_medicos`,
+`max_historico_meses`) y el manejo del 402 en el app.
 
 *Endpoints viejos* (grupo con `throttle:1000,1`; los usaban los botones que el escritorio ya no tiene):
 
@@ -228,7 +254,11 @@ sistema legado).
    solo crea `Root`, `Medico`, `Secretaria`, `Paciente` y `Representante`. Si tocás permisos, verificá
    cuál de los dos lados es el que manda.
 9. **`RoleAndUserSeeder` crea un usuario Root por defecto con contraseña conocida**
-   (`root@admin.com` / `12345678`). No lo dejes habilitado en un entorno publicado.
+   (`root@admin.com` / `12345678`), igual que `UserSeeder`, `MedicalDataSeeder` y `FakeClinicalDataSeeder`
+   (médicos de ejemplo, también con `12345678`). Con `APP_ENV=production` ya **no** se siembran. Si una base
+   publicada los tiene de antes: crea tu administrador con `php artisan cuentas:admin` y corre
+   `php artisan produccion:limpiar-pruebas` (simula por defecto; `--confirmar` borra; `--conservar=correo`;
+   ver el Paso 28 del `ROADMAP.md`).
 
 ## Dónde está el detalle funcional
 

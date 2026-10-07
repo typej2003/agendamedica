@@ -34,6 +34,7 @@ use App\Models\SyncChange;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\Vademecum;
+use App\Services\ServicioService;
 use App\Sync\CreacionesClinicas;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,18 @@ class SyncAppDataController extends Controller
             $registrosMedicos[] = $medicoModel->reg_medico;
         }
         $registrosMedicos = array_values(array_unique($registrosMedicos));
+
+        // Servicio contratado: vencido (pasada la gracia) no se sincroniza, ni subir ni bajar. El app sigue
+        // funcionando con lo que ya tiene en el teléfono y deja sus cambios en la cola. Un médico que por
+        // alguna vía quedó sin ninguna fila recibe aquí su mes de prueba en vez de quedar sin sincronizar.
+        $servicio = app(ServicioService::class);
+        if ($medicoModel->reg_medico && collect($registrosMedicos)->every(fn ($r) => $servicio->actual($r) === null)) {
+            $servicio->otorgarPrueba($medicoModel->reg_medico);
+        }
+        $estadoServicio = $servicio->mejorEstado($registrosMedicos);
+        if ($bloqueo = $servicio->bloqueo($estadoServicio)) {
+            return $bloqueo;
+        }
 
         $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
         $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
@@ -262,6 +275,11 @@ class SyncAppDataController extends Controller
             // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
             // no por delta.
             'medicos' => $medicos,
+            // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
+            // venza (y no intente sincronizar cuando ya venció).
+            'servicio' => collect($estadoServicio)->only(
+                ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones']
+            )->all(),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],
@@ -282,7 +300,7 @@ class SyncAppDataController extends Controller
      * necesita la `clave` para poder filtrar esas citas (se muestra como "Médico N").
      *
      * @param list<string> $registrosMedicos
-     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, especialidad: ?string}>
+     * @return list<array{clave: int, id: ?int, name: ?string, lastname: ?string, prefix: ?string, user_id: ?int, especialidad: ?string}>
      */
     private function medicosDelTenant(array $registrosMedicos): array
     {
@@ -303,6 +321,10 @@ class SyncAppDataController extends Controller
                 'id' => $medico?->id,
                 'name' => $medico?->name,
                 'lastname' => $medico?->lastname,
+                // Tratamiento ("Dr.", "Dra.") para el título de la agenda, y la cuenta de acceso para
+                // saber cuál de estos médicos es quien tiene la sesión abierta (`users.id`).
+                'prefix' => $medico?->prefix,
+                'user_id' => $medico?->user_id,
                 'especialidad' => $evolucion->especialidad,
                 // Plantillas de mensaje (Paso 23): cada médico solo edita la suya propia (vía
                 // `POST /app/configuracion`, resuelto por la cuenta logueada), pero al enviar un

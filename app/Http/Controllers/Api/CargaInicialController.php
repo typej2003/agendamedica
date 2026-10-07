@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SyncCarga;
 use App\Services\CargaInicialService;
+use App\Events\EscritorioSincronizo;
+use App\Services\ServicioService;
 use App\Services\SyncAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +27,8 @@ class CargaInicialController extends Controller
 {
     public function __construct(
         private SyncAuthService $auth,
-        private CargaInicialService $cargas
+        private CargaInicialService $cargas,
+        private ServicioService $servicio
     ) {
     }
 
@@ -46,6 +49,10 @@ class CargaInicialController extends Controller
             return response()->json([
                 'ok' => false, 'error' => 'parametros', 'mensaje' => 'Faltan reg_medico o tablas.',
             ], 422);
+        }
+
+        if ($bloqueo = $this->bloqueoDeServicio($regMedico)) {
+            return $bloqueo;
         }
 
         $r = $this->cargas->iniciar($regMedico, $tablas);
@@ -133,6 +140,21 @@ class CargaInicialController extends Controller
             ], 403)];
         }
 
+        if ($bloqueo = $this->bloqueoDeServicio($carga->reg_medico)) {
+            return [null, $bloqueo];
+        }
+
         return [$carga, null];
+    }
+
+    /**
+     * Sin servicio vigente no se sube nada. Antes se avisa que el escritorio habló: quien sincroniza desde él
+     * recibe su año de cortesía la primera vez (ver App\Listeners\OtorgarAnioPowerBuilder).
+     */
+    private function bloqueoDeServicio(string $regMedico): ?JsonResponse
+    {
+        EscritorioSincronizo::dispatch($regMedico);
+
+        return $this->servicio->bloqueo($this->servicio->estado($regMedico));
     }
 }

@@ -180,7 +180,7 @@
                     <label for="email" class="form-label small fw-bold" style="color: var(--dark-color);">Correo electrónico</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        <input type="email" name="email" id="email" value="{{ old('email', 'carlos@gmail.com') }}" 
+                        <input type="email" name="email" id="email" value="{{ old('email') }}"
                                class="form-control @error('email') is-invalid @enderror" 
                                placeholder="ejemplo@correo.com" required autocomplete="email" autofocus>
                         @error('email')
@@ -196,7 +196,7 @@
                     <label for="password" class="form-label small fw-bold" style="color: var(--dark-color);">Contraseña</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input type="password" name="password" id="password" value="12345678" 
+                        <input type="password" name="password" id="password"
                                class="form-control @error('password') is-invalid @enderror" 
                                placeholder="••••••••" required autocomplete="current-password">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword">

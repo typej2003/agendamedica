@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
 use App\Models\SyncCarga;
+use App\Events\EscritorioSincronizo;
+use App\Services\ServicioService;
 use App\Services\SyncAuthService;
 use App\Sync\Escritorio\CambiosEscritorio;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +22,7 @@ use Illuminate\Http\Request;
  */
 class CambiosEscritorioController extends Controller
 {
-    public function __construct(private SyncAuthService $auth)
+    public function __construct(private SyncAuthService $auth, private ServicioService $servicio)
     {
     }
 
@@ -43,8 +45,12 @@ class CambiosEscritorioController extends Controller
             return $error;
         }
 
+        // Habló el escritorio: si es la primera vez, recibe su año de cortesía (antes de leer el estado).
+        EscritorioSincronizo::dispatch($regMedico);
+
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
         $medico = $this->medicoDe($regMedico);
+        $servicio = $this->servicio->estado($regMedico);
 
         return response()->json([
             'ok'     => true,
@@ -54,6 +60,15 @@ class CambiosEscritorioController extends Controller
             'carga'  => $carga ? $carga->estado : 'ninguna',
             'tablas' => implode(',', config('sync_legado.tablas', [])),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
+            // Servicio contratado (se muestra en la pantalla de sincronización). Esta respuesta nunca se bloquea:
+            // con el servicio vencido el escritorio tiene que poder enterarse para avisarlo.
+            // `servicio_estado`: vigente | gracia | vencido | sin_servicio. `servicio_dias`: días que faltan
+            // (negativo si ya venció). Las fechas van como AAAA-MM-DD.
+            'servicio_estado' => $servicio['estado'],
+            'servicio_plan'   => $servicio['plan'] ?? '',
+            'servicio_vence'  => $servicio['vence_el'] ?? '',
+            'servicio_dias'   => $servicio['dias_restantes'] ?? '',
+            'servicio_gracia_hasta' => $servicio['gracia_hasta'] ?? '',
         ]);
     }
 
@@ -62,6 +77,11 @@ class CambiosEscritorioController extends Controller
         [$regMedico, $error] = $this->medico($request);
         if ($error) {
             return $error;
+        }
+
+        EscritorioSincronizo::dispatch($regMedico);
+        if ($bloqueo = $this->servicio->bloqueo($this->servicio->estado($regMedico))) {
+            return $bloqueo;
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();

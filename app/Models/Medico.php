@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Events\MedicoRegistrado;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Medico extends Model
@@ -31,6 +33,11 @@ class Medico extends Model
         'reg_medico', // temporal, tiende a cambiar no usar
     ];
 
+    /** Al crearse un médico (por cualquier camino) recibe su mes de prueba: ver App\Listeners\OtorgarServicioDePrueba. */
+    protected $dispatchesEvents = [
+        'created' => MedicoRegistrado::class,
+    ];
+
     /**
      * Deja el prefijo listo para guardar: sin espacios, `null` si quedó vacío y con punto final ("Dr" -> "Dr.").
      * Va como mutador para que valga igual en el panel de Usuarios, en el listado viejo y en cualquier alta.
@@ -48,6 +55,12 @@ class Medico extends Model
     public function setPrefixAttribute($valor): void
     {
         $this->attributes['prefix'] = self::normalizarPrefijo($valor);
+    }
+
+    /** Todos los `reg_medico` a los que tiene acceso (el suyo y los que se le asignaron desde el panel). */
+    public function registros(): HasMany
+    {
+        return $this->hasMany(MedicoRegistro::class, 'medico_id', 'id');
     }
 
     public function registro(): HasOne
