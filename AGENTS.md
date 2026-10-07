@@ -259,6 +259,15 @@ sistema legado).
    publicada los tiene de antes: crea tu administrador con `php artisan cuentas:admin` y corre
    `php artisan produccion:limpiar-pruebas` (simula por defecto; `--confirmar` borra; `--conservar=correo`;
    ver el Paso 28 del `ROADMAP.md`).
+10. **`->timestamp()` no nullable en la primera columna TIMESTAMP de una tabla se auto-actualiza sola** en
+    MySQL/MariaDB con `explicit_defaults_for_timestamp` deshabilitado (el default en MariaDB y MySQL ≤ 8.0):
+    el motor le agrega `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`, así que **cualquier UPDATE de
+    la fila pisa esa columna con "ahora"** si el UPDATE no la menciona. Pasó de verdad (2026-10-07): las API
+    keys del escritorio "duraban 24 horas" porque `sync_credentials.expires_at` era `timestamp NOT NULL` y
+    `SyncAuthService` guarda `last_used_at` en cada request; la credencial vencía en su primer uso. Para
+    fechas que no son "cuándo se tocó la fila" usá `->dateTime()` (además evita el techo de 2038 y la
+    conversión por zona horaria). Corregido por `2026_10_07_120000_corrige_expires_at_de_sync_credentials`;
+    `expires_at` era la única columna del esquema con ese patrón.
 
 ## Dónde está el detalle funcional
 

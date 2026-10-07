@@ -37,7 +37,13 @@ return new class extends Migration
             $table->string('token_hash', 64)->unique();
 
             // Vencimiento absoluto, verificado en el servidor. Decisión del usuario: 1 año.
-            $table->timestamp('expires_at')->index();
+            //
+            // `dateTime()` y NO `timestamp()`: esta es la primera columna TIMESTAMP de la tabla y, en
+            // MySQL/MariaDB con `explicit_defaults_for_timestamp` deshabilitado, `timestamp NOT NULL`
+            // recibe solo `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` — el vencimiento se
+            // pisaba en cada UPDATE (el sync guarda `last_used_at`) y las credenciales vencían al primer
+            // uso. Ver la migración `2026_10_07_120000_corrige_expires_at_de_sync_credentials`.
+            $table->dateTime('expires_at')->index();
 
             // Revocación inmediata (equipo robado, técnico que se va, reinstalación).
             $table->timestamp('revoked_at')->nullable();
