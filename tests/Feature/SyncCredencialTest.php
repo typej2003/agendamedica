@@ -100,6 +100,33 @@ class SyncCredencialTest extends TestCase
             ->assertJson(['status' => 'success']);
     }
 
+    /**
+     * Usar la credencial no puede mover su vencimiento.
+     *
+     * Es el invariante que rompió producción el 2026-10-07: `validarToken()` guarda `last_used_at` en cada
+     * petición autenticada, y con `expires_at` declarado `TIMESTAMP NOT NULL` (la primera columna TIMESTAMP
+     * de la tabla) MySQL/MariaDB le agregaba `ON UPDATE current_timestamp()`, así que el UPDATE del último
+     * uso pisaba el vencimiento con "ahora" y la credencial vencía en su primer sync. Acá se fija el lado de
+     * la aplicación (que guardar el uso no recalcule ni pise `expires_at`); la trampa del motor se corrige en
+     * la migración `2026_10_07_120000_corrige_expires_at_de_sync_credentials` — SQLite (la base de tests) no
+     * la tiene, por eso este test solo cubre la mitad que sí se puede reproducir acá.
+     */
+    public function test_usar_la_credencial_no_mueve_el_vencimiento(): void
+    {
+        [$token, $cred] = $this->emitirCredencial('test-sync-015');
+        $vence = $cred->expires_at->toDateTimeString();
+
+        $this->postJson('/api/sync/upload-batch', ['table' => 'motivo_cita', 'data' => []],
+            ['Authorization' => 'Bearer ' . $token])
+            ->assertStatus(200);
+
+        $cred->refresh();
+
+        $this->assertNotNull($cred->last_used_at, 'El uso tiene que quedar registrado.');
+        $this->assertTrue($cred->estaActiva(), 'La credencial tiene que seguir activa después de usarse.');
+        $this->assertSame($vence, $cred->expires_at->toDateTimeString(), 'El vencimiento no puede moverse al usar la credencial.');
+    }
+
     public function test_la_credencial_vencida_es_rechazada(): void
     {
         [$token] = $this->emitirCredencial('test-sync-003', ['expires_at' => now()->subDay()]);
