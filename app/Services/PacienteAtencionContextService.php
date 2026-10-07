@@ -18,6 +18,65 @@ class PacienteAtencionContextService
     public const LIMITE_CUPOS_DIARIOS = 15;
 
     /**
+     * Busca al paciente en el modelo Paciente probando variantes del número telefónico.
+     */
+    public function buscarPacientePorTelefono(string $telefono): ?Paciente
+    {
+        $clean = preg_replace('/\D/', '', $telefono); // Ej: 584165800403
+
+        if (empty($clean)) {
+            return null;
+        }
+
+        $posiblesValores = [
+            $telefono,
+            $clean,
+        ];
+
+        // Variaciones para números en Venezuela (+58)
+        if (str_starts_with($clean, '58') && strlen($clean) >= 12) {
+            $nacional = '0' . substr($clean, 2); // 04165800403
+            $sinPrefijo = substr($clean, 2);      // 4165800403
+            $posiblesValores[] = $nacional;
+            $posiblesValores[] = $sinPrefijo;
+            $posiblesValores[] = '+' . $clean;
+            if (strlen($nacional) === 11) {
+                $posiblesValores[] = substr($nacional, 0, 4) . '-' . substr($nacional, 4); // 0416-5800403
+                $posiblesValores[] = substr($nacional, 0, 4) . ' ' . substr($nacional, 4); // 0416 5800403
+            }
+        } elseif (str_starts_with($clean, '0') && strlen($clean) === 11) {
+            $internacional = '58' . substr($clean, 1);
+            $posiblesValores[] = $internacional;
+            $posiblesValores[] = '+' . $internacional;
+            $posiblesValores[] = substr($clean, 1);
+            $posiblesValores[] = substr($clean, 0, 4) . '-' . substr($clean, 4);
+        }
+
+        $posiblesValores = array_unique(array_filter($posiblesValores));
+
+        try {
+            // 1. Búsqueda exacta por cualquiera de las variantes formateadas
+            $paciente = Paciente::whereIn('telefono', $posiblesValores)->first();
+            if ($paciente) {
+                return $paciente;
+            }
+
+            // 2. Búsqueda por los últimos 7 dígitos locales (número de abonado en VE)
+            $ultimos7 = substr($clean, -7);
+            if (strlen($ultimos7) === 7) {
+                $paciente = Paciente::where('telefono', 'like', "%{$ultimos7}%")->first();
+                if ($paciente) {
+                    return $paciente;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PacienteAtencionContextService: error al buscar paciente: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Obtiene el contexto completo del paciente a partir de su número de teléfono.
      * Consulta Paciente, MedicoPaciente, Medico y Specialty.
      *
@@ -26,21 +85,10 @@ class PacienteAtencionContextService
      */
     public function obtenerContextoPaciente(string $telefono): array
     {
-        $ultimosDigitos = substr(preg_replace('/\D/', '', $telefono), -8);
-
-        $paciente = null;
-        if (!empty($ultimosDigitos)) {
-            try {
-                $paciente = Paciente::where('telefono', 'like', "%{$ultimosDigitos}%")->first();
-            } catch (\Throwable $e) {
-                Log::warning('PacienteAtencionContextService: error al buscar paciente: ' . $e->getMessage());
-            }
-        }
-
-        // Catálogo de especialidades reales (modelo Specialty)
+        $paciente = $this->buscarPacientePorTelefono($telefono);
         $especialidades = $this->obtenerEspecialidadesDisponibles();
 
-        // 1. Paciente NO registrado
+        // 1. Paciente NO registrado en la tabla pacientes
         if (!$paciente) {
             return [
                 'existe' => false,
@@ -52,7 +100,7 @@ class PacienteAtencionContextService
             ];
         }
 
-        // 2. Paciente SÍ registrado
+        // 2. Paciente SÍ registrado en la tabla pacientes
         $nombreCompleto = trim("{$paciente->nombres} {$paciente->apellidos}");
         $numhistoria = $paciente->numhistoria;
 
@@ -103,6 +151,71 @@ class PacienteAtencionContextService
             'tiene_medicos' => !empty($medicosAsociados),
             'especialidades' => $especialidades,
         ];
+    }
+
+    /**
+     * Genera el mensaje estructurado de WhatsApp para el primer contacto o saludo.
+     */
+    public function generarMensajePrimerContacto(array $contexto): string
+    {
+        $especialidades = $contexto['especialidades'] ?? [];
+
+        // CASO 1: El teléfono NO existe en la tabla pacientes (Paciente Nuevo)
+        if (!$contexto['existe']) {
+            $msg = "¡Hola! 👋 Te damos la bienvenida a *Doctorisimo*, tu plataforma de atención médica y gestión de citas.\n\n";
+            $msg .= "¿A cuál especialidad médica deseas buscar un médico para agendar tu cita?\n\n";
+
+            foreach ($especialidades as $idx => $esp) {
+                $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
+                $msg .= "{$numEmoji} {$esp}\n";
+            }
+
+            $msg .= "\nPor favor, responde con el número o nombre de la especialidad que necesitas. 😊";
+            return $msg;
+        }
+
+        // CASO 2: El teléfono SÍ existe en la tabla pacientes
+        $nombre = $contexto['nombre'];
+        $medicos = $contexto['medicos_asociados'] ?? [];
+        $totalMedicos = count($medicos);
+
+        // 2.A: Si son varios médicos en MedicoPaciente
+        if ($totalMedicos > 1) {
+            $msg = "¡Hola, *{$nombre}*! 👋 Bienvenido a *Doctorisimo*. Es un gusto saludarte.\n\n";
+            $msg .= "Vemos que en nuestro consultorio te has atendido anteriormente con los siguientes médicos:\n\n";
+
+            foreach ($medicos as $idx => $med) {
+                $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
+                $msg .= "{$numEmoji} *{$med['nombre']}* ({$med['especialidad']})\n";
+            }
+
+            $msg .= "\n¿A qué médico deseas referenciar para agendar tu cita?\n";
+            $msg .= "*(Escribe el número o el nombre de tu doctor, o indícanos si prefieres otra especialidad)*.";
+            return $msg;
+        }
+
+        // 2.B: Si es 1 solo médico en MedicoPaciente
+        if ($totalMedicos === 1) {
+            $med = $medicos[0];
+            $msg = "¡Hola, *{$nombre}*! 👋 Bienvenido a *Doctorisimo*. Es un gusto saludarte.\n\n";
+            $msg .= "Vemos que tu médico tratante registrado es el *{$med['nombre']}* ({$med['especialidad']}).\n\n";
+            $msg .= "¿Deseas consultar la disponibilidad de cita con tu doctor habitual o prefieres buscar otra especialidad médica?\n\n";
+            $msg .= "1️⃣ Consultar disponibilidad con {$med['nombre']}\n";
+            $msg .= "2️⃣ Buscar otra especialidad médica";
+            return $msg;
+        }
+
+        // 2.C: Si NO existe registro en MedicoPaciente
+        $msg = "¡Hola, *{$nombre}*! 👋 Bienvenido a *Doctorisimo*. Es un gusto saludarte.\n\n";
+        $msg .= "¿A cuál especialidad médica deseas buscar un médico para agendar tu cita?\n\n";
+
+        foreach ($especialidades as $idx => $esp) {
+            $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
+            $msg .= "{$numEmoji} {$esp}\n";
+        }
+
+        $msg .= "\nPor favor, responde con el número o nombre de la especialidad que buscas. 😊";
+        return $msg;
     }
 
     /**
@@ -210,14 +323,14 @@ class PacienteAtencionContextService
     /**
      * Obtiene la lista de nombres de especialidades desde el modelo Specialty.
      */
-    protected function obtenerEspecialidadesDisponibles(): array
+    public function obtenerEspecialidadesDisponibles(): array
     {
         try {
             if (class_exists(Specialty::class)) {
                 $lista = Specialty::orderBy('name')
                     ->pluck('name')
                     ->filter()
-                    ->take(10)
+                    ->take(8)
                     ->values()
                     ->toArray();
 
@@ -230,5 +343,26 @@ class PacienteAtencionContextService
         }
 
         return ['Medicina General', 'Ginecología y Obstetricia', 'Pediatría', 'Cardiología', 'Traumatología'];
+    }
+
+    /**
+     * Ayudante para emojis numéricos
+     */
+    protected function obtenerNumeroEmoji(int $numero): string
+    {
+        $emojis = [
+            1 => '1️⃣',
+            2 => '2️⃣',
+            3 => '3️⃣',
+            4 => '4️⃣',
+            5 => '5️⃣',
+            6 => '6️⃣',
+            7 => '7️⃣',
+            8 => '8️⃣',
+            9 => '9️⃣',
+            10 => '🔟',
+        ];
+
+        return $emojis[$numero] ?? "{$numero}.";
     }
 }

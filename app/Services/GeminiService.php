@@ -26,12 +26,7 @@ class GeminiService
      */
     public function generarRespuesta(string $mensajeUsuario, ?string $telefono = null): string
     {
-        if (empty($this->apiKey)) {
-            Log::error('GeminiService: API Key no configurada o vacía.');
-            return $this->generarRespuestaFallback($mensajeUsuario, $telefono);
-        }
-
-        // 1. Obtener contexto del paciente
+        // 1. Obtener contexto del paciente por su teléfono
         $contexto = $telefono
             ? $this->contextService->obtenerContextoPaciente($telefono)
             : [
@@ -40,13 +35,87 @@ class GeminiService
                 'numhistoria' => null,
                 'medicos_asociados' => [],
                 'tiene_medicos' => false,
-                'especialidades' => ['Medicina General', 'Ginecología', 'Pediatría', 'Cardiología'],
+                'especialidades' => $this->contextService->obtenerEspecialidadesDisponibles(),
             ];
 
-        // 2. Construir el System Instruction enriquecido
+        // 2. Manejo directo si el usuario responde con el número de opción del médico mostrado
+        $respuestaDirectaOpcion = $this->resolverOpcionDirecta($mensajeUsuario, $contexto);
+        if ($respuestaDirectaOpcion !== null) {
+            return $respuestaDirectaOpcion;
+        }
+
+        // 3. Si el mensaje es un saludo o la primera petición, responder según el flujo exacto requerido
+        if ($this->esSaludoOPrimerMensaje($mensajeUsuario)) {
+            return $this->contextService->generarMensajePrimerContacto($contexto);
+        }
+
+        // 4. Si es una consulta conversacional, procesar con Gemini AI y Function Calling
+        if (empty($this->apiKey)) {
+            Log::error('GeminiService: API Key no configurada o vacía.');
+            return $this->contextService->generarMensajePrimerContacto($contexto);
+        }
+
+        return $this->procesarConGeminiAI($mensajeUsuario, $contexto);
+    }
+
+    /**
+     * Evalúa si el mensaje recibido corresponde a un saludo o primer contacto.
+     */
+    protected function esSaludoOPrimerMensaje(string $mensaje): bool
+    {
+        $limpio = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $mensaje)));
+
+        if (is_numeric($limpio)) {
+            return false;
+        }
+
+        $saludos = [
+            'hola', 'ola', 'buenas', 'buenos dias', 'buenos días', 'buenas tardes',
+            'buenas noches', 'buen dia', 'buen día', 'saludos', 'hola buen dia',
+            'hola buenas', 'hola buenas tardes', 'hola buenos dias', 'menu', 'inicio',
+            'empezar', 'start', 'ayuda', 'hi', 'hello'
+        ];
+
+        return in_array($limpio, $saludos) || in_array($limpio, ['hola!', 'hola.', 'buenas!']);
+    }
+
+    /**
+     * Resuelve si el usuario seleccionó una opción numérica directa correspondiente
+     * a uno de sus médicos habituales mostrados en el menú previo.
+     */
+    protected function resolverOpcionDirecta(string $mensajeUsuario, array $contexto): ?string
+    {
+        $trim = trim($mensajeUsuario);
+        $medicos = $contexto['medicos_asociados'] ?? [];
+
+        if (is_numeric($trim)) {
+            $indice = (int)$trim - 1;
+            if (isset($medicos[$indice])) {
+                $medicoElegido = $medicos[$indice];
+                $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
+
+                if (!empty($disponibilidad['disponible'])) {
+                    return "¡Perfecto! Hemos consultado la agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}):\n\n"
+                        . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
+                        . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
+                        . "¿Deseas que reservemos tu cita para esta fecha?";
+                } else {
+                    return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                        . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Procesa con la API de Gemini integrando Function Calling (Tools).
+     */
+    protected function procesarConGeminiAI(string $mensajeUsuario, array $contexto): string
+    {
         $systemInstruction = $this->construirSystemInstruction($contexto);
 
-        // 3. Declaración de herramientas (Tools / Function Calling)
         $tools = [
             [
                 'function_declarations' => [
@@ -99,7 +168,6 @@ class GeminiService
             ],
         ];
 
-        // Modelos de fallback automático
         $modelosFallback = array_unique([$this->model, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-1.5-flash']);
 
         foreach ($modelosFallback as $modeloActual) {
@@ -117,7 +185,7 @@ class GeminiService
                 if ($response->successful()) {
                     $candidate = $response->json('candidates.0.content.parts.0');
 
-                    // Evaluar si Gemini invocó una Tool (Function Calling)
+                    // Evaluar si Gemini solicitó ejecutar una Tool (Function Calling)
                     if (isset($candidate['functionCall'])) {
                         $functionCall = $candidate['functionCall'];
                         $functionName = $functionCall['name'];
@@ -133,7 +201,7 @@ class GeminiService
                             $resultadoTool = $this->contextService->buscarMedicosPorEspecialidad($esp);
                         }
 
-                        // Segundo turno: Enviar la respuesta de la tool a Gemini
+                        // Segundo turno para que Gemini redacte la respuesta con los datos de Cola
                         $followUpPayload = [
                             'system_instruction' => [
                                 'parts' => [['text' => $systemInstruction]],
@@ -185,15 +253,14 @@ class GeminiService
                     'body' => $response->body(),
                 ]);
 
-                usleep(250_000); // 250 ms
+                usleep(250_000);
 
             } catch (\Throwable $e) {
                 Log::error("GeminiService Exception con modelo {$modeloActual}: " . $e->getMessage());
             }
         }
 
-        // Si falla la API de Gemini, responder con el fallback enriquecido
-        return $this->generarRespuestaFallback($mensajeUsuario, $telefono);
+        return $this->contextService->generarMensajePrimerContacto($contexto);
     }
 
     /**
@@ -207,104 +274,57 @@ class GeminiService
         $prompt .= "Tu objetivo es brindar una atención cálida, humana, profesional, clara y eficiente por WhatsApp.\n";
         $prompt .= "Hoy es: {$hoy}.\n\n";
 
-        $especialidadesStr = implode(', ', $contexto['especialidades']);
+        $especialidadesStr = implode(', ', $contexto['especialidades'] ?? []);
 
         if ($contexto['existe']) {
             $nombre = $contexto['nombre'];
-            $prompt .= "ESTADO DEL PACIENTE: REGISTRADO.\n";
+            $prompt .= "ESTADO DEL PACIENTE: REGISTRADO EN EL SISTEMA.\n";
             $prompt .= "- Nombre completo: {$nombre}.\n";
             $prompt .= "- Historia clínica: #{$contexto['numhistoria']}.\n";
 
-            $medicos = $contexto['medicos_asociados'];
+            $medicos = $contexto['medicos_asociados'] ?? [];
             $totalMedicos = count($medicos);
 
             if ($totalMedicos > 1) {
-                $prompt .= "- El paciente tiene antecedentes en MedicoPaciente con {$totalMedicos} médicos tratantes:\n";
+                $prompt .= "- El paciente ha sido atendido en MedicoPaciente por {$totalMedicos} médicos:\n";
                 foreach ($medicos as $i => $m) {
                     $prompt .= "  " . ($i + 1) . ". {$m['nombre']} ({$m['especialidad']}) [reg_medico: {$m['reg_medico']}]\n";
                 }
                 $prompt .= "\nREGLAS DE ATENCIÓN:\n";
-                $prompt .= "1. SALUDO INICIAL: Saluda cordialmente al paciente por su nombre y apellido ('¡Hola, {$nombre}! 👋 Bienvenido a Doctorisimo').\n";
-                $prompt .= "2. INDAGAR MÉDICO: Como ha sido atendido por varios médicos, muéstrale la lista numerada de sus doctores conocidos y pregúntale a qué médico desea referenciar o agendar su consulta.\n";
-                $prompt .= "3. También dale la opción de indicar si prefiere consultar una especialidad diferente.\n";
-                $prompt .= "4. CONSULTA DE CUPO: Cuando el paciente elija a uno de sus médicos (por número o nombre), DEBES invocar la herramienta 'consultar_proximo_cupo_disponible' con el 'reg_medico' de ese médico.\n";
-                $prompt .= "5. RESPUESTA DE CUPO: Con la respuesta devuelta por la función, infórmale el día más próximo donde le queda cupo y cuántos cupos le quedan.\n";
+                $prompt .= "1. Saluda cordialmente al paciente por su nombre y apellido ('¡Hola, {$nombre}! 👋').\n";
+                $prompt .= "2. Pregúntale a qué médico desea referenciar o agendar su cita (muestra la lista numerada).\n";
+                $prompt .= "3. Cuando el paciente elija o mencione a un médico, DEBES invocar 'consultar_proximo_cupo_disponible' con el 'reg_medico' de ese médico.\n";
+                $prompt .= "4. Informa el día más próximo donde le queda cupo en Cola y los cupos restantes.\n";
             } elseif ($totalMedicos === 1) {
                 $m = $medicos[0];
-                $prompt .= "- El paciente tiene un médico tratante registrado en MedicoPaciente:\n";
+                $prompt .= "- El paciente tiene un médico habitual en MedicoPaciente:\n";
                 $prompt .= "  {$m['nombre']} ({$m['especialidad']}) [reg_medico: {$m['reg_medico']}].\n";
                 $prompt .= "\nREGLAS DE ATENCIÓN:\n";
-                $prompt .= "1. SALUDO INICIAL: Saluda al paciente cordialmente por su nombre ('¡Hola, {$nombre}! 👋').\n";
-                $prompt .= "2. CONFIRMAR MÉDICO: Pregúntale si desea consultar la disponibilidad de cita con su médico habitual ({$m['nombre']}) o si desea consultar otra especialidad médica.\n";
-                $prompt .= "3. CONSULTA DE CUPO: Si confirma que desea cita con ese doctor, DEBES llamar a 'consultar_proximo_cupo_disponible' con reg_medico '{$m['reg_medico']}'.\n";
-                $prompt .= "4. Informa el día más cercano disponible y los cupos libres según el resultado.\n";
+                $prompt .= "1. Saluda al paciente cordialmente por su nombre ('¡Hola, {$nombre}! 👋').\n";
+                $prompt .= "2. Pregúntale si desea cita con su médico habitual ({$m['nombre']}) o si desea consultar otra especialidad médica.\n";
+                $prompt .= "3. Si confirma que desea cita con ese doctor, DEBES invocar 'consultar_proximo_cupo_disponible' con reg_medico '{$m['reg_medico']}'.\n";
+                $prompt .= "4. Informa el día más próximo disponible en Cola y los cupos libres.\n";
             } else {
-                // Paciente existe pero no tiene médicos en MedicoPaciente
                 $prompt .= "- El paciente está registrado pero NO tiene médicos previos en MedicoPaciente.\n";
                 $prompt .= "\nREGLAS DE ATENCIÓN:\n";
-                $prompt .= "1. SALUDO INICIAL: Salúdalo cordialmente por su nombre ('¡Hola, {$nombre}! 👋 Bienvenido a Doctorisimo').\n";
-                $prompt .= "2. PREGUNTAR ESPECIALIDAD: Como no tiene médico previo registrado, pregúntale a cuál especialidad médica desea buscar un médico para agendar su cita.\n";
-                $prompt .= "   Menciónale nuestras especialidades disponibles: {$especialidadesStr}.\n";
-                $prompt .= "3. Al indicar una especialidad, llama a 'buscar_medicos_por_especialidad' y luego consulta el cupo más próximo con 'consultar_proximo_cupo_disponible'.\n";
+                $prompt .= "1. Salúdalo por su nombre: '¡Hola, {$nombre}! 👋'.\n";
+                $prompt .= "2. Pregúntale a cuál especialidad médica desea buscar un médico para agendar su cita.\n";
+                $prompt .= "   Especialidades disponibles: {$especialidadesStr}.\n";
+                $prompt .= "3. Al indicar la especialidad, llama a 'buscar_medicos_por_especialidad' y luego a 'consultar_proximo_cupo_disponible'.\n";
             }
         } else {
-            // Paciente NO registrado
-            $prompt .= "ESTADO DEL PACIENTE: NO REGISTRADO (Primer contacto / Nuevo usuario).\n";
+            $prompt .= "ESTADO DEL PACIENTE: NO REGISTRADO (Paciente nuevo / primer contacto).\n";
             $prompt .= "\nREGLAS DE ATENCIÓN:\n";
-            $prompt .= "1. SALUDO INICIAL: Saluda de forma general y cordial, dándole la bienvenida a Doctorisimo ('¡Hola! 👋 Bienvenido a Doctorisimo').\n";
-            $prompt .= "2. PREGUNTAR ESPECIALIDAD: Pregúntale a cuál especialidad médica desea buscar un médico para agendar su cita.\n";
-            $prompt .= "   Muestra las opciones de especialidades disponibles: {$especialidadesStr}.\n";
-            $prompt .= "3. Una vez indicada la especialidad o el médico, usa las herramientas para verificar doctores y consultar el día más próximo con cupos en 'Cola'.\n";
+            $prompt .= "1. Saluda cordialmente dándole la bienvenida a Doctorisimo.\n";
+            $prompt .= "2. Pregúntale a cuál especialidad médica desea buscar un médico para agendar su cita.\n";
+            $prompt .= "   Especialidades disponibles: {$especialidadesStr}.\n";
+            $prompt .= "3. Al indicar la especialidad o médico, consulta los cupos en Cola con 'consultar_proximo_cupo_disponible'.\n";
         }
 
         $prompt .= "\nREGLAS GENERALES:\n";
-        $prompt .= "- Sé empático, claro, conciso y usa viñetas/emojis moderados.\n";
+        $prompt .= "- Sé conciso, empático y usa formato de WhatsApp (negritas con asteriscos, emojis moderados).\n";
         $prompt .= "- NUNCA inventes fechas ni cupos; utiliza SIEMPRE el resultado de 'consultar_proximo_cupo_disponible'.\n";
-        $prompt .= "- NO diagnostiques ni mediques. Ante emergencias graves, indica acudir a urgencias.\n";
 
         return $prompt;
-    }
-
-    /**
-     * Respuesta de fallback si los modelos de Gemini no responden
-     */
-    protected function generarRespuestaFallback(string $mensajeUsuario, ?string $telefono = null): string
-    {
-        $contexto = $telefono
-            ? $this->contextService->obtenerContextoPaciente($telefono)
-            : ['existe' => false];
-
-        if (!empty($contexto['existe'])) {
-            $nombre = $contexto['nombre'];
-            $medicos = $contexto['medicos_asociados'] ?? [];
-
-            if (count($medicos) > 1) {
-                $salida = "¡Hola, {$nombre}! 👋 Bienvenido a Doctorisimo.\n\n"
-                    . "Vemos que anteriormente te has atendido con nuestros siguientes especialistas:\n";
-                foreach ($medicos as $i => $m) {
-                    $salida .= ($i + 1) . "️⃣ {$m['nombre']} ({$m['especialidad']})\n";
-                }
-                $salida .= "\n¿Con cuál de ellos deseas agendar tu cita? Escribe el número o el nombre del doctor.";
-                return $salida;
-            }
-
-            if (count($medicos) === 1) {
-                $m = $medicos[0];
-                return "¡Hola, {$nombre}! 👋 Bienvenido a Doctorisimo.\n\n"
-                    . "¿Deseas agendar una cita con tu médico habitual, {$m['nombre']} ({$m['especialidad']}), o prefieres consultar otra especialidad?";
-            }
-
-            $especialidadesStr = implode("\n- ", $contexto['especialidades'] ?? []);
-            return "¡Hola, {$nombre}! 👋 Bienvenido a Doctorisimo.\n\n"
-                . "¿A cuál especialidad médica deseas acudir para buscar un médico y agendar tu cita?\n- {$especialidadesStr}";
-        }
-
-        return "¡Hola! 👋 Bienvenido a Doctorisimo.\n\n"
-            . "¿En qué especialidad médica deseas buscar un médico para agendar tu cita?\n"
-            . "1️⃣ Medicina General\n"
-            . "2️⃣ Ginecología y Obstetricia\n"
-            . "3️⃣ Pediatría\n"
-            . "4️⃣ Cardiología\n\n"
-            . "Por favor, escribe la opción o la especialidad que buscas.";
     }
 }

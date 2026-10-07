@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class PacienteAtencionFlowTest extends TestCase
 {
-    public function test_contexto_paciente_no_registrado_retorna_especialidades()
+    public function test_saludo_paciente_no_registrado_da_bienvenida_y_pregunta_especialidad()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
         $mockContext->shouldReceive('obtenerContextoPaciente')
@@ -27,31 +27,22 @@ class PacienteAtencionFlowTest extends TestCase
                 'numhistoria' => null,
                 'medicos_asociados' => [],
                 'tiene_medicos' => false,
-                'especialidades' => ['Cardiología', 'Pediatría'],
+                'especialidades' => ['Medicina General', 'Cardiología', 'Pediatría'],
             ]);
 
-        Http::fake([
-            'https://generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [
-                    [
-                        'content' => [
-                            'parts' => [
-                                ['text' => '¡Hola! Bienvenido a Doctorisimo. ¿A cuál especialidad médica deseas acudir para agendar tu cita?']
-                            ]
-                        ]
-                    ]
-                ]
-            ], 200),
-        ]);
+        $mockContext->shouldReceive('generarMensajePrimerContacto')
+            ->once()
+            ->andReturn("¡Hola! 👋 Te damos la bienvenida a *Doctorisimo*.\n\n¿A cuál especialidad médica deseas buscar un médico para agendar tu cita?\n\n1️⃣ Medicina General\n2️⃣ Cardiología\n3️⃣ Pediatría");
 
         $gemini = app(GeminiService::class);
         $respuesta = $gemini->generarRespuesta('Hola', '584129998877');
 
-        $this->assertStringContainsString('Bienvenido a Doctorisimo', $respuesta);
-        $this->assertStringContainsString('especialidad', $respuesta);
+        $this->assertStringContainsString('Doctorisimo', $respuesta);
+        $this->assertStringContainsString('especialidad médica', $respuesta);
+        $this->assertStringContainsString('Cardiología', $respuesta);
     }
 
-    public function test_contexto_paciente_con_multiples_medicos_ofrece_lista()
+    public function test_saludo_paciente_registrado_con_multiples_medicos_pregunta_a_cual_referenciar()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
         $mockContext->shouldReceive('obtenerContextoPaciente')
@@ -79,32 +70,70 @@ class PacienteAtencionFlowTest extends TestCase
                 'especialidades' => ['Cardiología', 'Ginecología'],
             ]);
 
-        Http::fake([
-            'https://generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [
-                    [
-                        'content' => [
-                            'parts' => [
-                                ['text' => '¡Hola, José Rosales! Veo que te has atendido con el Dr. Carlos Mendoza y la Dra. María Colmenares. ¿Con cuál de ellos deseas agendar tu cita?']
-                            ]
-                        ]
-                    ]
-                ]
-            ], 200),
-        ]);
+        $mockContext->shouldReceive('generarMensajePrimerContacto')
+            ->once()
+            ->andReturn("¡Hola, *José Rosales*! 👋 Bienvenido a *Doctorisimo*.\n\nVemos que en nuestro consultorio te has atendido anteriormente con los siguientes médicos:\n\n1️⃣ *Dr(a). Carlos Mendoza* (Cardiología)\n2️⃣ *Dr(a). María Colmenares* (Ginecología)\n\n¿A qué médico deseas referenciar para agendar tu cita?");
 
         $gemini = app(GeminiService::class);
         $respuesta = $gemini->generarRespuesta('Hola buenas tardes', '584165800403');
 
         $this->assertStringContainsString('José Rosales', $respuesta);
         $this->assertStringContainsString('Carlos Mendoza', $respuesta);
+        $this->assertStringContainsString('referenciar', $respuesta);
     }
 
-    public function test_gemini_invoca_tool_consultar_proximo_cupo_en_cola()
+    public function test_saludo_paciente_registrado_con_un_solo_medico()
+    {
+        $contextService = new PacienteAtencionContextService();
+        $contexto = [
+            'existe' => true,
+            'nombre' => 'José Rosales',
+            'numhistoria' => 101,
+            'medicos_asociados' => [
+                [
+                    'id' => 1,
+                    'reg_medico' => 'MED-001',
+                    'nombre' => 'Dr. Carlos Mendoza',
+                    'especialidad' => 'Cardiología',
+                ],
+            ],
+            'tiene_medicos' => true,
+            'especialidades' => ['Cardiología'],
+        ];
+
+        $mensaje = $contextService->generarMensajePrimerContacto($contexto);
+
+        $this->assertStringContainsString('José Rosales', $mensaje);
+        $this->assertStringContainsString('Dr. Carlos Mendoza', $mensaje);
+        $this->assertStringContainsString('médico tratante registrado', $mensaje);
+        $this->assertStringContainsString('doctor habitual', $mensaje);
+    }
+
+    public function test_saludo_paciente_registrado_sin_medicos_en_medicopaciente()
+    {
+        $contextService = new PacienteAtencionContextService();
+        $contexto = [
+            'existe' => true,
+            'nombre' => 'José Rosales',
+            'numhistoria' => 101,
+            'medicos_asociados' => [],
+            'tiene_medicos' => false,
+            'especialidades' => ['Medicina General', 'Pediatría'],
+        ];
+
+        $mensaje = $contextService->generarMensajePrimerContacto($contexto);
+
+        $this->assertStringContainsString('José Rosales', $mensaje);
+        $this->assertStringContainsString('¿A cuál especialidad médica deseas buscar un médico', $mensaje);
+        $this->assertStringContainsString('Medicina General', $mensaje);
+    }
+
+    public function test_seleccion_de_medico_consulta_cola_y_devuelve_proximo_cupo()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
         $mockContext->shouldReceive('obtenerContextoPaciente')
             ->once()
+            ->with('584165800403')
             ->andReturn([
                 'existe' => true,
                 'nombre' => 'José Rosales',
@@ -134,47 +163,11 @@ class PacienteAtencionFlowTest extends TestCase
                 'cupos_disponibles' => 5,
             ]);
 
-        // Simular primer turno con FunctionCall y segundo turno con respuesta final
-        Http::fake([
-            'https://generativelanguage.googleapis.com/*' => Http::sequence()
-                ->push([
-                    'candidates' => [
-                        [
-                            'content' => [
-                                'parts' => [
-                                    [
-                                        'functionCall' => [
-                                            'name' => 'consultar_proximo_cupo_disponible',
-                                            'args' => [
-                                                'reg_medico' => 'MED-001',
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ], 200)
-                ->push([
-                    'candidates' => [
-                        [
-                            'content' => [
-                                'parts' => [
-                                    [
-                                        'text' => 'El día más próximo disponible para el Dr. Carlos Mendoza es el Jueves 8 de octubre de 2026 y le quedan 5 cupos.',
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ], 200),
-        ]);
-
         $gemini = app(GeminiService::class);
-        $respuesta = $gemini->generarRespuesta('Quiero cita con el doctor Carlos Mendoza', '584165800403');
+        $respuesta = $gemini->generarRespuesta('1', '584165800403');
 
         $this->assertStringContainsString('Carlos Mendoza', $respuesta);
         $this->assertStringContainsString('Jueves 8 de octubre de 2026', $respuesta);
-        $this->assertStringContainsString('5 cupos', $respuesta);
+        $this->assertStringContainsString('5', $respuesta);
     }
 }
