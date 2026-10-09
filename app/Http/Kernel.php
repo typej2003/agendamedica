@@ -75,5 +75,8 @@ class Kernel extends HttpKernel
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+
+        // Web clínica: exige que el usuario haya elegido con qué médico/registro opera (PLAN-WEB.md).
+        'clinica.contexto' => \App\Http\Middleware\AsegurarContextoClinico::class,
     ];
 }

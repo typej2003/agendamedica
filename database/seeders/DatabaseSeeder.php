@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             StateSeeder::class,
             CitySeeder::class,
             SpecialtySeeder::class,
+            EspecialidadesYModulosSeeder::class,
         ]);
 
         // Cuentas con clave conocida, centros y pacientes inventados: solo para desarrollo y pruebas.
@@ -32,6 +33,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             MedicalDataSeeder::class,
             FakeClinicalDataSeeder::class,
+            // Después de los datos de prueba: asegura la especialidad del médico demo y la cuenta de secretaría.
+            ClinicaDemoSeeder::class,
         ]);
     }
 }
