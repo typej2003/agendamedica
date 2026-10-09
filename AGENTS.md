@@ -166,6 +166,16 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 | `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
 
+*Restauración de una base desde la nube* (una sola vez, para cuando se pierde la PC). **No** es la
+bajada: `cambios/bajar` (Fase 2.B) sigue pendiente. `App\Sync\Escritorio\RestauracionEscritorio` +
+`php artisan sync:restaurar-escritorio --reg-medico=<medico> [--salida=<carpeta>] [--zip]` escribe
+`manifiesto.txt` + `datos/<tabla>.tsv` con las tablas de `config/sync_legado.php`, usando las
+traducciones inversas (`EstadoCita::aEscritorio`, `AtencionCita::aEscritorio`, pacientes por
+`historias.clave_escritorio`) y dejando afuera lo excluido (`evolucion.logo/contrasena/sms_*`). Del
+lado de la PC lo aplica `../bridge/restaurar-escritorio.vbs` (ADODB sobre el DSN de `cdatabase.ini`,
+con el esquema real de la base local). Tests en `tests/Feature/RestauracionEscritorioTest.php`;
+instructivo en `../bridge/LEEME-restauracion.md`.
+
 **Planes de servicio y vencimiento** (ROADMAP Paso 27). Tablas `planes` (catálogo; `restricciones` en JSON leído con
 `App\Support\RestriccionesPlan`, que completa con valores por defecto lo que falte) y `reg_medico_servicio` (una fila
 por contratación/renovación, copia restricciones y monto del plan; el vigente es la activa de mayor `vence_el`).
