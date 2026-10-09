@@ -263,6 +263,66 @@ class CambiosEscritorioTest extends TestCase
             'la edición del escritorio queda anotada para que el app la respete');
     }
 
+    public function test_una_factura_del_escritorio_no_se_pinta_como_confirmada(): void
+    {
+        // La secretaria le elaboró la factura a la cita del día (el escritorio usa `estado = 1`).
+        $this->subir([['id' => 62, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'estado' => 1]]]);
+
+        $cita = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')->first();
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $cita->estado,
+            'en AppDDR `estado` es la confirmación: la factura del escritorio no la escribe');
+        $this->assertTrue((bool) $cita->facturada_escritorio, 'la factura del escritorio se conserva aparte');
+    }
+
+    public function test_una_confirmacion_de_appddr_sobrevive_a_la_edicion_del_escritorio(): void
+    {
+        $cita = Cola::where('reg_medico', self::REG)->first();
+        // La secretaria confirmó la cita desde la web (AppDDR escribe `estado = 1`).
+        $cita->estado = Cola::ESTADO_CONFIRMADA;
+        $cita->save();
+        SyncChange::create(['reg_medico' => self::REG, 'table_name' => 'cola', 'record_id' => $cita->id, 'operation' => 'updated',
+            'column_name' => 'estado', 'value' => Cola::ESTADO_CONFIRMADA, 'occurred_at' => '2026-10-02 10:05:00', 'source' => 'mobile']);
+
+        // El médico le cambia la hora de fin en el escritorio: la fila viaja con `estado = 0`.
+        $this->subir([['id' => 63, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 10:10:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'estado' => 0, 'hora_fin' => '08:40:00']]]);
+
+        $cita->refresh();
+        $this->assertSame(Cola::ESTADO_CONFIRMADA, (int) $cita->estado, 'el escritorio no confirma ni desconfirma');
+        $this->assertSame('08:40:00', (string) $cita->hora_fin, 'el resto de la edición sí se aplica');
+        $this->assertNull($cita->facturada_escritorio, 'el 0 del escritorio no es una factura');
+    }
+
+    public function test_confirmada_por_el_paciente_no_la_pisa_una_factura_del_escritorio(): void
+    {
+        // `estado = 2` (lo confirmó el paciente) es el caso que el `if` del escritorio no cubre.
+        $cita = Cola::where('reg_medico', self::REG)->first();
+        $cita->estado = Cola::ESTADO_CONFIRMADA_PACIENTE;
+        $cita->save();
+
+        $this->subir([['id' => 64, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'estado' => 1]]]);
+
+        $cita->refresh();
+        $this->assertSame(Cola::ESTADO_CONFIRMADA_PACIENTE, (int) $cita->estado, 'AppDDR conserva su confirmación');
+        $this->assertTrue((bool) $cita->facturada_escritorio, 'y la factura del escritorio queda registrada');
+    }
+
+    public function test_una_cita_nueva_del_escritorio_nace_sin_confirmar(): void
+    {
+        $this->subir([['id' => 65, 'tabla' => 'cola', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-03', 'hora_ini' => '09:00:00'],
+            'fila' => ['fecha' => '2026-10-03', 'hora_ini' => '09:00:00', 'numhistoria' => 1, 'estado' => 1]]]);
+
+        $cita = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-03|09:00:00')->first();
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $cita->estado, 'la agenda del escritorio no confirma');
+        $this->assertTrue((bool) $cita->facturada_escritorio);
+    }
+
     public function test_tabla_sin_clave_primaria_se_reemplaza_entera(): void
     {
         DB::table('vademecum_m')->insert(['reg_medico' => self::REG, 'codemedicina' => 'VIEJO']);

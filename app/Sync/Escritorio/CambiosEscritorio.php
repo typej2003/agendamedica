@@ -318,7 +318,10 @@ class CambiosEscritorio
         }
 
         $ignoradas = [];
-        $datos = $this->traducir($carga, $this->tablas->filtrar('cola', $this->tablas->normalizarClaves($fila), $ignoradas));
+        // La `estado` del escritorio ("factura elaborada") no se escribe en `cola.estado`
+        // (confirmación en AppDDR): se traduce acá. Ver EstadoCita y WEB-2.12.
+        $delEscritorio = EstadoCita::aAppDdr($this->tablas->normalizarClaves($fila));
+        $datos = $this->traducir($carga, $this->tablas->filtrar('cola', $delEscritorio, $ignoradas));
         $datos = array_diff_key($datos, array_flip($delApp['columnas']));
         $datos['reg_medico'] = $carga->reg_medico;
         $datos['clave_escritorio'] = $claveLocal;
@@ -329,6 +332,8 @@ class CambiosEscritorio
             DB::table('cola')->where('id', $cita->id)->update($datos);
             $this->anotarEdiciones($carga, 'cola', $cita->id, $this->distintas($antes, $datos), $fecha);
         } else {
+            // El escritorio no confirma citas: nace sin confirmar (puede nacer facturada).
+            $datos['estado'] = Cola::ESTADO_NO_CONFIRMADA;
             $datos['created_at'] = now();
             DB::table('cola')->insert($datos);
         }

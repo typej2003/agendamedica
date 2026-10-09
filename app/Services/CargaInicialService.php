@@ -6,6 +6,7 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
+use App\Sync\Escritorio\EstadoCita;
 use App\Sync\Escritorio\PacientesLegado;
 use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Support\Facades\DB;
@@ -276,6 +277,10 @@ class CargaInicialService
                 continue;
             }
             $limpia = $this->tablas->filtrar($tabla, $fila, $ignoradas);
+            if ($tabla === 'cola') {
+                // El escritorio trae `estado = 1` de facturación, no de confirmación (WEB-2.12).
+                $limpia = EstadoCita::nuevaDeEscritorio($limpia);
+            }
             $limpia['reg_medico'] = $carga->reg_medico;
             // Clave de la fila en el escritorio: con ella la sincronización de cambios reconoce
             // consultas y citas aunque sus números o su hora cambien (bridge/DISENO-FASE-2.md § 4).

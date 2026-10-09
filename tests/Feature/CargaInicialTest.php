@@ -124,6 +124,24 @@ class CargaInicialTest extends TestCase
         $this->assertSame(['1.25', 'N', null], array_map(fn ($v) => $v === null ? null : (string) $v, $valores));
     }
 
+    public function test_la_carga_no_confunde_una_factura_del_escritorio_con_una_confirmacion(): void
+    {
+        // En el escritorio `cola.estado = 1` es "factura elaborada", no "confirmada" (WEB-2.12).
+        $this->crearMedico('carga-t-006');
+        $carga = $this->iniciar('carga-t-006', ['cola' => 2])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'estado' => 1],
+            ['fecha' => '2026-10-01', 'hora_ini' => '09:00:00', 'estado' => 0],
+        ]])->assertOk()->assertJson(['recibidas' => 2]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-006')->orderBy('hora_ini')->get();
+        $this->assertSame([0, 0], $citas->pluck('estado')->map(fn ($e) => (int) $e)->all(),
+            'ninguna cita de la carga queda "Confirmada"');
+        $this->assertSame([1, null], $citas->pluck('facturada_escritorio')->map(fn ($f) => $f === null ? null : (int) $f)->all(),
+            'la factura del escritorio se conserva en su columna');
+    }
+
     public function test_evolucion_no_cuenta_como_dato_previo(): void
     {
         $this->crearMedico('carga-t-003');
