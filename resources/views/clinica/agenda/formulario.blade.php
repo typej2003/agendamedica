@@ -44,8 +44,10 @@
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label small mb-0" for="sede-elegida">Sede</label>
+                    {{-- `@disabled` es de Blade 9: en Laravel 8 se escribe el atributo (si no, el
+                         `select` mostraba el texto `@disabled(…)` al lado). --}}
                     <select name="sede" id="sede-elegida" class="form-select form-select-sm"
-                            onchange="this.form.submit()" @disabled($sedes->isEmpty())>
+                            onchange="this.form.submit()" @if ($sedes->isEmpty()) disabled @endif>
                         {{-- Sin sede elegida no se preselecciona ninguna: la sede decide la jornada y el
                              lugar, y elegirla por el usuario sería agendar donde no corresponde. --}}
                         @if ($sede === null && $sedes->isNotEmpty())

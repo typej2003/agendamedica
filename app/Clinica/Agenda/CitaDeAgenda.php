@@ -3,6 +3,8 @@
 namespace App\Clinica\Agenda;
 
 use App\Models\Cola;
+use App\Notificaciones\Correo;
+use App\Notificaciones\Telefono;
 use Carbon\Carbon;
 
 /**
@@ -47,7 +49,37 @@ final class CitaDeAgenda
          * si el código no está en el catálogo. Ver `razon()`.
          */
         public readonly ?string $motivoNombre = null,
+        /** `pacientes.telefono`, tal cual está guardado (la vista decide si sirve para el envío). */
+        public readonly ?string $telefono = null,
+        /** `pacientes.email`. */
+        public readonly ?string $email = null,
+        /** `pacientes.cedula`: el listado que se imprime la lleva (como el DataWindow del escritorio). */
+        public readonly ?string $cedula = null,
     ) {
+    }
+
+    /**
+     * ¿Se le puede mandar el recordatorio a esta cita? (WEB-2.6)
+     *
+     * El recordatorio **desaparece si la cita ya está confirmada o atendida** —no tiene sentido
+     * recordarle a quien ya confirmó o está siendo atendido— y tampoco en una cita que el escritorio
+     * movió: esa fila es la vieja, el paciente ya está en la fecha nueva.
+     */
+    public function puedeRecordar(): bool
+    {
+        return ! $this->movida() && ! $this->confirmada() && ! $this->atendida();
+    }
+
+    /** ¿El teléfono guardado sirve para mandarle un SMS o un WhatsApp? */
+    public function tieneTelefono(): bool
+    {
+        return Telefono::internacional($this->telefono) !== null;
+    }
+
+    /** ¿El correo guardado tiene forma de correo? */
+    public function tieneCorreo(): bool
+    {
+        return Correo::valido($this->email) !== null;
     }
 
     /** La confirmó el consultorio (1) o el paciente (2). Ver `Cola::ESTADO_*`. */

@@ -57,6 +57,18 @@ class Medico extends Model
         $this->attributes['prefix'] = self::normalizarPrefijo($valor);
     }
 
+    /**
+     * `Dr. Carlos Mendoza`: tratamiento + nombre + apellido, para firmar un mensaje o mostrar al
+     * médico en la agenda. Es el mismo texto que arma el móvil (`Medico.nombreMostrar`), porque el
+     * `{doctor}` de la plantilla de recordatorio tiene que salir igual en las dos superficies.
+     */
+    public function getNombreMostrarAttribute(): string
+    {
+        $nombre = trim(implode(' ', array_filter([$this->name, $this->lastname])));
+
+        return trim(trim((string) $this->prefix) . ' ' . $nombre);
+    }
+
     /** Todos los `reg_medico` a los que tiene acceso (el suyo y los que se le asignaron desde el panel). */
     public function registros(): HasMany
     {

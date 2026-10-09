@@ -34,11 +34,13 @@ Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automát
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`).
 
-Dos datos del entorno que no están en `.env.example`: las variables de **WhatsApp**
-(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`) las lee `config/services.php`
-pero no aparecen en el ejemplo — hay que agregarlas a mano. Y **`SYNC_API_KEY`** (clave de sync del
-escritorio) tampoco está en el ejemplo: `config/app.php` la lee con un default de transición (ver trampas
-conocidas).
+Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
+tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
+(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` — están en `.env.example` con valor
+vacío, pero no en el `.env`) y, desde WEB-2.6, las del **SMS por Twilio** (`TWILIO_ACCOUNT_SID`,
+`TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor** (`MAIL_*`). Y **`SYNC_API_KEY`**
+(clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php` la lee con un default de
+transición (ver trampas conocidas).
 
 ## Qué es
 
@@ -68,18 +70,21 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | Ruta | Qué contiene |
 |---|---|
 | `routes/api.php` | Todos los endpoints de app y de sync. **Es el mejor mapa del backend: empezá por acá.** |
-| `routes/web.php`, `routes/web/{admin,medico,customer}.php` | Panel web Livewire + login por sesión. |
+| `routes/web.php`, `routes/web/{admin,medico,customer,cuentas,clinica}.php` | Panel web Livewire + login por sesión, y la **web clínica** (`clinica.php`: contexto, pacientes y agenda, con el recordatorio por cita y las acciones del día de WEB-2.6/2.7). |
 | `app/Http/Controllers/Api/` | Controladores de la API (login, refresh, sync, upload, webhook WhatsApp). Incluye `AppAgendaMedicaController` y los `" - copia.php"`, que están muertos (ver trampas). |
 | `app/Http/Controllers/Auth/` | Login web del panel (`CustomLoginController`). |
-| `app/Http/Controllers/Clinica/` | Web clínica (`/clinica`): `Shell`, `Contexto`, `Paciente` (listado, ficha y el buscador JSON que usa el alta de cita) y `Agenda` (vista día/semana/mes y las acciones del mostrador). |
-| `app/Actions/` | **Dominio compartido entre la web y el sync** (R3 de `PLAN-WEB.md`): `Agenda/{CrearCita,EditarCita,EliminarCita,ConfirmarCita,AtenderCita,CobrarCita,ReordenarCola}` y `Pacientes/CrearPaciente`. Las dos superficies las usan: **ninguna regla de negocio se escribe dos veces**. |
+| `app/Http/Controllers/Clinica/` | Web clínica (`/clinica`): `Shell`, `Contexto`, `Paciente` (listado, ficha y el buscador JSON que usa el alta de cita) y `Agenda` (vista día/semana/mes, las acciones del mostrador y —WEB-2.6/2.7— el recordatorio por cita, el envío del día y el listado que se imprime). |
+| `app/Actions/` | **Dominio compartido entre la web y el sync** (R3 de `PLAN-WEB.md`): `Agenda/{CrearCita,EditarCita,EliminarCita,ConfirmarCita,AtenderCita,CobrarCita,ReordenarCola}`, `Pacientes/CrearPaciente` y `Notificaciones/EnviarRecordatorio` (WEB-2.6: los tres canales, con el registro del envío). Las dos superficies las usan: **ninguna regla de negocio se escribe dos veces**. |
+| `app/Notificaciones/` | Reglas sin estado de los recordatorios (WEB-2.6), portadas del móvil (`recordatorio.dart`): `Canal` (sms/whatsapp/correo), `Telefono` (normalización a internacional), `Correo` (validación), `MensajeDeRecordatorio` (plantilla + etiquetas) y `ExcepcionDeEnvio` (el envío ni se intentó: falta el dato o el proveedor). |
 | `app/Clinica/` | Reglas de la web clínica sin estado: `ContextoTrabajo` (médico/especialidad/sede de la sesión) y `Agenda/{ArmadorDeAgenda,Jornada,CitaDeAgenda}` — la jornada, la posición calculada, la modalidad de la sede, el cupo y la cita pendiente. |
 | `app/Http/Livewire/` | Componentes del panel: `Admin/*` (listados ~CRUD, `CargarSql`), `Medico/*`, `Components/*` (agenda/calendario), `Dashboard/*`, `Layouts/*`. |
 | `resources/views/` | Blade: `auth/` (login + registro de médico/paciente), `livewire/` (una vista por componente, `admin/`, `medico/`, `dashboard/`, `layouts/`, `components/`), `clinica/` (web clínica: `layout.blade.php` + una vista por módulo) y `layouts/app.blade.php` (armazón compartido con el sitio público). |
 | `public/` | Document root (`index.php`, `.htaccess`) y los assets propios: `css/gineco.css` (**la paleta**, en tokens `--ds-*`, más los estilos de marca del sitio público), `css/doctorisimo-ui.css` (**el sistema de la aplicación**: Bootstrap recoloreado + armazón, se carga después de Bootstrap), `js/gineco.js`. |
 | `app/Support/` | Utilidades sin estado (`FechaClinica`, `RestriccionesPlan`, `IconoModulo`, …). |
 | `app/Models/` | Eloquent sobre las tablas del legado (`Cola`, `Paciente`, `Historia`, `Consulta`, `Medico`, `MedicalCenter`, `MotivoCita`, `Evolucion`, `UploadServer`, `User`…). |
-| `app/Services/WhatsAppService.php` | Envío de plantillas por WhatsApp Cloud API (Meta, Graph API v19.0); lee `config('services.whatsapp.*')`. |
+| `app/Services/WhatsAppService.php` | Envío de plantillas por WhatsApp Cloud API (Meta, Graph API v19.0); lee `config('services.whatsapp.*')`. ⚠️ Su constructor tipa las credenciales como `string`: **verificá `config('services.whatsapp.*')` antes de instanciarlo** (por eso `EnviarRecordatorio` lo resuelve con `app()` después del chequeo, y no por inyección). |
+| `app/Services/SmsService.php` | SMS por **Twilio** desde el servidor (WEB-2.6); lee `config('services.twilio.*')` (`TWILIO_*`). Devuelve la respuesta cruda del proveedor, como `WhatsAppService`. |
+| `app/Mail/RecordatorioDeCita.php` + `resources/views/emails/recordatorio-cita.blade.php` | El correo del recordatorio (WEB-2.6), con el **médico de la cita como remitente** y `Reply-To` al mismo. |
 | `database/migrations/2026_08_25_055351_create_medical_tables_schema.php` | **Migración núcleo**: crea el esquema médico completo migrado del legado (~120 tablas, ~1650 líneas). Referencia obligatoria. |
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos). |
 | `database/seeders/` | Países / estados / ciudades / especialidades / roles / datos médicos de ejemplo. |
@@ -96,7 +101,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/cambiar-password` | `CambiarPasswordController@cambiar` — `password_actual`, `password_nueva` (+`_confirmation`, mín. 8). Es lo único (junto a `GET /api/user`) que deja pasar `EnsurePasswordChanged` mientras la clave es temporal; las demás rutas `auth:api` responden 403 `password_change_required`. |
 | `POST` | `/api/app/refresh-data` | `RefreshAppController@refreshData` — protegido por `auth:api`; acepta `mes`/`anio` y devuelve citas, colas, pacientes, motivos, centros médicos, historias y evoluciones del médico (o del paciente). |
 | `POST` | `/api/app/sync-app-data` | `SyncAppDataController@sync` — sync delta real (push + pull), ver `12-arquitectura-offline-sync.md`. Desde el Paso 18.B también crea historia, consulta y récipe (`App\Sync\CreacionesClinicas`, número asignado por el servidor); desde el 18.B2, además, motivos de consulta: baja `motivos_consulta` y `motivo_consulta_paciente`, acepta la creación `motivo_consulta_paciente` (agrega un motivo del catálogo a una consulta) y `deleted` sobre ella lo quita. |
-| `POST` | `/api/app/citas/{cola}/notificar` | `NotificacionCitaController@enviar` — WhatsApp, online-only, no pasa por la cola de sync. |
+| `POST` | `/api/app/citas/{cola}/notificar` | `NotificacionCitaController@enviar` — recordatorio al paciente por `whatsapp`, `sms` (Twilio) o `correo` (SMTP del servidor), online-only, no pasa por la cola de sync. La lógica es `App\Actions\Notificaciones\EnviarRecordatorio`, **la misma que usa la web**. |
 | `POST` | `/api/app/configuracion` | `ConfiguracionMedicoController@actualizar` — datos de reporte del médico (Paso 17: especialidad, logo, pie de récipe/informe) y desde el Paso 23 las plantillas de mensaje (`plantilla_cita`/`plantilla_cumple`); online-only, misma razón que el de notificar. |
 | `POST` | `/api/app/motivos-consulta` | `MotivoConsultaController@crear` — alta en el catálogo de motivos de consulta del médico (Paso 18.B2), online-only: `descripcion` → `id`, `codemotivo` (correlativo de 4 dígitos); si ya hay una igual devuelve la existente (200) en vez de duplicar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
@@ -314,6 +319,10 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`.
     fechas que no son "cuándo se tocó la fila" usá `->dateTime()` (además evita el techo de 2038 y la
     conversión por zona horaria). Corregido por `2026_10_07_120000_corrige_expires_at_de_sync_credentials`;
     `expires_at` era la única columna del esquema con ese patrón.
+11. **`@disabled`, `@checked` y `@selected` de Blade son de Laravel 9, no del 8.** Este repo está en
+    Laravel 8: la directiva **no compila** y el navegador muestra el texto `@disabled(…)` al lado del
+    control (pasó en el `select` de sede de "Nueva cita" y en el botón del envío del día, WEB-2.6/2.7). Se
+    escribe el atributo: `@if ($x) disabled @endif`.
 
 ## Dónde está el detalle funcional
 

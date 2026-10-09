@@ -56,6 +56,19 @@
                 </select>
             </form>
 
+            {{-- Acciones globales del día (WEB-2.7): la ventana de envío y el listado que se imprime.
+                 Solo en la vista de día: son "las del día", no las del rango. --}}
+            @if ($vista === 'dia')
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ route('clinica.agenda.envio', ['fecha' => $fecha->toDateString(), 'sede' => $sedeId ?? 'todas']) }}">
+                    <i class="bi bi-send"></i> Enviar a todos
+                </a>
+                <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener"
+                   href="{{ route('clinica.agenda.imprimir', ['fecha' => $fecha->toDateString(), 'sede' => $sedeId ?? 'todas']) }}">
+                    <i class="bi bi-printer"></i> Imprimir listado
+                </a>
+            @endif
+
             <a class="btn btn-sm btn-primary"
                href="{{ route('clinica.agenda.nueva', ['fecha' => $fecha->toDateString(), 'sede' => $sedeId]) }}">
                 <i class="bi bi-plus-lg"></i> Nueva cita
@@ -102,6 +115,44 @@
         </div>
     </div>
 
+    {{-- Recordatorio de una cita (WEB-2.6): mismo diálogo para todas las filas, que lo llena con sus
+         datos. Los tres canales se muestran siempre; el que no tiene dato queda deshabilitado y el
+         aviso dice cuál falta (regla de la wiki). --}}
+    <div id="mensaje-fondo" class="cobro-fondo" hidden>
+        <div class="cobro-caja">
+            <form method="POST" id="mensaje-form">
+                @csrf
+                <h2 class="h6">Recordar a <span id="mensaje-paciente"></span></h2>
+
+                <div class="mb-2">
+                    <span class="form-label small mb-0 d-block">Por dónde</span>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach ($canales as $clave => $etiqueta)
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="canal" id="canal-{{ $clave }}"
+                                       value="{{ $clave }}" data-canal="{{ $clave }}">
+                                <label class="form-check-label small" for="canal-{{ $clave }}">{{ $etiqueta }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                    <p class="small text-muted mb-0" id="mensaje-falta"></p>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small mb-0" for="mensaje-texto">Mensaje</label>
+                    <textarea name="mensaje" id="mensaje-texto" rows="4" maxlength="500"
+                              class="form-control form-control-sm"></textarea>
+                    <p class="small text-muted mb-0" id="mensaje-contador"></p>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cerrarMensaje()">Cancelar</button>
+                    <button class="btn btn-sm btn-primary" id="mensaje-enviar">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Cobro: el diálogo se llena desde los datos de la cita; el monto solo se pide si la cita
         // todavía no tiene precio (lo común en los datos del legado).
@@ -120,6 +171,67 @@
         function cerrarCobro() {
             document.getElementById('cobro-fondo').hidden = true;
         }
+
+        // Recordatorio de una cita (WEB-2.6). Los tres canales se muestran siempre: el que el
+        // paciente no puede recibir queda deshabilitado y el aviso dice cuál falta. Un SMS de más de
+        // 160 caracteres se avisa (antes se recortaba en silencio).
+        function abrirMensaje(boton) {
+            const datos = boton.dataset;
+            document.getElementById('mensaje-form').action = datos.url;
+            document.getElementById('mensaje-paciente').textContent = datos.paciente;
+            document.getElementById('mensaje-texto').value = datos.mensaje;
+
+            const disponible = {
+                sms: datos.tieneTelefono === '1',
+                whatsapp: datos.tieneTelefono === '1',
+                correo: datos.tieneCorreo === '1',
+            };
+
+            let elegido = false;
+            document.querySelectorAll('#mensaje-fondo [data-canal]').forEach(function (radio) {
+                const puede = disponible[radio.dataset.canal] === true;
+                radio.disabled = !puede;
+                radio.closest('.form-check').classList.toggle('text-muted', !puede);
+                radio.checked = puede && !elegido;
+                if (radio.checked) {
+                    elegido = true;
+                }
+            });
+
+            const faltantes = [];
+            if (!disponible.sms) {
+                faltantes.push('teléfono');
+            }
+            if (!disponible.correo) {
+                faltantes.push('correo');
+            }
+            document.getElementById('mensaje-falta').textContent = faltantes.length === 0
+                ? ''
+                : 'Al paciente le falta ' + faltantes.join(' y ') + ' en la ficha.';
+
+            document.getElementById('mensaje-enviar').disabled = !elegido;
+            actualizarContadorMensaje();
+            document.getElementById('mensaje-fondo').hidden = false;
+            document.getElementById('mensaje-texto').focus();
+        }
+
+        function cerrarMensaje() {
+            document.getElementById('mensaje-fondo').hidden = true;
+        }
+
+        function actualizarContadorMensaje() {
+            const texto = document.getElementById('mensaje-texto').value;
+            const canal = document.querySelector('#mensaje-fondo [data-canal]:checked');
+            const aviso = canal && canal.value === 'sms' && texto.length > 160
+                ? ' — pasa los 160 caracteres de un SMS'
+                : '';
+            document.getElementById('mensaje-contador').textContent = texto.length + ' caracteres' + aviso;
+        }
+
+        document.getElementById('mensaje-texto').addEventListener('input', actualizarContadorMensaje);
+        document.querySelectorAll('#mensaje-fondo [data-canal]').forEach(function (radio) {
+            radio.addEventListener('change', actualizarContadorMensaje);
+        });
 
         // Reordenar: el arrastre manda **el movimiento** (desde -> hasta), no el orden nuevo de cada
         // fila; el servidor corre las demás en una transacción. Es la misma operación de sync que el

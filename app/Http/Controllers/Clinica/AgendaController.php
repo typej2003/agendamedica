@@ -9,15 +9,24 @@ use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\EditarCita;
 use App\Actions\Agenda\EliminarCita;
 use App\Actions\Agenda\ReordenarCola;
+use App\Actions\Notificaciones\EnviarRecordatorio;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
+use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Agenda\Jornada;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
+use App\Models\Evolucion;
+use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MotivoCita;
+use App\Models\NotificacionCita;
 use App\Models\Office;
 use App\Models\Paciente;
+use App\Notificaciones\Canal;
+use App\Notificaciones\ExcepcionDeEnvio;
+use App\Notificaciones\MensajeDeRecordatorio;
+use App\Support\FechaClinica;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -42,8 +51,10 @@ class AgendaController extends Controller
      */
     private const HORA_POR_DEFECTO = '08:00';
 
-    public function __construct(private ArmadorDeAgenda $armador)
-    {
+    public function __construct(
+        private ArmadorDeAgenda $armador,
+        private MensajeDeRecordatorio $mensajes,
+    ) {
     }
 
     public function index(Request $request)
@@ -70,6 +81,10 @@ class AgendaController extends Controller
 
         $conteos = $visibles->groupBy('fecha')->map->count();
 
+        // Recordatorio por cita (WEB-2.6): el texto del **médico de esa cita** ya armado, para que el
+        // diálogo de envío de cada fila lo ofrezca sin una consulta por fila.
+        [$plantillas, $medicos, $medicoPorDefecto] = $this->medicosYPlantillas($regMedico);
+
         return view('clinica.agenda.index', [
             'vista'         => $vista,
             'fecha'         => $fecha,
@@ -82,6 +97,14 @@ class AgendaController extends Controller
             'semanasDelMes' => $vista === 'mes' ? $this->semanasDelMes($fecha, $conteos) : [],
             'totalRango'    => $visibles->count(),
             'ahora'         => Carbon::now(),
+            'mensajes'      => $this->mensajesDeRecordatorio(
+                $visibles,
+                $plantillas,
+                $medicos,
+                $medicoPorDefecto,
+                $this->centrosDe($sedes),
+            ),
+            'canales'       => Canal::etiquetas(),
         ]);
     }
 
@@ -414,6 +437,273 @@ class AgendaController extends Controller
         }
 
         return back()->with('estado', 'Orden actualizado.');
+    }
+
+    // ------------------------------------------------- Recordatorios y envíos del día (WEB-2.6/2.7)
+
+    /**
+     * Mandar el recordatorio de **una** cita, por el canal elegido (WEB-2.6).
+     *
+     * Es el camino del móvil (Paso 21.B) traído a la web: el diálogo ofrece los tres canales, el
+     * texto del médico **de esa cita** y avisa si al paciente le falta el dato. El envío en sí lo hace
+     * `EnviarRecordatorio`, la misma Action que usa el endpoint del app (PLAN-WEB.md, R3).
+     *
+     * Las citas confirmadas o atendidas no reciben recordatorio (regla de la wiki): el diálogo no se
+     * ofrece y esto lo vuelve a comprobar, porque un POST se puede mandar a mano.
+     */
+    public function notificar(Request $request, Cola $cola, EnviarRecordatorio $accion)
+    {
+        $cita = $this->citaDelContexto($request, $cola);
+
+        if ($cita->movida_escritorio) {
+            return back()->with('error', 'El escritorio movió esta cita a otro día: el paciente ya está en la fecha nueva.');
+        }
+
+        if ((int) $cita->atendido === 1) {
+            return back()->with('error', 'Esta cita ya está atendida: no se le manda el recordatorio.');
+        }
+
+        if (in_array((int) $cita->estado, [Cola::ESTADO_CONFIRMADA, Cola::ESTADO_CONFIRMADA_PACIENTE], true)) {
+            return back()->with('error', 'Esta cita ya está confirmada: no hace falta recordársela.');
+        }
+
+        $datos = $request->validate([
+            'canal'   => ['required', 'in:' . implode(',', Canal::todos())],
+            'mensaje' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $notificacion = $accion->ejecutar($cita, $datos['canal'], $datos['mensaje'] ?? null, $request->user());
+        } catch (ExcepcionDeEnvio|InvalidArgumentException $excepcion) {
+            return back()->with('error', $excepcion->getMessage());
+        }
+
+        if ($notificacion->estado !== NotificacionCita::ESTADO_ENVIADA) {
+            return back()->with('error', 'El proveedor no aceptó el mensaje. El intento quedó registrado.');
+        }
+
+        return back()->with('estado', 'Recordatorio enviado por ' . Canal::etiqueta($datos['canal']) . '.');
+    }
+
+    /**
+     * La ventana de **envío del día** (WEB-2.7): los pacientes de la jornada, el canal y el texto, como
+     * `w_sms_enviar` / `w_correo_enviar` del escritorio. Ahí el usuario tilde a quién le manda.
+     */
+    public function envio(Request $request)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $fecha = $this->fecha($request->query('fecha'));
+        $sedes = $this->armador->sedes($contexto['reg_medico'], $contexto['medico']->id);
+        $sedeId = $this->sedePedida($request, $contexto);
+        // Misma regla que el recordatorio de una cita: no se le recuerda a quien ya confirmó o está
+        // siendo atendido. El listado que se **imprime** sí las lleva (ahí el estatus es el dato).
+        $citas = $this->citasDeLaJornada($contexto['reg_medico'], $sedes, $fecha, $sedeId)
+            ->filter(fn (CitaDeAgenda $cita) => $cita->puedeRecordar())
+            ->values();
+
+        [$plantillas, $nombres, $medicoPorDefecto] = $this->medicosYPlantillas($contexto['reg_medico']);
+        $canalPedido = $request->query('canal');
+
+        return view('clinica.agenda.envio', [
+            'fecha'    => $fecha,
+            'sedeId'   => $sedeId,
+            'sede'     => $sedeId ? $sedes->firstWhere('id', $sedeId) : null,
+            'citas'    => $citas,
+            'mensajes' => $this->mensajesDeRecordatorio($citas, $plantillas, $nombres, $medicoPorDefecto, $this->centrosDe($sedes)),
+            'canales'  => Canal::etiquetas(),
+            // El SMS es el del escritorio (su ventana, y su columna `cola.sms`): es el que viene elegido.
+            'canal'    => Canal::existe($canalPedido) ? $canalPedido : Canal::SMS,
+        ]);
+    }
+
+    /**
+     * Mandar el recordatorio a **los seleccionados** de la jornada (WEB-2.7).
+     *
+     * Va cita por cita a propósito: que a un paciente le falte el teléfono, o que el proveedor rechace
+     * un mensaje, **no** puede abortar el resto del envío. Cada intento queda registrado igual
+     * (`notificaciones_cita`), y lo que falló se le informa al usuario con el nombre del paciente.
+     */
+    public function enviarMasivo(Request $request, EnviarRecordatorio $accion)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        $datos = $request->validate([
+            'fecha'   => ['required', 'date'],
+            'sede'    => ['nullable'],
+            'canal'   => ['required', 'in:' . implode(',', Canal::todos())],
+            'mensaje' => ['nullable', 'string', 'max:500'],
+            'citas'   => ['required', 'array'],
+            'citas.*' => ['integer'],
+        ]);
+
+        $enviados = 0;
+        $fallidos = [];
+
+        foreach ($datos['citas'] as $id) {
+            $cita = Cola::find($id);
+
+            // Tenancy: el POST puede traer cualquier id; solo se toca lo del registro del contexto.
+            if (! $cita || $cita->reg_medico !== $contexto['reg_medico']) {
+                continue;
+            }
+
+            try {
+                $notificacion = $accion->ejecutar($cita, $datos['canal'], $datos['mensaje'] ?? null, $request->user());
+            } catch (ExcepcionDeEnvio|InvalidArgumentException $excepcion) {
+                $fallidos[] = $this->nombreDelPacienteDe($cita, $accion) . ': ' . $excepcion->getMessage();
+                continue;
+            }
+
+            if ($notificacion->estado === NotificacionCita::ESTADO_ENVIADA) {
+                $enviados++;
+            } else {
+                $fallidos[] = $this->nombreDelPacienteDe($cita, $accion) . ': el proveedor no aceptó el mensaje';
+            }
+        }
+
+        $destino = redirect()->route('clinica.agenda.envio', [
+            'fecha' => $datos['fecha'],
+            'sede'  => $datos['sede'] ?: 'todas',
+            'canal' => $datos['canal'],
+        ])->with('estado', sprintf(
+            '%d %s por %s.',
+            $enviados,
+            $enviados === 1 ? 'recordatorio enviado' : 'recordatorios enviados',
+            Canal::etiqueta($datos['canal']),
+        ));
+
+        if ($fallidos !== []) {
+            $destino = $destino->with('error', sprintf(
+                '%d sin enviar — %s%s',
+                count($fallidos),
+                implode('; ', array_slice($fallidos, 0, 3)),
+                count($fallidos) > 3 ? '…' : '',
+            ));
+        }
+
+        return $destino;
+    }
+
+    /**
+     * El listado del día para imprimir (WEB-2.7): la pantalla que reemplaza al `dw_1.print()` del
+     * botón *Imprimir* de `w_hacer_cita` (`d_pacientes_consulta_cita_print`: hora, paciente, cédula,
+     * teléfono, razón y estatus, sin las citas que el escritorio movió).
+     *
+     * Imprime el navegador (PLAN-WEB.md, R6), no el servidor: la vista es lo que se manda a la
+     * impresora del consultorio.
+     */
+    public function imprimir(Request $request)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $fecha = $this->fecha($request->query('fecha'));
+        $sedes = $this->armador->sedes($contexto['reg_medico'], $contexto['medico']->id);
+        $sedeId = $this->sedePedida($request, $contexto);
+
+        return view('clinica.agenda.imprimir', [
+            'fecha'  => $fecha,
+            'sede'   => $sedeId ? $sedes->firstWhere('id', $sedeId) : null,
+            'medico' => $contexto['medico'],
+            'citas'  => $this->citasDeLaJornada($contexto['reg_medico'], $sedes, $fecha, $sedeId),
+        ]);
+    }
+
+    /**
+     * Las citas del día y la sede pedidos, sin las que el escritorio movió.
+     *
+     * @param  Collection<int,Office>  $sedes
+     * @return Collection<int,CitaDeAgenda>
+     */
+    private function citasDeLaJornada(string $regMedico, Collection $sedes, Carbon $fecha, ?int $sedeId): Collection
+    {
+        $centroId = $sedeId ? $sedes->firstWhere('id', $sedeId)?->medical_center_id : null;
+
+        return $this->armador->citas($regMedico, $fecha->copy(), $fecha->copy())
+            ->when($centroId !== null, fn (Collection $citas) => $citas->where('centroId', $centroId))
+            ->reject(fn (CitaDeAgenda $cita) => $cita->movida())
+            ->values();
+    }
+
+    /**
+     * La plantilla y el nombre del **médico de cada cita**, por `evolucion.clave` = `cola.medico`.
+     *
+     * Es la regla del móvil (Paso 22.B/23): una secretaría manda recordatorios de citas de varios
+     * médicos del consultorio y cada uno sale con las palabras de su propio médico. Se resuelve en
+     * lote porque la agenda de un día tiene muchas filas y la configuración es una por médico.
+     *
+     * @return array{0: array<int,string>, 1: array<int,string>, 2: ?string}
+     *         plantilla por clave, nombre por clave, y el nombre del médico del registro — para las
+     *         citas cuya `clave` no está en `evolucion`, que es lo común en los datos reales.
+     */
+    private function medicosYPlantillas(string $regMedico): array
+    {
+        $evoluciones = Evolucion::where('reg_medico', $regMedico)->whereNotNull('clave')->get();
+        $medicosPorCorreo = Medico::whereIn('email', $evoluciones->pluck('correo_med')->filter()->unique()->all())
+            ->get()
+            ->keyBy('email');
+
+        $plantillas = [];
+        $nombres = [];
+
+        foreach ($evoluciones as $evolucion) {
+            $clave = (int) $evolucion->clave;
+            $medico = $evolucion->correo_med ? $medicosPorCorreo->get($evolucion->correo_med) : null;
+
+            $plantillas[$clave] = (string) $evolucion->plantilla_cita;
+            $nombres[$clave] = $medico?->nombreMostrar ?? '';
+        }
+
+        return [$plantillas, $nombres, Medico::where('reg_medico', $regMedico)->first()?->nombreMostrar];
+    }
+
+    /**
+     * El mensaje de recordatorio ya armado de cada cita, para que la vista no lo resuelva fila por fila.
+     *
+     * @param  Collection<int,CitaDeAgenda>  $citas
+     * @param  array<int,string>  $plantillas  clave de `evolucion` => plantilla
+     * @param  array<int,string>  $nombres  clave => nombre del médico
+     * @param  array<int,string>  $centros  `medical_center_id` => nombre de la sede
+     * @return array<int,string>  id de cita => mensaje
+     */
+    private function mensajesDeRecordatorio(
+        Collection $citas,
+        array $plantillas,
+        array $nombres,
+        ?string $medicoPorDefecto,
+        array $centros
+    ): array {
+        $mensajes = [];
+
+        foreach ($citas as $cita) {
+            $mensajes[$cita->id] = $this->mensajes->armar($plantillas[$cita->medico ?? ''] ?? null, [
+                'paciente' => $cita->paciente,
+                'fecha'    => FechaClinica::formato($cita->fecha, 'd/m/Y'),
+                'hora'     => $cita->horaIni ? substr($cita->horaIni, 0, 5) : '',
+                'doctor'   => $nombres[$cita->medico ?? ''] ?? (string) $medicoPorDefecto,
+                'centro'   => $centros[$cita->centroId ?? ''] ?? '',
+            ]);
+        }
+
+        return $mensajes;
+    }
+
+    /** @return array<int,string> `medical_center_id` => nombre, para la etiqueta `{centro}`. */
+    private function centrosDe(Collection $sedes): array
+    {
+        return $sedes
+            ->mapWithKeys(fn (Office $sede) => [
+                (int) $sede->medical_center_id => (string) ($sede->medicalCenter->name ?? ''),
+            ])
+            ->all();
+    }
+
+    /** El nombre del paciente de una cita, para decir **a quién** no se le pudo mandar el recordatorio. */
+    private function nombreDelPacienteDe(Cola $cita, EnviarRecordatorio $accion): string
+    {
+        $paciente = $accion->pacienteDeLaCita($cita);
+
+        return $paciente
+            ? trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''))
+            : 'Cita #' . $cita->id;
     }
 
     /** Una cita del `reg_medico` del contexto; la de otro médico no se toca ni se confirma que exista. */

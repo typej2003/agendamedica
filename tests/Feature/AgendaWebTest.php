@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Models\Cola;
+use App\Models\Evolucion;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MotivoCita;
+use App\Models\NotificacionCita;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
@@ -20,6 +22,7 @@ use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -121,9 +124,9 @@ class AgendaWebTest extends TestCase
         ]);
     }
 
-    private function pacienteConHistoria(Medico $medico, int $numhistoria, string $nombres, string $apellidos = 'Paciente'): int
+    private function pacienteConHistoria(Medico $medico, int $numhistoria, string $nombres, string $apellidos = 'Paciente', array $extra = []): int
     {
-        $id = DB::table('pacientes')->insertGetId([
+        $id = DB::table('pacientes')->insertGetId(array_merge([
             'nombres'    => $nombres,
             'apellidos'  => $apellidos,
             'cedula'     => (string) random_int(10000000, 30000000),
@@ -131,7 +134,7 @@ class AgendaWebTest extends TestCase
             'fnacimiento'=> '1990-05-04',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], $extra));
 
         DB::table('medico_pacientes')->insert([
             'medico_id'   => $medico->id,
@@ -930,5 +933,240 @@ class AgendaWebTest extends TestCase
             ->assertSessionHasErrors('sede');
 
         $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    // --------------------------------------------- Recordatorios y envíos del día (WEB-2.6 / WEB-2.7)
+
+    /** @return array<string,string> credenciales de Twilio de prueba (son del servidor, no del médico). */
+    private function twilio(): array
+    {
+        return [
+            'services.twilio.sid'   => 'ACprueba',
+            'services.twilio.token' => 'token-de-prueba',
+            'services.twilio.from'  => '+15005550006',
+        ];
+    }
+
+    public function test_la_jornada_ofrece_el_recordatorio_con_el_texto_del_medico_de_la_cita(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4001, 'Ana', 'Alvarez', [
+            'telefono' => '0414-1234567',
+            'email'    => 'ana@example.com',
+        ]);
+
+        // La plantilla es la del médico **de la cita** (`evolucion.clave` = `cola.medico`), no la de
+        // quien tiene la sesión abierta.
+        Evolucion::create([
+            'reg_medico'     => $medico->reg_medico,
+            'clave'          => 7,
+            'correo_med'     => $medico->email,
+            'plantilla_cita' => 'Hola {paciente}: cita el {fecha} a las {hora} con el {doctor}.',
+        ]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:30:00', 1, [
+            'numhistoria' => 4001,
+            'medico'      => 7,
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('abrirMensaje(this)', false);
+        // Las etiquetas ya sustituidas, en el texto que el diálogo ofrece de arranque.
+        $respuesta->assertSee('Hola Alvarez, Ana: cita el 05/10/2026 a las 09:30 con el Dr. de prueba Agenda.', false);
+        $respuesta->assertSee('data-tiene-telefono="1"', false);
+        $respuesta->assertSee('data-tiene-correo="1"', false);
+    }
+
+    public function test_el_recordatorio_se_manda_y_deja_la_constancia_en_la_cita(): void
+    {
+        config($this->twilio());
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM1', 'status' => 'queued'], 201)]);
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4002, 'Beto', 'Blanco', ['telefono' => '0414-9999999']);
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4002]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/notificar', ['canal' => 'sms', 'mensaje' => 'Hola Beto, te esperamos.'])
+            ->assertRedirect()
+            ->assertSessionHas('estado');
+
+        $this->assertSame('Hola Beto, te esperamos.', $cita->fresh()->sms_text);
+        $this->assertSame(1, NotificacionCita::where('cola_id', $cita->id)->where('canal', 'sms')->count());
+    }
+
+    public function test_no_se_le_recuerda_a_una_cita_ya_confirmada(): void
+    {
+        config($this->twilio());
+        Http::fake();
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4003, 'Carla', 'Castro', ['telefono' => '0414-1111111']);
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 4003,
+            'estado'      => Cola::ESTADO_CONFIRMADA,
+        ]);
+
+        $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Ni el botón en la jornada —ya confirmó, no hay nada que recordarle— ni el POST a mano.
+        $peticion->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas')
+            ->assertOk()
+            ->assertDontSee('abrirMensaje(this)', false);
+
+        $peticion->post('/clinica/agenda/' . $cita->id . '/notificar', ['canal' => 'sms'])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, NotificacionCita::count());
+        Http::assertNothingSent();
+    }
+
+    public function test_sin_el_dato_del_canal_el_envio_avisa_que_falta_y_no_registra_nada(): void
+    {
+        config($this->twilio());
+        Http::fake();
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4004, 'Dora', 'Díaz', ['telefono' => '12345']);
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4004]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/notificar', ['canal' => 'sms'])
+            ->assertRedirect()
+            ->assertSessionHas('error', 'El paciente no tiene un teléfono válido registrado.');
+
+        $this->assertSame(0, NotificacionCita::count());
+    }
+
+    public function test_la_pagina_de_envio_lista_los_pacientes_del_dia_y_marca_el_dato_que_falta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4005, 'Eva', 'Estévez', ['telefono' => '12345', 'email' => 'eva@example.com']);
+        $this->pacienteConHistoria($medico, 4006, 'Fina', 'Fernández', ['telefono' => '0414-3333333']);
+
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4005]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 2, ['numhistoria' => 4006]);
+        // Una ya confirmada no entra en la lista: no hay nada que recordarle.
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '10:00:00', 3, [
+            'numhistoria' => 4006,
+            'estado'      => Cola::ESTADO_CONFIRMADA,
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/envio?fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Enviar a todos');
+        $respuesta->assertSee('Estévez');
+        $respuesta->assertSee('Fernández');
+        $respuesta->assertSee('Sin celular válido');
+        // Dos pacientes en la lista, cada uno con la marca de qué dato tiene (el JS del canal arma la
+        // selección con eso); la tercera cita, ya confirmada, no se lista.
+        $respuesta->assertSee('2 pacientes');
+        $respuesta->assertSee('data-telefono="0"', false);
+        $respuesta->assertSee('Enviar a los seleccionados');
+        // `@disabled` es de Blade 9: si se cuela, la página muestra el texto de la directiva.
+        $respuesta->assertDontSee('@disabled', false);
+        $this->assertSame(2, substr_count($respuesta->content(), 'name="citas[]"'));
+    }
+
+    public function test_el_envio_del_dia_manda_a_los_seleccionados_y_reporta_los_que_fallan(): void
+    {
+        config($this->twilio());
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM2', 'status' => 'queued'], 201)]);
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4007, 'Gloria', 'Gómez', ['telefono' => '0414-4444444']);
+        $this->pacienteConHistoria($medico, 4008, 'Hugo', 'Hernández', ['telefono' => '12345']);
+
+        $buena = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4007]);
+        $mala = $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 2, ['numhistoria' => 4008]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/envio', [
+                'fecha'   => $this->lunes->toDateString(),
+                'sede'    => $sede->id,
+                'canal'   => 'sms',
+                'mensaje' => 'Aviso del consultorio.',
+                'citas'   => [$buena->id, $mala->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('estado')
+            ->assertSessionHas('error');
+
+        // El que no tiene teléfono no rompe el envío del resto.
+        $this->assertSame(1, NotificacionCita::where('cola_id', $buena->id)->count());
+        $this->assertSame(0, NotificacionCita::where('cola_id', $mala->id)->count());
+        $this->assertSame('Aviso del consultorio.', $buena->fresh()->sms_text);
+    }
+
+    public function test_el_envio_del_dia_no_toca_las_citas_de_otro_medico(): void
+    {
+        config($this->twilio());
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM3'], 201)]);
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $this->pacienteConHistoria($otro, 4009, 'Ajena', 'Persona', ['telefono' => '0414-5555555']);
+        $ajena = $this->cita($otro, null, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4009]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/envio', [
+                'fecha'   => $this->lunes->toDateString(),
+                'sede'    => 'todas',
+                'canal'   => 'sms',
+                'mensaje' => 'Aviso.',
+                'citas'   => [$ajena->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(0, NotificacionCita::count());
+        Http::assertNothingSent();
+    }
+
+    public function test_el_listado_que_se_imprime_trae_el_dia_y_deja_afuera_las_citas_movidas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->pacienteConHistoria($medico, 4010, 'Iris', 'Ibáñez', ['telefono' => '0414-6666666']);
+        $this->pacienteConHistoria($medico, 4011, 'Juan', 'Jiménez');
+
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4010]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 2, ['numhistoria' => 4010, 'atendido' => 1]);
+        // El escritorio la movió a otro día: no está en la jornada.
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '10:00:00', 3, [
+            'numhistoria'       => 4011,
+            'movida_escritorio' => true,
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/imprimir?fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Listado del día');
+        $respuesta->assertSee('Ibáñez');
+        $respuesta->assertSee('Pendiente');
+        $respuesta->assertSee('Atendido');
+        $respuesta->assertSee('2 Pacientes para el 05/10/2026');
+        $respuesta->assertDontSee('Jiménez');
     }
 }

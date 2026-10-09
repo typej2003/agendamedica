@@ -83,8 +83,14 @@ final class ArmadorDeAgenda
         $sinHistoria = $filas->pluck('paciente_sinhistoria_id')->filter()->unique()->values();
         $fichaSinHistoria = $sinHistoria->isEmpty() ? [] : DB::table('pacientes')
             ->whereIn('id', $sinHistoria->all())
-            ->get(['id', 'nombres', 'apellidos'])
-            ->mapWithKeys(fn ($p) => [(int) $p->id => ['id' => (int) $p->id, 'nombre' => $this->nombreDe($p)]])
+            ->get(['id', 'nombres', 'apellidos', 'cedula', 'telefono', 'email'])
+            ->mapWithKeys(fn ($p) => [(int) $p->id => [
+                'id' => (int) $p->id,
+                'nombre' => $this->nombreDe($p),
+                'telefono' => $p->telefono,
+                'email' => $p->email,
+                'cedula' => $p->cedula,
+            ]])
             ->all();
 
         return $filas->map(function (Cola $cola) use ($centroPorHistoria, $fichaPorHistoria, $fichaSinHistoria, $motivoPorCodigo) {
@@ -117,6 +123,12 @@ final class ArmadorDeAgenda
                 medico: $cola->medico !== null ? (int) $cola->medico : null,
                 movidaEscritorio: (bool) $cola->movida_escritorio,
                 motivoNombre: $motivoPorCodigo[$cola->tipo ?? ''] ?? $motivoPorCodigo[$cola->motivo ?? ''] ?? null,
+                // El contacto del paciente viaja con la cita: el envío del recordatorio (WEB-2.6) lo
+                // necesita por fila y resolverlo en la vista sería una consulta por cita. La cédula la
+                // usa el listado que se imprime (WEB-2.7).
+                telefono: $ficha['telefono'] ?? null,
+                email: $ficha['email'] ?? null,
+                cedula: $ficha['cedula'] ?? null,
             );
         });
     }
@@ -387,7 +399,8 @@ final class ArmadorDeAgenda
             ->all();
     }
 
-    /** @return array<int,array{id:int,nombre:string}> numhistoria => ficha del paciente. */    private function fichaPorHistoria(string $regMedico, Collection $numHistorias): array
+    /** @return array<int,array{id:int,nombre:string,telefono:?string,email:?string,cedula:?string}> numhistoria => ficha. */
+    private function fichaPorHistoria(string $regMedico, Collection $numHistorias): array
     {
         if ($numHistorias->isEmpty()) {
             return [];
@@ -397,8 +410,22 @@ final class ArmadorDeAgenda
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('medico_pacientes.reg_medico', $regMedico)
             ->whereIn('medico_pacientes.numhistoria', $numHistorias->all())
-            ->get(['medico_pacientes.numhistoria', 'pacientes.id', 'pacientes.nombres', 'pacientes.apellidos'])
-            ->mapWithKeys(fn ($p) => [(int) $p->numhistoria => ['id' => (int) $p->id, 'nombre' => $this->nombreDe($p)]])
+            ->get([
+                'medico_pacientes.numhistoria',
+                'pacientes.id',
+                'pacientes.nombres',
+                'pacientes.apellidos',
+                'pacientes.cedula',
+                'pacientes.telefono',
+                'pacientes.email',
+            ])
+            ->mapWithKeys(fn ($p) => [(int) $p->numhistoria => [
+                'id' => (int) $p->id,
+                'nombre' => $this->nombreDe($p),
+                'telefono' => $p->telefono,
+                'email' => $p->email,
+                'cedula' => $p->cedula,
+            ]])
             ->all();
     }
 

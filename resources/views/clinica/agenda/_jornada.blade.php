@@ -120,6 +120,24 @@
                         @if ($cita->movida())
                             <span class="small text-muted">Sin acciones: el escritorio la movió</span>
                         @else
+                        {{-- Recordatorio (WEB-2.6): desaparece si la cita ya está confirmada o atendida
+                             —no se le recuerda a quien ya confirmó— y avisa qué dato le falta al
+                             paciente. El diálogo es uno solo para toda la página. --}}
+                        @if ($cita->puedeRecordar())
+                            <button type="button" class="btn btn-sm btn-outline-info"
+                                    data-url="{{ route('clinica.agenda.notificar', $cita->id) }}"
+                                    data-paciente="{{ $cita->paciente }}"
+                                    data-telefono="{{ $cita->telefono }}"
+                                    data-email="{{ $cita->email }}"
+                                    data-mensaje="{{ $mensajes[$cita->id] ?? '' }}"
+                                    data-tiene-telefono="{{ $cita->tieneTelefono() ? '1' : '0' }}"
+                                    data-tiene-correo="{{ $cita->tieneCorreo() ? '1' : '0' }}"
+                                    onclick="abrirMensaje(this)"
+                                    title="Mandar el recordatorio por SMS, WhatsApp o correo">
+                                <i class="bi bi-chat-dots"></i>
+                            </button>
+                        @endif
+
                         @if (! $cita->confirmada())
                             <form method="POST" action="{{ route('clinica.agenda.confirmar', $cita->id) }}" class="d-inline">
                                 @csrf

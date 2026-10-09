@@ -43,8 +43,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // módulo es `clinica.agenda`, que es la que el menú arma desde `especialidad_modulo`.
             Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
             Route::get('/agenda/nueva', [AgendaController::class, 'nueva'])->name('agenda.nueva');
+            // Recordatorios y acciones globales del día (WEB-2.6/2.7). Van **antes** de las rutas con
+            // `{cola}`: si no, `envio`/`imprimir` entrarían como id de cita.
+            Route::get('/agenda/envio', [AgendaController::class, 'envio'])->name('agenda.envio');
+            Route::post('/agenda/envio', [AgendaController::class, 'enviarMasivo'])->name('agenda.envio.enviar');
+            Route::get('/agenda/imprimir', [AgendaController::class, 'imprimir'])->name('agenda.imprimir');
             Route::post('/agenda', [AgendaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [AgendaController::class, 'reordenar'])->name('agenda.reordenar');
+            Route::post('/agenda/{cola}/notificar', [AgendaController::class, 'notificar'])->name('agenda.notificar');
             Route::post('/agenda/{cola}/confirmar', [AgendaController::class, 'confirmar'])->name('agenda.confirmar');
             Route::post('/agenda/{cola}/atender', [AgendaController::class, 'atender'])->name('agenda.atender');
             Route::post('/agenda/{cola}/cobrar', [AgendaController::class, 'cobrar'])->name('agenda.cobrar');
