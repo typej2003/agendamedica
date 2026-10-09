@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Agenda\AtenderCita;
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
+use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\ReordenarCola;
+use App\Actions\Pacientes\CrearPaciente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Http\Resources\ConfiguracionMedicoResource;
@@ -344,26 +346,6 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * La `clave` de `evolucion` que le corresponde a [medico] dentro de este tenant — el mismo
-     * cruce que `medicosDelTenant`, pero al revés (por su propio correo). Es el default cuando el
-     * cliente crea una cita sin elegir médico explícitamente (Paso 22.C): el caso común, de un
-     * solo médico en la instancia. Nula si no hay fila de `evolucion` para él (pasa en los datos
-     * reales, que casi nunca tienen configuración).
-     */
-    private function claveDelMedico(Medico $medico, array $registrosMedicos): ?int
-    {
-        if (!$medico->email) {
-            return null;
-        }
-
-        $clave = Evolucion::whereIn('reg_medico', $registrosMedicos)
-            ->where('correo_med', $medico->email)
-            ->value('clave');
-
-        return $clave === null ? null : (int) $clave;
-    }
-
-    /**
      * Aplica las operaciones que mandó el cliente. Lo único que devuelve es lo que el cliente no
      * puede deducir solo: qué id real le tocó a cada fila que creó offline, y qué creaciones se
      * rechazaron. El resto del resultado se ve reflejado en el delta que se calcula después,
@@ -663,33 +645,11 @@ class SyncAppDataController extends Controller
             return;
         }
 
-        $paciente = DB::transaction(function () use ($columnas, $medico, $regMedico) {
-            $paciente = Paciente::where('cedula', $columnas['cedula'])->first();
-
-            if ($paciente) {
-                // Ya existe (lo atiende otro médico, o el escritorio lo subió antes): se enlaza y
-                // solo se completan los campos vacíos. Pisar los datos de una ficha ajena con lo
-                // que escribió la secretaria en el teléfono sería perder información de otro.
-                $completar = [];
-                foreach ($columnas as $columna => $valor) {
-                    if ($valor !== null && $paciente->{$columna} === null) {
-                        $completar[$columna] = $valor;
-                    }
-                }
-                if ($completar !== []) {
-                    $paciente->fill($completar)->save();
-                }
-            } else {
-                $paciente = Paciente::create($columnas);
-            }
-
-            MedicoPaciente::firstOrCreate(
-                ['medico_id' => $medico->id, 'paciente_id' => $paciente->id],
-                ['reg_medico' => $regMedico, 'numhistoria' => null],
-            );
-
-            return $paciente;
-        });
+        // La regla del alta —enlazar por cédula en vez de duplicar la ficha, completar solo los
+        // campos vacíos de una ficha ajena, y no crear `historia`— vive en la Action, que es la
+        // **misma** que usa la web clínica (PLAN-WEB.md, R3). Acá queda lo que es del sync: el id
+        // temporal con el que el cliente reconoce la fila que creó estando offline.
+        $paciente = app(CrearPaciente::class)->ejecutar($columnas, $medico, $regMedico);
 
         SyncChange::create([
             'reg_medico' => $regMedico,
@@ -770,20 +730,18 @@ class SyncAppDataController extends Controller
         // respeta esa; si no (el caso común, un solo médico en la instancia), se resuelve la del
         // médico autenticado.
         if (!isset($columnas['medico'])) {
-            $columnas['medico'] = $this->claveDelMedico($medico, $registrosMedicos);
+            $columnas['medico'] = $medico->claveDeEvolucion($registrosMedicos);
         }
 
-        $cola = Cola::create($columnas);
-
-        SyncChange::create([
-            'reg_medico' => $cola->reg_medico,
-            'table_name' => 'cola',
-            'record_id' => $cola->id,
-            'client_temp_id' => $tempId,
-            'operation' => 'created',
-            'occurred_at' => $occurredAt,
-            'source' => 'mobile',
-        ]);
+        // La fila y su rastro en `sync_changes` los escribe la Action compartida con la web clínica
+        // (PLAN-WEB.md, R3); acá le llega el `reg_medico` ya resuelto y el id temporal del cliente.
+        $cola = app(CrearCita::class)->ejecutar(
+            $columnas['reg_medico'],
+            $columnas,
+            $occurredAt,
+            'mobile',
+            $tempId,
+        );
 
         $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
     }

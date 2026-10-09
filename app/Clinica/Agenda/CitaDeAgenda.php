@@ -42,6 +42,11 @@ final class CitaDeAgenda
          * el escritorio la esconde del día, pero la web no pierde el dato.
          */
         public readonly bool $movidaEscritorio = false,
+        /**
+         * La razón de la cita **resuelta contra el catálogo** (`motivo_cita.tipo_atencion`), o nula
+         * si el código no está en el catálogo. Ver `razon()`.
+         */
+        public readonly ?string $motivoNombre = null,
     ) {
     }
 
@@ -111,6 +116,34 @@ final class CitaDeAgenda
     public function horaCorta(): string
     {
         return $this->horaIni ? substr($this->horaIni, 0, 5) : '—';
+    }
+
+    /**
+     * La razón de la cita, resuelta contra el catálogo de motivos.
+     *
+     * **No se usa `cola.motivo` como si fuera la razón**: en el legado esa columna es texto libre y
+     * en los datos reales trae el nombre del paciente (`'ATENDER A: …'`, R10 del contraste). La
+     * razón de verdad es el `codigo` de `motivo_cita`, que el escritorio guarda en `cola.tipo` y el
+     * móvil en `cola.motivo` — por eso se buscan los dos. El texto libre solo se muestra si parece
+     * un código y no está en el catálogo (último recurso: es lo único cierto que hay de esa fila).
+     */
+    public function razon(): string
+    {
+        if ($this->motivoNombre !== null && $this->motivoNombre !== '') {
+            return $this->motivoNombre;
+        }
+
+        if ($this->tipo !== null && $this->tipo !== '') {
+            return $this->tipo;
+        }
+
+        return $this->pareceCodigo($this->motivo) ? trim((string) $this->motivo) : '—';
+    }
+
+    /** ¿El texto parece un código del catálogo y no el nombre del paciente? */
+    private function pareceCodigo(?string $texto): bool
+    {
+        return $texto !== null && preg_match('/^[A-Za-z0-9._-]{1,12}$/', trim($texto)) === 1;
     }
 
     public function inicio(): Carbon

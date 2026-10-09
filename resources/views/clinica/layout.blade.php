@@ -145,5 +145,9 @@
     })();
 </script>
 
+{{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido:
+     así el HTML de la vista queda solo el HTML. --}}
+@yield('scripts')
+
 </body>
 </html>

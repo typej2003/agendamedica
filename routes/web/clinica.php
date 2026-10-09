@@ -34,14 +34,24 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
 
             Route::get('/pacientes', [PacienteController::class, 'index'])->name('pacientes');
+            // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"
+            // entra por `{paciente}` y no resuelve.
+            Route::get('/pacientes/buscar', [PacienteController::class, 'buscar'])->name('pacientes.buscar');
             Route::get('/pacientes/{paciente}', [PacienteController::class, 'ver'])->name('pacientes.ver');
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del
             // módulo es `clinica.agenda`, que es la que el menú arma desde `especialidad_modulo`.
             Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
+            Route::get('/agenda/nueva', [AgendaController::class, 'nueva'])->name('agenda.nueva');
+            Route::post('/agenda', [AgendaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [AgendaController::class, 'reordenar'])->name('agenda.reordenar');
             Route::post('/agenda/{cola}/confirmar', [AgendaController::class, 'confirmar'])->name('agenda.confirmar');
             Route::post('/agenda/{cola}/atender', [AgendaController::class, 'atender'])->name('agenda.atender');
             Route::post('/agenda/{cola}/cobrar', [AgendaController::class, 'cobrar'])->name('agenda.cobrar');
+            Route::post('/agenda/{cola}/eliminar', [AgendaController::class, 'eliminar'])->name('agenda.eliminar');
+            Route::get('/agenda/{cola}/editar', [AgendaController::class, 'editar'])->name('agenda.editar');
+            // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como
+            // id de cita, así que las de arriba tienen que estar declaradas primero.
+            Route::post('/agenda/{cola}', [AgendaController::class, 'actualizar'])->name('agenda.actualizar');
         });
     });

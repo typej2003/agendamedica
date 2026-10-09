@@ -6,9 +6,12 @@ use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Models\Cola;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
+use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
+use App\Models\MotivoCita;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
+use App\Models\Paciente;
 use App\Models\Specialty;
 use App\Models\SyncChange;
 use App\Models\User;
@@ -509,5 +512,423 @@ class AgendaWebTest extends TestCase
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
             ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString())
             ->assertOk();
+    }
+
+    // ----------------------------------------------------------- Alta de cita (WEB-2.2) y edición (2.3)
+
+    /** Lo mínimo del formulario de "Nueva cita": la sede elegida en el paso 1 y el día. */
+    private function datosDeCita(Office $sede, array $extra = []): array
+    {
+        return array_merge([
+            'sede'  => $sede->id,
+            'fecha' => $this->lunes->toDateString(),
+        ], $extra);
+    }
+
+    /** El redirect con el que el controlador devuelve a la agenda, para comparar. */
+    private function urlDeLaAgenda(Office $sede, ?string $fecha = null): string
+    {
+        return route('clinica.agenda', [
+            'vista' => 'dia',
+            'fecha' => $fecha ?? $this->lunes->toDateString(),
+            'sede'  => $sede->id,
+        ]);
+    }
+
+    public function test_agendar_una_cita_de_un_paciente_con_historia(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '09:30',
+                'paciente_id' => $pacienteId,
+                'monto'       => '50',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+
+        $this->assertSame(2001, (int) $cita->numhistoria);
+        $this->assertSame('09:30', substr($cita->hora_ini, 0, 5));
+        $this->assertSame('D', $cita->turno);            // derivado de la hora
+        $this->assertSame(1, (int) $cita->numorden);     // el próximo de la jornada
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $cita->estado);
+        $this->assertSame(50.0, (float) $cita->monto);
+        $this->assertSame('web', SyncChange::where('table_name', 'cola')
+            ->where('record_id', $cita->id)
+            ->where('operation', 'created')
+            ->value('source'));
+    }
+
+    public function test_agendar_da_de_alta_al_paciente_nuevo_sin_historia(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'            => '09:00',
+                'nuevo_cedula'    => '12345678',
+                'nuevo_nombres'   => 'Nueva',
+                'nuevo_apellidos' => 'Paciente',
+                'nuevo_telefono'  => '0414-1234567',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $paciente = Paciente::where('cedula', '12345678')->firstOrFail();
+        $this->assertSame('Nueva', $paciente->nombres);
+
+        // El vínculo nace **sin número de historia**: lo asigna el API cuando se complete la historia.
+        $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $paciente->id)->firstOrFail();
+        $this->assertNull($relacion->numhistoria);
+
+        // Y la cita queda anclada al paciente, no a una historia que no existe.
+        $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertNull($cita->numhistoria);
+        $this->assertSame($paciente->id, (int) $cita->paciente_sinhistoria_id);
+    }
+
+    public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        // Una ficha que ya existe (la cargó otro consultorio) con datos propios.
+        $ajena = Paciente::create([
+            'cedula'    => '99887766',
+            'nombres'   => 'Vieja',
+            'apellidos' => 'Ficha',
+            'telefono'  => '0212-0000000',
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'            => '09:00',
+                'nuevo_cedula'    => '99887766',
+                'nuevo_nombres'   => 'Otro',
+                'nuevo_apellidos' => 'Nombre',
+                'nuevo_telefono'  => '0414-9999999',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        // No se duplica la ficha y no se pisan los datos que ya tenía.
+        $this->assertSame(1, Paciente::where('cedula', '99887766')->count());
+        $this->assertSame('Vieja', $ajena->fresh()->nombres);
+        $this->assertSame('0212-0000000', $ajena->fresh()->telefono);
+
+        // Pero sí queda enlazada a este médico y la cita apunta a ella.
+        $this->assertSame(1, MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->count());
+        $this->assertSame($ajena->id, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->paciente_sinhistoria_id);
+    }
+
+    public function test_una_cita_pendiente_se_pregunta_antes_de_agendar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        // Una cita pendiente de hoy en adelante (las pasadas sin atender no cuentan).
+        $this->cita($medico, $sede, Carbon::today()->addDay()->toDateString(), '09:00:00', 1, ['numhistoria' => 2001]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '10:00',
+                'paciente_id' => $pacienteId,
+            ]));
+
+        // Vuelve el formulario con la pregunta y **no se escribió nada**.
+        $respuesta->assertOk();
+        $respuesta->assertSee('Ya tiene una cita pendiente');
+        $respuesta->assertSee('Mover esa cita a la nueva fecha');
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_se_puede_agendar_otra_cita_de_todos_modos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $this->cita($medico, $sede, Carbon::today()->addDay()->toDateString(), '09:00:00', 1, ['numhistoria' => 2001]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '10:00',
+                'paciente_id' => $pacienteId,
+                'decision'    => 'otra',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        // La excepción del tratamiento: dos citas del mismo paciente (masajistas, terapias).
+        $this->assertSame(2, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_mover_la_cita_pendiente_conserva_lo_cobrado_y_reinicia_la_confirmacion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $pendiente = $this->cita($medico, $sede, Carbon::today()->addDay()->toDateString(), '09:00:00', 1, [
+            'numhistoria' => 2001,
+            'estado'      => Cola::ESTADO_CONFIRMADA,
+            'sms_text'    => 'recordatorio enviado',
+            'monto'       => 50,
+            'monto_pagado'=> 30,
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '10:00',
+                'paciente_id' => $pacienteId,
+                'decision'    => 'mover',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $fresca = $pendiente->fresh();
+
+        // Es **la misma fila** movida, con lo cobrado intacto…
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame($this->lunes->toDateString(), $fresca->fecha->toDateString());
+        $this->assertSame('10:00', substr($fresca->hora_ini, 0, 5));
+        $this->assertSame(30.0, (float) $fresca->monto_pagado);
+
+        // …y reiniciado lo que valía para la fecha vieja.
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $fresca->estado);
+        $this->assertNull($fresca->sms_text);
+    }
+
+    public function test_cancelar_la_pregunta_por_la_cita_pendiente_no_agenda_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $this->cita($medico, $sede, Carbon::today()->addDay()->toDateString(), '09:00:00', 1, ['numhistoria' => 2001]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '10:00',
+                'paciente_id' => $pacienteId,
+                'decision'    => 'cancelar',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_por_orden_de_llegada_la_hora_la_pone_el_bloque(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $this->bloque($sede, '14:00', '18:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'bloque'      => 1,
+                'paciente_id' => $pacienteId,
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame('14:00', substr($cita->hora_ini, 0, 5));
+        $this->assertSame('T', $cita->turno);
+    }
+
+    public function test_con_hora_de_cita_la_hora_es_obligatoria(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['paciente_id' => $pacienteId]))
+            ->assertSessionHasErrors('hora');
+
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_reagendar_mueve_la_misma_cita_y_reinicia_lo_que_valia_para_la_fecha_vieja(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria'  => 2001,
+            'estado'       => Cola::ESTADO_CONFIRMADA,
+            'sms_text'     => 'recordatorio enviado',
+            'monto'        => 50,
+            'monto_pagado' => 30,
+        ]);
+
+        $otroDia = $this->lunes->copy()->addWeek();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id, [
+                'sede'        => $sede->id,
+                'fecha'       => $otroDia->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+                'monto'       => '50',
+            ])
+            ->assertRedirect($this->urlDeLaAgenda($sede, $otroDia->toDateString()));
+
+        $fresca = $cita->fresh();
+
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame($otroDia->toDateString(), $fresca->fecha->toDateString());
+        $this->assertSame('09:00', substr($fresca->hora_ini, 0, 5));
+        $this->assertSame(30.0, (float) $fresca->monto_pagado);
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $fresca->estado);
+        $this->assertNull($fresca->sms_text);
+
+        // Y queda el rastro que el sync necesita para no pisar la edición desde el teléfono.
+        $this->assertSame(1, SyncChange::where('table_name', 'cola')
+            ->where('record_id', $cita->id)
+            ->where('column_name', 'fecha')
+            ->where('source', 'web')
+            ->count());
+    }
+
+    public function test_una_cita_atendida_no_se_reagenda_ni_se_elimina(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 2001,
+            'atendido'    => 1,
+        ]);
+
+        $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $peticion->post('/clinica/agenda/' . $cita->id, [
+            'sede'        => $sede->id,
+            'fecha'       => $this->lunes->copy()->addWeek()->toDateString(),
+            'hora'        => '09:00',
+            'paciente_id' => $pacienteId,
+        ])->assertStatus(302)->assertSessionHas('error');
+
+        $peticion->post('/clinica/agenda/' . $cita->id . '/eliminar')
+            ->assertStatus(302)->assertSessionHas('error');
+
+        $fresca = $cita->fresh();
+        $this->assertNotNull($fresca);
+        $this->assertSame($this->lunes->toDateString(), $fresca->fecha->toDateString());
+    }
+
+    public function test_eliminar_la_cita_la_borra_y_deja_rastro_para_el_sync(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $cita = $this->cita($medico, null, $this->lunes->toDateString(), '08:00:00', 1);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/eliminar')
+            ->assertStatus(302)
+            ->assertSessionHas('estado');
+
+        $this->assertNull(Cola::find($cita->id));
+        $this->assertSame(1, SyncChange::where('table_name', 'cola')
+            ->where('record_id', $cita->id)
+            ->where('operation', 'deleted')
+            ->count());
+    }
+
+    public function test_una_cita_con_pago_registrado_no_se_elimina(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $cita = $this->cita($medico, null, $this->lunes->toDateString(), '08:00:00', 1, [
+            'monto'        => 50,
+            'monto_pagado' => 20,
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/eliminar')
+            ->assertStatus(302)
+            ->assertSessionHas('error');
+
+        $this->assertNotNull($cita->fresh());
+    }
+
+    public function test_el_buscador_de_pacientes_devuelve_solo_los_del_medico(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->pacienteConHistoria($medico, 3001, 'Buscada', 'Persona');
+
+        // Otro médico con un paciente que se llama igual: no tiene que aparecer.
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $this->pacienteConHistoria($otro, 3002, 'Buscada', 'Ajena');
+
+        $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $peticion->getJson('/clinica/pacientes/buscar?q=Buscada')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonFragment(['nombre' => 'Persona, Buscada']);
+
+        // Con una sola letra no devuelve nada: sería el consultorio entero.
+        $peticion->getJson('/clinica/pacientes/buscar?q=B')->assertOk()->assertJsonCount(0);
+    }
+
+    public function test_la_agenda_muestra_la_razon_del_catalogo_y_no_el_nombre_del_paciente(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        MotivoCita::create([
+            'reg_medico'    => $medico->reg_medico,
+            'codigo'        => 'CONS',
+            'tipo_atencion' => 'Consulta general',
+        ]);
+
+        // El legado escribe `tipo` (escritorio) y `motivo` con el nombre del paciente.
+        $this->cita($medico, null, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 2001,
+            'tipo'        => 'CONS',
+            'motivo'      => 'ATENDER A: Ana Alvarez',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Consulta general');
+        $respuesta->assertDontSee('ATENDER A');
+    }
+
+    public function test_no_se_agenda_en_la_sede_de_otro_medico(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        // Una sede propia (con sedes configuradas hay que elegir una de ellas) y una ajena.
+        $this->sede($medico, $this->centro('Propia')->id, Office::MODALIDAD_HORA, 'C1');
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $ajena = $this->sede($otro, $this->centro('Ajena')->id, Office::MODALIDAD_HORA, 'C9');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', [
+                'sede'        => $ajena->id,
+                'fecha'       => $this->lunes->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ])
+            ->assertSessionHasErrors('sede');
+
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
     }
 }

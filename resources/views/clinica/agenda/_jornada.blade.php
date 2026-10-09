@@ -34,6 +34,11 @@
                 @php $movidas = $jornada->movidas()->count(); @endphp
                 · <span class="text-muted">{{ $movidas }} {{ $movidas === 1 ? 'movida' : 'movidas' }} por el escritorio</span>
             @endif
+
+            <a class="btn btn-sm btn-outline-primary ms-2"
+               href="{{ route('clinica.agenda.nueva', ['fecha' => $jornada->fecha, 'sede' => $jornada->sede?->id]) }}">
+                <i class="bi bi-plus-lg"></i> Agendar
+            </a>
         </div>
     </div>
 
@@ -92,7 +97,7 @@
                             <span class="badge bg-secondary">Sin historia</span>
                         @endif
                     </td>
-                    <td class="small">{{ $cita->motivo ?: ($cita->tipo ?: '—') }}</td>
+                    <td class="small">{{ $cita->razon() }}</td>
                     <td>
                         @if ($cita->movida())
                             <span class="badge bg-secondary"
@@ -155,6 +160,27 @@
                                 Cobrar
                             </button>
                         @endif
+
+                        {{-- Editar y eliminar: una cita atendida ya ocurrió (y tiene la consulta
+                             colgando) y una con pago registrado no se borra — la regla la aplica
+                             `App\Actions\Agenda\EliminarCita`; acá solo no se ofrece el botón. --}}
+                        @unless ($cita->atendida())
+                            <a class="btn btn-sm btn-outline-secondary" title="Editar o reagendar"
+                               href="{{ route('clinica.agenda.editar', $cita->id) }}">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            @unless (in_array($pago, [Cola::PAGO_PAGADA, Cola::PAGO_ABONADA], true))
+                                <form method="POST" action="{{ route('clinica.agenda.eliminar', $cita->id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('¿Eliminar esta cita? No se puede deshacer.');">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar la cita">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            @endunless
+                        @endunless
                         @endif
                     </td>
                 </tr>

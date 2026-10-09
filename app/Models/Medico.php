@@ -84,6 +84,30 @@ class Medico extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * La `clave` de `evolucion` que le corresponde a este médico dentro de un consultorio: es la
+     * numeración con la que el legado lo identifica en `cola.medico` (no es `medicos.id`, ver
+     * `App\Models\Cola`). La usan el sync del móvil al crear una cita sin elegir médico y la web
+     * clínica al agendar, para que las dos superficies escriban el mismo número.
+     *
+     * Nula si no hay fila de `evolucion` para él, que es lo común en los datos reales: casi ningún
+     * consultorio tiene la configuración cargada.
+     *
+     * @param  string|array<int,string>  $registros  El registro propio, o todos los del consultorio.
+     */
+    public function claveDeEvolucion(string|array $registros): ?int
+    {
+        if (! $this->email) {
+            return null;
+        }
+
+        $clave = Evolucion::whereIn('reg_medico', (array) $registros)
+            ->where('correo_med', $this->email)
+            ->value('clave');
+
+        return $clave === null ? null : (int) $clave;
+    }
+
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class, 'office_id');

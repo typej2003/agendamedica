@@ -50,8 +50,18 @@ final class Jornada
     /** `D` (mañana) o `T` (tarde): la convención del legado, derivada de la hora — no se pregunta. */
     public function turno(): string
     {
-        $hora = $this->horario->hora_inicio ?? ($this->citas->first()->horaIni ?? null);
+        return self::turnoDe($this->horario->hora_inicio ?? ($this->citas->first()->horaIni ?? null));
+    }
 
+    /**
+     * El turno de una hora cualquiera: es la regla del legado (`w_nueva_cita.srw:716-721` la deriva
+     * de la hora, y el escritorio es inconsistente con las ventanas que usan la hora del reloj).
+     *
+     * Vive acá, estática, porque la necesita también quien **todavía no tiene la jornada**: al
+     * agendar, el turno de la cita nueva sale de la hora elegida.
+     */
+    public static function turnoDe(?string $hora): string
+    {
         return (OfficeSchedule::aMinutos($hora) ?? 0) < 12 * 60 ? 'D' : 'T';
     }
 

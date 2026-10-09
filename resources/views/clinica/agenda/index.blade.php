@@ -55,6 +55,11 @@
                     @endforeach
                 </select>
             </form>
+
+            <a class="btn btn-sm btn-primary"
+               href="{{ route('clinica.agenda.nueva', ['fecha' => $fecha->toDateString(), 'sede' => $sedeId]) }}">
+                <i class="bi bi-plus-lg"></i> Nueva cita
+            </a>
         </div>
     </div>
 

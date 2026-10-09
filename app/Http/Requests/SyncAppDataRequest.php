@@ -50,7 +50,7 @@ class SyncAppDataRequest extends FormRequest
      * autenticado, que es lo único que marca el tenant. `medico` (la `clave` de `evolucion`, Paso
      * 22.B) sí, desde el Paso 22.C: en un tenant con más de un médico, quien agenda elige para
      * cuál es la cita. Si no lo manda (el caso común, un solo médico en la instancia), el servidor
-     * resuelve la del médico autenticado (`SyncAppDataController::claveDelMedico`).
+     * resuelve la del médico autenticado (`Medico::claveDeEvolucion`).
      */
     public const CREATABLE_COLUMNS = [
         'cola' => [

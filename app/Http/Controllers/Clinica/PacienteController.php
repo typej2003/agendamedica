@@ -56,6 +56,50 @@ class PacienteController extends Controller
         ]);
     }
 
+    /**
+     * Los pacientes del contexto que coinciden con lo que se está escribiendo en el buscador de
+     * "Nueva cita" (apellido, nombre, cédula o n.º de historia). Devuelve JSON y **pocos**: es un
+     * desplegable para elegir uno, no un listado.
+     *
+     * Se exigen dos caracteres: con uno solo la lista sería el consultorio entero.
+     */
+    public function buscar(Request $request)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $buscar = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($buscar) < 2) {
+            return response()->json([]);
+        }
+
+        $pacientes = DB::table('medico_pacientes')
+            ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
+            ->where('medico_pacientes.reg_medico', $contexto['reg_medico'])
+            ->where(function ($filtro) use ($buscar) {
+                $filtro->where('pacientes.nombres', 'like', "%{$buscar}%")
+                    ->orWhere('pacientes.apellidos', 'like', "%{$buscar}%")
+                    ->orWhere('pacientes.cedula', 'like', "%{$buscar}%")
+                    ->orWhere('medico_pacientes.numhistoria', 'like', "%{$buscar}%");
+            })
+            ->orderBy('pacientes.apellidos')
+            ->orderBy('pacientes.nombres')
+            ->limit(10)
+            ->get([
+                'pacientes.id',
+                'pacientes.nombres',
+                'pacientes.apellidos',
+                'pacientes.cedula',
+                'medico_pacientes.numhistoria',
+            ]);
+
+        return response()->json($pacientes->map(fn ($fila) => [
+            'id'          => (int) $fila->id,
+            'nombre'      => trim(($fila->apellidos ?? '') . ', ' . ($fila->nombres ?? ''), ', '),
+            'cedula'      => $fila->cedula,
+            'numhistoria' => $fila->numhistoria !== null ? (int) $fila->numhistoria : null,
+        ])->values());
+    }
+
     public function ver(Request $request, int $paciente)
     {
         $contexto = $request->attributes->get('contexto_clinico');
