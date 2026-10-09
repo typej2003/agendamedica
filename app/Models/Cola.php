@@ -20,7 +20,11 @@ class Cola extends Model
      * - **Confirmación** → `estado` (esta constante). El escritorio **no** la usa para esto: sus
      *   ventanas de agenda escriben siempre `0`, y el `1` se lo pone facturación (ver la nota de
      *   abajo). Acá la columna es la confirmación y esos son sus únicos valores.
-     * - **Atención** → `atendido` (0/1), que el legado sí usa de verdad.
+     * - **Atención** → `atendido` (0/1), que el legado sí usa de verdad. ⚠️ En el escritorio la misma
+     *   columna tiene **cuatro** valores (0/1/2/3: el `2` es "la cita se movió" y el `3` *Realizada*,
+     *   sin escritor). Acá siempre es el booleano; la traducción la hace el sync
+     *   (`App\Sync\Escritorio\AtencionCita`, WEB-2.13) y la cita movida queda en
+     *   `movida_escritorio`.
      * - **Pago** → `monto` vs. `monto_pagado`, ver `estadoPago()`.
      *
      * ⚠️ **Ojo con `estado` en el escritorio.** Ahí la misma columna significa "factura elaborada"
@@ -54,6 +58,7 @@ class Cola extends Model
         'paciente_sinhistoria_id',
         'numorden',
         'atendido',
+        'movida_escritorio',
         'estado',
         'facturada_escritorio',
         'turno',
@@ -72,6 +77,7 @@ class Cola extends Model
 
     protected $casts = [
         'fecha' => 'date',
+        'movida_escritorio' => 'boolean',
         'facturada_escritorio' => 'boolean',
     ];
 

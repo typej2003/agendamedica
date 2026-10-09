@@ -142,6 +142,26 @@ class CargaInicialTest extends TestCase
             'la factura del escritorio se conserva en su columna');
     }
 
+    public function test_la_carga_normaliza_el_atendido_del_escritorio(): void
+    {
+        // En el escritorio `atendido` tiene cuatro valores (0/1/2/3): el 2 es "la cita se movió" y el
+        // 3 *Realizada*; AppDDR solo entiende el booleano (WEB-2.13).
+        $this->crearMedico('carga-t-007');
+        $carga = $this->iniciar('carga-t-007', ['cola' => 3])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'atendido' => 2],
+            ['fecha' => '2026-10-01', 'hora_ini' => '09:00:00', 'atendido' => 3],
+            ['fecha' => '2026-10-01', 'hora_ini' => '10:00:00', 'atendido' => 1],
+        ]])->assertOk()->assertJson(['recibidas' => 3]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-007')->orderBy('hora_ini')->get();
+        $this->assertSame([0, 1, 1], $citas->pluck('atendido')->map(fn ($a) => (int) $a)->all(),
+            'el 2 queda pendiente y el 3 cuenta como atendida');
+        $this->assertSame([1, 0, 0], $citas->pluck('movida_escritorio')->map(fn ($m) => (int) $m)->all(),
+            'solo la movida queda marcada');
+    }
+
     public function test_evolucion_no_cuenta_como_dato_previo(): void
     {
         $this->crearMedico('carga-t-003');

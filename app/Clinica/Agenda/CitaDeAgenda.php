@@ -36,6 +36,12 @@ final class CitaDeAgenda
         public readonly ?string $motivo,
         public readonly ?string $tipo,
         public readonly ?int $medico,
+        /**
+         * El escritorio PowerBuilder la **movió a otro día** (`cola.movida_escritorio`; en su
+         * `atendido` era un `2`, WEB-2.13). Acá se muestra marcada, sin acciones y fuera del cupo:
+         * el escritorio la esconde del día, pero la web no pierde el dato.
+         */
+        public readonly bool $movidaEscritorio = false,
     ) {
     }
 
@@ -48,6 +54,12 @@ final class CitaDeAgenda
     public function atendida(): bool
     {
         return (int) $this->atendido === 1;
+    }
+
+    /** El escritorio la postergó: esta fila es la vieja, la nueva está en la fecha destino. */
+    public function movida(): bool
+    {
+        return $this->movidaEscritorio;
     }
 
     public function montoPendiente(): float
@@ -79,15 +91,21 @@ final class CitaDeAgenda
      */
     public function puedeConfirmar(Carbon $ahora): bool
     {
-        return ! $this->confirmada()
+        return ! $this->movida()
+            && ! $this->confirmada()
             && $this->esDelDia($ahora)
             && ! $ahora->lessThan($this->inicio()->subHour());
     }
 
-    /** "Atender" solo el día de la cita. Una vez atendida no hay vuelta atrás. */
+    /**
+     * "Atender" solo el día de la cita. Una vez atendida no hay vuelta atrás.
+     *
+     * Una cita movida por el escritorio tampoco se atiende: esta fila es la vieja y el paciente ya
+     * está en su fecha nueva.
+     */
     public function puedeAtender(Carbon $ahora): bool
     {
-        return ! $this->atendida() && $this->esDelDia($ahora);
+        return ! $this->movida() && ! $this->atendida() && $this->esDelDia($ahora);
     }
 
     public function horaCorta(): string

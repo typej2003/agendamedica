@@ -111,6 +111,7 @@ final class ArmadorDeAgenda
                 motivo: $cola->motivo,
                 tipo: $cola->tipo,
                 medico: $cola->medico !== null ? (int) $cola->medico : null,
+                movidaEscritorio: (bool) $cola->movida_escritorio,
             );
         });
     }
@@ -168,6 +169,8 @@ final class ArmadorDeAgenda
      * citas del rango, no sobre las filtradas: si la secretaria filtra por motivo, el paciente 7
      * tiene que seguir siendo el 7 (regla del móvil).
      *
+     * Las citas movidas por el escritorio quedan afuera: no tienen posición en la cola del día.
+     *
      * @param  Collection<int,Jornada>  $jornadas
      * @return array<int,int>
      */
@@ -177,6 +180,9 @@ final class ArmadorDeAgenda
 
         foreach ($jornadas as $jornada) {
             foreach ($jornada->ordenadas() as $fila) {
+                if ($fila['posicion'] === null) {
+                    continue;
+                }
                 $posiciones[$fila['cita']->id] = $fila['posicion'];
             }
         }

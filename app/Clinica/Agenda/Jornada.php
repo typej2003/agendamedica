@@ -60,9 +60,19 @@ final class Jornada
         return $this->horario->cupo ?? null;
     }
 
+    /**
+     * Cuántas citas **cuentan** para la jornada: las movidas por el escritorio no (el escritorio las
+     * esconde del día y su paciente ya está en la fecha nueva). Se siguen listando, marcadas.
+     */
     public function cantidad(): int
     {
-        return $this->citas->count();
+        return $this->citas->reject(fn (CitaDeAgenda $cita) => $cita->movida())->count();
+    }
+
+    /** Las citas que el escritorio postergó y todavía apuntan a este día. */
+    public function movidas(): Collection
+    {
+        return $this->citas->filter(fn (CitaDeAgenda $cita) => $cita->movida())->values();
     }
 
     public function siguienteNumero(): int
@@ -105,13 +115,20 @@ final class Jornada
      * El criterio de orden es el del móvil (`_compararEnJornada`): si la sede trabaja **por orden
      * de llegada** manda `numorden`; en una sede con **hora de cita** manda la hora.
      *
-     * @return Collection<int,array{cita: CitaDeAgenda, posicion: int}>
+     * Las citas **movidas por el escritorio** van al final y **sin posición** (`null`): no son parte
+     * de la cola del día (el escritorio las excluye), solo quedan a la vista como aviso.
+     *
+     * @return Collection<int,array{cita: CitaDeAgenda, posicion: ?int}>
      */
     public function ordenadas(): Collection
     {
         $porOrdenDeLlegada = $this->esPorOrdenDeLlegada();
 
         $ordenadas = $this->citas->sort(function (CitaDeAgenda $a, CitaDeAgenda $b) use ($porOrdenDeLlegada) {
+            if ($a->movida() !== $b->movida()) {
+                return $a->movida() ? 1 : -1;
+            }
+
             if ($porOrdenDeLlegada) {
                 $ordenA = $a->numOrden ?? PHP_INT_MAX;
                 $ordenB = $b->numOrden ?? PHP_INT_MAX;
@@ -123,6 +140,14 @@ final class Jornada
             return strcmp((string) $a->horaIni, (string) $b->horaIni);
         })->values();
 
-        return $ordenadas->map(fn (CitaDeAgenda $cita, int $i) => ['cita' => $cita, 'posicion' => $i + 1]);
+        $posicion = 0;
+
+        return $ordenadas->map(function (CitaDeAgenda $cita) use (&$posicion) {
+            if ($cita->movida()) {
+                return ['cita' => $cita, 'posicion' => null];
+            }
+
+            return ['cita' => $cita, 'posicion' => ++$posicion];
+        });
     }
 }

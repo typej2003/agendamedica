@@ -6,6 +6,7 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
+use App\Sync\Escritorio\AtencionCita;
 use App\Sync\Escritorio\EstadoCita;
 use App\Sync\Escritorio\PacientesLegado;
 use App\Sync\Escritorio\TablasLegado;
@@ -278,8 +279,10 @@ class CargaInicialService
             }
             $limpia = $this->tablas->filtrar($tabla, $fila, $ignoradas);
             if ($tabla === 'cola') {
-                // El escritorio trae `estado = 1` de facturación, no de confirmación (WEB-2.12).
+                // El escritorio trae `estado = 1` de facturación, no de confirmación (WEB-2.12), y su
+                // `atendido` con cuatro valores (0/1/2/3), no el booleano de AppDDR (WEB-2.13).
                 $limpia = EstadoCita::nuevaDeEscritorio($limpia);
+                $limpia = AtencionCita::aAppDdr($limpia);
             }
             $limpia['reg_medico'] = $carga->reg_medico;
             // Clave de la fila en el escritorio: con ella la sincronización de cambios reconoce

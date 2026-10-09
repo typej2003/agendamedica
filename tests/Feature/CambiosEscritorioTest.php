@@ -323,6 +323,46 @@ class CambiosEscritorioTest extends TestCase
         $this->assertTrue((bool) $cita->facturada_escritorio);
     }
 
+    public function test_una_cita_movida_por_el_escritorio_no_queda_pendiente_en_appddr(): void
+    {
+        // `w_calendar` marca la cita vieja con `atendido = 2` cuando la pasa a otro día (WEB-2.13).
+        $this->subir([['id' => 66, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 12:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'atendido' => 2]]]);
+
+        $cita = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')->first();
+        $this->assertSame(0, (int) $cita->atendido, 'el 2 del escritorio no es un valor de AppDDR');
+        $this->assertTrue((bool) $cita->movida_escritorio, 'la movida se conserva aparte');
+    }
+
+    public function test_un_cero_del_escritorio_vuelve_a_dejar_normal_una_cita_movida(): void
+    {
+        // Reagendar en el mismo día (`w_nueva_cita_7`) resetea `atendido`: la marca no es de un solo
+        // sentido, a diferencia de `facturada_escritorio`.
+        $cita = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')->first();
+        $cita->movida_escritorio = true;
+        $cita->save();
+
+        $this->subir([['id' => 67, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 12:30:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'atendido' => 0]]]);
+
+        $this->assertFalse((bool) $cita->fresh()->movida_escritorio);
+    }
+
+    public function test_realizada_del_escritorio_cuenta_como_atendida(): void
+    {
+        // `3 = Realizada` está declarado en el DataWindow y ninguna ventana lo escribe; si aparece,
+        // es una consulta hecha (decisión 2026-10-09).
+        $this->subir([['id' => 68, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 13:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 1, 'atendido' => 3]]]);
+
+        $cita = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')->first();
+        $this->assertSame(1, (int) $cita->atendido);
+        $this->assertFalse((bool) $cita->movida_escritorio);
+    }
+
     public function test_tabla_sin_clave_primaria_se_reemplaza_entera(): void
     {
         DB::table('vademecum_m')->insert(['reg_medico' => self::REG, 'codemedicina' => 'VIEJO']);

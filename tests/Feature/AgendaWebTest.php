@@ -328,6 +328,62 @@ class AgendaWebTest extends TestCase
 
     // --------------------------------------------------------------------------------- Acciones
 
+    public function test_una_cita_movida_por_el_escritorio_se_muestra_marcada_y_no_cuenta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $sede = $this->sede($medico, $this->centro('Movidas')->id, Office::MODALIDAD_HORA);
+        $this->bloque($sede, '08:00', '12:00', 2);
+
+        $this->pacienteConHistoria($medico, 4001, 'Viva', 'EnLaFecha');
+        $this->pacienteConHistoria($medico, 4002, 'Movida', 'AlOtroDia');
+
+        // La cita viva del día y la que el escritorio postergó (`atendido = 2` → `movida_escritorio`).
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4001]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '11:00:00', 2, [
+            'numhistoria' => 4002, 'movida_escritorio' => true,
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(
+            '/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas'
+        );
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Movida');                        // la fila no desaparece en silencio
+        $respuesta->assertSee('1 movida por el escritorio');
+        $respuesta->assertSee('Sin acciones: el escritorio la movió');
+        $respuesta->assertSee('AlOtroDia');
+
+        // Fuera del cupo: 1 sola cita cuenta (no “cupo 2/2”).
+        $respuesta->assertSee('cupo 1/2');
+        $respuesta->assertDontSee('Cupo completo');
+
+        // Y sin número de posición en la cola del día.
+        $jornadas = app(ArmadorDeAgenda::class)->jornadas(
+            app(ArmadorDeAgenda::class)->citas($medico->reg_medico, $this->lunes->copy(), $this->lunes->copy()),
+            app(ArmadorDeAgenda::class)->sedes($medico->reg_medico, $medico->id),
+        );
+        $filaMovida = $jornadas->first()->ordenadas()->firstWhere('cita.numHistoria', 4002);
+        $this->assertNotNull($filaMovida, 'la movida se sigue listando');
+        $this->assertNull($filaMovida['posicion'], 'la movida no ocupa un número de la cola');
+
+        // Y ninguna acción se puede ejecutar sobre ella (ni desde la UI ni por POST directo).
+        $movida = Cola::where('numhistoria', 4002)->firstOrFail();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $movida->id . '/atender')
+            ->assertRedirect();
+
+        $this->assertSame(0, (int) $movida->fresh()->atendido,
+            'una cita movida no se puede atender desde la web');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $movida->id . '/confirmar', ['estado' => Cola::ESTADO_CONFIRMADA])
+            ->assertRedirect();
+
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $movida->fresh()->estado);
+    }
+
     public function test_confirmar_marca_la_cita_y_deja_rastro_para_el_sync(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

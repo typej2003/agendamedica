@@ -30,6 +30,10 @@
                 · sin cupo configurado
             @endif
             · próximo #{{ $jornada->siguienteNumero() }}
+            @if ($jornada->movidas()->isNotEmpty())
+                @php $movidas = $jornada->movidas()->count(); @endphp
+                · <span class="text-muted">{{ $movidas }} {{ $movidas === 1 ? 'movida' : 'movidas' }} por el escritorio</span>
+            @endif
         </div>
     </div>
 
@@ -57,16 +61,24 @@
                    @endif>
             @foreach ($jornada->ordenadas() as $fila)
                 @php $cita = $fila['cita']; @endphp
-                <tr class="{{ $cita->atendida() ? 'table-success' : '' }}"
-                    @if ($puedeReordenar)
+                <tr class="{{ $cita->movida() ? 'text-muted' : ($cita->atendida() ? 'table-success' : '') }}"
+                    @if ($puedeReordenar && ! $cita->movida())
                         draggable="true" data-id="{{ $cita->id }}" data-numorden="{{ $cita->numOrden }}"
                     @endif>
                     @if ($puedeReordenar)
                         <td class="text-muted" title="Arrastrar para reordenar" style="cursor: grab;">
-                            <i class="bi bi-grip-vertical"></i>
+                            @unless ($cita->movida())
+                                <i class="bi bi-grip-vertical"></i>
+                            @endunless
                         </td>
                     @endif
-                    <td><span class="badge bg-dark">#{{ $fila['posicion'] }}</span></td>
+                    <td>
+                        @if ($fila['posicion'] !== null)
+                            <span class="badge bg-dark">#{{ $fila['posicion'] }}</span>
+                        @else
+                            <span class="badge bg-secondary" title="El escritorio la movió a otro día">—</span>
+                        @endif
+                    </td>
                     <td>{{ $cita->horaCorta() }}</td>
                     <td>
                         @if ($cita->pacienteId)
@@ -82,7 +94,10 @@
                     </td>
                     <td class="small">{{ $cita->motivo ?: ($cita->tipo ?: '—') }}</td>
                     <td>
-                        @if ($cita->atendida())
+                        @if ($cita->movida())
+                            <span class="badge bg-secondary"
+                                  title="El escritorio la postergó: el paciente ya está en la fecha nueva">Movida</span>
+                        @elseif ($cita->atendida())
                             <span class="badge bg-success">Atendida</span>
                         @elseif ($cita->confirmada())
                             <span class="badge bg-primary">Confirmada</span>
@@ -97,6 +112,9 @@
                         </span>
                     </td>
                     <td class="text-end text-nowrap">
+                        @if ($cita->movida())
+                            <span class="small text-muted">Sin acciones: el escritorio la movió</span>
+                        @else
                         @if (! $cita->confirmada())
                             <form method="POST" action="{{ route('clinica.agenda.confirmar', $cita->id) }}" class="d-inline">
                                 @csrf
@@ -136,6 +154,7 @@
                                     onclick="abrirCobro(this)">
                                 Cobrar
                             </button>
+                        @endif
                         @endif
                     </td>
                 </tr>

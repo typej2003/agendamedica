@@ -321,6 +321,9 @@ class CambiosEscritorio
         // La `estado` del escritorio ("factura elaborada") no se escribe en `cola.estado`
         // (confirmación en AppDDR): se traduce acá. Ver EstadoCita y WEB-2.12.
         $delEscritorio = EstadoCita::aAppDdr($this->tablas->normalizarClaves($fila));
+        // Y su `atendido` (0/1/2/3) se normaliza al booleano de AppDDR, con la movida aparte
+        // (`AtencionCita`, WEB-2.13).
+        $delEscritorio = AtencionCita::aAppDdr($delEscritorio);
         $datos = $this->traducir($carga, $this->tablas->filtrar('cola', $delEscritorio, $ignoradas));
         $datos = array_diff_key($datos, array_flip($delApp['columnas']));
         $datos['reg_medico'] = $carga->reg_medico;

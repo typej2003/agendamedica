@@ -73,6 +73,11 @@ class AgendaController extends Controller
     public function confirmar(Request $request, Cola $cola, ConfirmarCita $accion)
     {
         $cita = $this->citaDelContexto($request, $cola);
+
+        if ($cita->movida_escritorio) {
+            return back()->with('error', 'El escritorio movió esta cita a otro día: el paciente ya está en la fecha nueva.');
+        }
+
         $estado = (int) $request->input('estado', Cola::ESTADO_CONFIRMADA);
 
         if ($estado === Cola::ESTADO_NO_CONFIRMADA && (int) $cita->atendido === 1) {
@@ -95,7 +100,13 @@ class AgendaController extends Controller
      */
     public function atender(Request $request, Cola $cola, AtenderCita $accion)
     {
-        $accion->ejecutar($this->citaDelContexto($request, $cola), true, null, 'web');
+        $cita = $this->citaDelContexto($request, $cola);
+
+        if ($cita->movida_escritorio) {
+            return back()->with('error', 'El escritorio movió esta cita a otro día: el paciente ya está en la fecha nueva.');
+        }
+
+        $accion->ejecutar($cita, true, null, 'web');
 
         return back()->with('estado', 'Cita marcada como atendida.');
     }
