@@ -21,7 +21,11 @@
     --bs-body-color: var(--ds-texto);
     --bs-body-color-rgb: 32, 16, 72;
     --bs-body-bg: var(--ds-fondo);
-    --bs-heading-color: var(--ds-tinta);
+    /* `--bs-heading-color` se deja **sin definir** a propósito (Bootstrap lo trae vacío): así el
+       encabezado hereda del contenedor. Fijarlo acá pintaba de tinta los títulos que van sobre fondo
+       oscuro —p. ej. el `h5` de un `card-header bg-primary text-white`, que quedaba en 2:1—, porque el
+       `text-white` solo pinta al contenedor.
+       En fondo claro igual queda la tinta, porque es el color de `body`. */
     --bs-secondary-color: var(--ds-texto-3);
     --bs-secondary-color-rgb: 107, 101, 128;
     --bs-emphasis-color: var(--ds-tinta);
@@ -85,9 +89,10 @@ body {
     outline-offset: 2px;
 }
 
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    color: var(--ds-tinta);
-}
+/* Los encabezados **heredan** el color (Bootstrap los deja sin color propio a propósito): forzarles la
+   tinta desde acá rompía los que van sobre fondo oscuro — el `text-white` de un `card-header bg-primary`
+   solo pinta al contenedor, no al `h5` de adentro, y el título quedaba en 2:1. `body` ya define
+   `--ds-texto`, que es el mismo color, así que heredar es exactamente lo que se busca. */
 
 .text-muted { color: var(--ds-texto-3) !important; }
 .text-info { color: var(--ds-info) !important; }
@@ -173,6 +178,19 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     --bs-btn-border-color: var(--ds-peligro);
     --bs-btn-hover-bg: #94201a;
     --bs-btn-hover-border-color: #94201a;
+}
+
+/* Bootstrap deja `btn-info` en cian claro (#0dcaf0): con texto blanco da 1,9:1. */
+.btn-info {
+    --bs-btn-bg: var(--ds-info);
+    --bs-btn-border-color: var(--ds-info);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-bg: #0a4a63;
+    --bs-btn-hover-border-color: #0a4a63;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #08384b;
+    --bs-btn-active-border-color: #08384b;
+    --bs-btn-active-color: #fff;
 }
 
 .btn-outline-danger {
@@ -344,14 +362,27 @@ fieldset:disabled .btn[class*="btn-outline-"] {
     --bs-table-border-color: var(--ds-borde);
 }
 
+/* Aire en las celdas: Bootstrap usa .5rem/.5rem y `table-sm` baja a .25rem, que dejaba el texto pegado
+   al borde de la tarjeta. Se sobreescribe el mismo selector que usa Bootstrap porque el relleno de celda
+   no está expuesto como variable. */
+.table > :not(caption) > * > * {
+    padding: .7rem .9rem;
+}
+
+.table-sm > :not(caption) > * > * {
+    padding: .5rem .75rem;
+}
+
+/* Los extremos de la fila llevan un poco más, así el contenido no toca el borde de la tarjeta. */
+.table > :not(caption) > * > *:first-child { padding-left: 1rem; }
+.table > :not(caption) > * > *:last-child { padding-right: 1rem; }
+
 .table thead th {
     font-size: .78rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .03em;
     color: var(--ds-texto-2);
-    padding-top: .6rem;
-    padding-bottom: .6rem;
     white-space: nowrap;
 }
 

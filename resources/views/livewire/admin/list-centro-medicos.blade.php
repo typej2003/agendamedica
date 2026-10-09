@@ -51,10 +51,10 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-warning me-1" wire:click="edit({{ $centro->id }})">
+                            <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $centro->id }})">
                                 Editar
                             </button>
-                            <button class="btn btn-sm btn-danger" wire:click="triggerDeleteConfirm({{ $centro->id }})">
+                            <button class="btn btn-sm btn-outline-danger" wire:click="triggerDeleteConfirm({{ $centro->id }})">
                                 Eliminar
                             </button>
                         </td>

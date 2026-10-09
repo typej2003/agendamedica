@@ -38,10 +38,10 @@
                         <td>{{ $paciente->telefono ?? 'N/A' }}</td>
                         <td>{{ $paciente->email ?? 'N/A' }}</td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-warning me-1" wire:click="edit({{ $paciente->id }})">
+                            <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $paciente->id }})">
                                 Editar
                             </button>
-                            <button class="btn btn-sm btn-danger" wire:click="triggerDeleteConfirm({{ $paciente->id }})">
+                            <button class="btn btn-sm btn-outline-danger" wire:click="triggerDeleteConfirm({{ $paciente->id }})">
                                 Eliminar
                             </button>
                         </td>
