@@ -400,10 +400,12 @@ class CuentasTest extends TestCase
 
         $this->post('/cambiar-password', [
             'password_actual' => 'Temporal123', 'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('clinica.inicio'));
 
         $this->assertFalse($r['user']->fresh()->must_change_password);
-        $this->get('/dashboard')->assertOk();
+        // Sin clave temporal el médico ya trabaja: el panel de administración lo devuelve a su consultorio.
+        $this->get('/dashboard')->assertRedirect(route('clinica.inicio'));
+        $this->get('/clinica/contexto')->assertOk();
     }
 
     public function test_una_cuenta_bloqueada_es_sacada_de_la_web(): void

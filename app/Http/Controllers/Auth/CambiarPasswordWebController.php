@@ -43,6 +43,8 @@ class CambiarPasswordWebController extends Controller
 
         $cuentas->cambiarClave($user, $datos['password_nueva']);
 
-        return redirect()->route('dashboard')->with('status', 'Contraseña actualizada.');
+        // Se vuelve al área del usuario, la misma a la que entra al iniciar sesión: un médico con clave
+        // temporal tiene que terminar en el consultorio, no en el panel de administración.
+        return redirect()->route($user->rutaDeInicio())->with('status', 'Contraseña actualizada.');
     }
 }

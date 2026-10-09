@@ -1,155 +1,219 @@
-/* ==========================================
-   Variables de Paleta de Colores
-   ========================================== */
-:root {
-    --primary-color: #c28fd6;
-    --primary-hover: #b072c7;
-    --primary-light: #f7effa;
-    --primary-border: #ebd3f5;
-    
-    --accent-color: #3bb39e;
-    --accent-hover: #329887;
-    --accent-light: #eaf8f5;
+/* ==========================================================================
+   Doctorísimo — paleta y estilos de marca
+   ==========================================================================
+   La paleta sale del **logo de la app** (`DoctorisimoMobile/assets/icon/icon.png`), medido píxel a
+   píxel sobre la imagen: violeta `#783080` (20,4% de la tinta, el corazón y la "A" del script), azul
+   marino `#201048` (9,8%, la "M"), magenta `#602068` y el celeste del latido `#40b0d8`.
 
-    --dark-color: #2e1f38;
-    --muted-color: #6c757d;
-    --bg-light: #fdf8ff;
-    --bg-surface: #ffffff;
+   Regla de contraste (WCAG AA = 4,5:1 para texto normal): cada color de la paleta está anotado con su
+   relación contra el fondo con el que se usa. El lila anterior (`#c28fd6` con texto blanco, 2,6:1) no
+   cumplía y se retiró.
+
+   Este archivo define **una sola vez** los tokens. Los nombres históricos (`--primary-color`, etc.) se
+   mantienen apuntando a los nuevos para no romper las vistas que ya los usan: cambiando acá, cambia
+   todo el sitio. El sistema de la aplicación (Bootstrap + componentes web) vive en
+   `doctorisimo-ui.css`, que consume estos mismos tokens.
+   ========================================================================== */
+
+:root {
+    /* ---- Violeta de marca (del logo) ---- */
+    --ds-violeta-50:  #f9f4fa;
+    --ds-violeta-100: #f3e8f5;
+    --ds-violeta-200: #e3cfe6;
+    --ds-violeta-300: #cfb0d4;
+    --ds-violeta-500: #9a4aa2;
+    --ds-violeta-600: #8a3a91;
+    --ds-violeta-700: #783080;   /* primario — 8,3:1 con blanco */
+    --ds-violeta-800: #60256a;   /* hover/activo */
+    --ds-violeta-900: #4a1a53;
+
+    /* ---- Azul marino de la "M" ---- */
+    --ds-tinta: #201048;         /* texto principal — 17,1:1 con blanco */
+
+    /* ---- Celeste del latido ---- */
+    --ds-celeste-50:  #e6f4fa;
+    --ds-celeste-200: #b8e0f0;
+    --ds-celeste-500: #40b0d8;   /* acento decorativo: NO usar como texto (2,5:1) */
+    --ds-celeste-700: #0d5e7d;   /* celeste oscurecido para texto — 7,5:1 con blanco */
+
+    /* ---- Neutros, tintados hacia el violeta del logo ---- */
+    --ds-texto:        #201048;  /* 16,6:1 sobre --ds-fondo */
+    --ds-texto-2:      #4a4463;  /* 9,1:1 */
+    --ds-texto-3:      #6b6580;  /* 5,5:1 — el "text-muted" del sistema */
+    --ds-borde:        #e6e2ec;
+    --ds-borde-2:      #d5d0e4;
+    --ds-fondo:        #f6f5f9;
+    --ds-superficie:   #ffffff;
+    --ds-superficie-2: #f1eff5;
+
+    /* ---- Semánticos (texto sobre su propio fondo claro) ---- */
+    --ds-exito:         #14654a;  --ds-exito-bg:   #e8f6f0;  --ds-exito-borde:   #b6e2d0;
+    --ds-aviso:         #7a5900;  --ds-aviso-bg:   #ffecb3;  --ds-aviso-borde:   #f2dcb3;
+    --ds-peligro:       #b3261e;  --ds-peligro-bg: #fdecea;  --ds-peligro-borde: #f5c6c2;
+    --ds-info:          #0d5e7d;  --ds-info-bg:    #e6f4fa;  --ds-info-borde:    #b8e0f0;
+
+    /* ---- Formas y sombras ---- */
+    --ds-radio-sm: 8px;
+    --ds-radio: 10px;
+    --ds-radio-lg: 14px;
+    --ds-sombra-1: 0 1px 2px rgba(32, 16, 72, .06), 0 1px 3px rgba(32, 16, 72, .04);
+    --ds-sombra-2: 0 4px 16px rgba(32, 16, 72, .08);
+    --ds-sombra-3: 0 10px 30px rgba(32, 16, 72, .12);
+    --ds-foco: 0 0 0 .2rem rgba(120, 48, 128, .28);
+
+    /* ---- Nombres históricos (gineco), apuntando a la misma paleta ---- */
+    --primary-color: var(--ds-violeta-700);
+    --primary-hover: var(--ds-violeta-800);
+    --primary-light: var(--ds-violeta-100);
+    --primary-border: var(--ds-violeta-200);
+
+    --accent-color: var(--ds-celeste-700);
+    --accent-hover: #0a4a63;
+    --accent-light: var(--ds-celeste-50);
+
+    --dark-color: var(--ds-tinta);
+    --muted-color: var(--ds-texto-3);
+    --bg-light: var(--ds-violeta-50);
+    --bg-surface: var(--ds-superficie);
 }
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: var(--dark-color);
-    background-color: var(--bg-surface);
+    color: var(--ds-texto);
+    background-color: var(--ds-superficie);
 }
 
 /* ==========================================
    Header / Navbar
    ========================================== */
 .navbar-gineco {
-    background-color: var(--bg-surface);
-    box-shadow: 0 2px 15px rgba(194, 143, 214, 0.15);
+    background-color: var(--ds-superficie);
+    box-shadow: 0 1px 3px rgba(32, 16, 72, .06);
 }
 
 .navbar-gineco .navbar-brand {
     font-weight: 700;
-    color: var(--dark-color);
+    color: var(--ds-tinta);
 }
 
 .navbar-gineco .navbar-brand span {
-    color: var(--primary-color);
+    color: var(--ds-violeta-700);
 }
 
 .nav-link {
-    color: var(--dark-color);
+    color: var(--ds-texto-2);
     font-weight: 500;
-    transition: color 0.3s ease;
+    transition: color .2s ease;
 }
 
 .nav-link:hover {
-    color: var(--primary-hover);
+    color: var(--ds-violeta-700);
 }
 
 /* ==========================================
-   Botones Personalizados
+   Botones de marca
    ========================================== */
 .btn-primary-gineco {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #ffffff;
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
     font-weight: 600;
     border-radius: 50px;
     padding: 10px 24px;
-    transition: all 0.3s ease;
+    transition: all .2s ease;
 }
 
-.btn-primary-gineco:hover {
-    background-color: var(--primary-hover);
-    border-color: var(--primary-hover);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(194, 143, 214, 0.4);
+.btn-primary-gineco:hover,
+.btn-primary-gineco:focus {
+    background-color: var(--ds-violeta-800);
+    border-color: var(--ds-violeta-800);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(120, 48, 128, .35);
 }
 
 .btn-accent-gineco {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-    color: #ffffff;
+    background-color: var(--ds-celeste-700);
+    border-color: var(--ds-celeste-700);
+    color: #fff;
     font-weight: 600;
     border-radius: 50px;
     padding: 10px 24px;
-    transition: all 0.3s ease;
+    transition: all .2s ease;
 }
 
-.btn-accent-gineco:hover {
+.btn-accent-gineco:hover,
+.btn-accent-gineco:focus {
     background-color: var(--accent-hover);
     border-color: var(--accent-hover);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(59, 179, 158, 0.4);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(13, 94, 125, .35);
 }
 
 .btn-outline-gineco {
-    border: 2px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 2px solid var(--ds-violeta-700);
+    color: var(--ds-violeta-700);
     font-weight: 600;
     border-radius: 50px;
     padding: 8px 22px;
-    transition: all 0.3s ease;
+    transition: all .2s ease;
 }
 
-.btn-outline-gineco:hover {
-    background-color: var(--primary-color);
-    color: #ffffff;
+.btn-outline-gineco:hover,
+.btn-outline-gineco:focus {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
 }
 
 /* ==========================================
-   Hero Section
+   Hero Section (sitio público)
    ========================================== */
 .hero-section {
-    background: linear-gradient(135deg, var(--bg-light) 0%, #ffffff 100%);
+    background: linear-gradient(135deg, var(--ds-violeta-50) 0%, #ffffff 100%);
     padding: 80px 0 60px 0;
-    border-bottom: 1px solid var(--primary-border);
+    border-bottom: 1px solid var(--ds-violeta-200);
 }
 
 .hero-title {
     font-weight: 800;
-    color: var(--dark-color);
+    color: var(--ds-tinta);
 }
 
 .hero-title span {
-    color: var(--primary-color);
+    color: var(--ds-violeta-700);
 }
 
 .search-box-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(194, 143, 214, 0.2);
-    border: 1px solid var(--primary-border);
+    background: #fff;
+    border-radius: var(--ds-radio-lg);
+    box-shadow: var(--ds-sombra-3);
+    border: 1px solid var(--ds-violeta-200);
 }
 
 /* ==========================================
    Cards de Servicios / Especialidades
    ========================================== */
 .service-card {
-    background: #ffffff;
-    border: 1px solid #f0e6f5;
-    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
     padding: 25px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform .2s ease, box-shadow .2s ease;
     height: 100%;
 }
 
 .service-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(194, 143, 214, 0.2);
-    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: var(--ds-sombra-2);
+    border-color: var(--ds-violeta-200);
 }
 
 .service-icon {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: var(--primary-light);
-    color: var(--primary-color);
+    background-color: var(--ds-violeta-100);
+    color: var(--ds-violeta-700);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -158,23 +222,24 @@ body {
 }
 
 .accent-icon {
-    background-color: var(--accent-light);
-    color: var(--accent-color);
+    background-color: var(--ds-celeste-50);
+    color: var(--ds-celeste-700);
 }
 
 /* ==========================================
-   Sección Banner Promocional / Telemedicina
+   Banner promocional / Telemedicina
    ========================================== */
 .banner-telemedicina {
-    background-color: var(--primary-light);
-    border-radius: 20px;
-    border: 1px solid var(--primary-border);
+    background-color: var(--ds-violeta-50);
+    border-radius: var(--ds-radio-lg);
+    border: 1px solid var(--ds-violeta-200);
 }
 
 .badge-gineco {
-    background-color: var(--accent-light);
-    color: var(--accent-color);
-    font-size: 0.85rem;
+    background-color: var(--ds-celeste-50);
+    color: var(--ds-celeste-700);
+    border: 1px solid var(--ds-celeste-200);
+    font-size: .85rem;
     font-weight: 700;
     padding: 6px 14px;
     border-radius: 20px;
@@ -184,16 +249,25 @@ body {
    Footer
    ========================================== */
 .footer-gineco {
-    background-color: var(--dark-color);
-    color: #ffffff;
+    background-color: var(--ds-tinta);
+    color: #fff;
 }
 
 .footer-gineco a {
-    color: #d1c4db;
+    color: var(--ds-violeta-200);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color .2s ease;
 }
 
 .footer-gineco a:hover {
-    color: var(--primary-color);
+    color: #fff;
 }
+
+/* El pie es oscuro: los encabezados no pueden heredar la tinta (quedarían invisibles) y el gris del
+   "text-muted" del sistema no tiene contraste sobre azul marino. */
+.footer-gineco h1, .footer-gineco h2, .footer-gineco h3,
+.footer-gineco h4, .footer-gineco h5, .footer-gineco h6 {
+    color: #fff;
+}
+
+.footer-gineco .text-muted { color: #b9aecb !important; }

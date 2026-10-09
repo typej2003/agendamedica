@@ -1,0 +1,775 @@
+/* ==========================================================================
+   Doctorísimo — sistema de la aplicación (web clínica + panel)
+   ==========================================================================
+   Se carga **después de Bootstrap** y hace dos cosas:
+
+   1. Le cambia la paleta a Bootstrap (variables CSS + los pocos componentes donde Bootstrap tiene el
+      color fijo). Con eso, las ~50 vistas que ya usan `btn-primary`, `badge bg-info`, `table-light`,
+      `text-muted`… adoptan la paleta sin tocarlas una por una.
+   2. Agrega los componentes del armazón (barra superior, menú lateral, encabezado de página, tarjetas
+      de indicador, estado vacío).
+
+   Los colores salen de `gineco.css` (`--ds-*`), que es el único archivo donde está la paleta.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Bootstrap, recoloreado
+   ========================================================================== */
+:root {
+    /* Tipografía y base */
+    --bs-font-sans-serif: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bs-body-color: var(--ds-texto);
+    --bs-body-color-rgb: 32, 16, 72;
+    --bs-body-bg: var(--ds-fondo);
+    --bs-heading-color: var(--ds-tinta);
+    --bs-secondary-color: var(--ds-texto-3);
+    --bs-secondary-color-rgb: 107, 101, 128;
+    --bs-emphasis-color: var(--ds-tinta);
+    --bs-border-color: var(--ds-borde);
+    --bs-border-color-translucent: rgba(32, 16, 72, .12);
+    --bs-border-radius: var(--ds-radio);
+    --bs-border-radius-sm: var(--ds-radio-sm);
+    --bs-border-radius-lg: var(--ds-radio-lg);
+
+    /* Vínculos */
+    --bs-link-color: var(--ds-violeta-700);
+    --bs-link-color-rgb: 120, 48, 128;
+    --bs-link-hover-color: var(--ds-violeta-800);
+    --bs-link-hover-color-rgb: 96, 37, 106;
+
+    /* Primario (violeta del logo) */
+    --bs-primary: #783080;
+    --bs-primary-rgb: 120, 48, 128;
+    --bs-primary-text-emphasis: var(--ds-violeta-900);
+    --bs-primary-bg-subtle: var(--ds-violeta-100);
+    --bs-primary-border-subtle: var(--ds-violeta-200);
+
+    /* Semánticos: el texto oscuro y el fondo claro, para que `text-*` y `bg-*-subtle` cumplan AA */
+    --bs-success-rgb: 20, 101, 74;
+    --bs-success-text-emphasis: #0f5c40;
+    --bs-success-bg-subtle: var(--ds-exito-bg);
+    --bs-success-border-subtle: var(--ds-exito-borde);
+
+    --bs-danger-rgb: 179, 38, 30;
+    --bs-danger-text-emphasis: #7d1a15;
+    --bs-danger-bg-subtle: var(--ds-peligro-bg);
+    --bs-danger-border-subtle: var(--ds-peligro-borde);
+
+    --bs-warning-text-emphasis: var(--ds-aviso);
+    --bs-warning-bg-subtle: var(--ds-aviso-bg);
+    --bs-warning-border-subtle: var(--ds-aviso-borde);
+
+    /* El celeste del latido es el acento de marca (decorativo) */
+    --bs-info-rgb: 64, 176, 216;
+    --bs-info-text-emphasis: var(--ds-info);
+    --bs-info-bg-subtle: var(--ds-info-bg);
+    --bs-info-border-subtle: var(--ds-info-borde);
+
+    --bs-secondary-rgb: 107, 101, 128;
+    --bs-dark-rgb: 32, 16, 72;
+    --bs-light-rgb: 241, 239, 245;
+
+    /* Bootstrap pinta los `code` de rosa (#d63384): 4,15:1 sobre el fondo de la app. */
+    --bs-code-color: var(--ds-violeta-800);
+}
+
+body {
+    background-color: var(--ds-fondo);
+    color: var(--ds-texto);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visible y consistente en todo el sitio (accesibilidad: nunca se apaga el contorno). */
+:focus-visible {
+    outline: 2px solid var(--ds-violeta-700);
+    outline-offset: 2px;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--ds-tinta);
+}
+
+.text-muted { color: var(--ds-texto-3) !important; }
+.text-info { color: var(--ds-info) !important; }
+.text-warning { color: var(--ds-aviso) !important; }
+.text-success { color: var(--ds-exito) !important; }
+.text-danger { color: var(--ds-peligro) !important; }
+.text-body-secondary { color: var(--ds-texto-2) !important; }
+
+::selection { background: var(--ds-violeta-200); color: var(--ds-violeta-900); }
+
+/* --- Botones --- */
+.btn {
+    --bs-btn-font-weight: 600;
+    --bs-btn-border-radius: var(--ds-radio-sm);
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--ds-violeta-700);
+    --bs-btn-border-color: var(--ds-violeta-700);
+    --bs-btn-hover-bg: var(--ds-violeta-800);
+    --bs-btn-hover-border-color: var(--ds-violeta-800);
+    --bs-btn-active-bg: var(--ds-violeta-900);
+    --bs-btn-active-border-color: var(--ds-violeta-900);
+    --bs-btn-disabled-bg: var(--ds-violeta-300);
+    --bs-btn-disabled-border-color: var(--ds-violeta-300);
+    --bs-btn-focus-shadow-rgb: 120, 48, 128;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--ds-violeta-700);
+    --bs-btn-border-color: var(--ds-violeta-700);
+    --bs-btn-hover-bg: var(--ds-violeta-700);
+    --bs-btn-hover-border-color: var(--ds-violeta-700);
+    --bs-btn-active-bg: var(--ds-violeta-800);
+    --bs-btn-active-border-color: var(--ds-violeta-800);
+    --bs-btn-disabled-color: var(--ds-violeta-300);
+    --bs-btn-disabled-border-color: var(--ds-violeta-300);
+    --bs-btn-focus-shadow-rgb: 120, 48, 128;
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--ds-texto-3);
+    --bs-btn-border-color: var(--ds-texto-3);
+    --bs-btn-hover-bg: var(--ds-texto-2);
+    --bs-btn-hover-border-color: var(--ds-texto-2);
+    --bs-btn-active-bg: var(--ds-tinta);
+    --bs-btn-active-border-color: var(--ds-tinta);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--ds-texto-2);
+    --bs-btn-border-color: var(--ds-borde-2);
+    --bs-btn-hover-bg: var(--ds-superficie-2);
+    --bs-btn-hover-border-color: var(--ds-texto-3);
+    --bs-btn-hover-color: var(--ds-tinta);
+    --bs-btn-active-bg: var(--ds-borde-2);
+    --bs-btn-active-border-color: var(--ds-texto-3);
+    --bs-btn-active-color: var(--ds-tinta);
+}
+
+.btn-success {
+    --bs-btn-bg: var(--ds-exito);
+    --bs-btn-border-color: var(--ds-exito);
+    --bs-btn-hover-bg: #14654a;
+    --bs-btn-hover-border-color: #14654a;
+    --bs-btn-active-bg: #0f5c40;
+    --bs-btn-active-border-color: #0f5c40;
+}
+
+.btn-outline-success {
+    --bs-btn-color: var(--ds-exito);
+    --bs-btn-border-color: var(--ds-exito);
+    --bs-btn-hover-bg: var(--ds-exito);
+    --bs-btn-hover-border-color: var(--ds-exito);
+    --bs-btn-active-bg: #14654a;
+    --bs-btn-active-border-color: #14654a;
+    --bs-btn-focus-shadow-rgb: 26, 127, 90;
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--ds-peligro);
+    --bs-btn-border-color: var(--ds-peligro);
+    --bs-btn-hover-bg: #94201a;
+    --bs-btn-hover-border-color: #94201a;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--ds-peligro);
+    --bs-btn-border-color: var(--ds-peligro);
+    --bs-btn-hover-bg: var(--ds-peligro);
+    --bs-btn-hover-border-color: var(--ds-peligro);
+    --bs-btn-focus-shadow-rgb: 179, 38, 30;
+}
+
+/* Bootstrap deja el ámbar (#ffc107) como color de texto de `btn-outline-warning`: 1,5:1 sobre el fondo
+   claro, ilegible. El borde sigue siendo ámbar, el texto pasa al ámbar oscuro. */
+.btn-outline-warning {
+    --bs-btn-color: var(--ds-aviso);
+    --bs-btn-border-color: #e0a800;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ds-aviso);
+    --bs-btn-hover-border-color: var(--ds-aviso);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #5f4500;
+    --bs-btn-active-border-color: #5f4500;
+    --bs-btn-focus-shadow-rgb: 122, 89, 0;
+}
+
+.btn-outline-info {
+    --bs-btn-color: var(--ds-info);
+    --bs-btn-border-color: var(--ds-celeste-500);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ds-info);
+    --bs-btn-hover-border-color: var(--ds-info);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #0a4a63;
+    --bs-btn-active-border-color: #0a4a63;
+    --bs-btn-focus-shadow-rgb: 13, 94, 125;
+}
+
+/* Botón deshabilitado: Bootstrap conserva el color de la variante en `--bs-btn-disabled-color`, que
+   además deja el texto casi invisible (el violeta claro daba 1,8:1). Se unifica en gris legible. */
+.btn[class*="btn-outline-"]:disabled,
+.btn[class*="btn-outline-"].disabled,
+fieldset:disabled .btn[class*="btn-outline-"] {
+    --bs-btn-disabled-color: var(--ds-texto-3);
+    --bs-btn-disabled-border-color: var(--ds-borde-2);
+    --bs-btn-disabled-bg: transparent;
+}
+
+.btn-outline-dark {
+    --bs-btn-color: var(--ds-tinta);
+    --bs-btn-border-color: var(--ds-borde-2);
+    --bs-btn-hover-bg: var(--ds-tinta);
+    --bs-btn-hover-border-color: var(--ds-tinta);
+    --bs-btn-active-bg: var(--ds-tinta);
+    --bs-btn-active-border-color: var(--ds-tinta);
+}
+
+.btn-light {
+    --bs-btn-bg: var(--ds-superficie-2);
+    --bs-btn-border-color: var(--ds-borde);
+    --bs-btn-color: var(--ds-texto-2);
+    --bs-btn-hover-bg: var(--ds-borde);
+    --bs-btn-hover-border-color: var(--ds-borde-2);
+    --bs-btn-hover-color: var(--ds-tinta);
+}
+
+.btn-link {
+    --bs-btn-color: var(--ds-violeta-700);
+    --bs-btn-hover-color: var(--ds-violeta-800);
+}
+
+.btn-check:checked + .btn-outline-primary,
+.btn-outline-primary.active {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
+}
+
+/* --- Insignias: pastilla suave, con texto oscuro sobre fondo claro --- */
+.badge {
+    --bs-badge-font-weight: 600;
+    padding: .35em .7em;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.badge.bg-primary, .badge.bg-primary.text-dark {
+    background-color: var(--ds-violeta-100) !important;
+    border-color: var(--ds-violeta-200) !important;
+    color: var(--ds-violeta-800) !important;
+}
+
+.badge.bg-success, .badge.bg-success.text-dark {
+    background-color: var(--ds-exito-bg) !important;
+    border-color: var(--ds-exito-borde) !important;
+    color: var(--ds-exito) !important;
+}
+
+.badge.bg-warning, .badge.bg-warning.text-dark {
+    background-color: var(--ds-aviso-bg) !important;
+    border-color: var(--ds-aviso-borde) !important;
+    color: var(--ds-aviso) !important;
+}
+
+.badge.bg-danger, .badge.bg-danger.text-dark {
+    background-color: var(--ds-peligro-bg) !important;
+    border-color: var(--ds-peligro-borde) !important;
+    color: var(--ds-peligro) !important;
+}
+
+.badge.bg-info, .badge.bg-info.text-dark {
+    background-color: var(--ds-info-bg) !important;
+    border-color: var(--ds-info-borde) !important;
+    color: var(--ds-info) !important;
+}
+
+.badge.bg-secondary, .badge.bg-secondary.text-dark {
+    background-color: var(--ds-superficie-2) !important;
+    border-color: var(--ds-borde-2) !important;
+    color: var(--ds-texto-2) !important;
+}
+
+.badge.bg-light, .badge.bg-light.text-dark {
+    background-color: var(--ds-superficie-2) !important;
+    border-color: var(--ds-borde) !important;
+    color: var(--ds-texto-2) !important;
+}
+
+/* El único sólido: el número de turno, que necesita peso visual. */
+.badge.bg-dark, .badge.bg-dark.text-white {
+    background-color: var(--ds-tinta) !important;
+    border-color: var(--ds-tinta) !important;
+    color: #fff !important;
+}
+
+/* --- Tarjetas --- */
+.card {
+    --bs-card-border-color: var(--ds-borde);
+    --bs-card-border-radius: var(--ds-radio);
+    --bs-card-inner-border-radius: calc(var(--ds-radio) - 1px);
+    --bs-card-cap-bg: var(--ds-superficie);
+    --bs-card-cap-color: var(--ds-tinta);
+    box-shadow: var(--ds-sombra-1);
+}
+
+.card-header {
+    border-bottom-color: var(--ds-borde);
+    font-weight: 600;
+}
+
+.card-footer {
+    background-color: var(--ds-superficie-2);
+    border-top-color: var(--ds-borde);
+}
+
+/* --- Tablas --- */
+.table {
+    --bs-table-color: var(--ds-texto);
+    --bs-table-border-color: var(--ds-borde);
+    --bs-table-hover-bg: var(--ds-violeta-50);
+    --bs-table-hover-color: var(--ds-tinta);
+    --bs-table-bg: transparent;
+    margin-bottom: 0;
+}
+
+.table > thead,
+.table > thead.table-light,
+.table thead.table-light {
+    --bs-table-bg: var(--ds-superficie-2);
+    --bs-table-color: var(--ds-texto-2);
+    --bs-table-border-color: var(--ds-borde);
+}
+
+.table thead th {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ds-texto-2);
+    padding-top: .6rem;
+    padding-bottom: .6rem;
+    white-space: nowrap;
+}
+
+/* Varias pantallas del panel usan `thead.table-dark`: la cabecera negra pesa más que la tabla y choca
+   con la paleta, así que se unifica con la cabecera clara del resto. */
+.table > thead.table-dark,
+.table > thead.table-dark > tr > th {
+    --bs-table-bg: var(--ds-superficie-2);
+    --bs-table-color: var(--ds-texto-2);
+    --bs-table-border-color: var(--ds-borde);
+    background-color: var(--ds-superficie-2);
+    color: var(--ds-texto-2);
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+/* Fila de cita ya atendida: sólo se tiñe el fondo, el texto sigue siendo el normal (en verde, toda la
+   fila se volvería ilegible). */
+.table > tbody > tr.table-success,
+.table > tbody > tr.table-success > * {
+    --bs-table-bg: var(--ds-exito-bg);
+    --bs-table-color: var(--ds-texto);
+    box-shadow: none;
+}
+
+/* --- Formularios --- */
+.form-control, .form-select {
+    border-color: var(--ds-borde-2);
+    border-radius: var(--ds-radio-sm);
+    color: var(--ds-texto);
+    background-color: var(--ds-superficie);
+}
+
+.form-control::placeholder { color: var(--ds-texto-3); opacity: 1; }
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--ds-violeta-500);
+    box-shadow: var(--ds-foco);
+}
+
+.form-label {
+    color: var(--ds-texto-2);
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.form-text { color: var(--ds-texto-3); }
+
+.form-check-input { border-color: var(--ds-borde-2); }
+
+.form-check-input:checked {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+}
+
+.form-check-input:focus {
+    border-color: var(--ds-violeta-500);
+    box-shadow: var(--ds-foco);
+}
+
+.input-group-text {
+    background-color: var(--ds-superficie-2);
+    border-color: var(--ds-borde-2);
+    color: var(--ds-texto-2);
+}
+
+/* --- Avisos --- */
+.alert {
+    border-radius: var(--ds-radio);
+    border-width: 1px;
+}
+
+.alert-success { background-color: var(--ds-exito-bg); border-color: var(--ds-exito-borde); color: #0f5c40; }
+.alert-warning { background-color: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
+.alert-danger  { background-color: var(--ds-peligro-bg); border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
+.alert-info    { background-color: var(--ds-info-bg); border-color: var(--ds-info-borde); color: var(--ds-info); }
+.alert-primary { background-color: var(--ds-violeta-100); border-color: var(--ds-violeta-200); color: var(--ds-violeta-900); }
+
+/* --- Navegación, menús y paginación --- */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    background-color: var(--ds-violeta-700);
+    color: #fff;
+}
+
+.dropdown-menu {
+    --bs-dropdown-border-color: var(--ds-borde);
+    --bs-dropdown-border-radius: var(--ds-radio);
+    --bs-dropdown-link-active-bg: var(--ds-violeta-700);
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-hover-bg: var(--ds-violeta-50);
+    --bs-dropdown-link-hover-color: var(--ds-violeta-900);
+    box-shadow: var(--ds-sombra-2);
+    padding: .35rem;
+}
+
+.dropdown-item {
+    border-radius: var(--ds-radio-sm);
+    padding: .45rem .7rem;
+    font-size: .92rem;
+}
+
+.pagination {
+    --bs-pagination-color: var(--ds-violeta-700);
+    --bs-pagination-hover-color: var(--ds-violeta-800);
+    --bs-pagination-hover-bg: var(--ds-violeta-50);
+    --bs-pagination-hover-border-color: var(--ds-violeta-200);
+    --bs-pagination-focus-color: var(--ds-violeta-800);
+    --bs-pagination-focus-bg: var(--ds-violeta-50);
+    --bs-pagination-focus-box-shadow: var(--ds-foco);
+    --bs-pagination-active-bg: var(--ds-violeta-700);
+    --bs-pagination-active-border-color: var(--ds-violeta-700);
+    --bs-pagination-border-color: var(--ds-borde);
+    --bs-pagination-disabled-color: var(--ds-texto-3);
+}
+
+.list-group {
+    --bs-list-group-border-color: var(--ds-borde);
+    --bs-list-group-action-hover-bg: var(--ds-violeta-50);
+    --bs-list-group-active-bg: var(--ds-violeta-700);
+    --bs-list-group-active-border-color: var(--ds-violeta-700);
+}
+
+.modal-content {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-lg);
+}
+
+.modal-header, .modal-footer { border-color: var(--ds-borde); }
+
+.spinner-border.text-primary, .spinner-grow.text-primary { color: var(--ds-violeta-700) !important; }
+
+/* ==========================================================================
+   2. Armazón de la aplicación
+   ========================================================================== */
+
+/* --- Barra superior --- */
+.app-topbar {
+    background: var(--ds-superficie);
+    border-bottom: 1px solid var(--ds-borde);
+    min-height: 62px;
+}
+
+.app-marca {
+    font-weight: 700;
+    color: var(--ds-tinta);
+    letter-spacing: .1px;
+}
+
+.app-marca .app-marca-acento { color: var(--ds-violeta-700); }
+.app-marca .app-marca-icono { color: var(--ds-violeta-700); }
+
+/* --- Menú lateral --- */
+.app-sidebar {
+    background: var(--ds-superficie);
+    border-right: 1px solid var(--ds-borde);
+    width: 248px;
+}
+
+/* El fondo del menú cubre todo el alto de la página, pero **lo que acompaña el scroll** es el
+   contenido: si no, en una lista larga el menú termina antes que la página y queda un hueco gris. */
+@media (min-width: 992px) {
+    .app-sidebar > .app-sidebar-interior {
+        position: sticky;
+        top: var(--app-topbar-alto, 62px);
+        max-height: calc(100vh - var(--app-topbar-alto, 62px));
+        overflow-y: auto;
+    }
+}
+
+.app-sidebar .app-sidebar-titulo {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+    padding: .9rem .85rem .35rem;
+}
+
+.app-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    color: var(--ds-texto-2);
+    font-weight: 500;
+    font-size: .93rem;
+    border-radius: var(--ds-radio-sm);
+    padding: .5rem .75rem;
+    margin-bottom: 2px;
+}
+
+.app-sidebar .nav-link i {
+    font-size: 1.05rem;
+    width: 1.25rem;
+    text-align: center;
+    color: var(--ds-texto-3);
+}
+
+.app-sidebar .nav-link:hover {
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-900);
+}
+
+.app-sidebar .nav-link:hover i { color: var(--ds-violeta-700); }
+
+.app-sidebar .nav-link.active {
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 600;
+}
+
+.app-sidebar .nav-link.active i { color: #fff; }
+
+.app-sidebar .nav-link.disabled {
+    color: var(--ds-texto-3);
+    opacity: .7;
+}
+
+/* Menú lateral plegado (panel): sólo quedan los iconos. */
+.app-sidebar.minimizado { width: 76px; }
+
+.app-sidebar.minimizado .link-text,
+.app-sidebar.minimizado .app-sidebar-titulo { display: none; }
+
+.app-sidebar.minimizado .nav-link { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
+
+.app-sidebar { flex: 0 0 auto; }
+
+/* --- Encabezado de página --- */
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.page-head h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-head .page-head-sub {
+    color: var(--ds-texto-3);
+    font-size: .88rem;
+    margin: .15rem 0 0;
+}
+
+/* --- Fichas de contexto (médico, especialidad, sede) --- */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: var(--ds-superficie-2);
+    border: 1px solid var(--ds-borde);
+    color: var(--ds-texto-2);
+    border-radius: 999px;
+    padding: .15rem .65rem;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.chip i { color: var(--ds-texto-3); }
+
+/* --- Tarjetas de indicador (dashboards) --- */
+.stat-card {
+    background: var(--ds-superficie);
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    box-shadow: var(--ds-sombra-1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.stat-card .stat-card-cuerpo {
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    flex: 1;
+}
+
+.stat-card .stat-etiqueta {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+}
+
+.stat-card .stat-valor {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ds-tinta);
+    margin: .3rem 0 0;
+}
+
+/* Círculo de icono, reutilizable fuera de las tarjetas de indicador (avatares, módulos del consultorio). */
+.stat-icono {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex: 0 0 auto;
+}
+
+.stat-card .stat-pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem 1.1rem;
+    font-size: .8rem;
+    color: var(--ds-texto-2);
+    background: var(--ds-superficie-2);
+    border-top: 1px solid var(--ds-borde);
+    text-decoration: none;
+}
+
+.stat-card .stat-pie:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-900); }
+
+/* Acentos de las tarjetas: sólo el icono y el borde superior llevan color. */
+.stat-card.stat-violeta { border-top: 3px solid var(--ds-violeta-700); }
+.stat-card.stat-violeta .stat-icono { background: var(--ds-violeta-100); color: var(--ds-violeta-700); }
+
+.stat-card.stat-celeste { border-top: 3px solid var(--ds-celeste-500); }
+.stat-card.stat-celeste .stat-icono { background: var(--ds-celeste-50); color: var(--ds-celeste-700); }
+
+.stat-card.stat-exito { border-top: 3px solid var(--ds-exito); }
+.stat-card.stat-exito .stat-icono { background: var(--ds-exito-bg); color: var(--ds-exito); }
+
+.stat-card.stat-aviso { border-top: 3px solid #d99b00; }
+.stat-card.stat-aviso .stat-icono { background: var(--ds-aviso-bg); color: var(--ds-aviso); }
+
+.stat-card.stat-tinta { border-top: 3px solid var(--ds-tinta); }
+.stat-card.stat-tinta .stat-icono { background: var(--ds-superficie-2); color: var(--ds-tinta); }
+
+/* --- Estado vacío --- */
+.empty-state {
+    text-align: center;
+    color: var(--ds-texto-3);
+    padding: 2.25rem 1rem;
+}
+
+.empty-state i {
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: .5rem;
+    color: var(--ds-borde-2);
+}
+
+.empty-state p { margin-bottom: 0; }
+
+/* --- Barra de acciones fija del menú lateral --- */
+.app-sidebar .app-sidebar-pie {
+    border-top: 1px solid var(--ds-borde);
+    padding: .5rem;
+}
+
+/* --- Utilidades propias --- */
+.sombra-1 { box-shadow: var(--ds-sombra-1); }
+.texto-tenue { color: var(--ds-texto-3); }
+.texto-2 { color: var(--ds-texto-2); }
+.fondo-app { background: var(--ds-fondo); }
+
+/* ==========================================================================
+   3. Adaptación a pantallas chicas
+   ========================================================================== */
+
+/* En el panel el contenido llevaba hasta el borde de la ventana (las tablas se pegaban al menú). Se le
+   da aire lateral; arriba no, porque cada pantalla ya trae su propio margen. */
+body.panel .main-content {
+    padding: 0 1.5rem 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    body.panel .main-content { padding: 0 .85rem 1rem; }
+}
+
+/* El menú lateral se pliega en un panel deslizable: en el celular ocupa el ancho completo y el
+   contenido deja de quedar debajo (era el caso de `/clinica`, con el menú empujando la agenda). */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        bottom: 0;
+        z-index: 1045;
+        width: min(280px, 84vw);
+        overflow-y: auto;
+        transition: left .2s ease-in-out;
+        box-shadow: var(--ds-sombra-3);
+    }
+
+    .app-sidebar.abierto { left: 0; }
+
+    .app-sidebar-fondo {
+        position: fixed;
+        inset: 0;
+        background: rgba(32, 16, 72, .35);
+        z-index: 1040;
+    }
+}
+
+@media (min-width: 992px) {
+    .app-sidebar-fondo { display: none; }
+}
+
+/* La barra de filtros y las tablas anchas se desplazan en horizontal, no rompen el layout. */
+@media (max-width: 767.98px) {
+    .page-head h1 { font-size: 1.15rem; }
+    .app-contenido { padding: 1rem .85rem; }
+}

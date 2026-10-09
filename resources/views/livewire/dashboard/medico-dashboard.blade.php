@@ -1,171 +1,129 @@
-<div>
-    @section('content_header')
-        <div class="d-flex align-items-center justify-content-between">
-            <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard del Médico
-            </h1>
-            <span class="badge bg-light text-dark border px-3 py-2">
-                <i class="bi bi-arrow-repeat spin me-1"></i> Actualizando en tiempo real
-            </span>
+<div class="container-fluid py-3" wire:poll.10s>
+    <div class="page-head">
+        <div>
+            <h1><i class="bi bi-speedometer2 me-2" style="color: var(--ds-violeta-700);"></i>Panel del médico</h1>
+            <p class="page-head-sub">Pacientes asignados a tu consulta y tus citas.</p>
         </div>
-    @endsection
+        <span class="badge bg-light text-dark border">
+            <i class="bi bi-arrow-repeat me-1"></i> Actualizando en tiempo real
+        </span>
+    </div>
 
-    @section('content')
-        <div wire:poll.10s>
-            <!-- Cards Estadísticas Principales -->
-            <div class="row g-3 mb-4">
-                <!-- 1. Mis Pacientes En Línea -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card border-0 shadow-sm rounded-3 bg-danger text-white h-100">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Mis Pacientes En Línea</span>
-                                    <h2 class="display-6 fw-bold mb-0 d-flex align-items-center gap-2">
-                                        {{ number_format($usuariosConectados) }}
-                                        <span class="spinner-grow spinner-grow-sm text-light" role="status" aria-hidden="true"></span>
-                                    </h2>
-                                </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="bi bi-wifi fs-4 text-white"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                            <small class="text-white-50">Actividad en los últimos 5 min</small>
-                            <i class="bi bi-circle-fill text-warning extra-small"></i>
-                        </div>
+    <div class="row g-3 mb-4">
+        <!-- 1. Pacientes en línea -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card stat-violeta">
+                <div class="stat-card-cuerpo">
+                    <div>
+                        <span class="stat-etiqueta">Mis pacientes en línea</span>
+                        <p class="stat-valor d-flex align-items-center gap-2">
+                            {{ number_format($usuariosConectados) }}
+                            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                        </p>
                     </div>
+                    <span class="stat-icono"><i class="bi bi-wifi"></i></span>
                 </div>
-
-                <!-- 2. Mis Usuarios Pacientes -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Usuarios Asignados</span>
-                                    <h2 class="display-6 fw-bold mb-0">{{ number_format($totalUsuarios) }}</h2>
-                                </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="bi bi-people-fill fs-4 text-white"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                            <small class="text-white-50">Cuentas creadas de mis pacientes</small>
-                            <i class="bi bi-arrow-right-short text-white fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Mis Pacientes Totales -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-white-50 text-uppercase fw-semibold small d-block mb-1">Mis Pacientes</span>
-                                    <h2 class="display-6 fw-bold mb-0">{{ number_format($totalPacientes) }}</h2>
-                                </div>
-                                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="bi bi-person-heart fs-4 text-white"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-black bg-opacity-10 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                            <small class="text-white-50">Pacientes asignados a mi consulta</small>
-                            <i class="bi bi-arrow-right-short text-white fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Tarjeta Única Consolidada de Citas (Desde Modelo Cola) -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100 d-flex flex-column justify-content-between">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-white-50 text-uppercase fw-semibold small">Mis Citas</span>
-                                <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                                    <i class="bi bi-calendar-event fs-5 text-white"></i>
-                                </div>
-                            </div>
-
-                            <!-- Total de Citas -->
-                            <div class="mb-2">
-                                <h2 class="display-6 fw-bold mb-0">{{ number_format($citasTotales) }}</h2>
-                                <span class="text-white-50 extra-small">Registradas en total</span>
-                            </div>
-
-                            <!-- Detalle Hoy / Mañana -->
-                            <div class="row g-2 pt-2 border-top border-secondary border-opacity-50">
-                                <div class="col-6">
-                                    <span class="text-white-50 d-block extra-small text-uppercase">Hoy</span>
-                                    <span class="fw-bold fs-6 text-success">+{{ number_format($citasHoy) }}</span>
-                                </div>
-                                <div class="col-6 border-start border-secondary border-opacity-50 ps-2">
-                                    <span class="text-white-50 d-block extra-small text-uppercase">Mañana</span>
-                                    <span class="fw-bold fs-6 text-warning">+{{ number_format($citasManana) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="card-footer bg-black bg-opacity-25 border-0 py-2 px-3 d-flex justify-content-between align-items-center text-white text-decoration-none">
-                            <small class="text-white-50">Ver agendamiento</small>
-                            <i class="bi bi-chevron-right text-white small"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabla Detallada de Mis Usuarios Activos -->
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white py-3 border-bottom-0">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="bi bi-broadcast text-success me-2"></i>Mis Usuarios Pacientes Activos en este Momento
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Estado</th>
-                                    <th>Usuario</th>
-                                    <th>Email</th>
-                                    <th>ID</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($listaUsuariosConectados as $user)
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1">
-                                                <i class="bi bi-circle-fill me-1 small"></i> En línea
-                                            </span>
-                                        </td>
-                                        <td class="fw-semibold">{{ $user->name }}</td>
-                                        <td class="text-muted">{{ $user->email }}</td>
-                                        <td><code>#{{ $user->id }}</code></td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">
-                                            <i class="bi bi-person-x fs-4 d-block mb-1"></i>
-                                            No hay usuarios asignados a su consulta activos en este momento.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="stat-pie">
+                    <span>Actividad en los últimos 5 min</span>
+                    <i class="bi bi-circle-fill" style="font-size: .5rem; color: var(--ds-exito);"></i>
                 </div>
             </div>
         </div>
-    @endsection
+
+        <!-- 2. Cuentas de pacientes -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card stat-celeste">
+                <div class="stat-card-cuerpo">
+                    <div>
+                        <span class="stat-etiqueta">Cuentas asignadas</span>
+                        <p class="stat-valor">{{ number_format($totalUsuarios) }}</p>
+                    </div>
+                    <span class="stat-icono"><i class="bi bi-people-fill"></i></span>
+                </div>
+                <div class="stat-pie">
+                    <span>Cuentas creadas de mis pacientes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Pacientes totales -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card stat-exito">
+                <div class="stat-card-cuerpo">
+                    <div>
+                        <span class="stat-etiqueta">Mis pacientes</span>
+                        <p class="stat-valor">{{ number_format($totalPacientes) }}</p>
+                    </div>
+                    <span class="stat-icono"><i class="bi bi-person-heart"></i></span>
+                </div>
+                <div class="stat-pie">
+                    <span>Pacientes asignados a mi consulta</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Citas (tabla `cola`) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card stat-tinta">
+                <div class="stat-card-cuerpo">
+                    <div>
+                        <span class="stat-etiqueta">Mis citas</span>
+                        <p class="stat-valor">{{ number_format($citasTotales) }}</p>
+                        <span class="texto-tenue" style="font-size: .78rem;">Registradas en total</span>
+                    </div>
+                    <span class="stat-icono"><i class="bi bi-calendar-event"></i></span>
+                </div>
+                <a href="{{ route('agendar.dia', ['medicoId' => $medico->id ?? 1, 'fecha' => $fechaHoy]) }}" class="stat-pie">
+                    <span class="d-flex gap-3">
+                        <span><span class="texto-tenue">Hoy</span> <strong style="color: var(--ds-exito);">+{{ number_format($citasHoy) }}</strong></span>
+                        <span><span class="texto-tenue">Mañana</span> <strong style="color: var(--ds-aviso);">+{{ number_format($citasManana) }}</strong></span>
+                    </span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pacientes activos -->
+    <div class="card">
+        <div class="card-header py-3 d-flex align-items-center gap-2">
+            <i class="bi bi-broadcast" style="color: var(--ds-exito);"></i>
+            <span>Mis pacientes activos en este momento</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Estado</th>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($listaUsuariosConectados as $user)
+                        <tr>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: .5rem;"></i> En línea
+                                </span>
+                            </td>
+                            <td class="fw-semibold">{{ $user->name }}</td>
+                            <td class="text-muted">{{ $user->email }}</td>
+                            <td><code>#{{ $user->id }}</code></td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="bi bi-person-x"></i>
+                                    <p>No hay usuarios asignados a tu consulta activos en este momento.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
-<style>
-.extra-small {
-    font-size: 0.75rem;
-}
-</style>

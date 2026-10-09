@@ -3,12 +3,20 @@
 @section('titulo', 'Elegir consultorio')
 
 @section('contenido')
-    <h1 class="h4 mb-3">¿Con qué consultorio vas a trabajar?</h1>
+    <div class="page-head">
+        <div>
+            <h1>¿Con qué consultorio vas a trabajar?</h1>
+            <p class="page-head-sub">Se elige una vez y se puede cambiar cuando quieras.</p>
+        </div>
+    </div>
 
     @if (empty($disponibles))
-        <div class="alert alert-warning">
-            Tu cuenta todavía no tiene acceso a los datos de ningún médico.
-            Pedile a un administrador que te asigne un <strong>reg_medico</strong> (panel → Usuarios → Registros de datos).
+        <div class="alert alert-warning d-flex gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                Tu cuenta todavía no tiene acceso a los datos de ningún médico.
+                Pedile a un administrador que te asigne un <strong>reg_medico</strong> (panel → Usuarios → Registros de datos).
+            </div>
         </div>
     @endif
 

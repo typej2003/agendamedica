@@ -77,6 +77,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Nombre de la ruta donde este usuario trabaja, y por lo tanto a dónde entra al iniciar sesión.
+     *
+     * El panel (`/dashboard`) quedó para administración; el médico y la secretaría trabajan en el
+     * consultorio (`/clinica`), que es el mismo flujo con o sin clave temporal (lo usan el login y el
+     * cambio de contraseña, para no repetir la regla en cada uno).
+     */
+    public function rutaDeInicio(): string
+    {
+        if (! $this->esAdministrador() && $this->hasAnyRole(['Medico', 'Secretaria'])) {
+            return 'clinica.inicio';
+        }
+
+        // TODO (/consultorio): cuando exista el área del paciente, acá va su ruta.
+        return 'dashboard';
+    }
+
+    /**
      * Comprueba si el usuario tiene una sesión activa en los últimos 5 minutos.
      */
     public function isOnline(): bool

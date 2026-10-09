@@ -25,21 +25,28 @@
 @endphp
 
 @section('contenido')
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h1 class="h4 mb-0">Agenda</h1>
+    <div class="page-head">
+        <div>
+            <h1>Agenda</h1>
+            <p class="page-head-sub">
+                {{ ucfirst($titulo) }} · {{ $totalRango }} {{ $totalRango === 1 ? 'cita' : 'citas' }}
+            </p>
+        </div>
 
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
                 @foreach (['dia' => 'Día', 'semana' => 'Semana', 'mes' => 'Mes'] as $clave => $etiqueta)
                     <a class="btn btn-outline-primary {{ $vista === $clave ? 'active' : '' }}"
-                       href="{{ $url(['vista' => $clave, 'fecha' => $fecha->toDateString()]) }}">{{ $etiqueta }}</a>
+                       href="{{ $url(['vista' => $clave, 'fecha' => $fecha->toDateString()]) }}"
+                       @if ($vista === $clave) aria-current="true" @endif>{{ $etiqueta }}</a>
                 @endforeach
             </div>
 
             <form method="GET" action="{{ route('clinica.agenda') }}" class="d-flex gap-2 align-items-center">
                 <input type="hidden" name="vista" value="{{ $vista }}">
                 <input type="hidden" name="fecha" value="{{ $fecha->toDateString() }}">
-                <select name="sede" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 240px;">
+                <select name="sede" class="form-select form-select-sm" onchange="this.form.submit()"
+                        style="min-width: 240px;" aria-label="Sede">
                     <option value="todas" {{ $sedeId === null ? 'selected' : '' }}>Todas las sedes</option>
                     @foreach ($sedes as $sede)
                         <option value="{{ $sede->id }}" {{ $sedeId === $sede->id ? 'selected' : '' }}>
@@ -52,13 +59,12 @@
     </div>
 
     <div class="d-flex align-items-center gap-2 mb-3">
-        <a class="btn btn-sm btn-outline-secondary" title="Anterior"
+        <a class="btn btn-sm btn-outline-secondary" title="Anterior" aria-label="Día anterior"
            href="{{ $url(['fecha' => $anterior->toDateString()]) }}"><i class="bi bi-chevron-left"></i></a>
         <a class="btn btn-sm btn-outline-secondary" href="{{ $url(['fecha' => now()->toDateString()]) }}">Hoy</a>
-        <a class="btn btn-sm btn-outline-secondary" title="Siguiente"
+        <a class="btn btn-sm btn-outline-secondary" title="Siguiente" aria-label="Día siguiente"
            href="{{ $url(['fecha' => $siguiente->toDateString()]) }}"><i class="bi bi-chevron-right"></i></a>
         <strong class="ms-2">{{ ucfirst($titulo) }}</strong>
-        <span class="text-muted small">{{ $totalRango }} {{ $totalRango === 1 ? 'cita' : 'citas' }}</span>
     </div>
 
     @include('clinica.agenda.' . $vista)

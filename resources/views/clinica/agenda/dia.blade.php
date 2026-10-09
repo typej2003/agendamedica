@@ -1,7 +1,9 @@
 @if ($jornadas->isEmpty())
     <div class="card">
-        <div class="card-body text-center text-muted py-5">
-            No hay citas para este día{{ $sedeId ? ' en la sede elegida' : '' }}.
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <p>No hay citas para este día{{ $sedeId ? ' en la sede elegida' : '' }}.</p>
+            <p class="small">Probá con otra fecha o cambiá la sede del filtro.</p>
         </div>
     </div>
 @else

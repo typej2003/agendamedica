@@ -3,15 +3,22 @@
 @section('titulo', 'Ficha del paciente')
 
 @section('contenido')
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="h4 mb-0">{{ trim($paciente->apellidos . ', ' . $paciente->nombres) }}</h1>
-        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes') }}">Volver al listado</a>
+    <div class="page-head">
+        <div>
+            <h1>{{ trim($paciente->apellidos . ', ' . $paciente->nombres) }}</h1>
+            @if ($paciente->numhistoria)
+                <p class="page-head-sub">Historia N.º {{ $paciente->numhistoria }}</p>
+            @endif
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes') }}">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
     </div>
 
     <div class="row g-3">
         <div class="col-12 col-lg-7">
             <div class="card">
-                <div class="card-header bg-white fw-semibold">Datos del paciente</div>
+                <div class="card-header">Datos del paciente</div>
                 <div class="card-body">
                     <dl class="row mb-0 small">
                         <dt class="col-4">Cédula</dt><dd class="col-8">{{ $paciente->cedula ?: '—' }}</dd>
@@ -39,7 +46,7 @@
 
         <div class="col-12 col-lg-5">
             <div class="card h-100">
-                <div class="card-header bg-white fw-semibold">Consultas registradas</div>
+                <div class="card-header">Consultas registradas</div>
                 <div class="card-body p-0">
                     @if ($paciente->numhistoria === null)
                         <p class="text-muted p-3 mb-0">

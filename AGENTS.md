@@ -72,8 +72,9 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `app/Http/Controllers/Api/` | Controladores de la API (login, refresh, sync, upload, webhook WhatsApp). Incluye `AppAgendaMedicaController` y los `" - copia.php"`, que están muertos (ver trampas). |
 | `app/Http/Controllers/Auth/` | Login web del panel (`CustomLoginController`). |
 | `app/Http/Livewire/` | Componentes del panel: `Admin/*` (listados ~CRUD, `CargarSql`), `Medico/*`, `Components/*` (agenda/calendario), `Dashboard/*`, `Layouts/*`. |
-| `resources/views/` | Blade: `auth/` (login + registro de médico/paciente), `livewire/` (una vista por componente, `admin/`, `medico/`, `dashboard/`, `layouts/`, `components/`) y `layouts/app.blade.php`. |
-| `public/` | Document root (`index.php`, `.htaccess`); los assets propios llevan el nombre del legado: `public/css/gineco.css`, `public/js/gineco.js`. |
+| `resources/views/` | Blade: `auth/` (login + registro de médico/paciente), `livewire/` (una vista por componente, `admin/`, `medico/`, `dashboard/`, `layouts/`, `components/`), `clinica/` (web clínica: `layout.blade.php` + una vista por módulo) y `layouts/app.blade.php` (armazón compartido con el sitio público). |
+| `public/` | Document root (`index.php`, `.htaccess`) y los assets propios: `css/gineco.css` (**la paleta**, en tokens `--ds-*`, más los estilos de marca del sitio público), `css/doctorisimo-ui.css` (**el sistema de la aplicación**: Bootstrap recoloreado + armazón, se carga después de Bootstrap), `js/gineco.js`. |
+| `app/Support/` | Utilidades sin estado (`FechaClinica`, `RestriccionesPlan`, `IconoModulo`, …). |
 | `app/Models/` | Eloquent sobre las tablas del legado (`Cola`, `Paciente`, `Historia`, `Consulta`, `Medico`, `MedicalCenter`, `MotivoCita`, `Evolucion`, `UploadServer`, `User`…). |
 | `app/Services/WhatsAppService.php` | Envío de plantillas por WhatsApp Cloud API (Meta, Graph API v19.0); lee `config('services.whatsapp.*')`. |
 | `database/migrations/2026_08_25_055351_create_medical_tables_schema.php` | **Migración núcleo**: crea el esquema médico completo migrado del legado (~120 tablas, ~1650 líneas). Referencia obligatoria. |
@@ -97,9 +98,12 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/motivos-consulta` | `MotivoConsultaController@crear` — alta en el catálogo de motivos de consulta del médico (Paso 18.B2), online-only: `descripcion` → `id`, `codemotivo` (correlativo de 4 dígitos); si ya hay una igual devuelve la existente (200) en vez de duplicar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 
-**Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El inicio de sesión (API y web) no se
-tocó**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medicos.user_id` como vínculo con el
-doctor, como ya era. Lo nuevo se apoya en eso:
+**Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El mecanismo de inicio de sesión (API y
+web) no se tocó**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medicos.user_id` como vínculo con el
+doctor, como ya era. Lo que sí cambió (2026-10-08) es **a dónde entra cada rol**: `User::rutaDeInicio()` devuelve
+`clinica.inicio` para médico y secretaría y `dashboard` para administración (y para el paciente, mientras no exista
+`/consultorio`); lo usan el login, el cambio de clave y `DashboardController` (que redirige al consultorio a quien no
+es administrador). El panel `/dashboard` quedó para administración. Lo nuevo se apoya en eso:
 - `users.must_change_password`, `users.is_active`, `users.blocked_reason` (migración `2026_10_03_200000`).
 - Toda escritura de claves, roles y bloqueos pasa por `CuentaService`, que escribe `users.password` **y** espeja
   `medicos.password` (el login prueba `users` y, si falla, `medicos`: escribir una sola dejaría dos claves válidas).
@@ -206,6 +210,35 @@ php artisan test                  # PHPUnit; los tests presentes son plantillas 
 
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
+
+## Sistema visual (web clínica y panel)
+
+**La paleta sale del logo de la app** (`../DoctorisimoMobile/assets/icon/icon.png`), medido píxel a píxel:
+violeta `#783080` (primario, 8,3:1 con blanco), azul marino `#201048` (texto, 17,1:1) y el celeste del
+latido `#40b0d8` (acento decorativo, no sirve como texto). Está en **un solo lugar**: el bloque `:root` de
+`public/css/gineco.css`, como tokens `--ds-*`, con la relación de contraste anotada en cada uno. Los nombres
+viejos (`--primary-color`, `--accent-color`…) siguen existiendo apuntando a los nuevos, así que las vistas
+que ya los usaban cambiaron de color sin tocarlas.
+
+- **`public/css/gineco.css`** — los tokens + los estilos de marca del sitio público (`hero-section`,
+  `service-card`, `btn-primary-gineco`, footer).
+- **`public/css/doctorisimo-ui.css`** — **el sistema de la aplicación**, y se carga **después de Bootstrap**:
+  recolorea Bootstrap por variables (`--bs-primary`, `--bs-body-color`, `--bs-*-bg-subtle`…) más las reglas
+  donde Bootstrap tiene el color fijo (`btn-*`, `badge bg-*`, `table-dark`, `code`). Por eso las ~50 vistas
+  del panel adoptaron la paleta sin editarlas una por una. Trae además el armazón: `.app-sidebar`,
+  `.app-topbar`, `.page-head`, `.stat-card`, `.empty-state`, `.chip`.
+- Se carga en `layouts/app.blade.php` (panel **y** sitio público: es el mismo armazón de Livewire) y en
+  `clinica/layout.blade.php` y `auth/login.blade.php`.
+- **Cuando algo se ve mal, no se adivina: se mide.** `../.agent-tools/contraste-ui-web.js` recorre las
+  pantallas, resuelve el fondo efectivo de cada texto y calcula la relación WCAG (umbral 4,5:1 / 3:1 para
+  texto grande). Deja el conteo de incumplimientos por pantalla; hoy son **0**.
+  `../.agent-tools/capturas-ui-web.js` saca las capturas de todas las pantallas (público, clínica y panel,
+  escritorio y celular) para revisarlas.
+
+**Trampa medida (2026-10-08):** un botón deshabilitado **no** usa `--bs-btn-color` sino
+`--bs-btn-disabled-color`, que cada variante de Bootstrap fija con su propio color. Sobreescribir solo la
+primera deja los botones deshabilitados con el color viejo (el "Atender" de la agenda quedaba en 1,8:1).
+Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`.
 
 ## Convenciones y nomenclatura del dominio
 

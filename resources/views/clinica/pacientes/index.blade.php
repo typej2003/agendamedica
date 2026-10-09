@@ -3,11 +3,15 @@
 @section('titulo', 'Pacientes')
 
 @section('contenido')
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h1 class="h4 mb-0">Pacientes</h1>
+    <div class="page-head">
+        <div>
+            <h1>Pacientes</h1>
+            <p class="page-head-sub">Pacientes del registro con el que estás trabajando.</p>
+        </div>
         <form class="d-flex gap-2" method="GET" action="{{ route('clinica.pacientes') }}">
             <input type="search" name="buscar" value="{{ $buscar }}" class="form-control form-control-sm"
-                   placeholder="Nombre, cédula o N.º de historia" style="min-width: 260px;">
+                   placeholder="Nombre, cédula o N.º de historia" style="min-width: 260px;"
+                   aria-label="Buscar paciente">
             <button class="btn btn-sm btn-primary">Buscar</button>
             @if ($buscar !== '')
                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes') }}">Limpiar</a>
@@ -51,8 +55,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            {{ $buscar !== '' ? 'Ningún paciente coincide con la búsqueda.' : 'Este consultorio todavía no tiene pacientes.' }}
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi {{ $buscar !== '' ? 'bi-search' : 'bi-people' }}"></i>
+                                <p>{{ $buscar !== '' ? 'Ningún paciente coincide con la búsqueda.' : 'Este consultorio todavía no tiene pacientes.' }}</p>
+                            </div>
                         </td>
                     </tr>
                 @endforelse

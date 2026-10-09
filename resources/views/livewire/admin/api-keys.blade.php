@@ -83,7 +83,7 @@
                                 </td>
                                 <td class="text-end text-nowrap">
                                     @if ($r['regs'])
-                                        <button wire:click="abrirEmitir({{ $medico->id }})" class="btn btn-sm btn-primary">
+                                        <button wire:click="abrirEmitir({{ $medico->id }})" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-key-fill me-1"></i> Generar API key
                                         </button>
                                         <button wire:click="verCredenciales({{ $medico->id }})" class="btn btn-sm btn-outline-secondary">
