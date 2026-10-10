@@ -11,62 +11,40 @@
          `doctorisimo-ui.css`. Ese orden importa: el sistema va después de Bootstrap. --}}
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
-
 </head>
 <body>
 
+{{-- `$armazon` (ArmazonVista) lo arma `ArmazonClinicaComposer`: las fichas del contexto, los accesos y el
+     menú salen de ahí, no de la vista. --}}
 <header class="app-topbar d-flex align-items-center justify-content-between px-3 py-2">
     <div class="d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-light d-lg-none" type="button" id="clinica-menu-boton"
                 aria-label="Abrir menú" aria-controls="clinica-sidebar" aria-expanded="false">
-            <i class="bi bi-list fs-5"></i>
+            <i class="bi bi-list fs-5" aria-hidden="true"></i>
         </button>
 
         <div>
             <div class="app-marca">
-                <i class="bi bi-heart-pulse-fill app-marca-icono"></i>
+                <i class="bi bi-heart-pulse-fill app-marca-icono" aria-hidden="true"></i>
                 Doctorísimo <span class="text-muted fw-normal">· Consultorio</span>
             </div>
-            @isset($contexto)
+            @if ($armazon->tieneContexto())
                 <div class="d-none d-md-flex flex-wrap gap-1 mt-1">
-                    <span class="chip"><i class="bi bi-person-badge"></i>
-                        {{ trim(($contexto['medico']->prefix ?? '') . ' ' . $contexto['medico']->name . ' ' . $contexto['medico']->lastname) }}
-                    </span>
-                    <span class="chip"><i class="bi bi-clipboard2-pulse"></i>
-                        {{ $contexto['specialty']->name ?? 'Sin especialidad asignada' }}
-                    </span>
-                    <span class="chip"><i class="bi bi-geo-alt"></i>
-                        {{ $contexto['office']->office_number ?? ($contexto['office']->medicalCenter->name ?? 'Sin sede') }}
-                    </span>
-                    <span class="chip"><i class="bi bi-hash"></i>{{ $contexto['reg_medico'] }}</span>
+                    @foreach ($armazon->fichas() as $ficha)
+                        <span class="chip"><i class="bi {{ $ficha['icono'] }}" aria-hidden="true"></i> {{ $ficha['texto'] }}</span>
+                    @endforeach
                 </div>
-            @endisset
+            @endif
         </div>
     </div>
 
     <div class="d-flex align-items-center gap-2">
-        {{-- Las sedes son el **lugar de la clínica**: se dan de alta una vez para todos los médicos que
-             atienden ahí y son el paso previo a crear un consultorio (WEB-2.8b.1). Por eso el acceso
-             está en la barra y no colgado del menú de un módulo. --}}
-        <a href="{{ route('clinica.sedes') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-hospital"></i> <span class="d-none d-sm-inline">Sedes</span>
-        </a>
-        {{-- Los consultorios son **del médico del contexto** (WEB-2.8b.2): sin contexto no hay a quién
-             cargarle uno, así que el acceso solo aparece cuando ya se eligió con quién trabajar. --}}
-        @isset($contexto)
-            <a href="{{ route('clinica.consultorios') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-door-closed"></i> <span class="d-none d-sm-inline">Consultorios</span>
+        @foreach ($armazon->accesos() as $acceso)
+            <a href="{{ $acceso['url'] }}" class="btn btn-sm {{ $acceso['primario'] ? 'btn-outline-primary' : 'btn-outline-secondary' }}"
+               title="{{ $acceso['texto'] }}">
+                <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
             </a>
-        @endisset
-        <a href="{{ route('clinica.contexto') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-repeat"></i> <span class="d-none d-sm-inline">Cambiar consultorio</span>
-        </a>
-        {{-- El panel es de administración: a un médico no se le ofrece una puerta que ya no le corresponde. --}}
-        @if (auth()->user()->esAdministrador())
-            <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-speedometer2"></i> <span class="d-none d-sm-inline">Panel</span>
-            </a>
-        @endif
+        @endforeach
     </div>
 </header>
 
@@ -74,55 +52,42 @@
     <div class="app-sidebar-fondo" id="clinica-sidebar-fondo" hidden></div>
 
     <nav class="app-sidebar" id="clinica-sidebar" aria-label="Menú del consultorio">
-      <div class="app-sidebar-interior py-2 px-2">
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('clinica.inicio') ? 'active' : '' }}"
-                   href="{{ route('clinica.inicio') }}">
-                    <i class="bi bi-house-door"></i> Inicio
-                </a>
-            </li>
-
-            {{-- El menú sale de los módulos implementados de la especialidad: nada escrito a mano. --}}
-            @foreach (($modulos ?? collect()) as $modulo)
-                @php
-                    $rutaModulo = 'clinica.' . $modulo->slug;
-                    $iconoModulo = \App\Support\IconoModulo::para($modulo->slug);
-                @endphp
-                <li class="nav-item">
-                    @if (\Illuminate\Support\Facades\Route::has($rutaModulo))
-                        <a class="nav-link {{ request()->routeIs($rutaModulo . '*') ? 'active' : '' }}"
-                           href="{{ route($rutaModulo) }}">
-                            <i class="bi {{ $iconoModulo }}"></i> {{ $modulo->nombre }}
-                        </a>
-                    @else
-                        <span class="nav-link disabled" title="Módulo declarado, todavía sin pantalla">
-                            <i class="bi {{ $iconoModulo }}"></i> {{ $modulo->nombre }}
-                        </span>
-                    @endif
-                </li>
-            @endforeach
-        </ul>
-      </div>
+        <div class="app-sidebar-interior py-2 px-2">
+            <ul class="nav flex-column">
+                @foreach ($armazon->menu() as $item)
+                    <li class="nav-item">
+                        @if ($item['url'])
+                            <a class="nav-link {{ $item['activo'] ? 'active' : '' }}" href="{{ $item['url'] }}">
+                                <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i> {{ $item['texto'] }}
+                            </a>
+                        @else
+                            <span class="nav-link disabled" title="Módulo declarado, todavía sin pantalla">
+                                <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i> {{ $item['texto'] }}
+                            </span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </div>
     </nav>
 
     <main class="app-contenido p-3 p-lg-4">
         @if (session('estado'))
-            <div class="alert alert-success py-2 d-flex align-items-center gap-2">
-                <i class="bi bi-check-circle-fill"></i> {{ session('estado') }}
+            <div class="alert alert-success py-2 d-flex align-items-center gap-2" role="status">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ session('estado') }}
             </div>
         @endif
         @if (session('error'))
-            <div class="alert alert-warning py-2 d-flex align-items-center gap-2">
-                <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+            <div class="alert alert-warning py-2 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ session('error') }}
             </div>
         @endif
-        {{-- Avisos que no son el resultado de la operación (el día no laborable que se eligió al
-             agendar, el solape de un bloque de horario con otro consultorio del mismo médico): van en
-             lista para que no se pisen con `estado` ni entre ellos. --}}
+        {{-- Avisos que no son el resultado de la operación (el día no laborable que se eligió al agendar, el
+             solape de un bloque de horario con otro consultorio del mismo médico): van en lista para que no
+             se pisen con `estado` ni entre ellos. --}}
         @foreach ((array) session('avisos', []) as $aviso)
-            <div class="alert alert-warning py-2 d-flex align-items-center gap-2">
-                <i class="bi bi-exclamation-circle-fill"></i> {{ $aviso }}
+            <div class="alert alert-warning py-2 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> {{ $aviso }}
             </div>
         @endforeach
 
@@ -132,8 +97,8 @@
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
 
-{{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido:
-     así el HTML de la vista queda solo el HTML. --}}
+{{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido: así el
+     HTML de la vista queda solo el HTML. --}}
 @yield('scripts')
 
 </body>

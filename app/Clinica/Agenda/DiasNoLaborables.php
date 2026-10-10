@@ -77,6 +77,28 @@ class DiasNoLaborables
     }
 
     /**
+     * Los días marcados de **un médico** en un mes, del 1 al último. Es la lista de la pantalla de días
+     * no laborables (a diferencia de `entre`, que trae los de toda la clínica para pintar la agenda).
+     *
+     * @return Collection<int,DiaNoLaborable>
+     */
+    public function delMes(string $regMedico, int $claveMedico, Carbon $mes): Collection
+    {
+        return DiaNoLaborable::where('reg_medico', $regMedico)
+            ->where('medico', $claveMedico)
+            ->whereDate('dia', '>=', $mes->copy()->startOfMonth()->toDateString())
+            ->whereDate('dia', '<=', $mes->copy()->endOfMonth()->toDateString())
+            ->orderBy('dia')
+            ->get();
+    }
+
+    /** Un día del consultorio del contexto; el de otro `reg_medico` no se toca ni se confirma que exista. */
+    public function delContexto(string $regMedico, int $id): DiaNoLaborable
+    {
+        return DiaNoLaborable::where('reg_medico', $regMedico)->whereKey($id)->firstOrFail();
+    }
+
+    /**
      * El aviso para el usuario, con el `motivo` del legado **palabra por palabra** (el escritorio
      * muestra el mismo texto en su `messagebox`).
      */

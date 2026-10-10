@@ -1,229 +1,148 @@
 @extends('clinica.layout')
 
-@php
-    use App\Models\Office;
-
-    $valor = fn (string $campo, $defecto = null) => old($campo, $defecto);
-    $volver = route('clinica.inicio');
-    $sinSedes = $sedes->isEmpty();
-
-    // Un consultorio se identifica por su sede y su número; el nombre del lugar sale de la otra tabla.
-    $etiqueta = fn (Office $o) => ($o->medicalCenter->name ?? 'Sede')
-        . ($o->office_number ? ' · ' . $o->office_number : '');
-@endphp
-
 @section('titulo', 'Consultorios')
 
 @section('contenido')
-    <div class="page-head">
-        <div>
-            <h1>Consultorios</h1>
-            <p class="page-head-sub">
-                Dónde atiende
-                {{ trim(($medico->prefix ?? '') . ' ' . $medico->name . ' ' . $medico->lastname) }}.
-                La modalidad y la duración son lo que la agenda usa para armar la jornada.
-            </p>
-        </div>
+    <x-ui.page-head titulo="Consultorios" :subtitulo="$vm->subtitulo()" :volver="$vm->urlVolver()" volver-texto="Volver">
+        <x-slot name="acciones">
+            <x-ui.segmentado :opciones="$vm->filtros()" etiqueta="Qué consultorios ver" />
+        </x-slot>
+    </x-ui.page-head>
 
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <a class="btn btn-sm btn-outline-secondary {{ $verInactivos ? '' : 'active' }}"
-               href="{{ route('clinica.consultorios') }}">Activos</a>
-            <a class="btn btn-sm btn-outline-secondary {{ $verInactivos ? 'active' : '' }}"
-               href="{{ route('clinica.consultorios', ['inactivos' => 1]) }}">Todos</a>
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $volver }}">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
+    <x-ui.errores />
 
-    @if ($errors->any())
-        <div class="alert alert-warning py-2">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ $errors->first() }}
-        </div>
-    @endif
-
-    @if ($sinSedes)
-        {{-- Sin sedes no hay dónde colgar un consultorio: se avisa con el camino, no un formulario
-             que no se puede completar. --}}
+    @if ($vm->sinSedes())
+        {{-- Sin sedes no hay dónde colgar un consultorio: se avisa con el camino, no un formulario que no se
+             puede completar. --}}
         <div class="alert alert-warning d-flex gap-2">
-            <i class="bi bi-hospital"></i>
+            <i class="bi bi-hospital" aria-hidden="true"></i>
             <div>
                 Todavía no hay <strong>sedes</strong> cargadas, así que no se puede crear un consultorio.
-                <a href="{{ route('clinica.sedes') }}">Cargá primero la sede</a> donde atendés.
+                <a href="{{ $vm->urlSedes() }}">Carga primero la sede</a> donde atiendes.
             </div>
         </div>
     @else
-        <form method="POST" action="{{ route('clinica.consultorios.guardar') }}" class="card mb-3">
+        <form method="POST" action="{{ $vm->urlGuardar() }}">
             @csrf
-            <input type="hidden" name="id" value="{{ $valor('id', $editando?->id) }}">
-            <input type="hidden" name="ver_inactivos" value="{{ $verInactivos ? 1 : 0 }}">
+            <input type="hidden" name="id" value="{{ $vm->idEditando() }}">
+            <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">
 
-            <div class="card-body">
-                <h2 class="h6 mb-2">{{ $editando ? 'Editar el consultorio' : 'Nuevo consultorio' }}</h2>
-
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <label class="form-label small mb-0" for="medical_center_id">Sede *</label>
-                        <select name="medical_center_id" id="medical_center_id" class="form-select form-select-sm" required>
-                            <option value="">— Elegí la sede —</option>
-                            @foreach ($sedes as $sede)
-                                <option value="{{ $sede->id }}"
-                                        {{ (int) $valor('medical_center_id', $editando?->medical_center_id) === $sede->id ? 'selected' : '' }}>
-                                    {{ $sede->name }}
-                                </option>
+            <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-door-closed" class="mb-3">
+                <div class="row g-3">
+                    <x-ui.campo etiqueta="Sede" for="medical_center_id" requerido class="col-md-4">
+                        <select name="medical_center_id" id="medical_center_id" class="form-select" required>
+                            <option value="">— Elige la sede —</option>
+                            @foreach ($vm->opcionesDeSede() as $opcion)
+                                <option value="{{ $opcion['valor'] }}" {{ $opcion['elegida'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                             @endforeach
                         </select>
-                    </div>
+                    </x-ui.campo>
 
-                    <div class="col-md-3">
-                        <label class="form-label small mb-0" for="office_number">Consultorio *</label>
-                        <input type="text" name="office_number" id="office_number" class="form-control form-control-sm"
-                               maxlength="50" placeholder="101-A, Piso 2, Consultorio 3…"
-                               value="{{ $valor('office_number', $editando?->office_number) }}">
-                    </div>
+                    <x-ui.campo etiqueta="Consultorio" for="office_number" requerido class="col-md-3">
+                        <input type="text" name="office_number" id="office_number" class="form-control" maxlength="50"
+                               placeholder="101-A, Piso 2, Consultorio 3…" value="{{ $vm->valor('office_number') }}">
+                    </x-ui.campo>
 
-                    <div class="col-md-5">
-                        <label class="form-label small mb-0" for="modalidad">Cómo se atiende *</label>
-                        <select name="modalidad" id="modalidad" class="form-select form-select-sm" required>
-                            @foreach ($modalidades as $clave => $etiquetaModalidad)
-                                <option value="{{ $clave }}"
-                                        {{ $valor('modalidad', $editando?->modalidad ?? Office::MODALIDAD_ORDEN) === $clave ? 'selected' : '' }}>
-                                    {{ $etiquetaModalidad }}
-                                </option>
+                    <x-ui.campo etiqueta="Cómo se atiende" for="modalidad" requerido class="col-md-5"
+                                ayuda="Orden de llegada: la secretaria arma la cola. Hora de cita: cada paciente tiene su hora.">
+                        <select name="modalidad" id="modalidad" class="form-select" required>
+                            @foreach ($vm->opcionesDeModalidad() as $opcion)
+                                <option value="{{ $opcion['valor'] }}" {{ $opcion['elegida'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                             @endforeach
                         </select>
-                        <span class="form-text small">
-                            <strong>Orden de llegada</strong>: la secretaria arma la cola.
-                            <strong>Hora de cita</strong>: cada paciente tiene su hora.
-                        </span>
-                    </div>
+                    </x-ui.campo>
 
-                    <div class="col-md-3">
-                        <label class="form-label small mb-0" for="duracion_cita">Duración de la cita</label>
-                        <div class="input-group input-group-sm">
-                            <input type="number" name="duracion_cita" id="duracion_cita" class="form-control"
-                                   min="5" max="480" step="5"
-                                   placeholder="{{ $duracionPorDefecto }}"
-                                   value="{{ $valor('duracion_cita', $editando?->duracion_cita) }}">
+                    <x-ui.campo etiqueta="Duración de la cita" for="duracion_cita" class="col-md-3" ayuda="Vacío = sin duración configurada.">
+                        <div class="input-group">
+                            <input type="number" name="duracion_cita" id="duracion_cita" class="form-control" min="5" max="480" step="5"
+                                   placeholder="{{ $vm->duracionPorDefecto() }}" value="{{ $vm->valor('duracion_cita') }}">
                             <span class="input-group-text">min</span>
                         </div>
-                        <span class="form-text small">Vacío = sin duración configurada.</span>
-                    </div>
+                    </x-ui.campo>
 
-                    <div class="col-md-3">
-                        <label class="form-label small mb-0" for="phone">Teléfono del consultorio</label>
-                        <input type="text" name="phone" id="phone" class="form-control form-control-sm" maxlength="50"
-                               value="{{ $valor('phone', $editando?->phone) }}">
-                    </div>
+                    <x-ui.campo etiqueta="Teléfono del consultorio" for="phone" class="col-md-4">
+                        <input type="text" name="phone" id="phone" class="form-control" maxlength="50" value="{{ $vm->valor('phone') }}">
+                    </x-ui.campo>
 
-                    <div class="col-md-2 d-flex align-items-end">
+                    <div class="col-md-3 d-flex align-items-center">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="activo" id="activo" value="1"
-                                   {{ $valor('activo', $editando?->activo ?? true) ? 'checked' : '' }}>
-                            <label class="form-check-label small" for="activo">Se sigue usando</label>
+                            <input class="form-check-input" type="checkbox" name="activo" id="activo" value="1" {{ $vm->seSigueUsando() ? 'checked' : '' }}>
+                            <label class="form-check-label" for="activo">Se sigue usando</label>
                         </div>
                     </div>
-
-                    <div class="col-md-4 d-flex align-items-end gap-2">
-                        <button class="btn btn-sm btn-primary flex-grow-1">
-                            {{ $editando ? 'Guardar cambios' : 'Registrar el consultorio' }}
-                        </button>
-                        @if ($editando)
-                            <a class="btn btn-sm btn-outline-secondary"
-                               href="{{ route('clinica.consultorios', $verInactivos ? ['inactivos' => 1] : []) }}">Cancelar</a>
-                        @endif
-                    </div>
                 </div>
-            </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    @if ($vm->editando())
+                        <a class="btn btn-outline-secondary" href="{{ $vm->urlCancelar() }}">Cancelar</a>
+                    @endif
+                    <button class="btn btn-primary">{{ $vm->botonGuardar() }}</button>
+                </div>
+            </x-ui.tarjeta>
         </form>
     @endif
 
-    <div class="card">
-        @if ($consultorios->isEmpty())
-            <div class="empty-state">
-                <i class="bi bi-door-closed"></i>
-                <p>No hay consultorios {{ $verInactivos ? '' : 'activos' }}.</p>
-                <p class="small">
-                    Sin un consultorio cargado no se puede agendar: la agenda necesita saber la sede,
-                    la modalidad y el horario. Y sin <strong>horarios</strong> cargados (sus bloques de
-                    día y hora) la jornada no tiene tope de pacientes.
-                </p>
-            </div>
+    <x-ui.tarjeta sin-relleno>
+        @if ($vm->estaVacio())
+            <x-ui.vacio icono="bi-door-closed" :titulo="$vm->textoVacio()">
+                Sin un consultorio cargado no se puede agendar: la agenda necesita saber la sede, la modalidad y el
+                horario. Y sin horarios cargados (sus bloques de día y hora) la jornada no tiene tope de pacientes.
+            </x-ui.vacio>
         @else
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">Sede</th>
-                            <th scope="col">Consultorio</th>
-                            <th scope="col">Cómo se atiende</th>
-                            <th scope="col" class="text-center">Duración</th>
-                            <th scope="col" class="text-center">Horarios</th>
-                            <th scope="col">Estado</th>
-                            <th scope="col" class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($consultorios as $consultorio)
-                            <tr>
-                                <td><strong>{{ $consultorio->medicalCenter->name ?? 'Sede' }}</strong></td>
-                                <td>{{ $consultorio->office_number }}</td>
-                                <td>
-                                    <span class="badge {{ $consultorio->modalidad === Office::MODALIDAD_ORDEN ? 'bg-info text-dark' : 'bg-secondary' }}">
-                                        {{ $modalidades[$consultorio->modalidad] ?? $consultorio->modalidad }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    {{ $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : '—' }}
-                                </td>
-                                <td class="text-center">
-                                    {{-- Los bloques se cargan en su propia pantalla (WEB-2.8b.3): el
-                                         número es el atajo, y sin bloques el atajo invita a cargarlos. --}}
-                                    <a class="{{ $consultorio->schedules->isEmpty() ? 'small' : 'badge bg-secondary text-decoration-none' }}"
-                                       href="{{ route('clinica.consultorios.horarios', $consultorio) }}">
-                                        @if ($consultorio->schedules->isEmpty())
-                                            cargar horarios
-                                        @else
-                                            {{ $consultorio->schedules->count() }}
-                                            {{ $consultorio->schedules->count() === 1 ? 'bloque' : 'bloques' }}
-                                        @endif
-                                    </a>
-                                </td>
-                                <td>
-                                    @if ($consultorio->activo)
-                                        <span class="badge bg-success">Activo</span>
-                                    @else
-                                        <span class="badge bg-secondary">Inactivo</span>
-                                    @endif
-                                </td>
-                                <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="{{ route('clinica.consultorios.horarios', $consultorio) }}">
-                                        <i class="bi bi-clock"></i> Horarios
-                                    </a>
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="{{ route('clinica.consultorios', array_filter(['editar' => $consultorio->id, 'inactivos' => $verInactivos ? 1 : null])) }}">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </a>
-                                    <form method="POST" action="{{ route('clinica.consultorios.activar', $consultorio->id) }}"
-                                          class="d-inline">
+            <x-ui.tabla>
+                <thead>
+                <tr>
+                    <th>Consultorio</th>
+                    <th>Cómo se atiende</th>
+                    <th>Duración</th>
+                    <th>Horarios</th>
+                    <th>Estado</th>
+                    <th class="text-end"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach ($vm->filas() as $fila)
+                    <tr>
+                        <td class="celda-principal">
+                            <strong>{{ $fila['sede'] }}</strong>
+                            <span class="texto-tenue d-block small">{{ $fila['consultorio'] }}</span>
+                        </td>
+                        <td data-etiqueta="Cómo se atiende">
+                            <x-ui.estado :tono="$fila['modalidad']['tono']" :icono="$fila['modalidad']['icono']">{{ $fila['modalidad']['texto'] }}</x-ui.estado>
+                        </td>
+                        <td data-etiqueta="Duración">{{ $fila['duracion'] ?? '—' }}</td>
+                        <td data-etiqueta="Horarios">
+                            {{-- Los bloques se cargan en su propia pantalla (WEB-2.8b.3): sin bloques el
+                                 atajo invita a cargarlos. --}}
+                            <a class="small" href="{{ $fila['urlHorarios'] }}">{{ $fila['bloques'] ?? 'cargar horarios' }}</a>
+                        </td>
+                        <td data-etiqueta="Estado">
+                            <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
+                        </td>
+                        <td class="celda-acciones text-end">
+                            <div class="acciones-fila">
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlHorarios'] }}">
+                                    <i class="bi bi-clock" aria-hidden="true"></i> Horarios
+                                </a>
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                </a>
+                                <x-ui.menu>
+                                    <form method="POST" action="{{ $fila['urlActivar'] }}">
                                         @csrf
                                         @method('PATCH')
-                                        <input type="hidden" name="ver_inactivos" value="{{ $verInactivos ? 1 : 0 }}">
-                                        <button class="btn btn-sm {{ $consultorio->activo ? 'btn-outline-danger' : 'btn-outline-primary' }}">
-                                            @if ($consultorio->activo)
-                                                <i class="bi bi-slash-circle"></i> Desactivar
-                                            @else
-                                                <i class="bi bi-check-circle"></i> Activar
-                                            @endif
+                                        <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">
+                                        <button class="menu-item {{ $fila['activar']['peligro'] ? 'menu-item-peligro' : '' }}">
+                                            <i class="bi {{ $fila['activar']['icono'] }}" aria-hidden="true"></i> {{ $fila['activar']['texto'] }}
                                         </button>
                                     </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </x-ui.menu>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </x-ui.tabla>
         @endif
-    </div>
+    </x-ui.tarjeta>
 @endsection

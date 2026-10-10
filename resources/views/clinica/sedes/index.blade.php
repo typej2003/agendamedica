@@ -1,175 +1,120 @@
 @extends('clinica.layout')
 
-@php
-    $valor = fn (string $campo, $defecto = null) => old($campo, $defecto);
-    $volver = route('clinica.inicio');
-@endphp
-
 @section('titulo', 'Sedes')
 
 @section('contenido')
-    <div class="page-head">
-        <div>
-            <h1>Sedes</h1>
-            <p class="page-head-sub">
-                Los lugares donde atienden los médicos del consultorio.
-                Acá se elige la sede al agendar y al crear un consultorio.
-            </p>
-        </div>
+    <x-ui.page-head titulo="Sedes"
+                    subtitulo="Los lugares donde atienden los médicos del consultorio. Aquí se elige la sede al agendar y al crear un consultorio."
+                    :volver="$vm->urlVolver()" volver-texto="Volver">
+        <x-slot name="acciones">
+            <x-ui.segmentado :opciones="$vm->filtros()" etiqueta="Qué sedes ver" />
+        </x-slot>
+    </x-ui.page-head>
 
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <a class="btn btn-sm btn-outline-secondary {{ $verTodas ? '' : 'active' }}"
-               href="{{ route('clinica.sedes') }}">
-                Activas ({{ $totalActivas }})
-            </a>
-            <a class="btn btn-sm btn-outline-secondary {{ $verTodas ? 'active' : '' }}"
-               href="{{ route('clinica.sedes', ['todas' => 1]) }}">
-                Todas
-            </a>
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $volver }}">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
+    <x-ui.errores />
 
-    @if ($errors->any())
-        <div class="alert alert-warning py-2">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ $errors->first() }}
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('clinica.sedes.guardar') }}" class="card mb-3">
+    <form method="POST" action="{{ $vm->urlGuardar() }}">
         @csrf
-        <input type="hidden" name="id" value="{{ $valor('id', $editando?->id) }}">
-        <input type="hidden" name="ver_todas" value="{{ $verTodas ? 1 : 0 }}">
+        <input type="hidden" name="id" value="{{ $vm->idEditando() }}">
+        <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
 
-        <div class="card-body">
-            <h2 class="h6 mb-2">{{ $editando ? 'Editar la sede' : 'Nueva sede' }}</h2>
+        <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-hospital" class="mb-3">
+            <div class="row g-3">
+                <x-ui.campo etiqueta="Nombre" for="name" requerido class="col-md-4">
+                    <input type="text" name="name" id="name" class="form-control" maxlength="200"
+                           placeholder="Clínica Metropolitana" value="{{ $vm->valor('name') }}">
+                </x-ui.campo>
 
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <label class="form-label small mb-0" for="name">Nombre *</label>
-                    <input type="text" name="name" id="name" class="form-control form-control-sm" maxlength="200"
-                           placeholder="Clínica Metropolitana" value="{{ $valor('name', $editando?->name) }}">
-                </div>
+                <x-ui.campo etiqueta="Dirección" for="address" requerido class="col-md-5">
+                    <input type="text" name="address" id="address" class="form-control" maxlength="1000" value="{{ $vm->valor('address') }}">
+                </x-ui.campo>
 
-                <div class="col-md-5">
-                    <label class="form-label small mb-0" for="address">Dirección *</label>
-                    <input type="text" name="address" id="address" class="form-control form-control-sm" maxlength="1000"
-                           value="{{ $valor('address', $editando?->address) }}">
-                </div>
+                <x-ui.campo etiqueta="Teléfono" for="phone" class="col-md-3">
+                    <input type="text" name="phone" id="phone" class="form-control" maxlength="50" value="{{ $vm->valor('phone') }}">
+                </x-ui.campo>
 
-                <div class="col-md-3">
-                    <label class="form-label small mb-0" for="phone">Teléfono</label>
-                    <input type="text" name="phone" id="phone" class="form-control form-control-sm" maxlength="50"
-                           value="{{ $valor('phone', $editando?->phone) }}">
-                </div>
-
-                <div class="col-md-5">
-                    <label class="form-label small mb-0" for="city_id">Ciudad *</label>
-                    <select name="city_id" id="city_id" class="form-select form-select-sm" required>
-                        <option value="">— Elegí la ciudad —</option>
-                        @foreach ($ciudades as $ciudad)
-                            <option value="{{ $ciudad->id }}"
-                                    {{ (int) $valor('city_id', $editando?->city_id) === $ciudad->id ? 'selected' : '' }}>
-                                {{ $ciudad->name }} — {{ $ciudad->state->name ?? '' }}
-                            </option>
+                <x-ui.campo etiqueta="Ciudad" for="city_id" requerido class="col-md-5" ayuda="El estado y el país salen de la ciudad.">
+                    <select name="city_id" id="city_id" class="form-select" required>
+                        <option value="">— Elige la ciudad —</option>
+                        @foreach ($vm->opcionesDeCiudad() as $opcion)
+                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegida'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                         @endforeach
                     </select>
-                    {{-- El estado y el país no se preguntan: se derivan de la ciudad (los exige el
-                         esquema migrado y una ciudad pertenece a un solo estado). --}}
-                    <span class="form-text small">El estado y el país salen de la ciudad.</span>
-                </div>
+                </x-ui.campo>
 
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-md-3 d-flex align-items-center">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="activo" id="activo" value="1"
-                               {{ $valor('activo', $editando?->activo ?? true) ? 'checked' : '' }}>
-                        <label class="form-check-label small" for="activo">Se sigue usando</label>
+                        <input class="form-check-input" type="checkbox" name="activo" id="activo" value="1" {{ $vm->seSigueUsando() ? 'checked' : '' }}>
+                        <label class="form-check-label" for="activo">Se sigue usando</label>
                     </div>
                 </div>
-
-                <div class="col-md-4 d-flex align-items-end gap-2">
-                    <button class="btn btn-sm btn-primary flex-grow-1">
-                        {{ $editando ? 'Guardar cambios' : 'Registrar la sede' }}
-                    </button>
-                    @if ($editando)
-                        <a class="btn btn-sm btn-outline-secondary"
-                           href="{{ route('clinica.sedes', $verTodas ? ['todas' => 1] : []) }}">Cancelar</a>
-                    @endif
-                </div>
             </div>
-        </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                @if ($vm->editando())
+                    <a class="btn btn-outline-secondary" href="{{ $vm->urlCancelar() }}">Cancelar</a>
+                @endif
+                <button class="btn btn-primary">{{ $vm->botonGuardar() }}</button>
+            </div>
+        </x-ui.tarjeta>
     </form>
 
-    <div class="card">
-        @if ($sedes->isEmpty())
-            <div class="empty-state">
-                <i class="bi bi-hospital"></i>
-                <p>No hay sedes {{ $verTodas ? '' : 'activas' }}.</p>
-                <p class="small">Cargá la primera en el formulario de arriba: sin sedes no se pueden crear consultorios.</p>
-            </div>
+    <x-ui.tarjeta sin-relleno>
+        @if ($vm->estaVacio())
+            @php $vacio = $vm->vacio(); @endphp
+            <x-ui.vacio icono="bi-hospital" :titulo="$vacio['texto']">{{ $vacio['ayuda'] }}</x-ui.vacio>
         @else
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">Sede</th>
-                            <th scope="col">Dirección</th>
-                            <th scope="col">Ciudad</th>
-                            <th scope="col">Teléfono</th>
-                            <th scope="col" class="text-center">Consultorios</th>
-                            <th scope="col">Estado</th>
-                            <th scope="col" class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($sedes as $sede)
-                            <tr>
-                                <td><strong>{{ $sede->name }}</strong></td>
-                                <td>{{ $sede->address }}</td>
-                                <td>{{ $sede->city->name ?? '—' }}</td>
-                                <td>{{ $sede->phone ?: '—' }}</td>
-                                <td class="text-center">
-                                    @if ($sede->consultorios_activos > 0)
-                                        <span class="badge bg-secondary">{{ $sede->consultorios_activos }}</span>
-                                    @else
-                                        <span class="text-muted small">ninguno</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($sede->activo)
-                                        <span class="badge bg-success">Activa</span>
-                                    @else
-                                        <span class="badge bg-secondary">Inactiva</span>
-                                    @endif
-                                </td>
-                                <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="{{ route('clinica.sedes', array_filter(['editar' => $sede->id, 'todas' => $verTodas ? 1 : null])) }}">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </a>
-                                    {{-- La baja es desactivar: la cita guarda `medical_center_id` y el
-                                         historial tiene que poder seguir leyendo el lugar. --}}
-                                    <form method="POST" action="{{ route('clinica.sedes.activar', $sede->id) }}"
-                                          class="d-inline">
+            <x-ui.tabla>
+                <thead>
+                <tr>
+                    <th>Sede</th>
+                    <th>Dirección</th>
+                    <th>Teléfono</th>
+                    <th class="text-center">Consultorios</th>
+                    <th>Estado</th>
+                    <th class="text-end"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach ($vm->filas() as $fila)
+                    <tr>
+                        <td class="celda-principal">
+                            <strong>{{ $fila['nombre'] }}</strong>
+                            <span class="texto-tenue small d-block">{{ $fila['ciudad'] ?? '—' }}</span>
+                        </td>
+                        <td data-etiqueta="Dirección">{{ $fila['direccion'] }}</td>
+                        <td data-etiqueta="Teléfono">{{ $fila['telefono'] ?? '—' }}</td>
+                        <td data-etiqueta="Consultorios" class="text-md-center">
+                            @if ($fila['consultorios'] > 0)
+                                <x-ui.estado tono="neutro" icono="bi-door-closed">{{ $fila['consultorios'] }}</x-ui.estado>
+                            @else
+                                <span class="texto-tenue small">ninguno</span>
+                            @endif
+                        </td>
+                        <td data-etiqueta="Estado">
+                            <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
+                        </td>
+                        <td class="celda-acciones text-end">
+                            <div class="acciones-fila">
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                </a>
+                                <x-ui.menu>
+                                    <form method="POST" action="{{ $fila['urlActivar'] }}">
                                         @csrf
                                         @method('PATCH')
-                                        <input type="hidden" name="ver_todas" value="{{ $verTodas ? 1 : 0 }}">
-                                        <button class="btn btn-sm {{ $sede->activo ? 'btn-outline-danger' : 'btn-outline-primary' }}">
-                                            @if ($sede->activo)
-                                                <i class="bi bi-slash-circle"></i> Desactivar
-                                            @else
-                                                <i class="bi bi-check-circle"></i> Activar
-                                            @endif
+                                        <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
+                                        <button class="menu-item {{ $fila['activar']['peligro'] ? 'menu-item-peligro' : '' }}">
+                                            <i class="bi {{ $fila['activar']['icono'] }}" aria-hidden="true"></i> {{ $fila['activar']['texto'] }}
                                         </button>
                                     </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </x-ui.menu>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </x-ui.tabla>
         @endif
-    </div>
+    </x-ui.tarjeta>
 @endsection

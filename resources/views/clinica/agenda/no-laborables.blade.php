@@ -1,161 +1,106 @@
 @extends('clinica.layout')
 
-@php
-    use App\Models\DiaNoLaborable;
-    use App\Support\FechaClinica;
-
-    $tituloMes = FechaClinica::tituloMes($mes);
-    $anterior = $mes->copy()->subMonth();
-    $siguiente = $mes->copy()->addMonth();
-    $volver = route('clinica.agenda', ['vista' => 'dia', 'fecha' => now()->toDateString()]);
-
-    // El formulario sirve para las dos cosas: sin `editando` da de alta; con él, edita ese día.
-    $valor = fn (string $campo, $defecto = null) => old($campo, $defecto);
-    $accion = route('clinica.agenda.no-laborables.guardar');
-@endphp
-
 @section('titulo', 'Días no laborables')
 
 @section('contenido')
-    <div class="page-head">
-        <div>
-            <h1>Días no laborables</h1>
-            <p class="page-head-sub">
-                Feriados, congresos y ausencias de
-                {{ trim(($medico->prefix ?? '') . ' ' . $medico->name . ' ' . $medico->lastname) }}.
-                La agenda los avisa al agendar.
-            </p>
-        </div>
+    <x-ui.page-head titulo="Días no laborables" :subtitulo="$vm->subtitulo()"
+                    :volver="$vm->urlVolver()" volver-texto="Volver a la agenda">
+        <x-slot name="acciones">
+            <a class="btn btn-primary" href="{{ $vm->urlMarcar() }}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Marcar un día
+            </a>
+        </x-slot>
+    </x-ui.page-head>
 
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $volver }}">
-                <i class="bi bi-arrow-left"></i> Volver a la agenda
-            </a>
-            <a class="btn btn-sm btn-primary" href="{{ route('clinica.agenda.no-laborables', ['mes' => $mes->format('Y-m')]) }}">
-                <i class="bi bi-plus-lg"></i> Marcar un día
-            </a>
+    <div class="agenda-barra">
+        <div class="agenda-navegacion">
+            <div class="btn-group" role="group" aria-label="Navegación">
+                <a class="btn btn-outline-secondary" href="{{ $vm->urlAnterior() }}" title="Mes anterior" aria-label="Mes anterior">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </a>
+                <a class="btn btn-outline-secondary" href="{{ $vm->urlEsteMes() }}">Este mes</a>
+                <a class="btn btn-outline-secondary" href="{{ $vm->urlSiguiente() }}" title="Mes siguiente" aria-label="Mes siguiente">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <h2 class="agenda-titulo">{{ $vm->titulo() }}</h2>
+            <span class="texto-tenue small">· {{ $vm->conteo() }}</span>
         </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <a class="btn btn-sm btn-outline-secondary" title="Mes anterior" aria-label="Mes anterior"
-           href="{{ route('clinica.agenda.no-laborables', ['mes' => $anterior->format('Y-m')]) }}">
-            <i class="bi bi-chevron-left"></i>
-        </a>
-        <a class="btn btn-sm btn-outline-secondary"
-           href="{{ route('clinica.agenda.no-laborables', ['mes' => now()->format('Y-m')]) }}">Este mes</a>
-        <a class="btn btn-sm btn-outline-secondary" title="Mes siguiente" aria-label="Mes siguiente"
-           href="{{ route('clinica.agenda.no-laborables', ['mes' => $siguiente->format('Y-m')]) }}">
-            <i class="bi bi-chevron-right"></i>
-        </a>
-        <strong class="ms-2">{{ ucfirst($tituloMes) }}</strong>
-        <span class="text-muted small">
-            · {{ $dias->count() }} {{ $dias->count() === 1 ? 'día marcado' : 'días marcados' }}
-        </span>
-    </div>
+    <x-ui.errores />
 
-    @if ($errors->any())
-        <div class="alert alert-warning py-2">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ $errors->first() }}
-        </div>
-    @endif
-
-    <form method="POST" action="{{ $accion }}" class="card mb-3">
+    {{-- El formulario sirve para las dos cosas: sin `editando` da de alta; con él, edita ese día. --}}
+    <form method="POST" action="{{ $vm->urlGuardar() }}">
         @csrf
-        <input type="hidden" name="id" value="{{ $valor('id', $editando?->id) }}">
+        <input type="hidden" name="id" value="{{ $vm->idEditando() }}">
 
-        <div class="card-body">
-            <h2 class="h6 mb-2">{{ $editando ? 'Editar el día marcado' : 'Marcar un día' }}</h2>
+        <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-calendar-x" class="mb-3">
+            <div class="row g-3 align-items-end">
+                <x-ui.campo etiqueta="Día" for="dia" class="col-md-3">
+                    <input type="date" name="dia" id="dia" class="form-control" value="{{ $vm->dia() }}" required>
+                </x-ui.campo>
 
-            <div class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small mb-0" for="dia">Día</label>
-                    <input type="date" name="dia" id="dia" class="form-control form-control-sm"
-                           value="{{ $valor('dia', $editando?->dia?->toDateString() ?? ($mes->isCurrentMonth() ? now()->toDateString() : $mes->copy()->startOfMonth()->toDateString())) }}" required>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label small mb-0" for="tipo">Tipo</label>
-                    <select name="tipo" id="tipo" class="form-select form-select-sm">
-                        @foreach ($tipos as $claveTipo => $etiqueta)
-                            <option value="{{ $claveTipo }}"
-                                    {{ $valor('tipo', $editando?->tipo ?? DiaNoLaborable::FERIADO) === $claveTipo ? 'selected' : '' }}>
-                                {{ $etiqueta }}
-                            </option>
+                <x-ui.campo etiqueta="Tipo" for="tipo" class="col-md-3">
+                    <select name="tipo" id="tipo" class="form-select">
+                        @foreach ($vm->opcionesDeTipo() as $opcion)
+                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                         @endforeach
                     </select>
-                </div>
+                </x-ui.campo>
 
-                <div class="col-md-4">
-                    <label class="form-label small mb-0" for="motivo">Motivo</label>
-                    <input type="text" name="motivo" id="motivo" class="form-control form-control-sm" maxlength="100"
-                           placeholder="Lo que se le avisa a la secretaria" value="{{ $valor('motivo', $editando?->motivo) }}">
-                    <span class="form-text small">Es el texto que muestra la agenda, como en el escritorio.</span>
-                </div>
-
-                <div class="col-md-2 d-flex gap-2">
-                    <button class="btn btn-sm btn-primary flex-grow-1">
-                        {{ $editando ? 'Guardar' : 'Marcar' }}
-                    </button>
-                    @if ($editando)
-                        <a class="btn btn-sm btn-outline-secondary"
-                           href="{{ route('clinica.agenda.no-laborables', ['mes' => $mes->format('Y-m')]) }}">Cancelar</a>
-                    @endif
-                </div>
+                <x-ui.campo etiqueta="Motivo" for="motivo" class="col-md-6" ayuda="Es el texto que muestra la agenda, como en el escritorio.">
+                    <input type="text" name="motivo" id="motivo" class="form-control" maxlength="100"
+                           placeholder="Lo que se le avisa a la secretaria" value="{{ $vm->valor('motivo') }}">
+                </x-ui.campo>
             </div>
-        </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                @if ($vm->editando())
+                    <a class="btn btn-outline-secondary" href="{{ $vm->urlCancelar() }}">Cancelar</a>
+                @endif
+                <button class="btn btn-primary">{{ $vm->botonGuardar() }}</button>
+            </div>
+        </x-ui.tarjeta>
     </form>
 
-    <div class="card">
-        @if ($dias->isEmpty())
-            <div class="empty-state">
-                <i class="bi bi-calendar-check"></i>
-                <p>No hay días marcados en {{ strtolower($tituloMes) }}.</p>
-                <p class="small">El médico atiende todos los días de este mes.</p>
-            </div>
+    <x-ui.tarjeta sin-relleno>
+        @if ($vm->estaVacio())
+            <x-ui.vacio icono="bi-calendar-check" :titulo="$vm->textoVacio()">El médico atiende todos los días de este mes.</x-ui.vacio>
         @else
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">Día</th>
-                            <th scope="col">Tipo</th>
-                            <th scope="col">Motivo</th>
-                            <th scope="col" class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($dias as $dia)
-                            <tr>
-                                <td>
-                                    <strong>{{ FechaClinica::tituloDia($dia->dia) }}</strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ $dia->etiquetaTipo() }}</span>
-                                </td>
-                                <td>
-                                    {{ $dia->motivo ?: '—' }}
-                                </td>
-                                <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="{{ route('clinica.agenda.no-laborables', ['mes' => $mes->format('Y-m'), 'editar' => $dia->id]) }}">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </a>
-                                    <form method="POST" action="{{ route('clinica.agenda.no-laborables.eliminar', $dia->id) }}"
-                                          class="d-inline"
-                                          onsubmit="return confirm('¿Quitar la marca del {{ $dia->dia->format('d/m/Y') }}?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i> Quitar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <x-ui.tabla>
+                <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Tipo</th>
+                    <th>Motivo</th>
+                    <th class="text-end"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach ($vm->filas() as $fila)
+                    <tr>
+                        <td class="celda-principal"><strong>{{ $fila['dia'] }}</strong></td>
+                        <td data-etiqueta="Tipo"><x-ui.estado tono="aviso" icono="bi-calendar-x">{{ $fila['tipo'] }}</x-ui.estado></td>
+                        <td data-etiqueta="Motivo">{{ $fila['motivo'] ?? '—' }}</td>
+                        <td class="celda-acciones text-end">
+                            <div class="acciones-fila">
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                </a>
+                                <form method="POST" action="{{ $fila['urlEliminar'] }}" data-confirmar="{{ $fila['confirmar'] }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash" aria-hidden="true"></i> Quitar
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </x-ui.tabla>
         @endif
-    </div>
+    </x-ui.tarjeta>
 @endsection

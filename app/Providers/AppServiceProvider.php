@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\ArmazonClinicaComposer;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,5 +31,8 @@ class AppServiceProvider extends ServiceProvider
         // se estiraban a ~1600px y la página terminaba en un bloque gigante. Los componentes Livewire ya
         // fijan `$paginationTheme = 'bootstrap'` uno por uno; esto fija el valor por defecto para el resto.
         Paginator::useBootstrap();
+
+        // El armazón de la web clínica (barra, accesos y menú) lo arma un ViewModel, no el layout.
+        View::composer('clinica.layout', ArmazonClinicaComposer::class);
     }
 }

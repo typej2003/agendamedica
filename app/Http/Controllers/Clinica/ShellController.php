@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\Vistas\InicioVista;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 /**
- * Pantalla de entrada de la web clínica. Los módulos que muestra el menú salen de la especialidad del
- * contexto —los implementados y visibles para los roles del usuario— y los comparte el middleware
- * `AsegurarContextoClinico`, así que acá solo queda el estado del shell.
+ * Pantalla de entrada de la web clínica. Los módulos que muestra salen de la especialidad del contexto
+ * —los implementados y visibles para los roles del usuario— y los comparte el middleware
+ * `AsegurarContextoClinico`.
  */
 class ShellController extends Controller
 {
@@ -17,7 +18,7 @@ class ShellController extends Controller
         $actual = $request->attributes->get('contexto_clinico');
 
         return view('clinica.shell', [
-            'sinEspecialidad' => $actual['specialty'] === null,
+            'vm' => new InicioVista($actual, view()->shared('modulos', collect())),
         ]);
     }
 }

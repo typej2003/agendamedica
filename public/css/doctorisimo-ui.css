@@ -1435,3 +1435,10 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 }
 
 .jornada-resumen-inline { padding: .6rem .8rem; background: var(--ds-violeta-50); border-radius: var(--ds-radio-sm); }
+
+/* --- Accesos a módulos (inicio) y errores de campo --- */
+.modulo-icono { background: var(--ds-violeta-100); color: var(--ds-violeta-700); }
+.modulo-nombre { font-size: 1rem; font-weight: 700; margin: 0 0 .15rem; }
+.modulo-acceso { transition: box-shadow .15s ease, border-color .15s ease; }
+.modulo-acceso:hover { border-color: var(--ds-violeta-200); box-shadow: var(--ds-sombra-2); }
+.campo-error { color: var(--ds-peligro); font-size: .85rem; margin-top: .2rem; }

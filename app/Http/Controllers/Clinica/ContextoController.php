@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\ContextoTrabajo;
+use App\Clinica\Vistas\ContextoVista;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -21,8 +22,7 @@ class ContextoController extends Controller
     public function editar(Request $request)
     {
         return view('clinica.contexto', [
-            'disponibles' => $this->contexto->disponibles($request->user()),
-            'actual'      => $this->contexto->actual($request->user()),
+            'vm' => new ContextoVista($this->contexto->disponibles($request->user())),
         ]);
     }
 
