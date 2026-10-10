@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Clinica\AgendaController;
+use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\HorarioController;
+use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -71,7 +73,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del
             // módulo es `clinica.agenda`, que es la que el menú arma desde `especialidad_modulo`.
             Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
-            Route::get('/agenda/nueva', [AgendaController::class, 'nueva'])->name('agenda.nueva');
+            Route::get('/agenda/nueva', [CitaController::class, 'nueva'])->name('agenda.nueva');
             // Recordatorios y acciones globales del día (WEB-2.6/2.7). Van **antes** de las rutas con
             // `{cola}`: si no, `envio`/`imprimir` entrarían como id de cita.
             Route::get('/agenda/envio', [RecordatorioController::class, 'envio'])->name('agenda.envio');
@@ -85,16 +87,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::post('/agenda/no-laborables', [NoLaborableController::class, 'guardar'])->name('agenda.no-laborables.guardar');
             Route::delete('/agenda/no-laborables/{noLaborable}', [NoLaborableController::class, 'eliminar'])->name('agenda.no-laborables.eliminar');
 
-            Route::post('/agenda', [AgendaController::class, 'crear'])->name('agenda.crear');
-            Route::post('/agenda/reordenar', [AgendaController::class, 'reordenar'])->name('agenda.reordenar');
+            Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
+            Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');
             Route::post('/agenda/{cola}/notificar', [RecordatorioController::class, 'notificar'])->name('agenda.notificar');
-            Route::post('/agenda/{cola}/confirmar', [AgendaController::class, 'confirmar'])->name('agenda.confirmar');
-            Route::post('/agenda/{cola}/atender', [AgendaController::class, 'atender'])->name('agenda.atender');
-            Route::post('/agenda/{cola}/cobrar', [AgendaController::class, 'cobrar'])->name('agenda.cobrar');
-            Route::post('/agenda/{cola}/eliminar', [AgendaController::class, 'eliminar'])->name('agenda.eliminar');
-            Route::get('/agenda/{cola}/editar', [AgendaController::class, 'editar'])->name('agenda.editar');
+            Route::post('/agenda/{cola}/confirmar', [MostradorController::class, 'confirmar'])->name('agenda.confirmar');
+            Route::post('/agenda/{cola}/atender', [MostradorController::class, 'atender'])->name('agenda.atender');
+            Route::post('/agenda/{cola}/cobrar', [MostradorController::class, 'cobrar'])->name('agenda.cobrar');
+            Route::post('/agenda/{cola}/eliminar', [CitaController::class, 'eliminar'])->name('agenda.eliminar');
+            Route::get('/agenda/{cola}/editar', [CitaController::class, 'editar'])->name('agenda.editar');
             // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como
             // id de cita, así que las de arriba tienen que estar declaradas primero.
-            Route::post('/agenda/{cola}', [AgendaController::class, 'actualizar'])->name('agenda.actualizar');
+            Route::post('/agenda/{cola}', [CitaController::class, 'actualizar'])->name('agenda.actualizar');
         });
     });

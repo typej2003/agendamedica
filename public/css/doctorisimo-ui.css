@@ -1408,3 +1408,30 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
     .calendario-marca { display: none; }
     .calendario-conteo { font-size: .7rem; padding: 0 .35rem; }
 }
+
+/* --- Formulario por pasos (cita) --- */
+.paso { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--ds-borde); }
+.paso-aviso { background: var(--ds-aviso-bg); }
+
+.paso-titulo {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 .9rem;
+}
+
+.paso-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-size: .8rem;
+}
+
+.jornada-resumen-inline { padding: .6rem .8rem; background: var(--ds-violeta-50); border-radius: var(--ds-radio-sm); }
