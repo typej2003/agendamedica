@@ -1169,4 +1169,148 @@ class AgendaWebTest extends TestCase
         $respuesta->assertSee('2 Pacientes para el 05/10/2026');
         $respuesta->assertDontSee('Jiménez');
     }
+
+    // ------------------------------------------- Filtro por razón y buscador del día (WEB-2.14)
+
+    public function test_el_filtro_por_razon_deja_solo_las_citas_de_esa_razon_en_las_dos_columnas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'ECO', 'tipo_atencion' => 'Ecografía']);
+        MotivoCita::create([
+            'reg_medico' => $medico->reg_medico, 'codigo' => 'PAP', 'tipo_atencion' => 'Papanicolau',
+        ]);
+
+        $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+        $this->pacienteConHistoria($medico, 5002, 'Beto', 'Blanco');
+        $this->pacienteConHistoria($medico, 5003, 'Carla', 'Castro');
+
+        // La razón vive en `tipo` cuando la escribe el escritorio o la web…
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 5001, 'tipo' => 'ECO',
+        ]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 2, [
+            'numhistoria' => 5002, 'tipo' => 'PAP',
+        ]);
+        // …y en `motivo` cuando la escribe el móvil (WEB-2.16: la web busca el código en las dos).
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '10:00:00', 3, [
+            'numhistoria' => 5003, 'motivo' => 'ECO',
+        ]);
+
+        $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Sin filtro están las tres.
+        $peticion->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas')
+            ->assertOk()
+            ->assertSee('3 citas');
+
+        $respuesta = $peticion->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString()
+            . '&sede=todas&razon=ECO');
+
+        $respuesta->assertOk();
+        // El filtro es por el **código** de la razón, no por su texto: el listado muestra el catálogo.
+        // (El texto del motivo sigue apareciendo en el `<select>`, por eso lo que se mira acá es el
+        // paciente de la cita que no corresponde a la razón elegida.)
+        $respuesta->assertSee('Ecografía');
+        $respuesta->assertSee('Alvarez');
+        $respuesta->assertSee('Castro');
+        $respuesta->assertDontSee('Blanco');
+        // El encabezado y el conteo del día reflejan lo filtrado, y el chip avisa cuál está puesto.
+        $respuesta->assertSee('2 citas');
+        $respuesta->assertSee('Razón: Ecografía');
+        $respuesta->assertSee('Quitar el filtro de razón');
+        // El `<select>` viene con la razón elegida (no hay `@selected` en Blade 8: es el atributo).
+        $respuesta->assertSee('value="ECO" selected', false);
+    }
+
+    public function test_una_razon_que_no_esta_en_el_catalogo_no_filtra_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'ECO', 'tipo_atencion' => 'Ecografía']);
+        $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+        $this->pacienteConHistoria($medico, 5002, 'Beto', 'Blanco');
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 5001, 'tipo' => 'ECO',
+        ]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 2, [
+            'numhistoria' => 5002, 'tipo' => 'PAP',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas&razon=NOEXISTE');
+
+        $respuesta->assertOk();
+        // Un código inventado se comporta como "Todas las razones" (`TODOS` de `ddlb_1` del escritorio):
+        // la agenda no queda en blanco y tampoco aparece un chip de un filtro que no se aplicó.
+        $respuesta->assertSee('2 citas');
+        $respuesta->assertSee('Alvarez');
+        $respuesta->assertSee('Blanco');
+        $respuesta->assertDontSee('Razón:');
+    }
+
+    public function test_el_filtro_por_razon_no_cambia_la_posicion_calculada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00', 10);
+
+        MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'ECO', 'tipo_atencion' => 'Ecografía']);
+
+        // El séptimo de la jornada es el de la razón filtrada: su posición no puede renumerarse.
+        for ($i = 1; $i <= 7; $i++) {
+            $this->pacienteConHistoria($medico, 6000 + $i, 'Paciente' . $i, 'Numero');
+        }
+        for ($i = 1; $i <= 6; $i++) {
+            $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', $i, [
+                'numhistoria' => 6000 + $i, 'tipo' => 'CTRL',
+            ]);
+        }
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00:00', 7, [
+            'numhistoria' => 6007, 'tipo' => 'ECO',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas&razon=ECO');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Numero, Paciente7');
+        // Sigue siendo el 7 aunque sea la única fila de la lista (la posición se calcula sobre todo el
+        // rango, antes de filtrar): si se renumerara, acá habría un `#1`.
+        $respuesta->assertSee('badge bg-dark">#7', false);
+        $respuesta->assertDontSee('badge bg-dark">#1<', false);
+    }
+
+    public function test_la_vista_de_dia_ofrece_el_buscador_de_pacientes_de_la_agenda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=' . $sede->id);
+
+        $respuesta->assertOk();
+        // El buscador es el listado que el escritorio tiene al lado de la agenda: input con el endpoint
+        // JSON del alta y el contenedor de resultados.
+        $respuesta->assertSee('data-url="' . route('clinica.pacientes.buscar') . '"', false);
+        $respuesta->assertSee('id="agenda-paciente-resultados"', false);
+        $respuesta->assertSee('Hacer cita');
+        $respuesta->assertSee('Pacientes de la agenda');
+        // El "Hacer cita" de cada fila va al alta con la fecha y la sede que se están mirando; el
+        // `+ '&paciente_id='` del JS es el que agrega el paciente elegido. `@json` escapa las barras.
+        $respuesta->assertSee(
+            'agenda\\/nueva?fecha=' . $this->lunes->toDateString() . '&sede=' . $sede->id . '"',
+            false
+        );
+        // Es de la vista de **día**: la semana y el mes no lo llevan.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=semana&fecha=' . $this->lunes->toDateString() . '&sede=todas')
+            ->assertOk()
+            ->assertDontSee('id="agenda-paciente-busqueda"', false);
+    }
 }

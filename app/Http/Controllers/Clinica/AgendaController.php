@@ -81,6 +81,22 @@ class AgendaController extends Controller
             ? $delRango
             : $delRango->where('centroId', $centroId)->values();
 
+        // Filtro por razón (WEB-2.14): el escritorio filtra la pantalla del día por el motivo de la
+        // cita (`ddlb_1` de `w_hacer_cita` → `cola_tipo like '%XX%'`, con `TODOS`). Acá el código se
+        // compara **exacto** en las dos columnas donde el legado lo guarda —`tipo`, que escriben el
+        // escritorio y la web, y `motivo`, que escribe el móvil—, que es la misma regla con la que
+        // cada fila muestra su razón (`CitaDeAgenda::razon`). Se aplica **después** de calcular las
+        // posiciones: filtrar no renumera la cola (el paciente 7 sigue siendo el 7).
+        $razones = $this->motivosDe($contexto, null);
+        $razon = $this->razonPedida($request, $razones);
+
+        if ($razon !== null) {
+            $visibles = $visibles
+                ->filter(fn (CitaDeAgenda $cita) => trim((string) $cita->tipo) === $razon
+                    || trim((string) $cita->motivo) === $razon)
+                ->values();
+        }
+
         $conteos = $visibles->groupBy('fecha')->map->count();
 
         // Días no laborables (WEB-2.8): el aviso del día que se está mirando y, en la vista de mes,
@@ -97,6 +113,8 @@ class AgendaController extends Controller
             'fecha'         => $fecha,
             'sedeId'        => $sedeId,
             'sedes'         => $sedes,
+            'razon'         => $razon,
+            'razones'       => $razones,
             'jornadas'      => $this->armador->jornadas($visibles, $sedes),
             'posiciones'    => $posiciones,
             'conteosPorDia' => $conteos,
@@ -774,6 +792,34 @@ class AgendaController extends Controller
             'mes'    => [$fecha->copy()->startOfMonth(), $fecha->copy()->endOfMonth()],
             default  => [$fecha->copy(), $fecha->copy()],
         };
+    }
+
+    /**
+     * La razón pedida en el filtro (WEB-2.14): el `codigo` de `motivo_cita` del médico, o `null` si
+     * no se filtró o si el código no está en su catálogo.
+     *
+     * La comprobación contra el catálogo es lo que hace que un valor inventado en la URL se comporte
+     * como "Todas las razones" (`ddlb_1` del escritorio: `TODOS` deja el filtro vacío y no filtra) en
+     * vez de dejar la agenda en blanco, que no tendría forma de explicarse. El valor viaja como `value`
+     * de cada `<option>`, así que es también lo que se compara contra `cola.tipo` y `cola.motivo`.
+     *
+     * @param  Collection<int,MotivoCita>  $razones  el catálogo del médico del contexto
+     */
+    private function razonPedida(Request $request, Collection $razones): ?string
+    {
+        $pedida = $request->query('razon');
+
+        if (! is_string($pedida) || trim($pedida) === '') {
+            return null;
+        }
+
+        $pedida = trim($pedida);
+
+        // Un motivo de otra sede del mismo médico también sirve: el catálogo es del médico, y `cola`
+        // no dice en qué consultorio se eligió. Lo que no se acepta es un código que no existe.
+        return $razones->contains(fn (MotivoCita $motivo) => (string) $motivo->codigo === $pedida)
+            ? $pedida
+            : null;
     }
 
     /** La sede pedida: por defecto la del contexto; `todas` (o 0) muestra todas. */

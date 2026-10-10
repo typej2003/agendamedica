@@ -78,8 +78,14 @@
                         </td>
                     @endif
                     <td>
-                        @if ($fila['posicion'] !== null)
-                            <span class="badge bg-dark">#{{ $fila['posicion'] }}</span>
+                        {{-- La posición sale del mapa que el controlador calcula **sobre todo el rango**
+                             (`ArmadorDeAgenda::posiciones`), no de la lista filtrada: al filtrar por sede
+                             o por razón el paciente 7 sigue siendo el 7, que es la regla del móvil y lo
+                             que el escritorio resuelve con su `SetFilter` sobre el DataWindow ya
+                             recuperado (`ddlb_1` de `w_hacer_cita`). --}}
+                        @php $posicion = $posiciones[$cita->id] ?? null; @endphp
+                        @if ($posicion !== null)
+                            <span class="badge bg-dark">#{{ $posicion }}</span>
                         @else
                             <span class="badge bg-secondary" title="El escritorio la movió a otro día">—</span>
                         @endif

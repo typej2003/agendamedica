@@ -38,10 +38,13 @@
                 @foreach (['dia' => 'Día', 'semana' => 'Semana', 'mes' => 'Mes'] as $clave => $etiqueta)
                     <a class="btn btn-outline-primary {{ $vista === $clave ? 'active' : '' }}"
                        href="{{ $url(['vista' => $clave, 'fecha' => $fecha->toDateString()]) }}"
+                       data-vista="{{ $clave }}"
                        @if ($vista === $clave) aria-current="true" @endif>{{ $etiqueta }}</a>
                 @endforeach
             </div>
 
+            {{-- Sede y razón en el **mismo** GET: los dos son el encabezado de la pantalla y se
+                 combinan (`ddlb_1` y `ddlb_2` de `w_hacer_cita`, que se aplican juntos). --}}
             <form method="GET" action="{{ route('clinica.agenda') }}" class="d-flex gap-2 align-items-center">
                 <input type="hidden" name="vista" value="{{ $vista }}">
                 <input type="hidden" name="fecha" value="{{ $fecha->toDateString() }}">
@@ -51,6 +54,20 @@
                     @foreach ($sedes as $sede)
                         <option value="{{ $sede->id }}" {{ $sedeId === $sede->id ? 'selected' : '' }}>
                             {{ $sede->medicalCenter->name ?? 'Sede' }}@if ($sede->office_number) — {{ $sede->office_number }}@endif
+                        </option>
+                    @endforeach
+                </select>
+
+                {{-- Filtro por razón (WEB-2.14): el `<select>` de `ddlb_1` del escritorio, que arma
+                     `cola_tipo like '%XX%'` con la opción `TODOS`. Una opción por motivo del catálogo
+                     (`motivo_cita` del médico): el value es el `codigo` —lo que está guardado en
+                     `cola.tipo` y, en el móvil, en `cola.motivo`— y el texto el `tipo_atencion`. --}}
+                <select name="razon" class="form-select form-select-sm" onchange="this.form.submit()"
+                        style="min-width: 200px;" aria-label="Razón de la cita">
+                    <option value="" {{ $razon === null ? 'selected' : '' }}>Todas las razones</option>
+                    @foreach ($razones as $motivo)
+                        <option value="{{ $motivo->codigo }}" {{ $razon === (string) $motivo->codigo ? 'selected' : '' }}>
+                            {{ $motivo->tipo_atencion ?: $motivo->codigo }}
                         </option>
                     @endforeach
                 </select>
@@ -91,6 +108,19 @@
         @if ($noLaborable)
             <span class="badge bg-warning text-dark" title="{{ $noLaborable }}">
                 <i class="bi bi-calendar-x"></i> Día no laborable
+            </span>
+        @endif
+        {{-- La razón activa se ve como chip (WEB-2.14), no solo por el `<select>`: así queda claro por
+             qué el listado tiene menos renglones. La × quita `razon` del query —`except` y no
+             `['razon' => null]`, que dejaría `?razon=` en la URL— y conserva la vista, la fecha y la
+             sede que se estaban mirando. --}}
+        @if ($razon !== null)
+            @php $etiquetaRazon = $razones->firstWhere('codigo', $razon)?->tipo_atencion ?: $razon; @endphp
+            <span class="chip">
+                <i class="bi bi-funnel"></i> Razón: {{ $etiquetaRazon }}
+                <a href="{{ route('clinica.agenda', request()->except('razon')) }}"
+                   class="text-decoration-none" title="Quitar el filtro de razón"
+                   aria-label="Quitar el filtro de razón">&times;</a>
             </span>
         @endif
     </div>
