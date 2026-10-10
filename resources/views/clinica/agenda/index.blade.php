@@ -67,6 +67,11 @@
                    href="{{ route('clinica.agenda.imprimir', ['fecha' => $fecha->toDateString(), 'sede' => $sedeId ?? 'todas']) }}">
                     <i class="bi bi-printer"></i> Imprimir listado
                 </a>
+                {{-- Días no laborables (WEB-2.8): el ABM que el escritorio tiene en `w_horarios`. --}}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ route('clinica.agenda.no-laborables', ['mes' => $fecha->format('Y-m')]) }}">
+                    <i class="bi bi-calendar-x"></i> Días no laborables
+                </a>
             @endif
 
             <a class="btn btn-sm btn-primary"
@@ -83,7 +88,25 @@
         <a class="btn btn-sm btn-outline-secondary" title="Siguiente" aria-label="Día siguiente"
            href="{{ $url(['fecha' => $siguiente->toDateString()]) }}"><i class="bi bi-chevron-right"></i></a>
         <strong class="ms-2">{{ ucfirst($titulo) }}</strong>
+        @if ($noLaborable)
+            <span class="badge bg-warning text-dark" title="{{ $noLaborable }}">
+                <i class="bi bi-calendar-x"></i> Día no laborable
+            </span>
+        @endif
     </div>
+
+    {{-- El aviso del día no laborable (WEB-2.8) se ve en la agenda **antes** de agendar: es el texto
+         que el escritorio muestra en su `messagebox` al intentar crear la cita. --}}
+    @if ($noLaborable)
+        <div class="alert alert-warning py-2 d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-calendar-x"></i>
+            <span>{{ $noLaborable }}</span>
+            <a class="ms-auto small"
+               href="{{ route('clinica.agenda.no-laborables', ['mes' => $fecha->format('Y-m')]) }}">
+                Ver o editar los días no laborables
+            </a>
+        </div>
+    @endif
 
     @include('clinica.agenda.' . $vista)
 

@@ -84,6 +84,20 @@
                 </p>
             @endif
 
+            {{-- Día no laborable (WEB-2.8). El escritorio **aborta** el agendamiento cuando el día
+                 tiene motivo (`w_nueva_cita_7.srw:698-706`); acá se avisa con el mismo texto y se deja
+                 decidir: "hoy es feriado pero el Dr. atiende igual" es un caso real. --}}
+            @if ($noLaborable)
+                <div class="alert alert-warning py-2 mt-2 mb-0 d-flex flex-wrap align-items-center gap-2">
+                    <i class="bi bi-calendar-x"></i>
+                    <span>
+                        <strong>El {{ $fecha->format('d/m/Y') }} el médico no atiende.</strong>
+                        {{ $noLaborable }}
+                    </span>
+                    <a class="ms-auto small" href="{{ $urlNoLaborables }}">Ver los días no laborables</a>
+                </div>
+            @endif
+
             @if ($jornada)
                 <p class="small text-muted mb-0 mt-2">
                     <span class="badge {{ $jornada->esPorOrdenDeLlegada() ? 'bg-info text-dark' : 'bg-secondary' }}">

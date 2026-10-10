@@ -119,6 +119,13 @@
                 <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
             </div>
         @endif
+        {{-- Avisos que no son el resultado de la operación (hoy, el día no laborable que se eligió al
+             agendar): van en lista para que no se pisen con `estado` ni entre ellos. --}}
+        @foreach ((array) session('avisos', []) as $aviso)
+            <div class="alert alert-warning py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-x"></i> {{ $aviso }}
+            </div>
+        @endforeach
 
         @yield('contenido')
     </main>

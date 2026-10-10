@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\ContextoController;
+use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\ShellController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/agenda/envio', [AgendaController::class, 'envio'])->name('agenda.envio');
             Route::post('/agenda/envio', [AgendaController::class, 'enviarMasivo'])->name('agenda.envio.enviar');
             Route::get('/agenda/imprimir', [AgendaController::class, 'imprimir'])->name('agenda.imprimir');
+
+            // Días no laborables (WEB-2.8): el ABM que el escritorio tiene en `w_horarios` (feriados,
+            // congresos, otro consultorio, quirófano). Son parte de la agenda —la secretaria los mueve
+            // y la agenda los avisa al agendar—, no del panel de administración.
+            Route::get('/agenda/no-laborables', [NoLaborableController::class, 'index'])->name('agenda.no-laborables');
+            Route::post('/agenda/no-laborables', [NoLaborableController::class, 'guardar'])->name('agenda.no-laborables.guardar');
+            Route::delete('/agenda/no-laborables/{noLaborable}', [NoLaborableController::class, 'eliminar'])->name('agenda.no-laborables.eliminar');
+
             Route::post('/agenda', [AgendaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [AgendaController::class, 'reordenar'])->name('agenda.reordenar');
             Route::post('/agenda/{cola}/notificar', [AgendaController::class, 'notificar'])->name('agenda.notificar');

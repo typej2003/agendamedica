@@ -13,6 +13,7 @@ use App\Actions\Notificaciones\EnviarRecordatorio;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\CitaDeAgenda;
+use App\Clinica\Agenda\DiasNoLaborables;
 use App\Clinica\Agenda\Jornada;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
@@ -54,6 +55,7 @@ class AgendaController extends Controller
     public function __construct(
         private ArmadorDeAgenda $armador,
         private MensajeDeRecordatorio $mensajes,
+        private DiasNoLaborables $diasNoLaborables,
     ) {
     }
 
@@ -81,6 +83,11 @@ class AgendaController extends Controller
 
         $conteos = $visibles->groupBy('fecha')->map->count();
 
+        // Días no laborables (WEB-2.8): el aviso del día que se está mirando y, en la vista de mes,
+        // la marca de cada día del rango para no ver sólo el conteo de citas.
+        $noLaborables = $this->diasNoLaborables->entre($regMedico, $desde->copy(), $hasta->copy());
+        $hoyNoLaborable = $this->diasNoLaborables->delDia($regMedico, $this->claveDelMedico($contexto), $fecha);
+
         // Recordatorio por cita (WEB-2.6): el texto del **médico de esa cita** ya armado, para que el
         // diálogo de envío de cada fila lo ofrezca sin una consulta por fila.
         [$plantillas, $medicos, $medicoPorDefecto] = $this->medicosYPlantillas($regMedico);
@@ -93,6 +100,8 @@ class AgendaController extends Controller
             'jornadas'      => $this->armador->jornadas($visibles, $sedes),
             'posiciones'    => $posiciones,
             'conteosPorDia' => $conteos,
+            'noLaborables'  => $noLaborables,
+            'noLaborable'   => $hoyNoLaborable !== null ? $this->diasNoLaborables->aviso($hoyNoLaborable) : null,
             'semana'        => $this->diasDeLaSemana($fecha),
             'semanasDelMes' => $vista === 'mes' ? $this->semanasDelMes($fecha, $conteos) : [],
             'totalRango'    => $visibles->count(),
@@ -185,7 +194,7 @@ class AgendaController extends Controller
         }
 
         if (($valores['decision'] ?? null) === 'cancelar') {
-            return $this->volverALaAgenda($fecha, $sede, 'No se agendó nada.');
+            return $this->volverALaAgenda($fecha, $sede, 'No se agendó nada.', $this->avisoDeRedireccion($contexto, $fecha));
         }
 
         // La ficha y su **vínculo con el médico** los garantiza la Action: si la cédula ya existía,
@@ -213,12 +222,12 @@ class AgendaController extends Controller
                 'web',
             );
 
-            return $this->volverALaAgenda($fecha, $sede, 'Se movió la cita que ya tenía.');
+            return $this->volverALaAgenda($fecha, $sede, 'Se movió la cita que ya tenía.', $this->avisoDeRedireccion($contexto, $fecha));
         }
 
         $crear->ejecutar($regMedico, $this->filaDeCita($objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $contexto, $monto), Carbon::now(), 'web');
 
-        return $this->volverALaAgenda($fecha, $sede, 'Cita agendada.');
+        return $this->volverALaAgenda($fecha, $sede, 'Cita agendada.', $this->avisoDeRedireccion($contexto, $fecha));
     }
 
     /** El formulario de edición, con la cita puesta (misma vista que "Nueva cita"). */
@@ -324,6 +333,7 @@ class AgendaController extends Controller
             $fecha,
             $sede,
             $aplicadas === [] ? 'No había nada que cambiar.' : 'Cita actualizada.',
+            $this->avisoDeRedireccion($contexto, $fecha),
         );
     }
 
@@ -715,6 +725,37 @@ class AgendaController extends Controller
         return $cola;
     }
 
+    /** La clave con la que se marcan los días no laborables de este médico (`cola_dia_no_labor.medico`). */
+    private function claveDelMedico(array $contexto): int
+    {
+        return $this->diasNoLaborables->claveDe($contexto['medico'], $contexto['reg_medico']);
+    }
+
+    /** El aviso del día no laborable ya armado, o `null` si ese día el médico atiende normal. */
+    private function avisoDelDia(array $contexto, Carbon $fecha): ?string
+    {
+        $dia = $this->diasNoLaborables->delDia($contexto['reg_medico'], $this->claveDelMedico($contexto), $fecha);
+
+        return $dia !== null ? $this->diasNoLaborables->aviso($dia) : null;
+    }
+
+    /**
+     * El aviso del día no laborable como mensaje de la redirección (POST).
+     *
+     * No bloquea: el escritorio aborta el agendamiento cuando el día tiene motivo y la web **avisa y
+     * deja decidir** (decisión del 2026-10-09, WEB-2.8), porque la excepción real —"es feriado pero el
+     * Dr. atiende igual"— no puede quedar sin camino. Los mensajes viajan en `avisos`, una lista, para
+     * que el aviso del día no se pise con el del resultado de la operación.
+     *
+     * @return array<int,string>
+     */
+    private function avisoDeRedireccion(array $contexto, Carbon $fecha): array
+    {
+        $aviso = $this->avisoDelDia($contexto, $fecha);
+
+        return $aviso !== null ? [$aviso] : [];
+    }
+
     /** La fecha pedida (`Y-m-d`), o hoy. Nunca revienta por un valor mal formado en la URL. */
     private function fecha(?string $valor): Carbon
     {
@@ -836,6 +877,11 @@ class AgendaController extends Controller
             'pendiente'       => $datos['pendiente'],
             'valores'         => $datos['valores'],
             'urlBuscar'       => route('clinica.pacientes.buscar'),
+            // Día no laborable (WEB-2.8): el escritorio aborta el agendamiento, la web lo avisa y deja
+            // decidir. El texto es el `motivo` del legado, tal cual.
+            'noLaborable'     => $this->avisoDelDia($contexto, $fecha),
+            // La marca es por médico: el aviso se arma con la clave del médico del contexto.
+            'urlNoLaborables' => route('clinica.agenda.no-laborables'),
         ];
     }
 
@@ -1155,14 +1201,25 @@ class AgendaController extends Controller
         return ['id' => null, 'nombre' => trim($apellidos . ', ' . $nombres, ', '), 'numhistoria' => null];
     }
 
-    /** Volver a la agenda en el día y la sede de la cita, que es donde el usuario espera verla. */
-    private function volverALaAgenda(Carbon $fecha, ?Office $sede, ?string $mensaje)
+    /**
+     * Volver a la agenda en el día y la sede de la cita, que es donde el usuario espera verla.
+     *
+     * `$avisos` son los mensajes que **no** son el resultado de la operación (hoy, el día no
+     * laborable): viajan en una lista para que no se pisen con `estado` ni entre ellos.
+     *
+     * @param  array<int,string>  $avisos
+     */
+    private function volverALaAgenda(Carbon $fecha, ?Office $sede, ?string $mensaje, array $avisos = [])
     {
         $destino = redirect()->route('clinica.agenda', [
             'vista' => 'dia',
             'fecha' => $fecha->toDateString(),
             'sede'  => $sede?->id ?? 'todas',
         ]);
+
+        if ($avisos !== []) {
+            $destino = $destino->with('avisos', $avisos);
+        }
 
         return $mensaje !== null ? $destino->with('estado', $mensaje) : $destino;
     }
