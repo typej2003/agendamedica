@@ -62,10 +62,17 @@
                                 </select>
                                 @if ($acceso['sedes']->isEmpty())
                                     {{-- Sin consultorios no hay sede que elegir: la agenda no puede
-                                         calcular la jornada. El camino es darlos de alta (WEB-2.8b.2). --}}
+                                         calcular la jornada. El camino es darlos de alta (WEB-2.8b.2),
+                                         y para eso hay que elegir primero con quién trabajar. --}}
                                     <span class="form-text small">
-                                        Este médico todavía no tiene consultorios cargados.
-                                        <a href="{{ route('clinica.sedes') }}">Cargá primero la sede</a>.
+                                        Este médico todavía no tiene consultorios cargados: elegilo acá y
+                                        cargá el suyo (primero la <a href="{{ route('clinica.sedes') }}">sede</a>,
+                                        si falta).
+                                    </span>
+                                @else
+                                    <span class="form-text small">
+                                        ¿Falta un consultorio o querés cambiarlo?
+                                        <a href="{{ route('clinica.consultorios') }}">Consultorios</a>.
                                     </span>
                                 @endif
                             </div>

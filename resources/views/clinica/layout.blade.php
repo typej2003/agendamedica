@@ -66,6 +66,13 @@
         <a href="{{ route('clinica.sedes') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-hospital"></i> <span class="d-none d-sm-inline">Sedes</span>
         </a>
+        {{-- Los consultorios son **del médico del contexto** (WEB-2.8b.2): sin contexto no hay a quién
+             cargarle uno, así que el acceso solo aparece cuando ya se eligió con quién trabajar. --}}
+        @isset($contexto)
+            <a href="{{ route('clinica.consultorios') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-door-closed"></i> <span class="d-none d-sm-inline">Consultorios</span>
+            </a>
+        @endisset
         <a href="{{ route('clinica.contexto') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-repeat"></i> <span class="d-none d-sm-inline">Cambiar consultorio</span>
         </a>

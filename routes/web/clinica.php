@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Clinica\AgendaController;
+use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
@@ -42,6 +43,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
+
+            // Consultorios del médico (WEB-2.8b.2): dónde atiende, con qué modalidad y con qué
+            // duración. Es lo que la agenda necesita para calcular la jornada —y lo que un médico
+            // nuevo tiene que cargar antes de poder agendar—, así que vive con la agenda y no en el
+            // panel. `reg_medico` y `medico_id` salen del contexto: son consultorios **de un médico**.
+            Route::get('/consultorios', [ConsultorioController::class, 'index'])->name('consultorios');
+            Route::post('/consultorios', [ConsultorioController::class, 'guardar'])->name('consultorios.guardar');
+            Route::patch('/consultorios/{consultorio}/activar', [ConsultorioController::class, 'activar'])->name('consultorios.activar');
 
             Route::get('/pacientes', [PacienteController::class, 'index'])->name('pacientes');
             // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"

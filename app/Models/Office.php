@@ -26,6 +26,15 @@ class Office extends Model
 
     public const DURACION_CITA_POR_DEFECTO = 30;
 
+    /** Las modalidades de agenda, con su etiqueta. Es lo que ofrece el alta del consultorio. */
+    public static function modalidades(): array
+    {
+        return [
+            self::MODALIDAD_ORDEN => 'Orden de llegada',
+            self::MODALIDAD_HORA  => 'Hora de cita',
+        ];
+    }
+
     protected $fillable = [
         'medical_center_id',
         'medico_id',
