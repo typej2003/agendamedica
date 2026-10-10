@@ -29,6 +29,12 @@ class PacientesVistasTest extends TestCase
         ], $campos);
     }
 
+    /** Con la página y la ruta explícitas el paginador no consulta el contenedor de Laravel. */
+    private function paginador(array $items, int $total): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator($items, $total, 25, 1, ['path' => '/clinica/pacientes']);
+    }
+
     public function test_la_ficha_arma_el_nombre_y_los_estados(): void
     {
         $vista = new FichaDePacienteVista($this->paciente(), collect());
@@ -86,7 +92,7 @@ class PacientesVistasTest extends TestCase
 
     public function test_el_listado_distingue_vacio_de_busqueda_sin_resultados(): void
     {
-        $vacio = new LengthAwarePaginator([], 0, 25);
+        $vacio = $this->paginador([], 0);
 
         $sinPacientes = new ListadoDePacientesVista($vacio, '');
         $this->assertTrue($sinPacientes->estaVacio());
@@ -99,11 +105,11 @@ class PacientesVistasTest extends TestCase
 
     public function test_el_subtitulo_y_el_rango_cuentan_los_pacientes(): void
     {
-        $uno = new ListadoDePacientesVista(new LengthAwarePaginator([$this->paciente()], 1, 25), '');
+        $uno = new ListadoDePacientesVista($this->paginador([$this->paciente()], 1), '');
         $this->assertSame('1 paciente en el registro con el que estás trabajando.', $uno->subtitulo());
         $this->assertSame('Mostrando 1–1 de 1', $uno->rango());
 
-        $varios = new ListadoDePacientesVista(new LengthAwarePaginator([$this->paciente()], 40, 25), 'Pérez');
+        $varios = new ListadoDePacientesVista($this->paginador([$this->paciente()], 40), 'Pérez');
         $this->assertSame('40 resultados para «Pérez».', $varios->subtitulo());
     }
 

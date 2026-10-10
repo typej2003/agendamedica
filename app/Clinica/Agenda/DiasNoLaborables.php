@@ -34,6 +34,23 @@ class DiasNoLaborables
         return $medico->claveDeEvolucion($regMedico) ?? $medico->id;
     }
 
+    /**
+     * El aviso del día no laborable ya armado para el médico del contexto, o `null` si ese día atiende
+     * normal. Lo usan la agenda, el formulario de la cita y los avisos de las redirecciones.
+     *
+     * @param  array  $contexto  el `contexto_clinico` de la petición (`medico` y `reg_medico`)
+     */
+    public function avisoDelDia(array $contexto, Carbon $fecha): ?string
+    {
+        $dia = $this->delDia(
+            $contexto['reg_medico'],
+            $this->claveDe($contexto['medico'], $contexto['reg_medico']),
+            $fecha,
+        );
+
+        return $dia !== null ? $this->aviso($dia) : null;
+    }
+
     /** El día no laborable de esa fecha para ese médico, o `null` si atiende normal. */
     public function delDia(string $regMedico, int $claveMedico, Carbon $fecha): ?DiaNoLaborable
     {

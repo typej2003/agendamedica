@@ -130,26 +130,7 @@
     </main>
 </div>
 
-<script>
-    // Menú lateral en celular: se desliza sobre el contenido en vez de empujarlo (antes el menú ocupaba
-    // el ancho completo y la agenda quedaba debajo, fuera de la pantalla).
-    (function () {
-        const menu = document.getElementById('clinica-sidebar');
-        const fondo = document.getElementById('clinica-sidebar-fondo');
-        const boton = document.getElementById('clinica-menu-boton');
-        if (!menu || !boton) return;
-
-        function abrir(estado) {
-            menu.classList.toggle('abierto', estado);
-            fondo.hidden = !estado;
-            boton.setAttribute('aria-expanded', estado ? 'true' : 'false');
-        }
-
-        boton.addEventListener('click', () => abrir(!menu.classList.contains('abierto')));
-        fondo.addEventListener('click', () => abrir(false));
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') abrir(false); });
-    })();
-</script>
+<script src="{{ asset('js/clinica/shell.js') }}"></script>
 
 {{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido:
      así el HTML de la vista queda solo el HTML. --}}

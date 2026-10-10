@@ -15,6 +15,9 @@ use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Agenda\DiasNoLaborables;
 use App\Clinica\Agenda\Jornada;
+use App\Clinica\Agenda\LectorDeAgenda;
+use App\Clinica\Agenda\ParametrosDeAgenda;
+use App\Clinica\Agenda\Vistas\AgendaVista;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
 use App\Models\Evolucion;
@@ -59,79 +62,13 @@ class AgendaController extends Controller
     ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request, LectorDeAgenda $lector)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $regMedico = $contexto['reg_medico'];
-
-        $vista = in_array($request->query('vista'), self::VISTAS, true) ? $request->query('vista') : 'dia';
-        $fecha = $this->fecha($request->query('fecha'));
-        [$desde, $hasta] = $this->rango($vista, $fecha);
-
-        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
-        $sedeId = $this->sedePedida($request, $contexto);
-        $centroId = $sedeId ? $sedes->firstWhere('id', $sedeId)?->medical_center_id : null;
-
-        // La posición del paciente se calcula sobre **todas** las citas del rango, no sobre las que
-        // quedan visibles al filtrar: si la secretaria filtra, el paciente 7 sigue siendo el 7.
-        $delRango = $this->armador->citas($regMedico, $desde, $hasta);
-        $posiciones = $this->armador->posiciones($this->armador->jornadas($delRango, $sedes));
-
-        $visibles = $centroId === null
-            ? $delRango
-            : $delRango->where('centroId', $centroId)->values();
-
-        // Filtro por razón (WEB-2.14): el escritorio filtra la pantalla del día por el motivo de la
-        // cita (`ddlb_1` de `w_hacer_cita` → `cola_tipo like '%XX%'`, con `TODOS`). Acá el código se
-        // compara **exacto** en las dos columnas donde el legado lo guarda —`tipo`, que escriben el
-        // escritorio y la web, y `motivo`, que escribe el móvil—, que es la misma regla con la que
-        // cada fila muestra su razón (`CitaDeAgenda::razon`). Se aplica **después** de calcular las
-        // posiciones: filtrar no renumera la cola (el paciente 7 sigue siendo el 7).
-        $razones = $this->motivosDe($contexto, null);
-        $razon = $this->razonPedida($request, $razones);
-
-        if ($razon !== null) {
-            $visibles = $visibles
-                ->filter(fn (CitaDeAgenda $cita) => trim((string) $cita->tipo) === $razon
-                    || trim((string) $cita->motivo) === $razon)
-                ->values();
-        }
-
-        $conteos = $visibles->groupBy('fecha')->map->count();
-
-        // Días no laborables (WEB-2.8): el aviso del día que se está mirando y, en la vista de mes,
-        // la marca de cada día del rango para no ver sólo el conteo de citas.
-        $noLaborables = $this->diasNoLaborables->entre($regMedico, $desde->copy(), $hasta->copy());
-        $hoyNoLaborable = $this->diasNoLaborables->delDia($regMedico, $this->claveDelMedico($contexto), $fecha);
-
-        // Recordatorio por cita (WEB-2.6): el texto del **médico de esa cita** ya armado, para que el
-        // diálogo de envío de cada fila lo ofrezca sin una consulta por fila.
-        [$plantillas, $medicos, $medicoPorDefecto] = $this->medicosYPlantillas($regMedico);
+        $lectura = $lector->leer(ParametrosDeAgenda::desde($request, $contexto), $contexto);
 
         return view('clinica.agenda.index', [
-            'vista'         => $vista,
-            'fecha'         => $fecha,
-            'sedeId'        => $sedeId,
-            'sedes'         => $sedes,
-            'razon'         => $razon,
-            'razones'       => $razones,
-            'jornadas'      => $this->armador->jornadas($visibles, $sedes),
-            'posiciones'    => $posiciones,
-            'conteosPorDia' => $conteos,
-            'noLaborables'  => $noLaborables,
-            'noLaborable'   => $hoyNoLaborable !== null ? $this->diasNoLaborables->aviso($hoyNoLaborable) : null,
-            'semana'        => $this->diasDeLaSemana($fecha),
-            'semanasDelMes' => $vista === 'mes' ? $this->semanasDelMes($fecha, $conteos) : [],
-            'totalRango'    => $visibles->count(),
-            'ahora'         => Carbon::now(),
-            'mensajes'      => $this->mensajesDeRecordatorio(
-                $visibles,
-                $plantillas,
-                $medicos,
-                $medicoPorDefecto,
-                $this->centrosDe($sedes),
-            ),
-            'canales'       => Canal::etiquetas(),
+            'vm' => new AgendaVista($lectura, $request->query()),
         ]);
     }
 

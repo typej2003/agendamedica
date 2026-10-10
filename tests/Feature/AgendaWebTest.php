@@ -974,7 +974,7 @@ class AgendaWebTest extends TestCase
             ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('abrirMensaje(this)', false);
+        $respuesta->assertSee('data-dialogo="recordatorio"', false);
         // Las etiquetas ya sustituidas, en el texto que el diálogo ofrece de arranque.
         $respuesta->assertSee('Hola Alvarez, Ana: cita el 05/10/2026 a las 09:30 con el Dr. de prueba Agenda.', false);
         $respuesta->assertSee('data-tiene-telefono="1"', false);
@@ -1020,7 +1020,7 @@ class AgendaWebTest extends TestCase
         // Ni el botón en la jornada —ya confirmó, no hay nada que recordarle— ni el POST a mano.
         $peticion->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas')
             ->assertOk()
-            ->assertDontSee('abrirMensaje(this)', false);
+            ->assertDontSee('data-dialogo="recordatorio"', false);
 
         $peticion->post('/clinica/agenda/' . $cita->id . '/notificar', ['canal' => 'sms'])
             ->assertRedirect()
@@ -1281,8 +1281,8 @@ class AgendaWebTest extends TestCase
         $respuesta->assertSee('Numero, Paciente7');
         // Sigue siendo el 7 aunque sea la única fila de la lista (la posición se calcula sobre todo el
         // rango, antes de filtrar): si se renumerara, acá habría un `#1`.
-        $respuesta->assertSee('badge bg-dark">#7', false);
-        $respuesta->assertDontSee('badge bg-dark">#1<', false);
+        $respuesta->assertSee('turno">#7', false);
+        $respuesta->assertDontSee('turno">#1<', false);
     }
 
     public function test_la_vista_de_dia_ofrece_el_buscador_de_pacientes_de_la_agenda(): void
@@ -1302,9 +1302,9 @@ class AgendaWebTest extends TestCase
         $respuesta->assertSee('Hacer cita');
         $respuesta->assertSee('Pacientes de la agenda');
         // El "Hacer cita" de cada fila va al alta con la fecha y la sede que se están mirando; el
-        // `+ '&paciente_id='` del JS es el que agrega el paciente elegido. `@json` escapa las barras.
+        // `paciente_id` lo agrega `agenda-pacientes.js` con el paciente elegido.
         $respuesta->assertSee(
-            'agenda\\/nueva?fecha=' . $this->lunes->toDateString() . '&sede=' . $sede->id . '"',
+            'data-nueva="' . e(route('clinica.agenda.nueva', ['fecha' => $this->lunes->toDateString(), 'sede' => $sede->id])) . '"',
             false
         );
         // Es de la vista de **día**: la semana y el mes no lo llevan.
