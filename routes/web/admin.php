@@ -5,7 +5,6 @@ use App\Http\Livewire\Admin\ListMedicos;
 use App\Http\Livewire\Admin\ListPacientes;
 use App\Http\Livewire\Admin\ListHistorias;
 use App\Http\Livewire\Admin\ListUsers;
-use App\Http\Livewire\Admin\CargarSql;
 use App\Http\Livewire\Medico\ListMedicoCenterMedical;
 use App\Http\Livewire\Admin\Privacidad;
 use App\Http\Livewire\Admin\Servicio;
@@ -19,17 +18,17 @@ use App\Http\Livewire\Admin\DatosClientes;
 
 Route::middleware(['auth'])->group(function () {
     
-    // Rutas de Administración de Agenda Médica (Acceso exclusivo Root)
+    // Rutas de Administración (acceso exclusivo Root).
+    // Nota: La gestión de médicos, administradores y asistentes se centraliza en `/admin/cuentas`
+    // (cuentas.php). La operativa médica (consultorio, agenda, historias, sedes, pacientes) vive en `/clinica`.
+    // La antigua herramienta de importación `/cargar-sql` fue removida.
     Route::middleware(['role:Root'])->prefix('admin')->name('admin.')->group(function () {
+        // Rutas heredadas conservadas solo para soporte interno si fuera necesario:
         Route::get('/users', ListUsers::class)->name('users');
         Route::get('/medicos', ListMedicos::class)->name('medicos');
         Route::get('/pacientes', ListPacientes::class)->name('pacientes');
-        // Las sedes se administran en `/clinica/sedes` (WEB-2.8b.1): son el lugar donde atiende un
-        // médico y se configuran donde se usa la agenda. El ABM que vivía acá (`ListCentroMedicos`)
-        // se eliminó: escribía `email` e `is_active`, columnas que `medical_centers` nunca tuvo.
         Route::get('/medico-centro-medico', ListMedicoCenterMedical::class)->name('medico-centro-medico');
         Route::get('/historias', ListHistorias::class)->name('historias');
-        Route::get('/cargar-sql', CargarSql::class)->name('cargar-sql');
     });
 
 });

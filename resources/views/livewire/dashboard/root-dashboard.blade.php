@@ -47,7 +47,7 @@
             </div>
         </div>
 
-        <!-- 3. Pacientes -->
+        <!-- 3. Pacientes (métrica global informativa) -->
         <div class="col-12 col-sm-6 col-xl">
             <div class="stat-card stat-exito">
                 <div class="stat-card-cuerpo">
@@ -57,10 +57,9 @@
                     </div>
                     <span class="stat-icono"><i class="bi bi-person-heart"></i></span>
                 </div>
-                <a href="{{ route('admin.pacientes') }}" class="stat-pie">
-                    <span>Gestionar pacientes</span>
-                    <i class="bi bi-arrow-right-short fs-5"></i>
-                </a>
+                <div class="stat-pie">
+                    <span class="texto-tenue">Pacientes registrados en el sistema</span>
+                </div>
             </div>
         </div>
 
@@ -74,7 +73,7 @@
                     </div>
                     <span class="stat-icono"><i class="bi bi-person-badge"></i></span>
                 </div>
-                <a href="{{ route('admin.medicos') }}" class="stat-pie">
+                <a href="{{ route('admin.cuentas') }}" class="stat-pie">
                     <span>Gestionar médicos</span>
                     <i class="bi bi-arrow-right-short fs-5"></i>
                 </a>

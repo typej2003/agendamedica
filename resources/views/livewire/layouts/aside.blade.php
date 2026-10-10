@@ -49,55 +49,7 @@
             </li>
         @endif
 
-        @if ($usuario->hasRole('Root'))
-            <li class="app-sidebar-titulo link-text">Agenda médica</li>
 
-            <li class="nav-item">
-                <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos') ? 'active' : '' }}">
-                    <i class="bi bi-person-badge"></i>
-                    <span class="link-text">Médicos</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.pacientes') }}" class="nav-link {{ request()->routeIs('admin.pacientes') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i>
-                    <span class="link-text">Pacientes</span>
-                </a>
-            </li>
-
-            {{-- Las sedes se administran en `/clinica/sedes`, no acá: son el lugar donde atiende un
-                 médico y se eligen justo donde se usa la agenda. El ABM viejo de este panel
-                 (`Admin\ListCentroMedicos`) se eliminó porque escribía `email` e `is_active`, dos
-                 columnas que la tabla nunca tuvo. --}}
-            <li class="nav-item">
-                <a href="{{ route('clinica.sedes') }}" class="nav-link {{ request()->routeIs('clinica.sedes') ? 'active' : '' }}">
-                    <i class="bi bi-hospital"></i>
-                    <span class="link-text">Centros médicos</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.medico-centro-medico') }}" class="nav-link {{ request()->routeIs('admin.medico-centro-medico') ? 'active' : '' }}">
-                    <i class="bi bi-link-45deg"></i>
-                    <span class="link-text">Médico por centro</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.historias') }}" class="nav-link {{ request()->routeIs('admin.historias') ? 'active' : '' }}">
-                    <i class="bi bi-journal-medical"></i>
-                    <span class="link-text">Historias médicas</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.cargar-sql') }}" class="nav-link {{ request()->routeIs('admin.cargar-sql') ? 'active' : '' }}">
-                    <i class="bi bi-filetype-sql"></i>
-                    <span class="link-text">Cargar SQL</span>
-                </a>
-            </li>
-        @endif
 
         @if ($esAdmin)
             <li class="app-sidebar-titulo link-text">Administración</li>
