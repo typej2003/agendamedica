@@ -14,13 +14,11 @@ use App\Models\Paciente;
 use App\Models\User;
 use App\Notificaciones\Canal;
 use App\Notificaciones\Correo;
+use App\Notificaciones\DespachadorDeCanales;
 use App\Notificaciones\ExcepcionDeEnvio;
 use App\Notificaciones\MensajeDeRecordatorio;
 use App\Notificaciones\Telefono;
-use App\Services\SmsService;
-use App\Services\WhatsAppService;
 use App\Support\FechaClinica;
-use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
@@ -43,6 +41,10 @@ use InvalidArgumentException;
  *     respuesta del proveedor y quién lo mandó), y el envío que salió deja la constancia que el
  *     escritorio entiende en `cola.sms_text`.
  *
+ * El **cómo sale cada canal** no vive acá: es `App\Notificaciones\DespachadorDeCanales`, que comparte
+ * con el saludo de cumpleaños (WEB-2.9). Esta Action se queda con lo que es del recordatorio: la cita,
+ * el paciente que cuelga de ella y su plantilla.
+ *
  * ⚠️ **WhatsApp**: lo que viaja es la plantilla aprobada por Meta (`notificacion_paciente`, con el
  * nombre del paciente como único parámetro). El texto del médico se registra como el mensaje del
  * envío, pero no es lo que se transmite: fuera de la ventana de 24 h Meta solo acepta plantillas
@@ -50,11 +52,12 @@ use InvalidArgumentException;
  */
 final class EnviarRecordatorio
 {
-    /** Nombre exacto de la plantilla aprobada en Meta, la única que se puede mandar por WhatsApp. */
-    public const PLANTILLA_WHATSAPP = 'notificacion_paciente';
+    /** Nombre de la plantilla aprobada en Meta. Se conserva acá porque el móvil lo publica. */
+    public const PLANTILLA_WHATSAPP = DespachadorDeCanales::PLANTILLA_WHATSAPP;
 
     public function __construct(
         private MensajeDeRecordatorio $mensajes,
+        private DespachadorDeCanales $canales,
     ) {
     }
 
@@ -81,7 +84,15 @@ final class EnviarRecordatorio
         $texto = $this->texto($mensaje, $plantilla, $cita, $paciente, $medico, $centro);
         $destino = $this->destino($canal, $paciente);
 
-        $envio = $this->enviar($canal, $destino, $texto, $paciente, $medico, $centro);
+        $envio = $this->canales->enviar(
+            $canal,
+            $destino,
+            $texto,
+            $this->nombreDelPaciente($paciente),
+            $medico,
+            $centro,
+            RecordatorioDeCita::class,
+        );
 
         $notificacion = NotificacionCita::create([
             'reg_medico' => $cita->reg_medico,
@@ -89,7 +100,7 @@ final class EnviarRecordatorio
             'canal'      => $canal,
             'destino'    => $destino,
             'plantilla'  => $canal === Canal::WHATSAPP
-                ? self::PLANTILLA_WHATSAPP
+                ? DespachadorDeCanales::PLANTILLA_WHATSAPP
                 : (trim((string) $plantilla) !== '' ? 'plantilla_cita' : 'recordatorio_por_defecto'),
             'mensaje'    => mb_substr($texto, 0, 500),
             'estado'     => $envio['ok'] ? NotificacionCita::ESTADO_ENVIADA : NotificacionCita::ESTADO_FALLIDA,
@@ -222,79 +233,6 @@ final class EnviarRecordatorio
         }
 
         return $telefono;
-    }
-
-    /**
-     * @return array{ok: bool, respuesta: array}
-     *
-     * @throws ExcepcionDeEnvio  cuando al canal le falta la configuración del servidor.
-     */
-    private function enviar(
-        string $canal,
-        string $destino,
-        string $texto,
-        Paciente $paciente,
-        ?Medico $medico,
-        ?string $centro
-    ): array {
-        return match ($canal) {
-            Canal::WHATSAPP => $this->porWhatsApp($destino, $paciente),
-            Canal::SMS      => $this->porSms($destino, $texto),
-            Canal::CORREO   => $this->porCorreo($destino, $texto, $paciente, $medico, $centro),
-        };
-    }
-
-    /** @return array{ok: bool, respuesta: array} */
-    private function porWhatsApp(string $destino, Paciente $paciente): array
-    {
-        // Se verifica la configuración **antes de instanciar** el servicio: `WhatsAppService` tipa sus
-        // credenciales como `string`, así que sin `WHATSAPP_TOKEN` en el entorno su constructor tira
-        // un `TypeError` en vez del 503 que corresponde.
-        if (! config('services.whatsapp.token') || ! config('services.whatsapp.phone_number_id')) {
-            throw new ExcepcionDeEnvio('El envío por WhatsApp no está configurado en el servidor.', 503);
-        }
-
-        $respuesta = app(WhatsAppService::class)->sendTemplate(
-            $destino,
-            self::PLANTILLA_WHATSAPP,
-            [$this->nombreDelPaciente($paciente)],
-        );
-
-        return ['ok' => isset($respuesta['messages']), 'respuesta' => $respuesta];
-    }
-
-    /** @return array{ok: bool, respuesta: array} */
-    private function porSms(string $destino, string $texto): array
-    {
-        $sms = app(SmsService::class);
-
-        if (! $sms->configurado()) {
-            throw new ExcepcionDeEnvio('El envío de SMS no está configurado en el servidor.', 503);
-        }
-
-        return $sms->enviar($destino, $texto);
-    }
-
-    /** @return array{ok: bool, respuesta: array} */
-    private function porCorreo(string $destino, string $texto, Paciente $paciente, ?Medico $medico, ?string $centro): array
-    {
-        $remitente = Correo::valido($medico->email ?? null);
-        $nombre = $this->nombreDelMedico($medico);
-
-        try {
-            Mail::to($destino)->send(new RecordatorioDeCita(
-                cuerpo: $texto,
-                paciente: $this->nombreDelPaciente($paciente),
-                doctor: $nombre !== '' ? $nombre : null,
-                centro: $centro,
-                remitente: $remitente,
-                nombreRemitente: $nombre !== '' ? $nombre : null,
-            ));
-        } catch (\Throwable $e) {
-            return ['ok' => false, 'respuesta' => ['error' => $e->getMessage()]];
-        }
-
-        return ['ok' => true, 'respuesta' => ['to' => $destino, 'from' => $remitente]];
     }
 
     private function nombreDelPaciente(Paciente $paciente): string

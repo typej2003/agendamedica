@@ -217,6 +217,17 @@ final class AgendaVista
         return route('clinica.agenda.motivos');
     }
 
+    /**
+     * Los cumpleaños del día (WEB-2.9). La pantalla no es de la agenda —el paciente que cumple años hoy
+     * entra aunque no tenga ninguna cita—, pero se llega desde acá, que es donde la secretaria ya está
+     * todos los días. Se le pasa la fecha que se está mirando para que el atajo no obligue a cambiarla
+     * después.
+     */
+    public function urlCumpleanos(): string
+    {
+        return route('clinica.cumpleanos', ['fecha' => $this->fecha()->toDateString()]);
+    }
+
     // -------------------------------------------------------------------------------------- Acciones
 
     public function urlNueva(): string

@@ -16,10 +16,12 @@ final class InicioVista
     /**
      * @param  array  $contexto  el `contexto_clinico` de la petición
      * @param  Collection<int,object>  $modulos  los módulos visibles (`slug`, `nombre`)
+     * @param  int  $cumpleanosDeHoy  cuántos pacientes del médico cumplen años hoy (WEB-2.9)
      */
     public function __construct(
         private array $contexto,
         private Collection $modulos,
+        private int $cumpleanosDeHoy = 0,
     ) {
     }
 
@@ -53,5 +55,29 @@ final class InicioVista
                 'url'    => Route::has($ruta) ? route($ruta) : null,
             ];
         })->all();
+    }
+
+    /**
+     * El aviso de cumpleaños del día (WEB-2.9). Va en Inicio y no en el menú porque la pantalla no es un
+     * módulo —es una herramienta que además es **provisional hasta WEB-8.2**—, pero el aviso tiene que
+     * estar donde el médico entra: es lo único que lo lleva a mandar el saludo.
+     */
+    public function hayCumpleanosHoy(): bool
+    {
+        return $this->cumpleanosDeHoy > 0;
+    }
+
+    public function textoCumpleanos(): string
+    {
+        if ($this->cumpleanosDeHoy === 1) {
+            return 'Hoy cumple años 1 paciente.';
+        }
+
+        return 'Hoy cumplen años ' . $this->cumpleanosDeHoy . ' pacientes.';
+    }
+
+    public function urlCumpleanos(): string
+    {
+        return route('clinica.cumpleanos');
     }
 }

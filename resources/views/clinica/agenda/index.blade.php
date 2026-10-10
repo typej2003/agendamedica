@@ -23,6 +23,12 @@
                     <a class="menu-item" href="{{ $vm->urlMotivos() }}">
                         <i class="bi bi-tags" aria-hidden="true"></i> Motivos de cita
                     </a>
+                    {{-- Cumpleaños (WEB-2.9): los que cumplen años hoy y el envío automático. Es una
+                         herramienta de todos los días y por eso está acá, aunque no sea de la agenda:
+                         el paciente que cumple años hoy entra aunque no tenga ninguna cita. --}}
+                    <a class="menu-item" href="{{ $vm->urlCumpleanos() }}">
+                        <i class="bi bi-balloon" aria-hidden="true"></i> Cumpleaños de hoy
+                    </a>
                 </x-ui.menu>
             @endif
 

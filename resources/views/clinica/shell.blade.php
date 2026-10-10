@@ -5,6 +5,16 @@
 @section('contenido')
     <x-ui.page-head titulo="Consultorio" :subtitulo="$vm->subtitulo()" />
 
+    {{-- El aviso de cumpleaños del día (WEB-2.9): la pantalla que lo resuelve no es un módulo del menú,
+         así que este es el camino por el que el médico se entera de que hoy hay saludos para mandar. --}}
+    @if ($vm->hayCumpleanosHoy())
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="alert">
+            <i class="bi bi-balloon" aria-hidden="true"></i>
+            <span>{{ $vm->textoCumpleanos() }}</span>
+            <a class="ms-auto small fw-semibold" href="{{ $vm->urlCumpleanos() }}">Ver los cumpleaños y saludarlos</a>
+        </div>
+    @endif
+
     @if ($vm->sinEspecialidad())
         <div class="alert alert-warning d-flex gap-2" role="alert">
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>

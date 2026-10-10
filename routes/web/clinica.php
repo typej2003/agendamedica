@@ -5,6 +5,7 @@ use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
+use App\Http\Controllers\Clinica\CumpleanosController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaController;
@@ -105,6 +106,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // `{cola}` por el mismo motivo que `envio`/`imprimir`.
             Route::get('/agenda/motivos', [MotivoCitaController::class, 'index'])->name('agenda.motivos');
             Route::patch('/agenda/motivos/{motivo}/alternar', [MotivoCitaController::class, 'alternar'])->name('agenda.motivos.alternar');
+
+            // Cumpleaños (WEB-2.9): los que cumplen años hoy y la configuración del envío automático.
+            // Es una **herramienta** —no un módulo del menú— y es **provisional hasta WEB-8.2**, que es la
+            // pantalla de configuración de notificaciones que se va a llevar la configuración de acá. Se
+            // alcanza desde el "Más" de la agenda y desde el inicio. `/cumpleanos` y no
+            // `/agenda/cumpleanos` porque el listado **no** es de la agenda (un paciente que cumple años
+            // hoy entra aunque no tenga ninguna cita): la agenda sólo ofrece el atajo.
+            Route::get('/cumpleanos', [CumpleanosController::class, 'index'])->name('cumpleanos');
+            Route::post('/cumpleanos', [CumpleanosController::class, 'enviar'])->name('cumpleanos.enviar');
+            Route::patch('/cumpleanos/configuracion', [CumpleanosController::class, 'configuracion'])->name('cumpleanos.configuracion');
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');
