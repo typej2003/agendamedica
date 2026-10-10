@@ -1313,4 +1313,46 @@ class AgendaWebTest extends TestCase
             ->assertOk()
             ->assertDontSee('id="agenda-paciente-busqueda"', false);
     }
+
+    public function test_el_hacer_cita_del_buscador_abre_el_alta_con_el_paciente_elegido(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pacienteId = $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+
+        // Es el `href` que arma `agenda-pacientes.js` con el paciente de la fila elegida.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&paciente_id=' . $pacienteId);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Alvarez, Ana');
+        $respuesta->assertSee('Elegido:', false);
+        $respuesta->assertSee('name="paciente_id" id="paciente-id" value="' . $pacienteId . '"', false);
+    }
+
+    public function test_el_paciente_elegido_no_se_pierde_al_cambiar_la_sede_del_alta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pacienteId = $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+
+        // Sin sede elegida el alta no guarda (lo dice el aviso de arriba): si al elegirla se perdiera el
+        // paciente, el buscador de la agenda obligaría a elegirlo dos veces.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&paciente_id=' . $pacienteId);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('— Elige una sede —');
+        // El paso 1 es un GET sobre esta misma pantalla: el elegido viaja con él.
+        $respuesta->assertSee('<input type="hidden" name="paciente_id" value="' . $pacienteId . '">', false);
+
+        $conSede = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString()
+                . '&paciente_id=' . $pacienteId . '&sede=' . $sede->id);
+
+        $conSede->assertOk();
+        $conSede->assertSee('Elegido:');
+        $conSede->assertSee('Alvarez, Ana');
+        $conSede->assertSee('name="paciente_id" id="paciente-id" value="' . $pacienteId . '"', false);
+    }
 }

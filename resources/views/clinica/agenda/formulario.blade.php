@@ -6,10 +6,21 @@
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()"
                     :volver="$vm->urlVolver()" volver-texto="Volver a la agenda" />
 
+    {{-- El primer error de validación, arriba: los que no caen en un campo del formulario —elegir la sede
+         cuando el alta llega desde la agenda con `sede=todas`, por ejemplo— no se verían de otra forma y
+         el formulario parecería no guardar. Mismo patrón que las otras pantallas migradas. --}}
+    <x-ui.errores />
+
     {{-- Paso 1: dónde y cuándo. Es un GET sobre esta misma pantalla porque la sede y el día son lo que define
          la jornada (modalidad, cupo y qué número le toca): con eso resuelto el servidor arma el resto del
          formulario. Cambiar cualquiera de los dos recarga y recalcula. --}}
     <form method="GET" action="{{ $vm->urlFiltro() }}">
+        {{-- El paciente ya elegido no se pierde al cambiar la sede o el día: este paso recarga la pantalla
+             y el elegido viaja en la URL (si no, el buscador de la agenda mandaría a elegirlo dos veces). --}}
+        @if ($vm->pacienteId())
+            <input type="hidden" name="paciente_id" value="{{ $vm->pacienteId() }}">
+        @endif
+
         <x-ui.tarjeta class="mb-3">
             <h2 class="paso-titulo"><span class="paso-numero">1</span> Dónde y cuándo</h2>
 
