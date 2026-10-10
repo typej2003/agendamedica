@@ -839,6 +839,18 @@ body.panel .main-content {
 
 .card-titulo i { color: var(--ds-violeta-700); }
 
+/* --- Pie de una tarjeta (resumen + acción principal) --- */
+.tarjeta-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: var(--ds-superficie-2);
+    border-top: 1px solid var(--ds-borde);
+}
+
 /* --- Etiqueta de campo (mayúsculas pequeñas) --- */
 .etiqueta {
     font-size: .72rem;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\RecordatorioController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
 use Illuminate\Support\Facades\Route;
@@ -73,8 +74,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/agenda/nueva', [AgendaController::class, 'nueva'])->name('agenda.nueva');
             // Recordatorios y acciones globales del día (WEB-2.6/2.7). Van **antes** de las rutas con
             // `{cola}`: si no, `envio`/`imprimir` entrarían como id de cita.
-            Route::get('/agenda/envio', [AgendaController::class, 'envio'])->name('agenda.envio');
-            Route::post('/agenda/envio', [AgendaController::class, 'enviarMasivo'])->name('agenda.envio.enviar');
+            Route::get('/agenda/envio', [RecordatorioController::class, 'envio'])->name('agenda.envio');
+            Route::post('/agenda/envio', [RecordatorioController::class, 'enviarMasivo'])->name('agenda.envio.enviar');
             Route::get('/agenda/imprimir', [AgendaController::class, 'imprimir'])->name('agenda.imprimir');
 
             // Días no laborables (WEB-2.8): el ABM que el escritorio tiene en `w_horarios` (feriados,
@@ -86,7 +87,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
 
             Route::post('/agenda', [AgendaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [AgendaController::class, 'reordenar'])->name('agenda.reordenar');
-            Route::post('/agenda/{cola}/notificar', [AgendaController::class, 'notificar'])->name('agenda.notificar');
+            Route::post('/agenda/{cola}/notificar', [RecordatorioController::class, 'notificar'])->name('agenda.notificar');
             Route::post('/agenda/{cola}/confirmar', [AgendaController::class, 'confirmar'])->name('agenda.confirmar');
             Route::post('/agenda/{cola}/atender', [AgendaController::class, 'atender'])->name('agenda.atender');
             Route::post('/agenda/{cola}/cobrar', [AgendaController::class, 'cobrar'])->name('agenda.cobrar');

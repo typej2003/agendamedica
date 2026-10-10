@@ -2,7 +2,9 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Models\Office;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Lee la agenda de un rango para la web clínica: las citas, las jornadas con su posición calculada, los
@@ -72,5 +74,55 @@ class LectorDeAgenda
             mensajes: $this->recordatorios->mensajesPara($regMedico, $visibles, $sedes),
             ahora: Carbon::now(),
         );
+    }
+
+    /** @return Collection<int,Office> las sedes del médico del contexto */
+    public function sedes(array $contexto): Collection
+    {
+        return $this->armador->sedes($contexto['reg_medico'], $contexto['medico']->id);
+    }
+
+    /**
+     * Las citas del día y la sede pedidos, sin las que el escritorio movió (la fila vieja: el paciente ya
+     * está en la fecha nueva). Es la base del listado que se imprime y del envío del día.
+     *
+     * @param  Collection<int,Office>  $sedes
+     * @return Collection<int,CitaDeAgenda>
+     */
+    public function citasDelDia(array $contexto, Collection $sedes, Carbon $fecha, ?int $sedeId): Collection
+    {
+        $centroId = $sedeId ? $sedes->firstWhere('id', $sedeId)?->medical_center_id : null;
+
+        return $this->armador->citas($contexto['reg_medico'], $fecha->copy(), $fecha->copy())
+            ->when($centroId !== null, fn (Collection $citas) => $citas->where('centroId', $centroId))
+            ->reject(fn (CitaDeAgenda $cita) => $cita->movida())
+            ->values();
+    }
+
+    /**
+     * Las citas del día a las que **se les puede recordar**: no las confirmadas ni las atendidas (misma
+     * regla que el recordatorio de una cita). El listado que se imprime sí las lleva: ahí el estatus es
+     * el dato.
+     *
+     * @param  Collection<int,Office>  $sedes
+     * @return Collection<int,CitaDeAgenda>
+     */
+    public function citasParaRecordar(array $contexto, Collection $sedes, Carbon $fecha, ?int $sedeId): Collection
+    {
+        return $this->citasDelDia($contexto, $sedes, $fecha, $sedeId)
+            ->filter(fn (CitaDeAgenda $cita) => $cita->puedeRecordar())
+            ->values();
+    }
+
+    /**
+     * El texto del recordatorio de cada cita, ya armado.
+     *
+     * @param  Collection<int,CitaDeAgenda>  $citas
+     * @param  Collection<int,Office>  $sedes
+     * @return array<int,string>  id de cita => mensaje
+     */
+    public function mensajesPara(array $contexto, Collection $citas, Collection $sedes): array
+    {
+        return $this->recordatorios->mensajesPara($contexto['reg_medico'], $citas, $sedes);
     }
 }
