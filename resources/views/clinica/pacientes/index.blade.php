@@ -5,8 +5,15 @@
 @section('contenido')
     <x-ui.page-head titulo="Pacientes" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <x-ui.buscador :accion="route('clinica.pacientes')" :valor="$vm->buscar()"
-                           placeholder="Nombre, cédula o n.º de historia" etiqueta="Buscar paciente" />
+            <a class="btn btn-primary" href="{{ route('clinica.pacientes.nuevo') }}">
+                <i class="bi bi-person-plus" aria-hidden="true"></i> Nuevo paciente
+            </a>
+            {{-- El buscador va debajo del alta: es la acción de la pantalla y el buscador es lo que se usa
+                 todo el tiempo, pero no compiten por el mismo lugar. --}}
+            <div class="w-100">
+                <x-ui.buscador :accion="route('clinica.pacientes')" :valor="$vm->buscar()"
+                               placeholder="Nombre, cédula o n.º de historia" etiqueta="Buscar paciente" />
+            </div>
         </x-slot>
     </x-ui.page-head>
 

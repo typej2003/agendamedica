@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Pacientes;
 
+use App\Models\Paciente;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,13 @@ class PacientesDelConsultorio
         'pacientes.sexo',
         'pacientes.telefono',
         'pacientes.email',
+        // Los datos de filiación y contacto que la ficha muestra (WEB-3.2: la ficha tiene que decir con
+        // quién se atiende al paciente, no solo su teléfono) y el código del seguro, que la pantalla
+        // resuelve contra el catálogo del consultorio.
+        'pacientes.direccion',
+        'pacientes.profesion',
+        'pacientes.ocupacion',
+        'pacientes.codesegemp',
         'medico_pacientes.numhistoria',
     ];
 
@@ -65,6 +73,39 @@ class PacientesDelConsultorio
         }
 
         return $ficha;
+    }
+
+    /**
+     * El **paciente completo** para editarlo (la ficha de la pantalla lee un subconjunto de columnas),
+     * más su número de historia en este consultorio. `null` si no es paciente del `reg_medico`: un
+     * paciente de otro médico no se edita ni se confirma que exista (404 en el controlador).
+     *
+     * Se consulta primero el vínculo —que es lo que dice de quién es el paciente— y recién después el
+     * modelo: así la pantalla de edición nunca toca una ficha ajena, ni siquiera para leerla.
+     *
+     * @return array{paciente:Paciente, numhistoria:?string}|null
+     */
+    public function editable(string $regMedico, int $pacienteId): ?array
+    {
+        $vinculo = DB::table('medico_pacientes')
+            ->where('reg_medico', $regMedico)
+            ->where('paciente_id', $pacienteId)
+            ->first(['numhistoria']);
+
+        if ($vinculo === null) {
+            return null;
+        }
+
+        $paciente = Paciente::find($pacienteId);
+
+        if ($paciente === null) {
+            return null;
+        }
+
+        return [
+            'paciente'    => $paciente,
+            'numhistoria' => CamposDePaciente::numeroDeHistoria($vinculo->numhistoria),
+        ];
     }
 
     /**

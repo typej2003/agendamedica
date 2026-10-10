@@ -39,6 +39,36 @@ final class FechaClinica
         }
     }
 
+    /**
+     * Una fecha del legado lista para un `<input type="date">`: `AAAA-MM-DD`, o **vacío** cuando la fecha
+     * no sirve (nula, basura, o un año imposible que Carbon sí sabe leer).
+     *
+     * El último caso es el que obliga a que esto exista: `fnacimiento` está casteado a `date` en el modelo,
+     * así que el `0000-00-01` de la base ya llega convertido en un objeto del **año -1**, que
+     * `esNula()` no reconoce por su texto y que el navegador mostraría como una fecha rara. El rango útil
+     * es el mismo de `edad()`: nada antes de 1900 ni en el futuro.
+     */
+    public static function paraInput($valor): string
+    {
+        $texto = trim((string) $valor);
+
+        if (self::esNula($texto)) {
+            return '';
+        }
+
+        try {
+            $fecha = Carbon::parse($texto);
+        } catch (Throwable $e) {
+            return '';
+        }
+
+        if ($fecha->year < 1900 || $fecha->greaterThan(Carbon::now())) {
+            return '';
+        }
+
+        return $fecha->format('Y-m-d');
+    }
+
     /** Edad en años cumplidos, o `null` si no hay fecha válida. */
     public static function edad($fnacimiento): ?int
     {

@@ -62,26 +62,18 @@ final class CambiarCedula
         }
 
         // La cédula es del paciente, no del consultorio: la comparación es **global**, como la del
-        // alta (`CrearPaciente`), porque el mismo `pacientes` lo comparten todos los médicos.
-        $otro = Paciente::where('cedula', $nuevaCedula)->where('id', '!=', $paciente->getKey())->first();
+        // alta (`CrearPaciente`), porque el mismo `pacientes` lo comparten todos los médicos. La regla
+        // —y el mensaje— viven en `IdentidadDePaciente`, que además usan el alta y la edición de la
+        // ficha de WEB-3.2: no hay dos versiones de "esa cédula ya es de otro".
+        $otro = IdentidadDePaciente::duenoDe($nuevaCedula, $paciente);
 
         if ($otro !== null) {
-            throw new InvalidArgumentException(
-                'La cédula ' . $nuevaCedula . ' ya es de ' . $this->nombreDe($otro)
-                . '. Si son la misma persona, corrige la ficha que quedó repetida en vez de duplicar la cédula.'
-            );
+            throw new InvalidArgumentException(IdentidadDePaciente::cedulaOcupada($otro, $nuevaCedula));
         }
 
         $paciente->cedula = $nuevaCedula;
         $paciente->save();
 
         return $paciente;
-    }
-
-    private function nombreDe(Paciente $paciente): string
-    {
-        $nombre = trim(($paciente->apellidos ?? '') . ', ' . ($paciente->nombres ?? ''), ', ');
-
-        return $nombre !== '' ? $nombre : 'otro paciente (historia ' . ($paciente->numhistoria ?? 'sin número') . ')';
     }
 }

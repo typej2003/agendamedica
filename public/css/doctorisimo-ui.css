@@ -1209,6 +1209,11 @@ dialog.dialogo::backdrop { background: rgba(32, 16, 72, .45); }
 .dialogo-titulo { font-size: 1.1rem; font-weight: 700; margin: 0 0 .9rem; }
 .dialogo-pie { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.1rem; }
 
+/* --- Alta y edición de paciente (WEB-3.2) --- */
+/* La nacionalidad es una letra (`V`/`E`): dentro del grupo de la cédula ocupa lo mínimo y deja el resto
+   al número, que es lo que se escribe de verdad. */
+.campo-nacionalidad { max-width: 8.5rem; }
+
 /* --- Resultados en vivo (<x-ui.buscador-vivo>) --- */
 .resultados-flotantes {
     position: absolute;

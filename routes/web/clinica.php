@@ -71,6 +71,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"
             // entra por `{paciente}` y no resuelve.
             Route::get('/pacientes/buscar', [PacienteController::class, 'buscar'])->name('pacientes.buscar');
+            // Alta y edición de la ficha (WEB-3.2). Mismas dos razones que `buscar` para ir **antes** de
+            // `/pacientes/{paciente}`: `nuevo` y `{paciente}/editar` no son ids de paciente.
+            Route::get('/pacientes/nuevo', [PacienteController::class, 'nuevo'])->name('pacientes.nuevo');
+            Route::post('/pacientes', [PacienteController::class, 'guardar'])->name('pacientes.guardar');
+            Route::get('/pacientes/{paciente}/editar', [PacienteController::class, 'editar'])->name('pacientes.editar');
+            Route::put('/pacientes/{paciente}', [PacienteController::class, 'actualizar'])->name('pacientes.actualizar');
             // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
             // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma
             // razón que `buscar`: si no, el segmento `citas` entraría como id de paciente.

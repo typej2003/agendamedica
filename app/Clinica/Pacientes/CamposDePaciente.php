@@ -63,7 +63,17 @@ final class CamposDePaciente
             return null;
         }
 
-        return in_array(mb_strtoupper($texto), self::SIN_CEDULA, true) ? null : $texto;
+        return self::esSinCedula($texto) ? null : $texto;
+    }
+
+    /**
+     * ¿El texto es el marcador de "sin cédula"? Es la definición que consulta
+     * `App\Actions\Pacientes\IdentidadDePaciente` para no enlazar dos pacientes distintos por el
+     * marcador (el vacío no lo mira: eso es "no hay cédula", no un marcador escrito).
+     */
+    public static function esSinCedula($valor): bool
+    {
+        return in_array(mb_strtoupper(trim((string) $valor)), self::SIN_CEDULA, true);
     }
 
     /**

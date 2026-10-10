@@ -4,7 +4,13 @@
 
 @section('contenido')
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()"
-                    :volver="route('clinica.pacientes')" volver-texto="Pacientes" />
+                    :volver="route('clinica.pacientes')" volver-texto="Pacientes">
+        <x-slot name="acciones">
+            <a class="btn btn-outline-primary" href="{{ route('clinica.pacientes.editar', $vm->id()) }}">
+                <i class="bi bi-pencil" aria-hidden="true"></i> Editar la ficha
+            </a>
+        </x-slot>
+    </x-ui.page-head>
 
     {{-- Cabecera de la ficha: quién es y cómo está de un vistazo. --}}
     <x-ui.tarjeta class="mb-3">
@@ -42,6 +48,10 @@
                     <x-ui.dato etiqueta="Sexo" :valor="$vm->sexo()" />
                     <x-ui.dato etiqueta="Teléfono" :valor="$vm->telefono()" />
                     <x-ui.dato etiqueta="Correo" :valor="$vm->correo()" />
+                    <x-ui.dato etiqueta="Dirección" :valor="$vm->direccion()" />
+                    <x-ui.dato etiqueta="Profesión" :valor="$vm->profesion()" />
+                    <x-ui.dato etiqueta="Ocupación" :valor="$vm->ocupacion()" />
+                    <x-ui.dato etiqueta="Seguro / empresa" :valor="$vm->seguro()" />
                 </dl>
             </x-ui.tarjeta>
         </div>

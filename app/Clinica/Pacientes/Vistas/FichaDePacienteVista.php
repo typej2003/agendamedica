@@ -19,12 +19,31 @@ final class FichaDePacienteVista
     public function __construct(
         private object $paciente,
         private Collection $consultas,
+        private ?string $seguro = null,
     ) {
+    }
+
+    /**
+     * El mismo ViewModel con el **nombre** del seguro ya resuelto contra el catálogo del consultorio.
+     *
+     * Es un `with` y no un dato del constructor porque el catálogo se consulta por el código que el propio
+     * paciente trae (`codesegemp`): resolverlo afuera obligaría a leer dos veces lo mismo. El ViewModel
+     * sigue sin saber de base de datos.
+     */
+    public function conSeguro(?string $seguro): self
+    {
+        return new self($this->paciente, $this->consultas, $seguro);
     }
 
     public function nombre(): string
     {
         return CamposDePaciente::nombre($this->paciente->apellidos, $this->paciente->nombres);
+    }
+
+    /** El id del paciente: lo necesita la vista para el enlace a "Editar la ficha" (WEB-3.2). */
+    public function id(): int
+    {
+        return (int) $this->paciente->id;
     }
 
     public function tieneHistoria(): bool
@@ -104,6 +123,49 @@ final class FichaDePacienteVista
     public function correo(): ?string
     {
         return CamposDePaciente::texto($this->paciente->email);
+    }
+
+    public function direccion(): ?string
+    {
+        return CamposDePaciente::texto($this->paciente->direccion ?? null);
+    }
+
+    public function profesion(): ?string
+    {
+        return CamposDePaciente::texto($this->paciente->profesion ?? null);
+    }
+
+    public function ocupacion(): ?string
+    {
+        return CamposDePaciente::texto($this->paciente->ocupacion ?? null);
+    }
+
+    /**
+     * El código del seguro que tiene guardado el paciente (`codesegemp`), limpio. Es lo que el
+     * controlador cruza con el catálogo del consultorio para armar `$seguro`.
+     */
+    public function codigoDelSeguro(): ?string
+    {
+        return CamposDePaciente::texto($this->paciente->codesegemp);
+    }
+
+    /**
+     * El seguro/empresa aseguradora para mostrar: el **nombre** del catálogo del consultorio, o el código
+     * tal cual si no está en él (un catálogo que todavía no bajó no puede hacer desaparecer el dato).
+     *
+     * `00` es **PERSONAL** en el catálogo del legado —el default del alta del escritorio,
+     * `w_agregar_pacientes.srw:378`—: es el paciente que se atiende por su cuenta, así que no se muestra
+     * como si tuviera una empresa.
+     */
+    public function seguro(): ?string
+    {
+        $codigo = $this->codigoDelSeguro();
+
+        if ($codigo === null || $codigo === '00') {
+            return null;
+        }
+
+        return $this->seguro ?? $codigo;
     }
 
     public function totalConsultas(): int
