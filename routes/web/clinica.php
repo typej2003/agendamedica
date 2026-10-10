@@ -3,6 +3,7 @@
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
+use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\SedeController;
@@ -51,6 +52,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/consultorios', [ConsultorioController::class, 'index'])->name('consultorios');
             Route::post('/consultorios', [ConsultorioController::class, 'guardar'])->name('consultorios.guardar');
             Route::patch('/consultorios/{consultorio}/activar', [ConsultorioController::class, 'activar'])->name('consultorios.activar');
+
+            // Bloques de horario de cada consultorio (WEB-2.8b.3): qué días, de qué hora a qué hora y
+            // con qué cupo. Es lo que la agenda usa para armar la jornada, medir el cupo y decidir la
+            // hora de una cita por orden de llegada. Cuelga del consultorio —no es un módulo del menú—
+            // porque el mismo médico puede atender distinto en cada lugar donde trabaja.
+            Route::get('/consultorios/{consultorio}/horarios', [HorarioController::class, 'index'])->name('consultorios.horarios');
+            Route::post('/consultorios/{consultorio}/horarios', [HorarioController::class, 'guardar'])->name('consultorios.horarios.guardar');
+            Route::delete('/consultorios/{consultorio}/horarios/{bloque}', [HorarioController::class, 'eliminar'])->name('consultorios.horarios.eliminar');
 
             Route::get('/pacientes', [PacienteController::class, 'index'])->name('pacientes');
             // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"

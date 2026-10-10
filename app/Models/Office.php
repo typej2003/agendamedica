@@ -77,6 +77,22 @@ class Office extends Model
     }
 
     /**
+     * Los consultorios **de un médico**: los de su `reg_medico` o los suyos por `medico_id`. A
+     * diferencia de `vigentesDe`, no mira `activo` ni la sede: es "de quién es", no "dónde atiende
+     * hoy". Es el criterio que comparten la pantalla de consultorios (WEB-2.8b.2), la de horarios
+     * (WEB-2.8b.3) y el aviso de solape de bloques.
+     */
+    public function scopeDelMedico($query, string $regMedico, ?int $medicoId = null)
+    {
+        return $query->where(function ($consulta) use ($regMedico, $medicoId) {
+            $consulta->where('reg_medico', $regMedico);
+            if ($medicoId) {
+                $consulta->orWhere('medico_id', $medicoId);
+            }
+        });
+    }
+
+    /**
      * Los consultorios **vigentes** de un médico: activos, de su `reg_medico` (o del médico, para las
      * filas que todavía no tienen el registro denormalizado) y **de una sede activa**.
      *
@@ -94,11 +110,6 @@ class Office extends Model
         return $query
             ->where('activo', true)
             ->whereHas('medicalCenter', fn ($centro) => $centro->activos())
-            ->where(function ($consulta) use ($regMedico, $medicoId) {
-                $consulta->where('reg_medico', $regMedico);
-                if ($medicoId) {
-                    $consulta->orWhere('medico_id', $medicoId);
-                }
-            });
+            ->delMedico($regMedico, $medicoId);
     }
 }

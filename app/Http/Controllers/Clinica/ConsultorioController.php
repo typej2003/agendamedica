@@ -113,14 +113,11 @@ class ConsultorioController extends Controller
     }
 
     /**
-     * Los consultorios que le corresponden al médico del contexto: los de su registro o los suyos
-     * por `medico_id` (las filas viejas sin `reg_medico`, igual que el scope de vigentes).
+     * Los consultorios que le corresponden al médico del contexto (`Office::scopeDelMedico`): los de
+     * su registro o los suyos por `medico_id` (las filas viejas sin `reg_medico`).
      */
     private function delMedico(array $contexto)
     {
-        return Office::where(function ($consulta) use ($contexto) {
-            $consulta->where('reg_medico', $contexto['reg_medico'])
-                ->orWhere('medico_id', $contexto['medico']->id);
-        });
+        return Office::delMedico($contexto['reg_medico'], $contexto['medico']->id);
     }
 }

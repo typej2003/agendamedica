@@ -128,7 +128,7 @@ class ConsultoriosWebTest extends TestCase
         $respuesta->assertSee('701');
         $respuesta->assertSee('Orden de llegada');
         $respuesta->assertSee('20 min');
-        $respuesta->assertSee('sin cargar');   // los bloques de horario son WEB-2.8b.3
+        $respuesta->assertSee('cargar horarios');   // los bloques se cargan en su pantalla (WEB-2.8b.3)
     }
 
     public function test_crear_un_consultorio_escribe_el_registro_y_el_dueno_del_contexto(): void

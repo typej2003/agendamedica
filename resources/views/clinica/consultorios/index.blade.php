@@ -145,7 +145,8 @@
                 <p>No hay consultorios {{ $verInactivos ? '' : 'activos' }}.</p>
                 <p class="small">
                     Sin un consultorio cargado no se puede agendar: la agenda necesita saber la sede,
-                    la modalidad y el horario.
+                    la modalidad y el horario. Y sin <strong>horarios</strong> cargados (sus bloques de
+                    día y hora) la jornada no tiene tope de pacientes.
                 </p>
             </div>
         @else
@@ -176,12 +177,17 @@
                                     {{ $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : '—' }}
                                 </td>
                                 <td class="text-center">
-                                    @if ($consultorio->schedules->isEmpty())
-                                        {{-- Los bloques son WEB-2.8b.3: decirlo es más útil que un cero. --}}
-                                        <span class="text-muted small">sin cargar</span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ $consultorio->schedules->count() }}</span>
-                                    @endif
+                                    {{-- Los bloques se cargan en su propia pantalla (WEB-2.8b.3): el
+                                         número es el atajo, y sin bloques el atajo invita a cargarlos. --}}
+                                    <a class="{{ $consultorio->schedules->isEmpty() ? 'small' : 'badge bg-secondary text-decoration-none' }}"
+                                       href="{{ route('clinica.consultorios.horarios', $consultorio) }}">
+                                        @if ($consultorio->schedules->isEmpty())
+                                            cargar horarios
+                                        @else
+                                            {{ $consultorio->schedules->count() }}
+                                            {{ $consultorio->schedules->count() === 1 ? 'bloque' : 'bloques' }}
+                                        @endif
+                                    </a>
                                 </td>
                                 <td>
                                     @if ($consultorio->activo)
@@ -191,6 +197,10 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       href="{{ route('clinica.consultorios.horarios', $consultorio) }}">
+                                        <i class="bi bi-clock"></i> Horarios
+                                    </a>
                                     <a class="btn btn-sm btn-outline-secondary"
                                        href="{{ route('clinica.consultorios', array_filter(['editar' => $consultorio->id, 'inactivos' => $verInactivos ? 1 : null])) }}">
                                         <i class="bi bi-pencil"></i> Editar
