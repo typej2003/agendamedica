@@ -255,7 +255,7 @@ class PacientesWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Paciente, Propia');
         $respuesta->assertDontSee('Persona, Ajena');
-        $respuesta->assertSee('1 paciente en el registro con el que estás trabajando.');
+        $respuesta->assertSee('1 paciente.');
     }
 
     public function test_el_mismo_paciente_en_dos_consultorios_se_lista_con_el_numero_de_cada_uno(): void

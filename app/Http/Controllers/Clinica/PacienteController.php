@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
+use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
+use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
@@ -33,9 +36,17 @@ use InvalidArgumentException;
  * `role:Root|Medico|Secretaria`), y lo que la secretaría sigue sin ver es la **historia clínica**
  * (consultas, antecedentes, documentos), que no se toca acá. La deuda de recortar el módulo Pacientes por
  * rol está anotada en `ROADMAP.md` y **no** es de esta tarea.
+ *
+ * **La misma vara para asignar la historia (WEB-3.3)**: el legado lo hacía la **secretaría al recibir al
+ * paciente** —dice la wiki: "lo normal es que lo haga la secretaria al recibirlo"— y, si el paciente
+ * llegaba a "Atender" sin historia, el **médico** en ese momento. Asignar el número es de las dos
+ * cuentas; lo que la secretaría sigue sin ver es la consulta. Por eso la ruta vive en este controlador,
+ * con el `role:Root|Medico|Secretaria` del grupo, y **no** se agrega ningún permiso nuevo.
  */
 class PacienteController extends Controller
 {
+    use ResuelveLosRegistrosDelMedico;
+
     public function __construct(
         private PacientesDelConsultorio $pacientes,
         private CatalogoDeSeguros $seguros,
@@ -46,9 +57,20 @@ class PacienteController extends Controller
     {
         $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
         $buscar = trim((string) $request->query('buscar', ''));
+        // Un `?historia=` que no sea uno de los valores válidos vuelve a "Todos" en vez de mostrar una
+        // lista mezclada: la pantalla no le hace caso a lo que no entiende.
+        $filtro = FiltroDePacientes::normalizar($request->query('historia'));
 
         return view('clinica.pacientes.index', [
-            'vm' => new ListadoDePacientesVista($this->pacientes->listar($regMedico, $buscar), $buscar),
+            'vm' => new ListadoDePacientesVista(
+                $this->pacientes->listar($regMedico, $buscar, $filtro),
+                $buscar,
+                $filtro,
+                $this->pacientes->conteos($regMedico, $buscar),
+                // La URL base la resuelve el controlador: el ViewModel no llama a `route()` (se prueba
+                // sin contenedor) y el segmentado arma sus enlaces sobre esto.
+                route('clinica.pacientes'),
+            ),
         ]);
     }
 
@@ -75,7 +97,61 @@ class PacienteController extends Controller
         // en él se muestra tal cual, y `00` (PERSONAL) como "sin seguro": lo decide el ViewModel.
         $vm = $vm->conSeguro($this->seguros->nombreDe($this->seguros->de($regMedico), $vm->codigoDelSeguro()));
 
+        // La URL de la acción que llena la historia la arma el controlador (el ViewModel se prueba sin
+        // contenedor): la ficha la usa sólo si el paciente todavía no tiene número.
+        $vm = $vm->conUrlAsignarHistoria(route('clinica.pacientes.asignar-historia', $ficha->id));
+
         return view('clinica.pacientes.ver', ['vm' => $vm]);
+    }
+
+    /**
+     * **Asignarle el número de historia** a un paciente que todavía no lo tiene (WEB-3.3).
+     *
+     * Es la mitad que faltaba de F3: la ficha del paciente ya se lee y se edita (WEB-3.1/3.2), pero el
+     * número sólo se podía asignar desde la agenda, con "Pasar a cita formal" (WEB-2.11) y **sólo si el
+     * paciente tenía una cita del día anclada**. La regla no se escribe de nuevo: la Action compartida
+     * `App\Actions\Pacientes\AsignarHistoria` es la única que sabe el correlativo del médico —la última
+     * de `historias` más las del pivote, comparada como entero—, el reintento ante la unicidad
+     * `(reg_medico, numhistoria)`, la idempotencia y el enlace de las citas que estaban "sin historia".
+     * La usan, además de esta pantalla, "Pasar a cita formal" y el sync del móvil.
+     *
+     * Cuatro decisiones que son de esta pantalla y no de la Action:
+     *
+     *  - **De quién es el paciente lo dice el vínculo** (`medico_pacientes.numhistoria`): si no está en
+     *    el consultorio del contexto, **404** sin confirmar que exista, igual que su ficha.
+     *  - **El `reg_medico` no viaja en el POST.** La Action lo saca del vínculo del paciente ("es el
+     *    tenant, y una superficie no lo elige"), así que un `reg_medico` mandado a mano se ignora.
+     *  - **Idempotente y visible**: si ya la tenía, la Action devuelve la suya y el mensaje lo dice con
+     *    el número; si no, se informa **qué número** le tocó. Nunca se numera dos veces.
+     *  - **Los `reg_medico` del médico se resuelven con el mismo trait que "Pasar a cita formal"**, que a
+     *    su vez copia al sync: el correlativo tiene que dar igual en las dos superficies.
+     */
+    public function asignarHistoria(Request $request, int $paciente, AsignarHistoria $accion)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $vinculo = $this->pacientes->vinculo($contexto['reg_medico'], $paciente);
+
+        abort_unless($vinculo !== null, 404);
+
+        $yaTenia = $vinculo->numhistoria !== null;
+
+        try {
+            $historia = $accion->ejecutar(
+                $contexto['medico'],
+                $this->registrosDelMedico($contexto['medico']),
+                (int) $vinculo->paciente_id,
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            return redirect()
+                ->route('clinica.pacientes.ver', $paciente)
+                ->with('error', $excepcion->getMessage());
+        }
+
+        return redirect()
+            ->route('clinica.pacientes.ver', $paciente)
+            ->with('estado', $yaTenia
+                ? 'Este paciente ya tenía historia: H. ' . $historia->numhistoria . '. No se le asignó otra.'
+                : 'Se le asignó la historia H. ' . $historia->numhistoria . ' y ya se lo puede atender.');
     }
 
     /**

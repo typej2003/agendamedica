@@ -9,10 +9,22 @@
                 <i class="bi bi-person-plus" aria-hidden="true"></i> Nuevo paciente
             </a>
             {{-- El buscador va debajo del alta: es la acción de la pantalla y el buscador es lo que se usa
-                 todo el tiempo, pero no compiten por el mismo lugar. --}}
+                 todo el tiempo, pero no compiten por el mismo lugar. Debajo, el filtro "Sin historia"
+                 (WEB-3.3), que es lo que la secretaría necesita para ir a llenar las que faltan: el
+                 conteo de cada segmento sale del ViewModel y respeta la búsqueda escrita. --}}
             <div class="w-100">
                 <x-ui.buscador :accion="route('clinica.pacientes')" :valor="$vm->buscar()"
-                               placeholder="Nombre, cédula o n.º de historia" etiqueta="Buscar paciente" />
+                               :limpiar="$vm->urlLimpiarBusqueda()"
+                               placeholder="Nombre, cédula o n.º de historia" etiqueta="Buscar paciente">
+                    {{-- Buscar dentro del segmento en el que se está: si no, escribir en el buscador
+                         devolvería a "Todos" sin que nadie lo haya pedido. --}}
+                    @if ($vm->hayFiltro())
+                        <input type="hidden" name="historia" value="{{ $vm->filtro() }}">
+                    @endif
+                </x-ui.buscador>
+            </div>
+            <div class="w-100">
+                <x-ui.segmentado :opciones="$vm->filtros()" etiqueta="Filtrar por historia clínica" />
             </div>
         </x-slot>
     </x-ui.page-head>
@@ -22,9 +34,9 @@
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">
                 {{ $vacio['texto'] }}
-                @if ($vm->hayBusqueda())
+                @if ($vm->hayBusqueda() || $vm->hayFiltro())
                     <x-slot name="acciones">
-                        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes') }}">Ver todos los pacientes</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ $vm->urlTodos() }}">Ver todos los pacientes</a>
                     </x-slot>
                 @endif
             </x-ui.vacio>

@@ -8,11 +8,10 @@ use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\ReordenarCola;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
+use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
-use App\Models\Medico;
 use App\Models\MedicoPaciente;
-use App\Models\MedicoRegistro;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +26,7 @@ use InvalidArgumentException;
 class MostradorController extends Controller
 {
     use ResuelveLaCitaDelContexto;
+    use ResuelveLosRegistrosDelMedico;
 
     /** Confirmar la cita (o quitarle la confirmación, mientras no esté atendida). */
     public function confirmar(Request $request, Cola $cola, ConfirmarCita $accion)
@@ -168,24 +168,6 @@ class MostradorController extends Controller
         }
 
         return $cita->paciente_sinhistoria_id !== null ? (int) $cita->paciente_sinhistoria_id : null;
-    }
-
-    /**
-     * Los `reg_medico` del médico del contexto, resueltos **igual que en el sync** (`SyncAppDataController`):
-     * el correlativo del número de historia se calcula sobre el mismo conjunto en las dos superficies, o
-     * el mismo paciente recibiría un número distinto según quién lo atienda.
-     *
-     * @return array<int,string>
-     */
-    private function registrosDelMedico(Medico $medico): array
-    {
-        $registros = MedicoRegistro::where('medico_id', $medico->id)->pluck('reg_medico')->filter()->toArray();
-
-        if (! empty($medico->reg_medico)) {
-            $registros[] = $medico->reg_medico;
-        }
-
-        return array_values(array_unique($registros));
     }
 
     /**

@@ -76,6 +76,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/pacientes/nuevo', [PacienteController::class, 'nuevo'])->name('pacientes.nuevo');
             Route::post('/pacientes', [PacienteController::class, 'guardar'])->name('pacientes.guardar');
             Route::get('/pacientes/{paciente}/editar', [PacienteController::class, 'editar'])->name('pacientes.editar');
+            // Asignarle el número de historia al paciente que todavía no lo tiene (WEB-3.3): la Action
+            // compartida con "Pasar a cita formal" (WEB-2.11) y con el sync del móvil. La hace la
+            // secretaría al recibir al paciente, o el médico si llega a atenderlo sin historia; el
+            // `reg_medico` sale del vínculo del paciente y **no** del formulario.
+            Route::post('/pacientes/{paciente}/historia', [PacienteController::class, 'asignarHistoria'])->name('pacientes.asignar-historia');
             Route::put('/pacientes/{paciente}', [PacienteController::class, 'actualizar'])->name('pacientes.actualizar');
             // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
             // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma

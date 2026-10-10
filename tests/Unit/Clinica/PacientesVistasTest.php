@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Clinica;
 
+use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
 use App\Support\Iniciales;
@@ -33,6 +34,22 @@ class PacientesVistasTest extends TestCase
     private function paginador(array $items, int $total): LengthAwarePaginator
     {
         return new LengthAwarePaginator($items, $total, 25, 1, ['path' => '/clinica/pacientes']);
+    }
+
+    /**
+     * Un listado con la **base** puesta (el controlador pasa `route('clinica.pacientes')`): el ViewModel
+     * no llama a `route()` para que estos tests sigan corriendo sin contenedor de Laravel.
+     *
+     * @param  array{todos?:int, sinHistoria?:int, conHistoria?:int}  $conteos
+     */
+    private function listado(
+        array $items,
+        int $total,
+        string $buscar = '',
+        string $filtro = FiltroDePacientes::TODOS,
+        array $conteos = ['todos' => 0, 'sinHistoria' => 0, 'conHistoria' => 0],
+    ): ListadoDePacientesVista {
+        return new ListadoDePacientesVista($this->paginador($items, $total), $buscar, $filtro, $conteos, '/clinica/pacientes');
     }
 
     public function test_la_ficha_arma_el_nombre_y_los_estados(): void
@@ -166,11 +183,113 @@ class PacientesVistasTest extends TestCase
     public function test_el_subtitulo_y_el_rango_cuentan_los_pacientes(): void
     {
         $uno = new ListadoDePacientesVista($this->paginador([$this->paciente()], 1), '');
-        $this->assertSame('1 paciente en el registro con el que estás trabajando.', $uno->subtitulo());
+        $this->assertSame('1 paciente.', $uno->subtitulo());
         $this->assertSame('Mostrando 1–1 de 1', $uno->rango());
 
         $varios = new ListadoDePacientesVista($this->paginador([$this->paciente()], 40), 'Pérez');
         $this->assertSame('40 resultados para «Pérez».', $varios->subtitulo());
+    }
+
+    // ------------------------------------------------------ Asignar la historia desde la ficha (WEB-3.3)
+
+    public function test_la_ficha_sin_historia_ofrece_la_accion_y_la_del_que_ya_tiene_no(): void
+    {
+        // La URL la resuelve el controlador: acá se prueba el ViewModel con una URL fija, sin contenedor.
+        $sin = (new FichaDePacienteVista($this->paciente(['numhistoria' => null]), collect()))
+            ->conUrlAsignarHistoria('/clinica/pacientes/51/historia');
+
+        $this->assertTrue($sin->puedeAsignarHistoria());
+        $this->assertSame('/clinica/pacientes/51/historia', $sin->urlAsignarHistoria());
+        $this->assertSame('Falta el número de historia', $sin->sinHistoria()['titulo']);
+        $this->assertStringContainsString('correlativo', $sin->sinHistoria()['texto']);
+        $this->assertStringContainsString('Pérez, Ana María', $sin->confirmarAsignarHistoria());
+        $this->assertStringContainsString('no se puede deshacer', $sin->confirmarAsignarHistoria());
+        $this->assertSame('Asignar el número de historia', $sin->botonAsignarHistoria());
+
+        // El que ya tiene historia **no** ofrece nada: sólo la muestra.
+        $con = (new FichaDePacienteVista($this->paciente(), collect()))
+            ->conUrlAsignarHistoria('/clinica/pacientes/51/historia');
+
+        $this->assertFalse($con->puedeAsignarHistoria());
+        $this->assertSame('1001', $con->numeroDeHistoria());
+    }
+
+    public function test_la_ficha_no_ofrece_asignar_la_historia_sin_la_url_del_controlador(): void
+    {
+        // El ViewModel no arma rutas (se prueba sin Laravel): sin URL no hay acción que ofrecer, ni
+        // siquiera para un paciente sin historia.
+        $vista = new FichaDePacienteVista($this->paciente(['numhistoria' => null]), collect());
+
+        $this->assertFalse($vista->puedeAsignarHistoria());
+        $this->assertNull($vista->urlAsignarHistoria());
+    }
+
+    public function test_el_filtro_sin_historia_arma_sus_opciones_con_el_conteo(): void
+    {
+        $vista = $this->listado(
+            [$this->paciente(['numhistoria' => null])],
+            1,
+            '',
+            FiltroDePacientes::SIN_HISTORIA,
+            ['todos' => 9, 'sinHistoria' => 1, 'conHistoria' => 8],
+        );
+
+        $this->assertTrue($vista->viendoSinHistoria());
+        $this->assertTrue($vista->hayFiltro());
+        $this->assertSame(FiltroDePacientes::SIN_HISTORIA, $vista->filtro());
+        $this->assertSame('1 paciente sin número de historia: hay que asignarles el número antes de atenderlos.', $vista->subtitulo());
+
+        $filtros = $vista->filtros();
+        $this->assertSame('Todos (9)', $filtros[0]['texto']);
+        $this->assertSame('Sin historia (1)', $filtros[1]['texto']);
+        $this->assertSame('Con historia (8)', $filtros[2]['texto']);
+        $this->assertFalse($filtros[0]['activa']);
+        $this->assertTrue($filtros[1]['activa']);
+        $this->assertFalse($filtros[2]['activa']);
+
+        // Cada opción lleva a su filtro y "Todos" no manda el parámetro (vuelve al listado pelado).
+        $this->assertSame('/clinica/pacientes', $filtros[0]['url']);
+        $this->assertSame('/clinica/pacientes?historia=sin-historia', $filtros[1]['url']);
+        $this->assertSame('/clinica/pacientes?historia=con-historia', $filtros[2]['url']);
+    }
+
+    public function test_el_filtro_se_conserva_al_buscar_y_se_quita_al_limpiar(): void
+    {
+        $vista = $this->listado([], 0, 'Pérez', FiltroDePacientes::SIN_HISTORIA);
+
+        // La búsqueda viaja en las opciones del segmentado: cambiar de filtro no la pierde.
+        $this->assertStringContainsString('buscar=P', $vista->filtros()[1]['url']);
+        $this->assertStringContainsString('historia=sin-historia', $vista->filtros()[1]['url']);
+
+        // "Limpiar" saca la búsqueda y deja el filtro; "Ver todos" saca las dos cosas.
+        $this->assertSame('/clinica/pacientes?historia=sin-historia', $vista->urlLimpiarBusqueda());
+        $this->assertSame('/clinica/pacientes', $vista->urlTodos());
+    }
+
+    public function test_el_estado_vacio_distingue_el_filtro_sin_historia_de_la_busqueda(): void
+    {
+        // Con el filtro puesto y sin búsqueda, el vacío es una buena noticia, no un "no hay nada".
+        $sinHistoria = $this->listado([], 0, '', FiltroDePacientes::SIN_HISTORIA);
+        $this->assertSame('No hay pacientes sin historia', $sinHistoria->vacio()['titulo']);
+        $this->assertStringContainsString('ya tienen su número', $sinHistoria->vacio()['texto']);
+
+        // La búsqueda manda: buscar dentro del filtro y no encontrar es otra cosa.
+        $conBusqueda = $this->listado([], 0, 'Zzz', FiltroDePacientes::SIN_HISTORIA);
+        $this->assertSame('Ningún paciente coincide con la búsqueda', $conBusqueda->vacio()['titulo']);
+
+        // Y sin filtro queda el vacío del consultorio entero, como antes.
+        $this->assertSame('Este consultorio todavía no tiene pacientes', $this->listado([], 0)->vacio()['titulo']);
+    }
+
+    public function test_un_filtro_desconocido_se_normaliza_a_todos(): void
+    {
+        // El controlador pasa por acá antes de consultar: `?historia=cualquiera` no devuelve una lista
+        // mezclada ni rompe; se comporta como "Todos".
+        $this->assertSame(FiltroDePacientes::TODOS, FiltroDePacientes::normalizar('cualquiera'));
+        $this->assertSame(FiltroDePacientes::TODOS, FiltroDePacientes::normalizar(''));
+        $this->assertSame(FiltroDePacientes::TODOS, FiltroDePacientes::normalizar(null));
+        $this->assertSame(FiltroDePacientes::SIN_HISTORIA, FiltroDePacientes::normalizar('sin-historia'));
+        $this->assertSame(FiltroDePacientes::CON_HISTORIA, FiltroDePacientes::normalizar('con-historia'));
     }
 
     public function test_las_iniciales_aguantan_los_dos_formatos_de_nombre(): void

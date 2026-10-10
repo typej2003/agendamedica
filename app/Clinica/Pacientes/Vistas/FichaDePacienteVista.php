@@ -20,7 +20,20 @@ final class FichaDePacienteVista
         private object $paciente,
         private Collection $consultas,
         private ?string $seguro = null,
+        private ?string $urlAsignarHistoria = null,
     ) {
+    }
+
+    /**
+     * El mismo ViewModel con la **URL de la acción que asigna la historia** ya resuelta (WEB-3.3).
+     *
+     * La URL no se arma acá adentro a propósito: el ViewModel se prueba **sin base de datos y sin
+     * contenedor** (`tests/Unit/Clinica/`), y un `route()` adentro obligaría a levantar Laravel para
+     * probar la ficha. Es el mismo criterio que `conSeguro()`, que recibe el catálogo ya leído.
+     */
+    public function conUrlAsignarHistoria(string $url): self
+    {
+        return new self($this->paciente, $this->consultas, $this->seguro, $url);
     }
 
     /**
@@ -32,7 +45,7 @@ final class FichaDePacienteVista
      */
     public function conSeguro(?string $seguro): self
     {
-        return new self($this->paciente, $this->consultas, $seguro);
+        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria);
     }
 
     public function nombre(): string
@@ -171,6 +184,58 @@ final class FichaDePacienteVista
     public function totalConsultas(): int
     {
         return $this->consultas->count();
+    }
+
+    // --------------------------------------------------- Llenar la historia desde la ficha (WEB-3.3)
+
+    /**
+     * Si la ficha **ofrece** asignarle el número de historia. Cuando el paciente ya la tiene, la ficha
+     * no ofrece nada de esto: sólo la muestra (la Action es idempotente, pero un botón que no hace nada
+     * no se pone).
+     *
+     * La URL la resolvió el controlador (`conUrlAsignarHistoria`); sin ella no hay acción que ofrecer.
+     */
+    public function puedeAsignarHistoria(): bool
+    {
+        return ! $this->tieneHistoria() && $this->urlAsignarHistoria !== null;
+    }
+
+    public function urlAsignarHistoria(): ?string
+    {
+        return $this->urlAsignarHistoria;
+    }
+
+    /**
+     * El bloque de "falta la historia" de la ficha. No es un dato del paciente como los demás: es lo que
+     * hay que hacer antes de poder atenderlo (wiki `04-historia-clinica.md`: "No se atiende sin
+     * historia"), así que va con título y texto propios y no como una fila más de la rejilla.
+     *
+     * @return array{titulo:string, texto:string}
+     */
+    public function sinHistoria(): array
+    {
+        return [
+            'titulo' => 'Falta el número de historia',
+            'texto'  => 'Sin número de historia el paciente no se puede atender ni tener consultas. '
+                . 'Se lo asigna el servidor con el correlativo de este consultorio, así que todavía no se sabe cuál va a ser.',
+        ];
+    }
+
+    /** El rótulo del botón que dispara la acción. */
+    public function botonAsignarHistoria(): string
+    {
+        return 'Asignar el número de historia';
+    }
+
+    /**
+     * La confirmación que se muestra **antes** de la acción (`data-confirmar` de `shell.js`): nombra al
+     * paciente y dice el efecto, como la de "Pasar a cita formal" (WEB-2.11). El número no se puede
+     * adelantar —lo calcula el servidor—, así que lo que se promete es el efecto, no el número.
+     */
+    public function confirmarAsignarHistoria(): string
+    {
+        return '¿Asignarle el número de historia a ' . $this->nombre() . '? Es un número correlativo de '
+            . 'este consultorio, no se puede elegir y no se puede deshacer.';
     }
 
     /** La frase del estado vacío de las consultas, que depende de por qué no hay ninguna. */

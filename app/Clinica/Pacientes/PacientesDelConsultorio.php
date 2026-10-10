@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\DB;
  * El número de historia vive en `historias` y en `medico_pacientes`, y los dos los escriben juntos todos
  * los caminos de sync (carga inicial, escritorio, alta del app, `AsignarHistoria`). Acá se lee **del
  * pivote**, que es el vínculo por médico —el mismo que usan la agenda y los cumpleaños—, y se limpia con
- * `CamposDePaciente`: el legado lo guarda como texto y acepta vacíos y espacios.
+ * `CamposDePaciente`: el legado lo guarda como texto y acepta vacíos y espacios. `FiltroDePacientes` es
+ * quien dice, en SQL y en un solo lugar, qué filas de ese pivote están "sin historia" (WEB-3.3).
  */
 class PacientesDelConsultorio
 {
@@ -42,10 +43,18 @@ class PacientesDelConsultorio
 
     public const POR_PAGINA = 25;
 
-    /** El listado con la búsqueda por nombre, apellido, cédula o n.º de historia, paginado. */
-    public function listar(string $regMedico, string $buscar = ''): LengthAwarePaginator
+    /**
+     * El listado con la búsqueda por nombre, apellido, cédula o n.º de historia, paginado y —desde
+     * WEB-3.3— filtrable por "tiene historia / no tiene historia".
+     *
+     * El filtro es lo que la secretaría necesita para ir a llenar las historias: `medico_pacientes` es
+     * donde vive el número y `FiltroDePacientes` es el único lugar donde está escrito qué significa que
+     * no lo tenga (el `null` **y** el `''` del legado), para que la pantalla no diga "Sin historia" en
+     * una fila que su propio filtro no trae.
+     */
+    public function listar(string $regMedico, string $buscar = '', string $filtro = FiltroDePacientes::TODOS): LengthAwarePaginator
     {
-        return $this->delConsultorio($regMedico)
+        return $this->conFiltro($this->delConsultorio($regMedico), $filtro)
             ->when($buscar !== '', fn ($consulta) => BusquedaDePacientes::aplicar($consulta, $buscar))
             ->orderBy('pacientes.apellidos')
             ->orderBy('pacientes.nombres')
@@ -53,6 +62,50 @@ class PacientesDelConsultorio
             ->distinct()
             ->paginate(self::POR_PAGINA)
             ->withQueryString();
+    }
+
+    /**
+     * Cuántos pacientes hay de cada lado —todos, sin historia y con historia—, **con la misma búsqueda
+     * aplicada**: el segmentado los usa de etiqueta, y un contador que ignore lo que el usuario escribió
+     * en el buscador prometería filas que la tabla no muestra.
+     *
+     * @return array{todos:int, sinHistoria:int, conHistoria:int}
+     */
+    public function conteos(string $regMedico, string $buscar = ''): array
+    {
+        $base = fn () => $this->delConsultorio($regMedico)
+            ->when($buscar !== '', fn ($consulta) => BusquedaDePacientes::aplicar($consulta, $buscar));
+
+        return [
+            'todos'       => $base()->distinct()->count('pacientes.id'),
+            'sinHistoria' => $base()->whereRaw(FiltroDePacientes::sqlSinHistoria())->distinct()->count('pacientes.id'),
+            'conHistoria' => $base()->whereRaw(FiltroDePacientes::sqlConHistoria())->distinct()->count('pacientes.id'),
+        ];
+    }
+
+    /**
+     * El **vínculo** del paciente con el consultorio, que es lo que dice de quién es: el `numhistoria`
+     * del pivote (que es el que muestra la ficha y el que decide si hay algo que asignar) y el
+     * `reg_medico` con el que quedó guardado.
+     *
+     * Devuelve `null` cuando el paciente no es del `reg_medico` del contexto: la pantalla que asigna la
+     * historia responde **404** con esto, igual que la ficha, sin confirmar que exista en otro médico.
+     *
+     * Es un `object` y no un `MedicoPaciente` a propósito: el pivote no tiene clave primaria propia y la
+     * Action decide con el vínculo, no con el modelo.
+     */
+    public function vinculo(string $regMedico, int $pacienteId): ?object
+    {
+        $vinculo = DB::table('medico_pacientes')
+            ->where('reg_medico', $regMedico)
+            ->where('paciente_id', $pacienteId)
+            ->first(['paciente_id', 'numhistoria', 'reg_medico']);
+
+        if ($vinculo !== null) {
+            $vinculo->numhistoria = CamposDePaciente::numeroDeHistoria($vinculo->numhistoria);
+        }
+
+        return $vinculo;
     }
 
     /**
@@ -168,5 +221,19 @@ class PacientesDelConsultorio
         return DB::table('medico_pacientes')
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('medico_pacientes.reg_medico', $regMedico);
+    }
+
+    /**
+     * El segmentado del listado (WEB-3.3): `sin-historia` deja sólo los que todavía no tienen número y
+     * `con-historia` los que sí. La condición sale de `FiltroDePacientes` —no se escribe acá— porque es
+     * la misma que usan los contadores de las etiquetas.
+     */
+    private function conFiltro($consulta, string $filtro)
+    {
+        return match ($filtro) {
+            FiltroDePacientes::SIN_HISTORIA => $consulta->whereRaw(FiltroDePacientes::sqlSinHistoria()),
+            FiltroDePacientes::CON_HISTORIA => $consulta->whereRaw(FiltroDePacientes::sqlConHistoria()),
+            default                         => $consulta,
+        };
     }
 }

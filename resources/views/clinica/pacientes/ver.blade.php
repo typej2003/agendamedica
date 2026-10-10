@@ -6,7 +6,12 @@
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()"
                     :volver="route('clinica.pacientes')" volver-texto="Pacientes">
         <x-slot name="acciones">
-            <a class="btn btn-outline-primary" href="{{ route('clinica.pacientes.editar', $vm->id()) }}">
+            {{-- Cuando falta la historia, **esa** es la acción primaria de la pantalla: es lo que hay que
+                 hacer para poder atender al paciente (wiki `04-historia-clinica.md`: "No se atiende sin
+                 historia"). Editar la ficha queda al lado, en secundario. Con la historia puesta, la
+                 única acción vuelve a ser editar. Una sola acción sólida por pantalla (guía de UI §1). --}}
+            <a class="btn {{ $vm->puedeAsignarHistoria() ? 'btn-outline-primary' : 'btn-primary' }}"
+               href="{{ route('clinica.pacientes.editar', $vm->id()) }}">
                 <i class="bi bi-pencil" aria-hidden="true"></i> Editar la ficha
             </a>
         </x-slot>
@@ -36,6 +41,26 @@
             </div>
         </div>
     </x-ui.tarjeta>
+
+    {{-- Llenar la historia (WEB-3.3): sólo aparece si el paciente **no** tiene número; cuando ya lo
+         tiene, la ficha no ofrece nada de esto, sólo lo muestra en sus datos y en el estado de arriba.
+         El bloque explica el efecto porque el número no se puede elegir ni adelantar: lo calcula el
+         servidor con el correlativo del consultorio, y la acción no se puede deshacer. --}}
+    @if ($vm->puedeAsignarHistoria())
+        @php $sinHistoria = $vm->sinHistoria(); @endphp
+        <x-ui.tarjeta id="ficha-sin-historia" :titulo="$sinHistoria['titulo']" icono="bi-journal-medical" class="mb-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <p class="mb-0 texto-tenue">{{ $sinHistoria['texto'] }}</p>
+                <form method="POST" action="{{ $vm->urlAsignarHistoria() }}"
+                      data-confirmar="{{ $vm->confirmarAsignarHistoria() }}">
+                    @csrf
+                    <button class="btn btn-primary text-nowrap">
+                        <i class="bi bi-journal-medical" aria-hidden="true"></i> {{ $vm->botonAsignarHistoria() }}
+                    </button>
+                </form>
+            </div>
+        </x-ui.tarjeta>
+    @endif
 
     <div class="row g-3">
         <div class="col-12 col-lg-6">
