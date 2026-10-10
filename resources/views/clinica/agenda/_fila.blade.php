@@ -86,8 +86,9 @@
 
                 {{-- El resto de las acciones, en el menú. Una cita atendida ya ocurrió (y tiene la consulta
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
-                     acá solo no se ofrece. --}}
-                @if ($recordatorio || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar())
+                     acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
+                     cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
+                @if ($recordatorio || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId())
                     <x-ui.menu>
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
@@ -118,6 +119,14 @@
                                 <input type="hidden" name="estado" value="{{ $quitar['estado'] }}">
                                 <button class="menu-item"><i class="bi bi-x-circle" aria-hidden="true"></i> Quitar confirmación</button>
                             </form>
+                        @endif
+
+                        {{-- El otro eje del listado: las citas de **este** paciente ("Cita x Paciente",
+                             `pb_2` de `w_hacer_cita.srw:1039` → `w_listado_pacientes_a_citas`, WEB-2.15). --}}
+                        @if ($fila->pacienteId())
+                            <a class="menu-item" href="{{ route('clinica.pacientes.citas', $fila->pacienteId()) }}">
+                                <i class="bi bi-calendar3" aria-hidden="true"></i> Citas del paciente
+                            </a>
                         @endif
 
                         @if ($fila->urlEditar())

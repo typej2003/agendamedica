@@ -27,10 +27,18 @@ final class FilaDeCitaVista
         return $this->cita->id;
     }
 
-    /** "#7": la posición calculada sobre todo el rango; "—" si el escritorio movió la cita a otro día. */
+    /**
+     * "#7": la posición calculada sobre todo el rango. En la pantalla de un paciente (`$posicion` nula
+     * porque no hay jornada a la vista) queda vacío; en la agenda, la cita que el escritorio movió
+     * muestra "—" con el porqué en el `title`.
+     */
     public function turno(): string
     {
-        return $this->posicion !== null ? '#' . $this->posicion : '—';
+        if ($this->posicion !== null) {
+            return '#' . $this->posicion;
+        }
+
+        return $this->movida() ? '—' : '';
     }
 
     public function tieneTurno(): bool
@@ -43,6 +51,23 @@ final class FilaDeCitaVista
         return $this->cita->horaCorta();
     }
 
+    /** La fecha `Y-m-d` de la cita: la pantalla de un paciente la formatea con `FechaClinica`. */
+    public function fecha(): string
+    {
+        return $this->cita->fecha;
+    }
+
+    public function estaConfirmada(): bool
+    {
+        return $this->cita->confirmada();
+    }
+
+    /** `Cola::PAGO_*`: el mismo estado derivado que pinta la columna de pago de la agenda. */
+    public function estadoPago(): string
+    {
+        return $this->cita->estadoPago();
+    }
+
     public function paciente(): string
     {
         return $this->cita->paciente;
@@ -51,6 +76,12 @@ final class FilaDeCitaVista
     public function urlPaciente(): ?string
     {
         return $this->cita->pacienteId ? route('clinica.pacientes.ver', $this->cita->pacienteId) : null;
+    }
+
+    /** `pacientes.id` del paciente de la cita, para el formulario que la elimina. */
+    public function pacienteId(): ?int
+    {
+        return $this->cita->pacienteId;
     }
 
     /** "H. 4001", o `null` si el paciente todavía no tiene número de historia. */

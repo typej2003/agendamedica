@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
+use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\HorarioController;
@@ -68,6 +69,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"
             // entra por `{paciente}` y no resuelve.
             Route::get('/pacientes/buscar', [PacienteController::class, 'buscar'])->name('pacientes.buscar');
+            // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
+            // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma
+            // razón que `buscar`: si no, el segmento `citas` entraría como id de paciente.
+            Route::get('/pacientes/{paciente}/citas', [CitasDelPacienteController::class, 'index'])->name('pacientes.citas');
+            // El cambio de cédula es lo único que no se puede hacer desde otra pantalla (la fuente lo
+            // exige con la clave de consulta).
+            Route::post('/pacientes/{paciente}/cedula', [CitasDelPacienteController::class, 'cambiarCedula'])->name('pacientes.cedula');
+            // Eliminar una cita desde acá: la Action es la misma de la agenda (`EliminarCita`), cambia
+            // solo a dónde vuelve. La ruta es propia para no tocar el borrado de la agenda.
+            Route::post('/pacientes/{paciente}/citas/{cola}/eliminar', [CitasDelPacienteController::class, 'eliminar'])->name('pacientes.citas.eliminar');
             Route::get('/pacientes/{paciente}', [PacienteController::class, 'ver'])->name('pacientes.ver');
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

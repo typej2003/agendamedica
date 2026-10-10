@@ -52,16 +52,73 @@ final class ArmadorDeAgenda
      */
     public function citas(string $regMedico, Carbon $desde, Carbon $hasta): Collection
     {
-        $filas = Cola::where('reg_medico', $regMedico)
-            // `whereDate` y no `whereBetween`: con el cast `date` la fecha se guarda con hora
-            // (`… 00:00:00`) y en SQLite `BETWEEN 'Y-m-d'` la dejaría afuera. `whereDate` resuelve
-            // el día en los dos motores (en MySQL la columna es DATE y también coincide).
-            ->whereDate('fecha', '>=', $desde->toDateString())
-            ->whereDate('fecha', '<=', $hasta->toDateString())
-            ->orderBy('fecha')
-            ->orderBy('hora_ini')
-            ->get();
+        return $this->armar(
+            $regMedico,
+            Cola::where('reg_medico', $regMedico)
+                // `whereDate` y no `whereBetween`: con el cast `date` la fecha se guarda con hora
+                // (`… 00:00:00`) y en SQLite `BETWEEN 'Y-m-d'` la dejaría afuera. `whereDate` resuelve
+                // el día en los dos motores (en MySQL la columna es DATE y también coincide).
+                ->whereDate('fecha', '>=', $desde->toDateString())
+                ->whereDate('fecha', '<=', $hasta->toDateString())
+                ->orderBy('fecha')
+                ->orderBy('hora_ini')
+                ->get(),
+        );
+    }
 
+    /**
+     * **Todas** las citas de un paciente —pasadas y futuras—, de la más reciente a la más vieja. No
+     * lleva rango porque no lo tiene: es el otro eje del listado ("Cita x Paciente",
+     * `w_listado_pacientes_a_citas`, WEB-2.15). El `DataWindow` de la fuente filtraba por
+     * `cola.numhistoria = :histo` (y escondía las movidas, `atendido <> 2`); acá se devuelven todas,
+     * incluidas las movidas, marcadas por `CitaDeAgenda::movida()`.
+     *
+     * El paciente se busca por las dos formas en que una cita se enlaza con él —`numhistoria` (el
+     * camino normal) o `paciente_sinhistoria_id`—, igual que `citaPendiente`.
+     *
+     * @return Collection<int,CitaDeAgenda>
+     */
+    public function citasDelPaciente(string $regMedico, ?int $numHistoria, ?int $pacienteId): Collection
+    {
+        if ($numHistoria === null && $pacienteId === null) {
+            return collect();
+        }
+
+        return $this->armar(
+            $regMedico,
+            Cola::where('reg_medico', $regMedico)
+                ->where(function ($consulta) use ($numHistoria, $pacienteId) {
+                    // El enlace del paciente, en un solo grupo: `numhistoria` (el camino normal) o
+                    // `paciente_sinhistoria_id` (una cita de un paciente sin historia). El primer
+                    // término es un `where` y no un `orWhere`: suelto, se escaparía del filtro del médico.
+                    $conNumHistoria = $numHistoria !== null;
+
+                    if ($conNumHistoria) {
+                        $consulta->where('numhistoria', $numHistoria);
+                    }
+
+                    if ($pacienteId !== null) {
+                        $conNumHistoria
+                            ? $consulta->orWhere('paciente_sinhistoria_id', $pacienteId)
+                            : $consulta->where('paciente_sinhistoria_id', $pacienteId);
+                    }
+                })
+                ->orderByDesc('fecha')
+                ->orderByDesc('hora_ini')
+                ->get(),
+        );
+    }
+
+    /**
+     * Las filas de `cola` ya resueltas a `CitaDeAgenda`: el nombre del paciente, la sede y la razón se
+     * leen en lote (no una consulta por fila) y con las mismas reglas para la agenda y para la pantalla
+     * de las citas de un paciente.
+     *
+     * @param  Collection<int,Cola>  $filas
+     * @return Collection<int,CitaDeAgenda>
+     */
+    private function armar(string $regMedico, Collection $filas): Collection
+    {
         if ($filas->isEmpty()) {
             return collect();
         }
