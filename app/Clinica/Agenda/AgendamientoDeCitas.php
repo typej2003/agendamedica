@@ -21,8 +21,9 @@ use Illuminate\Validation\ValidationException;
  * en qué jornada cae y con qué hora, número y monto nace la fila.
  *
  * La regla de la cita pendiente es la de Alexander: un paciente tiene **una** cita pendiente por médico y
- * consultorio; la excepción de los tratamientos (masajistas, terapias, donde sí se agendan varias) hoy se
- * resuelve preguntando (queda por automatizar: WEB-2.17).
+ * consultorio. La excepción de los tratamientos (masajistas, terapias, donde sí se agendan varias) se
+ * resuelve con la marca del motivo (`motivo_cita.admite_varias_citas_pendientes`, WEB-2.17): con el
+ * motivo marcado no se pregunta nada.
  */
 class AgendamientoDeCitas
 {
@@ -47,7 +48,8 @@ class AgendamientoDeCitas
      *
      * Si el paciente **ya tiene una cita pendiente** en ese consultorio no se escribe nada todavía: se
      * devuelve la pregunta —mover esa cita a la fecha nueva, agendar otra de todos modos o cancelar—, que
-     * es lo que hace el móvil.
+     * es lo que hace el móvil. Con un motivo que **admite varias citas pendientes** la pregunta no
+     * existe: se agenda directo (WEB-2.17).
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
      */
@@ -66,7 +68,16 @@ class AgendamientoDeCitas
         // A quién se le agenda, **sin escribir nada todavía**: el paciente elegido, o la ficha que ya
         // exista con la cédula nueva (el alta enlaza, no duplica).
         $objetivo = $this->pacientes->identificar($contexto, $valores);
-        $pendiente = $this->armador->citaPendiente($regMedico, $objetivo['numhistoria'], $objetivo['paciente']?->id, $centroId);
+
+        // La excepción de las citas múltiples (WEB-2.17): si el motivo elegido **admite varias citas
+        // pendientes** del mismo paciente —masajistas, terapias—, la regla de la cita única no aplica y
+        // no hay nada que preguntar. La marca es del motivo, y el formulario guarda su código en
+        // `cola.tipo` (WEB-2.16), así que se resuelve por el código elegido; sin motivo, la regla común
+        // se aplica igual que siempre.
+        $admiteVarias = $this->motivos->admiteVariasCitas($regMedico, $valores['motivo'] ?? null, $sede);
+        $pendiente = $admiteVarias
+            ? null
+            : $this->armador->citaPendiente($regMedico, $objetivo['numhistoria'], $objetivo['paciente']?->id, $centroId);
         $decision = $valores['decision'] ?? null;
 
         if ($pendiente !== null && $decision === null) {

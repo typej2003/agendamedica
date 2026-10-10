@@ -211,6 +211,12 @@ final class AgendaVista
         return route('clinica.agenda.no-laborables', ['mes' => $this->fecha()->format('Y-m')]);
     }
 
+    /** Los motivos de cita y su marca de "varias citas" (WEB-2.17): la excepción a la cita única. */
+    public function urlMotivos(): string
+    {
+        return route('clinica.agenda.motivos');
+    }
+
     // -------------------------------------------------------------------------------------- Acciones
 
     public function urlNueva(): string

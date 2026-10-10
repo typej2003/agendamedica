@@ -7,6 +7,7 @@ use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\MostradorController;
+use App\Http\Controllers\Clinica\MotivoCitaController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -97,6 +98,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/agenda/no-laborables', [NoLaborableController::class, 'index'])->name('agenda.no-laborables');
             Route::post('/agenda/no-laborables', [NoLaborableController::class, 'guardar'])->name('agenda.no-laborables.guardar');
             Route::delete('/agenda/no-laborables/{noLaborable}', [NoLaborableController::class, 'eliminar'])->name('agenda.no-laborables.eliminar');
+
+            // Motivos de cita (WEB-2.17): el catálogo del médico con la marca de "admite varias citas
+            // pendientes", que es la excepción a la regla de la cita única. Como los días no laborables,
+            // es una herramienta de la agenda y no un módulo del menú. Va **antes** de las rutas con
+            // `{cola}` por el mismo motivo que `envio`/`imprimir`.
+            Route::get('/agenda/motivos', [MotivoCitaController::class, 'index'])->name('agenda.motivos');
+            Route::patch('/agenda/motivos/{motivo}/alternar', [MotivoCitaController::class, 'alternar'])->name('agenda.motivos.alternar');
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');

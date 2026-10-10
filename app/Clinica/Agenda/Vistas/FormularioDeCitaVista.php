@@ -96,6 +96,12 @@ final class FormularioDeCitaVista
         return route('clinica.agenda.no-laborables');
     }
 
+    /** Los motivos de cita y su marca de "varias citas" (WEB-2.17). */
+    public function urlMotivos(): string
+    {
+        return route('clinica.agenda.motivos');
+    }
+
     // --------------------------------------------------------------------------------------- Paso 1
 
     public function fecha(): string
@@ -257,5 +263,15 @@ final class FormularioDeCitaVista
     public function precioDelMotivo()
     {
         return $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->precio;
+    }
+
+    /**
+     * El motivo elegido **admite varias citas pendientes** (WEB-2.17): con él no se pregunta por la cita
+     * anterior. Se dice acá para que el usuario entienda por qué no le preguntaron —y para que, con un
+     * motivo común, sepa que la marca existe—. Sale del mismo catálogo con el que se armó el `<select>`.
+     */
+    public function motivoAdmiteVarias(): bool
+    {
+        return (bool) $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->admite_varias_citas_pendientes;
     }
 }

@@ -116,6 +116,13 @@
                         <button class="btn btn-outline-primary" name="decision" value="otra">Agendar otra de todos modos</button>
                         <button class="btn btn-outline-secondary" name="decision" value="cancelar">Cancelar</button>
                     </div>
+
+                    {{-- Si es un tratamiento, la excepción se marca una vez y la pregunta deja de aparecer
+                         (WEB-2.17): acá es donde el usuario se entera de que existe. --}}
+                    <p class="form-text mb-0 mt-3">
+                        Si este motivo se agenda varias veces —masajistas, terapias—,
+                        <a href="{{ $vm->urlMotivos() }}">márcalo en los motivos de cita</a> y no se vuelve a preguntar.
+                    </p>
                 </div>
             @endif
 
@@ -235,6 +242,11 @@
                                 <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                             @endforeach
                         </select>
+                        {{-- La excepción de citas múltiples (WEB-2.17): el motivo marcado no pregunta. Se
+                             dice acá para que no parezca que la regla de la cita pendiente se rompió. --}}
+                        @if ($vm->motivoAdmiteVarias())
+                            <span class="form-text">Admite varias citas pendientes del mismo paciente.</span>
+                        @endif
                     </div>
 
                     <div class="col-md-3">

@@ -18,6 +18,11 @@
                     <a class="menu-item" href="{{ $vm->urlNoLaborables() }}">
                         <i class="bi bi-calendar-x" aria-hidden="true"></i> Días no laborables
                     </a>
+                    {{-- Motivos de cita (WEB-2.17): dónde se marca que un motivo admite varias citas
+                         pendientes del mismo paciente. --}}
+                    <a class="menu-item" href="{{ $vm->urlMotivos() }}">
+                        <i class="bi bi-tags" aria-hidden="true"></i> Motivos de cita
+                    </a>
                 </x-ui.menu>
             @endif
 
