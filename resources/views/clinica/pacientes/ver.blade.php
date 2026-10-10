@@ -3,78 +3,70 @@
 @section('titulo', 'Ficha del paciente')
 
 @section('contenido')
-    <div class="page-head">
-        <div>
-            <h1>{{ trim($paciente->apellidos . ', ' . $paciente->nombres) }}</h1>
-            @if ($paciente->numhistoria)
-                <p class="page-head-sub">Historia N.º {{ $paciente->numhistoria }}</p>
-            @endif
+    <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()"
+                    :volver="route('clinica.pacientes')" volver-texto="Pacientes" />
+
+    {{-- Cabecera de la ficha: quién es y cómo está de un vistazo. --}}
+    <x-ui.tarjeta class="mb-3">
+        <div class="ficha-cabecera">
+            <x-ui.avatar :nombre="$vm->nombre()" tamano="lg" />
+            <div class="ficha-cabecera-texto">
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach ($vm->estados() as $estado)
+                        <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']">{{ $estado['texto'] }}</x-ui.estado>
+                    @endforeach
+                </div>
+                <div class="ficha-cabecera-contacto">
+                    @if ($vm->telefono())
+                        <span><i class="bi bi-telephone" aria-hidden="true"></i> {{ $vm->telefono() }}</span>
+                    @endif
+                    @if ($vm->correo())
+                        <span class="text-break"><i class="bi bi-envelope" aria-hidden="true"></i> {{ $vm->correo() }}</span>
+                    @endif
+                    @unless ($vm->telefono() || $vm->correo())
+                        <span class="texto-tenue">Sin teléfono ni correo registrados</span>
+                    @endunless
+                </div>
+            </div>
         </div>
-        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes') }}">
-            <i class="bi bi-arrow-left"></i> Volver al listado
-        </a>
-    </div>
+    </x-ui.tarjeta>
 
     <div class="row g-3">
-        <div class="col-12 col-lg-7">
-            <div class="card">
-                <div class="card-header">Datos del paciente</div>
-                <div class="card-body">
-                    <dl class="row mb-0 small">
-                        <dt class="col-4">Cédula</dt><dd class="col-8">{{ $paciente->cedula ?: '—' }}</dd>
-                        <dt class="col-4">N.º de historia</dt>
-                        <dd class="col-8">
-                            @if ($paciente->numhistoria)
-                                {{ $paciente->numhistoria }}
-                            @else
-                                <span class="badge bg-secondary">Sin historia</span>
-                            @endif
-                        </dd>
-                        <dt class="col-4">Nacimiento</dt>
-                        <dd class="col-8">
-                            {{ \App\Support\FechaClinica::formato($paciente->fnacimiento) }}
-                            @php $edad = \App\Support\FechaClinica::edad($paciente->fnacimiento); @endphp
-                            @if ($edad !== null) <span class="text-muted">({{ $edad }} años)</span> @endif
-                        </dd>
-                        <dt class="col-4">Sexo</dt><dd class="col-8">{{ $paciente->sexo ?: '—' }}</dd>
-                        <dt class="col-4">Teléfono</dt><dd class="col-8">{{ $paciente->telefono ?: '—' }}</dd>
-                        <dt class="col-4">Correo</dt><dd class="col-8">{{ $paciente->email ?: '—' }}</dd>
-                    </dl>
-                </div>
-            </div>
+        <div class="col-12 col-lg-6">
+            <x-ui.tarjeta titulo="Datos del paciente" icono="bi-person-vcard" class="h-100">
+                <dl class="datos-rejilla">
+                    <x-ui.dato etiqueta="Cédula" :valor="$vm->cedula()" />
+                    <x-ui.dato etiqueta="N.º de historia" :valor="$vm->numeroDeHistoria()" />
+                    <x-ui.dato etiqueta="Nacimiento" :valor="$vm->nacimiento()" />
+                    <x-ui.dato etiqueta="Edad" :valor="$vm->edad()" />
+                    <x-ui.dato etiqueta="Sexo" :valor="$vm->sexo()" />
+                    <x-ui.dato etiqueta="Teléfono" :valor="$vm->telefono()" />
+                    <x-ui.dato etiqueta="Correo" :valor="$vm->correo()" />
+                </dl>
+            </x-ui.tarjeta>
         </div>
 
-        <div class="col-12 col-lg-5">
-            <div class="card h-100">
-                <div class="card-header">Consultas registradas</div>
-                <div class="card-body p-0">
-                    @if ($paciente->numhistoria === null)
-                        <p class="text-muted p-3 mb-0">
-                            El paciente todavía no tiene número de historia, así que no hay consultas asociadas.
-                        </p>
-                    @elseif ($consultas->isEmpty())
-                        <p class="text-muted p-3 mb-0">Sin consultas registradas.</p>
-                    @else
-                        <ul class="list-group list-group-flush">
-                            @foreach ($consultas as $consulta)
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <span>{{ \App\Support\FechaClinica::formato($consulta->fecha) }}</span>
-                                        <span class="text-muted small">Consulta {{ $consulta->nroconsulta }}</span>
-                                    </div>
-                                    @if (trim((string) $consulta->enfermedadactual) !== '')
-                                        <div class="small text-muted text-truncate">{{ $consulta->enfermedadactual }}</div>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
-            </div>
+        <div class="col-12 col-lg-6">
+            <x-ui.tarjeta titulo="Consultas" icono="bi-journal-text" sin-relleno class="h-100">
+                @if ($vm->totalConsultas() === 0)
+                    @php $sin = $vm->sinConsultas(); @endphp
+                    <x-ui.vacio :icono="$sin['icono']" :titulo="$sin['titulo']">{{ $sin['texto'] }}</x-ui.vacio>
+                @else
+                    <ol class="linea-tiempo">
+                        @foreach ($vm->consultas() as $consulta)
+                            <li>
+                                <div class="linea-tiempo-cabeza">
+                                    <strong>{{ $consulta['fecha'] }}</strong>
+                                    <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                                </div>
+                                @if ($consulta['resumen'])
+                                    <p class="linea-tiempo-texto">{{ $consulta['resumen'] }}</p>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+            </x-ui.tarjeta>
         </div>
     </div>
-
-    <p class="text-muted small mt-3 mb-0">
-        Ficha de <strong>sólo lectura</strong>: editar, iniciar consulta y recetar llegan en los módulos siguientes.
-    </p>
 @endsection

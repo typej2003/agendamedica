@@ -231,6 +231,11 @@ sistema legado).
 
 ## Sistema visual (web clínica y panel)
 
+**Antes de tocar una pantalla de `/clinica` leé [`../Docs/Web/guia-ui.md`](../Docs/Web/guia-ui.md) (cómo se ve: tokens,
+componentes `<x-ui.*>`, estados, checklist) y [`../Docs/Web/guia-arquitectura-web.md`](../Docs/Web/guia-arquitectura-web.md)
+(cómo se construye: controlador delgado → consulta/acción → ViewModel en `app/Clinica/<Modulo>/Vistas/` → Blade que solo
+pinta).** Componentes en `resources/views/components/ui/`; JS de cada pantalla en `public/js/clinica/`.
+
 **La paleta sale del logo de la app** (`../DoctorisimoMobile/assets/icon/icon.png`), medido píxel a píxel:
 violeta `#783080` (primario, 8,3:1 con blanco), azul marino `#201048` (texto, 17,1:1) y el celeste del
 latido `#40b0d8` (acento decorativo, no sirve como texto). Está en **un solo lugar**: el bloque `:root` de

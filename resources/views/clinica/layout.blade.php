@@ -12,21 +12,6 @@
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
 
-    <style>
-        /* Agenda (F2): la fila que se arrastra y el diálogo de cobro. */
-        .lista-cola tr[draggable="true"] { cursor: grab; }
-        .lista-cola tr.arrastrando { opacity: .5; }
-        .cobro-fondo { position: fixed; inset: 0; background: rgba(32, 16, 72, .45); display: flex; align-items: center; justify-content: center; z-index: 1050; }
-        .cobro-caja { background: var(--ds-superficie); border-radius: var(--ds-radio-lg); padding: 1.25rem; width: min(24rem, 92vw); box-shadow: var(--ds-sombra-3); }
-        .calendario-mes td { width: 14.28%; }
-
-        @media (min-width: 992px) {
-            /* El menú acompaña el scroll (`.app-sidebar-interior`) mientras el fondo blanco cubre todo
-               el alto; la barra superior no es fija, así que el menú se pega al borde de la ventana. */
-            .clinica-cuerpo { display: flex; min-height: calc(100vh - 62px); --app-topbar-alto: 0px; }
-            .app-contenido { flex: 1; min-width: 0; }
-        }
-    </style>
 </head>
 <body>
 

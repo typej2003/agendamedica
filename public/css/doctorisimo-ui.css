@@ -804,3 +804,324 @@ body.panel .main-content {
     .page-head h1 { font-size: 1.15rem; }
     .app-contenido { padding: 1rem .85rem; }
 }
+
+/* ==========================================================================
+   4. Web clínica — componentes de pantalla (`<x-ui.*>`, ver Docs/Web/guia-ui.md)
+   ========================================================================== */
+
+/* --- Encabezado de página: enlace de regreso y acciones --- */
+.page-head .page-head-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: .25rem;
+}
+
+.page-head .page-head-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* --- Título de tarjeta --- */
+.card-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.card-titulo i { color: var(--ds-violeta-700); }
+
+/* --- Etiqueta de campo (mayúsculas pequeñas) --- */
+.etiqueta {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+}
+
+/* --- Estado: pastilla con color + icono + texto --- */
+.estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.estado-exito   { background: var(--ds-exito-bg);     border-color: var(--ds-exito-borde);   color: var(--ds-exito); }
+.estado-aviso   { background: var(--ds-aviso-bg);     border-color: var(--ds-aviso-borde);   color: var(--ds-aviso); }
+.estado-peligro { background: var(--ds-peligro-bg);   border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
+.estado-info    { background: var(--ds-info-bg);      border-color: var(--ds-info-borde);    color: var(--ds-info); }
+.estado-marca   { background: var(--ds-violeta-100);  border-color: var(--ds-violeta-200);   color: var(--ds-violeta-800); }
+.estado-neutro  { background: var(--ds-superficie-2); border-color: var(--ds-borde-2);       color: var(--ds-texto-2); }
+
+/* --- Avatar con iniciales y bloque de identidad --- */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    font-weight: 700;
+    letter-spacing: .02em;
+    user-select: none;
+}
+
+.avatar-sm { width: 28px; height: 28px; font-size: .68rem; }
+.avatar-md { width: 38px; height: 38px; font-size: .82rem; }
+.avatar-lg { width: 64px; height: 64px; font-size: 1.35rem; }
+
+/* Texto oscuro sobre fondo suave: todos cumplen AA. */
+.avatar-tono-violeta { background: var(--ds-violeta-100);  color: var(--ds-violeta-800); }
+.avatar-tono-celeste { background: var(--ds-celeste-50);   color: var(--ds-celeste-700); }
+.avatar-tono-exito   { background: var(--ds-exito-bg);     color: var(--ds-exito); }
+.avatar-tono-aviso   { background: var(--ds-aviso-bg);     color: var(--ds-aviso); }
+.avatar-tono-tinta   { background: var(--ds-superficie-2); color: var(--ds-tinta); }
+
+.identidad {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 0;
+}
+
+.identidad-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.identidad-nombre {
+    font-weight: 600;
+    color: var(--ds-tinta);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underline; }
+
+.identidad-detalle {
+    font-size: .82rem;
+    color: var(--ds-texto-3);
+}
+
+/* --- Ficha: pares etiqueta/valor --- */
+.dato { margin: 0; }
+.dato dd { margin: .1rem 0 0; color: var(--ds-texto); overflow-wrap: anywhere; }
+.dato-vacio { color: var(--ds-texto-3); }
+
+.datos-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 1rem 1.25rem;
+    margin: 0;
+}
+
+/* --- Estado vacío (amplía el de la sección 2) --- */
+.empty-state .empty-state-titulo {
+    font-weight: 600;
+    color: var(--ds-texto-2);
+    margin-bottom: .15rem;
+}
+
+.empty-state .empty-state-texto { font-size: .9rem; margin-bottom: 0; }
+.empty-state .empty-state-acciones { margin-top: .85rem; }
+
+/* --- Buscador --- */
+.buscador {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+.page-head .buscador { flex-wrap: nowrap; }
+.page-head .buscador-campo { flex: 1 1 18rem; min-width: 12rem; }
+
+.buscador-campo {
+    position: relative;
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.buscador-campo i {
+    position: absolute;
+    left: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ds-texto-3);
+    pointer-events: none;
+}
+
+.buscador-campo .form-control { padding-left: 2.3rem; }
+
+/* --- Tabla que se apila en tarjetas en el celular --- */
+@media (max-width: 767.98px) {
+    .tabla-tarjetas thead { display: none; }
+
+    .tabla-tarjetas,
+    .tabla-tarjetas tbody,
+    .tabla-tarjetas tr,
+    .tabla-tarjetas td { display: block; width: 100%; }
+
+    .tabla-tarjetas tr {
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--ds-borde);
+    }
+
+    .tabla-tarjetas tr:last-child { border-bottom: 0; }
+
+    .tabla-tarjetas > :not(caption) > * > * { padding: .25rem 1rem; border: 0; }
+
+    .tabla-tarjetas td[data-etiqueta] {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        text-align: right;
+    }
+
+    .tabla-tarjetas td[data-etiqueta]::before {
+        content: attr(data-etiqueta);
+        flex: 0 0 auto;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: var(--ds-texto-3);
+        text-align: left;
+    }
+
+    /* Una celda sin dato no ocupa renglón en la tarjeta. */
+    .tabla-tarjetas td.celda-vacia { display: none; }
+
+    /* La primera celda (la identidad) abre la tarjeta y ocupa todo el ancho. */
+    .tabla-tarjetas td.celda-principal { text-align: left; padding-top: .35rem; }
+    .tabla-tarjetas td.celda-acciones { display: flex; justify-content: flex-end; padding-bottom: .35rem; }
+}
+
+/* --- Pie de un listado: rango + paginación --- */
+.lista-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-top: .85rem;
+}
+
+.lista-pie .pagination { margin-bottom: 0; flex-wrap: wrap; }
+
+@media (max-width: 575.98px) {
+    .lista-pie { justify-content: center; }
+}
+
+/* --- Cabecera de una ficha --- */
+.ficha-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+}
+
+.ficha-cabecera-texto {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    min-width: 0;
+}
+
+.ficha-cabecera-contacto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1.25rem;
+    color: var(--ds-texto-2);
+    font-size: .92rem;
+}
+
+.ficha-cabecera-contacto i { color: var(--ds-texto-3); margin-right: .2rem; }
+
+/* --- Línea de tiempo (consultas, antecedentes…) --- */
+.linea-tiempo {
+    list-style: none;
+    margin: 0;
+    padding: .5rem 1rem .5rem 1.5rem;
+}
+
+.linea-tiempo > li {
+    position: relative;
+    padding: .7rem 0 .7rem 1.1rem;
+    border-left: 2px solid var(--ds-violeta-200);
+}
+
+.linea-tiempo > li::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 1.05rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ds-superficie);
+    border: 2px solid var(--ds-violeta-700);
+}
+
+.linea-tiempo-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.linea-tiempo-texto {
+    margin: .2rem 0 0;
+    font-size: .9rem;
+    color: var(--ds-texto-2);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+    .ficha-cabecera { align-items: flex-start; }
+    .avatar-lg { width: 52px; height: 52px; font-size: 1.1rem; }
+}
+
+/* --- Ancho de columnas y controles (reemplazan los `style=""` de las vistas) --- */
+.col-estrecha { width: 2rem; }
+.col-numero   { width: 3rem; }
+.col-hora     { width: 4.5rem; }
+.control-sede   { min-width: 15rem; }
+.control-razon  { min-width: 12.5rem; }
+.control-buscar { min-width: 16rem; }
+
+/* ==========================================================================
+   5. Web clínica — armazón y agenda (antes un `<style>` dentro de clinica/layout)
+   ========================================================================== */
+
+/* La fila que se arrastra y el diálogo de cobro. */
+.lista-cola tr[draggable="true"] { cursor: grab; }
+.lista-cola tr.arrastrando { opacity: .5; }
+.cobro-fondo { position: fixed; inset: 0; background: rgba(32, 16, 72, .45); display: flex; align-items: center; justify-content: center; z-index: 1050; }
+.cobro-caja { background: var(--ds-superficie); border-radius: var(--ds-radio-lg); padding: 1.25rem; width: min(24rem, 92vw); box-shadow: var(--ds-sombra-3); }
+.calendario-mes td { width: 14.28%; }
+
+@media (min-width: 992px) {
+    /* El menú acompaña el scroll (`.app-sidebar-interior`) mientras el fondo blanco cubre todo
+       el alto; la barra superior no es fija, así que el menú se pega al borde de la ventana. */
+    .clinica-cuerpo { display: flex; min-height: calc(100vh - 62px); --app-topbar-alto: 0px; }
+    .app-contenido { flex: 1; min-width: 0; }
+}
