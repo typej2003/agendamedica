@@ -66,8 +66,12 @@
                 </a>
             </li>
 
+            {{-- Las sedes se administran en `/clinica/sedes`, no acá: son el lugar donde atiende un
+                 médico y se eligen justo donde se usa la agenda. El ABM viejo de este panel
+                 (`Admin\ListCentroMedicos`) se eliminó porque escribía `email` e `is_active`, dos
+                 columnas que la tabla nunca tuvo. --}}
             <li class="nav-item">
-                <a href="{{ route('admin.centros-medicos') }}" class="nav-link {{ request()->routeIs('admin.centros-medicos') ? 'active' : '' }}">
+                <a href="{{ route('clinica.sedes') }}" class="nav-link {{ request()->routeIs('clinica.sedes') ? 'active' : '' }}">
                     <i class="bi bi-hospital"></i>
                     <span class="link-text">Centros médicos</span>
                 </a>

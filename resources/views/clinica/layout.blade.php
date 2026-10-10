@@ -60,6 +60,12 @@
     </div>
 
     <div class="d-flex align-items-center gap-2">
+        {{-- Las sedes son el **lugar de la clínica**: se dan de alta una vez para todos los médicos que
+             atienden ahí y son el paso previo a crear un consultorio (WEB-2.8b.1). Por eso el acceso
+             está en la barra y no colgado del menú de un módulo. --}}
+        <a href="{{ route('clinica.sedes') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-hospital"></i> <span class="d-none d-sm-inline">Sedes</span>
+        </a>
         <a href="{{ route('clinica.contexto') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-repeat"></i> <span class="d-none d-sm-inline">Cambiar consultorio</span>
         </a>

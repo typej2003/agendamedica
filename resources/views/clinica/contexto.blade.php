@@ -60,6 +60,14 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                @if ($acceso['sedes']->isEmpty())
+                                    {{-- Sin consultorios no hay sede que elegir: la agenda no puede
+                                         calcular la jornada. El camino es darlos de alta (WEB-2.8b.2). --}}
+                                    <span class="form-text small">
+                                        Este médico todavía no tiene consultorios cargados.
+                                        <a href="{{ route('clinica.sedes') }}">Cargá primero la sede</a>.
+                                    </span>
+                                @endif
                             </div>
 
                             <button class="btn btn-sm btn-primary">Trabajar acá</button>

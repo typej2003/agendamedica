@@ -4,6 +4,7 @@ use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         Route::get('/contexto', [ContextoController::class, 'editar'])->name('contexto');
         Route::post('/contexto', [ContextoController::class, 'guardar'])->name('contexto.guardar');
         Route::delete('/contexto', [ContextoController::class, 'salir'])->name('contexto.salir');
+
+        // Sedes (WEB-2.8b.1): el lugar donde atiende un médico. Es el **lugar de la clínica**, no de un
+        // médico, así que va fuera del grupo que exige contexto: se da de alta antes de asignarle un
+        // consultorio a nadie. La segunda mitad —consultorios, modalidad y horarios— va adentro
+        // (WEB-2.8b.2/3), porque eso sí es de cada médico.
+        Route::get('/sedes', [SedeController::class, 'index'])->name('sedes');
+        Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
+        Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
 
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {

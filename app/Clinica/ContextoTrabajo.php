@@ -61,10 +61,9 @@ class ContextoTrabajo
                 continue; // datos sin ficha de médico: no hay nombre ni especialidad que mostrar
             }
 
-            $sedes = Office::where('activo', true)
-                ->where(function ($consulta) use ($registro, $medico) {
-                    $consulta->where('reg_medico', $registro)->orWhere('medico_id', $medico->id);
-                })
+            // Los consultorios vigentes del médico: activos y de su registro (la regla vive en el
+            // scope, para que el contexto y la agenda no tengan cada uno la suya).
+            $sedes = Office::vigentesDe($registro, $medico->id)
                 ->orderBy('id')
                 ->get();
 

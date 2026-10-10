@@ -34,13 +34,7 @@ final class ArmadorDeAgenda
     public function sedes(string $regMedico, ?int $medicoId = null): Collection
     {
         return Office::with(['schedules', 'medicalCenter'])
-            ->where('activo', true)
-            ->where(function ($consulta) use ($regMedico, $medicoId) {
-                $consulta->where('reg_medico', $regMedico);
-                if ($medicoId) {
-                    $consulta->orWhere('medico_id', $medicoId);
-                }
-            })
+            ->vigentesDe($regMedico, $medicoId)
             ->orderBy('id')
             ->get();
     }
