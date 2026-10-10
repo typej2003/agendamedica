@@ -2,7 +2,6 @@
 
 namespace App\Clinica\Pacientes;
 
-use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +12,11 @@ use Illuminate\Support\Facades\DB;
  * Lee de las tablas reales, no de `refresh-data`, que tiene el doble shape que ya documentó el móvil.
  * **Todo** se filtra por el `reg_medico`: un paciente de otro médico no se devuelve ni se confirma que
  * exista. No sabe de HTTP ni de HTML; lo que muestra la pantalla lo arman los ViewModels de `Vistas/`.
+ *
+ * El número de historia vive en `historias` y en `medico_pacientes`, y los dos los escriben juntos todos
+ * los caminos de sync (carga inicial, escritorio, alta del app, `AsignarHistoria`). Acá se lee **del
+ * pivote**, que es el vínculo por médico —el mismo que usan la agenda y los cumpleaños—, y se limpia con
+ * `CamposDePaciente`: el legado lo guarda como texto y acepta vacíos y espacios.
  */
 class PacientesDelConsultorio
 {
@@ -34,7 +38,7 @@ class PacientesDelConsultorio
     public function listar(string $regMedico, string $buscar = ''): LengthAwarePaginator
     {
         return $this->delConsultorio($regMedico)
-            ->when($buscar !== '', fn ($consulta) => $consulta->where($this->filtroDeBusqueda($buscar)))
+            ->when($buscar !== '', fn ($consulta) => BusquedaDePacientes::aplicar($consulta, $buscar))
             ->orderBy('pacientes.apellidos')
             ->orderBy('pacientes.nombres')
             ->select(self::COLUMNAS)
@@ -43,25 +47,44 @@ class PacientesDelConsultorio
             ->withQueryString();
     }
 
-    /** La ficha de un paciente del consultorio, o `null` si no existe o es de otro médico. */
+    /**
+     * La ficha de un paciente del consultorio, o `null` si no existe o es de otro médico.
+     *
+     * El `numhistoria` que devuelve ya viene limpio —texto sin espacios, `null` si el vínculo todavía no
+     * tiene número—, para que ninguna pantalla repita el `!== null` que el `''` del legado rompe.
+     */
     public function ficha(string $regMedico, int $pacienteId): ?object
     {
-        return $this->delConsultorio($regMedico)
+        $ficha = $this->delConsultorio($regMedico)
             ->where('pacientes.id', $pacienteId)
             ->select(self::COLUMNAS)
             ->first();
+
+        if ($ficha !== null) {
+            $ficha->numhistoria = CamposDePaciente::numeroDeHistoria($ficha->numhistoria);
+        }
+
+        return $ficha;
     }
 
-    /** Las últimas consultas de la historia del paciente; vacío si todavía no tiene n.º de historia. */
-    public function consultasDe(string $regMedico, ?int $numhistoria, int $limite = 20): Collection
+    /**
+     * Las últimas consultas de la historia del paciente; vacío si todavía no tiene n.º de historia.
+     *
+     * El número llega como texto (así está en el pivote) y acá se vuelve entero, que es como está en
+     * `consultas`. Si no es numérico no se busca nada: `(int)` lo volvería `0` y traería las consultas de
+     * otro paciente.
+     */
+    public function consultasDe(string $regMedico, ?string $numhistoria, int $limite = 20): Collection
     {
-        if ($numhistoria === null) {
+        $numero = CamposDePaciente::historiaNumerica($numhistoria);
+
+        if ($numero === null) {
             return collect();
         }
 
         return DB::table('consultas')
             ->where('reg_medico', $regMedico)
-            ->where('numhistoria', $numhistoria)
+            ->where('numhistoria', $numero)
             ->orderByDesc('fecha')
             ->limit($limite)
             ->get(['id', 'fecha', 'nroconsulta', 'enfermedadactual']);
@@ -79,8 +102,7 @@ class PacientesDelConsultorio
             return [];
         }
 
-        $filas = $this->delConsultorio($regMedico)
-            ->where($this->filtroDeBusqueda($buscar))
+        $filas = BusquedaDePacientes::aplicar($this->delConsultorio($regMedico), $buscar)
             ->orderBy('pacientes.apellidos')
             ->orderBy('pacientes.nombres')
             ->limit($limite)
@@ -94,9 +116,9 @@ class PacientesDelConsultorio
 
         return $filas->map(fn ($fila) => [
             'id'          => (int) $fila->id,
-            'nombre'      => trim(($fila->apellidos ?? '') . ', ' . ($fila->nombres ?? ''), ', '),
-            'cedula'      => $fila->cedula,
-            'numhistoria' => $fila->numhistoria !== null ? (int) $fila->numhistoria : null,
+            'nombre'      => CamposDePaciente::nombre($fila->apellidos, $fila->nombres),
+            'cedula'      => CamposDePaciente::cedula($fila->cedula),
+            'numhistoria' => CamposDePaciente::historiaNumerica($fila->numhistoria),
         ])->values()->all();
     }
 
@@ -105,16 +127,5 @@ class PacientesDelConsultorio
         return DB::table('medico_pacientes')
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('medico_pacientes.reg_medico', $regMedico);
-    }
-
-    /** El grupo `where` de la búsqueda: agrupado para que el `or` no se escape del filtro por `reg_medico`. */
-    private function filtroDeBusqueda(string $buscar): Closure
-    {
-        return function ($filtro) use ($buscar) {
-            $filtro->where('pacientes.nombres', 'like', "%{$buscar}%")
-                ->orWhere('pacientes.apellidos', 'like', "%{$buscar}%")
-                ->orWhere('pacientes.cedula', 'like', "%{$buscar}%")
-                ->orWhere('medico_pacientes.numhistoria', 'like', "%{$buscar}%");
-        };
     }
 }

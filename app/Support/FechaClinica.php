@@ -14,11 +14,21 @@ final class FechaClinica
 {
     private const NULAS = ['', '0000-00-00', '0000-00-00 00:00:00', 'null', 'NULL'];
 
+    /**
+     * ¿Es una de las fechas nulas del legado? Además de `0000-00-00` hay que cubrir toda la familia
+     * `0000-00-*`: MySQL acepta `0000-00-01` y Carbon lo convierte en el **año -1**, que no revienta pero
+     * da una edad absurda (medido: 2026 años).
+     */
+    private static function esNula(string $texto): bool
+    {
+        return in_array($texto, self::NULAS, true) || str_starts_with($texto, '0000-00');
+    }
+
     public static function formato($valor, string $formato = 'd/m/Y'): string
     {
         $texto = trim((string) $valor);
 
-        if ($texto === '' || in_array($texto, self::NULAS, true)) {
+        if (self::esNula($texto)) {
             return '—';
         }
 
@@ -34,15 +44,23 @@ final class FechaClinica
     {
         $texto = trim((string) $fnacimiento);
 
-        if ($texto === '' || in_array($texto, self::NULAS, true)) {
+        if (self::esNula($texto)) {
             return null;
         }
 
         try {
-            return Carbon::parse($texto)->diffInYears(Carbon::now());
+            $fecha = Carbon::parse($texto);
         } catch (Throwable $e) {
             return null;
         }
+
+        // Una fecha de nacimiento en el futuro o con un año imposible tampoco da edad: `diffInYears` es
+        // absoluto, así que un `2099-01-01` mal cargado mostraba "73 años" en un recién nacido.
+        if ($fecha->year < 1900 || $fecha->greaterThan(Carbon::now())) {
+            return null;
+        }
+
+        return $fecha->diffInYears(Carbon::now());
     }
 
     private const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];

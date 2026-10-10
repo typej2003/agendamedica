@@ -2,12 +2,17 @@
 
 namespace App\Clinica\Pacientes\Vistas;
 
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
 use Illuminate\Support\Collection;
 
 /**
  * Lo que muestra la ficha de un paciente (`/clinica/pacientes/{id}`): el encabezado con sus estados, los
  * datos personales ya formateados y la lista de consultas. La vista solo lo recorre.
+ *
+ * Los campos del legado se leen con `CamposDePaciente`: una cédula `S.C.` es "sin cédula" y un
+ * `numhistoria` vacío es "sin historia". `fnacimiento` se formatea con `FechaClinica`, que tolera
+ * `0000-00-00` y basura sin romper la pantalla.
  */
 final class FichaDePacienteVista
 {
@@ -19,17 +24,17 @@ final class FichaDePacienteVista
 
     public function nombre(): string
     {
-        return trim($this->paciente->apellidos . ', ' . $this->paciente->nombres, ', ');
+        return CamposDePaciente::nombre($this->paciente->apellidos, $this->paciente->nombres);
     }
 
     public function tieneHistoria(): bool
     {
-        return $this->paciente->numhistoria !== null;
+        return $this->numeroDeHistoria() !== null;
     }
 
     public function subtitulo(): string
     {
-        return $this->tieneHistoria() ? 'Historia N.º ' . $this->paciente->numhistoria : 'Todavía sin número de historia';
+        return $this->tieneHistoria() ? 'Historia N.º ' . $this->numeroDeHistoria() : 'Todavía sin número de historia';
     }
 
     /**
@@ -40,7 +45,7 @@ final class FichaDePacienteVista
     public function estados(): array
     {
         $estados = [$this->tieneHistoria()
-            ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $this->paciente->numhistoria]
+            ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $this->numeroDeHistoria()]
             : ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Sin historia']];
 
         if ($this->edad() !== null) {
@@ -63,9 +68,9 @@ final class FichaDePacienteVista
 
     public function sexo(): ?string
     {
-        $sexo = trim((string) $this->paciente->sexo);
+        $sexo = CamposDePaciente::texto($this->paciente->sexo);
 
-        return match (strtoupper($sexo)) {
+        return match (strtoupper((string) $sexo)) {
             ''  => null,
             'F' => 'Femenino',
             'M' => 'Masculino',
@@ -75,7 +80,7 @@ final class FichaDePacienteVista
 
     public function cedula(): ?string
     {
-        return trim((string) $this->paciente->cedula) ?: null;
+        return CamposDePaciente::cedula($this->paciente->cedula);
     }
 
     /** La fecha de nacimiento legible, o `null` si el legado no la trae o no se puede interpretar. */
@@ -88,17 +93,17 @@ final class FichaDePacienteVista
 
     public function numeroDeHistoria(): ?string
     {
-        return $this->tieneHistoria() ? (string) $this->paciente->numhistoria : null;
+        return CamposDePaciente::numeroDeHistoria($this->paciente->numhistoria);
     }
 
     public function telefono(): ?string
     {
-        return trim((string) $this->paciente->telefono) ?: null;
+        return CamposDePaciente::texto($this->paciente->telefono);
     }
 
     public function correo(): ?string
     {
-        return trim((string) $this->paciente->email) ?: null;
+        return CamposDePaciente::texto($this->paciente->email);
     }
 
     public function totalConsultas(): int
@@ -120,7 +125,7 @@ final class FichaDePacienteVista
         return $this->consultas->map(fn ($consulta) => [
             'fecha'   => FechaClinica::formato($consulta->fecha),
             'numero'  => 'Consulta ' . $consulta->nroconsulta,
-            'resumen' => trim((string) $consulta->enfermedadactual) ?: null,
+            'resumen' => CamposDePaciente::texto($consulta->enfermedadactual),
         ])->all();
     }
 }

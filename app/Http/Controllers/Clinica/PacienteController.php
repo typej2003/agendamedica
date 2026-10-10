@@ -49,10 +49,8 @@ class PacienteController extends Controller
         // Un paciente de otro médico no se muestra ni se confirma que exista.
         abort_unless($ficha, 404);
 
-        $numhistoria = $ficha->numhistoria !== null ? (int) $ficha->numhistoria : null;
-
         return view('clinica.pacientes.ver', [
-            'vm' => new FichaDePacienteVista($ficha, $this->pacientes->consultasDe($regMedico, $numhistoria)),
+            'vm' => new FichaDePacienteVista($ficha, $this->pacientes->consultasDe($regMedico, $ficha->numhistoria)),
         ]);
     }
 }

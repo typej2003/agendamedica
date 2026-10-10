@@ -2,12 +2,16 @@
 
 namespace App\Clinica\Pacientes\Vistas;
 
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Lo que muestra el listado de pacientes (`/clinica/pacientes`): textos ya formateados, el estado de
  * cada historia y el mensaje de "no hay nada". La vista solo lo recorre.
+ *
+ * Cada campo pasa por `CamposDePaciente`: el legado guarda la cédula ausente como `S.C.` y el número de
+ * historia como texto que puede venir vacío, y la guía de UI pide `—`/"Sin cédula" cuando el dato no está.
  */
 final class ListadoDePacientesVista
 {
@@ -83,20 +87,21 @@ final class ListadoDePacientesVista
     private function fila(object $paciente): array
     {
         $edad = FechaClinica::edad($paciente->fnacimiento);
-        $cedula = trim((string) $paciente->cedula);
+        $cedula = CamposDePaciente::cedula($paciente->cedula);
+        $historia = CamposDePaciente::numeroDeHistoria($paciente->numhistoria);
 
         return [
             'id'         => (int) $paciente->id,
             'url'        => route('clinica.pacientes.ver', $paciente->id),
-            'nombre'     => trim($paciente->apellidos . ', ' . $paciente->nombres, ', '),
-            'cedula'     => $cedula !== '' ? 'C.I. ' . $cedula : 'Sin cédula',
-            'historia'   => $paciente->numhistoria !== null
-                ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $paciente->numhistoria]
+            'nombre'     => CamposDePaciente::nombre($paciente->apellidos, $paciente->nombres),
+            'cedula'     => $cedula !== null ? 'C.I. ' . $cedula : 'Sin cédula',
+            'historia'   => $historia !== null
+                ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $historia]
                 : ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Sin historia'],
             'edad'       => $edad !== null ? $edad . ($edad === 1 ? ' año' : ' años') : null,
             'nacimiento' => FechaClinica::formato($paciente->fnacimiento),
-            'telefono'   => trim((string) $paciente->telefono) ?: null,
-            'correo'     => trim((string) $paciente->email) ?: null,
+            'telefono'   => CamposDePaciente::texto($paciente->telefono),
+            'correo'     => CamposDePaciente::texto($paciente->email),
         ];
     }
 }

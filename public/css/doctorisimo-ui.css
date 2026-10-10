@@ -982,6 +982,14 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .buscador-campo .form-control { padding-left: 2.3rem; }
 
+/* En el celular el campo y los dos botones ("Buscar" y "Limpiar", que aparece con una búsqueda activa) no
+   entran en una línea: el buscador vuelve a envolver y el campo ocupa el ancho completo. Sin esto la
+   página gana 3 px de scroll horizontal a 375 px (medido). */
+@media (max-width: 575.98px) {
+    .page-head .buscador { flex-wrap: wrap; }
+    .page-head .buscador-campo { flex: 1 1 100%; min-width: 0; }
+}
+
 /* --- Tabla que se apila en tarjetas en el celular --- */
 @media (max-width: 767.98px) {
     .tabla-tarjetas thead { display: none; }

@@ -75,6 +75,66 @@ class PacientesVistasTest extends TestCase
         $this->assertNull($vista->edad());
     }
 
+    public function test_la_ficha_tolera_los_marcadores_y_el_texto_del_legado(): void
+    {
+        // `S.C.` es la opción "sin cédula" del alta del legado y el número de historia es texto: puede
+        // venir vacío (el `!== null` de antes lo daba por bueno) o con espacios y ceros a la izquierda.
+        $vista = new FichaDePacienteVista($this->paciente([
+            'cedula' => 'S.C.', 'numhistoria' => ' 01001 ', 'telefono' => '   ', 'email' => '  ', 'sexo' => 'f',
+        ]), collect());
+
+        $this->assertNull($vista->cedula());
+        $this->assertNull($vista->telefono());
+        $this->assertNull($vista->correo());
+        $this->assertSame('Femenino', $vista->sexo());
+        $this->assertSame('01001', $vista->numeroDeHistoria());
+        $this->assertSame('Historia N.º 01001', $vista->subtitulo());
+        $this->assertSame('Historia 01001', $vista->estados()[0]['texto']);
+
+        $sinNumero = new FichaDePacienteVista($this->paciente(['numhistoria' => '']), collect());
+        $this->assertFalse($sinNumero->tieneHistoria());
+        $this->assertNull($sinNumero->numeroDeHistoria());
+        $this->assertSame('Sin historia', $sinNumero->estados()[0]['texto']);
+        $this->assertStringContainsString('todavía no tiene historia', $sinNumero->sinConsultas()['titulo']);
+    }
+
+    public function test_la_ficha_no_muestra_un_titulo_en_blanco(): void
+    {
+        // Hay fichas del legado sin nombres ni apellidos (una está en la base de desarrollo).
+        $vista = new FichaDePacienteVista($this->paciente(['nombres' => null, 'apellidos' => '   ']), collect());
+
+        $this->assertSame('Paciente sin nombre', $vista->nombre());
+    }
+
+    public function test_la_edad_aguanta_una_fecha_de_nacimiento_basura(): void
+    {
+        // `0000-00-00` es la fecha nula del legado y `0000-00-01` es de la misma familia: Carbon lo
+        // interpreta como el **año -1** y la ficha mostraba "2026 años". Para la pantalla, sin fecha.
+        foreach (['0000-00-00', '0000-00-00 00:00:00', '0000-00-01', '', null] as $nula) {
+            $vista = new FichaDePacienteVista($this->paciente(['fnacimiento' => $nula]), collect());
+
+            $this->assertNull($vista->edad(), 'la edad de ' . var_export($nula, true) . ' tiene que ser null');
+            $this->assertNull($vista->nacimiento(), 'la fecha de ' . var_export($nula, true) . ' tiene que ser null');
+        }
+
+        // Lo que no se puede interpretar tampoco da edad; la fecha se muestra tal cual, que es la
+        // decisión de `FechaClinica`: avisar el dato roto en vez de esconderlo. El año imposible y la
+        // fecha futura también quedan sin edad (`diffInYears` es absoluto).
+        foreach (['no es una fecha', '32/13/1990', '0001-01-01', '2099-01-01'] as $rota) {
+            $vista = new FichaDePacienteVista($this->paciente(['fnacimiento' => $rota]), collect());
+
+            $this->assertNull($vista->edad(), 'la edad de ' . var_export($rota, true) . ' tiene que ser null');
+            $this->assertNotNull($vista->nacimiento(), 'la fecha de ' . var_export($rota, true) . ' se muestra tal cual');
+        }
+
+        // El estado de la edad no se agrega cuando no hay edad: sin dato no hay pastilla.
+        $this->assertCount(2, (new FichaDePacienteVista($this->paciente(['fnacimiento' => '0000-00-00']), collect()))->estados());
+
+        $buena = new FichaDePacienteVista($this->paciente(['fnacimiento' => '1990-05-01']), collect());
+        $this->assertSame('01/05/1990', $buena->nacimiento());
+        $this->assertMatchesRegularExpression('/^\d+ años$/', $buena->edad());
+    }
+
     public function test_las_consultas_salen_con_fecha_legible_y_resumen_recortado(): void
     {
         $consultas = collect([

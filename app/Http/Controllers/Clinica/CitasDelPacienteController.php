@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Agenda\EliminarCita;
 use App\Actions\Pacientes\CambiarCedula;
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\CitasDelPaciente;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Pacientes\Vistas\CitasDelPacienteVista;
@@ -44,7 +45,9 @@ class CitasDelPacienteController extends Controller
 
         // El vínculo con el médico es el que tiene el número de historia (y es por médico); la cita
         // puede estar enganchada además por `paciente_sinhistoria_id` si el paciente todavía no tiene uno.
-        $numHistoria = $ficha->numhistoria !== null ? (int) $ficha->numhistoria : null;
+        // El número es texto en el pivote y entero en `cola`: se convierte una sola vez, acá, y una
+        // historia no numérica del legado queda en `null` en vez de volverse un `0` que traería otra cosa.
+        $numHistoria = CamposDePaciente::historiaNumerica($ficha->numhistoria);
 
         return view('clinica.pacientes.citas', [
             'vm' => new CitasDelPacienteVista(
