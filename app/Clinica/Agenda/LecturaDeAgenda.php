@@ -21,6 +21,8 @@ final class LecturaDeAgenda
      * @param  Collection<string,int>  $conteosPorDia  `Y-m-d` => citas visibles
      * @param  Collection<string,\App\Models\DiaNoLaborable>  $noLaborables  `Y-m-d` => día marcado
      * @param  array<int,string>  $mensajes  id de cita => texto del recordatorio
+     * @param  Collection<int,CitaDeAgenda>  $pacientesSinHistoria  las citas del día **que se está
+     *         mirando** cuyo paciente todavía no tiene número de historia (panel WEB-2.11)
      */
     public function __construct(
         public readonly ParametrosDeAgenda $parametros,
@@ -35,6 +37,7 @@ final class LecturaDeAgenda
         public readonly int $totalRango,
         public readonly array $mensajes,
         public readonly Carbon $ahora,
+        public readonly Collection $pacientesSinHistoria,
     ) {
     }
 }

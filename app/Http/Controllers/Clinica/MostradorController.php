@@ -6,15 +6,23 @@ use App\Actions\Agenda\AtenderCita;
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\ReordenarCola;
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
+use App\Models\Medico;
+use App\Models\MedicoPaciente;
+use App\Models\MedicoRegistro;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 /**
- * Las acciones del mostrador sobre una cita —confirmar, atender, cobrar y reordenar la cola—, todas sobre
- * las **Actions compartidas** con el sync del móvil (PLAN-WEB.md, R3). El controlador solo valida que la
- * cita sea del contexto y traduce el resultado a un mensaje.
+ * Las acciones del mostrador sobre una cita —confirmar, atender, cobrar, reordenar la cola y pasar un
+ * paciente sin historia a cita formal—, todas sobre las **Actions compartidas** con el sync del móvil
+ * (PLAN-WEB.md, R3). El controlador solo valida que la cita sea del contexto y traduce el resultado a un
+ * mensaje.
  */
 class MostradorController extends Controller
 {
@@ -81,6 +89,103 @@ class MostradorController extends Controller
         );
 
         return back()->with('estado', 'Cobro registrado.');
+    }
+
+    /**
+     * **"Pasar a cita formal"** (WEB-2.11): asignarle la historia al paciente de una cita que todavía no
+     * tiene número, con lo que la cita deja de ser "sin historia" —es la misma fila, enlazada por
+     * `cola.numhistoria`— y el paciente queda listo para atender.
+     *
+     * Es la acción del `pb_3` de `w_hacer_cita` (`:801-805`) → `w_pasar_pacientes_n_reg_consulta_cita`,
+     * pero sobre el modelo de AppDDR: el escritorio crea un paciente nuevo en `pacientes` y otra cita;
+     * acá el paciente y la cita **ya existen** (los creó el alta de la web, WEB-2.2, anclados por
+     * `paciente_sinhistoria_id`) y lo único que falta es el número. La regla vive en la Action
+     * compartida con el sync del móvil: `AsignarHistoria`.
+     *
+     * El número **no se puede adelantar** en el formulario —lo calcula el servidor al asignarlo con el
+     * correlativo vigente del médico—, así que la pantalla confirma el efecto antes y acá se informa el
+     * número después. Idempotente: si el paciente ya la tenía, la Action devuelve la suya y no numera
+     * dos veces (el doble clic o el reintento terminan en el mismo lugar).
+     *
+     * Vuelve **explícitamente** a la agenda del día y la sede de la cita (no con `back()`): el destino
+     * es el mismo con o sin el `Referer` que manda el navegador, que es la única forma de que el
+     * resultado no dependa de cómo llegó la petición.
+     */
+    public function pasarACitaFormal(Request $request, Cola $cola, AsignarHistoria $accion)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $cita = $this->citaDelContexto($request, $cola);
+        $volver = $this->urlDeLaAgendaDe($request, $cita);
+
+        $pacienteId = $this->pacienteDeLaCita($cita);
+
+        if ($pacienteId === null) {
+            return $volver->with('error', 'Esta cita no tiene un paciente identificable al que asignarle la historia.');
+        }
+
+        $teniaHistoria = $cita->numhistoria !== null;
+
+        try {
+            $historia = $accion->ejecutar($contexto['medico'], $this->registrosDelMedico($contexto['medico']), $pacienteId);
+        } catch (InvalidArgumentException $excepcion) {
+            return $volver->with('error', $excepcion->getMessage());
+        }
+
+        return $volver->with('estado', $teniaHistoria
+            ? 'Este paciente ya tenía historia: H. ' . $historia->numhistoria . '.'
+            : 'Cita formal: al paciente se le asignó la historia H. ' . $historia->numhistoria . ' y su cita quedó enlazada.');
+    }
+
+    /**
+     * La agenda del día y la sede de la cita: donde el usuario ve el resultado de la acción. La sede
+     * sale de la cita (no del `Referer`), así se cae al panel de la cita que se acaba de formalizar.
+     */
+    private function urlDeLaAgendaDe(Request $request, Cola $cita): RedirectResponse
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        return redirect()->route('clinica.agenda', [
+            'vista' => 'dia',
+            'fecha' => Carbon::parse($cita->fecha)->toDateString(),
+            'sede'  => $cita->medical_center_id !== null
+                ? ($contexto['sedes']->firstWhere('medical_center_id', (int) $cita->medical_center_id)?->id ?? 'todas')
+                : 'todas',
+        ]);
+    }
+
+    /**
+     * `pacientes.id` del paciente de la cita: el vínculo normal es la historia
+     * (`medico_pacientes.numhistoria`) y, mientras no la tenga, el ancla
+     * `cola.paciente_sinhistoria_id`. Una cita sin ninguna de las dos no dice a quién numerar (en los
+     * datos del legado las hay: filas de `cola` con `numhistoria` nulo).
+     */
+    private function pacienteDeLaCita(Cola $cita): ?int
+    {
+        if ($cita->numhistoria !== null) {
+            return MedicoPaciente::where('reg_medico', $cita->reg_medico)
+                ->where('numhistoria', (int) $cita->numhistoria)
+                ->value('paciente_id');
+        }
+
+        return $cita->paciente_sinhistoria_id !== null ? (int) $cita->paciente_sinhistoria_id : null;
+    }
+
+    /**
+     * Los `reg_medico` del médico del contexto, resueltos **igual que en el sync** (`SyncAppDataController`):
+     * el correlativo del número de historia se calcula sobre el mismo conjunto en las dos superficies, o
+     * el mismo paciente recibiría un número distinto según quién lo atienda.
+     *
+     * @return array<int,string>
+     */
+    private function registrosDelMedico(Medico $medico): array
+    {
+        $registros = MedicoRegistro::where('medico_id', $medico->id)->pluck('reg_medico')->filter()->toArray();
+
+        if (! empty($medico->reg_medico)) {
+            $registros[] = $medico->reg_medico;
+        }
+
+        return array_values(array_unique($registros));
     }
 
     /**

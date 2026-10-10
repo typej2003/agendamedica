@@ -2,11 +2,11 @@
 
 namespace App\Sync;
 
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
-use App\Models\MedicoPaciente;
 use App\Models\MotivoConsulta;
 use App\Models\MotivoConsultaPaciente;
 use App\Models\Recipe;
@@ -14,9 +14,9 @@ use App\Models\RecipeDetalle;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * Creaciones del flujo de atención (ROADMAP.md Paso 18.B): **llenar la historia** de un paciente dado
@@ -54,6 +54,7 @@ class CreacionesClinicas
     public function __construct(
         private Medico $medico,
         private array $registrosMedicos,
+        private AsignarHistoria $asignarHistoria,
     ) {
     }
 
@@ -117,6 +118,11 @@ class CreacionesClinicas
     /**
      * "Llenar historia": le asigna número a un paciente que lo tiene de este médico sin historia. Los
      * datos de la ficha no viajan acá: ya se editan con `updated` sobre `pacientes`.
+     *
+     * La regla del número —el correlativo del médico, la idempotencia y el enlace de las citas que
+     * estaban "sin historia"— **no vive acá**: la resuelve `AsignarHistoria`, que es la misma Action
+     * que usa la web con "Pasar a cita formal" (WEB-2.11). Lo único propio del sync es el rastro: a
+     * qué id temporal corresponde la historia que se acaba de devolver.
      */
     private function crearHistoria(array $change, int $tempId, array $pacientesCreados, callable $rechazar): ?array
     {
@@ -130,62 +136,14 @@ class CreacionesClinicas
             return null;
         }
 
-        $relacion = MedicoPaciente::where('medico_id', $this->medico->id)
-            ->where('paciente_id', (int) $pacienteId)
-            ->first();
-        if (!$relacion) {
-            $rechazar('Ese paciente no es de este médico.');
+        try {
+            $historia = $this->asignarHistoria->ejecutar($this->medico, $this->registrosMedicos, (int) $pacienteId);
+        } catch (InvalidArgumentException $e) {
+            $rechazar($e->getMessage());
             return null;
         }
 
-        // Otro teléfono (o el escritorio) ya le llenó la historia: no se numera dos veces, se devuelve
-        // la que tiene. El teléfono reemplaza su provisional por esa.
-        if ($relacion->numhistoria !== null) {
-            $historia = Historia::where('paciente_id', $relacion->paciente_id)
-                ->where('medico_id', $this->medico->id)
-                ->first();
-            if ($historia) {
-                $this->anotar('historias', $historia->id, $tempId, $historia->reg_medico);
-                $this->historias[$tempId] = $historia->id;
-                return $this->respuestaHistoria($tempId, $historia);
-            }
-        }
-
-        $regMedico = $relacion->reg_medico ?: $this->medico->regMedicoPrincipal();
-
-        // Dos teléfonos llenando historias a la vez pueden calcular el mismo número: la unicidad
-        // `(reg_medico, numhistoria)` hace que uno falle, y ese reintenta con el siguiente.
-        for ($intento = 0; ; $intento++) {
-            try {
-                $historia = DB::transaction(function () use ($relacion, $regMedico) {
-                    $numero = $this->siguienteHistoria();
-
-                    $historia = Historia::create([
-                        'numhistoria' => (string) $numero,
-                        'reg_medico' => $regMedico,
-                        'paciente_id' => $relacion->paciente_id,
-                        'medico_id' => $this->medico->id,
-                    ]);
-                    $relacion->numhistoria = (string) $numero;
-                    $relacion->save();
-
-                    // Las citas que tenía "sin historia" pasan a referenciarla como las del legado.
-                    Cola::where('paciente_sinhistoria_id', $relacion->paciente_id)
-                        ->whereIn('reg_medico', $this->registrosMedicos)
-                        ->whereNull('numhistoria')
-                        ->update(['numhistoria' => $numero]);
-
-                    return $historia;
-                });
-                break;
-            } catch (QueryException $e) {
-                if ($intento >= 2) {
-                    throw $e;
-                }
-            }
-        }
-
-        $this->anotar('historias', $historia->id, $tempId, $regMedico);
+        $this->anotar('historias', $historia->id, $tempId, $historia->reg_medico);
         $this->historias[$tempId] = $historia->id;
 
         return $this->respuestaHistoria($tempId, $historia);
@@ -333,18 +291,6 @@ class CreacionesClinicas
         }
 
         return $catalogo->where('codemotivo', trim($codigo))->value('codemotivo');
-    }
-
-    private function siguienteHistoria(): int
-    {
-        // Las del médico por las dos vías en que el legado las deja: `historias` (sync de pacientes)
-        // y el pivote. El número se guarda como texto, así que se compara como entero en PHP.
-        $numeros = Historia::whereIn('reg_medico', $this->registrosMedicos)->pluck('numhistoria')
-            ->merge(MedicoPaciente::where('medico_id', $this->medico->id)->pluck('numhistoria'))
-            ->filter(fn ($n) => $n !== null && is_numeric($n))
-            ->map(fn ($n) => (int) $n);
-
-        return ((int) $numeros->max()) + 1;
     }
 
     private function siguienteRecipe(Consulta $consulta): int

@@ -41,6 +41,7 @@ use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\Vademecum;
 use App\Services\ServicioService;
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Sync\CreacionesClinicas;
 use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
@@ -366,7 +367,7 @@ class SyncAppDataController extends Controller
         // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
         // cliente no tiene forma de garantizar el orden del arreglo.
         $changes = $this->enOrdenDeDependencia($changes);
-        $clinicas = new CreacionesClinicas($medico, $registrosMedicos);
+        $clinicas = new CreacionesClinicas($medico, $registrosMedicos, app(AsignarHistoria::class));
         $creadosAntes = count($creados);
 
         foreach ($changes as $change) {

@@ -22,6 +22,10 @@
     </template>
 </x-ui.tarjeta>
 
+{{-- El panel "Pacientes sin historia a atender" (WEB-2.11), al lado del listado como en el escritorio:
+     son los pacientes del día a los que todavía hay que numerarles la historia antes de atenderlos. --}}
+@include('clinica.agenda._sin-historia', ['sinHistoria' => $cuerpo->sinHistoria()])
+
 @if ($cuerpo->estaVacio())
     @php $vacio = $cuerpo->vacio(); @endphp
     <x-ui.tarjeta>

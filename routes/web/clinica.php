@@ -108,6 +108,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');
+            // "Pasar a cita formal" (WEB-2.11): la Action compartida le asigna la historia al paciente de
+            // una cita que todavía no la tiene y la deja enlazada. Va con las acciones del mostrador —es
+            // una acción sobre una cita, no una pantalla— y **antes** de `POST /agenda/{cola}`.
+            Route::post('/agenda/{cola}/pasar-a-cita-formal', [MostradorController::class, 'pasarACitaFormal'])
+                ->name('agenda.pasar-a-cita-formal');
             Route::post('/agenda/{cola}/notificar', [RecordatorioController::class, 'notificar'])->name('agenda.notificar');
             Route::post('/agenda/{cola}/confirmar', [MostradorController::class, 'confirmar'])->name('agenda.confirmar');
             Route::post('/agenda/{cola}/atender', [MostradorController::class, 'atender'])->name('agenda.atender');

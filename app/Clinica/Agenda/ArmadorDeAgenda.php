@@ -52,7 +52,7 @@ final class ArmadorDeAgenda
      */
     public function citas(string $regMedico, Carbon $desde, Carbon $hasta): Collection
     {
-        return $this->armar(
+        return $this->armarCitas(
             $regMedico,
             Cola::where('reg_medico', $regMedico)
                 // `whereDate` y no `whereBetween`: con el cast `date` la fecha se guarda con hora
@@ -84,7 +84,7 @@ final class ArmadorDeAgenda
             return collect();
         }
 
-        return $this->armar(
+        return $this->armarCitas(
             $regMedico,
             Cola::where('reg_medico', $regMedico)
                 ->where(function ($consulta) use ($numHistoria, $pacienteId) {
@@ -114,10 +114,28 @@ final class ArmadorDeAgenda
      * leen en lote (no una consulta por fila) y con las mismas reglas para la agenda y para la pantalla
      * de las citas de un paciente.
      *
+     * Es público porque hay **otras consultas de `cola`** que tienen que resolverse igual y no pueden
+     * pasar por `citas()`: el panel de pacientes sin historia (WEB-2.11) filtra por el pivote, no por
+     * el rango. Si cada una armara su propia fila, el nombre y la sede del mismo paciente podrían
+     * salir distintos en dos partes de la misma pantalla.
+     *
      * @param  Collection<int,Cola>  $filas
      * @return Collection<int,CitaDeAgenda>
      */
-    private function armar(string $regMedico, Collection $filas): Collection
+    public function desdeFilas(string $regMedico, Collection $filas): Collection
+    {
+        return $this->armarCitas($regMedico, $filas);
+    }
+
+    /**
+     * Las filas de `cola` ya resueltas a `CitaDeAgenda`: el nombre del paciente, la sede y la razón se
+     * leen en lote (no una consulta por fila) y con las mismas reglas para la agenda y para la pantalla
+     * de las citas de un paciente.
+     *
+     * @param  Collection<int,Cola>  $filas
+     * @return Collection<int,CitaDeAgenda>
+     */
+    private function armarCitas(string $regMedico, Collection $filas): Collection
     {
         if ($filas->isEmpty()) {
             return collect();

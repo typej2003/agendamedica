@@ -5,8 +5,8 @@ namespace App\Clinica\Agenda\Vistas;
 use App\Clinica\Agenda\LecturaDeAgenda;
 
 /**
- * El cuerpo de la vista de día, que es la pantalla del mostrador: el buscador de pacientes y las jornadas
- * (una por sede) con sus citas.
+ * El cuerpo de la vista de día, que es la pantalla del mostrador: el buscador de pacientes, el panel de
+ * pacientes sin historia y las jornadas (una por sede) con sus citas.
  */
 final class DiaVista
 {
@@ -56,5 +56,23 @@ final class DiaVista
             'fecha' => $this->lectura->parametros->fecha->toDateString(),
             'sede'  => $this->lectura->parametros->sedeId,
         ]));
+    }
+
+    // ------------------------------------------------ Pacientes sin historia a atender (WEB-2.11)
+
+    /**
+     * El panel "Pacientes sin historia a atender": las citas del día que se está mirando cuyo paciente
+     * todavía no tiene número de historia, con su "Pasar a cita formal". El escritorio lo tiene al lado
+     * del listado (`dw_3` de `w_hacer_cita`).
+     *
+     * Sale de la lectura (que lo resuelve con una sola consulta) y se le pasa la fecha para que el
+     * subtítulo diga de qué día habla.
+     */
+    public function sinHistoria(): PacientesSinHistoriaVista
+    {
+        return new PacientesSinHistoriaVista(
+            $this->lectura->pacientesSinHistoria,
+            $this->lectura->parametros->fecha->copy(),
+        );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Models\Cola;
 use App\Models\Office;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -73,6 +74,11 @@ class LectorDeAgenda
             // el diálogo de cada fila lo ofrezca sin una consulta por fila.
             mensajes: $this->recordatorios->mensajesPara($regMedico, $visibles, $sedes),
             ahora: Carbon::now(),
+            // El panel "Pacientes sin historia a atender" (WEB-2.11) es **del día que se está
+            // mirando**, no del rango: en semana y mes no se muestra.
+            pacientesSinHistoria: $parametros->vista === 'dia'
+                ? $this->sinHistoria($regMedico, $parametros->fecha, $centroId)
+                : collect(),
         );
     }
 
@@ -96,6 +102,45 @@ class LectorDeAgenda
         return $this->armador->citas($contexto['reg_medico'], $fecha->copy(), $fecha->copy())
             ->when($centroId !== null, fn (Collection $citas) => $citas->where('centroId', $centroId))
             ->reject(fn (CitaDeAgenda $cita) => $cita->movida())
+            ->values();
+    }
+
+    /**
+     * Las citas de un día cuyo paciente **todavía no tiene número de historia** (panel "Pacientes sin
+     * historia a atender", WEB-2.11).
+     *
+     * Cómo se reconoce: la cita está anclada al paciente por `cola.paciente_sinhistoria_id` y **no**
+     * lleva `numhistoria`. Ese es el estado que deja el alta de la web cuando el paciente es nuevo
+     * (WEB-2.2) y el que el propio "Pasar a cita formal" resuelve, así que la lista se vacía sola
+     * después de asignar el número.
+     *
+     * No es "cualquier fila con `numhistoria` nulo": una cita del legado puede no tener ni número ni
+     * ancla (sin paciente identificable) y esa **no** se ofrece para formalizar — no hay a quién
+     * numerarle. Las condiciones del pivote son las mismas que muestra la fila de la agenda, así que
+     * las citas de otro médico no entran ni por el pivote.
+     *
+     * @return Collection<int,CitaDeAgenda>
+     */
+    public function sinHistoria(string $regMedico, Carbon $fecha, ?int $centroId): Collection
+    {
+        $filas = Cola::where('reg_medico', $regMedico)
+            ->whereDate('fecha', $fecha->toDateString())
+            ->whereNull('numhistoria')
+            ->whereNotNull('paciente_sinhistoria_id')
+            ->whereIn('paciente_sinhistoria_id', function ($consulta) use ($regMedico) {
+                $consulta->select('paciente_id')
+                    ->from('medico_pacientes')
+                    ->where('reg_medico', $regMedico)
+                    ->where(function ($pivote) {
+                        $pivote->whereNull('numhistoria')->orWhere('numhistoria', '');
+                    });
+            })
+            ->orderBy('hora_ini')
+            ->orderBy('numorden')
+            ->get();
+
+        return $this->armador->desdeFilas($regMedico, $filas)
+            ->when($centroId !== null, fn (Collection $citas) => $citas->where('centroId', $centroId))
             ->values();
     }
 
