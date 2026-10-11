@@ -1784,8 +1784,8 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 
 .consulta-panel { list-style: none; margin: 0; padding: 0; }
 
-/* El ítem es una fila de tres piezas: icono, texto que crece y el estado a la derecha. En celular el
-   estado baja debajo del texto en vez de apretarlo (guía de UI, §7). */
+/* El ítem es una fila de dos piezas: el icono y el texto. El estado ("Próximamente") va **dentro** del texto,
+   en la fila del título, así la descripción de abajo usa todo el ancho del ítem. */
 .consulta-panel-item {
     display: flex;
     align-items: center;
@@ -1815,21 +1815,22 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
     color: var(--ds-texto-3);
 }
 
-.consulta-panel-texto { flex: 1 1 100%; min-width: 0; }
+.consulta-panel-texto { flex: 1 1 auto; min-width: 0; }
 
-/* En pantalla grande el estado va a la derecha del ítem y el texto ocupa lo que queda; en celular el
-   estado **baja debajo del texto** (`flex-basis: 100%`) porque la pastilla "Próximamente" no entra al
-   lado y comprimiría el nombre a una letra por renglón (guía de UI, §7).
+/* La fila del título: el nombre a la izquierda y la pastilla a la derecha, **siempre en la misma fila**. Si
+   no caben (una columna angosta), el que cede es el nombre, que se parte en dos renglones por palabras
+   ("Estudio / ecográfico"); la pastilla no se achica ni baja, y queda alineada con el primer renglón. */
+.consulta-panel-cabecera {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+}
 
-   El `max-width` del ítem es lo que evita el problema en pantalla grande: la lista son trece renglones
-   cortos y, si el ítem se estirara, la pastilla no se achica (`.estado` es `inline-flex`) y el texto del
-   medio queda en un pasillo de dos o tres letras. */
-.consulta-panel-item > .estado { flex: 0 0 auto; order: 3; }
+.consulta-panel-cabecera > .consulta-panel-nombre { flex: 1 1 auto; min-width: 0; }
+.consulta-panel-cabecera > .estado { flex: 0 0 auto; margin-left: auto; margin-top: .05rem; }
 
 @media (min-width: 768px) {
     .consulta-panel-item { align-items: flex-start; max-width: 28rem; }
-    .consulta-panel-texto { flex: 1 1 auto; }
-    .consulta-panel-item > .estado { order: 0; margin-left: auto; }
 }
 
 .consulta-panel-nombre {
@@ -1847,11 +1848,6 @@ a.consulta-panel-nombre:hover { color: var(--ds-violeta-700); text-decoration: u
     font-size: .85rem;
     color: var(--ds-texto-3);
     overflow-wrap: anywhere;
-}
-
-@media (max-width: 575.98px) {
-    .consulta-panel-item { flex-wrap: wrap; }
-    .consulta-panel-texto { flex-basis: calc(100% - 2.6rem); }
 }
 
 /* La sección que se está mirando: el ítem del panel se marca con el fondo de marca suave y una barra a

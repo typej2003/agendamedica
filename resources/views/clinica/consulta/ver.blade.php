@@ -58,20 +58,24 @@
                                 <li class="consulta-panel-item {{ $item['listo'] ? '' : 'consulta-panel-item-pendiente' }} {{ $item['activo'] ? 'consulta-panel-item-activo' : '' }}">
                                     <span class="consulta-panel-icono"><i class="bi {{ $item['icono'] }}" aria-hidden="true"></i></span>
                                     <div class="consulta-panel-texto">
-                                        @if ($item['url'])
-                                            <a class="consulta-panel-nombre" href="{{ $item['url'] }}"
-                                               @if ($item['activo']) aria-current="true" @endif>{{ $item['titulo'] }}</a>
-                                        @else
-                                            <span class="consulta-panel-nombre">{{ $item['titulo'] }}</span>
-                                        @endif
+                                        {{-- El estado va en la fila del título, a la derecha, para que la descripción de abajo
+                                             use todo el ancho del ítem. Sólo los que todavía no están lo llevan
+                                             ("Próximamente", color + icono + texto, como pide la guía de UI); los
+                                             disponibles se reconocen por su enlace. --}}
+                                        <div class="consulta-panel-cabecera">
+                                            @if ($item['url'])
+                                                <a class="consulta-panel-nombre" href="{{ $item['url'] }}"
+                                                   @if ($item['activo']) aria-current="true" @endif>{{ $item['titulo'] }}</a>
+                                            @else
+                                                <span class="consulta-panel-nombre">{{ $item['titulo'] }}</span>
+                                            @endif
+                                            @if ($item['estado'])
+                                                <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
+                                                             :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
+                                            @endif
+                                        </div>
                                         <span class="consulta-panel-detalle">{{ $item['detalle'] }}</span>
                                     </div>
-                                    {{-- Sólo los que todavía no están llevan estado ("Próximamente", color + icono + texto,
-                                         como pide la guía de UI); los disponibles se reconocen por su enlace. --}}
-                                    @if ($item['estado'])
-                                        <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
-                                                     :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
-                                    @endif
                                 </li>
                             @endforeach
                         </ul>
