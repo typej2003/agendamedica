@@ -63,8 +63,12 @@ class EspecialidadesYModulosSeeder extends Seeder
      * habilitados en este consultorio"), aunque tuviera la especialidad activa y su consultorio cargado
      * (medido el 2026-10-11, al agregar la pantalla de Especialidades del panel: 7 de las 8 especialidades
      * del catálogo no daban ningún módulo).
+     *
+     * Es **público** a propósito: `especialidades:sembrar` —el paso que se corre al final de cada
+     * despliegue— verifica con esta misma lista que ninguna especialidad quede sin el núcleo, sin repetir
+     * los slugs.
      */
-    private const NUCLEO_IMPLEMENTADO = [
+    public const NUCLEO_IMPLEMENTADO = [
         'agenda'    => ['Medico', 'Secretaria'],
         'pacientes' => ['Medico', 'Secretaria'],
     ];

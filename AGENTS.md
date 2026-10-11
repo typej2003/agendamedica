@@ -1,4 +1,4 @@
-# MedicAPI — backend de AppDDR
+﻿# MedicAPI — backend de AppDDR
 
 Guía de entrada para trabajar en este repo. **Antes de escribir código, leé "Antes de empezar"** (rama
 y entorno) y la wiki indicada al final: este repo no lleva la especificación funcional.
@@ -33,7 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras **WEB-1.13**, el núcleo del menú para todas las especialidades) es **1162 en
+medición (2026-10-11, tras **WEB-1.13**, el núcleo del menú para todas las especialidades) es **1167 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
@@ -296,7 +296,8 @@ es administrador). El panel `/dashboard` quedó para administración. Lo nuevo s
   puede agendar** (la jornada se arma por sede). En `/clinica/contexto` el campo es el **consultorio**
   (`offices`) —se rotula así desde el 2026-10-11, antes decía "Sede"— y el aviso manda a
   `/clinica/consultorios` (la sede, `medical_centers`, se crea en `/clinica/sedes`). Verificación en Chrome:
-  `../.agent-tools/verificar-menu-por-especialidad-web.js`.
+  `../.agent-tools/verificar-menu-por-especialidad-web.js`. En una base ya desplegada, el paso del final del
+  despliegue es **`php artisan especialidades:sembrar`** (ver "Cómo verificar cambios").
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
@@ -380,6 +381,18 @@ php artisan route:list            # mapa real de rutas (después de armar el ent
 php artisan migrate --pretend     # revisar el SQL de una migración nueva
 php artisan test                  # PHPUnit; los tests presentes son plantillas de Laravel
 ```
+
+**Al final de cada despliegue** hay que correr **`php artisan especialidades:sembrar`**. El catálogo
+multi-especialidad (`specialties` + `especialidad_modulo`) es **catálogo y no viaja por migración**, así que
+en un servidor que ya tenía datos las especialidades que ya existían se quedan sin módulos y el consultorio
+del médico sale **vacío** ("No hay módulos habilitados en este consultorio todavía"), aunque tenga la
+especialidad activa y su consultorio cargado (medido el 2026-10-11: 7 de las 8 especialidades del catálogo).
+El comando es **idempotente** —sólo agrega lo que falta, no renombra, no borra y no pisa lo que no
+administra—, tiene **`--simular`** para mirar sin escribir y **termina en error** si algo no se pudo arreglar
+(por ejemplo un módulo del núcleo desactivado a mano en `modulos_clinicos`), para que el despliegue no pase
+como bueno. Corre después de `migrate --force`; las reglas viven en los seeders, no en el comando
+(`app/Console/Commands/SembrarEspecialidadesCommand.php`, tests en
+`tests/Feature/SembrarEspecialidadesCommandTest.php`).
 
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
