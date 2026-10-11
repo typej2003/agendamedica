@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md).
+[`AGENTS.md`](AGENTS.md). Van **34** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -259,4 +259,31 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     con `disco` la subió la web, sin `disco` es del escritorio. Cualquier consumidor de esa tabla (la
     descarga, el listado, y el proceso de copia de WEB-T.1 que va a leer las viejas) tiene que mirar
     `disco`, **no** el formato de la ruta.
+
+33. **El `_token` de la sesión se rota al responder, así que un verificador de navegador no puede leerlo una
+    sola vez y usarlo dos veces.** Medido al verificar WEB-4.8 en Chrome: el script leía el
+    `input[name="_token"]` en la pantalla de la consulta, lo usaba para el `POST` del cierre (que funciona) y
+    **volvía a usarlo** para el segundo `POST` —el del mostrador que prueba el rechazo de la regla—. Ese
+    segundo POST respondía **419** y no aplicaba nada: el síntoma era una cita que quedaba sin marcar *a pesar
+    de que la pantalla mostraba el aviso de éxito*. **Regla para los verificadores**: el token se relee
+    **después de cada navegación**, de un formulario `@csrf` de la página en la que se está parado (el layout
+    clínico no publica `meta[name=csrf-token]`, ver la trampa 16), y un `419` **no** se interpreta como "la
+    acción falló". Si un verificador dice "la acción no se aplicó" pero la pantalla dice que sí, mirá primero
+    el status del POST.
+
+34. **Un ayudante de verificación que se apoya en lo que dejó la corrida *anterior* elige la fila
+    equivocada** — y el síntoma parece un bug de la aplicación. Medido al verificar WEB-4.8 en Chrome: el
+    ayudante calculaba el próximo `numhistoria` leyendo **sólo `historias`**, pero la corrida anterior había
+    dejado una fila en el pivote `medico_pacientes` con ese mismo número (la cita "sin historia" de su caso).
+    Resultado: la corrida nueva creaba **su cita con el mismo número que la cita vieja de la anterior**, y el
+    cierre —que busca la cita por `numhistoria` + fecha, como corresponde— encontraba **la vieja** (la de
+    `numorden` más alto) y la marcaba a ella. Dos cosas arreglan esto y conviene copiarlas: (a) el correlativo
+    del ayudante se calcula con **las dos fuentes** (`historias` **y** `medico_pacientes`), que es la misma
+    cuenta que `App\Actions\Pacientes\AsignarHistoria::siguienteNumero`; y (b) la fila de la corrida se crea
+    con el **`numorden` más alto del día**, para que el desempate por orden (el de `ArmadorDeAgenda`) no la
+    deje atrás. Es una variante de la trampa 27 del lado del verificador: **la base de desarrollo se deja como
+    quede, así que las corridas se acumulan y el ayudante tiene que ser idempotente consigo mismo**. De paso,
+    la app sí tenía algo que corregir que la corrida destapó: `CitaDeLaConsulta` ahora prefiere una cita
+    **viva** sobre una **movida por el escritorio** del mismo día (la movida es la fila vieja y el paciente ya
+    está en la fecha nueva).
 

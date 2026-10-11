@@ -4,6 +4,7 @@ use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
+use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
@@ -192,6 +193,17 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/examenes', [ConsultaImagenesController::class, 'subir'])->name('consulta.examenes.subir');
                 Route::get('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'descargar'])->name('consulta.examenes.descargar');
                 Route::delete('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'quitar'])->name('consulta.examenes.quitar');
+
+                // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
+                // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
+                // como atendida— y volver a la agenda del día, que es lo que el escritorio hace al cerrar
+                // `w_consulta_principal` (su `open` ya había marcado `atendido`). La regla que le da
+                // sentido —"cita atendida ⇒ tiene historia"— vive en `App\Actions\Agenda\AtenderCita`, la
+                // Action compartida con el sync del móvil, y el rastro queda en `sync_changes` con
+                // `source = web`. Va **después** de las rutas que llevan el mismo prefijo para no
+                // interceptarlas (el segmento `cerrar` no es un id de imagen, pero el orden es el criterio
+                // de este archivo).
+                Route::post('/consulta/{consulta}/cerrar', [ConsultaCerrarController::class, 'cerrar'])->name('consulta.cerrar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Agenda\AtenderCita;
+use App\Actions\Agenda\CitaNoAtendible;
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\CrearCita;
@@ -823,6 +824,18 @@ class SyncAppDataController extends Controller
      * Las que sí lo son no pueden seguir por ahí: si cada superficie tuviera su propia copia de la
      * regla (que atender implica confirmar, que el abono se suma o que el estado de pago se deriva)
      * la web y el móvil empezarían a comportarse distinto sobre la misma base (PLAN-WEB.md, R3).
+     *
+     * **La regla "cita atendida ⇒ tiene historia" (WEB-4.8) se descarta acá, no rompe el lote.** Marcar
+     * `atendido = 1` sin historia lanza `CitaNoAtendible` (la regla vive en `AtenderCita`, que es la única
+     * puerta a esa columna en las dos superficies). Un cambio que incumple una regla de negocio **no es un
+     * lote mal formado**: se descarta —como el last-write-wins descarta el cambio que pierde—, el resto de
+     * los cambios se aplica, y el teléfono se corrige solo en la sincronización siguiente, porque
+     * sobreescribe su copia local con lo que el servidor le devuelve (el `atendido` sigue en 0). Es el
+     * "descartar" que TODO.md §9 dejó propuesto; el canal de rechazos visible sigue siendo sólo el de las
+     * **creaciones** (`rechazados`), que es una deuda anotada y no de esta tarea.
+     *
+     * El `catch` es puntual y no un `Throwable` genérico: cualquier otra excepción de la Action tiene que
+     * seguir subiendo y verse como el error que es.
      */
     private function aplicarAccionDeCita(int $recordId, string $column, $valor, Carbon $occurredAt): bool
     {
@@ -835,19 +848,23 @@ class SyncAppDataController extends Controller
             return true; // la fila ya no existe: nada que aplicar, pero no cae al camino genérico
         }
 
-        switch ($column) {
-            case 'estado':
-                app(ConfirmarCita::class)->ejecutar($cita, (int) $valor, $occurredAt, 'mobile');
-                break;
-            case 'atendido':
-                app(AtenderCita::class)->ejecutar($cita, (int) $valor === 1, $occurredAt, 'mobile');
-                break;
-            case 'monto':
-                app(CobrarCita::class)->fijarMonto($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
-                break;
-            case 'monto_pagado':
-                app(CobrarCita::class)->fijarPagado($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
-                break;
+        try {
+            switch ($column) {
+                case 'estado':
+                    app(ConfirmarCita::class)->ejecutar($cita, (int) $valor, $occurredAt, 'mobile');
+                    break;
+                case 'atendido':
+                    app(AtenderCita::class)->ejecutar($cita, (int) $valor === 1, $occurredAt, 'mobile');
+                    break;
+                case 'monto':
+                    app(CobrarCita::class)->fijarMonto($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
+                    break;
+                case 'monto_pagado':
+                    app(CobrarCita::class)->fijarPagado($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
+                    break;
+            }
+        } catch (CitaNoAtendible $e) {
+            // La cita se queda sin atender: el teléfono lo ve en el delta y revierte su marca.
         }
 
         return true;

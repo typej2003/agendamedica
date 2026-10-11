@@ -107,6 +107,11 @@ final class ConsultaShellVista
         // (`?seccion=…`). Sin ella, esos ítems quedan sin enlace y el panel no los ofrece.
         private ?string $urlConsulta = null,
         private ?string $seccion = null,
+        // "Terminar la consulta" (WEB-4.8): la acción primaria de la pantalla y su disponibilidad. El
+        // controlador las resuelve —la URL es de la acción y la bandera sale de la cita del día— y acá
+        // sólo se decide qué se muestra (la guía de UI: el estado se ve, no se lee).
+        private ?string $urlTerminar = null,
+        private bool $terminable = false,
     ) {
     }
 
@@ -162,6 +167,33 @@ final class ConsultaShellVista
     public function urlVolver(): ?string
     {
         return $this->urlVolver;
+    }
+
+    /**
+     * **Terminar la consulta** (WEB-4.8): la acción primaria de la pantalla, o `null` si no se ofrece.
+     *
+     * No se ofrece cuando la consulta no es de hoy. El escritorio sólo marca `atendido` la cita del día
+     * (`w_consulta_principal.srw:4418-4420`: `fecha = today()`), así que estrenar una consulta vieja —a la
+     * que se entra desde la historia del paciente, sin haber atendido a nadie hoy— no es "terminar una
+     * atención" y marcar la cita de esa fecha pasada no significaría nada.
+     */
+    public function urlTerminar(): ?string
+    {
+        return $this->terminable ? $this->urlTerminar : null;
+    }
+
+    /**
+     * El aviso de la confirmación, con el paciente y la consulta ya dentro.
+     *
+     * Terminar la atención marca la cita como atendida y **no se deshace** (el escritorio tampoco lo
+     * deshace: `atendido` es una marca, no un estado que se vuelva atrás desde la consulta), así que la
+     * pantalla lo dice antes de hacerlo y nombra lo que cambia.
+     */
+    public function avisoTerminar(): string
+    {
+        return '¿Terminar la consulta N.º ' . $this->nroconsulta . ' de ' . $this->nombre()
+            . '? La cita de hoy va a quedar marcada como atendida y volverás a la agenda del día. '
+            . 'La cita no se puede volver a marcar como no atendida desde acá.';
     }
 
     /**
@@ -235,8 +267,8 @@ final class ConsultaShellVista
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Al cerrar WEB-4.7 ya se pueden cargar los ítems 1, 2, 3, 4, 7,
-     * 8 y 9, y el resto sigue llegando por tareas.
+     * las secciones se abren desde el panel. Al cerrar WEB-4.8 ya se pueden cargar los ítems 1, 2, 3, 4, 7,
+     * 8, 9 y 12, y el resto sigue llegando por tareas (F5, F6 y F9).
      */
     public function sinContenido(): array
     {
@@ -246,7 +278,8 @@ final class ConsultaShellVista
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
                 . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, exámenes, '
                 . 'diagnóstico, evolución y los datos personales del paciente— se abren acá; el resto llega '
-                . 'con las tareas siguientes (estudios y documentos).',
+                . 'con las tareas siguientes (estudios y documentos). Cuando termines la atención, la acción '
+                . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
     }
 

@@ -8,6 +8,20 @@
          necesita al entrar es confirmar **a quién** está atendiendo. --}}
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlVolver()" volver-texto="Volver a la agenda">
         <x-slot name="acciones">
+            {{-- La **acción primaria** de la pantalla (guía de UI §1: un solo botón sólido): terminar la
+                 atención. Es lo que el escritorio hace al cerrar `w_consulta_principal` —la cita ya había
+                 quedado `atendido` en su `open`—, así que no hay ningún estado nuevo que inventar: la
+                 consulta se cierra, la cita de hoy queda atendida y se vuelve a la agenda del día. Pide
+                 confirmación con el mecanismo de `shell.js` (`data-confirmar`), sin diálogo propio ni JS
+                 nuevo: la acción es irreversible y la pantalla lo dice con el texto del ViewModel. --}}
+            @if ($vm->urlTerminar())
+                <form method="POST" action="{{ $vm->urlTerminar() }}" data-confirmar="{{ $vm->avisoTerminar() }}">
+                    @csrf
+                    <button class="btn btn-primary">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Terminar la consulta
+                    </button>
+                </form>
+            @endif
             @if ($vm->urlHistoria())
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlHistoria() }}">
                     <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia del paciente

@@ -20,6 +20,9 @@ use App\Models\MedicoPaciente;
  * mostrador al decidir si hay que mandar a asignar la historia (y cuál es la consulta del día que se
  * ofrece re-atender) y el shell al resolver el encabezado de una consulta ya existente. Si cada una
  * hiciera su propia lectura, el mismo paciente podría resolverse distinto en dos partes del mismo flujo.
+ *
+ * Su hermana es `CitaDeLaConsulta`, que va en el sentido contrario (de la consulta a la cita) y la usa el
+ * cierre de la consulta (WEB-4.8).
  */
 final class PacienteDeLaCita
 {

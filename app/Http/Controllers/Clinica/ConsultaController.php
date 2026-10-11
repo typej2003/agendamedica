@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\AntecedentesDelPaciente;
+use App\Clinica\Consulta\CitaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
@@ -73,6 +74,7 @@ class ConsultaController extends Controller
         EvolucionDeLaConsulta $evolucion,
         ExamenesDeLaConsulta $examenes,
         ImagenesDeLaConsulta $imagenes,
+        CitaDeLaConsulta $citas,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -109,6 +111,13 @@ class ConsultaController extends Controller
                 ]),
                 $urlConsulta,
                 $seccion,
+                route('clinica.consulta.cerrar', $consulta->id),
+                // "Terminar la consulta" (WEB-4.8) se ofrece **sólo para la consulta de hoy**: el
+                // escritorio marca `atendido` nada más que la cita del día (`w_consulta_principal.srw:4418`),
+                // y marcar hoy la cita de una consulta vieja no sería terminar la atención de nadie.
+                // La bandera sale de acá y no de la vista (guía de arquitectura: el rol y el estado no se
+                // consultan en el Blade).
+                $this->esDeHoy($dia) && $this->hayCitaTerminable($consulta, $dia, (int) $paciente->id, $citas),
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
@@ -121,6 +130,28 @@ class ConsultaController extends Controller
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
         ]);
+    }
+
+    /**
+     * ¿La consulta es de hoy en el consultorio? Es la condición de "Terminar la consulta" (WEB-4.8).
+     *
+     * Se compara contra `FechaDelConsultorio::hoy()` y no contra `now()`: "hoy" para el negocio es el día
+     * del consultorio, y en un consultorio de Venezuela (UTC-4) la fecha del servidor se adelanta cuatro
+     * horas (misma trampa que el "Atender" de la agenda, `LectorDeAgenda`).
+     */
+    private function esDeHoy(Carbon $dia): bool
+    {
+        return $dia->toDateString() === FechaDelConsultorio::hoy()->toDateString();
+    }
+
+    /**
+     * ¿Hay una cita de la agenda que "Terminar la consulta" pueda marcar? Sin cita no hay nada que
+     * terminar más allá de la consulta misma, y con la cita movida por el escritorio la fila es la vieja
+     * (`CitaEncontrada::terminable`), así que la pantalla no ofrece la acción.
+     */
+    private function hayCitaTerminable(Consulta $consulta, Carbon $dia, int $pacienteId, CitaDeLaConsulta $citas): bool
+    {
+        return $citas->de((int) $consulta->numhistoria, $dia, (string) $consulta->reg_medico, null, $pacienteId) !== null;
     }
 
     /**

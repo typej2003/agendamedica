@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Agenda\AtenderCita;
+use App\Actions\Agenda\CitaNoAtendible;
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\ReordenarCola;
@@ -129,7 +130,17 @@ class MostradorController extends Controller
         // marca con la que `RegistroDeCambios` decide si la edición gana (last-write-wins por columna)
         // frente a lo que ya subió el teléfono. No se pasa `null` para que la Action no tenga que
         // adivinar la zona (PLAN-WEB.md: "hoy" y "ahora" del negocio son los del consultorio).
-        $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
+        //
+        // `AtenderCita` exige la regla "cita atendida ⇒ tiene historia" (WEB-4.8): si la cita no la tiene y
+        // no se la puede resolver desde el vínculo del paciente, rechaza la marca. Acá no debería pasar —el
+        // caso 2 ya mandó a asignarla—, pero una cita sin paciente identificable (las filas del legado con
+        // `numhistoria` nulo y sin ancla) sí llega hasta acá, y tiene que volver con un aviso en vez de con
+        // un error del servidor.
+        try {
+            $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
+        } catch (CitaNoAtendible $excepcion) {
+            return back()->with('error', $excepcion->getMessage());
+        }
 
         // La secretaría no entra a la consulta (§3.14): la cita queda atendida —"el paciente llegó" es
         // del mostrador y su acción no cambia— y vuelve a la agenda con el aviso, en vez de caer en el

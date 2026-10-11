@@ -33,7 +33,8 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras cerrar **WEB-4.7**, los exámenes y las imágenes de la consulta) es **917 en
+medición (2026-10-11, tras cerrar **WEB-4.8** —el cierre de la consulta y la regla "cita atendida ⇒ tiene
+historia"—, con **F4 cerrada**) es **936 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
@@ -91,6 +92,21 @@ servidor; la usan la web y —cuando suba imágenes— el móvil; ver las trampa
 `App\Clinica\Consulta\{ExamenesDeLaConsulta,ImagenesDeLaConsulta}` (el mapa del dato: los exámenes de
 `examen_paciente` con su catálogo y la observación del conjunto de `examen_obs`, las dos formas de fila de
 `imagen_consulta` y la comprobación de dueño de la descarga) y sus `Vistas/{SeccionDeExamenesVista,ImagenesDeLaConsultaVista}`.
+Lo que **WEB-4.8 (2026-10-11)**, el cierre de F4, agregó a esas tres filas es: `ConsultaCerrar` (**WEB-4.8:
+cerrar la consulta** —`POST /clinica/consulta/{consulta}/cerrar`—, la acción primaria del shell: termina la
+atención, la cita de hoy queda atendida y se vuelve a la agenda. **No crea ningún estado nuevo**: la
+fuente lo confirma —el escritorio marca `cola.atendido = 1` en el `open` de `w_consulta_principal`
+(`:4416-4421`) y sus botones de salida sólo cierran la ventana—; sólo se ofrece **para la consulta de
+hoy** y el **404**/**403** son los del grupo de la consulta), `Consulta/CerrarConsulta` (la Action: resuelve
+la cita del día, delega la marca en `AtenderCita` y devuelve qué pasó —los tres desenlaces de
+`ConsultaCerrada`: la cita quedó atendida, no había cita de ese día o el escritorio la había movido—) y
+`Clinica/Consulta/{CitaDeLaConsulta,CitaEncontrada}` (el mapa del vínculo —**`cola` no tiene `nroconsulta`**,
+así que la cita se busca por `numhistoria` + fecha, y el segundo intento es el ancla
+`paciente_sinhistoria_id`— y el value object que dice si la cita es terminable). La misma tarea puso la
+regla **"cita atendida ⇒ tiene historia"** en `Actions/Agenda/{AtenderCita,CitaNoAtendible}`: al marcar
+sin número la resuelve del vínculo del paciente y, si no hay ninguno, **rechaza** —la web avisa y el sync
+la **descarta**—; `Vistas/ConsultaShellVista` ganó `urlTerminar()`/`avisoTerminar()` y el panel sigue en
+**8 de 13** (los 5 que faltan son de F5, F6 y F9).
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -346,11 +362,13 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **32** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **34** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
-crudos, los roles de la consulta, los `[hidden]`, `examen_fisico_nuevo` y las **reglas de archivo de
+crudos, los roles de la consulta, los `[hidden]`, `examen_fisico_nuevo`, las **reglas de archivo de
 Laravel** (trampas 30 a 32: `mimetypes` rechaza toda subida, `finfo` usa la extensión como pista y
-`imagen_consulta.imagen` es `NOT NULL`) se pagan caros. Cada tarea
+`imagen_consulta.imagen` es `NOT NULL`) y **los verificadores de navegador** (trampas 33 y 34: el `_token`
+se rota al responder y los ayudantes que se apoyan en lo que dejó la corrida anterior eligen la fila
+equivocada) se pagan caros. Cada tarea
 nueva agrega la suya **al final de ese archivo**, con la tarea y la fecha que la encontró.
 
 ## Dónde está el detalle funcional
