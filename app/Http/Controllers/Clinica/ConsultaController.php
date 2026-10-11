@@ -27,9 +27,13 @@ use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Impresion\MembreteDelMedico;
+use App\Clinica\Impresion\ProximaCitaDelRecipe;
+use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Models\Medico;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -65,8 +69,11 @@ class ConsultaController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
-    public function __construct(private ConsultasDelContexto $consultas)
-    {
+    public function __construct(
+        private ConsultasDelContexto $consultas,
+        private MembreteDelMedico $membretes,
+        private ProximaCitaDelRecipe $proximaCita,
+    ) {
     }
 
     public function ver(
@@ -129,7 +136,7 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -181,6 +188,8 @@ class ConsultaController extends Controller
         RecipesDeLaConsulta $recipes,
         RecipeDeLaPareja $pareja,
         Carbon $dia,
+        int $pacienteId,
+        Medico $medico,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -278,7 +287,7 @@ class ConsultaController extends Controller
         }
 
         if ($seccion === ConsultaShellVista::SECCION_RECIPES) {
-            return $this->recipes($consulta, $regMedico, $recipes, $pareja, $dia);
+            return $this->recipes($consulta, $regMedico, $recipes, $pareja, $dia, $pacienteId, $medico);
         }
 
         return null;
@@ -292,7 +301,7 @@ class ConsultaController extends Controller
      * Un `?recipe=` que no es `nuevo`, `pareja` ni el número de un récipe de **esta** consulta da **404**: no hay
      * nada que editar y no se confirma qué récipes existen en otra consulta.
      */
-    private function recipes(Consulta $consulta, string $regMedico, RecipesDeLaConsulta $recipes, RecipeDeLaPareja $pareja, Carbon $dia): object
+    private function recipes(Consulta $consulta, string $regMedico, RecipesDeLaConsulta $recipes, RecipeDeLaPareja $pareja, Carbon $dia, int $pacienteId, Medico $medico): object
     {
         $editando = request()->query('recipe');
         $editando = is_string($editando) && $editando !== '' ? $editando : null;
@@ -306,7 +315,7 @@ class ConsultaController extends Controller
         );
 
         if ($editando === ConsultaShellVista::RECIPE_PAREJA) {
-            return new SeccionDeRecipeDeLaParejaVista(
+            return (new SeccionDeRecipeDeLaParejaVista(
                 // El récipe de la pareja de **esta** consulta (`recipes_pareja`: una por consulta, sin cabecera),
                 // o `null` si todavía no tiene. No se mezcla con los récipes del paciente.
                 $pareja->de($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
@@ -321,14 +330,14 @@ class ConsultaController extends Controller
                 $pestanas,
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
-            );
+            ))->conImpresion($this->impresion($consulta, $pacienteId, $medico));
         }
 
         if ($editando !== null) {
             abort_unless($editando === 'nuevo' || (ctype_digit($editando) && $recipes->existe($consulta, (int) $editando)), 404);
         }
 
-        return new SeccionDeRecipesVista(
+        return (new SeccionDeRecipesVista(
             // Los récipes de **esta** consulta, agrupados como el legado (`nrohistoria` + `nroconsulta` +
             // `recipe`, con el `NULL` del escritorio como el récipe 1).
             $recipes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
@@ -349,7 +358,29 @@ class ConsultaController extends Controller
             // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
             (array) old(),
             $pestanas,
-        );
+        ))->conImpresion($this->impresion($consulta, $pacienteId, $medico));
+    }
+
+    /**
+     * Lo que la sección de récipes ofrece para **imprimir** (WEB-5.2): el diálogo con las opciones guardadas del
+     * médico, la próxima cita que saldría al pie de la hoja, "Hacer cita" —el formulario de la agenda con el
+     * paciente ya elegido, que vuelve a esta sección— y la vista previa de cada récipe. Las URLs las resuelve
+     * el controlador, como en el resto de la web clínica.
+     *
+     * @return array{dialogo:OpcionesDeImpresionVista, proximaCita:?string, hacerCita:string, imprimir:\Closure, imprimirPareja:string}
+     */
+    private function impresion(Consulta $consulta, int $pacienteId, Medico $medico): array
+    {
+        $id = $consulta->id;
+        $proxima = $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId);
+
+        return [
+            'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($medico), route('clinica.recipes.opciones')),
+            'proximaCita' => $proxima === null ? null : ProximaCitaDelRecipe::texto($proxima),
+            'hacerCita' => route('clinica.agenda.nueva', ['paciente_id' => $pacienteId, 'volver_consulta' => $id]),
+            'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),
+            'imprimirPareja' => route('clinica.consulta.recipe-pareja.imprimir', $id),
+        ];
     }
 
     /**

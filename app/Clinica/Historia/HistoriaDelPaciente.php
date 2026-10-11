@@ -160,7 +160,7 @@ final class HistoriaDelPaciente
      * hace el ViewModel, y la impresión muestra el texto completo.
      *
      * @param  Collection<int, object>  $consultas  lo que devolvió `consultas()`, para la fecha de cada una
-     * @return Collection<int, array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string}>
+     * @return Collection<int, array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int}>
      */
     public function documentos(string $regMedico, ?string $numhistoria, Collection $consultas): Collection
     {
@@ -263,6 +263,8 @@ final class HistoriaDelPaciente
                 $recipe->cantidad . ($recipe->cantidad === 1 ? ' medicamento' : ' medicamentos')
                     . ($nombres === '' ? '' : ': ' . $nombres),
                 CamposDePaciente::texto($recipe->fecha),
+                // El número del récipe dentro de su consulta: con él se arma el enlace a su hoja impresa (WEB-5.2).
+                $recipe->numero,
             ));
         }
 
@@ -280,9 +282,9 @@ final class HistoriaDelPaciente
      * se fecha el día en que empieza, no el día en que se atendió.
      *
      * @param  Collection<int, mixed>  $fechaDeLaConsulta
-     * @return array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string}
+     * @return array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int}
      */
-    private function documento(string $tipo, string $icono, int $consulta, Collection $fechaDeLaConsulta, ?string $resumen, ?string $fecha = null): array
+    private function documento(string $tipo, string $icono, int $consulta, Collection $fechaDeLaConsulta, ?string $resumen, ?string $fecha = null, ?int $recipe = null): array
     {
         return [
             'tipo'     => $tipo,
@@ -290,6 +292,8 @@ final class HistoriaDelPaciente
             'consulta' => $consulta,
             'fecha'    => $fecha ?? $fechaDeLaConsulta[$consulta] ?? null,
             'resumen'  => $resumen,
+            // Sólo los récipes: su número dentro de la consulta (`null` en los demás documentos).
+            'recipe'   => $recipe,
         ];
     }
 
@@ -392,6 +396,7 @@ final class HistoriaDelPaciente
             ->groupBy(fn ($fila) => (int) $fila->nroconsulta . '|' . RecipesDeLaConsulta::numeroDeGrupo($fila->recipe))
             ->map(fn (Collection $filas) => (object) [
                 'nroconsulta'    => (int) $filas->first()->nroconsulta,
+                'numero'         => RecipesDeLaConsulta::numeroDeGrupo($filas->first()->recipe),
                 'fecha'          => $filas->first()->fecha,
                 'cantidad'       => $filas->count(),
                 'codemedicinas'  => $filas->pluck('codemedicina')->all(),

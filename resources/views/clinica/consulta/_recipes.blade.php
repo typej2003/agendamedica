@@ -42,6 +42,10 @@
 
         <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
+        {{-- Lo que sale al pie de la hoja (WEB-5.2): la próxima cita que el paciente ya tiene agendada y el atajo
+             para hacerla. «Hacer cita» abre el formulario de la agenda con el paciente elegido y vuelve acá. --}}
+        @include('clinica.consulta._recipes-cita', ['seccion' => $seccion])
+
         @if ($seccion->estaVacia())
             <x-ui.vacio icono="bi-prescription2" titulo="Esta consulta todavía no tiene récipes">
                 Crea el primero: busca los medicamentos en tu vademécum o carga un tratamiento completo.
@@ -64,6 +68,15 @@
                             </div>
 
                             <div class="recipe-acciones">
+                                {{-- Imprimir (WEB-5.2): abre el diálogo con las opciones de la hoja y sigue a la vista
+                                     previa. Un récipe sin medicamentos no se imprime. --}}
+                                @if ($seccion->puedeImprimir() && ! $receta['vacio'])
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-imprimir-recipe
+                                            data-siguiente="{{ $receta['urlImprimir'] }}" data-titulo="{{ $receta['titulo'] }}">
+                                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                                    </button>
+                                @endif
+
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $receta['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
@@ -108,6 +121,14 @@
             </div>
         @endif
     </x-ui.tarjeta>
+
+    {{-- El diálogo «Imprimir récipe» (WEB-5.2): uno solo para toda la lista; el botón de cada récipe le dice a qué
+         vista previa seguir. --}}
+    @if ($seccion->puedeImprimir())
+        <x-ui.dialogo id="dialogo-imprimir-recipe" titulo="Imprimir récipe" lateral>
+            @include('clinica.imprimir._opciones', ['dialogo' => $seccion->dialogoDeImpresion()])
+        </x-ui.dialogo>
+    @endif
 @else
     {{-- ---------------------------------------------------------------------------------- El editor --}}
     @php $contador = $seccion->estadoDelEditor(); @endphp

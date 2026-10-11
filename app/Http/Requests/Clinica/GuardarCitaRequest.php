@@ -36,6 +36,8 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_email'     => ['nullable', 'email', 'max:120'],
             'nuevo_sexo'      => ['nullable', 'in:F,M'],
             'decision'        => ['nullable', 'in:mover,otra,cancelar'],
+            // De qué consulta se vino con "Hacer cita" (WEB-5.2): sólo para volver a sus récipes al guardar.
+            'volver_consulta' => ['nullable', 'integer'],
         ];
     }
 
@@ -72,6 +74,7 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_email.max'               => 'El correo no puede pasar de 120 caracteres.',
             'nuevo_sexo.in'                 => 'El sexo del paciente nuevo debe ser femenino o masculino.',
             'decision.in'                   => 'Elige una de las opciones que se ofrecen.',
+            'volver_consulta.integer'       => 'No se sabe a qué consulta volver: ábrela de nuevo desde su lista.',
         ];
     }
 }

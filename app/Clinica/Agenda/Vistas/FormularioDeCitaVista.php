@@ -38,6 +38,8 @@ final class FormularioDeCitaVista
         private array $valores,
         private ?string $avisoNoLaborable,
         private Carbon $ahora,
+        /** @var array{consulta:int, url:string, texto:string}|null  a dónde vuelve si se llegó desde los récipes */
+        private ?array $volverA = null,
     ) {
     }
 
@@ -83,7 +85,23 @@ final class FormularioDeCitaVista
 
     public function urlVolver(): string
     {
+        if ($this->volverA !== null) {
+            return $this->volverA['url'];
+        }
+
         return route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->fecha->toDateString(), 'sede' => $this->sede?->id ?? 'todas']);
+    }
+
+    /** El texto del enlace de regreso: "Volver a la agenda", o a los récipes si se llegó desde ahí (WEB-5.2). */
+    public function textoVolver(): string
+    {
+        return $this->volverA['texto'] ?? 'Volver a la agenda';
+    }
+
+    /** La consulta de la que se llegó con "Hacer cita" (WEB-5.2), o `null`: viaja en un campo oculto del formulario. */
+    public function volverConsulta(): ?int
+    {
+        return $this->volverA['consulta'] ?? null;
     }
 
     public function urlBuscarPacientes(): string

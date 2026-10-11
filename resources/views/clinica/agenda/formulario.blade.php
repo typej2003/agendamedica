@@ -4,7 +4,7 @@
 
 @section('contenido')
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()"
-                    :volver="$vm->urlVolver()" volver-texto="Volver a la agenda" />
+                    :volver="$vm->urlVolver()" :volver-texto="$vm->textoVolver()" />
 
     {{-- El primer error de validación, arriba: los que no caen en un campo del formulario —elegir la sede
          cuando el alta llega desde la agenda con `sede=todas`, por ejemplo— no se verían de otra forma y
@@ -19,6 +19,9 @@
              y el elegido viaja en la URL (si no, el buscador de la agenda mandaría a elegirlo dos veces). --}}
         @if ($vm->pacienteId())
             <input type="hidden" name="paciente_id" value="{{ $vm->pacienteId() }}">
+        @endif
+        @if ($vm->volverConsulta())
+            <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
         @endif
 
         <x-ui.tarjeta class="mb-3">
@@ -97,6 +100,10 @@
             {{-- La sede y el día vienen del paso 1 (ahí se recargan y se recalculan). --}}
             <input type="hidden" name="sede" value="{{ $vm->sedeId() }}">
             <input type="hidden" name="fecha" value="{{ $vm->fecha() }}">
+            @if ($vm->volverConsulta())
+                {{-- "Hacer cita" desde los récipes de una consulta (WEB-5.2): al guardar vuelve a ellos. --}}
+                <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
+            @endif
 
             {{-- La pregunta por la cita pendiente: no se escribió nada todavía, así que decide el usuario con
                  los mismos datos que ya cargó en el formulario. --}}

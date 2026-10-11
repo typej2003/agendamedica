@@ -131,6 +131,7 @@
                         <th>Documento</th>
                         <th>Fecha</th>
                         <th>Resumen</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -145,6 +146,17 @@
                             </td>
                             <td data-etiqueta="Fecha">{{ $documento['fecha'] }}</td>
                             <td data-etiqueta="Resumen">{{ $documento['resumen'] ?? '—' }}</td>
+                            <td class="text-end" data-etiqueta="Acciones">
+                                {{-- La hoja impresa del récipe (WEB-5.2): la misma página de impresión que la sección de
+                                     récipes de la consulta. Sólo la ve quien puede abrir la consulta. --}}
+                                @if ($documento['urlImprimir'])
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ $documento['urlImprimir'] }}">
+                                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                                    </a>
+                                @else
+                                    <span class="texto-tenue">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>

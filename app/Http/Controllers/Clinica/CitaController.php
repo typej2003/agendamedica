@@ -10,7 +10,9 @@ use App\Clinica\Agenda\FormularioDeCita;
 use App\Clinica\Agenda\PacientesDeCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\ResultadoDeAgendamiento;
+use App\Clinica\Agenda\VueltaDeLaCita;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
+use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Clinica\GuardarCitaRequest;
 use App\Models\Cola;
@@ -27,6 +29,7 @@ use InvalidArgumentException;
 class CitaController extends Controller
 {
     use ResuelveLaCitaDelContexto;
+    use ResuelveLosRegistrosDelMedico;
 
     public function __construct(
         private AgendamientoDeCitas $agendamiento,
@@ -34,6 +37,7 @@ class CitaController extends Controller
         private PacientesDeCita $pacientes,
         private ArmadorDeAgenda $armador,
         private DiasNoLaborables $diasNoLaborables,
+        private VueltaDeLaCita $vuelta,
     ) {
     }
 
@@ -61,6 +65,8 @@ class CitaController extends Controller
             'valores'         => ['paciente_id' => $paciente?->id],
             'pacienteElegido' => $paciente ? $this->pacientes->ficha($paciente, $this->pacientes->numHistoriaDe($contexto, $paciente)) : null,
             'pendiente'       => null,
+            // "Hacer cita" desde los récipes de una consulta (WEB-5.2): a dónde vuelve al guardar.
+            'volverA'         => $this->vueltaDe($request, $contexto, $request->query('volver_consulta')),
         ])]);
     }
 
@@ -72,6 +78,7 @@ class CitaController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $resultado = $this->agendamiento->agendar($contexto, $request->validated());
+        $volverA = $this->vueltaDe($request, $contexto, $request->validated()['volver_consulta'] ?? null);
 
         if ($resultado->esPregunta()) {
             return view('clinica.agenda.formulario', ['vm' => $this->formulario->armar($contexto, [
@@ -82,7 +89,13 @@ class CitaController extends Controller
                 'valores'         => $resultado->valores,
                 'pacienteElegido' => $this->pacientes->ficha($resultado->objetivo['paciente'], $resultado->objetivo['numhistoria'], $resultado->valores),
                 'pendiente'       => $resultado->pendiente,
+                'volverA'         => $volverA,
             ])]);
+        }
+
+        // Si se llegó desde los récipes de una consulta (WEB-5.2), se vuelve ahí; si no, a la agenda.
+        if ($volverA !== null) {
+            return redirect($volverA['url'])->with('estado', $resultado->mensaje());
         }
 
         return $this->volverALaAgenda($contexto, $resultado);
@@ -179,6 +192,17 @@ class CitaController extends Controller
         }
 
         return $destino->with('estado', $resultado->mensaje());
+    }
+
+    /** A dónde vuelve el formulario si se llegó desde los récipes de una consulta (`VueltaDeLaCita`), o `null`. */
+    private function vueltaDe(Request $request, array $contexto, $consultaId): ?array
+    {
+        return $this->vuelta->de(
+            $contexto,
+            $this->registrosDelMedico($contexto['medico']),
+            (bool) $request->user()?->trabajaLaConsulta(),
+            $consultaId,
+        );
     }
 
     /** De vuelta a la agenda del día de la cita, con un error. */

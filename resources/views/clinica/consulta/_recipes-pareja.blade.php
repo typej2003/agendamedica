@@ -20,17 +20,37 @@
     <x-ui.segmentado class="recipe-pestanas" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
 
     @if ($seccion->existe())
-        <form method="POST" action="{{ $seccion->urlEliminar() }}" data-confirmar="{{ $seccion->avisoDeEliminar() }}" data-recipe-salir>
-            @csrf
-            @method('DELETE')
-            <x-ui.menu etiqueta="Más acciones del récipe de la pareja">
-                <button class="menu-item menu-item-peligro">
-                    <i class="bi bi-trash" aria-hidden="true"></i> Eliminar el récipe de la pareja
+        <div class="recipe-acciones">
+            {{-- Imprimir (WEB-5.2): imprime lo que está **guardado**. Si el editor tiene cambios sin guardar, el
+                 navegador avisa antes de salir (`consulta-recipes.js`). --}}
+            @if ($seccion->puedeImprimir())
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-imprimir-recipe
+                        data-siguiente="{{ $seccion->urlImprimirPareja() }}" data-titulo="Récipe de la pareja">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
                 </button>
-            </x-ui.menu>
-        </form>
+            @endif
+
+            <form method="POST" action="{{ $seccion->urlEliminar() }}" data-confirmar="{{ $seccion->avisoDeEliminar() }}" data-recipe-salir>
+                @csrf
+                @method('DELETE')
+                <x-ui.menu etiqueta="Más acciones del récipe de la pareja">
+                    <button class="menu-item menu-item-peligro">
+                        <i class="bi bi-trash" aria-hidden="true"></i> Eliminar el récipe de la pareja
+                    </button>
+                </x-ui.menu>
+            </form>
+        </div>
     @endif
 </div>
+
+{{-- La próxima cita que sale al pie de la hoja y el atajo para hacerla (WEB-5.2). --}}
+@include('clinica.consulta._recipes-cita', ['seccion' => $seccion])
+
+@if ($seccion->puedeImprimir())
+    <x-ui.dialogo id="dialogo-imprimir-recipe" titulo="Imprimir récipe" lateral>
+        @include('clinica.imprimir._opciones', ['dialogo' => $seccion->dialogoDeImpresion()])
+    </x-ui.dialogo>
+@endif
 
 <form method="POST" action="{{ $editor['urlGuardar'] }}" id="recipe-form" data-consulta-recipe
       data-aviso="{{ $seccion->avisoSinGuardar() }}" data-siguiente-clave="{{ $seccion->siguienteClave() }}">

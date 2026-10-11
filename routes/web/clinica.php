@@ -19,6 +19,7 @@ use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
 use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HorarioController;
+use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaController;
 use App\Http\Controllers\Clinica\NoLaborableController;
@@ -219,6 +220,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'guardar'])->name('consulta.recipe-pareja.guardar');
                 Route::delete('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'eliminar'])->name('consulta.recipe-pareja.eliminar');
 
+                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja A4 horizontal que
+                // imprime el navegador, la de un récipe del paciente (por su número) y la de la pareja. Es la
+                // **misma hoja** que imprime la secretaría desde la agenda (más abajo): acá sólo cambia por dónde
+                // se entra, y como la consulta es del médico estas dos van en su grupo.
+                Route::get('/consulta/{consulta}/recipes/{numero}/imprimir', [ImpresionDeRecipeController::class, 'delPaciente'])
+                    ->whereNumber('numero')->name('consulta.recipes.imprimir');
+                Route::get('/consulta/{consulta}/recipe-pareja/imprimir', [ImpresionDeRecipeController::class, 'dePareja'])->name('consulta.recipe-pareja.imprimir');
+
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
                 // como atendida— y volver a la agenda del día, que es lo que el escritorio hace al cerrar
@@ -264,6 +273,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/cumpleanos', [CumpleanosController::class, 'index'])->name('cumpleanos');
             Route::post('/cumpleanos', [CumpleanosController::class, 'enviar'])->name('cumpleanos.enviar');
             Route::patch('/cumpleanos/configuracion', [CumpleanosController::class, 'configuracion'])->name('cumpleanos.configuracion');
+
+            // **Imprimir el récipe de una cita atendida** (WEB-5.2): lo que la secretaría hace con la fila de
+            // la agenda, sin entrar a la consulta (que es sólo del médico). `recipes` es la lista para elegir
+            // cuál (se salta si la cita tiene uno solo) y `recipes/imprimir` la vista previa: la misma hoja que
+            // imprime el médico desde la consulta. Sólo **imprime**: no lista medicamentos ni deja editar nada.
+            Route::get('/agenda/{cola}/recipes', [ImpresionDeRecipeController::class, 'recipesDeLaCita'])->name('agenda.recipes');
+            Route::get('/agenda/{cola}/recipes/imprimir', [ImpresionDeRecipeController::class, 'imprimirDeLaCita'])->name('agenda.recipes.imprimir');
+            // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
+            // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
+            Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');

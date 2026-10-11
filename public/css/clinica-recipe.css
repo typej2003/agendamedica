@@ -1,0 +1,120 @@
+/* La hoja del récipe que imprime el navegador (WEB-5.2, PLAN-WEB.md R6 y decisión 17): un A4 horizontal partido
+   en dos mitades con su línea de corte. Cada mitad es un récipe completo (membrete, datos del paciente, cuerpo,
+   próxima cita, firma con sello y pie). Pantalla aparte: se usa junto con `clinica-impresion.css`.
+
+   Las medidas tienen su gemela en `App\Clinica\Impresion\MedidasDeLaMitad` y `DistribuidorDeRecipe` (quien decide
+   cuántos medicamentos entran en la hoja): el cuerpo mide lo que sobra de los 193 mm útiles, y si algo de acá
+   cambia hay que cambiarlo allá. */
+
+@page { size: A4 landscape; margin: 0; }
+
+.recipe-hojas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8mm;
+    padding: 6mm 0 12mm;
+    /* En pantalla `imprimir-recipe.js` lo achica para que la hoja entre en el ancho disponible (en el celular
+       no hay 297 mm); al imprimir vuelve a 1. */
+    zoom: var(--escala, 1);
+}
+
+/* ---------------------------------------------------------------------------------------------- La hoja */
+
+/* 209,5 y no 210: con la altura exacta de la página, un redondeo del navegador empuja una hoja en blanco. */
+.recipe-hoja {
+    position: relative;
+    display: flex;
+    width: 297mm;
+    height: 209.5mm;
+    flex: none;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(32, 16, 72, .18);
+    break-after: page;
+    break-inside: avoid;
+}
+
+/* La línea de corte, entre las dos mitades. */
+.recipe-hoja::before {
+    content: '';
+    position: absolute;
+    top: 12mm;
+    bottom: 12mm;
+    left: 50%;
+    border-left: .2mm dashed #9e9ea8;
+}
+
+/* Una mitad: 148,5 × 210 mm con 9 mm arriba, 8 abajo y 10 a los lados (193 × 128,5 mm útiles). */
+.recipe-mitad {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    width: 148.5mm;
+    height: 100%;
+    padding: 9mm 10mm 8mm;
+    overflow-wrap: anywhere;
+}
+
+/* Línea separadora: 0,5 mm de raya, 2 de aire arriba y 2,5 abajo. */
+.recipe-linea { flex: none; height: 0; margin: 2mm 0 2.5mm; border-top: .5mm solid #000; }
+.linea-negro { border-top-color: #000; }
+.linea-blanco { border-top-color: #fff; }
+.linea-rojo { border-top-color: #c62828; }
+.linea-marron { border-top-color: #6d4c41; }
+.linea-fucsia { border-top-color: #d81b60; }
+.linea-verde { border-top-color: #2e7d32; }
+.linea-gris { border-top-color: #757575; }
+.linea-amarillo { border-top-color: #f9a825; }
+.linea-azul { border-top-color: #1565c0; }
+
+/* ------------------------------------------------------------------------------------ Datos del paciente
+   Texto a 9 pt; la etiqueta, en negrita a 8. `C.I.` / `EDAD` / `FECHA` van en una línea; la dirección sólo en la mitad
+   "Rp.". 4 mm de aire debajo. */
+
+.recipe-datos { flex: none; margin-bottom: 4mm; font-size: 9pt; line-height: 1.25; }
+.recipe-dato { margin: 0; }
+.recipe-dato-etiqueta { margin-right: 1.5mm; font-size: 8pt; font-weight: 700; }
+.recipe-datos-fila { display: flex; justify-content: space-between; gap: 2mm; margin: 1mm 0 0; }
+.recipe-dato-direccion { margin-top: 1mm; }
+
+/* ------------------------------------------------------------------------------------------------ Título
+   "Rp." / "Indicaciones:" a 14 pt en negrita itálica; a la derecha, "Hoja 1 de 2" si el récipe sigue. */
+
+.recipe-titulo-fila { flex: none; display: flex; align-items: baseline; justify-content: space-between; gap: 3mm; margin-bottom: 2.5mm; }
+.recipe-titulo { margin: 0; font-size: 14pt; font-weight: 700; font-style: italic; line-height: 1.25; }
+.recipe-hoja-etiqueta { font-size: 8pt; }
+
+/* ------------------------------------------------------------------------------------------------ Cuerpo
+   Toma lo que sobra. La letra la fija la hoja (`tamano-10`, `-9` o `-8`, según `DistribuidorDeRecipe`). */
+
+.recipe-cuerpo { flex: 1 1 0; min-height: 0; padding-left: 3mm; font-size: 10pt; line-height: 1.25; }
+.tamano-10 .recipe-cuerpo { font-size: 10pt; }
+.tamano-9 .recipe-cuerpo { font-size: 9pt; }
+.tamano-8 .recipe-cuerpo { font-size: 8pt; }
+
+.recipe-lista { margin: 0; padding: 0; list-style: none; }
+.recipe-nombre { font-weight: 700; }
+
+/* "Rp.": la cantidad en una columna de 9 mm y el nombre al lado; 1,8 mm de aire entre medicamentos. */
+.recipe-rp-fila { display: flex; margin-bottom: 1.8mm; break-inside: avoid; }
+.recipe-cantidad { flex: none; width: 9mm; }
+.recipe-rp-fila .recipe-nombre { flex: 1 1 auto; min-width: 0; }
+
+/* "Indicaciones": el nombre y debajo la indicación; 2,6 mm de aire. Respeta los saltos de línea del texto. */
+.recipe-indicacion-fila { margin-bottom: 2.6mm; break-inside: avoid; }
+.recipe-indicacion { margin: 0; white-space: pre-line; }
+
+/* ----------------------------------------------------------------------------- Próxima cita y lugar del QR */
+
+.recipe-proxima-cita { margin: 0; font-size: 8pt; font-weight: 700; }
+
+/* 16 × 16 mm reservados para el código QR de verificación (tarea posterior, WEB-5.6): vacío y sin borde. */
+.recipe-qr-reservado { flex: none; width: 16mm; height: 16mm; }
+
+/* ---------------------------------------------------------------------------------------------- Impresión */
+
+@media print {
+    .recipe-hojas { display: block; padding: 0; gap: 0; zoom: 1 !important; }
+    .recipe-hoja { box-shadow: none; }
+    .recipe-hoja:last-child { break-after: auto; }
+}

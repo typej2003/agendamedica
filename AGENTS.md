@@ -33,7 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras cerrar **WEB-5.1b** —el récipe de la pareja—) es **1057 en
+medición (2026-10-11, tras cerrar **WEB-5.2** —imprimir el récipe—) es **1151 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
@@ -142,6 +142,26 @@ catálogo que el récipe del paciente, `RecipesDeLaConsulta::resolverItemsContra
 PestanasDeRecipes,ComparteElEditorDeRecipes}` (siempre es el editor; el trait lleva la caja de herramientas, los topes y
 las filas del editor que comparten los dos ViewModels) y el modelo `App\Models\RecipePareja`. **Sin columnas ni
 tablas nuevas, y el móvil no sincroniza `recipes_pareja`.** Ver las trampas 43 a 45.
+
+Lo que **WEB-5.2 (2026-10-11)**, imprimir el récipe, agregó: `ImpresionDeRecipeController` (**la hoja A4 horizontal que imprime el
+navegador**: `GET /clinica/consulta/{consulta}/recipes/{n}/imprimir` y `…/recipe-pareja/imprimir` en el grupo `role:Root|Medico`,
+`GET /clinica/agenda/{cola}/recipes` —la lista de los récipes de una cita atendida— y `…/recipes/imprimir?recipe=N|pareja|todos` con los
+roles de la agenda, y `POST /clinica/recipes/opciones-de-impresion`, que guarda modo y nombre en el formato del médico y sigue a la
+vista previa; **dos caminos y una sola hoja**, `vistaPrevia()`), `Recipes/GuardarOpcionesDeImpresion` (escribe las dos columnas
+**nullable nuevas** de `recipe_formatos`, `modo_impresion` y `nombre_medicamento`, **sin mover `updated_at`** de una fila que ya existe y sin
+crear fila hasta la primera elección) y `App\Clinica\Impresion\` (sin HTTP: `MembreteDelMedico`/`Membrete` —`recipe_formatos` +
+`evolucion` bajo el **registro principal** del médico—, `RecipesParaImprimir`/`DocumentoDeRecipe`/`ItemImpreso` —el nombre comercial o
+genérico—, `ProximaCitaDelRecipe` —`fecha > hoy`, de ese médico, la hora sólo en sede por hora—, `RecipesPorCita` —de la cita atendida a su
+consulta, y en lote para la agenda—, `OpcionesDeRecipe` y **la regla de la hoja**: `MedidorDeTexto` + `MedidasDeLaMitad` +
+`DistribuidorDeRecipe`: letra de 10, 9 u 8 pt, gana el escalón con menos hojas y el récipe sigue en otra hoja sin partir un medicamento)
+más sus `Vistas/` (`HojasDeRecipeVista`, `OpcionesDeImpresionVista`, `RecipesDeLaCitaVista`). Las vistas están en
+`resources/views/clinica/imprimir/` y los componentes reutilizables en `resources/views/components/impresion/`
+(`<x-impresion.membrete|firma|pie>`); CSS `public/css/clinica-impresion.css` + `clinica-recipe.css`, JS
+`public/js/clinica/imprimir-recipe.js` y **fuentes auto-alojadas** en `public/fonts/recipe/`. **El API del móvil no cambió**: el JSON de
+`RecipeFormatoResource` conserva sus 6 claves y `RecipeFormatoController@actualizar` no toca las columnas nuevas. Además, el formulario de la cita
+(`CitaController`, `FormularioDeCita`, `GuardarCitaRequest`) admite `volver_consulta` (`App\Clinica\Agenda\VueltaDeLaCita`) para que
+«Hacer cita» desde los récipes vuelva a ellos, la fila de la agenda (`FilaDeCitaVista::imprimirRecipe`) ofrece «Imprimir récipe» en la cita
+atendida con récipes y la historia del paciente enlaza la hoja de cada récipe al médico. Ver las trampas 46 a 50.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -406,7 +426,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **45** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **50** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

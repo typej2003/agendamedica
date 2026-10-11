@@ -24,7 +24,7 @@ class FormularioDeCita
     }
 
     /**
-     * @param  array{cita: ?Cola, accion: string, fecha: Carbon, sedeId: ?int, valores: array, pacienteElegido: ?array, pendiente: ?array}  $datos
+     * @param  array{cita: ?Cola, accion: string, fecha: Carbon, sedeId: ?int, valores: array, pacienteElegido: ?array, pendiente: ?array, volverA?: ?array}  $datos
      */
     public function armar(array $contexto, array $datos): FormularioDeCitaVista
     {
@@ -62,6 +62,8 @@ class FormularioDeCita
             avisoNoLaborable: $this->diasNoLaborables->avisoDelDia($contexto, $fecha),
             // En la zona del consultorio, como en `LectorDeAgenda`: el formulario decide con esto si la cita es de hoy.
             ahora: FechaDelConsultorio::ahora(),
+            // A dónde vuelve si se llegó con "Hacer cita" desde los récipes (WEB-5.2); `null` = la agenda.
+            volverA: $datos['volverA'] ?? null,
         );
     }
 }

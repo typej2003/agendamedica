@@ -178,6 +178,8 @@ final class SeccionDeRecipesVista
                     'indicaciones' => $item->indicaciones,
                     'avisoVademecum' => $item->enVademecum ? null : 'ya no está en tu vademécum',
                 ])->all(),
+                // La vista previa para imprimir (WEB-5.2); vacía si la sección no ofrece imprimir.
+                'urlImprimir' => $this->puedeImprimir() ? $this->urlImprimir($recipe->numero) : '',
                 'urlEditar' => ($this->urlEditar)($recipe->numero),
                 'urlEliminar' => ($this->urlEliminar)($recipe->numero),
                 'avisoEliminar' => '¿Eliminar el récipe ' . $recipe->numero . ' de esta consulta? Se borran sus '

@@ -46,6 +46,11 @@ class HistoriaDelPacienteController extends Controller
                 // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
                 route('clinica.pacientes.ver', $paciente),
                 route('clinica.pacientes.historia.imprimir', $paciente),
+                // La hoja impresa de cada récipe (WEB-5.2): sólo para quien puede abrir la consulta —el médico—.
+                // La secretaría imprime desde la fila de la cita en la agenda; este enlace le daría 403.
+                $request->user()?->trabajaLaConsulta()
+                    ? fn (int $consulta, int $numero) => route('clinica.consulta.recipes.imprimir', [$consulta, $numero])
+                    : null,
             ),
         ]);
     }

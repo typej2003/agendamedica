@@ -49,6 +49,7 @@
                 $atender = $fila->atender();
                 $cobro = $fila->cobro();
                 $recordatorio = $fila->recordatorio();
+                $imprimirRecipe = $fila->imprimirRecipe();
                 $quitar = $fila->quitarConfirmacion();
             @endphp
 
@@ -81,6 +82,14 @@
                             {{ $atender['editar'] ? 'Editar consulta' : 'Atender' }}
                         </button>
                     </form>
+                @endif
+
+                {{-- Imprimir el récipe de la cita ya atendida (WEB-5.2): la secretaría lo entrega sin entrar a la
+                     consulta, que es sólo del médico. Sólo aparece si la consulta tiene récipes. --}}
+                @if ($imprimirRecipe)
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirRecipe['url'] }}">
+                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir récipe
+                    </a>
                 @endif
 
                 @if ($cobro)

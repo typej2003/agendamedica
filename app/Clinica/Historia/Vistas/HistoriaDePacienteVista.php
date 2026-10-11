@@ -4,6 +4,7 @@ namespace App\Clinica\Historia\Vistas;
 
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
+use Closure;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,6 +33,11 @@ final class HistoriaDePacienteVista
         private Collection $documentos,
         private ?string $urlFicha = null,
         private ?string $urlImprimir = null,
+        /**
+         * `fn(int $consultaId, int $numero): string` — la hoja impresa de un récipe (WEB-5.2), o `null` si quien mira
+         * no puede entrar a la consulta (la secretaría imprime desde la agenda): sin esto la fila no lleva enlace.
+         */
+        private ?Closure $urlImprimirRecipe = null,
     ) {
     }
 
@@ -201,16 +207,22 @@ final class HistoriaDePacienteVista
      * Los documentos de la historia, el más reciente primero, con su tipo, su consulta y un resumen del
      * contenido. **No se crean acá** (F5): esta pantalla sólo los lista.
      *
-     * @return array<int, array{tipo:string, icono:string, consulta:?string, fecha:string, resumen:?string}>
+     * @return array<int, array{tipo:string, icono:string, consulta:?string, fecha:string, resumen:?string, urlImprimir:?string}>
      */
     public function documentos(): array
     {
+        $consultaPorNumero = $this->consultas->mapWithKeys(fn ($consulta) => [(int) $consulta->nroconsulta => (int) $consulta->id]);
+
         return $this->documentos->map(fn ($documento) => [
             'tipo'     => $documento['tipo'],
             'icono'    => $documento['icono'],
             'consulta' => isset($documento['consulta']) ? 'Consulta ' . (int) $documento['consulta'] : null,
             'fecha'    => FechaClinica::formato($documento['fecha'] ?? null),
             'resumen'  => $this->recorte($documento['resumen'] ?? null),
+            // El enlace a la hoja impresa: sólo en los récipes, y sólo para quien puede abrirla (WEB-5.2).
+            'urlImprimir' => $this->urlImprimirRecipe !== null && ($documento['recipe'] ?? null) !== null && isset($consultaPorNumero[(int) $documento['consulta']])
+                ? ($this->urlImprimirRecipe)($consultaPorNumero[(int) $documento['consulta']], (int) $documento['recipe'])
+                : null,
         ])->all();
     }
 

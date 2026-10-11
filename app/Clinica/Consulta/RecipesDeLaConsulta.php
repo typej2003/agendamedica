@@ -416,7 +416,7 @@ final class RecipesDeLaConsulta
      * médico. Es el mismo armado que usa `deLaConsulta` para el récipe del paciente.
      *
      * @param  Collection<int,object>  $filas  con `id`, `codemedicina`, `cantidad`, `indicaciones`, `descripcion`
-     * @return Collection<int,object{id:int, codigo:string, nombre:string, generico:?string, cantidad:?int, indicaciones:?string, enVademecum:bool}>
+     * @return Collection<int,object{id:int, codigo:string, nombre:string, generico:?string, comercial:?string, presentacion:?string, descripcion:?string, cantidad:?int, indicaciones:?string, enVademecum:bool}>
      */
     public function itemsDe(string $regMedico, Collection $filas): Collection
     {
@@ -490,6 +490,11 @@ final class RecipesDeLaConsulta
             'codigo' => $codigo,
             'nombre' => $this->nombreDe($medicamento, CamposDePaciente::texto($fila->descripcion), $codigo),
             'generico' => CamposDePaciente::texto($medicamento->nombregenerico ?? null),
+            // El nombre comercial y la presentación por separado, para la hoja impresa (WEB-5.2): ahí el
+            // médico elige con cuál sale el medicamento y `nombre` ya viene armado con el comercial.
+            'comercial' => CamposDePaciente::texto($medicamento->nombrecomercial ?? null),
+            'presentacion' => CamposDePaciente::texto($medicamento->presentacion ?? null),
+            'descripcion' => CamposDePaciente::texto($fila->descripcion),
             'cantidad' => $fila->cantidad === null ? null : (int) $fila->cantidad,
             'indicaciones' => CamposDePaciente::texto($fila->indicaciones),
             'enVademecum' => $medicamento !== null,

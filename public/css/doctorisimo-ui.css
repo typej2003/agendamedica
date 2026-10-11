@@ -2516,3 +2516,48 @@ body.auth-pagina {
     .recipe-fila-campos { flex-wrap: wrap; }
     .recipe-cantidad-campo { flex-basis: 100%; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Imprimir el récipe (WEB-5.2)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* El diálogo "Imprimir récipe": qué se imprime y con qué nombre sale el medicamento. Dos grupos de opciones
+   (botones de radio con su explicación). La vista previa, que no carga esta hoja, tiene un gemelo en
+   `clinica-impresion.css`. */
+.opciones-impresion .opciones-grupo { margin: 0 0 1rem; padding: 0; border: 0; min-width: 0; }
+.opciones-impresion .opciones-grupo .etiqueta { padding: 0; margin-bottom: .4rem; }
+
+.opcion-de-impresion {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .55rem .7rem;
+    margin-bottom: .4rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    cursor: pointer;
+}
+
+.opcion-de-impresion:has(input:checked) { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); }
+.opcion-de-impresion input { margin-top: .25rem; accent-color: var(--ds-violeta-700); }
+.opcion-de-impresion-texto { display: flex; flex-direction: column; }
+.opcion-de-impresion-texto small { color: var(--ds-texto-3); }
+.opciones-nota { margin: 0; color: var(--ds-texto-3); font-size: .875rem; }
+
+/* La franja de la sección de récipes con lo que sale al pie de la hoja: la próxima cita ya agendada (o la falta de
+   ella) y el atajo para hacer una. */
+.recipe-proxima-cita-franja {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem .75rem;
+    margin-bottom: 1rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+}
+
+.recipe-proxima-cita-texto { display: flex; align-items: center; gap: .5rem; min-width: 0; }

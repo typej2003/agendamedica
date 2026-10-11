@@ -26,6 +26,8 @@ final class AgendaVista
          * médico). Lo resuelve el controlador con `User::trabajaLaConsulta()` y baja hasta cada fila.
          */
         private bool $puedeAbrirLaConsulta = true,
+        /** @var array<int,int>  ids de cita (ya atendida) cuya consulta tiene récipes para imprimir (WEB-5.2) */
+        private array $citasConRecipes = [],
     ) {
     }
 
@@ -301,6 +303,7 @@ final class AgendaVista
                 $this->lectura->ahora,
                 $conArrastre,
                 $this->puedeAbrirLaConsulta,
+                $this->citasConRecipes,
             ))
             ->all();
     }

@@ -42,6 +42,24 @@ class RecipeFormato extends Model
 
     public const POSICIONES_SELLO = ['izquierda', 'centro', 'derecha'];
 
+    /**
+     * Cómo se reparte la hoja al imprimir desde la web (WEB-5.2): una hoja con la mitad "Rp." para la
+     * farmacia y la mitad "Indicaciones" para el paciente, o sólo la mitad de las indicaciones. Son las
+     * dos opciones de la pantalla de récipes del legado y del móvil (`ModoImpresion`).
+     */
+    public const MODO_RP_E_INDICACIONES = 'rp_indicaciones';
+
+    public const MODO_SOLO_INDICACIONES = 'solo_indicaciones';
+
+    public const MODOS_IMPRESION = [self::MODO_RP_E_INDICACIONES, self::MODO_SOLO_INDICACIONES];
+
+    /** Con qué nombre sale el medicamento: el comercial o el genérico (la casilla "Genérico / Comercial"). */
+    public const NOMBRE_COMERCIAL = 'comercial';
+
+    public const NOMBRE_GENERICO = 'generico';
+
+    public const NOMBRES_MEDICAMENTO = [self::NOMBRE_COMERCIAL, self::NOMBRE_GENERICO];
+
     /** Lo que ve un médico que nunca configuró nada: el aspecto por defecto del legado. */
     public static function elementosPorDefecto(): array
     {

@@ -156,4 +156,68 @@ trait ComparteElEditorDeRecipes
     {
         return 'Control prenatal, infección urinaria…';
     }
+
+    // ------------------------------------------------------------------- Imprimir y hacer cita (WEB-5.2)
+
+    /**
+     * Lo que la sección ofrece para **imprimir** el récipe y para **hacer la cita** que sale al pie de la hoja.
+     * Se pone aparte (y no en el constructor) porque no cambia el modo de la sección: es una franja y unos
+     * botones, y el ViewModel que no los recibe se arma igual que antes.
+     *
+     * @var array{dialogo:\App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista, proximaCita:?string, hacerCita:string, imprimir:\Closure, imprimirPareja:string}|null
+     */
+    private ?array $impresion = null;
+
+    /**
+     * @param  array{dialogo:\App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista, proximaCita:?string, hacerCita:string, imprimir:\Closure, imprimirPareja:string}  $impresion
+     *         `dialogo` (las opciones del diálogo), `proximaCita` (la frase de lo que sale al pie, o `null` si el
+     *         paciente no tiene), `hacerCita` (a dónde lleva "Hacer cita"), `imprimir` (`fn(int $numero)`: la vista
+     *         previa de ese récipe) e `imprimirPareja`
+     */
+    public function conImpresion(array $impresion): static
+    {
+        $this->impresion = $impresion;
+
+        return $this;
+    }
+
+    public function puedeImprimir(): bool
+    {
+        return $this->impresion !== null;
+    }
+
+    public function dialogoDeImpresion(): ?\App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista
+    {
+        return $this->impresion['dialogo'] ?? null;
+    }
+
+    /** ¿El paciente ya tiene una próxima cita agendada (la que sale al pie de la hoja)? */
+    public function tieneProximaCita(): bool
+    {
+        return ($this->impresion['proximaCita'] ?? null) !== null;
+    }
+
+    /** Lo que sale al pie de la hoja, o por qué no sale nada. */
+    public function textoDeLaProximaCita(): string
+    {
+        return $this->impresion['proximaCita'] ?? 'El paciente no tiene próxima cita agendada: la hoja sale sin ella.';
+    }
+
+    /** "Hacer cita": el formulario de la agenda con el paciente ya elegido, que vuelve a esta sección al guardar. */
+    public function urlHacerCita(): string
+    {
+        return $this->impresion['hacerCita'] ?? '';
+    }
+
+    /** La vista previa de un récipe del paciente. */
+    public function urlImprimir(int $numero): string
+    {
+        return ($this->impresion['imprimir'])($numero);
+    }
+
+    /** La vista previa del récipe de la pareja. */
+    public function urlImprimirPareja(): string
+    {
+        return $this->impresion['imprimirPareja'] ?? '';
+    }
 }

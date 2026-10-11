@@ -6,6 +6,7 @@ use App\Clinica\Agenda\LectorDeAgenda;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\Vistas\AgendaVista;
 use App\Clinica\Agenda\Vistas\ListadoDelDiaVista;
+use App\Clinica\Impresion\RecipesPorCita;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,7 @@ use Illuminate\Http\Request;
  */
 class AgendaController extends Controller
 {
-    public function index(Request $request, LectorDeAgenda $lector)
+    public function index(Request $request, LectorDeAgenda $lector, RecipesPorCita $recipesPorCita)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $lectura = $lector->leer(ParametrosDeAgenda::desde($request, $contexto), $contexto);
@@ -31,6 +32,8 @@ class AgendaController extends Controller
                 // "Atender abre la consulta" (WEB-4.1): la fila ofrece el botón solo a quien puede entrar
                 // a la consulta —el médico—, con la misma regla que protege la ruta del shell (§3.14).
                 (bool) $request->user()?->trabajaLaConsulta(),
+                // "Imprimir récipe" (WEB-5.2): qué citas atendidas tienen récipes, en lote para toda la agenda.
+                $recipesPorCita->conRecipes($contexto['reg_medico'], $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas)),
             ),
         ]);
     }

@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **45** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **50** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -433,3 +433,40 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     Y una cosa que cualquier verificador que cree la pareja debe recordar: **un récipe de la pareja sin
     medicamentos no existe** (los datos viven en las filas), así que la pantalla exige al menos un medicamento y la
     baja de todos es "Eliminar el récipe de la pareja".
+
+46. **`route()` devuelve URLs ABSOLUTAS: lo que un botón pasa en `data-*` o en un campo oculto no es una ruta.** Medido al
+    verificar WEB-5.2 en Chrome (los tests no lo vieron, porque pasaban rutas relativas a mano): el diálogo «Imprimir récipe»
+    manda `siguiente` (a qué vista previa seguir) y los botones lo llevan de `route(...)`, o sea
+    `http://127.0.0.1:8000/clinica/…`. La validación —que sólo acepta una ruta `/clinica/…/imprimir` para no ser una redirección
+    abierta— lo **rechazaba**, el POST volvía con un error y **no se guardaba nada**, sin ningún síntoma en la pantalla de la
+    consulta. `ImpresionDeRecipeController::rutaDeEsteSitio` reduce a ruta una URL **del mismo host** (sin usuario ni
+    clave) **antes** de validar; cualquier otra cosa sigue rechazándose. Regla: un campo que viaja de la vista al servidor y
+    decide una redirección se prueba con **la URL que arma `route()`** y con la de otro sitio, no sólo con un path a mano.
+47. **`JsonResource` envuelve la respuesta en `data`, y `actingAs` se queda en el test.** Dos tropiezos de WEB-5.2: (a) el
+    JSON de `RecipeFormatoResource` llega como `{"data": {…}}` en `actualizar` (no así dentro de `sync-app-data`, donde lo
+    pone `formato_recipe` a mano), así que una aserción de las claves del Resource se hace sobre `json('data')`; (b) dentro de
+    **un mismo test**, después de un `actingAs($user)` el siguiente `get()` «de invitado» **sigue autenticado**: la prueba del
+    login va en su propio método (o antes de cualquier `actingAs`), no al final de otra.
+48. **La hoja del récipe mide lo que el servidor cree que mide: `MedidasDeLaMitad` y `clinica-recipe.css` son gemelas.** El
+    navegador no sabe pasar a una segunda hoja repitiendo el membrete y la firma, así que `DistribuidorDeRecipe` decide cuántos
+    medicamentos entran **midiendo** (`MedidorDeTexto`: el ancho de cada letra de Arimo, que es la fuente del cuerpo) contra el alto
+    que queda en la mitad. Cada constante de esa cuenta (márgenes, línea separadora, alto de la franja de firma, interlínea…) tiene su
+    gemela en el CSS; si se cambia una sola, el cuerpo se desborda **sin avisar** —el CSS deja `overflow` visible a propósito: un
+    desborde que se ve se corrige, uno que se recorta es texto clínico que se pierde—. Lo que lo ata es el verificador de Chrome
+    (`verificar-recipe-impresion-web.js`): mide `scrollHeight - clientHeight` de **cada cuerpo** con `media: 'print'` y compara las
+    páginas del PDF con las hojas del DOM, en cuatro membretes pesados. Tres detalles medidos al escribirlo: la hoja mide
+    **209,5 mm y no 210** (con la altura exacta de la página un redondeo del navegador empuja una hoja en blanco); la **línea
+    separadora es un `border-top` y no un fondo** (Chrome no imprime los fondos sin «gráficos de fondo»; `print-color-adjust: exact`
+    cubre el resto); y en pantalla la hoja se achica con `zoom` (que sí cambia el layout, a diferencia de `transform`), con
+    `zoom: 1 !important` al imprimir.
+49. **La secretaría entra por el acceso de SISTEMA, no por «Médico» ni «Paciente».** Un verificador que intenta loguearla con
+    `label[for=type_medico]` o `type_paciente` se queda en `/login` **sin ningún error**, y lo que se ve parece un bug de la pantalla
+    (el botón «no está»): la cuenta es de `users` con rol `Secretaria`, y ese modelo se autentica con el interruptor
+    `#systemAccessCheck` (`user_type = Root`, que en realidad significa «modelo `User`»). Se verifica en una **sesión nueva**
+    (`browser.newContext()`), así que no hace falta cerrar sesión. Los 403 que el verificador provoca a propósito dejan un
+    «Failed to load resource» en la consola: se tolera sólo ese número, no el resto.
+50. **Para leer un PDF desde un verificador sólo hay `pdftotext`.** En esta máquina existe `pdftotext` (poppler, `/mingw64/bin`) y **no**
+    `pdfinfo`/`pdftoppm`: las páginas de un PDF de Chrome se cuentan por los `\f` que `pdftotext` deja entre ellas, el tamaño sale del
+    `/MediaBox` del archivo (A4 horizontal = 841,9 × 595,3 pt; Chrome lo escribe como 841,92 × 594,96) y la «rasterización» de la hoja
+    se hace con una captura en `emulateMedia({ media: 'print' })`. El texto de `-layout` pone las dos mitades de la hoja en la misma
+    línea: se compara con los espacios colapsados y por fragmentos de **una** mitad.

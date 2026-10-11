@@ -107,4 +107,6 @@
     {{-- El editor de récipes (WEB-5.1): el buscador del vademécum y de los tratamientos, las filas del
          récipe y el aviso de cambios sin guardar. Se inicializa sólo si la sección está en pantalla. --}}
     <script src="{{ asset('js/clinica/consulta-recipes.js') }}"></script>
+    {{-- El diálogo «Imprimir récipe» de la sección (WEB-5.2): sólo se inicializa si hay un botón que lo abra. --}}
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
 @endsection
