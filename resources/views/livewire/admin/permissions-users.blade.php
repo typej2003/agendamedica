@@ -1,16 +1,11 @@
 <div>
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h4 class="fw-bold mb-0">Asignar Permisos Directos a Usuarios</h4>
         </div>
         <div class="card-body">
 
-            @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('message') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+            <x-ui.avisos />
 
             <!-- Selector de Usuario -->
             <div class="mb-4">

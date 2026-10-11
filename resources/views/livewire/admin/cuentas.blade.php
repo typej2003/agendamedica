@@ -1,25 +1,16 @@
-<div class="mt-4">
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-5">
-            <h4 class="fw-bold mb-0">Usuarios</h4>
-            <small class="text-muted">Médicos y administradores: altas, claves y bloqueos.</small>
-        </div>
-        <div class="col-md-7 text-md-end mt-2 mt-md-0">
+<div>
+    <x-ui.page-head titulo="Usuarios" subtitulo="Médicos y administradores: altas, claves y bloqueos.">
+        <x-slot name="acciones">
             <button wire:click="abrirAlta('medico')" class="btn btn-primary">
-                <i class="bi bi-person-plus-fill me-1"></i> Nuevo médico
+                <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Nuevo médico
             </button>
             <button wire:click="abrirAlta('administrador')" class="btn btn-outline-primary">
-                <i class="bi bi-shield-plus me-1"></i> Nuevo administrador
+                <i class="bi bi-shield-plus" aria-hidden="true"></i> Nuevo administrador
             </button>
-        </div>
-    </div>
+        </x-slot>
+    </x-ui.page-head>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
     {{-- Errores de reglas de negocio de acciones sin ventana (p. ej. "último administrador") --}}
     @if (! $modal && ($errors->has('cuenta') || $errors->has('medico')))
@@ -41,7 +32,7 @@
         </li>
     </ul>
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-5">

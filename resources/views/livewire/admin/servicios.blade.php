@@ -1,25 +1,8 @@
-<div class="mt-4">
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-8">
-            <h4 class="fw-bold mb-0">Planes y servicios</h4>
-            <small class="text-muted">
-                Qué plan tiene cada médico y hasta cuándo. Con el servicio vencido (pasados 5 días de gracia) se suspende solo la sincronización.
-            </small>
-        </div>
-    </div>
+<div>
+    <x-ui.page-head titulo="Planes y servicios"
+                    subtitulo="Qué plan tiene cada médico y hasta cuándo. Con el servicio vencido (pasados 5 días de gracia) se suspende solo la sincronización." />
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-    @endif
-    @if (session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
@@ -55,7 +38,7 @@
             @endforeach
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card">
             <div class="card-header bg-white py-3">
                 <div class="row">
                     <div class="col-md-5">
@@ -161,7 +144,7 @@
 
     {{-- ================================ Planes ================================ --}}
     @if ($pestana === 'planes')
-        <div class="card shadow-sm border-0">
+        <div class="card">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <span class="text-muted small">
                     El plan <strong>predeterminado</strong> es el que recibe un médico al registrarse: su primer mes es gratis aunque el plan sea de pago.

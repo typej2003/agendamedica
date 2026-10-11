@@ -1,7 +1,7 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <div class="card shadow-sm border-0">
+            <div class="card">
                 <div class="card-header bg-primary text-white d-flex align-items-center">
                     <i class="bi bi-file-earmark-arrow-up fs-4 me-2"></i>
                     <h5 class="mb-0">Carga y Actualización de Archivos SQL (PowerBuilder)</h5>
@@ -9,19 +9,8 @@
 
                 <div class="card-body p-4">
                     {{-- Mensajes de estado --}}
-                    @if (session()->has('message'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle-fill me-2"></i>{{ session('message') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
+                    <x-ui.avisos />
 
-                    @if (session()->has('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
 
                     <form wire:submit.prevent="procesarSql">
                         {{-- Selección del Médico --}}

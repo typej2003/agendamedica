@@ -974,11 +974,11 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 /* En el panel el contenido llevaba hasta el borde de la ventana (las tablas se pegaban al menú). Se le
    da aire lateral; arriba no, porque cada pantalla ya trae su propio margen. */
 body.panel .main-content {
-    padding: 0 1.5rem 1.5rem;
+    padding: 1.5rem 1.5rem 2rem;
 }
 
 @media (max-width: 767.98px) {
-    body.panel .main-content { padding: 0 .85rem 1rem; }
+    body.panel .main-content { padding: 1rem .85rem 1.5rem; }
 }
 
 /* El menú lateral se pliega en un panel deslizable: en el celular ocupa el ancho completo y el

@@ -1,13 +1,11 @@
-<div class="container-fluid py-3" wire:poll.10s>
-    <div class="page-head">
-        <div>
-            <h1><i class="bi bi-speedometer2 me-2" style="color: var(--ds-violeta-700);"></i>Panel de administración</h1>
-            <p class="page-head-sub">Usuarios, pacientes, médicos y citas de todo el sistema.</p>
-        </div>
-        <span class="badge bg-light text-dark border">
-            <i class="bi bi-arrow-repeat me-1"></i> Actualizando en tiempo real
-        </span>
-    </div>
+<div wire:poll.10s>
+    <x-ui.page-head titulo="Panel de administración" subtitulo="Usuarios, pacientes, médicos y citas de todo el sistema.">
+        <x-slot name="acciones">
+            <span class="badge bg-light text-dark">
+                <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Actualizando en tiempo real
+            </span>
+        </x-slot>
+    </x-ui.page-head>
 
     <div class="row g-3 mb-4">
         <!-- 1. Usuarios conectados ahora -->

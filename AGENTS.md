@@ -328,6 +328,13 @@ que ya los usaban cambiaron de color sin tocarlas.
 
 - **`public/css/gineco.css`** — los tokens + los estilos de marca del sitio público (`hero-section`,
   `service-card`, `btn-primary-gineco`, footer).
+- **Rediseño de UI (2026-10-11), `/clinica` y panel por igual**: tipografía **Inter** variable **auto-alojada**
+  (`public/fonts/inter/`, licencia OFL; sin CDN), **barra lateral indigo de alto completo** con la marca arriba
+  (tokens `--ds-barra*`) y plegable a 72 px, barra superior delgada, botones y campos de **36 px**, pastillas de
+  8 px, `<x-ui.dialogo lateral>` para los formularios y `<x-ui.avisos />` para los avisos del panel. El panel
+  (`resources/views/livewire/admin/*`) ya usa `<x-ui.page-head>` y `<x-ui.avisos />`; **quedan** sus
+  modales de Bootstrap (se ven bien pero no son el panel lateral), algunos `style=` de los dashboards y el
+  `paciente-dashboard`. Detalle y reglas en [`../Docs/Web/guia-ui.md`](../Docs/Web/guia-ui.md).
 - **`public/css/doctorisimo-ui.css`** — **el sistema de la aplicación**, y se carga **después de Bootstrap**:
   recolorea Bootstrap por variables (`--bs-primary`, `--bs-body-color`, `--bs-*-bg-subtle`…) más las reglas
   donde Bootstrap tiene el color fijo (`btn-*`, `badge bg-*`, `table-dark`, `code`). Por eso las ~50 vistas
