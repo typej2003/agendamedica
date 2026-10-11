@@ -1110,9 +1110,28 @@ class AgendaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/agenda', $this->datosDeCita($sede, ['fecha' => '2026-10-13', 'paciente_id' => $pacienteId]))
             ->assertOk()
-            ->assertSee('Ya tiene una cita pendiente');
+            ->assertSee('Ya tiene una cita pendiente')
+            // La frase cierra pegada al nombre de la sede ("…en San José."), sin un espacio antes del punto.
+            ->assertSee('en San José.', false)
+            ->assertDontSee('en San José .', false);
 
         $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    /**
+     * El panel "Pacientes sin historia a atender" decía "Hoy no hay pacientes sin historia" viendo cualquier
+     * día (revisión 2026-10-11). Dice "Hoy" solo cuando el día que se mira es hoy **del consultorio**.
+     */
+    public function test_el_panel_sin_historia_vacio_dice_hoy_solo_si_es_hoy(): void
+    {
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-10')
+            ->assertOk()->assertSee('Hoy no hay pacientes sin historia')->assertDontSee('Ese día no hay pacientes sin historia');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-08')
+            ->assertOk()->assertSee('Ese día no hay pacientes sin historia')->assertDontSee('Hoy no hay pacientes sin historia');
     }
 
     public function test_con_hora_de_cita_la_hora_es_obligatoria(): void

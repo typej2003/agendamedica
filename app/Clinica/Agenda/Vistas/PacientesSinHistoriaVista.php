@@ -27,9 +27,14 @@ final class PacientesSinHistoriaVista
     /**
      * @param  Collection<int,CitaDeAgenda>  $citas  las del día que se está mirando, sin número de historia
      */
+    /**
+     * @param  bool  $esHoy  si el día que se mira es hoy **del consultorio**: el vacío dice "Hoy" solo entonces.
+     *                       Lo calcula quien arma la vista (`DiaVista`); por defecto `true`, como se probó siempre.
+     */
     public function __construct(
         private Collection $citas,
         private Carbon $fecha,
+        private bool $esHoy = true,
     ) {
     }
 
@@ -68,7 +73,8 @@ final class PacientesSinHistoriaVista
     {
         return [
             'icono'  => 'bi-journal-medical',
-            'titulo' => 'Hoy no hay pacientes sin historia',
+            // "Hoy" solo si es hoy: viendo el jueves pasado decía "Hoy no hay…", que es falso o confuso.
+            'titulo' => ($this->esHoy ? 'Hoy' : 'Ese día') . ' no hay pacientes sin historia',
             'texto'  => 'Todos los pacientes de este día ya tienen su número de historia. Cuando la secretaría dé de alta una cita sin historia, aparece acá.',
         ];
     }

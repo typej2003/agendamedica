@@ -72,6 +72,15 @@ class PacientesSinHistoriaVistaTest extends TestCase
         $this->assertStringContainsString('número de historia', $vacia->vacio()['texto']);
     }
 
+    /** Viendo otro día, el vacío no puede decir "Hoy": el jueves pasado decía "Hoy no hay…" (revisión 2026-10-11). */
+    public function test_el_vacio_de_otro_dia_no_dice_hoy(): void
+    {
+        $otroDia = new PacientesSinHistoriaVista(collect([]), $this->lunes->copy(), false);
+
+        $this->assertSame('Ese día no hay pacientes sin historia', $otroDia->vacio()['titulo']);
+        $this->assertSame('Hoy no hay pacientes sin historia', $this->vista([])->vacio()['titulo'], 'Por defecto es hoy.');
+    }
+
     public function test_cada_fila_dice_el_paciente_la_hora_y_su_accion(): void
     {
         $fila = $this->vista([$this->cita()])->filas()[0];

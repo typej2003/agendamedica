@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda\Vistas;
 
 use App\Clinica\Agenda\LecturaDeAgenda;
+use App\Clinica\FechaDelConsultorio;
 
 /**
  * El cuerpo de la vista de día, que es la pantalla del mostrador: el buscador de pacientes, el panel de
@@ -70,9 +71,13 @@ final class DiaVista
      */
     public function sinHistoria(): PacientesSinHistoriaVista
     {
+        $fecha = $this->lectura->parametros->fecha->copy();
+
         return new PacientesSinHistoriaVista(
             $this->lectura->pacientesSinHistoria,
-            $this->lectura->parametros->fecha->copy(),
+            $fecha,
+            // "Hoy" es el del consultorio (`FechaDelConsultorio`), no el del servidor en UTC.
+            $fecha->toDateString() === FechaDelConsultorio::hoy()->toDateString(),
         );
     }
 }

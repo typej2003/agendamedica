@@ -130,7 +130,7 @@
 
                         <td data-etiqueta="Cumple">{{ $fila['edad'] ?? '—' }}</td>
 
-                        <td data-etiqueta="Contacto">
+                        <td class="celda-apilada" data-etiqueta="Contacto">
                             <span class="d-block">
                                 <i class="bi bi-telephone" aria-hidden="true"></i>
                                 {{ $fila['telefono'] ?: '—' }}

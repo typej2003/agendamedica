@@ -172,6 +172,25 @@ class CumpleanosWebTest extends TestCase
         $respuesta->assertDontSee('DeOtro');
     }
 
+    /**
+     * En el celular el contacto va **apilado** (etiqueta arriba, valor con todo el ancho): en la fila de siempre
+     * el correo se partía a mitad de palabra. El CSS que lo apila cuelga de esta clase; el ancho real lo mide
+     * `.agent-tools/verificar-visual-movil-web.js`.
+     */
+    public function test_la_celda_de_contacto_se_apila_en_el_celular(): void
+    {
+        [$user, $medico, $gineco] = $this->medico();
+        $this->paciente($medico, '1990-10-10', ['nombres' => 'Ana', 'apellidos' => 'Pérez', 'email' => 'una.direccion.muy.larga@example.com']);
+
+        $this->conContexto($user, $medico, $gineco)->get('/clinica/cumpleanos?fecha=' . self::HOY)
+            ->assertOk()
+            ->assertSee('<td class="celda-apilada" data-etiqueta="Contacto">', false)
+            ->assertSee('una.direccion.muy.larga@example.com');
+
+        $css = file_get_contents(public_path('css/doctorisimo-ui.css'));
+        $this->assertMatchesRegularExpression('/\.tabla-tarjetas td\.celda-apilada\[data-etiqueta\]\s*\{[^}]*flex-direction:\s*column/s', $css);
+    }
+
     public function test_el_que_nacio_un_29_de_febrero_aparece_el_28_y_la_pantalla_lo_dice(): void
     {
         [$user, $medico, $gineco] = $this->medico();

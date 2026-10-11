@@ -106,7 +106,7 @@
                     <p class="mb-3">
                         <strong>{{ $pendiente['paciente'] }}</strong> ya tiene cita el {{ $pendiente['fecha'] }}
                         @if ($pendiente['hora']) a las {{ $pendiente['hora'] }} @endif
-                        @if ($pendiente['sede']) en {{ $pendiente['sede'] }} @endif.
+                        @if ($pendiente['sede']) en {{ $pendiente['sede'] }}@endif.
                         Normalmente un paciente tiene <strong>una sola</strong> cita pendiente por consultorio (los
                         tratamientos —masajistas, terapias— son la excepción: ahí se agendan varias).
                         ¿Qué quieres hacer?

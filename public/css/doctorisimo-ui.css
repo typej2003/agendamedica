@@ -1042,6 +1042,16 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     /* La primera celda (la identidad) abre la tarjeta y ocupa todo el ancho. */
     .tabla-tarjetas td.celda-principal { text-align: left; padding-top: .35rem; }
     .tabla-tarjetas td.celda-acciones { display: flex; justify-content: flex-end; padding-bottom: .35rem; }
+
+    /* Una celda con un valor largo (un correo) se apila: la etiqueta arriba y el valor con todo el ancho.
+       En la fila de siempre (etiqueta a la izquierda, valor a la derecha) el correo se partía a mitad de
+       palabra ("fuenmayoryy@gm / ail.com"). */
+    .tabla-tarjetas td.celda-apilada[data-etiqueta] {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .15rem;
+        text-align: left;
+    }
 }
 
 /* --- Pie de un listado: rango + paginación --- */
@@ -1471,6 +1481,10 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 .calendario-marca { margin-top: .3rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 575.98px) {
+    /* El mes tiene que caber en el celular (a 390 px la columna del domingo quedaba fuera de la pantalla):
+       columnas de igual ancho que no crecen con el texto y encabezados más compactos. */
+    .calendario-mes { table-layout: fixed; width: 100%; }
+    .calendario-mes th { padding: .4rem 0 !important; font-size: .66rem; letter-spacing: 0; }
     .calendario-celda { height: 4.2rem; padding: .25rem !important; }
     .calendario-celda.no-laborable { background: var(--ds-aviso-bg); }
     .calendario-marca { display: none; }
@@ -1917,3 +1931,19 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 .saltar-al-contenido:focus { top: .75rem; outline: 3px solid var(--ds-celeste-700); outline-offset: 2px; }
 /* El destino del salto recibe el foco por código (`tabindex="-1"`): sin contorno, no es un control. */
 .app-contenido:focus { outline: none; }
+
+/* --- Objetivos táctiles en el celular ---
+   Los botones y campos `-sm` miden ~31 px: demasiado chicos para el pulgar (la guía de accesibilidad de Apple
+   pide 44 px y WCAG 2.5.8 un mínimo de 24). En pantallas angostas se suben a 40 px; en escritorio se
+   quedan compactos, que es donde se usa el mouse. */
+@media (max-width: 767.98px) {
+    .btn-sm,
+    .form-control-sm,
+    .form-select-sm,
+    .pagination .page-link { min-height: 2.5rem; }
+
+    .btn-sm,
+    .pagination .page-link { display: inline-flex; align-items: center; justify-content: center; }
+
+    .pagination .page-link { min-width: 2.5rem; }
+}

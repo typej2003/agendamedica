@@ -234,7 +234,9 @@ class PacientesSinHistoriaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('Pacientes sin historia a atender');
-        $respuesta->assertSee('Hoy no hay pacientes sin historia');
+        // El día que se mira es un lunes fijo (no "hoy"): el vacío dice "Ese día". Que diga "Hoy" solo cuando es
+        // hoy lo prueba `AgendaWebTest::test_el_panel_sin_historia_vacio_dice_hoy_solo_si_es_hoy`.
+        $respuesta->assertSee('Ese día no hay pacientes sin historia');
         $respuesta->assertSee('Ninguno');
         $respuesta->assertDontSee('Pasar a cita formal');
     }
@@ -303,7 +305,7 @@ class PacientesSinHistoriaWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlDeLaAgenda());
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Hoy no hay pacientes sin historia');
+        $respuesta->assertSee('Ese día no hay pacientes sin historia');
     }
 
     public function test_el_panel_es_de_la_vista_de_dia_y_no_de_semana_ni_mes(): void
@@ -355,7 +357,7 @@ class PacientesSinHistoriaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlDeLaAgenda())
             ->assertOk()
-            ->assertSee('Hoy no hay pacientes sin historia');
+            ->assertSee('Ese día no hay pacientes sin historia');
     }
 
     public function test_pasar_a_cita_formal_dos_veces_no_numera_dos_veces(): void
