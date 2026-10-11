@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
+use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
@@ -267,7 +268,7 @@ class PacienteController extends Controller
         // con el paciente ya elegido, donde la agenda pide la razón y arma la cola del día.
         if ($ficha === null && $request->boolean('atender_hoy')) {
             return redirect()
-                ->route('clinica.agenda.nueva', ['fecha' => now()->toDateString(), 'paciente_id' => $paciente->id])
+                ->route('clinica.agenda.nueva', ['fecha' => FechaDelConsultorio::hoy()->toDateString(), 'paciente_id' => $paciente->id])
                 ->with('estado', $mensaje . ' Ahora elige la razón y la hora de la cita de hoy.');
         }
 

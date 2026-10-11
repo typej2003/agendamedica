@@ -40,6 +40,17 @@ final class FechaDelConsultorio
     }
 
     /**
+     * El día de hoy **del consultorio** como fecha de calendario: medianoche, sin zona propia, igual que lo que
+     * arma `Carbon::createFromFormat('!Y-m-d', …)` con la fecha de la URL. Es lo que usa la agenda para su día
+     * por defecto, para marcar "hoy" y para comparar días: así la fecha pedida y la de hoy son comparables sin
+     * mezclar zonas (a las 20:30 en Caracas es ya el día siguiente en UTC, y `Carbon::today()` daba ese).
+     */
+    public static function hoyComoFecha(): Carbon
+    {
+        return Carbon::createFromFormat('!Y-m-d', self::hoy()->toDateString());
+    }
+
+    /**
      * Interpreta una fecha pedida a mano (`--fecha=AAAA-MM-DD`, `?fecha=`) como un día **del
      * consultorio**. Sin esto, el `--fecha` de las pruebas se parsearía en UTC y una medianoche se
      * correría un día para atrás en la zona del consultorio.

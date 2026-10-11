@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda\Vistas;
 
 use App\Clinica\Agenda\LecturaDeAgenda;
+use App\Clinica\FechaDelConsultorio;
 use App\Support\FechaClinica;
 use Carbon\Carbon;
 
@@ -30,7 +31,7 @@ final class SemanaVista
 
             $dias[] = [
                 'titulo'       => ucfirst(FechaClinica::tituloDia($dia)),
-                'esHoy'        => $dia->isToday(),
+                'esHoy'        => $dia->toDateString() === FechaDelConsultorio::hoy()->toDateString(),
                 'conteo'       => $citas . ($citas === 1 ? ' cita' : ' citas'),
                 'url'          => route('clinica.agenda', ['vista' => 'dia', 'fecha' => $clave, 'sede' => $this->lectura->parametros->sedeId ?? 'todas']),
                 'noLaborable'  => MesVista::marca($this->lectura->noLaborables->get($clave)),

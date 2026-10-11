@@ -3,6 +3,7 @@
 namespace App\Clinica\Pacientes\Vistas;
 
 use App\Actions\Pacientes\IdentidadDePaciente;
+use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Vistas\ConValoresDeFormulario;
 use App\Models\Paciente;
 use App\Support\FechaClinica;
@@ -234,7 +235,7 @@ final class FormularioDePacienteVista
     public function urlAtenderHoy(): string
     {
         return route('clinica.agenda.nueva', [
-            'fecha'       => now()->toDateString(),
+            'fecha'       => FechaDelConsultorio::hoy()->toDateString(),
             'paciente_id' => $this->editando?->getKey(),
         ]);
     }

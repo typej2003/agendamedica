@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
@@ -339,7 +340,7 @@ final class ArmadorDeAgenda
         }
 
         $filas = Cola::where('reg_medico', $regMedico)
-            ->whereDate('fecha', '>=', Carbon::today()->toDateString())
+            ->whereDate('fecha', '>=', FechaDelConsultorio::hoy()->toDateString())
             ->where(function ($consulta) {
                 $consulta->whereNull('atendido')->orWhere('atendido', 0);
             })

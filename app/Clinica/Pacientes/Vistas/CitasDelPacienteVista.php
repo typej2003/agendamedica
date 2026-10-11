@@ -4,6 +4,7 @@ namespace App\Clinica\Pacientes\Vistas;
 
 use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Agenda\Vistas\FilaDeCitaVista;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Support\FechaClinica;
 use Illuminate\Support\Collection;
@@ -82,7 +83,7 @@ final class CitasDelPacienteVista
     /** Volver a la agenda, que es la pantalla desde la que se llega. */
     public function urlAgenda(): string
     {
-        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => now()->toDateString(), 'sede' => 'todas']);
+        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => FechaDelConsultorio::hoy()->toDateString(), 'sede' => 'todas']);
     }
 
     /** El listado de pacientes: de donde se llega cuando la pantalla se abre desde el menú. */
@@ -147,7 +148,7 @@ final class CitasDelPacienteVista
     public function filas(): array
     {
         return $this->citas
-            ->map(fn (CitaDeAgenda $cita) => new FilaDeCitaVista($cita, null, false, now()))
+            ->map(fn (CitaDeAgenda $cita) => new FilaDeCitaVista($cita, null, false, FechaDelConsultorio::ahora()))
             ->all();
     }
 

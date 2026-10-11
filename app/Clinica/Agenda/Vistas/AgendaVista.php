@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda\Vistas;
 
 use App\Clinica\Agenda\LecturaDeAgenda;
+use App\Clinica\FechaDelConsultorio;
 use App\Notificaciones\Canal;
 use App\Support\FechaClinica;
 use Carbon\Carbon;
@@ -120,7 +121,7 @@ final class AgendaVista
 
     public function urlHoy(): string
     {
-        return $this->url(['fecha' => Carbon::today()->toDateString()]);
+        return $this->url(['fecha' => FechaDelConsultorio::hoyComoFecha()->toDateString()]);
     }
 
     public function etiquetaAnterior(): string

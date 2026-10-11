@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda\Vistas;
 
 use App\Clinica\Agenda\LecturaDeAgenda;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\DiaNoLaborable;
 use Carbon\Carbon;
 
@@ -41,7 +42,7 @@ final class MesVista
 
             $semana[] = [
                 'numero'      => $cursor->day,
-                'esHoy'       => $cursor->isToday(),
+                'esHoy'       => $cursor->toDateString() === FechaDelConsultorio::hoy()->toDateString(),
                 'enMes'       => $cursor->month === $fecha->month,
                 'conteo'      => $conteo,
                 'conteoTexto' => $conteo . ($conteo === 1 ? ' cita' : ' citas'),

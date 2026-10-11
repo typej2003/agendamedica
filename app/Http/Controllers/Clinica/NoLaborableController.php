@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Agenda\DiasNoLaborables;
 use App\Clinica\Agenda\Vistas\NoLaborablesVista;
+use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Controller;
 use App\Models\DiaNoLaborable;
 use Carbon\Carbon;
@@ -105,9 +106,9 @@ class NoLaborableController extends Controller
     private function mes(?string $valor): Carbon
     {
         try {
-            return $valor ? Carbon::createFromFormat('!Y-m', $valor) : Carbon::today()->startOfMonth();
+            return $valor ? Carbon::createFromFormat('!Y-m', $valor) : FechaDelConsultorio::hoyComoFecha()->startOfMonth();
         } catch (\Throwable $e) {
-            return Carbon::today()->startOfMonth();
+            return FechaDelConsultorio::hoyComoFecha()->startOfMonth();
         }
     }
 }

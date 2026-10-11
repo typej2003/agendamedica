@@ -49,6 +49,14 @@ class AgendaWebTest extends TestCase
         $this->lunes = Carbon::parse('2026-10-05')->startOfWeek(Carbon::MONDAY);
     }
 
+    protected function tearDown(): void
+    {
+        // Las pruebas de zona horaria fijan el reloj: que no se filtre a las demás.
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     // --------------------------------------------------------------------------------------- Ayudas
 
     private function medicoConAcceso(string $rol = 'Medico'): array
@@ -1001,6 +1009,110 @@ class AgendaWebTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame(Cola::PAGO_PAGADA, $cita->fresh()->estadoPago());
+    }
+
+    // ------------------------------------------------- "Hoy" es el del consultorio, no el del servidor
+
+    /**
+     * El servidor corre en UTC (`config('app.timezone')`, que no se toca) y Venezuela es UTC-4: desde las 8 pm
+     * locales la agenda, "Nueva cita", "Enviar a todos" y compañía abrían en **mañana** (revisión de la web,
+     * 2026-10-11) mientras que Cumpleaños, que sí usa `FechaDelConsultorio`, decía hoy. Se fija el reloj a las
+     * 00:30 UTC del 11/10 —las 20:30 del sábado 10/10 en Caracas— y todas tienen que decir sábado 10.
+     */
+    private function a_las_ocho_y_media_de_la_noche_en_caracas(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-11 00:30:00', 'UTC'));
+    }
+
+    public function test_la_agenda_abre_en_el_dia_del_consultorio_aunque_en_utc_ya_sea_manana(): void
+    {
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda')
+            ->assertOk()
+            ->assertSee('Sábado 10/10/2026')
+            ->assertDontSee('Domingo 11/10/2026');
+
+        // Y el botón "Hoy" lleva al mismo día.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-08')
+            ->assertOk()
+            ->assertSee('fecha=2026-10-10', false);
+    }
+
+    public function test_la_semana_y_el_mes_marcan_como_hoy_el_dia_del_consultorio(): void
+    {
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $semana = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=semana')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#agenda-dia-titulo es-hoy">\s*<a [^>]*>([^<]+)</a>#u', $semana, $dia));
+        $this->assertStringStartsWith('Sábado 10/10/2026', trim($dia[1]));
+
+        $mes = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda?vista=mes')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#calendario-dia es-hoy"[^>]*aria-label="(\d+):#u', $mes, $celda));
+        $this->assertSame('10', $celda[1]);
+    }
+
+    public function test_nueva_cita_enviar_a_todos_y_las_pantallas_de_la_agenda_arrancan_en_el_dia_del_consultorio(): void
+    {
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda/nueva')
+            ->assertOk()
+            ->assertSee('10/10/2026')
+            ->assertSee('value="2026-10-10"', false)
+            ->assertDontSee('2026-10-11', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda/envio')
+            ->assertOk()
+            ->assertSee('Sábado 10/10/2026');
+
+        foreach (['/clinica/agenda/motivos', '/clinica/agenda/no-laborables'] as $ruta) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($ruta)
+                ->assertOk()
+                ->assertSee('fecha=2026-10-10', false)
+                ->assertDontSee('fecha=2026-10-11', false);
+        }
+    }
+
+    public function test_los_dias_no_laborables_abren_en_el_mes_y_el_dia_del_consultorio(): void
+    {
+        // 00:30 UTC del 1/nov = 20:30 del 31/oct en Caracas: el mes en curso todavía es octubre.
+        Carbon::setTestNow(Carbon::parse('2026-11-01 00:30:00', 'UTC'));
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda/no-laborables')
+            ->assertOk()
+            ->assertSee('Octubre 2026')
+            ->assertSee('value="2026-10-31"', false);
+    }
+
+    /**
+     * La cita pendiente que el alta detecta ("ya tiene una cita pendiente") cuenta desde **hoy del
+     * consultorio**: a las 20:30 locales una cita de ese mismo día todavía es pendiente (con la fecha UTC
+     * ya era "pasada" y se podía agendar otra sin el aviso).
+     */
+    public function test_la_cita_de_hoy_del_consultorio_sigue_siendo_pendiente_de_noche(): void
+    {
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, 6);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $this->cita($medico, $sede, '2026-10-10', '08:00:00', 1, ['numhistoria' => 2001]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['fecha' => '2026-10-13', 'paciente_id' => $pacienteId]))
+            ->assertOk()
+            ->assertSee('Ya tiene una cita pendiente');
+
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
     }
 
     public function test_con_hora_de_cita_la_hora_es_obligatoria(): void

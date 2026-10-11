@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda\Vistas;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Medico;
 use App\Models\MotivoCita;
 use Carbon\Carbon;
@@ -46,7 +47,7 @@ final class MotivosDeCitaVista
 
     public function urlVolver(): string
     {
-        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => Carbon::today()->toDateString()]);
+        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => FechaDelConsultorio::hoyComoFecha()->toDateString()]);
     }
 
     /** La acción de cada fila: la misma ruta para marcar y para desmarcar (alterna). */

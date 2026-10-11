@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda\Vistas;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Vistas\ConValoresDeFormulario;
 use App\Models\DiaNoLaborable;
 use App\Models\Medico;
@@ -53,7 +54,7 @@ final class NoLaborablesVista
 
     public function urlVolver(): string
     {
-        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => Carbon::today()->toDateString()]);
+        return route('clinica.agenda', ['vista' => 'dia', 'fecha' => FechaDelConsultorio::hoyComoFecha()->toDateString()]);
     }
 
     public function urlMarcar(): string
@@ -73,7 +74,7 @@ final class NoLaborablesVista
 
     public function urlEsteMes(): string
     {
-        return $this->url(Carbon::today());
+        return $this->url(FechaDelConsultorio::hoyComoFecha());
     }
 
     public function urlGuardar(): string
@@ -100,7 +101,7 @@ final class NoLaborablesVista
     public function dia(): string
     {
         return old('dia', $this->editando?->dia?->toDateString()
-            ?? ($this->mes->isCurrentMonth() ? Carbon::today()->toDateString() : $this->mes->copy()->startOfMonth()->toDateString()));
+            ?? ($this->mes->format('Y-m') === FechaDelConsultorio::hoyComoFecha()->format('Y-m') ? FechaDelConsultorio::hoyComoFecha()->toDateString() : $this->mes->copy()->startOfMonth()->toDateString()));
     }
 
     /** @return array<int,array{valor:string, texto:string, elegido:bool}> */

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Clinica\FechaDelConsultorio;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -39,9 +40,9 @@ final class ParametrosDeAgenda
     public static function fechaDe(?string $valor): Carbon
     {
         try {
-            return $valor ? Carbon::createFromFormat('!Y-m-d', $valor) : Carbon::today();
+            return $valor ? Carbon::createFromFormat('!Y-m-d', $valor) : FechaDelConsultorio::hoyComoFecha();
         } catch (\Throwable $e) {
-            return Carbon::today();
+            return FechaDelConsultorio::hoyComoFecha();
         }
     }
 

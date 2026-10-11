@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda;
 
 use App\Clinica\Agenda\Vistas\FormularioDeCitaVista;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use Carbon\Carbon;
 
@@ -59,7 +60,8 @@ class FormularioDeCita
             valores: $datos['valores'],
             // La marca es por médico: el aviso se arma con la clave del médico del contexto.
             avisoNoLaborable: $this->diasNoLaborables->avisoDelDia($contexto, $fecha),
-            ahora: Carbon::now(),
+            // En la zona del consultorio, como en `LectorDeAgenda`: el formulario decide con esto si la cita es de hoy.
+            ahora: FechaDelConsultorio::ahora(),
         );
     }
 }
