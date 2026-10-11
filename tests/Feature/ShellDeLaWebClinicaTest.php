@@ -29,11 +29,11 @@ class ShellDeLaWebClinicaTest extends TestCase
 {
     use DatabaseTransactions;
 
-    private function medicoConAcceso(): array
+    private function medicoConAcceso(string $slugEspecialidad = 'ginecologia-y-obstetricia'): array
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
 
-        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $gineco = Specialty::where('slug', $slugEspecialidad)->firstOrFail();
         $regMedico = 'shell-web-' . uniqid();
 
         $user = User::create([
@@ -107,7 +107,29 @@ class ShellDeLaWebClinicaTest extends TestCase
             ->assertSee('Cerrar sesión');
     }
 
-    // ----------------------------------------------------------------------- Saltar al contenido
+    // ------------------------------------------------------------------- Menú del consultorio
+
+    /**
+     * El menú del consultorio sale de los módulos **implementados** de la especialidad del contexto, y el
+     * núcleo compartido (agenda y pacientes) es de **todas** (PLAN-WEB.md, R1).
+     *
+     * Medido el 2026-10-11: una especialidad del catálogo sin manifiesto (traumatología, pediatría,
+     * medicina general…) no recibía ninguna fila de `especialidad_modulo`, así que su médico entraba a un
+     * consultorio con el menú vacío y el aviso "No hay módulos habilitados en este consultorio todavía",
+     * aunque tuviera la especialidad activa y su consultorio cargado. No depende del consultorio: acá el
+     * contexto va sin sede y los accesos tienen que estar igual.
+     */
+    public function test_el_nucleo_del_menu_esta_en_cualquier_especialidad(): void
+    {
+        [$user, $medico, $traumatologia] = $this->medicoConAcceso('traumatologia-y-ortopedia');
+
+        $this->conContexto($user, $medico, $traumatologia)->get('/clinica')
+            ->assertOk()
+            ->assertSee('Agenda')
+            ->assertSee('Pacientes')
+            ->assertDontSee('No hay módulos habilitados')
+            ->assertDontSee('no tiene una especialidad asignada');
+    }
 
     public function test_cada_pantalla_ofrece_saltar_al_contenido(): void
     {

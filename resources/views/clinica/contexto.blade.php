@@ -37,21 +37,27 @@
                             </select>
                         </x-ui.campo>
 
-                        <x-ui.campo etiqueta="Sede" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
+                        {{-- El campo guarda el **consultorio** del médico (`offices`), no la sede
+                             (`medical_centers`): se etiqueta por lo que es, porque el rótulo "Sede" hacía
+                             buscar una pantalla para asignarle una sede al médico (2026-10-11). Vacío =
+                             todos sus consultorios: la agenda muestra las sedes juntas. --}}
+                        <x-ui.campo etiqueta="Consultorio" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
                             <select name="office_id" id="sede-{{ $medico['regMedico'] }}" class="form-select">
-                                <option value="">Todas / sin especificar</option>
+                                <option value="">Todos mis consultorios (sin especificar)</option>
                                 @foreach ($medico['sedes'] as $sede)
                                     <option value="{{ $sede['valor'] }}">{{ $sede['texto'] }}</option>
                                 @endforeach
                             </select>
                             @if ($medico['sinConsultorios'])
                                 <span class="form-text d-block">
-                                    Este médico todavía no tiene consultorios cargados: elígelo aquí y carga el suyo
-                                    (primero la <a href="{{ $vm->urlSedes() }}">sede</a>, si falta).
+                                    Este médico todavía no tiene consultorios cargados: cárgalos en
+                                    <a href="{{ $vm->urlConsultorios() }}">Consultorios</a> (si el lugar todavía no
+                                    existe, primero la <a href="{{ $vm->urlSedes() }}">sede</a>).
                                 </span>
                             @else
                                 <span class="form-text d-block">
-                                    ¿Falta un consultorio o quieres cambiarlo? <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
+                                    El consultorio es dónde atiende el médico dentro de una sede. ¿Falta uno o quieres
+                                    cambiarlo? <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
                                 </span>
                             @endif
                         </x-ui.campo>

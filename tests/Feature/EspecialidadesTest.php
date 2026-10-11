@@ -105,6 +105,47 @@ class EspecialidadesTest extends TestCase
         $this->assertSame([], $gineco->modulosVisibles(['Paciente'])->pluck('slug')->all());
     }
 
+    /**
+     * El núcleo compartido es de **todas** las especialidades, no sólo de la que tiene manifiesto (R1): las
+     * filas del catálogo de `SpecialtySeeder` (pediatría, cardiología, traumatología…) no recibían ninguna
+     * fila de `especialidad_modulo` y su médico entraba a un consultorio con el menú vacío (2026-10-11).
+     */
+    public function test_el_nucleo_compartido_queda_implementado_para_toda_especialidad_del_catalogo(): void
+    {
+        $this->seed(EspecialidadesYModulosSeeder::class);
+
+        $catalogo = Specialty::orderBy('id')->get();
+        $this->assertGreaterThan(1, $catalogo->count());
+
+        foreach ($catalogo as $especialidad) {
+            $this->assertSame(
+                ['agenda', 'pacientes'],
+                $especialidad->modulosVisibles(['Medico'])->pluck('slug')->all(),
+                "La especialidad '{$especialidad->name}' no ofrece el núcleo compartido."
+            );
+            $this->assertSame(
+                ['agenda', 'pacientes'],
+                $especialidad->modulosVisibles(['Secretaria'])->pluck('slug')->all(),
+                "La secretaría no ve el núcleo de '{$especialidad->name}'."
+            );
+        }
+    }
+
+    /** Una especialidad sin manifiesto no inventa módulos propios: sólo recibe el núcleo. */
+    public function test_una_especialidad_sin_manifiesto_solo_recibe_el_nucleo(): void
+    {
+        $this->seed(EspecialidadesYModulosSeeder::class);
+
+        $general = Specialty::where('slug', 'medicina-general')->firstOrFail();
+
+        $this->assertSame(
+            ['agenda', 'pacientes'],
+            $general->modulos()->orderBy('especialidad_modulo.orden')->pluck('slug')->all()
+        );
+        // Y sigue sin declarar los módulos propios de otra especialidad.
+        $this->assertSame(0, $general->modulos()->whereIn('slug', ['ecografias', 'prenatal', 'pareja'])->count());
+    }
+
     /** Crea un directorio temporal con manifiestos y lo borra al terminar el test. */
     private function manifiestosDePrueba(array $manifiestos): string
     {

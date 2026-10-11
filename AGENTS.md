@@ -33,9 +33,9 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras la sección **"Especialidades"** del panel) es **1159 en
-verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido dos veces y
-una tercera con la base de tests borrada, siempre 1159 + 3). El test que era **flaky**
+medición (2026-10-11, tras **WEB-1.13**, el núcleo del menú para todas las especialidades) es **1162 en
+verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
+una con la base de tests borrada). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
 `reg_medico` de la prueba y terminaba leyendo las filas que siembra `FakeClinicalDataSeeder`, que reparte
@@ -220,7 +220,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `app/Console/Commands/EnviarCumpleanosCommand.php` + `app/Console/Kernel.php` | **`cumpleanos:enviar`** (WEB-2.9): recorre los médicos con el envío automático activo y les manda el saludo a los que cumplen años hoy, **sin repetir** (el registro manda). Tiene `--fecha=AAAA-MM-DD` y `--simular` (no manda ni registra). Es la **única tarea programada** del proyecto: `Kernel::schedule()` la corre **cada 15 minutos** porque la hora es por médico. ⚠️ En producción necesita el **cron del servidor** (`schedule:run`). |
 | `database/migrations/2026_08_25_055351_create_medical_tables_schema.php` | **Migración núcleo**: crea el esquema médico completo migrado del legado (~120 tablas, ~1650 líneas). Referencia obligatoria. |
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos, **`notificaciones_cumple`** —WEB-2.9: el registro de los saludos de cumpleaños, con índice único por `(paciente_id, fecha_cumple)`— y **`parentesco`** —WEB-3.4: el catálogo de parentescos del representante, de AppDDR, con `codigo` `char(1)` único—). |
-| `database/seeders/` | Países / estados / ciudades / especialidades / roles / **`ParentescoSeeder`** (WEB-3.4: el catálogo de parentescos del representante, idempotente con `updateOrCreate`, y es **catálogo**: corre también en producción) / datos médicos de ejemplo. |
+| `database/seeders/` | Países / estados / ciudades / especialidades / roles / **`ParentescoSeeder`** (WEB-3.4: el catálogo de parentescos del representante, idempotente con `updateOrCreate`, y es **catálogo**: corre también en producción) / **`EspecialidadesYModulosSeeder`** (el marco multi-especialidad: los módulos de cada especialidad con `implementado`/`visible_para`; siembra el **núcleo** —agenda y pacientes— para **todas** las filas del catálogo, no sólo las que tienen manifiesto, y es **catálogo**: en una base ya desplegada hay que correrlo una vez) / datos médicos de ejemplo. |
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
 | `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
@@ -287,6 +287,16 @@ es administrador). El panel `/dashboard` quedó para administración. Lo nuevo s
   los manifiestos (`config/especialidades/*.php` con `EspecialidadesYModulosSeeder`). Tests en
   `tests/Feature/EspecialidadesDelMedicoTest.php`; verificación en Chrome en
   `../.agent-tools/verificar-especialidades-admin-web.js` (trampa 51: las casillas del array van con `.defer`).
+  ⚠️ **El menú del consultorio sale de `especialidad_modulo`, no del consultorio**: el **núcleo compartido**
+  (agenda y pacientes, `EspecialidadesYModulosSeeder::NUCLEO_IMPLEMENTADO`) está implementado para **todas**
+  las especialidades del catálogo (PLAN-WEB.md R1) y los módulos **propios** de cada una viven en
+  `PROPIOS_IMPLEMENTADOS` (hoy vacío). Sin el núcleo, una especialidad sin manifiesto dejaba al médico con el
+  menú vacío aunque tuviera la especialidad activa y su consultorio cargado (medido 2026-10-11: era el caso
+  de 7 de las 8 filas del catálogo). Un médico **sin consultorios** entra igual y ve sus módulos, pero **no
+  puede agendar** (la jornada se arma por sede). En `/clinica/contexto` el campo es el **consultorio**
+  (`offices`) —se rotula así desde el 2026-10-11, antes decía "Sede"— y el aviso manda a
+  `/clinica/consultorios` (la sede, `medical_centers`, se crea en `/clinica/sedes`). Verificación en Chrome:
+  `../.agent-tools/verificar-menu-por-especialidad-web.js`.
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y

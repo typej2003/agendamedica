@@ -3,8 +3,12 @@
 namespace App\Clinica\Vistas;
 
 /**
- * La pantalla de **elegir consultorio** (`/clinica/contexto`): con qué médico/registro, especialidad y sede
- * se opera. Una tarjeta por médico al que el usuario tiene acceso.
+ * La pantalla de **elegir consultorio** (`/clinica/contexto`): con qué médico/registro, especialidad y
+ * **consultorio** se opera. Una tarjeta por médico al que el usuario tiene acceso.
+ *
+ * ⚠️ La clave `sedes` del contexto son los **consultorios** (`offices`) del médico, no las filas del
+ * catálogo de sedes (`medical_centers`): el nombre viene del armado del contexto y se dejó como está (no se
+ * renombra), pero la pantalla lo rotula "Consultorio" porque es lo que lista.
  */
 final class ContextoVista
 {
