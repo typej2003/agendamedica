@@ -54,6 +54,22 @@ class User extends Authenticatable
     /** Roles Spatie que dan acceso al dashboard de administración. */
     public const ROLES_ADMIN = ['Root', 'Administrador'];
 
+    /**
+     * **¿Este usuario trabaja la consulta?** Es la pregunta de la que cuelga "la consulta es sólo del
+     * médico" (PLAN-WEB.md §3.14, Nivel 3 del legado): la secretaría agenda, confirma y cobra, pero no
+     * entra a la ficha clínica.
+     *
+     * Vive acá y no en cada pantalla por la misma razón que `esAdministrador()`: el **mismo** conjunto de
+     * roles tiene que decidir tres cosas que no pueden divergir —el grupo `role:Root|Medico` de la ruta
+     * del shell, el redirect del mostrador cuando la secretaría toca "Atender" y el botón "Editar
+     * consulta" de la agenda—. La regla del menú lateral (qué módulos ve cada rol) es otra: esa sale de
+     * `especialidad_modulo.visible_para` (WEB-4.1 no marca `consulta` como módulo implementado).
+     */
+    public function trabajaLaConsulta(): bool
+    {
+        return $this->hasAnyRole(['Root', 'Medico']);
+    }
+
     /** Ficha de médico de esta cuenta (vínculo `medicos.user_id`). */
     public function medico(): HasOne
     {

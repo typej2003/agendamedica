@@ -367,7 +367,13 @@ class SyncAppDataController extends Controller
         // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
         // cliente no tiene forma de garantizar el orden del arreglo.
         $changes = $this->enOrdenDeDependencia($changes);
-        $clinicas = new CreacionesClinicas($medico, $registrosMedicos, app(AsignarHistoria::class));
+        $clinicas = new CreacionesClinicas(
+            $medico,
+            $registrosMedicos,
+            app(AsignarHistoria::class),
+            // La regla del número de consulta vive en la Action compartida con la web (WEB-4.1).
+            app(\App\Actions\Consulta\CrearConsulta::class),
+        );
         $creadosAntes = count($creados);
 
         foreach ($changes as $change) {

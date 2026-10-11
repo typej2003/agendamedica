@@ -20,6 +20,11 @@ final class AgendaVista
     public function __construct(
         private LecturaDeAgenda $lectura,
         private array $query,
+        /**
+         * Si el usuario que mira la agenda puede entrar a la consulta (WEB-4.1: la consulta es sólo del
+         * médico). Lo resuelve el controlador con `User::trabajaLaConsulta()` y baja hasta cada fila.
+         */
+        private bool $puedeAbrirLaConsulta = true,
     ) {
     }
 
@@ -294,6 +299,7 @@ final class AgendaVista
                 $this->lectura->mensajes,
                 $this->lectura->ahora,
                 $conArrastre,
+                $this->puedeAbrirLaConsulta,
             ))
             ->all();
     }

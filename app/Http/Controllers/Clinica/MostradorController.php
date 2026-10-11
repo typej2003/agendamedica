@@ -6,7 +6,10 @@ use App\Actions\Agenda\AtenderCita;
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\ReordenarCola;
+use App\Actions\Consulta\AbrirConsulta;
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Clinica\Consulta\PacienteDeLaCita;
+use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -18,15 +21,23 @@ use Illuminate\Http\Request;
 use InvalidArgumentException;
 
 /**
- * Las acciones del mostrador sobre una cita —confirmar, atender, cobrar, reordenar la cola y pasar un
- * paciente sin historia a cita formal—, todas sobre las **Actions compartidas** con el sync del móvil
- * (PLAN-WEB.md, R3). El controlador solo valida que la cita sea del contexto y traduce el resultado a un
- * mensaje.
+ * Las acciones del mostrador sobre una cita —confirmar, **atender (que ahora abre la consulta, WEB-4.1)**,
+ * cobrar, reordenar la cola y pasar un paciente sin historia a cita formal—, todas sobre las **Actions
+ * compartidas** con el sync del móvil (PLAN-WEB.md, R3). El controlador solo valida que la cita sea del
+ * contexto y traduce el resultado a un mensaje.
+ *
+ * "Atender" es el único de estos métodos que **decide un flujo** (los cuatro casos de la consulta) y no
+ * solo traduce una escritura: por eso está documentado caso por caso y delega todo lo demás —el número de
+ * la consulta, la marca de atendida— en sus Actions.
  */
 class MostradorController extends Controller
 {
     use ResuelveLaCitaDelContexto;
     use ResuelveLosRegistrosDelMedico;
+
+    public function __construct(private PacienteDeLaCita $pacienteDeLaCita)
+    {
+    }
 
     /** Confirmar la cita (o quitarle la confirmación, mientras no esté atendida). */
     public function confirmar(Request $request, Cola $cola, ConfirmarCita $accion)
@@ -52,22 +63,144 @@ class MostradorController extends Controller
     }
 
     /**
-     * Marcar la cita como atendida. **Atender implica confirmado** (lo resuelve la Action).
+     * **"Atender" abre la consulta** (WEB-4.1, PLAN-WEB.md §3.10 y wiki `04-historia-clinica.md`): lo
+     * que en el legado hace el `open` de `w_consulta_principal` —abre la consulta del día, la crea si no
+     * existe y deja la cita atendida (`UPDATE cola SET atendido = 1`)—, en un solo POST.
      *
-     * Abrir la consulta es otra cosa: llega con el módulo Consulta (F4), que es donde existe la pantalla.
-     * Hasta entonces "Atender" deja la marca, que es el dato que la consulta va a usar.
+     * Los cuatro casos, en este orden:
+     *
+     *  1. **La cita no dice a quién atender** (sin `numhistoria` ni ancla): no hay nada que abrir.
+     *  2. **El paciente no tiene historia**: no se atiende sin historia (confirmado con Alexander,
+     *     2026-09-23). Se lo manda a asignarla (WEB-3.3, la Action `AsignarHistoria`) y **no se crea
+     *     ninguna consulta**. El móvil la llena en el momento porque trabaja sin conexión; la web tiene
+     *     la ficha, que es donde la regla del número ya vive, así que no la duplica.
+     *  3. **La cita ya está atendida**: el botón era "Editar consulta" y entra a la consulta del día
+     *     **sin marcar nada** (no se deshace ni se vuelve a marcar). Si por lo que sea no hay consulta de
+     *     ese día, se abre una —la pantalla tiene que existir para poder editar—.
+     *  4. **La cita no está atendida**: se abre —o crea— la consulta del día, se marca la cita como
+     *     atendida (`AtenderCita`, que **implica confirmada**) y recién ahí se entra. El orden importa:
+     *     no se marca una cita cuya consulta no se pudo abrir, que es lo que hace el móvil.
+     *
+     * La pregunta del legado "¿re-atender o consulta nueva?" la resuelve la vista de día con su diálogo:
+     * "re-atender" (el POST normal) reusa la consulta de hoy si el paciente ya tiene una, y "consulta
+     * nueva" manda `nueva=1`, que numera la siguiente aunque haya una hoy.
+     *
+     * **La secretaría no entra a la consulta** (§3.14): si es ella quien toca el botón, la cita queda
+     * atendida igual —"el paciente llegó" es del mostrador y su acción no cambia— pero vuelve a la agenda
+     * con el aviso, en vez de caer en el 403 de la ruta del shell. El botón de una cita ya atendida ni
+     * siquiera se le ofrece (`FilaDeCitaVista::atender`).
      */
-    public function atender(Request $request, Cola $cola, AtenderCita $accion)
+    public function atender(Request $request, Cola $cola, AbrirConsulta $abrir, AtenderCita $atenderCita)
     {
+        $contexto = $request->attributes->get('contexto_clinico');
         $cita = $this->citaDelContexto($request, $cola);
 
         if ($cita->movida_escritorio) {
             return back()->with('error', $this->avisoDeCitaMovida());
         }
 
-        $accion->ejecutar($cita, true, null, 'web');
+        $registros = $this->registrosDelMedico($contexto['medico']);
+        $pacienteId = $this->pacienteDeLaCita->opcional($cita, $registros);
 
-        return back()->with('estado', 'Cita marcada como atendida.');
+        if ($pacienteId === null) {
+            return back()->with('error', $this->avisoDeCitaSinPaciente());
+        }
+
+        // El día de la consulta es el de la cita, en la zona del consultorio (`FechaDelConsultorio`):
+        // "Atender" solo se ofrece el día de la cita, así que es hoy, pero la fuente es la cita.
+        $dia = FechaDelConsultorio::dia($cita->fecha ? Carbon::parse($cita->fecha)->toDateString() : null);
+
+        // La cita ya atendida no se vuelve a marcar: solo se entra a editar la consulta del día (o se
+        // abre una si no hay, para que la pantalla tenga qué mostrar). No pide confirmación porque no
+        // hay nada que marcar; lo resuelve el diálogo de la vista.
+        if (! $this->citaPorAtender($cita)) {
+            return $this->entrarALaConsulta($request, $cita, $abrir, $registros, $pacienteId, $dia);
+        }
+
+        try {
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->sinHistoria($pacienteId, $excepcion->getMessage());
+        }
+
+        // La marca después de abrir: si la consulta no se pudo abrir, la cita no queda atendida.
+        //
+        // El "cuándo" se resuelve **en la zona del consultorio** y una sola vez para la escritura: es la
+        // marca con la que `RegistroDeCambios` decide si la edición gana (last-write-wins por columna)
+        // frente a lo que ya subió el teléfono. No se pasa `null` para que la Action no tenga que
+        // adivinar la zona (PLAN-WEB.md: "hoy" y "ahora" del negocio son los del consultorio).
+        $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
+
+        // La secretaría no entra a la consulta (§3.14): la cita queda atendida —"el paciente llegó" es
+        // del mostrador y su acción no cambia— y vuelve a la agenda con el aviso, en vez de caer en el
+        // 403 de la ruta del shell.
+        if (! $request->user()->trabajaLaConsulta()) {
+            return $this->urlDeLaAgendaDe($request, $cita)->with('estado', $this->avisoDeConsultaDelMedico());
+        }
+
+        return $this->irALaConsulta(
+            $abierta->consulta->id,
+            'La cita quedó atendida y la consulta N.º ' . $abierta->nroconsulta() . ' está abierta.'
+        );
+    }
+
+    /** @param  array<int,string>  $registros */
+    private function entrarALaConsulta(
+        Request $request,
+        Cola $cita,
+        AbrirConsulta $abrir,
+        array $registros,
+        int $pacienteId,
+        Carbon $dia,
+    ): RedirectResponse {
+        try {
+            // `nueva` también vale acá: desde una cita ya atendida se puede abrir la consulta nueva del
+            // día (el "consulta nueva" del legado no exige que la cita esté sin atender).
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->sinHistoria($pacienteId, $excepcion->getMessage());
+        }
+
+        return $this->irALaConsulta($abierta->consulta->id, 'Consulta N.º ' . $abierta->nroconsulta() . ' abierta.');
+    }
+
+    /**
+     * ¿Esta cita es de las que hay que marcar al atender? No si ya está atendida, y tampoco si el
+     * escritorio la movió (esa fila es la vieja: el paciente ya está en la fecha nueva).
+     */
+    private function citaPorAtender(Cola $cita): bool
+    {
+        return ! $cita->movida_escritorio && (int) $cita->atendido !== 1;
+    }
+
+    /** A la consulta, con el mensaje de qué pasó. */
+    private function irALaConsulta(int $consultaId, string $mensaje): RedirectResponse
+    {
+        return redirect()->route('clinica.consulta', $consultaId)->with('estado', $mensaje);
+    }
+
+    /**
+     * Sin historia no hay consulta: al paciente hay que numerársela primero. Va a la **ficha**, que es
+     * donde vive la acción (WEB-3.3) y donde el médico o la secretaría la resuelven sin perder de vista
+     * la agenda.
+     */
+    private function sinHistoria(int $pacienteId, string $mensaje): RedirectResponse
+    {
+        return redirect()
+            ->route('clinica.pacientes.ver', $pacienteId)
+            ->with('error', $mensaje . ' Se la asignas desde acá y después vuelves a atender la cita.');
+    }
+
+    /** El aviso para la secretaría: la cita se atendió, pero la consulta es del médico (§3.14). */
+    private function avisoDeConsultaDelMedico(): string
+    {
+        return 'La cita quedó atendida. La consulta la abre el médico: la ficha clínica no está entre las '
+            . 'pantallas de la secretaría.';
+    }
+
+    private function avisoDeCitaSinPaciente(): string
+    {
+        return 'Esta cita no tiene un paciente identificable al que atender.';
     }
 
     /** Cobrar: abono parcial, sumado a lo ya pagado (ver `CobrarCita`). */

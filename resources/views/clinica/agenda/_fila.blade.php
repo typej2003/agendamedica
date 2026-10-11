@@ -53,7 +53,12 @@
             @endphp
 
             <div class="acciones-fila">
-                {{-- La acción que sigue: confirmar (el paciente llegó) y, ya confirmada, atender. --}}
+                {{-- La acción que sigue: confirmar (el paciente llegó) y, ya confirmada, atender.
+                     **"Atender" abre la consulta** (WEB-4.1): el botón no envía el formulario, abre el
+                     diálogo de la página (`data-atender`) que ofrece abrir la consulta de hoy o crear una
+                     nueva. Con la cita ya atendida el botón dice "Editar consulta" y entra a la misma
+                     consulta del día sin marcar nada; a la secretaría no se le ofrece (la consulta es del
+                     médico, PLAN-WEB.md §3.14). --}}
                 @if ($confirmar)
                     <form method="POST" action="{{ $confirmar['url'] }}">
                         @csrf
@@ -64,11 +69,15 @@
                         </button>
                     </form>
                 @elseif ($atender)
-                    <form method="POST" action="{{ $atender['url'] }}">
+                    <form method="POST" action="{{ $atender['url'] }}"
+                          data-atender
+                          data-paciente="{{ $fila->paciente() }}"
+                          data-editar="{{ $atender['editar'] ? '1' : '0' }}">
                         @csrf
-                        <button class="btn btn-sm btn-outline-primary" title="{{ $atender['titulo'] }}"
-                                @if (! $atender['habilitada']) disabled @endif>
-                            <i class="bi bi-play-circle" aria-hidden="true"></i> Atender
+                        <button class="btn btn-sm {{ $atender['editar'] ? 'btn-outline-primary' : 'btn-primary' }}"
+                                title="{{ $atender['titulo'] }}" @if (! $atender['habilitada']) disabled @endif>
+                            <i class="bi {{ $atender['editar'] ? 'bi-pencil' : 'bi-play-circle' }}" aria-hidden="true"></i>
+                            {{ $atender['editar'] ? 'Editar consulta' : 'Atender' }}
                         </button>
                     </form>
                 @endif
@@ -103,9 +112,11 @@
                             </button>
                         @endif
 
-                        {{-- Con la cita sin confirmar, "Atender" va en el menú: implica confirmada. --}}
+                        {{-- Con la cita sin confirmar, "Atender" va en el menú: implica confirmada y además
+                             abre la consulta del día (WEB-4.1). Es el mismo diálogo de la página. --}}
                         @if ($confirmar && $atender)
-                            <form method="POST" action="{{ $atender['url'] }}">
+                            <form method="POST" action="{{ $atender['url'] }}"
+                                  data-atender data-paciente="{{ $fila->paciente() }}" data-editar="0">
                                 @csrf
                                 <button class="menu-item" title="{{ $atender['titulo'] }}" @if (! $atender['habilitada']) disabled @endif>
                                     <i class="bi bi-play-circle" aria-hidden="true"></i> Atender (implica confirmada)

@@ -19,6 +19,10 @@ class IconoModulo
             str_contains($slug, 'agenda'), str_contains($slug, 'cita') => 'bi-calendar3',
             str_contains($slug, 'paciente') => 'bi-people',
             str_contains($slug, 'historia') => 'bi-journal-medical',
+            // La consulta (F4): el mismo icono con el que la web clínica marca la consulta en la historia
+            // del paciente (WEB-3.5). El módulo existe en el catálogo pero todavía no se muestra en el
+            // menú: se entra por "Atender" (WEB-4.1).
+            str_contains($slug, 'consulta') => 'bi-journal-medical',
             str_contains($slug, 'recipe'), str_contains($slug, 'receta') => 'bi-file-medical',
             str_contains($slug, 'evolucion') => 'bi-activity',
             str_contains($slug, 'ecografia'), str_contains($slug, 'examen') => 'bi-clipboard2-pulse',

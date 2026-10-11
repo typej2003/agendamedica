@@ -3,6 +3,7 @@
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
+use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
@@ -106,6 +107,20 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // solo a dónde vuelve. La ruta es propia para no tocar el borrado de la agenda.
             Route::post('/pacientes/{paciente}/citas/{cola}/eliminar', [CitasDelPacienteController::class, 'eliminar'])->name('pacientes.citas.eliminar');
             Route::get('/pacientes/{paciente}', [PacienteController::class, 'ver'])->name('pacientes.ver');
+
+            // **La consulta** (F4/WEB-4.1): la pantalla de la atención, con el panel de 13 ítems del
+            // legado. Es **sólo del médico**: la secretaría no entra a la ficha clínica (PLAN-WEB.md
+            // §3.14, Nivel 3 del legado), así que vive en un grupo con sus propios roles y no en el que
+            // comparte con la agenda. El grupo `clinica.contexto` sigue valiendo: una consulta se lee con
+            // el médico del contexto.
+            //
+            // No cuelga de `/pacientes/{paciente}` porque la consulta no es del paciente: es **de una
+            // historia** (`numhistoria` + `nroconsulta`), y ese es el vínculo que el escritorio y el sync
+            // comparten. El controlador resuelve el paciente para el encabezado y responde 404 si la
+            // consulta es de otro consultorio.
+            Route::middleware('role:Root|Medico')->group(function () {
+                Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+            });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del
             // módulo es `clinica.agenda`, que es la que el menú arma desde `especialidad_modulo`.

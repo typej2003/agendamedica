@@ -2,6 +2,7 @@
 
 namespace App\Sync;
 
+use App\Actions\Consulta\CrearConsulta;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Models\Cola;
 use App\Models\Consulta;
@@ -28,6 +29,12 @@ use InvalidArgumentException;
  *    + 1; consulta: la última de esa historia + 1; récipe: el siguiente de la consulta). El teléfono
  *    muestra uno provisional y lo reemplaza por el que vuelve en `creados` (decisión del usuario,
  *    2026-09-23). Por eso no viajan columnas: solo a qué cuelga cada cosa.
+ *
+ *    Las dos reglas del número que ya usaba otra superficie **no viven acá**: el de la historia está en
+ *    `App\Actions\Pacientes\AsignarHistoria` (desde WEB-2.11) y el de la consulta en
+ *    `App\Actions\Consulta\CrearConsulta` (desde WEB-4.1, cuando "Atender" de la web pasó a abrir la
+ *    consulta). Este servicio les pasa lo que solo él sabe —la historia resuelta del lote— y anota el
+ *    rastro.
  * 2. **Cada una cuelga de la anterior**, que puede venir en el mismo lote (id temporal:
  *    `historia_temp_id`, `consulta_temp_id`) o ya existir (número o id real). Una referencia temporal
  *    de un lote anterior se resuelve por `sync_changes`, así que el reintento de un récipe cuya
@@ -55,6 +62,7 @@ class CreacionesClinicas
         private Medico $medico,
         private array $registrosMedicos,
         private AsignarHistoria $asignarHistoria,
+        private CrearConsulta $crearConsulta,
     ) {
     }
 
@@ -152,6 +160,11 @@ class CreacionesClinicas
     /**
      * Abrir una consulta al atender. Siempre crea una nueva: la pregunta "¿re-atender o consulta
      * nueva?" la resuelve el teléfono (re-atender reusa la del día sin mandar nada acá).
+     *
+     * La regla del **número** —la última de esa historia + 1— **no vive acá**: la resuelve
+     * `App\Actions\Consulta\CrearConsulta`, que es la misma Action que usa la web al "Atender"
+     * (PLAN-WEB.md, R3; el mismo camino que hizo `AsignarHistoria` en WEB-2.11). Lo único propio del
+     * sync es el rastro: a qué id temporal corresponde la consulta que se acaba de crear.
      */
     private function crearConsulta(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -162,20 +175,8 @@ class CreacionesClinicas
         }
 
         $fecha = $this->fechaValida($change['fecha'] ?? null) ?? now()->toDateString();
-        $numhistoria = (int) $historia->numhistoria;
 
-        $consulta = DB::transaction(function () use ($historia, $numhistoria, $fecha) {
-            $ultima = Consulta::where('numhistoria', $numhistoria)
-                ->whereIn('reg_medico', $this->registrosMedicos)
-                ->max('nroconsulta');
-
-            return Consulta::create([
-                'reg_medico' => $historia->reg_medico,
-                'numhistoria' => $numhistoria,
-                'nroconsulta' => ((int) $ultima) + 1,
-                'fecha' => $fecha,
-            ]);
-        });
+        $consulta = $this->crearConsulta->ejecutar($historia, Carbon::parse($fecha));
 
         $this->anotar('consultas', $consulta->id, $tempId, $consulta->reg_medico);
         $this->consultas[$tempId] = $consulta->id;

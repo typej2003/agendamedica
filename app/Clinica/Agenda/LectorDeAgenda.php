@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\Office;
 use Carbon\Carbon;
@@ -73,7 +74,11 @@ class LectorDeAgenda
             // Recordatorio por cita (WEB-2.6): el texto del **médico de esa cita** ya armado, para que
             // el diálogo de cada fila lo ofrezca sin una consulta por fila.
             mensajes: $this->recordatorios->mensajesPara($regMedico, $visibles, $sedes),
-            ahora: Carbon::now(),
+            // "Ahora" **en la zona del consultorio**, no en UTC: es con lo que cada fila decide si
+            // ofrece "Confirmar" (desde una hora antes) y "Atender" (solo el día de la cita). Con
+            // `Carbon::now()` —UTC— un consultorio de Venezuela (UTC-4) apagaba esos botones a las
+            // 20:00 locales, cuando en UTC ya es el día siguiente (`FechaDelConsultorio`, WEB-2.9).
+            ahora: FechaDelConsultorio::ahora(),
             // El panel "Pacientes sin historia a atender" (WEB-2.11) es **del día que se está
             // mirando**, no del rango: en semana y mes no se muestra.
             pacientesSinHistoria: $parametros->vista === 'dia'

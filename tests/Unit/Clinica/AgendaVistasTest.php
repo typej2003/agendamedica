@@ -75,17 +75,42 @@ class AgendaVistasTest extends TestCase
         }
     }
 
-    public function test_una_cita_atendida_no_ofrece_confirmar_ni_editar_ni_eliminar(): void
+    public function test_una_cita_atendida_ofrece_editar_la_consulta_pero_no_confirmar_ni_reagendar(): void
     {
         $fila = $this->fila(['atendido' => 1, 'estado' => Cola::ESTADO_NO_CONFIRMADA]);
 
         $this->assertSame('Atendida', $fila->estado()['texto']);
         $this->assertSame('fila-atendida', $fila->clase());
         $this->assertNull($fila->confirmar());      // atender implica confirmada
-        $this->assertNull($fila->atender());
         $this->assertNull($fila->urlEditar());
         $this->assertNull($fila->urlEliminar());
+
+        // Con la cita ya atendida el botón entra a **editar la consulta del día** y no vuelve a marcar
+        // nada (WEB-4.1: en el legado es la misma pantalla de la consulta).
+        $atender = $fila->atender();
+        $this->assertNotNull($atender);
+        $this->assertTrue($atender['editar']);
+        $this->assertTrue($atender['habilitada']);
+
         $this->assertNotNull($fila->cobro());       // pero todavía se puede cobrar
+    }
+
+    public function test_la_secretaria_no_recibe_el_boton_de_la_consulta(): void
+    {
+        // La consulta es sólo del médico (PLAN-WEB.md §3.14): a la secretaría se le ofrece atender una
+        // cita pendiente (es la acción del mostrador), pero no entrar a la ficha clínica.
+        $pendiente = new FilaDeCitaVista($this->cita(), 3, true, $this->ahora(), '', false);
+        $this->assertFalse($pendiente->atender()['habilitada']);
+
+        $atendida = new FilaDeCitaVista(
+            $this->cita(['atendido' => 1, 'estado' => Cola::ESTADO_CONFIRMADA]),
+            3,
+            true,
+            $this->ahora(),
+            '',
+            false,
+        );
+        $this->assertNull($atendida->atender(), 'una cita ya atendida no le ofrece nada a la secretaría');
     }
 
     public function test_una_cita_confirmada_ofrece_atender_y_quitar_la_confirmacion(): void

@@ -25,7 +25,13 @@ class AgendaController extends Controller
         $lectura = $lector->leer(ParametrosDeAgenda::desde($request, $contexto), $contexto);
 
         return view('clinica.agenda.index', [
-            'vm' => new AgendaVista($lectura, $request->query()),
+            'vm' => new AgendaVista(
+                $lectura,
+                $request->query(),
+                // "Atender abre la consulta" (WEB-4.1): la fila ofrece el botón solo a quien puede entrar
+                // a la consulta —el médico—, con la misma regla que protege la ruta del shell (§3.14).
+                (bool) $request->user()?->trabajaLaConsulta(),
+            ),
         ]);
     }
 

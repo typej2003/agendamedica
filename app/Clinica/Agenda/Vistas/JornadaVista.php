@@ -14,6 +14,8 @@ final class JornadaVista
     /**
      * @param  array<int,int>  $posiciones  id de cita => posición calculada sobre todo el rango
      * @param  array<int,string>  $mensajes  id de cita => texto del recordatorio
+     * @param  bool  $puedeAbrirLaConsulta  si el usuario puede entrar a la consulta (WEB-4.1: sólo el
+     *                                      médico). Lo resuelve el controlador, no la vista.
      */
     public function __construct(
         private Jornada $jornada,
@@ -21,6 +23,7 @@ final class JornadaVista
         private array $mensajes,
         private Carbon $ahora,
         private bool $conArrastre,
+        private bool $puedeAbrirLaConsulta = true,
     ) {
     }
 
@@ -134,6 +137,7 @@ final class JornadaVista
                 $arrastrable,
                 $this->ahora,
                 $this->mensajes[$fila['cita']->id] ?? '',
+                $this->puedeAbrirLaConsulta,
             ))
             ->all();
     }

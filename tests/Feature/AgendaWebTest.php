@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Models\Cola;
+use App\Models\Consulta;
 use App\Models\Evolucion;
+use App\Models\Historia;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -410,7 +412,20 @@ class AgendaWebTest extends TestCase
     public function test_atender_implica_confirmar(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $cita = $this->cita($medico, null, $this->lunes->toDateString(), '08:00:00', 1, ['estado' => 0, 'atendido' => 0]);
+
+        // Un paciente del médico **con su historia**: sin historia no se atiende (el caso está en
+        // `ConsultaWebTest`), así que acá se prueba el camino normal completo.
+        $pacienteId = $this->pacienteConHistoria($medico, 4001, 'Ana', 'Alvarez');
+        Historia::create([
+            'numhistoria' => '4001',
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $pacienteId,
+            'medico_id'   => $medico->id,
+        ]);
+
+        $cita = $this->cita($medico, null, $this->lunes->toDateString(), '08:00:00', 1, [
+            'numhistoria' => 4001, 'estado' => 0, 'atendido' => 0,
+        ]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/agenda/' . $cita->id . '/atender')
@@ -419,6 +434,12 @@ class AgendaWebTest extends TestCase
         $fresca = $cita->fresh();
         $this->assertSame(1, (int) $fresca->atendido);
         $this->assertSame(Cola::ESTADO_CONFIRMADA, (int) $fresca->estado);
+
+        // Y "Atender" **abre la consulta del día** (WEB-4.1): la crea con el correlativo de la historia y
+        // con el día de la cita.
+        $consulta = Consulta::where('reg_medico', $medico->reg_medico)->where('numhistoria', 4001)->first();
+        $this->assertNotNull($consulta, 'atender tiene que abrir la consulta');
+        $this->assertSame(1, (int) $consulta->nroconsulta);
     }
 
     public function test_cobrar_suma_los_abonos_y_fija_el_monto_solo_si_no_habia(): void
