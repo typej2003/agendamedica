@@ -33,8 +33,9 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras cerrar **WEB-5.2** —imprimir el récipe—) es **1151 en
-verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
+medición (2026-10-11, tras la sección **"Especialidades"** del panel) es **1159 en
+verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido dos veces y
+una tercera con la base de tests borrada, siempre 1159 + 3). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
 `reg_medico` de la prueba y terminaba leyendo las filas que siembra `FakeClinicalDataSeeder`, que reparte
@@ -276,6 +277,16 @@ es administrador). El panel `/dashboard` quedó para administración. Lo nuevo s
   comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página. "Permisos de Usuario" se quitó del panel lateral
   (no funcionaba; `/users/permissions` sigue en `routes/web.php`, sin enlace). **Cerrar sesión** pide confirmación
   en el panel lateral y en el menú del usuario (`confirmarCierreSesion` en `layouts/app.blade.php`, SweetAlert2).
+- **Sección "Especialidades"** (`/admin/especialidades`, `Admin\Especialidades`, misma ruta-archivo
+  `routes/web/cuentas.php`): con qué especialidades trabaja cada médico — es lo que enciende los módulos de la web
+  clínica (`specialties` + pivote `medico_specialty`, ver `ContextoTrabajo`; **no** confundir con `especial`, el
+  catálogo del legado por médico). Lista los médicos con sus especialidades y sus pastillas **Todos / Sin
+  especialidad / Con especialidad** (los que no tienen ninguna no ven ningún módulo), y la ventana de asignación
+  tilda las del catálogo: la regla es `CuentaService::asignarEspecialidades` (`sync` del pivote) y **se puede
+  dejar al médico sin ninguna** — se avisa, no se bloquea. El catálogo **no** se crea ni se edita acá: lo siembran
+  los manifiestos (`config/especialidades/*.php` con `EspecialidadesYModulosSeeder`). Tests en
+  `tests/Feature/EspecialidadesDelMedicoTest.php`; verificación en Chrome en
+  `../.agent-tools/verificar-especialidades-admin-web.js` (trampa 51: las casillas del array van con `.defer`).
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
@@ -426,7 +437,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **50** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **52** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

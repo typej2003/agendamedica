@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **50** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **52** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -470,3 +470,16 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     `/MediaBox` del archivo (A4 horizontal = 841,9 × 595,3 pt; Chrome lo escribe como 841,92 × 594,96) y la «rasterización» de la hoja
     se hace con una captura en `emulateMedia({ media: 'print' })`. El texto de `-layout` pone las dos mitades de la hoja en la misma
     línea: se compara con los espacios colapsados y por fragmentos de **una** mitad.
+51. **`wire:model` en un `array` de casillas pierde lo tildado antes (panel de Especialidades).** En la ventana de
+    «Especialidades» del médico (`Admin\Especialidades`, 2026-10-11) las casillas del catálogo estaban con
+    `wire:model="seleccionadas"`: cada clic dispara **su propia** petición y, con dos clics seguidos, la segunda viaja antes de
+    que vuelva la primera, así que se guardaba **sólo la última tildada**. Medido en Chrome: tildar Cardiología y Dermatología
+    y «Guardar» dejaba **1 asignada** y la fila con una sola; con `wire:model.defer` (una sola petición, la del formulario)
+    quedan las dos. El test de Livewire **no** lo ve —`->set('seleccionadas', [1, 2])` manda el array completo en una petición—:
+    lo cazó el verificador de Chrome (`verificar-especialidades-admin-web.js`), que es la razón para no confiar sólo en el test.
+    Regla: en un formulario con botón «Guardar», las casillas de un array van con **`.defer`**.
+52. **El `favicon-16x16.png` que falta es del armazón del panel, no de la pantalla que se está mirando.** Chrome pide el favicon
+    en la **primera** navegación después del login y deja un `404 /favicon-16x16.png` en la consola y en las respuestas (medido el
+    2026-10-11: pasa igual entrando primero a `/admin/cuentas`). Un verificador que cuente «errores de consola» tiene que
+    distinguirlo del error propio —el de esta pantalla se mide por las **respuestas** ≥ 400 y por el resto de la consola— o va a
+    dar rojo por algo que no es suyo. No se arregló (falta el archivo, no es de esta tarea).

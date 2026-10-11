@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Specialty;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -454,6 +455,51 @@ class CuentaService
         DB::transaction(function () use ($medico, $regMedico) {
             DB::table('medico_registros')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
             DB::table('medico_pacientes')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
+        });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Especialidades del médico                                           */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Deja al médico con EXACTAMENTE estas especialidades del catálogo (pivote `medico_specialty`).
+     *
+     * Es lo que decide con qué trabaja en `/clinica`: `ContextoTrabajo` arma el contexto con las
+     * especialidades **activas** del médico y de ahí salen los módulos del menú (PLAN-WEB.md, R1/R2).
+     * Ojo con el catálogo: acá se usa `specialties` —el de AppDDR—, **no** `especial`, que es el del
+     * legado por médico (`doctores.codeespecial`).
+     *
+     * Se puede dejar sin ninguna (el pivote no lo impide y hay médicos del sync que nunca tuvieron): la
+     * web clínica lo trata como "sin especialidad asignada" y no le muestra módulos. No se crean
+     * especialidades desde acá: el catálogo lo siembran los manifiestos (`config/especialidades/*.php`
+     * con `EspecialidadesYModulosSeeder`).
+     *
+     * @param  array<int|string>  $especialidadIds
+     * @return array{asignadas: int, quitadas: int}  para el aviso de la pantalla
+     */
+    public function asignarEspecialidades(Medico $medico, array $especialidadIds): array
+    {
+        $ids = collect($especialidadIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($desconocidas = $ids->diff(Specialty::whereIn('id', $ids)->pluck('id'))->all()) {
+            throw ValidationException::withMessages([
+                'especialidades' => 'Especialidad desconocida: ' . implode(', ', $desconocidas) . '.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($medico, $ids) {
+            // `sync` deja el pivote con exactamente estos ids: agrega los que faltan y quita los que sobran.
+            $cambios = $medico->specialties()->sync($ids->all());
+
+            return [
+                'asignadas' => count($cambios['attached']),
+                'quitadas'  => count($cambios['detached']),
+            ];
         });
     }
 

@@ -47,6 +47,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.especialidades') }}" class="nav-link {{ request()->routeIs('admin.especialidades') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.especialidades')) aria-current="page" @endif title="Especialidades">
+                    <i class="bi bi-stethoscope" aria-hidden="true"></i>
+                    <span class="link-text">Especialidades</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
                     <i class="bi bi-key-fill" aria-hidden="true"></i>
