@@ -6,6 +6,12 @@
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()"
                     :volver="route('clinica.pacientes')" volver-texto="Pacientes">
         <x-slot name="acciones">
+            {{-- La historia del paciente (WEB-3.5): sus consultas, antecedentes y documentos. Es la otra
+                 mitad de la ficha —lo que pasó en las consultas— y se ofrece siempre, también al paciente
+                 sin número, que ahí ve el estado vacío y el camino para asignárselo. --}}
+            <a class="btn btn-outline-secondary" href="{{ route('clinica.pacientes.historia', $vm->id()) }}">
+                <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia
+            </a>
             {{-- Cuando falta la historia, **esa** es la acción primaria de la pantalla: es lo que hay que
                  hacer para poder atender al paciente (wiki `04-historia-clinica.md`: "No se atiende sin
                  historia"). Editar la ficha queda al lado, en secundario. Con la historia puesta, la

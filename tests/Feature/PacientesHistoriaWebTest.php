@@ -149,7 +149,11 @@ class PacientesHistoriaWebTest extends TestCase
         $respuesta->assertSee('Historia N.º 1001');
         $respuesta->assertDontSee('Falta el número de historia');
         $respuesta->assertDontSee('Asignar el número de historia');
-        $respuesta->assertDontSee(route('clinica.pacientes.asignar-historia', $paciente), false);
+        // La ausencia se mide por **el formulario**, no por la URL: desde WEB-3.5 la ruta
+        // `/pacientes/{id}/historia` es también la pantalla de la historia (GET), así que el texto de la
+        // URL aparece en el enlace "Ver la historia" de la ficha. Lo que no puede aparecer es un POST a la
+        // acción de asignar.
+        $respuesta->assertDontSee('action="' . route('clinica.pacientes.asignar-historia', $paciente) . '"', false);
     }
 
     // ------------------------------------------------------------------------------ Asignar la historia

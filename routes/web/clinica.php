@@ -6,6 +6,7 @@ use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
+use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaController;
@@ -82,6 +83,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // secretaría al recibir al paciente, o el médico si llega a atenderlo sin historia; el
             // `reg_medico` sale del vínculo del paciente y **no** del formulario.
             Route::post('/pacientes/{paciente}/historia', [PacienteController::class, 'asignarHistoria'])->name('pacientes.asignar-historia');
+            // La **historia del paciente** (WEB-3.5): sus consultas, sus antecedentes y sus documentos, y
+            // la impresión del resumen. Es de **sólo lectura** (la consulta es F4 y los documentos, F5) y
+            // va aparte de la ficha porque es otra responsabilidad: la ficha es la filiación y el contacto,
+            // la historia es lo que pasó en las consultas. Un paciente de otro médico da 404.
+            Route::get('/pacientes/{paciente}/historia', [HistoriaDelPacienteController::class, 'ver'])->name('pacientes.historia');
+            Route::get('/pacientes/{paciente}/historia/imprimir', [HistoriaDelPacienteController::class, 'imprimir'])->name('pacientes.historia.imprimir');
             // El representante del paciente (WEB-3.4): el adulto que responde por él y el que presta el
             // teléfono para el recordatorio. Es un **upsert por historia** (la tabla legada tiene una fila
             // por `numhistoria`), así que cargar y editar son el mismo POST; el formulario vive en el

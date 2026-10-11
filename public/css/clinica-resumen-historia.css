@@ -1,0 +1,54 @@
+/* "Resumen de historia clínica" para imprimir (`/clinica/pacientes/{id}/historia/imprimir`, WEB-3.5).
+   Pantalla aparte, sin el armazón de la web: es el documento que va a la impresora del consultorio, como
+   el listado del día (`clinica-imprimir.css`). Los colores son los de la paleta (`gineco.css`), repetidos
+   acá porque esta página no carga el sistema de la aplicación. */
+
+@page { size: portrait; margin: 1.5cm; }
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #201048;
+    font-size: 12px;
+    margin: 0 auto;
+    max-width: 19cm;
+    padding: 1.5rem 1rem;
+}
+
+header { border-bottom: 2px solid #783080; padding-bottom: .5rem; margin-bottom: .75rem; }
+.membrete { color: #55555f; font-size: 11px; }
+h1 { font-size: 16px; margin: 0; }
+
+.datos { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin: .5rem 0 0; }
+.datos div { display: flex; gap: .35rem; }
+.datos dt { font-weight: bold; margin: 0; }
+.datos dd { margin: 0; }
+
+.consulta { margin-bottom: .9rem; break-inside: avoid; }
+.consulta h2 {
+    font-size: 12px;
+    margin: 0 0 .25rem;
+    border-bottom: 1px solid #d8d8e0;
+    padding-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.consulta h2 .numero { font-weight: normal; color: #55555f; }
+
+.seccion { margin: 0 0 .2rem; text-align: justify; }
+.seccion-titulo { font-weight: bold; }
+
+.sin-datos { color: #55555f; }
+
+.acciones { margin-bottom: 1rem; }
+.acciones button {
+    font: inherit; padding: .5rem 1rem; border: 0; border-radius: .35rem;
+    background: #783080; color: #fff; cursor: pointer;
+}
+
+@media print {
+    .acciones { display: none; }
+    body { padding: 0; max-width: none; }
+}

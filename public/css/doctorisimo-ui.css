@@ -735,7 +735,10 @@ fieldset:disabled .btn[class*="btn-outline-"] {
     padding: 2.25rem 1rem;
 }
 
-.empty-state i {
+/* El icono del estado vacío va en bloque y grande. El selector apunta sólo al icono **propio** del
+   componente: con `.empty-state i` también alcanzaba a los iconos de los botones del slot `acciones`
+   (la historia del paciente tiene uno: "Ir a la ficha a asignarla"), que quedaban uno arriba del otro. */
+.empty-state > i {
     font-size: 1.6rem;
     display: block;
     margin-bottom: .5rem;
@@ -1139,6 +1142,32 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     color: var(--ds-texto);
     overflow-wrap: anywhere;
 }
+
+/* --- Historia del paciente (WEB-3.5): los antecedentes agrupados por tipo --- */
+.antecedentes-grupo + .antecedentes-grupo { margin-top: 1rem; }
+
+.antecedentes-titulo {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ds-texto-3);
+    margin: 0 0 .35rem;
+}
+
+.lista-antecedentes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lista-antecedentes > li {
+    padding: .45rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+    overflow-wrap: anywhere;
+}
+
+.lista-antecedentes > li:last-child { border-bottom: 0; }
 
 /* --- Ancho de columnas y controles (reemplazan los `style=""` de las vistas) --- */
 .col-estrecha { width: 2rem; }
