@@ -64,12 +64,13 @@
         </div>
 
         {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
-             ninguna. Las secciones llegan por los parciales —`_motivos` (WEB-4.2) y `_enfermedad`
-             (WEB-4.2)— y las siguientes tareas agregan las suyas: el nombre del parcial lo resuelve el
-             ViewModel a partir del mapa del panel. --}}
+             ninguna. Las secciones llegan por los parciales —`_motivos` y `_enfermedad` (WEB-4.2),
+             `_evaluacion` (WEB-4.3) y `_antecedentes` (WEB-4.4)— y las siguientes tareas agregan las suyas:
+             el nombre del parcial lo resuelve el ViewModel a partir del mapa del panel. La sección de
+             antecedentes recibe además su `catalogo` (el buscador), que sólo ella tiene. --}}
         <div class="col-12 col-lg-7 col-xl-8">
             @if ($contenido && $vm->parcial())
-                @include($vm->parcial(), ['seccion' => $contenido])
+                @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null])
             @else
                 <x-ui.tarjeta id="consulta-contenido" titulo="Contenido de la consulta" icono="bi-journal-medical">
                     @php $vacio = $vm->sinContenido(); @endphp

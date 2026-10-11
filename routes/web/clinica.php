@@ -3,6 +3,7 @@
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
+use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
@@ -144,6 +145,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+
+                // Antecedentes del paciente (WEB-4.4): el ítem 3 del panel. **No son de la consulta** —
+                // `antece_paciente` se llavea por `numhistoria` y el escritorio los carga y los lee por
+                // historia (`w_consulta_principal.srw:7416`, `:7636`, `:7754`)—, así que la Action vive en
+                // `Actions\Pacientes`; la sección se abre dentro de la consulta porque es el ítem 3 de su
+                // panel. `buscar` es el buscador del catálogo (JSON) y va **antes** de las rutas con
+                // parámetro.
+                Route::get('/consulta/{consulta}/antecedentes/buscar', [ConsultaAntecedentesController::class, 'buscar'])->name('consulta.antecedentes.buscar');
+                Route::post('/consulta/{consulta}/antecedentes', [ConsultaAntecedentesController::class, 'guardar'])->name('consulta.antecedentes.guardar');
+                Route::post('/consulta/{consulta}/antecedentes/crear', [ConsultaAntecedentesController::class, 'crear'])->name('consulta.antecedentes.crear');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

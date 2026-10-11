@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
+use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
+use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -51,8 +54,13 @@ class ConsultaController extends Controller
     {
     }
 
-    public function ver(Request $request, Consulta $consulta, MotivosDeLaConsulta $motivos, ExamenFisicoDeLaConsulta $examen)
-    {
+    public function ver(
+        Request $request,
+        Consulta $consulta,
+        MotivosDeLaConsulta $motivos,
+        ExamenFisicoDeLaConsulta $examen,
+        AntecedentesDelPaciente $antecedentes,
+    ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
 
@@ -92,7 +100,9 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes),
+            // La tarjeta del buscador del catálogo, que sólo tiene la sección de antecedentes (WEB-4.4).
+            'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
         ]);
     }
 
@@ -109,6 +119,7 @@ class ConsultaController extends Controller
         string $regMedico,
         MotivosDeLaConsulta $motivos,
         ExamenFisicoDeLaConsulta $examen,
+        AntecedentesDelPaciente $antecedentes,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -150,6 +161,55 @@ class ConsultaController extends Controller
             );
         }
 
+        if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {
+            $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
+
+            return new SeccionDeAntecedentesVista(
+                $delPaciente,
+                route('clinica.consulta.antecedentes.guardar', $consulta->id),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
+                // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                (array) old(),
+            );
+        }
+
         return null;
     }
+
+    /**
+     * El ViewModel del **buscador del catálogo de antecedentes**, o `null` si la sección activa no es la de
+     * antecedentes. Es una lectura propia —el catálogo del médico y los tipos, que no dependen de la
+     * consulta— y por eso no viaja adentro del ViewModel de la sección: la vista grande son los
+     * antecedentes del paciente y esta tarjeta es la herramienta para agregarlos.
+     */
+    private function catalogoDeAntecedentes(
+        string $seccion,
+        Consulta $consulta,
+        string $regMedico,
+        AntecedentesDelPaciente $antecedentes,
+    ): ?object {
+        if ($seccion !== ConsultaShellVista::SECCION_ANTECEDENTES) {
+            return null;
+        }
+
+        $buscar = trim((string) request()->query('buscar', ''));
+        $tipo = trim((string) request()->query('tipo', ''));
+        $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
+
+        return new SeccionDeAntecedentesCatalogoVista(
+            $antecedentes->catalogo($regMedico, $buscar, $tipo),
+            $delPaciente->pluck('codigo')->all(),
+            $antecedentes->tipos(),
+            // La base del enlace "Agregar" de cada fila: vuelve a **esta misma sección** (el `?seccion=`
+            // lo agrega el ViewModel) con el código tildado.
+            route('clinica.consulta', [$consulta->id]),
+            route('clinica.consulta.antecedentes.crear', $consulta->id),
+            $buscar,
+            $tipo,
+            // El `?…` de la URL: es lo que dice qué quedó tildado para agregar (`?agregar=…`).
+            request()->query(),
+            // La base del `action` del guardado: el ViewModel le agrega la sección (para que la vuelta del
+            // POST caiga acá) y los pendientes del buscador como query.
+            route('clinica.consulta.antecedentes.guardar', $consulta->id),
+        );    }
 }

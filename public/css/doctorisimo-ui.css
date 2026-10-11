@@ -1704,3 +1704,83 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     color: var(--ds-texto-3);
     margin-bottom: .15rem;
 }
+
+/* ==========================================================================
+   10. Web clínica — los antecedentes del paciente (WEB-4.4)
+   ========================================================================== */
+
+/* Los grupos por tipo: el título es el del catálogo (`tipo_antecedente.descripcion`) y va como subtítulo,
+   porque la jerarquía de la tarjeta ya la tiene el nombre de la sección. */
+.antecedentes-grupo + .antecedentes-grupo { margin-top: 1rem; }
+
+.antecedentes-grupo-titulo {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ds-texto-3);
+    margin-bottom: .35rem;
+}
+
+.antecedentes-lista { list-style: none; margin: 0; padding: 0; }
+
+.antecedentes-item {
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.antecedentes-item:last-child { border-bottom: 0; }
+
+/* La fila con la casilla de Alerta: fondo ámbar suave y barra a la izquierda. El color no es la única
+   señal —la casilla está tildada y la pastilla del encabezado lo cuenta—, como pide la guía de UI §1. */
+.antecedentes-item-alerta {
+    background: var(--ds-aviso-bg);
+    border-left: 3px solid var(--ds-aviso-borde);
+    border-radius: var(--ds-radio);
+    padding-left: .6rem;
+    padding-right: .6rem;
+}
+
+.antecedentes-item-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+}
+
+.antecedentes-item-datos { flex: 1 1 auto; min-width: 0; }
+
+.antecedentes-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.antecedentes-item-datos .form-control { margin-top: .25rem; }
+
+/* La casilla de Alerta, a la derecha del nombre: `flex: 0 0 auto` para que no se estire con el texto. */
+.antecedentes-alerta {
+    flex: 0 0 auto;
+    margin-top: .1rem;
+    white-space: nowrap;
+}
+
+.antecedentes-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+/* Una fila marcada para quitar: se atenúa y el nombre se tacha **sólo acá**, porque el borrado todavía no
+   pasó (la guía de UI prohíbe tachar como estado de un dato terminado; esto es una acción pendiente). */
+.antecedentes-item-quitado { opacity: .55; }
+
+.antecedentes-item-quitado .antecedentes-nombre,
+.antecedentes-item-quitado .antecedentes-item-datos .form-control { text-decoration: line-through; }
+
+@media (max-width: 575.98px) {
+    .antecedentes-item-texto { flex-wrap: wrap; }
+    .antecedentes-item-datos { flex-basis: 100%; }
+    .antecedentes-alerta,
+    .antecedentes-acciones { order: 2; }
+}

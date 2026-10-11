@@ -21,6 +21,12 @@
  *    formulario** (son veinte campos en dos tablas), y el **IMC** —peso / talla², la cuenta que el
  *    escritorio hace en `gffimc.srf`— recalculado al escribir el peso o la talla. El IMC no se guarda: es
  *    de pantalla.
+ *
+ * 4. **Los antecedentes** (WEB-4.4): el mismo aviso de cambios sin guardar —el detalle, la casilla de
+ *    Alerta y lo que el buscador dejó tildado— y el **"Quitar"** de cada fila, que no borra nada al
+ *    instante: marca la fila y agrega su código al `POST` del botón guardar, que es donde la baja se
+ *    aplica. El `hidden` que se inserta es la única forma de decirle al servidor "esto ya no está" sin
+ *    duplicar el estado en la vista.
  */
 (function () {
     'use strict';
@@ -272,5 +278,132 @@
         [peso, talla].forEach(function (campo) {
             if (campo) campo.addEventListener('input', pintarImc);
         });
+    }
+
+    // ------------------------------------------------------------------ Antecedentes (WEB-4.4)
+
+    const antecedentes = document.querySelector('[data-consulta-antecedentes]');
+
+    if (antecedentes) {
+        const aviso = document.getElementById('antecedentes-sin-guardar');
+        /** Los controles de una fila que sigue en la lista: lo que la baja saca del POST y del aviso. */
+        const controlesDe = (fila) => Array.prototype.slice.call(
+            fila.querySelectorAll('input[type=text], input[type=checkbox], input[type=hidden][name^="filas["]'),
+        );
+        const campos = Array.prototype.slice.call(
+            antecedentes.querySelectorAll(
+                'input[type=text][name^="filas["], input[type=checkbox][name^="filas["], input[type=hidden][name^="filas["]',
+            ),
+        );
+
+        // El estado de partida de cada control, tal como el servidor pintó el formulario (ya trae el
+        // `old()` si el POST falló). El checkbox compara `checked`, que es lo que cambia la casilla.
+        const guardados = campos.map(function (campo) {
+            return campo.type === 'checkbox' ? campo.checked : campo.value;
+        });
+        // Las filas que el médico sacó con el botón: su código viaja en `quitar[]` y sus controles **no**
+        // viajan (si no, el POST hablaría de una fila que ya no está).
+        const quitados = [];
+        const controlesQuitados = [];
+
+        function sucio() {
+            if (quitados.length > 0) return true;
+
+            return campos.some(function (campo, indice) {
+                // Un control de una fila quitada ya no cuenta: su baja ya está en `quitados`.
+                if (controlesQuitados.indexOf(campo) >= 0) return false;
+
+                return campo.type === 'checkbox'
+                    ? campo.checked !== guardados[indice]
+                    : campo.value !== guardados[indice];
+            });
+        }
+
+        function pintarAviso() {
+            if (aviso) aviso.hidden = !sucio();
+        }
+
+        campos.forEach(function (campo) {
+            campo.addEventListener('input', pintarAviso);
+            campo.addEventListener('change', pintarAviso);
+        });
+
+        // "Quitar" no borra: marca la fila, saca sus controles del formulario y deja su código en
+        // `quitar[]`. El segundo botón la restaura tal como estaba.
+        antecedentes.querySelectorAll('[data-antecedente-quitar]').forEach(function (boton) {
+            const fila = boton.closest('[data-antecedente-fila]');
+            const codigo = boton.dataset.antecedenteQuitar;
+            const oculto = document.createElement('input');
+            oculto.type = 'hidden';
+            oculto.name = 'quitar[]';
+            oculto.value = codigo;
+            const avisoQuitar = fila ? fila.querySelector('.antecedentes-aviso-quitar') : null;
+            const restaurar = fila ? fila.querySelector('[data-antecedente-restaurar]') : null;
+            const controles = fila ? controlesDe(fila) : [];
+            const estabaTildada = fila
+                ? Boolean(fila.querySelector('input[type=checkbox][name$="[alerta]"]')?.checked)
+                : false;
+
+            boton.addEventListener('click', function () {
+                if (quitados.indexOf(codigo) >= 0) return;
+
+                quitados.push(codigo);
+                antecedentes.appendChild(oculto);
+                // Los controles de la fila se van del formulario: el POST no manda `filas[id]` de una fila
+                // que se está quitando (el servidor ya la borra por `quitar[]`).
+                controles.forEach(function (control) {
+                    control.disabled = true;
+                    controlesQuitados.push(control);
+                });
+                if (fila) fila.classList.add('antecedentes-item-quitado');
+                if (avisoQuitar) avisoQuitar.hidden = false;
+                boton.hidden = true;
+                if (restaurar) restaurar.hidden = false;
+                pintarAviso();
+            });
+
+            if (restaurar) {
+                restaurar.addEventListener('click', function () {
+                    const posicion = quitados.indexOf(codigo);
+                    if (posicion < 0) return;
+
+                    quitados.splice(posicion, 1);
+                    if (oculto.parentNode) oculto.parentNode.removeChild(oculto);
+                    controles.forEach(function (control) {
+                        control.disabled = false;
+                        const enLista = controlesQuitados.indexOf(control);
+                        if (enLista >= 0) controlesQuitados.splice(enLista, 1);
+                    });
+                    if (fila) fila.classList.remove('antecedentes-item-quitado');
+                    if (avisoQuitar) avisoQuitar.hidden = true;
+                    if (fila) {
+                        const casilla = fila.querySelector('input[type=checkbox][name$="[alerta]"]');
+                        if (casilla) casilla.checked = estabaTildada;
+                    }
+                    boton.hidden = false;
+                    restaurar.hidden = true;
+                    pintarAviso();
+                });
+            }
+        });
+
+        // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder los cambios.
+        const cancelar = antecedentes.querySelector('a[href]');
+        if (cancelar) {
+            cancelar.addEventListener('click', function (evento) {
+                if (sucio() && !window.confirm(antecedentes.dataset.aviso)) {
+                    evento.preventDefault();
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucio()) return;
+            evento.preventDefault();
+            // El texto de retorno lo ignora el navegador (muestra el suyo), pero sin algo no avisa.
+            evento.returnValue = antecedentes.dataset.aviso;
+        });
+
+        pintarAviso();
     }
 })();

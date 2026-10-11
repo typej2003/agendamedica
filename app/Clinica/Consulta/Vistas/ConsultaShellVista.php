@@ -33,6 +33,9 @@ final class ConsultaShellVista
     /** La clave de la sección de evaluación física en `?seccion=` (WEB-4.3). */
     public const SECCION_EVALUACION = 'evaluacion';
 
+    /** La clave de la sección de antecedentes en `?seccion=` (WEB-4.4). */
+    public const SECCION_ANTECEDENTES = 'antecedentes';
+
     /**
      * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
      * lleva hoy.
@@ -55,7 +58,9 @@ final class ConsultaShellVista
             'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
             'seccion' => self::SECCION_ENFERMEDAD],
         ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
-            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'proximamente'],
+            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'listo',
+            'seccion' => self::SECCION_ANTECEDENTES],
+
         ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
             'detalle' => 'Antropometría, examen por aparatos y ginecológico.', 'tarea' => 'WEB-4.3', 'estado' => 'listo',
             'seccion' => self::SECCION_EVALUACION],
@@ -207,7 +212,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 4 de 13 (motivos, enfermedad actual, evaluación física y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 5 de 13 (motivos, enfermedad actual, antecedentes, evaluación física y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -217,8 +222,8 @@ final class ConsultaShellVista
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Al cerrar WEB-4.3 ya se pueden cargar los ítems 1, 2 y 4 y el
-     * resto sigue llegando por tareas.
+     * las secciones se abren desde el panel. Al cerrar WEB-4.4 ya se pueden cargar los ítems 1, 2, 3 y 4 y
+     * el resto sigue llegando por tareas.
      */
     public function sinContenido(): array
     {
@@ -226,9 +231,9 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
-                . '—motivos de consulta, enfermedad actual, evaluación física y los datos personales del '
-                . 'paciente— se abren acá; el resto llega con las tareas siguientes (antecedentes, '
-                . 'diagnósticos, evolución, estudios y documentos).',
+                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física y los datos '
+                . 'personales del paciente— se abren acá; el resto llega con las tareas siguientes '
+                . '(diagnósticos, evolución, estudios y documentos).',
         ];
     }
 

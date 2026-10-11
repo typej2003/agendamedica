@@ -629,7 +629,7 @@ class ConsultaEvaluacionWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('4 de 13 disponibles', false);
+        $respuesta->assertSee('5 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
     }
 }
