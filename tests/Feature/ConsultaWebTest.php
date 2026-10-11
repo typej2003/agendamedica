@@ -415,10 +415,14 @@ class ConsultaWebTest extends TestCase
             $respuesta->assertSee($item, false);
         }
 
-        // Los que todavía no existen dicen que llegan después; el único disponible es la ficha.
+        // Los que todavía no existen dicen que llegan después, con la tarea en el `title` del estado; y
+        // los ítems de WEB-4.2 ya están disponibles (motivos y enfermedad actual, que se abren con
+        // `?seccion=` dentro de esta misma pantalla).
         $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('WEB-4.2');
+        $respuesta->assertSee('WEB-4.3');
         $respuesta->assertSee('Disponible');
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.pacientes.ver', $pacienteId), false);
 
         // Y la vuelta a la agenda del día de la consulta (con el `&` de la query ya escapado por Blade).

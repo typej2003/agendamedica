@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Consulta\AgregarMotivoAlCatalogo;
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
-use App\Services\CatalogoMotivosConsulta;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -20,10 +20,14 @@ use InvalidArgumentException;
  *
  * Agregar un motivo **a una consulta** sí es offline y va por `sync-app-data`
  * (`motivo_consulta_paciente`).
+ *
+ * La regla del alta —el código correlativo, las mayúsculas y el "si ya existe una igual devuelve la
+ * existente"— **no vive acá**: es `App\Actions\Consulta\AgregarMotivoAlCatalogo`, la misma que usa el
+ * buscador de motivos de la consulta de la web desde **WEB-4.2** (PLAN-WEB.md §3.15 y R3).
  */
 class MotivoConsultaController extends Controller
 {
-    public function crear(Request $request, CatalogoMotivosConsulta $catalogo)
+    public function crear(Request $request, AgregarMotivoAlCatalogo $catalogo)
     {
         $user = $request->user();
         if (!$user) {
@@ -49,7 +53,7 @@ class MotivoConsultaController extends Controller
         }
 
         try {
-            [$motivo, $creado] = $catalogo->obtenerOCrear($medico, $registros, $datos['descripcion']);
+            [$motivo, $creado] = $catalogo->ejecutar($medico, $registros, $datos['descripcion']);
         } catch (InvalidArgumentException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

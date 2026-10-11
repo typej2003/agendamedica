@@ -4,6 +4,8 @@ use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaController;
+use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
+use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
@@ -120,6 +122,21 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+
+                // El contenido de las dos primeras secciones (WEB-4.2), que se abre **dentro** del shell
+                // con `?seccion=`. Son acciones —escriben— y por eso viven en controladores propios
+                // (la guía de la web parte los controladores por responsabilidad, no por pantalla).
+                //
+                // Motivos de consulta: agregar uno del catálogo, crear el que falta (online-only,
+                // PLAN-WEB.md §3.15) y quitarlo. `buscar` es JSON y va **antes** de las rutas con
+                // parámetro para que `buscar` no entre como id de un motivo.
+                Route::get('/consulta/{consulta}/motivos/buscar', [ConsultaMotivosController::class, 'buscar'])->name('consulta.motivos.buscar');
+                Route::post('/consulta/{consulta}/motivos', [ConsultaMotivosController::class, 'agregar'])->name('consulta.motivos.agregar');
+                Route::post('/consulta/{consulta}/motivos/crear', [ConsultaMotivosController::class, 'crear'])->name('consulta.motivos.crear');
+                Route::delete('/consulta/{consulta}/motivos/{motivo}', [ConsultaMotivosController::class, 'quitar'])->name('consulta.motivos.quitar');
+
+                // Enfermedad actual: se guarda con un botón, no hay autoguardado.
+                Route::post('/consulta/{consulta}/enfermedad', [ConsultaEnfermedadController::class, 'guardar'])->name('consulta.enfermedad.guardar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

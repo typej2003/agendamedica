@@ -6,12 +6,14 @@ use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use PHPUnit\Framework\TestCase;
 
 /**
- * El ViewModel del **shell de la consulta** (WEB-4.1) se prueba sin base de datos ni HTTP: datos de
- * entrada → textos de salida (Docs/Web/guia-arquitectura-web.md).
+ * El ViewModel del **shell de la consulta** (WEB-4.1, ampliado en WEB-4.2) se prueba sin base de datos ni
+ * HTTP: datos de entrada → textos de salida (Docs/Web/guia-arquitectura-web.md).
  *
  * Lo que se fija acá: el encabezado (paciente, consulta, historia y fecha), que el panel tenga los
- * **13 ítems del legado** en su orden y con su tarea, que el único disponible al cerrar 4.1 sea la ficha
- * del paciente y que lo que todavía no existe diga "Próximamente" en vez de ofrecer un enlace muerto.
+ * **13 ítems del legado** en su orden y con su tarea, **qué ítems están disponibles y a dónde lleva
+ * cada uno** —los de WEB-4.2 abren su sección dentro de la pantalla (`?seccion=`), *Datos personales*
+ * enlaza a la ficha— y que lo que todavía no existe diga "Próximamente" en vez de ofrecer un enlace
+ * muerto.
  */
 class ConsultaShellVistaTest extends TestCase
 {
@@ -34,6 +36,8 @@ class ConsultaShellVistaTest extends TestCase
             $extra['urlPaciente'] ?? '/clinica/pacientes/5619',
             $extra['urlHistoria'] ?? '/clinica/pacientes/5619/historia',
             $extra['urlVolver'] ?? '/clinica/agenda?vista=dia&fecha=2026-10-05&sede=todas',
+            $extra['urlConsulta'] ?? '/clinica/consulta/42',
+            $extra['seccion'] ?? null,
         );
     }
 
@@ -93,7 +97,7 @@ class ConsultaShellVistaTest extends TestCase
         ], array_column($items, 'tarea'));
     }
 
-    public function test_cada_item_dice_su_estado_y_solo_la_ficha_tiene_enlace(): void
+    public function test_el_panel_marca_disponibles_los_items_de_web_4_2_y_la_ficha(): void
     {
         $vm = $this->vista();
 
@@ -104,15 +108,23 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        // Al cerrar WEB-4.1 el único ítem con pantalla es "Datos personales" (la ficha, F3).
-        $this->assertSame(1, $vm->totalListos());
+        // Al cerrar WEB-4.2 ya hay tres ítems con pantalla: motivos y enfermedad actual, que se abren
+        // **dentro** del shell, y Datos personales, que enlaza a la ficha del paciente (F3).
+        $this->assertSame(3, $vm->totalListos());
+
+        $this->assertSame('/clinica/consulta/42?seccion=motivos', $disponibles['Motivos de consulta']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=enfermedad', $disponibles['Enfermedad actual']['url']);
         $this->assertSame('/clinica/pacientes/5619', $disponibles['Datos personales']['url']);
-        $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Disponible'],
-            $disponibles['Datos personales']['estado']);
+
+        foreach (['Motivos de consulta', 'Enfermedad actual', 'Datos personales'] as $titulo) {
+            $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Disponible'],
+                $disponibles[$titulo]['estado'], $titulo);
+            $this->assertSame('Ya está en la web', $disponibles[$titulo]['titulo_estado'], $titulo);
+        }
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
         foreach ($disponibles as $titulo => $item) {
-            if ($titulo === 'Datos personales') {
+            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Datos personales'], true)) {
                 continue;
             }
 
@@ -123,13 +135,49 @@ class ConsultaShellVistaTest extends TestCase
         }
     }
 
-    public function test_el_estado_vacio_del_contenido_dice_que_las_secciones_llegan_despues(): void
+    public function test_la_seccion_activa_marca_su_item_y_resuelve_el_parcial(): void
+    {
+        $conMotivos = $this->vista(['seccion' => ConsultaShellVista::SECCION_MOTIVOS]);
+
+        $this->assertSame('motivos', $conMotivos->seccion());
+        $this->assertSame('clinica.consulta._motivos', $conMotivos->parcial());
+
+        $items = [];
+        foreach ($conMotivos->panel() as $bloque) {
+            foreach ($bloque['items'] as $item) {
+                $items[$item['titulo']] = $item;
+            }
+        }
+
+        $this->assertTrue($items['Motivos de consulta']['activo']);
+        $this->assertFalse($items['Enfermedad actual']['activo']);
+
+        $conEnfermedad = $this->vista(['seccion' => ConsultaShellVista::SECCION_ENFERMEDAD]);
+        $this->assertSame('clinica.consulta._enfermedad', $conEnfermedad->parcial());
+    }
+
+    public function test_una_seccion_que_no_existe_es_como_no_haber_abierto_ninguna(): void
+    {
+        // Un valor inventado en la URL no abre una sección que no exista (y la vista vuelve al estado
+        // vacío del shell en vez de romperse).
+        $vm = $this->vista(['seccion' => 'prefactura']);
+
+        $this->assertNull($vm->seccion());
+        $this->assertNull($vm->parcial());
+
+        // Sin la URL de la consulta, los ítems de WEB-4.2 no ofrecen un enlace muerto.
+        $sinUrl = new ConsultaShellVista($this->paciente(), 3, '2026-10-05', null, null, null, null, ConsultaShellVista::SECCION_MOTIVOS);
+        $items = $sinUrl->panel()[0]['items'];
+        $this->assertNull($items[0]['url']);
+    }
+
+    public function test_el_estado_vacio_del_contenido_dice_que_las_secciones_se_abren_del_panel(): void
     {
         $vacio = $this->vista()->sinContenido();
 
-        $this->assertSame('bi-tools', $vacio['icono']);
-        $this->assertStringContainsString('armazón', $vacio['texto']);
-        $this->assertStringContainsString('13 ítems', $vacio['texto']);
+        $this->assertSame('bi-list-ul', $vacio['icono']);
+        $this->assertStringContainsString('panel', $vacio['texto']);
+        $this->assertStringContainsString('motivos de consulta', $vacio['texto']);
     }
 
     public function test_las_urls_las_resuelve_el_controlador(): void

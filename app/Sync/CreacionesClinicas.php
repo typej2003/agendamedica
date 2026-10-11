@@ -2,14 +2,15 @@
 
 namespace App\Sync;
 
+use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
+use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MotivoConsulta;
-use App\Models\MotivoConsultaPaciente;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
 use App\Models\SyncChange;
@@ -47,8 +48,9 @@ use InvalidArgumentException;
  * (ver PENDIENTES-POWERBUILDER.md).
  *
  * Paso 18.B2 suma los **motivos de una consulta**: agregar uno del catálogo
- * (`motivo_consulta_paciente`) y quitarlo ([self::quitarMotivoDeConsulta]). El catálogo en sí lo
- * ampliaría un endpoint online-only aparte, no esta cola.
+ * (`motivo_consulta_paciente`) y quitarlo ([self::quitarMotivoDeConsulta]). Las dos reglas se extrajeron
+ * a `App\Actions\Consulta\` en WEB-4.2 (las comparte la consulta de la web); el catálogo en sí lo amplía
+ * un endpoint online-only aparte, no esta cola.
  */
 class CreacionesClinicas
 {
@@ -63,6 +65,9 @@ class CreacionesClinicas
         private array $registrosMedicos,
         private AsignarHistoria $asignarHistoria,
         private CrearConsulta $crearConsulta,
+        // Las dos reglas de los motivos de una consulta, compartidas con la web desde WEB-4.2.
+        private AgregarMotivoALaConsulta $agregarMotivo,
+        private QuitarMotivoDeLaConsulta $quitarMotivo,
     ) {
     }
 
@@ -102,25 +107,14 @@ class CreacionesClinicas
      * Quitar un motivo de una consulta. No toca el catálogo (como en el legado: "eliminar un motivo
      * de la consulta no lo borra del catálogo"). Deja rastro en `sync_changes` para que los demás
      * teléfonos también lo suelten. Idempotente: si ya no está, no hace nada.
+     *
+     * La regla **no vive acá**: es `App\Actions\Consulta\QuitarMotivoDeLaConsulta`, la misma que usa la
+     * consulta de la web desde WEB-4.2. Lo único propio del sync es que restringe a los registros del
+     * médico y firma el rastro como `mobile`.
      */
     public function quitarMotivoDeConsulta(int $recordId): void
     {
-        $fila = MotivoConsultaPaciente::whereIn('reg_medico', $this->registrosMedicos)->find($recordId);
-        if (!$fila) {
-            return;
-        }
-
-        $regMedico = $fila->reg_medico;
-        $fila->delete();
-
-        SyncChange::create([
-            'reg_medico' => $regMedico,
-            'table_name' => 'motivo_consulta_paciente',
-            'record_id' => $recordId,
-            'operation' => 'deleted',
-            'occurred_at' => now(),
-            'source' => 'mobile',
-        ]);
+        $this->quitarMotivo->ejecutar($recordId, $this->registrosMedicos, 'mobile');
     }
 
     /**
@@ -247,8 +241,13 @@ class CreacionesClinicas
     /**
      * Agregar un motivo a una consulta. Cuelga de la consulta (existente o del mismo lote) y de un
      * motivo que **ya está** en el catálogo (`codemotivo`): el catálogo no se crea por acá sino con
-     * `POST /app/motivos-consulta` (online-only, ver `MotivoConsultaController`). Agregar dos veces el
-     * mismo motivo a la misma consulta devuelve la fila que ya estaba.
+     * `POST /app/motivos-consulta` (online-only, ver `MotivoConsultaController`).
+     *
+     * Las dos reglas —"el motivo tiene que estar en el catálogo de este médico" y "agregarlo dos veces
+     * devuelve la fila que ya estaba"— **no viven acá**: las resuelve `AgregarMotivoALaConsulta`, la
+     * misma Action que usa la consulta de la web desde WEB-4.2. Lo único propio del sync es el rastro
+     * del **id temporal** del lote (`anotar`), que es lo que le permite al teléfono soltar su fila
+     * provisional y reintentar sin duplicar.
      */
     private function crearMotivoDeConsulta(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -258,40 +257,30 @@ class CreacionesClinicas
             return null;
         }
 
-        $codigo = $this->resolverCodigoDeMotivo($change);
-        if ($codigo === null) {
+        $motivo = $this->resolverMotivoDelCatalogo($change);
+        if (!$motivo) {
             $rechazar('El motivo no está en el catálogo de este médico.');
             return null;
         }
 
-        $fila = MotivoConsultaPaciente::where('reg_medico', $consulta->reg_medico)
-            ->where('nrohistoria', $consulta->numhistoria)
-            ->where('nroconsulta', $consulta->nroconsulta)
-            ->where('codemotivo', $codigo)
-            ->first()
-            ?? MotivoConsultaPaciente::create([
-                'reg_medico' => $consulta->reg_medico,
-                'codemotivo' => $codigo,
-                'nrohistoria' => $consulta->numhistoria,
-                'nroconsulta' => $consulta->nroconsulta,
-            ]);
+        [$fila] = $this->agregarMotivo->ejecutar($consulta, $motivo, 'mobile');
 
         $this->anotar('motivo_consulta_paciente', $fila->id, $tempId, $fila->reg_medico);
 
         return $this->respuestaMotivoDeConsulta($tempId, $fila->id);
     }
 
-    /** El código del catálogo al que apunta la creación, o null si no existe en este tenant. */
-    private function resolverCodigoDeMotivo(array $change): ?string
+    /** El motivo del catálogo al que apunta la creación, o null si no existe en este tenant. */
+    private function resolverMotivoDelCatalogo(array $change): ?MotivoConsulta
     {
-        $catalogo = MotivoConsulta::whereIn('reg_medico', $this->registrosMedicos);
-
         $codigo = $change['codemotivo'] ?? null;
         if (!is_string($codigo) || trim($codigo) === '') {
             return null;
         }
 
-        return $catalogo->where('codemotivo', trim($codigo))->value('codemotivo');
+        return MotivoConsulta::whereIn('reg_medico', $this->registrosMedicos)
+            ->where('codemotivo', trim($codigo))
+            ->first();
     }
 
     private function siguienteRecipe(Consulta $consulta): int

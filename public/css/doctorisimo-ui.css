@@ -454,6 +454,12 @@ fieldset:disabled .btn[class*="btn-outline-"] {
     border-width: 1px;
 }
 
+/* El navegador esconde `[hidden]` con `display: none`, pero Bootstrap lo **pisa** con
+   `.d-flex { display: flex !important }`: un aviso con `hidden` y utilidades de flex (el de "hay cambios
+   sin guardar", WEB-4.2) se veía igual —pasó al verificar la pantalla en Chrome—. Esta regla devuelve el
+   significado del atributo, que es lo que el JS usa para mostrar y ocultar. */
+[hidden] { display: none !important; }
+
 .alert-success { background-color: var(--ds-exito-bg); border-color: var(--ds-exito-borde); color: #0f5c40; }
 .alert-warning { background-color: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
 .alert-danger  { background-color: var(--ds-peligro-bg); border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
@@ -1591,3 +1597,50 @@ a.consulta-panel-nombre:hover { color: var(--ds-violeta-700); text-decoration: u
     .consulta-panel-item { flex-wrap: wrap; }
     .consulta-panel-texto { flex-basis: calc(100% - 2.6rem); }
 }
+
+/* La sección que se está mirando: el ítem del panel se marca con el fondo de marca suave y una barra a
+   la izquierda, para que se vea **cuál** de los trece está abierto (guía de UI §3: el ítem activo). */
+.consulta-panel-item-activo {
+    background: var(--ds-violeta-50);
+    border-radius: var(--ds-radio);
+    box-shadow: inset 3px 0 0 var(--ds-violeta-700);
+    padding-left: .5rem;
+    padding-right: .5rem;
+}
+
+/* ==========================================================================
+   8. Web clínica — las secciones de la consulta (WEB-4.2): motivos y enfermedad actual
+   ========================================================================== */
+
+/* Los motivos que la consulta ya tiene: una fila por motivo, con su quitar a la derecha. Es una lista y
+   no una tabla porque son pocos renglones cortos y en celular la tabla se volvería tarjetas. */
+.motivos-lista { list-style: none; margin: 0; padding: 0; }
+
+.motivos-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.motivos-item:last-child { border-bottom: 0; }
+
+.motivos-item-texto { min-width: 0; }
+
+.motivos-item-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* La fila del buscador: el resultado y su acción. Es el mismo `.resultado-paciente` de los buscadores en
+   vivo, con el botón de crear como `<button>` (abre el diálogo) y no como enlace. */
+.resultado-motivo { width: 100%; text-align: left; border: 0; }
+
+button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-violeta-700); }
+
+/* El campo de la enfermedad actual: el texto clínico se lee cómodo y crece con el contenido hasta un
+   tope, para que no empuje el botón de guardar fuera de la pantalla. */
+#enfermedadactual { min-height: 14rem; resize: vertical; }

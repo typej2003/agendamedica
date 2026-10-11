@@ -24,6 +24,12 @@ use App\Support\FechaClinica;
  */
 final class ConsultaShellVista
 {
+    /** La clave de la sección de motivos en `?seccion=`. */
+    public const SECCION_MOTIVOS = 'motivos';
+
+    /** La clave de la sección de enfermedad actual en `?seccion=`. */
+    public const SECCION_ENFERMEDAD = 'enfermedad';
+
     /**
      * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
      * lleva hoy.
@@ -33,15 +39,18 @@ final class ConsultaShellVista
      * el documento. El orden del panel es el del legado y no se reordena.
      *
      * `tarea` es la tarea de la web que lo completa; `estado` es `listo` (ya hay pantalla a la que
-     * entrar) o `proximamente`. La única `listo` al cerrar 4.1 es **Datos personales**, porque la ficha
-     * del paciente es F3 y ya está hecha: editar la filiación dentro de la consulta no necesita una
-     * pantalla nueva, necesita el enlace.
+     * entrar) o `proximamente`. `seccion` es la clave del contenido que se abre **dentro de esta misma
+     * pantalla** (`?seccion=…`): los ítems 1 y 2, que trae WEB-4.2, no son otra pantalla —son la tarjeta
+     * de contenido del shell—, y su enlace lo arma `item()`. *Datos personales* no tiene `seccion`: su
+     * pantalla es la ficha del paciente (F3) y sigue siendo un enlace afuera.
      */
     private const PANEL = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
-            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'proximamente'],
+            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_MOTIVOS],
         ['numero' => 2, 'grupo' => 'Consulta', 'titulo' => 'Enfermedad actual', 'icono' => 'bi-file-text',
-            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'proximamente'],
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_ENFERMEDAD],
         ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
             'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'proximamente'],
         ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
@@ -73,6 +82,10 @@ final class ConsultaShellVista
         private ?string $urlPaciente = null,
         private ?string $urlHistoria = null,
         private ?string $urlVolver = null,
+        // La URL de esta misma pantalla: es la base de los enlaces del panel que abren una sección
+        // (`?seccion=…`). Sin ella, esos ítems quedan sin enlace y el panel no los ofrece.
+        private ?string $urlConsulta = null,
+        private ?string $seccion = null,
     ) {
     }
 
@@ -131,6 +144,40 @@ final class ConsultaShellVista
     }
 
     /**
+     * La sección de contenido que se está mirando (`?seccion=`), o `null` si no se eligió ninguna.
+     *
+     * Es lo que la vista usa para destacar el ítem del panel, y lo que el controlador consulta para
+     * armar el ViewModel de la sección. Un valor desconocido se trata como "ninguna": el panel no tiene
+     * una sección que no exista.
+     */
+    public function seccion(): ?string
+    {
+        if ($this->seccion === null) {
+            return null;
+        }
+
+        foreach (self::PANEL as $item) {
+            if (($item['seccion'] ?? null) === $this->seccion) {
+                return $this->seccion;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * El parcial de la sección activa (`clinica.consulta._motivos` / `._enfermedad`), o `null` si no hay
+     * ninguna. El mapa se arma con las claves del panel, así que agregar una sección es agregar una fila
+     * a `PANEL` y su parcial, no tocar la vista.
+     */
+    public function parcial(): ?string
+    {
+        $seccion = $this->seccion();
+
+        return $seccion === null ? null : 'clinica.consulta._' . $seccion;
+    }
+
+    /**
      * El panel completo, agrupado como el legado: lo de la atención primero y los documentos después.
      *
      * @return array<int,array{titulo:string, grupos:array<int,array{titulo:string, items:array<int,array<string,mixed>>}>}>
@@ -156,21 +203,28 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 1 de 13 (Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 3 de 13 (motivos, enfermedad actual y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
     }
 
-    /** El estado vacío del panel de contenido: dice qué falta y que llega por tareas. */
+    /**
+     * El estado vacío del contenido: el shell sin ninguna sección elegida.
+     *
+     * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
+     * las secciones se abren desde el panel. Al cerrar WEB-4.2 los ítems 1 y 2 ya se pueden cargar y el
+     * resto sigue llegando por tareas.
+     */
     public function sinContenido(): array
     {
         return [
-            'icono' => 'bi-tools',
-            'titulo' => 'Todavía no hay secciones para cargar',
-            'texto' => 'Este es el armazón de la consulta. Los 13 ítems del panel del escritorio se van '
-                . 'habilitando con las tareas siguientes (motivos y enfermedad actual, evaluación física, '
-                . 'antecedentes, diagnósticos, evolución, estudios y documentos).',
+            'icono' => 'bi-list-ul',
+            'titulo' => 'Elige una sección en el panel',
+            'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
+                . '—motivos de consulta, enfermedad actual y los datos personales del paciente— se abren acá; '
+                . 'el resto llega con las tareas siguientes (evaluación física, antecedentes, diagnósticos, '
+                . 'evolución, estudios y documentos).',
         ];
     }
 
@@ -178,6 +232,7 @@ final class ConsultaShellVista
     private function item(array $item): array
     {
         $listo = $item['estado'] === 'listo';
+        $seccion = $item['seccion'] ?? null;
 
         return [
             'numero' => (int) $item['numero'],
@@ -186,8 +241,12 @@ final class ConsultaShellVista
             'icono' => $item['icono'],
             'tarea' => $item['tarea'],
             'listo' => $listo,
-            // `Datos personales` es el único que ya tiene pantalla: la ficha del paciente (F3).
-            'url' => $listo ? $this->urlPaciente : null,
+            // Los ítems de WEB-4.2 (motivos y enfermedad actual) se abren **dentro** del shell
+            // (`?seccion=…`); *Datos personales* es un enlace a la ficha del paciente (F3).
+            'url' => $seccion !== null
+                ? $this->urlSeccion($seccion)
+                : ($listo ? $this->urlPaciente : null),
+            'activo' => $seccion !== null && $seccion === $this->seccion(),
             'estado' => $listo
                 ? ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Disponible']
                 : ['tono' => 'neutro', 'icono' => 'bi-hourglass-split', 'texto' => 'Próximamente'],
@@ -195,5 +254,15 @@ final class ConsultaShellVista
                 ? 'Ya está en la web'
                 : 'Llega con ' . $item['tarea'] . ': todavía no se puede cargar',
         ];
+    }
+
+    /** La URL de una sección dentro de esta misma consulta; `null` si la pantalla no tiene su URL. */
+    private function urlSeccion(string $seccion): ?string
+    {
+        if ($this->urlConsulta === null) {
+            return null;
+        }
+
+        return $this->urlConsulta . '?seccion=' . $seccion;
     }
 }

@@ -373,6 +373,9 @@ class SyncAppDataController extends Controller
             app(AsignarHistoria::class),
             // La regla del número de consulta vive en la Action compartida con la web (WEB-4.1).
             app(\App\Actions\Consulta\CrearConsulta::class),
+            // Y las dos reglas de los motivos de una consulta, desde WEB-4.2.
+            app(\App\Actions\Consulta\AgregarMotivoALaConsulta::class),
+            app(\App\Actions\Consulta\QuitarMotivoDeLaConsulta::class),
         );
         $creadosAntes = count($creados);
 

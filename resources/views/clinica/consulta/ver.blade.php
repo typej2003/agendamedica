@@ -21,10 +21,15 @@
         </x-slot>
     </x-ui.page-head>
 
+    {{-- Los errores de validación de la sección (el nombre del motivo nuevo) van arriba y no dentro del
+         diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
+    <x-ui.errores />
+
     <div class="row g-3">
         {{-- El panel de navegación del legado (`w_consulta_principal`): los 13 ítems con su estado. Los que
              todavía no tienen pantalla dicen "Próximamente" y con qué tarea llegan, en vez de ofrecer un
-             enlace muerto.
+             enlace muerto; los de WEB-4.2 (motivos y enfermedad actual) abren su sección dentro de esta
+             misma pantalla con `?seccion=`.
 
              Ocupa más que un tercio a propósito (5 de 12 en pantalla grande): son trece renglones con
              nombre, detalle y estado, y en una columna más angosta el estado se come el texto. --}}
@@ -36,11 +41,12 @@
                         <h3 class="consulta-panel-titulo">{{ $bloque['titulo'] }}</h3>
                         <ul class="consulta-panel">
                             @foreach ($bloque['items'] as $item)
-                                <li class="consulta-panel-item {{ $item['listo'] ? '' : 'consulta-panel-item-pendiente' }}">
+                                <li class="consulta-panel-item {{ $item['listo'] ? '' : 'consulta-panel-item-pendiente' }} {{ $item['activo'] ? 'consulta-panel-item-activo' : '' }}">
                                     <span class="consulta-panel-icono"><i class="bi {{ $item['icono'] }}" aria-hidden="true"></i></span>
                                     <div class="consulta-panel-texto">
                                         @if ($item['url'])
-                                            <a class="consulta-panel-nombre" href="{{ $item['url'] }}">{{ $item['titulo'] }}</a>
+                                            <a class="consulta-panel-nombre" href="{{ $item['url'] }}"
+                                               @if ($item['activo']) aria-current="true" @endif>{{ $item['titulo'] }}</a>
                                         @else
                                             <span class="consulta-panel-nombre">{{ $item['titulo'] }}</span>
                                         @endif
@@ -57,13 +63,23 @@
             </x-ui.tarjeta>
         </div>
 
-        {{-- El contenido. Hoy es el armazón: cada ítem del panel va a poner acá su sección, y el estado
-             vacío dice exactamente eso (y no "no hay datos", que sería mentira). --}}
+        {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
+             ninguna. Las secciones llegan por los parciales —`_motivos` (WEB-4.2) y `_enfermedad`
+             (WEB-4.2)— y las siguientes tareas agregan las suyas: el nombre del parcial lo resuelve el
+             ViewModel a partir del mapa del panel. --}}
         <div class="col-12 col-lg-7 col-xl-8">
-            <x-ui.tarjeta id="consulta-contenido" titulo="Contenido de la consulta" icono="bi-journal-medical">
-                @php $vacio = $vm->sinContenido(); @endphp
-                <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
-            </x-ui.tarjeta>
+            @if ($contenido && $vm->parcial())
+                @include($vm->parcial(), ['seccion' => $contenido])
+            @else
+                <x-ui.tarjeta id="consulta-contenido" titulo="Contenido de la consulta" icono="bi-journal-medical">
+                    @php $vacio = $vm->sinContenido(); @endphp
+                    <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
+                </x-ui.tarjeta>
+            @endif
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/clinica/consulta.js') }}"></script>
 @endsection
