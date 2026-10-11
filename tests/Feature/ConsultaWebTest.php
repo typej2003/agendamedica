@@ -431,7 +431,8 @@ class ConsultaWebTest extends TestCase
         // (antecedentes), WEB-4.5 (diagnóstico) y WEB-4.6 (evolución) ya están disponibles y se abren con
         // `?seccion=` dentro de esta misma pantalla.
         $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('Disponible');
+        // Los disponibles no llevan pastilla "Disponible": el contador "N de 13 disponibles" sí queda.
+        $respuesta->assertDontSee('>Disponible<', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);

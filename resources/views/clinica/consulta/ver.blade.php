@@ -66,9 +66,12 @@
                                         @endif
                                         <span class="consulta-panel-detalle">{{ $item['detalle'] }}</span>
                                     </div>
-                                    {{-- El estado del ítem: color + icono + texto, como pide la guía de UI. --}}
-                                    <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
-                                                 :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
+                                    {{-- Sólo los que todavía no están llevan estado ("Próximamente", color + icono + texto,
+                                         como pide la guía de UI); los disponibles se reconocen por su enlace. --}}
+                                    @if ($item['estado'])
+                                        <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
+                                                     :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
+                                    @endif
                                 </li>
                             @endforeach
                         </ul>

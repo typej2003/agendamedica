@@ -302,11 +302,14 @@ final class ConsultaShellVista
                 ? $this->urlSeccion($seccion)
                 : ($listo ? $this->urlPaciente : null),
             'activo' => $seccion !== null && $seccion === $this->seccion(),
+            // Sólo lo que **no** está lleva pastilla: "Próximamente" basta para distinguirlo, y un "Disponible" en
+            // cada ítem listo le quitaba al nombre y al detalle el espacio que necesitan. El que sí está se
+            // reconoce por su enlace y por su icono de marca.
             'estado' => $listo
-                ? ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Disponible']
+                ? null
                 : ['tono' => 'neutro', 'icono' => 'bi-hourglass-split', 'texto' => 'Próximamente'],
             'titulo_estado' => $listo
-                ? 'Ya está en la web'
+                ? null
                 : 'Llega con ' . $item['tarea'] . ': todavía no se puede cargar',
         ];
     }

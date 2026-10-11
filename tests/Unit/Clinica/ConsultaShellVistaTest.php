@@ -123,9 +123,9 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/pacientes/5619', $disponibles['Datos personales']['url']);
 
         foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Datos personales'] as $titulo) {
-            $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Disponible'],
-                $disponibles[$titulo]['estado'], $titulo);
-            $this->assertSame('Ya está en la web', $disponibles[$titulo]['titulo_estado'], $titulo);
+            // Los disponibles no llevan pastilla: sólo "Próximamente" distingue a los que faltan.
+            $this->assertNull($disponibles[$titulo]['estado'], $titulo);
+            $this->assertNull($disponibles[$titulo]['titulo_estado'], $titulo);
         }
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
