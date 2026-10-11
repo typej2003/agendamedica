@@ -370,12 +370,24 @@ class CambiosEscritorio
 
     private function guardarGenerico(SyncCarga $carga, string $tabla, array $clave, array $fila, Carbon $fecha): string
     {
-        $clave = $this->traducir($carga, $clave);
+        $numeroConsulta = null;
+        $clave = $this->traducir($carga, $clave, $numeroConsulta);
         $existentes = $this->filasPorClave($carga, $tabla, $clave)->get();
 
         $ignoradas = [];
         $datos = $this->traducir($carga, $this->tablas->filtrar($tabla, $this->tablas->normalizarClaves($fila), $ignoradas));
         $datos['reg_medico'] = $carga->reg_medico;
+
+        // ⚠️ `examen_fisico_nuevo.consulta` **no** es el id de la consulta: es su **número dentro de la
+        // historia** (`nroconsulta`). Es la misma trampa que documenta `App\Clinica\Consulta\
+        // ExamenFisicoDeLaConsulta`, y acá importa porque `traducir()` traduce el `consulta` de la fila al
+        // **id** del API (que es lo que necesitan las demás tablas hijas, como `examen_paciente`):
+        // guardarlo así dejaría la fila del examen en otro espacio de claves que el de la carga inicial (y
+        // que el de la web), que escribe el número. Se corrige con el número ya traducido.
+        if ($tabla === 'examen_fisico_nuevo' && $numeroConsulta !== null && $this->tablas->tieneColumna($tabla, 'consulta')) {
+            $datos['consulta'] = $numeroConsulta;
+        }
+
         if ($this->tablas->tieneColumna($tabla, 'medico_id')) {
             $datos['medico_id'] = $carga->medico_id;
         }
@@ -476,8 +488,12 @@ class CambiosEscritorio
      * Reemplaza los números de historia (y de consulta, si viene junto a uno de historia) del
      * escritorio por los del API. Si la historia o la consulta todavía no subió, rechaza: el
      * escritorio lo reintenta cuando haya subido.
+     *
+     * `$numeroConsulta` (por referencia) devuelve el **número** de la consulta en el API cuando la clave
+     * traía una: lo usa `guardarGenerico` para las tablas cuya columna `consulta` guarda el número y no el
+     * id (`examen_fisico_nuevo`). Es un parámetro opcional para no cambiar lo que devuelve el resto.
      */
-    private function traducir(SyncCarga $carga, array $valores): array
+    private function traducir(SyncCarga $carga, array $valores, ?int &$numeroConsulta = null): array
     {
         $colH = $this->primeraColumna($valores, TablasLegado::COLUMNAS_HISTORIA);
         if ($colH === null) {
@@ -489,6 +505,7 @@ class CambiosEscritorio
         if ($colC !== null) {
             [$hApi, $cApi] = $this->consultaApi($carga, $hLocal, $valores[$colC]);
             $valores[$colC] = $cApi;
+            $numeroConsulta = (int) $cApi;
         } else {
             $hApi = $this->historiaApi($carga, $hLocal);
         }

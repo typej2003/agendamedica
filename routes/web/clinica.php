@@ -5,6 +5,7 @@ use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
+use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
@@ -137,6 +138,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
 
                 // Enfermedad actual: se guarda con un botón, no hay autoguardado.
                 Route::post('/consulta/{consulta}/enfermedad', [ConsultaEnfermedadController::class, 'guardar'])->name('consulta.enfermedad.guardar');
+
+                // Evaluación física (WEB-4.3): el examen general y el ginecológico. Son **dos tablas**
+                // (`consultas` y `examen_fisico_nuevo`) y se guardan juntas, con el mismo botón explícito
+                // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
+                // son de F6 y no entran acá.
+                Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

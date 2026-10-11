@@ -1,8 +1,8 @@
 /*
- * La consulta (WEB-4.2): el contenido de sus secciones, dentro del shell.
+ * La consulta (WEB-4.2 y WEB-4.3): el contenido de sus secciones, dentro del shell.
  *
  * Las vistas no llevan JS: declaran lo que quieren con `data-*` y este archivo —el de la pantalla, como
- * `agenda-pacientes.js`— lo resuelve. Hace dos cosas, cada una atada a un bloque de la pantalla:
+ * `agenda-pacientes.js`— lo resuelve. Hace tres cosas, cada una atada a un bloque de la pantalla:
  *
  * 1. **El buscador de motivos** (`#consulta-motivos`): filtra el catálogo del médico mientras se escribe
  *    (250 ms de espera, como el buscador de pacientes), un motivo por nombre, y ofrece **crear el que
@@ -16,6 +16,11 @@
  * 2. **El aviso de "hay cambios sin guardar"** de la enfermedad actual (`[data-consulta-enfermedad]`):
  *    el texto clínico se guarda con un botón, así que la pantalla tiene que decir cuándo hay algo escrito
  *    que todavía no está guardado y el navegador tiene que avisar antes de perderlo.
+ *
+ * 3. **La evaluación física** (WEB-4.3): el mismo aviso de cambios sin guardar, pero de **todo el
+ *    formulario** (son veinte campos en dos tablas), y el **IMC** —peso / talla², la cuenta que el
+ *    escritorio hace en `gffimc.srf`— recalculado al escribir el peso o la talla. El IMC no se guarda: es
+ *    de pantalla.
  */
 (function () {
     'use strict';
@@ -200,4 +205,72 @@
 
         pintarAviso();
     });
+
+    // ------------------------------------------------- Evaluación física (WEB-4.3)
+
+    const evaluacion = document.querySelector('[data-consulta-evaluacion]');
+
+    if (evaluacion) {
+        const aviso = document.getElementById('evaluacion-sin-guardar');
+        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input, textarea'));
+
+        // El valor de partida de cada control, para saber si algo cambió. Se toma del `value`/`textContent`
+        // con el que el servidor pintó el formulario (que ya trae el `old()` si el POST falló).
+        const guardados = campos.map(function (campo) {
+            return campo.value;
+        });
+
+        function sucio() {
+            return campos.some(function (campo, indice) {
+                return campo.value !== guardados[indice];
+            });
+        }
+
+        function pintarAviso() {
+            if (aviso) aviso.hidden = !sucio();
+        }
+
+        campos.forEach(function (campo) {
+            campo.addEventListener('input', pintarAviso);
+        });
+
+        const cancelar = evaluacion.querySelector('a[href]');
+        if (cancelar) {
+            cancelar.addEventListener('click', function (evento) {
+                if (sucio() && !window.confirm(evaluacion.dataset.aviso)) {
+                    evento.preventDefault();
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucio()) return;
+            evento.preventDefault();
+            evento.returnValue = evaluacion.dataset.aviso;
+        });
+
+        // El IMC: peso / talla², la misma cuenta de `gffimc.srf` (y `0` si falta alguno de los dos, que acá
+        // se muestra como `—`). No se guarda en ninguna columna: se recalcula mientras se escribe.
+        const imc = document.querySelector('[data-evaluacion-imc]');
+        const peso = document.getElementById('peso');
+        const talla = document.getElementById('talla');
+
+        function pintarImc() {
+            if (!imc || !peso || !talla) return;
+
+            const p = parseFloat(peso.value.replace(',', '.'));
+            const t = parseFloat(talla.value.replace(',', '.'));
+
+            if (!isFinite(p) || !isFinite(t) || p <= 0 || t <= 0) {
+                imc.textContent = '—';
+                return;
+            }
+
+            imc.textContent = (p / (t * t)).toFixed(2).replace('.', ',');
+        }
+
+        [peso, talla].forEach(function (campo) {
+            if (campo) campo.addEventListener('input', pintarImc);
+        });
+    }
 })();

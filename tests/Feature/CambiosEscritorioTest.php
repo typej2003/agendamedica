@@ -217,6 +217,44 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame(3, (int) DB::table('examen_paciente')->where('reg_medico', self::REG)->where('codeexamen', 'E1')->value('nroconsulta'));
     }
 
+    /**
+     * **WEB-4.3**: `examen_fisico_nuevo.consulta` guarda el **número** de la consulta, no su id.
+     *
+     * El camino genérico traduce la clave al id del API (que es lo que necesitan las demás tablas hijas,
+     * como `examen_paciente`), pero esta tabla es la excepción: su columna `consulta` es el número con el
+     * que el escritorio ata la fila, y la web la lee y la escribe con ese número
+     * (`App\Clinica\Consulta\ExamenFisicoDeLaConsulta`). Sin la corrección, la fila del examen quedaba en
+     * otro espacio de claves que el de la carga inicial y que el de la web: dos filas para la misma
+     * consulta y campos que no se ven.
+     */
+    public function test_el_examen_fisico_guarda_el_numero_de_la_consulta_y_no_su_id(): void
+    {
+        $this->subir([[
+            'id' => 33, 'tabla' => 'examen_fisico_nuevo', 'op' => 'U', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['historia' => '1', 'consulta' => '1'],
+            'fila' => ['historia' => 1, 'consulta' => 1, 'general' => 'DEL ESCRITORIO'],
+        ]]);
+
+        $fila = DB::table('examen_fisico_nuevo')->where('reg_medico', self::REG)->first();
+        $this->assertNotNull($fila, 'la fila del examen se guardó');
+        $this->assertSame('DEL ESCRITORIO', $fila->general);
+        $this->assertSame(1, (int) $fila->consulta, 'la columna `consulta` guarda el número, no el id');
+
+        // Y el id de la consulta de esa historia **no** es 1, así que las dos claves no coinciden: es lo que
+        // hace que la distinción importe.
+        $idDeLaConsulta = DB::table('consultas')->where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->value('id');
+        $this->assertNotSame(1, (int) $idDeLaConsulta);
+
+        // La otra tabla hija sigue guardando el **id** traducido (no se cambió su comportamiento).
+        $this->subir([[
+            'id' => 34, 'tabla' => 'examen_paciente', 'op' => 'I', 'fecha' => '2026-10-02 10:01:00',
+            'clave' => ['nrohistoria' => '1', 'nroconsulta' => '1', 'codeexamen' => 'E9'],
+            'fila' => ['nrohistoria' => 1, 'nroconsulta' => 1, 'codeexamen' => 'E9'],
+        ]]);
+
+        $this->assertSame(1, (int) DB::table('examen_paciente')->where('reg_medico', self::REG)->where('codeexamen', 'E9')->value('nroconsulta'));
+    }
+
     public function test_lo_que_cuelga_de_una_historia_que_no_subio_se_rechaza_y_no_se_confirma(): void
     {
         $r = $this->subir([['id' => 41, 'tabla' => 'antece_paciente', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',

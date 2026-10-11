@@ -587,7 +587,7 @@ class ConsultaSeccionesWebTest extends TestCase
 
     // -------------------------------------------------------------------------------- El shell
 
-    public function test_el_panel_marca_los_items_de_web_4_2_y_abre_sus_secciones(): void
+    public function test_el_panel_marca_los_items_disponibles_y_abre_sus_secciones(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->paciente($medico, 1001);
@@ -602,12 +602,12 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('3 de 13 disponibles', false);
+        $respuesta->assertSee('4 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         // El resto sigue diciendo que llega después.
         $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('WEB-4.3');
+        $respuesta->assertSee('WEB-4.4');
     }
 
     public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void

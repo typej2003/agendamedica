@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\ConsultasDelContexto;
+use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
+use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -49,7 +51,7 @@ class ConsultaController extends Controller
     {
     }
 
-    public function ver(Request $request, Consulta $consulta, MotivosDeLaConsulta $motivos)
+    public function ver(Request $request, Consulta $consulta, MotivosDeLaConsulta $motivos, ExamenFisicoDeLaConsulta $examen)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -90,7 +92,7 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen),
         ]);
     }
 
@@ -101,8 +103,13 @@ class ConsultaController extends Controller
      * Las URLs son **de la acción**, no de la pantalla: "Agregar" y "Quitar" postean a rutas propias
      * —porque escriben— y vuelven acá. La vista no arma ninguna.
      */
-    private function seccion(string $seccion, Consulta $consulta, string $regMedico, MotivosDeLaConsulta $motivos): ?object
-    {
+    private function seccion(
+        string $seccion,
+        Consulta $consulta,
+        string $regMedico,
+        MotivosDeLaConsulta $motivos,
+        ExamenFisicoDeLaConsulta $examen,
+    ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
 
@@ -130,6 +137,16 @@ class ConsultaController extends Controller
                 $consulta->enfermedadactual,
                 route('clinica.consulta.enfermedad.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ENFERMEDAD]),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_EVALUACION) {
+            return new EvaluacionFisicaVista(
+                $examen->de($consulta),
+                route('clinica.consulta.evaluacion.guardar', $consulta->id),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION]),
+                // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                (array) old(),
             );
         }
 
