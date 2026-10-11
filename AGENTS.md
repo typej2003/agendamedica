@@ -234,6 +234,12 @@ php artisan test                  # PHPUnit; los tests presentes son plantillas 
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
 
+**La base de desarrollo es dummy y se deja como quede** (decisión del usuario, 2026-10-10): un test de
+navegador puede crear datos y **no borrarlos**, y no hace falta que los verificadores limpien nada. Si
+alguna vez hace falta limpiar a mano, va **por `id`** y contra la base de desarrollo (`database.testing.sqlite`
+la arma sola la suite): dos limpiezas por `numhistoria`/`nroconsulta` ya borraron filas de otros pacientes
+(6 de `consultas` y 6 de `examen_fisico_nuevo`).
+
 ## Sistema visual (web clínica y panel)
 
 **Antes de tocar una pantalla de `/clinica` leé [`../Docs/Web/guia-ui.md`](../Docs/Web/guia-ui.md) (cómo se ve: tokens,
