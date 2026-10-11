@@ -17,7 +17,10 @@
    ========================================================================== */
 :root {
     /* Tipografía y base */
-    --bs-font-sans-serif: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bs-font-sans-serif: var(--ds-fuente);
+    --bs-body-font-family: var(--ds-fuente);
+    --bs-body-font-size: .9375rem;
+    --bs-body-line-height: 1.5;
     --bs-body-color: var(--ds-texto);
     --bs-body-color-rgb: 32, 16, 72;
     --bs-body-bg: var(--ds-fondo);
@@ -33,7 +36,7 @@
     --bs-border-color-translucent: rgba(32, 16, 72, .12);
     --bs-border-radius: var(--ds-radio);
     --bs-border-radius-sm: var(--ds-radio-sm);
-    --bs-border-radius-lg: var(--ds-radio-lg);
+    --bs-border-radius-lg: var(--ds-radio-card);
 
     /* Vínculos */
     --bs-link-color: var(--ds-violeta-700);
@@ -81,6 +84,22 @@ body {
     background-color: var(--ds-fondo);
     color: var(--ds-texto);
     -webkit-font-smoothing: antialiased;
+    /* Inter trae variantes de cifras y de letras: la "l" con cola y el cero con barra se leen sin duda
+       en una cédula, una hora o un monto. */
+    font-feature-settings: 'cv11', 'ss03';
+}
+
+/* Cifras de ancho fijo: las horas de la agenda y los montos se alinean en columna. */
+.table td, .table th, .tnum { font-variant-numeric: tabular-nums; }
+
+/* Quien pidió menos movimiento no ve transiciones ni animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* Foco visible y consistente en todo el sitio (accesibilidad: nunca se apaga el contorno). */
@@ -104,11 +123,36 @@ body {
 ::selection { background: var(--ds-violeta-200); color: var(--ds-violeta-900); }
 
 /* --- Botones --- */
+/* 36 px de alto (32 px el `btn-sm`), la misma altura que un campo: en una barra de filtros quedan alineados. */
 .btn {
-    --bs-btn-font-weight: 600;
-    --bs-btn-border-radius: var(--ds-radio-sm);
-    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    --bs-btn-font-weight: 500;
+    --bs-btn-font-size: .875rem;
+    --bs-btn-line-height: 1.25rem;
+    --bs-btn-padding-y: .4375rem;
+    --bs-btn-padding-x: 1rem;
+    --bs-btn-border-radius: var(--ds-radio);
+    transition: background-color var(--ds-dur-base) var(--ds-ease), border-color var(--ds-dur-base) var(--ds-ease),
+                box-shadow var(--ds-dur-base) var(--ds-ease), transform var(--ds-dur-micro) var(--ds-ease);
 }
+
+.btn:active:not(:disabled):not(.disabled) { transform: translateY(1px); }
+
+.btn-sm {
+    --bs-btn-font-size: .8125rem;
+    --bs-btn-line-height: 1rem;
+    --bs-btn-padding-y: .4375rem;
+    --bs-btn-padding-x: .75rem;
+    --bs-btn-border-radius: var(--ds-radio);
+}
+
+.btn-lg {
+    --bs-btn-font-size: 1rem;
+    --bs-btn-padding-y: .625rem;
+    --bs-btn-padding-x: 1.25rem;
+    --bs-btn-border-radius: var(--ds-radio);
+}
+
+.btn-primary { box-shadow: var(--ds-sombra-1); }
 
 .btn-primary {
     --bs-btn-bg: var(--ds-violeta-700);
@@ -269,10 +313,13 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 
 /* --- Insignias: pastilla suave, con texto oscuro sobre fondo claro --- */
 .badge {
-    --bs-badge-font-weight: 600;
-    padding: .35em .7em;
-    border-radius: 999px;
+    --bs-badge-font-size: .75rem;
+    --bs-badge-font-weight: 500;
+    --bs-badge-padding-y: .25rem;
+    --bs-badge-padding-x: .5rem;
+    --bs-badge-border-radius: var(--ds-radio-sm);
     border: 1px solid transparent;
+    line-height: 1.1;
 }
 
 .badge.bg-primary, .badge.bg-primary.text-dark {
@@ -327,8 +374,8 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 /* --- Tarjetas --- */
 .card {
     --bs-card-border-color: var(--ds-borde);
-    --bs-card-border-radius: var(--ds-radio);
-    --bs-card-inner-border-radius: calc(var(--ds-radio) - 1px);
+    --bs-card-border-radius: var(--ds-radio-card);
+    --bs-card-inner-border-radius: calc(var(--ds-radio-card) - 1px);
     --bs-card-cap-bg: var(--ds-superficie);
     --bs-card-cap-color: var(--ds-tinta);
     box-shadow: var(--ds-sombra-1);
@@ -377,11 +424,11 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 .table > :not(caption) > * > *:first-child { padding-left: 1rem; }
 .table > :not(caption) > * > *:last-child { padding-right: 1rem; }
 
+/* Cabecera en minúsculas y peso medio, como el resto del texto: las mayúsculas gritaban sobre la tabla.
+   Las etiquetas de campo (`.etiqueta`) sí siguen en mayúsculas pequeñas. */
 .table thead th {
-    font-size: .78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .03em;
+    font-size: .8125rem;
+    font-weight: 600;
     color: var(--ds-texto-2);
     white-space: nowrap;
 }
@@ -408,12 +455,28 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 }
 
 /* --- Formularios --- */
+/* 36 px de alto, igual que un botón; el borde es el de control (3,6:1), no el decorativo de las tarjetas. */
 .form-control, .form-select {
-    border-color: var(--ds-borde-2);
-    border-radius: var(--ds-radio-sm);
+    --bs-border-color: var(--ds-borde-control);
+    border-color: var(--ds-borde-control);
+    border-radius: var(--ds-radio);
     color: var(--ds-texto);
     background-color: var(--ds-superficie);
+    font-size: .875rem;
+    line-height: 1.25rem;
+    padding-top: .4375rem;
+    padding-bottom: .4375rem;
+    transition: border-color var(--ds-dur-base) var(--ds-ease), box-shadow var(--ds-dur-base) var(--ds-ease);
 }
+
+.form-control-sm, .form-select-sm {
+    font-size: .8125rem;
+    line-height: 1rem;
+    border-radius: var(--ds-radio);
+}
+
+/* El `textarea` no tiene alto fijo: sólo cambian el tamaño de letra y el borde. */
+textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 
 .form-control::placeholder { color: var(--ds-texto-3); opacity: 1; }
 
@@ -430,7 +493,7 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 
 .form-text { color: var(--ds-texto-3); }
 
-.form-check-input { border-color: var(--ds-borde-2); }
+.form-check-input { border-color: var(--ds-borde-control); }
 
 .form-check-input:checked {
     background-color: var(--ds-violeta-700);
@@ -444,8 +507,10 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 
 .input-group-text {
     background-color: var(--ds-superficie-2);
-    border-color: var(--ds-borde-2);
+    border-color: var(--ds-borde-control);
     color: var(--ds-texto-2);
+    font-size: .875rem;
+    border-radius: var(--ds-radio);
 }
 
 /* --- Avisos --- */
@@ -513,7 +578,7 @@ fieldset:disabled .btn[class*="btn-outline-"] {
 
 .modal-content {
     border: 1px solid var(--ds-borde);
-    border-radius: var(--ds-radio-lg);
+    border-radius: var(--ds-radio-card);
 }
 
 .modal-header, .modal-footer { border-color: var(--ds-borde); }

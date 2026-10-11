@@ -15,7 +15,33 @@
    `doctorisimo-ui.css`, que consume estos mismos tokens.
    ========================================================================== */
 
+/* ==========================================================================
+   Tipografía: Inter (licencia OFL, `public/fonts/inter/LICENSE.txt`), variable y **auto-alojada**: no hay
+   petición a un tercero y funciona sin conexión. Dos subconjuntos cubren el español completo (latin) y los
+   nombres con diacríticos poco comunes (latin-ext); el navegador baja el segundo sólo si lo necesita.
+   ========================================================================== */
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url('../fonts/inter/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url('../fonts/inter/inter-latin-wght-normal.woff2') format('woff2-variations');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
+    /* ---- Tipografía ---- */
+    --ds-fuente: 'Inter Variable', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
     /* ---- Violeta de marca (del logo) ---- */
     --ds-violeta-50:  #f9f4fa;
     --ds-violeta-100: #f3e8f5;
@@ -42,6 +68,7 @@
     --ds-texto-3:      #6b6580;  /* 5,5:1 — el "text-muted" del sistema */
     --ds-borde:        #e6e2ec;
     --ds-borde-2:      #d5d0e4;
+    --ds-borde-control: #8a849c; /* borde de un campo o casilla: 3,6:1 con blanco (AA para componentes) */
     --ds-fondo:        #f6f5f9;
     --ds-superficie:   #ffffff;
     --ds-superficie-2: #f1eff5;
@@ -52,14 +79,34 @@
     --ds-peligro:       #b3261e;  --ds-peligro-bg: #fdecea;  --ds-peligro-borde: #f5c6c2;
     --ds-info:          #0d5e7d;  --ds-info-bg:    #e6f4fa;  --ds-info-borde:    #b8e0f0;
 
+    /* ---- Barra lateral: el indigo del logo, más hondo que la tinta del texto ---- */
+    --ds-barra:         #2a1450;  /* fondo — 16,1:1 con blanco */
+    --ds-barra-2:       #38206a;  /* hover y ítem activo */
+    --ds-barra-borde:   #46308a;
+    --ds-barra-texto:   #ffffff;
+    --ds-barra-texto-2: #cfc6e6;  /* grupos y secundarios — 9,9:1 sobre --ds-barra */
+    --ds-barra-hilo:    var(--ds-celeste-500);  /* el hilo del ítem activo (decorativo, no es texto) */
+    --ds-barra-ancho:   264px;
+    --ds-barra-ancho-plegada: 72px;
+
     /* ---- Formas y sombras ---- */
     --ds-radio-sm: 8px;
-    --ds-radio: 10px;
-    --ds-radio-lg: 14px;
+    --ds-radio: 10px;          /* controles y botones */
+    --ds-radio-card: 12px;     /* tarjetas */
+    --ds-radio-lg: 14px;       /* diálogos */
+    --ds-control-alto: 36px;   /* botón y campo: la misma altura, así se alinean en una barra de filtros */
+    --ds-control-alto-sm: 32px;
     --ds-sombra-1: 0 1px 2px rgba(32, 16, 72, .06), 0 1px 3px rgba(32, 16, 72, .04);
     --ds-sombra-2: 0 4px 16px rgba(32, 16, 72, .08);
     --ds-sombra-3: 0 10px 30px rgba(32, 16, 72, .12);
     --ds-foco: 0 0 0 .2rem rgba(120, 48, 128, .28);
+
+    /* ---- Movimiento: breve, y se apaga con `prefers-reduced-motion` (ver doctorisimo-ui.css) ---- */
+    --ds-dur-micro: .12s;
+    --ds-dur-base: .18s;
+    --ds-dur-panel: .24s;
+    --ds-dur-pagina: .36s;
+    --ds-ease: cubic-bezier(.2, .8, .2, 1);
 
     /* ---- Nombres históricos (gineco), apuntando a la misma paleta ---- */
     --primary-color: var(--ds-violeta-700);
@@ -78,7 +125,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: var(--ds-fuente);
     color: var(--ds-texto);
     background-color: var(--ds-superficie);
 }
