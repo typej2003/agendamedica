@@ -459,6 +459,152 @@ class PacientesAltaEdicionWebTest extends TestCase
         $respuesta->assertDontSee('¿Atenderá a este paciente hoy?', false);
     }
 
+    // --------------------------------------------------------------- Validaciones (revisión 2026-10-11)
+
+    /**
+     * Una fecha de nacimiento de 2099 se guardaba con "Se guardaron los cambios" y **borraba la que
+     * tenía** (la ficha quedaba sin fecha ni edad). Una fecha futura no es un dato posible.
+     */
+    public function test_una_fecha_de_nacimiento_futura_se_rechaza_y_no_pisa_la_que_estaba(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, ['fnacimiento' => '1980-07-02 00:00:00'], '01001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, $this->formulario(['cedula' => '12345678', 'fnacimiento' => '2099-01-01']))
+            ->assertSessionHasErrors(['fnacimiento' => 'La fecha de nacimiento no puede ser posterior a hoy.'])
+            ->assertSessionMissing('estado');
+
+        $this->assertStringStartsWith('1980-07-02', (string) DB::table('pacientes')->where('id', $paciente)->value('fnacimiento'));
+    }
+
+    public function test_hoy_y_el_pasado_son_fechas_de_nacimiento_validas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, [], '01001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, $this->formulario(['cedula' => '12345678', 'fnacimiento' => now()->toDateString()]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertStringStartsWith(now()->toDateString(), (string) DB::table('pacientes')->where('id', $paciente)->value('fnacimiento'));
+    }
+
+    /** El teléfono que no tiene ni un dígito ("hola") se guardaba tal cual. */
+    public function test_un_telefono_sin_digitos_se_rechaza(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, ['telefono' => '02121234567'], '01001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, $this->formulario(['cedula' => '12345678', 'telefono' => 'hola']))
+            ->assertSessionHasErrors(['telefono' => 'El teléfono solo lleva números, espacios y los signos + - ( ) .'])
+            ->assertSessionMissing('estado');
+
+        $this->assertSame('02121234567', DB::table('pacientes')->where('id', $paciente)->value('telefono'));
+    }
+
+    public function test_los_telefonos_con_formato_habitual_se_aceptan(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, [], '01001');
+
+        foreach (['04141234567', '0414-123.45.67', '+58 (412) 123 4567', '(0212) 555-0101'] as $telefono) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->put('/clinica/pacientes/' . $paciente, $this->formulario(['cedula' => '12345678', 'telefono' => $telefono]))
+                ->assertSessionHasNoErrors();
+
+            $this->assertSame($telefono, DB::table('pacientes')->where('id', $paciente)->value('telefono'));
+        }
+    }
+
+    /**
+     * El legado trae teléfonos escritos de cualquier manera ("llamar a la tía"). Editar **otro dato** de
+     * ese paciente no puede quedar bloqueado por un teléfono que no se tocó: la regla mira solo lo que
+     * cambia (la misma idea que con la cédula "S.C.").
+     */
+    public function test_un_telefono_sucio_del_legado_que_no_se_toco_no_bloquea_la_edicion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, ['telefono' => 'llamar a la tia'], '01001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, $this->formulario([
+                'cedula' => '12345678', 'telefono' => 'llamar a la tia', 'profesion' => 'Docente',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado');
+
+        $this->assertSame('Docente', DB::table('pacientes')->where('id', $paciente)->value('profesion'));
+    }
+
+    /**
+     * Más largo que la columna: el **servidor** lo rechaza (el navegador ya corta con `maxlength`, pero un
+     * POST a mano o una app vieja no pasa por ahí) y lo dice en español, sin guardar nada.
+     */
+    public function test_un_texto_mas_largo_que_la_columna_se_rechaza_en_espanol_y_no_se_guarda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, ['apellidos' => 'Reynoso'], '01001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, $this->formulario(['cedula' => '12345678', 'apellidos' => str_repeat('X', 26)]))
+            ->assertSessionHasErrors(['apellidos' => 'El apellido no puede pasar de 25 caracteres.']);
+
+        $this->assertSame('Reynoso', DB::table('pacientes')->where('id', $paciente)->value('apellidos'));
+    }
+
+    /**
+     * Cada regla de la ficha necesita su aviso en español (el `locale` de la app es `en`; ver la prueba
+     * gemela de la cita). Se manda todo mal a la vez y se revisa que ningún aviso salga en inglés ni
+     * nombre un campo interno.
+     */
+    public function test_todos_los_errores_de_la_ficha_estan_en_espanol(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac'         => 'X',
+                'sin_cedula'  => 'quizas',
+                'cedula'      => 'abc',
+                'apellidos'   => str_repeat('A', 26),
+                'nombres'     => str_repeat('N', 26),
+                'sexo'        => 'Z',
+                'fnacimiento' => 'ayer',
+                'lnacimiento' => str_repeat('L', 101),
+                'codeestado'  => 'Z',
+                'direccion'   => str_repeat('D', 201),
+                'telefono'    => str_repeat('9', 21),
+                'email'       => 'no-es-un-correo',
+                'profesion'   => str_repeat('P', 51),
+                'ocupacion'   => str_repeat('O', 101),
+                'escolaridad' => str_repeat('E', 101),
+                'codesegemp'  => 'ABCD',
+                'dependencia' => str_repeat('R', 31),
+                'fingreso'    => 'ayer',
+                'atender_hoy' => 'quizas',
+            ]);
+
+        $errores = session('errors')->getBag('default')->toArray();
+
+        foreach (['nac', 'sin_cedula', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento', 'codeestado',
+                  'direccion', 'telefono', 'email', 'profesion', 'ocupacion', 'escolaridad', 'codesegemp', 'dependencia',
+                  'fingreso', 'atender_hoy'] as $campo) {
+            $this->assertArrayHasKey($campo, $errores, "«{$campo}» mal escrito tiene que dar su aviso.");
+        }
+
+        foreach ($errores as $campo => $mensajes) {
+            foreach ($mensajes as $mensaje) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/\b(The|field|must|required|format|invalid|selected|greater|less|characters)\b|_|\bid\b/i',
+                    $mensaje,
+                    "El aviso de «{$campo}» está en inglés o nombra un campo interno: {$mensaje}",
+                );
+            }
+        }
+    }
+
     public function test_editar_o_guardar_la_ficha_de_un_paciente_de_otro_medico_da_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

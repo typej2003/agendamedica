@@ -317,6 +317,80 @@ class PacientesWebTest extends TestCase
         $sinResultados->assertSee('Ver todos los pacientes');
     }
 
+    /**
+     * `%` y `_` son comodines del `LIKE`: buscar `%` devolvía los 1033 pacientes (revisión de la web,
+     * 2026-10-11) y `An_` encontraba a "Ana". Lo que el usuario escribe se busca **como texto**.
+     */
+    public function test_los_comodines_del_like_se_buscan_como_texto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'Reynoso', '11111111', '2081');
+        $this->paciente($medico, 'Beto', 'Salas', '22222222', '2082');
+        $this->paciente($medico, 'Cora', '100% Real', '33333333', '2083');
+
+        // Ningún dato tiene un `_`, ni `An_` ni `%a%` ni `1111111_` escritos: sin escape, `_` y `%` harían de
+        // comodín y encontrarían a Ana, a Beto o a todos.
+        foreach (['_', 'An_', '%a%', '1111111_'] as $buscar) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get('/clinica/pacientes?buscar=' . urlencode($buscar))
+                ->assertOk()
+                ->assertSee('Sin resultados para', false)
+                ->assertDontSee('Reynoso')
+                ->assertDontSee('Salas');
+        }
+
+        // Y el `%` que **sí** está escrito en un dato se encuentra tal cual: solo a "100% Real", no a todos.
+        foreach (['%', '100%'] as $buscar) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get('/clinica/pacientes?buscar=' . urlencode($buscar))
+                ->assertOk()
+                ->assertSee('100% Real')
+                ->assertDontSee('Reynoso')
+                ->assertDontSee('Salas');
+        }
+    }
+
+    /**
+     * `?page=999` mostraba la tabla vacía, "Mostrando – de 1033" y un paginador sin página actual. Una
+     * página que ya no existe (se borró gente, o se escribió a mano en la barra) lleva a la **última**,
+     * conservando la búsqueda y el filtro.
+     */
+    public function test_una_pagina_fuera_de_rango_lleva_a_la_ultima_conservando_la_busqueda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        foreach (range(1, 26) as $n) {
+            $this->paciente($medico, 'Paciente' . $n, 'Zeta', (string) (30000000 + $n), (string) (3000 + $n));
+        }
+
+        // 26 pacientes a 25 por página: dos páginas.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes?page=999')
+            ->assertRedirect(route('clinica.pacientes', ['page' => 2]));
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes?buscar=Zeta&historia=con&page=999')
+            ->assertRedirect(route('clinica.pacientes', ['buscar' => 'Zeta', 'historia' => 'con', 'page' => 2]));
+
+        // La última página existe y se muestra; la primera también.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes?page=2')->assertOk()->assertSee('Mostrando 26');
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes')->assertOk()->assertSee('Mostrando 1');
+    }
+
+    public function test_una_busqueda_sin_resultados_no_redirige_aunque_la_pagina_sea_grande(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'Reynoso', '11111111', '2081');
+
+        // Sin ningún resultado no hay "última página" a la que ir: se muestra el vacío, sin bucle.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes?buscar=Zzzz&page=5')
+            ->assertOk()
+            ->assertSee('Sin resultados para');
+    }
+
     // ----------------------------------------------------------------------------------------- Ficha
 
     public function test_la_ficha_muestra_los_datos_y_las_consultas_de_la_historia(): void

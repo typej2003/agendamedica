@@ -61,9 +61,21 @@ class PacienteController extends Controller
         // lista mezclada: la pantalla no le hace caso a lo que no entiende.
         $filtro = FiltroDePacientes::normalizar($request->query('historia'));
 
+        $listado = $this->pacientes->listar($regMedico, $buscar, $filtro);
+
+        // Una página que ya no existe (`?page=999`, o se borró gente) mostraba la tabla vacía y un
+        // "Mostrando – de 1033": se lleva a la **última**, con la búsqueda y el filtro que traía. Sin
+        // resultados no hay última página a la que ir (`total() === 0`): se muestra el vacío, sin bucle.
+        if ($listado->isEmpty() && $listado->total() > 0 && $listado->currentPage() > $listado->lastPage()) {
+            return redirect()->route('clinica.pacientes', array_merge(
+                $request->query(),
+                ['page' => $listado->lastPage()],
+            ));
+        }
+
         return view('clinica.pacientes.index', [
             'vm' => new ListadoDePacientesVista(
-                $this->pacientes->listar($regMedico, $buscar, $filtro),
+                $listado,
                 $buscar,
                 $filtro,
                 $this->pacientes->conteos($regMedico, $buscar),
@@ -284,11 +296,12 @@ class PacienteController extends Controller
             'apellidos'    => ['required', 'string', 'max:25'],
             'nombres'      => ['required', 'string', 'max:25'],
             'sexo'         => ['nullable', 'in:' . implode(',', array_keys(FormularioDePacienteVista::SEXOS))],
-            'fnacimiento'  => ['nullable', 'date_format:Y-m-d'],
+            // Una fecha de nacimiento futura no es un dato posible: se guardaba y dejaba la ficha sin fecha ni edad.
+            'fnacimiento'  => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'lnacimiento'  => ['nullable', 'string', 'max:100'],
             'codeestado'   => ['nullable', 'in:' . implode(',', array_keys(FormularioDePacienteVista::ESTADOS_CIVILES))],
             'direccion'    => ['nullable', 'string', 'max:200'],
-            'telefono'     => ['nullable', 'string', 'max:20'],
+            'telefono'     => $this->reglasDelTelefono($request, $paciente),
             'email'        => ['nullable', 'email', 'max:100'],
             'profesion'    => ['nullable', 'string', 'max:50'],
             'ocupacion'    => ['nullable', 'string', 'max:100'],
@@ -297,14 +310,64 @@ class PacienteController extends Controller
             'dependencia'  => ['nullable', 'string', 'max:30'],
             'fingreso'     => ['nullable', 'date_format:Y-m-d'],
             'atender_hoy'  => ['nullable', 'boolean'],
-        ], [
-            'cedula.required'    => 'Escribe la cédula o marca "Sin cédula (S.C.)".',
-            'cedula.regex'       => 'La cédula solo lleva números (hasta 10 dígitos).',
-            'apellidos.required' => 'El apellido es obligatorio.',
-            'nombres.required'   => 'El nombre es obligatorio.',
-            'email.email'        => 'Revisa el correo: no tiene forma de correo.',
+        ], $this->avisos());
+    }
+
+    /**
+     * El teléfono: solo dígitos y los signos de siempre (`+ - ( ) .` y espacios), con al menos un dígito.
+     * Se comprueba **solo si cambió**: el legado trae teléfonos escritos de cualquier manera ("llamar a la
+     * tía") y editar otro dato de ese paciente no puede quedar bloqueado por algo que no se tocó (la misma
+     * idea que con la cédula "S.C.").
+     *
+     * @return array<int,string>
+     */
+    private function reglasDelTelefono(Request $request, ?Paciente $paciente): array
+    {
+        $reglas = ['nullable', 'string', 'max:20'];
+
+        if (trim((string) $request->input('telefono')) !== trim((string) ($paciente?->telefono ?? ''))) {
+            $reglas[] = 'regex:/^(?=.*[0-9])[0-9+\-\s().]+$/';
+        }
+
+        return $reglas;
+    }
+
+    /**
+     * Los avisos de la ficha, **uno por regla**: el `locale` de la app es `en` (la API comparte esa
+     * configuración y no se toca por una pantalla), así que una regla sin texto propio sale en inglés.
+     * `PacientesAltaEdicionWebTest::test_todos_los_errores_de_la_ficha_estan_en_espanol` lo exige.
+     *
+     * @return array<string,string>
+     */
+    private function avisos(): array
+    {
+        return [
+            'nac.in'                  => 'La nacionalidad elegida no es válida.',
+            'sin_cedula.boolean'      => 'La opción "Sin cédula" no es válida.',
+            'cedula.required'         => 'Escribe la cédula o marca "Sin cédula (S.C.)".',
+            'cedula.regex'            => 'La cédula solo lleva números (hasta 10 dígitos).',
+            'apellidos.required'      => 'El apellido es obligatorio.',
+            'apellidos.max'           => 'El apellido no puede pasar de 25 caracteres.',
+            'nombres.required'        => 'El nombre es obligatorio.',
+            'nombres.max'             => 'El nombre no puede pasar de 25 caracteres.',
+            'sexo.in'                 => 'El sexo elegido no es válido.',
             'fnacimiento.date_format' => 'La fecha de nacimiento va como día/mes/año.',
-        ]);
+            'fnacimiento.before_or_equal' => 'La fecha de nacimiento no puede ser posterior a hoy.',
+            'lnacimiento.max'         => 'El lugar de nacimiento no puede pasar de 100 caracteres.',
+            'codeestado.in'           => 'El estado civil elegido no es válido.',
+            'direccion.max'           => 'La dirección no puede pasar de 200 caracteres.',
+            'telefono.max'            => 'El teléfono no puede pasar de 20 caracteres.',
+            'telefono.regex'          => 'El teléfono solo lleva números, espacios y los signos + - ( ) .',
+            'email.email'             => 'Revisa el correo: no tiene forma de correo.',
+            'email.max'               => 'El correo no puede pasar de 100 caracteres.',
+            'profesion.max'           => 'La profesión no puede pasar de 50 caracteres.',
+            'ocupacion.max'           => 'La ocupación no puede pasar de 100 caracteres.',
+            'escolaridad.max'         => 'La escolaridad no puede pasar de 100 caracteres.',
+            'codesegemp.max'          => 'El seguro elegido no es válido.',
+            'dependencia.max'         => 'El campo "Referido por" no puede pasar de 30 caracteres.',
+            'fingreso.date_format'    => 'La fecha de ingreso va como día/mes/año.',
+            'atender_hoy.boolean'     => 'La opción "¿Atenderá hoy?" no es válida.',
+        ];
     }
 
     /**
