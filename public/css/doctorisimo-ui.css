@@ -2317,3 +2317,59 @@ body.auth-pagina {
     .auth-formulario { padding: 2rem; }
     .login-card { padding: 2rem; }
 }
+
+
+/* ==========================================================================
+   9. Indicador de carga (`<x-ui.cargando>`)
+   ========================================================================== */
+
+.cargando {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .15rem;           /* el texto casi toca el icono: el SVG ya está recortado a su contenido */
+    color: var(--ds-violeta-700);
+}
+
+.cargando-icono { height: 7rem; width: auto; overflow: visible; }  /* el latido de la campana no se recorta */
+.cargando-sm .cargando-icono { height: 2.75rem; }
+.cargando-lg .cargando-icono { height: 10rem; }
+
+.cargando-campana { fill: var(--ds-superficie); }
+.cargando-latido { fill: var(--ds-celeste-500); }   /* el latido del logo; decorativo */
+
+.cargando-texto {
+    color: var(--ds-texto-3);
+    font-size: .75rem;
+    font-weight: 500;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    animation: cargando-parpadeo 1.5s ease-in-out infinite;
+}
+
+.cargando-sm .cargando-texto { font-size: .6875rem; letter-spacing: .15em; }
+.cargando-lg .cargando-texto { font-size: .8125rem; }
+
+@keyframes cargando-parpadeo {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+}
+
+/* Velo: tapa el contenedor mientras algo carga. El contenedor se vuelve la referencia de la posición. */
+.cargando-cubre {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    justify-content: center;
+    background: rgba(246, 245, 249, .85);
+    border-radius: inherit;
+}
+
+:has(> .cargando-cubre) { position: relative; }
+
+/* Cuando el velo pasa de oculto a visible (Livewire lo muestra con `display: flex`) entra con un fundido. */
+.cargando-cubre { animation: velo-entra var(--ds-dur-base) var(--ds-ease); }
+
+@media (prefers-reduced-motion: reduce) {
+    .cargando-texto { animation: none; }
+}

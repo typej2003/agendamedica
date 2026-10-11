@@ -33,6 +33,7 @@
 
     <!-- Tabla Principal -->
     <div class="card">
+        <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-bordered align-middle mb-0">

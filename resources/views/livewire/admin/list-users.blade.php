@@ -11,6 +11,7 @@
 
 
     <div class="card">
+        <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-4">
