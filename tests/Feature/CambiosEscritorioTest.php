@@ -409,6 +409,58 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame(0, DB::table('operadores')->where('reg_medico', self::REG)->count());
     }
 
+    /**
+     * **WEB-3.4**: `representante` es una tabla del legado más de la lista blanca y sigue subiendo por el
+     * camino genérico, sin que el sync se haya tocado. La web le agregó tres columnas **nullable**
+     * (`cedula`, `telefono`, `email`), así que este test fija las dos mitades del criterio de la tarea:
+     * una fila del escritorio **con las columnas de siempre y ninguna nueva** entra igual, y una con los
+     * datos de contacto nuevos los guarda. Además comprueba lo que la tabla tiene de particular: su clave
+     * real es el `numhistoria` (`PRIMARY KEY (numhistoria)` en el esquema del legado), así que el número
+     * se traduce como el de cualquier tabla hija y una historia que todavía no subió se rechaza.
+     */
+    public function test_la_tabla_representante_sigue_subiendo_por_el_camino_generico(): void
+    {
+        $r = $this->subir([
+            ['id' => 91, 'tabla' => 'representante', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+             'clave' => ['numhistoria' => '1'],
+             'fila' => ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ', 'codeparentesco' => 'M', 'direccion' => 'CALLE 1']],
+            ['id' => 92, 'tabla' => 'representante', 'op' => 'I', 'fecha' => '2026-10-02 10:00:01',
+             'clave' => ['numhistoria' => '2'],
+             'fila' => ['numhistoria' => 2, 'nombre' => 'LUIS GOMEZ', 'codeparentesco' => 'P',
+                        'cedula' => '12345678', 'telefono' => '04141112233', 'email' => 'luis@example.com']],
+        ]);
+        $this->assertEqualsCanonicalizing(['91', '92'], $this->confirmados($r));
+
+        $viejo = DB::table('representante')->where('reg_medico', self::REG)->where('numhistoria', 1)->first();
+        $this->assertSame('ROSA PEREZ', $viejo->nombre);
+        $this->assertSame('M', $viejo->codeparentesco);
+        $this->assertSame('CALLE 1', $viejo->direccion);
+        $this->assertNull($viejo->cedula, 'las columnas nuevas son nullable: la fila del escritorio viejo entra igual');
+        $this->assertNull($viejo->telefono);
+        $this->assertNull($viejo->email);
+
+        $nuevo = DB::table('representante')->where('reg_medico', self::REG)->where('numhistoria', 2)->first();
+        $this->assertSame('12345678', $nuevo->cedula);
+        $this->assertSame('04141112233', $nuevo->telefono);
+        $this->assertSame('luis@example.com', $nuevo->email);
+
+        // Editar en el escritorio actualiza la MISMA fila (la clave es el `numhistoria`).
+        $this->subir([['id' => 93, 'tabla' => 'representante', 'op' => 'U', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['numhistoria' => '1'],
+            'fila' => ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ DE PRUEBA', 'codeparentesco' => 'M', 'telefono' => '04249998877']]]);
+
+        $this->assertSame(2, DB::table('representante')->where('reg_medico', self::REG)->count());
+        $viejo = DB::table('representante')->where('reg_medico', self::REG)->where('numhistoria', 1)->first();
+        $this->assertSame('ROSA PEREZ DE PRUEBA', $viejo->nombre);
+        $this->assertSame('04249998877', $viejo->telefono);
+
+        // Y una fila de una historia que todavía no subió se rechaza, como cualquier tabla hija.
+        $r = $this->subir([['id' => 94, 'tabla' => 'representante', 'op' => 'I', 'fecha' => '2026-10-02 12:00:00',
+            'clave' => ['numhistoria' => '99'], 'fila' => ['numhistoria' => 99, 'nombre' => 'NADIE']]]);
+        $this->assertSame([], $this->confirmados($r));
+        $this->assertStringContainsString('todavía no está en el API', $r->json('rechazados'));
+    }
+
     public function test_estado_devuelve_el_prefijo_del_medico_o_null(): void
     {
         $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()

@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             SpecialtySeeder::class,
             EspecialidadesYModulosSeeder::class,
+            // El catálogo de parentescos del representante (WEB-3.4): es de AppDDR y la ficha lo necesita
+            // para mostrar el parentesco por su nombre y para llenar su `<select>`.
+            ParentescoSeeder::class,
         ]);
 
         // Cuentas con clave conocida, centros y pacientes inventados: solo para desarrollo y pruebas.

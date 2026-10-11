@@ -312,6 +312,43 @@ class CargaInicialTest extends TestCase
             ->assertJson(['error' => 'carga_ya_completa']);
     }
 
+    /**
+     * **WEB-3.4**: la tabla `representante` de la lista blanca sigue subiendo igual. La web le agregó
+     * tres columnas **nullable** (`cedula`, `telefono`, `email`) y este test fija las dos cosas que
+     * importan: una fila del escritorio **con las columnas viejas y nada más** entra sin romperse —es el
+     * caso de cualquier instalación que todavía no se actualizó—, y las columnas nuevas viajan cuando
+     * vienen. La tabla no se reestructuró: el sync no se tocó.
+     */
+    public function test_la_tabla_representante_sigue_subiendo_con_las_columnas_del_escritorio(): void
+    {
+        $this->crearMedico('carga-t-011');
+        $r = $this->iniciar('carga-t-011', ['representante' => 2])->assertOk();
+        $this->assertSame('', $r->json('ignoradas'));
+        $carga = $r->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'representante', 'desde' => 0, 'filas' => [
+            // Sólo las columnas que ya existían en el legado (y en el API antes de WEB-3.4).
+            ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ', 'codeparentesco' => 'M', 'direccion' => 'CALLE 1'],
+            // Y una con los datos de contacto nuevos, como los va a mandar el escritorio actualizado.
+            ['numhistoria' => 2, 'nombre' => 'LUIS GOMEZ', 'codeparentesco' => 'P', 'direccion' => 'CALLE 2',
+             'cedula' => '12345678', 'telefono' => '04141112233', 'email' => 'luis@example.com'],
+        ]])->assertOk()->assertJson(['recibidas' => 2]);
+
+        $viejo = DB::table('representante')->where('reg_medico', 'carga-t-011')->where('numhistoria', 1)->first();
+        $this->assertSame('ROSA PEREZ', $viejo->nombre);
+        $this->assertSame('M', $viejo->codeparentesco);
+        $this->assertNull($viejo->cedula, 'las columnas nuevas son nullable: la fila vieja entra igual');
+        $this->assertNull($viejo->telefono);
+        $this->assertNull($viejo->email);
+
+        $nuevo = DB::table('representante')->where('reg_medico', 'carga-t-011')->where('numhistoria', 2)->first();
+        $this->assertSame('12345678', $nuevo->cedula);
+        $this->assertSame('04141112233', $nuevo->telefono);
+        $this->assertSame('luis@example.com', $nuevo->email);
+
+        $this->enviar('finalizar', ['carga_id' => $carga])->assertOk()->assertJson(['columnas_ignoradas' => '']);
+    }
+
     public function test_sin_credencial_no_entra(): void
     {
         $this->postJson('/api/sync/carga-inicial/iniciar', ['reg_medico' => 'x', 'tablas' => []])

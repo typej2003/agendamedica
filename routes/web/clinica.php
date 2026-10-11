@@ -12,6 +12,7 @@ use App\Http\Controllers\Clinica\MotivoCitaController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\RecordatorioController;
+use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // secretaría al recibir al paciente, o el médico si llega a atenderlo sin historia; el
             // `reg_medico` sale del vínculo del paciente y **no** del formulario.
             Route::post('/pacientes/{paciente}/historia', [PacienteController::class, 'asignarHistoria'])->name('pacientes.asignar-historia');
+            // El representante del paciente (WEB-3.4): el adulto que responde por él y el que presta el
+            // teléfono para el recordatorio. Es un **upsert por historia** (la tabla legada tiene una fila
+            // por `numhistoria`), así que cargar y editar son el mismo POST; el formulario vive en el
+            // bloque de la ficha, que es la única pantalla que lo muestra.
+            Route::post('/pacientes/{paciente}/representante', [RepresentanteController::class, 'guardar'])->name('pacientes.representante');
             Route::put('/pacientes/{paciente}', [PacienteController::class, 'actualizar'])->name('pacientes.actualizar');
             // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
             // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma

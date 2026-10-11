@@ -1120,6 +1120,26 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     .avatar-lg { width: 52px; height: 52px; font-size: 1.1rem; }
 }
 
+/* --- Representante del paciente en la ficha (WEB-3.4) --- */
+.representante-datos {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.representante-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+.representante-nombre {
+    font-weight: 600;
+    color: var(--ds-texto);
+    overflow-wrap: anywhere;
+}
+
 /* --- Ancho de columnas y controles (reemplazan los `style=""` de las vistas) --- */
 .col-estrecha { width: 2rem; }
 .col-numero   { width: 3rem; }

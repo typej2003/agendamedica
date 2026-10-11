@@ -17,6 +17,14 @@
         </x-slot>
     </x-ui.page-head>
 
+    {{-- Los errores de validación del representante se muestran acá arriba y además abren su diálogo
+         (`data-abrir-al-cargar`): el campo que falló está adentro y, sin eso, el aviso quedaría detrás de
+         una ventana cerrada (misma decisión que el cambio de cédula, WEB-2.15). El texto del error lo
+         dibuja cada `<x-ui.campo>` debajo de su control. --}}
+    @if ($errors->any())
+        <x-ui.errores class="mb-3" />
+    @endif
+
     {{-- Cabecera de la ficha: quién es y cómo está de un vistazo. --}}
     <x-ui.tarjeta class="mb-3">
         <div class="ficha-cabecera">
@@ -62,6 +70,44 @@
         </x-ui.tarjeta>
     @endif
 
+    {{-- Representante del paciente (WEB-3.4): el adulto que responde por él —pediatría y casos
+         generales— y el que presta su teléfono para el recordatorio (PLAN-WEB.md §6). Es **uno** por
+         paciente: en el legado la tabla `representante` tiene `PRIMARY KEY (numhistoria)`, así que se
+         guarda con el número de historia y no es una lista. Por eso, sin historia, el bloque no ofrece
+         el formulario: dice el motivo y manda a asignarla (WEB-3.3), que es la acción de arriba. --}}
+    @php $rep = $representante; @endphp
+    <x-ui.tarjeta id="ficha-representante" titulo="Representante" icono="bi-person-hearts" class="mb-3">
+        <x-slot name="acciones">
+            @if ($rep->puedeEditar())
+                <button type="button" class="btn btn-outline-primary" data-dialogo="dialogo-representante">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> {{ $rep->botonEditar() }}
+                </button>
+            @endif
+        </x-slot>
+
+        @if ($rep->cargado())
+            <div class="representante-datos">
+                <div class="representante-cabeza">
+                    <span class="representante-nombre">{{ $rep->nombre() ?? 'Representante sin nombre' }}</span>
+                    @if ($rep->parentesco())
+                        <x-ui.estado tono="neutro" icono="bi-people">{{ $rep->parentesco() }}</x-ui.estado>
+                    @endif
+                </div>
+                <dl class="datos-rejilla">
+                    <x-ui.dato etiqueta="Cédula" :valor="$rep->cedula()" />
+                    <x-ui.dato etiqueta="Teléfono" :valor="$rep->telefono()" />
+                    <x-ui.dato etiqueta="Correo" :valor="$rep->correo()" />
+                    <x-ui.dato etiqueta="Dirección" :valor="$rep->direccion()" />
+                </dl>
+            </div>
+        @else
+            @php $sinRepresentante = $rep->vacio(); @endphp
+            <x-ui.vacio icono="bi-person-hearts" :titulo="$sinRepresentante['titulo']">
+                {{ $sinRepresentante['texto'] }}
+            </x-ui.vacio>
+        @endif
+    </x-ui.tarjeta>
+
     <div class="row g-3">
         <div class="col-12 col-lg-6">
             <x-ui.tarjeta titulo="Datos del paciente" icono="bi-person-vcard" class="h-100">
@@ -104,4 +150,13 @@
             </x-ui.tarjeta>
         </div>
     </div>
+
+    {{-- El formulario del representante, en un diálogo: la ficha no cambia de pantalla para cargar un dato
+         de contacto. El botón del bloque lo abre (`public/js/clinica/representante.js`) y, si la validación
+         falló, la página lo abre sola para que el error se lea (guía de UI §3). --}}
+    @include('clinica.pacientes._dialogo-representante', ['rep' => $representante])
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/clinica/representante.js') }}"></script>
 @endsection

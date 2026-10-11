@@ -82,7 +82,7 @@ class PacienteController extends Controller
         return response()->json($this->pacientes->sugerencias($regMedico, trim((string) $request->query('q', ''))));
     }
 
-    public function ver(Request $request, int $paciente)
+    public function ver(Request $request, int $paciente, RepresentanteController $representante)
     {
         $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
 
@@ -101,7 +101,13 @@ class PacienteController extends Controller
         // contenedor): la ficha la usa sólo si el paciente todavía no tiene número.
         $vm = $vm->conUrlAsignarHistoria(route('clinica.pacientes.asignar-historia', $ficha->id));
 
-        return view('clinica.pacientes.ver', ['vm' => $vm]);
+        // El representante es **de la ficha** (WEB-3.4): no tiene pantalla propia, así que su bloque —con
+        // su catálogo de parentescos ya leído y su URL de guardado— lo arma su controlador y la ficha lo
+        // incluye, igual que el resto de los datos de la pantalla.
+        return view('clinica.pacientes.ver', [
+            'vm'            => $vm,
+            'representante' => $representante->bloque($request, $paciente),
+        ]);
     }
 
     /**
