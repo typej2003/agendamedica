@@ -33,10 +33,6 @@
         #wrapper { display: flex; min-height: calc(100vh - var(--navbar-height)); }
 
         .main-content { flex: 1; padding: 0; min-width: 0; }
-
-        @media (min-width: 992px) {
-            #sidebarMenu { min-height: calc(100vh - var(--navbar-height)); }
-        }
     </style>
 </head>
 <body class="@auth panel @else sitio-publico @endauth">

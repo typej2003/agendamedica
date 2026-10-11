@@ -1,7 +1,7 @@
 {{-- Recordatorio de una cita (WEB-2.6): mismo diálogo para todas las filas, que lo llena con sus datos
      (`public/js/clinica/agenda.js`). Los tres canales se muestran siempre; el que el paciente no puede
      recibir queda deshabilitado y el aviso dice cuál dato falta (regla de la wiki). Recibe `$canales`. --}}
-<x-ui.dialogo id="dialogo-recordatorio" titulo="Recordar al paciente">
+<x-ui.dialogo id="dialogo-recordatorio" titulo="Recordar al paciente" lateral>
     <form method="POST" id="mensaje-form">
         @csrf
         <div class="dialogo-cuerpo">

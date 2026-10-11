@@ -13,7 +13,7 @@
 
     Recibe `$rep` (App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista).
 --}}
-<x-ui.dialogo id="dialogo-representante" titulo="{{ $rep->tituloFormulario() }}"
+<x-ui.dialogo id="dialogo-representante" titulo="{{ $rep->tituloFormulario() }}" lateral
               data-abrir-al-cargar="{{ $errors->hasAny(['nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion']) ? '1' : '0' }}">
     <form method="POST" action="{{ $rep->urlGuardar() }}">
         @csrf

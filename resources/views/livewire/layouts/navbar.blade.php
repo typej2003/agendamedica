@@ -48,6 +48,13 @@
                                     </span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end w-100 w-lg-auto">
+                                    <li>
+                                        <div class="dropdown-header">
+                                            <span class="d-block fw-semibold text-body">{{ $usuario->email }}</span>
+                                            <span class="d-block">{{ $usuario->getRoleNames()->first() ?? 'Sin rol' }}</span>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
                                     @if ($usuario->esAdministrador() || $usuario->hasRole('Paciente'))
                                         <li>
                                             <a class="dropdown-item py-2" href="{{ route('dashboard') }}">

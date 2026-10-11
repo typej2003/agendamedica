@@ -33,6 +33,32 @@
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') abrir(false); });
     }
 
+    // ---- Menú lateral plegado (escritorio): sólo iconos. La preferencia se recuerda en este navegador; si el
+    // almacenamiento no está disponible (ventana privada, bloqueado) el menú simplemente arranca desplegado.
+    const plegar = document.querySelector('[data-plegar-barra]');
+    const LLAVE_BARRA = 'ddr.barra.plegada';
+
+    if (menu && plegar) {
+        const aplicarPliegue = function (plegado, recordar) {
+            menu.classList.toggle('minimizado', plegado);
+            const texto = plegado ? 'Desplegar el menú' : 'Plegar el menú';
+            plegar.setAttribute('aria-expanded', plegado ? 'false' : 'true');
+            plegar.setAttribute('aria-label', texto);
+            plegar.setAttribute('title', texto);
+            if (recordar) {
+                try { window.localStorage.setItem(LLAVE_BARRA, plegado ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
+            }
+        };
+
+        let guardado = false;
+        try { guardado = window.localStorage.getItem(LLAVE_BARRA) === '1'; } catch (e) { /* sin almacenamiento */ }
+        if (guardado) aplicarPliegue(true, false);
+
+        plegar.addEventListener('click', function () {
+            aplicarPliegue(!menu.classList.contains('minimizado'), true);
+        });
+    }
+
     // ---- Controles que envían su formulario al cambiar.
     document.addEventListener('change', function (evento) {
         const control = evento.target.closest('[data-autoenviar]');

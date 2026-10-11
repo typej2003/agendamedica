@@ -80,11 +80,11 @@
     --ds-info:          #0d5e7d;  --ds-info-bg:    #e6f4fa;  --ds-info-borde:    #b8e0f0;
 
     /* ---- Barra lateral: el indigo del logo, más hondo que la tinta del texto ---- */
-    --ds-barra:         #2a1450;  /* fondo — 16,1:1 con blanco */
-    --ds-barra-2:       #38206a;  /* hover y ítem activo */
-    --ds-barra-borde:   #46308a;
+    --ds-barra:         #1f1146;  /* fondo — el azul marino de la "M" del logo, un paso más hondo: 17,6:1 con blanco */
+    --ds-barra-2:       #2e1c63;  /* hover y ítem activo */
+    --ds-barra-borde:   #3d2a7d;
     --ds-barra-texto:   #ffffff;
-    --ds-barra-texto-2: #cfc6e6;  /* grupos y secundarios — 9,9:1 sobre --ds-barra */
+    --ds-barra-texto-2: #cdc6e8;  /* grupos y secundarios — 10,6:1 sobre --ds-barra */
     --ds-barra-hilo:    var(--ds-celeste-500);  /* el hilo del ítem activo (decorativo, no es texto) */
     --ds-barra-ancho:   264px;
     --ds-barra-ancho-plegada: 72px;

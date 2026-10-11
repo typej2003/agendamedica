@@ -1,7 +1,7 @@
 {{-- Un solo diálogo de cobro para toda la página: el botón "Cobrar" de cada cita lo llena con sus datos
      (`public/js/clinica/agenda.js`). El monto solo se pide si la cita todavía no tiene precio (lo común en
      los datos del legado). --}}
-<x-ui.dialogo id="dialogo-cobro" titulo="Registrar cobro">
+<x-ui.dialogo id="dialogo-cobro" titulo="Registrar cobro" lateral>
     <form method="POST" id="cobro-form">
         @csrf
         <div class="dialogo-cuerpo">

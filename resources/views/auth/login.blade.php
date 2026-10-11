@@ -13,85 +13,27 @@
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
 
-    <style>
-        body {
-            background: linear-gradient(160deg, var(--ds-violeta-50) 0%, var(--ds-fondo) 55%, var(--ds-celeste-50) 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem 1rem;
-        }
-
-        .login-card {
-            background: var(--ds-superficie);
-            border-radius: var(--ds-radio-lg);
-            box-shadow: var(--ds-sombra-3);
-            border: 1px solid var(--ds-borde);
-            max-width: 430px;
-            width: 100%;
-        }
-
-        .login-header-icon {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background-color: var(--ds-violeta-100);
-            color: var(--ds-violeta-700);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 31px;
-            margin-bottom: 14px;
-            transition: transform .2s ease;
-        }
-
-        .brand-link { text-decoration: none; color: inherit; display: inline-block; }
-        .brand-link:hover .login-header-icon { transform: scale(1.04); }
-
-        .auth-links a {
-            color: var(--ds-celeste-700);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: .88rem;
-        }
-
-        .auth-links a:hover { text-decoration: underline; }
-
-        /* Selector del tipo de usuario */
-        .user-type-selector .btn { border-color: var(--ds-borde-2); color: var(--ds-texto-2); }
-        .user-type-selector .btn:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-800); }
-        .user-type-selector .btn-check:checked + .btn {
-            background-color: var(--ds-violeta-700);
-            border-color: var(--ds-violeta-700);
-            color: #fff;
-        }
-
-        .disabled-group { opacity: .55; pointer-events: none; }
-
-        .acceso-sistema {
-            background: var(--ds-superficie-2);
-            border: 1px solid var(--ds-borde);
-            border-radius: var(--ds-radio);
-            padding: .6rem .85rem;
-        }
-    </style>
 </head>
-<body>
+<body class="auth-pagina">
 
-    <div class="w-100 d-flex justify-content-center">
-        <div class="card login-card p-4 p-md-5">
-            <!-- Título y Logotipo -->
-            <div class="text-center mb-4">
-                <a href="{{ url('/') }}" class="brand-link">
-                    <span class="login-header-icon">
-                        <i class="bi bi-heart-pulse-fill"></i>
-                    </span>
-                    <h1 class="h3 fw-bold mb-1" style="color: var(--ds-tinta);">
-                        Doctorísimo<span style="color: var(--ds-violeta-700);">.App</span>
-                    </h1>
-                </a>
-                <p class="text-muted small mt-1 mb-0">Inicia sesión para acceder al sistema</p>
+    {{-- Panel de marca: en escritorio ocupa la mitad izquierda con el lema; en el celular queda de franja. --}}
+    <aside class="auth-marca" aria-label="Doctorísimo">
+        <a href="{{ url('/') }}" class="auth-marca-logo">
+            <span class="app-marca-ficha" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></span>
+            <span class="auth-marca-nombre">Doctorísimo<span>.App</span></span>
+        </a>
+
+        <div class="auth-marca-lema">
+            <p class="auth-lema-titulo">Tu consultorio,<br>siempre a la mano</p>
+            <p class="auth-lema-texto">Agenda, historia clínica y récipes en un solo lugar, con o sin conexión.</p>
+        </div>
+    </aside>
+
+    <main class="auth-formulario">
+        <div class="card login-card">
+            <div class="mb-4">
+                <h1 class="auth-titulo">Iniciar sesión</h1>
+                <p class="text-muted small mb-0">Ingresa con tu correo y tu contraseña para acceder al sistema.</p>
             </div>
 
             <form action="{{ route('login') }}" method="post" id="loginForm">
@@ -104,7 +46,7 @@
                 <div class="acceso-sistema mb-3">
                     <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 ps-0">
                         <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" id="systemAccessCheck" {{ old('user_type') == 'Root' ? 'checked' : '' }}>
-                        <label class="form-check-label small fw-semibold mb-0" for="systemAccessCheck" style="color: var(--ds-texto-2);">
+                        <label class="form-check-label small fw-semibold mb-0" for="systemAccessCheck">
                             Acceso de administración / sistema
                         </label>
                     </div>
@@ -112,7 +54,7 @@
 
                 <!-- Selector del tipo de usuario -->
                 <div class="mb-4" id="userTypeContainer">
-                    <span class="form-label small fw-bold d-block text-center mb-2" style="color: var(--ds-texto-2);">Acceder como:</span>
+                    <span class="form-label small fw-bold d-block text-center mb-2">Acceder como:</span>
                     <div class="btn-group w-100 user-type-selector" role="group" id="btnGroupUserType" aria-label="Tipo de usuario">
                         <input type="radio" class="btn-check user-type-radio" name="user_type_option" id="type_paciente" value="Paciente" {{ old('user_type', 'Paciente') == 'Paciente' ? 'checked' : '' }}>
                         <label class="btn btn-outline-primary fw-semibold" for="type_paciente">
@@ -163,13 +105,13 @@
 
                 <div class="form-check mb-4">
                     <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                    <label class="form-check-label small" for="remember" style="color: var(--ds-texto-2);">
+                    <label class="form-check-label small" for="remember">
                         Recuérdame
                     </label>
                 </div>
 
                 <div class="d-grid mb-4">
-                    <button type="submit" class="btn btn-primary-gineco">Ingresar</button>
+                    <button type="submit" class="btn btn-primary">Ingresar</button>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center auth-links">
@@ -187,7 +129,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </main>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

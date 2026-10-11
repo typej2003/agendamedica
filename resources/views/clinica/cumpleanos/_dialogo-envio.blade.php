@@ -5,7 +5,7 @@
 
      El canal viaja como `automatico`: la pantalla usa el canal **configurado** (el mismo que va a usar el
      envío automático), y resolverlo en el servidor deja una sola versión de esa decisión. --}}
-<x-ui.dialogo id="dialogo-cumple" titulo="Saludar por su cumpleaños">
+<x-ui.dialogo id="dialogo-cumple" titulo="Saludar por su cumpleaños" lateral>
     <form method="POST" action="{{ route('clinica.cumpleanos.enviar') }}">
         @csrf
         <input type="hidden" name="canal" value="automatico">

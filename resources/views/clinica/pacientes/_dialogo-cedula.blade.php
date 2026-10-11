@@ -7,7 +7,7 @@
     La cédula actual se muestra como dato, no como campo editable: la fuente también la mostraba aparte
     (`st_15`) y comparaba contra ella. Recibe `$vm` (CitasDelPacienteVista).
 --}}
-<x-ui.dialogo id="dialogo-cedula" titulo="Cambiar la cédula del paciente"
+<x-ui.dialogo id="dialogo-cedula" titulo="Cambiar la cédula del paciente" lateral
               data-abrir-al-cargar="{{ $errors->has('cedula') ? '1' : '0' }}">
     <form method="POST" action="{{ $vm->urlCambiarCedula() }}" id="cedula-form">
         @csrf
