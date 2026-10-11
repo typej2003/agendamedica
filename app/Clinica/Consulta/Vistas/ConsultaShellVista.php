@@ -42,6 +42,9 @@ final class ConsultaShellVista
     /** La clave de la sección de evolución en `?seccion=` (WEB-4.6). */
     public const SECCION_EVOLUCION = 'evolucion';
 
+    /** La clave de la sección de exámenes e imágenes en `?seccion=` (WEB-4.7). */
+    public const SECCION_EXAMENES = 'examenes';
+
     /**
      * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
      * lleva hoy.
@@ -75,7 +78,8 @@ final class ConsultaShellVista
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Control de embarazo', 'icono' => 'bi-gender-female',
             'detalle' => 'Prenatal, laboratorio, controles y reporte.', 'tarea' => 'F6', 'estado' => 'proximamente'],
         ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Exámenes', 'icono' => 'bi-droplet',
-            'detalle' => 'Laboratorio de rutina de la consulta.', 'tarea' => 'WEB-4.7', 'estado' => 'proximamente'],
+            'detalle' => 'Laboratorio de rutina de la consulta y las imágenes de sus estudios.',
+            'tarea' => 'WEB-4.7', 'estado' => 'listo', 'seccion' => self::SECCION_EXAMENES],
         ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],
@@ -221,7 +225,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 7 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, diagnóstico, evolución y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 8 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, exámenes, diagnóstico, evolución y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -231,8 +235,8 @@ final class ConsultaShellVista
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Al cerrar WEB-4.6 ya se pueden cargar los ítems 1, 2, 3, 4, 8 y
-     * 9, y el resto sigue llegando por tareas.
+     * las secciones se abren desde el panel. Al cerrar WEB-4.7 ya se pueden cargar los ítems 1, 2, 3, 4, 7,
+     * 8 y 9, y el resto sigue llegando por tareas.
      */
     public function sinContenido(): array
     {
@@ -240,9 +244,9 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
-                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, diagnóstico, '
-                . 'evolución y los datos personales del paciente— se abren acá; el resto llega con las tareas '
-                . 'siguientes (estudios y documentos).',
+                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, exámenes, '
+                . 'diagnóstico, evolución y los datos personales del paciente— se abren acá; el resto llega '
+                . 'con las tareas siguientes (estudios y documentos).',
         ];
     }
 

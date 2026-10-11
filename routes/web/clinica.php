@@ -9,6 +9,7 @@ use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
+use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
@@ -177,6 +178,20 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `consultas.observaciones`: en la fuente esa columna es la **colposcopia** del examen
                 // ginecológico (`:2757`, `:2836`), no un campo de la evolución (ver `EvolucionDeLaConsulta`).
                 Route::post('/consulta/{consulta}/evolucion', [ConsultaEvolucionController::class, 'guardar'])->name('consulta.evolucion.guardar');
+
+                // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
+                // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el
+                // escritorio: su ABM es F5/WEB-5.4) y **escribe** las imágenes (`imagen_consulta`, la
+                // misma tabla que el escritorio llena con la ruta del archivo, `w_consulta_principal.srw:10744`).
+                //
+                // La subida y la baja son POST/DELETE normales —el archivo viaja en un `<form>` con
+                // `multipart/form-data`— y la descarga es un GET **autorizado**: el disco es privado
+                // (`storage/app/clinica`, fuera de `public/`), así que esta ruta es el único camino al
+                // archivo y comprueba el `reg_medico` del contexto contra el dueño de la fila. Una imagen
+                // de otro médico —o de otra consulta— responde 404.
+                Route::post('/consulta/{consulta}/examenes', [ConsultaImagenesController::class, 'subir'])->name('consulta.examenes.subir');
+                Route::get('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'descargar'])->name('consulta.examenes.descargar');
+                Route::delete('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'quitar'])->name('consulta.examenes.quitar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

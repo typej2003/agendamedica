@@ -7,14 +7,18 @@ use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
+use App\Clinica\Consulta\ExamenesDeLaConsulta;
+use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
+use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
+use App\Clinica\Consulta\Vistas\SeccionDeExamenesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -26,8 +30,8 @@ use Illuminate\Http\Request;
 /**
  * **La consulta** (F4): el shell de la consulta de un paciente —el encabezado y el panel de 13 ítems del
  * legado— y, desde **WEB-4.2**, el contenido de sus secciones (motivos de consulta, enfermedad actual,
- * evaluación física, antecedentes, diagnóstico y evolución), que se abren **dentro de la misma pantalla**
- * con `?seccion=`.
+ * evaluación física, antecedentes, exámenes e imágenes, diagnóstico y evolución), que se abren **dentro
+ * de la misma pantalla** con `?seccion=`.
  *
  * Entrar es **siempre por una acción del médico**: "Atender" desde la agenda, que abre —o crea— la
  * consulta del día (`App\Actions\Consulta\AbrirConsulta`). Por eso no hay una ruta que liste consultas ni
@@ -67,6 +71,8 @@ class ConsultaController extends Controller
         AntecedentesDelPaciente $antecedentes,
         DiagnosticosDeLaConsulta $diagnosticos,
         EvolucionDeLaConsulta $evolucion,
+        ExamenesDeLaConsulta $examenes,
+        ImagenesDeLaConsulta $imagenes,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -107,9 +113,13 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion),
-            // La tarjeta del buscador del catálogo, que sólo tiene la sección de antecedentes (WEB-4.4).
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes),
+            // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
+            // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
+            // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
+            // cuerpo, y por eso viajan aparte.
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
+            'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
         ]);
     }
 
@@ -129,6 +139,7 @@ class ConsultaController extends Controller
         AntecedentesDelPaciente $antecedentes,
         DiagnosticosDeLaConsulta $diagnosticos,
         EvolucionDeLaConsulta $evolucion,
+        ExamenesDeLaConsulta $examenes,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -213,7 +224,49 @@ class ConsultaController extends Controller
             );
         }
 
+        if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
+            return new SeccionDeExamenesVista(
+                // Los exámenes de **esta** consulta: la fila se llavea por `nrohistoria` + `nroconsulta`
+                // (`examen_paciente`, el `dw_12` de la pestaña de laboratorio del escritorio).
+                $examenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                // La observación del conjunto (`examen_obs.observacion`), que no es el resultado de una
+                // fila: es el texto que el escritorio deja para el grupo de exámenes.
+                $examenes->observacion($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                $examenes->tieneCatalogo($regMedico),
+            );
+        }
+
         return null;
+    }
+
+    /**
+     * El ViewModel de la **subida de imágenes** de la consulta (WEB-4.7), o `null` si la sección activa no
+     * es la de exámenes.
+     *
+     * Es la otra mitad del ítem 7 y la única parte de la consulta que mueve un archivo: el archivo va al
+     * disco privado `clinica` y se sirve por la ruta autorizada de `ConsultaImagenesController`, que
+     * comprueba que la historia es de este médico. La tarjeta se arma aparte de la lista de exámenes
+     * porque son dos cosas distintas —una lee lo que hizo el escritorio, la otra escribe—, igual que la
+     * tarjeta del catálogo de antecedentes.
+     */
+    private function imagenesDeLaConsulta(
+        string $seccion,
+        Consulta $consulta,
+        string $regMedico,
+        ImagenesDeLaConsulta $imagenes,
+    ): ?object {
+        if ($seccion !== ConsultaShellVista::SECCION_EXAMENES) {
+            return null;
+        }
+
+        return new ImagenesDeLaConsultaVista(
+            $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+            route('clinica.consulta.examenes.subir', $consulta->id),
+            // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
+            // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
+            fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+            fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+        );
     }
 
     /**

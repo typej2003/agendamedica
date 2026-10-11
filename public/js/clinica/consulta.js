@@ -36,6 +36,11 @@
  *    sección del ítem 9, y las **plantillas**: cada botón de la lista copia su texto en el campo (que es lo
  *    que el doble clic del `dw_84` hace en el escritorio, `w_consulta_principal.srw:12002`) y deja el
  *    formulario marcado como sucio, porque copiar una plantilla **es escribir**: todavía no está guardada.
+ *
+ * 7. **La subida de una imagen** (WEB-4.7, ítem 7): el aviso de "elegiste una imagen y no la subiste". Es lo
+ *    único que hace falta: el archivo lo manda el `<form enctype="multipart/form-data">` y quien lo valida
+ *    —tipo real, tamaño— y le pone el nombre es el servidor (`App\Clinica\Archivos\ArchivosClinicos`). El
+ *    script no toca ni el nombre ni el contenido del archivo.
  */
 (function () {
     'use strict';
@@ -568,5 +573,43 @@
                 campo.focus();
             });
         });
+    }
+
+    // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)
+
+    // La única subida de archivo de la consulta: el formulario de la sección del ítem 7. Lo que hace el
+    // script es **avisar** —el archivo elegido y todavía sin subir se pierde si se sale—, nada más: el
+    // `POST` lo manda el navegador con el `multipart/form-data` del formulario y el archivo lo valida y lo
+    // guarda el servidor. El nombre del archivo no se toca acá ni allá: lo pone el servidor.
+    const subidaDeImagen = document.querySelector('[data-consulta-archivo]');
+
+    if (subidaDeImagen) {
+        const aviso = document.getElementById('examenes-sin-subir');
+        const archivo = subidaDeImagen.querySelector('input[type=file]');
+
+        function sucio() {
+            return Boolean(archivo && archivo.files && archivo.files.length > 0);
+        }
+
+        function pintarAviso() {
+            if (aviso) aviso.hidden = !sucio();
+        }
+
+        if (archivo) {
+            archivo.addEventListener('change', pintarAviso);
+            // Elegir un archivo es una acción: el envío lo decide el médico con el botón. Si el formulario
+            // se envía, el archivo deja de estar "sin subir" y el navegador se va: no hay nada que avisar.
+            subidaDeImagen.addEventListener('submit', function () {
+                if (aviso) aviso.hidden = true;
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucio()) return;
+            evento.preventDefault();
+            evento.returnValue = subidaDeImagen.dataset.aviso;
+        });
+
+        pintarAviso();
     }
 })();

@@ -223,3 +223,40 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     `d_l_enfe_actu_para`, `retrieve('EV')` en `:3055`; el doble clic copia la `descripcion` en el campo,
     `:12002`); es el **mismo** DataWindow que usa la enfermedad actual, que se distingue por `tipo = 'EA'`.
 
+30. **La regla `mimetypes` de Laravel 8 rechaza TODA subida de un formulario (y `getPath()` de un archivo
+    subido es vacío).** Medido al hacer WEB-4.7, con la primera versión de la validación de la subida de
+    imágenes: `validateMimetypes()` exige `$value->getPath() !== ''`
+    (`vendor/laravel/framework/src/Illuminate/Validation/Concerns/ValidatesAttributes.php:1356`) y el
+    `getPath()` de un `UploadedFile` que llega en un `POST` —y el de los `UploadedFile::fake()` de los
+    tests— es la **cadena vacía**, así que la condición nunca se cumple y **todo** se rechaza con el
+    mensaje "must be a file of type: …", incluidos los PNG reales. Lo que sí mide el tipo es
+    `getMimeType()` (finfo sobre el contenido), así que la política de `App\Clinica\Archivos\ArchivosClinicos`
+    valida con un **cierre** que lo compara contra la lista blanca. Si una regla de archivo "no deja pasar
+    nada", mirá primero `getPath()` antes de dudar del archivo.
+
+31. **`UploadedFile::getMimeType()` (finfo) usa la EXTENSIÓN del nombre como pista cuando el contenido no
+    alcanza, así que "tipo real" no es tan real.** Medido también en WEB-4.7: un `<?php echo "hola";`
+    llamado `foto.png` se detecta **`image/png`** (y un `.png.exe` con un PNG adentro se detecta
+    `application/x-ms-dos-executable`: la pista es la última extensión). O sea que el MIME detectado **no**
+    distingue por sí solo un archivo con contenido arbitrario y nombre de imagen. Lo que protege de verdad
+    —y por eso la política hace **las dos** comprobaciones— es: (a) la **extensión** del nombre que mandó
+    el cliente contra la lista blanca, y (b) que el archivo se guarde **con la extensión del contenido y
+    un nombre que arma el servidor**, en un disco privado fuera de `public/`, así que nunca queda un `.php`
+    (ni un `.png` con PHP adentro *servido por el servidor web*, que igual no se ejecutaría). Un test
+    (`ConsultaImagenesWebTest::test_el_mime_de_finfo_usa_la_extension_como_pista_y_eso_esta_cubierto`)
+    fija el comportamiento de finfo para que no vuelva a sorprender.
+
+32. **`imagen_consulta.imagen` es `NOT NULL` y en la base real guarda una RUTA ABSOLUTA del disco de la PC
+    del consultorio — y una fila con `imagen` relativa NO se distingue de una del escritorio.** Medido al
+    hacer WEB-4.7 en Chrome: la primera versión de la Action guardaba la ruta en una **columna nueva**
+    `archivo` y dejaba `imagen` en `null`; el `INSERT` explotó con
+    `NOT NULL constraint failed: imagen_consulta.imagen` (el esquema del legado la declara obligatoria,
+    migración `2026_08_25_055351:1219`). Y al revés: escribir la ruta relativa en `imagen` sin más hace
+    que la lectura no sepa si esa fila es de la web (el archivo está en el servidor) o del escritorio (la
+    ruta apunta al disco de **esa** PC) — y en los datos reales la columna trae
+    `C:\Users\IBYTE\Downloads\20211025_121548.jpg`, así que las dos formas conviven. La solución que quedó
+    es **una sola columna de ruta (`imagen`) más una columna nullable nueva `disco` como marca de origen**:
+    con `disco` la subió la web, sin `disco` es del escritorio. Cualquier consumidor de esa tabla (la
+    descarga, el listado, y el proceso de copia de WEB-T.1 que va a leer las viejas) tiene que mirar
+    `disco`, **no** el formato de la ruta.
+

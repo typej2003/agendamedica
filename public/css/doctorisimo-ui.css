@@ -1865,3 +1865,37 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 @media (max-width: 575.98px) {
     .evolucion-plantilla { padding: .6rem .7rem; }
 }
+
+/* ---------------------------------------------------------------------------
+   Sección de exámenes e imágenes de la consulta (WEB-4.7, ítem 7)
+   La lista de las imágenes cargadas: cada fila dice qué es, de dónde salió el archivo —del servidor o del
+   disco de la PC donde lo cargó el escritorio— y ofrece verlo o quitarlo. El icono es el mismo de la
+   tarjeta (`bi-image`): la imagen no se incrusta en la lista (una ecografía entera desarmaría la pantalla
+   y el archivo se sirve por su ruta autorizada, que se abre en una pestaña).
+   ========================================================================== */
+
+.examen-imagen {
+    padding: .7rem 0;
+    border-top: 1px solid var(--ds-borde);
+}
+
+.examen-imagen:first-child { border-top: 0; }
+
+.examen-imagen-icono {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ds-radio);
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+}
+
+/* A 375 px las acciones de la fila bajan debajo del texto y ocupan el ancho: dos botones apretados al
+   lado de un párrafo no se tocan con el dedo (guía de UI §7). */
+@media (max-width: 575.98px) {
+    .examen-imagen .acciones-fila { display: flex; gap: .5rem; width: 100%; }
+    .examen-imagen .acciones-fila .btn { flex: 1 1 auto; }
+}
