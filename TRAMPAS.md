@@ -317,3 +317,29 @@ encontró. El estado del código, los comandos y el mapa del repo están en
       la misma pantalla, y `assertDontSee` distingue mayúsculas. Un verificador que busque `atender` sin
       distinguirlas lo va a encontrar en el título del panel y va a creer que la acción sigue ahí.
 
+36. **"Hoy" del negocio nunca es `now()` ni `Carbon::today()`: es `FechaDelConsultorio`.** Medido en la revisión
+    general de la web (2026-10-11): `config('app.timezone')` es **UTC** (a propósito: ver `config/clinica.php`) y
+    Venezuela es UTC-4, así que desde las 8 pm locales `Carbon::today()` ya es **mañana**. La agenda, "Nueva
+    cita", "Enviar a todos", Motivos y Días no laborables abrían en el día siguiente, y "Hoy" y el marcado de hoy
+    en semana y mes también. Lo que decide **qué día es** (día por defecto, "hoy", "pendiente desde hoy", mes en
+    curso) usa `FechaDelConsultorio::hoy()` / `::ahora()`, y `::hoyComoFecha()` cuando se compara contra fechas
+    armadas con `Carbon::createFromFormat('!Y-m-d', …)`. Las **marcas de tiempo** (`created_at`, `cuando` del
+    sync) siguen con `now()`. La prueba: `Carbon::setTestNow('2026-10-11 00:30:00')` (UTC) = 20:30 del 10/10 en
+    Caracas (`AgendaWebTest`, sección "Hoy es el del consultorio"); sin `tearDown` que la limpie se filtra a
+    las demás pruebas.
+
+37. **El encabezado de la web clínica tiene un `<form>` (cerrar sesión) antes del contenido.** Medido al agregar el
+    menú "Mi cuenta" (2026-10-11): todos los verificadores elegían el consultorio con
+    `locator('form button').first()`, que ahora es **"Cerrar sesión"**. Se usa `locator('main form button')`
+    (el formulario de contexto está dentro de `<main>`). Dos detalles más al medir en Playwright: los ítems de
+    un `<details>` **cerrado** tienen caja y `offsetParent` no nulo (hay que excluir `.menu-lista` al contar
+    botones visibles), y la transición del enlace "Saltar al contenido" dura 100 ms (esperar antes de capturar).
+
+38. **El `locale` de la app es `en` y toda regla de validación sin mensaje propio sale en inglés.** Medido en la
+    revisión general de la web (2026-10-11): "The nuevo cedula field is required when paciente id is not
+    present." en "Nueva cita". La API comparte esa configuración, así que **no** se cambia el locale por una
+    pantalla: cada `validate()`/`FormRequest` de la web clínica lleva **un aviso por regla** (`messages()` o el
+    segundo argumento de `validate`). Hay una prueba "todos los errores … están en español" por formulario
+    (`AgendaWebTest`, `PacientesAltaEdicionWebTest`): al agregar una regla, falla hasta que tenga su texto.
+    Quedan **sin esa prueba** el diálogo del representante, los motivos, sedes y consultorios.
+    Y una más de entorno: `php artisan test a.php b.php` **solo corre el primero**; se corren por separado.
