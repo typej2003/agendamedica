@@ -271,7 +271,9 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
 
 *Restauración de una base desde la nube* (una sola vez, para cuando se pierde la PC). **No** es la
-bajada: `cambios/bajar` (Fase 2.B) sigue pendiente. `App\Sync\Escritorio\RestauracionEscritorio` +
+bajada: `cambios/bajar` (Fase 2.B) **está descartada** (decisión final del usuario, 2026-10-11: el
+PowerBuilder no se actualiza, la web lo reemplaza y el sync del escritorio es sólo de subida; lo único que
+falta es subir las imágenes, WEB-T.1). `App\Sync\Escritorio\RestauracionEscritorio` +
 `php artisan sync:restaurar-escritorio --reg-medico=<medico> [--salida=<carpeta>] [--zip]` escribe
 `manifiesto.txt` + `datos/<tabla>.tsv` con las tablas de `config/sync_legado.php`, usando las
 traducciones inversas (`EstadoCita::aEscritorio`, `AtencionCita::aEscritorio`, pacientes por

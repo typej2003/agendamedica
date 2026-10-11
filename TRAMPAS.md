@@ -372,7 +372,7 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     Medido al hacer WEB-5.1 (esquemas `esquemas-asa/*.sql`: `PRIMARY KEY ("nrohistoria","nroconsulta",
     "codemedicina")`). Dentro de **un** récipe la web no repite medicamento (la Action lo descarta y el editor no
     lo agrega dos veces), pero el mismo medicamento en el récipe 1 y en el 2 de una consulta es válido en MySQL
-    (`id` propio) y **chocaría con la clave del escritorio el día que exista `cambios/bajar`**. Anotado en
+    (`id` propio) y **chocaría con la clave del escritorio si alguna vez bajara al escritorio (`cambios/bajar` quedó descartada el 2026-10-11, así que hoy no aplica)**. Anotado en
     `PENDIENTES-POWERBUILDER.md`; no se restringe ahora porque el móvil ya lo permite y la decisión del usuario
     es "varios récipes por consulta". Y dos detalles de la misma fuente: el escritorio numera `orden` **desde 0**
     (`orden = dw_9.rowcount()`, `:13351`) y el móvil desde 1, así que las filas nuevas siguen **al mayor** `orden`
