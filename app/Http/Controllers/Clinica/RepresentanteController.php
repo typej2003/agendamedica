@@ -10,6 +10,7 @@ use App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Throwable;
 
@@ -113,6 +114,17 @@ class RepresentanteController extends Controller
             'email.email'        => 'Revisa el correo: no tiene forma de correo.',
             'direccion.max'      => 'La dirección no puede pasar de 60 caracteres (es el ancho del escritorio).',
         ]);
+
+        // Un formulario sin nada escrito no es un representante: creaba una fila en blanco ("Representante
+        // sin nombre") que avisaba "Se guardó" y hacía desaparecer el "Cargar el representante" de la ficha.
+        // La regla es "algo que guardar", no "nombre obligatorio": el legado puede traer un representante
+        // sin nombre y con un teléfono, y quien lo completa no debería inventar el nombre. El error va en
+        // `nombre` porque es el primer campo del diálogo (y su clave abre el diálogo para que se lea).
+        if (collect($datos)->every(fn ($valor) => trim((string) $valor) === '')) {
+            throw ValidationException::withMessages([
+                'nombre' => 'Escribe el nombre del representante o, al menos, un dato para contactarlo.',
+            ]);
+        }
 
         try {
             $accion->ejecutar($contexto['reg_medico'], $vinculo->numhistoria, $datos);

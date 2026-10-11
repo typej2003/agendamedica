@@ -306,6 +306,68 @@ class PacienteRepresentanteWebTest extends TestCase
         $this->assertSame(0, DB::table('representante')->where('reg_medico', $medico->reg_medico)->count());
     }
 
+    /**
+     * Guardar el diálogo **sin escribir nada** creaba un "Representante sin nombre" con todo en blanco y
+     * avisaba "Se guardó" (revisión de la web, 2026-10-11). No es un representante: es una fila vacía que
+     * además hace desaparecer el "Cargar el representante" de la ficha.
+     */
+    public function test_un_formulario_vacio_no_crea_un_representante_en_blanco(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Julia', '7001');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from(route('clinica.pacientes.ver', $paciente))
+            ->post(route('clinica.pacientes.representante', $paciente), [
+                'nombre' => '', 'codeparentesco' => '', 'cedula' => '', 'telefono' => '', 'email' => '', 'direccion' => '',
+            ])
+            ->assertRedirect(route('clinica.pacientes.ver', $paciente))
+            ->assertSessionHasErrors(['nombre' => 'Escribe el nombre del representante o, al menos, un dato para contactarlo.'])
+            ->assertSessionMissing('estado');
+
+        $this->assertSame(0, DB::table('representante')->where('reg_medico', $medico->reg_medico)->count());
+
+        // Y la ficha sigue ofreciendo cargarlo (no quedó una fila "sin nombre").
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente))
+            ->assertOk()
+            ->assertSee('Cargar el representante')
+            ->assertDontSee('Representante sin nombre');
+    }
+
+    public function test_un_formulario_vacio_no_borra_el_representante_que_ya_estaba(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Karen', '7002');
+        $id = $this->representante($medico, '7002', ['nombre' => 'ROSA DE KAREN']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.pacientes.representante', $paciente), [
+                'nombre' => '', 'codeparentesco' => '', 'cedula' => '', 'telefono' => '', 'email' => '', 'direccion' => '',
+            ])
+            ->assertSessionHasErrors('nombre');
+
+        $this->assertSame('ROSA DE KAREN', DB::table('representante')->where('id', $id)->value('nombre'));
+    }
+
+    /**
+     * Lo que **sí** vale: un representante del legado puede venir sin nombre y con un teléfono, y quien lo
+     * completa no debería verse obligado a inventar el nombre. La regla es "algo que guardar", no "nombre
+     * obligatorio".
+     */
+    public function test_con_solo_un_dato_de_contacto_si_se_guarda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Lidia', '7003');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.pacientes.representante', $paciente), ['nombre' => '', 'telefono' => '04141234567'])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado');
+
+        $this->assertSame('04141234567', DB::table('representante')->where('reg_medico', $medico->reg_medico)->value('telefono'));
+    }
+
     public function test_un_dato_invalido_no_borra_lo_escrito(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
