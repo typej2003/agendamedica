@@ -1433,6 +1433,14 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
     .tabla-agenda .acciones-fila { justify-content: flex-start; }
 }
 
+/* En la tabla (escritorio y tableta) las acciones de una cita van **en una sola línea**: la columna se ajusta a
+   su contenido y es la de estados la que envuelve. Con `flex-wrap` suelto, el navegador repartía el ancho
+   entre columnas y partía "Confirmar / Cobrar / ⋯" en dos renglones en cada fila. */
+@media (min-width: 768px) {
+    .tabla-agenda td.celda-acciones { width: 1%; white-space: nowrap; }
+    .tabla-agenda .acciones-fila { flex-wrap: nowrap; }
+}
+
 /* --- Semana --- */
 .agenda-dia { margin-top: 1.25rem; }
 .agenda-dia-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: .6rem; }
