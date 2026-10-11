@@ -3,14 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Iniciar sesión · {{ config('app.name', 'Doctorísimo') }}</title>
+    <title>Iniciar sesión · Doctorísimo</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
     <!-- Paleta + sistema de la aplicación (mismo aspecto que el panel y el consultorio) -->
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
@@ -135,7 +133,7 @@
                 <div class="mb-3">
                     <label for="email" class="form-label small fw-bold">Correo electrónico</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                         <input type="email" name="email" id="email" value="{{ old('email') }}"
                                class="form-control @error('email') is-invalid @enderror"
                                placeholder="ejemplo@correo.com" required autocomplete="email" autofocus>
@@ -149,7 +147,7 @@
                 <div class="mb-3">
                     <label for="password" class="form-label small fw-bold">Contraseña</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
                         <input type="password" name="password" id="password"
                                class="form-control @error('password') is-invalid @enderror"
                                placeholder="••••••••" required autocomplete="current-password">
