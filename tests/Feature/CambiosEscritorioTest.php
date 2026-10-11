@@ -427,6 +427,26 @@ class CambiosEscritorioTest extends TestCase
             'el récipe 2 lo creó el app y se conserva');
     }
 
+    public function test_reemplazar_una_tabla_sin_clave_no_borra_la_cabecera_de_recipe_que_creo_la_web(): void
+    {
+        // WEB-5.1: la web crea cabeceras de récipe con la misma convención de rastro que el móvil (el `created`
+        // de `recipes` con el id de la cabecera), pero con `source = web`. El reemplazo de `recipe_detalle` del
+        // escritorio las tiene que conservar igual.
+        DB::table('recipe_detalle')->insert(['reg_medico' => self::REG, 'nrohistoria' => 1, 'nroconsulta' => 1, 'recipe' => 1]);
+        $delaWeb = DB::table('recipe_detalle')->insertGetId(['reg_medico' => self::REG, 'nrohistoria' => 1, 'nroconsulta' => 1, 'recipe' => 2]);
+        $ajena = DB::table('recipe_detalle')->insertGetId(['reg_medico' => self::REG, 'nrohistoria' => 1, 'nroconsulta' => 1, 'recipe' => 3]);
+        SyncChange::create(['reg_medico' => self::REG, 'table_name' => 'recipes', 'record_id' => $delaWeb, 'operation' => 'created',
+            'occurred_at' => now(), 'source' => 'web']);
+
+        $this->subir([['id' => 73, 'tabla' => 'recipe_detalle', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['nrohistoria' => 1, 'nroconsulta' => 1, 'recipe' => 1]]]]);
+
+        $this->assertEqualsCanonicalizing([1, 2],
+            DB::table('recipe_detalle')->where('reg_medico', self::REG)->pluck('recipe')->map(fn ($r) => (int) $r)->all(),
+            'el récipe 2 lo creó la web y se conserva; el 3 no lo creó nadie del app y se reemplaza');
+        $this->assertNull(DB::table('recipe_detalle')->find($ajena));
+    }
+
     public function test_tabla_fuera_de_la_lista_blanca_se_rechaza(): void
     {
         $r = $this->subir([['id' => 81, 'tabla' => 'users', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',

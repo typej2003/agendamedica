@@ -4,6 +4,7 @@ namespace App\Sync;
 
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
+use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Models\Cola;
@@ -17,7 +18,6 @@ use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
@@ -68,6 +68,9 @@ class CreacionesClinicas
         // Las dos reglas de los motivos de una consulta, compartidas con la web desde WEB-4.2.
         private AgregarMotivoALaConsulta $agregarMotivo,
         private QuitarMotivoDeLaConsulta $quitarMotivo,
+        // La regla del récipe (el número, la cabecera y la forma de las filas), compartida con la web
+        // desde WEB-5.1.
+        private GuardarRecipe $guardarRecipe,
     ) {
     }
 
@@ -183,6 +186,14 @@ class CreacionesClinicas
      * todas con el mismo número de récipe dentro de la consulta. Viaja como **una** creación con sus
      * `items` y no como una por fila: un récipe a medio crear (la mitad de los medicamentos) no tiene
      * sentido ni para imprimir ni para el escritorio.
+     *
+     * La regla de escritura —el número que sigue, la cabecera con `fe_vence = 30` y la forma de las
+     * filas— **no vive acá**: es `App\Actions\Consulta\GuardarRecipe`, la misma que usa la sección de
+     * récipes de la consulta de la web desde WEB-5.1 (R3). Lo único propio del sync es lo que valida del
+     * lote (`itemsValidos`), la fecha por defecto y el rastro: el `created` de la **cabecera** con el id
+     * temporal del lote (`anotar`), que es lo que le permite al teléfono soltar su fila provisional y al
+     * reemplazo de `recipe_detalle` del escritorio conservar la cabecera. Por eso se llama sin `$origen`:
+     * la Action no anota nada.
      */
     private function crearRecipe(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -201,41 +212,11 @@ class CreacionesClinicas
         $fecha = $this->fechaValida($change['fecha'] ?? null)
             ?? ($consulta->fecha ? Carbon::parse($consulta->fecha)->toDateString() : now()->toDateString());
 
-        [$detalle, $filas] = DB::transaction(function () use ($consulta, $items, $fecha) {
-            $numero = $this->siguienteRecipe($consulta);
+        $resultado = $this->guardarRecipe->ejecutar($consulta, $items, $fecha, null, null, null);
 
-            $detalle = RecipeDetalle::create([
-                'reg_medico' => $consulta->reg_medico,
-                'nrohistoria' => $consulta->numhistoria,
-                'nroconsulta' => $consulta->nroconsulta,
-                'recipe' => $numero,
-                'fe_emision' => $fecha,
-                // Como el legado: el récipe vence a los 30 días.
-                'fe_vence' => 30,
-            ]);
+        $this->anotar('recipes', $resultado->cabecera->id, $tempId, $resultado->cabecera->reg_medico);
 
-            $filas = [];
-            foreach ($items as $orden => $item) {
-                $filas[] = Recipe::create([
-                    'reg_medico' => $consulta->reg_medico,
-                    'nrohistoria' => $consulta->numhistoria,
-                    'nroconsulta' => $consulta->nroconsulta,
-                    'codemedicina' => $item['codemedicina'],
-                    'indicaciones' => $item['indicaciones'],
-                    'cantidad' => $item['cantidad'],
-                    'descripcion' => $item['descripcion'],
-                    'orden' => $orden + 1,
-                    'fecha' => $fecha,
-                    'recipe' => $numero,
-                ]);
-            }
-
-            return [$detalle, $filas];
-        });
-
-        $this->anotar('recipes', $detalle->id, $tempId, $detalle->reg_medico);
-
-        return $this->respuestaRecipe($tempId, $detalle, collect($filas));
+        return $this->respuestaRecipe($tempId, $resultado->cabecera, $resultado->filas);
     }
 
     /**
@@ -281,24 +262,6 @@ class CreacionesClinicas
         return MotivoConsulta::whereIn('reg_medico', $this->registrosMedicos)
             ->where('codemotivo', trim($codigo))
             ->first();
-    }
-
-    private function siguienteRecipe(Consulta $consulta): int
-    {
-        $filtro = fn ($query) => $query->where('nrohistoria', $consulta->numhistoria)
-            ->where('nroconsulta', $consulta->nroconsulta)
-            ->whereIn('reg_medico', $this->registrosMedicos);
-
-        $ultimo = max(
-            (int) $filtro(Recipe::query())->max('recipe'),
-            (int) $filtro(RecipeDetalle::query())->max('recipe'),
-        );
-        // Los récipes viejos del legado tienen `recipe` NULL (uno por consulta): cuentan como el 1.
-        if ($ultimo === 0 && $filtro(Recipe::query())->exists()) {
-            $ultimo = 1;
-        }
-
-        return $ultimo + 1;
     }
 
     private function resolverHistoria(array $change): ?Historia

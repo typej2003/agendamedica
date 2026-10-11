@@ -377,6 +377,8 @@ class SyncAppDataController extends Controller
             // Y las dos reglas de los motivos de una consulta, desde WEB-4.2.
             app(\App\Actions\Consulta\AgregarMotivoALaConsulta::class),
             app(\App\Actions\Consulta\QuitarMotivoDeLaConsulta::class),
+            // Y la regla del récipe (el número, la cabecera y las filas), desde WEB-5.1.
+            app(\App\Actions\Consulta\GuardarRecipe::class),
         );
         $creadosAntes = count($creados);
 

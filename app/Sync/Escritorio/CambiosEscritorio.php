@@ -451,12 +451,14 @@ class CambiosEscritorio
             $limpias[] = $limpia;
         }
 
-        // Las filas que creó el app (y que el escritorio todavía no tiene) no se borran.
+        // Las filas que creó el app (y que el escritorio todavía no tiene) no se borran. «El app» son las
+        // dos superficies que escriben: el móvil y, desde WEB-5.1, la web (que crea cabeceras de récipe
+        // `recipe_detalle` con la misma convención de rastro que el móvil).
         $borrar = DB::table($tabla)->where('reg_medico', $carga->reg_medico);
         $tablaDelApp = config("sync_legado.sin_clave_con_altas_del_app.{$tabla}");
         if ($tablaDelApp) {
             $delApp = SyncChange::where('table_name', $tablaDelApp)->where('operation', 'created')
-                ->where('source', 'mobile')->where('reg_medico', $carga->reg_medico)->pluck('record_id');
+                ->whereIn('source', ['mobile', 'web'])->where('reg_medico', $carga->reg_medico)->pluck('record_id');
             $borrar->whereNotIn('id', $delApp);
         }
         $borrar->delete();

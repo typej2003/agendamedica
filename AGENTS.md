@@ -33,8 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras cerrar **WEB-4.8** —el cierre de la consulta y la regla "cita atendida ⇒ tiene
-historia"— y **WEB-4.9** —"Atender" es sólo del médico, con **F4 cerrada**) es **939 en
+medición (2026-10-11, tras cerrar **WEB-5.1** —los récipes de la consulta—) es **1024 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
@@ -107,6 +106,26 @@ regla **"cita atendida ⇒ tiene historia"** en `Actions/Agenda/{AtenderCita,Cit
 sin número la resuelve del vínculo del paciente y, si no hay ninguno, **rechaza** —la web avisa y el sync
 la **descarta**—; `Vistas/ConsultaShellVista` ganó `urlTerminar()`/`avisoTerminar()` y el panel sigue en
 **8 de 13** (los 5 que faltan son de F5, F6 y F9).
+
+Lo que **WEB-5.1 (2026-10-11)**, los récipes de la consulta, agregó a esas tres filas es: `ConsultaRecipes`
+(**WEB-5.1: los récipes de una consulta** en `?seccion=recipes`, con `&recipe=nuevo` o `&recipe=2` para el
+editor de uno; `POST /clinica/consulta/{consulta}/recipes` crea, `POST …/recipes/{numero}` edita **en el lugar**,
+`DELETE …/recipes/{numero}` elimina el récipe entero, y los JSON `GET …/recipes/medicamentos?q=` y
+`…/recipes/tratamientos?q=` buscan en el vademécum y en los tratamientos del médico; `POST …/recipes/medicamentos`
+es el **alta rápida** del medicamento que falta, online-only y con JSON para no perder lo que hay en el editor),
+`Consulta/{GuardarRecipe,EliminarRecipe,ResultadoDeRecipe,AgregarMedicamentoAlVademecum}` (**R3**:
+`GuardarRecipe` es **la** regla de escritura del récipe —el número que sigue, la cabecera con `fe_vence = 30` y
+la forma de las filas— y **la usa también `CreacionesClinicas::crearRecipe`** del móvil (con `$origen = null`: el
+móvil anota su propio rastro), que ya no tiene `siguienteRecipe`; al editar compara por `codemedicina` y escribe
+**sólo lo que cambió** con el last-write-wins por columna; el vademécum es **`vademecum`**, no `vademecum_m`, ver
+las trampas 39 a 42) y `App\Clinica\Consulta\RecipesDeLaConsulta` (la lectura y **la definición del
+agrupamiento**: `nrohistoria` + `nroconsulta` + `recipe`, con **`NULL` = récipe 1**, que usa también
+`HistoriaDelPaciente`; el vademécum **sin tildes** por comercial o genérico con un medicamento por
+`nombre/presentación`, los tratamientos con sus medicamentos y la comprobación de que un medicamento nuevo del
+récipe es del vademécum o de un tratamiento del médico: no hay texto libre) más
+`Vistas/SeccionDeRecipesVista` (lista y editor). El móvil: `recipes` baja por delta de `updated_at` (cada edición
+lo cambia) y las **bajas** viajan en `eliminados` con un `deleted` por fila bajo `recipes`; el reemplazo de
+`recipe_detalle` del escritorio ahora respeta también las cabeceras anotadas con `source = web`.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -369,7 +388,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **38** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **42** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

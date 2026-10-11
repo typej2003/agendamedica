@@ -2369,3 +2369,135 @@ body.auth-pagina {
 @media (prefers-reduced-motion: reduce) {
     .cargando-texto { animation: none; }
 }
+
+/* ==========================================================================
+   Web clínica — los récipes de la consulta (WEB-5.1, ítem 10 del panel)
+   La lista de los récipes de la consulta (un bloque por récipe, con sus medicamentos) y el editor de uno (una
+   fila por medicamento con su cantidad e indicaciones). Mismos tokens y misma forma que las otras secciones.
+   ========================================================================== */
+
+.recipe-lista { display: grid; gap: .85rem; }
+
+.recipe-bloque {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    padding: .85rem 1rem;
+    background: var(--ds-superficie);
+}
+
+.recipe-cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .6rem;
+}
+
+.recipe-cabecera-texto { min-width: 0; }
+
+.recipe-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 .1rem;
+}
+
+.recipe-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+.recipe-medicamentos { list-style: none; margin: 0; padding: 0; }
+
+.recipe-medicamento {
+    display: flex;
+    align-items: baseline;
+    gap: .65rem;
+    padding: .4rem 0;
+    border-top: 1px solid var(--ds-borde);
+}
+
+.recipe-medicamento:first-child { border-top: 0; }
+
+/* La cantidad en una ficha fija: se lee de un vistazo antes que el nombre. */
+.recipe-medicamento-cantidad {
+    flex: 0 0 auto;
+    min-width: 2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ds-violeta-800);
+    background: var(--ds-violeta-100);
+    border-radius: var(--ds-radio-sm);
+    padding: .05rem .4rem;
+}
+
+.recipe-medicamento-texto { min-width: 0; }
+
+.recipe-nombre {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.recipe-indicaciones-texto {
+    display: block;
+    color: var(--ds-texto-2);
+    font-size: .875rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+/* El editor: una fila por medicamento, con el quitar a la derecha. */
+.recipe-editor { list-style: none; margin: 0; padding: 0; }
+
+.recipe-fila {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.recipe-fila:first-child { border-top: 1px solid var(--ds-borde); }
+
+.recipe-fila-datos { flex: 1 1 auto; min-width: 0; }
+
+.recipe-generico { margin-left: .25rem; }
+
+.recipe-fila-campos {
+    display: flex;
+    gap: .75rem;
+    margin-top: .35rem;
+}
+
+.recipe-cantidad-campo { flex: 0 0 5.5rem; }
+.recipe-indicaciones-campo { flex: 1 1 auto; min-width: 0; }
+
+.recipe-fila .form-label {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ds-texto-3);
+    margin-bottom: .15rem;
+}
+
+.recipe-quitar { flex: 0 0 auto; }
+
+/* La fila de resultado del buscador (medicamento o tratamiento): el mismo `.resultado-paciente` de los
+   otros buscadores en vivo, como `<button>` (agregar al récipe) y no como formulario. */
+.resultado-recipe { width: 100%; text-align: left; border: 0; }
+/* Lo que ya está en el récipe: el texto se apaga, **no** la fila (con `opacity` el fondo se vuelve translúcido y
+   deja ver lo que hay debajo de la lista flotante). */
+.resultado-recipe:disabled { cursor: default; }
+.resultado-recipe:disabled .resultado-paciente-datos { color: var(--ds-texto-3); }
+.resultado-recipe:not(:disabled):hover .resultado-paciente-datos strong { color: var(--ds-violeta-700); }
+
+@media (max-width: 575.98px) {
+    .recipe-cabecera { flex-wrap: wrap; }
+    .recipe-fila { flex-wrap: wrap; }
+    .recipe-fila-datos { flex-basis: 100%; }
+    .recipe-quitar { order: 2; margin-left: auto; }
+    .recipe-fila-campos { flex-wrap: wrap; }
+    .recipe-cantidad-campo { flex-basis: 100%; }
+}

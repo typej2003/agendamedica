@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **35** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **42** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -343,3 +343,53 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     (`AgendaWebTest`, `PacientesAltaEdicionWebTest`): al agregar una regla, falla hasta que tenga su texto.
     Quedan **sin esa prueba** el diálogo del representante, los motivos, sedes y consultorios.
     Y una más de entorno: `php artisan test a.php b.php` **solo corre el primero**; se corren por separado.
+
+39. **El vademécum de la pestaña de récipes es `vademecum`, no `vademecum_m`.** Medido al hacer WEB-5.1
+    (2026-10-11). Las dos tablas existen (`vademecum_m` con `codemedicina char(200)` y `presentacion char(35)`, y
+    en la base local sólo la tienen `gineco-prueba-03` a `06`), y el nombre invita a pensar que `_m` es "el de la
+    consulta". No lo es: `d_medicamentos_listado.srd` (la lista de la pestaña, `w_consulta_principal.srw:12694`,
+    `:13070`, `:14206`) y `d_medicamentos_recipe_con.srd` (la grilla del récipe, que cruza por
+    `recipes.codemedicina = vademecum.codemedicina`) leen **`vademecum`**, y el alta (`w_nuevo_vademecum`, abierta
+    desde `:13239`) guarda con `d_a_vademecum_go.srd`, que actualiza **`vademecum`**. `w_nuevo_vademecum_m` y
+    `w_nuevo_vademecum_mante` usan **los mismos** DataWindows (`d_b_vademecum`, `d_a_vademecum_go`; `update=
+    "vademecum"`): `vademecum_m` es una copia que sólo aparece en `respaldos/` y en una pantalla alterna.
+    El móvil también lee `vademecum`. La web escribe y busca ahí; `vademecum_m` no se toca.
+
+40. **El `created` de `recipes` en `sync_changes` es el de la CABECERA (`recipe_detalle.id`), no el de la fila.**
+    Es una convención heredada del móvil (`CreacionesClinicas::anotar('recipes', $detalle->id, …)`) y no es
+    casual: el reemplazo de la tabla `recipe_detalle` que hace el escritorio (no tiene clave primaria) conserva
+    las cabeceras que el app anotó con ese `created` (`config/sync_legado.php` → `sin_clave_con_altas_del_app`,
+    `CambiosEscritorio::reemplazarTabla`). Tres consecuencias de WEB-5.1: (a) `GuardarRecipe` anota el `created`
+    **de la cabecera** y **ninguno por fila** —el `record_id` de una fila podría coincidir con el de una cabecera
+    ajena y blindarla del reemplazo, dejando cabeceras duplicadas—; (b) ese reemplazo sólo respetaba
+    `source = 'mobile'`, así que una cabecera creada por la web **se perdía** en la siguiente subida de
+    `recipe_detalle` del escritorio: ahora respeta `mobile` **y** `web`; (c) los `deleted` sí son **por fila**
+    bajo `recipes` (con el id de la fila) porque es lo que el pull del móvil usa para soltarla (`eliminados`,
+    que el teléfono aplica con `DELETE … WHERE id IN (…)` sobre su espejo de `recipes`).
+
+41. **La clave del escritorio en `recipes` es `(nrohistoria, nroconsulta, codemedicina)`: un medicamento no puede
+    estar dos veces en la misma consulta — y la web (como el móvil) sí lo permite entre récipes distintos.**
+    Medido al hacer WEB-5.1 (esquemas `esquemas-asa/*.sql`: `PRIMARY KEY ("nrohistoria","nroconsulta",
+    "codemedicina")`). Dentro de **un** récipe la web no repite medicamento (la Action lo descarta y el editor no
+    lo agrega dos veces), pero el mismo medicamento en el récipe 1 y en el 2 de una consulta es válido en MySQL
+    (`id` propio) y **chocaría con la clave del escritorio el día que exista `cambios/bajar`**. Anotado en
+    `PENDIENTES-POWERBUILDER.md`; no se restringe ahora porque el móvil ya lo permite y la decisión del usuario
+    es "varios récipes por consulta". Y dos detalles de la misma fuente: el escritorio numera `orden` **desde 0**
+    (`orden = dw_9.rowcount()`, `:13351`) y el móvil desde 1, así que las filas nuevas siguen **al mayor** `orden`
+    existente (no renumeran las viejas); y `recipes.recipe` es `NULL` en 281.630 de 281.716 filas de la base
+    local: **`NULL` es el récipe 1** (`RecipesDeLaConsulta::numeroDeGrupo`), la historia del paciente usa esa
+    misma definición y editar uno de esos récipes **no escribe `recipe` en sus filas** (sólo las nuevas llevan 1).
+
+42. **En un verificador con buscador en vivo, "hay resultados visibles" no prueba que sean los de lo que se
+    escribió; y `opacity` en una fila de resultado deja ver lo que hay debajo.** Medido al verificar WEB-5.1 en
+    Chrome: (a) la lista de la búsqueda anterior sigue visible mientras llega la respuesta nueva, así que un
+    `waitForFunction(!resultados.hidden)` devolvía enseguida y el verificador leía los resultados **viejos**
+    (parecía que "adevit" devolvía KEFORAL). Se espera la **respuesta del servidor a esa consulta**
+    (`waitForResponse` por la URL `?q=…`) y después el pintado; (b) `.resultado-recipe:disabled { opacity: .6 }`
+    volvía **translúcida** la fila de "ya está en el récipe" y el texto de la ayuda se veía a través de la
+    lista flotante: el estado "ya está" se marca con el color del texto, no con `opacity` del contenedor. Y de
+    paso, **un hallazgo que no es de esta tarea**: en las secciones de `consulta.js` (antecedentes,
+    diagnósticos…) «Cancelar» con cambios pide confirmación **y** después el `beforeunload` del navegador pide
+    otra vez (doble aviso); el editor de récipes lo evita (`saliendo = true` al confirmar) y las otras quedan
+    sin cambiar.
+

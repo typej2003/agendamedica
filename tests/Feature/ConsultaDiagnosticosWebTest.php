@@ -716,7 +716,7 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('8 de 13 disponibles', false);
+        $respuesta->assertSee('9 de 13 disponibles', false);
         $respuesta->assertSee('bi-clipboard2-check', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);

@@ -87,7 +87,7 @@
         {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
              ninguna. Las secciones llegan por los parciales —`_motivos` y `_enfermedad` (WEB-4.2),
              `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4), `_diagnostico` (WEB-4.5), `_evolucion`
-             (WEB-4.6) y `_examenes` (WEB-4.7)— y las siguientes tareas agregan las suyas: el nombre del
+             (WEB-4.6), `_examenes` (WEB-4.7) y `_recipes` (WEB-5.1)— y las siguientes tareas agregan las suyas: el nombre del
              parcial lo resuelve el ViewModel a partir del mapa del panel. --}}
         <div class="col-12 col-lg-7 col-xl-8">
             @if ($contenido && $vm->parcial())
@@ -104,4 +104,7 @@
 
 @section('scripts')
     <script src="{{ asset('js/clinica/consulta.js') }}"></script>
+    {{-- El editor de récipes (WEB-5.1): el buscador del vademécum y de los tratamientos, las filas del
+         récipe y el aviso de cambios sin guardar. Se inicializa sólo si la sección está en pantalla. --}}
+    <script src="{{ asset('js/clinica/consulta-recipes.js') }}"></script>
 @endsection

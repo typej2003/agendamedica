@@ -448,7 +448,7 @@ class ConsultaEvolucionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('8 de 13 disponibles', false);
+        $respuesta->assertSee('9 de 13 disponibles', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
         // Y el ítem ya no dice que llega después.

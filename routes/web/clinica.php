@@ -12,6 +12,7 @@ use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
+use App\Http\Controllers\Clinica\ConsultaRecipesController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
@@ -193,6 +194,21 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/examenes', [ConsultaImagenesController::class, 'subir'])->name('consulta.examenes.subir');
                 Route::get('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'descargar'])->name('consulta.examenes.descargar');
                 Route::delete('/consulta/{consulta}/examenes/{imagen}', [ConsultaImagenesController::class, 'quitar'])->name('consulta.examenes.quitar');
+
+                // Récipes de la consulta (WEB-5.1): el ítem 10 del panel. Cada medicamento es una fila de
+                // `recipes` y se agrupan por `nrohistoria` + `nroconsulta` + `recipe` (el `NULL` del
+                // escritorio es el récipe 1), así que la consulta tiene **varios** y cualquiera se corrige
+                // o se elimina en el lugar. La regla de escritura es una Action de `Actions\Consulta`
+                // (`GuardarRecipe`, la misma que usa el sync del móvil). El vademécum y los tratamientos se
+                // buscan por JSON del médico del contexto; crear el medicamento que falta es online-only.
+                // `medicamentos` va **antes** de `{numero}` y el número se acota a dígitos: un récipe de otro
+                // médico —o de otra consulta— responde 404.
+                Route::get('/consulta/{consulta}/recipes/medicamentos', [ConsultaRecipesController::class, 'medicamentos'])->name('consulta.recipes.medicamentos');
+                Route::get('/consulta/{consulta}/recipes/tratamientos', [ConsultaRecipesController::class, 'tratamientos'])->name('consulta.recipes.tratamientos');
+                Route::post('/consulta/{consulta}/recipes/medicamentos', [ConsultaRecipesController::class, 'crearMedicamento'])->name('consulta.recipes.medicamentos.crear');
+                Route::post('/consulta/{consulta}/recipes', [ConsultaRecipesController::class, 'crear'])->name('consulta.recipes.crear');
+                Route::post('/consulta/{consulta}/recipes/{numero}', [ConsultaRecipesController::class, 'guardar'])->whereNumber('numero')->name('consulta.recipes.guardar');
+                Route::delete('/consulta/{consulta}/recipes/{numero}', [ConsultaRecipesController::class, 'eliminar'])->whereNumber('numero')->name('consulta.recipes.eliminar');
 
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda

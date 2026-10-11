@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -385,7 +386,10 @@ final class HistoriaDelPaciente
             ->orderBy('recipe')
             ->orderBy('orden')
             ->get(['nroconsulta', 'recipe', 'codemedicina', 'fecha'])
-            ->groupBy(fn ($fila) => (int) $fila->nroconsulta . '|' . (int) $fila->recipe)
+            // El mismo agrupamiento que la consulta (`RecipesDeLaConsulta::numeroDeGrupo`): el `NULL` del
+            // escritorio es el récipe 1, así que una fila sin número y una con `recipe = 1` son el mismo
+            // récipe y no dos documentos.
+            ->groupBy(fn ($fila) => (int) $fila->nroconsulta . '|' . RecipesDeLaConsulta::numeroDeGrupo($fila->recipe))
             ->map(fn (Collection $filas) => (object) [
                 'nroconsulta'    => (int) $filas->first()->nroconsulta,
                 'fecha'          => $filas->first()->fecha,
