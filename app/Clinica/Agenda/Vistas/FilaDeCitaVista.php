@@ -22,7 +22,8 @@ final class FilaDeCitaVista
         /**
          * Si el usuario que mira la agenda **puede entrar a la consulta** (WEB-4.1: la consulta es sólo
          * del médico, PLAN-WEB.md §3.14). Lo resuelve el controlador con la misma regla que la ruta del
-         * shell —`User::trabajaLaConsulta()`— para que la fila no ofrezca un botón que va a responder 403.
+         * shell —`User::trabajaLaConsulta()`— para que la fila no ofrezca una acción que le responde 403
+         * (WEB-4.9: "Atender" no se le muestra a la secretaría, ni como botón ni en el menú).
          */
         private bool $puedeAbrirLaConsulta = true,
     ) {
@@ -232,13 +233,15 @@ final class FilaDeCitaVista
      * marcar: con la cita atendida el botón dice **"Editar consulta"** y entra a la misma consulta del
      * día sin tocar nada (wiki `04-historia-clinica.md`).
      *
-     * A la secretaría no se le ofrece: la consulta es del médico (PLAN-WEB.md §3.14). La cita ya
-     * atendida tampoco, porque lo único que ese botón haría para ella es llevarla a una pantalla que no
-     * le corresponde.
+     * **A la secretaría no se le ofrece —ni como botón ni en el menú—** (WEB-4.9, decisión del usuario
+     * del 2026-10-11): "Atender" es abrir la consulta, y la consulta es del médico. No es un botón
+     * deshabilitado con un motivo: la acción no está entre las suyas, así que la fila no la pinta (y el
+     * POST a mano responde 403). Lo que sí conserva —confirmar, cobrar, agendar y reordenar— sale de los
+     * otros métodos de esta misma clase.
      */
     public function atender(): ?array
     {
-        if ($this->movida() || ($this->atendida() && ! $this->puedeAbrirLaConsulta)) {
+        if ($this->movida() || ! $this->puedeAbrirLaConsulta) {
             return null;
         }
 
@@ -251,7 +254,7 @@ final class FilaDeCitaVista
             ];
         }
 
-        $puede = $this->puedeAbrirLaConsulta && $this->cita->puedeAtender($this->ahora);
+        $puede = $this->cita->puedeAtender($this->ahora);
 
         return [
             'url'       => route('clinica.agenda.atender', $this->cita->id),
@@ -259,7 +262,7 @@ final class FilaDeCitaVista
             'habilitada' => $puede,
             'titulo'    => $puede
                 ? 'Abrir la consulta del día y marcar la cita como atendida (implica confirmada)'
-                : 'Atender abre la consulta: solo el médico, el día de la cita',
+                : 'Atender abre la consulta: solo el día de la cita',
         ];
     }
 

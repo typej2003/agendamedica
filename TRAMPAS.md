@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **34** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **35** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -113,14 +113,18 @@ encontró. El estado del código, los comandos y el mapa del repo están en
       `assertDontSee(route('clinica.pacientes.asignar-historia', $p))` sobre la ficha dejó de probar lo que
       probaba —el enlace "Ver la historia" tiene ese href— y hubo que medir la ausencia por **el formulario**
       (`action="…"`). Si agregás una ruta hermana, comprobá que los `assertDontSee` de URL sigan diciendo algo.
-19. **La consulta tiene su propio grupo de roles, y la secretaría no entra.** Medido al hacer WEB-4.1:
-    `role:Root|Medico` **dentro** del grupo `clinica.contexto` (no al revés: el contexto se necesita para leer
-    la consulta) y la secretaría recibe **403**, que es lo que el test afirma (`assertForbidden`). Tres cosas
-    dependen de esa misma regla y **no pueden divergir**: la ruta del shell, el redirect del mostrador cuando
-    la secretaría toca "Atender" (la cita **sí** queda atendida y vuelve a la agenda con el aviso, en vez de
-    caer en el 403) y el botón "Editar consulta" de la agenda, que a ella **no se le ofrece**. Por eso la
-    regla vive en `User::trabajaLaConsulta()` y la bandera **baja desde `AgendaController`** hasta la fila
-    (`AgendaVista` → `JornadaVista` → `FilaDeCitaVista`): no se consulta el rol en la vista.
+19. **La regla "la consulta es sólo del médico" decide tres cosas que no pueden divergir — y desde
+    WEB-4.9 incluye "Atender".** La ruta del shell está en un grupo `role:Root|Medico` **dentro** del grupo
+    `clinica.contexto` (no al revés: el contexto se necesita para leer la consulta) y la secretaría recibe
+    **403**, que es lo que el test afirma (`assertForbidden`). De la misma regla dependen la fila de la
+    agenda —que a la secretaría **no** le pinta "Atender" (ni el botón ni el ítem del menú) ni "Editar
+    consulta"— y el **rechazo del POST `/clinica/agenda/{cola}/atender`**, que responde **403** y **no toca
+    nada**: ni `cola.atendido`, ni la confirmación que "atender implica confirmada", ni `sync_changes` (una
+    versión anterior marcaba la cita y devolvía a la agenda con un aviso; el usuario la cambió el
+    2026-10-11: **"Atender es sólo del médico"**). Por eso la regla vive en `User::trabajaLaConsulta()` y la
+    bandera **baja desde `AgendaController`** hasta la fila (`AgendaVista` → `JornadaVista` →
+    `FilaDeCitaVista`): no se consulta el rol en la vista. El chequeo del controlador va **antes** de
+    resolver la cita, igual que el middleware: la respuesta no depende de si la cita existe.
 20. **"Editar consulta" abre un diálogo que no navega, y el "Atender" de una cita sin confirmar vive en
     el menú.** Dos consecuencias para los tests de navegador (Playwright): (a) el botón de la fila **no**
     envía el formulario —`shell.js` lo intercepta para ofrecer "re-atender o consulta nueva"—, así que
@@ -286,4 +290,30 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     la app sí tenía algo que corregir que la corrida destapó: `CitaDeLaConsulta` ahora prefiere una cita
     **viva** sobre una **movida por el escritorio** del mismo día (la movida es la fila vieja y el paciente ya
     está en la fecha nueva).
+    **Y hay una TERCERA fuente que la cuenta de `AsignarHistoria::siguienteNumero` no mira: `cola`.**
+    Medido al hacer **WEB-4.9** (2026-10-11): el verificador de **WEB-4.8** crea a propósito una fila que
+    **viola** la regla "atendido ⇒ tiene historia" —una cita `atendido = 1` con un `numhistoria` que **no**
+    tiene fila en `historias`—, así que esa corrida deja un número **usado en `cola` y en ningún otro lado**.
+    El ayudante que calculaba el correlativo con `historias` + `medico_pacientes` volvió a elegir ese número,
+    la corrida nueva creó **una segunda cita del mismo `numhistoria` para hoy** y el verificador —que ubicaba
+    la fila por el nombre del paciente— leyó **la vieja** (el síntoma fue "la cita sin confirmar ya está
+    atendida"). Lo que lo arregla: (a) el correlativo del ayudante cuenta **también `cola`**; y (b) el
+    verificador ubica la fila por el **enlace a la ficha** (`pacientes.id`, que es único), no por el texto del
+    nombre. La Action `AsignarHistoria` **no** se toca por esto —en datos sanos esa tercera fuente no existe
+    (0 filas en la base)—: es una regla del **verificador**, no del producto.
+
+35. **El diálogo de "Atender" está en el HTML de todos los roles, y el panel de "sin historia" escribe
+    "atender" en minúscula.** Medido al hacer **WEB-4.9** (2026-10-11), al escribir los tests y el
+    verificador de que la secretaría no ve "Atender":
+    - `resources/views/clinica/agenda/index.blade.php` incluye `_dialogo-atender` **siempre** —es **un**
+      diálogo para toda la página, que los botones de las filas llenan con sus `data-*`—, así que con la
+      secretaría el markup del diálogo (`#dialogo-atender`, `#atender-form`, el botón "Abrir la consulta")
+      **igual está** y el diálogo queda inerte porque no hay ningún `form[data-atender]` que lo abra. "La
+      secretaría no ve Atender" **no** se puede medir por la ausencia del diálogo ni del texto "Abrir la
+      consulta": se mide por el `form[data-atender]` de la **fila** (o por su URL, que es lo más difícil de
+      confundir).
+    - Y `assertDontSee('Atender')` sólo es fiable por la **mayúscula**: el panel "Pacientes sin historia
+      **a atender**" (WEB-2.11, `PacientesSinHistoriaVista::titulo()`) escribe la palabra en minúscula en
+      la misma pantalla, y `assertDontSee` distingue mayúsculas. Un verificador que busque `atender` sin
+      distinguirlas lo va a encontrar en el título del panel y va a creer que la acción sigue ahí.
 

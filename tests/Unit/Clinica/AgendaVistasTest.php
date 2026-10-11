@@ -95,12 +95,14 @@ class AgendaVistasTest extends TestCase
         $this->assertNotNull($fila->cobro());       // pero todavía se puede cobrar
     }
 
-    public function test_la_secretaria_no_recibe_el_boton_de_la_consulta(): void
+    public function test_la_secretaria_no_recibe_la_accion_de_la_consulta(): void
     {
-        // La consulta es sólo del médico (PLAN-WEB.md §3.14): a la secretaría se le ofrece atender una
-        // cita pendiente (es la acción del mostrador), pero no entrar a la ficha clínica.
+        // **"Atender" es sólo del médico** (WEB-4.9, decisión del usuario del 2026-10-11): atender es abrir
+        // la consulta y la consulta es del médico (PLAN-WEB.md §3.14). A la secretaría la fila no le pinta
+        // la acción —ni como botón ni en el menú, de ahí el `null` y no un botón deshabilitado—, ni con la
+        // cita pendiente ni con la cita ya atendida (donde el botón sería "Editar consulta").
         $pendiente = new FilaDeCitaVista($this->cita(), 3, true, $this->ahora(), '', false);
-        $this->assertFalse($pendiente->atender()['habilitada']);
+        $this->assertNull($pendiente->atender(), 'la secretaría no ve "Atender"');
 
         $atendida = new FilaDeCitaVista(
             $this->cita(['atendido' => 1, 'estado' => Cola::ESTADO_CONFIRMADA]),
@@ -110,7 +112,14 @@ class AgendaVistasTest extends TestCase
             '',
             false,
         );
-        $this->assertNull($atendida->atender(), 'una cita ya atendida no le ofrece nada a la secretaría');
+        $this->assertNull($atendida->atender(), 'ni "Editar consulta" sobre una cita ya atendida');
+
+        // Lo que sí conserva sobre la misma cita pendiente: confirmar, cobrar, recordar, reagendar y borrar.
+        $this->assertNotNull($pendiente->confirmar());
+        $this->assertNotNull($pendiente->cobro());
+        $this->assertNotNull($pendiente->recordatorio());
+        $this->assertNotNull($pendiente->urlEditar());
+        $this->assertNotNull($pendiente->urlEliminar());
     }
 
     public function test_una_cita_confirmada_ofrece_atender_y_quitar_la_confirmacion(): void

@@ -90,6 +90,25 @@ class AgendaWebTest extends TestCase
         ]]);
     }
 
+    /**
+     * La secretaría del consultorio: **sin** ficha de médico (no la tiene) y con el `reg_medico` asignado,
+     * que es como entra en la web real (`medico_registros`).
+     */
+    private function secretariaConAcceso(Medico $medico): User
+    {
+        $secretaria = User::create([
+            'name'                 => 'Secretaria',
+            'email'                => 'agenda-secre-' . uniqid() . '@example.com',
+            'password'             => Hash::make('secreto123'),
+            'is_active'            => true,
+            'must_change_password' => false,
+        ]);
+        $secretaria->assignRole('Secretaria');
+        MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
+
+        return $secretaria;
+    }
+
     private function centro(string $nombre): MedicalCenter
     {
         return MedicalCenter::create([
@@ -517,25 +536,91 @@ class AgendaWebTest extends TestCase
 
     public function test_la_secretaria_entra_a_la_agenda(): void
     {
-        $this->seed(EspecialidadesYModulosSeeder::class);
-        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-
-        $medico = Medico::create(['name' => 'Dr. Dueño', 'lastname' => 'Datos', 'reg_medico' => 'agenda-secre-' . uniqid()]);
-        $medico->specialties()->attach($gineco->id);
-
-        $secretaria = User::create([
-            'name'                 => 'Secretaria',
-            'email'                => 'agenda-secre-' . uniqid() . '@example.com',
-            'password'             => Hash::make('secreto123'),
-            'is_active'            => true,
-            'must_change_password' => false,
-        ]);
-        $secretaria->assignRole('Secretaria');
-        MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        $secretaria = $this->secretariaConAcceso($medico);
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
             ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString())
             ->assertOk();
+    }
+
+    /**
+     * **La secretaría conserva lo suyo** (WEB-4.9, decisión del usuario del 2026-10-11): agendar, **mover**
+     * la cita (reagendar), cambiar el orden de la cola, **confirmar** y **cobrar**. Lo único que pierde es
+     * "Atender" —su POST responde 403 y la cita no se marca: eso se fija en `ConsultaWebTest`, porque la
+     * regla es de la consulta—, así que acá se comprueba que las otras cinco acciones sigan siendo suyas
+     * por HTTP, que es la vara con la que el usuario lo dijo.
+     */
+    public function test_la_secretaria_conserva_confirmar_cobrar_agendar_mover_y_reordenar(): void
+    {
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        $secretaria = $this->secretariaConAcceso($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 2001]);
+
+        // 1) Confirmar: el paciente llegó, y es del mostrador (WEB-2.4).
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post('/clinica/agenda/' . $cita->id . '/confirmar', ['estado' => Cola::ESTADO_CONFIRMADA])
+            ->assertRedirect();
+
+        $this->assertSame(Cola::ESTADO_CONFIRMADA, (int) $cita->fresh()->estado);
+
+        // 2) Cobrar: abono parcial, sumado a lo ya pagado.
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 20, 'monto' => 50])
+            ->assertRedirect();
+
+        $this->assertSame(20.0, (float) $cita->fresh()->monto_pagado);
+
+        // 3) Agendar (y con eso, reagendar): el alta y la edición de la cita son suyas (WEB-2.2/2.3).
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '09:30', 'paciente_id' => $pacienteId]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $segunda = Cola::where('reg_medico', $medico->reg_medico)
+            ->where('id', '!=', $cita->id)
+            ->firstOrFail();
+        $this->assertSame(2, Cola::where('reg_medico', $medico->reg_medico)->count());
+
+        // 4) **Mover** una cita (reagendar): es la misma fila que cambia de fecha, con lo cobrado intacto
+        // y lo que valía para la fecha vieja reiniciado (la regla de `EditarCita`, WEB-2.3). Se usa una
+        // cita **pendiente** de verdad (de hoy en adelante): es la que el alta detecta y pregunta si
+        // mover.
+        $futura = $this->cita($medico, $sede, Carbon::today()->addDays(2)->toDateString(), '10:00:00', 9, [
+            'numhistoria' => 2001, 'estado' => Cola::ESTADO_CONFIRMADA, 'monto' => 50, 'monto_pagado' => 30,
+        ]);
+
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'        => '11:00',
+                'paciente_id' => $pacienteId,
+                'decision'    => 'mover',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $movida = $futura->fresh();
+        $this->assertSame($this->lunes->toDateString(), $movida->fecha->toDateString());
+        $this->assertSame(30.0, (float) $movida->monto_pagado);
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $movida->estado);
+        // Mover no inserta: la jornada queda con las mismas filas que antes del movimiento.
+        $this->assertSame(3, Cola::where('reg_medico', $medico->reg_medico)->count());
+
+        // 5) Reordenar la cola: el arrastre es **una** operación de sync, no N updates (WEB-2.5).
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->postJson('/clinica/agenda/reordenar', [
+                'record_id' => $segunda->id,
+                'from'      => (int) $segunda->numorden,
+                'to'        => 1,
+                'fecha'     => $this->lunes->toDateString(),
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertSame(1, (int) $segunda->fresh()->numorden);
+        $this->assertSame(2, (int) $cita->fresh()->numorden);
     }
 
     // ----------------------------------------------------------- Alta de cita (WEB-2.2) y edición (2.3)

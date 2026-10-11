@@ -29,7 +29,8 @@ use InvalidArgumentException;
  *
  * "Atender" es el único de estos métodos que **decide un flujo** (los cuatro casos de la consulta) y no
  * solo traduce una escritura: por eso está documentado caso por caso y delega todo lo demás —el número de
- * la consulta, la marca de atendida— en sus Actions.
+ * la consulta, la marca de atendida— en sus Actions. También es el único que **no es de la secretaría**
+ * (WEB-4.9): confirmar, cobrar, agendar y reordenar siguen siendo suyos.
  */
 class MostradorController extends Controller
 {
@@ -64,6 +65,20 @@ class MostradorController extends Controller
     }
 
     /**
+     * **"Atender" es sólo del médico** (decisión del usuario, 2026-10-11; WEB-4.9). La secretaría agenda,
+     * mueve la cita, cambia el orden de la cola, confirma y cobra; **no atiende**: el `atendido = 1` de una
+     * cita sólo lo produce el médico —al abrir la consulta desde el mostrador o desde la agenda—, que es lo
+     * que el escritorio hace en el `open` de `w_consulta_principal` (`:4416-4421`) y la misma regla que ya
+     * decide quién entra al shell (`User::trabajaLaConsulta()`, PLAN-WEB.md §3.14).
+     *
+     * Quien no trabaja la consulta recibe **403** y **no se toca nada**: ni `cola.atendido`, ni la
+     * confirmación que "atender" implica, ni `sync_changes`, ni se abre ninguna consulta. El 403 es el
+     * mismo "no podés hacer esto" que la ruta del shell le da a la secretaría (y no un redirect con aviso
+     * como el de la cita movida o la cita sin historia): acá no falla el estado de la cita —es atendible—
+     * sino quién la atiende, que es exactamente lo que el grupo `role:Root|Medico` de `/consulta` responde
+     * con 403. La comprobación va **antes** de resolver la cita, como ese middleware: la respuesta no
+     * depende de si la cita existe.
+     *
      * **"Atender" abre la consulta** (WEB-4.1, PLAN-WEB.md §3.10 y wiki `04-historia-clinica.md`): lo
      * que en el legado hace el `open` de `w_consulta_principal` —abre la consulta del día, la crea si no
      * existe y deja la cita atendida (`UPDATE cola SET atendido = 1`)—, en un solo POST.
@@ -85,14 +100,13 @@ class MostradorController extends Controller
      * La pregunta del legado "¿re-atender o consulta nueva?" la resuelve la vista de día con su diálogo:
      * "re-atender" (el POST normal) reusa la consulta de hoy si el paciente ya tiene una, y "consulta
      * nueva" manda `nueva=1`, que numera la siguiente aunque haya una hoy.
-     *
-     * **La secretaría no entra a la consulta** (§3.14): si es ella quien toca el botón, la cita queda
-     * atendida igual —"el paciente llegó" es del mostrador y su acción no cambia— pero vuelve a la agenda
-     * con el aviso, en vez de caer en el 403 de la ruta del shell. El botón de una cita ya atendida ni
-     * siquiera se le ofrece (`FilaDeCitaVista::atender`).
      */
     public function atender(Request $request, Cola $cola, AbrirConsulta $abrir, AtenderCita $atenderCita)
     {
+        // La consulta es del médico y "atender" es abrirla (WEB-4.9): la secretaría no pasa de acá y la
+        // cita queda intacta. Es la misma regla que protege la ruta del shell, con la misma respuesta.
+        abort_unless((bool) $request->user()?->trabajaLaConsulta(), 403);
+
         $contexto = $request->attributes->get('contexto_clinico');
         $cita = $this->citaDelContexto($request, $cola);
 
@@ -140,13 +154,6 @@ class MostradorController extends Controller
             $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
         } catch (CitaNoAtendible $excepcion) {
             return back()->with('error', $excepcion->getMessage());
-        }
-
-        // La secretaría no entra a la consulta (§3.14): la cita queda atendida —"el paciente llegó" es
-        // del mostrador y su acción no cambia— y vuelve a la agenda con el aviso, en vez de caer en el
-        // 403 de la ruta del shell.
-        if (! $request->user()->trabajaLaConsulta()) {
-            return $this->urlDeLaAgendaDe($request, $cita)->with('estado', $this->avisoDeConsultaDelMedico());
         }
 
         return $this->irALaConsulta(
@@ -200,13 +207,6 @@ class MostradorController extends Controller
         return redirect()
             ->route('clinica.pacientes.ver', $pacienteId)
             ->with('error', $mensaje . ' Se la asignas desde acá y después vuelves a atender la cita.');
-    }
-
-    /** El aviso para la secretaría: la cita se atendió, pero la consulta es del médico (§3.14). */
-    private function avisoDeConsultaDelMedico(): string
-    {
-        return 'La cita quedó atendida. La consulta la abre el médico: la ficha clínica no está entre las '
-            . 'pantallas de la secretaría.';
     }
 
     private function avisoDeCitaSinPaciente(): string

@@ -57,8 +57,9 @@
                      **"Atender" abre la consulta** (WEB-4.1): el botón no envía el formulario, abre el
                      diálogo de la página (`data-atender`) que ofrece abrir la consulta de hoy o crear una
                      nueva. Con la cita ya atendida el botón dice "Editar consulta" y entra a la misma
-                     consulta del día sin marcar nada; a la secretaría no se le ofrece (la consulta es del
-                     médico, PLAN-WEB.md §3.14). --}}
+                     consulta del día sin marcar nada. **"Atender" es sólo del médico** (WEB-4.9): a la
+                     secretaría no se le pinta —ni acá ni en el menú—, porque atender es abrir la consulta
+                     (PLAN-WEB.md §3.14) y el POST a mano responde 403. --}}
                 @if ($confirmar)
                     <form method="POST" action="{{ $confirmar['url'] }}">
                         @csrf

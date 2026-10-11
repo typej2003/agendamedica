@@ -13,6 +13,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Specialty;
+use App\Models\SyncChange;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -33,7 +34,9 @@ use Tests\TestCase;
  *  4. si el paciente ya tiene consulta hoy, "re-atender" reusa esa y "consulta nueva" numera la siguiente.
  *
  * Y el recorte de roles: **la consulta es sólo del médico**, así que la secretaría no entra al shell
- * (responde 403, no un redirect silencioso) ni recibe el botón que la abre.
+ * (responde 403, no un redirect silencioso) ni recibe el botón que la abre. Desde **WEB-4.9** (decisión
+ * del usuario, 2026-10-11) eso incluye **"Atender"**: la secretaría no ve la acción en la fila y el POST
+ * a mano responde 403 **sin marcar la cita** (antes lo marcaba y volvía con un aviso).
  *
  * `DatabaseTransactions`, como el resto de los tests de la web clínica.
  */
@@ -500,27 +503,57 @@ class ConsultaWebTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_la_secretaria_puede_marcar_la_cita_pero_no_abre_la_consulta(): void
+    /**
+     * **La secretaría no puede atender** (WEB-4.9, decisión del usuario del 2026-10-11: "Atender es sólo
+     * del médico"). El POST a mano responde **403** —el mismo "no podés hacer esto" que la ruta del shell
+     * le da por la misma regla (`User::trabajaLaConsulta()`)— y **no deja media marca**: la cita no queda
+     * atendida, ni confirmada por el "atender implica confirmada", ni con rastro de sync, ni con una
+     * consulta abierta al lado.
+     *
+     * Antes este test afirmaba lo contrario (la cita quedaba atendida y la secretaría volvía a la agenda
+     * con un aviso): era el comportamiento del 2026-10-10, que el usuario cambió al decir que el
+     * `atendido = 1` de una cita sólo lo produce el médico.
+     */
+    public function test_la_secretaria_no_puede_marcar_la_cita_por_post(): void
     {
-        // El botón de la agenda es el del mostrador y su acción no cambia: la cita queda atendida. Lo que
-        // no hace es llevarla al shell, que no le corresponde.
         [, $medico, $gineco] = $this->medicoConAcceso();
         $secretaria = $this->secretariaConAcceso($medico);
         $sede = $this->sede($medico);
         $this->paciente($medico, 'Ana', 'Alvarez', 1001);
         $cita = $this->cita($medico, $sede, ['numhistoria' => 1001]);
 
-        $respuesta = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
-            ->post($this->urlAtender($cita));
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post($this->urlAtender($cita))
+            ->assertForbidden();
 
-        $respuesta->assertRedirect(route('clinica.agenda', [
-            'vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => $sede->id,
-        ]));
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'quedó atendida'));
+        // Nada se marcó: ni la atención, ni la confirmación que "atender" implica, ni el rastro del sync.
+        $fresca = $cita->fresh();
+        $this->assertSame(0, (int) $fresca->atendido);
+        $this->assertSame(Cola::ESTADO_NO_CONFIRMADA, (int) $fresca->estado);
+        $this->assertSame(0, SyncChange::where('table_name', 'cola')->where('record_id', $cita->id)->count());
 
-        $this->assertSame(1, (int) $cita->fresh()->atendido);
-        // La consulta se abrió (el médico la va a encontrar lista), pero la secretaría no la ve.
-        $this->assertSame(1, Consulta::where('reg_medico', $medico->reg_medico)->count());
+        // Y no se abrió ninguna consulta: la atención no ocurrió.
+        $this->assertSame(0, Consulta::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    /** El médico, en cambio, sigue viendo la acción en su agenda (y la usa: ver los tests de arriba). */
+    public function test_la_agenda_le_ofrece_atender_al_medico(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $cita = $this->cita($medico, $sede, ['numhistoria' => 1001]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(
+            route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas'])
+        );
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Atender');
+        $respuesta->assertSee($this->urlAtender($cita), false);
+        // La cita sin confirmar: el botón principal es Confirmar y "Atender" viaja en el menú.
+        $respuesta->assertSee('Confirmar');
+        $respuesta->assertSee('Cobrar');
     }
 
     public function test_la_agenda_no_le_ofrece_a_la_secretaria_ninguna_accion_sobre_una_cita_atendida(): void
@@ -537,6 +570,36 @@ class ConsultaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertDontSee('Editar consulta');
+        $respuesta->assertDontSee('Atender');
+    }
+
+    /**
+     * Y tampoco sobre una cita pendiente (WEB-4.9): la acción no se le muestra **ni como botón ni dentro
+     * del menú de acciones** —donde vivía cuando la cita todavía no estaba confirmada—, porque atender es
+     * abrir la consulta. Lo que sí conserva es lo suyo: Confirmar, Cobrar y el menú con lo demás.
+     */
+    public function test_la_agenda_no_le_ofrece_atender_a_la_secretaria_sobre_una_cita_pendiente(): void
+    {
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        $secretaria = $this->secretariaConAcceso($medico);
+        $sede = $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $cita = $this->cita($medico, $sede, ['numhistoria' => 1001]);
+
+        $respuesta = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)->get(
+            route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas'])
+        );
+
+        $respuesta->assertOk();
+        $respuesta->assertDontSee('Atender');
+        // La marca por la URL es la que dice de verdad que la acción no está: el texto podría estar en
+        // cualquier otro lado de la página (la trampa 18 es exactamente esto).
+        $respuesta->assertDontSee($this->urlAtender($cita), false);
+
+        // Lo que la secretaría sí conserva sobre la misma cita.
+        $respuesta->assertSee('Confirmar');
+        $respuesta->assertSee('Cobrar');
+        $respuesta->assertSee(route('clinica.agenda.editar', $cita->id), false);
     }
 
     public function test_la_consulta_no_es_un_modulo_del_menu_mientras_no_tenga_pantalla_propia(): void
