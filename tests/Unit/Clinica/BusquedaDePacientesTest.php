@@ -69,4 +69,13 @@ class BusquedaDePacientesTest extends TestCase
         $this->assertSame(['S/H'], BusquedaDePacientes::formasDeNumero('S/H'));
         $this->assertSame(['10A'], BusquedaDePacientes::formasDeNumero('10A'));
     }
+
+    public function test_los_comodines_del_like_y_el_escape_se_antepone_con_signo_de_admiracion(): void
+    {
+        $this->assertSame('100!% real', BusquedaDePacientes::escaparLike('100% real'));
+        $this->assertSame('an!_', BusquedaDePacientes::escaparLike('an_'));
+        $this->assertSame('!!hola', BusquedaDePacientes::escaparLike('!hola'));
+        // Sin comodines no cambia nada.
+        $this->assertSame('reynoso', BusquedaDePacientes::escaparLike('reynoso'));
+    }
 }

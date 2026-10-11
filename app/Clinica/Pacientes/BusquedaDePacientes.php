@@ -90,6 +90,17 @@ final class BusquedaDePacientes
     }
 
     /**
+     * La palabra lista para ir dentro de un `LIKE`: los comodines (`%`, `_`) y el propio carácter de escape
+     * se anteponen con `!`. Sin esto, buscar `%` devolvía todos los pacientes y `An_` encontraba a "Ana":
+     * lo que se escribe se busca **como texto**. Se usa `!` (y `ESCAPE '!'` en la consulta) y no la barra
+     * invertida porque en SQLite y en MySQL el literal `'\'` no significa lo mismo, y `!` sí.
+     */
+    public static function escaparLike(string $texto): string
+    {
+        return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $texto);
+    }
+
+    /**
      * Agrega el grupo de búsqueda a la consulta: un `where` por palabra (se exigen todas), y dentro de
      * cada uno un `or` entre las columnas del paciente. El grupo va anidado para que el `or` no se
      * escape del filtro por `reg_medico`.
@@ -98,14 +109,14 @@ final class BusquedaDePacientes
     {
         foreach (self::palabras($buscar) as $palabra) {
             $consulta->where(function ($grupo) use ($palabra) {
-                $termino = '%' . self::normalizar($palabra) . '%';
+                $termino = '%' . self::escaparLike(self::normalizar($palabra)) . '%';
 
-                $grupo->whereRaw(self::columnaNormalizada('pacientes.nombres') . ' like ?', [$termino])
-                    ->orWhereRaw(self::columnaNormalizada('pacientes.apellidos') . ' like ?', [$termino])
-                    ->orWhere('pacientes.cedula', 'like', $termino);
+                $grupo->whereRaw(self::columnaNormalizada('pacientes.nombres') . " like ? escape '!'", [$termino])
+                    ->orWhereRaw(self::columnaNormalizada('pacientes.apellidos') . " like ? escape '!'", [$termino])
+                    ->orWhereRaw("pacientes.cedula like ? escape '!'", [$termino]);
 
                 foreach (self::formasDeNumero($palabra) as $forma) {
-                    $grupo->orWhere('medico_pacientes.numhistoria', 'like', '%' . $forma . '%');
+                    $grupo->orWhereRaw("medico_pacientes.numhistoria like ? escape '!'", ['%' . self::escaparLike($forma) . '%']);
                 }
             });
         }
