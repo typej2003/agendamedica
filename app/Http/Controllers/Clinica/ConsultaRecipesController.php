@@ -9,7 +9,7 @@ use App\Actions\Consulta\ResultadoDeRecipe;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
-use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
+use App\Http\Controllers\Clinica\Concerns\ItemsDeUnRecipeEnElFormulario;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
@@ -41,6 +41,7 @@ use InvalidArgumentException;
 class ConsultaRecipesController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
+    use ItemsDeUnRecipeEnElFormulario;
 
     public function __construct(private ConsultasDelContexto $consultas)
     {
@@ -227,37 +228,19 @@ class ConsultaRecipesController extends Controller
     /** @return array<string,mixed> */
     private function reglas(): array
     {
-        return [
-            'fecha' => 'nullable|date_format:Y-m-d',
-            'items' => 'required|array|min:1|max:60',
-            'items.*.codemedicina' => 'required|string|max:8',
-            'items.*.cantidad' => 'nullable|integer|min:1|max:' . SeccionDeRecipesVista::CANTIDAD_MAXIMA,
-            'items.*.indicaciones' => 'nullable|string|max:' . SeccionDeRecipesVista::LARGO_INDICACIONES,
-        ];
+        return ['fecha' => 'nullable|date_format:Y-m-d'] + $this->reglasDeLosItems();
     }
 
     /**
      * Un aviso por regla: el `locale` de la app es `en` y la validación sale en inglés si no se le da su
-     * texto (trampa 38 de `TRAMPAS.md`).
+     * texto (trampa 38 de `TRAMPAS.md`). Los de los medicamentos son los del trait, compartidos con el
+     * récipe de la pareja.
      *
      * @return array<string,string>
      */
     private function mensajes(): array
     {
-        return [
-            'fecha.date_format' => 'La fecha de emisión no es válida.',
-            'items.required' => 'Agrega al menos un medicamento al récipe.',
-            'items.array' => 'Los medicamentos del récipe no llegaron bien: vuelve a abrir el editor.',
-            'items.min' => 'Agrega al menos un medicamento al récipe.',
-            'items.max' => 'Un récipe no puede llevar más de 60 medicamentos.',
-            'items.*.codemedicina.required' => 'A una fila del récipe le falta el medicamento.',
-            'items.*.codemedicina.max' => 'El código de un medicamento es demasiado largo.',
-            'items.*.cantidad.integer' => 'La cantidad de cada medicamento tiene que ser un número entero.',
-            'items.*.cantidad.min' => 'La cantidad mínima de un medicamento es 1.',
-            'items.*.cantidad.max' => 'La cantidad de un medicamento no puede pasar de ' . SeccionDeRecipesVista::CANTIDAD_MAXIMA . '.',
-            'items.*.indicaciones.max' => 'Las indicaciones de un medicamento no pueden pasar de '
-                . SeccionDeRecipesVista::LARGO_INDICACIONES . ' caracteres.',
-        ];
+        return ['fecha.date_format' => 'La fecha de emisión no es válida.'] + $this->mensajesDeLosItems();
     }
 
     /** La vuelta al editor del récipe con lo escrito (el `old()` del formulario). */
@@ -295,24 +278,6 @@ class ConsultaRecipesController extends Controller
         }
 
         return 'Récipe ' . $resultado->numero . ' actualizado: ' . implode(', ', $partes) . '.';
-    }
-
-    /**
-     * «A», «A» y «B», «A», «B» y «C»: nombra lo que pasó con cada medicamento, no con su id.
-     *
-     * @param  array<int,string>  $nombres
-     */
-    private function listar(array $nombres): string
-    {
-        $etiquetas = array_map(fn ($nombre) => '«' . $nombre . '»', $nombres);
-
-        if (count($etiquetas) === 1) {
-            return $etiquetas[0];
-        }
-
-        $ultimo = array_pop($etiquetas);
-
-        return implode(', ', $etiquetas) . ' y ' . $ultimo;
     }
 
     /** La consulta del contexto (404 si es de otro médico). */

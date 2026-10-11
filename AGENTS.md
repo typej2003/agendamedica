@@ -33,7 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras cerrar **WEB-5.1** —los récipes de la consulta—) es **1024 en
+medición (2026-10-11, tras cerrar **WEB-5.1b** —el récipe de la pareja—) es **1057 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
@@ -126,6 +126,22 @@ récipe es del vademécum o de un tratamiento del médico: no hay texto libre) m
 `Vistas/SeccionDeRecipesVista` (lista y editor). El móvil: `recipes` baja por delta de `updated_at` (cada edición
 lo cambia) y las **bajas** viajan en `eliminados` con un `deleted` por fila bajo `recipes`; el reemplazo de
 `recipe_detalle` del escritorio ahora respeta también las cabeceras anotadas con `source = web`.
+
+Lo que **WEB-5.1b (2026-10-11)**, el récipe de la pareja, agregó a esas tres filas es: `ConsultaRecipeParejaController`
+(**WEB-5.1b: el récipe de la pareja** en `?seccion=recipes&recipe=pareja`, la segunda pestaña de la sección; **uno
+por consulta**, así que no lleva número: `POST /clinica/consulta/{consulta}/recipe-pareja` lo crea o lo corrige **en el
+lugar** y `DELETE` la misma ruta lo elimina entero; los buscadores del vademécum y de los tratamientos y el alta rápida
+son los de `ConsultaRecipesController`, sin duplicar), `Consulta/{GuardarRecipeDeLaPareja,EliminarRecipeDeLaPareja,
+ResultadoDeRecipeDeLaPareja,ItemsDeRecipe}` (`GuardarRecipeDeLaPareja` escribe **sólo lo que cambió** en
+`recipes_pareja` —`cantidad`, `indicaciones`, `cedula`, `nombre`, filas nuevas y bajas— con el last-write-wins por
+columna, `updated_at` nuevo y el rastro `source = web` (un `created` **por fila**: es lo que la protege del reemplazo
+de la tabla que sube el escritorio, `sin_clave_con_altas_del_app`); `ItemsDeRecipe` es la normalización de los
+medicamentos que ahora comparten `GuardarRecipe` y esta Action) y `App\Clinica\Consulta\RecipeDeLaPareja` (la
+lectura: la cédula y el nombre salen de la **primera** fila, y `resolverItems` aplica la misma comprobación de
+catálogo que el récipe del paciente, `RecipesDeLaConsulta::resolverItemsContra`) más `Vistas/{SeccionDeRecipeDeLaParejaVista,
+PestanasDeRecipes,ComparteElEditorDeRecipes}` (siempre es el editor; el trait lleva la caja de herramientas, los topes y
+las filas del editor que comparten los dos ViewModels) y el modelo `App\Models\RecipePareja`. **Sin columnas ni
+tablas nuevas, y el móvil no sincroniza `recipes_pareja`.** Ver las trampas 43 a 45.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -390,7 +406,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **42** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **45** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

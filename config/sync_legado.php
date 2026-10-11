@@ -66,6 +66,10 @@ return [
     // tabla del legado => table_name con que el app anota la creación.
     'sin_clave_con_altas_del_app' => [
         'recipe_detalle' => 'recipes', // récipes creados desde "Atender" (App\Sync\CreacionesClinicas)
+        // Las filas del récipe de la pareja que crea la web (WEB-5.1b, `GuardarRecipeDeLaPareja`): `recipes_pareja`
+        // tampoco tiene clave primaria en el PowerBuilder (su registro de cambios es de sentencia, `op = T`) y
+        // cada fila anota su propio `created` con su id (la tabla no tiene cabecera).
+        'recipes_pareja' => 'recipes_pareja',
     ],
 
     // Tablas del escritorio que el app guarda en su copia local con el mismo nombre. Cuando el

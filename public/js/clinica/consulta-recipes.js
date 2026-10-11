@@ -18,6 +18,9 @@
  *    consulta + medicamento) y «Quitar» saca la fila del formulario. Editar las indicaciones de una fila
  *    sólo cambia ese récipe: nunca el vademécum ni el tratamiento.
  *
+ * (WEB-5.1b: el editor del **récipe de la pareja** es el mismo marcado y este mismo script; lo único que cambia
+ * es que no tiene fecha de emisión y que su cédula y su nombre cuentan para el aviso de cambios sin guardar.)
+ *
  * 3. **El aviso de «hay cambios sin guardar»** y el del navegador al salir: el récipe se guarda con un
  *    botón, así que la pantalla dice cuándo hay algo que todavía no está guardado.
  *
@@ -69,10 +72,14 @@
         return filas().map(function (fila) { return fila.dataset.codigo; });
     }
 
-    /** Lo que decide si hay cambios sin guardar: la fecha y, por fila, el código, la cantidad y las indicaciones. */
+    /**
+     * Lo que decide si hay cambios sin guardar: la fecha, los campos extra del editor (`data-recipe-extra`: en el
+     * récipe de la pareja, su cédula y su nombre) y, por fila, el código, la cantidad y las indicaciones.
+     */
     function instantanea() {
         return JSON.stringify([
             campoFecha ? campoFecha.value : '',
+            Array.prototype.map.call(formulario.querySelectorAll('[data-recipe-extra]'), function (campo) { return campo.value; }),
             filas().map(function (fila) {
                 return [
                     fila.dataset.codigo,
@@ -151,6 +158,9 @@
 
     lista.addEventListener('input', actualizar);
     if (campoFecha) campoFecha.addEventListener('input', actualizar);
+    Array.prototype.forEach.call(formulario.querySelectorAll('[data-recipe-extra]'), function (campo) {
+        campo.addEventListener('input', actualizar);
+    });
 
     // ------------------------------------------------------------------------------------ El buscador
 
@@ -434,6 +444,15 @@
     // Guardar también es salir a propósito: no hay nada que avisar.
     formulario.addEventListener('submit', function () {
         saliendo = true;
+    });
+
+    // Y eliminar el récipe de la pareja (un formulario aparte, `data-recipe-salir`): si el médico lo confirma,
+    // salir es a propósito. `shell.js` pide la confirmación en su propio `submit` (más arriba en el
+    // documento) y la cancela con `preventDefault()`; este oyente corre después y sólo cuenta lo confirmado.
+    document.addEventListener('submit', function (evento) {
+        if (evento.target.hasAttribute && evento.target.hasAttribute('data-recipe-salir') && !evento.defaultPrevented) {
+            saliendo = true;
+        }
     });
 
     window.addEventListener('beforeunload', function (evento) {

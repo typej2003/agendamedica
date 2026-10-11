@@ -11,17 +11,24 @@
      El editor es de **guardado explícito** y trabaja sobre el récipe entero: lo que se agrega o se quita
      viaja en un solo `POST`. Quien arma las filas, busca y avisa de «cambios sin guardar» es
      `consulta-recipes.js`, desde los `data-*` de acá; la vista no lleva JS ni estilos. --}}
+<div class="consulta-seccion" id="consulta-recipes"
+     data-url-medicamentos="{{ $seccion->urlMedicamentos() }}"
+     data-url-tratamientos="{{ $seccion->urlTratamientos() }}">
+
+@if ($seccion->esDeLaPareja())
+    {{-- El récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección. --}}
+    @include('clinica.consulta._recipes-pareja')
+@else
 @php
     $editor = $seccion->editor();
     $estado = $seccion->estado();
 @endphp
 
-<div class="consulta-seccion" id="consulta-recipes"
-     data-url-medicamentos="{{ $seccion->urlMedicamentos() }}"
-     data-url-tratamientos="{{ $seccion->urlTratamientos() }}">
-
 @if ($editor === null)
     {{-- ------------------------------------------------------------------------------------ La lista --}}
+    {{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. --}}
+    <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
@@ -153,103 +160,9 @@
         </x-ui.tarjeta>
     </form>
 
-    {{-- La plantilla de una fila: el script la clona al agregar un medicamento (el mismo marcado que las
-         filas que pinta el servidor). --}}
-    <template id="recipe-fila-plantilla">
-        @include('clinica.consulta._recipes-fila', ['fila' => ['clave' => '__CLAVE__', 'codigo' => '', 'nombre' => '', 'generico' => null, 'cantidad' => '1', 'indicaciones' => '']])
-    </template>
-
-    {{-- Las herramientas para llenar el récipe: van **fuera** del formulario (no mandan nada por sí solas;
-         lo que eligen entra al editor y se guarda con su botón). --}}
-    <x-ui.tarjeta titulo="Agregar medicamentos" icono="bi-search" class="mt-3" id="recipe-herramientas">
-        <div class="btn-group mb-3" role="group" aria-label="Qué buscar">
-            <button type="button" class="btn btn-outline-secondary active" data-recipe-modo="medicamentos" aria-pressed="true">
-                <i class="bi bi-capsule" aria-hidden="true"></i> Medicamentos
-            </button>
-            <button type="button" class="btn btn-outline-secondary" data-recipe-modo="tratamientos" aria-pressed="false">
-                <i class="bi bi-collection" aria-hidden="true"></i> Tratamientos
-            </button>
-        </div>
-
-        <div class="position-relative" id="recipe-busqueda">
-            <label class="form-label" for="recipe-texto" id="recipe-etiqueta">Busca en tu vademécum</label>
-
-            <div class="buscador-campo buscador-vivo">
-                <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="search" id="recipe-texto" class="form-control form-control-sm" autocomplete="off"
-                       placeholder="{{ $seccion->placeholderMedicamentos() }}"
-                       data-placeholder-medicamentos="{{ $seccion->placeholderMedicamentos() }}"
-                       data-placeholder-tratamientos="{{ $seccion->placeholderTratamientos() }}"
-                       aria-controls="recipe-resultados">
-            </div>
-
-            <div class="list-group resultados-flotantes" id="recipe-resultados" aria-label="Resultados de la búsqueda" hidden></div>
-        </div>
-
-        <p class="form-text mt-2 mb-0" id="recipe-ayuda"
-           data-ayuda-medicamentos="{{ $seccion->ayudaDelBuscador() }}"
-           data-ayuda-tratamientos="{{ $seccion->ayudaDeTratamientos() }}">{{ $seccion->ayudaDelBuscador() }}</p>
-
-        {{-- Los resultados: el script clona estas filas (el marcado es de la vista, no del script). --}}
-        <template id="recipe-resultado-plantilla">
-            <button type="button" class="resultado-paciente resultado-recipe">
-                <span class="resultado-paciente-datos">
-                    <strong data-resultado-nombre></strong>
-                    <span class="texto-tenue small d-block" data-resultado-detalle></span>
-                </span>
-                <span class="btn btn-sm btn-outline-primary" data-resultado-accion>
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i> <span data-resultado-texto>Agregar</span>
-                </span>
-            </button>
-        </template>
-
-        {{-- El alta del medicamento que falta: es el botón *Agregar* del escritorio (`w_nuevo_vademecum`). El
-             aviso de conexión va acá, donde se decide crearlo: es lo único de la sección que no funciona
-             sin red. --}}
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="recipe-nuevo-medicamento">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un medicamento nuevo
-        </button>
-        <p class="form-text mb-0 mt-1">
-            <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
-        </p>
-    </x-ui.tarjeta>
-
-    <x-ui.dialogo id="dialogo-medicamento" titulo="Crear un medicamento" lateral>
-        <form method="POST" action="{{ $seccion->urlCrearMedicamento() }}" id="medicamento-form">
-            @csrf
-            <div class="dialogo-cuerpo">
-                <p class="alert alert-danger py-2 mb-3" id="medicamento-error" role="alert" hidden></p>
-
-                <x-ui.campo etiqueta="Nombre comercial" for="medicamento-comercial" error="nombrecomercial" requerido
-                            :ayuda="'Hasta ' . $seccion->largoNombre() . ' caracteres. Se guarda en mayúsculas.'">
-                    <input type="text" id="medicamento-comercial" name="nombrecomercial" class="form-control"
-                           maxlength="{{ $seccion->largoNombre() }}" value="{{ old('nombrecomercial') }}" autocomplete="off">
-                </x-ui.campo>
-
-                <x-ui.campo etiqueta="Principio activo (genérico)" for="medicamento-generico" error="nombregenerico" class="mt-3"
-                            :ayuda="'Opcional. Hasta ' . $seccion->largoNombre() . ' caracteres.'">
-                    <input type="text" id="medicamento-generico" name="nombregenerico" class="form-control"
-                           maxlength="{{ $seccion->largoNombre() }}" value="{{ old('nombregenerico') }}" autocomplete="off">
-                </x-ui.campo>
-
-                <x-ui.campo etiqueta="Presentación" for="medicamento-presentacion" error="presentacion" class="mt-3"
-                            :ayuda="'Opcional. Por ejemplo: Tabletas 500 mg. Hasta ' . $seccion->largoPresentacion() . ' caracteres.'">
-                    <input type="text" id="medicamento-presentacion" name="presentacion" class="form-control"
-                           maxlength="{{ $seccion->largoPresentacion() }}" value="{{ old('presentacion') }}" autocomplete="off">
-                </x-ui.campo>
-
-                <x-ui.campo etiqueta="Indicaciones por defecto" for="medicamento-uso" error="uso" class="mt-3"
-                            ayuda="Opcional. Es el texto que aparece al agregarlo a un récipe; allí se puede cambiar sin tocar el vademécum.">
-                    <textarea id="medicamento-uso" name="uso" class="form-control" rows="3"
-                              maxlength="{{ $seccion->largoIndicaciones() }}">{{ old('uso') }}</textarea>
-                </x-ui.campo>
-            </div>
-
-            <div class="dialogo-pie">
-                <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
-                <button class="btn btn-primary" id="medicamento-crear">Crear y agregar al récipe</button>
-            </div>
-        </form>
-    </x-ui.dialogo>
+    {{-- La plantilla de la fila, las herramientas para llenar el récipe y el alta del medicamento que falta son
+         las mismas del récipe de la pareja: viven en un parcial. --}}
+    @include('clinica.consulta._recipes-herramientas')
+@endif
 @endif
 </div>

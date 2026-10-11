@@ -2371,12 +2371,24 @@ body.auth-pagina {
 }
 
 /* ==========================================================================
-   Web clínica — los récipes de la consulta (WEB-5.1, ítem 10 del panel)
+   Web clínica — los récipes de la consulta (WEB-5.1 y WEB-5.1b, ítem 10 del panel)
    La lista de los récipes de la consulta (un bloque por récipe, con sus medicamentos) y el editor de uno (una
    fila por medicamento con su cantidad e indicaciones). Mismos tokens y misma forma que las otras secciones.
    ========================================================================== */
 
 .recipe-lista { display: grid; gap: .85rem; }
+
+/* Las dos pestañas de la sección (WEB-5.1b: «Récipes del paciente» / «Récipe de la pareja») y, a su derecha, el
+   menú de lo destructivo. En el celular los dos botones se reparten el ancho y, si no caben, el texto se parte
+   en lugar de empujar la página. */
+.recipe-pestanas-barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+.recipe-pestanas { max-width: 100%; }
+.recipe-pestanas .btn { white-space: normal; }
 
 .recipe-bloque {
     border: 1px solid var(--ds-borde);
@@ -2494,6 +2506,9 @@ body.auth-pagina {
 .resultado-recipe:not(:disabled):hover .resultado-paciente-datos strong { color: var(--ds-violeta-700); }
 
 @media (max-width: 575.98px) {
+    .recipe-pestanas { width: 100%; }
+    .recipe-pestanas .btn { flex: 1 1 0; min-width: 0; }
+    .recipe-pestanas-barra .recipe-pestanas { flex: 1 1 auto; width: auto; }
     .recipe-cabecera { flex-wrap: wrap; }
     .recipe-fila { flex-wrap: wrap; }
     .recipe-fila-datos { flex-basis: 100%; }

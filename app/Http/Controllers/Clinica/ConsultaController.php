@@ -11,6 +11,7 @@ use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
+use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
@@ -22,6 +23,8 @@ use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeExamenesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
+use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
+use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -78,6 +81,7 @@ class ConsultaController extends Controller
         ImagenesDeLaConsulta $imagenes,
         CitaDeLaConsulta $citas,
         RecipesDeLaConsulta $recipes,
+        RecipeDeLaPareja $pareja,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -125,7 +129,7 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $dia),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -175,6 +179,7 @@ class ConsultaController extends Controller
         EvolucionDeLaConsulta $evolucion,
         ExamenesDeLaConsulta $examenes,
         RecipesDeLaConsulta $recipes,
+        RecipeDeLaPareja $pareja,
         Carbon $dia,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
@@ -273,29 +278,55 @@ class ConsultaController extends Controller
         }
 
         if ($seccion === ConsultaShellVista::SECCION_RECIPES) {
-            return $this->recipes($consulta, $regMedico, $recipes, $dia);
+            return $this->recipes($consulta, $regMedico, $recipes, $pareja, $dia);
         }
 
         return null;
     }
 
     /**
-     * El ViewModel de los **récipes** de la consulta (WEB-5.1): la lista de los que tiene o el editor de
-     * uno (`?recipe=nuevo` o `?recipe=2`).
+     * El ViewModel de los **récipes** de la consulta (WEB-5.1): la lista de los que tiene, el editor de uno
+     * (`?recipe=nuevo` o `?recipe=2`) o —**WEB-5.1b**— el **récipe de la pareja** (`?recipe=pareja`), la segunda
+     * pestaña de la sección.
      *
-     * Un `?recipe=` que no es `nuevo` ni el número de un récipe de **esta** consulta da **404**: no hay
+     * Un `?recipe=` que no es `nuevo`, `pareja` ni el número de un récipe de **esta** consulta da **404**: no hay
      * nada que editar y no se confirma qué récipes existen en otra consulta.
      */
-    private function recipes(Consulta $consulta, string $regMedico, RecipesDeLaConsulta $recipes, Carbon $dia): SeccionDeRecipesVista
+    private function recipes(Consulta $consulta, string $regMedico, RecipesDeLaConsulta $recipes, RecipeDeLaPareja $pareja, Carbon $dia): object
     {
         $editando = request()->query('recipe');
         $editando = is_string($editando) && $editando !== '' ? $editando : null;
 
+        $id = $consulta->id;
+
+        $urlLista = route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
+        $pestanas = new PestanasDeRecipes(
+            $urlLista,
+            route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA]),
+        );
+
+        if ($editando === ConsultaShellVista::RECIPE_PAREJA) {
+            return new SeccionDeRecipeDeLaParejaVista(
+                // El récipe de la pareja de **esta** consulta (`recipes_pareja`: una por consulta, sin cabecera),
+                // o `null` si todavía no tiene. No se mezcla con los récipes del paciente.
+                $pareja->de($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                [
+                    'guardar' => route('clinica.consulta.recipe-pareja.guardar', $id),
+                    'eliminar' => route('clinica.consulta.recipe-pareja.eliminar', $id),
+                    // La caja de herramientas es la misma del récipe del paciente: mismos buscadores y misma alta.
+                    'medicamentos' => route('clinica.consulta.recipes.medicamentos', $id),
+                    'tratamientos' => route('clinica.consulta.recipes.tratamientos', $id),
+                    'crearMedicamento' => route('clinica.consulta.recipes.medicamentos.crear', $id),
+                ],
+                $pestanas,
+                // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                (array) old(),
+            );
+        }
+
         if ($editando !== null) {
             abort_unless($editando === 'nuevo' || (ctype_digit($editando) && $recipes->existe($consulta, (int) $editando)), 404);
         }
-
-        $id = $consulta->id;
 
         return new SeccionDeRecipesVista(
             // Los récipes de **esta** consulta, agrupados como el legado (`nrohistoria` + `nroconsulta` +
@@ -304,7 +335,7 @@ class ConsultaController extends Controller
             $editando === null ? null : ($editando === 'nuevo' ? 'nuevo' : (string) (int) $editando),
             $dia->toDateString(),
             [
-                'lista' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]),
+                'lista' => $urlLista,
                 'nuevo' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => 'nuevo']),
                 'guardarNuevo' => route('clinica.consulta.recipes.crear', $id),
                 'medicamentos' => route('clinica.consulta.recipes.medicamentos', $id),
@@ -317,6 +348,7 @@ class ConsultaController extends Controller
             fn (int $numero) => route('clinica.consulta.recipes.eliminar', [$id, $numero]),
             // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
             (array) old(),
+            $pestanas,
         );
     }
 

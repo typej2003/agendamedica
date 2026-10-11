@@ -49,6 +49,12 @@ final class ConsultaShellVista
     public const SECCION_RECIPES = 'recipes';
 
     /**
+     * El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de
+     * récipes. Los demás valores son `nuevo` (un récipe del paciente por crear) o el número de uno que existe.
+     */
+    public const RECIPE_PAREJA = 'pareja';
+
+    /**
      * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
      * lleva hoy.
      *
@@ -90,7 +96,7 @@ final class ConsultaShellVista
             'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
             'seccion' => self::SECCION_EVOLUCION],
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
-            'detalle' => 'Varios por consulta, por medicamento o por tratamiento; se pueden corregir.',
+            'detalle' => 'Varios por consulta, por medicamento o por tratamiento, y el de la pareja; se pueden corregir.',
             'tarea' => 'WEB-5.1', 'estado' => 'listo', 'seccion' => self::SECCION_RECIPES],
         ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
             'detalle' => 'Laboratorio, radiología, reposos, referencias, informes.', 'tarea' => 'F5', 'estado' => 'proximamente'],

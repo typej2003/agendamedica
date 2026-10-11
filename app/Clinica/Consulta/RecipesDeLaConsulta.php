@@ -344,6 +344,22 @@ final class RecipesDeLaConsulta
             }
         }
 
+        return $this->resolverItemsContra($consulta, $actuales, $items);
+    }
+
+    /**
+     * La comprobación de `resolverItems` contra **lo que el récipe ya tiene** (`código => descripcion`), para que
+     * el récipe del paciente y el de la pareja (WEB-5.1b, `RecipeDeLaPareja`) apliquen **la misma regla** y sólo
+     * cambie de dónde salen las filas que ya estaban (`recipes` o `recipes_pareja`).
+     *
+     * @param  array<string,?string>  $actuales  los medicamentos que el récipe ya tiene, por código
+     * @param  array<int,array<string,mixed>>  $items  los `items` del formulario
+     * @return array{items:array<int,array{codemedicina:string, cantidad:int, indicaciones:?string, descripcion:?string, nombre:string}>, desconocidos:array<int,string>}
+     */
+    public function resolverItemsContra(Consulta $consulta, array $actuales, array $items): array
+    {
+        $regMedico = (string) $consulta->reg_medico;
+
         $codigos = [];
         foreach ($items as $item) {
             $codigo = is_array($item) ? trim((string) ($item['codemedicina'] ?? '')) : '';
@@ -392,6 +408,21 @@ final class RecipesDeLaConsulta
         }
 
         return ['items' => $resueltos, 'desconocidos' => $desconocidos];
+    }
+
+    /**
+     * Las filas de un récipe (`recipes` **o** `recipes_pareja`: las dos tienen `codemedicina`, `cantidad`,
+     * `indicaciones` y `descripcion`) como items listos para pintar, con el nombre resuelto por el vademécum del
+     * médico. Es el mismo armado que usa `deLaConsulta` para el récipe del paciente.
+     *
+     * @param  Collection<int,object>  $filas  con `id`, `codemedicina`, `cantidad`, `indicaciones`, `descripcion`
+     * @return Collection<int,object{id:int, codigo:string, nombre:string, generico:?string, cantidad:?int, indicaciones:?string, enVademecum:bool}>
+     */
+    public function itemsDe(string $regMedico, Collection $filas): Collection
+    {
+        $catalogo = $this->vademecumPorCodigo($regMedico, $filas->pluck('codemedicina')->all());
+
+        return $filas->map(fn ($fila) => $this->item($fila, $catalogo[trim((string) $fila->codemedicina)] ?? null))->values();
     }
 
     // ------------------------------------------------------------------------------------------ Adentro

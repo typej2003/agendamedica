@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **42** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **45** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -393,3 +393,43 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     otra vez (doble aviso); el editor de récipes lo evita (`saliendo = true` al confirmar) y las otras quedan
     sin cambiar.
 
+43. **`recipes_pareja` no tiene clave primaria en el escritorio: lo sube ENTERO, y el reemplazo borraba lo que la web
+    creó.** Medido al hacer WEB-5.1b (2026-10-11). El registro de cambios del PowerBuilder vigila las tablas **con**
+    clave con tres triggers de fila (`_ins`, `_upd`, `_del`) y las **sin** clave con uno de sentencia que anota `T`
+    ("reenviar la tabla entera"): `recipes_pareja` tiene **sólo** el trigger base
+    (`Docs/MICONSULTAGI/bridge/quitar-registro-cambios.sql:215`, junto a `recipes`, que tiene los cuatro). Entonces
+    `CambiosEscritorio::reemplazarTabla` hace `DELETE ... WHERE reg_medico = …` y vuelve a insertar lo que llegó: las
+    filas de la web **se perdían** en la primera subida de esa tabla. La solución es la de la trampa 40 con una
+    diferencia: `config/sync_legado.php → sin_clave_con_altas_del_app` suma `'recipes_pareja' => 'recipes_pareja'` y
+    `GuardarRecipeDeLaPareja` anota **un `created` por fila** (la fila **es** la tabla: no hay cabecera, así que el
+    `record_id` no puede chocar con el de otra cosa). **Lo que no se resuelve:** una fila que **creó el escritorio**
+    no tiene `created` de la web, así que si la web la edita o la borra y el escritorio vuelve a subir la tabla, el
+    reemplazo la deja como la mandó el escritorio (la edición se pierde y la borrada vuelve). Sólo ocurre en un
+    consultorio que use los dos sistemas, y el escritorio **no recibe nada de la web** (la bajada se descartó el
+    2026-10-11). Antes de asumir que una tabla "se reemplaza bien", mirá si sus triggers son los tres de fila o el de
+    sentencia. El test `CambiosEscritorioTest::test_reemplazar_recipes_pareja_…` **falla** si se saca la línea de la
+    configuración (se comprobó).
+
+44. **El récipe de la pareja guarda y elimina en la MISMA URL (cambia el verbo), y el menú de eliminar no puede ir
+    dentro del formulario del editor.** Medido al hacer WEB-5.1b: `POST /clinica/consulta/{id}/recipe-pareja` crea o
+    corrige y `DELETE` la misma ruta elimina (no hay número de récipe: es uno por consulta). Dos consecuencias, la
+    primera pariente de la trampa 18: (a) `route('clinica.consulta.recipe-pareja.guardar', …)` y `…eliminar` devuelven
+    **el mismo texto**, así que `assertDontSee($urlEliminar)` sobre la pantalla vacía falló porque el `action` del
+    formulario de guardar **es** esa URL: la ausencia del "eliminar" se mide por el formulario (`data-recipe-salir`) o
+    por su texto, no por el `href`/`action`; (b) un `<form method="DELETE">` **no se anida** dentro del `<form>` del
+    editor (HTML no admite formularios anidados), así que el menú de eliminar vive **fuera**, en la barra de las
+    pestañas. Y esa separación trae su propio detalle de JS: `consulta-recipes.js` marca `saliendo = true` al guardar,
+    pero el formulario de eliminar es otro; el atributo `data-recipe-salir` lo cubre **después** del `confirm` de
+    `shell.js` (oyente en `document`, registrado antes) mirando `defaultPrevented`, para que confirmar la baja con
+    cambios sin guardar no sume un segundo aviso del navegador (el verificador cuenta los diálogos **por tipo**).
+
+45. **Playwright entrega el `confirm` de la página y el `beforeunload` del navegador por el mismo evento `dialog`:
+    distinguilos por `dialog.type()`.** Medido al verificar WEB-5.1b en Chrome: un verificador que sólo cuenta
+    "diálogos" no sabe si la pantalla pidió confirmación o si el navegador avisó de cambios sin guardar (`'confirm'`
+    contra `'beforeunload'`; el `message` del segundo llega **vacío**: el navegador pone su propio texto). Las dos
+    comprobaciones de la tarea —cambiar de pestaña con cambios avisa **una** vez (`beforeunload`) y eliminar con
+    cambios pide **una** confirmación (`confirm`) y ningún `beforeunload`— se escriben con el tipo en la mano. El
+    `beforeunload` sólo se dispara si la página tuvo interacción del usuario (Playwright la da al hacer `fill`).
+    Y una cosa que cualquier verificador que cree la pareja debe recordar: **un récipe de la pareja sin
+    medicamentos no existe** (los datos viven en las filas), así que la pantalla exige al menos un medicamento y la
+    baja de todos es "Eliminar el récipe de la pareja".

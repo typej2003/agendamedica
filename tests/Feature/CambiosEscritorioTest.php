@@ -447,6 +447,27 @@ class CambiosEscritorioTest extends TestCase
         $this->assertNull(DB::table('recipe_detalle')->find($ajena));
     }
 
+    public function test_reemplazar_recipes_pareja_conserva_las_filas_que_creo_la_web_y_reemplaza_el_resto(): void
+    {
+        // WEB-5.1b: `recipes_pareja` no tiene clave primaria en el escritorio, que la sube entera (`op = T`), y el
+        // reemplazo borra todo lo del médico. Las filas que creó la web (el `created` de cada fila, hecho por
+        // la Action real) se conservan; las que no creó nadie del app se reemplazan por lo que manda el escritorio.
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        DB::table('recipes_pareja')->insert(['reg_medico' => self::REG, 'nrohistoria' => 1, 'nroconsulta' => 1,
+            'codemedicina' => 'VIEJO', 'cedula' => '111', 'nombre' => 'DEL ESCRITORIO']);
+
+        app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class)->ejecutar(
+            $consulta, '12345678', 'MARIANA', [['codemedicina' => 'WEB01', 'cantidad' => 1, 'descripcion' => 'X', 'nombre' => 'X']], null, 'web');
+
+        $this->subir([['id' => 74, 'tabla' => 'recipes_pareja', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['nrohistoria' => 1, 'nroconsulta' => 1, 'codemedicina' => 'NUEVO', 'cedula' => '222', 'nombre' => 'OTRA']]]]);
+
+        $this->assertEqualsCanonicalizing(['WEB01', 'NUEVO'],
+            DB::table('recipes_pareja')->where('reg_medico', self::REG)->pluck('codemedicina')->all(),
+            'la fila de la web se conserva; la que nadie del app creó se reemplaza por lo que subió el escritorio');
+        $this->assertSame('MARIANA', DB::table('recipes_pareja')->where('reg_medico', self::REG)->where('codemedicina', 'WEB01')->value('nombre'));
+    }
+
     public function test_tabla_fuera_de_la_lista_blanca_se_rechaza(): void
     {
         $r = $this->subir([['id' => 81, 'tabla' => 'users', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',

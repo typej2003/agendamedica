@@ -12,6 +12,7 @@ use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
+use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
 use App\Http\Controllers\Clinica\ConsultaRecipesController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
@@ -209,6 +210,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/recipes', [ConsultaRecipesController::class, 'crear'])->name('consulta.recipes.crear');
                 Route::post('/consulta/{consulta}/recipes/{numero}', [ConsultaRecipesController::class, 'guardar'])->whereNumber('numero')->name('consulta.recipes.guardar');
                 Route::delete('/consulta/{consulta}/recipes/{numero}', [ConsultaRecipesController::class, 'eliminar'])->whereNumber('numero')->name('consulta.recipes.eliminar');
+
+                // **Récipe de la pareja** (WEB-5.1b): la segunda pestaña de los récipes. Es **uno por
+                // consulta** (`recipes_pareja` no tiene `recipe` ni cabecera), así que no lleva número: un solo
+                // `POST` lo crea o lo corrige en el lugar y un `DELETE` lo elimina entero. La cédula y el nombre
+                // de la pareja son texto libre. Los buscadores del vademécum y de los tratamientos y el alta del
+                // medicamento que falta son los de arriba (los mismos endpoints, no se duplican).
+                Route::post('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'guardar'])->name('consulta.recipe-pareja.guardar');
+                Route::delete('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'eliminar'])->name('consulta.recipe-pareja.eliminar');
 
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda

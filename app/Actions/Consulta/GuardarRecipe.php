@@ -333,37 +333,14 @@ final class GuardarRecipe
     }
 
     /**
-     * Los medicamentos como se escriben: el código recortado, la cantidad entera o `null`, las
-     * indicaciones sin espacios de más (y `''` como `null`) y **un medicamento una sola vez** (la clave del
-     * escritorio es `(nrohistoria, nroconsulta, codemedicina)`). Lo que no trae código se descarta.
+     * Los medicamentos como se escriben (la regla vive en `ItemsDeRecipe`, que comparte con el récipe de la
+     * pareja, WEB-5.1b).
      *
      * @return array<int,array{codemedicina:string, cantidad:?int, indicaciones:?string, descripcion:?string, nombre:string}>
      */
     private function normalizar(array $items): array
     {
-        $limpios = [];
-        $vistos = [];
-
-        foreach (array_values($items) as $item) {
-            $codigo = is_array($item) ? trim((string) ($item['codemedicina'] ?? '')) : '';
-
-            if ($codigo === '' || isset($vistos[$codigo])) {
-                continue;
-            }
-            $vistos[$codigo] = true;
-
-            $descripcion = $this->texto($item['descripcion'] ?? null);
-
-            $limpios[] = [
-                'codemedicina' => $codigo,
-                'cantidad' => $this->entero($item['cantidad'] ?? null),
-                'indicaciones' => $this->texto($item['indicaciones'] ?? null),
-                'descripcion' => $descripcion === null ? null : mb_substr($descripcion, 0, 200),
-                'nombre' => $this->texto($item['nombre'] ?? null) ?? $descripcion ?? $codigo,
-            ];
-        }
-
-        return $limpios;
+        return ItemsDeRecipe::normalizar($items);
     }
 
     /** El nombre con el que se cuenta una fila que ya estaba: el que mandó el formulario o, si no, el suyo. */
@@ -382,19 +359,13 @@ final class GuardarRecipe
 
     private function entero($valor): ?int
     {
-        return is_numeric($valor) ? (int) $valor : null;
+        return ItemsDeRecipe::entero($valor);
     }
 
     /** `''` y `null` son el mismo estado: sin texto. */
     private function texto($valor): ?string
     {
-        if ($valor === null || ! is_scalar($valor)) {
-            return null;
-        }
-
-        $texto = trim((string) $valor);
-
-        return $texto === '' ? null : $texto;
+        return ItemsDeRecipe::texto($valor);
     }
 
     private function fechaValida(?string $fecha): ?string
