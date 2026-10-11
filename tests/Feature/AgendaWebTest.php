@@ -854,6 +854,72 @@ class AgendaWebTest extends TestCase
         $this->assertSame('T', $cita->turno);
     }
 
+    /**
+     * Sin paciente, el alta de la cita decía "The nuevo cedula field is required when paciente id is not
+     * present." (revisión de la web, 2026-10-11): inglés y con los nombres internos del formulario. Un
+     * médico no tiene por qué saber qué es `paciente id`.
+     */
+    public function test_agendar_sin_paciente_pide_elegir_uno_en_espanol(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede))
+            ->assertSessionHasErrors([
+                'nuevo_cedula' => 'Elige un paciente de la lista o carga uno nuevo (con su cédula, nombres y apellidos).',
+            ]);
+
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    /**
+     * Ninguna regla del formulario de la cita puede caer en el mensaje por defecto de Laravel: el `locale`
+     * de la app es `en` (y la API comparte esa configuración, así que no se cambia), de modo que **cada
+     * regla de `GuardarCitaRequest` necesita su texto**. Si se agrega una regla sin mensaje, esta prueba lo
+     * dice. Se manda todo mal a la vez y se revisa que ningún aviso esté en inglés ni nombre un campo
+     * interno.
+     */
+    public function test_todos_los_errores_del_formulario_de_cita_estan_en_espanol(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', [
+                'sede'            => 'no-es-un-numero',
+                'fecha'           => 'ayer',
+                'hora'            => '99',
+                'bloque'          => -1,
+                'motivo'          => str_repeat('M', 51),
+                'monto'           => 'abc',
+                'paciente_id'     => 'no-es-un-numero',
+                'nuevo_cedula'    => str_repeat('1', 21),
+                'nuevo_nombres'   => str_repeat('N', 101),
+                'nuevo_apellidos' => str_repeat('A', 101),
+                'nuevo_telefono'  => str_repeat('9', 31),
+                'nuevo_email'     => 'no-es-un-correo',
+                'nuevo_sexo'      => 'Z',
+                'decision'        => 'quizas',
+            ]);
+
+        $errores = session('errors')->getBag('default')->toArray();
+
+        $this->assertCount(14, $errores, 'Cada campo mal escrito tiene que dar su propio aviso.');
+
+        foreach ($errores as $campo => $mensajes) {
+            foreach ($mensajes as $mensaje) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/\b(The|field|must|required|format|invalid|selected|greater|less)\b|_|\bid\b/i',
+                    $mensaje,
+                    "El aviso de «{$campo}» está en inglés o nombra un campo interno: {$mensaje}",
+                );
+            }
+        }
+
+        $respuesta->assertSessionHasErrors(['fecha', 'hora', 'monto', 'nuevo_email']);
+    }
+
     public function test_con_hora_de_cita_la_hora_es_obligatoria(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
