@@ -7,9 +7,9 @@
          data-url="{{ $cuerpo->urlBuscar() }}" data-nueva="{{ $cuerpo->urlNueva() }}">
         <x-ui.buscador-vivo id="agenda-paciente-texto" resultados="agenda-paciente-resultados"
                             placeholder="Apellido, nombre, cédula o n.º de historia"
-                            etiqueta="Buscar paciente para hacerle una cita" />
+                            etiqueta="Buscar paciente para hacerle una cita" modo="lista" />
     </div>
-    <p class="form-text mb-0" id="agenda-paciente-ayuda">
+    <p class="form-text mb-0" id="agenda-paciente-ayuda" role="status">
         Elige «Hacer cita» en el paciente para agendarle sin pasar por Pacientes.
     </p>
 

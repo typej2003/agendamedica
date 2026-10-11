@@ -1899,3 +1899,21 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .examen-imagen .acciones-fila { display: flex; gap: .5rem; width: 100%; }
     .examen-imagen .acciones-fila .btn { flex: 1 1 auto; }
 }
+
+/* --- Enlace "Saltar al contenido" (teclado y lector de pantalla): fuera de pantalla hasta recibir el foco --- */
+.saltar-al-contenido {
+    position: absolute;
+    left: .75rem;
+    top: -4rem;
+    z-index: 2000;
+    padding: .55rem 1rem;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--ds-radio);
+    text-decoration: none;
+    transition: top .1s ease-out;
+}
+.saltar-al-contenido:focus { top: .75rem; outline: 3px solid var(--ds-celeste-700); outline-offset: 2px; }
+/* El destino del salto recibe el foco por código (`tabindex="-1"`): sin contorno, no es un control. */
+.app-contenido:focus { outline: none; }

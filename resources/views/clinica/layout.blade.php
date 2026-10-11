@@ -14,6 +14,10 @@
 </head>
 <body>
 
+{{-- Para quien navega con teclado o lector de pantalla: salta el encabezado y el menú (una docena de enlaces
+     antes del contenido en cada pantalla). Invisible hasta que recibe el foco con Tab. --}}
+<a class="saltar-al-contenido" href="#contenido-principal">Saltar al contenido</a>
+
 {{-- `$armazon` (ArmazonVista) lo arma `ArmazonClinicaComposer`: las fichas del contexto, los accesos y el
      menú salen de ahí, no de la vista. --}}
 <header class="app-topbar d-flex align-items-center justify-content-between px-3 py-2">
@@ -45,6 +49,22 @@
                 <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
             </a>
         @endforeach
+
+        {{-- La cuenta: cambiar la contraseña y **cerrar sesión**. Antes no había cómo salir desde el consultorio
+             (el cierre de sesión solo existía en el panel de administración). --}}
+        @auth
+            <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="\Illuminate\Support\Str::words(auth()->user()->name, 1, '')">
+                <a class="menu-item" href="{{ route('cuenta.password') }}">
+                    <i class="bi bi-key" aria-hidden="true"></i> Cambiar contraseña
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="menu-item menu-item-peligro">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Cerrar sesión
+                    </button>
+                </form>
+            </x-ui.menu>
+        @endauth
     </div>
 </header>
 
@@ -71,7 +91,7 @@
         </div>
     </nav>
 
-    <main class="app-contenido p-3 p-lg-4">
+    <main class="app-contenido p-3 p-lg-4" id="contenido-principal" tabindex="-1">
         @if (session('estado'))
             <div class="alert alert-success py-2 d-flex align-items-center gap-2" role="status">
                 <i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ session('estado') }}

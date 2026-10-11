@@ -20,6 +20,8 @@
     function limpiar() {
         lista.innerHTML = '';
         lista.hidden = true;
+        // El campo es un combobox: el lector de pantalla se entera de que la lista se cerró.
+        caja.setAttribute('aria-expanded', 'false');
     }
 
     function descripcion(paciente) {
@@ -47,6 +49,7 @@
             const boton = document.createElement('button');
             boton.type = 'button';
             boton.className = 'list-group-item list-group-item-action small';
+            boton.setAttribute('role', 'option');
             boton.textContent = paciente.nombre
                 + (paciente.cedula ? ' · ' + paciente.cedula : '')
                 + (paciente.numhistoria ? ' · H. ' + paciente.numhistoria : ' · sin historia');
@@ -55,7 +58,15 @@
         });
 
         lista.hidden = false;
+        caja.setAttribute('aria-expanded', 'true');
     }
+
+    // Escape cierra la lista sin elegir a nadie, como cualquier combobox.
+    caja.addEventListener('keydown', function (evento) {
+        if (evento.key === 'Escape' && !lista.hidden) {
+            limpiar();
+        }
+    });
 
     caja.addEventListener('input', function () {
         document.querySelectorAll('input[name="paciente_id"]').forEach(function (oculto) {
