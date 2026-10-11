@@ -920,6 +920,89 @@ class AgendaWebTest extends TestCase
         $respuesta->assertSessionHasErrors(['fecha', 'hora', 'monto', 'nuevo_email']);
     }
 
+    // --------------------------------------------------------------------- Cobro: no cobrar de más
+
+    /** Una cita de hoy en una sede por orden de llegada, con el precio y lo ya abonado que se pidan. */
+    private function citaParaCobrar(array $extra): array
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_ORDEN, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, $extra);
+
+        return [$user, $medico, $gineco, $cita];
+    }
+
+    /**
+     * El diálogo "Registrar cobro" aceptaba cualquier cifra: 99999 sobre una consulta de 50 la dejaba
+     * "Pagada" con 99999 cobrados (revisión de la web, 2026-10-11). Lo recibido no puede pasar de lo que
+     * falta: el abono se **suma** a lo ya pagado, así que el tope es `monto - monto_pagado`.
+     */
+    public function test_no_se_cobra_mas_de_lo_que_falta_y_el_aviso_dice_cuanto_falta(): void
+    {
+        [$user, $medico, $gineco, $cita] = $this->citaParaCobrar(['monto' => 50, 'monto_pagado' => 30]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 25])
+            ->assertSessionHasErrors(['recibido' => 'Lo recibido (25,00) supera lo que falta por cobrar (20,00).'])
+            ->assertSessionMissing('estado');
+
+        $this->assertSame(30.0, (float) $cita->fresh()->monto_pagado);
+    }
+
+    public function test_cobrar_exactamente_lo_que_falta_salda_la_cita(): void
+    {
+        [$user, $medico, $gineco, $cita] = $this->citaParaCobrar(['monto' => 50, 'monto_pagado' => 30]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 20])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'Cobro registrado.');
+
+        $this->assertSame(50.0, (float) $cita->fresh()->monto_pagado);
+        $this->assertSame(Cola::PAGO_PAGADA, $cita->fresh()->estadoPago());
+    }
+
+    public function test_una_cita_ya_pagada_no_admite_otro_cobro(): void
+    {
+        [$user, $medico, $gineco, $cita] = $this->citaParaCobrar(['monto' => 50, 'monto_pagado' => 50]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 5])
+            ->assertSessionHasErrors(['recibido' => 'Lo recibido (5,00) supera lo que falta por cobrar (0,00).']);
+
+        $this->assertSame(50.0, (float) $cita->fresh()->monto_pagado);
+    }
+
+    /** Si el precio se fija en el mismo cobro (el diálogo lo ofrece cuando la cita no tenía), ese precio es el tope. */
+    public function test_el_precio_que_se_fija_en_el_mismo_cobro_tambien_pone_el_tope(): void
+    {
+        [$user, $medico, $gineco, $cita] = $this->citaParaCobrar([]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['monto' => 40, 'recibido' => 100])
+            ->assertSessionHasErrors('recibido');
+
+        $cita = $cita->fresh();
+        $this->assertNull($cita->monto, 'Un cobro rechazado no fija el precio a medias.');
+        $this->assertSame(0.0, (float) $cita->monto_pagado);
+    }
+
+    /**
+     * Lo que **no** cambia, por diseño (`Cola::estadoPago`): una cita sin precio que se cobra queda
+     * "Pagada". El médico no siempre le pone precio y aun así cobra; sin precio no hay tope que aplicar.
+     */
+    public function test_una_cita_sin_precio_se_puede_cobrar_sin_tope(): void
+    {
+        [$user, $medico, $gineco, $cita] = $this->citaParaCobrar([]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 35])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(Cola::PAGO_PAGADA, $cita->fresh()->estadoPago());
+    }
+
     public function test_con_hora_de_cita_la_hora_es_obligatoria(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

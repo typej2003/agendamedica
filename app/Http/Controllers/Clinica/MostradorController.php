@@ -19,6 +19,7 @@ use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
@@ -224,13 +225,19 @@ class MostradorController extends Controller
             'monto'    => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $accion->recibir(
-            $cita,
-            (float) $datos['recibido'],
-            isset($datos['monto']) ? (float) $datos['monto'] : null,
-            null,
-            'web'
-        );
+        try {
+            $accion->recibir(
+                $cita,
+                (float) $datos['recibido'],
+                isset($datos['monto']) ? (float) $datos['monto'] : null,
+                null,
+                'web'
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            // Cobrar de más: vuelve con el aviso en el campo `recibido` y sin escribir nada (la Action
+            // revisa antes de tocar la cita, así que tampoco queda el precio fijado a medias).
+            throw ValidationException::withMessages(['recibido' => $excepcion->getMessage()]);
+        }
 
         return back()->with('estado', 'Cobro registrado.');
     }

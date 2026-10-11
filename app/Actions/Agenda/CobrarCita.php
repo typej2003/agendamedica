@@ -30,11 +30,15 @@ final class CobrarCita
      *
      * @param  float  $recibido  Lo que entra ahora; se suma a lo ya pagado.
      * @param  float|null  $monto  Precio a fijar **solo si la cita no tenía**: si ya tenía precio, se ignora.
+     *
+     * @throws InvalidArgumentException si la cita tiene precio y lo recibido supera lo que falta por cobrar
      */
     public function recibir(Cola $cita, float $recibido, ?float $monto = null, ?Carbon $cuando = null, string $origen = 'web'): bool
     {
         $cuando = $cuando ?: Carbon::now();
         $aplicado = false;
+
+        $this->verificarQueNoSeCobreDeMas($cita, $recibido, $monto);
 
         if ((float) ($cita->monto ?? 0) <= 0 && $monto !== null) {
             $aplicado = $this->fijarMonto($cita, $monto, $cuando, $origen) || $aplicado;
@@ -43,6 +47,35 @@ final class CobrarCita
         $pagado = (float) ($cita->monto_pagado ?? 0) + $recibido;
 
         return $this->fijarPagado($cita, $pagado, $cuando, $origen) || $aplicado;
+    }
+
+    /**
+     * Lo recibido no puede pasar de lo que falta (`monto - monto_pagado`): el diálogo del mostrador aceptaba
+     * cualquier cifra y 99999 sobre una consulta de 50 la dejaba "Pagada". El tope es el precio de la cita o,
+     * si no tenía, el que se fija **en este mismo cobro**. Sin precio de ninguno de los dos lados no hay tope
+     * que aplicar: una cita sin precio que se cobra queda "Pagada" **por diseño** (`Cola::estadoPago`).
+     *
+     * Solo la web pasa por acá: el sync escribe el valor absoluto que ya calculó el teléfono (`fijarPagado`)
+     * y no se le cuestiona.
+     */
+    private function verificarQueNoSeCobreDeMas(Cola $cita, float $recibido, ?float $monto): void
+    {
+        $precio = (float) ($cita->monto ?? 0) > 0 ? (float) $cita->monto : (float) ($monto ?? 0);
+
+        if ($precio <= 0) {
+            return;
+        }
+
+        $falta = max(0.0, $precio - (float) ($cita->monto_pagado ?? 0));
+
+        // Medio centavo de margen: las sumas en coma flotante no deben rechazar el cobro exacto.
+        if ($recibido > $falta + 0.005) {
+            throw new InvalidArgumentException(sprintf(
+                'Lo recibido (%s) supera lo que falta por cobrar (%s).',
+                number_format($recibido, 2, ',', '.'),
+                number_format($falta, 2, ',', '.'),
+            ));
+        }
     }
 
     /** Fija el precio de la cita (el valor absoluto que llega del cliente en el sync). */
