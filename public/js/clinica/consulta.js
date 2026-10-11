@@ -27,6 +27,10 @@
  *    instante: marca la fila y agrega su código al `POST` del botón guardar, que es donde la baja se
  *    aplica. El `hidden` que se inserta es la única forma de decirle al servidor "esto ya no está" sin
  *    duplicar el estado en la vista.
+ *
+ * 5. **Los diagnósticos** (WEB-4.5): el mismo aviso y el mismo "Quitar" que los antecedentes, para la
+ *    sección del ítem 8. Acá la fila se identifica por su **id** (el detalle editado y la baja viajan en el
+ *    mismo `POST`) y el `quitar[]` que inserta el script es el que la Action usa para borrar.
  */
 (function () {
     'use strict';
@@ -402,6 +406,121 @@
             evento.preventDefault();
             // El texto de retorno lo ignora el navegador (muestra el suyo), pero sin algo no avisa.
             evento.returnValue = antecedentes.dataset.aviso;
+        });
+
+        pintarAviso();
+    }
+
+    // ------------------------------------------------------------------- Diagnósticos (WEB-4.5)
+
+    // El mismo patrón que los antecedentes, para la sección del ítem 8: el aviso de "hay cambios sin
+    // guardar" —el detalle editado y lo que se va a quitar— y el "Quitar" de cada fila, que no borra nada al
+    // instante: marca la fila y agrega su **id** al `POST` del botón guardar, que es donde la baja se aplica
+    // (el escritorio también espera al *Guardar* de la ventana para el `dw_8.update()`).
+    const diagnosticos = document.querySelector('[data-consulta-diagnosticos]');
+
+    if (diagnosticos) {
+        const aviso = document.getElementById('diagnosticos-sin-guardar');
+        const controlesDe = (fila) => Array.prototype.slice.call(
+            fila.querySelectorAll('input[type=text][name^="filas["], input[type=hidden][name^="filas["]'),
+        );
+        const campos = Array.prototype.slice.call(
+            diagnosticos.querySelectorAll('input[type=text][name^="filas["], input[type=hidden][name^="filas["]'),
+        );
+
+        // El estado de partida de cada control, tal como el servidor pintó el formulario (ya trae el
+        // `old()` si el POST falló).
+        const guardados = campos.map(function (campo) {
+            return campo.value;
+        });
+        // Las filas que el médico sacó con el botón: su id viaja en `quitar[]` y sus controles **no** viajan
+        // (si no, el POST hablaría de una fila que ya no está).
+        const quitados = [];
+        const controlesQuitados = [];
+
+        function sucio() {
+            if (quitados.length > 0) return true;
+
+            return campos.some(function (campo, indice) {
+                if (controlesQuitados.indexOf(campo) >= 0) return false;
+
+                return campo.value !== guardados[indice];
+            });
+        }
+
+        function pintarAviso() {
+            if (aviso) aviso.hidden = !sucio();
+        }
+
+        campos.forEach(function (campo) {
+            campo.addEventListener('input', pintarAviso);
+        });
+
+        diagnosticos.querySelectorAll('[data-diagnostico-quitar]').forEach(function (boton) {
+            const fila = boton.closest('[data-diagnostico-fila]');
+            const id = boton.dataset.diagnosticoQuitar;
+            const oculto = document.createElement('input');
+            oculto.type = 'hidden';
+            oculto.name = 'quitar[]';
+            oculto.value = id;
+            const avisoQuitar = fila ? fila.querySelector('.diagnosticos-aviso-quitar') : null;
+            const restaurar = fila ? fila.querySelector('[data-diagnostico-restaurar]') : null;
+            const controles = fila ? controlesDe(fila) : [];
+
+            boton.addEventListener('click', function () {
+                if (quitados.indexOf(id) >= 0) return;
+
+                quitados.push(id);
+                diagnosticos.appendChild(oculto);
+                // Los controles de la fila se van del formulario: el POST no manda `filas[id]` de una fila
+                // que se está quitando (el servidor ya la borra por `quitar[]`).
+                controles.forEach(function (control) {
+                    control.disabled = true;
+                    controlesQuitados.push(control);
+                });
+                if (fila) fila.classList.add('diagnosticos-item-quitado');
+                if (avisoQuitar) avisoQuitar.hidden = false;
+                boton.hidden = true;
+                if (restaurar) restaurar.hidden = false;
+                pintarAviso();
+            });
+
+            if (restaurar) {
+                restaurar.addEventListener('click', function () {
+                    const posicion = quitados.indexOf(id);
+                    if (posicion < 0) return;
+
+                    quitados.splice(posicion, 1);
+                    if (oculto.parentNode) oculto.parentNode.removeChild(oculto);
+                    controles.forEach(function (control) {
+                        control.disabled = false;
+                        const enLista = controlesQuitados.indexOf(control);
+                        if (enLista >= 0) controlesQuitados.splice(enLista, 1);
+                    });
+                    if (fila) fila.classList.remove('diagnosticos-item-quitado');
+                    if (avisoQuitar) avisoQuitar.hidden = true;
+                    boton.hidden = false;
+                    restaurar.hidden = true;
+                    pintarAviso();
+                });
+            }
+        });
+
+        // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder los cambios.
+        const cancelar = diagnosticos.querySelector('a[href]');
+        if (cancelar) {
+            cancelar.addEventListener('click', function (evento) {
+                if (sucio() && !window.confirm(diagnosticos.dataset.aviso)) {
+                    evento.preventDefault();
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucio()) return;
+            evento.preventDefault();
+            // El texto de retorno lo ignora el navegador (muestra el suyo), pero sin algo no avisa.
+            evento.returnValue = diagnosticos.dataset.aviso;
         });
 
         pintarAviso();

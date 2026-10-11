@@ -602,13 +602,13 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('5 de 13 disponibles', false);
+        $respuesta->assertSee('6 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
-        // El resto sigue diciendo que llega después.
+        // El resto sigue diciendo que llega después (con la tarea de la primera que falta, la evolución).
         $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('WEB-4.5');
+        $respuesta->assertSee('WEB-4.6');
     }
 
     public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void

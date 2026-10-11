@@ -21,6 +21,10 @@ use InvalidArgumentException;
  * la respuesta y guarda el motivo con su id y su código reales. Agregar un motivo **a una consulta** sí
  * es offline y es otra Action (`AgregarMotivoALaConsulta`).
  *
+ * Desde **WEB-4.5** (los diagnósticos de la consulta) las dos reglas que este catálogo comparte con el de
+ * diagnósticos —la descripción en mayúsculas y el correlativo de cuatro dígitos— viven en
+ * `App\Actions\Consulta\ReglasDelCatalogo`; esta Action conserva su comportamiento y sus mensajes.
+ *
  * Límite conocido (heredado del sync): dos altas *distintas* en el mismo instante podrían calcular el
  * mismo código —la tabla no tiene unicidad por `(reg_medico, codemotivo)` y el legado podría tener
  * repetidos que impidan agregarla—. Crear motivos es poco frecuente, así que el riesgo es muy bajo.
@@ -41,14 +45,9 @@ final class AgregarMotivoAlCatalogo
      */
     public function ejecutar(Medico $medico, array $registrosMedicos, string $descripcion): array
     {
-        $descripcion = mb_strtoupper(trim(preg_replace('/\s+/u', ' ', $descripcion)));
-
-        if ($descripcion === '') {
-            throw new InvalidArgumentException('El motivo no tiene descripción.');
-        }
-        if (mb_strlen($descripcion) > self::LARGO_MAXIMO) {
-            throw new InvalidArgumentException('La descripción del motivo no puede pasar de ' . self::LARGO_MAXIMO . ' caracteres.');
-        }
+        // Las dos reglas que comparte con el catálogo de diagnósticos (WEB-4.5) viven en un solo lugar:
+        // `ReglasDelCatalogo` (las mayúsculas y el correlativo de cuatro dígitos con su tope de 9999).
+        $descripcion = ReglasDelCatalogo::descripcion($descripcion, self::LARGO_MAXIMO, 'motivo');
 
         $catalogo = MotivoConsulta::whereIn('reg_medico', $registrosMedicos)->get();
 
@@ -57,17 +56,9 @@ final class AgregarMotivoAlCatalogo
             return [$existente, false];
         }
 
-        $siguiente = ((int) $catalogo->pluck('codemotivo')
-            ->filter(fn ($c) => is_numeric($c))
-            ->map(fn ($c) => (int) $c)
-            ->max()) + 1;
-        if ($siguiente > 9999) {
-            throw new InvalidArgumentException('El catálogo de motivos está lleno.');
-        }
-
         $motivo = MotivoConsulta::create([
             'reg_medico' => $medico->regMedicoPrincipal(),
-            'codemotivo' => str_pad((string) $siguiente, 4, '0', STR_PAD_LEFT),
+            'codemotivo' => ReglasDelCatalogo::siguienteCodigo($catalogo->pluck('codemotivo'), 'motivos'),
             'descripcion' => $descripcion,
         ]);
 

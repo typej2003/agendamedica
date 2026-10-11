@@ -65,9 +65,9 @@
 
         {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
              ninguna. Las secciones llegan por los parciales —`_motivos` y `_enfermedad` (WEB-4.2),
-             `_evaluacion` (WEB-4.3) y `_antecedentes` (WEB-4.4)— y las siguientes tareas agregan las suyas:
-             el nombre del parcial lo resuelve el ViewModel a partir del mapa del panel. La sección de
-             antecedentes recibe además su `catalogo` (el buscador), que sólo ella tiene. --}}
+             `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4) y `_diagnostico` (WEB-4.5)— y las siguientes
+             tareas agregan las suyas: el nombre del parcial lo resuelve el ViewModel a partir del mapa del
+             panel. --}}
         <div class="col-12 col-lg-7 col-xl-8">
             @if ($contenido && $vm->parcial())
                 @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null])

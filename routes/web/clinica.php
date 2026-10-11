@@ -5,6 +5,7 @@ use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaController;
+use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -155,6 +156,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/consulta/{consulta}/antecedentes/buscar', [ConsultaAntecedentesController::class, 'buscar'])->name('consulta.antecedentes.buscar');
                 Route::post('/consulta/{consulta}/antecedentes', [ConsultaAntecedentesController::class, 'guardar'])->name('consulta.antecedentes.guardar');
                 Route::post('/consulta/{consulta}/antecedentes/crear', [ConsultaAntecedentesController::class, 'crear'])->name('consulta.antecedentes.crear');
+
+                // Diagnósticos de la consulta (WEB-4.5): el ítem 8 del panel. La fila de
+                // `diagnostico_paciente` **sí es de la consulta** —se llavea por `nrohistoria` +
+                // `nroconsulta` + `codediagnostico` (`d_diagnostico_consulta_1.srd`, `retrieve(historia,
+                // consulta)` en `w_consulta_principal.srw:3007`)—, así que la Action vive en
+                // `Actions\Consulta`. La sección es de **guardado explícito**: un solo POST aplica el
+                // detalle editado, lo tildado del catálogo y lo quitado (el `dw_8.update()` del escritorio
+                // también espera al *Guardar* de la ventana, `:2709`).
+                Route::post('/consulta/{consulta}/diagnosticos', [ConsultaDiagnosticosController::class, 'guardar'])->name('consulta.diagnosticos.guardar');
+                Route::post('/consulta/{consulta}/diagnosticos/crear', [ConsultaDiagnosticosController::class, 'crear'])->name('consulta.diagnosticos.crear');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

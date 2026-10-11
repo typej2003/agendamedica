@@ -1784,3 +1784,50 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .antecedentes-alerta,
     .antecedentes-acciones { order: 2; }
 }
+
+/* ---------------------------------------------------------------------------
+   Sección de diagnósticos de la consulta (WEB-4.5, ítem 8)
+   Misma forma que los antecedentes: una fila con su nombre, el detalle editable y el botón de quitar.
+   ========================================================================== */
+
+.diagnosticos-lista { list-style: none; margin: 0; padding: 0; }
+
+.diagnosticos-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.diagnosticos-item:last-child { border-bottom: 0; }
+
+.diagnosticos-item-datos { flex: 1 1 auto; min-width: 0; }
+
+.diagnosticos-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.diagnosticos-item-datos .form-control { margin-top: .25rem; }
+
+.diagnosticos-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+/* Una fila marcada para quitar: se atenúa y el nombre se tacha **sólo acá**, porque el borrado todavía no
+   pasó (la guía de UI prohíbe tachar como estado de un dato terminado; esto es una acción pendiente). */
+.diagnosticos-item-quitado { opacity: .55; }
+
+.diagnosticos-item-quitado .diagnosticos-nombre,
+.diagnosticos-item-quitado .diagnosticos-item-datos .form-control { text-decoration: line-through; }
+
+@media (max-width: 575.98px) {
+    .diagnosticos-item { flex-wrap: wrap; }
+    .diagnosticos-item-datos { flex-basis: 100%; }
+    .diagnosticos-acciones { order: 2; }
+}

@@ -319,7 +319,15 @@ class ConsultaWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlAtender($cita));
 
-        $nueva = Consulta::where('numhistoria', 1002)->orderByDesc('nroconsulta')->first();
+        // La consulta se busca **por el reg_medico de esta prueba**, no sólo por el número de historia:
+        // `FakeClinicalDataSeeder` siembra `gineco-00001` con las historias 1001–1050 y reparte 80
+        // consultas al azar entre ellas, así que una consulta de la base sembrada puede tener el mismo
+        // `numhistoria` y un `nroconsulta` más alto. Sin el filtro, la aserción medía la fila sembrada
+        // (el test fallaba ~1 de cada 4 corridas, según cuántas consultas le tocaran al azar a la 1002).
+        $nueva = Consulta::where('reg_medico', $medico->reg_medico)
+            ->where('numhistoria', 1002)
+            ->orderByDesc('nroconsulta')
+            ->first();
         $this->assertSame(2, (int) $nueva->nroconsulta, 'la consulta sigue el correlativo de la historia');
         $this->assertSame($this->hoy->toDateString(), $nueva->fecha->toDateString());
     }
@@ -416,14 +424,16 @@ class ConsultaWebTest extends TestCase
         }
 
         // Los que todavía no existen dicen que llegan después, con la tarea en el `title` del estado; y
-        // los ítems de WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física) y WEB-4.4
-        // (antecedentes) ya están disponibles y se abren con `?seccion=` dentro de esta misma pantalla.
+        // los ítems de WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física), WEB-4.4
+        // (antecedentes) y WEB-4.5 (diagnóstico) ya están disponibles y se abren con `?seccion=` dentro de
+        // esta misma pantalla.
         $respuesta->assertSee('Próximamente');
         $respuesta->assertSee('Disponible');
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);
         $respuesta->assertSee(route('clinica.pacientes.ver', $pacienteId), false);
 
         // Y la vuelta a la agenda del día de la consulta (con el `&` de la query ya escapado por Blade).

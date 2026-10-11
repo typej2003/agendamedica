@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\ConsultasDelContexto;
+use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -11,6 +12,7 @@ use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
+use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -60,6 +62,7 @@ class ConsultaController extends Controller
         MotivosDeLaConsulta $motivos,
         ExamenFisicoDeLaConsulta $examen,
         AntecedentesDelPaciente $antecedentes,
+        DiagnosticosDeLaConsulta $diagnosticos,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -100,7 +103,7 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos),
             // La tarjeta del buscador del catálogo, que sólo tiene la sección de antecedentes (WEB-4.4).
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
         ]);
@@ -120,6 +123,7 @@ class ConsultaController extends Controller
         MotivosDeLaConsulta $motivos,
         ExamenFisicoDeLaConsulta $examen,
         AntecedentesDelPaciente $antecedentes,
+        DiagnosticosDeLaConsulta $diagnosticos,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -169,6 +173,26 @@ class ConsultaController extends Controller
                 route('clinica.consulta.antecedentes.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                (array) old(),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_DIAGNOSTICO) {
+            $buscar = trim((string) request()->query('buscar', ''));
+
+            return new SeccionDeDiagnosticosVista(
+                // Los diagnósticos de **esta** consulta: la fila se llavea por `nrohistoria` +
+                // `nroconsulta` + `codediagnostico` (`DiagnosticosDeLaConsulta`).
+                $diagnosticos->deLaConsulta($regMedico, (string) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                $diagnosticos->buscar($regMedico, $buscar),
+                // Lo tildado del catálogo viaja en la query (el buscador es un `GET`): son los códigos que
+                // el botón de guardar agrega a la consulta.
+                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
+                $buscar,
+                route('clinica.consulta.diagnosticos.guardar', $consulta->id),
+                // La base del buscador y del "Cancelar": esta misma sección, sin query.
+                route('clinica.consulta', [$consulta->id]),
+                route('clinica.consulta.diagnosticos.crear', $consulta->id),
                 (array) old(),
             );
         }

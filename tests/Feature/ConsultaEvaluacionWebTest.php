@@ -218,7 +218,6 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta->assertSee('Guardar la evaluación física', false);
 
         // La antropometría y la tensión, tal cual están guardadas.
-        file_put_contents(__DIR__ . '/_tmp_evaluacion.html', $respuesta->getContent());
         $respuesta->assertSee('value="70.5"', false);
         $respuesta->assertSee('value="1.62"', false);
         $respuesta->assertSee('value="120/80"', false);
@@ -629,7 +628,7 @@ class ConsultaEvaluacionWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('5 de 13 disponibles', false);
+        $respuesta->assertSee('6 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
     }
 }
