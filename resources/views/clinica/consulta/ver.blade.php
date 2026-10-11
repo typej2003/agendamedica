@@ -109,4 +109,6 @@
     <script src="{{ asset('js/clinica/consulta-recipes.js') }}"></script>
     {{-- El diálogo «Imprimir récipe» de la sección (WEB-5.2): sólo se inicializa si hay un botón que lo abra. --}}
     <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    {{-- Las solicitudes de la consulta (WEB-5.3a): cambios sin guardar, plantillas, fechas del reposo y buscador de médicos. --}}
+    <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
 @endsection

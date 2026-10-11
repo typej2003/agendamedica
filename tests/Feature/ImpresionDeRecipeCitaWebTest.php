@@ -73,12 +73,15 @@ class ImpresionDeRecipeCitaWebTest extends TestCase
 
     private function urlLista(Cola $cita): string
     {
-        return route('clinica.agenda.recipes', $cita->id);
+        return route('clinica.agenda.documentos', $cita->id);
     }
 
+    /** La vista previa de un récipe de la cita (`'1'`, `'pareja'`), de `'todos'` o —sin nada— del único que tenga. */
     private function urlHoja(Cola $cita, ?string $recipe = null): string
     {
-        return route('clinica.agenda.recipes.imprimir', $recipe === null ? [$cita->id] : [$cita->id, 'recipe' => $recipe]);
+        $documento = $recipe === null || $recipe === 'todos' ? $recipe : 'recipe-' . $recipe;
+
+        return route('clinica.agenda.documentos.imprimir', $documento === null ? [$cita->id] : [$cita->id, 'documento' => $documento]);
     }
 
     // ---------------------------------------------------------------------------- El botón de la agenda
@@ -91,7 +94,7 @@ class ImpresionDeRecipeCitaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('href="' . $this->urlLista($cita) . '"', false);
-        $respuesta->assertSee('Imprimir récipe');
+        $respuesta->assertSee('Imprimir documentos');
     }
 
     public function test_no_se_ofrece_en_una_cita_sin_atender_sin_recipes_o_movida_por_el_escritorio(): void
@@ -210,7 +213,7 @@ class ImpresionDeRecipeCitaWebTest extends TestCase
         $respuesta = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)->get($this->urlLista($cita));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Récipes de Ana Alvarez');
+        $respuesta->assertSee('Documentos de Ana Alvarez');
         $respuesta->assertSee('Récipe 1');
         $respuesta->assertSee('Récipe 2');
         $respuesta->assertSee('Récipe de la pareja');
@@ -269,7 +272,7 @@ class ImpresionDeRecipeCitaWebTest extends TestCase
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)->get($this->urlLista($cita))
             ->assertOk()
-            ->assertSee('Esta consulta no tiene récipes');
+            ->assertSee('Esta consulta no tiene documentos para imprimir');
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)->get($this->urlHoja($cita, '1'))->assertNotFound();
     }
@@ -328,7 +331,7 @@ class ImpresionDeRecipeCitaWebTest extends TestCase
     public function test_la_secretaria_cambia_las_opciones_desde_la_hoja_y_el_medico_las_ve(): void
     {
         [$medicoUser, $medico, $gineco, $secretaria, $cita, $consulta] = $this->escenario();
-        $siguiente = '/clinica/agenda/' . $cita->id . '/recipes/imprimir?recipe=1';
+        $siguiente = '/clinica/agenda/' . $cita->id . '/documentos/imprimir?documento=recipe-1';
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
             ->post(route('clinica.recipes.opciones'), ['modo' => 'solo_indicaciones', 'nombre' => 'generico', 'siguiente' => $siguiente])

@@ -12,7 +12,7 @@ use App\Clinica\Impresion\OpcionesDeRecipe;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\Vistas\HojasDeRecipeVista;
 use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
-use App\Clinica\Impresion\Vistas\RecipesDeLaCitaVista;
+use App\Clinica\Impresion\Vistas\DocumentosDeLaCitaVista;
 use App\Models\RecipeFormato;
 use PHPUnit\Framework\TestCase;
 
@@ -527,56 +527,72 @@ class ImpresionDeRecipeUnidadTest extends TestCase
 
     // ---------------------------------------------------------------- Los récipes de una cita
 
-    private function listaDeLaCita(array $disponibles, bool $atendida = true): RecipesDeLaCitaVista
+    private function listaDeLaCita(array $disponibles, bool $atendida = true): DocumentosDeLaCitaVista
     {
-        return new RecipesDeLaCitaVista(
+        return new DocumentosDeLaCitaVista(
             'Ana Pérez',
             '2026-10-07',
             $atendida,
             $disponibles,
             '/clinica/agenda?fecha=2026-10-07',
-            fn (string $clave) => '/clinica/agenda/5/recipes/imprimir?recipe=' . $clave,
+            fn (string $clave) => '/clinica/agenda/5/documentos/imprimir?documento=' . $clave,
             new OpcionesDeImpresionVista(OpcionesDeRecipe::porDefecto(), '/guardar'),
         );
     }
 
-    public function test_la_lista_de_la_cita_describe_cada_recipe_sin_su_contenido_y_ofrece_imprimir_todos(): void
+    private function recipeDeLaLista(string $clave, string $titulo, string $resumen, ?string $fecha, bool $pareja = false): array
+    {
+        return [
+            'clave' => $clave, 'tipo' => 'recipe', 'titulo' => $titulo, 'resumen' => $resumen, 'fecha' => $fecha,
+            'icono' => $pareja ? 'bi-people' : 'bi-prescription2', 'de_la_pareja' => $pareja,
+        ];
+    }
+
+    public function test_la_lista_de_la_cita_describe_cada_documento_sin_su_contenido_y_ofrece_imprimir_todos(): void
     {
         $lista = $this->listaDeLaCita([
-            ['clave' => '1', 'titulo' => 'Récipe 1', 'resumen' => '3 medicamentos', 'fecha' => '2026-10-05', 'de_la_pareja' => false],
-            ['clave' => 'pareja', 'titulo' => 'Récipe de la pareja', 'resumen' => '1 medicamento', 'fecha' => null, 'de_la_pareja' => true],
+            $this->recipeDeLaLista('recipe-1', 'Récipe 1', '3 medicamentos', '2026-10-05'),
+            $this->recipeDeLaLista('recipe-pareja', 'Récipe de la pareja', '1 medicamento', null, true),
+            ['clave' => 'reposo', 'tipo' => 'reposo', 'titulo' => 'Reposo médico', 'resumen' => '8 días', 'fecha' => '2026-10-07', 'icono' => 'bi-bandaid', 'de_la_pareja' => false],
         ]);
 
         $this->assertFalse($lista->estaVacia());
         $this->assertTrue($lista->puedeImprimirTodos());
-        $this->assertSame('Récipes de Ana Pérez', $lista->titulo());
+        $this->assertTrue($lista->hayRecipes());
+        $this->assertSame('Documentos de Ana Pérez', $lista->titulo());
         $this->assertSame('Cita del 07/10/2026', $lista->subtitulo());
-        $this->assertSame('/clinica/agenda/5/recipes/imprimir?recipe=todos', $lista->urlImprimirTodos());
+        $this->assertSame('/clinica/agenda/5/documentos/imprimir?documento=todos', $lista->urlImprimirTodos());
 
-        $recipes = $lista->recipes();
-        $this->assertSame('/clinica/agenda/5/recipes/imprimir?recipe=1', $recipes[0]['urlImprimir']);
-        $this->assertSame('05/10/2026', $recipes[0]['fecha']);
-        $this->assertSame('bi-prescription2', $recipes[0]['icono']);
-        $this->assertNull($recipes[1]['fecha']);
-        $this->assertSame('bi-people', $recipes[1]['icono']);
-        // La lista sólo lleva títulos y cuentas: nada de medicamentos ni de indicaciones.
-        $this->assertSame(['titulo', 'resumen', 'fecha', 'urlImprimir', 'icono'], array_keys($recipes[0]));
+        $documentos = $lista->documentos();
+        $this->assertSame('/clinica/agenda/5/documentos/imprimir?documento=recipe-1', $documentos[0]['urlImprimir']);
+        $this->assertSame('05/10/2026', $documentos[0]['fecha']);
+        $this->assertSame('bi-prescription2', $documentos[0]['icono']);
+        $this->assertNull($documentos[1]['fecha']);
+        $this->assertSame('bi-people', $documentos[1]['icono']);
+        // Los récipes pasan por las opciones de la hoja; los demás documentos van directo a su vista previa.
+        $this->assertTrue($documentos[0]['conOpciones']);
+        $this->assertFalse($documentos[2]['conOpciones']);
+        // La lista sólo lleva títulos y resúmenes: nada de medicamentos, indicaciones ni textos.
+        $this->assertSame(['titulo', 'resumen', 'fecha', 'urlImprimir', 'icono', 'conOpciones'], array_keys($documentos[0]));
     }
 
-    public function test_con_un_solo_recipe_no_se_ofrece_imprimir_todos(): void
+    public function test_con_un_solo_documento_no_se_ofrece_imprimir_todos_y_sin_recipes_no_hay_opciones(): void
     {
-        $lista = $this->listaDeLaCita([['clave' => '1', 'titulo' => 'Récipe 1', 'resumen' => '1 medicamento', 'fecha' => null, 'de_la_pareja' => false]]);
+        $lista = $this->listaDeLaCita([
+            ['clave' => 'informe', 'tipo' => 'informe', 'titulo' => 'Informe médico', 'resumen' => 'Informe médico', 'fecha' => null, 'icono' => 'bi-file-earmark-text', 'de_la_pareja' => false],
+        ]);
 
         $this->assertFalse($lista->puedeImprimirTodos());
+        $this->assertFalse($lista->hayRecipes());
     }
 
-    public function test_sin_recipes_la_lista_dice_por_que_no_hay_nada(): void
+    public function test_sin_documentos_la_lista_dice_por_que_no_hay_nada(): void
     {
         $atendida = $this->listaDeLaCita([]);
         $sinAtender = $this->listaDeLaCita([], false);
 
         $this->assertTrue($atendida->estaVacia());
-        $this->assertSame('Esta consulta no tiene récipes', $atendida->sinRecipes()['titulo']);
-        $this->assertSame('Esta cita todavía no fue atendida', $sinAtender->sinRecipes()['titulo']);
+        $this->assertSame('Esta consulta no tiene documentos para imprimir', $atendida->sinDocumentos()['titulo']);
+        $this->assertSame('Esta cita todavía no fue atendida', $sinAtender->sinDocumentos()['titulo']);
     }
 }

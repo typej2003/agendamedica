@@ -93,7 +93,7 @@ class ConsultaShellVistaTest extends TestCase
         // Y cada uno con la tarea que lo completa: es el mapa del shell, no decoración.
         $this->assertSame([
             'WEB-4.2', 'WEB-4.2', 'WEB-4.4', 'WEB-4.3', 'F6', 'F6', 'WEB-4.7', 'WEB-4.5',
-            'WEB-4.6', 'WEB-5.1', 'F5', 'F3', 'F9',
+            'WEB-4.6', 'WEB-5.1', 'WEB-5.3a', 'F3', 'F9',
         ], array_column($items, 'tarea'));
     }
 
@@ -108,10 +108,10 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        // Al cerrar WEB-5.1 ya hay **nueve** ítems con pantalla: motivos, enfermedad actual, antecedentes,
-        // evaluación física, exámenes, diagnóstico, evolución y récipes, que se abren **dentro** del shell, y
-        // Datos personales, que enlaza a la ficha (F3).
-        $this->assertSame(9, $vm->totalListos());
+        // Al cerrar WEB-5.3a ya hay **diez** ítems con pantalla: motivos, enfermedad actual, antecedentes,
+        // evaluación física, exámenes, diagnóstico, evolución, récipes y solicitudes, que se abren **dentro** del
+        // shell, y Datos personales, que enlaza a la ficha (F3).
+        $this->assertSame(10, $vm->totalListos());
 
         $this->assertSame('/clinica/consulta/42?seccion=motivos', $disponibles['Motivos de consulta']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=enfermedad', $disponibles['Enfermedad actual']['url']);
@@ -121,9 +121,10 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/consulta/42?seccion=diagnostico', $disponibles['Diagnóstico']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=evolucion', $disponibles['Evolución']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=recipes', $disponibles['Récipes']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=solicitudes', $disponibles['Solicitudes']['url']);
         $this->assertSame('/clinica/pacientes/5619', $disponibles['Datos personales']['url']);
 
-        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Datos personales'] as $titulo) {
+        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Solicitudes', 'Datos personales'] as $titulo) {
             // Los disponibles no llevan pastilla: sólo "Próximamente" distingue a los que faltan.
             $this->assertNull($disponibles[$titulo]['estado'], $titulo);
             $this->assertNull($disponibles[$titulo]['titulo_estado'], $titulo);
@@ -131,7 +132,7 @@ class ConsultaShellVistaTest extends TestCase
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
         foreach ($disponibles as $titulo => $item) {
-            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Datos personales'], true)) {
+            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Solicitudes', 'Datos personales'], true)) {
                 continue;
             }
 

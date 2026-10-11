@@ -49,7 +49,7 @@
                 $atender = $fila->atender();
                 $cobro = $fila->cobro();
                 $recordatorio = $fila->recordatorio();
-                $imprimirRecipe = $fila->imprimirRecipe();
+                $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
             @endphp
 
@@ -84,11 +84,12 @@
                     </form>
                 @endif
 
-                {{-- Imprimir el récipe de la cita ya atendida (WEB-5.2): la secretaría lo entrega sin entrar a la
-                     consulta, que es sólo del médico. Sólo aparece si la consulta tiene récipes. --}}
-                @if ($imprimirRecipe)
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirRecipe['url'] }}">
-                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir récipe
+                {{-- Imprimir los documentos de la cita ya atendida (WEB-5.2, ampliado en WEB-5.3a): la secretaría entrega
+                     los papeles sin entrar a la consulta, que es sólo del médico. Sólo aparece si la consulta tiene
+                     algo que imprimir (récipes, constancia, reposo, referencias o informe). --}}
+                @if ($imprimirDocumentos)
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirDocumentos['url'] }}">
+                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir documentos
                     </a>
                 @endif
 

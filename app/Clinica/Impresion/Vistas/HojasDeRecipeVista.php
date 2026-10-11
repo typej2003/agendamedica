@@ -63,6 +63,12 @@ final class HojasDeRecipeVista
         return $this->dialogo;
     }
 
+    /** ¿Se ofrece el botón «Opciones» de la hoja? Siempre: es la página de un récipe (la de varios documentos es `HojasImpresasVista`). */
+    public function conOpciones(): bool
+    {
+        return true;
+    }
+
     public function urlVolver(): string
     {
         return $this->urls['volver'];

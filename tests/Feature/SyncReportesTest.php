@@ -153,4 +153,32 @@ class SyncReportesTest extends TestCase
             collect($r->json('eliminados'))->map(fn ($e) => ['table_name' => $e['table_name'], 'record_id' => $e['record_id']])->all(),
         );
     }
+
+    /**
+     * **WEB-5.3a**: lo que la web edita o borra de estas tablas llega al teléfono igual que lo del escritorio: las ediciones
+     * por el delta de `updated_at` y las bajas por el `deleted` de `sync_changes` (`eliminados`).
+     */
+    public function test_lo_que_la_web_edita_y_borra_llega_al_telefono_por_delta_y_por_eliminados(): void
+    {
+        $reg = 'rep-w-' . uniqid();
+        Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
+        $since = $this->sync()->json('synced_at');
+        $this->travel(5)->seconds();
+
+        $consulta = \App\Models\Consulta::where('reg_medico', $reg)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        app(\App\Actions\Consulta\GuardarReposoDeLaConsulta::class)->ejecutar($consulta, 9, '2026-03-10', 'Reposo corregido en la web', null, 'web');
+        app(\App\Actions\Consulta\GuardarConstanciaDeLaConsulta::class)->ejecutar($consulta, null, 'Observación de la web', null, 'web');
+        app(\App\Actions\Consulta\EliminarInformeDeLaConsulta::class)->ejecutar($consulta, null, 'web');
+        $informe = DB::table('sync_changes')->where('reg_medico', $reg)->where('table_name', 'informe')->where('source', 'web')->value('record_id');
+
+        $r = $this->sync(['since' => $since]);
+
+        $this->assertSame(9, $r->json('reposo_paciente.0.numdias'));
+        $this->assertSame('Observación de la web', $r->json('constancia_obs.0.observacion01'));
+        $this->assertSame([], $r->json('informe'));
+        $this->assertContains(
+            ['table_name' => 'informe', 'record_id' => $informe],
+            collect($r->json('eliminados'))->map(fn ($e) => ['table_name' => $e['table_name'], 'record_id' => $e['record_id']])->all(),
+        );
+    }
 }

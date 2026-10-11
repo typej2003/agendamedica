@@ -554,4 +554,57 @@ class CambiosEscritorioTest extends TestCase
         $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()
             ->assertJson(['medico_nombre' => '', 'medico_prefix' => null]);
     }
+
+    /**
+     * **WEB-5.3a**: `constancia_obs`, `reposo_paciente`, `referencia` e `informe` tienen **clave primaria** en el PowerBuilder
+     * (`(historia, consulta)`, y `(historia, consulta, médico)` la referencia), así que el escritorio las sube **fila por fila**
+     * (`I`/`U`/`D`) y no con el reemplazo de la tabla entera (`T`) que borra las filas de la web (trampas 40 y 43). Por eso no
+     * necesitan estar en `sin_clave_con_altas_del_app`. Este test fija lo que sí hay que garantizar: lo que el escritorio sube
+     * y borra **de otras filas** no toca las que creó la web, en las cuatro tablas.
+     */
+    public function test_la_subida_fila_por_fila_de_las_solicitudes_no_toca_las_filas_que_creo_la_web(): void
+    {
+        $this->assertSame([], array_intersect(
+            ['constancia_obs', 'reposo_paciente', 'referencia', 'informe'],
+            array_keys(config('sync_legado.sin_clave_con_altas_del_app')),
+        ), 'las cuatro tienen clave: se suben por fila y no se reemplazan enteras');
+
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+
+        DB::table('especial')->insert(['reg_medico' => self::REG, 'codeespecial' => '002', 'especialidad' => 'CARDIOLOGIA']);
+        DB::table('doctores')->insert(['reg_medico' => self::REG, 'cedula' => 7, 'apellidos' => 'PEREZ', 'nombres' => 'LUIS', 'codeespecial' => '002']);
+
+        // Lo que escribe la web, con las Actions reales (cada una deja su `created` con `source = web`).
+        app(\App\Actions\Consulta\GuardarConstanciaDeLaConsulta::class)->ejecutar($consulta, null, 'OBS WEB', null, 'web');
+        app(\App\Actions\Consulta\GuardarReposoDeLaConsulta::class)->ejecutar($consulta, 5, '2026-10-10', 'REPOSO WEB', null, 'web');
+        app(\App\Actions\Consulta\GuardarReferenciaDeLaConsulta::class)->ejecutar($consulta, [self::REG], 7, 'MOTIVO WEB', null, 'web');
+        app(\App\Actions\Consulta\GuardarInformeDeLaConsulta::class)->ejecutar($consulta, 'PARA WEB', 'INFORME WEB', '2026-10-10', null, 'web');
+
+        // El escritorio crea otra consulta (1|2) y sube sus filas; después borra las de esa consulta y una referencia ajena.
+        $fecha = '2026-10-02 10:00:00';
+        $this->subir([
+            ['id' => 201, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => '2026-10-02']],
+            ['id' => 202, 'tabla' => 'constancia_obs', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'numconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'numconsulta' => 2, 'observacion01' => 'DEL ESCRITORIO']],
+            ['id' => 203, 'tabla' => 'reposo_paciente', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'codereposo' => 'M', 'numdias' => 3]],
+            ['id' => 204, 'tabla' => 'referencia', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'ceduladoctor' => '9'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'ceduladoctor' => 9, 'referencia' => 'X']],
+            ['id' => 205, 'tabla' => 'informe', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'descripcion' => 'DEL ESCRITORIO']],
+        ]);
+
+        $this->subir([
+            ['id' => 206, 'tabla' => 'constancia_obs', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['numhistoria' => '1', 'numconsulta' => '2']],
+            ['id' => 207, 'tabla' => 'reposo_paciente', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2']],
+            ['id' => 208, 'tabla' => 'referencia', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'ceduladoctor' => '9']],
+            ['id' => 209, 'tabla' => 'informe', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2']],
+        ]);
+
+        $this->assertSame('OBS WEB', DB::table('constancia_obs')->where('reg_medico', self::REG)->where('numconsulta', 1)->value('observacion01'));
+        $this->assertSame(5, (int) DB::table('reposo_paciente')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('numdias'));
+        $this->assertSame('MOTIVO WEB', DB::table('referencia')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('referencia'));
+        $this->assertSame('INFORME WEB', DB::table('informe')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('descripcion'));
+    }
 }

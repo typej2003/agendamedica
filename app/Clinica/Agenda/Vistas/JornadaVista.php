@@ -24,8 +24,8 @@ final class JornadaVista
         private Carbon $ahora,
         private bool $conArrastre,
         private bool $puedeAbrirLaConsulta = true,
-        /** @var array<int,int>  ids de cita (ya atendida) cuya consulta tiene récipes para imprimir (WEB-5.2) */
-        private array $citasConRecipes = [],
+        /** @var array<int,int>  ids de cita (ya atendida) cuya consulta tiene documentos para imprimir: récipes (WEB-5.2) o solicitudes (WEB-5.3a) */
+        private array $citasConDocumentos = [],
     ) {
     }
 
@@ -140,7 +140,7 @@ final class JornadaVista
                 $this->ahora,
                 $this->mensajes[$fila['cita']->id] ?? '',
                 $this->puedeAbrirLaConsulta,
-                isset($this->citasConRecipes[$fila['cita']->id]),
+                isset($this->citasConDocumentos[$fila['cita']->id]),
             ))
             ->all();
     }

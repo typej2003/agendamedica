@@ -4,6 +4,11 @@ use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
+use App\Http\Controllers\Clinica\ConsultaConstanciaController;
+use App\Http\Controllers\Clinica\ConsultaInformeController;
+use App\Http\Controllers\Clinica\ConsultaReferenciasController;
+use App\Http\Controllers\Clinica\ConsultaReposoController;
+use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
@@ -228,6 +233,24 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                     ->whereNumber('numero')->name('consulta.recipes.imprimir');
                 Route::get('/consulta/{consulta}/recipe-pareja/imprimir', [ImpresionDeRecipeController::class, 'dePareja'])->name('consulta.recipe-pareja.imprimir');
 
+                // **Solicitudes de la consulta** (WEB-5.3a): el ítem 11 del panel, con sus pestañas (`?seccion=solicitudes&solicitud=`).
+                // Constancia, reposo e informe son **uno por consulta** (la clave primaria del legado) y se guardan/eliminan en la misma
+                // URL cambiando el verbo; las referencias son varias, una por médico. Sólo del médico: la secretaría imprime desde la cita.
+                Route::post('/consulta/{consulta}/constancia', [ConsultaConstanciaController::class, 'guardar'])->name('consulta.constancia.guardar');
+                Route::delete('/consulta/{consulta}/constancia', [ConsultaConstanciaController::class, 'eliminar'])->name('consulta.constancia.eliminar');
+                Route::post('/consulta/{consulta}/reposo', [ConsultaReposoController::class, 'guardar'])->name('consulta.reposo.guardar');
+                Route::delete('/consulta/{consulta}/reposo', [ConsultaReposoController::class, 'eliminar'])->name('consulta.reposo.eliminar');
+                Route::post('/consulta/{consulta}/informe', [ConsultaInformeController::class, 'guardar'])->name('consulta.informe.guardar');
+                Route::delete('/consulta/{consulta}/informe', [ConsultaInformeController::class, 'eliminar'])->name('consulta.informe.eliminar');
+                // `medicos` (buscador JSON y alta) va antes de las rutas con `{cedula}`.
+                Route::get('/consulta/{consulta}/referencias/medicos', [ConsultaReferenciasController::class, 'buscar'])->name('consulta.referencias.buscar');
+                Route::post('/consulta/{consulta}/referencias/medicos', [ConsultaReferenciasController::class, 'medicoNuevo'])->name('consulta.referencias.medico-nuevo');
+                Route::post('/consulta/{consulta}/referencias', [ConsultaReferenciasController::class, 'agregar'])->name('consulta.referencias.agregar');
+                Route::post('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'guardar'])->whereNumber('cedula')->name('consulta.referencias.guardar');
+                Route::delete('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'eliminar'])->whereNumber('cedula')->name('consulta.referencias.eliminar');
+                // La hoja impresa de un documento (o de «todos»): `?documento=reposo`. La misma que imprime la secretaría desde la cita.
+                Route::get('/consulta/{consulta}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'delaConsulta'])->name('consulta.documentos.imprimir');
+
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
                 // como atendida— y volver a la agenda del día, que es lo que el escritorio hace al cerrar
@@ -278,8 +301,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // la agenda, sin entrar a la consulta (que es sólo del médico). `recipes` es la lista para elegir
             // cuál (se salta si la cita tiene uno solo) y `recipes/imprimir` la vista previa: la misma hoja que
             // imprime el médico desde la consulta. Sólo **imprime**: no lista medicamentos ni deja editar nada.
-            Route::get('/agenda/{cola}/recipes', [ImpresionDeRecipeController::class, 'recipesDeLaCita'])->name('agenda.recipes');
-            Route::get('/agenda/{cola}/recipes/imprimir', [ImpresionDeRecipeController::class, 'imprimirDeLaCita'])->name('agenda.recipes.imprimir');
+            // Desde WEB-5.3a es «Imprimir documentos»: la lista lleva los récipes **y** la constancia, el reposo, las referencias y el
+            // informe de esa consulta (`?documento=recipe-1|reposo|referencia-3|todos`).
+            Route::get('/agenda/{cola}/documentos', [ImpresionDeDocumentosController::class, 'listaDeLaCita'])->name('agenda.documentos');
+            Route::get('/agenda/{cola}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'imprimirDeLaCita'])->name('agenda.documentos.imprimir');
             // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
             // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
             Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');

@@ -51,6 +51,10 @@ class HistoriaDelPacienteController extends Controller
                 $request->user()?->trabajaLaConsulta()
                     ? fn (int $consulta, int $numero) => route('clinica.consulta.recipes.imprimir', [$consulta, $numero])
                     : null,
+                // Y la de la constancia, el reposo, las referencias y el informe (WEB-5.3a), con la misma restricción.
+                $request->user()?->trabajaLaConsulta()
+                    ? fn (int $consulta, string $clave) => route('clinica.consulta.documentos.imprimir', [$consulta, 'documento' => $clave])
+                    : null,
             ),
         ]);
     }

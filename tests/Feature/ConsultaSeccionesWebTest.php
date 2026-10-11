@@ -602,7 +602,7 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('9 de 13 disponibles', false);
+        $respuesta->assertSee('10 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
@@ -611,15 +611,18 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']), false);
         // Y los récipes (WEB-5.1): el ítem 10 abre su sección dentro del shell.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']), false);
+        // Y las solicitudes (WEB-5.3a): el ítem 11 abre su sección dentro del shell.
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']), false);
         // El resto sigue diciendo que llega después, con la tarea que lo trae (los dos de F6: la eco y el
-        // control de embarazo; F5 —las solicitudes— y F9 en los documentos).
+        // control de embarazo; y F9 en la pre-factura).
         $respuesta->assertSee('Próximamente');
         $respuesta->assertSee('Llega con F6', false);
-        $respuesta->assertSee('Llega con F5', false);
         $respuesta->assertSee('Llega con F9', false);
-        // Y ya **no** queda ningún ítem esperando a WEB-4.7 ni a WEB-5.1: sus paneles están disponibles.
+        // Y ya **no** queda ningún ítem esperando a WEB-4.7, WEB-5.1 ni a las solicitudes: sus paneles están disponibles.
         $respuesta->assertDontSee('Llega con WEB-4.7', false);
         $respuesta->assertDontSee('Llega con WEB-5.1', false);
+        $respuesta->assertDontSee('Llega con F5', false);
+        $respuesta->assertDontSee('Llega con WEB-5.3a', false);
     }
 
     public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void

@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CitaDeLaConsulta;
+use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
+use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
+use App\Clinica\Consulta\InformeDeLaConsulta;
+use App\Clinica\Consulta\ReferenciasDeLaConsulta;
+use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
@@ -14,10 +19,16 @@ use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
+use App\Clinica\Consulta\Vistas\InformeVista;
+use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
+use App\Clinica\Consulta\Vistas\ReferenciasVista;
+use App\Clinica\Consulta\Vistas\ReposoVista;
+use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
@@ -89,6 +100,11 @@ class ConsultaController extends Controller
         CitaDeLaConsulta $citas,
         RecipesDeLaConsulta $recipes,
         RecipeDeLaPareja $pareja,
+        ConstanciaDeLaConsulta $constancias,
+        ReposoDeLaConsulta $reposos,
+        ReferenciasDeLaConsulta $referencias,
+        InformeDeLaConsulta $informes,
+        DoctoresDelMedico $doctores,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -136,7 +152,9 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
+            'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
+                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores)
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -291,6 +309,90 @@ class ConsultaController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * El ViewModel de la sección **Solicitudes** (WEB-5.3a, ítem 11): la pestaña elegida con `?solicitud=` (constancia, reposo,
+     * referencias o informe; cualquier otro valor abre la constancia) y los datos de esa pestaña ya leídos.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
+     */
+    private function solicitudes(
+        Consulta $consulta,
+        array $registros,
+        Carbon $dia,
+        object $paciente,
+        ConstanciaDeLaConsulta $constancias,
+        ReposoDeLaConsulta $reposos,
+        ReferenciasDeLaConsulta $referencias,
+        InformeDeLaConsulta $informes,
+        DoctoresDelMedico $doctores,
+    ): SeccionDeSolicitudesVista {
+        $id = $consulta->id;
+        $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'));
+        $old = (array) old();
+
+        $pestanas = new PestanasDeSolicitudes(
+            fn (string $clave) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $clave]),
+        );
+
+        // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
+        $imprimir = fn (string $clave) => route('clinica.consulta.documentos.imprimir', [$id, 'documento' => $clave]);
+
+        if ($activa === PestanasDeSolicitudes::REPOSO) {
+            $fila = $reposos->fila($consulta);
+            $vista = new ReposoVista(
+                $fila?->numdias,
+                $fila?->fdesde?->toDateString(),
+                $fila?->obser_reposo,
+                $reposos->esReal($fila),
+                $dia->toDateString(),
+                ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')],
+                $old,
+            );
+        } elseif ($activa === PestanasDeSolicitudes::REFERENCIAS) {
+            $vista = new ReferenciasVista(
+                $referencias->deLaConsulta($consulta, $registros),
+                $doctores->especialidades($registros),
+                [
+                    'buscar' => route('clinica.consulta.referencias.buscar', $id),
+                    'agregar' => route('clinica.consulta.referencias.agregar', $id),
+                    'medicoNuevo' => route('clinica.consulta.referencias.medico-nuevo', $id),
+                ],
+                fn (int $cedula) => route('clinica.consulta.referencias.guardar', [$id, $cedula]),
+                fn (int $cedula) => route('clinica.consulta.referencias.eliminar', [$id, $cedula]),
+                fn (int $cedula) => $imprimir('referencia-' . $cedula),
+                $old,
+                session()->has('crear_medico'),
+            );
+        } elseif ($activa === PestanasDeSolicitudes::INFORME) {
+            $fila = $informes->fila($consulta);
+            $vista = new InformeVista(
+                $fila?->para,
+                $fila?->descripcion,
+                $fila?->fe_cha?->toDateString(),
+                $informes->esReal($fila),
+                FechaDelConsultorio::hoy()->toDateString(),
+                $informes->plantillas((string) $consulta->reg_medico),
+                $informes->anteriores($consulta),
+                ['guardar' => route('clinica.consulta.informe.guardar', $id), 'eliminar' => route('clinica.consulta.informe.eliminar', $id), 'imprimir' => $imprimir('informe')],
+                $old,
+            );
+        } else {
+            $fila = $constancias->fila($consulta);
+            $vista = new ConstanciaVista(
+                trim(trim((string) $paciente->nombres) . ' ' . trim((string) $paciente->apellidos)),
+                $dia->toDateString(),
+                $constancias->textoAutomatico($consulta),
+                $constancias->diagnosticosEditados($fila),
+                $constancias->observacion($fila),
+                $constancias->tieneContenidoPropio($fila),
+                ['guardar' => route('clinica.consulta.constancia.guardar', $id), 'eliminar' => route('clinica.consulta.constancia.eliminar', $id), 'imprimir' => $imprimir('constancia')],
+                $old,
+            );
+        }
+
+        return new SeccionDeSolicitudesVista($activa, $pestanas, $vista);
     }
 
     /**

@@ -27,10 +27,11 @@ final class FilaDeCitaVista
          */
         private bool $puedeAbrirLaConsulta = true,
         /**
-         * Si la consulta de esta cita (ya atendida) tiene récipes con medicamentos para imprimir (WEB-5.2). Lo
-         * resuelve el controlador **en lote** para toda la agenda (`RecipesPorCita::conRecipes`), no por fila.
+         * Si la consulta de esta cita (ya atendida) tiene documentos para imprimir: récipes con medicamentos (WEB-5.2) o
+         * solicitudes —constancia propia, reposo, referencias, informe— (WEB-5.3a). Lo resuelve el controlador **en lote**
+         * para toda la agenda (`DocumentosPorCita::conDocumentos`), no por fila.
          */
-        private bool $tieneRecipes = false,
+        private bool $tieneDocumentos = false,
     ) {
     }
 
@@ -272,19 +273,20 @@ final class FilaDeCitaVista
     }
 
     /**
-     * **"Imprimir récipe"** (WEB-5.2): lo que la secretaría hace con una cita ya atendida para entregarle el récipe
-     * al paciente sin entrar a la consulta (que es sólo del médico). Sólo se ofrece si la cita se atendió y su
-     * consulta tiene algo que imprimir; una cita movida por el escritorio no lleva acciones.
+     * **"Imprimir documentos"** (WEB-5.2, ampliado en WEB-5.3a): lo que la secretaría hace con una cita ya atendida para
+     * entregarle al paciente sus papeles (récipes, constancia, reposo, referencias, informe) sin entrar a la consulta (que es
+     * sólo del médico). Sólo se ofrece si la cita se atendió y su consulta tiene algo que imprimir; una cita movida por el
+     * escritorio no lleva acciones.
      *
      * @return array{url:string}|null
      */
-    public function imprimirRecipe(): ?array
+    public function imprimirDocumentos(): ?array
     {
-        if ($this->movida() || ! $this->atendida() || ! $this->tieneRecipes) {
+        if ($this->movida() || ! $this->atendida() || ! $this->tieneDocumentos) {
             return null;
         }
 
-        return ['url' => route('clinica.agenda.recipes', $this->cita->id)];
+        return ['url' => route('clinica.agenda.documentos', $this->cita->id)];
     }
 
     /** El cobro: abono parcial sumado a lo ya pagado. El monto solo se pide si la cita no tiene precio. */

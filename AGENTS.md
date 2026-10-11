@@ -33,7 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras **WEB-1.13**, el núcleo del menú para todas las especialidades) es **1167 en
+medición (2026-10-11, tras **WEB-5.3a**, las solicitudes de la consulta) es **1239 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
@@ -163,6 +163,29 @@ más sus `Vistas/` (`HojasDeRecipeVista`, `OpcionesDeImpresionVista`, `RecipesDe
 (`CitaController`, `FormularioDeCita`, `GuardarCitaRequest`) admite `volver_consulta` (`App\Clinica\Agenda\VueltaDeLaCita`) para que
 «Hacer cita» desde los récipes vuelva a ellos, la fila de la agenda (`FilaDeCitaVista::imprimirRecipe`) ofrece «Imprimir récipe» en la cita
 atendida con récipes y la historia del paciente enlaza la hoja de cada récipe al médico. Ver las trampas 46 a 50.
+
+Lo que **WEB-5.3a (2026-10-11)**, las solicitudes de la consulta, agregó: controladores `ConsultaConstanciaController`, `ConsultaReposoController`,
+`ConsultaReferenciasController` (el buscador JSON de `doctores`, referir, el motivo, quitar y el alta rápida del colega) y `ConsultaInformeController`
+—cada uno con `guardar`/`eliminar`, en el grupo `role:Root|Medico` de la consulta— y `ImpresionDeDocumentosController` (**la hoja de media A4 de cada
+documento**: `GET /clinica/consulta/{consulta}/documentos/imprimir?documento=constancia|reposo|referencia-<médico>|informe|todos` para el médico y, con los
+roles de la agenda, `GET /clinica/agenda/{cola}/documentos` —la lista de **todo lo imprimible** de la cita atendida— y `…/documentos/imprimir`, que
+**reemplazan** a `agenda.recipes*` de WEB-5.2). La sección es el ítem 11 del shell (`?seccion=solicitudes&solicitud=`; `ConsultaShellVista::SECCION_SOLICITUDES`,
+**10 de 13**) con `Vistas/{SeccionDeSolicitudesVista,PestanasDeSolicitudes,ConstanciaVista,ReposoVista,ReferenciasVista,InformeVista}` y los parciales
+`clinica/consulta/_solicitudes*`; `PestanasDeSolicitudes` es el único lugar donde se agrega una pestaña. **Lectura** en `App\Clinica\Consulta\`:
+`QueEsUnDocumento` (**la** regla de qué es un documento y qué es una plantilla vacía del legado: la usan la sección, `HistoriaDelPaciente`, la impresión y,
+en SQL, `DocumentosPorCita`), `ConstanciaDeLaConsulta`, `ReposoDeLaConsulta` (con la cuenta de las fechas: hasta = inicio + días − 1, reintegro = inicio + días,
+y `fechaDeInicio`, que acepta fechas futuras), `ReferenciasDeLaConsulta`, `DoctoresDelMedico` e `InformeDeLaConsulta`. **Escritura** en `App\Actions\Consulta\`
+(`GuardarConstanciaDeLaConsulta`, `GuardarReposoDeLaConsulta`/`Eliminar…`, `GuardarReferenciaDeLaConsulta`/`Eliminar…`, `AgregarDoctorAlCatalogo`,
+`GuardarInformeDeLaConsulta`/`Eliminar…`, con `ResultadoDeSolicitud` y el trait `EscribeConRastro`): una fila por consulta —por médico en la referencia—,
+**sólo lo que cambió**, rastro por columna en `sync_changes` (`source = web`) y last-write-wins; **sin columnas ni tablas nuevas** (los diagnósticos editados
+de la constancia usan `constancia_obs.observacion`, que el escritorio no escribe). **Impresión** en `App\Clinica\Impresion\`: `DocumentoImpreso`,
+`SolicitudesParaImprimir`, `DocumentosParaImprimir` (la lista y la clave común de récipes y solicitudes: `recipe-1`, `constancia`, `referencia-3`…),
+`DistribuidorDeDocumento` (+ `MedidasDeLaMitad::altoDelCuerpoDeDocumento`: el texto sigue en la otra mitad y, si hace falta, en más hojas),
+`PacienteImpreso` (la cabecera del paciente, extraída de `RecipesParaImprimir`), `DocumentosPorCita` (antes `RecipesPorCita`) y
+`Vistas/{HojasDeDocumentoVista,HojasImpresasVista,DocumentosDeLaCitaVista}`; vistas `clinica/imprimir/{hojas,_documento-mitad,documentos-de-la-cita}`, CSS
+`public/css/clinica-documento.css` (gemelo de las medidas) y JS `public/js/clinica/consulta-solicitudes.js`. **El API del móvil no cambió** (baja las cuatro
+tablas por el delta de `updated_at` y las bajas por `eliminados`; un test lo fija) y **la subida del escritorio tampoco**: las cuatro tablas tienen clave
+primaria y se suben por fila. Ver las trampas 53 a 55.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -460,7 +483,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **52** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **55** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

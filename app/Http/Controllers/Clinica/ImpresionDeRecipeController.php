@@ -8,51 +8,42 @@ use App\Clinica\Impresion\DocumentoDeRecipe;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\RecipesParaImprimir;
-use App\Clinica\Impresion\RecipesPorCita;
 use App\Clinica\Impresion\Vistas\HojasDeRecipeVista;
 use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
-use App\Clinica\Impresion\Vistas\RecipesDeLaCitaVista;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
-use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
-use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\RecipeFormato;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use InvalidArgumentException;
 
 /**
  * **Imprimir el récipe** (WEB-5.2): la vista previa de la hoja A4 horizontal que imprime el navegador
  * (PLAN-WEB.md R6, decisión 17) y la elección de cómo sale.
  *
- * Hay **dos caminos a la misma hoja**, y los dos terminan en `vistaPrevia()` —una sola implementación de la hoja y
- * de la regla— :
- *
- *  - **El médico**, desde la consulta (`/clinica/consulta/{consulta}/recipes/{n}/imprimir` y
- *    `/recipe-pareja/imprimir`) o desde la historia del paciente. Va en el grupo `role:Root|Medico` de la consulta.
- *  - **La secretaría** —y también el médico—, desde la fila de una cita **ya atendida** de la agenda
- *    (`/clinica/agenda/{cola}/recipes` y `/imprimir`). La secretaría **no entra a la consulta** ni a la ficha
- *    clínica, y esta ruta no se la abre: sólo **imprime**. Lo único clínico que ve es lo que sale en la hoja y la
- *    lista de qué récipes tiene esa cita para elegir cuál imprimir.
+ * Este controlador es **el del médico en la consulta**: la hoja de un récipe del paciente
+ * (`/clinica/consulta/{consulta}/recipes/{n}/imprimir`) o la de la pareja (`/recipe-pareja/imprimir`), en el grupo
+ * `role:Root|Medico` de la consulta. Desde WEB-5.3a **la secretaría** imprime desde la cita atendida por
+ * `ImpresionDeDocumentosController` (la lista de todo lo imprimible de la cita y su vista previa), que arma la misma hoja del
+ * récipe con `HojasImpresasVista`.
  *
  * La elección de cómo sale (`POST /clinica/recipes/opciones-de-impresion`) es del **médico del contexto** y la
  * puede hacer cualquiera de los dos: lo que elige la asistente es lo que ve el médico (decisión del usuario,
- * 2026-10-11).
+ * 2026-10-11). Vive acá porque es la opción **del récipe** (el modo y el nombre del medicamento); los demás documentos no
+ * la usan.
  *
- * Todo se resuelve contra el **contexto**: una consulta o una cita de otro consultorio responde 404 sin confirmar
- * que existe, y el membrete es el del médico del contexto.
+ * Todo se resuelve contra el **contexto**: una consulta de otro consultorio responde 404 sin confirmar que existe, y el
+ * membrete es el del médico del contexto.
  */
 class ImpresionDeRecipeController extends Controller
 {
-    use ResuelveLaCitaDelContexto;
     use ResuelveLosRegistrosDelMedico;
 
     /**
      * Las URLs a las que se puede **seguir** después de guardar las opciones: sólo las vistas previas de la web
-     * clínica (`…/imprimir`, con su `?recipe=`), para que el campo `siguiente` del formulario no sirva de
-     * redirección abierta.
+     * clínica (`…/imprimir`, con su `?recipe=` o `?documento=`), para que el campo `siguiente` del formulario no sirva
+     * de redirección abierta.
      */
     private const SIGUIENTE_VALIDO = '#^/clinica/[A-Za-z0-9_/-]+/imprimir(\?[A-Za-z0-9_=&%:.-]*)?$#';
 
@@ -61,7 +52,6 @@ class ImpresionDeRecipeController extends Controller
         private RecipesParaImprimir $recipes,
         private MembreteDelMedico $membretes,
         private ProximaCitaDelRecipe $proximaCita,
-        private RecipesPorCita $porCita,
     ) {
     }
 
@@ -94,73 +84,6 @@ class ImpresionDeRecipeController extends Controller
             [DocumentoDeRecipe::PAREJA],
             route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA]),
             'Volver a los récipes',
-        );
-    }
-
-    // ------------------------------------------------------------------------- La cita (secretaría)
-
-    /**
-     * Los récipes de una cita **atendida**: la lista para elegir cuál imprimir. Si la cita tiene **uno solo**, la
-     * lista se salta y va directo a su vista previa; si no tiene ninguno, la pantalla lo dice (no es un error: la
-     * consulta pudo no recetar nada).
-     */
-    public function recipesDeLaCita(Request $request, Cola $cola)
-    {
-        $contexto = $request->attributes->get('contexto_clinico');
-        $cita = $this->citaDelContexto($request, $cola);
-        $dia = Carbon::parse($cita->fecha)->toDateString();
-        $atendida = (int) $cita->atendido === 1 && ! $cita->movida_escritorio;
-
-        $de = $this->porCita->deLaCita($cita, $this->registrosDelMedico($contexto['medico']));
-        $disponibles = $atendida && $de['consulta'] !== null ? $this->recipes->disponibles($de['consulta']) : [];
-
-        if (count($disponibles) === 1) {
-            return redirect()->route('clinica.agenda.recipes.imprimir', [$cita->id, 'recipe' => $disponibles[0]['clave']]);
-        }
-
-        return view('clinica.imprimir.recipes-de-la-cita', [
-            'vm' => new RecipesDeLaCitaVista(
-                $de['nombre'],
-                $dia,
-                $atendida,
-                $disponibles,
-                route('clinica.agenda', ['vista' => 'dia', 'fecha' => $dia, 'sede' => 'todas']),
-                fn (string $clave) => route('clinica.agenda.recipes.imprimir', [$cita->id, 'recipe' => $clave]),
-                new OpcionesDeImpresionVista($this->membretes->opciones($contexto['medico']), route('clinica.recipes.opciones')),
-            ),
-        ]);
-    }
-
-    /**
-     * La vista previa de los récipes de una cita atendida: `?recipe=2`, `?recipe=pareja` o `?recipe=todos`.
-     * Sin `recipe` se imprime el único que tenga, si es uno solo; si hay varios hay que elegir (404 si no).
-     */
-    public function imprimirDeLaCita(Request $request, Cola $cola)
-    {
-        $contexto = $request->attributes->get('contexto_clinico');
-        $cita = $this->citaDelContexto($request, $cola);
-
-        abort_if($cita->movida_escritorio || (int) $cita->atendido !== 1, 404);
-
-        $de = $this->porCita->deLaCita($cita, $this->registrosDelMedico($contexto['medico']));
-        abort_if($de['consulta'] === null || $de['pacienteId'] === null, 404);
-
-        $disponibles = $this->recipes->disponibles($de['consulta']);
-        $claves = array_column($disponibles, 'clave');
-        $pedido = (string) $request->query('recipe', count($claves) === 1 ? $claves[0] : '');
-
-        $elegidos = $pedido === 'todos' ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
-        abort_if($elegidos === [], 404);
-
-        return $this->vistaPrevia(
-            $request,
-            $de['consulta'],
-            $de['pacienteId'],
-            $elegidos,
-            count($disponibles) > 1
-                ? route('clinica.agenda.recipes', $cita->id)
-                : route('clinica.agenda', ['vista' => 'dia', 'fecha' => Carbon::parse($cita->fecha)->toDateString(), 'sede' => 'todas']),
-            count($disponibles) > 1 ? 'Volver a los récipes de la cita' : 'Volver a la agenda',
         );
     }
 
@@ -222,7 +145,7 @@ class ImpresionDeRecipeController extends Controller
 
         $opciones = $this->membretes->opciones($contexto['medico']);
 
-        return view('clinica.imprimir.recipe', [
+        return view('clinica.imprimir.hojas', [
             'vm' => new HojasDeRecipeVista(
                 $this->membretes->de($contexto['medico']),
                 $opciones,

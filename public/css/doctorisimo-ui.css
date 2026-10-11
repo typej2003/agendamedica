@@ -2561,3 +2561,15 @@ body.auth-pagina {
 }
 
 .recipe-proxima-cita-texto { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+
+/* Solicitudes de la consulta (WEB-5.3a): el texto base de la constancia y las fechas calculadas del reposo. */
+.solicitud-texto-base {
+    margin: 0 0 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+    color: var(--ds-texto-2);
+}
+
+.solicitud-calculo { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }

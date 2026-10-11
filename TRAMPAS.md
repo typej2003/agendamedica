@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **52** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **55** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -483,3 +483,24 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     2026-10-11: pasa igual entrando primero a `/admin/cuentas`). Un verificador que cuente «errores de consola» tiene que
     distinguirlo del error propio —el de esta pantalla se mide por las **respuestas** ≥ 400 y por el resto de la consola— o va a
     dar rojo por algo que no es suyo. No se arregló (falta el archivo, no es de esta tarea).
+53. **Las cuatro tablas de las solicitudes tienen clave primaria en el PowerBuilder: se suben por fila y no hay nada que "proteger" con
+    `sin_clave_con_altas_del_app`.** Medido al hacer WEB-5.3a (2026-10-11). `constancia_obs`, `reposo_paciente`, `referencia` e `informe` llevan los
+    tres triggers de fila (`op = I/U/D`, ver `registro-cambios.js` y `quitar-registro-cambios.sql`) y no el de sentencia (`op = T`) de
+    `recipes_pareja`, así que `CambiosEscritorio` las trata con `guardarGenerico`/`borrarGenerico` **por clave** y jamás con `reemplazarTabla`: una
+    fila que creó la web no se borra por una subida de **otra** fila (lo fija `CambiosEscritorioTest::test_la_subida_fila_por_fila_de_las_solicitudes_…`).
+    Lo que **sí** puede pasar —y no se resuelve— es que el escritorio vuelva a subir **la misma clave** (una consulta que existe en los dos lados): el
+    `UPDATE` de `guardarGenerico` no consulta `sync_changes`, así que pisa lo que la web editó antes; y una fila **del escritorio** que la web borra
+    vuelve si el escritorio la re-sube. Sólo ocurre en un consultorio que use los dos sistemas, y el escritorio no recibe nada de la web. Las Actions
+    dejan igual su `created`/`updated`/`deleted` con `source = web`: es lo que el móvil lee (`updated_at` para el delta y `deleted` para `eliminados`).
+    Antes de agregar una tabla a `sin_clave_con_altas_del_app`, comprobá que sea de las de sentencia.
+54. **`FechaClinica::paraInput` descarta las fechas futuras: sirve para un nacimiento, no para el inicio de un reposo.** Medido al escribir
+    `ReposoDeLaConsulta` (2026-10-11): `paraInput` devuelve `''` para cualquier fecha posterior a hoy (es la vara de `fnacimiento`), así que un reposo que
+    **empieza mañana** habría caído en el día de la consulta sin avisar, en la pantalla y en la hoja. Las fechas de un documento se leen con
+    `ReposoDeLaConsulta::fechaDeInicio` (acepta el futuro, cae en un respaldo sólo con `0000-00-*`, vacío o basura). Misma familia que la trampa 12: una columna
+    `date` casteada se escribe con la hora.
+55. **`pdftotext` no sirve para comprobar el ORDEN del texto justificado ni de las dos mitades de una hoja.** Medido al verificar WEB-5.3a en Chrome: con
+    `-layout` las dos mitades salen mezcladas en la misma línea (trampa 50) y **sin** `-layout` el texto justificado (`text-align: justify`) se lee por
+    **columnas de palabras** (`informe1 … informe165` salía `…, 168, 172, 174, 178…` aunque el DOM está en orden). El verificador comprueba entonces que **estén
+    todas las palabras, cada una una vez** (`completa()` ordena antes de comparar) y el **orden** lo fijan los tests de PHP sobre el HTML
+    (`ImpresionDeSolicitudesWebTest::palabrasDelCuerpo`). Y una trampa del propio verificador: `ayudante largo N` reescribe el texto con otro prefijo (`largoN`),
+    así que el prefijo que se busca en el PDF tiene que ser el del último texto escrito.

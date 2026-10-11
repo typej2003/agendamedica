@@ -38,6 +38,11 @@ final class HistoriaDePacienteVista
          * no puede entrar a la consulta (la secretaría imprime desde la agenda): sin esto la fila no lleva enlace.
          */
         private ?Closure $urlImprimirRecipe = null,
+        /**
+         * `fn(int $consultaId, string $clave): string` — la hoja impresa de una constancia, un reposo, una referencia o un
+         * informe (WEB-5.3a), o `null` si quien mira no puede entrar a la consulta. Misma razón que el de los récipes.
+         */
+        private ?Closure $urlImprimirDocumento = null,
     ) {
     }
 
@@ -219,11 +224,35 @@ final class HistoriaDePacienteVista
             'consulta' => isset($documento['consulta']) ? 'Consulta ' . (int) $documento['consulta'] : null,
             'fecha'    => FechaClinica::formato($documento['fecha'] ?? null),
             'resumen'  => $this->recorte($documento['resumen'] ?? null),
-            // El enlace a la hoja impresa: sólo en los récipes, y sólo para quien puede abrirla (WEB-5.2).
-            'urlImprimir' => $this->urlImprimirRecipe !== null && ($documento['recipe'] ?? null) !== null && isset($consultaPorNumero[(int) $documento['consulta']])
-                ? ($this->urlImprimirRecipe)($consultaPorNumero[(int) $documento['consulta']], (int) $documento['recipe'])
-                : null,
+            // El enlace a la hoja impresa, sólo para quien puede abrirla (WEB-5.2 los récipes, WEB-5.3a el resto).
+            'urlImprimir' => $this->urlDeLaHoja($documento, $consultaPorNumero),
         ])->all();
+    }
+
+    /**
+     * La URL de la hoja impresa de un documento, o `null` si quien mira no puede abrirla (la secretaría imprime desde la
+     * agenda) o el documento no tiene hoja.
+     *
+     * @param  array<string,mixed>  $documento
+     * @param  Collection<int,int>  $consultaPorNumero  `nroconsulta => id de la consulta`
+     */
+    private function urlDeLaHoja(array $documento, Collection $consultaPorNumero): ?string
+    {
+        $consulta = $consultaPorNumero[(int) ($documento['consulta'] ?? 0)] ?? null;
+
+        if ($consulta === null) {
+            return null;
+        }
+
+        if (($documento['recipe'] ?? null) !== null) {
+            return $this->urlImprimirRecipe === null ? null : ($this->urlImprimirRecipe)($consulta, (int) $documento['recipe']);
+        }
+
+        if (($documento['clave'] ?? null) !== null && $this->urlImprimirDocumento !== null) {
+            return ($this->urlImprimirDocumento)($consulta, (string) $documento['clave']);
+        }
+
+        return null;
     }
 
     /** @return array{icono:string, titulo:string, texto:string} */

@@ -65,6 +65,23 @@ final class MedidasDeLaMitad
 
     private const RESERVA_MM = 4.0;
 
+    /**
+     * La línea «Continúa →» al pie del cuerpo de una mitad que sigue en la otra (WEB-5.3a): 8 pt itálica y 1,5 de aire
+     * (`.documento-continua`). Reemplaza a la franja de firma, que sólo lleva la última mitad de un documento.
+     */
+    private const CONTINUA_MM = 5.2;
+
+    /** El título de una mitad de continuación (11 pt) y su aire: `.documento-titulo-continuacion` (4,85 + 2,5). */
+    private const TITULO_CONTINUACION_MM = 7.4;
+
+    /**
+     * Lo que ocupan la fecha y el «PACIENTE:» en el encabezado corto de una mitad de continuación
+     * (`.documento-continuacion-datos`): «PACIENTE:» ~17 mm y «FECHA: dd/mm/aaaa» ~30 mm.
+     */
+    private const ETIQUETA_DEL_PACIENTE_MM = 17.0;
+
+    private const FECHA_DE_CONTINUACION_MM = 30.0;
+
     /** La separación entre el logo y los textos, cuando el logo va al lado (`.membrete-con-logo`). */
     private const SEPARACION_DEL_LOGO_MM = 3.0;
 
@@ -111,6 +128,55 @@ final class MedidasDeLaMitad
         // Un membrete absurdo (un logo enorme y textos larguísimos) no puede dejar el cuerpo sin lugar: queda
         // una lista mínima y es el verificador el que avisa del desborde.
         return max(self::ALTO_UTIL_MM - $ocupado, 30.0);
+    }
+
+    /**
+     * El alto que queda para el cuerpo de **una mitad de un documento** (constancia, reposo, referencia, informe), en
+     * milímetros (WEB-5.3a).
+     *
+     * Un documento ocupa una mitad; si el texto no entra, **sigue en la otra** y, si hace falta, en las siguientes. Hay dos
+     * clases de mitad:
+     *
+     *  - la **primera**: membrete, línea, datos del paciente y el título (14 pt), como la del récipe;
+     *  - las de **continuación**: sin membrete, un encabezado corto (`PACIENTE:` y `FECHA:`), la línea y un título más chico
+     *    (11 pt, «… (continuación)»), como el móvil.
+     *
+     * Y al pie, **una sola** lleva la firma —la última— y las demás la línea «Continúa →». El pie de página (las líneas de
+     * dirección del consultorio) va en todas.
+     *
+     * @param  string  $paciente  el nombre que se imprime en `PACIENTE`
+     * @param  bool  $primera  `true` para la primera mitad, `false` para una de continuación
+     * @param  bool  $conFirma  `true` si es la última mitad del documento (lleva la firma), `false` si sigue en otra
+     */
+    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma): float
+    {
+        $arriba = $primera
+            ? $this->altoDelMembrete($membrete)
+                + self::LINEA_MM
+                + $this->altoDeLosDatos($paciente, null) + self::AIRE_DE_LOS_DATOS_MM
+                + self::TITULO_MM
+            : $this->altoDelEncabezadoDeContinuacion($paciente)
+                + self::LINEA_MM
+                + self::TITULO_CONTINUACION_MM;
+
+        $ocupado = $arriba
+            + ($conFirma ? self::FIRMA_MM : self::CONTINUA_MM)
+            + $this->altoDelPie($membrete)
+            + self::RESERVA_MM;
+
+        return max(self::ALTO_UTIL_MM - $ocupado, 30.0);
+    }
+
+    /**
+     * El encabezado corto de una mitad de continuación: `PACIENTE: nombre` a la izquierda y `FECHA: …` a la derecha, en
+     * una línea de 9 pt (el nombre se parte en más si no entra).
+     */
+    public function altoDelEncabezadoDeContinuacion(string $paciente): float
+    {
+        $linea = 9.0 * self::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
+        $ancho = self::ANCHO_UTIL_MM - self::ETIQUETA_DEL_PACIENTE_MM - self::FECHA_DE_CONTINUACION_MM;
+
+        return max($this->medidor->lineas($paciente, $ancho, 9.0), 1) * $linea;
     }
 
     /**

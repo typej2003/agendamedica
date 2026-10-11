@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
@@ -146,7 +147,9 @@ final class HistoriaDelPaciente
      *
      * Se arma con los mismos criterios con los que el móvil decide qué es un documento de verdad
      * (`DoctorisimoMobile/lib/features/reportes/`, `ReportesRepository::armar` / `documento.dart`), porque
-     * al abrir una consulta el legado **crea plantillas vacías** que no son documentos de nadie:
+     * al abrir una consulta el legado **crea plantillas vacías** que no son documentos de nadie. La regla vive
+     * en `QueEsUnDocumento` (WEB-5.3a) y es la misma que usan la sección de solicitudes de la consulta y la
+     * impresión:
      *
      *  - **Reposo**: sólo si tiene más de un día **o** una observación.
      *  - **Informe**: sólo si su texto no está vacío ni es `'.'`.
@@ -160,7 +163,7 @@ final class HistoriaDelPaciente
      * hace el ViewModel, y la impresión muestra el texto completo.
      *
      * @param  Collection<int, object>  $consultas  lo que devolvió `consultas()`, para la fecha de cada una
-     * @return Collection<int, array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int}>
+     * @return Collection<int, array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int, clave:?string}>
      */
     public function documentos(string $regMedico, ?string $numhistoria, Collection $consultas): Collection
     {
@@ -183,7 +186,7 @@ final class HistoriaDelPaciente
 
             // La constancia vacía que el legado crea en cada consulta no es un documento de nadie: su
             // texto es fijo y lo arma la consulta. Sólo se lista la que trae algo propio.
-            if ($observacion === null) {
+            if (! QueEsUnDocumento::constancia($constancia->observacion01, $constancia->observacion, $constancia->titulo)) {
                 continue;
             }
 
@@ -193,6 +196,9 @@ final class HistoriaDelPaciente
                 (int) $constancia->numconsulta,
                 $fechaDeLaConsulta,
                 $observacion,
+                null,
+                null,
+                'constancia',
             ));
         }
 
@@ -200,7 +206,7 @@ final class HistoriaDelPaciente
             $dias = $reposo->numdias === null ? null : (int) $reposo->numdias;
             $observacion = CamposDePaciente::texto($reposo->obser_reposo);
 
-            if (! ($dias > 1) && $observacion === null) {
+            if (! QueEsUnDocumento::reposo($dias, $observacion)) {
                 continue;
             }
 
@@ -214,6 +220,8 @@ final class HistoriaDelPaciente
                     $observacion,
                 ])->filter()->implode(' — ')) ?: null,
                 CamposDePaciente::texto($reposo->fdesde),
+                null,
+                'reposo',
             ));
         }
 
@@ -232,13 +240,16 @@ final class HistoriaDelPaciente
                     $medico === null ? null : 'Referido a ' . $medico,
                     $motivo,
                 ])->filter()->implode(' — ')) ?: null,
+                null,
+                null,
+                'referencia-' . (int) $referencia->ceduladoctor,
             ));
         }
 
         foreach ($this->informes($regMedico, $numero) as $informe) {
             $descripcion = CamposDePaciente::texto($informe->descripcion);
 
-            if ($descripcion === null || $descripcion === '.') {
+            if (! QueEsUnDocumento::informe($descripcion)) {
                 continue;
             }
 
@@ -249,6 +260,8 @@ final class HistoriaDelPaciente
                 $fechaDeLaConsulta,
                 $descripcion,
                 CamposDePaciente::texto($informe->fe_cha),
+                null,
+                'informe',
             ));
         }
 
@@ -265,6 +278,7 @@ final class HistoriaDelPaciente
                 CamposDePaciente::texto($recipe->fecha),
                 // El número del récipe dentro de su consulta: con él se arma el enlace a su hoja impresa (WEB-5.2).
                 $recipe->numero,
+                'recipe-' . $recipe->numero,
             ));
         }
 
@@ -282,9 +296,9 @@ final class HistoriaDelPaciente
      * se fecha el día en que empieza, no el día en que se atendió.
      *
      * @param  Collection<int, mixed>  $fechaDeLaConsulta
-     * @return array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int}
+     * @return array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int, clave:?string}
      */
-    private function documento(string $tipo, string $icono, int $consulta, Collection $fechaDeLaConsulta, ?string $resumen, ?string $fecha = null, ?int $recipe = null): array
+    private function documento(string $tipo, string $icono, int $consulta, Collection $fechaDeLaConsulta, ?string $resumen, ?string $fecha = null, ?int $recipe = null, ?string $clave = null): array
     {
         return [
             'tipo'     => $tipo,
@@ -294,6 +308,9 @@ final class HistoriaDelPaciente
             'resumen'  => $resumen,
             // Sólo los récipes: su número dentro de la consulta (`null` en los demás documentos).
             'recipe'   => $recipe,
+            // Con qué clave se pide su hoja impresa (`constancia`, `reposo`, `referencia-3`, `informe`,
+            // `recipe-2`): la misma que usa `DocumentosParaImprimir` (WEB-5.3a).
+            'clave'    => $clave,
         ];
     }
 

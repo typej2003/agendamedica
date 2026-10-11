@@ -7,10 +7,8 @@ use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Consulta;
 use App\Models\Paciente;
-use App\Support\FechaClinica;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Throwable;
 
 /**
  * **Los récipes de una consulta, listos para imprimir** (WEB-5.2): qué hay para imprimir (los récipes del
@@ -133,12 +131,8 @@ final class RecipesParaImprimir
             'Récipe ' . $recipe->numero,
             $recipe->numero,
             $fecha,
-            [
-                'nombre' => trim(trim((string) $paciente->nombres) . ' ' . trim((string) $paciente->apellidos)),
-                'cedula' => $this->cedula($paciente),
-                'edad' => $this->edadA($paciente->fnacimiento, $fecha),
-                'direccion' => CamposDePaciente::texto($paciente->direccion),
-            ],
+            // La cabecera del paciente es la misma de todos los documentos impresos (`PacienteImpreso`).
+            PacienteImpreso::datos($paciente, $fecha),
             $this->items($recipe->items),
         );
     }
@@ -158,35 +152,6 @@ final class RecipesParaImprimir
             $item->presentacion,
             $item->descripcion,
         ))->values()->all();
-    }
-
-    /** `V-12345678`: la cédula con su nacionalidad, o `null` si el paciente no tiene (el `S.C.` del legado no cuenta). */
-    private function cedula(Paciente $paciente): ?string
-    {
-        $cedula = CamposDePaciente::cedula($paciente->cedula);
-
-        if ($cedula === null) {
-            return null;
-        }
-
-        return (CamposDePaciente::texto($paciente->nac) ?? 'V') . '-' . $cedula;
-    }
-
-    /** Los años cumplidos a la fecha del récipe; `null` si la fecha de nacimiento no sirve o es posterior. */
-    private function edadA($fnacimiento, string $fecha): ?int
-    {
-        if (FechaClinica::paraInput($fnacimiento) === '') {
-            return null;
-        }
-
-        try {
-            $nacimiento = Carbon::parse(FechaClinica::paraInput($fnacimiento));
-            $al = Carbon::parse($fecha);
-        } catch (Throwable $e) {
-            return null;
-        }
-
-        return $nacimiento->greaterThan($al) ? null : $nacimiento->diffInYears($al);
     }
 
     private function cuenta(int $total): string
