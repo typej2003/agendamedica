@@ -8,6 +8,7 @@ use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
@@ -166,6 +167,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // también espera al *Guardar* de la ventana, `:2709`).
                 Route::post('/consulta/{consulta}/diagnosticos', [ConsultaDiagnosticosController::class, 'guardar'])->name('consulta.diagnosticos.guardar');
                 Route::post('/consulta/{consulta}/diagnosticos/crear', [ConsultaDiagnosticosController::class, 'crear'])->name('consulta.diagnosticos.crear');
+
+                // Evolución de la consulta (WEB-4.6): el ítem 9 del panel. **Es una columna de la
+                // consulta** —`consultas.evolucion`, que el `INSERT`/`UPDATE` de `w_consulta_principal`
+                // escribe desde el campo de su pestaña *Evolución* (`:2738`, `:2835`) y que la ventana
+                // relee con `SELECT evolucion … WHERE numhistoria = :historia AND nroconsulta = :consulta`
+                // (`:4218-4242`)—, así que la Action vive en `Actions\Consulta`. Como la enfermedad actual,
+                // se guarda con un botón explícito y no con autoguardado. La sección no toca
+                // `consultas.observaciones`: en la fuente esa columna es la **colposcopia** del examen
+                // ginecológico (`:2757`, `:2836`), no un campo de la evolución (ver `EvolucionDeLaConsulta`).
+                Route::post('/consulta/{consulta}/evolucion', [ConsultaEvolucionController::class, 'guardar'])->name('consulta.evolucion.guardar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

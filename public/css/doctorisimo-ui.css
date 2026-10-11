@@ -1831,3 +1831,37 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .diagnosticos-item-datos { flex-basis: 100%; }
     .diagnosticos-acciones { order: 2; }
 }
+
+/* ---------------------------------------------------------------------------
+   Sección de evolución de la consulta (WEB-4.6, ítem 9)
+   El campo de texto (el mismo patrón de la enfermedad actual) y, al lado, la lista de las plantillas del
+   escritorio: cada una es un botón que copia su texto en el campo, como el doble clic del `dw_84`.
+   ========================================================================== */
+
+.evolucion-plantillas { list-style: none; margin: 0; padding: 0; }
+
+.evolucion-plantilla {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: .45rem .6rem;
+    margin-bottom: .35rem;
+    border: 1px solid var(--ds-borde-2);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    color: var(--ds-texto);
+    cursor: pointer;
+}
+
+.evolucion-plantilla:hover { border-color: var(--ds-violeta-700); }
+
+.evolucion-plantilla-titulo {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* A 375 px cada control tiene que seguir siendo un objetivo táctil cómodo (guía de UI §7). */
+@media (max-width: 575.98px) {
+    .evolucion-plantilla { padding: .6rem .7rem; }
+}

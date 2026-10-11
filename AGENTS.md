@@ -33,7 +33,7 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-10, tras cerrar **WEB-4.5**, los diagnósticos de la consulta) es **859 en verde y 3 que
+medición (2026-10-10, tras cerrar **WEB-4.6**, la evolución de la consulta) es **883 en verde y 3 que
 fallan** por las credenciales de WhatsApp (es de entorno, no del código). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
@@ -69,6 +69,15 @@ ya estaba, `created` de la nueva con la descripción del catálogo copiada como 
 `App\Clinica\Consulta\DiagnosticosDeLaConsulta` (el mapa del dato: el catálogo del médico **sin tildes** y
 **un diagnóstico por nombre**, las filas de la consulta con el nombre resuelto por catálogo, los "vacíos"
 del legado y que **no hay tipos ni CIE** en la fuente).
+Lo que **WEB-4.6 (2026-10-10)** agregó a esas tres filas es: `ConsultaEvolucion` (**WEB-4.6: la evolución de
+una consulta** en `?seccion=evolucion`, con `POST /clinica/consulta/{consulta}/evolucion`; **la evolución es
+una COLUMNA de la consulta** —`consultas.evolucion`, llaveada por `numhistoria` + `nroconsulta`—, así que la
+Action vive en `Actions\Consulta`), `Consulta/GuardarEvolucionDeLaConsulta` (escribe **sólo `evolucion`** con
+el last-write-wins por columna y su rastro en `sync_changes` con `source = web`; **el sync no cambió y no
+había regla que extraer**: el móvil no escribe esa columna y el escritorio la sube por su camino genérico) y
+`App\Clinica\Consulta\{EvolucionDeLaConsulta,TextoDeLaConsulta}` (el mapa del dato —la columna, su fuente y
+las **plantillas** de `formato_print` con `tipo = 'EV'`— y el helper de los "vacíos" del legado: `NULL`,
+`''` y el literal `none`; ver la trampa 29).
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -515,6 +524,30 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
     `diagnosticos` —su `retrieve` es sólo de `diagnostico_paciente`—, o sea que una fila creada sin detalle se
     ve **vacía** en el escritorio; es también la única columna editable de la tabla (`edit.limit=100`, y la
     guarda el `dw_8.update()` del `ue_guardar`, `:2709`). `orden` queda `null`, como lo deja la fuente.
+29. **`consultas.observaciones` es la COLPOSCOPIA, no un campo de la evolución — y la tabla `evolucion` no
+    tiene nada que ver con la evolución de una consulta.** Medido al hacer WEB-4.6, que es el ítem 9 del
+    panel y el plan de la web listaba como *"evolución, observaciones"* (`PLAN-WEB.md` §2). Son **dos
+    confusiones de nombre** que cuestan caro:
+    - La **evolución** es una **columna de la consulta**: `consultas.evolucion` (`longText`), llaveada por
+      `numhistoria` + `nroconsulta` —así la escribe el `UPDATE "consultas"` de la ventana
+      (`w_consulta_principal.srw:2835`, tomada del campo en `:2738`) y así la relee
+      (`SELECT evolucion, fecha … WHERE numhistoria = :historia AND nroconsulta = :alNewRow`,
+      `:4218-4242`)—. **La tabla `evolucion` es la configuración del médico**: su logo, su membrete, su
+      horario, su `contrasena` del sistema viejo y la `clave` con la que `cola.medico` lo identifica
+      (una fila por médico). Un `where('numhistoria', …)` contra `evolucion` no significa nada y un
+      `Evolucion::create()` crea una fila de configuración.
+    - **`consultas.observaciones`** (la columna vecina) **no es el segundo campo de la evolución**: el
+      `ue_guardar` la escribe desde el campo *Colposcopia* de la solapa *Examen Ginecológico* —
+      `s_obs = tab_1.tabpage_examen.tab_7.tabpage_31.mle_4.text` (`:2757`) y `"observaciones" = :s_obs`
+      (`:2836`), con el comentario `SET "colposcopia" = :s_obs` en `:2766`— y al recargar la vuelve a poner
+      en **ese** campo (`:2958`). `tabpage_31` es la solapa de colposcopia (sus botones imprimen
+      `d_colposcopia_1`/`d_colposcopia_2`, `:10608`/`:10614`; su catálogo se `retrieve('CO')`, `:3043`).
+      Es de **F6/WEB-4.7** y la sección de la web **no la lee, no la edita y no la borra** (un test lo
+      fija). Lo mismo vale para el **tratamiento** (`tabpage_40.mle_11` → la copia `consultas.laringe`,
+      `:2762` y `:2832`), que es la pestaña *TRATAMIENTO* del panel (F5).
+    Las **plantillas** de la evolución son la lista `formato_print` con `tipo = 'EV'` (el `dw_84`, dataobject
+    `d_l_enfe_actu_para`, `retrieve('EV')` en `:3055`; el doble clic copia la `descripcion` en el campo,
+    `:12002`); es el **mismo** DataWindow que usa la enfermedad actual, que se distingue por `tipo = 'EA'`.
 
 ## Dónde está el detalle funcional
 

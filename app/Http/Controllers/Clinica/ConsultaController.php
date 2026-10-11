@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
+use App\Clinica\Consulta\EvolucionDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
+use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
@@ -23,8 +25,9 @@ use Illuminate\Http\Request;
 
 /**
  * **La consulta** (F4): el shell de la consulta de un paciente —el encabezado y el panel de 13 ítems del
- * legado— y, desde **WEB-4.2**, el contenido de las dos primeras secciones (motivos de consulta y
- * enfermedad actual), que se abren **dentro de la misma pantalla** con `?seccion=`.
+ * legado— y, desde **WEB-4.2**, el contenido de sus secciones (motivos de consulta, enfermedad actual,
+ * evaluación física, antecedentes, diagnóstico y evolución), que se abren **dentro de la misma pantalla**
+ * con `?seccion=`.
  *
  * Entrar es **siempre por una acción del médico**: "Atender" desde la agenda, que abre —o crea— la
  * consulta del día (`App\Actions\Consulta\AbrirConsulta`). Por eso no hay una ruta que liste consultas ni
@@ -63,6 +66,7 @@ class ConsultaController extends Controller
         ExamenFisicoDeLaConsulta $examen,
         AntecedentesDelPaciente $antecedentes,
         DiagnosticosDeLaConsulta $diagnosticos,
+        EvolucionDeLaConsulta $evolucion,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -103,7 +107,7 @@ class ConsultaController extends Controller
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
-            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos),
+            'contenido' => $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion),
             // La tarjeta del buscador del catálogo, que sólo tiene la sección de antecedentes (WEB-4.4).
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
         ]);
@@ -124,6 +128,7 @@ class ConsultaController extends Controller
         ExamenFisicoDeLaConsulta $examen,
         AntecedentesDelPaciente $antecedentes,
         DiagnosticosDeLaConsulta $diagnosticos,
+        EvolucionDeLaConsulta $evolucion,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -194,6 +199,17 @@ class ConsultaController extends Controller
                 route('clinica.consulta', [$consulta->id]),
                 route('clinica.consulta.diagnosticos.crear', $consulta->id),
                 (array) old(),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_EVOLUCION) {
+            return new EvolucionVista(
+                // El texto del escritorio se lee **tal cual** (los "vacíos" del legado se limpian en la
+                // lectura, `EvolucionDeLaConsulta`) y las plantillas son las de su tabla `formato_print`.
+                $evolucion->de($consulta),
+                $evolucion->plantillas($regMedico),
+                route('clinica.consulta.evolucion.guardar', $consulta->id),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVOLUCION]),
             );
         }
 

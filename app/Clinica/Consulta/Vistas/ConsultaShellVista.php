@@ -39,6 +39,9 @@ final class ConsultaShellVista
     /** La clave de la sección de diagnósticos en `?seccion=` (WEB-4.5). */
     public const SECCION_DIAGNOSTICO = 'diagnostico';
 
+    /** La clave de la sección de evolución en `?seccion=` (WEB-4.6). */
+    public const SECCION_EVOLUCION = 'evolucion';
+
     /**
      * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
      * lleva hoy.
@@ -77,7 +80,8 @@ final class ConsultaShellVista
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],
         ['numero' => 9, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
-            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'proximamente'],
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVOLUCION],
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
             'detalle' => 'Los del paciente ya se listan en su historia.', 'tarea' => 'F5', 'estado' => 'proximamente'],
         ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
@@ -180,8 +184,9 @@ final class ConsultaShellVista
 
     /**
      * El parcial de la sección activa (`clinica.consulta._motivos` / `._enfermedad` / `._evaluacion` /
-     * `._antecedentes` / `._diagnostico`), o `null` si no hay ninguna. El mapa se arma con las claves del
-     * panel, así que agregar una sección es agregar una fila a `PANEL` y su parcial, no tocar la vista.
+     * `._antecedentes` / `._diagnostico` / `._evolucion`), o `null` si no hay ninguna. El mapa se arma con
+     * las claves del panel, así que agregar una sección es agregar una fila a `PANEL` y su parcial, no
+     * tocar la vista.
      */
     public function parcial(): ?string
     {
@@ -216,7 +221,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 6 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, diagnóstico y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 7 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, diagnóstico, evolución y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -226,8 +231,8 @@ final class ConsultaShellVista
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Al cerrar WEB-4.5 ya se pueden cargar los ítems 1, 2, 3, 4 y 8
-     * y el resto sigue llegando por tareas.
+     * las secciones se abren desde el panel. Al cerrar WEB-4.6 ya se pueden cargar los ítems 1, 2, 3, 4, 8 y
+     * 9, y el resto sigue llegando por tareas.
      */
     public function sinContenido(): array
     {
@@ -235,9 +240,9 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
-                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, diagnóstico y '
-                . 'los datos personales del paciente— se abren acá; el resto llega con las tareas '
-                . 'siguientes (evolución, estudios y documentos).',
+                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, diagnóstico, '
+                . 'evolución y los datos personales del paciente— se abren acá; el resto llega con las tareas '
+                . 'siguientes (estudios y documentos).',
         ];
     }
 

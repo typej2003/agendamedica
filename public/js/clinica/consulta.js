@@ -31,6 +31,11 @@
  * 5. **Los diagnósticos** (WEB-4.5): el mismo aviso y el mismo "Quitar" que los antecedentes, para la
  *    sección del ítem 8. Acá la fila se identifica por su **id** (el detalle editado y la baja viajan en el
  *    mismo `POST`) y el `quitar[]` que inserta el script es el que la Action usa para borrar.
+ *
+ * 6. **La evolución** (WEB-4.6): el mismo aviso de cambios sin guardar que la enfermedad actual, para la
+ *    sección del ítem 9, y las **plantillas**: cada botón de la lista copia su texto en el campo (que es lo
+ *    que el doble clic del `dw_84` hace en el escritorio, `w_consulta_principal.srw:12002`) y deja el
+ *    formulario marcado como sucio, porque copiar una plantilla **es escribir**: todavía no está guardada.
  */
 (function () {
     'use strict';
@@ -179,12 +184,17 @@
 
     // ------------------------------------------------- Aviso de cambios sin guardar (enfermedad actual)
 
-    document.querySelectorAll('[data-consulta-enfermedad]').forEach(function (formulario) {
+    // Una sección de **texto clínico con guardado explícito**: el aviso de "hay cambios sin guardar" y el
+    // aviso del navegador al salir. Son la misma forma —un formulario con su `<textarea>`, su cartel y su
+    // "Cancelar"—, así que las dos secciones que la usan (la enfermedad actual, WEB-4.2, y la evolución,
+    // WEB-4.6) la comparten en vez de duplicarla.
+    function avisoDeTexto(formulario, idAviso) {
         const campo = formulario.querySelector('textarea');
-        const aviso = document.getElementById('enfermedad-sin-guardar');
-        const guardado = campo ? campo.value : '';
+        const aviso = document.getElementById(idAviso);
 
         if (!campo) return;
+
+        const guardado = campo.value;
 
         function sucio() {
             return campo.value !== guardado;
@@ -214,7 +224,13 @@
         });
 
         pintarAviso();
-    });
+    }
+
+    const enfermedad = document.querySelector('[data-consulta-enfermedad]');
+
+    if (enfermedad) {
+        avisoDeTexto(enfermedad, 'enfermedad-sin-guardar');
+    }
 
     // ------------------------------------------------- Evaluación física (WEB-4.3)
 
@@ -524,5 +540,33 @@
         });
 
         pintarAviso();
+    }
+
+    // ------------------------------------------------------------------- Evolución (WEB-4.6)
+
+    // El mismo aviso de texto clínico que la enfermedad actual y, además, las plantillas del escritorio:
+    // cada botón copia su texto en el campo. `avisoDeTexto` engancha el aviso **antes** de que el script
+    // toque el campo, así que el valor de partida es el que pintó el servidor y copiar una plantilla deja el
+    // formulario sucio sin ningún estado extra.
+    const evolucion = document.querySelector('[data-consulta-evolucion]');
+
+    if (evolucion) {
+        avisoDeTexto(evolucion, 'evolucion-sin-guardar');
+
+        // El `<textarea>`, no el primero que aparezca: la sección tiene un solo campo de texto.
+        const campo = document.getElementById('evolucion');
+
+        evolucion.querySelectorAll('[data-evolucion-plantilla]').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                if (!campo) return;
+
+                // Lo que el doble clic del `dw_84` hace: `mle_evolucion.text = desch`. Se dispara `input`
+                // para que el aviso de cambios sin guardar se entere por el mismo camino que si el médico
+                // hubiera escrito (el listener de `avisoDeTexto`).
+                campo.value = boton.dataset.evolucionPlantilla;
+                campo.dispatchEvent(new Event('input', { bubbles: true }));
+                campo.focus();
+            });
+        });
     }
 })();
