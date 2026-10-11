@@ -26,16 +26,15 @@ final class HistoriaDelPaciente
     /**
      * El código de `antece_paciente.tipo2` que el legado lee como la marca de **alerta** del antecedente.
      *
-     * Medido en la fuente: `w_consulta_principal.srw:3072-3081` (y `:4540-4549`, y las dos copias de
-     * `w_consulta_principal_modificar.srw`) hace `SELECT descripcion, detalles FROM antece_paciente
-     * WHERE numhistoria = :historia AND tipo2 = 'A'` y lo escribe en el `st_203`, un texto **negrita y
-     * magenta** (`:6317-6331`) que se ve arriba en la pantalla de la consulta. Es lo que la wiki llama
-     * "una casilla de Alerta para resaltarlo en consultas futuras".
+     * Es el mismo que declara la casilla del DataWindow del paciente —`tipo2` con
+     * `checkbox.text="Alerta"`, `checkbox.on="A"` y `checkbox.off="B"` en
+     * `d_antecedentes_consulta_bueno.srd`— y el que la sección de antecedentes de la consulta escribe y
+     * borra (WEB-4.4); el mapa completo, con sus citas, está en `App\Clinica\Consulta\AntecedentesDelPaciente`.
      *
-     * ⚠️ **Ninguna ventana ni DataWindow de las fuentes escribe `tipo2`**: la casilla que lo marcaba no
-     * está en el material extraído, así que el valor `'A'` es lo único que se puede afirmar. Cualquier
-     * otro valor (incluido `null`) **no se interpreta**: se muestra el antecedente sin marca en vez de
-     * adjudicarle un significado que la fuente no dice (misma vara que el `codeparentesco` de WEB-3.4).
+     * Lo que **no** se interpreta es cualquier otro valor: la `B` de la casilla apagada y el `null` de las
+     * filas que inserta el botón *Pasar* del escritorio (`w_consulta_principal.srw:7754-7764`) se muestran
+     * **sin marca**, en vez de adjudicarles un significado que la fuente no dice (misma vara que el
+     * `codeparentesco` de WEB-3.4).
      */
     public const TIPO2_ALERTA = 'A';
 

@@ -33,8 +33,26 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-10, tras cerrar **WEB-4.3**, la evaluación física) es **792 en verde y 3 que fallan**
-por las credenciales de WhatsApp (es de entorno, no del código).
+medición (2026-10-10, tras cerrar **WEB-4.4**, los antecedentes del paciente) es **826 en verde y 3 que
+fallan** por las credenciales de WhatsApp (es de entorno, no del código). ⚠️
+`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia` es **flaky desde
+antes de WEB-4.4** (falla ~1 de cada 4 corridas; medido también con los cambios de esa tarea en *stash*):
+si aparece, no es de lo que estés tocando — queda anotado para mirarlo aparte.
+
+⚠️ **Las filas largas de la tabla de "Estructura" (las de `app/Http/Controllers/Clinica/`, `app/Actions/` y
+`app/Clinica/`) no entran en la lectura de 2000 caracteres por línea de algunas herramientas**: lo que
+**WEB-4.4 (2026-10-10)** agregó a esas tres filas —y que hay que leer en el archivo, no acá— es:
+`ConsultaAntecedentes` (**WEB-4.4: los antecedentes del paciente** en `?seccion=antecedentes`, con
+`POST /clinica/consulta/{consulta}/antecedentes`, `…/antecedentes/crear` y el JSON `…/antecedentes/buscar`;
+**los antecedentes son del paciente y no de la consulta**, así que su Action vive en `Actions\Pacientes`),
+`Pacientes/{GuardarAntecedentes,AgregarAntecedenteAlCatalogo,ResultadoDeAntecedentes}`
+(`GuardarAntecedentes` escribe **sólo lo que cambió** de `antece_paciente` —`detalles` y `tipo2` de una fila
+que ya estaba, `created` de la nueva y `deleted` de la baja— con el last-write-wins por columna y su rastro
+en `sync_changes` con `source = web`; `AgregarAntecedenteAlCatalogo` es el alta del catálogo con el
+correlativo de cuatro dígitos; **no cambia el comportamiento del sync**) y
+`App\Clinica\Consulta\AntecedentesDelPaciente` (el mapa del dato: los tres catálogos, los "vacíos" del
+legado, la casilla de Alerta `tipo2 = 'A'` y el orden de los grupos, que es el de las solapas del
+escritorio).
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
