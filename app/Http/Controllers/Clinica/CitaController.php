@@ -67,6 +67,7 @@ class CitaController extends Controller
             'pendiente'       => null,
             // "Hacer cita" desde los récipes de una consulta (WEB-5.2): a dónde vuelve al guardar.
             'volverA'         => $this->vueltaDe($request, $contexto, $request->query('volver_consulta')),
+            'puedeAdministrarMotivos' => (bool) $request->user()?->trabajaLaConsulta(),
         ])]);
     }
 
@@ -90,6 +91,7 @@ class CitaController extends Controller
                 'pacienteElegido' => $this->pacientes->ficha($resultado->objetivo['paciente'], $resultado->objetivo['numhistoria'], $resultado->valores),
                 'pendiente'       => $resultado->pendiente,
                 'volverA'         => $volverA,
+                'puedeAdministrarMotivos' => (bool) $request->user()?->trabajaLaConsulta(),
             ])]);
         }
 
@@ -138,6 +140,7 @@ class CitaController extends Controller
                 ? $this->pacientes->ficha($paciente, $cita->numhistoria !== null ? (int) $cita->numhistoria : null)
                 : null,
             'pendiente' => null,
+            'puedeAdministrarMotivos' => (bool) $request->user()?->trabajaLaConsulta(),
         ])]);
     }
 

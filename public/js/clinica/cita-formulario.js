@@ -1,5 +1,36 @@
 /*
- * Formulario de la cita (`/clinica/agenda/nueva` y `/editar`): el buscador de pacientes. Pide al servidor los
+ * Formulario de la cita (`/clinica/agenda/nueva` y `/editar`):
+ *
+ *  1. El precio del motivo (WEB-8.1c). Al elegir el motivo, el campo Monto muestra como referencia el precio que ese motivo
+ *     tiene en el catálogo (`data-precio` de cada `<option>`) y la ayuda lo dice. Es sólo una pista: el servidor sigue
+ *     resolviendo el monto vacío con el precio vigente del motivo, y lo escrito en Monto manda.
+ *       <select id="motivo" data-motivo-select> <option data-precio="150.00" data-precio-texto="150,00">
+ *       <input id="monto">   <span id="monto-ayuda">
+ *
+ *  2. El buscador de pacientes (abajo).
+ */
+(function () {
+    'use strict';
+
+    const motivo = document.querySelector('[data-motivo-select]');
+    const monto = document.getElementById('monto');
+    const ayuda = document.getElementById('monto-ayuda');
+    if (!motivo || !monto || !ayuda) return;
+
+    function mostrarPrecio() {
+        const opcion = motivo.options[motivo.selectedIndex];
+        const precio = opcion ? opcion.dataset.precio : '';
+        const texto = opcion ? opcion.dataset.precioTexto : '';
+
+        monto.placeholder = precio || '';
+        ayuda.textContent = 'Vacío = el precio del motivo' + (texto ? ' (' + texto + ').' : '.');
+    }
+
+    motivo.addEventListener('change', mostrarPrecio);
+})();
+
+/*
+ * El buscador de pacientes del formulario de la cita (`/clinica/agenda/nueva` y `/editar`). Pide al servidor los
  * que coinciden y deja el elegido en el campo oculto. Sin él, el formulario se puede completar igual con el
  * alta de un paciente nuevo.
  *

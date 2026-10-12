@@ -36,7 +36,7 @@ use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\MostradorController;
-use App\Http\Controllers\Clinica\MotivoCitaController;
+use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -298,6 +298,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/catalogos/motivos-consulta', [MotivoConsultaCatalogoController::class, 'index'])->name('catalogos.motivos-consulta');
                 Route::post('/catalogos/motivos-consulta', [MotivoConsultaCatalogoController::class, 'guardar'])->name('catalogos.motivos-consulta.guardar');
                 Route::delete('/catalogos/motivos-consulta/{id}', [MotivoConsultaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-consulta.quitar');
+                // **Motivos de cita** (WEB-8.1c): `motivo_cita` con su precio, su sede y la marca de varias citas pendientes.
+                // Absorbió la pantalla `/clinica/agenda/motivos` de WEB-2.17, que ahora redirige acá. El interruptor de la marca
+                // (`alternar`) y el alta/edición pasan por la misma Action. El motivo de otro médico, 404; la secretaría, 403.
+                Route::get('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'index'])->name('catalogos.motivos-cita');
+                Route::post('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'guardar'])->name('catalogos.motivos-cita.guardar');
+                Route::patch('/catalogos/motivos-cita/{id}/alternar', [MotivoCitaCatalogoController::class, 'alternar'])->whereNumber('id')->name('catalogos.motivos-cita.alternar');
+                Route::delete('/catalogos/motivos-cita/{id}', [MotivoCitaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-cita.quitar');
+                // La dirección vieja de WEB-2.17 (con su mismo nombre de ruta) lleva a la nueva. Va antes de `/agenda/{cola}`.
+                Route::get('/agenda/motivos', [MotivoCitaCatalogoController::class, 'pantallaAnterior'])->name('agenda.motivos');
                 Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
                 Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
                 Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');
@@ -337,13 +346,6 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/agenda/no-laborables', [NoLaborableController::class, 'index'])->name('agenda.no-laborables');
             Route::post('/agenda/no-laborables', [NoLaborableController::class, 'guardar'])->name('agenda.no-laborables.guardar');
             Route::delete('/agenda/no-laborables/{noLaborable}', [NoLaborableController::class, 'eliminar'])->name('agenda.no-laborables.eliminar');
-
-            // Motivos de cita (WEB-2.17): el catálogo del médico con la marca de "admite varias citas
-            // pendientes", que es la excepción a la regla de la cita única. Como los días no laborables,
-            // es una herramienta de la agenda y no un módulo del menú. Va **antes** de las rutas con
-            // `{cola}` por el mismo motivo que `envio`/`imprimir`.
-            Route::get('/agenda/motivos', [MotivoCitaController::class, 'index'])->name('agenda.motivos');
-            Route::patch('/agenda/motivos/{motivo}/alternar', [MotivoCitaController::class, 'alternar'])->name('agenda.motivos.alternar');
 
             // Cumpleaños (WEB-2.9): los que cumplen años hoy y la configuración del envío automático.
             // Es una **herramienta** —no un módulo del menú— y es **provisional hasta WEB-8.2**, que es la

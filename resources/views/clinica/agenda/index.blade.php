@@ -18,11 +18,13 @@
                     <a class="menu-item" href="{{ $vm->urlNoLaborables() }}">
                         <i class="bi bi-calendar-x" aria-hidden="true"></i> Días no laborables
                     </a>
-                    {{-- Motivos de cita (WEB-2.17): dónde se marca que un motivo admite varias citas
-                         pendientes del mismo paciente. --}}
-                    <a class="menu-item" href="{{ $vm->urlMotivos() }}">
-                        <i class="bi bi-tags" aria-hidden="true"></i> Motivos de cita
-                    </a>
+                    {{-- Motivos de cita (WEB-8.1c): el catálogo con su precio y la marca de varias citas pendientes
+                         (WEB-2.17). Es del médico: a la secretaría no se le ofrece un enlace que da 403. --}}
+                    @if ($vm->ofreceLosMotivos())
+                        <a class="menu-item" href="{{ $vm->urlMotivos() }}">
+                            <i class="bi bi-tags" aria-hidden="true"></i> Motivos de cita
+                        </a>
+                    @endif
                     {{-- Cumpleaños (WEB-2.9): los que cumplen años hoy y el envío automático. Es una
                          herramienta de todos los días y por eso está acá, aunque no sea de la agenda:
                          el paciente que cumple años hoy entra aunque no tenga ninguna cita. --}}

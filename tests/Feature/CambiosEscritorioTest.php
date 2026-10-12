@@ -525,6 +525,77 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame(0, DB::table('recipe_grupo_detalle')->where('reg_medico', self::REG)->count());
     }
 
+    public function test_reemplazar_motivo_cita_conserva_los_motivos_que_creo_la_web_y_el_precio_de_los_del_escritorio(): void
+    {
+        // WEB-8.1c: `motivo_cita` no tiene clave primaria en el escritorio (sólo un índice único llamado `primarykey`), así que
+        // su registro de cambios es de sentencia (`op = T`): lo sube ENTERO (sólo `codigo` y `tipo_atencion`) y el reemplazo
+        // borra todo lo del médico. Dos cosas se conservan: (1) los motivos que creó la web (su `created`, hecho por la Action
+        // real) y (2) lo que el escritorio no conoce —el precio, la sede y la marca— de los motivos que vienen de él.
+        DB::table('motivo_cita')->insert(['reg_medico' => self::REG, 'codigo' => '01', 'tipo_atencion' => 'PRIMERA CONSULTA',
+            'precio' => 150.5, 'admite_varias_citas_pendientes' => 1]);
+        DB::table('motivo_cita')->insert(['reg_medico' => self::REG, 'codigo' => '02', 'tipo_atencion' => 'VIEJO QUE YA NO EXISTE']);
+
+        $web = app(\App\Actions\Catalogos\CrearMotivoDeCita::class)->ejecutar($this->medico, self::REG, ['razon' => 'De la web', 'precio' => 40], null, 'web');
+        $this->assertSame('03', $web->codigo, 'el correlativo sigue al mayor, también al del escritorio');
+
+        $this->subir([['id' => 79, 'tabla' => 'motivo_cita', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['codigo' => '01', 'tipo_atencion' => 'PRIMERA CONSULTA RENOMBRADA'], ['codigo' => '09', 'tipo_atencion' => 'NUEVO DEL ESCRITORIO']]]]);
+
+        $filas = DB::table('motivo_cita')->where('reg_medico', self::REG)->orderBy('codigo')->get()->keyBy('codigo');
+        $this->assertEqualsCanonicalizing(['01', '03', '09'], $filas->keys()->all(), 'el de la web se conserva; el viejo que el escritorio ya no tiene se va');
+
+        // El que el escritorio vuelve a mandar conserva lo que la web le puso; el nombre es el que mandó el escritorio.
+        $this->assertSame('PRIMERA CONSULTA RENOMBRADA', $filas['01']->tipo_atencion);
+        $this->assertEquals(150.5, $filas['01']->precio);
+        $this->assertEquals(1, $filas['01']->admite_varias_citas_pendientes);
+        $this->assertSame('DE LA WEB', $filas['03']->tipo_atencion);
+        $this->assertEquals(40, $filas['03']->precio);
+        $this->assertNull($filas['09']->precio);
+    }
+
+    public function test_reemplazar_motivo_cita_devuelve_al_codigo_repetido_la_fila_sin_sede(): void
+    {
+        // Si el mismo código está sin sede y en una sede (lo deja la sincronización), el escritorio —que no conoce las
+        // sedes— manda una sola fila: recupera el precio de la que no tiene sede.
+        $centro = \App\Models\MedicalCenter::create([
+            'country_id' => DB::table('countries')->value('id'), 'state_id' => DB::table('estados')->value('id'),
+            'city_id' => DB::table('cities')->value('id'), 'name' => 'Centro', 'address' => 'X',
+        ]);
+        $sede = \App\Models\Office::create(['medical_center_id' => $centro->id, 'medico_id' => $this->medico->id, 'reg_medico' => self::REG,
+            'office_number' => 'C1', 'modalidad' => 'hora_cita', 'duracion_cita' => 30, 'activo' => true]);
+        DB::table('motivo_cita')->insert(['reg_medico' => self::REG, 'codigo' => 'PRIM', 'tipo_atencion' => 'DE SEDE', 'precio' => 80, 'office_id' => $sede->id]);
+        DB::table('motivo_cita')->insert(['reg_medico' => self::REG, 'codigo' => 'PRIM', 'tipo_atencion' => 'GENERAL', 'precio' => 150]);
+
+        $this->subir([['id' => 80, 'tabla' => 'motivo_cita', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['codigo' => 'PRIM', 'tipo_atencion' => 'PRIMERA']]]]);
+
+        $fila = DB::table('motivo_cita')->where('reg_medico', self::REG)->get();
+        $this->assertCount(1, $fila);
+        $this->assertEquals(150, $fila[0]->precio);
+        $this->assertNull($fila[0]->office_id);
+    }
+
+    public function test_sin_las_lineas_de_config_de_motivo_cita_la_subida_si_borraria_lo_de_la_web(): void
+    {
+        // El contraste que ata los tests anteriores a la configuración.
+        $this->assertArrayHasKey('motivo_cita', config('sync_legado.sin_clave_con_altas_del_app'));
+        $this->assertArrayHasKey('motivo_cita', config('sync_legado.columnas_del_app_en_el_reemplazo'));
+
+        app(\App\Actions\Catalogos\CrearMotivoDeCita::class)->ejecutar($this->medico, self::REG, ['razon' => 'De la web', 'precio' => 40], null, 'web');
+        DB::table('motivo_cita')->insert(['reg_medico' => self::REG, 'codigo' => '01', 'tipo_atencion' => 'DEL ESCRITORIO', 'precio' => 10]);
+
+        config([
+            'sync_legado.sin_clave_con_altas_del_app' => ['recipe_detalle' => 'recipes'],
+            'sync_legado.columnas_del_app_en_el_reemplazo' => [],
+        ]);
+
+        $this->subir([['id' => 81, 'tabla' => 'motivo_cita', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['codigo' => '01', 'tipo_atencion' => 'DEL ESCRITORIO']]]]);
+
+        $this->assertSame(['01'], DB::table('motivo_cita')->where('reg_medico', self::REG)->pluck('codigo')->all(), 'la fila de la web se perdió');
+        $this->assertNull(DB::table('motivo_cita')->where('reg_medico', self::REG)->value('precio'), 'y el precio del que vuelve también');
+    }
+
     public function test_el_vademecum_se_sube_por_fila_y_no_pierde_lo_que_creo_la_web(): void
     {
         // WEB-8.1a: `vademecum` SÍ tiene clave primaria en el escritorio (`codemedicina`): lleva los tres triggers de

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Catalogos;
 
+use App\Support\FechaClinica;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -92,6 +93,37 @@ final class UsoDeUnItemDelCatalogo
             ->count();
 
         return new self(self::cuando($consultas, 'referencia', 'referencias'));
+    }
+
+    /**
+     * Un motivo de cita (WEB-8.1c): las citas (`cola`) del médico que lo nombran por su código, en `tipo` (escritorio y web)
+     * o en `motivo` (móvil), de **cualquier fecha**. Se cuentan citas, no pacientes. `$elCodigoSigueEnOtraFila` es la
+     * salvedad de los códigos repetidos por sede: si otra fila conserva el código, las citas no quedan huérfanas.
+     */
+    public static function motivoDeCita(string $regMedico, string $codigo, bool $elCodigoSigueEnOtraFila = false): self
+    {
+        $codigo = trim($codigo);
+
+        if ($elCodigoSigueEnOtraFila || $codigo === '') {
+            return new self([]);
+        }
+
+        $citas = DB::table('cola')
+            ->where('reg_medico', $regMedico)
+            ->where(fn ($consulta) => $consulta->whereRaw('TRIM(tipo) = ?', [$codigo])->orWhereRaw('TRIM(motivo) = ?', [$codigo]))
+            ->selectRaw('COUNT(*) AS total, MIN(fecha) AS desde')
+            ->first();
+
+        $total = (int) ($citas->total ?? 0);
+
+        if ($total === 0) {
+            return new self([]);
+        }
+
+        $primera = $citas->desde !== null ? FechaClinica::formato($citas->desde) : '—';
+        $desde = $primera !== '—' ? ' (la más antigua es del ' . $primera . ')' : '';
+
+        return new self([($total === 1 ? '1 cita' : $total . ' citas') . $desde]);
     }
 
     public function enUso(): bool

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * **Motivos de consulta del catálogo** (WEB-8.1b): `motivos_consulta` del médico del contexto
  * (`/clinica/catalogos/motivos-consulta`). No son los **motivos de cita** (`motivo_cita`, con precio y la marca de citas
- * múltiples), que se administran en `/clinica/agenda/motivos` (WEB-2.17). Todo el comportamiento es el de
+ * múltiples), que se administran en `/clinica/catalogos/motivos-cita` (WEB-8.1c). Todo el comportamiento es el de
  * `CatalogoSimpleController`; el alta es la del catálogo de la consulta (`AgregarMotivoAlCatalogo`, vía `CrearMotivoEnElCatalogo`).
  */
 class MotivoConsultaCatalogoController extends CatalogoSimpleController

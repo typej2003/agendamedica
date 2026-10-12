@@ -352,15 +352,17 @@ class CatalogosVistaTest extends TestCase
     {
         $items = CatalogosDisponibles::submenu('clinica.catalogos.tratamientos');
 
-        // WEB-8.1b sumó cinco catálogos (la línea de `CATALOGOS` que 8.1a dejó preparada).
-        $this->assertSame(['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'], array_column($items, 'texto'));
-        $this->assertSame([false, true, false, false, false, false, false], array_column($items, 'activo'));
+        // WEB-8.1b sumó cinco catálogos (la línea de `CATALOGOS` que 8.1a dejó preparada) y WEB-8.1c, los motivos de cita.
+        $this->assertSame(['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Motivos de cita', 'Exámenes', 'Tipos de examen', 'Médicos referidos'], array_column($items, 'texto'));
+        $this->assertSame([false, true, false, false, false, false, false, false], array_column($items, 'activo'));
         $this->assertSame(route('clinica.catalogos.medicamentos'), $items[0]['url']);
         $this->assertSame('bi-capsule', $items[0]['icono']);
 
         // Una pantalla hija (el editor) mantiene activo a su catálogo; el nombre parecido de otro no lo activa.
-        $this->assertSame([false, true, false, false, false, false, false], array_column(CatalogosDisponibles::submenu('clinica.catalogos.tratamientos.editar'), 'activo'));
-        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::submenu(null), 'activo'));
-        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::submenu('clinica.pacientes'), 'activo'));
+        $this->assertSame([false, true, false, false, false, false, false, false], array_column(CatalogosDisponibles::submenu('clinica.catalogos.tratamientos.editar'), 'activo'));
+        // «Motivos de consulta» y «Motivos de cita» se parecen en el nombre de la ruta y no se activan entre sí.
+        $this->assertSame([false, false, false, false, true, false, false, false], array_column(CatalogosDisponibles::submenu('clinica.catalogos.motivos-cita.guardar'), 'activo'));
+        $this->assertSame(array_fill(0, 8, false), array_column(CatalogosDisponibles::submenu(null), 'activo'));
+        $this->assertSame(array_fill(0, 8, false), array_column(CatalogosDisponibles::submenu('clinica.pacientes'), 'activo'));
     }
 }

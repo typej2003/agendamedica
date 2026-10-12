@@ -473,14 +473,14 @@ class CatalogosClinicosWebTest extends TestCase
         }
     }
 
-    public function test_el_menu_lateral_ofrece_los_siete_catalogos_como_submenus_y_los_errores_estan_en_espanol(): void
+    public function test_el_menu_lateral_ofrece_los_ocho_catalogos_como_submenus_y_los_errores_estan_en_espanol(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.diagnosticos'))->assertOk()->getContent();
         $submenu = $this->submenuDeCatalogos($html);
         $this->assertSame(
-            ['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'],
+            ['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Motivos de cita', 'Exámenes', 'Tipos de examen', 'Médicos referidos'],
             $submenu['textos']
         );
         $this->assertSame(['Diagnósticos'], $submenu['activos']);

@@ -64,6 +64,8 @@ class FormularioDeCita
             ahora: FechaDelConsultorio::ahora(),
             // A dónde vuelve si se llegó con "Hacer cita" desde los récipes (WEB-5.2); `null` = la agenda.
             volverA: $datos['volverA'] ?? null,
+            // Sólo el médico administra el catálogo de motivos (WEB-8.1c): a la secretaría no se le ofrece un enlace con 403.
+            puedeAdministrarMotivos: (bool) ($datos['puedeAdministrarMotivos'] ?? false),
         );
     }
 }

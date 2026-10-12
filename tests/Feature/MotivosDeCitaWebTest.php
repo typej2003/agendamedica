@@ -21,7 +21,7 @@ use Tests\TestCase;
 /**
  * La excepción de citas múltiples (WEB-2.17): la marca **del motivo** que hace que agendar dos veces al
  * mismo paciente en el mismo consultorio no pregunte, la pantalla que la administra
- * (`/clinica/agenda/motivos`) y la regla común de la cita única, que no cambia.
+ * (`/clinica/catalogos/motivos-cita`, que absorbió la de WEB-8.1c) y la regla común de la cita única, que no cambia.
  *
  * La marca vive en `motivo_cita.admite_varias_citas_pendientes` (columna nullable nueva): `null` —lo que
  * traen las filas que ya existían y las que sube el escritorio— se comporta como `false`.
@@ -177,7 +177,7 @@ class MotivosDeCitaWebTest extends TestCase
 
     public function test_un_invitado_no_entra(): void
     {
-        $this->get('/clinica/agenda/motivos')->assertRedirect(route('login'));
+        $this->get('/clinica/catalogos/motivos-cita')->assertRedirect(route('login'));
     }
 
     public function test_sin_contexto_no_se_puede_marcar_motivos(): void
@@ -185,7 +185,7 @@ class MotivosDeCitaWebTest extends TestCase
         // El catálogo es de un médico: sin saber cuál, la pantalla no tiene sujeto.
         [$user] = $this->medicoConAcceso();
 
-        $this->actingAs($user)->get('/clinica/agenda/motivos')->assertRedirect(route('clinica.contexto'));
+        $this->actingAs($user)->get('/clinica/catalogos/motivos-cita')->assertRedirect(route('clinica.contexto'));
     }
 
     public function test_la_pantalla_lista_los_motivos_del_medico_del_contexto(): void
@@ -201,7 +201,7 @@ class MotivosDeCitaWebTest extends TestCase
         $this->motivo($otro, 'AJENO');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/agenda/motivos');
+            ->get('/clinica/catalogos/motivos-cita');
 
         $respuesta->assertOk();
         $respuesta->assertSee('Motivos de cita');
@@ -220,11 +220,11 @@ class MotivosDeCitaWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/agenda/motivos');
+            ->get('/clinica/catalogos/motivos-cita');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Todavía no hay motivos de cita');
-        $respuesta->assertSee('sincronización del escritorio');
+        $respuesta->assertSee('Todavía no tienes motivos de cita');
+        $respuesta->assertSee('Crear el primer motivo');
     }
 
     public function test_la_agenda_lleva_a_la_pantalla_de_motivos(): void
@@ -236,7 +236,7 @@ class MotivosDeCitaWebTest extends TestCase
             ->get('/clinica/agenda?vista=dia&fecha=' . $this->lunes->toDateString() . '&sede=todas');
 
         $respuesta->assertOk();
-        $respuesta->assertSee(route('clinica.agenda.motivos'), false);
+        $respuesta->assertSee(route('clinica.catalogos.motivos-cita'), false);
         $respuesta->assertSee('Motivos de cita');
     }
 
@@ -248,15 +248,15 @@ class MotivosDeCitaWebTest extends TestCase
         $motivo = $this->motivo($medico, 'MASA');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->patch('/clinica/agenda/motivos/' . $motivo->id . '/alternar');
+            ->patch('/clinica/catalogos/motivos-cita/' . $motivo->id . '/alternar');
 
-        $respuesta->assertRedirect(route('clinica.agenda.motivos'));
+        $respuesta->assertRedirect(route('clinica.catalogos.motivos-cita'));
         $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'varias citas pendientes'));
         $this->assertTrue($motivo->refresh()->admite_varias_citas_pendientes);
 
         // Y la pantalla lo muestra marcado, con la acción para volver atrás.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/agenda/motivos')
+            ->get('/clinica/catalogos/motivos-cita')
             ->assertSee('Varias citas')
             ->assertSee('Volver a una sola');
     }
@@ -267,14 +267,14 @@ class MotivosDeCitaWebTest extends TestCase
         $motivo = $this->motivo($medico, 'MASA', ['admite_varias_citas_pendientes' => true]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->patch('/clinica/agenda/motivos/' . $motivo->id . '/alternar')
-            ->assertRedirect(route('clinica.agenda.motivos'));
+            ->patch('/clinica/catalogos/motivos-cita/' . $motivo->id . '/alternar')
+            ->assertRedirect(route('clinica.catalogos.motivos-cita'));
 
         // Desmarcar vuelve a dejar la columna en `null` (como las filas que nunca se marcaron), no en `false`.
         $this->assertNull($motivo->refresh()->admite_varias_citas_pendientes);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/agenda/motivos')
+            ->get('/clinica/catalogos/motivos-cita')
             ->assertSee('Una sola cita')
             ->assertSee('Admitir varias');
     }
@@ -286,7 +286,7 @@ class MotivosDeCitaWebTest extends TestCase
         $ajeno = $this->motivo($otro, 'ECO', ['admite_varias_citas_pendientes' => false]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->patch('/clinica/agenda/motivos/' . $ajeno->id . '/alternar')
+            ->patch('/clinica/catalogos/motivos-cita/' . $ajeno->id . '/alternar')
             ->assertNotFound();
 
         $this->assertFalse((bool) $ajeno->refresh()->admite_varias_citas_pendientes);
@@ -483,7 +483,7 @@ class MotivosDeCitaWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Ya tiene una cita pendiente');
         $respuesta->assertSee('márcalo en los motivos de cita');
-        $respuesta->assertSee(route('clinica.agenda.motivos'), false);
+        $respuesta->assertSee(route('clinica.catalogos.motivos-cita'), false);
         $respuesta->assertSee('Agendar otra de todos modos');
     }
 }

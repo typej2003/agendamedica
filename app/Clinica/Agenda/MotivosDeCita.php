@@ -7,15 +7,22 @@ use App\Models\Office;
 use Illuminate\Support\Collection;
 
 /**
- * El catálogo de motivos (razones) de cita del médico, que usan el filtro de la agenda, el formulario
- * de la cita, la regla de la cita única (WEB-2.17) y la pantalla que marca los motivos.
+ * El catálogo de motivos (razones) de cita del médico **tal como lo usa la agenda**: el filtro, el `<select>` del formulario
+ * de la cita, el precio del monto vacío y la regla de la cita única (WEB-2.17). El ABM del catálogo (alta, edición y quitar,
+ * WEB-8.1c) es otra lectura: `App\Clinica\Catalogos\MotivosDeCitaDelCatalogo`.
  */
 class MotivosDeCita
 {
     /**
-     * Los motivos de cita que se pueden elegir en esa sede: los suyos primero y los que no tienen
-     * sede (los que sube el escritorio, que no conoce el concepto de sede) como respaldo. Nunca se
-     * repite un código: el `<select>` no admite dos opciones con el mismo valor.
+     * Los motivos de cita que se pueden elegir en esa sede (WEB-8.1c): **los suyos y los que no tienen sede**
+     * (los que sube el escritorio, que no conoce el concepto de sede, y los que el médico crea para todas).
+     * Los de **otra** sede no se ofrecen: un motivo de una sede puede no existir en las demás (equipo que sólo hay en
+     * un consultorio) y su precio puede ser otro. Nunca se repite un código —el `<select>` no admite dos opciones con
+     * el mismo valor—: si la sede y «todas» traen el mismo código, gana el de la sede.
+     *
+     * Sin sede elegida (`null`) no hay a qué acotar: se devuelve el catálogo del médico con un solo motivo por código
+     * (el filtro de la agenda lo usa así). Esta lista es también **la que resuelve** el precio y la marca del código que
+     * llega del formulario (`AgendamientoDeCitas`), así que el formulario y el servidor miran el mismo catálogo.
      *
      * @return Collection<int,MotivoCita>
      */
@@ -23,34 +30,13 @@ class MotivosDeCita
     {
         return MotivoCita::where('reg_medico', $regMedico)
             ->get()
+            ->when($sede !== null, fn (Collection $motivos) => $motivos->filter(
+                fn (MotivoCita $motivo) => $motivo->office_id === null || (int) $motivo->office_id === (int) $sede->id
+            ))
             ->sortByDesc(fn (MotivoCita $motivo) => $motivo->office_id === $sede?->id)
             ->unique('codigo')
             ->sortBy('tipo_atencion')
             ->values();
-    }
-
-    /**
-     * **Todas** las filas del catálogo del médico, tal como están en la tabla: el ABM de motivos las
-     * recorre fila por fila y las muestra todas, incluidas las repetidas por código —un mismo `codigo`
-     * puede estar cargado una vez por sede y otra sin sede; `de()` se queda con una sola para el
-     * `<select>`—, así que necesita el nombre de la sede para distinguirlas.
-     *
-     * @return Collection<int,MotivoCita>
-     */
-    public function delMedico(string $regMedico): Collection
-    {
-        return MotivoCita::with('office.medicalCenter')
-            ->where('reg_medico', $regMedico)
-            ->orderBy('codigo')
-            ->orderBy('office_id')
-            ->orderBy('id')
-            ->get();
-    }
-
-    /** Un motivo del médico del contexto; el de otro médico no se toca (responde 404). */
-    public function encontrar(string $regMedico, int $id): MotivoCita
-    {
-        return MotivoCita::where('reg_medico', $regMedico)->whereKey($id)->firstOrFail();
     }
 
     /**

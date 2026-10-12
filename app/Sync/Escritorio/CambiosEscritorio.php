@@ -461,8 +461,25 @@ class CambiosEscritorio
                 ->whereIn('source', ['mobile', 'web'])->where('reg_medico', $carga->reg_medico)->pluck('record_id');
             $borrar->whereNotIn('id', $delApp);
         }
+
+        // Las columnas que el escritorio no conoce (precio, sede y marca de un motivo de cita, WEB-8.1c) se guardan antes de borrar
+        // para devolvérselas a la fila que vuelve a llegar con el mismo código.
+        $propias = config("sync_legado.columnas_del_app_en_el_reemplazo.{$tabla}");
+        $previas = $propias ? (clone $borrar)->orderBy('id')->get()->groupBy(fn ($fila) => trim((string) ($fila->{$propias['clave']} ?? ''))) : collect();
+
         $borrar->delete();
         foreach ($limpias as $limpia) {
+            if ($propias) {
+                $anterior = $previas->get(trim((string) ($limpia[$propias['clave']] ?? '')))
+                    ?->sortBy(fn ($fila) => ($fila->office_id ?? null) === null ? 0 : 1)->first();
+
+                foreach ($anterior ? $propias['columnas'] : [] as $columna) {
+                    if ($this->tablas->tieneColumna($tabla, $columna)) {
+                        $limpia[$columna] = $anterior->{$columna};
+                    }
+                }
+            }
+
             DB::table($tabla)->insert($limpia);
         }
 

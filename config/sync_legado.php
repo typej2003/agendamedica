@@ -77,6 +77,22 @@ return [
         // de la web. `vademecum`, en cambio, SÍ tiene clave primaria y se sube por fila: no entra acá.
         'recipe_grupo' => 'recipe_grupo',
         'recipe_grupo_detalle' => 'recipe_grupo_detalle',
+        // Los motivos de cita que crea la web (WEB-8.1c, `CrearMotivoDeCita`): `motivo_cita` no tiene clave primaria en el
+        // PowerBuilder, sólo un índice único llamado `primarykey` (`f_agregar_datos.srf:1697`), así que su registro de cambios
+        // es de sentencia (`op = T`) y cada subida reemplaza la tabla entera del médico. Sin esta línea esa subida borraría
+        // los motivos que creó la web. Cada fila anota su `created` bajo `motivo_cita`.
+        'motivo_cita' => 'motivo_cita',
+    ],
+
+    // Columnas que el escritorio NO conoce y que el reemplazo de una tabla sin clave no debe borrar (WEB-8.1c). Al reemplazar
+    // `motivo_cita` el escritorio manda sólo `codigo` y `tipo_atencion`: sin esto, cada subida dejaría los motivos que vienen
+    // del escritorio sin el precio, la sede ni la marca de varias citas que la web les puso. Por cada fila que llega se
+    // restauran esas columnas desde la fila que tenía el mismo `clave` (la que no tiene sede, si hay varias).
+    'columnas_del_app_en_el_reemplazo' => [
+        'motivo_cita' => [
+            'clave' => 'codigo',
+            'columnas' => ['office_id', 'precio', 'admite_varias_citas_pendientes'],
+        ],
     ],
 
     // Tablas del escritorio que el app guarda en su copia local con el mismo nombre. Cuando el

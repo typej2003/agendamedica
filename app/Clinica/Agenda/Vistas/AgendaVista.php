@@ -219,10 +219,19 @@ final class AgendaVista
         return route('clinica.agenda.no-laborables', ['mes' => $this->fecha()->format('Y-m')]);
     }
 
-    /** Los motivos de cita y su marca de "varias citas" (WEB-2.17): la excepción a la cita única. */
+    /**
+     * El catálogo de motivos de cita (WEB-8.1c): con su precio, su sede y la marca de "varias citas" (WEB-2.17). Es una
+     * pantalla del catálogo del médico, así que el menú «Más» sólo la ofrece a quien puede entrar a la consulta (la secretaría
+     * recibiría un 403): la misma regla que ya baja a cada fila.
+     */
     public function urlMotivos(): string
     {
-        return route('clinica.agenda.motivos');
+        return route('clinica.catalogos.motivos-cita');
+    }
+
+    public function ofreceLosMotivos(): bool
+    {
+        return $this->puedeAbrirLaConsulta;
     }
 
     /**

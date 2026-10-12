@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda\Vistas;
 
+use App\Actions\Catalogos\ReglasDelMotivoDeCita;
 use App\Clinica\Agenda\Jornada;
 use App\Models\Office;
 use Carbon\Carbon;
@@ -40,6 +41,8 @@ final class FormularioDeCitaVista
         private Carbon $ahora,
         /** @var array{consulta:int, url:string, texto:string}|null  a dónde vuelve si se llegó desde los récipes */
         private ?array $volverA = null,
+        /** Si quien agenda puede administrar el catálogo de motivos (WEB-8.1c: sólo el médico; la secretaría agenda con lo que él cargó). */
+        private bool $puedeAdministrarMotivos = false,
     ) {
     }
 
@@ -114,10 +117,22 @@ final class FormularioDeCitaVista
         return route('clinica.agenda.no-laborables');
     }
 
-    /** Los motivos de cita y su marca de "varias citas" (WEB-2.17). */
+    /** El catálogo de motivos de cita (WEB-8.1c): dónde se cargan, con su precio, y se marca "varias citas" (WEB-2.17). */
     public function urlMotivos(): string
     {
-        return route('clinica.agenda.motivos');
+        return route('clinica.catalogos.motivos-cita');
+    }
+
+    /** El alta de un motivo con el diálogo ya abierto: es a donde manda el estado vacío. */
+    public function urlCrearMotivo(): string
+    {
+        return route('clinica.catalogos.motivos-cita', ['nuevo' => 1]);
+    }
+
+    /** ¿Ofrece el enlace al catálogo de motivos? Sólo el médico lo administra; la secretaría recibiría un 403. */
+    public function puedeAdministrarMotivos(): bool
+    {
+        return $this->puedeAdministrarMotivos;
     }
 
     // --------------------------------------------------------------------------------------- Paso 1
@@ -256,31 +271,72 @@ final class FormularioDeCitaVista
     }
 
     /**
-     * Los motivos del catálogo; si el de la cita no está (se guardó otro código), se agrega para no
-     * perderlo al editar.
+     * Los motivos que se ofrecen al agendar en esta sede (WEB-8.1c): los de la sede y los que no tienen sede
+     * (`MotivosDeCita::de`). Cada opción lleva el precio vigente del motivo, que la página muestra como referencia del monto.
      *
-     * @return array<int,array{valor:string, texto:string, elegido:bool}>
+     * Si un motivo de la sede y otro «de todas» se llaman igual, se ofrece **uno**, el de la sede (con su precio): el
+     * médico crea el de la sede justamente para cambiar el precio. El que ya está elegido siempre se conserva. Si el motivo
+     * de la cita que se edita no está (se guardó otro código, o es de otra sede), se agrega para no perderlo al editar.
+     *
+     * @return array<int,array{valor:string, texto:string, elegido:bool, precio:?string, precioTexto:?string}>
      */
     public function opcionesDeMotivo(): array
     {
         $elegido = (string) $this->valor('motivo');
-        $opciones = $this->motivos->map(fn ($motivo) => [
-            'valor'   => (string) $motivo->codigo,
-            'texto'   => $motivo->tipo_atencion ?: (string) $motivo->codigo,
-            'elegido' => $elegido === (string) $motivo->codigo,
-        ])->values()->all();
+        $vistos = [];
+        $opciones = [];
+
+        // Primero los de la sede: si la razón se repite, la que se queda es la suya.
+        $ordenados = $this->motivos->sortByDesc(fn ($motivo) => $this->sede !== null && (int) $motivo->office_id === (int) $this->sede->id)->values();
+
+        foreach ($ordenados as $motivo) {
+            $texto = $motivo->tipo_atencion ?: (string) $motivo->codigo;
+            $clave = ReglasDelMotivoDeCita::clave($texto);
+            $esElElegido = $elegido === (string) $motivo->codigo;
+
+            if (isset($vistos[$clave]) && ! $esElElegido) {
+                continue;
+            }
+
+            $vistos[$clave] = true;
+            $opciones[] = [
+                'valor' => (string) $motivo->codigo,
+                'texto' => $texto,
+                'elegido' => $esElElegido,
+                'precio' => $motivo->precio === null ? null : number_format((float) $motivo->precio, 2, '.', ''),
+                'precioTexto' => $motivo->precio === null ? null : number_format((float) $motivo->precio, 2, ',', '.'),
+            ];
+        }
+
+        usort($opciones, fn ($a, $b) => strcasecmp($a['texto'], $b['texto']));
 
         if ($elegido !== '' && ! $this->motivos->contains(fn ($m) => (string) $m->codigo === $elegido)) {
-            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (no está en el catálogo)', 'elegido' => true];
+            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (no está en el catálogo de esta sede)', 'elegido' => true, 'precio' => null, 'precioTexto' => null];
         }
 
         return $opciones;
     }
 
-    /** El precio del motivo elegido: es lo que se cobra si el monto se deja vacío. */
-    public function precioDelMotivo()
+    /** ¿La sede no tiene ningún motivo para ofrecer? Es el estado vacío del selector. */
+    public function sinMotivos(): bool
     {
-        return $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->precio;
+        return $this->motivos->isEmpty();
+    }
+
+    /** El precio del motivo elegido (con punto, para el `placeholder` del monto): es lo que se cobra si el monto se deja vacío. */
+    public function precioDelMotivo(): ?string
+    {
+        $precio = $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->precio;
+
+        return $precio === null ? null : number_format((float) $precio, 2, '.', '');
+    }
+
+    /** La ayuda del monto: dice de dónde sale lo que se cobra si se deja vacío, con el precio del motivo elegido si lo tiene. */
+    public function ayudaDelMonto(): string
+    {
+        $precio = $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->precio;
+
+        return 'Vacío = el precio del motivo' . ($precio === null ? '.' : ' (' . number_format((float) $precio, 2, ',', '.') . ').');
     }
 
     /**

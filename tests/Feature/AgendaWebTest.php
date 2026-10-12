@@ -1073,7 +1073,8 @@ class AgendaWebTest extends TestCase
             ->assertOk()
             ->assertSee('Sábado 10/10/2026');
 
-        foreach (['/clinica/agenda/motivos', '/clinica/agenda/no-laborables'] as $ruta) {
+        // (WEB-8.1c: la pantalla de motivos de cita pasó al catálogo y ya no lleva el enlace de regreso al día de la agenda.)
+        foreach (['/clinica/agenda/no-laborables'] as $ruta) {
             $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($ruta)
                 ->assertOk()
                 ->assertSee('fecha=2026-10-10', false)

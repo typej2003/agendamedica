@@ -128,7 +128,11 @@
                          (WEB-2.17): acá es donde el usuario se entera de que existe. --}}
                     <p class="form-text mb-0 mt-3">
                         Si este motivo se agenda varias veces —masajistas, terapias—,
-                        <a href="{{ $vm->urlMotivos() }}">márcalo en los motivos de cita</a> y no se vuelve a preguntar.
+                        @if ($vm->puedeAdministrarMotivos())
+                            <a href="{{ $vm->urlMotivos() }}">márcalo en los motivos de cita</a> y no se vuelve a preguntar.
+                        @else
+                            pídele al médico que lo marque en sus motivos de cita y no se vuelve a preguntar.
+                        @endif
                     </p>
                 </div>
             @endif
@@ -243,16 +247,31 @@
 
                     <div class="col-md-3">
                         <label class="form-label" for="motivo">Motivo</label>
-                        <select name="motivo" id="motivo" class="form-select">
-                            <option value="">Sin motivo</option>
+                        <select name="motivo" id="motivo" class="form-select" data-motivo-select>
+                            <option value="" data-precio="">Sin motivo</option>
                             @foreach ($vm->opcionesDeMotivo() as $opcion)
-                                <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
+                                <option value="{{ $opcion['valor'] }}" data-precio="{{ $opcion['precio'] }}"
+                                        data-precio-texto="{{ $opcion['precioTexto'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                             @endforeach
                         </select>
+                        {{-- Sin motivos para esta sede (WEB-8.1c): se dice y se ofrece crear el primero, que el médico carga en
+                             su catálogo con el precio. La secretaría agenda con lo que él cargó. --}}
+                        @if ($vm->sinMotivos())
+                            <span class="form-text d-block">
+                                Esta sede todavía no tiene motivos de cita.
+                                @if ($vm->puedeAdministrarMotivos())
+                                    <a href="{{ $vm->urlCrearMotivo() }}">Crea el primero</a> con su precio.
+                                @else
+                                    Pídele al médico que los cargue.
+                                @endif
+                            </span>
+                        @elseif ($vm->puedeAdministrarMotivos())
+                            <a class="form-text d-block" href="{{ $vm->urlMotivos() }}">Administrar motivos</a>
+                        @endif
                         {{-- La excepción de citas múltiples (WEB-2.17): el motivo marcado no pregunta. Se
                              dice acá para que no parezca que la regla de la cita pendiente se rompió. --}}
                         @if ($vm->motivoAdmiteVarias())
-                            <span class="form-text">Admite varias citas pendientes del mismo paciente.</span>
+                            <span class="form-text d-block">Admite varias citas pendientes del mismo paciente.</span>
                         @endif
                     </div>
 
@@ -260,7 +279,7 @@
                         <label class="form-label" for="monto">Monto</label>
                         <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
                                value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->precioDelMotivo() }}">
-                        <span class="form-text">Vacío = el precio del motivo.</span>
+                        <span class="form-text" id="monto-ayuda">{{ $vm->ayudaDelMonto() }}</span>
                     </div>
                 </div>
             </div>
