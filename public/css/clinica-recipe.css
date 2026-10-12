@@ -104,12 +104,24 @@
 .recipe-indicacion-fila { margin-bottom: 2.6mm; break-inside: avoid; }
 .recipe-indicacion { margin: 0; white-space: pre-line; }
 
-/* ----------------------------------------------------------------------------- Próxima cita y lugar del QR */
+/* ----------------------------------------------------------------------------- Próxima cita y QR de verificación */
 
 .recipe-proxima-cita { margin: 0; font-size: 8pt; font-weight: 700; }
 
-/* 16 × 16 mm reservados para el código QR de verificación (tarea posterior, WEB-5.6): vacío y sin borde. */
+/* El lugar del QR cuando el récipe no trae uno (no pasa desde la web): 16 × 16 mm vacíos, para no mover nada. */
 .recipe-qr-reservado { flex: none; width: 16mm; height: 16mm; }
+
+/* El QR de verificación (WEB-5.6): 16 × 16 mm (con su zona de silencio de 2 módulos, ≈ 0,39 mm por módulo) y, a su lado, la
+   dirección y el código corto en letra chica. Va sobre blanco y por encima del sello, que si está a la izquierda lo tapa:
+   un QR tapado no se lee. El alto de la franja de firma (22 mm) no cambia, así que la cuenta de `MedidasDeLaMitad` tampoco. */
+.recipe-qr { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 1.5mm; flex: none; background: #fff; }
+.recipe-qr-codigo { flex: none; width: 16mm; height: 16mm; }
+.recipe-qr-codigo svg { display: block; width: 100%; height: 100%; }
+.recipe-qr-leyenda { min-width: 0; font-size: 6pt; line-height: 1.25; }
+.recipe-qr-linea { margin: 0; }
+.recipe-qr-numero { font-size: 7.5pt; letter-spacing: .15mm; }
+.recipe-qr-aviso { font-weight: 700; }
+.recipe-qr-ejemplo .recipe-qr-numero { letter-spacing: 0; }
 
 /* ---------------------------------------------------------------------------------------------- Impresión */
 

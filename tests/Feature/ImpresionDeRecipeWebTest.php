@@ -92,9 +92,9 @@ class ImpresionDeRecipeWebTest extends TestCase
         $respuesta->assertSee('Av. Principal, Torre Salud, piso 3');
         $respuesta->assertSee('0251-5551234');
         $respuesta->assertSee('consultorio@example.com');
-        // El lugar reservado para el QR existe y está vacío (el QR es una tarea posterior).
-        $respuesta->assertSee('recipe-qr-reservado', false);
-        $respuesta->assertDontSee('<img class="recipe-qr', false);
+        // El lugar del QR ya no está vacío (WEB-5.6): trae el QR de verificación (el detalle, en RecipeVerificacionQrTest).
+        $respuesta->assertDontSee('recipe-qr-reservado', false);
+        $respuesta->assertSee('recipe-qr-codigo', false);
     }
 
     public function test_es_una_pagina_de_impresion_aparte_con_la_barra_que_no_se_imprime(): void

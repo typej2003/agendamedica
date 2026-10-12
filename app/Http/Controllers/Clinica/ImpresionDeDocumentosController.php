@@ -10,6 +10,7 @@ use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Clinica\Impresion\DocumentosPorCita;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
+use App\Clinica\Impresion\QrParaLosRecipes;
 use App\Clinica\Impresion\Vistas\DocumentosDeLaCitaVista;
 use App\Clinica\Impresion\Vistas\HojasImpresasVista;
 use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
@@ -54,6 +55,7 @@ class ImpresionDeDocumentosController extends Controller
         private MembreteDelMedico $membretes,
         private ProximaCitaDelRecipe $proximaCita,
         private DocumentosPorCita $porCita,
+        private QrParaLosRecipes $qr,
     ) {
     }
 
@@ -184,6 +186,9 @@ class ImpresionDeDocumentosController extends Controller
             abort_if($documento === null, 404);
             $documentos[] = $documento;
         }
+
+        // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima.
+        $documentos = $this->qr->agregar($documentos, $consulta, $contexto['medico']);
 
         $opciones = $this->membretes->opciones($contexto['medico']);
 

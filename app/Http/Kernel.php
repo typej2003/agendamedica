@@ -46,6 +46,12 @@ class Kernel extends HttpKernel
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+
+        // La página pública de verificación del récipe (WEB-5.6): sin sesión, sin cookies y sin CSRF (sólo GET). No usa el
+        // grupo `web` a propósito: quien escanea el QR no inicia sesión ni debe recibir una cookie.
+        'verificacion' => [
+            \App\Http\Middleware\VerificacionPublica::class,
+        ],
     ];
 
     /**

@@ -1,0 +1,144 @@
+/* La página pública de verificación del récipe (WEB-5.6): la abre una farmacia con el teléfono al escanear el QR de la hoja.
+   Es una pantalla aparte, sin el armazón de la web clínica y sin Bootstrap: usa los tokens `--ds-*` de `gineco.css`. Pensada
+   primero para el celular (una columna de 40rem como máximo) y con cada estado en color + icono + texto. */
+
+.verif-cuerpo {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--ds-fondo);
+    color: var(--ds-texto);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------------------------------------ Marca */
+
+.verif-marca { background: var(--ds-barra); color: #fff; }
+.verif-marca-interior {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .25rem 1rem;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: .875rem 1rem;
+}
+.verif-marca-nombre { font-size: 1.125rem; font-weight: 700; letter-spacing: -.01em; }
+.verif-marca-punto { color: #d8c4e8; font-weight: 600; }
+.verif-marca-titulo { font-size: .875rem; color: #e6dcf0; }
+
+/* ------------------------------------------------------------------------------------------------ Página */
+
+.verif-pagina {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem 1rem 2rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.verif-pie { padding: 1rem; text-align: center; font-size: .8125rem; color: var(--ds-texto-3); }
+.verif-pie p { margin: 0; }
+
+/* ------------------------------------------------------------------------------------------- Resultado */
+
+.verif-resultado {
+    display: flex;
+    gap: .875rem;
+    align-items: flex-start;
+    padding: 1.125rem 1rem;
+    border: 1px solid;
+    border-radius: var(--ds-radio-card, 12px);
+}
+.verif-resultado-exito { background: var(--ds-exito-bg); border-color: var(--ds-exito-borde); color: var(--ds-exito); }
+.verif-resultado-aviso { background: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
+.verif-resultado-peligro { background: var(--ds-peligro-bg); border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
+.verif-resultado-info { background: var(--ds-info-bg); border-color: var(--ds-info-borde); color: var(--ds-info); }
+
+.verif-icono { flex: none; width: 2.5rem; height: 2.5rem; }
+.verif-resultado-titulo { margin: 0; font-size: 1.375rem; font-weight: 700; line-height: 1.25; }
+.verif-resultado-texto { margin: .375rem 0 0; font-size: .9375rem; color: var(--ds-texto); }
+
+/* --------------------------------------------------------------------------------------------- Tarjetas */
+
+.verif-tarjeta {
+    padding: 1rem;
+    background: var(--ds-superficie);
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card, 12px);
+}
+.verif-tarjeta-suave { background: var(--ds-superficie-2); }
+.verif-titulo { margin: 0 0 .5rem; font-size: 1.375rem; font-weight: 700; line-height: 1.25; }
+.verif-subtitulo { margin: 0 0 .625rem; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ds-texto-2); }
+.verif-texto { margin: 0 0 1rem; color: var(--ds-texto-2); }
+.verif-nota { margin: 0; font-size: .8125rem; color: var(--ds-texto-3); }
+
+.verif-medico-nombre { margin: 0 0 .5rem; font-size: 1.125rem; font-weight: 600; }
+
+.verif-datos { margin: 0; display: grid; gap: .5rem; }
+.verif-dato { display: grid; grid-template-columns: minmax(7rem, 9rem) 1fr; gap: .5rem; }
+.verif-dato dt { font-size: .875rem; color: var(--ds-texto-3); font-weight: 500; }
+.verif-dato dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+/* --------------------------------------------------------------------------------------- Medicamentos */
+
+.verif-medicamentos { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+.verif-medicamento { display: flex; gap: .75rem; align-items: baseline; padding-bottom: .5rem; border-bottom: 1px solid var(--ds-borde); }
+.verif-medicamento:last-child { padding-bottom: 0; border-bottom: 0; }
+.verif-cantidad {
+    flex: none;
+    min-width: 2rem;
+    padding: .125rem .5rem;
+    text-align: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+    border-radius: var(--ds-radio-sm, 8px);
+}
+.verif-medicamento-nombre { font-weight: 600; overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------------------------- Código corto */
+
+.verif-etiqueta { display: block; margin-bottom: .375rem; font-size: .8125rem; font-weight: 600; color: var(--ds-texto-2); }
+.verif-buscar-fila { display: flex; gap: .5rem; }
+.verif-campo {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 2.75rem;
+    padding: 0 .75rem;
+    font: inherit;
+    font-size: 1.125rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ds-texto);
+    background: var(--ds-superficie);
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio, 10px);
+}
+.verif-campo:focus-visible, .verif-boton:focus-visible { outline: 3px solid var(--ds-violeta-200); outline-offset: 2px; }
+.verif-boton {
+    flex: none;
+    height: 2.75rem;
+    padding: 0 1.25rem;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ds-violeta-700);
+    border: 0;
+    border-radius: var(--ds-radio, 10px);
+    cursor: pointer;
+}
+.verif-boton:hover { background: var(--ds-violeta-800); }
+.verif-error { margin: .5rem 0 0; font-size: .875rem; color: var(--ds-peligro); }
+
+@media (max-width: 30rem) {
+    .verif-dato { grid-template-columns: 1fr; gap: .125rem; }
+}

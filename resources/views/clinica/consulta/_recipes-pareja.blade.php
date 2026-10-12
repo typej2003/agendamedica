@@ -30,6 +30,11 @@
                 </button>
             @endif
 
+            {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}
+            @if ($seccion->verificacionDeLaPareja())
+                @include('clinica.consulta._recipes-verificacion', ['v' => $seccion->verificacionDeLaPareja()])
+            @endif
+
             <form method="POST" action="{{ $seccion->urlEliminar() }}" data-confirmar="{{ $seccion->avisoDeEliminar() }}" data-recipe-salir>
                 @csrf
                 @method('DELETE')

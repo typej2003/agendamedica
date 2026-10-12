@@ -180,6 +180,8 @@ final class SeccionDeRecipesVista
                 ])->all(),
                 // La vista previa para imprimir (WEB-5.2); vacía si la sección no ofrece imprimir.
                 'urlImprimir' => $this->puedeImprimir() ? $this->urlImprimir($recipe->numero) : '',
+                // El QR de verificación (WEB-5.6): su estado y la acción de anularlo o reactivarlo; `null` si no se ofrece.
+                'verificacion' => $this->verificacionDe($recipe->numero),
                 'urlEditar' => ($this->urlEditar)($recipe->numero),
                 'urlEliminar' => ($this->urlEliminar)($recipe->numero),
                 'avisoEliminar' => '¿Eliminar el récipe ' . $recipe->numero . ' de esta consulta? Se borran sus '

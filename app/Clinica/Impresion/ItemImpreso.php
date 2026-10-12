@@ -24,6 +24,20 @@ final class ItemImpreso
     ) {
     }
 
+    /** Un medicamento tal como lo devuelve `RecipesDeLaConsulta::itemsDe` (la hoja y la verificación pública lo arman igual). */
+    public static function deLaConsulta(object $item): self
+    {
+        return new self(
+            $item->codigo,
+            $item->cantidad,
+            $item->indicaciones,
+            $item->comercial,
+            $item->generico,
+            $item->presentacion,
+            $item->descripcion,
+        );
+    }
+
     /** El nombre con el que sale impreso: `NOMBRE / PRESENTACIÓN`, comercial o genérico, siempre en mayúsculas. */
     public function nombre(bool $generico = false): string
     {

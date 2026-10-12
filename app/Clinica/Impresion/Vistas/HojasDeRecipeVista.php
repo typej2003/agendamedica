@@ -185,6 +185,8 @@ final class HojasDeRecipeVista
             'direccion' => $conDireccion && ! $documento->esDeLaPareja() ? ($persona['direccion'] ?? null) : null,
             'filas' => $filas,
             'proximaCita' => $this->proximaCita(),
+            // El QR de verificación (WEB-5.6): el mismo en las dos mitades. `null` si quien armó el récipe no se lo puso.
+            'qr' => $documento->qr,
         ];
     }
 

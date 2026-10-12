@@ -143,15 +143,7 @@ final class RecipesParaImprimir
      */
     private function items(Collection $items): array
     {
-        return $items->map(fn (object $item) => new ItemImpreso(
-            $item->codigo,
-            $item->cantidad,
-            $item->indicaciones,
-            $item->comercial,
-            $item->generico,
-            $item->presentacion,
-            $item->descripcion,
-        ))->values()->all();
+        return $items->map(fn (object $item) => ItemImpreso::deLaConsulta($item))->values()->all();
     }
 
     private function cuenta(int $total): string

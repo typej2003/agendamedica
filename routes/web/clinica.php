@@ -32,6 +32,7 @@ use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
+use App\Http\Controllers\Clinica\ConsultaRecipeVerificacionController;
 use App\Http\Controllers\Clinica\ConsultaRecipesController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
@@ -246,6 +247,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/consulta/{consulta}/recipes/{numero}/imprimir', [ImpresionDeRecipeController::class, 'delPaciente'])
                     ->whereNumber('numero')->name('consulta.recipes.imprimir');
                 Route::get('/consulta/{consulta}/recipe-pareja/imprimir', [ImpresionDeRecipeController::class, 'dePareja'])->name('consulta.recipe-pareja.imprimir');
+
+                // **El QR de verificación del récipe** (WEB-5.6): el médico puede anular el QR de un récipe ya impreso (la página
+                // pública pasa a decir «Anulado por el médico») y reactivarlo. El QR se crea al imprimir, no acá: un récipe que
+                // nunca se imprimió no tiene QR y estas rutas dan 404. La página pública es otra cosa (`routes/verificar.php`).
+                Route::post('/consulta/{consulta}/recipes/{numero}/verificacion/anular', [ConsultaRecipeVerificacionController::class, 'anular'])
+                    ->whereNumber('numero')->name('consulta.recipes.verificacion.anular');
+                Route::post('/consulta/{consulta}/recipes/{numero}/verificacion/reactivar', [ConsultaRecipeVerificacionController::class, 'reactivar'])
+                    ->whereNumber('numero')->name('consulta.recipes.verificacion.reactivar');
+                Route::post('/consulta/{consulta}/recipe-pareja/verificacion/anular', [ConsultaRecipeVerificacionController::class, 'anularPareja'])
+                    ->name('consulta.recipe-pareja.verificacion.anular');
+                Route::post('/consulta/{consulta}/recipe-pareja/verificacion/reactivar', [ConsultaRecipeVerificacionController::class, 'reactivarPareja'])
+                    ->name('consulta.recipe-pareja.verificacion.reactivar');
 
                 // **Solicitudes de la consulta** (WEB-5.3a): el ítem 11 del panel, con sus pestañas (`?seccion=solicitudes&solicitud=`).
                 // Constancia, reposo e informe son **uno por consulta** (la clave primaria del legado) y se guardan/eliminan en la misma

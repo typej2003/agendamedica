@@ -248,4 +248,106 @@ trait ComparteElEditorDeRecipes
     {
         return $this->impresion['imprimirPareja'] ?? '';
     }
+
+    // ------------------------------------------------------- Verificación pública del récipe (WEB-5.6)
+
+    /**
+     * Lo que la sección ofrece para **el QR de verificación** de cada récipe: en qué estado está (`sin` QR todavía,
+     * `activa` o `anulada`) y a dónde van «Anular» y «Reactivar». Aparte del constructor, como `conImpresion`: no cambia el
+     * modo de la sección.
+     *
+     * @var array{paciente:array<int,string>, pareja:?string, anular:\Closure, reactivar:\Closure, anularPareja:string, reactivarPareja:string}|null
+     */
+    private ?array $verificaciones = null;
+
+    /**
+     * @param  array{paciente:array<int,string>, pareja:?string, anular:\Closure, reactivar:\Closure, anularPareja:string, reactivarPareja:string}  $verificaciones
+     *         `paciente` (el estado por número de récipe; un récipe sin fila no figura), `pareja` (el estado del de la pareja, o
+     *         `null`), `anular`/`reactivar` (`fn(int $numero)`: las URLs de ese récipe) y las dos de la pareja
+     */
+    public function conVerificaciones(array $verificaciones): static
+    {
+        $this->verificaciones = $verificaciones;
+
+        return $this;
+    }
+
+    /**
+     * La pastilla de la verificación de un récipe del paciente y su acción, o `null` si la sección no la ofrece.
+     *
+     * @return array{tono:string, icono:string, texto:string, titulo:string, accion:?array{texto:string, icono:string, url:string, aviso:string}}|null
+     */
+    public function verificacionDe(int $numero): ?array
+    {
+        if ($this->verificaciones === null) {
+            return null;
+        }
+
+        return $this->verificacion(
+            $this->verificaciones['paciente'][$numero] ?? null,
+            'el récipe ' . $numero,
+            ($this->verificaciones['anular'])($numero),
+            ($this->verificaciones['reactivar'])($numero),
+        );
+    }
+
+    /** Lo mismo para el récipe de la pareja. */
+    public function verificacionDeLaPareja(): ?array
+    {
+        if ($this->verificaciones === null) {
+            return null;
+        }
+
+        return $this->verificacion(
+            $this->verificaciones['pareja'],
+            'el récipe de la pareja',
+            $this->verificaciones['anularPareja'],
+            $this->verificaciones['reactivarPareja'],
+        );
+    }
+
+    /**
+     * @return array{tono:string, icono:string, texto:string, titulo:string, accion:?array{texto:string, icono:string, url:string, aviso:string}}
+     */
+    private function verificacion(?string $estado, string $cual, string $urlAnular, string $urlReactivar): array
+    {
+        if ($estado === 'activa') {
+            return [
+                'tono' => 'exito',
+                'icono' => 'bi-qr-code',
+                'texto' => 'Verificación activa',
+                'titulo' => 'El QR de la hoja impresa verifica este récipe en la página pública.',
+                'accion' => [
+                    'texto' => 'Anular QR',
+                    'icono' => 'bi-slash-circle',
+                    'url' => $urlAnular,
+                    'aviso' => '¿Anular el QR de ' . $cual . '? Quien escanee la hoja impresa verá «Anulado por el médico». '
+                        . 'Puedes reactivarlo cuando quieras.',
+                ],
+            ];
+        }
+
+        if ($estado === 'anulada') {
+            return [
+                'tono' => 'peligro',
+                'icono' => 'bi-slash-circle',
+                'texto' => 'QR anulado',
+                'titulo' => 'La página pública dice «Anulado por el médico» para este récipe.',
+                'accion' => [
+                    'texto' => 'Reactivar QR',
+                    'icono' => 'bi-arrow-counterclockwise',
+                    'url' => $urlReactivar,
+                    'aviso' => '¿Reactivar el QR de ' . $cual . '? La hoja impresa vuelve a verificarse en la página pública.',
+                ],
+            ];
+        }
+
+        return [
+            'tono' => 'neutro',
+            'icono' => 'bi-qr-code',
+            'texto' => 'Aún sin QR',
+            'titulo' => 'El QR se crea la primera vez que imprimes este récipe.',
+            'accion' => null,
+        ];
+    }
 }

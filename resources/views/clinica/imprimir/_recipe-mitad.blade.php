@@ -56,9 +56,13 @@
         @if ($mitad['proximaCita'])
             <p class="recipe-proxima-cita">{{ $mitad['proximaCita'] }}</p>
         @endif
-        {{-- El lugar del código QR de verificación del récipe: 16 × 16 mm reservados y **vacíos**. El QR es una
-             tarea propia posterior (WEB-5.6); acá sólo se deja el espacio para que su llegada no mueva nada. --}}
-        <div class="recipe-qr-reservado" aria-hidden="true"></div>
+        {{-- El QR de verificación del récipe (WEB-5.6): 16 × 16 mm en el lugar que la hoja le reservaba, con la dirección
+             y el código corto al lado para teclearlos si el QR no se lee. El mismo QR va en las dos mitades. --}}
+        @if ($mitad['qr'])
+            @include('clinica.imprimir._recipe-qr', ['qr' => $mitad['qr']])
+        @else
+            <div class="recipe-qr-reservado" aria-hidden="true"></div>
+        @endif
     </x-impresion.firma>
 
     <x-impresion.pie :membrete="$membrete" />

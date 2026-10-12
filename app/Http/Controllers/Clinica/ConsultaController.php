@@ -48,6 +48,7 @@ use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
+use App\Clinica\Verificacion\VerificacionesDeLaConsulta;
 use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -92,6 +93,7 @@ class ConsultaController extends Controller
         private ConsultasDelContexto $consultas,
         private MembreteDelMedico $membretes,
         private ProximaCitaDelRecipe $proximaCita,
+        private VerificacionesDeLaConsulta $verificaciones,
     ) {
     }
 
@@ -584,7 +586,8 @@ class ConsultaController extends Controller
                 $pestanas,
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
-            ))->conImpresion($this->impresion($consulta, $pacienteId, $medico));
+            ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+                ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
         }
 
         if ($editando !== null) {
@@ -612,7 +615,26 @@ class ConsultaController extends Controller
             // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
             (array) old(),
             $pestanas,
-        ))->conImpresion($this->impresion($consulta, $pacienteId, $medico));
+        ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+            ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
+    }
+
+    /**
+     * El estado del QR de verificación de cada récipe de la consulta y a dónde van «Anular» y «Reactivar» (WEB-5.6). El QR se crea
+     * al imprimir: un récipe que nunca se imprimió no figura y la sección dice «Aún sin QR».
+     *
+     * @return array{paciente:array<int,string>, pareja:?string, anular:\Closure, reactivar:\Closure, anularPareja:string, reactivarPareja:string}
+     */
+    private function estadoDeLasVerificaciones(Consulta $consulta): array
+    {
+        $id = $consulta->id;
+
+        return $this->verificaciones->estados($consulta) + [
+            'anular' => fn (int $numero) => route('clinica.consulta.recipes.verificacion.anular', [$id, $numero]),
+            'reactivar' => fn (int $numero) => route('clinica.consulta.recipes.verificacion.reactivar', [$id, $numero]),
+            'anularPareja' => route('clinica.consulta.recipe-pareja.verificacion.anular', $id),
+            'reactivarPareja' => route('clinica.consulta.recipe-pareja.verificacion.reactivar', $id),
+        ];
     }
 
     /**

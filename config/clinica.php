@@ -22,4 +22,20 @@ return [
 
     'zona' => env('CLINICA_ZONA', 'America/Caracas'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Verificación pública del récipe (WEB-5.6)
+    |--------------------------------------------------------------------------
+    |
+    | El QR de la hoja del récipe lleva a `<url>/verificar/<token>`. La dirección sale de acá y no de la
+    | petición que imprime: el QR se escanea desde un teléfono de una farmacia, así que tiene que ser la
+    | dirección **pública** del sitio (en producción `https://doctorisimo.app`). Si `VERIFICACION_URL` no
+    | está, vale `APP_URL`.
+    |
+    */
+
+    'verificacion' => [
+        'url' => env('VERIFICACION_URL'),
+    ],
+
 ];

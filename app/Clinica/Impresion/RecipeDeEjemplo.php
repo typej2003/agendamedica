@@ -35,6 +35,8 @@ final class RecipeDeEjemplo
                 new ItemImpreso('EJ-2', 2, 'Tomar 1 cápsula vía oral cada 8 horas por 7 días.', 'AMOXAL', 'AMOXICILINA', 'Cápsulas 500 mg', null),
                 new ItemImpreso('EJ-3', 1, 'Aplicar una capa fina en la zona afectada dos veces al día.', 'CICATRIL', 'CLOSTEBOL', 'Crema 15 g', null),
             ],
+            // El QR de ejemplo (WEB-5.6): rotulado «EJEMPLO», no apunta a ningún récipe real.
+            QrDelRecipe::deEjemplo(),
         );
     }
 

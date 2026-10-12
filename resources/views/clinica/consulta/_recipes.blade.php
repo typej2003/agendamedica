@@ -77,6 +77,11 @@
                                     </button>
                                 @endif
 
+                                {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}
+                                @if ($receta['verificacion'])
+                                    @include('clinica.consulta._recipes-verificacion', ['v' => $receta['verificacion']])
+                                @endif
+
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $receta['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>

@@ -28,7 +28,14 @@ final class DocumentoDeRecipe
         public readonly string $fecha,
         public readonly array $persona,
         public readonly array $items,
+        public readonly ?QrDelRecipe $qr = null,
     ) {
+    }
+
+    /** El mismo récipe con su QR de verificación (WEB-5.6): lo agrega quien imprime, después de armarlo. */
+    public function conQr(QrDelRecipe $qr): self
+    {
+        return new self($this->tipo, $this->titulo, $this->numero, $this->fecha, $this->persona, $this->items, $qr);
     }
 
     public function esDeLaPareja(): bool
