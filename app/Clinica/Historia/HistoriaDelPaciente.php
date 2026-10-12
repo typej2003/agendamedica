@@ -4,6 +4,7 @@ namespace App\Clinica\Historia;
 
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -143,7 +144,7 @@ final class HistoriaDelPaciente
     }
 
     /**
-     * Los **documentos** de la historia: constancia, reposo, referencia, informe, hospitalización, dieta y récipes.
+     * Los **documentos** de la historia: laboratorio, estudios, constancia, reposo, referencia, informe, hospitalización, dieta y récipes.
      *
      * Se arma con los mismos criterios con los que el móvil decide qué es un documento de verdad
      * (`DoctorisimoMobile/lib/features/reportes/`, `ReportesRepository::armar` / `documento.dart`), porque
@@ -158,6 +159,8 @@ final class HistoriaDelPaciente
      *    diga y llenaría la lista con una fila por consulta.
      *  - **Hospitalización** (WEB-5.3b): sólo si tiene el lugar, el diagnóstico o las recomendaciones; la fila vacía que el
      *    escritorio crea al abrir la consulta no se lista. **Dieta**: sólo si tiene texto.
+     *  - **Laboratorio y estudios** (WEB-5.4): sólo si la consulta tiene al menos un examen/estudio o un resumen clínico con texto
+     *    (`QueEsUnDocumento::laboratorio` / `estudios`); la fila de observación vacía que el escritorio crea al agregar no cuenta.
      *  - **Referencia** y **récipes**: se listan todos (puede haber varias por consulta).
      *
      * La fecha de cada documento es la suya cuando la tiene (el `fdesde` del reposo, el `fe_cha` del
@@ -264,6 +267,44 @@ final class HistoriaDelPaciente
                 CamposDePaciente::texto($informe->fe_cha),
                 null,
                 'informe',
+            ));
+        }
+
+        foreach ($this->laboratorios($regMedico, $numero) as $nroconsulta => $orden) {
+            if (! QueEsUnDocumento::laboratorio($orden['examenes'], $orden['observacion'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Laboratorio',
+                'bi-droplet',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                $orden['examenes'] > 0
+                    ? $orden['examenes'] . ($orden['examenes'] === 1 ? ' examen' : ' exámenes')
+                    : CamposDePaciente::texto($orden['observacion']),
+                null,
+                null,
+                'laboratorio',
+            ));
+        }
+
+        foreach ($this->estudios($regMedico, $numero) as $nroconsulta => $solicitud) {
+            if (! QueEsUnDocumento::estudios($solicitud['estudios'], $solicitud['observacion'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Estudios',
+                'bi-image',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                $solicitud['estudios'] > 0
+                    ? $solicitud['estudios'] . ($solicitud['estudios'] === 1 ? ' estudio' : ' estudios')
+                    : CamposDePaciente::texto($solicitud['observacion']),
+                null,
+                null,
+                'estudios',
             ));
         }
 
@@ -436,6 +477,61 @@ final class HistoriaDelPaciente
             ->where('reg_medico', $regMedico)
             ->where('nrohistoria', $numero)
             ->get(['nroconsulta', 'hospital', 'diagprev', 'dieta']);
+    }
+
+    /**
+     * Las órdenes de laboratorio de la historia (WEB-5.4), por número de consulta: cuántos exámenes tiene cada consulta y su resumen clínico
+     * (`examen_obs`). Una consulta con una sola de las dos tablas también cuenta (la otra vale 0 / `null`).
+     *
+     * @return array<int,array{examenes:int, observacion:?string}>
+     */
+    private function laboratorios(string $regMedico, int $numero): array
+    {
+        return $this->ordenesDeVariasFilas('examen_paciente', 'examen_obs', $regMedico, $numero);
+    }
+
+    /**
+     * Las solicitudes de estudios de la historia (WEB-5.4), por número de consulta: cuántos estudios y su resumen clínico (`radiologia_obs`).
+     *
+     * @return array<int,array{estudios:int, observacion:?string}>
+     */
+    private function estudios(string $regMedico, int $numero): array
+    {
+        return array_map(
+            fn (array $orden) => ['estudios' => $orden['examenes'], 'observacion' => $orden['observacion']],
+            $this->ordenesDeVariasFilas('radiologia_paciente', 'radiologia_obs', $regMedico, $numero),
+        );
+    }
+
+    /** @return array<int,array{examenes:int, observacion:?string}> */
+    private function ordenesDeVariasFilas(string $tablaDeFilas, string $tablaDeObservacion, string $regMedico, int $numero): array
+    {
+        $ordenes = [];
+
+        $cuantos = DB::table($tablaDeFilas)
+            ->where('reg_medico', $regMedico)
+            ->where('nrohistoria', $numero)
+            ->groupBy('nroconsulta')
+            ->selectRaw('nroconsulta, COUNT(*) AS total')
+            ->get();
+
+        foreach ($cuantos as $fila) {
+            $ordenes[(int) $fila->nroconsulta] = ['examenes' => (int) $fila->total, 'observacion' => null];
+        }
+
+        $observaciones = DB::table($tablaDeObservacion)
+            ->where('reg_medico', $regMedico)
+            ->where('numhistoria', $numero)
+            ->get(['numconsulta', 'observacion']);
+
+        foreach ($observaciones as $fila) {
+            $ordenes[(int) $fila->numconsulta] ??= ['examenes' => 0, 'observacion' => null];
+            $ordenes[(int) $fila->numconsulta]['observacion'] = TextoDeLaConsulta::limpio($fila->observacion);
+        }
+
+        ksort($ordenes);
+
+        return $ordenes;
     }
 
     /** Las dietas / recomendaciones de la historia (WEB-5.3b); `histroria` es la historia y `consulta` el número de la consulta. */

@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\DB;
  *
  *  - **Diagnóstico** (`diagnosticos.codediagnostico`): los diagnósticos de las consultas (`diagnostico_paciente`).
  *  - **Motivo de consulta** (`motivos_consulta.codemotivo`): los motivos de las consultas (`motivo_consulta_paciente`).
- *  - **Examen** (`examenes.codeexamen`): los exámenes de las consultas (`examen_paciente`) y los de la pareja
- *    (`examen_pareja`; vacía en los datos, pero es la otra tabla que lo nombra).
+ *  - **Examen** (`examenes.codeexamen`): los exámenes de las consultas (`examen_paciente`), los estudios de imágenes de las consultas
+ *    (`radiologia_paciente.coderadio`, que apunta al mismo catálogo: WEB-5.4) y los de la pareja (`examen_pareja`; vacía en los datos,
+ *    pero es la otra tabla que lo nombra).
  *  - **Tipo de examen** (`tipos_examenes.codetipo`): los exámenes del catálogo que cuelgan de él (`examenes.codetipo`).
  *  - **Médico referido** (`doctores.cedula`): las referencias de las consultas (`referencia.ceduladoctor`), buscadas en
  *    **todos los registros del médico** porque el catálogo de colegas se resuelve por registros (`DoctoresDelMedico`).
@@ -52,9 +53,12 @@ final class UsoDeUnItemDelCatalogo
     public static function examen(string $regMedico, string $codigo): self
     {
         $partes = self::cuando(self::consultas('examen_paciente', $regMedico, 'codeexamen', $codigo), 'consulta', 'consultas');
+        // WEB-5.4: un estudio de imágenes es un examen de tipo `002` y se pide en `radiologia_paciente`; quitarlo del catálogo con una solicitud
+        // que lo nombra dejaría un código huérfano, igual que con un examen de laboratorio.
+        $estudios = self::cuando(self::consultas('radiologia_paciente', $regMedico, 'coderadio', $codigo), 'consulta con solicitud de estudios', 'consultas con solicitud de estudios');
         $pareja = self::cuando(self::consultas('examen_pareja', $regMedico, 'codeexamen', $codigo), 'consulta de la pareja', 'consultas de la pareja');
 
-        return new self(array_merge($partes, $pareja));
+        return new self(array_merge($partes, $estudios, $pareja));
     }
 
     public static function tipoDeExamen(string $regMedico, string $codigo): self

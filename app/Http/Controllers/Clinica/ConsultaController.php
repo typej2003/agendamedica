@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\AntecedentesDelPaciente;
+use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
+use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
@@ -17,6 +19,7 @@ use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
+use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
@@ -29,6 +32,7 @@ use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
+use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\ReferenciasVista;
 use App\Clinica\Consulta\Vistas\ReposoVista;
@@ -111,6 +115,9 @@ class ConsultaController extends Controller
         DoctoresDelMedico $doctores,
         HospitalizacionDeLaConsulta $hospitalizaciones,
         DietaDeLaConsulta $dietas,
+        LaboratorioDeLaConsulta $laboratorio,
+        EstudiosDeLaConsulta $estudios,
+        CatalogoParaPedirExamenes $catalogoDeExamenes,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -159,7 +166,7 @@ class ConsultaController extends Controller
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
-                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas)
+                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
                 : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
@@ -307,6 +314,8 @@ class ConsultaController extends Controller
                 // fila: es el texto que el escritorio deja para el grupo de exámenes.
                 $examenes->observacion($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
                 $examenes->tieneCatalogo($regMedico),
+                // *Solicitudes → Laboratorio* (WEB-5.4): donde se piden y se corrigen esos mismos exámenes.
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::LABORATORIO]),
             );
         }
 
@@ -318,7 +327,7 @@ class ConsultaController extends Controller
     }
 
     /**
-     * El ViewModel de la sección **Solicitudes** (WEB-5.3a, ítem 11): la pestaña elegida con `?solicitud=` (constancia, reposo,
+     * El ViewModel de la sección **Solicitudes** (WEB-5.3a, ítem 11): la pestaña elegida con `?solicitud=` (laboratorio, estudios, constancia, reposo,
      * referencias, hospitalización, informe o dieta; cualquier otro valor abre la constancia) y los datos de esa pestaña ya leídos.
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
@@ -335,6 +344,9 @@ class ConsultaController extends Controller
         DoctoresDelMedico $doctores,
         HospitalizacionDeLaConsulta $hospitalizaciones,
         DietaDeLaConsulta $dietas,
+        LaboratorioDeLaConsulta $laboratorio,
+        EstudiosDeLaConsulta $estudios,
+        CatalogoParaPedirExamenes $catalogoDeExamenes,
     ): SeccionDeSolicitudesVista {
         $id = $consulta->id;
         $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'));
@@ -347,7 +359,11 @@ class ConsultaController extends Controller
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
         $imprimir = fn (string $clave) => route('clinica.consulta.documentos.imprimir', [$id, 'documento' => $clave]);
 
-        if ($activa === PestanasDeSolicitudes::REPOSO) {
+        if ($activa === PestanasDeSolicitudes::LABORATORIO) {
+            $vista = $this->laboratorio($consulta, $laboratorio, $catalogoDeExamenes, $old, $imprimir('laboratorio'));
+        } elseif ($activa === PestanasDeSolicitudes::ESTUDIOS) {
+            $vista = $this->estudios($consulta, $estudios, $catalogoDeExamenes, $old, $imprimir('estudios'));
+        } elseif ($activa === PestanasDeSolicitudes::REPOSO) {
             $fila = $reposos->fila($consulta);
             $vista = new ReposoVista(
                 $fila?->numdias,
@@ -422,6 +438,113 @@ class ConsultaController extends Controller
         }
 
         return new SeccionDeSolicitudesVista($activa, $pestanas, $vista);
+    }
+
+    /**
+     * La pestaña **Laboratorio** (WEB-5.4): la orden de exámenes de la consulta, el catálogo del que se pide y las rutinas (los tipos de
+     * examen con exámenes). Si el último guardado falló la validación, la lista es la que quedó en el formulario (`old`), no la guardada.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function laboratorio(Consulta $consulta, LaboratorioDeLaConsulta $laboratorio, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    {
+        $id = $consulta->id;
+        $regMedico = (string) $consulta->reg_medico;
+
+        $filas = $laboratorio->filas($consulta);
+        $observacion = $laboratorio->observacion($consulta);
+
+        $items = $filas->map(fn (object $fila) => [
+            'codigo' => $fila->codigo,
+            'nombre' => $fila->nombre,
+            'tipo' => $fila->tipo,
+            'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+        ])->all();
+
+        return OrdenVista::laboratorio(
+            $this->itemsDelFormulario($old, 'examenes', $items, $regMedico, false, $catalogo),
+            array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $observacion,
+            $laboratorio->esReal($filas, $observacion),
+            $catalogo->hay($regMedico, false),
+            $catalogo->rutinas($regMedico),
+            [
+                'guardar' => route('clinica.consulta.laboratorio.guardar', $id),
+                'eliminar' => route('clinica.consulta.laboratorio.eliminar', $id),
+                'imprimir' => $urlImprimir,
+                'catalogo' => route('clinica.consulta.laboratorio.catalogo', $id),
+                'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
+                'administrar' => route('clinica.catalogos.examenes'),
+            ],
+        );
+    }
+
+    /**
+     * La pestaña **Estudios** (WEB-5.4): la solicitud de estudios de imágenes de la consulta y su catálogo (los exámenes de tipo `002`).
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function estudios(Consulta $consulta, EstudiosDeLaConsulta $estudios, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    {
+        $id = $consulta->id;
+        $regMedico = (string) $consulta->reg_medico;
+
+        $filas = $estudios->filas($consulta);
+        $observacion = $estudios->observacion($consulta);
+
+        $items = $filas->map(fn (object $fila) => [
+            'codigo' => $fila->codigo,
+            'nombre' => $fila->nombre,
+            'tipo' => null,
+            'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+        ])->all();
+
+        return OrdenVista::estudios(
+            $this->itemsDelFormulario($old, 'estudios', $items, $regMedico, true, $catalogo),
+            array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $observacion,
+            $estudios->esReal($filas, $observacion),
+            $catalogo->hay($regMedico, true),
+            [
+                'guardar' => route('clinica.consulta.estudios.guardar', $id),
+                'eliminar' => route('clinica.consulta.estudios.eliminar', $id),
+                'imprimir' => $urlImprimir,
+                'catalogo' => route('clinica.consulta.estudios.catalogo', $id),
+                'administrar' => route('clinica.catalogos.examenes'),
+            ],
+        );
+    }
+
+    /**
+     * Las filas del editor de una orden: las guardadas, o —si el último guardado falló la validación y volvió con el formulario— las que
+     * había en él, con el nombre resuelto contra lo guardado y contra el catálogo (el formulario sólo manda códigos).
+     *
+     * @param  array<string,mixed>  $old
+     * @param  array<int,array{codigo:string, nombre:string, tipo:?string, aviso:?string}>  $guardadas
+     * @return array<int,array{codigo:string, nombre:string, tipo:?string, aviso:?string}>
+     */
+    private function itemsDelFormulario(array $old, string $campo, array $guardadas, string $regMedico, bool $estudios, CatalogoParaPedirExamenes $catalogo): array
+    {
+        if (! array_key_exists('observacion', $old)) {
+            return $guardadas;
+        }
+
+        $codigos = array_values(array_unique(array_filter(array_map(fn ($codigo) => trim((string) $codigo), (array) ($old[$campo] ?? [])), fn (string $codigo) => $codigo !== '')));
+        $conocidas = collect($guardadas)->keyBy('codigo');
+        $delCatalogo = $catalogo->resolver($regMedico, $estudios, array_values(array_diff($codigos, $conocidas->keys()->all())));
+
+        return array_map(function (string $codigo) use ($conocidas, $delCatalogo) {
+            if ($conocidas->has($codigo)) {
+                return $conocidas->get($codigo);
+            }
+
+            $examen = $delCatalogo[$codigo] ?? null;
+
+            return [
+                'codigo' => $codigo,
+                'nombre' => $examen['nombre'] ?? $codigo,
+                'tipo' => $examen['tipo'] ?? null,
+                'aviso' => $examen === null ? 'No está en tu catálogo: se muestra el código.' : null,
+            ];
+        }, $codigos);
     }
 
     /**

@@ -92,7 +92,7 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
 
     // ===================================================================================== La sección
 
-    public function test_el_panel_queda_en_10_de_13_y_la_seccion_tiene_sus_seis_pestanas(): void
+    public function test_el_panel_queda_en_10_de_13_y_la_seccion_tiene_sus_ocho_pestanas(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
@@ -102,12 +102,13 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
 
         $seccion = $this->como($user, $medico, $gineco)->get($this->seccion($consulta));
         $seccion->assertOk();
-        foreach (['Constancia', 'Reposo', 'Referencia', 'Hospitalización', 'Informe médico', 'Dieta / Recomendaciones'] as $pestana) {
+        // Laboratorio y estudios llegaron con WEB-5.4 (hospitalización y dieta, con WEB-5.3b).
+        foreach (['Laboratorio', 'Estudios', 'Constancia', 'Reposo', 'Referencia', 'Hospitalización', 'Informe médico', 'Dieta / Recomendaciones'] as $pestana) {
             $seccion->assertSee($pestana);
         }
-        // Lo que todavía no existe no se muestra como pestaña (ni vacía): laboratorio y estudios (hospitalización y dieta llegaron con WEB-5.3b).
-        foreach (['Laboratorio', 'Estudios'] as $futura) {
-            $seccion->assertDontSee('>' . $futura . '<', false);
+        // Cada pestaña es un enlace de la misma sección.
+        foreach (['laboratorio', 'estudios'] as $clave) {
+            $seccion->assertSee(e($this->seccion($consulta, $clave)), false);
         }
     }
 

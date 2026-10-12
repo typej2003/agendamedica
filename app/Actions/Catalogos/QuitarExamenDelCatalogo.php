@@ -7,8 +7,8 @@ use App\Models\Examen;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Quitar un examen del catálogo (WEB-8.1b): en uso = los exámenes de las consultas (`examen_paciente`) y los de la
- * pareja (`examen_pareja`). La regla común es la de `QuitarDelCatalogo`.
+ * Quitar un examen del catálogo (WEB-8.1b): en uso = los exámenes de las consultas (`examen_paciente`), los estudios de imágenes
+ * pedidos (`radiologia_paciente`, WEB-5.4) y los de la pareja (`examen_pareja`). La regla común es la de `QuitarDelCatalogo`.
  */
 final class QuitarExamenDelCatalogo extends QuitarDelCatalogo
 {

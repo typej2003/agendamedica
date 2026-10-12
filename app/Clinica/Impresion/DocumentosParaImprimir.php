@@ -15,9 +15,8 @@ use App\Models\Consulta;
  *  - `recipe-1`, `recipe-2`… los récipes del paciente y `recipe-pareja` el de la pareja;
  *  - `constancia`, `reposo`, `referencia-<id del médico>`, `hospitalizacion`, `informe` y `dieta`.
  *
- * **Extensible**: laboratorio y estudios (WEB-5.4) suman su propia clase `…ParaImprimir` y una línea acá; lo que sale en
- * pantalla y la ruta no cambian. Hospitalización y dieta (WEB-5.3b) entraron por `SolicitudesParaImprimir`, con las demás
- * solicitudes de las pestañas.
+ * **Extensible**: una solicitud nueva entra por `SolicitudesParaImprimir`, con las demás de las pestañas, y suma su icono acá; lo que sale en
+ * pantalla y la ruta no cambian. Hospitalización y dieta (WEB-5.3b) y laboratorio y estudios (WEB-5.4) entraron así (claves `laboratorio` y `estudios`).
  *
  * Es de **sólo lectura**.
  */
@@ -30,6 +29,8 @@ final class DocumentosParaImprimir
     public const TODOS = 'todos';
 
     private const ICONOS = [
+        DocumentoImpreso::LABORATORIO => 'bi-droplet',
+        DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',
         DocumentoImpreso::REPOSO => 'bi-bandaid',
         DocumentoImpreso::REFERENCIA => 'bi-person-up',

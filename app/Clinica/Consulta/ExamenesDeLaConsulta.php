@@ -45,9 +45,9 @@ use Illuminate\Support\Facades\DB;
  *
  * Sólo lectura: lista los exámenes de esta consulta con su nombre resuelto por catálogo, su tipo y su
  * resultado (cuando lo tiene), y la observación del conjunto. **No** ordena exámenes nuevos ni los
- * quita: la fuente los agrega desde la pestaña *Solicitudes* y `examen_paciente` se cruza con las
- * solicitudes impresas, que son **F5/WEB-5.4**. Lo que sí trae WEB-4.7 es la **subida de imágenes**
- * (`ImagenesDeLaConsulta`), que es la otra mitad del ítem.
+ * quita: eso se hace en *Solicitudes → Laboratorio* (WEB-5.4, `LaboratorioDeLaConsulta` y
+ * `GuardarOrdenDeLaboratorio`), que escribe **estas mismas filas** y las lee con esta clase. Lo que sí
+ * trae WEB-4.7 es la **subida de imágenes** (`ImagenesDeLaConsulta`), que es la otra mitad del ítem.
  *
  * Es **sólo lectura**: la escritura de la sección es `App\Actions\Consulta\GuardarImagenDeLaConsulta`.
  */
@@ -98,6 +98,8 @@ final class ExamenesDeLaConsulta
                     // mismo (su `dddw` deja el `codeexamen` a la vista cuando no encuentra el nombre).
                     'nombre' => TextoDeLaConsulta::limpio($fila->examen) ?? $codigo,
                     'tipo' => TextoDeLaConsulta::limpio($fila->tipo),
+                    // El código del tipo (WEB-5.4: la orden de laboratorio agrupa por tipo); `null` si el examen no está en el catálogo.
+                    'codetipo' => TextoDeLaConsulta::limpio($fila->codetipo),
                     'resultado' => TextoDeLaConsulta::limpio($fila->resultado),
                     'vinculante' => TextoDeLaConsulta::limpio($fila->vinculante),
                 ];

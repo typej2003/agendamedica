@@ -111,4 +111,6 @@
     <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
     {{-- Las solicitudes de la consulta (WEB-5.3a): cambios sin guardar, plantillas, fechas del reposo y buscador de médicos. --}}
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
+    {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}
+    <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
 @endsection

@@ -2733,3 +2733,60 @@ body.auth-pagina {
     .formato-imagen { flex-direction: column; }
     .formato-alineacion .btn, .formato-colores .btn { min-height: 2.5rem; }
 }
+
+/* --- Órdenes de la consulta: laboratorio y estudios (WEB-5.4) ---
+   La lista de lo que lleva la orden (una fila por examen o estudio, con su «Quitar»), el buscador del catálogo con su filtro por tipo
+   y las rutinas (un botón por tipo de examen). Los estudios van numerados con un contador de CSS, así que una fila que el script agrega
+   toma su número sin tocar nada. */
+.orden-lista {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: .5rem;
+}
+
+.orden-fila {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .5rem .4rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+}
+
+.orden-fila-datos { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: .9rem; }
+.orden-nombre { font-weight: 500; }
+.orden-quitar { flex: 0 0 auto; }
+
+.orden-lista-numerada { grid-template-columns: 1fr; counter-reset: orden; }
+.orden-lista-numerada .orden-fila::before {
+    counter-increment: orden;
+    content: counter(orden) ".";
+    flex: 0 0 auto;
+    min-width: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ds-texto-3);
+}
+
+.orden-buscador { display: flex; flex-wrap: wrap; gap: .5rem; }
+.orden-buscador .buscador-campo { flex: 1 1 14rem; }
+.orden-buscador .form-select { flex: 0 1 14rem; }
+
+.orden-subtitulo {
+    margin: 0 0 .25rem;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+}
+
+.orden-rutinas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+@media (max-width: 575.98px) {
+    .orden-quitar { min-width: 40px; min-height: 40px; }
+    .orden-rutinas .btn { min-height: 40px; }
+}

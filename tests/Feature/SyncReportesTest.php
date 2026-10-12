@@ -182,6 +182,30 @@ class SyncReportesTest extends TestCase
         );
     }
 
+    public function test_el_telefono_no_baja_el_laboratorio_ni_los_estudios_de_la_web(): void
+    {
+        // WEB-5.4: el móvil no tiene ninguna de las cuatro tablas (no pide exámenes ni estudios): `sync-app-data` no las manda, ni por la
+        // descarga completa ni por delta, aunque la web las haya escrito. Si algún día el móvil las usa, este test es el que avisa.
+        $reg = 'rep-l-' . uniqid();
+        Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
+        $since = $this->sync()->json('synced_at');
+        $this->travel(5)->seconds();
+
+        DB::table('examenes')->insert([
+            ['reg_medico' => $reg, 'codeexamen' => '001', 'examen' => 'GLICEMIA', 'codetipo' => '001'],
+            ['reg_medico' => $reg, 'codeexamen' => '099', 'examen' => 'MAMOGRAFIA', 'codetipo' => '002'],
+        ]);
+        $consulta = \App\Models\Consulta::where('reg_medico', $reg)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->ejecutar($consulta, ['001'], 'RESUMEN', null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->ejecutar($consulta, ['099'], 'RESUMEN', null, 'web');
+
+        foreach ([$this->sync(), $this->sync(['since' => $since])] as $respuesta) {
+            foreach (['examen_paciente', 'examen_obs', 'radiologia_paciente', 'radiologia_obs', 'examenes', 'tipos_examenes'] as $tabla) {
+                $this->assertArrayNotHasKey($tabla, $respuesta->json(), $tabla);
+            }
+        }
+    }
+
     public function test_el_telefono_no_baja_la_hospitalizacion_ni_la_dieta_de_la_web(): void
     {
         // WEB-5.3b: el móvil no tiene ninguna de las dos tablas (no las imprime ni las guarda): `sync-app-data` no las manda, ni por la

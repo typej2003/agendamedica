@@ -2,10 +2,13 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\InformeDeLaConsulta;
+use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
@@ -13,11 +16,12 @@ use App\Models\Consulta;
 use App\Models\Paciente;
 use App\Support\FechaClinica;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Throwable;
 
 /**
- * **Las solicitudes de una consulta, listas para imprimir** (WEB-5.3a, WEB-5.3b): qué hay para imprimir (constancia, reposo,
- * referencias, hospitalización, informe y dieta) y cada una armada como `DocumentoImpreso`.
+ * **Las solicitudes de una consulta, listas para imprimir** (WEB-5.3a, WEB-5.3b, WEB-5.4): qué hay para imprimir (laboratorio, estudios,
+ * constancia, reposo, referencias, hospitalización, informe y dieta) y cada una armada como `DocumentoImpreso`.
  *
  * No decide qué es un documento ni lee nada por su cuenta: usa las lecturas de la sección de solicitudes
  * (`ConstanciaDeLaConsulta`, `ReposoDeLaConsulta`, `ReferenciasDeLaConsulta`, `InformeDeLaConsulta`) y la regla de
@@ -39,6 +43,15 @@ use Throwable;
  *    cabecera: la de la consulta. Se omite lo que no está escrito en vez de imprimir rótulos vacíos.
  *  - **Dieta** (`d_recipe_dieta.srd`, *RECOMENDACIONES / DIETAS*): el título de la dieta (`dieta`, en negrita) y su texto. Fecha de la
  *    cabecera: la de la consulta.
+ *  - **Laboratorio** (`d_examen_laboratorio_rut.srd`, la hoja de las *rutinas*; la de exámenes sueltos, `d_examen_laboratorio.srd`, es la misma sin
+ *    agrupar): *EXÁMENES DE LABORATORIO*, los exámenes **agrupados por tipo** (`group by tipos_examenes_tipo`) y el *Resumen clínico*
+ *    (`examen_obs.observacion`). Acá el título es «SOLICITUD DE EXÁMENES DE LABORATORIO», el grupo es un párrafo de lista (los exámenes del tipo, uno
+ *    tras otro, `DocumentoImpreso::parrafoDeLista`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
+ *  - **Estudios** (`d_estudio_imagenes.srd`, *SOLICITUD DE ESTUDIOS*): los estudios en el orden de `radiologia_paciente.orden`, numerados
+ *    («Estudios solicitados:»), y el *Resumen clínico* (`radiologia_obs.observacion`). Fecha: la de la consulta.
+ *
+ *  «Resumen clínico» es sólo el **rótulo de la observación** de esa orden (el campo que el médico escribe), no un texto que el escritorio arme
+ *  con los diagnósticos: la web no agrega ninguna línea automática.
  *
  * ## Qué se ofrece
  *
@@ -57,6 +70,8 @@ final class SolicitudesParaImprimir
         private InformeDeLaConsulta $informes,
         private HospitalizacionDeLaConsulta $hospitalizaciones,
         private DietaDeLaConsulta $dietas,
+        private LaboratorioDeLaConsulta $laboratorios,
+        private EstudiosDeLaConsulta $estudios,
     ) {
     }
 
@@ -71,6 +86,29 @@ final class SolicitudesParaImprimir
     {
         $disponibles = [];
         $fechaDeLaConsulta = $this->fechaDeLaConsulta($consulta);
+
+        $examenes = $this->laboratorios->filas($consulta);
+        if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::LABORATORIO,
+                'tipo' => DocumentoImpreso::LABORATORIO,
+                'titulo' => 'Laboratorio',
+                // Sin los exámenes ni el resumen: la lista de la cita la ve la secretaría y no lleva contenido clínico.
+                'resumen' => 'Orden de laboratorio',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        $pedidos = $this->estudios->filas($consulta);
+        if ($this->estudios->esReal($pedidos, $this->estudios->observacion($consulta))) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ESTUDIOS,
+                'tipo' => DocumentoImpreso::ESTUDIOS,
+                'titulo' => 'Estudios',
+                'resumen' => 'Solicitud de estudios',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
 
         $constancia = $this->constancias->fila($consulta);
         if ($constanciaBase || $this->constancias->tieneContenidoPropio($constancia)) {
@@ -164,6 +202,20 @@ final class SolicitudesParaImprimir
 
         if ($clave === DocumentoImpreso::CONSTANCIA) {
             return $this->constancia($consulta, $paciente, $fechaDeLaConsulta);
+        }
+
+        if ($clave === DocumentoImpreso::LABORATORIO) {
+            $examenes = $this->laboratorios->filas($consulta);
+            $resumen = $this->laboratorios->observacion($consulta);
+
+            return $this->laboratorios->esReal($examenes, $resumen) ? $this->laboratorio($paciente, $examenes, $resumen, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::ESTUDIOS) {
+            $pedidos = $this->estudios->filas($consulta);
+            $resumen = $this->estudios->observacion($consulta);
+
+            return $this->estudios->esReal($pedidos, $resumen) ? $this->estudio($paciente, $pedidos, $resumen, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::REPOSO) {
@@ -312,6 +364,61 @@ final class SolicitudesParaImprimir
                 DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($orden->diagprev), 'DIAGNÓSTICO PROVISIONAL:', true),
                 DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($orden->dieta), 'RECOMENDACIONES:', true),
             ),
+        );
+    }
+
+    /**
+     * La orden de laboratorio: los exámenes agrupados por tipo (el orden de `filas`: por tipo y por nombre, los que no tienen tipo al final) y el
+     * resumen clínico. Cada grupo es un párrafo de lista, que sólo se corta entre exámenes.
+     *
+     * @param  Collection<int,object>  $examenes
+     */
+    private function laboratorio(Paciente $paciente, Collection $examenes, ?string $resumen, string $fecha): DocumentoImpreso
+    {
+        $parrafos = [];
+
+        foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::LABORATORIO,
+            DocumentoImpreso::LABORATORIO,
+            'SOLICITUD DE EXÁMENES DE LABORATORIO',
+            'Orden de laboratorio',
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            array_merge($parrafos, DocumentoImpreso::parrafosDe($resumen, 'RESUMEN CLÍNICO:', true)),
+        );
+    }
+
+    /**
+     * La solicitud de estudios: uno por renglón, numerados en el orden de la lista, y el resumen clínico.
+     *
+     * @param  Collection<int,object>  $estudios
+     */
+    private function estudio(Paciente $paciente, Collection $estudios, ?string $resumen, string $fecha): DocumentoImpreso
+    {
+        $parrafos = [];
+
+        foreach ($estudios->values() as $posicion => $estudio) {
+            $parrafos[] = [
+                'texto' => ($posicion + 1) . '. ' . $estudio->nombre,
+                'etiqueta' => $posicion === 0 ? 'ESTUDIOS SOLICITADOS:' : null,
+                'aparte' => $posicion === 0,
+            ];
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ESTUDIOS,
+            DocumentoImpreso::ESTUDIOS,
+            'SOLICITUD DE ESTUDIOS',
+            'Solicitud de estudios',
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            array_merge($parrafos, DocumentoImpreso::parrafosDe($resumen, 'RESUMEN CLÍNICO:', true)),
         );
     }
 

@@ -99,4 +99,27 @@ final class QueEsUnDocumento
     {
         return TextoDeLaConsulta::limpio($descripcion) !== null;
     }
+
+    /**
+     * **Orden de laboratorio** (WEB-5.4): es una orden de verdad si tiene **al menos un examen** (`examen_paciente`) **o** una observación
+     * con texto (`examen_obs.observacion`, el «Resumen clínico»). La fila de `examen_obs` vacía que el escritorio crea al agregar un examen
+     * no cuenta por sí sola.
+     *
+     * @param  int  $examenes  cuántas filas de `examen_paciente` tiene la consulta
+     */
+    public static function laboratorio(int $examenes, $observacion): bool
+    {
+        return $examenes > 0 || TextoDeLaConsulta::limpio($observacion) !== null;
+    }
+
+    /**
+     * **Solicitud de estudios** (WEB-5.4): al menos un estudio (`radiologia_paciente`) **o** una observación con texto
+     * (`radiologia_obs.observacion`). Misma vara que `laboratorio`.
+     *
+     * @param  int  $estudios  cuántas filas de `radiologia_paciente` tiene la consulta
+     */
+    public static function estudios(int $estudios, $observacion): bool
+    {
+        return $estudios > 0 || TextoDeLaConsulta::limpio($observacion) !== null;
+    }
 }

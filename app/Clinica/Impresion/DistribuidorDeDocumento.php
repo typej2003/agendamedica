@@ -20,6 +20,8 @@ namespace App\Clinica\Impresion;
  *  4. **Nunca se corta una palabra ni se pierde texto.** El móvil, si ni a la letra más chica entra en las dos mitades,
  *     fuerza el corte y puede recortar; acá, si a 8 pt todavía no entra, el documento **sigue en una hoja más** (otro par de
  *     mitades, con la misma continuación) hasta que quepa todo.
+ *  4 bis. **Una lista no se corta por palabra sino entre sus elementos** (WEB-5.4: los exámenes de un tipo van en un párrafo con `items`):
+ *     un examen no queda partido en dos mitades, y la parte que sigue repite el rótulo del grupo con «(cont.)».
  *  5. Los **datos fijos** (los rótulos con su valor: `REPOSO DURANTE`, `REFERIDO A`…) no se parten: van en la primera mitad.
  *  6. Si todo el texto entra en la mitad sin firma pero no con ella, la firma **no queda sola** en la siguiente: pasa con ella
  *     el último párrafo (o, si hay uno solo, sus últimas palabras), como en el móvil.
@@ -172,7 +174,7 @@ final class DistribuidorDeDocumento
         }
 
         if (count($parrafos) > 1) {
-            return $total - $this->palabrasDe($parrafos[array_key_last($parrafos)]['texto']);
+            return $total - $this->unidadesDe($parrafos[array_key_last($parrafos)]);
         }
 
         return max(1, $total - min(self::PALABRAS_CON_LA_FIRMA, intdiv($total, 2)));
@@ -184,7 +186,7 @@ final class DistribuidorDeDocumento
      * El alto del cuerpo con esos datos fijos y esos párrafos a `$puntos` pt, en milímetros.
      *
      * @param  array<int,array{etiqueta:string, valor:string}>  $fijos
-     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool}>  $parrafos
+     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}>  $parrafos
      */
     private function alto(array $fijos, array $parrafos, int $puntos): float
     {
@@ -226,10 +228,16 @@ final class DistribuidorDeDocumento
 
     // ----------------------------------------------------------------------------------------------- Palabras
 
-    /** @param array<int,array{texto:string, etiqueta:?string, aparte:bool}> $parrafos */
+    /** @param array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}> $parrafos */
     private function palabras(array $parrafos): int
     {
-        return array_sum(array_map(fn (array $parrafo) => $this->palabrasDe($parrafo['texto']), $parrafos));
+        return array_sum(array_map(fn (array $parrafo) => $this->unidadesDe($parrafo), $parrafos));
+    }
+
+    /** Lo que se cuenta al cortar un párrafo: sus elementos si es una lista (WEB-5.4) y, si no, sus palabras. */
+    private function unidadesDe(array $parrafo): int
+    {
+        return isset($parrafo['items']) ? count($parrafo['items']) : $this->palabrasDe($parrafo['texto']);
     }
 
     private function palabrasDe(string $texto): int
@@ -250,6 +258,24 @@ final class DistribuidorDeDocumento
         $quedan = $n;
 
         foreach ($parrafos as $parrafo) {
+            // Una lista (los exámenes de un tipo) se corta entre elementos, no por palabra, y su resto repite el rótulo del grupo.
+            if (isset($parrafo['items'])) {
+                $cuantos = count($parrafo['items']);
+
+                if ($quedan >= $cuantos) {
+                    $primera[] = $parrafo;
+                    $quedan -= $cuantos;
+                } elseif ($quedan > 0) {
+                    $primera[] = $this->listaCon($parrafo, array_slice($parrafo['items'], 0, $quedan), $parrafo['etiqueta']);
+                    $resto[] = $this->listaCon($parrafo, array_slice($parrafo['items'], $quedan), $this->rotuloDeLaContinuacion($parrafo['etiqueta']));
+                    $quedan = 0;
+                } else {
+                    $resto[] = $parrafo;
+                }
+
+                continue;
+            }
+
             $palabras = preg_split('/\s+/u', trim($parrafo['texto']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
             if ($quedan >= count($palabras)) {
@@ -265,5 +291,27 @@ final class DistribuidorDeDocumento
         }
 
         return [$primera, $resto];
+    }
+
+    /**
+     * El mismo párrafo de lista con otros elementos y otro rótulo (la parte que entra y la que sigue).
+     *
+     * @param  array<int,string>  $items
+     */
+    private function listaCon(array $parrafo, array $items, ?string $etiqueta): array
+    {
+        return ['texto' => implode(DocumentoImpreso::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => $parrafo['aparte'], 'items' => array_values($items)];
+    }
+
+    /** «TIPO:» → «TIPO (cont.):»; una continuación que se vuelve a partir no acumula «(cont.)». */
+    private function rotuloDeLaContinuacion(?string $etiqueta): ?string
+    {
+        if ($etiqueta === null) {
+            return null;
+        }
+
+        $base = (string) preg_replace('/ \(cont\.\)(:?)$/u', '$1', $etiqueta);
+
+        return str_ends_with($base, ':') ? substr($base, 0, -1) . ' (cont.):' : $base . ' (cont.)';
     }
 }

@@ -838,6 +838,69 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame(0, DB::table('dieta_paciente')->where('reg_medico', self::REG)->count(), 'la dieta de la web se perdió');
     }
 
+    /**
+     * **WEB-5.4**: las cuatro tablas de laboratorio y estudios tienen **clave primaria** en el PowerBuilder (`examen_paciente`
+     * `(nrohistoria, nroconsulta, codeexamen)`, `examen_obs` `(numhistoria, numconsulta)`, `radiologia_paciente`
+     * `(nrohistoria, nroconsulta, coderadio)` y `radiologia_obs` `(numhistoria, numconsulta)`) y los tres triggers de fila
+     * (`tr_ddrsync_<tabla>_ins/_upd/_del` en `quitar-registro-cambios.sql`): el escritorio las sube **fila por fila** y no con el
+     * reemplazo de la tabla entera. Ninguna entra a `sin_clave_con_altas_del_app`; lo que sube y borra de **otra** consulta no toca lo que
+     * creó la web. Lo que sí pasa y queda fijado (trampa 75): si sube **la misma clave**, su `UPDATE` pisa lo que la web editó.
+     */
+    public function test_la_subida_fila_por_fila_de_laboratorio_y_estudios_no_toca_lo_que_creo_la_web(): void
+    {
+        $this->assertSame([], array_intersect(
+            ['examen_paciente', 'examen_obs', 'radiologia_paciente', 'radiologia_obs'],
+            array_keys(config('sync_legado.sin_clave_con_altas_del_app')),
+        ), 'las cuatro tienen clave: se suben por fila y no se reemplazan enteras');
+
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        DB::table('examenes')->insert([
+            ['reg_medico' => self::REG, 'codeexamen' => '001', 'examen' => 'GLICEMIA', 'codetipo' => '001'],
+            ['reg_medico' => self::REG, 'codeexamen' => '099', 'examen' => 'MAMOGRAFIA', 'codetipo' => '002'],
+        ]);
+
+        // Lo que escribe la web, con las Actions reales (cada fila deja su `created` con `source = web`).
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->ejecutar($consulta, ['001'], 'OBS WEB', null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->ejecutar($consulta, ['099'], 'RESUMEN WEB', null, 'web');
+
+        // El escritorio crea otra consulta (1|2), le sube sus filas y después las borra.
+        $fecha = '2026-10-02 10:00:00';
+        $this->subir([
+            ['id' => 220, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => '2026-10-02']],
+            ['id' => 221, 'tabla' => 'examen_paciente', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'codeexamen' => '001'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'codeexamen' => '001']],
+            ['id' => 222, 'tabla' => 'examen_obs', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'numconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'numconsulta' => 2, 'observacion' => 'DEL ESCRITORIO']],
+            ['id' => 223, 'tabla' => 'radiologia_paciente', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'coderadio' => '099'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'coderadio' => '099', 'nroopcion' => 1, 'orden' => 84]],
+            ['id' => 224, 'tabla' => 'radiologia_obs', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'numconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'numconsulta' => 2, 'observacion' => 'DEL ESCRITORIO']],
+        ]);
+
+        $this->assertSame(1, DB::table('examen_paciente')->where('reg_medico', self::REG)->where('nroconsulta', 2)->count());
+        $this->assertSame(84, (int) DB::table('radiologia_paciente')->where('reg_medico', self::REG)->where('nroconsulta', 2)->value('orden'));
+
+        $this->subir([
+            ['id' => 225, 'tabla' => 'examen_paciente', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'codeexamen' => '001']],
+            ['id' => 226, 'tabla' => 'examen_obs', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['numhistoria' => '1', 'numconsulta' => '2']],
+            ['id' => 227, 'tabla' => 'radiologia_paciente', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2', 'coderadio' => '099']],
+            ['id' => 228, 'tabla' => 'radiologia_obs', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['numhistoria' => '1', 'numconsulta' => '2']],
+        ]);
+
+        foreach (['examen_paciente', 'radiologia_paciente', 'examen_obs', 'radiologia_obs'] as $tabla) {
+            $this->assertSame(1, DB::table($tabla)->where('reg_medico', self::REG)->count(), $tabla . ': quedó sólo la fila de la web');
+        }
+        $this->assertSame('OBS WEB', DB::table('examen_obs')->where('reg_medico', self::REG)->where('numconsulta', 1)->value('observacion'));
+        $this->assertSame('RESUMEN WEB', DB::table('radiologia_obs')->where('reg_medico', self::REG)->where('numconsulta', 1)->value('observacion'));
+        $this->assertSame('001', trim(DB::table('examen_paciente')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('codeexamen')));
+
+        // La misma clave: el UPDATE del escritorio pisa lo que la web editó (no consulta `sync_changes`). Límite conocido, trampa 75.
+        $this->subir([['id' => 229, 'tabla' => 'examen_obs', 'op' => 'U', 'fecha' => '2026-10-02 12:00:00',
+            'clave' => ['numhistoria' => '1', 'numconsulta' => '1'], 'fila' => ['numhistoria' => 1, 'numconsulta' => 1, 'observacion' => 'PISADA POR EL ESCRITORIO']]]);
+        $this->assertSame('PISADA POR EL ESCRITORIO', DB::table('examen_obs')->where('reg_medico', self::REG)->where('numconsulta', 1)->value('observacion'));
+    }
+
     public function test_la_subida_fila_por_fila_de_los_catalogos_clinicos_no_toca_las_filas_que_creo_la_web(): void
     {
         // WEB-8.1b: diagnosticos, motivos_consulta, examenes, tipos_examenes y doctores tienen clave primaria en el PowerBuilder

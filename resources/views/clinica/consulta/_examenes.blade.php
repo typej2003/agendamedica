@@ -28,6 +28,11 @@
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
+            @if ($seccion->urlLaboratorio())
+                <a class="btn btn-sm btn-outline-secondary" href="{{ $seccion->urlLaboratorio() }}">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> Pedir o corregir
+                </a>
+            @endif
         </x-slot>
 
         @if ($seccion->hayObservacion())

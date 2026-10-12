@@ -7,7 +7,7 @@ namespace App\Clinica\Consulta\Vistas;
  * pestaña que se está mirando.
  *
  * Es deliberadamente delgado: cada pestaña tiene su propio ViewModel (`ConstanciaVista`, `ReposoVista`,
- * `ReferenciasVista`, `InformeVista`, `HospitalizacionVista`, `DietaVista`) y su parcial `_solicitudes-<clave>`. Agregar una pestaña (WEB-5.4) es
+ * `ReferenciasVista`, `InformeVista`, `HospitalizacionVista`, `DietaVista`, y `OrdenVista` para laboratorio y estudios) y su parcial `_solicitudes-<clave>`. Agregar una pestaña es
  * sumar su fila a `PestanasDeSolicitudes`, su ViewModel y su parcial, **sin tocar** ni este contenedor ni el controlador de
  * la consulta más que para armarle el ViewModel. Sin base de datos.
  */
@@ -20,7 +20,7 @@ final class SeccionDeSolicitudesVista
     ) {
     }
 
-    /** La clave de la pestaña activa (`constancia`, `reposo`, `referencias`, `hospitalizacion`, `informe`, `dieta`). */
+    /** La clave de la pestaña activa (`laboratorio`, `estudios`, `constancia`, `reposo`, `referencias`, `hospitalizacion`, `informe`, `dieta`). */
     public function activa(): string
     {
         return $this->activa;
@@ -46,8 +46,8 @@ final class SeccionDeSolicitudesVista
 
     public function ayuda(): string
     {
-        return 'Los documentos de esta consulta que se entregan al paciente: la constancia de asistencia, el reposo, '
-            . 'la referencia a otro médico, la orden de hospitalización, el informe y la dieta o recomendaciones. Se guardan '
-            . 'con su botón y se imprimen en media hoja, con el membrete de tu consultorio.';
+        return 'Los documentos de esta consulta que se entregan al paciente: la orden de laboratorio, la solicitud de estudios, '
+            . 'la constancia de asistencia, el reposo, la referencia a otro médico, la orden de hospitalización, el informe y la dieta o '
+            . 'recomendaciones. Se guardan con su botón y se imprimen en media hoja, con el membrete de tu consultorio.';
     }
 }

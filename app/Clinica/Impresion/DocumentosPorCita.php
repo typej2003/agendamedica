@@ -13,8 +13,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * **Los documentos de una cita atendida** (WEB-5.2, ampliado en WEB-5.3a): de la cita de la agenda a la consulta que la
- * atendió y a lo que esa consulta tiene para imprimir —los récipes y las solicitudes (constancia, reposo, referencias,
+ * **Los documentos de una cita atendida** (WEB-5.2, ampliado en WEB-5.3a y WEB-5.4): de la cita de la agenda a la consulta que la
+ * atendió y a lo que esa consulta tiene para imprimir —los récipes y las solicitudes (laboratorio, estudios, constancia, reposo, referencias,
  * hospitalización, informe y dieta)—. Es lo que la secretaría necesita para entregarle los papeles al paciente que acaba de salir del consultorio
  * **sin entrar a la consulta** (la consulta es sólo del médico).
  *
@@ -34,7 +34,8 @@ use Illuminate\Support\Facades\DB;
  * ## Qué cuenta como «algo para imprimir» en el lote
  *
  * Un récipe con medicamentos (del paciente o de la pareja) o un **documento de verdad** de los de `QueEsUnDocumento`: una
- * constancia con algo propio del médico, un reposo real, una referencia, un informe real, una orden de hospitalización o una dieta con texto. Es **la misma regla** que
+ * constancia con algo propio del médico, un reposo real, una referencia, un informe real, una orden de hospitalización, una dieta con texto, una orden de
+ * laboratorio o una solicitud de estudios (al menos un examen o estudio, o un resumen clínico con texto). Es **la misma regla** que
  * `SolicitudesParaImprimir::disponibles` aplica a una sola consulta, escrita acá como consulta de conjunto (SQL) porque es
  * por toda la agenda; los tests comparan las dos formas.
  *
@@ -137,9 +138,18 @@ final class DocumentosPorCita
                 ->whereRaw("TRIM(COALESCE(hospital, '')) <> ''")
                 ->orWhereRaw("TRIM(COALESCE(diagprev, '')) <> ''")
                 ->orWhereRaw("TRIM(COALESCE(dieta, '')) <> ''")), 'nrohistoria', 'nroconsulta');
-        //  - dieta con texto (la tabla llama `histroria` a la historia y `consulta` al número de la consulta).
+        //  - dieta con texto (la tabla llama `histroria` a la historia y `consulta` al número de la consulta);
         $this->marcar($conAlgo, DB::table('dieta_paciente')->where('reg_medico', $regMedico)->whereIn('histroria', $historias)
             ->whereRaw("TRIM(COALESCE(descripcion, '')) <> ''"), 'histroria', 'consulta');
+        //  - orden de laboratorio (WEB-5.4): al menos un examen, o un resumen clínico con texto (`QueEsUnDocumento::laboratorio`; el literal
+        //    `none` del DataWindow no es texto, como en `TextoDeLaConsulta`);
+        $this->marcar($conAlgo, DB::table('examen_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        $this->marcar($conAlgo, DB::table('examen_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+            ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
+        //  - solicitud de estudios (WEB-5.4): lo mismo con `radiologia_paciente` y `radiologia_obs`.
+        $this->marcar($conAlgo, DB::table('radiologia_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        $this->marcar($conAlgo, DB::table('radiologia_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+            ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
 
         $ids = [];
         foreach ($atendidas as $cita) {
