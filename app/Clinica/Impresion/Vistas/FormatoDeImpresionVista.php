@@ -66,6 +66,7 @@ final class FormatoDeImpresionVista
         private string $nombreDelMedico,
         private ?string $registroDelContexto,
         private array $urls,
+        private array $formatosEnBlanco = [],
     ) {
     }
 
@@ -114,6 +115,17 @@ final class FormatoDeImpresionVista
     public function urlVistaPrevia(): string
     {
         return $this->urls['vistaPrevia'];
+    }
+
+    /**
+     * Los formatos en blanco (WEB-5.5b) que se ofrecen en la tarjeta «Formatos en blanco»: cada uno con su nombre, una línea que dice qué lleva
+     * y la dirección de su hoja.
+     *
+     * @return array<int,array{clave:string, nombre:string, descripcion:string, url:string}>
+     */
+    public function formatosEnBlanco(): array
+    {
+        return $this->formatosEnBlanco;
     }
 
     public function urlVistaPreviaCompleta(): string

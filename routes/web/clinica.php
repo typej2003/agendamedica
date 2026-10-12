@@ -6,6 +6,7 @@ use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionController;
+use App\Http\Controllers\Clinica\FormatosEnBlancoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
 use App\Http\Controllers\Clinica\MotivoConsultaCatalogoController;
 use App\Http\Controllers\Clinica\TipoExamenCatalogoController;
@@ -356,6 +357,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // guarda bajo su registro principal, igual que el móvil. Cada sección tiene su ruta de guardado.
                 Route::get('/formato', [FormatoDeImpresionController::class, 'index'])->name('formato');
                 Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
+                // **Formatos en blanco** (WEB-5.5b): cada documento sin datos de paciente, para rellenar a mano. Sólo lee; la clave la acota el `where`.
+                Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z]+')->name('formato.en-blanco');
                 Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
                 Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
                 Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');

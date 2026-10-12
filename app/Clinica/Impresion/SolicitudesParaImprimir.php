@@ -270,8 +270,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::CONSTANCIA,
             DocumentoImpreso::CONSTANCIA,
-            'CONSTANCIA',
-            'Constancia',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::CONSTANCIA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::CONSTANCIA][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             [],
@@ -288,8 +288,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::REPOSO,
             DocumentoImpreso::REPOSO,
-            'REPOSO MÉDICO',
-            'Reposo médico',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REPOSO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REPOSO][1],
             $desde,
             PacienteImpreso::datos($paciente, $desde),
             [
@@ -322,8 +322,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::REFERENCIA,
             DocumentoImpreso::REFERENCIA . '-' . $referencia->cedula,
-            'REFERENCIA',
-            'Referencia',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REFERENCIA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REFERENCIA][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $fijos,
@@ -339,8 +339,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::INFORME,
             DocumentoImpreso::INFORME,
-            'INFORME MÉDICO',
-            'Informe médico',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::INFORME][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::INFORME][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $para === null ? [] : [['etiqueta' => 'PARA:', 'valor' => $para]],
@@ -355,8 +355,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::HOSPITALIZACION,
             DocumentoImpreso::HOSPITALIZACION,
-            'ORDEN DE HOSPITALIZACIÓN',
-            'Orden de hospitalización',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::HOSPITALIZACION][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::HOSPITALIZACION][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $lugar === null ? [] : [['etiqueta' => 'HOSPITALIZAR EN:', 'valor' => $lugar]],
@@ -384,8 +384,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::LABORATORIO,
             DocumentoImpreso::LABORATORIO,
-            'SOLICITUD DE EXÁMENES DE LABORATORIO',
-            'Orden de laboratorio',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             [],
@@ -413,8 +413,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::ESTUDIOS,
             DocumentoImpreso::ESTUDIOS,
-            'SOLICITUD DE ESTUDIOS',
-            'Solicitud de estudios',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ESTUDIOS][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ESTUDIOS][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             [],
@@ -429,8 +429,8 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             DocumentoImpreso::DIETA,
             DocumentoImpreso::DIETA,
-            'DIETA / RECOMENDACIONES',
-            'Dieta / Recomendaciones',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::DIETA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::DIETA][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $titulo === null ? [] : [['etiqueta' => 'DIETA:', 'valor' => (string) preg_replace('/\s+/u', ' ', $titulo)]],

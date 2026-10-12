@@ -37,6 +37,23 @@ final class DocumentoImpreso
 
     public const ESTUDIOS = 'estudios';
 
+    /**
+     * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
+     * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
+     *
+     * @var array<string,array{0:string,1:string}>
+     */
+    public const TITULOS = [
+        self::CONSTANCIA => ['CONSTANCIA', 'Constancia'],
+        self::REPOSO => ['REPOSO MÉDICO', 'Reposo médico'],
+        self::REFERENCIA => ['REFERENCIA', 'Referencia'],
+        self::INFORME => ['INFORME MÉDICO', 'Informe médico'],
+        self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
+        self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
+        self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
+        self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],
+    ];
+
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
     public const SEPARADOR_DE_ITEMS = ' · ';
 

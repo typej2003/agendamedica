@@ -7,19 +7,23 @@
 
     <div class="recipe-linea linea-{{ $membrete->colorLinea }}"></div>
 
-    <div class="recipe-datos">
-        <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>
-        <p class="recipe-datos-fila">
-            <span class="recipe-dato"><span class="recipe-dato-etiqueta">C.I.:</span> {{ $mitad['cedula'] }}</span>
-            @if ($mitad['edad'] !== null)
-                <span class="recipe-dato"><span class="recipe-dato-etiqueta">EDAD:</span> {{ $mitad['edad'] }}</span>
+    @if ($mitad['enBlanco'] ?? false)
+        @include('clinica.imprimir._datos-en-blanco')
+    @else
+        <div class="recipe-datos">
+            <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>
+            <p class="recipe-datos-fila">
+                <span class="recipe-dato"><span class="recipe-dato-etiqueta">C.I.:</span> {{ $mitad['cedula'] }}</span>
+                @if ($mitad['edad'] !== null)
+                    <span class="recipe-dato"><span class="recipe-dato-etiqueta">EDAD:</span> {{ $mitad['edad'] }}</span>
+                @endif
+                <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
+            </p>
+            @if ($mitad['direccion'])
+                <p class="recipe-dato recipe-dato-direccion"><span class="recipe-dato-etiqueta">DIRECCIÓN:</span> {{ $mitad['direccion'] }}</p>
             @endif
-            <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
-        </p>
-        @if ($mitad['direccion'])
-            <p class="recipe-dato recipe-dato-direccion"><span class="recipe-dato-etiqueta">DIRECCIÓN:</span> {{ $mitad['direccion'] }}</p>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <div class="recipe-titulo-fila">
         <h2 class="recipe-titulo">{{ $mitad['titulo'] }}</h2>
@@ -28,8 +32,11 @@
         @endif
     </div>
 
-    <div class="recipe-cuerpo">
-        @if ($mitad['clase'] === 'rp')
+    <div class="recipe-cuerpo{{ ($mitad['enBlanco'] ?? false) ? ' cuerpo-en-blanco' : '' }}">
+        @if ($mitad['enBlanco'] ?? false)
+            {{-- Formato en blanco (WEB-5.5b): renglones para escribir a mano. --}}
+            @include('clinica.imprimir._seccion-en-blanco', ['seccion' => ['etiqueta' => null, 'peso' => 1]])
+        @elseif ($mitad['clase'] === 'rp')
             <ol class="recipe-lista">
                 @foreach ($mitad['filas'] as $fila)
                     <li class="recipe-rp-fila">

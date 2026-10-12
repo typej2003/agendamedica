@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Impresion\FormatoDelMedico;
+use App\Clinica\Impresion\FormatosEnBlanco;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\Vistas\FormatoDeImpresionVista;
 use App\Clinica\Impresion\Vistas\HojaDePruebaVista;
@@ -45,6 +46,10 @@ class FormatoDeImpresionController extends Controller
                     'firma' => route('clinica.formato.firma'),
                     'restablecer' => route('clinica.formato.restablecer'),
                 ],
+                array_map(
+                    fn (array $formato) => $formato + ['url' => route('clinica.formato.en-blanco', ['formato' => $formato['clave']])],
+                    FormatosEnBlanco::catalogo(),
+                ),
             ),
         ]);
     }

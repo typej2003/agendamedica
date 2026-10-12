@@ -11,16 +11,20 @@
 
         <div class="recipe-linea linea-{{ $membrete->colorLinea }}"></div>
 
-        <div class="recipe-datos">
-            <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>
-            <p class="recipe-datos-fila">
-                <span class="recipe-dato"><span class="recipe-dato-etiqueta">C.I.:</span> {{ $mitad['cedula'] }}</span>
-                @if ($mitad['edad'] !== '')
-                    <span class="recipe-dato"><span class="recipe-dato-etiqueta">EDAD:</span> {{ $mitad['edad'] }}</span>
-                @endif
-                <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
-            </p>
-        </div>
+        @if ($mitad['enBlanco'] ?? false)
+            @include('clinica.imprimir._datos-en-blanco')
+        @else
+            <div class="recipe-datos">
+                <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>
+                <p class="recipe-datos-fila">
+                    <span class="recipe-dato"><span class="recipe-dato-etiqueta">C.I.:</span> {{ $mitad['cedula'] }}</span>
+                    @if ($mitad['edad'] !== '')
+                        <span class="recipe-dato"><span class="recipe-dato-etiqueta">EDAD:</span> {{ $mitad['edad'] }}</span>
+                    @endif
+                    <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
+                </p>
+            </div>
+        @endif
 
         <div class="recipe-titulo-fila documento-titulo-fila">
             <h2 class="recipe-titulo documento-titulo">{{ $mitad['titulo'] }}</h2>
@@ -38,12 +42,17 @@
         </div>
     @endif
 
-    <div class="recipe-cuerpo documento-cuerpo">
+    <div class="recipe-cuerpo documento-cuerpo{{ ($mitad['enBlanco'] ?? false) ? ' cuerpo-en-blanco' : '' }}">
         {{-- Los datos fijos (sólo en la primera mitad): rótulo en negrita y su valor, una por línea. --}}
         @if ($mitad['fijos'] !== [])
             <div class="documento-fijos">
                 @foreach ($mitad['fijos'] as $fijo)
-                    <p class="documento-fijo"><strong class="documento-rotulo">{{ $fijo['etiqueta'] }}</strong> {{ $fijo['valor'] }}</p>
+                    {{-- Un dato sin valor (formato en blanco, WEB-5.5b) deja su línea para escribirlo a mano. --}}
+                    @if ($fijo['valor'] === '')
+                        <p class="documento-fijo documento-fijo-en-blanco"><strong class="documento-rotulo">{{ $fijo['etiqueta'] }}</strong> <span class="linea-en-blanco"></span></p>
+                    @else
+                        <p class="documento-fijo"><strong class="documento-rotulo">{{ $fijo['etiqueta'] }}</strong> {{ $fijo['valor'] }}</p>
+                    @endif
                 @endforeach
             </div>
         @endif
@@ -56,6 +65,10 @@
             @else
                 <p class="documento-parrafo">{{ $parrafo['texto'] }}</p>
             @endif
+        @endforeach
+        {{-- Formato en blanco (WEB-5.5b): bloques de renglones para escribir, cada uno con su rótulo. --}}
+        @foreach ($mitad['secciones'] ?? [] as $seccion)
+            @include('clinica.imprimir._seccion-en-blanco', ['seccion' => $seccion])
         @endforeach
     </div>
 

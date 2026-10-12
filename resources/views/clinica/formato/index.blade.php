@@ -43,6 +43,7 @@
             @include('clinica.formato._logo')
             @include('clinica.formato._estilo')
             @include('clinica.formato._firma')
+            @include('clinica.formato._en-blanco')
         </div>
     </div>
 @endsection

@@ -2698,6 +2698,12 @@ body.auth-pagina {
 .formato-imagen { display: flex; align-items: flex-start; gap: 1rem; }
 .formato-imagen-controles { flex: 1 1 auto; min-width: 0; }
 
+/* Los formatos en blanco (WEB-5.5b): una fila por documento, con su botón de imprimir a la derecha. */
+.lista-en-blanco-fila { padding: .55rem 0; border-top: 1px solid var(--ds-borde); }
+.lista-en-blanco-fila:first-child { border-top: 0; padding-top: 0; }
+.lista-en-blanco-fila > div { min-width: 0; }
+.lista-en-blanco-fila .btn { flex: none; min-height: 40px; display: inline-flex; align-items: center; gap: .35rem; }
+
 .formato-miniatura {
     flex: none;
     width: 7rem;
