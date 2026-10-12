@@ -4,21 +4,19 @@
 
 @section('contenido')
     {{-- Medicamentos del catálogo (WEB-8.1a): el vademécum del médico. Una sola acción primaria (Nuevo medicamento);
-         el buscador es lo que se usa todo el tiempo y el índice de catálogos lleva a los demás. --}}
+         el buscador es lo que se usa todo el tiempo y está en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Medicamentos" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
             <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo medicamento
             </a>
-            <div class="w-100">
-                <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
-                               placeholder="Nombre comercial, principio activo o presentación" etiqueta="Buscar medicamento" />
-            </div>
-            <div class="w-100">
-                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
-            </div>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+                       placeholder="Nombre comercial, principio activo o presentación" etiqueta="Buscar medicamento" />
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

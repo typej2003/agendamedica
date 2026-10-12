@@ -4,21 +4,19 @@
 
 @section('contenido')
     {{-- Un catálogo de «código + texto» (WEB-8.1b): diagnósticos, motivos de consulta y tipos de examen. Una sola acción
-         primaria (Nuevo); el buscador es lo que se usa todo el tiempo y el índice de catálogos lleva a los demás. --}}
+         primaria (Nuevo); el buscador es lo que se usa todo el tiempo y está en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
             <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> {{ $vm->textoNuevo() }}
             </a>
-            <div class="w-100">
-                <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
-                               :placeholder="$vm->placeholder()" :etiqueta="$vm->etiquetaDeBuscar()" />
-            </div>
-            <div class="w-100">
-                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
-            </div>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+                       :placeholder="$vm->placeholder()" :etiqueta="$vm->etiquetaDeBuscar()" />
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

@@ -32,7 +32,29 @@
         <ul class="nav flex-column">
             @foreach ($armazon->menu() as $item)
                 <li class="nav-item">
-                    @if ($item['url'])
+                    @if (! empty($item['hijos']))
+                        {{-- Grupo plegable (Catálogos): `<details>` nativo, sin JS. Nace abierto cuando se está dentro de
+                             uno de sus hijos; el hijo activo lleva `aria-current`. Con la barra plegada a 72 px los hijos
+                             quedan como iconos con su `title`, como cualquier ítem. --}}
+                        <details class="nav-grupo" {{ $item['activo'] ? 'open' : '' }}>
+                            <summary class="nav-link {{ $item['activo'] ? 'activo-padre' : '' }}" title="{{ $item['texto'] }}">
+                                <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i>
+                                <span class="link-text">{{ $item['texto'] }}</span>
+                                <i class="bi bi-chevron-down nav-grupo-flecha link-text" aria-hidden="true"></i>
+                            </summary>
+                            <ul class="nav flex-column nav-submenu">
+                                @foreach ($item['hijos'] as $hijo)
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ $hijo['activo'] ? 'active' : '' }}" href="{{ $hijo['url'] }}"
+                                           @if ($hijo['activo']) aria-current="page" @endif title="{{ $hijo['texto'] }}">
+                                            <i class="bi {{ $hijo['icono'] }}" aria-hidden="true"></i>
+                                            <span class="link-text">{{ $hijo['texto'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    @elseif ($item['url'])
                         <a class="nav-link {{ $item['activo'] ? 'active' : '' }}" href="{{ $item['url'] }}"
                            @if ($item['activo']) aria-current="page" @endif title="{{ $item['texto'] }}">
                             <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i>

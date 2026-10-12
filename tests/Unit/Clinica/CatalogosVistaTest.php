@@ -346,17 +346,21 @@ class CatalogosVistaTest extends TestCase
         $this->assertSame(40, mb_strlen(CamposDelMedicamento::normalizar(['nombrecomercial' => 'A', 'nombrecomercial1' => str_repeat('A', 40)], true)['nombrecomercial1']));
     }
 
-    // ------------------------------------------------------------------------------ El índice de catálogos
+    // ------------------------------------------------------------------------- Los submenús de "Catálogos"
 
-    public function test_el_indice_de_catalogos_marca_el_actual_y_solo_lista_los_que_tienen_pantalla(): void
+    public function test_el_submenu_de_catalogos_marca_el_actual_y_solo_lista_los_que_tienen_pantalla(): void
     {
-        $pestanas = CatalogosDisponibles::pestanas('tratamientos');
+        $items = CatalogosDisponibles::submenu('clinica.catalogos.tratamientos');
 
-        // WEB-8.1b sumó cinco catálogos al índice (la línea de `CATALOGOS` que 8.1a dejó preparada).
-        $this->assertSame(['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'], array_column($pestanas, 'texto'));
-        $this->assertSame([false, true, false, false, false, false, false], array_column($pestanas, 'activa'));
-        $this->assertSame(route('clinica.catalogos.medicamentos'), $pestanas[0]['url']);
-        $this->assertSame(route('clinica.catalogos.medicamentos'), CatalogosDisponibles::urlDeEntrada());
-        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::pestanas(null), 'activa'));
+        // WEB-8.1b sumó cinco catálogos (la línea de `CATALOGOS` que 8.1a dejó preparada).
+        $this->assertSame(['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'], array_column($items, 'texto'));
+        $this->assertSame([false, true, false, false, false, false, false], array_column($items, 'activo'));
+        $this->assertSame(route('clinica.catalogos.medicamentos'), $items[0]['url']);
+        $this->assertSame('bi-capsule', $items[0]['icono']);
+
+        // Una pantalla hija (el editor) mantiene activo a su catálogo; el nombre parecido de otro no lo activa.
+        $this->assertSame([false, true, false, false, false, false, false], array_column(CatalogosDisponibles::submenu('clinica.catalogos.tratamientos.editar'), 'activo'));
+        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::submenu(null), 'activo'));
+        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::submenu('clinica.pacientes'), 'activo'));
     }
 }

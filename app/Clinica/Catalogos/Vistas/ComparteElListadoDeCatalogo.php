@@ -34,12 +34,6 @@ trait ComparteElListadoDeCatalogo
 
     // ----------------------------------------------------------------------------------------- Encabezado
 
-    /** @return array<int,array{texto:string, url:string, activa:bool}> */
-    public function catalogos(): array
-    {
-        return CatalogosDisponibles::pestanas($this->slug());
-    }
-
     public function buscar(): string
     {
         return $this->buscar;

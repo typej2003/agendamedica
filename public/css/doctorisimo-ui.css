@@ -772,6 +772,31 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 .app-sidebar.minimizado .app-sidebar-pie { flex-direction: column; }
 .app-sidebar.minimizado .app-sidebar-pie .nav-link { flex: 0 0 auto; width: 100%; }
 
+/* Grupo plegable del menú lateral (Catálogos): un `<details>` cuyo `<summary>` es el ítem padre y cuyos hijos son
+   enlaces con su icono. Nace abierto dentro de uno de sus hijos. Plegada la barra, los hijos siguen siendo
+   iconos con su `title`, como cualquier ítem. */
+.app-sidebar .nav-grupo > summary { list-style: none; cursor: pointer; }
+.app-sidebar .nav-grupo > summary::-webkit-details-marker { display: none; }
+.app-sidebar .nav-grupo > summary .nav-grupo-flecha {
+    margin-left: auto;
+    font-size: .75rem;
+    transition: transform var(--ds-dur-base) var(--ds-ease);
+}
+
+.app-sidebar .nav-grupo[open] > summary .nav-grupo-flecha { transform: rotate(180deg); }
+.app-sidebar .nav-grupo > summary.activo-padre { color: var(--ds-barra-texto); }
+
+.app-sidebar .nav-submenu {
+    list-style: none;
+    margin: 0 0 2px;
+    padding: 0 0 0 1.1rem;
+}
+
+.app-sidebar .nav-submenu .nav-link { font-size: .84rem; padding-top: .4rem; padding-bottom: .4rem; }
+
+.app-sidebar.minimizado .nav-grupo-flecha { display: none; }
+.app-sidebar.minimizado .nav-submenu { padding-left: 0; }
+
 @media (min-width: 992px) {
     /* De altura completa y fija: la página se desplaza, el menú no. La columna de contenido (y la barra
        superior del panel) le dejan su ancho a la izquierda y siguen el pliegue con `:has()`. */
@@ -809,7 +834,8 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 .page-head {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    /* Título y acciones nacen en el mismo borde superior, también cuando las acciones envuelven (trampa 63). */
+    align-items: flex-start;
     justify-content: space-between;
     gap: .75rem;
     margin-bottom: 1rem;
@@ -1173,9 +1199,6 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     gap: .5rem;
 }
 
-.page-head .buscador { flex-wrap: nowrap; }
-.page-head .buscador-campo { flex: 1 1 18rem; min-width: 12rem; }
-
 .buscador-campo {
     position: relative;
     flex: 1 1 16rem;
@@ -1193,12 +1216,36 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .buscador-campo .form-control { padding-left: 2.3rem; }
 
+/* --- Barra de herramientas: el buscador y los filtros de una pantalla, debajo del encabezado ---
+   El encabezado (`.page-head`) lleva sólo título, subtítulo y botones. Todo lo que filtra la lista va acá:
+   el buscador ocupa el ancho útil y los filtros (segmentados, selects) quedan a su derecha; en el celular
+   cada grupo baja a su propia línea. Es la hermana de `.agenda-barra`, para las pantallas sin calendario. */
+.barra-herramientas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.barra-herramientas .buscador { flex: 1 1 24rem; min-width: 0; }
+.barra-herramientas .buscador-campo { flex: 1 1 14rem; min-width: 10rem; }
+
+.barra-herramientas-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .6rem;
+}
+
 /* En el celular el campo y los dos botones ("Buscar" y "Limpiar", que aparece con una búsqueda activa) no
-   entran en una línea: el buscador vuelve a envolver y el campo ocupa el ancho completo. Sin esto la
-   página gana 3 px de scroll horizontal a 375 px (medido). */
+   entran en una línea: el campo se queda con el espacio que sobra y "Limpiar" baja a otra línea. Sin esto la página gana 3 px de
+   scroll horizontal a 375 px (medido). */
 @media (max-width: 575.98px) {
-    .page-head .buscador { flex-wrap: wrap; }
-    .page-head .buscador-campo { flex: 1 1 100%; min-width: 0; }
+    .barra-herramientas .buscador { flex-basis: 100%; }
+    .barra-herramientas .buscador-campo { flex: 1 1 8rem; min-width: 0; }
+    .barra-herramientas-filtros { width: 100%; }
 }
 
 /* --- Tabla que se apila en tarjetas en el celular --- */
@@ -2598,10 +2645,6 @@ body.auth-pagina {
     .recipe-orden { order: 2; flex-direction: row; }
     .recipe-orden .btn { min-width: 2.5rem; min-height: 2.5rem; }
 }
-
-/* El índice de catálogos (WEB-8.1b) tiene siete entradas: envuelve en varias líneas en vez de desbordar el celular. */
-.btn-group.catalogos-indice { display: flex; flex-wrap: wrap; gap: .375rem; }
-.btn-group.catalogos-indice > .btn { margin-left: 0 !important; border-radius: var(--bs-btn-border-radius, .5rem) !important; }
 
 /* El filtro por tipo de examen, junto al buscador. */
 .buscador .catalogo-filtro { width: auto; min-width: 10rem; max-width: 100%; }

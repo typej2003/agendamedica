@@ -473,14 +473,28 @@ class CatalogosClinicosWebTest extends TestCase
         }
     }
 
-    public function test_el_indice_ofrece_los_siete_catalogos_y_los_errores_estan_en_espanol(): void
+    public function test_el_menu_lateral_ofrece_los_siete_catalogos_como_submenus_y_los_errores_estan_en_espanol(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
-        $pagina = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.diagnosticos'));
-        foreach (['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'] as $texto) {
-            $pagina->assertSee($texto);
-        }
+        $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.diagnosticos'))->assertOk()->getContent();
+        $submenu = $this->submenuDeCatalogos($html);
+        $this->assertSame(
+            ['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'],
+            $submenu['textos']
+        );
+        $this->assertSame(['Diagnósticos'], $submenu['activos']);
+        $this->assertStringContainsString('<details class="nav-grupo" open>', $html);
+
+        // Fuera de los catálogos el grupo está plegado y ninguno se marca.
+        $fuera = $this->conContexto($user, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
+        $this->assertStringContainsString('<details class="nav-grupo" >', $fuera);
+        $this->assertSame([], $this->submenuDeCatalogos($fuera)['activos']);
+
+        // Y el encabezado ya no trae el índice de pestañas ni formularios: el buscador va en su barra de herramientas.
+        $this->assertStringNotContainsString('catalogos-indice', $html);
+        $this->assertStringContainsString('barra-herramientas', $html);
+        $this->assertSame(0, $this->formulariosEnElEncabezado($html));
 
         $this->conContexto($user, $medico, $gineco)->post(route('clinica.catalogos.diagnosticos.guardar'), ['id' => 'abc', 'descripcion' => str_repeat('A', 400), 'page' => 0])
             ->assertSessionHasErrors(['id', 'descripcion', 'page']);
@@ -488,6 +502,42 @@ class CatalogosClinicosWebTest extends TestCase
         foreach ($errores as $mensaje) {
             $this->assertDoesNotMatchRegularExpression('/\b(must|field|The)\b/', $mensaje);
         }
+    }
+
+    /**
+     * Los submenús de «Catálogos» del menú lateral: sus textos y cuáles están marcados como activos.
+     *
+     * @return array{textos:array<int,string>, activos:array<int,string>}
+     */
+    private function submenuDeCatalogos(string $html): array
+    {
+        preg_match('/<ul class="nav flex-column nav-submenu">(.*?)<\/ul>/s', $html, $bloque);
+        preg_match_all('/<a class="nav-link (active)?" href="[^"]*"[^>]*>\s*<i[^>]*><\/i>\s*<span class="link-text">([^<]+)<\/span>/s', $bloque[1] ?? '', $enlaces, PREG_SET_ORDER);
+
+        return [
+            'textos' => array_map(fn ($e) => $e[2], $enlaces),
+            'activos' => array_values(array_map(fn ($e) => $e[2], array_filter($enlaces, fn ($e) => $e[1] === 'active'))),
+        ];
+    }
+
+    /** Cuántos `<form>` o `<select>` hay dentro del slot de acciones del `page-head` (no debería haber ninguno). */
+    private function formulariosEnElEncabezado(string $html): int
+    {
+        preg_match('/<div class="page-head-acciones">(.*?)<\/div>\s*<\/div>/s', $html, $acciones);
+
+        return preg_match_all('/<(form|select|input)/', $acciones[1] ?? '');
+    }
+
+    public function test_la_secretaria_no_ve_el_grupo_de_catalogos_en_el_menu(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $secretaria = User::create(['name' => 'Secretaria', 'email' => 'catclin-m-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
+        $secretaria->assignRole('Secretaria');
+        MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
+
+        $html = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
+        $this->assertStringNotContainsString('nav-grupo', $html);
+        $this->assertStringNotContainsString('/catalogos/', $html);
     }
 
     public function test_el_movil_baja_lo_editado_por_delta_y_se_entera_de_las_bajas_con_el_nombre_de_su_tabla(): void

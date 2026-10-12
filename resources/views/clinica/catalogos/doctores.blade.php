@@ -4,21 +4,19 @@
 
 @section('contenido')
     {{-- Médicos referidos del catálogo (WEB-8.1b): la libreta de colegas del médico (`doctores`). Una sola acción primaria
-         (Nuevo médico); el buscador es lo que se usa todo el tiempo y el índice lleva a los demás catálogos. --}}
+         (Nuevo médico); el buscador es lo que se usa todo el tiempo y están en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Médicos referidos" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
             <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo médico
             </a>
-            <div class="w-100">
-                <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
-                               placeholder="Nombre, clínica, ciudad o especialidad" etiqueta="Buscar médico" />
-            </div>
-            <div class="w-100">
-                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
-            </div>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+                       placeholder="Nombre, clínica, ciudad o especialidad" etiqueta="Buscar médico" />
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

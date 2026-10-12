@@ -10,14 +10,12 @@
             <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo tratamiento
             </a>
-            <div class="w-100">
-                <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
-            </div>
-            <div class="w-100">
-                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
-            </div>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

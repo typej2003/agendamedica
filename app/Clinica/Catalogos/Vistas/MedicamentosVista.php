@@ -4,7 +4,6 @@ namespace App\Clinica\Catalogos\Vistas;
 
 use App\Actions\Catalogos\CamposDelMedicamento;
 use App\Actions\Consulta\AgregarMedicamentoAlVademecum;
-use App\Clinica\Catalogos\CatalogosDisponibles;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Vistas\ConValoresDeFormulario;
 use App\Models\Vademecum;
@@ -53,12 +52,6 @@ final class MedicamentosVista
     }
 
     // ----------------------------------------------------------------------------------------- Encabezado
-
-    /** @return array<int,array{texto:string, url:string, activa:bool}> */
-    public function catalogos(): array
-    {
-        return CatalogosDisponibles::pestanas('medicamentos');
-    }
 
     public function buscar(): string
     {

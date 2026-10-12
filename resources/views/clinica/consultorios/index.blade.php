@@ -4,10 +4,13 @@
 
 @section('contenido')
     <x-ui.page-head titulo="Consultorios" :subtitulo="$vm->subtitulo()" :volver="$vm->urlVolver()" volver-texto="Volver">
-        <x-slot name="acciones">
+    </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-slot name="filtros">
             <x-ui.segmentado :opciones="$vm->filtros()" etiqueta="Qué consultorios ver" />
         </x-slot>
-    </x-ui.page-head>
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

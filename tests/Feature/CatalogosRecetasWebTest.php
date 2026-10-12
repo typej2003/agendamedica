@@ -1040,10 +1040,13 @@ class CatalogosRecetasWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos'))->assertRedirect(route('clinica.catalogos.medicamentos'));
 
-        // Cada pantalla muestra el índice de catálogos, con el suyo marcado.
+        // El índice ya no es un segmentado arriba de la pantalla: los catálogos son submenús de «Catálogos» en la barra
+        // lateral, con el de la pantalla marcado (y el grupo abierto).
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.tratamientos'))->assertOk()->getContent();
-        $this->assertMatchesRegularExpression('/class="btn btn-outline-secondary active"[^>]*>Tratamientos</', $html);
-        $this->assertMatchesRegularExpression('/class="btn btn-outline-secondary "[^>]*>Medicamentos</', $html);
+        $this->assertMatchesRegularExpression('/<a class="nav-link active" href="[^"]*\/catalogos\/tratamientos"[^>]*aria-current="page"/', $html);
+        $this->assertMatchesRegularExpression('/<a class="nav-link " href="[^"]*\/catalogos\/medicamentos"/', $html);
+        $this->assertStringContainsString('<details class="nav-grupo" open>', $html);
+        $this->assertStringNotContainsString('catalogos-indice', $html);
     }
 
     public function test_un_invitado_va_al_login(): void

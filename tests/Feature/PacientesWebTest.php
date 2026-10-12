@@ -283,6 +283,23 @@ class PacientesWebTest extends TestCase
         $respuesta->assertDontSee('Historia 9001');
     }
 
+    public function test_el_encabezado_lleva_solo_el_boton_y_el_buscador_y_el_filtro_van_en_su_barra(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'Perez', '11111111', '2070');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/pacientes')->assertOk()->getContent();
+
+        // El slot de acciones del encabezado: un enlace de alta y nada más (ni formulario, ni segmentado, ni select).
+        $this->assertSame(1, preg_match('/<div class="page-head-acciones">(.*?)<\/div>\s*<\/div>/s', $html, $acciones));
+        $this->assertStringContainsString('Nuevo paciente', $acciones[1]);
+        $this->assertDoesNotMatchRegularExpression('/<(form|select|input)|btn-group/', $acciones[1]);
+
+        // El buscador y el segmentado viven en la barra de herramientas, después del encabezado.
+        $this->assertSame(1, preg_match('/class="barra-herramientas".*?<form class="buscador".*?btn-group/s', $html));
+        $this->assertGreaterThan(strpos($html, 'page-head-acciones'), strpos($html, 'barra-herramientas'));
+    }
+
     public function test_el_listado_marca_sin_cedula_y_sin_historia_sin_romperse(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

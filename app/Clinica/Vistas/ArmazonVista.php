@@ -84,7 +84,10 @@ final class ArmazonVista
     /**
      * El menú lateral: Inicio y un ítem por módulo. Un módulo declarado sin pantalla se muestra apagado.
      *
-     * @return array<int,array{texto:string, icono:string, url:?string, activo:bool}>
+     * Un ítem con `hijos` es un **grupo plegable** (hoy sólo "Catálogos"): no navega por sí mismo, se abre solo cuando
+     * uno de sus hijos es el activo y marca `activo` al padre.
+     *
+     * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, hijos?:array<int,array{texto:string, icono:string, url:string, activo:bool}>}>
      */
     public function menu(): array
     {
@@ -111,14 +114,16 @@ final class ArmazonVista
         // secretaría no los administra: la entrada sólo se ofrece a quien puede abrirlos (el resto recibiría un 403).
         // Va en la barra lateral y no en los accesos de la barra superior: ésa ya ocupa todo el ancho a 768 px con las
         // fichas del contexto, y un acceso más la desborda (medido al verificar WEB-8.1a; trampa 58 de `TRAMPAS.md`).
-        $catalogos = $this->tieneContexto() && $this->trabajaLaConsulta ? CatalogosDisponibles::urlDeEntrada() : null;
+        // "Catálogos" es un grupo con un submenú por catálogo (`CatalogosDisponibles` es la fuente única de cuáles hay).
+        $catalogos = $this->tieneContexto() && $this->trabajaLaConsulta ? CatalogosDisponibles::submenu($this->rutaActual) : [];
 
-        if ($catalogos !== null) {
+        if ($catalogos !== []) {
             $menu[] = [
                 'texto'  => 'Catálogos',
-                'icono'  => 'bi-capsule',
-                'url'    => $catalogos,
+                'icono'  => 'bi-book',
+                'url'    => null,
                 'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.catalogos'),
+                'hijos'  => $catalogos,
             ];
         }
 

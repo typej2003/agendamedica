@@ -5,9 +5,9 @@ namespace App\Clinica\Catalogos;
 use Illuminate\Support\Facades\Route;
 
 /**
- * **Los catálogos clínicos que el médico puede mantener** (WEB-8.1): el índice de la zona "Catálogos" de la web
- * clínica. Cada pantalla de catálogo muestra este índice como un segmentado y la entrada "Catálogos" de la barra
- * lleva al primero.
+ * **Los catálogos clínicos que el médico puede mantener** (WEB-8.1): la fuente única de qué catálogos existen. La
+ * entrada "Catálogos" del menú lateral es un grupo plegable y cada catálogo con pantalla es un submenú suyo
+ * (`ArmazonVista::menu()` lo lee de acá; las pantallas ya no repiten un índice de pestañas arriba).
  *
  * Es **extensible a propósito**: WEB-8.1b sumó sus pantallas (diagnósticos, motivos de consulta, exámenes, tipos de examen y
  * médicos referidos) agregando una línea a `CATALOGOS`, sin tocar las pantallas que ya existían. Sólo se listan los catálogos
@@ -28,28 +28,7 @@ final class CatalogosDisponibles
         'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],
     ];
 
-    /**
-     * Los catálogos con pantalla, para el segmentado de las pantallas de catálogo.
-     *
-     * @param  string|null  $actual  el `slug` del catálogo que se está mirando
-     * @return array<int,array{texto:string, url:string, activa:bool}>
-     */
-    public static function pestanas(?string $actual): array
-    {
-        $pestanas = [];
-
-        foreach (self::existentes() as $slug => $catalogo) {
-            $pestanas[] = [
-                'texto' => $catalogo['texto'],
-                'url' => route($catalogo['ruta']),
-                'activa' => $slug === $actual,
-            ];
-        }
-
-        return $pestanas;
-    }
-
-    /** La URL de la entrada "Catálogos" de la barra: el primer catálogo que tiene pantalla. */
+    /** La URL de `/clinica/catalogos` (la entrada histórica de la zona): el primer catálogo que tiene pantalla. */
     public static function urlDeEntrada(): ?string
     {
         foreach (self::existentes() as $catalogo) {
@@ -57,6 +36,30 @@ final class CatalogosDisponibles
         }
 
         return null;
+    }
+
+    /**
+     * Los submenús de "Catálogos" en el menú lateral: un ítem por catálogo con pantalla, con el activo marcado.
+     *
+     * @param  string|null  $rutaActual  el nombre de la ruta de la petición (`clinica.catalogos.tratamientos.editar`…):
+     *                                   un catálogo está activo en su listado y en todas sus pantallas hijas
+     * @return array<int,array{texto:string, icono:string, url:string, activo:bool}>
+     */
+    public static function submenu(?string $rutaActual): array
+    {
+        $items = [];
+
+        foreach (self::existentes() as $catalogo) {
+            $items[] = [
+                'texto' => $catalogo['texto'],
+                'icono' => $catalogo['icono'],
+                'url' => route($catalogo['ruta']),
+                'activo' => $rutaActual !== null
+                    && ($rutaActual === $catalogo['ruta'] || str_starts_with($rutaActual, $catalogo['ruta'] . '.')),
+            ];
+        }
+
+        return $items;
     }
 
     /** @return array<string,array{texto:string, icono:string, ruta:string}> */

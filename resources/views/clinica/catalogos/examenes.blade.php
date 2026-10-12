@@ -4,27 +4,25 @@
 
 @section('contenido')
     {{-- Exámenes del catálogo (WEB-8.1b): los exámenes y estudios del médico con su tipo. Una sola acción primaria (Nuevo
-         examen); el buscador y el filtro por tipo son lo que se usa todo el tiempo y el índice lleva a los demás catálogos. --}}
+         examen); el buscador y el filtro por tipo son lo que se usa todo el tiempo y están en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Exámenes" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
             <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo examen
             </a>
-            <div class="w-100">
-                <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
-                               placeholder="Nombre, código o tipo" etiqueta="Buscar examen">
-                    <select name="tipo" class="form-select catalogo-filtro" aria-label="Filtrar por tipo de examen">
-                        @foreach ($vm->opcionesDelFiltro() as $opcion)
-                            <option value="{{ $opcion['valor'] }}" {{ $vm->tipoActivo() === $opcion['valor'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
-                        @endforeach
-                    </select>
-                </x-ui.buscador>
-            </div>
-            <div class="w-100">
-                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
-            </div>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+                       placeholder="Nombre, código o tipo" etiqueta="Buscar examen">
+            <select name="tipo" class="form-select catalogo-filtro" aria-label="Filtrar por tipo de examen">
+                @foreach ($vm->opcionesDelFiltro() as $opcion)
+                    <option value="{{ $opcion['valor'] }}" {{ $vm->tipoActivo() === $opcion['valor'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
+                @endforeach
+            </select>
+        </x-ui.buscador>
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

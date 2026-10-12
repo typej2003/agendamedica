@@ -209,6 +209,8 @@ suman la comparación sin tildes y el `created`), `CrearExamenEnElCatalogo`, `Cr
 `UsoDeUnItemDelCatalogo` (qué es «en uso» en cada catálogo), `PaginaUnaColeccion` y `Vistas/{CatalogoSimpleVista,ExamenesVista,DoctoresVista,ComparteElListadoDeCatalogo}`; vistas `clinica/catalogos/{simple,examenes,doctores}.blade.php`; modelos `Examen` y `TipoExamen`.
 Sin columnas nuevas; las cinco tablas se suben por fila desde el escritorio y el móvil no cambió. Ver las trampas 60 a 62.
 
+**Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
+
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
 (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` — están en `.env.example` con valor

@@ -6,10 +6,13 @@
     <x-ui.page-head titulo="Sedes"
                     subtitulo="Los lugares donde atienden los médicos del consultorio. Aquí se elige la sede al agendar y al crear un consultorio."
                     :volver="$vm->urlVolver()" volver-texto="Volver">
-        <x-slot name="acciones">
+    </x-ui.page-head>
+
+    <x-ui.barra-herramientas>
+        <x-slot name="filtros">
             <x-ui.segmentado :opciones="$vm->filtros()" etiqueta="Qué sedes ver" />
         </x-slot>
-    </x-ui.page-head>
+    </x-ui.barra-herramientas>
 
     <x-ui.errores />
 

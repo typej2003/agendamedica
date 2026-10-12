@@ -2,7 +2,6 @@
 
 namespace App\Clinica\Catalogos\Vistas;
 
-use App\Clinica\Catalogos\CatalogosDisponibles;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,12 +29,6 @@ final class TratamientosVista
         private int $total,
         private array $urls,
     ) {
-    }
-
-    /** @return array<int,array{texto:string, url:string, activa:bool}> */
-    public function catalogos(): array
-    {
-        return CatalogosDisponibles::pestanas('tratamientos');
     }
 
     public function buscar(): string
