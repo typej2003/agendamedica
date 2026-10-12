@@ -15,7 +15,7 @@
                                placeholder="Nombre comercial, principio activo o presentación" etiqueta="Buscar medicamento" />
             </div>
             <div class="w-100">
-                <x-ui.segmentado :opciones="$vm->catalogos()" etiqueta="Catálogos" />
+                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
             </div>
         </x-slot>
     </x-ui.page-head>

@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\CatalogoController;
+use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
+use App\Http\Controllers\Clinica\DoctorCatalogoController;
+use App\Http\Controllers\Clinica\ExamenCatalogoController;
+use App\Http\Controllers\Clinica\MotivoConsultaCatalogoController;
+use App\Http\Controllers\Clinica\TipoExamenCatalogoController;
 use App\Http\Controllers\Clinica\MedicamentoCatalogoController;
 use App\Http\Controllers\Clinica\TratamientoCatalogoController;
 use App\Http\Controllers\Clinica\CitaController;
@@ -281,6 +286,25 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/catalogos/tratamientos/{tratamiento}/editar', [TratamientoCatalogoController::class, 'editar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.editar');
                 Route::post('/catalogos/tratamientos/{tratamiento}', [TratamientoCatalogoController::class, 'guardar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.guardar');
                 Route::delete('/catalogos/tratamientos/{tratamiento}', [TratamientoCatalogoController::class, 'quitar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.quitar');
+
+                // **Catálogos clínicos** (WEB-8.1b): diagnósticos, motivos de consulta, tipos de examen, exámenes y médicos referidos.
+                // Los cinco con la misma forma —listado paginado con buscador, alta y edición en un diálogo y «quitar»— y la misma
+                // regla de baja que los medicamentos: lo que está en uso no se borra y el aviso dice dónde.
+                Route::get('/catalogos/diagnosticos', [DiagnosticoCatalogoController::class, 'index'])->name('catalogos.diagnosticos');
+                Route::post('/catalogos/diagnosticos', [DiagnosticoCatalogoController::class, 'guardar'])->name('catalogos.diagnosticos.guardar');
+                Route::delete('/catalogos/diagnosticos/{id}', [DiagnosticoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.diagnosticos.quitar');
+                Route::get('/catalogos/motivos-consulta', [MotivoConsultaCatalogoController::class, 'index'])->name('catalogos.motivos-consulta');
+                Route::post('/catalogos/motivos-consulta', [MotivoConsultaCatalogoController::class, 'guardar'])->name('catalogos.motivos-consulta.guardar');
+                Route::delete('/catalogos/motivos-consulta/{id}', [MotivoConsultaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-consulta.quitar');
+                Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
+                Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
+                Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');
+                Route::get('/catalogos/tipos-examen', [TipoExamenCatalogoController::class, 'index'])->name('catalogos.tipos-examen');
+                Route::post('/catalogos/tipos-examen', [TipoExamenCatalogoController::class, 'guardar'])->name('catalogos.tipos-examen.guardar');
+                Route::delete('/catalogos/tipos-examen/{id}', [TipoExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.tipos-examen.quitar');
+                Route::get('/catalogos/medicos-referidos', [DoctorCatalogoController::class, 'index'])->name('catalogos.medicos-referidos');
+                Route::post('/catalogos/medicos-referidos', [DoctorCatalogoController::class, 'guardar'])->name('catalogos.medicos-referidos.guardar');
+                Route::delete('/catalogos/medicos-referidos/{id}', [DoctorCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.medicos-referidos.quitar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

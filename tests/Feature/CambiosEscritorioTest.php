@@ -689,4 +689,52 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame('MOTIVO WEB', DB::table('referencia')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('referencia'));
         $this->assertSame('INFORME WEB', DB::table('informe')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('descripcion'));
     }
+
+    public function test_la_subida_fila_por_fila_de_los_catalogos_clinicos_no_toca_las_filas_que_creo_la_web(): void
+    {
+        // WEB-8.1b: diagnosticos, motivos_consulta, examenes, tipos_examenes y doctores tienen clave primaria en el PowerBuilder
+        // (los tres triggers de fila): se suben por clave y NO necesitan `sin_clave_con_altas_del_app` (trampa 60). Si alguna
+        // pasara a ser de sentencia (`op = T`), este test falla en la primera aserción.
+        $this->assertSame([], array_intersect(
+            ['diagnosticos', 'motivos_consulta', 'examenes', 'tipos_examenes', 'doctores', 'especial'],
+            array_keys(config('sync_legado.sin_clave_con_altas_del_app')),
+        ));
+
+        DB::table('especial')->insert(['reg_medico' => self::REG, 'codeespecial' => '002', 'especialidad' => 'CARDIOLOGIA']);
+
+        // Lo que escribe la web, con las Actions reales (cada una deja su `created` con `source = web`).
+        $web = [
+            [app(\App\Actions\Catalogos\CrearDiagnosticoEnElCatalogo::class)->ejecutar($this->medico, [self::REG], 'DX WEB')[0], 'diagnosticos', 'codediagnostico'],
+            [app(\App\Actions\Catalogos\CrearMotivoEnElCatalogo::class)->ejecutar($this->medico, [self::REG], 'MOTIVO WEB')[0], 'motivos_consulta', 'codemotivo'],
+            [app(\App\Actions\Catalogos\CrearTipoDeExamenEnElCatalogo::class)->ejecutar(self::REG, [self::REG], 'TIPO WEB')[0], 'tipos_examenes', 'codetipo'],
+            [app(\App\Actions\Catalogos\CrearExamenEnElCatalogo::class)->ejecutar(self::REG, [self::REG], 'EXAMEN WEB', null)[0], 'examenes', 'codeexamen'],
+            [app(\App\Actions\Catalogos\CrearDoctorEnElCatalogo::class)->ejecutar(self::REG, [self::REG], ['apellidos' => 'WEB', 'nombres' => 'DOC', 'codeespecial' => '002'])[0], 'doctores', 'cedula'],
+        ];
+
+        // El escritorio crea otra fila de cada una (clave 900) y después borra esa misma.
+        $fecha = '2026-10-02 10:00:00';
+        $cambios = [];
+        $n = 300;
+        foreach ([['diagnosticos', 'codediagnostico', 'descripcion'], ['motivos_consulta', 'codemotivo', 'descripcion'], ['tipos_examenes', 'codetipo', 'tipo'],
+            ['examenes', 'codeexamen', 'examen'], ['doctores', 'cedula', 'apellidos']] as [$tabla, $clave, $texto]) {
+            $cambios[] = ['id' => $n++, 'tabla' => $tabla, 'op' => 'I', 'fecha' => $fecha, 'clave' => [$clave => '900'], 'fila' => [$clave => '900', $texto => 'DEL ESCRITORIO']];
+        }
+        $this->subir($cambios);
+
+        foreach ($web as [$fila, $tabla]) {
+            $this->assertNotNull(DB::table($tabla)->find($fila->id), "{$tabla}: la fila de la web sigue después de la subida del escritorio");
+        }
+        $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', self::REG)->where('descripcion', 'DEL ESCRITORIO')->count());
+
+        $borrados = [];
+        foreach ($cambios as $c) {
+            $borrados[] = ['id' => $c['id'] + 100, 'tabla' => $c['tabla'], 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => $c['clave']];
+        }
+        $this->subir($borrados);
+
+        foreach ($web as [$fila, $tabla]) {
+            $this->assertNotNull(DB::table($tabla)->find($fila->id), "{$tabla}: ni el borrado de otra clave toca la fila de la web");
+        }
+        $this->assertSame(0, DB::table('doctores')->where('reg_medico', self::REG)->where('apellidos', 'DEL ESCRITORIO')->count());
+    }
 }

@@ -14,7 +14,7 @@
                 <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
             </div>
             <div class="w-100">
-                <x-ui.segmentado :opciones="$vm->catalogos()" etiqueta="Catálogos" />
+                <x-ui.segmentado class="catalogos-indice" :opciones="$vm->catalogos()" etiqueta="Catálogos" />
             </div>
         </x-slot>
     </x-ui.page-head>

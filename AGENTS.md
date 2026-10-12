@@ -33,8 +33,8 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1296 en
-verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
+medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1319 en
+verde y 3 que fallan** (2026-10-12, tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
 Caracas** (trampa 59: se mide por carpeta con `php -d memory_limit=2G artisan test tests/Unit` y `tests/Feature`). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
@@ -199,6 +199,15 @@ candado), `GuardarTratamiento`, `QuitarTratamiento`, el trait `RastroDeTratamien
 reutiliza los parciales y `consulta-recipes.js` del récipe (`ComparteElEditorDeRecipes` ganó `ofreceTratamientos/ofreceCrearMedicamento/ofreceOrdenar`). `RecipesDeLaConsulta` ganó
 `palabrasDeBusqueda`/`medicamentoCoincide`/`resolverItemsDelMedico` y el tope opcional de `tratamientos()` (sin cambiar lo que hacía). Sync: `recipe_grupo(_detalle)` en
 `sin_clave_con_altas_del_app`; el móvil no cambió. Ver las trampas 56 a 59.
+
+Lo que **WEB-8.1b (2026-10-11)**, los catálogos clínicos, agregó: controladores `CatalogoSimpleController` (la base: listado paginado con `?buscar=`, `?editar=`/`?nuevo=`, `POST` alta/edición y `DELETE` quitar) con sus hijos `DiagnosticoCatalogoController`
+(`/clinica/catalogos/diagnosticos`), `MotivoConsultaCatalogoController` (`…/motivos-consulta`) y `TipoExamenCatalogoController` (`…/tipos-examen`), más `ExamenCatalogoController` (`…/examenes`, con filtro `?tipo=`) y
+`DoctorCatalogoController` (`…/medicos-referidos`), todos en el grupo `role:Root|Medico` y acotados al `reg_medico` del contexto. **Actions** en `App\Actions\Catalogos\`: `Crear{Diagnostico,Motivo,Doctor}EnElCatalogo` (envuelven las altas rápidas y
+suman la comparación sin tildes y el `created`), `CrearExamenEnElCatalogo`, `CrearTipoDeExamenEnElCatalogo`, `Editar{Diagnostico,Motivo,TipoDeExamen}DelCatalogo` (sobre la base `EditarDescripcionDelCatalogo`), `EditarExamenDelCatalogo`,
+`EditarDoctorDelCatalogo` (la cédula no se edita) con `CamposDelDoctor`, `Quitar{Diagnostico,Motivo,Examen,TipoDeExamen,Doctor}DelCatalogo` (sobre `QuitarDelCatalogo`: transacción con candado, no borra lo que está en uso) y `ResultadoDeEdicion`.
+**Lectura** en `App\Clinica\Catalogos\`: `CatalogoSimpleDelCatalogo` + `DefinicionDeCatalogoSimple` (diagnósticos, motivos y tipos comparten lectura, ViewModel y vista), `ExamenesDelCatalogo`, `DoctoresDelCatalogo`,
+`UsoDeUnItemDelCatalogo` (qué es «en uso» en cada catálogo), `PaginaUnaColeccion` y `Vistas/{CatalogoSimpleVista,ExamenesVista,DoctoresVista,ComparteElListadoDeCatalogo}`; vistas `clinica/catalogos/{simple,examenes,doctores}.blade.php`; modelos `Examen` y `TipoExamen`.
+Sin columnas nuevas; las cinco tablas se suben por fila desde el escritorio y el móvil no cambió. Ver las trampas 60 a 62.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -496,7 +505,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **59** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **62** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

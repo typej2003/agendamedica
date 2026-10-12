@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Route;
  * clínica. Cada pantalla de catálogo muestra este índice como un segmentado y la entrada "Catálogos" de la barra
  * lleva al primero.
  *
- * Es **extensible a propósito**: WEB-8.1b suma sus pantallas (diagnósticos, motivos de consulta, exámenes y médicos
- * referidos) agregando una línea a `CATALOGOS`, sin tocar las pantallas que ya existen. Sólo se listan los catálogos
+ * Es **extensible a propósito**: WEB-8.1b sumó sus pantallas (diagnósticos, motivos de consulta, exámenes, tipos de examen y
+ * médicos referidos) agregando una línea a `CATALOGOS`, sin tocar las pantallas que ya existían. Sólo se listan los catálogos
  * cuya ruta existe: una entrada declarada que todavía no tiene pantalla no se ofrece (no hay enlaces rotos).
  */
 final class CatalogosDisponibles
@@ -21,6 +21,11 @@ final class CatalogosDisponibles
     private const CATALOGOS = [
         'medicamentos' => ['texto' => 'Medicamentos', 'icono' => 'bi-capsule', 'ruta' => 'clinica.catalogos.medicamentos'],
         'tratamientos' => ['texto' => 'Tratamientos', 'icono' => 'bi-collection', 'ruta' => 'clinica.catalogos.tratamientos'],
+        'diagnosticos' => ['texto' => 'Diagnósticos', 'icono' => 'bi-clipboard2-pulse', 'ruta' => 'clinica.catalogos.diagnosticos'],
+        'motivos-consulta' => ['texto' => 'Motivos de consulta', 'icono' => 'bi-chat-left-text', 'ruta' => 'clinica.catalogos.motivos-consulta'],
+        'examenes' => ['texto' => 'Exámenes', 'icono' => 'bi-eyedropper', 'ruta' => 'clinica.catalogos.examenes'],
+        'tipos-examen' => ['texto' => 'Tipos de examen', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.tipos-examen'],
+        'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],
     ];
 
     /**

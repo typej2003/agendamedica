@@ -11,16 +11,18 @@
 (function () {
     'use strict';
 
-    const dialogo = document.getElementById('dialogo-medicamento');
+    // WEB-8.1b: los catálogos nuevos marcan su diálogo con `data-catalogo-dialogo` y su campo inicial con
+    // `data-foco-inicial`; el de medicamentos conserva su id.
+    const dialogo = document.querySelector('dialog[data-catalogo-dialogo]') || document.getElementById('dialogo-medicamento');
     if (!dialogo) return;
 
     const abrir = function () {
         dialogo.showModal();
-        const primero = document.getElementById('medicamento-comercial');
+        const primero = dialogo.querySelector('[data-foco-inicial]') || document.getElementById('medicamento-comercial');
         if (primero) primero.focus();
     };
 
-    document.querySelectorAll('[data-dialogo="dialogo-medicamento"]').forEach(function (boton) {
+    document.querySelectorAll('[data-dialogo="' + dialogo.id + '"]').forEach(function (boton) {
         boton.addEventListener('click', abrir);
     });
 

@@ -352,10 +352,11 @@ class CatalogosVistaTest extends TestCase
     {
         $pestanas = CatalogosDisponibles::pestanas('tratamientos');
 
-        $this->assertSame(['Medicamentos', 'Tratamientos'], array_column($pestanas, 'texto'));
-        $this->assertSame([false, true], array_column($pestanas, 'activa'));
+        // WEB-8.1b sumó cinco catálogos al índice (la línea de `CATALOGOS` que 8.1a dejó preparada).
+        $this->assertSame(['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Exámenes', 'Tipos de examen', 'Médicos referidos'], array_column($pestanas, 'texto'));
+        $this->assertSame([false, true, false, false, false, false, false], array_column($pestanas, 'activa'));
         $this->assertSame(route('clinica.catalogos.medicamentos'), $pestanas[0]['url']);
         $this->assertSame(route('clinica.catalogos.medicamentos'), CatalogosDisponibles::urlDeEntrada());
-        $this->assertSame([false, false], array_column(CatalogosDisponibles::pestanas(null), 'activa'));
+        $this->assertSame(array_fill(0, 7, false), array_column(CatalogosDisponibles::pestanas(null), 'activa'));
     }
 }

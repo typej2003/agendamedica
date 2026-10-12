@@ -36,6 +36,8 @@ final class AgregarDoctorAlCatalogo
     public const LARGO_TELEFONO = 108;
     public const LARGO_CIUDAD = 30;
     public const LARGO_DIRECCION = 2000;
+    /** La nota del ABM de WEB-8.1b (`doctores.nota` es `text`; el DataWindow la deja en 32000). */
+    public const LARGO_NOTA = 32000;
 
     /**
      * @param  string  $regMedico  el registro con el que se guarda la fila (el del contexto)
@@ -54,6 +56,7 @@ final class AgregarDoctorAlCatalogo
         ?string $direccion = null,
         ?string $telefono = null,
         ?string $ciudad = null,
+        ?string $nota = null,
     ): array {
         $registros = array_values(array_unique(array_merge($registrosMedicos, [$regMedico])));
 
@@ -74,6 +77,7 @@ final class AgregarDoctorAlCatalogo
         $direccion = $this->texto($direccion, self::LARGO_DIRECCION, 'La dirección', false);
         $telefono = $this->texto($telefono, self::LARGO_TELEFONO, 'El teléfono', false);
         $ciudad = $this->texto($ciudad, self::LARGO_CIUDAD, 'La ciudad', false);
+        $nota = $this->texto($nota, self::LARGO_NOTA, 'La nota', false);
 
         $existentes = Doctor::whereIn('reg_medico', $registros)->get();
 
@@ -100,6 +104,7 @@ final class AgregarDoctorAlCatalogo
             'direccion' => $direccion,
             'telefono' => $telefono,
             'ciudad' => $ciudad,
+            'nota' => $nota,
         ]);
 
         return [$doctor, true];

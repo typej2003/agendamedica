@@ -63,10 +63,12 @@ final class ReglasDelCatalogo
      *
      * @param  iterable<mixed>  $codigos  los códigos que ya tiene el catálogo del médico
      * @param  string  $plural  cómo se llama el catálogo en el mensaje de error ("motivos", "diagnósticos")
+     * @param  int  $digitos  el ancho del código: cuatro en motivos y diagnósticos; tres en los exámenes y sus tipos
+     *                        (WEB-8.1b, `right("00"+trim(codigo),3)` de `w_agregar_examenes_estudios`)
      *
      * @throws InvalidArgumentException si el catálogo está lleno
      */
-    public static function siguienteCodigo(iterable $codigos, string $plural): string
+    public static function siguienteCodigo(iterable $codigos, string $plural, int $digitos = 4): string
     {
         $siguiente = 1;
 
@@ -76,10 +78,11 @@ final class ReglasDelCatalogo
             }
         }
 
-        if ($siguiente > self::CODIGO_MAXIMO) {
+        // Con cuatro dígitos el tope es 9999 (`CODIGO_MAXIMO`); con tres, 999: el `right(…,n)` de la fuente no cabe más.
+        if ($siguiente > (int) (10 ** $digitos) - 1) {
             throw new InvalidArgumentException('El catálogo de ' . $plural . ' está lleno.');
         }
 
-        return str_pad((string) $siguiente, 4, '0', STR_PAD_LEFT);
+        return str_pad((string) $siguiente, $digitos, '0', STR_PAD_LEFT);
     }
 }

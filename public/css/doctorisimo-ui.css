@@ -2598,3 +2598,10 @@ body.auth-pagina {
     .recipe-orden { order: 2; flex-direction: row; }
     .recipe-orden .btn { min-width: 2.5rem; min-height: 2.5rem; }
 }
+
+/* El índice de catálogos (WEB-8.1b) tiene siete entradas: envuelve en varias líneas en vez de desbordar el celular. */
+.btn-group.catalogos-indice { display: flex; flex-wrap: wrap; gap: .375rem; }
+.btn-group.catalogos-indice > .btn { margin-left: 0 !important; border-radius: var(--bs-btn-border-radius, .5rem) !important; }
+
+/* El filtro por tipo de examen, junto al buscador. */
+.buscador .catalogo-filtro { width: auto; min-width: 10rem; max-width: 100%; }

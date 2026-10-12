@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **59** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **62** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -527,3 +527,21 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     «hoy» con el reloj real: pasadas las 20:00 locales el día UTC ya es el siguiente (fallan también sin los cambios de WEB-8.1a, medido con `git stash`).
     Y la suite entera aborta con «Allowed memory size of 134217728 bytes exhausted» si algún test falla con una página enorme (Ignition renderiza el error):
     `php -d memory_limit=2G artisan test` o por carpeta (`tests/Unit`, `tests/Feature`).
+60. **Las cinco tablas de WEB-8.1b se suben por fila: no hay nada que proteger, y el riesgo real es otro.** Medido al hacer WEB-8.1b (2026-10-11) mirando
+    `quitar-registro-cambios.sql`: `diagnosticos`, `motivos_consulta`, `examenes`, `tipos_examenes` y `doctores` (y `especial`) llevan los tres triggers de fila
+    (`_ins`, `_upd`, `_del`) y no el de sentencia, así que `CambiosEscritorio` las trata con `guardarGenerico`/`borrarGenerico` **por clave** y jamás con
+    `reemplazarTabla` (el test `CambiosEscritorioTest::test_la_subida_fila_por_fila_de_los_catalogos_clinicos_…` falla si alguna entra a
+    `sin_clave_con_altas_del_app` o si una subida de otra clave borra una fila de la web). Lo que **sí** puede pasar, sin resolver (igual que 53/56): el
+    escritorio sube la misma clave (`UPDATE` sin mirar `sync_changes`) y pisa lo que la web editó, o re-sube una fila que la web quitó. **La cédula de
+    `doctores` no se edita desde la web** por esa razón: la copia del PowerBuilder seguiría con la clave vieja y su próxima subida crearía un duplicado, y
+    `referencia.ceduladoctor` enlaza por ella. El móvil baja `diagnosticos`, `motivos_consulta`, `doctores` y `especial` por delta y sus bajas viajan por
+    `eliminados` con el mismo nombre de tabla (no necesitan alias, a diferencia de los tratamientos, trampa 57); **no** guarda `examenes` ni `tipos_examenes`.
+61. **Las altas rápidas de motivos y diagnósticos comparan en mayúsculas pero CON tildes.** `AgregarMotivoAlCatalogo`/`AgregarDiagnosticoAlCatalogo` usan
+    `mb_strtoupper(trim())`, así que `PELVICO` y `PÉLVICO` no se ven como el mismo nombre y el alta rápida crearía el duplicado. El ABM (`CrearMotivoEnElCatalogo`,
+    `CrearDiagnosticoEnElCatalogo`) busca **antes** con `BusquedaDePacientes::normalizar` y devuelve el existente; el alta rápida de la consulta **no se tocó** (su
+    comportamiento no cambia). Lo mismo en la edición (`EditarDescripcionDelCatalogo`): un duplicado histórico se puede guardar sin cambiarle el nombre.
+62. **Editar archivos desde la herramienta de shell en esta máquina.** Medido en WEB-8.1b: (a) `python` en modo texto escribe **CRLF** en Windows (un archivo LF
+    del repo pasa a CRLF; se abre con `newline=''` o en binario); (b) las barras invertidas dobles de un comando pueden llegar colapsadas y dejar el
+    `namespace`/`use` roto o un CRLF convertido en un salto real dentro de un literal PHP (se detecta con `php -l`; se evita con `chr(92)`, con la herramienta
+    Edit o escribiendo el texto con Write y leyéndolo desde Python); (c) un heredoc largo con comillas simples puede abortar sin crear el archivo y sin avisar. Y de los
+    verificadores: el ayudante que siembra de forma idempotente **acumula uso** corrida tras corrida («está en 2 consultas»), así que se compara el texto del aviso y no el número.
