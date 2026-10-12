@@ -18,6 +18,9 @@
         </include>
     </coverage>
     <php>
+        <!-- La suite ya pasa de 1.300 tests y cada uno arranca la aplicacion con todas las rutas: con los 128 MB
+             por defecto de PHP aborta por memoria antes de dar la linea final (medido en WEB-8.1a). -->
+        <ini name="memory_limit" value="1G"/>
         <server name="APP_ENV" value="testing"/>
         <server name="BCRYPT_ROUNDS" value="4"/>
         <server name="CACHE_DRIVER" value="array"/>
