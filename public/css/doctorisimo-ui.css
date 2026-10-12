@@ -1613,7 +1613,10 @@ dialog.dialogo-lateral .dialogo-pie {
 }
 
 /* --- Jornada: cabecera con el cupo --- */
-.jornada { overflow: hidden; }
+/* Sin `overflow: hidden`: recortaría el menú de acciones de la fila cuando hay pocas citas (queda detrás).
+   Las esquinas se redondean a mano. */
+.jornada { overflow: visible; }
+.jornada-cabecera { border-radius: calc(var(--ds-radio-card) - 1px) calc(var(--ds-radio-card) - 1px) 0 0; }
 
 .jornada-cabecera {
     display: flex;
