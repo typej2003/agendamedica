@@ -332,4 +332,23 @@ class HistoriaDePacienteVistaTest extends TestCase
         $this->assertSame('Sin cédula', $vista->cedula());
         $this->assertSame('Sin número de historia', $vista->historia());
     }
+
+    public function test_la_consulta_lleva_enlace_solo_si_quien_mira_puede_abrirla(): void
+    {
+        $sin = $this->vista([$this->consulta()]);
+        $this->assertNull($sin->consultas()[0]['url']);
+
+        $con = new HistoriaDePacienteVista(
+            $this->ficha(),
+            collect([$this->consulta(['id' => 77])]),
+            collect(),
+            collect(),
+            '/clinica/pacientes/5619',
+            null,
+            null,
+            null,
+            fn (int $id) => "/clinica/consulta/{$id}",
+        );
+        $this->assertSame('/clinica/consulta/77', $con->consultas()[0]['url']);
+    }
 }

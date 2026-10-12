@@ -43,6 +43,11 @@ final class HistoriaDePacienteVista
          * informe (WEB-5.3a), o `null` si quien mira no puede entrar a la consulta. Misma razón que el de los récipes.
          */
         private ?Closure $urlImprimirDocumento = null,
+        /**
+         * `fn(int $consultaId): string` — la pantalla de la consulta, o `null` si quien mira no puede entrar a ella
+         * (la secretaría): sin esto la fila del listado no lleva enlace.
+         */
+        private ?Closure $urlConsulta = null,
     ) {
     }
 
@@ -126,7 +131,7 @@ final class HistoriaDePacienteVista
      * Las consultas para el listado, la más reciente primero (lo ordena la lectura), con los motivos, la
      * enfermedad actual, el diagnóstico y la evolución ya recortados.
      *
-     * @return array<int, array{fecha:string, numero:string, motivos:array<int,string>, enfermedad:?string, diagnostico:?string, evolucion:?string}>
+     * @return array<int, array{fecha:string, numero:string, motivos:array<int,string>, enfermedad:?string, diagnostico:?string, evolucion:?string, url:?string}>
      */
     public function consultas(): array
     {
@@ -137,6 +142,9 @@ final class HistoriaDePacienteVista
             'enfermedad'  => $this->recorte($consulta->enfermedadactual ?? null),
             'diagnostico' => $this->recorte(implode(' · ', (array) ($consulta->diagnosticos ?? [])) ?: null),
             'evolucion'   => $this->recorte($consulta->evolucion ?? null),
+            'url'         => $this->urlConsulta !== null && ($consulta->id ?? null) !== null
+                ? ($this->urlConsulta)((int) $consulta->id)
+                : null,
         ])->all();
     }
 

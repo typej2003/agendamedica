@@ -52,8 +52,18 @@
                     @foreach ($vm->consultas() as $consulta)
                         <li>
                             <div class="linea-tiempo-cabeza">
-                                <strong>{{ $consulta['fecha'] }}</strong>
-                                <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                                @if ($consulta['url'])
+                                    <span>
+                                        <a href="{{ $consulta['url'] }}" class="fw-bold text-decoration-none" title="Abrir la consulta">{{ $consulta['fecha'] }}</a>
+                                        <span class="texto-tenue small ms-1">{{ $consulta['numero'] }}</span>
+                                    </span>
+                                    <a href="{{ $consulta['url'] }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Ver consulta
+                                    </a>
+                                @else
+                                    <strong>{{ $consulta['fecha'] }}</strong>
+                                    <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                                @endif
                             </div>
 
                             @if ($consulta['motivos'] !== [])
