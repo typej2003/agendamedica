@@ -2140,16 +2140,18 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
    escritorio: cada una es un botón que copia su texto en el campo, como el doble clic del `dw_84`.
    ========================================================================== */
 
-.evolucion-plantillas { list-style: none; margin: 0; padding: 0; }
+/* Fichas en una fila que se parte: no le quitan ancho al campo de texto. */
+.evolucion-plantillas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
 
 .evolucion-plantilla {
-    display: block;
-    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    max-width: 100%;
     text-align: left;
-    padding: .45rem .6rem;
-    margin-bottom: .35rem;
+    padding: .35rem .7rem;
     border: 1px solid var(--ds-borde-2);
-    border-radius: var(--ds-radio);
+    border-radius: 999px;
     background: var(--ds-superficie);
     color: var(--ds-texto);
     cursor: pointer;
@@ -2158,7 +2160,6 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 .evolucion-plantilla:hover { border-color: var(--ds-violeta-700); }
 
 .evolucion-plantilla-titulo {
-    display: block;
     font-weight: 600;
     overflow-wrap: anywhere;
 }
