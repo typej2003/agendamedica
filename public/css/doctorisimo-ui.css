@@ -1341,6 +1341,22 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     font-size: .92rem;
 }
 
+/* Representante de un adulto: acción compacta a la derecha de la cabecera (se parte debajo en pantallas chicas). */
+.ficha-cabecera-representante {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .5rem .9rem;
+    color: var(--ds-texto-2);
+}
+
+@media (max-width: 767.98px) {
+    .ficha-cabecera { flex-wrap: wrap; }
+    .ficha-cabecera-representante { margin-left: 0; justify-content: flex-start; width: 100%; }
+}
+
 .ficha-cabecera-contacto i { color: var(--ds-texto-3); margin-right: .2rem; }
 
 /* --- Línea de tiempo (consultas, antecedentes…) --- */

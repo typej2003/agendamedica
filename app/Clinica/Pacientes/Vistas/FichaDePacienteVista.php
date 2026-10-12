@@ -91,6 +91,18 @@ final class FichaDePacienteVista
         return $estados;
     }
 
+    /**
+     * ¿Es menor de 18 años? Decide dónde vive el representante en la ficha: para un menor es un bloque propio
+     * (pediatría, ginecología de adolescentes); para un adulto —los pocos casos de autismo o discapacidad— es
+     * una acción compacta en la cabecera. Sin fecha de nacimiento no se sabe, y cuenta como adulto.
+     */
+    public function esMenorDeEdad(): bool
+    {
+        $edad = FechaClinica::edad($this->paciente->fnacimiento);
+
+        return $edad !== null && $edad < 18;
+    }
+
     public function edad(): ?string
     {
         $edad = FechaClinica::edad($this->paciente->fnacimiento);
