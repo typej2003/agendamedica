@@ -31,7 +31,10 @@
         <x-ui.errores class="mb-3" />
     @endif
 
-    {{-- Cabecera de la ficha: quién es y cómo está de un vistazo. --}}
+    @php $rep = $representante; @endphp
+
+    {{-- Cabecera de la ficha: quién es y cómo está de un vistazo. En un adulto el representante (los pocos
+         casos de autismo o discapacidad) no merece un bloque propio: va aquí, a la derecha. --}}
     <x-ui.tarjeta class="mb-3">
         <div class="ficha-cabecera">
             <x-ui.avatar :nombre="$vm->nombre()" tamano="lg" />
@@ -53,6 +56,20 @@
                     @endunless
                 </div>
             </div>
+            @if (! $vm->esMenorDeEdad() && $rep->puedeEditar())
+                <div class="ficha-cabecera-representante" id="ficha-representante">
+                    @if ($rep->cargado())
+                        <span class="small">
+                            <i class="bi bi-person-hearts" aria-hidden="true"></i>
+                            <strong>Representante:</strong> {{ $rep->nombre() ?? 'sin nombre' }}@if ($rep->parentesco()) ({{ $rep->parentesco() }})@endif
+                            @if ($rep->telefono()) · {{ $rep->telefono() }}@endif
+                        </span>
+                    @endif
+                    <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-dialogo="dialogo-representante">
+                        <i class="bi bi-person-hearts" aria-hidden="true"></i> {{ $rep->cargado() ? 'Editar representante' : 'Agregar representante' }}
+                    </button>
+                </div>
+            @endif
         </div>
     </x-ui.tarjeta>
 
@@ -81,7 +98,7 @@
          paciente: en el legado la tabla `representante` tiene `PRIMARY KEY (numhistoria)`, así que se
          guarda con el número de historia y no es una lista. Por eso, sin historia, el bloque no ofrece
          el formulario: dice el motivo y manda a asignarla (WEB-3.3), que es la acción de arriba. --}}
-    @php $rep = $representante; @endphp
+    @if ($vm->esMenorDeEdad())
     <x-ui.tarjeta id="ficha-representante" titulo="Representante" icono="bi-person-hearts" class="mb-3">
         <x-slot name="acciones">
             @if ($rep->puedeEditar())
@@ -113,6 +130,7 @@
             </x-ui.vacio>
         @endif
     </x-ui.tarjeta>
+    @endif
 
     <div class="row g-3">
         <div class="col-12 col-lg-6">

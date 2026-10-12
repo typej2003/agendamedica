@@ -55,6 +55,10 @@ class HistoriaDelPacienteController extends Controller
                 $request->user()?->trabajaLaConsulta()
                     ? fn (int $consulta, string $clave) => route('clinica.consulta.documentos.imprimir', [$consulta, 'documento' => $clave])
                     : null,
+                // Y la consulta misma, con la misma restricción: el título de cada fila del listado la abre.
+                $request->user()?->trabajaLaConsulta()
+                    ? fn (int $consulta) => route('clinica.consulta', $consulta)
+                    : null,
             ),
         ]);
     }

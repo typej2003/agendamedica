@@ -80,14 +80,19 @@ class PacienteRepresentanteWebTest extends TestCase
         ]]);
     }
 
-    /** Un paciente con su vínculo. Sin `$numhistoria` es el alta rápida que todavía no tiene número. */
-    private function paciente(Medico $medico, string $nombres, ?string $numhistoria = null): int
+    /**
+     * Un paciente con su vínculo. Sin `$numhistoria` es el alta rápida que todavía no tiene número. Por defecto
+     * es un **menor** (8 años): el bloque propio del representante es de los menores de 18; para un adulto
+     * pasa `$edad` (los pocos casos de autismo o discapacidad van en la cabecera).
+     */
+    private function paciente(Medico $medico, string $nombres, ?string $numhistoria = null, int $edad = 8): int
     {
         $id = DB::table('pacientes')->insertGetId([
             'nombres'     => $nombres,
             'apellidos'   => 'De Prueba',
             'cedula'      => (string) random_int(10000000, 30000000),
             'sexo'        => 'F',
+            'fnacimiento' => now()->subYears($edad)->subMonth()->toDateString(),
             'created_at'  => now(),
             'updated_at'  => now(),
         ]);
@@ -161,6 +166,45 @@ class PacienteRepresentanteWebTest extends TestCase
         $respuesta->assertSee('Cargar el representante');
         // El formulario está y apunta al POST de ese paciente.
         $respuesta->assertSee('action="' . route('clinica.pacientes.representante', $paciente) . '"', false);
+    }
+
+    public function test_un_adulto_no_tiene_bloque_propio_y_ofrece_agregar_el_representante_en_la_cabecera(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Adulta', '1003', 31);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $respuesta->assertOk();
+        $respuesta->assertDontSee('Sin representante cargado');
+        $respuesta->assertSee('Agregar representante');
+        // El formulario sigue disponible (el botón de la cabecera lo abre).
+        $respuesta->assertSee('action="' . route('clinica.pacientes.representante', $paciente) . '"', false);
+    }
+
+    public function test_un_menor_conserva_su_bloque_de_representante(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Menor', '1004', 17);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente))
+            ->assertOk()
+            ->assertSee('Sin representante cargado')
+            ->assertDontSee('Agregar representante');
+    }
+
+    public function test_un_adulto_sin_historia_no_ofrece_nada_del_representante(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Adulta sin historia', null, 40);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente))
+            ->assertOk()
+            ->assertDontSee('Agregar representante')
+            ->assertDontSee('Todavía no se puede cargar el representante');
     }
 
     /**
