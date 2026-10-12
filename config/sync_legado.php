@@ -82,6 +82,12 @@ return [
         // es de sentencia (`op = T`) y cada subida reemplaza la tabla entera del médico. Sin esta línea esa subida borraría
         // los motivos que creó la web. Cada fila anota su `created` bajo `motivo_cita`.
         'motivo_cita' => 'motivo_cita',
+        // La dieta / recomendaciones que crea la web (WEB-5.3b, `GuardarDietaDeLaConsulta`): `dieta_paciente` no tiene clave primaria en
+        // el PowerBuilder, sólo un índice único sobre (histroria, consulta), y su registro de cambios es de sentencia (`op = T`:
+        // `tr_ddrsync_dieta_paciente`, sin los `_ins/_upd/_del`), así que cada subida reemplaza la tabla entera del médico. Sin esta línea
+        // esa subida borraría las dietas que creó la web. Cada fila anota su `created` bajo `dieta_paciente`. (`hospitalizacion`, en
+        // cambio, SÍ tiene clave primaria y se sube por fila: no entra acá.)
+        'dieta_paciente' => 'dieta_paciente',
     ],
 
     // Columnas que el escritorio NO conoce y que el reemplazo de una tabla sin clave no debe borrar (WEB-8.1c). Al reemplazar

@@ -761,6 +761,83 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame('INFORME WEB', DB::table('informe')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('descripcion'));
     }
 
+    /**
+     * **WEB-5.3b**: `hospitalizacion` tiene **clave primaria** en el PowerBuilder (`(nrohistoria, nroconsulta)`, los tres triggers de fila:
+     * `tr_ddrsync_hospitalizacion_ins/_upd/_del`), así que el escritorio la sube **fila por fila** (`I`/`U`/`D`) y no con el reemplazo de
+     * la tabla entera: no necesita estar en `sin_clave_con_altas_del_app` y lo que sube y borra de **otra** fila no toca la que creó la web.
+     * Lo que sí pasa, y queda fijado para que no sorprenda (trampa 72): si el escritorio sube **la misma clave**, su `UPDATE` pisa lo que la
+     * web editó.
+     */
+    public function test_la_subida_fila_por_fila_de_la_hospitalizacion_no_toca_las_filas_que_creo_la_web(): void
+    {
+        $this->assertArrayNotHasKey('hospitalizacion', config('sync_legado.sin_clave_con_altas_del_app'), 'tiene clave: se sube por fila');
+
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        app(\App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta::class)->ejecutar($consulta, 'CLINICA WEB', 'DX WEB', 'REC WEB', null, 'web');
+
+        // El escritorio crea otra consulta (1|2), le sube su orden y después la borra.
+        $fecha = '2026-10-02 10:00:00';
+        $this->subir([
+            ['id' => 210, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['numhistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => '2026-10-02']],
+            ['id' => 211, 'tabla' => 'hospitalizacion', 'op' => 'I', 'fecha' => $fecha,
+             'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 2, 'hospital' => 'DEL ESCRITORIO']],
+        ]);
+        $this->assertSame('DEL ESCRITORIO', DB::table('hospitalizacion')->where('reg_medico', self::REG)->where('nroconsulta', 2)->value('hospital'));
+        $this->assertSame('CLINICA WEB', DB::table('hospitalizacion')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('hospital'));
+
+        $this->subir([['id' => 212, 'tabla' => 'hospitalizacion', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00', 'clave' => ['nrohistoria' => '1', 'nroconsulta' => '2']]]);
+
+        $this->assertSame(['CLINICA WEB'], DB::table('hospitalizacion')->where('reg_medico', self::REG)->pluck('hospital')->all(), 'se fue la del escritorio y quedó la de la web');
+        $this->assertSame('DX WEB', DB::table('hospitalizacion')->where('reg_medico', self::REG)->value('diagprev'));
+
+        // La misma clave: el UPDATE del escritorio pisa lo que la web editó (no consulta `sync_changes`). Límite conocido, trampa 72.
+        $this->subir([['id' => 213, 'tabla' => 'hospitalizacion', 'op' => 'U', 'fecha' => '2026-10-02 12:00:00',
+            'clave' => ['nrohistoria' => '1', 'nroconsulta' => '1'], 'fila' => ['nrohistoria' => 1, 'nroconsulta' => 1, 'hospital' => 'PISADA POR EL ESCRITORIO']]]);
+        $this->assertSame('PISADA POR EL ESCRITORIO', DB::table('hospitalizacion')->where('reg_medico', self::REG)->where('nroconsulta', 1)->value('hospital'));
+    }
+
+    /**
+     * **WEB-5.3b**: `dieta_paciente` NO tiene clave primaria en el PowerBuilder (sólo un índice único sobre `(histroria, consulta)`) y su
+     * registro de cambios es de sentencia (`tr_ddrsync_dieta_paciente`, `op = T`): la sube ENTERA y el reemplazo borra todo lo del médico.
+     * Las dietas que creó la web (el `created` de cada fila, hecho por la Action real) se conservan; lo que nadie del app creó se reemplaza.
+     */
+    public function test_reemplazar_dieta_paciente_conserva_las_dietas_que_creo_la_web_y_reemplaza_el_resto(): void
+    {
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        DB::table('dieta_paciente')->insert(['reg_medico' => self::REG, 'histroria' => 1, 'consulta' => 9, 'cod_dieta' => '01', 'descripcion' => 'VIEJA DEL ESCRITORIO', 'ejecutada' => 'S']);
+
+        app(\App\Actions\Consulta\GuardarDietaDeLaConsulta::class)->ejecutar($consulta, 'DIETA WEB', 'TEXTO WEB', null, 'web');
+
+        // El escritorio crea otra consulta (1|2) y sube la tabla entera con una dieta de esa consulta.
+        $fecha = '2026-10-02 10:00:00';
+        $this->subir([['id' => 214, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $fecha,
+            'clave' => ['numhistoria' => '1', 'nroconsulta' => '2'], 'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => '2026-10-02']]]);
+        $this->subir([['id' => 215, 'tabla' => 'dieta_paciente', 'op' => 'T', 'fecha' => $fecha,
+            'filas' => [['histroria' => 1, 'consulta' => 2, 'cod_dieta' => '02', 'descripcion' => 'NUEVA DEL ESCRITORIO', 'ejecutada' => 'S']]]]);
+
+        $this->assertEqualsCanonicalizing(['TEXTO WEB', 'NUEVA DEL ESCRITORIO'],
+            DB::table('dieta_paciente')->where('reg_medico', self::REG)->pluck('descripcion')->all(),
+            'la de la web se conserva; la vieja que el escritorio ya no tiene se va y la nueva entra');
+        $this->assertSame(2, (int) DB::table('dieta_paciente')->where('reg_medico', self::REG)->where('descripcion', 'NUEVA DEL ESCRITORIO')->value('consulta'),
+            'el número de consulta del escritorio se traduce al del API');
+    }
+
+    public function test_sin_la_linea_de_config_de_dieta_paciente_la_subida_si_borraria_las_dietas_de_la_web(): void
+    {
+        // El contraste que ata el test anterior a la configuración (WEB-5.3b).
+        $this->assertArrayHasKey('dieta_paciente', config('sync_legado.sin_clave_con_altas_del_app'));
+
+        $consulta = \App\Models\Consulta::where('reg_medico', self::REG)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        app(\App\Actions\Consulta\GuardarDietaDeLaConsulta::class)->ejecutar($consulta, null, 'TEXTO WEB', null, 'web');
+
+        config(['sync_legado.sin_clave_con_altas_del_app' => ['recipe_detalle' => 'recipes', 'recipes_pareja' => 'recipes_pareja']]);
+
+        $this->subir([['id' => 216, 'tabla' => 'dieta_paciente', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00', 'filas' => []]]);
+
+        $this->assertSame(0, DB::table('dieta_paciente')->where('reg_medico', self::REG)->count(), 'la dieta de la web se perdió');
+    }
+
     public function test_la_subida_fila_por_fila_de_los_catalogos_clinicos_no_toca_las_filas_que_creo_la_web(): void
     {
         // WEB-8.1b: diagnosticos, motivos_consulta, examenes, tipos_examenes y doctores tienen clave primaria en el PowerBuilder

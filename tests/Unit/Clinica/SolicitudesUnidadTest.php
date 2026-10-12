@@ -286,18 +286,21 @@ class SolicitudesUnidadTest extends TestCase
 
     // ==================================================================================== Pestañas
 
-    public function test_las_pestanas_son_las_cuatro_de_hoy_y_una_clave_desconocida_abre_la_constancia(): void
+    public function test_las_pestanas_son_las_seis_de_hoy_en_el_orden_del_escritorio_y_una_clave_desconocida_abre_la_constancia(): void
     {
         $pestanas = new PestanasDeSolicitudes(fn (string $clave) => '/c?solicitud=' . $clave);
         $opciones = $pestanas->opciones('reposo');
 
-        $this->assertSame(['Constancia', 'Reposo', 'Referencia', 'Informe médico'], array_column($opciones, 'texto'));
-        $this->assertSame([false, true, false, false], array_column($opciones, 'activa'));
-        $this->assertSame('/c?solicitud=informe', $opciones[3]['url']);
+        $this->assertSame(['Constancia', 'Reposo', 'Referencia', 'Hospitalización', 'Informe médico', 'Dieta / Recomendaciones'], array_column($opciones, 'texto'));
+        $this->assertSame([false, true, false, false, false, false], array_column($opciones, 'activa'));
+        $this->assertSame('/c?solicitud=hospitalizacion', $opciones[3]['url']);
+        $this->assertSame('/c?solicitud=informe', $opciones[4]['url']);
+        $this->assertSame('/c?solicitud=dieta', $opciones[5]['url']);
 
         $this->assertSame('constancia', PestanasDeSolicitudes::normalizar(null));
         $this->assertSame('constancia', PestanasDeSolicitudes::normalizar('dietas'));
         $this->assertSame('referencias', PestanasDeSolicitudes::normalizar('referencias'));
-        $this->assertSame(['constancia', 'reposo', 'referencias', 'informe'], PestanasDeSolicitudes::claves());
+        $this->assertSame('dieta', PestanasDeSolicitudes::normalizar('dieta'));
+        $this->assertSame(['constancia', 'reposo', 'referencias', 'hospitalizacion', 'informe', 'dieta'], PestanasDeSolicitudes::claves());
     }
 }

@@ -2437,6 +2437,12 @@ body.auth-pagina {
 .recipe-pestanas { max-width: 100%; }
 .recipe-pestanas .btn { white-space: normal; }
 
+/* Las pestañas de las solicitudes de la consulta (WEB-5.3b: seis, y «Dieta / Recomendaciones» es larga): ya no caben en una sola fila del
+   grupo de botones ni a 1280 px (la columna de la consulta es angosta) ni a 375 px. Pasan a botones sueltos que **se parten en filas**
+   en lugar de empujar la página. Se pide con la clase «pestanas-en-fila»; las dos pestañas de los récipes siguen siendo el grupo unido. */
+.btn-group.pestanas-en-fila { display: flex; flex-wrap: wrap; gap: .25rem; }
+.btn-group.pestanas-en-fila > .btn.btn { flex: 0 1 auto; margin-left: 0; border-radius: var(--ds-radio); }
+
 .recipe-bloque {
     border: 1px solid var(--ds-borde);
     border-radius: var(--ds-radio-card);

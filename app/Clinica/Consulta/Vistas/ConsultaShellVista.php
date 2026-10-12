@@ -48,7 +48,7 @@ final class ConsultaShellVista
     /** La clave de la sección de récipes en `?seccion=` (WEB-5.1). */
     public const SECCION_RECIPES = 'recipes';
 
-    /** La clave de la sección de solicitudes (constancia, reposo, referencia, informe) en `?seccion=` (WEB-5.3a). */
+    /** La clave de la sección de solicitudes (constancia, reposo, referencia, hospitalización, informe, dieta) en `?seccion=` (WEB-5.3a y WEB-5.3b). */
     public const SECCION_SOLICITUDES = 'solicitudes';
 
     /**
@@ -102,7 +102,7 @@ final class ConsultaShellVista
             'detalle' => 'Varios por consulta, por medicamento o por tratamiento, y el de la pareja; se pueden corregir.',
             'tarea' => 'WEB-5.1', 'estado' => 'listo', 'seccion' => self::SECCION_RECIPES],
         ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
-            'detalle' => 'Constancia, reposo, referencia e informe médico; laboratorio, estudios, hospitalización y dietas llegan después.',
+            'detalle' => 'Constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones; laboratorio y estudios llegan después.',
             'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
         ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
             'detalle' => 'La filiación y el contacto del paciente.', 'tarea' => 'F3', 'estado' => 'listo'],

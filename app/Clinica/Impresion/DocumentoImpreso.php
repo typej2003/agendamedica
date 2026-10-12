@@ -3,8 +3,8 @@
 namespace App\Clinica\Impresion;
 
 /**
- * **Un documento de la consulta listo para imprimir en media hoja** (WEB-5.3a): constancia, reposo, referencia o
- * informe. Lo arma `SolicitudesParaImprimir` y lo reparte en mitades `DistribuidorDeDocumento`.
+ * **Un documento de la consulta listo para imprimir en media hoja** (WEB-5.3a, WEB-5.3b): constancia, reposo, referencia,
+ * informe, orden de hospitalización o dieta / recomendaciones. Lo arma `SolicitudesParaImprimir` y lo reparte en mitades `DistribuidorDeDocumento`.
  *
  * Es un objeto de valores ya resuelto, sin base de datos: de quién es (`persona`, la cabecera de
  * `PacienteImpreso`), de qué fecha y qué lleva el cuerpo:
@@ -14,7 +14,7 @@ namespace App\Clinica\Impresion;
  *  - `parrafos`: el texto, que **sí se parte por palabra** si no entra. Cada uno puede llevar un rótulo en negrita
  *    (`IDX:`, inline, o `MOTIVO DE LA REFERENCIA:`, en su propia línea).
  *
- * `clave` es con lo que se pide el documento (`constancia`, `reposo`, `referencia-3`, `informe`): es la misma que usan la
+ * `clave` es con lo que se pide el documento (`constancia`, `reposo`, `referencia-3`, `informe`, `hospitalizacion`, `dieta`): es la misma que usan la
  * historia del paciente, la lista de la cita de la agenda y las rutas de impresión.
  */
 final class DocumentoImpreso
@@ -26,6 +26,10 @@ final class DocumentoImpreso
     public const REFERENCIA = 'referencia';
 
     public const INFORME = 'informe';
+
+    public const HOSPITALIZACION = 'hospitalizacion';
+
+    public const DIETA = 'dieta';
 
     /**
      * @param  string  $titulo  lo que se imprime arriba del cuerpo (`CONSTANCIA`, `REPOSO MÉDICO`…)

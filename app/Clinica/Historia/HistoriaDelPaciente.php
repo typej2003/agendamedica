@@ -143,7 +143,7 @@ final class HistoriaDelPaciente
     }
 
     /**
-     * Los **documentos** de la historia: constancia, reposo, referencia, informe y récipes.
+     * Los **documentos** de la historia: constancia, reposo, referencia, informe, hospitalización, dieta y récipes.
      *
      * Se arma con los mismos criterios con los que el móvil decide qué es un documento de verdad
      * (`DoctorisimoMobile/lib/features/reportes/`, `ReportesRepository::armar` / `documento.dart`), porque
@@ -156,6 +156,8 @@ final class HistoriaDelPaciente
      *  - **Constancia**: existe para **toda** consulta (su texto es fijo), así que acá sólo se lista la que
      *    trae algo propio —observación o título—; una constancia vacía no dice nada que la consulta no
      *    diga y llenaría la lista con una fila por consulta.
+     *  - **Hospitalización** (WEB-5.3b): sólo si tiene el lugar, el diagnóstico o las recomendaciones; la fila vacía que el
+     *    escritorio crea al abrir la consulta no se lista. **Dieta**: sólo si tiene texto.
      *  - **Referencia** y **récipes**: se listan todos (puede haber varias por consulta).
      *
      * La fecha de cada documento es la suya cuando la tiene (el `fdesde` del reposo, el `fe_cha` del
@@ -262,6 +264,40 @@ final class HistoriaDelPaciente
                 CamposDePaciente::texto($informe->fe_cha),
                 null,
                 'informe',
+            ));
+        }
+
+        foreach ($this->hospitalizaciones($regMedico, $numero) as $orden) {
+            if (! QueEsUnDocumento::hospitalizacion($orden->hospital, $orden->diagprev, $orden->dieta)) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Hospitalización',
+                'bi-hospital',
+                (int) $orden->nroconsulta,
+                $fechaDeLaConsulta,
+                CamposDePaciente::texto($orden->diagprev) ?? CamposDePaciente::texto($orden->hospital) ?? CamposDePaciente::texto($orden->dieta),
+                null,
+                null,
+                'hospitalizacion',
+            ));
+        }
+
+        foreach ($this->dietas($regMedico, $numero) as $dieta) {
+            if (! QueEsUnDocumento::dieta($dieta->descripcion)) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Dieta / Recomendaciones',
+                'bi-egg-fried',
+                (int) $dieta->consulta,
+                $fechaDeLaConsulta,
+                CamposDePaciente::texto($dieta->dieta) ?? CamposDePaciente::texto($dieta->descripcion),
+                null,
+                null,
+                'dieta',
             ));
         }
 
@@ -391,6 +427,24 @@ final class HistoriaDelPaciente
             ->where('reg_medico', $regMedico)
             ->where('nrohistoria', $numero)
             ->get(['nroconsulta', 'descripcion', 'fe_cha']);
+    }
+
+    /** Las órdenes de hospitalización de la historia (WEB-5.3b); las filas vacías del escritorio las descarta `documentos()`. */
+    private function hospitalizaciones(string $regMedico, int $numero): Collection
+    {
+        return DB::table('hospitalizacion')
+            ->where('reg_medico', $regMedico)
+            ->where('nrohistoria', $numero)
+            ->get(['nroconsulta', 'hospital', 'diagprev', 'dieta']);
+    }
+
+    /** Las dietas / recomendaciones de la historia (WEB-5.3b); `histroria` es la historia y `consulta` el número de la consulta. */
+    private function dietas(string $regMedico, int $numero): Collection
+    {
+        return DB::table('dieta_paciente')
+            ->where('reg_medico', $regMedico)
+            ->where('histroria', $numero)
+            ->get(['consulta', 'dieta', 'descripcion']);
     }
 
     /**

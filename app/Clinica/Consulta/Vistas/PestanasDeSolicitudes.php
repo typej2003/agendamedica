@@ -6,7 +6,8 @@ use Closure;
 
 /**
  * **Las pestañas de la sección Solicitudes** (WEB-5.3a, ítem 11 del panel de la consulta): Constancia · Reposo ·
- * Referencia · Informe.
+ * Referencia · Hospitalización · Informe médico · Dieta / Recomendaciones (el orden de las pestañas del escritorio,
+ * `w_consulta_principal.srw`, `tab_4`; las dos últimas son de WEB-5.3b).
  *
  * Son enlaces —cada pestaña es una URL de la misma sección (`?seccion=solicitudes&solicitud=reposo`)—, no
  * JavaScript, como las de los récipes (`PestanasDeRecipes`): funcionan sin script y la pestaña activa se puede
@@ -14,9 +15,8 @@ use Closure;
  *
  * ## Cómo crece sin reescribirse
  *
- * `TODAS` es la lista de pestañas **que existen hoy**, y es el único lugar donde se agregan: las entregas que siguen
- * (hospitalización y dietas, WEB-5.3b; laboratorio y estudios, WEB-5.4) suman su fila y su parcial
- * `_solicitudes-<clave>`. **Una pestaña que todavía no existe no se muestra**, ni vacía ni apagada: el panel de la
+ * `TODAS` es la lista de pestañas **que existen hoy**, y es el único lugar donde se agregan: la entrega que sigue
+ * (laboratorio y estudios, WEB-5.4) suma su fila y su parcial `_solicitudes-<clave>`. **Una pestaña que todavía no existe no se muestra**, ni vacía ni apagada: el panel de la
  * consulta ya dice qué llega con cada tarea. Sin base de datos.
  */
 final class PestanasDeSolicitudes
@@ -29,6 +29,10 @@ final class PestanasDeSolicitudes
 
     public const INFORME = 'informe';
 
+    public const HOSPITALIZACION = 'hospitalizacion';
+
+    public const DIETA = 'dieta';
+
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::CONSTANCIA;
 
@@ -37,7 +41,9 @@ final class PestanasDeSolicitudes
         self::CONSTANCIA => ['texto' => 'Constancia', 'icono' => 'bi-file-earmark-medical'],
         self::REPOSO => ['texto' => 'Reposo', 'icono' => 'bi-bandaid'],
         self::REFERENCIAS => ['texto' => 'Referencia', 'icono' => 'bi-person-up'],
+        self::HOSPITALIZACION => ['texto' => 'Hospitalización', 'icono' => 'bi-hospital'],
         self::INFORME => ['texto' => 'Informe médico', 'icono' => 'bi-file-earmark-text'],
+        self::DIETA => ['texto' => 'Dieta / Recomendaciones', 'icono' => 'bi-egg-fried'],
     ];
 
     /**

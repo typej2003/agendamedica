@@ -12,17 +12,21 @@ use App\Clinica\Consulta\EvolucionDeLaConsulta;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
+use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
+use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
+use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
+use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
@@ -105,6 +109,8 @@ class ConsultaController extends Controller
         ReferenciasDeLaConsulta $referencias,
         InformeDeLaConsulta $informes,
         DoctoresDelMedico $doctores,
+        HospitalizacionDeLaConsulta $hospitalizaciones,
+        DietaDeLaConsulta $dietas,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -153,7 +159,7 @@ class ConsultaController extends Controller
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
-                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores)
+                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas)
                 : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
@@ -313,7 +319,7 @@ class ConsultaController extends Controller
 
     /**
      * El ViewModel de la sección **Solicitudes** (WEB-5.3a, ítem 11): la pestaña elegida con `?solicitud=` (constancia, reposo,
-     * referencias o informe; cualquier otro valor abre la constancia) y los datos de esa pestaña ya leídos.
+     * referencias, hospitalización, informe o dieta; cualquier otro valor abre la constancia) y los datos de esa pestaña ya leídos.
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
      */
@@ -327,6 +333,8 @@ class ConsultaController extends Controller
         ReferenciasDeLaConsulta $referencias,
         InformeDeLaConsulta $informes,
         DoctoresDelMedico $doctores,
+        HospitalizacionDeLaConsulta $hospitalizaciones,
+        DietaDeLaConsulta $dietas,
     ): SeccionDeSolicitudesVista {
         $id = $consulta->id;
         $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'));
@@ -376,6 +384,27 @@ class ConsultaController extends Controller
                 $informes->plantillas((string) $consulta->reg_medico),
                 $informes->anteriores($consulta),
                 ['guardar' => route('clinica.consulta.informe.guardar', $id), 'eliminar' => route('clinica.consulta.informe.eliminar', $id), 'imprimir' => $imprimir('informe')],
+                $old,
+            );
+        } elseif ($activa === PestanasDeSolicitudes::HOSPITALIZACION) {
+            $fila = $hospitalizaciones->fila($consulta);
+            $vista = new HospitalizacionVista(
+                $fila?->hospital,
+                $fila?->diagprev,
+                $fila?->dieta,
+                $hospitalizaciones->esReal($fila),
+                $constancias->textoAutomatico($consulta),
+                ['guardar' => route('clinica.consulta.hospitalizacion.guardar', $id), 'eliminar' => route('clinica.consulta.hospitalizacion.eliminar', $id), 'imprimir' => $imprimir('hospitalizacion')],
+                $old,
+            );
+        } elseif ($activa === PestanasDeSolicitudes::DIETA) {
+            $fila = $dietas->fila($consulta);
+            $vista = new DietaVista(
+                $fila?->dieta,
+                $fila?->descripcion,
+                $dietas->esReal($fila),
+                $dietas->plantillas((string) $consulta->reg_medico),
+                ['guardar' => route('clinica.consulta.dieta.guardar', $id), 'eliminar' => route('clinica.consulta.dieta.eliminar', $id), 'imprimir' => $imprimir('dieta')],
                 $old,
             );
         } else {

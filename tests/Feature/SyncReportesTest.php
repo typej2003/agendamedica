@@ -181,4 +181,24 @@ class SyncReportesTest extends TestCase
             collect($r->json('eliminados'))->map(fn ($e) => ['table_name' => $e['table_name'], 'record_id' => $e['record_id']])->all(),
         );
     }
+
+    public function test_el_telefono_no_baja_la_hospitalizacion_ni_la_dieta_de_la_web(): void
+    {
+        // WEB-5.3b: el móvil no tiene ninguna de las dos tablas (no las imprime ni las guarda): `sync-app-data` no las manda, ni por la
+        // descarga completa ni por delta, aunque la web las haya escrito. Si algún día el móvil las usa, este test es el que avisa.
+        $reg = 'rep-h-' . uniqid();
+        Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
+        $since = $this->sync()->json('synced_at');
+        $this->travel(5)->seconds();
+
+        $consulta = \App\Models\Consulta::where('reg_medico', $reg)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
+        app(\App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta::class)->ejecutar($consulta, 'CLINICA', 'DX', 'REC', null, 'web');
+        app(\App\Actions\Consulta\GuardarDietaDeLaConsulta::class)->ejecutar($consulta, 'DIETA', 'TEXTO', null, 'web');
+
+        foreach ([$this->sync(), $this->sync(['since' => $since])] as $respuesta) {
+            foreach (['hospitalizacion', 'dieta_paciente', 'dietas'] as $tabla) {
+                $this->assertArrayNotHasKey($tabla, $respuesta->json(), $tabla);
+            }
+        }
+    }
 }

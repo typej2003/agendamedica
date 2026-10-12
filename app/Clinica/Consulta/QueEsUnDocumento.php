@@ -71,4 +71,32 @@ final class QueEsUnDocumento
 
         return false;
     }
+
+    /**
+     * **Hospitalización** (WEB-5.3b): es una orden de verdad si tiene **algo** de lo que la hoja imprime: el lugar a hospitalizar
+     * (`hospital`), el diagnóstico provisional (`diagprev`) o las recomendaciones (`dieta`). El escritorio crea la fila **vacía**
+     * al abrir la consulta (`w_consulta_principal.srw:3329-3334`): en la base de desarrollo son 114.499 de 119.299 filas, más
+     * unas pocas con cadenas vacías. `indiprev` y `habitacion` no cuentan: ninguna pantalla las escribe ni la hoja
+     * (`d_hospitalizacion_1`) las imprime, así que no hacen de una fila vacía un documento.
+     */
+    public static function hospitalizacion($hospital, $diagprev, $dieta): bool
+    {
+        foreach ([$hospital, $diagprev, $dieta] as $texto) {
+            if (TextoDeLaConsulta::limpio($texto) !== null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * **Dieta / recomendaciones** (WEB-5.3b): es un documento si tiene texto (`descripcion`). El escritorio sólo crea la fila al
+     * "pasar" una plantilla (`w_consulta_principal.srw:19689-19702`), así que casi nunca hay vacías, pero una sin texto no dice
+     * nada que imprimir (un título solo no es una dieta).
+     */
+    public static function dieta($descripcion): bool
+    {
+        return TextoDeLaConsulta::limpio($descripcion) !== null;
+    }
 }

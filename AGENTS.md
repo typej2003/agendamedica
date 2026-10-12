@@ -34,7 +34,7 @@ Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automát
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
 medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1365 en
-verde y 3 que fallan**; **la última (2026-10-12, tras WEB-8.1c, los motivos de cita con su monto) es 1400 en verde y 3 que fallan** (1365 + 41 nuevos − 6 del ViewModel anterior que se reemplazó; las 3 son las de WhatsApp) (2026-10-12, tras **WEB-8.2**: 1321 + 35 + 9; antes 1319 tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
+verde y 3 que fallan**; **la última (2026-10-12, tras WEB-5.3b, hospitalización y dietas) es 1449 en verde y 3 que fallan** (1400 + 49 nuevos; las 3 son las de WhatsApp; antes, tras WEB-8.1c, 1400) (1365 + 41 nuevos − 6 del ViewModel anterior que se reemplazó; las 3 son las de WhatsApp) (2026-10-12, tras **WEB-8.2**: 1321 + 35 + 9; antes 1319 tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
 Caracas** (trampa 59: se mide por carpeta con `php -d memory_limit=2G artisan test tests/Unit` y `tests/Feature`). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
@@ -187,6 +187,8 @@ de la constancia usan `constancia_obs.observacion`, que el escritorio no escribe
 `public/css/clinica-documento.css` (gemelo de las medidas) y JS `public/js/clinica/consulta-solicitudes.js`. **El API del móvil no cambió** (baja las cuatro
 tablas por el delta de `updated_at` y las bajas por `eliminados`; un test lo fija) y **la subida del escritorio tampoco**: las cuatro tablas tienen clave
 primaria y se suben por fila. Ver las trampas 53 a 55.
+
+Lo que **WEB-5.3b (2026-10-12)**, hospitalización y dieta / recomendaciones, agregó: controladores `ConsultaHospitalizacionController` y `ConsultaDietaController` (`guardar`/`eliminar`, en el grupo `role:Root|Medico` de la consulta; `POST`/`DELETE /clinica/consulta/{consulta}/hospitalizacion` y `/dieta`), las pestañas `hospitalizacion` y `dieta` de `PestanasDeSolicitudes` (orden del escritorio) con `Vistas/{HospitalizacionVista,DietaVista}` y los parciales `clinica/consulta/_solicitudes-{hospitalizacion,dieta}`. **Lectura** en `App\Clinica\Consulta\`: `HospitalizacionDeLaConsulta` (una por consulta; sólo `hospital`, `diagprev` y `dieta`: `indiprev`/`habitacion` no se tocan) y `DietaDeLaConsulta` (clave `histroria` + `consulta`; plantillas `formato_print` `DI`); `QueEsUnDocumento::{hospitalizacion,dieta}`. **Escritura** en `App\Actions\Consulta\`: `Guardar/EliminarHospitalizacionDeLaConsulta` y `Guardar/EliminarDietaDeLaConsulta` (trait `EscribeConRastro`, `source = web`; no crean filas vacías). Modelos `Hospitalizacion` y `DietaPaciente`. **Impresión:** `SolicitudesParaImprimir` suma `hospitalizacion` y `dieta` (claves y `DocumentoImpreso::{HOSPITALIZACION,DIETA}`), `DocumentosPorCita` los cuenta en SQL y `HistoriaDelPaciente` los lista. **Sync:** `dieta_paciente` entra a `sin_clave_con_altas_del_app` (el escritorio la sube entera); `hospitalizacion` se sube por fila; el móvil no baja ninguna. CSS `.pestanas-en-fila`. Sin columnas ni tablas nuevas. Ver las trampas 72 a 74.
 
 Lo que **WEB-8.1a (2026-10-11)**, los catálogos de medicamentos y tratamientos, agregó: controladores `CatalogoController` (la entrada: redirige al primer catálogo),
 `MedicamentoCatalogoController` (`/clinica/catalogos/medicamentos`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición, `DELETE`
@@ -511,7 +513,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **71** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **74** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

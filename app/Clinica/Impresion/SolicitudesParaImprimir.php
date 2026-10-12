@@ -3,6 +3,8 @@
 namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
+use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
@@ -14,8 +16,8 @@ use Carbon\Carbon;
 use Throwable;
 
 /**
- * **Las solicitudes de una consulta, listas para imprimir** (WEB-5.3a): qué hay para imprimir (constancia, reposo,
- * referencias e informe) y cada una armada como `DocumentoImpreso`.
+ * **Las solicitudes de una consulta, listas para imprimir** (WEB-5.3a, WEB-5.3b): qué hay para imprimir (constancia, reposo,
+ * referencias, hospitalización, informe y dieta) y cada una armada como `DocumentoImpreso`.
  *
  * No decide qué es un documento ni lee nada por su cuenta: usa las lecturas de la sección de solicitudes
  * (`ConstanciaDeLaConsulta`, `ReposoDeLaConsulta`, `ReferenciasDeLaConsulta`, `InformeDeLaConsulta`) y la regla de
@@ -32,6 +34,11 @@ use Throwable;
  *    REFERENCIA*. Se omiten los datos del médico que no están cargados en vez de imprimir rayas.
  *  - **Informe** (`d_informe_medico_ver_media`): *PARA* y el texto. Fecha de la cabecera: la del informe o, si no tiene, la
  *    de la consulta.
+ *  - **Hospitalización** (`d_hospitalizacion_1.srd`, *ORDEN DE HOSPITALIZACIÓN*): *Hospitalizar en*, *Diagnóstico provisional* y
+ *    *Recomendaciones*. La hoja del escritorio trae también `indiprev` y `habitacion` en su consulta pero **no las imprime**. Fecha de la
+ *    cabecera: la de la consulta. Se omite lo que no está escrito en vez de imprimir rótulos vacíos.
+ *  - **Dieta** (`d_recipe_dieta.srd`, *RECOMENDACIONES / DIETAS*): el título de la dieta (`dieta`, en negrita) y su texto. Fecha de la
+ *    cabecera: la de la consulta.
  *
  * ## Qué se ofrece
  *
@@ -48,6 +55,8 @@ final class SolicitudesParaImprimir
         private ReposoDeLaConsulta $reposos,
         private ReferenciasDeLaConsulta $referencias,
         private InformeDeLaConsulta $informes,
+        private HospitalizacionDeLaConsulta $hospitalizaciones,
+        private DietaDeLaConsulta $dietas,
     ) {
     }
 
@@ -98,6 +107,18 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        $hospitalizacion = $this->hospitalizaciones->fila($consulta);
+        if ($this->hospitalizaciones->esReal($hospitalizacion)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::HOSPITALIZACION,
+                'tipo' => DocumentoImpreso::HOSPITALIZACION,
+                'titulo' => 'Hospitalización',
+                // Sin el lugar ni el diagnóstico: la lista de la cita la ve la secretaría y no lleva contenido clínico.
+                'resumen' => 'Orden de hospitalización',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         $informe = $this->informes->fila($consulta);
         if ($this->informes->esReal($informe)) {
             $disponibles[] = [
@@ -106,6 +127,18 @@ final class SolicitudesParaImprimir
                 'titulo' => 'Informe médico',
                 'resumen' => 'Informe médico',
                 'fecha' => $informe->fe_cha !== null ? $informe->fe_cha->toDateString() : $fechaDeLaConsulta,
+            ];
+        }
+
+        $dieta = $this->dietas->fila($consulta);
+        if ($this->dietas->esReal($dieta)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::DIETA,
+                'tipo' => DocumentoImpreso::DIETA,
+                'titulo' => 'Dieta / Recomendaciones',
+                // Sin el título de la dieta (dice de qué se trata): la lista de la cita no lleva contenido clínico.
+                'resumen' => 'Dieta / Recomendaciones',
+                'fecha' => $fechaDeLaConsulta,
             ];
         }
 
@@ -143,6 +176,18 @@ final class SolicitudesParaImprimir
             $informe = $this->informes->fila($consulta);
 
             return $this->informes->esReal($informe) ? $this->informe($paciente, $informe, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::HOSPITALIZACION) {
+            $orden = $this->hospitalizaciones->fila($consulta);
+
+            return $this->hospitalizaciones->esReal($orden) ? $this->hospitalizacion($paciente, $orden, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::DIETA) {
+            $dieta = $this->dietas->fila($consulta);
+
+            return $this->dietas->esReal($dieta) ? $this->dieta($paciente, $dieta, $fechaDeLaConsulta) : null;
         }
 
         if (preg_match('/^' . DocumentoImpreso::REFERENCIA . '-(\d+)$/', $clave, $coincidencia) === 1) {
@@ -249,6 +294,49 @@ final class SolicitudesParaImprimir
             $para === null ? [] : [['etiqueta' => 'PARA:', 'valor' => $para]],
             DocumentoImpreso::parrafosDe($informe->descripcion),
         );
+    }
+
+    private function hospitalizacion(Paciente $paciente, object $orden, string $fecha): DocumentoImpreso
+    {
+        $lugar = $this->lugar($orden);
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::HOSPITALIZACION,
+            DocumentoImpreso::HOSPITALIZACION,
+            'ORDEN DE HOSPITALIZACIÓN',
+            'Orden de hospitalización',
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $lugar === null ? [] : [['etiqueta' => 'HOSPITALIZAR EN:', 'valor' => $lugar]],
+            array_merge(
+                DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($orden->diagprev), 'DIAGNÓSTICO PROVISIONAL:', true),
+                DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($orden->dieta), 'RECOMENDACIONES:', true),
+            ),
+        );
+    }
+
+    private function dieta(Paciente $paciente, object $dieta, string $fecha): DocumentoImpreso
+    {
+        $titulo = TextoDeLaConsulta::limpio($dieta->dieta);
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::DIETA,
+            DocumentoImpreso::DIETA,
+            'DIETA / RECOMENDACIONES',
+            'Dieta / Recomendaciones',
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $titulo === null ? [] : [['etiqueta' => 'DIETA:', 'valor' => (string) preg_replace('/\s+/u', ' ', $titulo)]],
+            DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($dieta->descripcion)),
+        );
+    }
+
+    /** El lugar a hospitalizar en una sola línea (`hospital` es un `char(60)`), o `null` si no se escribió. */
+    private function lugar(object $orden): ?string
+    {
+        $lugar = TextoDeLaConsulta::limpio($orden->hospital);
+
+        return $lugar === null ? null : (string) preg_replace('/\s+/u', ' ', $lugar);
     }
 
     // -------------------------------------------------------------------------------------------- Fechas

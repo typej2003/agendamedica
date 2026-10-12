@@ -6,17 +6,18 @@ use App\Models\Consulta;
 
 /**
  * **Todo lo que se puede imprimir de una consulta** (WEB-5.3a): los récipes (WEB-5.2) y las solicitudes —constancia,
- * reposo, referencias e informe—, con **una sola lista** y **una sola forma de pedir cada uno**.
+ * reposo, referencias, hospitalización, informe y dieta—, con **una sola lista** y **una sola forma de pedir cada uno**.
  *
  * Es lo que usa la pantalla «Imprimir documentos» de la cita de la agenda (la secretaría elige uno o imprime todos), el
  * botón de cada pestaña de la consulta y el enlace de la historia del paciente. No sabe nada de HTTP ni de hojas: junta
  * `RecipesParaImprimir` y `SolicitudesParaImprimir`, que ya saben qué es cada documento, y les pone una clave común:
  *
  *  - `recipe-1`, `recipe-2`… los récipes del paciente y `recipe-pareja` el de la pareja;
- *  - `constancia`, `reposo`, `referencia-<id del médico>` e `informe`.
+ *  - `constancia`, `reposo`, `referencia-<id del médico>`, `hospitalizacion`, `informe` y `dieta`.
  *
- * **Extensible**: hospitalización y dietas (WEB-5.3b) y laboratorio y estudios (WEB-5.4) suman su propia clase `…ParaImprimir`
- * y una línea acá; lo que sale en pantalla y la ruta no cambian.
+ * **Extensible**: laboratorio y estudios (WEB-5.4) suman su propia clase `…ParaImprimir` y una línea acá; lo que sale en
+ * pantalla y la ruta no cambian. Hospitalización y dieta (WEB-5.3b) entraron por `SolicitudesParaImprimir`, con las demás
+ * solicitudes de las pestañas.
  *
  * Es de **sólo lectura**.
  */
@@ -33,6 +34,8 @@ final class DocumentosParaImprimir
         DocumentoImpreso::REPOSO => 'bi-bandaid',
         DocumentoImpreso::REFERENCIA => 'bi-person-up',
         DocumentoImpreso::INFORME => 'bi-file-earmark-text',
+        DocumentoImpreso::HOSPITALIZACION => 'bi-hospital',
+        DocumentoImpreso::DIETA => 'bi-egg-fried',
     ];
 
     public function __construct(

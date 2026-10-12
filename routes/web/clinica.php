@@ -15,6 +15,8 @@ use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaConstanciaController;
+use App\Http\Controllers\Clinica\ConsultaDietaController;
+use App\Http\Controllers\Clinica\ConsultaHospitalizacionController;
 use App\Http\Controllers\Clinica\ConsultaInformeController;
 use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
@@ -252,6 +254,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/consulta/{consulta}/reposo', [ConsultaReposoController::class, 'eliminar'])->name('consulta.reposo.eliminar');
                 Route::post('/consulta/{consulta}/informe', [ConsultaInformeController::class, 'guardar'])->name('consulta.informe.guardar');
                 Route::delete('/consulta/{consulta}/informe', [ConsultaInformeController::class, 'eliminar'])->name('consulta.informe.eliminar');
+                // **Hospitalización y dieta / recomendaciones** (WEB-5.3b): las otras dos pestañas de las Solicitudes. También una por consulta
+                // (`nrohistoria` + `nroconsulta` y `histroria` + `consulta`), con guardado y baja en la misma URL cambiando el verbo.
+                Route::post('/consulta/{consulta}/hospitalizacion', [ConsultaHospitalizacionController::class, 'guardar'])->name('consulta.hospitalizacion.guardar');
+                Route::delete('/consulta/{consulta}/hospitalizacion', [ConsultaHospitalizacionController::class, 'eliminar'])->name('consulta.hospitalizacion.eliminar');
+                Route::post('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'guardar'])->name('consulta.dieta.guardar');
+                Route::delete('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'eliminar'])->name('consulta.dieta.eliminar');
                 // `medicos` (buscador JSON y alta) va antes de las rutas con `{cedula}`.
                 Route::get('/consulta/{consulta}/referencias/medicos', [ConsultaReferenciasController::class, 'buscar'])->name('consulta.referencias.buscar');
                 Route::post('/consulta/{consulta}/referencias/medicos', [ConsultaReferenciasController::class, 'medicoNuevo'])->name('consulta.referencias.medico-nuevo');
