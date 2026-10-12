@@ -46,6 +46,10 @@ final class AgregarMedicamentoAlVademecum
      *                             vademécum en el que busca la sección
      * @param  array<int,string>  $registrosMedicos  los registros del tenant, para el correlativo y para no
      *                                               duplicar uno que ya existe en cualquiera de ellos
+     * @param  array<string,?string>  $adicionales  columnas ya normalizadas que el ABM del vademécum (WEB-8.1a) suma a
+     *                                              las cuatro de siempre: las otras marcas, `sico` y `dosificacion`
+     *                                              (ver `App\Actions\Catalogos\CamposDelMedicamento`). El alta rápida de
+     *                                              la consulta no las pasa
      * @return array{0: Vademecum, 1: bool} el medicamento y si se creó ahora (`false` = ya existía uno igual)
      *
      * @throws InvalidArgumentException si falta el nombre, algo pasa del largo de su columna o el vademécum está lleno
@@ -57,11 +61,12 @@ final class AgregarMedicamentoAlVademecum
         ?string $nombreGenerico = null,
         ?string $presentacion = null,
         ?string $uso = null,
+        array $adicionales = [],
     ): array {
         $comercial = ReglasDelCatalogo::descripcion($nombreComercial, self::LARGO_NOMBRE, 'medicamento');
-        $generico = $this->opcional($nombreGenerico, self::LARGO_NOMBRE, 'El principio activo', true);
-        $presentacion = $this->opcional($presentacion, self::LARGO_PRESENTACION, 'La presentación', false);
-        $uso = $this->opcional($uso, self::LARGO_USO, 'Las indicaciones', false, false);
+        $generico = self::opcional($nombreGenerico, self::LARGO_NOMBRE, 'El principio activo', true);
+        $presentacion = self::opcional($presentacion, self::LARGO_PRESENTACION, 'La presentación', false);
+        $uso = self::opcional($uso, self::LARGO_USO, 'Las indicaciones', false, false);
 
         $vademecum = Vademecum::whereIn('reg_medico', array_values(array_unique(array_merge($registrosMedicos, [$regMedico]))))
             ->get();
@@ -84,7 +89,7 @@ final class AgregarMedicamentoAlVademecum
             'nombregenerico' => $generico,
             'presentacion' => $presentacion,
             'uso' => $uso,
-        ]);
+        ] + $adicionales);
 
         return [$medicamento, true];
     }
@@ -93,7 +98,7 @@ final class AgregarMedicamentoAlVademecum
      * Un campo opcional: vacío es `null`; con texto, se colapsan los espacios y se valida el largo. Las
      * indicaciones conservan sus saltos de línea (`$colapsar = false`).
      */
-    private function opcional(?string $valor, int $largo, string $nombre, bool $mayusculas, bool $colapsar = true): ?string
+    public static function opcional($valor, int $largo, string $nombre, bool $mayusculas, bool $colapsar = true): ?string
     {
         $texto = $colapsar
             ? trim((string) preg_replace('/\s+/u', ' ', (string) $valor))

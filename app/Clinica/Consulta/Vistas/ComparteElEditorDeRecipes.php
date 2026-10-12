@@ -102,6 +102,34 @@ trait ComparteElEditorDeRecipes
         return $this->urls['crearMedicamento'];
     }
 
+    /**
+     * Lo que la caja de herramientas ofrece, y que el editor de **tratamientos del catálogo** (WEB-8.1a) apaga: el
+     * modo "Tratamientos" (un tratamiento no se arma con otros tratamientos), el alta rápida del medicamento (en el
+     * catálogo se crea en su propia pantalla, `enlaceDeMedicamentos()`) y los botones de subir y bajar un
+     * medicamento (el orden de un tratamiento importa; el de un récipe, no). Los dos editores de récipes quedan
+     * como estaban: ofrecen las dos primeras y no la tercera.
+     */
+    public function ofreceTratamientos(): bool
+    {
+        return true;
+    }
+
+    public function ofreceCrearMedicamento(): bool
+    {
+        return true;
+    }
+
+    public function ofreceOrdenar(): bool
+    {
+        return false;
+    }
+
+    /** A dónde manda la caja de herramientas cuando no ofrece crear el medicamento (`null`: a ningún lado). */
+    public function enlaceDeMedicamentos(): ?string
+    {
+        return null;
+    }
+
     public function cantidadMaxima(): int
     {
         return SeccionDeRecipesVista::CANTIDAD_MAXIMA;

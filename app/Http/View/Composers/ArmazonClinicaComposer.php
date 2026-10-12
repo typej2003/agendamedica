@@ -23,6 +23,7 @@ class ArmazonClinicaComposer
             $compartidos['modulos'] ?? new Collection(),
             (bool) $peticion->user()?->esAdministrador(),
             $peticion->route()?->getName(),
+            (bool) $peticion->user()?->trabajaLaConsulta(),
         ));
     }
 }

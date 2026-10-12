@@ -30,10 +30,26 @@
         </div>
     </div>
 
+    {{-- El orden del medicamento, sólo donde importa (los tratamientos del catálogo, WEB-8.1a): el orden de la lista
+         es el `orden` que se guarda. --}}
+    @if ($seccion->ofreceOrdenar())
+        <div class="recipe-orden" role="group" aria-label="Orden de {{ $fila['nombre'] }}">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-recipe-subir
+                    title="Subir «{{ $fila['nombre'] }}»" aria-label="Subir {{ $fila['nombre'] }}">
+                <i class="bi bi-arrow-up" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-recipe-bajar
+                    title="Bajar «{{ $fila['nombre'] }}»" aria-label="Bajar {{ $fila['nombre'] }}">
+                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+            </button>
+        </div>
+    @endif
+
     {{-- "Quitar" saca el medicamento del récipe **en edición**: no borra nada hasta que se guarda, y no toca
          el vademécum ni el tratamiento de donde vino. --}}
     <button type="button" class="btn btn-sm btn-outline-danger recipe-quitar" data-recipe-quitar
-            title="Quitar «{{ $fila['nombre'] }}» del récipe" aria-label="Quitar {{ $fila['nombre'] }} del récipe">
+            title="Quitar «{{ $fila['nombre'] }}» del {{ $seccion->ofreceOrdenar() ? 'tratamiento' : 'récipe' }}"
+            aria-label="Quitar {{ $fila['nombre'] }} del {{ $seccion->ofreceOrdenar() ? 'tratamiento' : 'récipe' }}">
         <i class="bi bi-trash" aria-hidden="true"></i>
     </button>
 </li>

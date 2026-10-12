@@ -468,6 +468,88 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame('MARIANA', DB::table('recipes_pareja')->where('reg_medico', self::REG)->where('codemedicina', 'WEB01')->value('nombre'));
     }
 
+    public function test_reemplazar_los_tratamientos_conserva_los_que_creo_la_web_y_reemplaza_el_resto(): void
+    {
+        // WEB-8.1a: `recipe_grupo` y `recipe_grupo_detalle` no tienen clave primaria en el escritorio (cada una tiene sólo el
+        // trigger de sentencia): lo sube ENTERO y el reemplazo borra todo lo del médico antes de insertar lo que llegó. Los
+        // tratamientos que creó la web (el `created` de cada fila, hecho por la Action real, bajo el nombre de su tabla) se
+        // conservan; lo que nadie del app creó se reemplaza por lo que manda el escritorio.
+        DB::table('recipe_grupo')->insert(['reg_medico' => self::REG, 'codigo' => '0050', 'tratamiento' => 'VIEJO DEL ESCRITORIO']);
+        DB::table('recipe_grupo_detalle')->insert(['reg_medico' => self::REG, 'codigo' => '0050', 'codemedicina' => 'V1', 'cantidad' => 1, 'orden' => 0]);
+
+        $resultado = app(\App\Actions\Catalogos\GuardarTratamiento::class)->ejecutar(
+            self::REG, [self::REG], null, 'De la web',
+            [
+                ['codemedicina' => 'W1', 'cantidad' => 1, 'indicaciones' => 'Uno', 'descripcion' => 'W1', 'nombre' => 'W1'],
+                ['codemedicina' => 'W2', 'cantidad' => 2, 'indicaciones' => 'Dos', 'descripcion' => 'W2', 'nombre' => 'W2'],
+            ],
+            null, 'web',
+        );
+        $this->assertSame('0051', $resultado->tratamiento->codigo, 'el correlativo sigue al mayor, también al del escritorio');
+
+        $this->subir([
+            ['id' => 75, 'tabla' => 'recipe_grupo', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+                'filas' => [['codigo' => '0060', 'tratamiento' => 'NUEVO DEL ESCRITORIO']]],
+            ['id' => 76, 'tabla' => 'recipe_grupo_detalle', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+                'filas' => [['codigo' => '0060', 'codemedicina' => 'N1', 'cantidad' => 1, 'orden' => 0]]],
+        ]);
+
+        $this->assertEqualsCanonicalizing(['DE LA WEB', 'NUEVO DEL ESCRITORIO'],
+            DB::table('recipe_grupo')->where('reg_medico', self::REG)->pluck('tratamiento')->all(),
+            'el de la web se conserva; el viejo del escritorio se reemplaza por lo que manda el escritorio');
+        $this->assertEqualsCanonicalizing(['W1', 'W2', 'N1'],
+            DB::table('recipe_grupo_detalle')->where('reg_medico', self::REG)->pluck('codemedicina')->all());
+    }
+
+    public function test_sin_las_lineas_de_config_de_los_tratamientos_la_subida_si_los_borraria(): void
+    {
+        // El contraste que ata el test anterior a la configuración: sin `recipe_grupo` ni `recipe_grupo_detalle` en
+        // `sin_clave_con_altas_del_app`, el reemplazo de la tabla se lleva lo que creó la web.
+        $this->assertArrayHasKey('recipe_grupo', config('sync_legado.sin_clave_con_altas_del_app'));
+        $this->assertArrayHasKey('recipe_grupo_detalle', config('sync_legado.sin_clave_con_altas_del_app'));
+
+        app(\App\Actions\Catalogos\GuardarTratamiento::class)->ejecutar(
+            self::REG, [self::REG], null, 'De la web',
+            [['codemedicina' => 'W1', 'cantidad' => 1, 'indicaciones' => 'Uno', 'descripcion' => 'W1', 'nombre' => 'W1']],
+            null, 'web',
+        );
+
+        config(['sync_legado.sin_clave_con_altas_del_app' => ['recipe_detalle' => 'recipes', 'recipes_pareja' => 'recipes_pareja']]);
+
+        $this->subir([
+            ['id' => 77, 'tabla' => 'recipe_grupo', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00', 'filas' => []],
+            ['id' => 78, 'tabla' => 'recipe_grupo_detalle', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00', 'filas' => []],
+        ]);
+
+        $this->assertSame(0, DB::table('recipe_grupo')->where('reg_medico', self::REG)->count());
+        $this->assertSame(0, DB::table('recipe_grupo_detalle')->where('reg_medico', self::REG)->count());
+    }
+
+    public function test_el_vademecum_se_sube_por_fila_y_no_pierde_lo_que_creo_la_web(): void
+    {
+        // WEB-8.1a: `vademecum` SÍ tiene clave primaria en el escritorio (`codemedicina`): lleva los tres triggers de
+        // fila, se sube con `I`/`U`/`D` por clave y jamás con el reemplazo de la tabla. Por eso no necesita estar en
+        // `sin_clave_con_altas_del_app`, y una subida de OTRO código no toca lo que creó la web.
+        $this->assertArrayNotHasKey('vademecum', config('sync_legado.sin_clave_con_altas_del_app'));
+
+        [$web] = app(\App\Actions\Catalogos\CrearMedicamentoEnElCatalogo::class)->ejecutar(
+            self::REG, [self::REG], ['nombrecomercial' => 'De la web', 'presentacion' => 'Jarabe'], null, 'web',
+        );
+        DB::table('vademecum')->insert(['reg_medico' => self::REG, 'codemedicina' => '0600', 'nombrecomercial' => 'BORRABLE']);
+
+        $this->subir([
+            ['id' => 79, 'tabla' => 'vademecum', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+                'clave' => ['codemedicina' => '0500'], 'fila' => ['codemedicina' => '0500', 'nombrecomercial' => 'DEL ESCRITORIO']],
+            ['id' => 80, 'tabla' => 'vademecum', 'op' => 'D', 'fecha' => '2026-10-02 10:00:00', 'clave' => ['codemedicina' => '0600']],
+        ]);
+
+        $this->assertEqualsCanonicalizing([$web->codemedicina, '0500'],
+            DB::table('vademecum')->where('reg_medico', self::REG)->pluck('codemedicina')->all(),
+            'la fila de la web sigue; la del escritorio entra y la que borró el escritorio se va');
+        $this->assertNotNull(DB::table('vademecum')->find($web->id));
+        $this->assertSame('DE LA WEB', DB::table('vademecum')->find($web->id)->nombrecomercial);
+    }
+
     public function test_tabla_fuera_de_la_lista_blanca_se_rechaza(): void
     {
         $r = $this->subir([['id' => 81, 'tabla' => 'users', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',

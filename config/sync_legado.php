@@ -70,6 +70,13 @@ return [
         // tampoco tiene clave primaria en el PowerBuilder (su registro de cambios es de sentencia, `op = T`) y
         // cada fila anota su propio `created` con su id (la tabla no tiene cabecera).
         'recipes_pareja' => 'recipes_pareja',
+        // Los tratamientos del catálogo que crea la web (WEB-8.1a, `GuardarTratamiento`): `recipe_grupo` y
+        // `recipe_grupo_detalle` tampoco tienen clave primaria en el PowerBuilder (cada una tiene sólo el trigger
+        // de sentencia, `op = T`), y cada fila —encabezado y medicamento— anota su propio `created` bajo el
+        // nombre de su tabla. Sin estas dos líneas, la siguiente subida del escritorio borraría los tratamientos
+        // de la web. `vademecum`, en cambio, SÍ tiene clave primaria y se sube por fila: no entra acá.
+        'recipe_grupo' => 'recipe_grupo',
+        'recipe_grupo_detalle' => 'recipe_grupo_detalle',
     ],
 
     // Tablas del escritorio que el app guarda en su copia local con el mismo nombre. Cuando el

@@ -14,14 +14,18 @@
 {{-- Las herramientas para llenar el récipe: van **fuera** del formulario (no mandan nada por sí solas;
      lo que eligen entra al editor y se guarda con su botón). --}}
 <x-ui.tarjeta titulo="Agregar medicamentos" icono="bi-search" class="mt-3" id="recipe-herramientas">
-    <div class="btn-group mb-3" role="group" aria-label="Qué buscar">
-        <button type="button" class="btn btn-outline-secondary active" data-recipe-modo="medicamentos" aria-pressed="true">
-            <i class="bi bi-capsule" aria-hidden="true"></i> Medicamentos
-        </button>
-        <button type="button" class="btn btn-outline-secondary" data-recipe-modo="tratamientos" aria-pressed="false">
-            <i class="bi bi-collection" aria-hidden="true"></i> Tratamientos
-        </button>
-    </div>
+    {{-- El modo «Tratamientos» sólo existe donde se arma un récipe: un tratamiento del catálogo (WEB-8.1a) no se
+         arma con otros tratamientos. --}}
+    @if ($seccion->ofreceTratamientos())
+        <div class="btn-group mb-3" role="group" aria-label="Qué buscar">
+            <button type="button" class="btn btn-outline-secondary active" data-recipe-modo="medicamentos" aria-pressed="true">
+                <i class="bi bi-capsule" aria-hidden="true"></i> Medicamentos
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-recipe-modo="tratamientos" aria-pressed="false">
+                <i class="bi bi-collection" aria-hidden="true"></i> Tratamientos
+            </button>
+        </div>
+    @endif
 
     <div class="position-relative" id="recipe-busqueda">
         <label class="form-label" for="recipe-texto" id="recipe-etiqueta">Busca en tu vademécum</label>
@@ -58,14 +62,23 @@
     {{-- El alta del medicamento que falta: es el botón *Agregar* del escritorio (`w_nuevo_vademecum`). El
          aviso de conexión va acá, donde se decide crearlo: es lo único de la sección que no funciona
          sin red. --}}
-    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="recipe-nuevo-medicamento">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un medicamento nuevo
-    </button>
-    <p class="form-text mb-0 mt-1">
-        <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
-    </p>
+    @if ($seccion->ofreceCrearMedicamento())
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="recipe-nuevo-medicamento">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un medicamento nuevo
+        </button>
+        <p class="form-text mb-0 mt-1">
+            <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
+        </p>
+    @elseif ($seccion->enlaceDeMedicamentos())
+        {{-- En el catálogo el medicamento que falta se crea en su pantalla (el vademécum). --}}
+        <p class="form-text mb-0 mt-2">
+            ¿No está el medicamento? Créalo primero en <a href="{{ $seccion->enlaceDeMedicamentos() }}" target="_blank" rel="noopener">Medicamentos</a>
+            (se abre en otra pestaña, así no pierdes lo que llevas).
+        </p>
+    @endif
 </x-ui.tarjeta>
 
+@if ($seccion->ofreceCrearMedicamento())
 <x-ui.dialogo id="dialogo-medicamento" titulo="Crear un medicamento" lateral>
     <form method="POST" action="{{ $seccion->urlCrearMedicamento() }}" id="medicamento-form">
         @csrf
@@ -103,3 +116,5 @@
         </div>
     </form>
 </x-ui.dialogo>
+
+@endif

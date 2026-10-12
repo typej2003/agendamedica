@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Vistas;
 
+use App\Clinica\Catalogos\CatalogosDisponibles;
 use App\Support\IconoModulo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,7 @@ final class ArmazonVista
         private Collection $modulos,
         private bool $esAdministrador,
         private ?string $rutaActual,
+        private bool $trabajaLaConsulta = false,
     ) {
     }
 
@@ -102,6 +104,21 @@ final class ArmazonVista
                 'icono'  => IconoModulo::para($modulo->slug),
                 'url'    => $existe ? route($ruta) : null,
                 'activo' => $existe && $this->rutaActual !== null && ($this->rutaActual === $ruta || str_starts_with($this->rutaActual, $ruta . '.')),
+            ];
+        }
+
+        // Los catálogos clínicos (medicamentos, tratamientos…, WEB-8.1) son **del médico** —los de su contexto— y la
+        // secretaría no los administra: la entrada sólo se ofrece a quien puede abrirlos (el resto recibiría un 403).
+        // Va en la barra lateral y no en los accesos de la barra superior: ésa ya ocupa todo el ancho a 768 px con las
+        // fichas del contexto, y un acceso más la desborda (medido al verificar WEB-8.1a; trampa 58 de `TRAMPAS.md`).
+        $catalogos = $this->tieneContexto() && $this->trabajaLaConsulta ? CatalogosDisponibles::urlDeEntrada() : null;
+
+        if ($catalogos !== null) {
+            $menu[] = [
+                'texto'  => 'Catálogos',
+                'icono'  => 'bi-capsule',
+                'url'    => $catalogos,
+                'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.catalogos'),
             ];
         }
 

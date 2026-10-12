@@ -3,7 +3,7 @@
 Son las trampas **medidas** del repo (no teoría): varias ya costaron una tarde de depuración. Se leen
 **antes de escribir código** y **cada tarea agrega la suya al final**, con la fecha y la tarea que la
 encontró. El estado del código, los comandos y el mapa del repo están en
-[`AGENTS.md`](AGENTS.md). Van **55** y el archivo se lee entero en una sola pasada.
+[`AGENTS.md`](AGENTS.md). Van **59** y el archivo se lee entero en una sola pasada.
 
 ## Trampas conocidas (verificadas al crear esta guía)
 
@@ -504,3 +504,26 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     todas las palabras, cada una una vez** (`completa()` ordena antes de comparar) y el **orden** lo fijan los tests de PHP sobre el HTML
     (`ImpresionDeSolicitudesWebTest::palabrasDelCuerpo`). Y una trampa del propio verificador: `ayudante largo N` reescribe el texto con otro prefijo (`largoN`),
     así que el prefijo que se busca en el PDF tiene que ser el del último texto escrito.
+
+56. **`vademecum` tiene clave en el escritorio y se sube por fila; `recipe_grupo` y `recipe_grupo_detalle` no, y se suben ENTERAS.** Medido al hacer
+    WEB-8.1a (2026-10-11), mirando los triggers de `quitar-registro-cambios.sql`: `vademecum` lleva los tres de fila (`_ins`, `_upd`, `_del`, clave
+    `codemedicina`), así que `CambiosEscritorio` la trata con `guardarGenerico`/`borrarGenerico` y una fila creada por la web no corre riesgo (sólo
+    chocaría un código que el escritorio y la web den a la vez). `recipe_grupo` y `recipe_grupo_detalle` tienen **sólo** el trigger de sentencia
+    (`op = T`): `reemplazarTabla` borraba todo lo del médico, así que cada fila de la web anota su `created` bajo el nombre de **su** tabla y
+    `config/sync_legado.php → sin_clave_con_altas_del_app` suma las dos líneas (los tests `CambiosEscritorioTest::test_reemplazar_los_tratamientos_…`
+    y `…_sin_las_lineas_de_config_…` fallan/contrastan si se sacan). Sin resolver, igual que la trampa 43: una fila que creó el escritorio y la web
+    editó o borró vuelve a su versión si el escritorio re-sube la tabla, y el reemplazo reinserta con ids nuevos (el teléfono puede ver duplicados:
+    anterior a esta tarea).
+57. **El `deleted` de `sync_changes` tiene que llamarse como la tabla LOCAL del teléfono.** El pull del móvil (`eliminados`) manda `table_name` y
+    `record_id` y la app borra de la tabla local de ese nombre; ignora las que no conoce. Sus tablas de tratamientos se llaman `tratamientos` y
+    `tratamientos_detalle`, no `recipe_grupo(_detalle)`: un `deleted` bajo el nombre del servidor no llega a ninguna fila. `RastroDeTratamientos` deja
+    los dos (el del servidor y el del teléfono). `vademecum` y `recipes` se llaman igual y no necesitan alias. Medido leyendo `LocalDatabase.deleteByRemoteIds`.
+58. **La barra superior de `/clinica` ya está llena a 768 px: un acceso más la desborda.** Con las fichas del contexto, Sedes, Consultorios, Cambiar
+    consultorio y la cuenta, agregar «Catálogos» dejó 55 px de scroll horizontal a 768 en TODAS las pantallas del médico (lo midió el verificador de
+    WEB-8.1a; `verificar-menu-por-especialidad-web.js` también lo habría cazado). Las entradas nuevas van al menú lateral (`ArmazonVista::menu()`).
+    Y un medidor que no eligió consultorio ve la pantalla de contexto, sin fichas ni accesos: no prueba nada.
+59. **Tres tests dependen de la hora real y fallan desde las 20:00 de Caracas, y `php artisan test` completo se queda sin memoria con el límite de 128 MB.**
+    `AgendaVistasTest::…url_mal_formada`, `FormularioDePacienteVistaTest::…si_de_atender_hoy…` y `PacientesAltaEdicionWebTest::…si_de_atender_hoy…` comparan contra
+    «hoy» con el reloj real: pasadas las 20:00 locales el día UTC ya es el siguiente (fallan también sin los cambios de WEB-8.1a, medido con `git stash`).
+    Y la suite entera aborta con «Allowed memory size of 134217728 bytes exhausted» si algún test falla con una página enorme (Ignition renderiza el error):
+    `php -d memory_limit=2G artisan test` o por carpeta (`tests/Unit`, `tests/Feature`).

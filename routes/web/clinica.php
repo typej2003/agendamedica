@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Clinica\AgendaController;
+use App\Http\Controllers\Clinica\CatalogoController;
+use App\Http\Controllers\Clinica\MedicamentoCatalogoController;
+use App\Http\Controllers\Clinica\TratamientoCatalogoController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
@@ -261,6 +264,23 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // interceptarlas (el segmento `cerrar` no es un id de imagen, pero el orden es el criterio
                 // de este archivo).
                 Route::post('/consulta/{consulta}/cerrar', [ConsultaCerrarController::class, 'cerrar'])->name('consulta.cerrar');
+
+                // **Catálogos del médico** (WEB-8.1a): el vademécum (`vademecum`) y los tratamientos (`recipe_grupo` con
+                // sus medicamentos). Sólo del médico, como la consulta: la secretaría no administra catálogos
+                // clínicos (403), y todo se acota al `reg_medico` del contexto (lo de otro médico, 404). WEB-8.1b
+                // suma acá sus pantallas (`App\Clinica\Catalogos\CatalogosDisponibles`). Quitar un medicamento no
+                // borra lo que está en uso; quitar un tratamiento siempre se puede.
+                Route::get('/catalogos', [CatalogoController::class, 'indice'])->name('catalogos');
+                Route::get('/catalogos/medicamentos', [MedicamentoCatalogoController::class, 'index'])->name('catalogos.medicamentos');
+                Route::get('/catalogos/medicamentos/buscar', [MedicamentoCatalogoController::class, 'buscar'])->name('catalogos.medicamentos.buscar');
+                Route::post('/catalogos/medicamentos', [MedicamentoCatalogoController::class, 'guardar'])->name('catalogos.medicamentos.guardar');
+                Route::delete('/catalogos/medicamentos/{medicamento}', [MedicamentoCatalogoController::class, 'quitar'])->whereNumber('medicamento')->name('catalogos.medicamentos.quitar');
+                Route::get('/catalogos/tratamientos', [TratamientoCatalogoController::class, 'index'])->name('catalogos.tratamientos');
+                Route::get('/catalogos/tratamientos/nuevo', [TratamientoCatalogoController::class, 'nuevo'])->name('catalogos.tratamientos.nuevo');
+                Route::post('/catalogos/tratamientos', [TratamientoCatalogoController::class, 'crear'])->name('catalogos.tratamientos.crear');
+                Route::get('/catalogos/tratamientos/{tratamiento}/editar', [TratamientoCatalogoController::class, 'editar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.editar');
+                Route::post('/catalogos/tratamientos/{tratamiento}', [TratamientoCatalogoController::class, 'guardar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.guardar');
+                Route::delete('/catalogos/tratamientos/{tratamiento}', [TratamientoCatalogoController::class, 'quitar'])->whereNumber('tratamiento')->name('catalogos.tratamientos.quitar');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

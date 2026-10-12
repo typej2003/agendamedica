@@ -168,24 +168,7 @@ final class RecipesDeLaConsulta
             ->orderBy('codemedicina')
             ->get(['codemedicina', 'nombrecomercial', 'nombregenerico', 'presentacion', 'uso',
                 'nombrecomercial1', 'nombrecomercial2', 'nombrecomercial3'])
-            ->filter(function ($fila) use ($palabras) {
-                if ($palabras === []) {
-                    return true;
-                }
-
-                $pajar = BusquedaDePacientes::normalizar(implode(' ', array_filter([
-                    $fila->nombrecomercial, $fila->nombregenerico, $fila->presentacion,
-                    $fila->nombrecomercial1, $fila->nombrecomercial2, $fila->nombrecomercial3,
-                ], fn ($valor) => CamposDePaciente::texto($valor) !== null)));
-
-                foreach ($palabras as $palabra) {
-                    if (! str_contains($pajar, $palabra)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            })
+            ->filter(fn ($fila) => self::medicamentoCoincide($fila, $palabras))
             // Un medicamento sin ningún nombre no se ofrece: no hay cómo reconocerlo en la lista.
             ->filter(fn ($fila) => CamposDePaciente::texto($fila->nombrecomercial) !== null
                 || CamposDePaciente::texto($fila->nombregenerico) !== null)
@@ -204,9 +187,11 @@ final class RecipesDeLaConsulta
      * Los tratamientos (plantillas) del médico que coinciden con el nombre, cada uno con sus
      * medicamentos, cantidad e indicaciones por defecto y el nombre ya resuelto. Sin texto, todos.
      *
+     * @param  int|null  $tope  cuántos devuelve como máximo (por defecto `MAX_RESULTADOS`, que es lo que el buscador de
+     *                          la consulta necesita); `null` los devuelve todos, para el ABM de tratamientos (WEB-8.1a)
      * @return Collection<int,object{codigo:string, nombre:string, items:Collection<int,object>}>
      */
-    public function tratamientos(string $regMedico, string $buscar = ''): Collection
+    public function tratamientos(string $regMedico, string $buscar = '', ?int $tope = self::MAX_RESULTADOS): Collection
     {
         $palabras = $this->palabras($buscar);
 
@@ -225,7 +210,7 @@ final class RecipesDeLaConsulta
 
                 return CamposDePaciente::texto($grupo->tratamiento) !== null;
             })
-            ->take(self::MAX_RESULTADOS)
+            ->when($tope !== null, fn ($lista) => $lista->take($tope))
             ->values();
 
         if ($grupos->isEmpty()) {
@@ -358,8 +343,20 @@ final class RecipesDeLaConsulta
      */
     public function resolverItemsContra(Consulta $consulta, array $actuales, array $items): array
     {
-        $regMedico = (string) $consulta->reg_medico;
+        return $this->resolverItemsDelMedico((string) $consulta->reg_medico, $actuales, $items);
+    }
 
+    /**
+     * La misma comprobación contra los catálogos **de un médico** (su `reg_medico`), sin necesitar una consulta: la
+     * usan los récipes (`resolverItemsContra`) y los tratamientos del catálogo (WEB-8.1a), que se arman con los
+     * mismos medicamentos y la misma regla de "no hay texto libre".
+     *
+     * @param  array<string,?string>  $actuales  los medicamentos que la lista ya tiene, por código
+     * @param  array<int,array<string,mixed>>  $items  los `items` del formulario
+     * @return array{items:array<int,array{codemedicina:string, cantidad:int, indicaciones:?string, descripcion:?string, nombre:string}>, desconocidos:array<int,string>}
+     */
+    public function resolverItemsDelMedico(string $regMedico, array $actuales, array $items): array
+    {
         $codigos = [];
         foreach ($items as $item) {
             $codigo = is_array($item) ? trim((string) ($item['codemedicina'] ?? '')) : '';
@@ -430,9 +427,48 @@ final class RecipesDeLaConsulta
     /** @return array<int,string> las palabras de la búsqueda, normalizadas (sin tildes ni mayúsculas) */
     private function palabras(string $buscar): array
     {
+        return self::palabrasDeBusqueda($buscar);
+    }
+
+    /**
+     * Las palabras de una búsqueda de medicamentos, normalizadas (sin tildes ni mayúsculas). Es **la** definición
+     * de cómo se parte lo que el médico escribe: la usan el buscador de la consulta y el ABM del vademécum
+     * (WEB-8.1a), para que encuentren lo mismo.
+     *
+     * @return array<int,string>
+     */
+    public static function palabrasDeBusqueda(string $buscar): array
+    {
         $normalizada = BusquedaDePacientes::normalizar(trim($buscar));
 
         return array_values(array_filter(preg_split('/\s+/u', $normalizada) ?: [], fn ($palabra) => $palabra !== ''));
+    }
+
+    /**
+     * ¿Ese medicamento del vademécum coincide con **todas** las palabras? Se busca en el nombre comercial, el
+     * genérico, la presentación y las marcas alternas, sin distinguir tildes. Sin palabras, todos coinciden.
+     * La misma regla para la consulta y para el ABM (WEB-8.1a).
+     *
+     * @param  array<int,string>  $palabras  las de `palabrasDeBusqueda`
+     */
+    public static function medicamentoCoincide(object $fila, array $palabras): bool
+    {
+        if ($palabras === []) {
+            return true;
+        }
+
+        $pajar = BusquedaDePacientes::normalizar(implode(' ', array_filter([
+            $fila->nombrecomercial ?? null, $fila->nombregenerico ?? null, $fila->presentacion ?? null,
+            $fila->nombrecomercial1 ?? null, $fila->nombrecomercial2 ?? null, $fila->nombrecomercial3 ?? null,
+        ], fn ($valor) => CamposDePaciente::texto($valor) !== null)));
+
+        foreach ($palabras as $palabra) {
+            if (! str_contains($pajar, $palabra)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** Los que **empiezan** con lo escrito van primero, y después el orden alfabético por nombre. */

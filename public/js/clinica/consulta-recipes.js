@@ -57,6 +57,9 @@
     const botonCrear = document.getElementById('medicamento-crear');
     const botonNuevo = document.getElementById('recipe-nuevo-medicamento');
 
+    // Lo que se edita: «récipe» (la consulta) o «tratamiento» (el catálogo, WEB-8.1a, que usa este mismo editor).
+    const cosa = formulario.dataset.cosa || 'récipe';
+
     let siguienteClave = parseInt(formulario.dataset.siguienteClave, 10) || 0;
     let modo = 'medicamentos';
     let temporizador = null;
@@ -135,14 +138,34 @@
         fila.querySelector('textarea').value = medicamento.indicaciones || '';
 
         const quitar = fila.querySelector('[data-recipe-quitar]');
-        quitar.title = 'Quitar «' + medicamento.nombre + '» del récipe';
-        quitar.setAttribute('aria-label', 'Quitar ' + medicamento.nombre + ' del récipe');
+        quitar.title = 'Quitar «' + medicamento.nombre + '» del ' + cosa;
+        quitar.setAttribute('aria-label', 'Quitar ' + medicamento.nombre + ' del ' + cosa);
 
         lista.appendChild(fila);
         actualizar();
 
         return fila;
     }
+
+    // «Subir» y «bajar» (sólo en el editor de un tratamiento del catálogo): mueven la fila en la lista; el orden que
+    // se guarda es el de la lista, y mover una fila cuenta como un cambio sin guardar (`instantanea` mira el orden).
+    lista.addEventListener('click', function (evento) {
+        const mover = evento.target.closest('[data-recipe-subir], [data-recipe-bajar]');
+
+        if (!mover) return;
+
+        const fila = mover.closest('[data-recipe-fila]');
+        if (!fila) return;
+
+        if (mover.hasAttribute('data-recipe-subir')) {
+            if (fila.previousElementSibling) lista.insertBefore(fila, fila.previousElementSibling);
+        } else if (fila.nextElementSibling) {
+            lista.insertBefore(fila.nextElementSibling, fila);
+        }
+
+        mover.focus();
+        actualizar();
+    });
 
     // «Quitar» saca la fila del formulario: no borra nada hasta guardar, y no toca el vademécum.
     lista.addEventListener('click', function (evento) {
@@ -181,7 +204,7 @@
             resultado.disabled = yaEsta;
             accion.classList.toggle('btn-outline-primary', !yaEsta);
             accion.classList.toggle('btn-outline-secondary', yaEsta);
-            textoAccion.textContent = yaEsta ? 'Ya está en el récipe' : 'Agregar';
+            textoAccion.textContent = yaEsta ? 'Ya está en el ' + cosa : 'Agregar';
         });
     }
 
@@ -228,7 +251,7 @@
 
         const cuantos = datos.medicamentos.length;
         ayuda.textContent = cuantos + (cuantos === 1 ? ' medicamento' : ' medicamentos')
-            + ' que coinciden con «' + datos.buscar + '». Elige uno para agregarlo al récipe.';
+            + ' que coinciden con «' + datos.buscar + '». Elige uno para agregarlo al ' + cosa + '.';
     }
 
     function pintarTratamientos(datos) {

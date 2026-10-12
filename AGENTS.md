@@ -33,9 +33,10 @@ Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última
-medición (2026-10-11, tras **WEB-5.3a**, las solicitudes de la consulta) es **1239 en
+medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1296 en
 verde y 3 que fallan** por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
-una con la base de tests borrada). El test que era **flaky**
+una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
+Caracas** (trampa 59: se mide por carpeta con `php -d memory_limit=2G artisan test tests/Unit` y `tests/Feature`). El test que era **flaky**
 (`tests/Feature/ConsultaWebTest::test_la_numeracion_sigue_el_correlativo_de_la_historia`) **quedó
 arreglado en WEB-4.5**: la causa era del test —buscaba la consulta por `numhistoria` sin acotar al
 `reg_medico` de la prueba y terminaba leyendo las filas que siembra `FakeClinicalDataSeeder`, que reparte
@@ -186,6 +187,18 @@ de la constancia usan `constancia_obs.observacion`, que el escritorio no escribe
 `public/css/clinica-documento.css` (gemelo de las medidas) y JS `public/js/clinica/consulta-solicitudes.js`. **El API del móvil no cambió** (baja las cuatro
 tablas por el delta de `updated_at` y las bajas por `eliminados`; un test lo fija) y **la subida del escritorio tampoco**: las cuatro tablas tienen clave
 primaria y se suben por fila. Ver las trampas 53 a 55.
+
+Lo que **WEB-8.1a (2026-10-11)**, los catálogos de medicamentos y tratamientos, agregó: controladores `CatalogoController` (la entrada: redirige al primer catálogo),
+`MedicamentoCatalogoController` (`/clinica/catalogos/medicamentos`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición, `DELETE`
+quitar y el JSON `…/buscar` del editor de tratamientos) y `TratamientoCatalogoController` (`/clinica/catalogos/tratamientos`: lista, editor `nuevo`/`{id}/editar`, `POST` crear/guardar, `DELETE`),
+todos en un grupo `role:Root|Medico` (la secretaría: 403) acotado al `reg_medico` del contexto. **Actions** en `App\Actions\Catalogos\`: `CrearMedicamentoEnElCatalogo` (usa
+`AgregarMedicamentoAlVademecum`, WEB-5.1, que ganó un parámetro opcional), `EditarMedicamentoDelVademecum`, `QuitarMedicamentoDelCatalogo` (comprueba el uso y borra en una transacción con
+candado), `GuardarTratamiento`, `QuitarTratamiento`, el trait `RastroDeTratamientos` (el `deleted` del servidor **y** el que entiende el teléfono, trampa 57) y `CamposDelMedicamento`
+(los campos del ABM del escritorio y sus topes), con el trait `EscribeConRastro` de WEB-5.3a. **Lectura** en `App\Clinica\Catalogos\`: `MedicamentosDelCatalogo`, `TratamientosDelCatalogo`,
+`UsoDeUnMedicamento` (qué es "en uso"), `CatalogosDisponibles` (el índice extensible: WEB-8.1b suma una línea) y `Vistas/{MedicamentosVista,TratamientosVista,EditorDeTratamientoVista}`; el editor
+reutiliza los parciales y `consulta-recipes.js` del récipe (`ComparteElEditorDeRecipes` ganó `ofreceTratamientos/ofreceCrearMedicamento/ofreceOrdenar`). `RecipesDeLaConsulta` ganó
+`palabrasDeBusqueda`/`medicamentoCoincide`/`resolverItemsDelMedico` y el tope opcional de `tratamientos()` (sin cambiar lo que hacía). Sync: `recipe_grupo(_detalle)` en
+`sin_clave_con_altas_del_app`; el móvil no cambió. Ver las trampas 56 a 59.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
@@ -483,7 +496,7 @@ Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. 
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **55** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **59** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de
