@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Las imágenes (logo, firma y sello) viven en el disco `public` y se sirven por `/storage/…`; si el archivo ya no
  * está en el disco no se pinta (una imagen rota en una receta no sirve a nadie). La configuración **se edita
- * desde el móvil o el API** (la pantalla web es WEB-8.2): esta clase sólo la lee.
+ * desde el móvil, el API y la pantalla «Formato de impresión» de la web** (WEB-8.2, `App\Actions\Configuracion\`): esta clase sólo la lee.
  */
 final class MembreteDelMedico
 {

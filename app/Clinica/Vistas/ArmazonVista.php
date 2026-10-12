@@ -127,6 +127,25 @@ final class ArmazonVista
             ];
         }
 
+        // «Configuración» (WEB-8.2) es un grupo para lo que el médico ajusta de su propio consultorio; hoy tiene el formato de impresión
+        // (membrete, logo, firma y sello) y WEB-8.4 y 8.5 suman sus pantallas acá. Como los catálogos, es del médico y no de la secretaría.
+        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+            $esFormato = $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.formato');
+
+            $menu[] = [
+                'texto'  => 'Configuración',
+                'icono'  => 'bi-gear',
+                'url'    => null,
+                'activo' => $esFormato,
+                'hijos'  => [[
+                    'texto'  => 'Formato de impresión',
+                    'icono'  => 'bi-printer',
+                    'url'    => route('clinica.formato'),
+                    'activo' => $esFormato,
+                ]],
+            ];
+        }
+
         return $menu;
     }
 }

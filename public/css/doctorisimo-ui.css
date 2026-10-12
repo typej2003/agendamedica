@@ -2648,3 +2648,62 @@ body.auth-pagina {
 
 /* El filtro por tipo de examen, junto al buscador. */
 .buscador .catalogo-filtro { width: auto; min-width: 10rem; max-width: 100%; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Formato de impresión del médico (WEB-8.2)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* La vista previa se queda a la vista mientras se editan las secciones (en pantallas anchas). */
+@media (min-width: 1200px) {
+    .formato-previa { position: sticky; top: 1rem; }
+}
+
+/* El marco con la hoja de ejemplo: A4 horizontal (297 × 210 mm) más un poco de aire del fondo de la vista. */
+.formato-previa-marco {
+    display: block;
+    width: 100%;
+    aspect-ratio: 297 / 218;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+}
+
+/* La imagen actual (logo, firma o sello) junto al control para reemplazarla. */
+.formato-imagen { display: flex; align-items: flex-start; gap: 1rem; }
+.formato-imagen-controles { flex: 1 1 auto; min-width: 0; }
+
+.formato-miniatura {
+    flex: none;
+    width: 7rem;
+    height: 5rem;
+    object-fit: contain;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+}
+
+.formato-miniatura-vacia { display: flex; align-items: center; justify-content: center; color: var(--ds-texto-3); font-size: 1.5rem; }
+
+/* Un bloque de texto del membrete con sus opciones. */
+.formato-bloque { min-width: 0; margin: 0 0 1rem; padding: .75rem 1rem 1rem; border: 1px solid var(--ds-borde); border-radius: var(--ds-radio); }
+.formato-bloque-titulo { float: none; width: auto; margin: 0; padding: 0 .25rem; font-size: 1rem; font-weight: 600; }
+
+/* Los nueve colores de la línea: la muestra es el color de la hoja impresa (no un token de la aplicación). */
+.formato-colores { display: flex; flex-wrap: wrap; gap: .4rem; }
+.formato-color-muestra { display: inline-block; width: .9rem; height: .9rem; border: 1px solid var(--ds-borde-control); border-radius: 50%; vertical-align: -.1rem; }
+.formato-color-negro { background: #000000; }
+.formato-color-blanco { background: #ffffff; }
+.formato-color-rojo { background: #c62828; }
+.formato-color-marron { background: #6d4c41; }
+.formato-color-fucsia { background: #d81b60; }
+.formato-color-verde { background: #2e7d32; }
+.formato-color-gris { background: #757575; }
+.formato-color-amarillo { background: #f9a825; }
+.formato-color-azul { background: #1565c0; }
+
+.formato-alineacion .btn { min-width: 2.75rem; }
+
+@media (max-width: 575.98px) {
+    .formato-imagen { flex-direction: column; }
+    .formato-alineacion .btn, .formato-colores .btn { min-height: 2.5rem; }
+}

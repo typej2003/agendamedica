@@ -5,6 +5,8 @@ use App\Http\Controllers\Clinica\CatalogoController;
 use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
+use App\Http\Controllers\Clinica\FormatoDeImpresionController;
+use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
 use App\Http\Controllers\Clinica\MotivoConsultaCatalogoController;
 use App\Http\Controllers\Clinica\TipoExamenCatalogoController;
 use App\Http\Controllers\Clinica\MedicamentoCatalogoController;
@@ -305,6 +307,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/catalogos/medicos-referidos', [DoctorCatalogoController::class, 'index'])->name('catalogos.medicos-referidos');
                 Route::post('/catalogos/medicos-referidos', [DoctorCatalogoController::class, 'guardar'])->name('catalogos.medicos-referidos.guardar');
                 Route::delete('/catalogos/medicos-referidos/{id}', [DoctorCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.medicos-referidos.quitar');
+
+                // **Formato de impresión del médico** (WEB-8.2): el membrete, el logo, el estilo de cada bloque, la firma y el sello con
+                // los que sale el récipe y los demás documentos, más la hoja de prueba. Sólo del médico, como los catálogos: la
+                // secretaría imprime con el formato pero no lo configura (403). El formato es del médico y no del consultorio: se
+                // guarda bajo su registro principal, igual que el móvil. Cada sección tiene su ruta de guardado.
+                Route::get('/formato', [FormatoDeImpresionController::class, 'index'])->name('formato');
+                Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
+                Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
+                Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
+                Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
+                Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
+                Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

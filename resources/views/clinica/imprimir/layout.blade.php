@@ -13,9 +13,12 @@
 </head>
 <body>
 
-    <div class="barra-impresion">
-        @yield('barra')
-    </div>
+    {{-- La hoja de prueba incrustada en la pantalla del formato (WEB-8.2) no define barra: sin ella tampoco se pinta el contenedor. --}}
+    @hasSection('barra')
+        <div class="barra-impresion">
+            @yield('barra')
+        </div>
+    @endif
 
     @yield('contenido')
 
