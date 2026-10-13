@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consulta\GuardarEcoGinecologico;
 use App\Actions\Consulta\GuardarEcoObstetrico;
+use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -46,6 +48,7 @@ class ConsultaEstudioController extends Controller
         string $tipo,
         GuardarEcoGinecologico $guardar,
         GuardarEcoObstetrico $guardarObstetrico,
+        GuardarEcoObstetricoTercero $guardarObstetricoTercero,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -66,7 +69,8 @@ class ConsultaEstudioController extends Controller
         // con qué reglas. Un tipo nuevo suma su acción acá y su mapa en `reglasDe()`.
         $tipo = TiposDeEstudio::normalizar($tipo);
         $esObstetrico = $tipo === TiposDeEstudio::OBSTETRICO;
-        $accion = $esObstetrico ? $guardarObstetrico : $guardar;
+        $esTercero = $tipo === TiposDeEstudio::TERCERO;
+        $accion = $esTercero ? $guardarObstetricoTercero : ($esObstetrico ? $guardarObstetrico : $guardar);
 
         $destino = $this->destino($consulta, $tipo);
 
@@ -98,13 +102,15 @@ class ConsultaEstudioController extends Controller
      */
     private function reglasDe(string $tipo): array
     {
-        if ($tipo !== TiposDeEstudio::OBSTETRICO) {
+        if ($tipo !== TiposDeEstudio::OBSTETRICO && $tipo !== TiposDeEstudio::TERCERO) {
             return $this->reglas();
         }
 
         $reglas = [];
 
-        foreach (EcoObstetrico::grupos() as $grupo) {
+        $grupos = $tipo === TiposDeEstudio::TERCERO ? EcoObstetricoTercero::grupos() : EcoObstetrico::grupos();
+
+        foreach ($grupos as $grupo) {
             foreach ($grupo['campos'] as $campo) {
                 $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
                     'fecha' => 'nullable|date',

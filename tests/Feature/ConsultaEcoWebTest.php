@@ -609,4 +609,35 @@ class ConsultaEcoWebTest extends TestCase
 
         $this->assertSame(0, \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->count());
     }
+
+    public function test_el_tipo_tercero_abre_con_sus_bloques_y_guarda_en_su_tabla(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Los TRES tipos del ítem 5 que existen hoy, y los bloques propios del 2.º/3.er trimestre.
+        $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'tercero'));
+
+        $pantalla->assertOk()
+            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
+            ->assertSee('Datos biométricos')->assertSee('Datos anatómicos')
+            ->assertSee('Placenta y líquido')->assertSee('El feto')
+            ->assertSee('Peso F.')->assertSee('ILA (Phelan)');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'tercero'), [
+                'bio_peso_fetal' => '3200', 'fun_dp_grado' => 'II', 'ana_corazon' => 'N',
+                'conclusion' => 'Embarazo a término.',
+            ])
+            ->assertSessionHas('estado');
+
+        $fila = \App\Models\EcoObstetricoTercer::where('reg_medico', $medico->reg_medico)->where('consulta', 1)->first();
+
+        $this->assertNotNull($fila);
+        $this->assertSame('3200', (string) $fila->bio_peso_fetal);
+        $this->assertSame('II', $fila->fun_dp_grado);
+        // Es otro estudio: no toca la tabla del primer trimestre.
+        $this->assertSame(0, \App\Models\EcoObstetrico::where('historia', 1001)->count());
+    }
 }

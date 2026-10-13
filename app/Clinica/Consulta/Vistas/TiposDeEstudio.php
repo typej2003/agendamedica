@@ -36,6 +36,12 @@ final class TiposDeEstudio
      */
     public const OBSTETRICO = 'obstetrico';
 
+    /**
+     * El **eco obstétrico del segundo/tercer trimestre** (WEB-6.2): la misma tabla y la misma pantalla que
+     * el del tercero en el escritorio (`d_eco_obstetrico_trimestral_nueva`), con otro informe.
+     */
+    public const TERCERO = 'tercero';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -43,6 +49,7 @@ final class TiposDeEstudio
     private const TODOS = [
         self::GINECOLOGICO => ['texto' => 'Eco ginecológico', 'icono' => 'bi-activity'],
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
+        self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
     ];
 
     /**

@@ -29,8 +29,10 @@ use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
+use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
@@ -140,6 +142,7 @@ class ConsultaController extends Controller
         CatalogoParaPedirExamenes $catalogoDeExamenes,
         EcoGinecologico $eco,
         EcoObstetrico $ecoObstetrico,
+        EcoObstetricoTercero $ecoObstetricoTercero,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -192,7 +195,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $furPrenatal, $gestas, $informePrenatal),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $furPrenatal, $gestas, $informePrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -248,6 +251,7 @@ class ConsultaController extends Controller
         Medico $medico,
         EcoGinecologico $eco,
         EcoObstetrico $ecoObstetrico,
+        EcoObstetricoTercero $ecoObstetricoTercero,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -296,6 +300,29 @@ class ConsultaController extends Controller
             // El tipo del estudio viaja en la URL (`&tipo=`): el contenedor muestra los que existen hoy
             // (el ginecológico, WEB-6.1) y los demás llegan con las tareas siguientes de F6.
             $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
+
+            // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
+            // columnas en seis bloques, contra las 38 del primero).
+            if ($tipo === TiposDeEstudio::TERCERO) {
+                return new SeccionDeEstudioVista(
+                    $tipo,
+                    new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
+                        $consulta->id,
+                        'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                        'tipo' => $clave,
+                    ])),
+                    new EcoObstetricoTerceroVista(
+                        $ecoObstetricoTercero->de($consulta),
+                        route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                        route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                        // La hoja del 2.º/3.er trimestre llega con su paso: hasta entonces no se ofrece.
+                        '',
+                        null,
+                        null,
+                        (array) old(),
+                    ),
+                );
+            }
 
             return new SeccionDeEstudioVista(
                 $tipo,
