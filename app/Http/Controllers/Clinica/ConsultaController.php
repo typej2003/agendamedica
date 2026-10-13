@@ -52,9 +52,11 @@ use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Embarazo\Gesta;
 use App\Clinica\Embarazo\GestasDeLaHistoria;
+use App\Clinica\Embarazo\InformePrenatal;
 use App\Clinica\Embarazo\Vistas\FechasDelEmbarazoVista;
 use App\Clinica\Embarazo\Vistas\PestanasDelEmbarazo;
 use App\Clinica\Embarazo\Vistas\PrenatalVista;
+use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
@@ -137,6 +139,7 @@ class ConsultaController extends Controller
         EcoGinecologico $eco,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
+        InformePrenatal $informePrenatal,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -186,7 +189,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal, $gestas),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal, $gestas, $informePrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -243,6 +246,7 @@ class ConsultaController extends Controller
         EcoGinecologico $eco,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
+        InformePrenatal $informePrenatal,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -346,7 +350,22 @@ class ConsultaController extends Controller
 
             // Cada pestaña tiene su ViewModel: *Prenatal* es la de las gestas y las otras dos —*Laboratorio*
             // y *Controles*— son una fila por fecha, que comparten ViewModel y parcial.
-            if ($pestana === PestanasDelEmbarazo::LABORATORIO || $pestana === PestanasDelEmbarazo::CONTROLES) {
+            if ($pestana === PestanasDelEmbarazo::REPORTE) {
+                // El reporte: el resumen de lo que sale en la hoja «CONTROL DE EMBARAZO» y el botón que la
+                // imprime. La hoja la arma el motor de documentos, con `&gesta=` en la URL.
+                $informe = $informePrenatal->de($regMedico, $historia, $elegida?->clave(), $dia);
+
+                $pestanaVm = new ReporteVista(
+                    partes: $informe,
+                    gestas: $deLaHistoria,
+                    urlImprimir: route('clinica.consulta.documentos.imprimir', [
+                        $consulta->id,
+                        'documento' => DocumentoImpreso::CONTROL_DE_EMBARAZO,
+                    ]) . ($claveDeLaGesta > 0 ? '&gesta=' . $claveDeLaGesta : ''),
+                    urlVolver: $url(),
+                    urlGesta: fn (int $clave) => $url(['gesta' => $clave]),
+                );
+            } elseif ($pestana === PestanasDelEmbarazo::LABORATORIO || $pestana === PestanasDelEmbarazo::CONTROLES) {
                 $esLaboratorio = $pestana === PestanasDelEmbarazo::LABORATORIO;
                 $modelo = $esLaboratorio ? PrenaExamenB::class : PreNatalDesarrolloFino::class;
                 $campos = $modelo::campos();

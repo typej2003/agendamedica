@@ -370,11 +370,10 @@ class ConsultaPrenatalWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        // Las cuatro pestañas del escritorio: las tres que existen se ofrecen, el Reporte todavía no.
+        // Las cuatro pestañas del escritorio, en su orden.
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO));
         $respuesta->assertOk()
-            ->assertSee('Laboratorio')->assertSee('Controles')->assertSee('Prenatal')
-            ->assertDontSee('Reporte')
+            ->assertSee('Laboratorio')->assertSee('Controles')->assertSee('Prenatal')->assertSee('Reporte')
             ->assertSee('Laboratorio del embarazo')
             // Los rótulos del DataWindow del laboratorio.
             ->assertSee('Hb.')->assertSee('Hto')->assertSee('VDRL')->assertSee('Orina')
@@ -388,6 +387,35 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Presentación')->assertSee('Placenta')->assertSee('A.U.')
             // La opción del desplegable de la presentación muestra el texto y guarda el código.
             ->assertSee('Cefálica - Cefálica');
+    }
+
+    public function test_la_pestana_reporte_abre_con_la_ficha_de_la_gesta_y_el_boton_de_imprimir(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+            'tipiaje' => 'O+', 'observaciones' => 'En curso.',
+        ]);
+        PreNatalDesarrolloFino::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fecha' => '2026-06-01', 'peso' => '68', 'mf' => 'Fúndica',
+        ]);
+
+        $reporte = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::REPORTE, '&gesta=1'));
+
+        $reporte->assertOk()
+            ->assertSee('Informe del control de embarazo')
+            ->assertSee('Imprimir el informe')
+            // La ficha de la gesta, con las dos FPP: la del informe (283) y la de la pantalla (281).
+            ->assertSee('FUR')->assertSee('FPP')
+            ->assertSee('Tipiaje (madre)')
+            // Y lo cargado en los controles, que es lo que sale en la hoja.
+            ->assertSee('Peso: 68')->assertSee('Placenta: Fúndica');
+
+        // El enlace al motor de documentos, con la gesta.
+        $reporte->assertSee('documento=control-de-embarazo', false);
     }
 
     public function test_guardar_el_laboratorio_y_el_control_de_una_gesta(): void

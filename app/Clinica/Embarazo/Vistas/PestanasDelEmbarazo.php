@@ -29,6 +29,9 @@ final class PestanasDelEmbarazo
     /** Los **controles** de la gesta: una fila por fecha (`pre_natal_desarrollo_fino`). */
     public const CONTROLES = 'controles';
 
+    /** El **reporte**: el resumen de lo que sale en la hoja y el botón que la imprime. */
+    public const REPORTE = 'reporte';
+
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::PRENATAL;
 
@@ -37,6 +40,7 @@ final class PestanasDelEmbarazo
         self::PRENATAL => ['texto' => 'Prenatal', 'icono' => 'bi-calendar-heart'],
         self::LABORATORIO => ['texto' => 'Laboratorio', 'icono' => 'bi-droplet-half'],
         self::CONTROLES => ['texto' => 'Controles', 'icono' => 'bi-graph-up'],
+        self::REPORTE => ['texto' => 'Reporte', 'icono' => 'bi-file-earmark-medical'],
     ];
 
     /**
