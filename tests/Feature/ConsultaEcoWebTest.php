@@ -468,7 +468,7 @@ class ConsultaEcoWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlGuardar($consulta, 'obstetrico'), $this->formulario(['cuerpo' => '60']))
+            ->post($this->urlGuardar($consulta, 'doppler'), $this->formulario(['cuerpo' => '60']))
             ->assertNotFound();
 
         $this->assertSame(0, EcoPelvico::where('reg_medico', $medico->reg_medico)->count());
@@ -515,5 +515,81 @@ class ConsultaEcoWebTest extends TestCase
 
         $this->conContexto($otroUser, $otroMedico, $otraGineco)->actingAs($otroUser)
             ->post($this->urlGuardar($consulta), $this->formulario(['cuerpo' => '60']))->assertNotFound();
+    }
+
+    // ------------------------------------------------ El eco obstétrico (WEB-6.2), el otro tipo del ítem 5
+
+    public function test_el_tipo_obstetrico_abre_con_su_formulario_y_sus_bloques(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'obstetrico'));
+
+        $respuesta->assertOk();
+
+        // Los dos tipos del ítem 5 se ofrecen como enlaces.
+        $respuesta->assertSee('Eco ginecológico')->assertSee('Eco obstétrico (1.er trimestre)');
+
+        // Sus seis bloques y sus rótulos propios (el mapa del DataWindow vivo del 1er trimestre).
+        foreach (['El embarazo', 'El útero y los ovarios', 'El saco y la vitalidad',
+            'Las medidas y los marcadores', 'El riesgo del embarazo temprano', 'La conclusión'] as $bloque) {
+            $respuesta->assertSee($bloque);
+        }
+        foreach (['Saco gestacional', 'LCC', 'TN', 'Ductus venoso', 'Huevo anembrionado',
+            'Embarazo ectópico', 'Conclusión', 'Observaciones'] as $rotulo) {
+            $respuesta->assertSee($rotulo);
+        }
+        // La opción del desplegable muestra el texto y guarda el código.
+        $respuesta->assertSee('No visible');
+    }
+
+    public function test_guardar_el_eco_obstetrico_desde_la_seccion_y_su_hoja_no_se_ofrece(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'obstetrico'), [
+                'fur' => '2026-06-01', 'gesta' => '2', 'lcc' => '45', 'tn' => '1.8',
+                'actividad_cardiaca' => 'S', 'saco_gestacional' => '1',
+                'dc_venoso' => 'N', 'observacion' => 'Embarazo temprano normal.',
+            ]);
+
+        $respuesta->assertRedirect();
+        $respuesta->assertSessionHas('estado');
+
+        $fila = \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->where('historia', 1001)->first();
+
+        $this->assertNotNull($fila);
+        $this->assertSame('45', (string) $fila->lcc);
+        $this->assertSame('1', (string) $fila->saco_gestacional);
+        $this->assertSame('Embarazo temprano normal.', $fila->observacion);
+        // La FUR es la que se tecleó (el escritorio no la copia del control prenatal).
+        $this->assertSame('2026-06-01', (string) $fila->fur);
+
+        $this->assertDatabaseHas('sync_changes', [
+            'table_name' => 'eco_obstetrico', 'record_id' => $fila->id, 'operation' => 'created', 'source' => 'web',
+        ]);
+
+        // La vuelta cae en el mismo tipo, y la hoja del obstétrico todavía no se ofrece (llega con su tarea).
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'obstetrico'))
+            ->assertOk()
+            ->assertSee('Eco obstétrico guardado.')
+            ->assertDontSee('Imprimir el informe');
+    }
+
+    public function test_un_eco_obstetrico_sin_datos_no_se_guarda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '2026-06-01', 'gesta' => '1'])
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->count());
     }
 }

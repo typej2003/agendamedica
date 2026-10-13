@@ -20,8 +20,8 @@
             <input type="number" step="any" inputmode="decimal" class="form-control"
                    id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                    value="{{ $campo['valor'] }}">
-            @if ($campo['unidad'])
-                <span>{{ $campo['unidad'] }}</span>
+            @if (($campo['unidad'] ?? null))
+                <span>{{ ($campo['unidad'] ?? null) }}</span>
             @endif
         </div>
     @elseif ($campo['tipo'] === 'fecha')
@@ -34,8 +34,8 @@
         <div class="examen-unidad">
             <input type="text" class="form-control" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                    value="{{ $campo['valor'] }}">
-            @if ($campo['unidad'])
-                <span>{{ $campo['unidad'] }}</span>
+            @if (($campo['unidad'] ?? null))
+                <span>{{ ($campo['unidad'] ?? null) }}</span>
             @endif
         </div>
     @endif
