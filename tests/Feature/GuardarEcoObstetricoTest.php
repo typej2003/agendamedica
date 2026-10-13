@@ -186,4 +186,53 @@ class GuardarEcoObstetricoTest extends TestCase
         $this->assertSame('45', (new EcoObstetrico())->de($consulta)->valor('lcc'));
         $this->assertSame('70', (new EcoObstetrico())->de($otra)->valor('lcc'));
     }
+
+    // ------------------------------------------- El segundo/tercer trimestre (la misma regla, otra tabla)
+
+    public function test_el_tercer_trimestre_guarda_en_su_tabla_con_su_mapa(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $resultado = app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class)->ejecutar($consulta, [
+            'gestacion' => 'U', 'bio_peso_fetal' => '3200', 'bio_femur' => '72',
+            'ana_corazon' => 'N', 'fun_dp_grado' => 'II', 'fun_indice_la' => '12',
+            'conclusion' => 'Embarazo a término.',
+        ]);
+
+        $this->assertTrue($resultado->creado);
+
+        $fila = \App\Models\EcoObstetricoTercer::where('reg_medico', $medico->reg_medico)->where('consulta', 1)->first();
+
+        $this->assertNotNull($fila);
+        $this->assertSame('3200', (string) $fila->bio_peso_fetal);
+        $this->assertSame('II', $fila->fun_dp_grado);
+        $this->assertSame('U', $fila->gestacion);
+        $this->assertSame('Embarazo a término.', $fila->conclusion);
+        // La fecha la completa el servidor con hoy.
+        $this->assertSame($this->hoy->toDateString(), (string) $fila->fecha);
+
+        $this->assertDatabaseHas('sync_changes', [
+            'table_name' => 'eco_obstetrico_tercer', 'record_id' => $fila->id,
+            'operation' => 'created', 'source' => 'web',
+        ]);
+
+        // No toca la tabla del primer trimestre: son dos estudios distintos.
+        $this->assertSame(0, \App\Models\EcoObstetrico::where('historia', 1001)->count());
+    }
+
+    public function test_el_tercer_trimestre_corrige_su_fila_y_no_crea_otra(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+        $accion = app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class);
+
+        $accion->ejecutar($consulta, ['bio_femur' => '72']);
+        $accion->ejecutar($consulta, ['bio_femur' => '74', 'fun_indice_la' => '12']);
+
+        // Una fila por consulta: el segundo guardado corrige, no agrega (y es lo mismo que hace el
+        // escritorio, donde el 2.º y el 3.er trimestre comparten tabla).
+        $this->assertSame(1, \App\Models\EcoObstetricoTercer::where('historia', 1001)->count());
+        $this->assertSame('74', (string) \App\Models\EcoObstetricoTercer::where('historia', 1001)->first()->bio_femur);
+    }
 }
