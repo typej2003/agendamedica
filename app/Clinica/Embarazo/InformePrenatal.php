@@ -59,6 +59,15 @@ final class InformePrenatal
     }
 
     /**
+     * ¿Esta historia tiene alguna gesta? Es lo que decide si el informe se **ofrece** (sin gestas no hay
+     * nada que imprimir). Consulta una sola fila, no arma el informe entero.
+     */
+    public function tieneInforme(string $regMedico, int $numhistoria): bool
+    {
+        return (new GestasDeLaHistoria())->actual($regMedico, $numhistoria) !== null;
+    }
+
+    /**
      * La **FPP del informe** de una FUR: la de esta hoja (283), no la de la pantalla (281).
      */
     public function fpp(?string $fur): ?string

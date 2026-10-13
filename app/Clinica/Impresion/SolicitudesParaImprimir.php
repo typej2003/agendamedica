@@ -14,6 +14,9 @@ use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
+use App\Clinica\Embarazo\InformePrenatal;
+use App\Models\PreNatalDesarrolloFino;
+use App\Models\PrenaExamenB;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
 use App\Models\Paciente;
@@ -76,6 +79,7 @@ final class SolicitudesParaImprimir
         private LaboratorioDeLaConsulta $laboratorios,
         private EstudiosDeLaConsulta $estudios,
         private EcoGinecologico $ecos,
+        private InformePrenatal $informesPrenatales,
     ) {
     }
 
@@ -102,6 +106,20 @@ final class SolicitudesParaImprimir
                 // Sin los hallazgos ni las conclusiones: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del eco pélvico',
                 // La fecha de la hoja es la de la consulta; la del estudio va como dato del informe.
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del control de embarazo (WEB-6.6): es de la **gesta** y no de la consulta, así que se
+        // ofrece si esa historia tiene alguna gesta (sin ninguna no hay nada que imprimir). La hoja sale con
+        // la gesta actual; el `&gesta=` de la URL permite imprimir otra.
+        if ($this->informesPrenatales->tieneInforme((string) $consulta->reg_medico, (int) $consulta->numhistoria)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::CONTROL_DE_EMBARAZO,
+                'tipo' => DocumentoImpreso::CONTROL_DE_EMBARAZO,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::CONTROL_DE_EMBARAZO][1],
+                // Sin los controles ni el laboratorio: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del control de embarazo',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -209,7 +227,7 @@ final class SolicitudesParaImprimir
      *
      * @param  array<int,string>  $registros
      */
-    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave): ?DocumentoImpreso
+    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): ?DocumentoImpreso
     {
         $paciente = Paciente::find($pacienteId);
 
@@ -227,6 +245,14 @@ final class SolicitudesParaImprimir
             $estudio = $this->ecos->de($consulta);
 
             return $this->elEcoEsDocumento($estudio) ? $this->ecoPelvico($paciente, $estudio, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {
+            // El informe es de una **gesta** (la pedida en la URL o la actual), no de la consulta: es lo
+            // único de esta sección que no cuelga de la consulta.
+            $partes = $this->informesPrenatales->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $gesta);
+
+            return $partes === null ? null : $this->informeDelEmbarazo($paciente, $partes, $fechaDeLaConsulta);
         }
 
         if ($clave === DocumentoImpreso::LABORATORIO) {
@@ -627,6 +653,95 @@ final class SolicitudesParaImprimir
     }
 
     /** ¿El estudio es un documento de verdad? La misma regla que usa la pantalla (`QueEsUnDocumento::ecografia`). */
+    /**
+     * **El informe del control de embarazo** (WEB-6.6, la pestaña *Reporte*): la hoja «CONTROL DE EMBARAZO»
+     * del escritorio (`d_informe_pre_nata_peque.srd`), con la gesta, sus controles y su laboratorio.
+     *
+     * La ficha de la gesta sale del mapa del dato y va como datos del documento; los controles y el
+     * laboratorio, una línea por fecha con los campos que tienen algo, también desde sus mapas
+     * (`PreNatalDesarrolloFino::campos()` y `PrenaExamenB::campos()`): un campo nuevo de esas tablas aparece
+     * en la hoja sin tocar esto.
+     *
+     * ⚠️ La **FPP de esta hoja suma 283** (`d_pre_natal_observa_reporte.srd:45`), no los 281 de la pestaña:
+     * ver `InformePrenatal`.
+     *
+     * @param  array{gesta:Gesta, controles:\Illuminate\Support\Collection, laboratorios:\Illuminate\Support\Collection, hoy:\Carbon\CarbonInterface|null}  $partes
+     */
+    private function informeDelEmbarazo(Paciente $paciente, array $partes, string $fechaDeLaConsulta): DocumentoImpreso
+    {
+        $gesta = $partes['gesta'];
+        $valores = $gesta->valores();
+        $eg = $this->informesPrenatales->edadGestacional($gesta, $partes['hoy']);
+        $fpp = $this->informesPrenatales->fpp($gesta->fur());
+
+        $datos = [];
+        foreach ([
+            'FUR:' => $gesta->fur() === null ? null : FechaClinica::formato($gesta->fur()),
+            'FPP:' => $fpp === null ? null : FechaClinica::formato($fpp),
+            'Edad gestacional:' => $eg?->texto(),
+            'Menarquia:' => $gesta->menarquia(),
+            'Gestas:' => $valores['gestas'] ?? null,
+            'Partos:' => $valores['partos'] ?? null,
+            'Cesáreas:' => $valores['cesarea'] ?? null,
+            'Abortos:' => $valores['abortos'] ?? null,
+            'Otros:' => $valores['otros'] ?? null,
+            'Tipiaje (madre):' => $gesta->tipiaje(),
+            'Tipiaje (padre):' => $gesta->tipiajeDeLaPareja(),
+            'Final de embarazo:' => ($valores['final'] ?? null) === 'S' ? 'Sí' : (($valores['final'] ?? null) === 'N' ? 'No' : null),
+            'Embarazo múltiple:' => ($valores['multiple'] ?? null) === 'S' ? 'Sí' : (($valores['multiple'] ?? null) === 'N' ? 'No' : null),
+            'Cantidad:' => $valores['cantidad'] ?? null,
+        ] as $etiqueta => $valor) {
+            if ($valor !== null && $valor !== '') {
+                $datos[] = ['etiqueta' => $etiqueta, 'valor' => (string) $valor];
+            }
+        }
+
+        $parrafos = [];
+        $this->parrafosDeLasFechas($partes['controles'], PreNatalDesarrolloFino::campos(), 'Control del ', $parrafos);
+        $this->parrafosDeLasFechas($partes['laboratorios'], PrenaExamenB::campos(), 'Laboratorio del ', $parrafos);
+        $this->sumarParrafo($parrafos, 'Observaciones:', $gesta->observaciones());
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::CONTROL_DE_EMBARAZO,
+            DocumentoImpreso::CONTROL_DE_EMBARAZO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::CONTROL_DE_EMBARAZO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::CONTROL_DE_EMBARAZO][1],
+            $fechaDeLaConsulta,
+            PacienteImpreso::datos($paciente, $fechaDeLaConsulta),
+            $datos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * Una línea por fecha con los campos que tienen algo, con el rótulo del mapa de esa tabla.
+     *
+     * @param  \Illuminate\Support\Collection  $filas
+     * @param  array<int,array<string,mixed>>  $campos
+     * @param  array<int,array<string,mixed>>  $parrafos
+     */
+    private function parrafosDeLasFechas($filas, array $campos, string $rotulo, array &$parrafos): void
+    {
+        foreach ($filas as $fila) {
+            $valores = [];
+
+            foreach ($campos as $campo) {
+                $valor = $fila->{$campo['columna']} ?? null;
+
+                if ($valor !== null && (string) $valor !== '') {
+                    // El rótulo se respeta tal cual (el escritorio abrevia con punto: «Hb.», «A.U.»): si ya
+                    // termina en punto, el valor va después de un espacio, y si no, después de dos puntos.
+                    $etiqueta = (string) $campo['etiqueta'];
+                    $valores[] = (str_ends_with($etiqueta, '.') ? $etiqueta . ' ' : $etiqueta . ': ') . $valor;
+                }
+            }
+
+            if ($valores !== []) {
+                $this->sumarParrafo($parrafos, $rotulo . FechaClinica::formato((string) $fila->fecha) . ':', implode(' · ', $valores));
+            }
+        }
+    }
+
     private function elEcoEsDocumento(EstudioEcografico $estudio): bool
     {
         $conDato = 0;

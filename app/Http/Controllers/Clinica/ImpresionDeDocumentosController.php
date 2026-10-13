@@ -182,8 +182,10 @@ class ImpresionDeDocumentosController extends Controller
         $contexto = $request->attributes->get('contexto_clinico');
 
         $documentos = [];
+        $gesta = (int) $request->query('gesta', 0);
+
         foreach ($claves as $clave) {
-            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave);
+            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta > 0 ? $gesta : null);
             abort_if($documento === null, 404);
             $documentos[] = $documento;
         }

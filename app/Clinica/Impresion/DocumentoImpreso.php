@@ -47,6 +47,12 @@ final class DocumentoImpreso
     public const ECO_PELVICO = 'eco-pelvico';
 
     /**
+     * El **informe del control de embarazo** (WEB-6.6, la pestaña *Reporte*): la hoja que el escritorio
+     * imprime con `d_informe_pre_nata_peque.srd`, cuyo título es «CONTROL DE EMBARAZO» (`:19`).
+     */
+    public const CONTROL_DE_EMBARAZO = 'control-de-embarazo';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -62,6 +68,8 @@ final class DocumentoImpreso
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
         self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],
         self::ECO_PELVICO => ['INFORME ECOSONOGRÁFICO GINECOLÓGICO', 'Eco pélvico'],
+        // El título del DataWindow del informe prenatal, tal cual (`d_informe_pre_nata_peque.srd:19`).
+        self::CONTROL_DE_EMBARAZO => ['CONTROL DE EMBARAZO', 'Control de embarazo'],
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
