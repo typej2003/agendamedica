@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Models\Consulta;
 use App\Models\EcoObstetrico as EcoObstetricoModelo;
+use App\Models\EcoObstetricoTercer;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -117,5 +119,33 @@ class EcoObstetricoLecturaTest extends TestCase
 
         $this->assertFalse((new EcoObstetrico())->de($consulta)->tieneAlgoDe(['lcc']));
         $this->assertSame('52', (new EcoObstetrico())->de($otraConsulta)->valor('lcc'));
+    }
+
+    public function test_el_tercer_trimestre_lee_sus_bloques_y_su_gemelo(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico, 1002);
+
+        EcoObstetricoTercer::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1002, 'consulta' => 1,
+            'gesta' => 1, 'fur' => '2026-01-10', 'eg' => '39s + 2d', 'gemelo' => 'S',
+            'bio_peso_fetal' => '3200', 'bio_femur' => '72', 'ana_corazon' => 'Normal',
+            'fun_dp_grado' => 'II', 'fun_indice_la' => '12', 'conclusion' => 'Embarazo a término.',
+        ]);
+
+        $estudio = (new EcoObstetricoTercero())->de($consulta);
+
+        // Los tres bloques del escritorio, por su prefijo.
+        $this->assertSame('3200', $estudio->valor('bio_peso_fetal'));
+        $this->assertSame('Normal', $estudio->valor('ana_corazon'));
+        $this->assertSame('II', $estudio->valor('fun_dp_grado'));
+        // Y lo que este estudio tiene de propio: el gemelo y el informe en texto libre.
+        $this->assertSame('S', $estudio->valor('gemelo'));
+        $this->assertTrue($estudio->tieneAlgoDe(['bio_peso_fetal', 'fun_indice_la']));
+        $this->assertFalse($estudio->tieneAlgoDe(['puro_texto']));
+
+        // La clave es la misma que el primer trimestre: una fila por consulta.
+        $this->assertSame(1, (new EcoObstetricoTercero())->filaParaEscribir($consulta)->consulta);
+        $this->assertSame($medico->reg_medico, (new EcoObstetricoTercero())->filaParaEscribir($consulta)->reg_medico);
     }
 }
