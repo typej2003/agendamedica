@@ -280,6 +280,60 @@ class CambiosEscritorioTest extends TestCase
         $this->assertSame('09:30:00', (string) Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|09:30:00')->value('hora_ini'));
     }
 
+    /**
+     * **Trampa 109**: `clave_escritorio` de una cita (`fecha|hora_ini`) **no es única**: el legado
+     * permite dos citas a la misma hora para pacientes distintos (su clave primaria es `fecha` +
+     * `numhistoria`) y AppDDR también (citas múltiples). Un cambio con esa clave compartida tiene que
+     * tocar la cita de **su** historia, no la primera que aparezca.
+     */
+    public function test_un_cambio_con_clave_de_cita_compartida_actualiza_la_fila_de_su_historia(): void
+    {
+        $primera = $this->citaDeLaClave();
+        $segunda = $this->citaGemela();
+
+        $this->subir([['id' => 101, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => '2'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 2, 'motivo' => 'EDITADA']]]);
+
+        $this->assertSame('CONTROL', (string) $primera->fresh()->motivo, 'la cita de la historia 1 no se toca');
+        $this->assertSame('EDITADA', (string) $segunda->fresh()->motivo, 'se edita la de la historia 2');
+    }
+
+    public function test_un_borrado_con_clave_de_cita_compartida_borra_la_fila_de_su_historia(): void
+    {
+        $primera = $this->citaDeLaClave();
+        $segunda = $this->citaGemela();
+
+        $this->subir([['id' => 102, 'tabla' => 'cola', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => '2']]]);
+
+        $this->assertNull(Cola::find($segunda->id), 'se borra la cita de la historia 2');
+        $this->assertNotNull(Cola::find($primera->id), 'la de la historia 1 sigue');
+    }
+
+    /** La cita del setUp (historia 1), que comparte clave con la gemela. */
+    private function citaDeLaClave(): Cola
+    {
+        return Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')
+            ->orderBy('id')->firstOrFail();
+    }
+
+    /**
+     * Una segunda cita a la **misma** fecha y hora, de otra historia: la fila que el UNIQUE sobre
+     * `clave_escritorio` no dejaba tener.
+     */
+    private function citaGemela(): Cola
+    {
+        DB::table('cola')->insert([
+            'reg_medico' => self::REG, 'fecha' => '2026-10-01', 'hora_ini' => '08:00:00',
+            'numhistoria' => 2, 'motivo' => 'DE LA HISTORIA 2', 'clave_escritorio' => '2026-10-01|08:00:00',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        return Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-01|08:00:00')
+            ->orderByDesc('id')->firstOrFail();
+    }
+
     public function test_gana_la_ultima_edicion_por_columna(): void
     {
         $cita = Cola::where('reg_medico', self::REG)->first();

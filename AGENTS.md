@@ -450,7 +450,10 @@ la histórica. Para un médico con **varias especialidades** (el pivote `medico_
 ofrece la unión de todas: con una sola, las tablas de la otra no recibirían triggers y no subirían nunca.
 `columnas_equivalentes` traduce nombres de columna que el escritorio llama distinto —en la
 fila **y en la clave** del cambio—: es lo que hace que `examen_fisico_nuevo` de pediatría (clave
-`nrohistoria`/`nroconsulta`) caiga en `historia`/`consulta` sin columnas nuevas. Tests en
+`nrohistoria`/`nroconsulta`) caiga en `historia`/`consulta` sin columnas nuevas. ⚠️ **La clave de `cola`
+NO es única**: la primaria del legado es `fecha` + `numhistoria` (no `fecha + hora_ini`), así que dos
+citas a la misma hora son legítimas; `cola.clave_escritorio` lleva sólo un índice común y los cambios
+desempatan por el `numhistoria` que manda el escritorio (trampa 109). Tests en
 `tests/Feature/PediatriaSyncTest.php`. El relevamiento de una especialidad nueva son tres tools
 (`../bridge/tools/`), contados en `../Docs/Web/relevamiento-pediatria.md`.
 

@@ -315,7 +315,7 @@ class CambiosEscritorio
         }
         $claveLocal = TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']);
 
-        $cita = Cola::where('reg_medico', $carga->reg_medico)->where('clave_escritorio', $claveLocal)->first();
+        $cita = $this->citaPorClave($carga, $claveLocal, $this->numhistoriaDelCambio($clave, $fila));
 
         $delApp = $cita ? $this->edicionesDelApp('cola', $cita->id, $fecha) : ['borrado' => false, 'columnas' => []];
         if ($delApp['borrado']) {
@@ -355,9 +355,11 @@ class CambiosEscritorio
         if (! isset($clave['fecha'], $clave['hora_ini'])) {
             throw new RechazoCambio('cola sin fecha/hora_ini');
         }
-        $cita = Cola::where('reg_medico', $carga->reg_medico)
-            ->where('clave_escritorio', TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']))
-            ->first();
+        $cita = $this->citaPorClave(
+            $carga,
+            TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']),
+            $this->numhistoriaDelCambio($clave)
+        );
         if (! $cita) {
             return 'aplicado';
         }
@@ -367,6 +369,51 @@ class CambiosEscritorio
         $cita->delete();
 
         return 'aplicado';
+    }
+
+    /**
+     * La fila de `cola` de una clave del escritorio.
+     *
+     * `clave_escritorio` de una cita es `fecha|hora_ini` y **no es única**: el legado permite dos citas a
+     * la misma hora para pacientes distintos (su clave primaria es `fecha` + `numhistoria`) y AppDDR
+     * también (citas múltiples, `motivo_cita.admite_varias_citas_pendientes`, WEB-2.17). Con el índice
+     * único esto era imposible de guardar; desde que es un índice común, buscar por la clave y quedarse
+     * `first()` puede tocar la cita equivocada. Cuando hay más de una fila con esa clave se elige la del
+     * `numhistoria` del cambio (viene del escritorio, en su clave o en su fila): es la clave primaria
+     * real del legado. Si no viene, no se puede traducir o no coincide con ninguna, se queda la primera,
+     * como cuando la clave era única. Ver la trampa 109.
+     */
+    private function citaPorClave(SyncCarga $carga, string $claveLocal, ?string $numhistoriaLocal): ?Cola
+    {
+        $citas = Cola::where('reg_medico', $carga->reg_medico)->where('clave_escritorio', $claveLocal)->get();
+        if ($citas->count() <= 1 || $numhistoriaLocal === null) {
+            return $citas->first();
+        }
+
+        $historia = Historia::where('reg_medico', $carga->reg_medico)
+            ->where('clave_escritorio', TablasLegado::claveHistoria($numhistoriaLocal))
+            ->value('numhistoria');
+
+        return $historia === null
+            ? $citas->first()
+            : ($citas->firstWhere('numhistoria', $historia) ?? $citas->first());
+    }
+
+    /**
+     * El `numhistoria` del escritorio que trae un cambio: primero en su clave (la primaria del legado
+     * para `cola`) y, si no está, en la fila. Es solo para desempatar citas con la misma clave.
+     */
+    private function numhistoriaDelCambio(array $clave, array $fila = []): ?string
+    {
+        foreach ([$clave, $fila] as $valores) {
+            $valores = $this->tablas->normalizarClaves($valores);
+            $columna = $this->primeraColumna($valores, TablasLegado::COLUMNAS_HISTORIA);
+            if ($columna !== null) {
+                return (string) $valores[$columna];
+            }
+        }
+
+        return null;
     }
 
     /* ------------------------------------------------------------------ */

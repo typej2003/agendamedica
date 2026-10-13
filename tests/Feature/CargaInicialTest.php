@@ -162,6 +162,30 @@ class CargaInicialTest extends TestCase
             'solo la movida queda marcada');
     }
 
+    /**
+     * **Trampa 109**: el legado permite dos citas a la misma fecha y hora (su clave primaria es
+     * `fecha` + `numhistoria`), y AppDDR también (citas múltiples). La clave del escritorio de una cita,
+     * `fecha|hora_ini`, **no es única**: con el UNIQUE sobre `(reg_medico, clave_escritorio)` el lote
+     * entero moría con `Duplicate entry` y la carga inicial de pediatría quedaba trabada.
+     */
+    public function test_la_carga_acepta_dos_citas_a_la_misma_hora_con_distinta_historia(): void
+    {
+        $this->crearMedico('carga-t-012');
+        $carga = $this->iniciar('carga-t-012', ['cola' => 2])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2011-05-20', 'hora_ini' => '23:59:59', 'numhistoria' => 1, 'motivo' => 'UNO'],
+            ['fecha' => '2011-05-20', 'hora_ini' => '23:59:59', 'numhistoria' => 2, 'motivo' => 'DOS'],
+        ]])->assertOk()->assertJson(['recibidas' => 2, 'duplicado' => 0]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-012')->orderBy('numhistoria')->get();
+        $this->assertCount(2, $citas, 'las dos citas entran, no se pierde ni se rechaza el lote');
+        $this->assertSame('2011-05-20|23:59:59', (string) $citas[0]->clave_escritorio);
+        $this->assertSame((string) $citas[0]->clave_escritorio, (string) $citas[1]->clave_escritorio,
+            'las dos comparten la clave del escritorio: por eso el UNIQUE no podía estar');
+        $this->assertSame([1, 2], $citas->pluck('numhistoria')->map(fn ($n) => (int) $n)->all());
+    }
+
     public function test_evolucion_no_cuenta_como_dato_previo(): void
     {
         $this->crearMedico('carga-t-003');
