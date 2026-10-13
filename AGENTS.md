@@ -245,6 +245,27 @@ todavía no se edita). El **panel pasa de 10 a 11 de 13** ítems disponibles. Te
 `@selected`, la codificación de PowerShell, las trece aserciones del conteo del panel, la fecha del estudio y la FUR del
 prenatal).
 
+Lo que **WEB-6.6 (2026-10-13, en curso)**, el **control prenatal**, agregó a esas tres filas: `ConsultaEmbarazo`
+(**el ítem 6 del panel**: la sección `?seccion=embarazo&pestana=`, con `POST …/embarazo/prenatal` (la gesta),
+`…/embarazo/laboratorio` y `…/embarazo/controles`; el **dato es del embarazo y no de la consulta** —las tres
+tablas se llavean por `historia`/`gesta_clave`/`fecha`—, así que el controlador resuelve la consulta del
+contexto y usa su `numhistoria`), `Actions/Embarazo/{GuardarGestaDelEmbarazo,GuardarLaboratorioDelEmbarazo,
+GuardarControlDelEmbarazo}` (las tres con `EscribeConRastro`: sólo lo que cambió, rastro por columna en
+`sync_changes` con `source = web` y last-write-wins; una gesta necesita **FUR** y un laboratorio o un control
+necesitan **fecha**, que son parte de su clave) y `App\Clinica\Embarazo\` (`EdadGestacional` —**la regla de la
+edad gestacional y la FPP**, copiada verbatim del escritorio: semanas = `int(días/7)`, días = `mod(días,7)`, y
+la FPP **conserva el número de cada pantalla**: 281 la pestaña viva del control prenatal y 283 los reportes y
+los ecos—, `Gesta`/`GestasDeLaHistoria` —la gesta y su lectura, con `gesta_clave` **nullable**: una fila sin
+número es la gesta 1—, `Vistas/{PestanasDelEmbarazo,SeccionDeEmbarazoVista,PrenatalVista,FechasDelEmbarazoVista}`
+—`FechasDelEmbarazoVista` es **un solo** ViewModel para *Laboratorio* y *Controles*, que son la misma forma—,
+los modelos `PreNatalObservacion`/`PrenaExamenB`/`PreNatalDesarrolloFino` —cada uno con su **mapa de campos** en
+`campos()`—, los parciales `clinica/consulta/_embarazo*` y el aviso sin guardar genérico
+(`avisoDeFormulario`) que `consulta.js` ata por `data-consulta-fechas`). El panel pasa de 11 a **12 de 13**.
+⚠️ **Tres tablas que no son las que parecen** (las tres de la solapa vieja y oculta, sin datos en el dump):
+`prena_exames_b` (no `pre_natal_examenes`), `pre_natal_desarrollo_fino` (no `pre_natal_desarrollo`) y el
+DataWindow `d_pre_natal_observa_2.srd` (no el huérfano sin `_2`): ver la **trampa 99**. **Falta** la pestaña
+*Reporte* (el informe «CONTROL DE EMBARAZO») y el verificador en Chrome.
+
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
