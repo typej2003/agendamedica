@@ -27,6 +27,8 @@ use App\Models\EcoObstetrico as EcoObstetricoModelo;
  */
 final class EcoObstetrico
 {
+    use MapaDelEcoObstetrico;
+
     /** La tabla del eco obstétrico del primer trimestre. */
     public const TABLA = 'eco_obstetrico';
 
@@ -35,6 +37,104 @@ final class EcoObstetrico
 
     /** La columna de la consulta: **es parte de la clave** (`consulta`, `NOT NULL`). */
     public const COLUMNA_CONSULTA = 'consulta';
+
+    /**
+     * **El mapa del dato del eco obstétrico del primer trimestre**, en los bloques del escritorio.
+     *
+     * Los rótulos son los del DataWindow vivo; los `códigos` de cada lista, los del escritorio. Dos avisos:
+     *
+     *  - La columna **`observacion`** lleva el rótulo ***Conclusión:*** y **`otros`** el de
+     *    ***Observaciones:*** (al revés de lo que uno esperaría): se respeta lo que el médico ve.
+     *  - Las tres medidas de cada **ovario** y las dos del **cuerpo lúteo** en el escritorio se rotulan con
+     *    sub-rótulos **posicionales** (*Long:*, *Trans:*, *ANT.POST:*, *Der.:*, *Izq.:*) que el DataWindow
+     *    no asocia a cada columna: acá van con el nombre del grupo adelante (`Ovario derecho: Long`) y la
+     *    columna que corresponde, que es lo que el escritorio guarda.
+     *
+     * @return array<int,array{titulo:string, icono:string, campos:array<int,array<string,mixed>>}>
+     */
+    public static function grupos(): array
+    {
+        return [
+            ['titulo' => 'El embarazo', 'icono' => 'bi-calendar-heart', 'campos' => [
+                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha', 'ayuda' => 'La fecha del estudio.'],
+                self::texto('fur', 'FUR', 'La fecha de la última regla: el escritorio la copia del control prenatal.'),
+                self::texto('eg', 'EG', 'La edad gestacional, como la escribe el médico («20s + 6d»).'),
+                self::lista('gesta', 'Gesta', ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5',
+                    'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11'],
+                    'El número de la gesta que se está siguiendo (el escritorio lo numera en romanos).'),
+            ]],
+
+            ['titulo' => 'El útero y los ovarios', 'icono' => 'bi-circle', 'campos' => [
+                self::lista('cuerpo_utero', 'Útero', ['Visible' => '1', 'No visible' => '2']),
+                self::texto('cuerpo', 'Útero: Long'),
+                self::texto('transverso', 'Útero: Trans'),
+                self::texto('antero', 'Útero: ANT.POST'),
+                self::texto('ovarioderlong', 'Ovario derecho: Long'),
+                self::texto('ovarioderap', 'Ovario derecho: AP'),
+                self::texto('ovariodertras', 'Ovario derecho: Trans'),
+                self::texto('ovarioizqlong', 'Ovario izquierdo: Long'),
+                self::texto('ovarioizqap', 'Ovario izquierdo: AP'),
+                self::texto('ovarioizqtras', 'Ovario izquierdo: Trans'),
+                self::texto('der', 'Cuerpo lúteo: derecho'),
+                self::texto('izqu', 'Cuerpo lúteo: izquierdo'),
+                self::lista('posicionutreo', 'Utero', ['AVF' => '1', 'RVF' => '2', 'Indiferente' => '3']),
+                self::lista('posicionavf_d', 'Posición AVF', ['Derecho' => 'D', 'Izquierdo' => 'I', 'Línea media' => 'L']),
+                self::lista('posicionrvf_d', 'Posición RVF', ['Derecha' => 'D', 'Izquierda' => 'I']),
+            ]],
+
+            ['titulo' => 'El saco y la vitalidad', 'icono' => 'bi-activity', 'campos' => [
+                self::lista('saco_gestacional', 'Saco gestacional', ['Sí' => '1', 'No' => '2'],
+                    'Ojo: esta casilla guarda 1 y 2, no S y N como las demás.'),
+                self::siNo('circular_ovuide', 'Circular ovoide'),
+                self::siNo('alargado', 'Alargado'),
+                self::siNo('retraido', 'Retraído'),
+                self::siNo('anormal', 'Anormal'),
+                self::siNo('movimiento_embrionario', 'Movimiento embrionario'),
+                self::siNo('actividad_cardiaca', 'Actividad cardíaca'),
+            ]],
+
+            ['titulo' => 'Las medidas y los marcadores', 'icono' => 'bi-rulers', 'campos' => [
+                self::texto('lcc', 'LCC', 'La longitud cefalocaudal.'),
+                self::texto('dbp', 'DBP', 'El diámetro biparietal.'),
+                self::texto('tn', 'TN', 'La translucencia nucal.'),
+                self::texto('sa_vit', 'Saco vitelino'),
+                self::texto('lcr', 'LCR'),
+                self::lista('dc_venoso', 'Ductus venoso', ['Normal' => 'N', 'Patológico' => 'P']),
+            ]],
+
+            ['titulo' => 'El riesgo del embarazo temprano', 'icono' => 'bi-exclamation-triangle', 'campos' => [
+                self::siNo('huevo_anembrionado', 'Huevo anembrionado'),
+                self::siNo('mola', 'Mola'),
+                self::siNo('restos_abortivos', 'Restos ovulares'),
+                self::siNo('embarazo_ectopico', 'Embarazo ectópico'),
+            ]],
+
+            ['titulo' => 'La conclusión', 'icono' => 'bi-file-earmark-text', 'campos' => [
+                ['columna' => 'observacion', 'etiqueta' => 'Conclusión', 'tipo' => 'area',
+                    'ayuda' => 'La conclusión del estudio (la columna se llama `observacion`).'],
+                ['columna' => 'otros', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
+                    'ayuda' => 'Las observaciones (la columna se llama `otros`).'],
+            ]],
+        ];
+    }
+
+    /**
+     * Las columnas que la pantalla edita, en el orden del mapa: es lo que la Action guarda.
+     *
+     * @return array<int,string>
+     */
+    public static function columnas(): array
+    {
+        $columnas = [];
+
+        foreach (self::grupos() as $grupo) {
+            foreach ($grupo['campos'] as $campo) {
+                $columnas[] = $campo['columna'];
+            }
+        }
+
+        return $columnas;
+    }
 
     /**
      * El estudio de una consulta: sus valores, normalizados, o el objeto **vacío** si esa consulta no tiene
