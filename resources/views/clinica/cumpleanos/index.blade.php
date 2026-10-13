@@ -79,6 +79,11 @@
                 <x-ui.campo etiqueta="Mensaje" for="plantilla" class="col-md-7"
                             ayuda="Las etiquetas {paciente} y {doctor} se reemplazan al enviar. Es la misma plantilla que edita el móvil.">
                     <textarea name="plantilla" id="plantilla" rows="3" maxlength="500" class="form-control">{{ $vm->plantilla() }}</textarea>
+                    @if ($vm->urlEditarElMensaje())
+                        <a class="d-inline-block mt-1 small" href="{{ $vm->urlEditarElMensaje() }}">
+                            <i class="bi bi-pencil" aria-hidden="true"></i> Editar el mensaje con etiquetas, contador de SMS y vista previa
+                        </a>
+                    @endif
                 </x-ui.campo>
 
                 <div class="col-md-5">

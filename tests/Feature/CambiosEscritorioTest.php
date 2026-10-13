@@ -948,4 +948,40 @@ class CambiosEscritorioTest extends TestCase
         }
         $this->assertSame(0, DB::table('doctores')->where('reg_medico', self::REG)->where('apellidos', 'DEL ESCRITORIO')->count());
     }
+
+    /**
+     * **WEB-8.4**: `formato_print` NO tiene clave primaria en el PowerBuilder (sólo `CREATE UNIQUE INDEX primarykey … (codigo)`) y su registro de
+     * cambios es de sentencia (`tr_ddrsync_formato_print`, `op = T`, sin los `_ins/_upd/_del`): la sube ENTERA y el reemplazo borra todo lo del
+     * médico. Las plantillas que creó la web (el `created` de cada fila, hecho por la Action real) se conservan; lo que nadie del app creó se reemplaza.
+     */
+    public function test_reemplazar_formato_print_conserva_las_plantillas_que_creo_la_web_y_reemplaza_el_resto(): void
+    {
+        $vieja = \App\Models\FormatoPrint::create(['reg_medico' => self::REG, 'codigo' => '0001', 'tipo' => 'EV', 'titulo' => 'VIEJA DEL ESCRITORIO', 'descripcion' => 'texto']);
+        $deLaWeb = app(\App\Actions\Catalogos\CrearPlantillaDeTexto::class)->ejecutar(self::REG, ['tipo' => 'IM', 'titulo' => 'De la web', 'descripcion' => 'texto web'], null, 'web');
+
+        $this->subir([['id' => 901, 'tabla' => 'formato_print', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00',
+            'filas' => [['codigo' => '0007', 'titulo' => 'NUEVA DEL ESCRITORIO', 'descripcion' => 'texto nuevo', 'tipo' => 'DI']]]]);
+
+        $this->assertEqualsCanonicalizing(
+            ['DE LA WEB', 'NUEVA DEL ESCRITORIO'],
+            DB::table('formato_print')->where('reg_medico', self::REG)->pluck('titulo')->all(),
+            'la de la web se conserva; la vieja que el escritorio ya no tiene se va y la nueva entra',
+        );
+        $this->assertNotNull(\App\Models\FormatoPrint::find($deLaWeb->id));
+        $this->assertNull(\App\Models\FormatoPrint::find($vieja->id));
+    }
+
+    public function test_sin_la_linea_de_config_de_formato_print_la_subida_si_borraria_las_plantillas_de_la_web(): void
+    {
+        // El contraste que ata el test anterior a la configuración (WEB-8.4).
+        $this->assertArrayHasKey('formato_print', config('sync_legado.sin_clave_con_altas_del_app'));
+
+        app(\App\Actions\Catalogos\CrearPlantillaDeTexto::class)->ejecutar(self::REG, ['tipo' => 'EV', 'titulo' => 'De la web', 'descripcion' => 'texto'], null, 'web');
+
+        config(['sync_legado.sin_clave_con_altas_del_app' => ['recipe_detalle' => 'recipes', 'recipes_pareja' => 'recipes_pareja']]);
+
+        $this->subir([['id' => 902, 'tabla' => 'formato_print', 'op' => 'T', 'fecha' => '2026-10-02 10:00:00', 'filas' => []]]);
+
+        $this->assertSame(0, DB::table('formato_print')->where('reg_medico', self::REG)->count(), 'la plantilla de la web se perdió');
+    }
 }

@@ -172,7 +172,14 @@ final class EnviarRecordatorio
 
         $medico = $medico ?: Medico::where('reg_medico', $cita->reg_medico)->first();
 
-        return [$medico, $evolucion?->plantilla_cita];
+        // WEB-8.4: si la cita no se resuelve por `clave` (lo común cuando el médico nunca tuvo la configuración del escritorio: la fila
+        // que crea la web o el móvil al guardar su plantilla lleva `clave = 0` y la cita, `medico = null`), vale la plantilla de la
+        // configuración del registro. Sin esto, lo que el médico escribe en «Mensajes a pacientes» no se usaría nunca.
+        $plantilla = $evolucion !== null
+            ? $evolucion->plantilla_cita
+            : Evolucion::where('reg_medico', $cita->reg_medico)->orderBy('id')->value('plantilla_cita');
+
+        return [$medico, $plantilla];
     }
 
     /** El nombre del centro donde se atiende la cita, para la etiqueta `{centro}`. */

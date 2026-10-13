@@ -107,11 +107,11 @@ class EvolucionVistaTest extends TestCase
         $this->assertSame([], $vm->plantillas());
 
         // La frase dice **por qué** no hay y qué hacer: es el estado real de casi todas las instalaciones
-        // (la tabla `formato_print` llega por el sync del escritorio).
+        // (desde WEB-8.4 se crean en Catálogos → Plantillas de texto; antes sólo llegaban por el sync del escritorio).
         $vacio = $vm->sinPlantillas();
         $this->assertSame('Sin plantillas de evolución', $vacio['titulo']);
-        $this->assertStringContainsString('formato_print', $vacio['texto']);
-        $this->assertStringContainsString('sincronizas', $vacio['texto']);
+        $this->assertStringContainsString('Plantillas de texto', $vacio['texto']);
+        $this->assertStringContainsString('tipo Evolución', $vacio['texto']);
     }
 
     public function test_las_urls_son_las_de_la_seccion_y_el_aviso_nombra_la_evolucion(): void

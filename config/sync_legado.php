@@ -88,6 +88,11 @@ return [
         // esa subida borraría las dietas que creó la web. Cada fila anota su `created` bajo `dieta_paciente`. (`hospitalizacion`, en
         // cambio, SÍ tiene clave primaria y se sube por fila: no entra acá.)
         'dieta_paciente' => 'dieta_paciente',
+        // Las plantillas de texto que crea la web (WEB-8.4, `CrearPlantillaDeTexto`): `formato_print` tampoco tiene clave primaria en el
+        // PowerBuilder (sólo `CREATE UNIQUE INDEX primarykey … (codigo)`, `f_agregar_datos.srf:1684`) y su registro de cambios es de
+        // sentencia (`tr_ddrsync_formato_print`, `op = T`, sin los `_ins/_upd/_del`), así que cada subida reemplaza la tabla entera del
+        // médico. Sin esta línea esa subida borraría las plantillas que creó la web. Cada fila anota su `created` bajo `formato_print`.
+        'formato_print' => 'formato_print',
     ],
 
     // Columnas que el escritorio NO conoce y que el reemplazo de una tabla sin clave no debe borrar (WEB-8.1c). Al reemplazar

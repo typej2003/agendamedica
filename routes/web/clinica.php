@@ -45,6 +45,8 @@ use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
+use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
@@ -351,6 +353,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/catalogos/medicos-referidos', [DoctorCatalogoController::class, 'guardar'])->name('catalogos.medicos-referidos.guardar');
                 Route::delete('/catalogos/medicos-referidos/{id}', [DoctorCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.medicos-referidos.quitar');
 
+                // **Plantillas de texto** (WEB-8.4): `formato_print` del médico —las plantillas de la evolución, del informe médico, de las dietas…—,
+                // con la misma forma que los otros catálogos clínicos (listado con buscador y filtro por tipo, alta y edición en un diálogo y
+                // «quitar»). Una plantilla se copia a la consulta al elegirla, así que siempre se puede quitar.
+                Route::get('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'index'])->name('catalogos.plantillas-texto');
+                Route::post('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'guardar'])->name('catalogos.plantillas-texto.guardar');
+                Route::delete('/catalogos/plantillas-texto/{id}', [PlantillaDeTextoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.plantillas-texto.quitar');
+
                 // **Formato de impresión del médico** (WEB-8.2): el membrete, el logo, el estilo de cada bloque, la firma y el sello con
                 // los que sale el récipe y los demás documentos, más la hoja de prueba. Sólo del médico, como los catálogos: la
                 // secretaría imprime con el formato pero no lo configura (403). El formato es del médico y no del consultorio: se
@@ -364,6 +373,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
                 Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
                 Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
+
+                // **Mensajes a pacientes** (WEB-8.4): las plantillas del recordatorio de cita y del saludo de cumpleaños, con sus etiquetas,
+                // el contador de caracteres y de SMS y la vista previa. Sólo del médico (la secretaría manda los mensajes pero no escribe sus
+                // palabras: 403). `{plantilla}` es `cita` o `cumple`; la vista previa es un JSON que no guarda nada.
+                Route::get('/mensajes', [PlantillasDeMensajeController::class, 'index'])->name('mensajes');
+                Route::post('/mensajes/{plantilla}', [PlantillasDeMensajeController::class, 'guardar'])->where('plantilla', 'cita|cumple')->name('mensajes.guardar');
+                Route::post('/mensajes/{plantilla}/restablecer', [PlantillasDeMensajeController::class, 'restablecer'])->where('plantilla', 'cita|cumple')->name('mensajes.restablecer');
+                Route::post('/mensajes/{plantilla}/vista-previa', [PlantillasDeMensajeController::class, 'vistaPrevia'])->where('plantilla', 'cita|cumple')->name('mensajes.vista-previa');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

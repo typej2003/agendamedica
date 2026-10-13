@@ -55,7 +55,7 @@ class CumpleanosController extends Controller
         $contexto = $request->attributes->get('contexto_clinico');
         $dia = FechaDelConsultorio::dia($request->query('fecha'));
 
-        return view('clinica.cumpleanos.index', ['vm' => $this->vista($contexto, $dia)]);
+        return view('clinica.cumpleanos.index', ['vm' => $this->vista($contexto, $dia, $request->user()?->trabajaLaConsulta())]);
     }
 
     /**
@@ -169,7 +169,7 @@ class CumpleanosController extends Controller
      * default aplicado): es el que va a usar el comando, así que la fila tiene que decir lo mismo que
      * va a pasar solo.
      */
-    private function vista(array $contexto, $dia): CumpleanosVista
+    private function vista(array $contexto, $dia, ?bool $puedeEditarElMensaje = false): CumpleanosVista
     {
         $cumpleanos = $this->cumpleanos->delMedico($contexto['reg_medico'], $dia);
         $configuracion = ConfiguracionDeCumpleanos::de(Evolucion::where('reg_medico', $contexto['reg_medico'])->first());
@@ -185,6 +185,8 @@ class CumpleanosController extends Controller
             (string) ($contexto['medico']->nombreMostrar ?? ''),
             $this->mensajes,
             $this->registro->cuandoSeSaludo($dia, $cumpleanos->map(fn ($c) => $c->pacienteId())->all()),
+            // «Editar el mensaje» (WEB-8.4) sólo para quien puede entrar a esa pantalla: la secretaría no escribe las palabras del médico.
+            $puedeEditarElMensaje ? route('clinica.mensajes') : null,
         );
     }
 }

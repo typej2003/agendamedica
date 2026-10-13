@@ -132,9 +132,8 @@ final class EvolucionVista
         return [
             'icono' => 'bi-file-earmark-text',
             'titulo' => 'Sin plantillas de evolución',
-            'texto' => 'Tu escritorio no tiene cargadas plantillas de evolución (la lista «Evolución» de la '
-                . 'tabla formato_print), así que este campo se escribe a mano. Si las cargas en el escritorio '
-                . 'y sincronizas, aparecen acá.',
+            'texto' => 'Todavía no tienes plantillas de evolución, así que este campo se escribe a mano. Créalas en '
+                . 'Catálogos → Plantillas de texto (tipo Evolución) y aparecen acá al instante.',
         ];
     }
 

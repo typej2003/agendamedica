@@ -27,6 +27,7 @@ final class CatalogosDisponibles
         'examenes' => ['texto' => 'Exámenes', 'icono' => 'bi-eyedropper', 'ruta' => 'clinica.catalogos.examenes'],
         'tipos-examen' => ['texto' => 'Tipos de examen', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.tipos-examen'],
         'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],
+        'plantillas-texto' => ['texto' => 'Plantillas de texto', 'icono' => 'bi-file-earmark-text', 'ruta' => 'clinica.catalogos.plantillas-texto'],
     ];
 
     /** La URL de `/clinica/catalogos` (la entrada histórica de la zona): el primer catálogo que tiene pantalla. */

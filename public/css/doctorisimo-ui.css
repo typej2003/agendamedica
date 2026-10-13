@@ -2796,3 +2796,53 @@ body.auth-pagina {
     .orden-quitar { min-width: 40px; min-height: 40px; }
     .orden-rutinas .btn { min-height: 40px; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Mensajes a pacientes (WEB-8.4)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* Los botones de etiquetas del editor: se parten en varias líneas si no caben. */
+.plantilla-etiquetas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* El mensaje de ejemplo: una burbuja de texto plano, con los saltos de línea que escribió el médico. */
+.plantilla-previa {
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-violeta-50);
+    color: var(--ds-texto);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-height: 4rem;
+}
+
+/* Contadores de caracteres y de SMS, y los avisos de la plantilla (una etiqueta que no existe, falta de {paciente}…). */
+.plantilla-contadores { font-variant-numeric: tabular-nums; }
+.plantilla-avisos { display: grid; gap: .35rem; }
+.plantilla-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: .4rem .65rem;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radio-sm);
+    font-size: .875rem;
+}
+.plantilla-aviso > span { min-width: 0; overflow-wrap: anywhere; }
+.plantilla-aviso-aviso { background: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
+.plantilla-aviso-info { background: var(--ds-info-bg); border-color: var(--ds-info-borde); color: var(--ds-info); }
+
+@media (max-width: 575.98px) {
+    .plantilla-etiquetas .btn { min-height: 40px; }
+}
+
+/* El resumen del texto de una plantilla de texto en la lista (WEB-8.4): dos renglones como mucho. */
+.plantilla-resumen {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    max-width: 38rem;
+    font-size: .875rem;
+}

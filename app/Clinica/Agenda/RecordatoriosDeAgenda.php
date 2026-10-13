@@ -31,13 +31,13 @@ class RecordatoriosDeAgenda
      */
     public function mensajesPara(string $regMedico, Collection $citas, Collection $sedes): array
     {
-        [$plantillas, $nombres, $medicoPorDefecto] = $this->plantillasYMedicos($regMedico);
+        [$plantillas, $nombres, $medicoPorDefecto, $plantillaDelRegistro] = $this->plantillasYMedicos($regMedico);
         $centros = $this->centrosDe($sedes);
 
         $mensajes = [];
 
         foreach ($citas as $cita) {
-            $mensajes[$cita->id] = $this->mensajes->armar($plantillas[$cita->medico ?? ''] ?? null, [
+            $mensajes[$cita->id] = $this->mensajes->armar(array_key_exists($cita->medico ?? '', $plantillas) ? $plantillas[$cita->medico] : $plantillaDelRegistro, [
                 'paciente' => $cita->paciente,
                 'fecha'    => FechaClinica::formato($cita->fecha, 'd/m/Y'),
                 'hora'     => $cita->horaIni ? substr($cita->horaIni, 0, 5) : '',
@@ -52,7 +52,7 @@ class RecordatoriosDeAgenda
     /**
      * La plantilla y el nombre del **médico de cada cita**, por `evolucion.clave` = `cola.medico`.
      *
-     * @return array{0: array<int,string>, 1: array<int,string>, 2: ?string}
+     * @return array{0: array<int,string>, 1: array<int,string>, 2: ?string, 3: ?string}
      *         plantilla por clave, nombre por clave, y el nombre del médico del registro — para las
      *         citas cuya `clave` no está en `evolucion`, que es lo común en los datos reales.
      */
@@ -74,7 +74,8 @@ class RecordatoriosDeAgenda
             $nombres[$clave] = $medico?->nombreMostrar ?? '';
         }
 
-        return [$plantillas, $nombres, Medico::where('reg_medico', $regMedico)->first()?->nombreMostrar];
+        // WEB-8.4: la cita que no se resuelve por `clave` usa la plantilla de la configuración del registro (ver `EnviarRecordatorio`).
+        return [$plantillas, $nombres, Medico::where('reg_medico', $regMedico)->first()?->nombreMostrar, $evoluciones->sortBy('id')->first()?->plantilla_cita];
     }
 
     /** @return array<int,string> `medical_center_id` => nombre, para la etiqueta `{centro}`. */

@@ -42,7 +42,17 @@ final class CumpleanosVista
         private string $doctor,
         private MensajeDeCumpleanos $mensajes,
         private array $enviadosEl = [],
+        private ?string $urlEditarElMensaje = null,
     ) {
+    }
+
+    /**
+     * El enlace a «Mensajes a pacientes» (WEB-8.4), donde se escribe el saludo con sus etiquetas, el contador de SMS y la vista previa.
+     * `null` para quien no puede entrar (la secretaría): el campo de acá sigue editando la misma plantilla.
+     */
+    public function urlEditarElMensaje(): ?string
+    {
+        return $this->urlEditarElMensaje;
     }
 
     public function titulo(): string
