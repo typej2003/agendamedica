@@ -21,7 +21,7 @@ use App\Clinica\Consulta\EstudioEcografico;
  *  - El "¿esto es un documento?" cuenta los campos **del estudio**, sin la fecha, la FUR ni la gesta (las
  *    completa el servidor): un eco que sólo trae su FUR no ofrece hoja.
  */
-final class EcoObstetricoVista
+class EcoObstetricoVista
 {
     public function __construct(
         private EstudioEcografico $estudio,
@@ -32,6 +32,18 @@ final class EcoObstetricoVista
         private ?int $gestaSugerida = null,
         private array $old = [],
     ) {
+    }
+
+    /** El mapa del dato de ese estudio (sus bloques). */
+    protected function mapa(): array
+    {
+        return EcoObstetrico::grupos();
+    }
+
+    /** Las columnas que edita ese estudio, para contar lo cargado. */
+    protected function columnasDelEstudio(): array
+    {
+        return EcoObstetrico::columnas();
     }
 
     public function titulo(): string
@@ -55,7 +67,7 @@ final class EcoObstetricoVista
     {
         $grupos = [];
 
-        foreach (EcoObstetrico::grupos() as $grupo) {
+        foreach ($this->mapa() as $grupo) {
             $campos = [];
             foreach ($grupo['campos'] as $campo) {
                 $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
@@ -109,7 +121,7 @@ final class EcoObstetricoVista
     {
         $cuenta = 0;
 
-        foreach (array_diff(EcoObstetrico::columnas(), ['fecha', 'fur', 'gesta']) as $columna) {
+        foreach (array_diff($this->columnasDelEstudio(), ['fecha', 'fur', 'gesta']) as $columna) {
             $valor = $this->valorDe($columna);
 
             if ($valor !== null && $valor !== '') {
@@ -123,7 +135,7 @@ final class EcoObstetricoVista
     /** Cuántos campos del estudio se pueden cargar. */
     public function totalCampos(): int
     {
-        return count(EcoObstetrico::columnas()) - 3;
+        return count($this->columnasDelEstudio()) - 3;
     }
 
     /** ¿El estudio dice algo? Es la regla de la Action, dicha en pantalla. */
