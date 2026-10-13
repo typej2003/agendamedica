@@ -9,6 +9,7 @@ use App\Events\EscritorioSincronizo;
 use App\Services\ServicioService;
 use App\Services\SyncAuthService;
 use App\Sync\Escritorio\CambiosEscritorio;
+use App\Sync\Escritorio\TablasDelSync;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,8 +23,11 @@ use Illuminate\Http\Request;
  */
 class CambiosEscritorioController extends Controller
 {
-    public function __construct(private SyncAuthService $auth, private ServicioService $servicio)
-    {
+    public function __construct(
+        private SyncAuthService $auth,
+        private ServicioService $servicio,
+        private TablasDelSync $sync
+    ) {
     }
 
     /**
@@ -58,7 +62,9 @@ class CambiosEscritorioController extends Controller
             'medico_nombre' => $medico ? trim($medico->name . ' ' . $medico->lastname) : '',
             'medico_prefix' => $medico ? $medico->prefix : null,
             'carga'  => $carga ? $carga->estado : 'ninguna',
-            'tablas' => implode(',', config('sync_legado.tablas', [])),
+            // Las tablas que este escritorio tiene que vigilar: las de su especialidad (WEB-7.3). Un
+            // escritorio sin especialidad en el pivote sigue recibiendo la lista histórica.
+            'tablas' => implode(',', $this->sync->paraMedico($medico)),
             'ahora'  => now('UTC')->format('Y-m-d H:i:s'),
             // Servicio contratado (se muestra en la pantalla de sincronización). Esta respuesta nunca se bloquea:
             // con el servicio vencido el escritorio tiene que poder enterarse para avisarlo.

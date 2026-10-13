@@ -48,6 +48,9 @@ class EspecialidadesYModulosSeeder extends Seeder
         'procedimientos' => ['Procedimientos', 130],
         'radiologia'     => ['Radiología', 140],
         'pareja'         => ['Consulta de pareja', 150],
+        // Propios de pediatría (WEB-7.4): todavía sin pantalla, así que se siembran **ocultos**.
+        'crecimiento'    => ['Crecimiento', 160],
+        'vacunas'        => ['Vacunas', 170],
     ];
 
     /**
@@ -82,6 +85,7 @@ class EspecialidadesYModulosSeeder extends Seeder
      */
     private const PROPIOS_IMPLEMENTADOS = [
         'ginecologia' => [],
+        'pediatria'   => [],
     ];
 
     public function run(): void

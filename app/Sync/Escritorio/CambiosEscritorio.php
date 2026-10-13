@@ -44,7 +44,7 @@ class CambiosEscritorio
     /** @var array<string, ?array> "h|c" del escritorio -> [numhistoria, nroconsulta] del API */
     private array $consultas = [];
 
-    public function __construct(private TablasLegado $tablas)
+    public function __construct(private TablasLegado $tablas, private TablasDelSync $sync)
     {
     }
 
@@ -119,7 +119,7 @@ class CambiosEscritorio
         $tabla = $this->tablas->normalizar((string) ($cambio['tabla'] ?? ''));
         $op = (string) ($cambio['op'] ?? '');
 
-        if (! in_array($tabla, config('sync_legado.tablas', []), true)) {
+        if (! $this->sync->acepta($tabla)) {
             throw new RechazoCambio("tabla no permitida: {$tabla}");
         }
         if (! in_array($op, self::OPERACIONES, true)) {
@@ -127,7 +127,12 @@ class CambiosEscritorio
         }
 
         $fecha = isset($cambio['fecha']) ? Carbon::parse($cambio['fecha'], 'UTC') : now('UTC');
-        $clave = $this->tablas->normalizarClaves(is_array($cambio['clave'] ?? null) ? $cambio['clave'] : []);
+        // La clave que manda el escritorio puede usar sus nombres de columna (`nrohistoria`): se traduce
+        // antes de armar el WHERE, o no encontraría la fila (y sin clave encontraría todas).
+        $clave = $this->tablas->traducirColumnas(
+            $tabla,
+            $this->tablas->normalizarClaves(is_array($cambio['clave'] ?? null) ? $cambio['clave'] : [])
+        );
         $fila = is_array($cambio['fila'] ?? null) ? $cambio['fila'] : [];
 
         if ($op === 'T') {

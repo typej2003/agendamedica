@@ -55,7 +55,7 @@ class RestauracionEscritorio
     /** Filas por lectura: las tablas grandes (consultas) tienen TEXT largos y no entran en memoria. */
     private const FILAS_POR_LECTURA = 500;
 
-    public function __construct(private TablasLegado $tablas)
+    public function __construct(private TablasLegado $tablas, private TablasDelSync $sync)
     {
     }
 
@@ -94,7 +94,9 @@ class RestauracionEscritorio
         $carpeta = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $carpeta ?: $this->carpetaPorDefecto($regMedico)), DIRECTORY_SEPARATOR);
         $this->asegurarCarpeta($carpeta . DIRECTORY_SEPARATOR . 'datos');
 
-        $tablas = config('sync_legado.tablas', []);
+        // Las tablas del médico según su especialidad (WEB-7.3), no la lista histórica suelta: una
+        // restauración de pediatría tiene que incluir `paciente_chamo`, `vacunas` y su crecimiento.
+        $tablas = $this->sync->paraMedico($this->medicoDe($regMedico));
         if ($soloTablas !== null) {
             $tablas = array_values(array_intersect($tablas, $soloTablas));
         }

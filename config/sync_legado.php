@@ -2,22 +2,52 @@
 
 /*
 |--------------------------------------------------------------------------
-| Sync del escritorio PowerBuilder (GinecoReport) -> API
+| Sync del escritorio PowerBuilder (legado) -> API
 |--------------------------------------------------------------------------
 |
 | Lista blanca de las tablas del legado que el escritorio puede subir. Es la ÚNICA puerta: el
 | endpoint genérico viejo (`/sync/upload-batch`) escribía en cualquier tabla que existiera en MySQL
 | (`users`, `sync_credentials`...). Una tabla nueva del legado se sube recién cuando se agrega acá.
 |
-| Se armó cruzando las tablas de la base local del escritorio (`gidata.db`, dueño `tera`) con las
-| tablas del API (2026-09-27). Quedaron afuera las que no son datos del médico: catálogos internos
-| de PowerBuilder (`pbcat*`), tablas de ejemplo de Sybase (`employee`, `department`), las de
-| MobiLink/sistema (dueño `dbo`/`SYS`), `upload_servers` (bitácora del botón viejo),
-| `registro_operaciones` y `consultas_subida` (bitácoras), `evolucion_copy` (copia de respaldo de `evolucion`)
-| y `operadores`: son los USUARIOS del escritorio, con la contraseña en texto plano (sacada el
-| 2026-09-28; la carga inicial la había subido).
+| `tablas` es la lista **histórica**: se armó cruzando las tablas de la base local del escritorio de
+| ginecología (`gidata.db`, dueño `tera`) con las del API (2026-09-27), y es la que usan ginecología y
+| las demás especialidades que ya sincronizaban. Quedaron afuera las que no son datos del médico:
+| catálogos internos de PowerBuilder (`pbcat*`), tablas de ejemplo de Sybase (`employee`,
+| `department`), las de MobiLink/sistema (dueño `dbo`/`SYS`), `upload_servers` (bitácora del botón
+| viejo), `registro_operaciones` y `consultas_subida` (bitácoras), `evolucion_copy` (copia de respaldo
+| de `evolucion`) y `operadores`: son los USUARIOS del escritorio, con la contraseña en texto plano
+| (sacada el 2026-09-28; la carga inicial la había subido).
+|
+| **Multi-especialidad (WEB-7.3).** Lo que agrega cada especialidad sale de SU manifiesto
+| (`config/especialidades/<slug>.php` → `sync.tablas` y `sync.columnas_equivalentes`), no de otra lista
+| escrita a mano acá: sumar una especialidad es agregar su manifiesto, no tocar el motor del sync.
+| `tablas_por_especialidad` y `columnas_equivalentes` se derivan de ahí, y `tablas` sigue siendo la
+| lista histórica. `App\Sync\Escritorio\TablasDelSync` es quien las combina.
+|
+| ⚠️ Una tabla que el manifiesto declara pero que el API **no** tiene en la base no se puede ofrecer:
+| el sync la rechazaría o escribiría en el vacío. Por eso lo que el manifiesto suma son solo tablas
+| que existen en el API (sus migraciones las crean).
 |
 */
+
+/*
+| Los manifiestos se leen acá una vez: de ellos salen las tablas y las equivalencias de columnas que
+| cada especialidad agrega. Se leen con `require` directo (no con `config()`) para que este archivo no
+| dependa de que el resto de la configuración ya esté cargada.
+*/
+$tablasPorEspecialidad = [];
+$columnasEquivalentes = [];
+
+foreach (glob(__DIR__ . '/especialidades/*.php') ?: [] as $archivoManifiesto) {
+    $slug = basename($archivoManifiesto, '.php');
+    $manifiesto = require $archivoManifiesto;
+
+    $tablasPorEspecialidad[$slug] = array_values(array_unique((array) ($manifiesto['sync']['tablas'] ?? [])));
+
+    foreach ((array) ($manifiesto['sync']['columnas_equivalentes'] ?? []) as $tabla => $equivalencias) {
+        $columnasEquivalentes[$tabla] = (array) $equivalencias;
+    }
+}
 
 return [
 
@@ -51,6 +81,15 @@ return [
         'ultra_abdominal', 'ultra_mama', 'ultra_prostatico', 'ultra_testiculos',
         'ultra_tiroides_musculo', 'vademecum', 'vademecum_m',
     ],
+
+    // Lo que **agrega cada especialidad** a la lista de arriba (slug del manifiesto => tablas). Se
+    // deriva de `config/especialidades/*.php`; ver `App\Sync\Escritorio\TablasDelSync`.
+    'tablas_por_especialidad' => $tablasPorEspecialidad,
+
+    // Nombres de columna del escritorio que en el API se llaman distinto (tabla => [escritorio => API]).
+    // Se aplican al filtrar una fila y al resolver la clave de un cambio, así la fila no queda con la
+    // clave en un lado y las pantallas leyendo el otro (el caso de `examen_fisico_nuevo` en pediatría).
+    'columnas_equivalentes' => $columnasEquivalentes,
 
     // Columnas que NO se suben aunque vengan en el lote.
     //  - evolucion: credenciales de SMS y la contraseña del sistema viejo; y `logo`, que en el
