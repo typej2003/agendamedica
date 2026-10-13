@@ -9,6 +9,15 @@
     @if ($campo['tipo'] === 'fecha')
         <input type="date" class="form-control" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                value="{{ $campo['valor'] }}">
+    @elseif ($campo['tipo'] === 'opciones')
+        {{-- Un desplegable con la opción vacía: en el escritorio son casillas (Final de Embarazo, Embarazo
+             multiple) y la columna guarda "S" o "N"; sin marcar queda vacía. --}}
+        <select class="form-select" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}">
+            <option value="">—</option>
+            @foreach ($campo['opciones'] as $opcion)
+                <option value="{{ $opcion['valor'] }}" @if ((string) $campo['valor'] === (string) $opcion['valor']) selected @endif>{{ $opcion['texto'] }}</option>
+            @endforeach
+        </select>
     @elseif ($campo['tipo'] === 'numero')
         <input type="number" step="1" min="0" class="form-control" id="{{ $campo['columna'] }}"
                name="{{ $campo['columna'] }}" value="{{ $campo['valor'] }}">

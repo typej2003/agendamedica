@@ -154,9 +154,11 @@ final class PrenatalVista
     /** La ayuda de la pestaña: qué es y qué pasa al salir sin guardar. */
     public function ayuda(): string
     {
-        return 'Cada gesta guarda su FUR, su menarquia, su tipiaje y sus observaciones. La edad gestacional y '
-            . 'la FPP se calculan de la FUR (la FPP suma 270 días, como el escritorio) y se guardan con el '
-            . 'botón: si sales sin guardar, el navegador te avisa antes de perder lo escrito.';
+        return 'Cada gesta guarda su FUR, la menarquia, cuántas gestas, partos, cesáreas y abortos, el tipiaje '
+            . 'de la madre y del padre y sus observaciones. La edad gestacional y la FPP se calculan de la FUR '
+            . '(la FPP suma 281 días, como la pestaña del escritorio) y no se guardan: se recalculan al '
+            . 'escribir. Lo cargado se guarda con el botón; si sales sin guardar, el navegador te avisa antes '
+            . 'de perderlo.';
     }
 
     /** El aviso que `consulta.js` muestra y usa para el `beforeunload`. */

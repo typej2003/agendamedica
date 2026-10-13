@@ -155,40 +155,85 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         }
     }
 
-    public function test_no_toca_las_columnas_que_esta_pestana_no_edita(): void
+    public function test_la_unica_columna_que_esta_pestana_no_edita_es_parto(): void
     {
+        // ⚠️ La trampa del módulo: `parto` (*Parto:*) está en `d_pre_natal_observa.srd`, el DataWindow
+        // **huérfano** que ninguna ventana usa; en la pestaña viva (`d_pre_natal_observa_2.srd:28`) está
+        // `visible="0"`. Las otras siete columnas que antes se creían "de otras pantallas" (`partos`,
+        // `cesarea`, `abortos`, `otros`, `final`, `multiple`, `cantidad`) **sí** son de esta pestaña y el
+        // formulario las manda.
         $medico = $this->medico();
         $fila = PreNatalObservacion::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1004, 'gesta_clave' => 1,
-            'fur' => '2026-05-20', 'partos' => 2, 'cesarea' => 1, 'abortos' => 0,
+            'fur' => '2026-05-20', 'parto' => '1 cesárea',
+            'partos' => 2, 'cesarea' => 1, 'abortos' => 0,
             'otros' => 'gemelos', 'final' => 'V', 'multiple' => 'S', 'cantidad' => 2,
         ]);
 
         app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1004, $this->formulario([
             'fur' => '2026-05-21', 'gestas' => '3',
+            'partos' => '3', 'cesarea' => '2', 'abortos' => '1', 'otros' => 'un solo feto',
+            'final' => 'S', 'multiple' => 'N', 'cantidad' => '1',
         ]), clave: 1);
 
         $fresca = $fila->fresh();
         $this->assertSame('2026-05-21', $fresca->fur);
         $this->assertSame(3, $fresca->gestas);
-        // Lo que el escritorio escribe en otras pantallas queda como esté (y el número de la gesta no se toca).
-        $this->assertSame(2, $fresca->partos);
-        $this->assertSame(1, $fresca->cesarea);
-        $this->assertSame('gemelos', $fresca->otros);
-        $this->assertSame('V', $fresca->final);
-        $this->assertSame('S', $fresca->multiple);
-        $this->assertSame(2, $fresca->cantidad);
+
+        // Las siete de la pestaña siguen al formulario.
+        $this->assertSame(3, $fresca->partos);
+        $this->assertSame(2, $fresca->cesarea);
+        $this->assertSame(1, $fresca->abortos);
+        $this->assertSame('un solo feto', $fresca->otros);
+        $this->assertSame('S', $fresca->final);
+        $this->assertSame('N', $fresca->multiple);
+        $this->assertSame(1, $fresca->cantidad);
+
+        // Y `parto` (la del DataWindow huérfano) queda como estaba, y el número de la gesta no se toca.
+        $this->assertSame('1 cesárea', $fresca->parto);
         $this->assertSame(1, $fresca->gesta_clave);
     }
 
-    public function test_lo_que_no_es_numero_en_el_campo_de_gestas_queda_vacio(): void
+    public function test_al_crear_la_gesta_el_campo_gestas_arranca_con_su_numero(): void
     {
+        // Como el escritorio al crear una gesta (`w_agregar_nueva_gesta.srw:171-178`): estar en la gesta 2
+        // quiere decir que hubo 2 embarazos. Si el formulario trae otro número, manda el formulario.
         $medico = $this->medico();
 
-        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1005, $this->formulario([
-            'fur' => '2026-05-20', 'gestas' => 'no sé',
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1006, $this->formulario([
+            'fur' => '2026-05-20',
+        ]));
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1006, $this->formulario([
+            'fur' => '2026-06-20',
+        ]));
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1007, $this->formulario([
+            'fur' => '2026-05-20', 'gestas' => '7',
         ]));
 
-        $this->assertNull(PreNatalObservacion::where('reg_medico', $medico->reg_medico)->where('historia', 1005)->first()->gestas);
+        $gestas = PreNatalObservacion::where('reg_medico', $medico->reg_medico)->where('historia', 1006)
+            ->orderBy('gesta_clave')->get();
+
+        $this->assertSame(1, $gestas[0]->gestas);
+        $this->assertSame(2, $gestas[1]->gestas);
+        $this->assertSame(7, PreNatalObservacion::where('historia', 1007)->first()->gestas);
+    }
+
+    public function test_lo_que_no_es_numero_en_los_campos_de_numeros_queda_vacio(): void
+    {
+        $medico = $this->medico();
+        // Al crear, el campo vacío toma el número de la gesta (1), así que la basura se prueba corrigiendo.
+        $fila = PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1005, 'gesta_clave' => 1,
+            'fur' => '2026-05-20', 'gestas' => 2, 'partos' => 2, 'cantidad' => 2,
+        ]);
+
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1005, $this->formulario([
+            'fur' => '2026-05-20', 'gestas' => 'no sé', 'partos' => '1,5', 'cantidad' => '',
+        ]), clave: 1);
+
+        $fresca = $fila->fresh();
+        $this->assertNull($fresca->gestas);
+        $this->assertNull($fresca->partos);
+        $this->assertNull($fresca->cantidad);
     }
 }

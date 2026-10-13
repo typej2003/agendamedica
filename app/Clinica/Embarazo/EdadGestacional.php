@@ -20,11 +20,16 @@ use Carbon\CarbonInterface;
  * **semanas** = `int(días desde la FUR / 7)` y **días** = `mod(días desde la FUR, 7)`.
  *
  * La **FPP**, en cambio, **cambia según la pantalla** —es una discrepancia del legado, no un error de
- * lectura—: el control prenatal usa `relativedate(fur, 270)` (`d_pre_natal_observa.srd:20`) y el eco
- * obstétrico `relativedate(fur, 283)` (`d_eco_obstetrico_trimestral_nueva.srd:183`). **La decisión de
- * WEB-6.6 (2026-10-13) es conservar el número de cada pantalla**: cada una suma lo que el médico viene
- * leyendo ahí, y unificarlos cambiaría el dato bajo sus pies. Por eso la FPP se pide con sus días
- * (`fpp($fur, self::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL)`) y no hay un valor "correcto" único.
+ * lectura, y tiene **tres** valores, no dos—: el **control prenatal suma 281**
+ * (`d_pre_natal_observa_2.srd:38`, el DataWindow **vivo** de la pestaña *Prenatal*), los **reportes del
+ * control y todos los ecos suman 283** (`d_pre_natal_observa_reporte.srd:45`,
+ * `d_eco_obstetrico_trimestral_nueva.srd:183`) y hay un **270** que vive en `d_pre_natal_observa.srd:20` y
+ * `d_pre_natal_observac.srd:16`, dos DataWindows que **ninguna ventana usa** (el primero está huérfano y el
+ * segundo es la solapa vieja y oculta). **La decisión de WEB-6.6 (2026-10-13) es conservar el número de
+ * cada pantalla** —el control prenatal 281 y el eco obstétrico 283— porque es lo que el médico viene leyendo
+ * en cada pantalla del escritorio y unificarlos cambiaría el dato bajo sus pies; la fórmula de la EG sí es
+ * una sola. La web calcula y muestra las dos cosas (no las inventa: no hay columna de FPP y la de EG
+ * —`eg_fur`/`eg_eco` de `pre_natal_desarrollo_fino`— la teclea el médico). El **IMC** (peso / talla²,
  *
  * **No se guarda en ninguna columna**: en el legado la FPP es un `compute` del DataWindow y la edad
  * gestacional se muestra calculada; las columnas `eg_fur`/`eg_eco` de `pre_natal_desarrollo` las escribe el
@@ -43,8 +48,18 @@ use Carbon\CarbonInterface;
  */
 final class EdadGestacional
 {
-    /** Los días que suma el control prenatal para la FPP (`relativedate(fur, 270)`). */
-    public const DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL = 270;
+    /**
+     * Los días que suma el control prenatal para la FPP: **281**.
+     *
+     * ⚠️ **Cuidado con el DataWindow**: la pestaña viva del control prenatal es `d_pre_natal_observa_2.srd`
+     * (lo asigna `w_consulta_principal.srw:24725`) y **suma 281** (`:38`). `d_pre_natal_observa.srd` —el
+     * hermano sin `_2`— **no lo usa ninguna ventana**: es un huérfano y suma 270 («270» y «281», dos
+     * archivos con el mismo nombre base y distinto número). El tercer número es el de los **reportes y los
+     * ecos**: 283.
+     *
+     * Los tres están en `docs`/la wiki con su cita. La web conserva el número de **cada pantalla**.
+     */
+    public const DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL = 281;
 
     /** Los días que suma el eco obstétrico para la FPP (`relativedate(fur, 283)`): WEB-6.2. */
     public const DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO = 283;

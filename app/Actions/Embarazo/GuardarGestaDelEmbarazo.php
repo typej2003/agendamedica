@@ -40,15 +40,35 @@ final class GuardarGestaDelEmbarazo
     /** La tabla del control prenatal. */
     public const TABLA = GestasDeLaHistoria::TABLA;
 
-    /** Las siete columnas que edita la pestaña *Prenatal*, con los rótulos del DataWindow. */
-    public const COLUMNAS = ['fur', 'menarquia', 'gestas', 'parto', 'tipiaje', 'tipiaje_cony', 'observaciones'];
+    /**
+     * Las **trece** columnas que edita la pestaña *Prenatal* **viva**, con los rótulos del escritorio.
+     *
+     * Salen de `d_pre_natal_observa_2.srd` —el DataWindow que la ventana asigna de verdad
+     * (`w_consulta_principal.srw:24725`)—: las siete visibles (`fur`, `menarquia`, `gestas`, `partos`,
+     * `cesarea`, `abortos`, `otros`, `tipiaje`, `tipiaje_cony`, `observaciones`) más las tres columnas
+     * **ocultas del DataWindow** que el código de la ventana escribe igual desde sus controles: `final`
+     * (*Final de Embarazo*, `:24503`), `multiple` (*Embarazo multiple*, `:24513`) y `cantidad`
+     * (*Cantidad:*, `:24511`).
+     */
+    public const COLUMNAS = [
+        'fur', 'menarquia', 'gestas', 'partos', 'cesarea', 'abortos', 'otros',
+        'tipiaje', 'tipiaje_cony', 'final', 'multiple', 'cantidad', 'observaciones',
+    ];
+
+    /** Las columnas que se guardan como número (el resto son texto). */
+    private const NUMERICAS = ['gestas', 'partos', 'cesarea', 'abortos', 'cantidad'];
 
     /**
-     * Las columnas de la tabla que esta pestaña **no** toca (las escribe el escritorio en otras pantallas).
+     * La única columna de `pre_natal_observaciones` que esta pestaña **no** toca: **`parto`**.
+     *
+     * ⚠️ Es la trampa de este módulo: `parto` (*Parto:* en el rótulo) está en `d_pre_natal_observa.srd`
+     * —el DataWindow **huérfano**, que ninguna ventana usa— y en la pestaña viva
+     * (`d_pre_natal_observa_2.srd:28`) está `visible="0"`, así que el médico no la ve. El escritorio la
+     * persiste igual (viaja en el DataWindow), pero la web no la edita: queda como esté.
      *
      * @var array<int,string>
      */
-    public const COLUMNAS_QUE_NO_SE_TOCAN = ['partos', 'cesarea', 'abortos', 'otros', 'final', 'multiple', 'cantidad'];
+    public const COLUMNAS_QUE_NO_SE_TOCAN = ['parto'];
 
     public function __construct(private GestasDeLaHistoria $gestas)
     {
@@ -74,7 +94,11 @@ final class GuardarGestaDelEmbarazo
             $nuevos[$columna] = Gesta::texto($valores[$columna] ?? null);
         }
 
-        $nuevos['gestas'] = $this->entero($nuevos['gestas']);
+        // Los campos que son números (gestas, partos, cesárea, abortos y cantidad): lo que no sea número
+        // queda vacío, no guarda basura.
+        foreach (self::NUMERICAS as $columna) {
+            $nuevos[$columna] = $this->entero($nuevos[$columna]);
+        }
 
         if ($nuevos['fur'] === null) {
             throw new InvalidArgumentException('Cada gesta necesita su FUR: sin ella no hay edad gestacional ni FPP.');
@@ -87,6 +111,11 @@ final class GuardarGestaDelEmbarazo
             $fila = $this->gestas->fila($regMedico, $numhistoria, $clave);
 
             if ($fila === null) {
+                // Como el escritorio al crear una gesta (`w_agregar_nueva_gesta.srw:171-178`), el campo
+                // *Gestas* —cuántos embarazos ha tenido— arranca con el número de esta gesta si el
+                // formulario no trajo otro: estar en la gesta 3 quiere decir que hubo 3 embarazos.
+                $nuevos['gestas'] ??= (string) $clave;
+
                 $this->crearFila(PreNatalObservacion::class, self::TABLA, array_merge($nuevos, [
                     'reg_medico' => $regMedico,
                     'historia' => $numhistoria,

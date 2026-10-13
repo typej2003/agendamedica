@@ -231,8 +231,9 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertOk()
             ->assertSee('20 semanas y 6 días')
             ->assertSee('Gesta 1')
-            // La ayuda de la FPP deja claro cuál de los dos números usa esta pantalla.
-            ->assertSee('270 días');
+            // La ayuda de la FPP deja claro cuál de los números usa esta pantalla (281, el del DataWindow
+            // vivo del control prenatal; el eco obstétrico usa 283).
+            ->assertSee('281 días');
     }
 
     public function test_nueva_gesta_crea_la_siguiente_con_el_numero_que_asigna_el_servidor(): void

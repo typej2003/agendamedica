@@ -134,11 +134,17 @@ final class Gesta
     /**
      * **El mapa de los campos de la gesta**: qué columna, con qué rótulo y con qué control se pinta.
      *
-     * Los rótulos son los del DataWindow de la pestaña (`d_pre_natal_observa.srd`): *FUR*, *Menarquia*,
-     * *Gestas*, *Tipiaje* (con *Madre* y *Padre* debajo: `tipiaje` es el de la madre y `tipiaje_cony` el del
-     * padre), *Parto* y *Observaciones*. El orden es el de la pantalla del escritorio.
+     * Los rótulos son los del DataWindow **vivo** de la pestaña (`d_pre_natal_observa_2.srd`, el que asigna
+     * `w_consulta_principal.srw:24725`): *FUR*, *Menarquia*, *Gestas*, *Partos*, *Cesareas*, *Abortos*,
+     * *Otros*, *Tipiaje* (con *Madre:* y *Padre:*: `tipiaje` es el de la madre y `tipiaje_cony` el del
+     * padre), *Observaciones*, y los tres controles de la ventana que viven en columnas ocultas del
+     * DataWindow: **Final de Embarazo** (`final`, `S`/`N`), **Embarazo multiple** (`multiple`, `S`/`N`) y
+     * **Cantidad** (`cantidad`).
      *
-     * @return array<int,array{columna:string,etiqueta:string,tipo:string,ayuda:string}>
+     * ⚠️ **`parto` no está acá**: es la columna del rótulo *Parto:* del **otro** DataWindow
+     * (`d_pre_natal_observa.srd`, el huérfano), y en la pestaña viva está `visible="0"`. La web no la toca.
+     *
+     * @return array<int,array{columna:string,etiqueta:string,tipo:string,ayuda:string,opciones?:array<int,array{valor:string,texto:string}>}>
      */
     public static function campos(): array
     {
@@ -148,13 +154,24 @@ final class Gesta
             ['columna' => 'menarquia', 'etiqueta' => 'Menarquia', 'tipo' => 'texto',
                 'ayuda' => 'Cuándo le vino por primera vez.'],
             ['columna' => 'gestas', 'etiqueta' => 'Gestas', 'tipo' => 'numero',
-                'ayuda' => 'Cuántos embarazos ha tenido (el campo *Gestas* del escritorio).'],
-            ['columna' => 'parto', 'etiqueta' => 'Parto', 'tipo' => 'texto',
-                'ayuda' => 'Cómo terminaron: parto, cesárea, cuántos… El escritorio lo deja como texto libre.'],
+                'ayuda' => 'Cuántos embarazos ha tenido. El escritorio también escribe acá el número de la gesta al crearla.'],
+            ['columna' => 'partos', 'etiqueta' => 'Partos', 'tipo' => 'numero', 'ayuda' => 'Cuántos partos.'],
+            ['columna' => 'cesarea', 'etiqueta' => 'Cesáreas', 'tipo' => 'numero', 'ayuda' => 'Cuántas cesáreas.'],
+            ['columna' => 'abortos', 'etiqueta' => 'Abortos', 'tipo' => 'numero', 'ayuda' => 'Cuántos abortos.'],
+            ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'texto',
+                'ayuda' => 'Lo que no entra en las otras casillas.'],
             ['columna' => 'tipiaje', 'etiqueta' => 'Tipiaje (madre)', 'tipo' => 'texto',
                 'ayuda' => 'El grupo sanguíneo de la madre.'],
             ['columna' => 'tipiaje_cony', 'etiqueta' => 'Tipiaje (padre)', 'tipo' => 'texto',
                 'ayuda' => 'El grupo sanguíneo de la pareja (la columna se llama `tipiaje_cony`).'],
+            ['columna' => 'final', 'etiqueta' => 'Final de embarazo', 'tipo' => 'opciones',
+                'ayuda' => 'El embarazo ya terminó. El escritorio pide marcarlo antes de crear la gesta siguiente.',
+                'opciones' => [['valor' => 'S', 'texto' => 'Sí'], ['valor' => 'N', 'texto' => 'No']]],
+            ['columna' => 'multiple', 'etiqueta' => 'Embarazo múltiple', 'tipo' => 'opciones',
+                'ayuda' => 'Si son dos o más fetos.',
+                'opciones' => [['valor' => 'S', 'texto' => 'Sí'], ['valor' => 'N', 'texto' => 'No']]],
+            ['columna' => 'cantidad', 'etiqueta' => 'Cantidad', 'tipo' => 'numero',
+                'ayuda' => 'Cuántos fetos, cuando el embarazo es múltiple.'],
             ['columna' => 'observaciones', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
                 'ayuda' => 'Lo que haya que anotar de este embarazo.'],
         ];

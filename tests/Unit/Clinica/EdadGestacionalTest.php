@@ -68,10 +68,11 @@ class EdadGestacionalTest extends TestCase
 
     public function test_la_fpp_suma_los_dias_de_cada_pantalla(): void
     {
-        // 2026-01-01 + 270 días = 2026-09-28 (el 270 del control prenatal).
-        $this->assertSame('2026-09-28', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
+        // 2026-01-01 + 281 días = 2026-10-09 (el 281 de la pestaña *Prenatal* viva del control prenatal).
+        $this->assertSame('2026-10-09', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
 
-        // + 283 días = 2026-10-11 (el 283 del eco obstétrico, WEB-6.2): no son el mismo número, a propósito.
+        // + 283 días = 2026-10-11 (el 283 del eco obstétrico y de los reportes, WEB-6.2): no son el mismo
+        // número, a propósito.
         $this->assertSame('2026-10-11', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO));
 
         // Y sin FUR no hay FPP.
@@ -81,7 +82,11 @@ class EdadGestacionalTest extends TestCase
 
     public function test_los_dos_numeros_de_la_fpp_son_los_de_la_fuente(): void
     {
-        $this->assertSame(270, EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL);
+        // 281 es el de la pestaña VIVA (`d_pre_natal_observa_2.srd:38`, la que asigna
+        // `w_consulta_principal.srw:24725`). El 270 que se creía el del control prenatal vive en
+        // `d_pre_natal_observa.srd:20`, un DataWindow **huérfano** que ninguna ventana usa: es la trampa
+        // de este módulo. 283 es el de los ecos y los reportes.
+        $this->assertSame(281, EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL);
         $this->assertSame(283, EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO);
     }
 

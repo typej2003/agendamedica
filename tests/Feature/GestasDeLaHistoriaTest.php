@@ -100,7 +100,7 @@ class GestasDeLaHistoriaTest extends TestCase
         $this->assertSame('2026-05-20', (new GestasDeLaHistoria())->actual($medico->reg_medico, 1001)->fur());
     }
 
-    public function test_cada_gesta_trae_su_edad_gestacional_y_su_fpp_con_270_dias(): void
+    public function test_cada_gesta_trae_su_edad_gestacional_y_su_fpp_con_281_dias(): void
     {
         $medico = $this->medico();
         // 146 días antes del 2026-10-13: 20 semanas y 6 días (146 = 20 * 7 + 6).
@@ -110,8 +110,9 @@ class GestasDeLaHistoriaTest extends TestCase
 
         $this->assertSame(146, $gesta->edadGestacional()->diasTotales());
         $this->assertSame('20 semanas y 6 días', $gesta->edadGestacional()->texto());
-        // La FPP de esta pantalla suma 270: 2026-05-20 + 270 = 2027-02-14.
-        $this->assertSame('2027-02-14', $gesta->fpp());
+        // La FPP de esta pantalla suma **281** (el DataWindow **vivo** del control prenatal): 2026-05-20 +
+        // 281 = 2027-02-25. No son los 270 del DataWindow huérfano ni los 283 del eco obstétrico.
+        $this->assertSame('2027-02-25', $gesta->fpp());
     }
 
     public function test_una_gesta_sin_fur_no_tiene_edad_gestacional_ni_fpp(): void
