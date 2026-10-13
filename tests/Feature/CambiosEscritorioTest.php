@@ -311,6 +311,81 @@ class CambiosEscritorioTest extends TestCase
         $this->assertNotNull(Cola::find($primera->id), 'la de la historia 1 sigue');
     }
 
+    /**
+     * **Pediatría**: su `cola` tiene clave primaria `fecha` + `numhistoria` (los ocho esquemas de
+     * `esquemas-asa/`), así que el trigger manda `{fecha, numhistoria}` y **sin** `hora_ini` — la hora
+     * viaja sólo en la fila. La cita se tiene que resolver por la fecha y la historia, no por la hora.
+     */
+    public function test_un_cambio_de_pediatria_sin_hora_en_la_clave_actualiza_la_fila_de_su_historia(): void
+    {
+        $primera = $this->citaDeLaClave();
+        $segunda = $this->citaGemela();
+
+        $this->subir([['id' => 103, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'numhistoria' => '2'],
+            'fila' => ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'numhistoria' => 2, 'motivo' => 'EDITADA']]]);
+
+        $this->assertSame('CONTROL', (string) $primera->fresh()->motivo, 'la cita de la historia 1 no se toca');
+        $this->assertSame('EDITADA', (string) $segunda->fresh()->motivo, 'se edita la de la historia 2');
+    }
+
+    public function test_un_borrado_de_pediatria_sin_hora_en_la_clave_borra_la_fila_de_su_historia(): void
+    {
+        $primera = $this->citaDeLaClave();
+        $segunda = $this->citaGemela();
+
+        // El borrado del trigger no trae fila: la hora no está en ninguna parte del cambio.
+        $this->subir([['id' => 104, 'tabla' => 'cola', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'numhistoria' => '2']]]);
+
+        $this->assertNull(Cola::find($segunda->id), 'se borra la cita de la historia 2');
+        $this->assertNotNull(Cola::find($primera->id), 'la de la historia 1 sigue');
+    }
+
+    /** Una cita nueva a una hora que **ya** tiene otro paciente no puede pisarla: son dos filas. */
+    public function test_una_cita_nueva_de_pediatria_a_la_misma_hora_no_pisa_la_del_otro_paciente(): void
+    {
+        DB::table('cola')->insert([
+            'reg_medico' => self::REG, 'fecha' => '2026-10-05', 'hora_ini' => '09:00:00',
+            'numhistoria' => 1, 'motivo' => 'DEL PACIENTE 1', 'clave_escritorio' => '2026-10-05|09:00:00',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->subir([['id' => 105, 'tabla' => 'cola', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-05', 'numhistoria' => '2'],
+            'fila' => ['fecha' => '2026-10-05', 'hora_ini' => '09:00:00', 'numhistoria' => 2,
+                'motivo' => 'DEL PACIENTE 2', 'hora_fin' => '09:20:00']]]);
+
+        $citas = Cola::where('reg_medico', self::REG)->where('clave_escritorio', '2026-10-05|09:00:00')->orderBy('id')->get();
+        $this->assertCount(2, $citas, 'dos citas a la misma hora, no una pisada');
+        $this->assertSame(['1', '2'], $citas->pluck('numhistoria')->map(fn ($h) => (string) $h)->all());
+        $this->assertSame(['DEL PACIENTE 1', 'DEL PACIENTE 2'], $citas->pluck('motivo')->all());
+    }
+
+    /** La historia tiene que estar en el API: si no, se rechaza y el escritorio reintenta. */
+    public function test_una_cita_de_pediatria_de_una_historia_que_no_subio_se_rechaza(): void
+    {
+        $respuesta = $this->subir([['id' => 106, 'tabla' => 'cola', 'op' => 'D', 'fecha' => '2026-10-02 11:00:00',
+            'clave' => ['fecha' => '2026-10-01', 'numhistoria' => '99']]]);
+
+        $this->assertStringContainsString('106:la historia 99', (string) $respuesta->json('rechazados'));
+        $this->assertSame([], $this->confirmados($respuesta));
+    }
+
+    /**
+     * `cola.hora_ini` no es nula en el API (el escritorio la completa al agendar), así que una cita sin
+     * hora no se puede guardar: el rechazo lo dice, en vez de morir con un error de la base.
+     */
+    public function test_una_cita_sin_hora_se_rechaza_con_un_mensaje_claro(): void
+    {
+        $respuesta = $this->subir([['id' => 107, 'tabla' => 'cola', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
+            'clave' => ['fecha' => '2026-10-07', 'numhistoria' => '1'],
+            'fila' => ['fecha' => '2026-10-07', 'numhistoria' => 1, 'motivo' => 'SIN HORA']]]);
+
+        $this->assertStringContainsString('107:cola sin fecha/hora_ini', (string) $respuesta->json('rechazados'));
+        $this->assertSame(0, Cola::where('reg_medico', self::REG)->where('motivo', 'SIN HORA')->count());
+    }
+
     /** La cita del setUp (historia 1), que comparte clave con la gemela. */
     private function citaDeLaClave(): Cola
     {

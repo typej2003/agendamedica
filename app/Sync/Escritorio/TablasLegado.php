@@ -132,6 +132,13 @@ class TablasLegado
         return (int) $numHistoria . '|' . (int) $nroConsulta;
     }
 
+    /**
+     * `fecha|hora_ini`: la `clave_escritorio` de una cita y **sólo una de las dos claves primarias** que
+     * `cola` tiene en el legado. En los ocho esquemas de `Docs/MICONSULTAGI-legado/esquemas-asa/`
+     * (pediatría: `pediatria.sql`) la primaria es `fecha` + `numhistoria`, así que dos pacientes a la
+     * misma hora comparten esta clave; la cita se identifica por su historia en
+     * `CambiosEscritorio::citaDelCambio`. Ver la trampa 109.
+     */
     public static function claveCola($fecha, $horaIni): string
     {
         return Carbon::parse((string) $fecha)->format('Y-m-d') . '|' . Carbon::parse((string) $horaIni)->format('H:i:s');

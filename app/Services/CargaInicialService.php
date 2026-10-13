@@ -382,6 +382,7 @@ class CargaInicialService
             return TablasLegado::claveConsulta($fila['numhistoria'], $fila['nroconsulta']);
         }
         if ($tabla === 'cola' && isset($fila['fecha'], $fila['hora_ini'])) {
+            // `fecha|hora_ini`: la cita se identifica por su historia, no por esta clave (trampa 109).
             return TablasLegado::claveCola($fila['fecha'], $fila['hora_ini']);
         }
 

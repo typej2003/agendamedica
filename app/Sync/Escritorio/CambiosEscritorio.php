@@ -310,12 +310,19 @@ class CambiosEscritorio
 
     private function guardarCita(SyncCarga $carga, array $clave, array $fila, Carbon $fecha): string
     {
-        if (! isset($clave['fecha'], $clave['hora_ini'])) {
+        if (! isset($clave['fecha'])) {
+            throw new RechazoCambio('cola sin fecha');
+        }
+        // La hora viene en la clave de las bases cuya clave primaria es `fecha` + `hora_ini` y en la fila
+        // en las demás: en pediatría la clave primaria es `fecha` + `numhistoria` (trampa 109).
+        $hora = $this->horaDelCambio($clave, $fila);
+        if ($hora === null) {
+            // `cola.hora_ini` no es nula en el API (el escritorio la completa al agendar): sin hora la
+            // cita no se puede identificar ni guardar, y el rechazo lo dice en el log.
             throw new RechazoCambio('cola sin fecha/hora_ini');
         }
-        $claveLocal = TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']);
 
-        $cita = $this->citaPorClave($carga, $claveLocal, $this->numhistoriaDelCambio($clave, $fila));
+        $cita = $this->citaDelCambio($carga, $clave, $this->numhistoriaDelCambio($clave, $fila));
 
         $delApp = $cita ? $this->edicionesDelApp('cola', $cita->id, $fecha) : ['borrado' => false, 'columnas' => []];
         if ($delApp['borrado']) {
@@ -332,7 +339,7 @@ class CambiosEscritorio
         $datos = $this->traducir($carga, $this->tablas->filtrar('cola', $delEscritorio, $ignoradas));
         $datos = array_diff_key($datos, array_flip($delApp['columnas']));
         $datos['reg_medico'] = $carga->reg_medico;
-        $datos['clave_escritorio'] = $claveLocal;
+        $datos['clave_escritorio'] = TablasLegado::claveCola($clave['fecha'], $hora);
         $datos['updated_at'] = now();
 
         if ($cita) {
@@ -352,14 +359,10 @@ class CambiosEscritorio
     /** Con el modelo, para que quede en `sync_changes` y el app también la borre (Cola::booted). */
     private function borrarCita(SyncCarga $carga, array $clave, Carbon $fecha): string
     {
-        if (! isset($clave['fecha'], $clave['hora_ini'])) {
-            throw new RechazoCambio('cola sin fecha/hora_ini');
+        if (! isset($clave['fecha'])) {
+            throw new RechazoCambio('cola sin fecha');
         }
-        $cita = $this->citaPorClave(
-            $carga,
-            TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']),
-            $this->numhistoriaDelCambio($clave)
-        );
+        $cita = $this->citaDelCambio($carga, $clave, $this->numhistoriaDelCambio($clave));
         if (! $cita) {
             return 'aplicado';
         }
@@ -372,36 +375,74 @@ class CambiosEscritorio
     }
 
     /**
-     * La fila de `cola` de una clave del escritorio.
+     * La fila de `cola` que corresponde a un cambio del escritorio. Ver la trampa 109.
      *
-     * `clave_escritorio` de una cita es `fecha|hora_ini` y **no es única**: el legado permite dos citas a
-     * la misma hora para pacientes distintos (su clave primaria es `fecha` + `numhistoria`) y AppDDR
-     * también (citas múltiples, `motivo_cita.admite_varias_citas_pendientes`, WEB-2.17). Con el índice
-     * único esto era imposible de guardar; desde que es un índice común, buscar por la clave y quedarse
-     * `first()` puede tocar la cita equivocada. Cuando hay más de una fila con esa clave se elige la del
-     * `numhistoria` del cambio (viene del escritorio, en su clave o en su fila): es la clave primaria
-     * real del legado. Si no viene, no se puede traducir o no coincide con ninguna, se queda la primera,
-     * como cuando la clave era única. Ver la trampa 109.
+     * La clave primaria de `cola` **no es la misma en todas las bases del legado**, y el trigger manda
+     * las columnas que SU base declara como clave (`syscolumn.pkey` en `w_marca_bd.srw`, que lee
+     * `bridge/registro-cambios.js`), así que la clave del cambio dice cuál es:
+     *
+     *  - **Trae `hora_ini`**: la clave primaria es `fecha` + `hora_ini` y la cita se busca por
+     *    `clave_escritorio`, que la carga inicial escribió con esa fórmula. La historia sólo desempata.
+     *  - **No trae `hora_ini`**: la clave primaria es `fecha` + `numhistoria` —los ocho esquemas de
+     *    `Docs/MICONSULTAGI-legado/esquemas-asa/`, pediatría entre ellos—, o sea que la hora no
+     *    identifica la cita y hay que buscarla por la fecha y la historia del cambio. Es lo único que no
+     *    se equivoca de paciente cuando dos citas caen a la misma hora.
      */
-    private function citaPorClave(SyncCarga $carga, string $claveLocal, ?string $numhistoriaLocal): ?Cola
+    private function citaDelCambio(SyncCarga $carga, array $clave, ?string $historiaLocal): ?Cola
     {
-        $citas = Cola::where('reg_medico', $carga->reg_medico)->where('clave_escritorio', $claveLocal)->get();
-        if ($citas->count() <= 1 || $numhistoriaLocal === null) {
-            return $citas->first();
+        if (isset($clave['hora_ini']) && $clave['hora_ini'] !== '') {
+            $hApi = $historiaLocal === null ? null : $this->historiaEnApi($carga, $historiaLocal);
+
+            return $this->citaPorClave($carga, TablasLegado::claveCola($clave['fecha'], $clave['hora_ini']), $hApi);
         }
 
-        $historia = Historia::where('reg_medico', $carga->reg_medico)
-            ->where('clave_escritorio', TablasLegado::claveHistoria($numhistoriaLocal))
-            ->value('numhistoria');
+        // Sin hora en la clave y sin historia traducida no se puede decidir cuál es la cita: se rechaza y
+        // el escritorio reintenta cuando la historia haya subido (igual que el resto de las tablas).
+        if ($historiaLocal === null) {
+            throw new RechazoCambio('cola sin fecha/hora_ini ni numhistoria');
+        }
+        $hApi = $this->historiaApi($carga, $historiaLocal);
 
-        return $historia === null
-            ? $citas->first()
-            : ($citas->firstWhere('numhistoria', $historia) ?? $citas->first());
+        return Cola::where('reg_medico', $carga->reg_medico)
+            ->where('numhistoria', $hApi)
+            ->whereDate('fecha', Carbon::parse((string) $clave['fecha'])->toDateString())
+            ->orderBy('id')
+            ->first();
     }
 
     /**
-     * El `numhistoria` del escritorio que trae un cambio: primero en su clave (la primaria del legado
-     * para `cola`) y, si no está, en la fila. Es solo para desempatar citas con la misma clave.
+     * Las filas de `cola` con una `clave_escritorio` (`fecha|hora_ini`). Con más de una se elige la que es
+     * de la historia del cambio; si no se sabe cuál es o ninguna es suya, se queda la primera, como
+     * cuando la clave era única. Este camino es sólo para las bases cuya clave primaria trae la hora.
+     */
+    private function citaPorClave(SyncCarga $carga, string $claveLocal, ?string $hApi): ?Cola
+    {
+        $citas = Cola::where('reg_medico', $carga->reg_medico)->where('clave_escritorio', $claveLocal)->get();
+        if ($citas->count() <= 1 || $hApi === null) {
+            return $citas->first();
+        }
+
+        return $citas->firstWhere('numhistoria', $hApi) ?? $citas->first();
+    }
+
+    /**
+     * La hora de inicio de un cambio de cita: en la clave (bases cuya clave primaria la incluye) o en la
+     * fila (las demás: pediatría manda `{fecha, numhistoria}` y la hora viaja sólo en la fila).
+     */
+    private function horaDelCambio(array $clave, array $fila = []): ?string
+    {
+        foreach ([$clave, $this->tablas->normalizarClaves($fila)] as $valores) {
+            if (isset($valores['hora_ini']) && $valores['hora_ini'] !== '') {
+                return (string) $valores['hora_ini'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * El `numhistoria` del escritorio que trae un cambio: primero en su clave (en las bases cuya clave
+     * primaria de `cola` es `fecha`+`numhistoria`) y, si no está, en la fila.
      */
     private function numhistoriaDelCambio(array $clave, array $fila = []): ?string
     {
@@ -602,16 +643,24 @@ class CambiosEscritorio
 
     private function historiaApi(SyncCarga $carga, $local): string
     {
+        $historia = $this->historiaEnApi($carga, $local);
+        if ($historia === null) {
+            throw new RechazoCambio('la historia ' . TablasLegado::claveHistoria($local) . ' del escritorio todavía no está en el API');
+        }
+
+        return $historia;
+    }
+
+    /** El `numhistoria` del API de una historia del escritorio, o `null` si todavía no subió. */
+    private function historiaEnApi(SyncCarga $carga, $local): ?string
+    {
         $clave = TablasLegado::claveHistoria($local);
         if (! array_key_exists($clave, $this->historias)) {
             $this->historias[$clave] = Historia::where('reg_medico', $carga->reg_medico)
                 ->where('clave_escritorio', $clave)->value('numhistoria');
         }
-        if ($this->historias[$clave] === null) {
-            throw new RechazoCambio("la historia {$clave} del escritorio todavía no está en el API");
-        }
 
-        return (string) $this->historias[$clave];
+        return $this->historias[$clave] === null ? null : (string) $this->historias[$clave];
     }
 
     /** @return array{0:string, 1:int} */

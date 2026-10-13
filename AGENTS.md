@@ -452,8 +452,9 @@ ofrece la unión de todas: con una sola, las tablas de la otra no recibirían tr
 fila **y en la clave** del cambio—: es lo que hace que `examen_fisico_nuevo` de pediatría (clave
 `nrohistoria`/`nroconsulta`) caiga en `historia`/`consulta` sin columnas nuevas. ⚠️ **La clave de `cola`
 NO es única**: la primaria del legado es `fecha` + `numhistoria` (no `fecha + hora_ini`), así que dos
-citas a la misma hora son legítimas; `cola.clave_escritorio` lleva sólo un índice común y los cambios
-desempatan por el `numhistoria` que manda el escritorio (trampa 109). Tests en
+citas a la misma hora son legítimas; `cola.clave_escritorio` lleva sólo un índice común y
+`CambiosEscritorio::citaDelCambio` resuelve la cita por la clave que manda el escritorio —si trae
+`hora_ini` busca por `clave_escritorio` y si no (pediatría) por `fecha` + historia— (trampa 109). Tests en
 `tests/Feature/PediatriaSyncTest.php`. El relevamiento de una especialidad nueva son tres tools
 (`../bridge/tools/`), contados en `../Docs/Web/relevamiento-pediatria.md`.
 
