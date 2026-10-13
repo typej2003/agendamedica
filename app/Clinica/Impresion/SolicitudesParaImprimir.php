@@ -17,6 +17,7 @@ use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
+use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
 use App\Models\Paciente;
@@ -79,6 +80,7 @@ final class SolicitudesParaImprimir
         private LaboratorioDeLaConsulta $laboratorios,
         private EstudiosDeLaConsulta $estudios,
         private EcoGinecologico $ecos,
+        private EcoObstetrico $ecosObstetricos,
         private InformePrenatal $informesPrenatales,
     ) {
     }
@@ -120,6 +122,20 @@ final class SolicitudesParaImprimir
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::CONTROL_DE_EMBARAZO][1],
                 // Sin los controles ni el laboratorio: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del control de embarazo',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del eco obstétrico del primer trimestre (WEB-6.2): se ofrece si el estudio tiene datos
+        // (la fecha sola no lo hace, igual que en el eco pélvico).
+        $estudioObstetrico = $this->ecosObstetricos->de($consulta);
+        if ($this->elEcoObstetricoEsDocumento($estudioObstetrico)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_OBSTETRICO,
+                'tipo' => DocumentoImpreso::ECO_OBSTETRICO,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][1],
+                // Sin los hallazgos ni la conclusión: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del eco obstétrico (1.er trimestre)',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -245,6 +261,12 @@ final class SolicitudesParaImprimir
             $estudio = $this->ecos->de($consulta);
 
             return $this->elEcoEsDocumento($estudio) ? $this->ecoPelvico($paciente, $estudio, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_OBSTETRICO) {
+            $estudio = $this->ecosObstetricos->de($consulta);
+
+            return $this->elEcoObstetricoEsDocumento($estudio) ? $this->ecoObstetrico($paciente, $estudio, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {
@@ -740,6 +762,82 @@ final class SolicitudesParaImprimir
                 $this->sumarParrafo($parrafos, $rotulo . FechaClinica::formato((string) $fila->fecha) . ':', implode(' · ', $valores));
             }
         }
+    }
+
+    /**
+     * **El informe del eco obstétrico del primer trimestre** (WEB-6.2): la hoja «ECOSONOGRAFÍA OBSTÉTRICA ·
+     * PRIMER TRIMESTRE» del escritorio (`d_eco_obstetrico_print_nuevo_grande`).
+     *
+     * Se arma del **mapa del dato** (`EcoObstetrico::grupos()`): un párrafo por bloque, con los campos que
+     * tienen algo, así que un campo nuevo del mapa sale en la hoja sin tocar esto. Los rótulos del
+     * escritorio ya vienen sin dos puntos, así que se les pone el de la hoja.
+     *
+     * La **FPP** y la **EG** no son columnas del informe en el escritorio: se calculan de la FUR (la hoja del
+     * escritorio las muestra en su encabezado con `relativedate(fur, 283)` y la fórmula de la EG de siempre).
+     */
+    private function ecoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    {
+        $parrafos = [];
+
+        foreach (EcoObstetrico::grupos() as $grupo) {
+            $valores = [];
+
+            foreach ($grupo['campos'] as $campo) {
+                $valor = $estudio->valor($campo['columna']);
+
+                if ($valor !== null && $valor !== '') {
+                    $valores[] = $campo['etiqueta'] . ': ' . $valor;
+                }
+            }
+
+            if ($valores !== []) {
+                $this->sumarParrafo($parrafos, $grupo['titulo'] . ':', implode(' · ', $valores));
+            }
+        }
+
+        // La edad gestacional y la FPP del estudio, calculadas de su FUR (como el encabezado del escritorio).
+        $eg = \App\Clinica\Embarazo\EdadGestacional::de($estudio->fur());
+
+        if ($eg !== null) {
+            $datos = [
+                ['etiqueta' => 'EG:', 'valor' => $eg->texto()],
+            ];
+
+            $fpp = \App\Clinica\Embarazo\EdadGestacional::fpp($estudio->fur(), \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO);
+            if ($fpp !== null) {
+                $datos[] = ['etiqueta' => 'FPP:', 'valor' => FechaClinica::formato($fpp)];
+            }
+        } else {
+            $datos = [];
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_OBSTETRICO,
+            DocumentoImpreso::ECO_OBSTETRICO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][0] . ' · PRIMER TRIMESTRE',
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $datos,
+            $parrafos,
+        );
+    }
+
+    /** ¿El eco obstétrico dice algo? La fecha, la FUR y la gesta no cuentan (son del embarazo, no hallazgos). */
+    private function elEcoObstetricoEsDocumento(EstudioEcografico $estudio): bool
+    {
+        $noCuentan = ['fecha', 'fur', 'gesta'];
+        $conDatos = 0;
+
+        foreach (array_diff(EcoObstetrico::columnas(), $noCuentan) as $columna) {
+            $valor = $estudio->valor($columna);
+
+            if ($valor !== null && $valor !== '') {
+                $conDatos++;
+            }
+        }
+
+        return QueEsUnDocumento::ecografia($conDatos);
     }
 
     private function elEcoEsDocumento(EstudioEcografico $estudio): bool

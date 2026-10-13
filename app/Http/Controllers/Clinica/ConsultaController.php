@@ -309,9 +309,9 @@ class ConsultaController extends Controller
                         $ecoObstetrico->de($consulta),
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
-                        // La hoja del informe del obstétrico llega con su tarea (tiene formato en blanco en
-                        // el escritorio): hasta entonces la pantalla no ofrece el botón.
-                        '',
+                        // La hoja del informe del obstétrico: la impresión de documentos de la consulta, con
+                        // la clave del estudio (WEB-6.2).
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO]),
                         $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
                         $gestas->actual($regMedico, (int) $consulta->numhistoria)?->clave(),
                         (array) old(),

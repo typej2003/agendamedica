@@ -53,6 +53,12 @@ final class DocumentoImpreso
     public const CONTROL_DE_EMBARAZO = 'control-de-embarazo';
 
     /**
+     * El **informe del eco obstétrico del primer trimestre** (WEB-6.2): la hoja que el escritorio imprime con
+     * `d_eco_obstetrico_print_nuevo_grande`, cuyo título es «ECOSONOGRAFÍA OBSTÉTRICA» + «PRIMER TRIMESTRE».
+     */
+    public const ECO_OBSTETRICO = 'eco-obstetrico';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -70,6 +76,8 @@ final class DocumentoImpreso
         self::ECO_PELVICO => ['INFORME ECOSONOGRÁFICO GINECOLÓGICO', 'Eco pélvico'],
         // El título del DataWindow del informe prenatal, tal cual (`d_informe_pre_nata_peque.srd:19`).
         self::CONTROL_DE_EMBARAZO => ['CONTROL DE EMBARAZO', 'Control de embarazo'],
+        // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
+        self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */

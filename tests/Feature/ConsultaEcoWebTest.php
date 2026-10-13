@@ -573,12 +573,29 @@ class ConsultaEcoWebTest extends TestCase
             'table_name' => 'eco_obstetrico', 'record_id' => $fila->id, 'operation' => 'created', 'source' => 'web',
         ]);
 
-        // La vuelta cae en el mismo tipo, y la hoja del obstétrico todavía no se ofrece (llega con su tarea).
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get($this->urlSeccion($consulta, 'obstetrico'))
-            ->assertOk()
+        // La vuelta cae en el mismo tipo, y con el estudio cargado ya se ofrece su hoja.
+        $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'obstetrico'));
+
+        $pantalla->assertOk()
             ->assertSee('Eco obstétrico guardado.')
-            ->assertDontSee('Imprimir el informe');
+            ->assertSee('Imprimir el informe')
+            ->assertSee('documento=eco-obstetrico', false);
+
+        // Y la hoja sale con su título, la FUR, la EG y lo que se cargó (con su FPP, que suma 283).
+        $hoja = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route(
+            'clinica.consulta.documentos.imprimir',
+            [$consulta->id, 'documento' => \App\Clinica\Impresion\DocumentoImpreso::ECO_OBSTETRICO],
+        ));
+
+        $hoja->assertOk()
+            ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · PRIMER TRIMESTRE')
+            ->assertSee('El embarazo:')->assertSee('2026-06-01')
+            ->assertSee('LCC: 45')
+            // Los bloques sin datos no se imprimen (la misma regla del eco pélvico): en este caso no se
+            // cargó nada del riesgo del embarazo temprano.
+            ->assertDontSee('El riesgo del embarazo temprano:')
+            ->assertSee('Conclusión:');
     }
 
     public function test_un_eco_obstetrico_sin_datos_no_se_guarda(): void
