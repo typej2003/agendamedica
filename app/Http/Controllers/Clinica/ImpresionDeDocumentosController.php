@@ -92,6 +92,9 @@ class ImpresionDeDocumentosController extends Controller
             $elegidos,
             $this->urlDeLaConsulta($consulta, $ofrecidos, $elegidos),
             'Volver a la consulta',
+            // La gesta del control de embarazo (`&gesta=2`): el informe prenatal es de una gesta y no de la
+            // consulta, así que se pasa explícita en vez de que la lea el motor de documentos.
+            ((int) $request->query('gesta', 0)) ?: null,
         );
     }
 
@@ -177,15 +180,14 @@ class ImpresionDeDocumentosController extends Controller
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
      */
-    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver)
+    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
 
         $documentos = [];
-        $gesta = (int) $request->query('gesta', 0);
 
         foreach ($claves as $clave) {
-            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta > 0 ? $gesta : null);
+            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta);
             abort_if($documento === null, 404);
             $documentos[] = $documento;
         }
