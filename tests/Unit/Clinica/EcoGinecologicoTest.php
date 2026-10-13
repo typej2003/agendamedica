@@ -131,14 +131,21 @@ class EcoGinecologicoTest extends TestCase
         $this->assertFalse($estudio->tieneAlgoDe(['observacion', 'fur']));
     }
 
-    /** El registro de tipos: hoy sólo el ginecológico, y un valor raro cae al que existe. */
-    public function test_el_registro_de_tipos_solo_tiene_el_ginecologico(): void
+    /**
+     * El registro de tipos: los que ya existen (el ginecológico de WEB-6.1 y los dos obstétricos de WEB-6.2),
+     * y un valor raro cae al que existe.
+     *
+     * ⚠️ Este test fija la **lista**, así que encender un tipo lo rompe: es el mismo caso de la trampa 96 (hay
+     * aserciones de listas que no se ven en una búsqueda del contador del panel).
+     */
+    public function test_el_registro_de_tipos_tiene_los_que_existen_y_un_valor_raro_cae_al_primero(): void
     {
-        $this->assertSame(['ginecologico'], TiposDeEstudio::claves());
+        $this->assertSame(['ginecologico', 'obstetrico', 'tercero'], TiposDeEstudio::claves());
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar('inventado'));
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar(null));
         $this->assertTrue(TiposDeEstudio::existe('ginecologico'));
-        $this->assertFalse(TiposDeEstudio::existe('obstetrico'));
+        $this->assertTrue(TiposDeEstudio::existe('obstetrico'));
         $this->assertSame('Eco ginecológico', TiposDeEstudio::texto('ginecologico'));
+        $this->assertSame('Eco obstétrico (1.er trimestre)', TiposDeEstudio::texto('obstetrico'));
     }
 }
