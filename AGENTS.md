@@ -259,12 +259,14 @@ los ecos—, `Gesta`/`GestasDeLaHistoria` —la gesta y su lectura, con `gesta_c
 número es la gesta 1—, `Vistas/{PestanasDelEmbarazo,SeccionDeEmbarazoVista,PrenatalVista,FechasDelEmbarazoVista}`
 —`FechasDelEmbarazoVista` es **un solo** ViewModel para *Laboratorio* y *Controles*, que son la misma forma—,
 los modelos `PreNatalObservacion`/`PrenaExamenB`/`PreNatalDesarrolloFino` —cada uno con su **mapa de campos** en
-`campos()`—, los parciales `clinica/consulta/_embarazo*` y el aviso sin guardar genérico
-(`avisoDeFormulario`) que `consulta.js` ata por `data-consulta-fechas`). El panel pasa de 11 a **12 de 13**.
-⚠️ **Tres tablas que no son las que parecen** (las tres de la solapa vieja y oculta, sin datos en el dump):
-`prena_exames_b` (no `pre_natal_examenes`), `pre_natal_desarrollo_fino` (no `pre_natal_desarrollo`) y el
-DataWindow `d_pre_natal_observa_2.srd` (no el huérfano sin `_2`): ver la **trampa 99**. **Falta** la pestaña
-*Reporte* (el informe «CONTROL DE EMBARAZO») y el verificador en Chrome.
+`campos()`—, el motor de la **hoja del informe** (`DocumentoImpreso::CONTROL_DE_EMBARAZO` +
+`SolicitudesParaImprimir::informeDelEmbarazo`, con `&gesta=` en la ruta de impresión para elegir la gesta), los
+parciales `clinica/consulta/_embarazo*` y el aviso sin guardar genérico (`avisoDeFormulario`) que `consulta.js`
+ata por `data-consulta-fechas`). El panel pasa de 11 a **12 de 13**. Las **cuatro pestañas** del escritorio están
+(*Prenatal*, *Laboratorio*, *Controles* y *Reporte*). ⚠️ **Tres tablas que no son las que parecen** (las tres de
+la solapa vieja y oculta, sin datos en el dump): `prena_exames_b` (no `pre_natal_examenes`),
+`pre_natal_desarrollo_fino` (no `pre_natal_desarrollo`) y el DataWindow `d_pre_natal_observa_2.srd` (no el
+huérfano sin `_2`): ver la **trampa 99**. **Falta** el verificador en Chrome de la sección.
 
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
