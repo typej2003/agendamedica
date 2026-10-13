@@ -18,6 +18,7 @@ use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
 use App\Models\Paciente;
@@ -81,6 +82,7 @@ final class SolicitudesParaImprimir
         private EstudiosDeLaConsulta $estudios,
         private EcoGinecologico $ecos,
         private EcoObstetrico $ecosObstetricos,
+        private EcoObstetricoTercero $ecosObstetricosTerceros,
         private InformePrenatal $informesPrenatales,
     ) {
     }
@@ -129,13 +131,25 @@ final class SolicitudesParaImprimir
         // El informe del eco obstétrico del primer trimestre (WEB-6.2): se ofrece si el estudio tiene datos
         // (la fecha sola no lo hace, igual que en el eco pélvico).
         $estudioObstetrico = $this->ecosObstetricos->de($consulta);
-        if ($this->elEcoObstetricoEsDocumento($estudioObstetrico)) {
+        if ($this->elEcoObstetricoEsDocumento($estudioObstetrico, EcoObstetrico::columnas())) {
             $disponibles[] = [
                 'clave' => DocumentoImpreso::ECO_OBSTETRICO,
                 'tipo' => DocumentoImpreso::ECO_OBSTETRICO,
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][1],
                 // Sin los hallazgos ni la conclusión: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del eco obstétrico (1.er trimestre)',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El del 2.º/3.er trimestre: otro estudio (su tabla y su mapa), la misma regla para ofrecerlo.
+        $estudioTercero = $this->ecosObstetricosTerceros->de($consulta);
+        if ($this->elEcoObstetricoEsDocumento($estudioTercero, EcoObstetricoTercero::columnas())) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+                'tipo' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO_TERCERO][1],
+                'resumen' => 'Informe del eco obstétrico (2.º y 3.er trimestre)',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -266,7 +280,15 @@ final class SolicitudesParaImprimir
         if ($clave === DocumentoImpreso::ECO_OBSTETRICO) {
             $estudio = $this->ecosObstetricos->de($consulta);
 
-            return $this->elEcoObstetricoEsDocumento($estudio) ? $this->ecoObstetrico($paciente, $estudio, $fechaDeLaConsulta) : null;
+            return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetrico::columnas()) ? $this->ecoObstetrico($paciente, $estudio, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_OBSTETRICO_TERCERO) {
+            $estudio = $this->ecosObstetricosTerceros->de($consulta);
+
+            return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetricoTercero::columnas())
+                ? $this->ecoObstetricoTercero($paciente, $estudio, $fechaDeLaConsulta)
+                : null;
         }
 
         if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {
@@ -777,9 +799,23 @@ final class SolicitudesParaImprimir
      */
     private function ecoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
     {
+        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetrico::grupos(), DocumentoImpreso::ECO_OBSTETRICO, ' · PRIMER TRIMESTRE');
+    }
+
+    /** La del 2.º/3.er trimestre: la misma hoja con su mapa y su título. */
+    private function ecoObstetricoTercero(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    {
+        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetricoTercero::grupos(), DocumentoImpreso::ECO_OBSTETRICO_TERCERO, ' · SEGUNDO/TERCER TRIMESTRE');
+    }
+
+    /**
+     * La hoja de un eco obstétrico: un párrafo por bloque del mapa y la EG/FPP de su FUR.
+     */
+    private function hojaDelEcoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha, array $grupos, string $clave, string $sufijo): DocumentoImpreso
+    {
         $parrafos = [];
 
-        foreach (EcoObstetrico::grupos() as $grupo) {
+        foreach ($grupos as $grupo) {
             $valores = [];
 
             foreach ($grupo['campos'] as $campo) {
@@ -812,10 +848,10 @@ final class SolicitudesParaImprimir
         }
 
         return new DocumentoImpreso(
-            DocumentoImpreso::ECO_OBSTETRICO,
-            DocumentoImpreso::ECO_OBSTETRICO,
-            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][0] . ' · PRIMER TRIMESTRE',
-            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO][1],
+            $clave,
+            $clave,
+            DocumentoImpreso::TITULOS[$clave][0] . $sufijo,
+            DocumentoImpreso::TITULOS[$clave][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $datos,
@@ -824,12 +860,12 @@ final class SolicitudesParaImprimir
     }
 
     /** ¿El eco obstétrico dice algo? La fecha, la FUR y la gesta no cuentan (son del embarazo, no hallazgos). */
-    private function elEcoObstetricoEsDocumento(EstudioEcografico $estudio): bool
+    private function elEcoObstetricoEsDocumento(EstudioEcografico $estudio, array $columnas): bool
     {
         $noCuentan = ['fecha', 'fur', 'gesta'];
         $conDatos = 0;
 
-        foreach (array_diff(EcoObstetrico::columnas(), $noCuentan) as $columna) {
+        foreach (array_diff($columnas, $noCuentan) as $columna) {
             $valor = $estudio->valor($columna);
 
             if ($valor !== null && $valor !== '') {

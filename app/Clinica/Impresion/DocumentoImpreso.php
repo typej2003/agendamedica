@@ -58,6 +58,9 @@ final class DocumentoImpreso
      */
     public const ECO_OBSTETRICO = 'eco-obstetrico';
 
+    /** El **informe del eco obstétrico del 2.º/3.er trimestre** (WEB-6.2): «… SEGUNDO/TERCER TRIMESTRE». */
+    public const ECO_OBSTETRICO_TERCERO = 'eco-obstetrico-tercero';
+
     /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
@@ -78,6 +81,7 @@ final class DocumentoImpreso
         self::CONTROL_DE_EMBARAZO => ['CONTROL DE EMBARAZO', 'Control de embarazo'],
         // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
         self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
+        self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */

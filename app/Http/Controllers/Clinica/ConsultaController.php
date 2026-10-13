@@ -315,8 +315,7 @@ class ConsultaController extends Controller
                         $ecoObstetricoTercero->de($consulta),
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
-                        // La hoja del 2.º/3.er trimestre llega con su paso: hasta entonces no se ofrece.
-                        '',
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
                         null,
                         null,
                         (array) old(),

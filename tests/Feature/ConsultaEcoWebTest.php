@@ -639,5 +639,24 @@ class ConsultaEcoWebTest extends TestCase
         $this->assertSame('II', $fila->fun_dp_grado);
         // Es otro estudio: no toca la tabla del primer trimestre.
         $this->assertSame(0, \App\Models\EcoObstetrico::where('historia', 1001)->count());
+
+        // Y con el estudio cargado la pantalla ya ofrece su hoja, que sale con el título del trimestre.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'tercero'))
+            ->assertOk()->assertSee('Imprimir el informe')
+            ->assertSee('documento=eco-obstetrico-tercero', false);
+
+        $hoja = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route(
+            'clinica.consulta.documentos.imprimir',
+            [$consulta->id, 'documento' => \App\Clinica\Impresion\DocumentoImpreso::ECO_OBSTETRICO_TERCERO],
+        ));
+
+        $hoja->assertOk()
+            ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · SEGUNDO/TERCER TRIMESTRE')
+            ->assertSee('Datos biométricos:')
+            ->assertSee('Peso F.: 3200')
+            ->assertSee('Conclusiones: Embarazo a término.')
+            // Un bloque sin NINGÚN dato no se imprime (el del embarazo sí sale: lleva la fecha).
+            ->assertDontSee('El feto:');
     }
 }
