@@ -189,22 +189,7 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
 
         // Qué FUR salió en la hoja (así el fallo dice cuál eligió, no sólo que faltó una cadena).
         preg_match('/FUR:.*?(\d{2}\/\d{2}\/\d{4})/s', $primera->getContent(), $coincidencia);
-
-        // ⚠️ PENDIENTE (WEB-6.6): la gesta de la URL **no** llega al motor de documentos.
-        //
-        // Medido el 2026-10-13: la URL que arma el test lleva `gesta=1` (la aserción de arriba pasa), el
-        // controlador la lee y se la pasa a `SolicitudesParaImprimir::documento()` como quinto argumento (y
-        // la firma lo declara, `?int $gesta = null`), pero la hoja sale igual con la gesta **actual** (la 2):
-        // imprime el 10/01/2024 donde debería imprimir el 20/05/2026. `InformePrenatal::de($reg, $historia, 1)`
-        // sí devuelve la gesta 1 cuando se lo llama desde su propio test, así que el corte está entre el
-        // controlador y esa llamada. Falta mirarlo con la traza puesta (¿el `query('gesta')` se pierde en el
-        // camino de `delaConsulta`, o el `$gesta` que llega al motor no es el que se pasa?).
-        if (($coincidencia[1] ?? null) !== '20/05/2026') {
-            $this->markTestIncomplete(
-                'PENDIENTE WEB-6.6: la gesta de la URL no llega al motor de documentos (salió '
-                . ($coincidencia[1] ?? 'sin FUR') . ' y se pidió la 1, que es del 20/05/2026).'
-            );
-        }
+        $this->assertSame('20/05/2026', $coincidencia[1] ?? 'sin FUR en la hoja', 'La FUR que imprimió la hoja');
 
         $primera->assertSee('Control del 01/06/2026:');
     }

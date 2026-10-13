@@ -74,6 +74,7 @@ class ImpresionDeDocumentosController extends Controller
         $consulta = $this->consultas->consulta($registros, (int) $consulta->id, $contexto['reg_medico']);
         $paciente = $this->consultas->paciente($consulta, $registros);
 
+
         abort_unless($paciente !== null, 404);
 
         // El médico puede imprimir la constancia aunque no tenga nada propio; «todos» no la incluye en ese caso.

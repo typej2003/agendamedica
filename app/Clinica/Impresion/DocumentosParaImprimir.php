@@ -82,12 +82,14 @@ final class DocumentosParaImprimir
      *
      * @param  array<int,string>  $registros
      */
-    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave): DocumentoDeRecipe|DocumentoImpreso|null
+    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): DocumentoDeRecipe|DocumentoImpreso|null
     {
         if (str_starts_with($clave, self::PREFIJO_RECIPE)) {
             return $this->recipes->documento($consulta, $pacienteId, substr($clave, strlen(self::PREFIJO_RECIPE)));
         }
 
-        return $this->solicitudes->documento($consulta, $pacienteId, $registros, $clave);
+        // La gesta del control de embarazo (`&gesta=2`) tiene que cruzar esta fachada: es la única de las
+        // solicitudes que no es de la consulta, y sin pasarla el informe salía siempre con la gesta actual.
+        return $this->solicitudes->documento($consulta, $pacienteId, $registros, $clave, $gesta);
     }
 }
