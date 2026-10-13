@@ -55,6 +55,22 @@ return [
             'visibility' => 'public',
         ],
 
+        /*
+         * **Los archivos clínicos que sube un usuario** (WEB-4.7): las imágenes de una consulta.
+         *
+         * Es un disco **privado** a propósito y por eso **no** se parece al `public`: su raíz está fuera
+         * de `public/` (`storage/app/clinica`, como el disco `local` con su `storage/app`), no declara
+         * `url` y **no** tiene enlace simbólico en `public/`. Ninguna URL del servidor web lo alcanza: el
+         * único camino a un archivo es la ruta autorizada del API, que comprueba el `reg_medico` del
+         * contexto contra el dueño de la fila. La decisión y su porqué están en
+         * `App\Clinica\Archivos\ArchivosClinicos` y en la wiki `07-modelo-de-datos.md`.
+         */
+        'clinica' => [
+            'driver' => 'local',
+            'root' => storage_path('app/clinica'),
+            'visibility' => 'private',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

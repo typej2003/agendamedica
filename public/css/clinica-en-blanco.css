@@ -1,0 +1,75 @@
+/* Los formatos en blanco (WEB-5.5b): un documento sin datos de paciente, con renglones para escribir a mano. Se carga junto con
+   `clinica-impresion.css`, `clinica-recipe.css` y `clinica-documento.css`: es la MISMA hoja de la impresión real (membrete, mitad, firma
+   y pie), a la que esto sólo le agrega las líneas. Nada de acá mide texto: el alto de cada bloque lo reparte el navegador (`flex`) y lo
+   que no entra se corta limpio, por eso no tiene gemela en `MedidasDeLaMitad` ni en el distribuidor. */
+
+.recipe-hojas {
+    /* Gris oscuro y fino: se ve en una impresora en blanco y negro y no es una raya tan dura como el texto. */
+    --linea-en-blanco: #3c3c46;
+    --paso-del-renglon: 8mm;
+}
+
+/* ---------------------------------------------------------------------------------------- Datos del paciente
+   Los mismos rótulos de la hoja real; cada uno con su línea, que ocupa lo que queda de la fila. */
+
+.dato-en-blanco { display: flex; align-items: flex-end; gap: 1.5mm; min-width: 0; }
+.dato-en-blanco .recipe-dato-etiqueta { flex: none; margin-right: 0; }
+.dato-en-blanco .linea-en-blanco { flex: 1 1 auto; min-width: 8mm; }
+.recipe-datos-fila .dato-en-blanco { gap: 1mm; }
+.recipe-datos-fila .dato-ci { flex: 3 1 0; }
+.recipe-datos-fila .dato-edad { flex: 2 1 0; }
+.recipe-datos-fila .dato-fecha { flex: 3 1 0; }
+.recipe-datos-fila { align-items: flex-end; gap: 4mm; }
+
+.linea-en-blanco {
+    display: inline-block;
+    height: 1.15em;
+    border-bottom: .3mm solid var(--linea-en-blanco);
+}
+
+/* Un dato corto del cuerpo (REPOSO DURANTE: ______): el rótulo y su línea en la misma fila. */
+.documento-fijo-en-blanco { display: flex; align-items: flex-end; gap: 1.5mm; margin-bottom: 2mm; }
+.documento-fijo-en-blanco .documento-rotulo { flex: none; }
+.documento-fijo-en-blanco .linea-en-blanco { flex: 1 1 auto; min-width: 12mm; }
+
+/* ---------------------------------------------------------------------------------------------- Renglones
+   El cuerpo se vuelve una columna: cada bloque toma una parte del alto por su peso y los renglones de adentro se cortan donde
+   el bloque se acaba (`overflow: hidden`); un renglón a medias pierde su raya inferior y no queda a la vista. */
+
+.cuerpo-en-blanco { display: flex; flex-direction: column; overflow: hidden; }
+.cuerpo-en-blanco .documento-fijos { flex: none; }
+
+.seccion-en-blanco { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.seccion-peso-2 { flex-grow: 2; }
+.seccion-peso-3 { flex-grow: 3; }
+.seccion-en-blanco-rotulo { flex: none; margin-bottom: .5mm; }
+
+.renglones-en-blanco {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-auto-rows: var(--paso-del-renglon);
+    align-content: start;
+    overflow: hidden;
+}
+
+.renglon-en-blanco { display: block; border-bottom: .3mm solid var(--linea-en-blanco); }
+
+/* ------------------------------------------------------------------------------- Barra de la página (no se imprime) */
+
+.barra-impresion-modos { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .35rem; }
+.barra-impresion-modo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 .9rem;
+    border: 1px solid #783080;
+    border-radius: 10px;
+    background: #fff;
+    color: #783080;
+    font-weight: 600;
+    text-decoration: none;
+}
+.barra-impresion-modo:hover { background: #f5edf7; }
+.barra-impresion-modo[aria-current="true"] { background: #783080; color: #fff; }
+.barra-impresion-modo:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }

@@ -1,17 +1,13 @@
-<div class="container-fluid pt-4 px-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold text-dark">Listado de Pacientes</h2>
-        <button class="btn btn-primary" wire:click="create">
-            <i class="bi bi-plus-lg"></i> Nuevo Paciente
-        </button>
-    </div>
+<div>
+    <x-ui.page-head titulo="Pacientes" subtitulo="Los pacientes registrados en el sistema.">
+        <x-slot name="acciones">
+            <button class="btn btn-primary" wire:click="create">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo paciente
+            </button>
+        </x-slot>
+    </x-ui.page-head>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
     <div class="mb-3">
         <input type="text" class="form-control" placeholder="Buscar por cédula, nombre o apellido..." wire:model="search">
@@ -38,10 +34,10 @@
                         <td>{{ $paciente->telefono ?? 'N/A' }}</td>
                         <td>{{ $paciente->email ?? 'N/A' }}</td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-warning me-1" wire:click="edit({{ $paciente->id }})">
+                            <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $paciente->id }})">
                                 Editar
                             </button>
-                            <button class="btn btn-sm btn-danger" wire:click="triggerDeleteConfirm({{ $paciente->id }})">
+                            <button class="btn btn-sm btn-outline-danger" wire:click="triggerDeleteConfirm({{ $paciente->id }})">
                                 Eliminar
                             </button>
                         </td>

@@ -26,6 +26,15 @@ class Office extends Model
 
     public const DURACION_CITA_POR_DEFECTO = 30;
 
+    /** Las modalidades de agenda, con su etiqueta. Es lo que ofrece el alta del consultorio. */
+    public static function modalidades(): array
+    {
+        return [
+            self::MODALIDAD_ORDEN => 'Orden de llegada',
+            self::MODALIDAD_HORA  => 'Hora de cita',
+        ];
+    }
+
     protected $fillable = [
         'medical_center_id',
         'medico_id',
@@ -65,5 +74,42 @@ class Office extends Model
             ->where('dia_semana', $diaSemana)
             ->sortBy(fn (OfficeSchedule $bloque) => OfficeSchedule::aMinutos($bloque->hora_inicio))
             ->values();
+    }
+
+    /**
+     * Los consultorios **de un médico**: los de su `reg_medico` o los suyos por `medico_id`. A
+     * diferencia de `vigentesDe`, no mira `activo` ni la sede: es "de quién es", no "dónde atiende
+     * hoy". Es el criterio que comparten la pantalla de consultorios (WEB-2.8b.2), la de horarios
+     * (WEB-2.8b.3) y el aviso de solape de bloques.
+     */
+    public function scopeDelMedico($query, string $regMedico, ?int $medicoId = null)
+    {
+        return $query->where(function ($consulta) use ($regMedico, $medicoId) {
+            $consulta->where('reg_medico', $regMedico);
+            if ($medicoId) {
+                $consulta->orWhere('medico_id', $medicoId);
+            }
+        });
+    }
+
+    /**
+     * Los consultorios **vigentes** de un médico: activos, de su `reg_medico` (o del médico, para las
+     * filas que todavía no tienen el registro denormalizado) y **de una sede activa**.
+     *
+     * Es la regla de "dónde atiende este médico hoy", en un solo lugar: la usan el contexto de trabajo
+     * y el armador de la agenda (el móvil hace lo mismo con `Sedes.activas`). Dar de baja el
+     * consultorio —o cerrar la sede entera— deja de ofrecerlo en los dos, sin tocar las citas que ya
+     * tiene: eso es justamente lo que se busca al desactivar y no borrar.
+     *
+     * El `orWhere` del `medico_id` no es un capricho: el delta del móvil filtra por `reg_medico`, así
+     * que un consultorio sin registro —como los que sembró `MedicalDataSeeder`— sólo se ve por su
+     * dueño. Al guardarlo desde la web siempre se escribe el `reg_medico` (WEB-2.8b.2).
+     */
+    public function scopeVigentesDe($query, string $regMedico, ?int $medicoId = null)
+    {
+        return $query
+            ->where('activo', true)
+            ->whereHas('medicalCenter', fn ($centro) => $centro->activos())
+            ->delMedico($regMedico, $medicoId);
     }
 }

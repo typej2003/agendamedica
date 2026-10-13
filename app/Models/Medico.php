@@ -57,6 +57,18 @@ class Medico extends Model
         $this->attributes['prefix'] = self::normalizarPrefijo($valor);
     }
 
+    /**
+     * `Dr. Carlos Mendoza`: tratamiento + nombre + apellido, para firmar un mensaje o mostrar al
+     * médico en la agenda. Es el mismo texto que arma el móvil (`Medico.nombreMostrar`), porque el
+     * `{doctor}` de la plantilla de recordatorio tiene que salir igual en las dos superficies.
+     */
+    public function getNombreMostrarAttribute(): string
+    {
+        $nombre = trim(implode(' ', array_filter([$this->name, $this->lastname])));
+
+        return trim(trim((string) $this->prefix) . ' ' . $nombre);
+    }
+
     /** Todos los `reg_medico` a los que tiene acceso (el suyo y los que se le asignaron desde el panel). */
     public function registros(): HasMany
     {
@@ -82,6 +94,30 @@ class Medico extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * La `clave` de `evolucion` que le corresponde a este médico dentro de un consultorio: es la
+     * numeración con la que el legado lo identifica en `cola.medico` (no es `medicos.id`, ver
+     * `App\Models\Cola`). La usan el sync del móvil al crear una cita sin elegir médico y la web
+     * clínica al agendar, para que las dos superficies escriban el mismo número.
+     *
+     * Nula si no hay fila de `evolucion` para él, que es lo común en los datos reales: casi ningún
+     * consultorio tiene la configuración cargada.
+     *
+     * @param  string|array<int,string>  $registros  El registro propio, o todos los del consultorio.
+     */
+    public function claveDeEvolucion(string|array $registros): ?int
+    {
+        if (! $this->email) {
+            return null;
+        }
+
+        $clave = Evolucion::whereIn('reg_medico', (array) $registros)
+            ->where('correo_med', $this->email)
+            ->value('clave');
+
+        return $clave === null ? null : (int) $clave;
     }
 
     public function office(): BelongsTo

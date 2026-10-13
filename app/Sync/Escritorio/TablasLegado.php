@@ -42,6 +42,41 @@ class TablasLegado
     }
 
     /**
+     * Traduce los nombres de columna que el escritorio llama distinto que el API (config
+     * `sync_legado.columnas_equivalentes`, que sale del manifiesto de la especialidad).
+     *
+     * Es lo que evita que el mismo dato quede en dos columnas: el escritorio de pediatría llavea
+     * `examen_fisico_nuevo` por `nrohistoria` + `nroconsulta` y el API la guarda por `historia` +
+     * `consulta` (como la escriben la web y ginecología). Si vinieran las dos formas, gana el nombre
+     * del API.
+     */
+    public function traducirColumnas(string $tabla, array $fila): array
+    {
+        $equivalencias = config("sync_legado.columnas_equivalentes.{$tabla}", []);
+        if (! is_array($equivalencias) || $equivalencias === []) {
+            return $fila;
+        }
+
+        // Se recorre en el orden que vino (la fila no se reordena) y, si aparecen las dos formas del
+        // mismo dato, gana la del API.
+        $salida = [];
+        $deAlias = [];
+        foreach ($fila as $columna => $valor) {
+            $destino = $equivalencias[$columna] ?? $columna;
+            $esAlias = $destino !== $columna;
+
+            if (array_key_exists($destino, $salida) && ! ($deAlias[$destino] && ! $esAlias)) {
+                continue;
+            }
+
+            $salida[$destino] = $valor;
+            $deAlias[$destino] = $esAlias;
+        }
+
+        return $salida;
+    }
+
+    /**
      * Deja solo las columnas que existen en la tabla del API, sin `id`, `reg_medico` ni las
      * excluidas en `config/sync_legado.php`. Las que el API no tiene se agregan a $ignoradas: se
      * informan, no se pierden en silencio.
@@ -49,6 +84,7 @@ class TablasLegado
     public function filtrar(string $tabla, array $fila, array &$ignoradas): array
     {
         $excluidas = config("sync_legado.columnas_excluidas.{$tabla}", []);
+        $fila = $this->traducirColumnas($tabla, $this->normalizarClaves($fila));
         $limpia = [];
 
         foreach ($fila as $columna => $valor) {
@@ -96,6 +132,13 @@ class TablasLegado
         return (int) $numHistoria . '|' . (int) $nroConsulta;
     }
 
+    /**
+     * `fecha|hora_ini`: la `clave_escritorio` de una cita y **sólo una de las dos claves primarias** que
+     * `cola` tiene en el legado. En los ocho esquemas de `Docs/MICONSULTAGI-legado/esquemas-asa/`
+     * (pediatría: `pediatria.sql`) la primaria es `fecha` + `numhistoria`, así que dos pacientes a la
+     * misma hora comparten esta clave; la cita se identifica por su historia en
+     * `CambiosEscritorio::citaDelCambio`. Ver la trampa 109.
+     */
     public static function claveCola($fecha, $horaIni): string
     {
         return Carbon::parse((string) $fecha)->format('Y-m-d') . '|' . Carbon::parse((string) $horaIni)->format('H:i:s');

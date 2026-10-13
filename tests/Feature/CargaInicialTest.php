@@ -124,6 +124,68 @@ class CargaInicialTest extends TestCase
         $this->assertSame(['1.25', 'N', null], array_map(fn ($v) => $v === null ? null : (string) $v, $valores));
     }
 
+    public function test_la_carga_no_confunde_una_factura_del_escritorio_con_una_confirmacion(): void
+    {
+        // En el escritorio `cola.estado = 1` es "factura elaborada", no "confirmada" (WEB-2.12).
+        $this->crearMedico('carga-t-006');
+        $carga = $this->iniciar('carga-t-006', ['cola' => 2])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'estado' => 1],
+            ['fecha' => '2026-10-01', 'hora_ini' => '09:00:00', 'estado' => 0],
+        ]])->assertOk()->assertJson(['recibidas' => 2]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-006')->orderBy('hora_ini')->get();
+        $this->assertSame([0, 0], $citas->pluck('estado')->map(fn ($e) => (int) $e)->all(),
+            'ninguna cita de la carga queda "Confirmada"');
+        $this->assertSame([1, null], $citas->pluck('facturada_escritorio')->map(fn ($f) => $f === null ? null : (int) $f)->all(),
+            'la factura del escritorio se conserva en su columna');
+    }
+
+    public function test_la_carga_normaliza_el_atendido_del_escritorio(): void
+    {
+        // En el escritorio `atendido` tiene cuatro valores (0/1/2/3): el 2 es "la cita se movió" y el
+        // 3 *Realizada*; AppDDR solo entiende el booleano (WEB-2.13).
+        $this->crearMedico('carga-t-007');
+        $carga = $this->iniciar('carga-t-007', ['cola' => 3])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2026-10-01', 'hora_ini' => '08:00:00', 'atendido' => 2],
+            ['fecha' => '2026-10-01', 'hora_ini' => '09:00:00', 'atendido' => 3],
+            ['fecha' => '2026-10-01', 'hora_ini' => '10:00:00', 'atendido' => 1],
+        ]])->assertOk()->assertJson(['recibidas' => 3]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-007')->orderBy('hora_ini')->get();
+        $this->assertSame([0, 1, 1], $citas->pluck('atendido')->map(fn ($a) => (int) $a)->all(),
+            'el 2 queda pendiente y el 3 cuenta como atendida');
+        $this->assertSame([1, 0, 0], $citas->pluck('movida_escritorio')->map(fn ($m) => (int) $m)->all(),
+            'solo la movida queda marcada');
+    }
+
+    /**
+     * **Trampa 109**: el legado permite dos citas a la misma fecha y hora (su clave primaria es
+     * `fecha` + `numhistoria`), y AppDDR también (citas múltiples). La clave del escritorio de una cita,
+     * `fecha|hora_ini`, **no es única**: con el UNIQUE sobre `(reg_medico, clave_escritorio)` el lote
+     * entero moría con `Duplicate entry` y la carga inicial de pediatría quedaba trabada.
+     */
+    public function test_la_carga_acepta_dos_citas_a_la_misma_hora_con_distinta_historia(): void
+    {
+        $this->crearMedico('carga-t-012');
+        $carga = $this->iniciar('carga-t-012', ['cola' => 2])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'cola', 'desde' => 0, 'filas' => [
+            ['fecha' => '2011-05-20', 'hora_ini' => '23:59:59', 'numhistoria' => 1, 'motivo' => 'UNO'],
+            ['fecha' => '2011-05-20', 'hora_ini' => '23:59:59', 'numhistoria' => 2, 'motivo' => 'DOS'],
+        ]])->assertOk()->assertJson(['recibidas' => 2, 'duplicado' => 0]);
+
+        $citas = DB::table('cola')->where('reg_medico', 'carga-t-012')->orderBy('numhistoria')->get();
+        $this->assertCount(2, $citas, 'las dos citas entran, no se pierde ni se rechaza el lote');
+        $this->assertSame('2011-05-20|23:59:59', (string) $citas[0]->clave_escritorio);
+        $this->assertSame((string) $citas[0]->clave_escritorio, (string) $citas[1]->clave_escritorio,
+            'las dos comparten la clave del escritorio: por eso el UNIQUE no podía estar');
+        $this->assertSame([1, 2], $citas->pluck('numhistoria')->map(fn ($n) => (int) $n)->all());
+    }
+
     public function test_evolucion_no_cuenta_como_dato_previo(): void
     {
         $this->crearMedico('carga-t-003');
@@ -272,6 +334,43 @@ class CargaInicialTest extends TestCase
         $this->iniciar('carga-t-008', ['antece_paciente' => 2])
             ->assertStatus(409)
             ->assertJson(['error' => 'carga_ya_completa']);
+    }
+
+    /**
+     * **WEB-3.4**: la tabla `representante` de la lista blanca sigue subiendo igual. La web le agregó
+     * tres columnas **nullable** (`cedula`, `telefono`, `email`) y este test fija las dos cosas que
+     * importan: una fila del escritorio **con las columnas viejas y nada más** entra sin romperse —es el
+     * caso de cualquier instalación que todavía no se actualizó—, y las columnas nuevas viajan cuando
+     * vienen. La tabla no se reestructuró: el sync no se tocó.
+     */
+    public function test_la_tabla_representante_sigue_subiendo_con_las_columnas_del_escritorio(): void
+    {
+        $this->crearMedico('carga-t-011');
+        $r = $this->iniciar('carga-t-011', ['representante' => 2])->assertOk();
+        $this->assertSame('', $r->json('ignoradas'));
+        $carga = $r->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'representante', 'desde' => 0, 'filas' => [
+            // Sólo las columnas que ya existían en el legado (y en el API antes de WEB-3.4).
+            ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ', 'codeparentesco' => 'M', 'direccion' => 'CALLE 1'],
+            // Y una con los datos de contacto nuevos, como los va a mandar el escritorio actualizado.
+            ['numhistoria' => 2, 'nombre' => 'LUIS GOMEZ', 'codeparentesco' => 'P', 'direccion' => 'CALLE 2',
+             'cedula' => '12345678', 'telefono' => '04141112233', 'email' => 'luis@example.com'],
+        ]])->assertOk()->assertJson(['recibidas' => 2]);
+
+        $viejo = DB::table('representante')->where('reg_medico', 'carga-t-011')->where('numhistoria', 1)->first();
+        $this->assertSame('ROSA PEREZ', $viejo->nombre);
+        $this->assertSame('M', $viejo->codeparentesco);
+        $this->assertNull($viejo->cedula, 'las columnas nuevas son nullable: la fila vieja entra igual');
+        $this->assertNull($viejo->telefono);
+        $this->assertNull($viejo->email);
+
+        $nuevo = DB::table('representante')->where('reg_medico', 'carga-t-011')->where('numhistoria', 2)->first();
+        $this->assertSame('12345678', $nuevo->cedula);
+        $this->assertSame('04141112233', $nuevo->telefono);
+        $this->assertSame('luis@example.com', $nuevo->email);
+
+        $this->enviar('finalizar', ['carga_id' => $carga])->assertOk()->assertJson(['columnas_ignoradas' => '']);
     }
 
     public function test_sin_credencial_no_entra(): void

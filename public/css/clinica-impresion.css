@@ -1,0 +1,210 @@
+/* Lo común de los documentos que imprime la web clínica (WEB-5.2, PLAN-WEB.md R6): las fuentes del membrete, el
+   membrete, la franja de firma con su sello, el pie de página, la barra de la vista previa y el diálogo de
+   opciones. Lo carga `clinica/imprimir/layout.blade.php`; cada documento suma encima su propia hoja de estilos con
+   su `@page` (`clinica-recipe.css`).
+
+   Es una pantalla aparte, sin el armazón de la web ni Bootstrap: por eso lleva sus propios colores (los de la
+   paleta, `gineco.css`) y un diálogo propio. Las medidas del membrete, la firma y el pie tienen su gemela en
+   `App\Clinica\Impresion\MedidasDeLaMitad` y tienen que cambiar juntas. */
+
+/* ------------------------------------------------------------------------------------------------ Fuentes
+   Las cinco familias que el médico puede elegir (`recipe_formatos.elementos`), auto-alojadas: la hoja se imprime
+   igual sin conexión y sin las fuentes del equipo. Licencias en public/fonts/recipe/LICENCIAS.md. */
+
+@font-face { font-family: 'Recipe Arimo'; src: url('../fonts/recipe/Arimo-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Arimo'; src: url('../fonts/recipe/Arimo-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Arimo'; src: url('../fonts/recipe/Arimo-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Arimo'; src: url('../fonts/recipe/Arimo-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Tinos'; src: url('../fonts/recipe/Tinos-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Tinos'; src: url('../fonts/recipe/Tinos-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Tinos'; src: url('../fonts/recipe/Tinos-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Tinos'; src: url('../fonts/recipe/Tinos-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Cousine'; src: url('../fonts/recipe/Cousine-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Cousine'; src: url('../fonts/recipe/Cousine-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Cousine'; src: url('../fonts/recipe/Cousine-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Cousine'; src: url('../fonts/recipe/Cousine-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Comic Neue'; src: url('../fonts/recipe/ComicNeue-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Comic Neue'; src: url('../fonts/recipe/ComicNeue-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe Comic Neue'; src: url('../fonts/recipe/ComicNeue-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe Comic Neue'; src: url('../fonts/recipe/ComicNeue-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe DejaVu Sans'; src: url('../fonts/recipe/DejaVuSans.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe DejaVu Sans'; src: url('../fonts/recipe/DejaVuSans-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Recipe DejaVu Sans'; src: url('../fonts/recipe/DejaVuSans-Oblique.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Recipe DejaVu Sans'; src: url('../fonts/recipe/DejaVuSans-BoldOblique.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+
+/* El id de la fuente (`recipe_formatos`) es el sufijo de la clase: `fuente-arimo`, `fuente-comic_neue`… */
+.fuente-arimo { font-family: 'Recipe Arimo', Arial, Helvetica, sans-serif; }
+.fuente-tinos { font-family: 'Recipe Tinos', 'Times New Roman', Times, serif; }
+.fuente-cousine { font-family: 'Recipe Cousine', 'Courier New', Courier, monospace; }
+.fuente-comic_neue { font-family: 'Recipe Comic Neue', 'Comic Sans MS', cursive; }
+.fuente-dejavu_sans { font-family: 'Recipe DejaVu Sans', Verdana, sans-serif; }
+
+/* ------------------------------------------------------------------------------------------------- Página */
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+    font-family: 'Recipe Arimo', Arial, Helvetica, sans-serif;
+    color: #000;
+    background: #e9e7ef;
+    font-size: 10pt;
+    line-height: 1.25;
+    /* Las líneas de color y los bordes se imprimen aunque el diálogo del navegador tenga "gráficos de fondo" apagado. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* ---------------------------------------------------------------------------------------------- Membrete
+   Medidas: `MedidasDeLaMitad::altoDelMembrete` (textos a 16 / 9 / 9 pt, interlínea 1,25, logo de 17,6 / 24,7 /
+   31,8 mm de alto y hasta 40 mm de ancho, 3 mm entre el logo y los textos). */
+
+.membrete { display: flex; align-items: center; gap: 3mm; }
+.membrete.logo-derecha { flex-direction: row-reverse; }
+.membrete.logo-centro { flex-direction: column; gap: 1.4mm; align-items: stretch; }
+
+.membrete-textos { flex: 1 1 auto; min-width: 0; }
+.membrete-textos p, .pie-de-pagina p { margin: 0; line-height: 1.25; overflow-wrap: anywhere; }
+
+.membrete-logo { display: block; flex: none; width: auto; max-width: 40mm; object-fit: contain; }
+.membrete-logo.logo-chico { height: 17.6mm; }
+.membrete-logo.logo-mediano { height: 24.7mm; }
+.membrete-logo.logo-grande { height: 31.8mm; }
+.membrete.logo-centro .membrete-logo { align-self: center; }
+
+.membrete-medico { font-size: 16pt; }
+.membrete-especialidad, .membrete-rif { font-size: 9pt; }
+
+/* El estilo de cada bloque de texto (la configuración del formato del médico). */
+.alin-izquierda { text-align: left; }
+.alin-centro { text-align: center; }
+.alin-derecha { text-align: right; }
+.negrita { font-weight: 700; }
+.italica { font-style: italic; }
+.subrayado { text-decoration: underline; }
+.con-borde .caja-de-texto { display: inline-block; border: .2mm solid #000; padding: .3mm 1mm; }
+.membrete-logo.con-borde { border: .2mm solid #000; }
+
+/* --------------------------------------------------------------------------------------------- Firma y sello
+   Medidas: la franja mide 22 mm (`MedidasDeLaMitad::FIRMA_MM` suma 2 de aire). La firma ocupa hasta 14,1 mm
+   (40 pt) sobre su línea de 53 mm (150 pt); el sello, hasta 17,5 mm (el móvil usa 19,4: acá se recorta para no tapar la próxima cita), en la posición del médico. */
+
+.firmas {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 3mm;
+    height: 22mm;
+    margin-top: 2mm;
+    flex: none;
+}
+
+.firmas-izquierda { flex: 1 1 auto; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+
+.firma { flex: none; width: 53mm; text-align: center; }
+.firma-imagen { display: block; margin: 0 auto; max-width: 100%; max-height: 14.1mm; object-fit: contain; }
+.firma-linea { border-top: .25mm solid #000; }
+.firma-nombre { margin: .7mm 0 0; font-size: 8pt; line-height: 1.25; }
+
+.sello { position: absolute; bottom: 0; height: 17.5mm; max-width: 45mm; object-fit: contain; }
+.sello-izquierda { left: 0; }
+.sello-centro { left: 50%; transform: translateX(-50%); }
+.sello-derecha { right: 0; }
+
+/* ------------------------------------------------------------------------------------------------------ Pie
+   Medidas: 1,5 mm de aire y cada línea a 7 pt (`MedidasDeLaMitad::altoDelPie`). */
+
+.pie-de-pagina { margin-top: 1.5mm; flex: none; }
+.pie-de-pagina p { font-size: 7pt; }
+
+/* ------------------------------------------------------------------------------- Barra de la vista previa
+   No se imprime. */
+
+.barra-impresion {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    padding: .6rem 1rem;
+    background: #fff;
+    border-bottom: 1px solid #d8d8e0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #201048;
+}
+
+.barra-impresion-texto { min-width: 0; flex: 1 1 18rem; }
+.barra-impresion-volver { color: #783080; font-weight: 600; text-decoration: none; }
+.barra-impresion-volver:hover { text-decoration: underline; }
+.barra-impresion-titulo { margin: .1rem 0 0; font-size: 1.05rem; font-weight: 700; overflow-wrap: anywhere; }
+.barra-impresion-detalle { margin: 0; color: #55555f; }
+.barra-impresion-acciones { display: flex; gap: .5rem; flex: none; }
+
+.boton-impresion, .dialogo-impresion .btn {
+    min-height: 40px;
+    padding: 0 1.1rem;
+    border: 1px solid #783080;
+    border-radius: 10px;
+    background: #783080;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.boton-impresion:hover, .dialogo-impresion .btn-primary:hover { background: #5f2566; }
+.boton-impresion-secundario, .dialogo-impresion .btn-outline-secondary { background: #fff; color: #783080; }
+.boton-impresion-secundario:hover, .dialogo-impresion .btn-outline-secondary:hover { background: #f5edf7; }
+.boton-impresion:focus-visible, .dialogo-impresion .btn:focus-visible, .dialogo-impresion input:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }
+
+/* -------------------------------------------------------------------------------- Diálogo de las opciones
+   Gemelo de los estilos de `.opciones-grupo` / `.opcion-de-impresion` de `doctorisimo-ui.css` (esa hoja no se
+   carga acá). */
+
+.dialogo-impresion {
+    width: min(28rem, calc(100vw - 2rem));
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    color: #201048;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 12px 40px rgba(32, 16, 72, .28);
+}
+
+.dialogo-impresion::backdrop { background: rgba(32, 16, 72, .45); }
+.dialogo-impresion-caja { padding: 1.25rem; }
+.dialogo-impresion-titulo { margin: 0 0 1rem; font-size: 1.1rem; font-weight: 700; }
+.dialogo-impresion .dialogo-pie { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+
+.dialogo-impresion .opciones-grupo { margin: 0 0 1rem; padding: 0; border: 0; min-width: 0; }
+.dialogo-impresion .etiqueta { padding: 0; margin-bottom: .4rem; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #55555f; }
+.dialogo-impresion .opcion-de-impresion {
+    display: flex;
+    gap: .6rem;
+    align-items: flex-start;
+    padding: .55rem .7rem;
+    margin-bottom: .4rem;
+    border: 1px solid #8d8d99;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.dialogo-impresion .opcion-de-impresion:has(input:checked) { border-color: #783080; background: #f5edf7; }
+.dialogo-impresion .opcion-de-impresion input { margin-top: .2rem; accent-color: #783080; }
+.dialogo-impresion .opcion-de-impresion-texto { display: flex; flex-direction: column; }
+.dialogo-impresion .opcion-de-impresion-texto small { color: #55555f; }
+.dialogo-impresion .opciones-nota { margin: 0; color: #55555f; font-size: .85rem; }
+
+/* ---------------------------------------------------------------------------------------------- Impresión */
+
+@media print {
+    body { background: #fff; }
+    .barra-impresion, .dialogo-impresion { display: none !important; }
+}

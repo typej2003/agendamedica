@@ -36,6 +36,10 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
+            // La verificación pública del récipe (WEB-5.6): fuera del grupo `web`, sin sesión ni cookies.
+            Route::middleware('verificacion')
+                ->group(base_path('routes/verificar.php'));
+
             foreach (glob(base_path('routes/web/*.php')) as $file) {
                 Route::middleware('web')->group($file);
             }

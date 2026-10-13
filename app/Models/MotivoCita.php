@@ -28,10 +28,17 @@ class MotivoCita extends Model
         'codigo',
         'tipo_atencion',
         'precio',
+        'admite_varias_citas_pendientes',
     ];
 
     protected $casts = [
         'precio' => 'float',
+        // La sede es un id: con el cast la comparación `=== $sede->id` no depende de si el motor devuelve texto (WEB-8.1c).
+        'office_id' => 'integer',
+        // La marca de la excepción de citas múltiples (WEB-2.17): `null` (las filas que ya existían y las
+        // que sube el escritorio, que no conoce la columna) se comporta igual que `false`, y la pantalla
+        // de motivos deja `null` al desmarcar, así que "no marcado" tiene un solo valor.
+        'admite_varias_citas_pendientes' => 'boolean',
     ];
 
     /**

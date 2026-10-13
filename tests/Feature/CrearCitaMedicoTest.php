@@ -10,6 +10,7 @@ use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -163,5 +164,39 @@ class CrearCitaMedicoTest extends TestCase
         $ids = collect($response->json('offices'))->pluck('id');
         $this->assertTrue($ids->contains($officeA->id));
         $this->assertTrue($ids->contains($officeB->id));
+    }
+
+    public function test_los_bloques_de_horario_bajan_al_movil_y_su_baja_tambien(): void
+    {
+        // Los bloques se administran en la web (WEB-2.8b.3) y el teléfono los necesita para armar la
+        // jornada. El delta manda la tabla por `updated_at`, así que un bloque **borrado** sólo puede
+        // llegar por `eliminados`: eso lo escribe `OfficeSchedule::booted()`.
+        $regMedico = 'test-ccm-' . uniqid();
+        $medico = $this->medico($regMedico, autenticar: true);
+        $centro = MedicalCenter::firstOrFail();
+
+        $office = Office::create([
+            'medical_center_id' => $centro->id, 'medico_id' => $medico->id, 'reg_medico' => $regMedico,
+            'office_number' => 'H1',
+        ]);
+        $bloque = OfficeSchedule::create([
+            'office_id' => $office->id, 'reg_medico' => $regMedico,
+            'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00', 'cupo' => 8,
+        ]);
+
+        $completo = $this->postJson('/api/app/sync-app-data', [])->assertOk();
+        $bajado = collect($completo->json('office_schedules'))->firstWhere('id', $bloque->id);
+        $this->assertNotNull($bajado, 'El bloque nuevo tiene que viajar en el sync.');
+        $this->assertSame(8, (int) $bajado['cupo']);
+
+        $antes = now()->subMinute()->toIso8601String();
+        $bloque->delete();
+
+        $delta = $this->postJson('/api/app/sync-app-data', ['since' => $antes])->assertOk();
+        $eliminado = collect($delta->json('eliminados'))->first(
+            fn ($fila) => $fila['table_name'] === 'office_schedules' && (int) $fila['record_id'] === $bloque->id
+        );
+
+        $this->assertNotNull($eliminado, 'El borrado del bloque tiene que bajar como eliminado.');
     }
 }

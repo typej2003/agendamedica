@@ -1,30 +1,17 @@
-<div class="mt-4">
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-6">
-            <h4 class="fw-bold mb-0">Gestión de Usuarios</h4>
-        </div>
-        <div class="col-md-6 text-md-end">
+<div>
+    <x-ui.page-head titulo="Gestión de usuarios">
+        <x-slot name="acciones">
             <button wire:click="create" class="btn btn-primary">
-                + Nuevo Usuario
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo usuario
             </button>
-        </div>
-    </div>
+        </x-slot>
+    </x-ui.page-head>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
-    @if (session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
+        <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-4">

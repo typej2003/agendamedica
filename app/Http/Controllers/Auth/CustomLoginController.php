@@ -40,7 +40,9 @@ class CustomLoginController extends Controller
             Auth::login($user, $remember);
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            // Cada rol entra a su área (`User::rutaDeInicio`): administración al panel, médico y
+            // secretaría al consultorio.
+            return redirect()->intended(route($user->rutaDeInicio()));
         }
 
         // 2. Caso Médico (Modelo Medico)
@@ -78,7 +80,9 @@ class CustomLoginController extends Controller
             Auth::login($user, $remember);
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            // El médico entra directo a su consultorio (`/clinica`), no al panel de administración.
+            // Si todavía no eligió contexto, `clinica.contexto` lo manda a elegirlo.
+            return redirect()->intended(route($user->rutaDeInicio()));
         }
 
         // 3. Caso Paciente (Modelo Paciente)
@@ -117,7 +121,9 @@ class CustomLoginController extends Controller
             Auth::login($user, $remember);
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            // El paciente sigue entrando al panel mientras no exista `/consultorio` (ver el TODO en
+            // `User::rutaDeInicio`).
+            return redirect()->intended(route($user->rutaDeInicio()));
         }
     }
 }

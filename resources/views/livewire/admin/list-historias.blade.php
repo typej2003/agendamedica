@@ -1,21 +1,13 @@
-<div class="container-fluid pt-4 mt-3">
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h3 mb-0 text-gray-800 fw-bold">Gestión de Historias Médicas</h2>
-            <p class="text-muted small mb-0">Administración y seguimiento de registros clínicos</p>
-        </div>
-        <button class="btn btn-primary shadow-sm" wire:click="createHistoria">
-            <i class="bi bi-plus-circle me-1"></i> Nueva Historia
-        </button>
-    </div>
+<div>
+    <x-ui.page-head titulo="Historias médicas" subtitulo="Administración y seguimiento de registros clínicos.">
+        <x-slot name="acciones">
+            <button class="btn btn-primary" wire:click="createHistoria">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva historia
+            </button>
+        </x-slot>
+    </x-ui.page-head>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert">
-            <i class="bi bi-check-circle me-2"></i> {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
     <!-- Buscador Principal -->
     <div class="mb-4">
@@ -40,7 +32,8 @@
     </div>
 
     <!-- Tabla Principal -->
-    <div class="card border-0 shadow-sm">
+    <div class="card">
+        <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-bordered align-middle mb-0">

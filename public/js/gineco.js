@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Efecto de cambio de sombra en la barra de navegación al hacer scroll
+    // Esa barra sólo existe en el sitio público: en el panel no está y el listener tiraba un error en cada scroll.
     const navbar = document.querySelector('.navbar-gineco');
-    window.addEventListener('scroll', function () {
+    if (navbar) window.addEventListener('scroll', function () {
         if (window.scrollY > 20) {
             navbar.classList.add('shadow-sm');
         } else {

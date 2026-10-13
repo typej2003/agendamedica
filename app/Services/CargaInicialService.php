@@ -6,7 +6,10 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
+use App\Sync\Escritorio\AtencionCita;
+use App\Sync\Escritorio\EstadoCita;
 use App\Sync\Escritorio\PacientesLegado;
+use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -30,7 +33,7 @@ class CargaInicialService
     /** Tablas del API (no del legado) que también indican que el médico ya tiene datos. */
     private const TABLAS_DEL_API_CON_DATOS = ['medico_pacientes', 'historias'];
 
-    public function __construct(private TablasLegado $tablas)
+    public function __construct(private TablasLegado $tablas, private TablasDelSync $sync)
     {
     }
 
@@ -51,13 +54,16 @@ class CargaInicialService
     /**
      * Tablas donde el médico ya tiene filas. Vacío = limpio.
      *
+     * Mira las tablas de **su especialidad** (WEB-7.3): pediatría no tiene por qué revisar las de
+     * ginecología, y al revés. `$medico` es opcional para no romper a quien ya llamaba al método.
+     *
      * @return string[]
      */
-    public function tablasConDatos(string $regMedico): array
+    public function tablasConDatos(string $regMedico, ?Medico $medico = null): array
     {
         $excluidas = config('sync_legado.no_cuentan_para_limpieza', []);
         $tablas = array_merge(
-            array_diff(config('sync_legado.tablas', []), $excluidas),
+            array_diff($this->sync->paraMedico($medico), $excluidas),
             self::TABLAS_DEL_API_CON_DATOS
         );
 
@@ -113,8 +119,10 @@ class CargaInicialService
             ]);
         }
 
-        // Normalizar lo anunciado y separar lo que el API no acepta.
-        $permitidas = config('sync_legado.tablas', []);
+        // Normalizar lo anunciado y separar lo que el API no acepta. Lo que se **acepta** es la unión
+        // de todas las especialidades (una tabla de otra especialidad no se rechaza); lo que se le
+        // **pide** al escritorio, más abajo, es lo de la especialidad de este médico.
+        $permitidas = $this->sync->aceptadas();
         $aceptadas = [];
         $ignoradas = [];
         foreach ($anunciadas as $tabla => $filas) {
@@ -276,6 +284,12 @@ class CargaInicialService
                 continue;
             }
             $limpia = $this->tablas->filtrar($tabla, $fila, $ignoradas);
+            if ($tabla === 'cola') {
+                // El escritorio trae `estado = 1` de facturación, no de confirmación (WEB-2.12), y su
+                // `atendido` con cuatro valores (0/1/2/3), no el booleano de AppDDR (WEB-2.13).
+                $limpia = EstadoCita::nuevaDeEscritorio($limpia);
+                $limpia = AtencionCita::aAppDdr($limpia);
+            }
             $limpia['reg_medico'] = $carga->reg_medico;
             // Clave de la fila en el escritorio: con ella la sincronización de cambios reconoce
             // consultas y citas aunque sus números o su hora cambien (bridge/DISENO-FASE-2.md § 4).
@@ -368,6 +382,7 @@ class CargaInicialService
             return TablasLegado::claveConsulta($fila['numhistoria'], $fila['nroconsulta']);
         }
         if ($tabla === 'cola' && isset($fila['fecha'], $fila['hora_ini'])) {
+            // `fecha|hora_ini`: la cita se identifica por su historia, no por esta clave (trampa 109).
             return TablasLegado::claveCola($fila['fecha'], $fila['hora_ini']);
         }
 

@@ -24,7 +24,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Saludo de cumpleaños automático (WEB-2.9). **Cada 15 minutos y no una vez al día** porque la
+        // hora del envío es por médico (`evolucion.hora_cumpleanos`): el comando tiene que despertarse
+        // más seguido que la granularidad de la configuración y decidir él a quién le llegó la hora. Que
+        // no se mande dos veces no lo garantiza el horario, lo garantiza el registro del envío
+        // (`notificaciones_cumple`), así que correr de más es inofensivo.
+        //
+        // ⚠️ En producción esto **necesita el cron del servidor** (`* * * * * php artisan schedule:run`);
+        // sin él, el saludo automático no sale nunca. Anotado en ROADMAP.md §5.
+        $schedule->command('cumpleanos:enviar')
+            ->everyFifteenMinutes()
+            // Sin solapamiento: una corrida lenta no puede pisar a la siguiente (el registro igual lo
+            // cubre, pero así el log del comando se lee).
+            ->withoutOverlapping();
     }
 
     /**

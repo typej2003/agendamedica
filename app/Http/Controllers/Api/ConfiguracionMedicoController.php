@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Configuracion\GuardarMembreteDelMedico;
+use App\Actions\Configuracion\LimitesDelMembrete;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ConfiguracionMedicoResource;
-use App\Models\Evolucion;
 use App\Models\Medico;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Datos de reporte del médico (especialidad, logo, pie de récipe/informe — ver ROADMAP.md Paso 17):
@@ -18,10 +18,14 @@ use Illuminate\Support\Facades\Storage;
  * `cola`); `evolucion` es una fila única por médico, y encolarla ahí obligaría a inventar un id
  * local para algo que no lo necesita. El costo es que guardar pide conexión — aceptable para una
  * pantalla de configuración de baja frecuencia, no para el flujo clínico.
+ *
+ * Desde WEB-8.2 la escritura es `GuardarMembreteDelMedico` y los largos máximos son los de `LimitesDelMembrete`, los
+ * mismos que usa la pantalla "Formato de impresión" de la web clínica; este controlador sólo traduce HTTP y su JSON no
+ * cambió.
  */
 class ConfiguracionMedicoController extends Controller
 {
-    public function actualizar(Request $request)
+    public function actualizar(Request $request, GuardarMembreteDelMedico $guardar)
     {
         $user = $request->user();
         if (!$user) {
@@ -34,71 +38,55 @@ class ConfiguracionMedicoController extends Controller
         }
 
         $datos = $request->validate([
-            'especialidad' => 'sometimes|nullable|string|max:200',
+            'especialidad' => 'sometimes|' . LimitesDelMembrete::regla('especialidad'),
             'reg_medico' => 'sometimes|nullable|string|max:20',
-            'ciudad' => 'sometimes|nullable|string|max:20',
-            'rif' => 'sometimes|nullable|string|max:40',
-            'pie_recipe.direccion' => 'sometimes|nullable|string|max:90',
-            'pie_recipe.telefono' => 'sometimes|nullable|string|max:90',
-            'pie_recipe.correo' => 'sometimes|nullable|string|max:90',
-            'pie_informe.direccion' => 'sometimes|nullable|string|max:115',
-            'pie_informe.consultorio' => 'sometimes|nullable|string|max:115',
+            'ciudad' => 'sometimes|' . LimitesDelMembrete::regla('ciudad'),
+            'rif' => 'sometimes|' . LimitesDelMembrete::regla('rif'),
+            'pie_recipe.direccion' => 'sometimes|' . LimitesDelMembrete::regla('linea_1'),
+            'pie_recipe.telefono' => 'sometimes|' . LimitesDelMembrete::regla('linea_2'),
+            'pie_recipe.correo' => 'sometimes|' . LimitesDelMembrete::regla('linea_3'),
+            'pie_informe.direccion' => 'sometimes|' . LimitesDelMembrete::regla('lineag_1'),
+            'pie_informe.consultorio' => 'sometimes|' . LimitesDelMembrete::regla('lineag_2'),
             'logo' => 'sometimes|nullable|image|max:2048',
             // Plantillas de mensaje (Paso 23): "Plantilla de citas" y "Plantilla de cumpleaños".
-            'plantilla_cita' => 'sometimes|nullable|string|max:500',
-            'plantilla_cumple' => 'sometimes|nullable|string|max:500',
+            'plantilla_cita' => 'sometimes|' . LimitesDelMembrete::regla('plantilla_cita'),
+            'plantilla_cumple' => 'sometimes|' . LimitesDelMembrete::regla('plantilla_cumple'),
         ]);
 
         // `evolucion` no tiene `medico_id`: la clave de negocio es `reg_medico`, igual que en el
         // resto del backend (ver MedicAPI/AGENTS.md). Un médico con varios registros (`MedicoRegistro`)
         // guarda su reporte bajo el registro "principal" (ver `Medico::regMedicoPrincipal`).
-        $regMedicoClave = $medico->regMedicoPrincipal();
-        if (!$regMedicoClave) {
+        if (!$medico->regMedicoPrincipal()) {
             return response()->json([
                 'message' => 'Esta cuenta no tiene un número de registro médico principal configurado.',
             ], 422);
         }
 
-        $evolucion = Evolucion::firstOrNew(['reg_medico' => $regMedicoClave]);
-
-        foreach (['especialidad', 'ciudad', 'rif'] as $campo) {
+        // Actualización parcial: sólo viaja a la Action lo que la petición trae.
+        $campos = [];
+        foreach (['especialidad', 'ciudad', 'rif', 'reg_medico', 'plantilla_cita', 'plantilla_cumple'] as $campo) {
             if ($request->has($campo)) {
-                $evolucion->$campo = $datos[$campo] ?? null;
+                $campos[$campo] = $datos[$campo] ?? null;
             }
         }
-        if ($request->has('reg_medico')) {
-            // Permite corregir el número de registro médico que se imprime, sin cambiar la
-            // clave `reg_medico` con la que esta fila se busca (esa sigue siendo la del médico).
-            $evolucion->reg_medico = $datos['reg_medico'] ?? $regMedicoClave;
-        } elseif (!$evolucion->exists) {
-            $evolucion->reg_medico = $regMedicoClave;
-        }
-
-        if ($request->has('pie_recipe.direccion')) $evolucion->linea_1 = $datos['pie_recipe']['direccion'] ?? null;
-        if ($request->has('pie_recipe.telefono')) $evolucion->linea_2 = $datos['pie_recipe']['telefono'] ?? null;
-        if ($request->has('pie_recipe.correo')) $evolucion->linea_3 = $datos['pie_recipe']['correo'] ?? null;
-        if ($request->has('pie_informe.direccion')) $evolucion->lineag_1 = $datos['pie_informe']['direccion'] ?? null;
-        if ($request->has('pie_informe.consultorio')) $evolucion->lineag_2 = $datos['pie_informe']['consultorio'] ?? null;
-        if ($request->has('plantilla_cita')) $evolucion->plantilla_cita = $datos['plantilla_cita'] ?? null;
-        if ($request->has('plantilla_cumple')) $evolucion->plantilla_cumple = $datos['plantilla_cumple'] ?? null;
-
-        if ($request->hasFile('logo')) {
-            // Se borra la anterior para no acumular archivos huérfanos: acá no hay historial de
-            // logos, cada guardado reemplaza al único vigente.
-            if ($evolucion->logo) {
-                Storage::disk('public')->delete($evolucion->logo);
+        foreach ([
+            'pie_recipe.direccion' => 'linea_1',
+            'pie_recipe.telefono' => 'linea_2',
+            'pie_recipe.correo' => 'linea_3',
+            'pie_informe.direccion' => 'lineag_1',
+            'pie_informe.consultorio' => 'lineag_2',
+        ] as $clave => $columna) {
+            if ($request->has($clave)) {
+                $campos[$columna] = data_get($datos, $clave);
             }
-            $evolucion->logo = $request->file('logo')->store('logos', 'public');
         }
 
-        // `clave` es NOT NULL en el esquema legado sin default — una fila nueva sin ese dato de
-        // PowerBuilder (contraseña de acceso al reporte legado, no usado acá) rompería el insert.
-        if (!$evolucion->exists && $evolucion->clave === null) {
-            $evolucion->clave = 0;
-        }
+        $resultado = $guardar->ejecutar(
+            $medico,
+            $campos,
+            $request->hasFile('logo') ? $request->file('logo') : null,
+        );
 
-        $evolucion->save();
-
-        return new ConfiguracionMedicoResource($evolucion);
+        return new ConfiguracionMedicoResource($resultado->evolucion);
     }
 }

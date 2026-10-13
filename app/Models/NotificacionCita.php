@@ -17,10 +17,13 @@ class NotificacionCita extends Model
     public const CANAL_WHATSAPP = 'whatsapp';
 
     /**
-     * El SMS no sale del servidor: lo manda el teléfono con el SMS nativo (ROADMAP.md, Paso 14).
-     * El valor se conserva para poder registrar en el futuro un envío hecho desde el dispositivo.
+     * SMS por proveedor desde el servidor (Twilio, WEB-2.6). El móvil sigue mandando el suyo con el
+     * SMS nativo de Android y **no** lo registra acá: es el teléfono el que responde por ese envío.
      */
     public const CANAL_SMS = 'sms';
+
+    /** Correo con el SMTP del servidor y el médico de la cita como remitente (WEB-2.6). */
+    public const CANAL_CORREO = 'correo';
 
     public const ESTADO_ENVIADA = 'enviada';
     public const ESTADO_FALLIDA = 'fallida';

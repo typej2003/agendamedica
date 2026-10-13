@@ -17,11 +17,20 @@ class Cola extends Model
      * ("Confirmado | No atendida | Pagado"), o sea una cita puede estar confirmada *y* pagada *y*
      * sin atender al mismo tiempo. Cada una vive en su propio campo:
      *
-     * - **Confirmación** → `estado` (esta constante). La columna existe en el legado pero estaba
-     *   prácticamente sin usar (4 filas con `1` de 19.906 en el dump real), así que se le fija
-     *   acá la convención.
-     * - **Atención** → `atendido` (0/1), que el legado sí usa de verdad.
+     * - **Confirmación** → `estado` (esta constante). El escritorio **no** la usa para esto: sus
+     *   ventanas de agenda escriben siempre `0`, y el `1` se lo pone facturación (ver la nota de
+     *   abajo). Acá la columna es la confirmación y esos son sus únicos valores.
+     * - **Atención** → `atendido` (0/1), que el legado sí usa de verdad. ⚠️ En el escritorio la misma
+     *   columna tiene **cuatro** valores (0/1/2/3: el `2` es "la cita se movió" y el `3` *Realizada*,
+     *   sin escritor). Acá siempre es el booleano; la traducción la hace el sync
+     *   (`App\Sync\Escritorio\AtencionCita`, WEB-2.13) y la cita movida queda en
+     *   `movida_escritorio`.
      * - **Pago** → `monto` vs. `monto_pagado`, ver `estadoPago()`.
+     *
+     * ⚠️ **Ojo con `estado` en el escritorio.** Ahí la misma columna significa "factura elaborada"
+     * (la escribe facturación; ver `App\Sync\Escritorio\EstadoCita` y WEB-2.12). La traducción entre
+     * las dos semánticas la hace **solo la capa de sincronización**: acá `estado` es siempre la
+     * confirmación. El dato del escritorio vive en `facturada_escritorio`.
      */
     public const ESTADO_NO_CONFIRMADA = 0;       // no confirmada
     public const ESTADO_CONFIRMADA = 1;          // la confirmó el consultorio
@@ -49,7 +58,9 @@ class Cola extends Model
         'paciente_sinhistoria_id',
         'numorden',
         'atendido',
+        'movida_escritorio',
         'estado',
+        'facturada_escritorio',
         'turno',
         'motivo',
         'monto',
@@ -66,6 +77,8 @@ class Cola extends Model
 
     protected $casts = [
         'fecha' => 'date',
+        'movida_escritorio' => 'boolean',
+        'facturada_escritorio' => 'boolean',
     ];
 
     /** Lo que falta por cobrar de esta cita. */

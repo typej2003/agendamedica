@@ -10,7 +10,7 @@
                     $esModoHorario = !empty($proximaCita->hora_ini) && $proximaCita->hora_ini !== '08:00:00';
                 @endphp
 
-                <div class="card border-0 shadow-sm border-start border-4 border-primary bg-white">
+                <div class="card border-start border-4 border-primary bg-white">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                             <div class="d-flex align-items-center gap-3">
@@ -67,7 +67,7 @@
                 </div>
             @else
                 <!-- Estado sin cita agendada -->
-                <div class="card border-0 shadow-sm bg-light text-center p-4">
+                <div class="card bg-light text-center p-4">
                     <div class="card-body">
                         <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                             <i class="bi bi-calendar-plus fs-3"></i>

@@ -1,0 +1,53 @@
+/* El cuerpo de un documento de la consulta que imprime el navegador (WEB-5.3a): constancia, reposo, referencia e informe.
+   Se usa junto con `clinica-impresion.css` (membrete, firma, pie) y `clinica-recipe.css` (la hoja A4 horizontal, la mitad, la línea
+   separadora y los datos del paciente): un documento es **media hoja**, y si el texto no entra sigue en la otra mitad.
+
+   Las medidas tienen su gemela en `App\Clinica\Impresion\MedidasDeLaMitad` (lo que ocupa cada franja) y
+   `App\Clinica\Impresion\DistribuidorDeDocumento` (el aire de cada renglón): el servidor mide el texto para decidir dónde se
+   parte, y si algo de acá cambia hay que cambiarlo allá. El verificador de Chrome mide el cuerpo real contra el que se calculó. */
+
+/* ------------------------------------------------------------------------------------------------------ Título
+   «CONSTANCIA», «REPOSO MÉDICO»…: centrado, 14 pt en negrita (sin la cursiva del «Rp.») y 2,5 mm de aire — la misma franja
+   de 8,7 mm del récipe (`MedidasDeLaMitad::TITULO_MM`). */
+
+.documento-titulo-fila { justify-content: center; }
+.documento-titulo { font-style: normal; text-align: center; letter-spacing: .06em; }
+
+/* ---------------------------------------------------------------------------------- Encabezado de la continuación
+   Sin membrete: «PACIENTE: …» a la izquierda y «FECHA: …» a la derecha en una línea de 9 pt (`altoDelEncabezadoDeContinuacion`);
+   luego la misma línea separadora (5 mm) y un título de 11 pt con 2,5 mm de aire (7,4 mm: `TITULO_CONTINUACION_MM`). */
+
+.documento-continuacion-datos {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 3mm;
+    font-size: 9pt;
+    line-height: 1.25;
+}
+
+.documento-continuacion-paciente { flex: 1 1 auto; min-width: 0; }
+.documento-continuacion-fecha { flex: none; }
+
+.documento-titulo-continuacion { margin: 0; font-size: 11pt; font-weight: 700; line-height: 1.25; text-align: center; }
+
+/* ----------------------------------------------------------------------------------------------------- Cuerpo
+   La letra la fija la hoja (`tamano-10`, `-9` o `-8`, según `DistribuidorDeDocumento`) en `.recipe-cuerpo`. Los datos fijos
+   llevan 1,2 mm de aire cada uno y 2,4 mm el bloque; los párrafos, 2,6 mm. Un párrafo con rótulo en su propia línea suma 0,8 mm
+   entre el rótulo y el texto. */
+
+.documento-cuerpo { text-align: left; }
+
+.documento-fijos { margin-bottom: 2.4mm; }
+.documento-fijo { margin: 0 0 1.2mm; }
+
+.documento-rotulo { font-weight: 700; }
+.documento-rotulo-aparte { display: block; margin-bottom: .8mm; }
+
+.documento-parrafo { margin: 0 0 2.6mm; text-align: justify; }
+
+/* «Continúa →» al pie del cuerpo de una mitad que sigue en la otra: 8 pt en itálica y 1,5 mm de aire (5,2 mm:
+   `MedidasDeLaMitad::CONTINUA_MM`). Reemplaza a la franja de firma, que sólo lleva la última mitad. */
+
+.documento-continua { flex: none; margin: 1.5mm 0 0; text-align: right; font-size: 8pt; font-style: italic; line-height: 1.25; }

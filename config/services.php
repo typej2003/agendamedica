@@ -37,6 +37,17 @@ return [
         'version' => env('WHATSAPP_API_VERSION', 'v19.0'),
     ],
 
+    /*
+     * Proveedor de SMS de la web (WEB-2.6). La credencial es **del servidor**: los médicos no
+     * configuran proveedores de comunicación (decisión de Alexander, 2026-10-09) — el servidor manda
+     * por todos y el gasto se mide por médico con `notificaciones_cita`.
+     */
+    'twilio' => [
+        'sid'   => env('TWILIO_ACCOUNT_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'from'  => env('TWILIO_FROM'),
+    ],
+
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
     ],

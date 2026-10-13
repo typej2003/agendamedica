@@ -1,0 +1,2883 @@
+/* ==========================================================================
+   Doctorísimo — sistema de la aplicación (web clínica + panel)
+   ==========================================================================
+   Se carga **después de Bootstrap** y hace dos cosas:
+
+   1. Le cambia la paleta a Bootstrap (variables CSS + los pocos componentes donde Bootstrap tiene el
+      color fijo). Con eso, las ~50 vistas que ya usan `btn-primary`, `badge bg-info`, `table-light`,
+      `text-muted`… adoptan la paleta sin tocarlas una por una.
+   2. Agrega los componentes del armazón (barra superior, menú lateral, encabezado de página, tarjetas
+      de indicador, estado vacío).
+
+   Los colores salen de `gineco.css` (`--ds-*`), que es el único archivo donde está la paleta.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Bootstrap, recoloreado
+   ========================================================================== */
+:root {
+    /* Tipografía y base */
+    --bs-font-sans-serif: var(--ds-fuente);
+    --bs-body-font-family: var(--ds-fuente);
+    --bs-body-font-size: .9375rem;
+    --bs-body-line-height: 1.5;
+    --bs-body-color: var(--ds-texto);
+    --bs-body-color-rgb: 32, 16, 72;
+    --bs-body-bg: var(--ds-fondo);
+    /* `--bs-heading-color` se deja **sin definir** a propósito (Bootstrap lo trae vacío): así el
+       encabezado hereda del contenedor. Fijarlo acá pintaba de tinta los títulos que van sobre fondo
+       oscuro —p. ej. el `h5` de un `card-header bg-primary text-white`, que quedaba en 2:1—, porque el
+       `text-white` solo pinta al contenedor.
+       En fondo claro igual queda la tinta, porque es el color de `body`. */
+    --bs-secondary-color: var(--ds-texto-3);
+    --bs-secondary-color-rgb: 107, 101, 128;
+    --bs-emphasis-color: var(--ds-tinta);
+    --bs-border-color: var(--ds-borde);
+    --bs-border-color-translucent: rgba(32, 16, 72, .12);
+    --bs-border-radius: var(--ds-radio);
+    --bs-border-radius-sm: var(--ds-radio-sm);
+    --bs-border-radius-lg: var(--ds-radio-card);
+
+    /* Vínculos */
+    --bs-link-color: var(--ds-violeta-700);
+    --bs-link-color-rgb: 120, 48, 128;
+    --bs-link-hover-color: var(--ds-violeta-800);
+    --bs-link-hover-color-rgb: 96, 37, 106;
+
+    /* Primario (violeta del logo) */
+    --bs-primary: #783080;
+    --bs-primary-rgb: 120, 48, 128;
+    --bs-primary-text-emphasis: var(--ds-violeta-900);
+    --bs-primary-bg-subtle: var(--ds-violeta-100);
+    --bs-primary-border-subtle: var(--ds-violeta-200);
+
+    /* Semánticos: el texto oscuro y el fondo claro, para que `text-*` y `bg-*-subtle` cumplan AA */
+    --bs-success-rgb: 20, 101, 74;
+    --bs-success-text-emphasis: #0f5c40;
+    --bs-success-bg-subtle: var(--ds-exito-bg);
+    --bs-success-border-subtle: var(--ds-exito-borde);
+
+    --bs-danger-rgb: 179, 38, 30;
+    --bs-danger-text-emphasis: #7d1a15;
+    --bs-danger-bg-subtle: var(--ds-peligro-bg);
+    --bs-danger-border-subtle: var(--ds-peligro-borde);
+
+    --bs-warning-text-emphasis: var(--ds-aviso);
+    --bs-warning-bg-subtle: var(--ds-aviso-bg);
+    --bs-warning-border-subtle: var(--ds-aviso-borde);
+
+    /* El celeste del latido es el acento de marca (decorativo) */
+    --bs-info-rgb: 64, 176, 216;
+    --bs-info-text-emphasis: var(--ds-info);
+    --bs-info-bg-subtle: var(--ds-info-bg);
+    --bs-info-border-subtle: var(--ds-info-borde);
+
+    --bs-secondary-rgb: 107, 101, 128;
+    --bs-dark-rgb: 32, 16, 72;
+    --bs-light-rgb: 241, 239, 245;
+
+    /* Bootstrap pinta los `code` de rosa (#d63384): 4,15:1 sobre el fondo de la app. */
+    --bs-code-color: var(--ds-violeta-800);
+}
+
+body {
+    background-color: var(--ds-fondo);
+    color: var(--ds-texto);
+    -webkit-font-smoothing: antialiased;
+    /* Inter trae variantes de cifras y de letras: la "l" con cola y el cero con barra se leen sin duda
+       en una cédula, una hora o un monto. */
+    font-feature-settings: 'cv11', 'ss03';
+}
+
+/* Cifras de ancho fijo: las horas de la agenda y los montos se alinean en columna. */
+.table td, .table th, .tnum { font-variant-numeric: tabular-nums; }
+
+/* Quien pidió menos movimiento no ve transiciones ni animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Foco visible y consistente en todo el sitio (accesibilidad: nunca se apaga el contorno). */
+:focus-visible {
+    outline: 2px solid var(--ds-violeta-700);
+    outline-offset: 2px;
+}
+
+/* Los encabezados **heredan** el color (Bootstrap los deja sin color propio a propósito): forzarles la
+   tinta desde acá rompía los que van sobre fondo oscuro — el `text-white` de un `card-header bg-primary`
+   solo pinta al contenedor, no al `h5` de adentro, y el título quedaba en 2:1. `body` ya define
+   `--ds-texto`, que es el mismo color, así que heredar es exactamente lo que se busca. */
+
+.text-muted { color: var(--ds-texto-3) !important; }
+.text-info { color: var(--ds-info) !important; }
+.text-warning { color: var(--ds-aviso) !important; }
+.text-success { color: var(--ds-exito) !important; }
+.text-danger { color: var(--ds-peligro) !important; }
+.text-body-secondary { color: var(--ds-texto-2) !important; }
+
+::selection { background: var(--ds-violeta-200); color: var(--ds-violeta-900); }
+
+/* --- Botones --- */
+/* 36 px de alto (32 px el `btn-sm`), la misma altura que un campo: en una barra de filtros quedan alineados. */
+.btn {
+    --bs-btn-font-weight: 500;
+    --bs-btn-font-size: .875rem;
+    --bs-btn-line-height: 1.25rem;
+    --bs-btn-padding-y: .4375rem;
+    --bs-btn-padding-x: 1rem;
+    --bs-btn-border-radius: var(--ds-radio);
+    transition: background-color var(--ds-dur-base) var(--ds-ease), border-color var(--ds-dur-base) var(--ds-ease),
+                box-shadow var(--ds-dur-base) var(--ds-ease), transform var(--ds-dur-micro) var(--ds-ease);
+}
+
+.btn:active:not(:disabled):not(.disabled) { transform: translateY(1px); }
+
+.btn-sm {
+    --bs-btn-font-size: .8125rem;
+    --bs-btn-line-height: 1rem;
+    --bs-btn-padding-y: .4375rem;
+    --bs-btn-padding-x: .75rem;
+    --bs-btn-border-radius: var(--ds-radio);
+}
+
+.btn-lg {
+    --bs-btn-font-size: 1rem;
+    --bs-btn-padding-y: .625rem;
+    --bs-btn-padding-x: 1.25rem;
+    --bs-btn-border-radius: var(--ds-radio);
+}
+
+.btn-primary { box-shadow: var(--ds-sombra-1); }
+
+.btn-primary {
+    --bs-btn-bg: var(--ds-violeta-700);
+    --bs-btn-border-color: var(--ds-violeta-700);
+    --bs-btn-hover-bg: var(--ds-violeta-800);
+    --bs-btn-hover-border-color: var(--ds-violeta-800);
+    --bs-btn-active-bg: var(--ds-violeta-900);
+    --bs-btn-active-border-color: var(--ds-violeta-900);
+    --bs-btn-disabled-bg: var(--ds-violeta-300);
+    --bs-btn-disabled-border-color: var(--ds-violeta-300);
+    --bs-btn-focus-shadow-rgb: 120, 48, 128;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--ds-violeta-700);
+    --bs-btn-border-color: var(--ds-violeta-700);
+    --bs-btn-hover-bg: var(--ds-violeta-700);
+    --bs-btn-hover-border-color: var(--ds-violeta-700);
+    --bs-btn-active-bg: var(--ds-violeta-800);
+    --bs-btn-active-border-color: var(--ds-violeta-800);
+    --bs-btn-disabled-color: var(--ds-violeta-300);
+    --bs-btn-disabled-border-color: var(--ds-violeta-300);
+    --bs-btn-focus-shadow-rgb: 120, 48, 128;
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--ds-texto-3);
+    --bs-btn-border-color: var(--ds-texto-3);
+    --bs-btn-hover-bg: var(--ds-texto-2);
+    --bs-btn-hover-border-color: var(--ds-texto-2);
+    --bs-btn-active-bg: var(--ds-tinta);
+    --bs-btn-active-border-color: var(--ds-tinta);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--ds-texto-2);
+    --bs-btn-border-color: var(--ds-borde-2);
+    --bs-btn-hover-bg: var(--ds-superficie-2);
+    --bs-btn-hover-border-color: var(--ds-texto-3);
+    --bs-btn-hover-color: var(--ds-tinta);
+    --bs-btn-active-bg: var(--ds-borde-2);
+    --bs-btn-active-border-color: var(--ds-texto-3);
+    --bs-btn-active-color: var(--ds-tinta);
+}
+
+.btn-success {
+    --bs-btn-bg: var(--ds-exito);
+    --bs-btn-border-color: var(--ds-exito);
+    --bs-btn-hover-bg: #14654a;
+    --bs-btn-hover-border-color: #14654a;
+    --bs-btn-active-bg: #0f5c40;
+    --bs-btn-active-border-color: #0f5c40;
+}
+
+.btn-outline-success {
+    --bs-btn-color: var(--ds-exito);
+    --bs-btn-border-color: var(--ds-exito);
+    --bs-btn-hover-bg: var(--ds-exito);
+    --bs-btn-hover-border-color: var(--ds-exito);
+    --bs-btn-active-bg: #14654a;
+    --bs-btn-active-border-color: #14654a;
+    --bs-btn-focus-shadow-rgb: 26, 127, 90;
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--ds-peligro);
+    --bs-btn-border-color: var(--ds-peligro);
+    --bs-btn-hover-bg: #94201a;
+    --bs-btn-hover-border-color: #94201a;
+}
+
+/* Bootstrap deja `btn-info` en cian claro (#0dcaf0): con texto blanco da 1,9:1. */
+.btn-info {
+    --bs-btn-bg: var(--ds-info);
+    --bs-btn-border-color: var(--ds-info);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-bg: #0a4a63;
+    --bs-btn-hover-border-color: #0a4a63;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #08384b;
+    --bs-btn-active-border-color: #08384b;
+    --bs-btn-active-color: #fff;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--ds-peligro);
+    --bs-btn-border-color: var(--ds-peligro);
+    --bs-btn-hover-bg: var(--ds-peligro);
+    --bs-btn-hover-border-color: var(--ds-peligro);
+    --bs-btn-focus-shadow-rgb: 179, 38, 30;
+}
+
+/* Bootstrap deja el ámbar (#ffc107) como color de texto de `btn-outline-warning`: 1,5:1 sobre el fondo
+   claro, ilegible. El borde sigue siendo ámbar, el texto pasa al ámbar oscuro. */
+.btn-outline-warning {
+    --bs-btn-color: var(--ds-aviso);
+    --bs-btn-border-color: #e0a800;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ds-aviso);
+    --bs-btn-hover-border-color: var(--ds-aviso);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #5f4500;
+    --bs-btn-active-border-color: #5f4500;
+    --bs-btn-focus-shadow-rgb: 122, 89, 0;
+}
+
+.btn-outline-info {
+    --bs-btn-color: var(--ds-info);
+    --bs-btn-border-color: var(--ds-celeste-500);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ds-info);
+    --bs-btn-hover-border-color: var(--ds-info);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #0a4a63;
+    --bs-btn-active-border-color: #0a4a63;
+    --bs-btn-focus-shadow-rgb: 13, 94, 125;
+}
+
+/* Botón deshabilitado: Bootstrap conserva el color de la variante en `--bs-btn-disabled-color`, que
+   además deja el texto casi invisible (el violeta claro daba 1,8:1). Se unifica en gris legible. */
+.btn[class*="btn-outline-"]:disabled,
+.btn[class*="btn-outline-"].disabled,
+fieldset:disabled .btn[class*="btn-outline-"] {
+    --bs-btn-disabled-color: var(--ds-texto-3);
+    --bs-btn-disabled-border-color: var(--ds-borde-2);
+    --bs-btn-disabled-bg: transparent;
+}
+
+.btn-outline-dark {
+    --bs-btn-color: var(--ds-tinta);
+    --bs-btn-border-color: var(--ds-borde-2);
+    --bs-btn-hover-bg: var(--ds-tinta);
+    --bs-btn-hover-border-color: var(--ds-tinta);
+    --bs-btn-active-bg: var(--ds-tinta);
+    --bs-btn-active-border-color: var(--ds-tinta);
+}
+
+.btn-light {
+    --bs-btn-bg: var(--ds-superficie-2);
+    --bs-btn-border-color: var(--ds-borde);
+    --bs-btn-color: var(--ds-texto-2);
+    --bs-btn-hover-bg: var(--ds-borde);
+    --bs-btn-hover-border-color: var(--ds-borde-2);
+    --bs-btn-hover-color: var(--ds-tinta);
+}
+
+.btn-link {
+    --bs-btn-color: var(--ds-violeta-700);
+    --bs-btn-hover-color: var(--ds-violeta-800);
+}
+
+.btn-check:checked + .btn-outline-primary,
+.btn-outline-primary.active {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
+}
+
+/* --- Insignias: pastilla suave, con texto oscuro sobre fondo claro --- */
+.badge {
+    --bs-badge-font-size: .75rem;
+    --bs-badge-font-weight: 500;
+    --bs-badge-padding-y: .25rem;
+    --bs-badge-padding-x: .5rem;
+    --bs-badge-border-radius: var(--ds-radio-sm);
+    border: 1px solid transparent;
+    line-height: 1.1;
+}
+
+.badge.bg-primary, .badge.bg-primary.text-dark {
+    background-color: var(--ds-violeta-100) !important;
+    border-color: var(--ds-violeta-200) !important;
+    color: var(--ds-violeta-800) !important;
+}
+
+.badge.bg-success, .badge.bg-success.text-dark {
+    background-color: var(--ds-exito-bg) !important;
+    border-color: var(--ds-exito-borde) !important;
+    color: var(--ds-exito) !important;
+}
+
+.badge.bg-warning, .badge.bg-warning.text-dark {
+    background-color: var(--ds-aviso-bg) !important;
+    border-color: var(--ds-aviso-borde) !important;
+    color: var(--ds-aviso) !important;
+}
+
+.badge.bg-danger, .badge.bg-danger.text-dark {
+    background-color: var(--ds-peligro-bg) !important;
+    border-color: var(--ds-peligro-borde) !important;
+    color: var(--ds-peligro) !important;
+}
+
+.badge.bg-info, .badge.bg-info.text-dark {
+    background-color: var(--ds-info-bg) !important;
+    border-color: var(--ds-info-borde) !important;
+    color: var(--ds-info) !important;
+}
+
+.badge.bg-secondary, .badge.bg-secondary.text-dark {
+    background-color: var(--ds-superficie-2) !important;
+    border-color: var(--ds-borde-2) !important;
+    color: var(--ds-texto-2) !important;
+}
+
+.badge.bg-light, .badge.bg-light.text-dark {
+    background-color: var(--ds-superficie-2) !important;
+    border-color: var(--ds-borde) !important;
+    color: var(--ds-texto-2) !important;
+}
+
+/* El único sólido: el número de turno, que necesita peso visual. */
+.badge.bg-dark, .badge.bg-dark.text-white {
+    background-color: var(--ds-tinta) !important;
+    border-color: var(--ds-tinta) !important;
+    color: #fff !important;
+}
+
+/* --- Tarjetas --- */
+.card {
+    --bs-card-border-color: var(--ds-borde);
+    --bs-card-border-radius: var(--ds-radio-card);
+    --bs-card-inner-border-radius: calc(var(--ds-radio-card) - 1px);
+    --bs-card-cap-bg: var(--ds-superficie);
+    --bs-card-cap-color: var(--ds-tinta);
+    box-shadow: var(--ds-sombra-1);
+}
+
+.card-header {
+    border-bottom-color: var(--ds-borde);
+    font-weight: 600;
+}
+
+.card-footer {
+    background-color: var(--ds-superficie-2);
+    border-top-color: var(--ds-borde);
+}
+
+/* --- Tablas --- */
+.table-striped {
+    --bs-table-striped-bg: var(--ds-fondo);
+    --bs-table-striped-color: var(--ds-texto);
+}
+
+.table {
+    --bs-table-color: var(--ds-texto);
+    --bs-table-border-color: var(--ds-borde);
+    --bs-table-hover-bg: var(--ds-violeta-50);
+    --bs-table-hover-color: var(--ds-tinta);
+    --bs-table-bg: transparent;
+    margin-bottom: 0;
+}
+
+.table > thead,
+.table > thead.table-light,
+.table thead.table-light {
+    --bs-table-bg: var(--ds-superficie-2);
+    --bs-table-color: var(--ds-texto-2);
+    --bs-table-border-color: var(--ds-borde);
+}
+
+/* Aire en las celdas: Bootstrap usa .5rem/.5rem y `table-sm` baja a .25rem, que dejaba el texto pegado
+   al borde de la tarjeta. Se sobreescribe el mismo selector que usa Bootstrap porque el relleno de celda
+   no está expuesto como variable. */
+.table > :not(caption) > * > * {
+    padding: .7rem .9rem;
+}
+
+.table-sm > :not(caption) > * > * {
+    padding: .5rem .75rem;
+}
+
+/* Los extremos de la fila llevan un poco más, así el contenido no toca el borde de la tarjeta. */
+.table > :not(caption) > * > *:first-child { padding-left: 1rem; }
+.table > :not(caption) > * > *:last-child { padding-right: 1rem; }
+
+/* Cabecera en minúsculas y peso medio, como el resto del texto: las mayúsculas gritaban sobre la tabla.
+   Las etiquetas de campo (`.etiqueta`) sí siguen en mayúsculas pequeñas. */
+.table thead th {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--ds-texto-2);
+    white-space: nowrap;
+}
+
+/* Varias pantallas del panel usan `thead.table-dark`: la cabecera negra pesa más que la tabla y choca
+   con la paleta, así que se unifica con la cabecera clara del resto. */
+.table > thead.table-dark,
+.table > thead.table-dark > tr > th {
+    --bs-table-bg: var(--ds-superficie-2);
+    --bs-table-color: var(--ds-texto-2);
+    --bs-table-border-color: var(--ds-borde);
+    background-color: var(--ds-superficie-2);
+    color: var(--ds-texto-2);
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+/* Fila de cita ya atendida: sólo se tiñe el fondo, el texto sigue siendo el normal (en verde, toda la
+   fila se volvería ilegible). */
+.table > tbody > tr.table-success,
+.table > tbody > tr.table-success > * {
+    --bs-table-bg: var(--ds-exito-bg);
+    --bs-table-color: var(--ds-texto);
+    box-shadow: none;
+}
+
+/* --- Formularios --- */
+/* 36 px de alto, igual que un botón; el borde es el de control (3,6:1), no el decorativo de las tarjetas. */
+.form-control, .form-select {
+    --bs-border-color: var(--ds-borde-control);
+    border-color: var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    color: var(--ds-texto);
+    background-color: var(--ds-superficie);
+    font-size: .875rem;
+    line-height: 1.25rem;
+    padding-top: .4375rem;
+    padding-bottom: .4375rem;
+    transition: border-color var(--ds-dur-base) var(--ds-ease), box-shadow var(--ds-dur-base) var(--ds-ease);
+}
+
+.form-control-sm, .form-select-sm {
+    font-size: .8125rem;
+    line-height: 1rem;
+    border-radius: var(--ds-radio);
+}
+
+/* El `textarea` no tiene alto fijo: sólo cambian el tamaño de letra y el borde. */
+textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
+
+.form-control::placeholder { color: var(--ds-texto-3); opacity: 1; }
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--ds-violeta-500);
+    box-shadow: var(--ds-foco);
+}
+
+.form-label {
+    color: var(--ds-texto-2);
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.form-text { color: var(--ds-texto-3); }
+
+.form-check-input { border-color: var(--ds-borde-control); }
+
+.form-check-input:checked {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+}
+
+.form-check-input:focus {
+    border-color: var(--ds-violeta-500);
+    box-shadow: var(--ds-foco);
+}
+
+.input-group-text {
+    background-color: var(--ds-superficie-2);
+    border-color: var(--ds-borde-control);
+    color: var(--ds-texto-2);
+    font-size: .875rem;
+    border-radius: var(--ds-radio);
+}
+
+/* --- Avisos --- */
+.alert {
+    border-radius: var(--ds-radio);
+    border-width: 1px;
+}
+
+/* El navegador esconde `[hidden]` con `display: none`, pero Bootstrap lo **pisa** con
+   `.d-flex { display: flex !important }`: un aviso con `hidden` y utilidades de flex (el de "hay cambios
+   sin guardar", WEB-4.2) se veía igual —pasó al verificar la pantalla en Chrome—. Esta regla devuelve el
+   significado del atributo, que es lo que el JS usa para mostrar y ocultar. */
+[hidden] { display: none !important; }
+
+.alert-success { background-color: var(--ds-exito-bg); border-color: var(--ds-exito-borde); color: #0f5c40; }
+.alert-warning { background-color: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
+.alert-danger  { background-color: var(--ds-peligro-bg); border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
+.alert-info    { background-color: var(--ds-info-bg); border-color: var(--ds-info-borde); color: var(--ds-info); }
+.alert-primary { background-color: var(--ds-violeta-100); border-color: var(--ds-violeta-200); color: var(--ds-violeta-900); }
+
+/* --- Navegación, menús y paginación --- */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    background-color: var(--ds-violeta-700);
+    color: #fff;
+}
+
+.dropdown-menu {
+    --bs-dropdown-border-color: var(--ds-borde);
+    --bs-dropdown-border-radius: var(--ds-radio);
+    --bs-dropdown-link-active-bg: var(--ds-violeta-700);
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-hover-bg: var(--ds-violeta-50);
+    --bs-dropdown-link-hover-color: var(--ds-violeta-900);
+    box-shadow: var(--ds-sombra-2);
+    padding: .35rem;
+}
+
+.dropdown-item {
+    border-radius: var(--ds-radio-sm);
+    padding: .45rem .7rem;
+    font-size: .92rem;
+}
+
+.pagination {
+    --bs-pagination-color: var(--ds-violeta-700);
+    --bs-pagination-hover-color: var(--ds-violeta-800);
+    --bs-pagination-hover-bg: var(--ds-violeta-50);
+    --bs-pagination-hover-border-color: var(--ds-violeta-200);
+    --bs-pagination-focus-color: var(--ds-violeta-800);
+    --bs-pagination-focus-bg: var(--ds-violeta-50);
+    --bs-pagination-focus-box-shadow: var(--ds-foco);
+    --bs-pagination-active-bg: var(--ds-violeta-700);
+    --bs-pagination-active-border-color: var(--ds-violeta-700);
+    --bs-pagination-border-color: var(--ds-borde);
+    --bs-pagination-disabled-color: var(--ds-texto-3);
+}
+
+.list-group {
+    --bs-list-group-border-color: var(--ds-borde);
+    --bs-list-group-action-hover-bg: var(--ds-violeta-50);
+    --bs-list-group-active-bg: var(--ds-violeta-700);
+    --bs-list-group-active-border-color: var(--ds-violeta-700);
+}
+
+.modal-content {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+}
+
+.modal-header, .modal-footer { border-color: var(--ds-borde); }
+
+.spinner-border.text-primary, .spinner-grow.text-primary { color: var(--ds-violeta-700) !important; }
+
+/* ==========================================================================
+   2. Armazón de la aplicación
+   ========================================================================== */
+
+/* --- Barra superior --- */
+/* Delgada y clara: lleva el contexto (a la izquierda) y la cuenta (a la derecha). La marca vive en la barra
+   lateral desde que ésta ocupa todo el alto; en el celular, donde la barra lateral se esconde, la marca
+   vuelve acá. */
+.app-topbar {
+    background: var(--ds-superficie);
+    border-bottom: 1px solid var(--ds-borde);
+    min-height: 62px;
+}
+
+.app-marca {
+    font-weight: 700;
+    color: var(--ds-tinta);
+    letter-spacing: -.01em;
+}
+
+.app-marca .app-marca-acento { color: var(--ds-violeta-700); }
+.app-marca .app-marca-icono { color: var(--ds-violeta-700); }
+
+/* --- Menú lateral: indigo del logo, de arriba abajo --- */
+.app-sidebar {
+    background: var(--ds-barra);
+    color: var(--ds-barra-texto);
+    width: var(--ds-barra-ancho);
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+}
+
+/* La marca: el corazón del logo sobre una ficha blanca (el violeta solo no se lee sobre el indigo). */
+.app-sidebar .app-sidebar-marca {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    height: 72px;
+    padding: 0 1.1rem;
+    flex: 0 0 auto;
+    color: var(--ds-barra-texto);
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.app-sidebar .app-marca-ficha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--ds-radio);
+    background: #fff;
+    color: var(--ds-violeta-700);
+    font-size: 1.3rem;
+}
+
+.app-sidebar .app-marca-nombre {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.app-sidebar .app-marca-nombre strong { font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+.app-sidebar .app-marca-nombre small { font-size: .72rem; color: var(--ds-barra-texto-2); }
+
+.app-sidebar > .app-sidebar-interior {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: .5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-barra-borde) transparent;
+}
+
+.app-sidebar .app-sidebar-titulo {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ds-barra-texto-2);
+    padding: 1rem .75rem .4rem;
+}
+
+.app-sidebar .nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--ds-barra-texto-2);
+    font-weight: 500;
+    font-size: .875rem;
+    line-height: 1.25rem;
+    border-radius: var(--ds-radio);
+    padding: .5rem .75rem;
+    margin-bottom: 2px;
+    transition: background-color var(--ds-dur-base) var(--ds-ease), color var(--ds-dur-base) var(--ds-ease);
+}
+
+.app-sidebar .nav-link i {
+    font-size: 1.05rem;
+    width: 1.25rem;
+    text-align: center;
+    flex: 0 0 auto;
+    color: inherit;
+}
+
+.app-sidebar .nav-link:hover,
+.app-sidebar .nav-link:focus-visible {
+    background: var(--ds-barra-2);
+    color: var(--ds-barra-texto);
+}
+
+/* El ítem activo: fondo más claro y un hilo de cian a la izquierda (decorativo: el estado también se lee
+   por el contraste del texto y por `aria-current`). */
+.app-sidebar .nav-link.active {
+    background: var(--ds-barra-2);
+    color: var(--ds-barra-texto);
+}
+
+.app-sidebar .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: var(--ds-barra-hilo);
+    transform: translateY(-50%);
+}
+
+.app-sidebar .nav-link.disabled {
+    color: var(--ds-barra-texto-2);
+    opacity: .55;
+}
+
+.app-sidebar :focus-visible { outline-color: var(--ds-celeste-200); }
+
+/* Pie: separador, y a la derecha el botón de plegar. */
+.app-sidebar .app-sidebar-pie {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .5rem;
+    border-top: 1px solid var(--ds-barra-borde);
+    color: var(--ds-barra-texto-2);
+    font-size: .75rem;
+}
+
+.app-sidebar .app-sidebar-pie .nav-link { margin: 0; flex: 1 1 auto; }
+
+.app-sidebar .app-sidebar-plegar {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--ds-radio);
+    background: transparent;
+    color: var(--ds-barra-texto-2);
+    transition: background-color var(--ds-dur-base) var(--ds-ease), color var(--ds-dur-base) var(--ds-ease);
+}
+
+.app-sidebar .app-sidebar-plegar:hover { background: var(--ds-barra-2); color: var(--ds-barra-texto); }
+
+/* Plegado: sólo quedan los iconos, la ficha de la marca y el botón de desplegar. */
+.app-sidebar.minimizado .link-text,
+.app-sidebar.minimizado .app-sidebar-titulo,
+.app-sidebar.minimizado .app-marca-nombre { display: none; }
+
+.app-sidebar.minimizado .app-sidebar-marca { justify-content: center; padding: 0; }
+.app-sidebar.minimizado .nav-link { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
+.app-sidebar.minimizado .app-sidebar-pie { flex-direction: column; }
+.app-sidebar.minimizado .app-sidebar-pie .nav-link { flex: 0 0 auto; width: 100%; }
+
+/* Grupo plegable del menú lateral (Catálogos): un `<details>` cuyo `<summary>` es el ítem padre y cuyos hijos son
+   enlaces con su icono. Nace abierto dentro de uno de sus hijos. Plegada la barra, los hijos siguen siendo
+   iconos con su `title`, como cualquier ítem. */
+.app-sidebar .nav-grupo > summary { list-style: none; cursor: pointer; }
+.app-sidebar .nav-grupo > summary::-webkit-details-marker { display: none; }
+.app-sidebar .nav-grupo > summary .nav-grupo-flecha {
+    margin-left: auto;
+    font-size: .75rem;
+    transition: transform var(--ds-dur-base) var(--ds-ease);
+}
+
+.app-sidebar .nav-grupo[open] > summary .nav-grupo-flecha { transform: rotate(180deg); }
+.app-sidebar .nav-grupo > summary.activo-padre { color: var(--ds-barra-texto); }
+
+.app-sidebar .nav-submenu {
+    list-style: none;
+    margin: 0 0 2px;
+    padding: 0 0 0 1.1rem;
+}
+
+.app-sidebar .nav-submenu .nav-link { font-size: .84rem; padding-top: .4rem; padding-bottom: .4rem; }
+
+.app-sidebar.minimizado .nav-grupo-flecha { display: none; }
+.app-sidebar.minimizado .nav-submenu { padding-left: 0; }
+
+@media (min-width: 992px) {
+    /* De altura completa y fija: la página se desplaza, el menú no. La columna de contenido (y la barra
+       superior del panel) le dejan su ancho a la izquierda y siguen el pliegue con `:has()`. */
+    .app-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 1030;
+        transition: width var(--ds-dur-panel) var(--ds-ease);
+    }
+
+    .app-sidebar.minimizado { width: var(--ds-barra-ancho-plegada); }
+    .app-sidebar .app-sidebar-plegar { display: inline-flex; }
+
+    body.panel .main-content,
+    .app-columna {
+        margin-left: var(--ds-barra-ancho);
+        transition: margin-left var(--ds-dur-panel) var(--ds-ease);
+    }
+
+    body.panel .app-topbar {
+        left: var(--ds-barra-ancho);
+        transition: left var(--ds-dur-panel) var(--ds-ease);
+    }
+
+    /* La marca está en la barra lateral: la barra superior del panel no la repite. */
+    body.panel .app-topbar .app-marca { display: none; }
+
+    body:has(.app-sidebar.minimizado) .main-content,
+    body:has(.app-sidebar.minimizado) .app-columna { margin-left: var(--ds-barra-ancho-plegada); }
+
+    body:has(.app-sidebar.minimizado) .app-topbar { left: var(--ds-barra-ancho-plegada); }
+}
+
+/* --- Encabezado de página --- */
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    /* Título y acciones nacen en el mismo borde superior, también cuando las acciones envuelven (trampa 63). */
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.page-head h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -.01em;
+    color: var(--ds-tinta);
+    margin: 0;
+}
+
+.page-head .page-head-sub {
+    color: var(--ds-texto-3);
+    font-size: .875rem;
+    margin: .25rem 0 0;
+}
+
+/* La barra de acento: marca dónde empieza la pantalla (decorativa, no lleva significado propio). */
+.page-head .page-head-texto {
+    position: relative;
+    padding-left: .85rem;
+    min-width: 0;
+}
+
+.page-head .page-head-texto::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .25rem;
+    bottom: .25rem;
+    width: 3px;
+    border-radius: 999px;
+    background: var(--ds-violeta-700);
+}
+
+/* --- Fichas de contexto (médico, especialidad, sede) --- */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: var(--ds-superficie-2);
+    border: 1px solid var(--ds-borde);
+    color: var(--ds-texto-2);
+    border-radius: 999px;
+    padding: .15rem .65rem;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.chip i { color: var(--ds-texto-3); }
+
+/* --- Tarjetas de indicador (dashboards) --- */
+.stat-card {
+    background: var(--ds-superficie);
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    box-shadow: var(--ds-sombra-1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.stat-card .stat-card-cuerpo {
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    flex: 1;
+}
+
+.stat-card .stat-etiqueta {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--ds-texto-2);
+}
+
+.stat-card .stat-valor {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ds-tinta);
+    margin: .3rem 0 0;
+}
+
+/* Círculo de icono, reutilizable fuera de las tarjetas de indicador (avatares, módulos del consultorio). */
+.stat-icono {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--ds-radio);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex: 0 0 auto;
+}
+
+.stat-card .stat-pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem 1.1rem;
+    font-size: .8rem;
+    color: var(--ds-texto-2);
+    background: var(--ds-superficie-2);
+    border-top: 1px solid var(--ds-borde);
+    text-decoration: none;
+}
+
+.stat-card .stat-pie:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-900); }
+
+/* Acentos de las tarjetas: sólo el icono y el borde lateral llevan color. */
+.stat-card.stat-violeta { border-left: 4px solid var(--ds-violeta-700); }
+.stat-card.stat-violeta .stat-icono { background: var(--ds-violeta-100); color: var(--ds-violeta-700); }
+
+.stat-card.stat-celeste { border-left: 4px solid var(--ds-celeste-500); }
+.stat-card.stat-celeste .stat-icono { background: var(--ds-celeste-50); color: var(--ds-celeste-700); }
+
+.stat-card.stat-exito { border-left: 4px solid var(--ds-exito); }
+.stat-card.stat-exito .stat-icono { background: var(--ds-exito-bg); color: var(--ds-exito); }
+
+.stat-card.stat-aviso { border-left: 4px solid #d99b00; }
+.stat-card.stat-aviso .stat-icono { background: var(--ds-aviso-bg); color: var(--ds-aviso); }
+
+.stat-card.stat-tinta { border-left: 4px solid var(--ds-tinta); }
+.stat-card.stat-tinta .stat-icono { background: var(--ds-superficie-2); color: var(--ds-tinta); }
+
+/* --- Estado vacío --- */
+.empty-state {
+    text-align: center;
+    color: var(--ds-texto-3);
+    padding: 2.25rem 1rem;
+}
+
+/* El icono del estado vacío va en bloque y grande. El selector apunta sólo al icono **propio** del
+   componente: con `.empty-state i` también alcanzaba a los iconos de los botones del slot `acciones`
+   (la historia del paciente tiene uno: "Ir a la ficha a asignarla"), que quedaban uno arriba del otro. */
+.empty-state > i {
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: .5rem;
+    color: var(--ds-borde-2);
+}
+
+.empty-state p { margin-bottom: 0; }
+
+/* --- Utilidades propias --- */
+.sombra-1 { box-shadow: var(--ds-sombra-1); }
+.texto-tenue { color: var(--ds-texto-3); }
+.texto-2 { color: var(--ds-texto-2); }
+.fondo-app { background: var(--ds-fondo); }
+
+/* ==========================================================================
+   3. Adaptación a pantallas chicas
+   ========================================================================== */
+
+/* En el panel el contenido llevaba hasta el borde de la ventana (las tablas se pegaban al menú). Se le
+   da aire lateral; arriba no, porque cada pantalla ya trae su propio margen. */
+body.panel .main-content {
+    padding: 1.5rem 1.5rem 2rem;
+}
+
+@media (max-width: 767.98px) {
+    body.panel .main-content { padding: 1rem .85rem 1.5rem; }
+}
+
+/* El menú lateral se pliega en un panel deslizable: en el celular ocupa el ancho completo y el
+   contenido deja de quedar debajo (era el caso de `/clinica`, con el menú empujando la agenda). */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        bottom: 0;
+        z-index: 1045;
+        width: min(280px, 84vw);
+        overflow-y: auto;
+        transition: left var(--ds-dur-panel) var(--ds-ease);
+        box-shadow: var(--ds-sombra-3);
+    }
+
+    .app-sidebar.abierto { left: 0; }
+
+    .app-sidebar-fondo {
+        position: fixed;
+        inset: 0;
+        background: rgba(31, 17, 70, .6);
+        z-index: 1040;
+    }
+}
+
+@media (min-width: 992px) {
+    .app-sidebar-fondo { display: none; }
+}
+
+/* La barra de filtros y las tablas anchas se desplazan en horizontal, no rompen el layout. */
+@media (max-width: 767.98px) {
+    .page-head h1 { font-size: 1.15rem; }
+    .app-contenido { padding: 1rem .85rem; }
+}
+
+/* ==========================================================================
+   4. Web clínica — componentes de pantalla (`<x-ui.*>`, ver Docs/Web/guia-ui.md)
+   ========================================================================== */
+
+/* --- Encabezado de página: enlace de regreso y acciones --- */
+.page-head .page-head-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: .25rem;
+}
+
+.page-head .page-head-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* --- Título de tarjeta --- */
+.card-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.card-titulo i { color: var(--ds-violeta-700); }
+
+/* --- Pie de una tarjeta (resumen + acción principal) --- */
+.tarjeta-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: var(--ds-superficie-2);
+    border-top: 1px solid var(--ds-borde);
+}
+
+/* --- Etiqueta de campo (mayúsculas pequeñas) --- */
+.etiqueta {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+}
+
+/* --- Estado: pastilla con color + icono + texto --- */
+.estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .55rem;
+    border-radius: var(--ds-radio-sm);
+    border: 1px solid transparent;
+    font-size: .78rem;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.estado-exito   { background: var(--ds-exito-bg);     border-color: var(--ds-exito-borde);   color: var(--ds-exito); }
+.estado-aviso   { background: var(--ds-aviso-bg);     border-color: var(--ds-aviso-borde);   color: var(--ds-aviso); }
+.estado-peligro { background: var(--ds-peligro-bg);   border-color: var(--ds-peligro-borde); color: var(--ds-peligro); }
+.estado-info    { background: var(--ds-info-bg);      border-color: var(--ds-info-borde);    color: var(--ds-info); }
+.estado-marca   { background: var(--ds-violeta-100);  border-color: var(--ds-violeta-200);   color: var(--ds-violeta-800); }
+.estado-neutro  { background: var(--ds-superficie-2); border-color: var(--ds-borde-2);       color: var(--ds-texto-2); }
+
+/* --- Avatar con iniciales y bloque de identidad --- */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    font-weight: 700;
+    letter-spacing: .02em;
+    user-select: none;
+}
+
+.avatar-sm { width: 28px; height: 28px; font-size: .68rem; }
+.avatar-md { width: 38px; height: 38px; font-size: .82rem; }
+.avatar-lg { width: 64px; height: 64px; font-size: 1.35rem; }
+
+/* Texto oscuro sobre fondo suave: todos cumplen AA. */
+.avatar-tono-violeta { background: var(--ds-violeta-100);  color: var(--ds-violeta-800); }
+.avatar-tono-celeste { background: var(--ds-celeste-50);   color: var(--ds-celeste-700); }
+.avatar-tono-exito   { background: var(--ds-exito-bg);     color: var(--ds-exito); }
+.avatar-tono-aviso   { background: var(--ds-aviso-bg);     color: var(--ds-aviso); }
+.avatar-tono-tinta   { background: var(--ds-superficie-2); color: var(--ds-tinta); }
+
+.identidad {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 0;
+}
+
+.identidad-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.identidad-nombre {
+    font-weight: 600;
+    color: var(--ds-tinta);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underline; }
+
+.identidad-detalle {
+    font-size: .82rem;
+    color: var(--ds-texto-3);
+}
+
+/* --- Ficha: pares etiqueta/valor --- */
+.dato { margin: 0; }
+.dato dd { margin: .1rem 0 0; color: var(--ds-texto); overflow-wrap: anywhere; }
+.dato-vacio { color: var(--ds-texto-3); }
+
+.datos-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 1rem 1.25rem;
+    margin: 0;
+}
+
+/* --- Estado vacío (amplía el de la sección 2) --- */
+.empty-state .empty-state-titulo {
+    font-weight: 600;
+    color: var(--ds-texto-2);
+    margin-bottom: .15rem;
+}
+
+.empty-state .empty-state-texto { font-size: .9rem; margin-bottom: 0; }
+.empty-state .empty-state-acciones { margin-top: .85rem; }
+
+/* --- Buscador --- */
+.buscador {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+.buscador-campo {
+    position: relative;
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.buscador-campo i {
+    position: absolute;
+    left: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ds-texto-3);
+    pointer-events: none;
+}
+
+.buscador-campo .form-control { padding-left: 2.3rem; }
+
+/* --- Barra de herramientas: el buscador y los filtros de una pantalla, debajo del encabezado ---
+   El encabezado (`.page-head`) lleva sólo título, subtítulo y botones. Todo lo que filtra la lista va acá:
+   el buscador ocupa el ancho útil y los filtros (segmentados, selects) quedan a su derecha; en el celular
+   cada grupo baja a su propia línea. Es la hermana de `.agenda-barra`, para las pantallas sin calendario. */
+.barra-herramientas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.barra-herramientas .buscador { flex: 1 1 24rem; min-width: 0; }
+.barra-herramientas .buscador-campo { flex: 1 1 14rem; min-width: 10rem; }
+
+.barra-herramientas-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .6rem;
+}
+
+/* En el celular el campo y los dos botones ("Buscar" y "Limpiar", que aparece con una búsqueda activa) no
+   entran en una línea: el campo se queda con el espacio que sobra y "Limpiar" baja a otra línea. Sin esto la página gana 3 px de
+   scroll horizontal a 375 px (medido). */
+@media (max-width: 575.98px) {
+    .barra-herramientas .buscador { flex-basis: 100%; }
+    .barra-herramientas .buscador-campo { flex: 1 1 8rem; min-width: 0; }
+    .barra-herramientas-filtros { width: 100%; }
+}
+
+/* --- Tabla que se apila en tarjetas en el celular --- */
+@media (max-width: 767.98px) {
+    .tabla-tarjetas thead { display: none; }
+
+    .tabla-tarjetas,
+    .tabla-tarjetas tbody,
+    .tabla-tarjetas tr,
+    .tabla-tarjetas td { display: block; width: 100%; }
+
+    .tabla-tarjetas tr {
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--ds-borde);
+    }
+
+    .tabla-tarjetas tr:last-child { border-bottom: 0; }
+
+    .tabla-tarjetas > :not(caption) > * > * { padding: .25rem 1rem; border: 0; }
+
+    .tabla-tarjetas td[data-etiqueta] {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        text-align: right;
+    }
+
+    .tabla-tarjetas td[data-etiqueta]::before {
+        content: attr(data-etiqueta);
+        flex: 0 0 auto;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: var(--ds-texto-3);
+        text-align: left;
+    }
+
+    /* Una celda sin dato no ocupa renglón en la tarjeta. */
+    .tabla-tarjetas td.celda-vacia { display: none; }
+
+    /* La primera celda (la identidad) abre la tarjeta y ocupa todo el ancho. */
+    .tabla-tarjetas td.celda-principal { text-align: left; padding-top: .35rem; }
+    .tabla-tarjetas td.celda-acciones { display: flex; justify-content: flex-end; padding-bottom: .35rem; }
+
+    /* Una celda con un valor largo (un correo) se apila: la etiqueta arriba y el valor con todo el ancho.
+       En la fila de siempre (etiqueta a la izquierda, valor a la derecha) el correo se partía a mitad de
+       palabra ("fuenmayoryy@gm / ail.com"). */
+    .tabla-tarjetas td.celda-apilada[data-etiqueta] {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .15rem;
+        text-align: left;
+    }
+}
+
+/* --- Pie de un listado: rango + paginación --- */
+.lista-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-top: .85rem;
+}
+
+.lista-pie .pagination { margin-bottom: 0; flex-wrap: wrap; }
+
+@media (max-width: 575.98px) {
+    .lista-pie { justify-content: center; }
+}
+
+/* --- Cabecera de una ficha --- */
+.ficha-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+}
+
+.ficha-cabecera-texto {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    min-width: 0;
+}
+
+.ficha-cabecera-contacto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1.25rem;
+    color: var(--ds-texto-2);
+    font-size: .92rem;
+}
+
+/* Representante de un adulto: acción compacta a la derecha de la cabecera (se parte debajo en pantallas chicas). */
+.ficha-cabecera-representante {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .5rem .9rem;
+    color: var(--ds-texto-2);
+}
+
+@media (max-width: 767.98px) {
+    .ficha-cabecera { flex-wrap: wrap; }
+    .ficha-cabecera-representante { margin-left: 0; justify-content: flex-start; width: 100%; }
+}
+
+.ficha-cabecera-contacto i { color: var(--ds-texto-3); margin-right: .2rem; }
+
+/* --- Línea de tiempo (consultas, antecedentes…) --- */
+.linea-tiempo {
+    list-style: none;
+    margin: 0;
+    padding: .5rem 1rem .5rem 1.5rem;
+}
+
+.linea-tiempo > li {
+    position: relative;
+    padding: .7rem 0 .7rem 1.1rem;
+    border-left: 2px solid var(--ds-violeta-200);
+}
+
+.linea-tiempo > li::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 1.05rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ds-superficie);
+    border: 2px solid var(--ds-violeta-700);
+}
+
+.linea-tiempo-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.linea-tiempo-texto {
+    margin: .2rem 0 0;
+    font-size: .9rem;
+    color: var(--ds-texto-2);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+    .ficha-cabecera { align-items: flex-start; }
+    .avatar-lg { width: 52px; height: 52px; font-size: 1.1rem; }
+}
+
+/* --- Representante del paciente en la ficha (WEB-3.4) --- */
+.representante-datos {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.representante-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+.representante-nombre {
+    font-weight: 600;
+    color: var(--ds-texto);
+    overflow-wrap: anywhere;
+}
+
+/* --- Historia del paciente (WEB-3.5): los antecedentes agrupados por tipo --- */
+.antecedentes-grupo + .antecedentes-grupo { margin-top: 1rem; }
+
+.antecedentes-titulo {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ds-texto-3);
+    margin: 0 0 .35rem;
+}
+
+.lista-antecedentes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lista-antecedentes > li {
+    padding: .45rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+    overflow-wrap: anywhere;
+}
+
+.lista-antecedentes > li:last-child { border-bottom: 0; }
+
+/* --- Ancho de columnas y controles (reemplazan los `style=""` de las vistas) --- */
+.col-estrecha { width: 2rem; }
+.col-numero   { width: 3rem; }
+.col-hora     { width: 4.5rem; }
+.control-sede   { min-width: 15rem; }
+.control-razon  { min-width: 12.5rem; }
+.control-buscar { min-width: 16rem; }
+
+/* ==========================================================================
+   5. Web clínica — armazón y agenda (antes un `<style>` dentro de clinica/layout)
+   ========================================================================== */
+
+/* La fila que se arrastra (el diálogo de cobro es un <dialog>: ver sección 6). */
+.lista-cola tr[draggable="true"] { cursor: grab; }
+.lista-cola tr.arrastrando { opacity: .5; }
+.calendario-mes td { width: 14.28%; }
+
+/* La columna de contenido (barra superior + pantalla) ocupa lo que deja la barra lateral, que es fija. */
+.app-columna { min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
+.app-columna > .app-topbar { position: sticky; top: 0; z-index: 1020; }
+.app-contenido { flex: 1; min-width: 0; }
+
+/* ==========================================================================
+   6. Web clínica — agenda y piezas compartidas (menú, diálogo, resultados en vivo)
+   ========================================================================== */
+
+/* --- Menú de acciones (<details class="menu-acciones">, ver `<x-ui.menu>` y shell.js) --- */
+.menu-acciones { position: relative; display: inline-block; }
+.menu-acciones > summary { list-style: none; cursor: pointer; }
+.menu-acciones > summary::-webkit-details-marker { display: none; }
+.menu-acciones[open] > summary { background: var(--ds-superficie-2); border-color: var(--ds-texto-3); }
+
+.menu-lista {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 1060;
+    min-width: 14rem;
+    padding: .35rem;
+    background: var(--ds-superficie);
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    box-shadow: var(--ds-sombra-2);
+    text-align: left;
+}
+
+.menu-lista form { margin: 0; }
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    width: 100%;
+    padding: .5rem .7rem;
+    border: 0;
+    border-radius: var(--ds-radio-sm);
+    background: transparent;
+    color: var(--ds-texto);
+    font-size: .92rem;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.menu-item i { color: var(--ds-texto-3); }
+.menu-item:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-900); }
+.menu-item:hover i { color: var(--ds-violeta-700); }
+.menu-item:disabled { opacity: .55; cursor: not-allowed; }
+.menu-item-peligro, .menu-item-peligro i { color: var(--ds-peligro); }
+.menu-item-peligro:hover { background: var(--ds-peligro-bg); color: var(--ds-peligro); }
+
+/* --- Diálogo nativo (<dialog>, ver `<x-ui.dialogo>`) --- */
+dialog.dialogo {
+    width: min(26rem, 92vw);
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radio-card);
+    color: var(--ds-texto);
+    box-shadow: var(--ds-sombra-3);
+}
+
+dialog.dialogo::backdrop { background: rgba(31, 17, 70, .6); }
+
+dialog.dialogo[open]::backdrop { animation: velo-entra var(--ds-dur-base) var(--ds-ease); }
+dialog.dialogo[open] { animation: dialogo-entra var(--ds-dur-base) var(--ds-ease); }
+
+@keyframes velo-entra { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialogo-entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes lateral-entra { from { transform: translateX(100%); } to { transform: none; } }
+
+/* Variante lateral (`<x-ui.dialogo lateral>`): un formulario que entra por la derecha a alto completo y
+   deja ver la pantalla de fondo. Para confirmaciones cortas sigue el diálogo centrado. */
+dialog.dialogo-lateral {
+    width: min(32rem, 100vw);
+    max-width: 100vw;
+    height: 100%;
+    max-height: none;
+    margin: 0 0 0 auto;
+    border-radius: 0;
+    border-left: 1px solid var(--ds-borde);
+    overflow-y: auto;
+}
+
+dialog.dialogo-lateral[open] { animation: lateral-entra var(--ds-dur-panel) var(--ds-ease); }
+
+dialog.dialogo-lateral .dialogo-caja { min-height: 100%; display: flex; flex-direction: column; padding: 1.5rem; }
+dialog.dialogo-lateral .dialogo-caja > form { flex: 1 1 auto; display: flex; flex-direction: column; }
+dialog.dialogo-lateral .dialogo-cuerpo { flex: 1 1 auto; }
+dialog.dialogo-lateral .dialogo-pie {
+    position: sticky;
+    bottom: 0;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    background: var(--ds-superficie);
+    border-top: 1px solid var(--ds-borde);
+}
+
+.dialogo-caja { padding: 1.25rem; }
+.dialogo-titulo { font-size: 1.1rem; font-weight: 700; margin: 0 0 .9rem; }
+.dialogo-pie { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.1rem; }
+
+/* --- Alta y edición de paciente (WEB-3.2) --- */
+/* La nacionalidad es una letra (`V`/`E`): dentro del grupo de la cédula ocupa lo mínimo y deja el resto
+   al número, que es lo que se escribe de verdad. */
+.campo-nacionalidad { max-width: 8.5rem; }
+
+/* --- Resultados en vivo (<x-ui.buscador-vivo>) --- */
+.resultados-flotantes {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 1030;
+    max-height: 16rem;
+    overflow-y: auto;
+    border-radius: var(--ds-radio);
+    box-shadow: var(--ds-sombra-2);
+}
+
+.resultado-paciente {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .5rem .85rem;
+    background: var(--ds-superficie);
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.resultado-paciente:last-child { border-bottom: 0; }
+.resultado-paciente-datos { font-size: .9rem; min-width: 0; overflow-wrap: anywhere; }
+
+/* --- Barra de la agenda: navegación, vista y filtros --- */
+.agenda-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.agenda-navegacion, .agenda-controles, .agenda-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .6rem;
+}
+
+.agenda-titulo { font-size: 1.1rem; font-weight: 700; margin: 0 .25rem; }
+
+.agenda-filtros .form-select { width: auto; flex: 1 1 12rem; max-width: 18rem; }
+
+@media (max-width: 575.98px) {
+    .agenda-filtros { width: 100%; }
+    .agenda-filtros .form-select { width: 100%; min-width: 0; max-width: none; flex-basis: 100%; }
+}
+
+/* --- Jornada: cabecera con el cupo --- */
+/* Sin `overflow: hidden`: recortaría el menú de acciones de la fila cuando hay pocas citas (queda detrás).
+   Las esquinas se redondean a mano. */
+.jornada { overflow: visible; }
+.jornada-cabecera { border-radius: calc(var(--ds-radio-card) - 1px) calc(var(--ds-radio-card) - 1px) 0 0; }
+
+.jornada-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem 1.25rem;
+    padding: .85rem 1rem;
+    background: var(--ds-violeta-50);
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.jornada-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; }
+.jornada-sede i { color: var(--ds-violeta-700); margin-right: .15rem; }
+
+.jornada-resumen {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem 1rem;
+    font-size: .88rem;
+    color: var(--ds-texto-2);
+}
+
+.jornada-cupo { display: inline-flex; align-items: center; gap: .45rem; }
+
+progress.cupo-barra {
+    width: 4.5rem;
+    height: .5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ds-borde);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+progress.cupo-barra::-webkit-progress-bar { background: var(--ds-borde); border-radius: 999px; }
+progress.cupo-barra::-webkit-progress-value { background: var(--ds-violeta-700); border-radius: 999px; }
+progress.cupo-barra::-moz-progress-bar { background: var(--ds-violeta-700); border-radius: 999px; }
+progress.cupo-lleno::-webkit-progress-value { background: #d99b00; }
+progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
+
+/* --- Citas de la jornada --- */
+.turno {
+    display: inline-block;
+    min-width: 2.2rem;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    background: var(--ds-tinta);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.turno-vacio { background: var(--ds-superficie-2); color: var(--ds-texto-3); border: 1px solid var(--ds-borde-2); }
+
+.table > tbody > tr.fila-atendida,
+.table > tbody > tr.fila-atendida > * { --bs-table-bg: var(--ds-exito-bg); --bs-table-color: var(--ds-texto); }
+
+.table > tbody > tr.fila-movida > * { color: var(--ds-texto-3); }
+
+.celda-arrastre { width: 2rem; color: var(--ds-texto-3); cursor: grab; }
+.celda-hora { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.estados-fila { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.acciones-fila {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+}
+
+.acciones-fila form { margin: 0; }
+
+/* En el celular cada cita es una tarjeta compacta: turno y hora arriba, el paciente, los estados y las
+   acciones debajo (sin etiquetas por celda). */
+@media (max-width: 767.98px) {
+    .tabla-agenda > :not(caption) > * > * { padding: 0; }
+
+    .tabla-agenda tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .4rem .75rem;
+        padding: .8rem 1rem;
+    }
+
+    .tabla-agenda td { display: block; width: auto; }
+    .tabla-agenda td.celda-arrastre { display: none; }
+    .tabla-agenda td.celda-turno { order: 1; }
+    .tabla-agenda td.celda-hora { order: 2; margin-right: auto; font-weight: 600; }
+    .tabla-agenda td.celda-principal { order: 3; width: 100%; }
+    .tabla-agenda td.celda-estado { order: 4; width: 100%; }
+    .tabla-agenda td.celda-acciones { order: 5; width: 100%; text-align: left !important; justify-content: flex-start; }
+    .tabla-agenda .acciones-fila { justify-content: flex-start; }
+}
+
+/* En la tabla (escritorio y tableta) las acciones de una cita van **en una sola línea**: la columna se ajusta a
+   su contenido y es la de estados la que envuelve. Con `flex-wrap` suelto, el navegador repartía el ancho
+   entre columnas y partía "Confirmar / Cobrar / ⋯" en dos renglones en cada fila. */
+@media (min-width: 768px) {
+    .tabla-agenda td.celda-acciones { width: 1%; white-space: nowrap; }
+    .tabla-agenda .acciones-fila { flex-wrap: nowrap; }
+}
+
+/* --- Semana --- */
+.agenda-dia { margin-top: 1.25rem; }
+.agenda-dia-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: .6rem; }
+.agenda-dia-titulo { font-size: 1rem; font-weight: 700; margin: 0; }
+.agenda-dia-titulo a { color: inherit; text-decoration: none; }
+.agenda-dia-titulo a:hover { text-decoration: underline; }
+.agenda-dia-titulo.es-hoy { color: var(--ds-violeta-700); }
+
+/* --- Mes --- */
+.calendario-mes th { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.calendario-celda { height: 5.75rem; vertical-align: top; padding: .4rem !important; }
+.calendario-celda.fuera-del-mes { background: var(--ds-superficie-2); }
+.calendario-celda.fuera-del-mes .calendario-numero { color: var(--ds-texto-3); }
+
+.calendario-dia {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .25rem;
+    color: var(--ds-texto);
+    text-decoration: none;
+}
+
+.calendario-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    font-weight: 600;
+}
+
+.calendario-dia:hover .calendario-numero { background: var(--ds-violeta-100); }
+.calendario-dia.es-hoy .calendario-numero { background: var(--ds-violeta-700); color: #fff; }
+
+.calendario-conteo {
+    padding: .05rem .5rem;
+    border-radius: 999px;
+    background: var(--ds-violeta-100);
+    color: var(--ds-violeta-800);
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.calendario-marca { margin-top: .3rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 575.98px) {
+    /* El mes tiene que caber en el celular (a 390 px la columna del domingo quedaba fuera de la pantalla):
+       columnas de igual ancho que no crecen con el texto y encabezados más compactos. */
+    .calendario-mes { table-layout: fixed; width: 100%; }
+    .calendario-mes th { padding: .4rem 0 !important; font-size: .66rem; letter-spacing: 0; }
+    .calendario-celda { height: 4.2rem; padding: .25rem !important; }
+    .calendario-celda.no-laborable { background: var(--ds-aviso-bg); }
+    .calendario-marca { display: none; }
+    .calendario-conteo { font-size: .7rem; padding: 0 .35rem; }
+}
+
+/* --- Formulario por pasos (cita) --- */
+.paso { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--ds-borde); }
+.paso-aviso { background: var(--ds-aviso-bg); }
+
+.paso-titulo {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 .9rem;
+}
+
+.paso-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-size: .8rem;
+}
+
+.jornada-resumen-inline { padding: .6rem .8rem; background: var(--ds-violeta-50); border-radius: var(--ds-radio-sm); }
+
+/* --- Accesos a módulos (inicio) y errores de campo --- */
+.modulo-icono { background: var(--ds-violeta-100); color: var(--ds-violeta-700); }
+.modulo-nombre { font-size: 1rem; font-weight: 700; margin: 0 0 .15rem; }
+.modulo-acceso { transition: box-shadow .15s ease, border-color .15s ease; }
+.modulo-acceso:hover { border-color: var(--ds-violeta-200); box-shadow: var(--ds-sombra-2); }
+.campo-error { color: var(--ds-peligro); font-size: .85rem; margin-top: .2rem; }
+
+/* ==========================================================================
+   7. Web clínica — la consulta (WEB-4.1): el panel de secciones del legado
+   ========================================================================== */
+
+.consulta-panel-grupo + .consulta-panel-grupo { margin-top: .9rem; }
+
+.consulta-panel-titulo {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ds-texto-3);
+    margin: 0 0 .35rem;
+}
+
+.consulta-panel { list-style: none; margin: 0; padding: 0; }
+
+/* El ítem es una fila de dos piezas: el icono y el texto. El estado ("Próximamente") va **dentro** del texto,
+   en la fila del título, así la descripción de abajo usa todo el ancho del ítem. */
+.consulta-panel-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.consulta-panel-item:last-child { border-bottom: 0; }
+
+.consulta-panel-item-pendiente .consulta-panel-nombre { color: var(--ds-texto-2); }
+
+.consulta-panel-icono {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ds-radio);
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+}
+
+.consulta-panel-item-pendiente .consulta-panel-icono {
+    background: var(--ds-fondo);
+    color: var(--ds-texto-3);
+}
+
+.consulta-panel-texto { flex: 1 1 auto; min-width: 0; }
+
+/* La fila del título: el nombre a la izquierda y la pastilla a la derecha, **siempre en la misma fila**. Si
+   no caben (una columna angosta), el que cede es el nombre, que se parte en dos renglones por palabras
+   ("Estudio / ecográfico"); la pastilla no se achica ni baja, y queda alineada con el primer renglón. */
+.consulta-panel-cabecera {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+}
+
+.consulta-panel-cabecera > .consulta-panel-nombre { flex: 1 1 auto; min-width: 0; }
+.consulta-panel-cabecera > .estado { flex: 0 0 auto; margin-left: auto; margin-top: .05rem; }
+
+@media (min-width: 768px) {
+    .consulta-panel-item { align-items: flex-start; max-width: 28rem; }
+}
+
+.consulta-panel-nombre {
+    display: block;
+    font-weight: 600;
+    color: var(--ds-texto);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+a.consulta-panel-nombre:hover { color: var(--ds-violeta-700); text-decoration: underline; }
+
+.consulta-panel-detalle {
+    display: block;
+    font-size: .85rem;
+    color: var(--ds-texto-3);
+    overflow-wrap: anywhere;
+}
+
+/* La sección que se está mirando: el ítem del panel se marca con el fondo de marca suave y una barra a
+   la izquierda, para que se vea **cuál** de los trece está abierto (guía de UI §3: el ítem activo). */
+.consulta-panel-item-activo {
+    background: var(--ds-violeta-50);
+    border-radius: var(--ds-radio);
+    box-shadow: inset 3px 0 0 var(--ds-violeta-700);
+    padding-left: .5rem;
+    padding-right: .5rem;
+}
+
+/* ==========================================================================
+   8. Web clínica — las secciones de la consulta (WEB-4.2): motivos y enfermedad actual
+   ========================================================================== */
+
+/* Los motivos que la consulta ya tiene: una fila por motivo, con su quitar a la derecha. Es una lista y
+   no una tabla porque son pocos renglones cortos y en celular la tabla se volvería tarjetas. */
+.motivos-lista { list-style: none; margin: 0; padding: 0; }
+
+.motivos-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.motivos-item:last-child { border-bottom: 0; }
+
+.motivos-item-texto { min-width: 0; }
+
+.motivos-item-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* La fila del buscador: el resultado y su acción. Es el mismo `.resultado-paciente` de los buscadores en
+   vivo, con el botón de crear como `<button>` (abre el diálogo) y no como enlace. */
+.resultado-motivo { width: 100%; text-align: left; border: 0; }
+
+button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-violeta-700); }
+
+/* El campo de la enfermedad actual: el texto clínico se lee cómodo y crece con el contenido hasta un
+   tope, para que no empuje el botón de guardar fuera de la pantalla. */
+#enfermedadactual { min-height: 14rem; resize: vertical; }
+
+/* ==========================================================================
+   9. Web clínica — la evaluación física (WEB-4.3)
+   ========================================================================== */
+
+/* La rejilla de la antropometría y los signos: campos numéricos cortos, tantos como entren (a 1280 px son
+   cuatro por fila). `auto-fill` con un mínimo de 9rem evita el `col-*` de Bootstrap, que a 375 px deja los
+   campos de a uno y alarga la pantalla sin necesidad. */
+.examen-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+/* La unidad de un campo numérico (`kg`, `cm`, `x min`): va al lado del control, no dentro de la etiqueta,
+   para que la etiqueta siga siendo el nombre del dato. */
+.examen-unidad {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.examen-unidad > .form-control { min-width: 0; }
+
+.examen-unidad > span {
+    color: var(--ds-texto-3);
+    font-size: .85rem;
+    white-space: nowrap;
+}
+
+/* Los hallazgos por aparatos y el ginecológico: un área de texto por sistema, en dos columnas a 1280 px. */
+.examen-hallazgos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: .75rem;
+}
+
+.examen-hallazgos textarea { min-height: 5.5rem; resize: vertical; }
+
+/* El bloque de los resúmenes que escribe el escritorio con su botón "Actualizar": texto de lectura, así
+   que va sin controles y con el aire de una nota. */
+.examen-resumen {
+    border-left: 3px solid var(--ds-borde-2);
+    padding-left: .75rem;
+    margin-bottom: .75rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.examen-resumen:last-child { margin-bottom: 0; }
+
+.examen-resumen-titulo {
+    display: block;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ds-texto-3);
+    margin-bottom: .15rem;
+}
+
+/* ==========================================================================
+   10. Web clínica — los antecedentes del paciente (WEB-4.4)
+   ========================================================================== */
+
+/* Los grupos por tipo: el título es el del catálogo (`tipo_antecedente.descripcion`) y va como subtítulo,
+   porque la jerarquía de la tarjeta ya la tiene el nombre de la sección. */
+.antecedentes-grupo + .antecedentes-grupo { margin-top: 1rem; }
+
+.antecedentes-grupo-titulo {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ds-texto-3);
+    margin-bottom: .35rem;
+}
+
+.antecedentes-lista { list-style: none; margin: 0; padding: 0; }
+
+.antecedentes-item {
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.antecedentes-item:last-child { border-bottom: 0; }
+
+/* La fila con la casilla de Alerta: fondo ámbar suave y barra a la izquierda. El color no es la única
+   señal —la casilla está tildada y la pastilla del encabezado lo cuenta—, como pide la guía de UI §1. */
+.antecedentes-item-alerta {
+    background: var(--ds-aviso-bg);
+    border-left: 3px solid var(--ds-aviso-borde);
+    border-radius: var(--ds-radio);
+    padding-left: .6rem;
+    padding-right: .6rem;
+}
+
+.antecedentes-item-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+}
+
+.antecedentes-item-datos { flex: 1 1 auto; min-width: 0; }
+
+.antecedentes-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.antecedentes-item-datos .form-control { margin-top: .25rem; }
+
+/* La casilla de Alerta, a la derecha del nombre: `flex: 0 0 auto` para que no se estire con el texto. */
+.antecedentes-alerta {
+    flex: 0 0 auto;
+    margin-top: .1rem;
+    white-space: nowrap;
+}
+
+.antecedentes-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+/* Una fila marcada para quitar: se atenúa y el nombre se tacha **sólo acá**, porque el borrado todavía no
+   pasó (la guía de UI prohíbe tachar como estado de un dato terminado; esto es una acción pendiente). */
+.antecedentes-item-quitado { opacity: .55; }
+
+.antecedentes-item-quitado .antecedentes-nombre,
+.antecedentes-item-quitado .antecedentes-item-datos .form-control { text-decoration: line-through; }
+
+@media (max-width: 575.98px) {
+    .antecedentes-item-texto { flex-wrap: wrap; }
+    .antecedentes-item-datos { flex-basis: 100%; }
+    .antecedentes-alerta,
+    .antecedentes-acciones { order: 2; }
+}
+
+/* ---------------------------------------------------------------------------
+   Sección de diagnósticos de la consulta (WEB-4.5, ítem 8)
+   Misma forma que los antecedentes: una fila con su nombre, el detalle editable y el botón de quitar.
+   ========================================================================== */
+
+.diagnosticos-lista { list-style: none; margin: 0; padding: 0; }
+
+.diagnosticos-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.diagnosticos-item:last-child { border-bottom: 0; }
+
+.diagnosticos-item-datos { flex: 1 1 auto; min-width: 0; }
+
+.diagnosticos-nombre {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.diagnosticos-item-datos .form-control { margin-top: .25rem; }
+
+.diagnosticos-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+/* Una fila marcada para quitar: se atenúa y el nombre se tacha **sólo acá**, porque el borrado todavía no
+   pasó (la guía de UI prohíbe tachar como estado de un dato terminado; esto es una acción pendiente). */
+.diagnosticos-item-quitado { opacity: .55; }
+
+.diagnosticos-item-quitado .diagnosticos-nombre,
+.diagnosticos-item-quitado .diagnosticos-item-datos .form-control { text-decoration: line-through; }
+
+@media (max-width: 575.98px) {
+    .diagnosticos-item { flex-wrap: wrap; }
+    .diagnosticos-item-datos { flex-basis: 100%; }
+    .diagnosticos-acciones { order: 2; }
+}
+
+/* ---------------------------------------------------------------------------
+   Sección de evolución de la consulta (WEB-4.6, ítem 9)
+   El campo de texto (el mismo patrón de la enfermedad actual) y, al lado, la lista de las plantillas del
+   escritorio: cada una es un botón que copia su texto en el campo, como el doble clic del `dw_84`.
+   ========================================================================== */
+
+/* Fichas en una fila que se parte: no le quitan ancho al campo de texto. */
+.evolucion-plantillas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+
+.evolucion-plantilla {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    max-width: 100%;
+    text-align: left;
+    padding: .35rem .7rem;
+    border: 1px solid var(--ds-borde-2);
+    border-radius: 999px;
+    background: var(--ds-superficie);
+    color: var(--ds-texto);
+    cursor: pointer;
+}
+
+.evolucion-plantilla:hover { border-color: var(--ds-violeta-700); }
+
+.evolucion-plantilla-titulo {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* A 375 px cada control tiene que seguir siendo un objetivo táctil cómodo (guía de UI §7). */
+@media (max-width: 575.98px) {
+    .evolucion-plantilla { padding: .6rem .7rem; }
+}
+
+/* ---------------------------------------------------------------------------
+   Sección de exámenes e imágenes de la consulta (WEB-4.7, ítem 7)
+   La lista de las imágenes cargadas: cada fila dice qué es, de dónde salió el archivo —del servidor o del
+   disco de la PC donde lo cargó el escritorio— y ofrece verlo o quitarlo. El icono es el mismo de la
+   tarjeta (`bi-image`): la imagen no se incrusta en la lista (una ecografía entera desarmaría la pantalla
+   y el archivo se sirve por su ruta autorizada, que se abre en una pestaña).
+   ========================================================================== */
+
+.examen-imagen {
+    padding: .7rem 0;
+    border-top: 1px solid var(--ds-borde);
+}
+
+.examen-imagen:first-child { border-top: 0; }
+
+.examen-imagen-icono {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ds-radio);
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+}
+
+/* A 375 px las acciones de la fila bajan debajo del texto y ocupan el ancho: dos botones apretados al
+   lado de un párrafo no se tocan con el dedo (guía de UI §7). */
+@media (max-width: 575.98px) {
+    .examen-imagen .acciones-fila { display: flex; gap: .5rem; width: 100%; }
+    .examen-imagen .acciones-fila .btn { flex: 1 1 auto; }
+}
+
+/* --- Enlace "Saltar al contenido" (teclado y lector de pantalla): fuera de pantalla hasta recibir el foco --- */
+.saltar-al-contenido {
+    position: absolute;
+    left: .75rem;
+    top: -4rem;
+    z-index: 2000;
+    padding: .55rem 1rem;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--ds-radio);
+    text-decoration: none;
+    transition: top .1s ease-out;
+}
+.saltar-al-contenido:focus { top: .75rem; outline: 3px solid var(--ds-celeste-700); outline-offset: 2px; }
+/* El destino del salto recibe el foco por código (`tabindex="-1"`): sin contorno, no es un control. */
+.app-contenido:focus { outline: none; }
+
+/* --- Objetivos táctiles en el celular ---
+   Los botones y campos `-sm` miden ~31 px: demasiado chicos para el pulgar (la guía de accesibilidad de Apple
+   pide 44 px y WCAG 2.5.8 un mínimo de 24). En pantallas angostas se suben a 40 px; en escritorio se
+   quedan compactos, que es donde se usa el mouse. */
+@media (max-width: 767.98px) {
+    .btn-sm,
+    .form-control-sm,
+    .form-select-sm,
+    .pagination .page-link { min-height: 2.5rem; }
+
+    .btn-sm,
+    .pagination .page-link { display: inline-flex; align-items: center; justify-content: center; }
+
+    .pagination .page-link { min-width: 2.5rem; }
+}
+
+
+/* ==========================================================================
+   8. Autenticación (login) — panel de marca + formulario
+   ========================================================================== */
+
+/* Dos columnas en escritorio: a la izquierda la marca con su trama y el lema, a la derecha el formulario.
+   En el celular la marca queda como franja arriba y el formulario ocupa el resto. */
+body.auth-pagina {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    background: var(--ds-fondo);
+}
+
+.auth-marca {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--ds-barra);
+    color: var(--ds-barra-texto);
+    overflow: hidden;
+    /* La trama: líneas de pulso muy tenues, el latido del logo repetido. Decorativa. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='140' viewBox='0 0 180 140'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 35h46l8-18 12 36 10-18h104'/%3E%3Cpath d='M-40 105h46l8-18 12 36 10-18h104'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 180px 140px;
+}
+
+.auth-marca-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--ds-barra-texto);
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.auth-marca-logo .app-marca-ficha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ds-radio);
+    background: #fff;
+    color: var(--ds-violeta-700);
+    font-size: 1.4rem;
+}
+
+.auth-marca-nombre { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; }
+.auth-marca-nombre span { color: var(--ds-celeste-200); }
+
+/* El lema sólo aparece cuando hay lugar: en el celular el formulario es lo importante. */
+.auth-marca-lema { display: none; }
+
+.auth-lema-titulo {
+    margin: 0 0 .75rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+}
+
+.auth-lema-texto { margin: 0; max-width: 26rem; color: var(--ds-barra-texto-2); font-size: .95rem; }
+
+.auth-formulario {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 26rem;
+    padding: 1.5rem;
+    box-shadow: var(--ds-sombra-2);
+}
+
+.auth-titulo {
+    margin: 0 0 .35rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--ds-tinta);
+}
+
+.auth-links a {
+    color: var(--ds-celeste-700);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: .875rem;
+}
+
+.auth-links a:hover { text-decoration: underline; }
+
+/* Selector del tipo de usuario */
+.user-type-selector .btn { border-color: var(--ds-borde-control); color: var(--ds-texto-2); }
+.user-type-selector .btn:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-800); }
+.user-type-selector .btn-check:checked + .btn {
+    background-color: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
+}
+
+.disabled-group { opacity: .55; pointer-events: none; }
+
+.acceso-sistema {
+    background: var(--ds-superficie-2);
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    padding: .6rem .85rem;
+}
+
+@media (min-width: 992px) {
+    body.auth-pagina {
+        grid-template-columns: minmax(22rem, 5fr) 7fr;
+        grid-template-rows: 1fr;
+    }
+
+    .auth-marca { padding: 2.5rem 3rem; min-height: 100vh; }
+    .auth-marca-lema { display: block; }
+    .auth-formulario { padding: 2rem; }
+    .login-card { padding: 2rem; }
+}
+
+
+/* ==========================================================================
+   9. Indicador de carga (`<x-ui.cargando>`)
+   ========================================================================== */
+
+.cargando {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .15rem;           /* el texto casi toca el icono: el SVG ya está recortado a su contenido */
+    color: var(--ds-violeta-700);
+}
+
+.cargando-icono { height: 7rem; width: auto; overflow: visible; }  /* el latido de la campana no se recorta */
+.cargando-sm .cargando-icono { height: 2.75rem; }
+.cargando-lg .cargando-icono { height: 10rem; }
+
+.cargando-campana { fill: var(--ds-superficie); }
+.cargando-latido { fill: var(--ds-celeste-500); }   /* el latido del logo; decorativo */
+
+.cargando-texto {
+    color: var(--ds-texto-3);
+    font-size: .75rem;
+    font-weight: 500;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    animation: cargando-parpadeo 1.5s ease-in-out infinite;
+}
+
+.cargando-sm .cargando-texto { font-size: .6875rem; letter-spacing: .15em; }
+.cargando-lg .cargando-texto { font-size: .8125rem; }
+
+@keyframes cargando-parpadeo {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+}
+
+/* Velo: tapa el contenedor mientras algo carga. El contenedor se vuelve la referencia de la posición. */
+.cargando-cubre {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    justify-content: center;
+    background: rgba(246, 245, 249, .85);
+    border-radius: inherit;
+}
+
+:has(> .cargando-cubre) { position: relative; }
+
+/* Cuando el velo pasa de oculto a visible (Livewire lo muestra con `display: flex`) entra con un fundido. */
+.cargando-cubre { animation: velo-entra var(--ds-dur-base) var(--ds-ease); }
+
+@media (prefers-reduced-motion: reduce) {
+    .cargando-texto { animation: none; }
+}
+
+/* ==========================================================================
+   Web clínica — los récipes de la consulta (WEB-5.1 y WEB-5.1b, ítem 10 del panel)
+   La lista de los récipes de la consulta (un bloque por récipe, con sus medicamentos) y el editor de uno (una
+   fila por medicamento con su cantidad e indicaciones). Mismos tokens y misma forma que las otras secciones.
+   ========================================================================== */
+
+.recipe-lista { display: grid; gap: .85rem; }
+
+/* Las dos pestañas de la sección (WEB-5.1b: «Récipes del paciente» / «Récipe de la pareja») y, a su derecha, el
+   menú de lo destructivo. En el celular los dos botones se reparten el ancho y, si no caben, el texto se parte
+   en lugar de empujar la página. */
+.recipe-pestanas-barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+.recipe-pestanas { max-width: 100%; }
+.recipe-pestanas .btn { white-space: normal; }
+
+/* Las pestañas de las solicitudes de la consulta (WEB-5.3b: seis, y «Dieta / Recomendaciones» es larga): ya no caben en una sola fila del
+   grupo de botones ni a 1280 px (la columna de la consulta es angosta) ni a 375 px. Pasan a botones sueltos que **se parten en filas**
+   en lugar de empujar la página. Se pide con la clase «pestanas-en-fila»; las dos pestañas de los récipes siguen siendo el grupo unido. */
+.btn-group.pestanas-en-fila { display: flex; flex-wrap: wrap; gap: .25rem; }
+.btn-group.pestanas-en-fila > .btn.btn { flex: 0 1 auto; margin-left: 0; border-radius: var(--ds-radio); }
+
+.recipe-bloque {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    padding: .85rem 1rem;
+    background: var(--ds-superficie);
+}
+
+.recipe-cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .6rem;
+}
+
+.recipe-cabecera-texto { min-width: 0; }
+
+.recipe-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 .1rem;
+}
+
+.recipe-acciones {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+.recipe-medicamentos { list-style: none; margin: 0; padding: 0; }
+
+.recipe-medicamento {
+    display: flex;
+    align-items: baseline;
+    gap: .65rem;
+    padding: .4rem 0;
+    border-top: 1px solid var(--ds-borde);
+}
+
+.recipe-medicamento:first-child { border-top: 0; }
+
+/* La cantidad en una ficha fija: se lee de un vistazo antes que el nombre. */
+.recipe-medicamento-cantidad {
+    flex: 0 0 auto;
+    min-width: 2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ds-violeta-800);
+    background: var(--ds-violeta-100);
+    border-radius: var(--ds-radio-sm);
+    padding: .05rem .4rem;
+}
+
+.recipe-medicamento-texto { min-width: 0; }
+
+.recipe-nombre {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.recipe-indicaciones-texto {
+    display: block;
+    color: var(--ds-texto-2);
+    font-size: .875rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+/* El editor: una fila por medicamento, con el quitar a la derecha. */
+.recipe-editor { list-style: none; margin: 0; padding: 0; }
+
+.recipe-fila {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid var(--ds-borde);
+}
+
+.recipe-fila:first-child { border-top: 1px solid var(--ds-borde); }
+
+.recipe-fila-datos { flex: 1 1 auto; min-width: 0; }
+
+.recipe-generico { margin-left: .25rem; }
+
+.recipe-fila-campos {
+    display: flex;
+    gap: .75rem;
+    margin-top: .35rem;
+}
+
+.recipe-cantidad-campo { flex: 0 0 5.5rem; }
+.recipe-indicaciones-campo { flex: 1 1 auto; min-width: 0; }
+
+.recipe-fila .form-label {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ds-texto-3);
+    margin-bottom: .15rem;
+}
+
+.recipe-quitar { flex: 0 0 auto; }
+
+/* La fila de resultado del buscador (medicamento o tratamiento): el mismo `.resultado-paciente` de los
+   otros buscadores en vivo, como `<button>` (agregar al récipe) y no como formulario. */
+.resultado-recipe { width: 100%; text-align: left; border: 0; }
+/* Lo que ya está en el récipe: el texto se apaga, **no** la fila (con `opacity` el fondo se vuelve translúcido y
+   deja ver lo que hay debajo de la lista flotante). */
+.resultado-recipe:disabled { cursor: default; }
+.resultado-recipe:disabled .resultado-paciente-datos { color: var(--ds-texto-3); }
+.resultado-recipe:not(:disabled):hover .resultado-paciente-datos strong { color: var(--ds-violeta-700); }
+
+@media (max-width: 575.98px) {
+    .recipe-pestanas { width: 100%; }
+    .recipe-pestanas .btn { flex: 1 1 0; min-width: 0; }
+    .recipe-pestanas-barra .recipe-pestanas { flex: 1 1 auto; width: auto; }
+    .recipe-cabecera { flex-wrap: wrap; }
+    .recipe-fila { flex-wrap: wrap; }
+    .recipe-fila-datos { flex-basis: 100%; }
+    .recipe-quitar { order: 2; margin-left: auto; }
+    .recipe-fila-campos { flex-wrap: wrap; }
+    .recipe-cantidad-campo { flex-basis: 100%; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   Imprimir el récipe (WEB-5.2)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* El diálogo "Imprimir récipe": qué se imprime y con qué nombre sale el medicamento. Dos grupos de opciones
+   (botones de radio con su explicación). La vista previa, que no carga esta hoja, tiene un gemelo en
+   `clinica-impresion.css`. */
+.opciones-impresion .opciones-grupo { margin: 0 0 1rem; padding: 0; border: 0; min-width: 0; }
+.opciones-impresion .opciones-grupo .etiqueta { padding: 0; margin-bottom: .4rem; }
+
+.opcion-de-impresion {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .55rem .7rem;
+    margin-bottom: .4rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    cursor: pointer;
+}
+
+.opcion-de-impresion:has(input:checked) { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); }
+.opcion-de-impresion input { margin-top: .25rem; accent-color: var(--ds-violeta-700); }
+.opcion-de-impresion-texto { display: flex; flex-direction: column; }
+.opcion-de-impresion-texto small { color: var(--ds-texto-3); }
+.opciones-nota { margin: 0; color: var(--ds-texto-3); font-size: .875rem; }
+
+/* La franja de la sección de récipes con lo que sale al pie de la hoja: la próxima cita ya agendada (o la falta de
+   ella) y el atajo para hacer una. */
+.recipe-proxima-cita-franja {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem .75rem;
+    margin-bottom: 1rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+}
+
+.recipe-proxima-cita-texto { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+
+/* Solicitudes de la consulta (WEB-5.3a): el texto base de la constancia y las fechas calculadas del reposo. */
+.solicitud-texto-base {
+    margin: 0 0 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+    color: var(--ds-texto-2);
+}
+
+.solicitud-calculo { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Catálogos del médico (WEB-8.1a): medicamentos y tratamientos
+   --------------------------------------------------------------------------------------------------------- */
+
+/* Subir y bajar un medicamento del tratamiento (el editor de récipes lo apaga: allí el orden no importa). */
+.recipe-orden { display: flex; flex-direction: column; gap: .25rem; flex: 0 0 auto; }
+
+/* La indicación por defecto de un medicamento en la lista: una o dos líneas, el resto en el diálogo. */
+.catalogo-texto-corto {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    max-width: 38rem;
+}
+
+/* Las otras marcas del medicamento, en el diálogo: tres campos de una línea cada uno. */
+.catalogo-marcas { display: grid; gap: .5rem; }
+
+@media (max-width: 575.98px) {
+    .recipe-orden { order: 2; flex-direction: row; }
+    .recipe-orden .btn { min-width: 2.5rem; min-height: 2.5rem; }
+}
+
+/* El filtro por tipo de examen, junto al buscador. */
+.buscador .catalogo-filtro { width: auto; min-width: 10rem; max-width: 100%; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Formato de impresión del médico (WEB-8.2)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* La vista previa se queda a la vista mientras se editan las secciones (en pantallas anchas). */
+@media (min-width: 1200px) {
+    .formato-previa { position: sticky; top: 1rem; }
+}
+
+/* El marco con la hoja de ejemplo: A4 horizontal (297 × 210 mm) más un poco de aire del fondo de la vista. */
+.formato-previa-marco {
+    display: block;
+    width: 100%;
+    aspect-ratio: 297 / 218;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-fondo);
+}
+
+/* La imagen actual (logo, firma o sello) junto al control para reemplazarla. */
+.formato-imagen { display: flex; align-items: flex-start; gap: 1rem; }
+.formato-imagen-controles { flex: 1 1 auto; min-width: 0; }
+
+/* Los formatos en blanco (WEB-5.5b): una fila por documento, con su botón de imprimir a la derecha. */
+.lista-en-blanco-fila { padding: .55rem 0; border-top: 1px solid var(--ds-borde); }
+.lista-en-blanco-fila:first-child { border-top: 0; padding-top: 0; }
+.lista-en-blanco-fila > div { min-width: 0; }
+.lista-en-blanco-fila .btn { flex: none; min-height: 40px; display: inline-flex; align-items: center; gap: .35rem; }
+
+.formato-miniatura {
+    flex: none;
+    width: 7rem;
+    height: 5rem;
+    object-fit: contain;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+}
+
+.formato-miniatura-vacia { display: flex; align-items: center; justify-content: center; color: var(--ds-texto-3); font-size: 1.5rem; }
+
+/* Un bloque de texto del membrete con sus opciones. */
+.formato-bloque { min-width: 0; margin: 0 0 1rem; padding: .75rem 1rem 1rem; border: 1px solid var(--ds-borde); border-radius: var(--ds-radio); }
+.formato-bloque-titulo { float: none; width: auto; margin: 0; padding: 0 .25rem; font-size: 1rem; font-weight: 600; }
+
+/* Los nueve colores de la línea: la muestra es el color de la hoja impresa (no un token de la aplicación). */
+.formato-colores { display: flex; flex-wrap: wrap; gap: .4rem; }
+.formato-color-muestra { display: inline-block; width: .9rem; height: .9rem; border: 1px solid var(--ds-borde-control); border-radius: 50%; vertical-align: -.1rem; }
+.formato-color-negro { background: #000000; }
+.formato-color-blanco { background: #ffffff; }
+.formato-color-rojo { background: #c62828; }
+.formato-color-marron { background: #6d4c41; }
+.formato-color-fucsia { background: #d81b60; }
+.formato-color-verde { background: #2e7d32; }
+.formato-color-gris { background: #757575; }
+.formato-color-amarillo { background: #f9a825; }
+.formato-color-azul { background: #1565c0; }
+
+.formato-alineacion .btn { min-width: 2.75rem; }
+
+@media (max-width: 575.98px) {
+    .formato-imagen { flex-direction: column; }
+    .formato-alineacion .btn, .formato-colores .btn { min-height: 2.5rem; }
+}
+
+/* --- Órdenes de la consulta: laboratorio y estudios (WEB-5.4) ---
+   La lista de lo que lleva la orden (una fila por examen o estudio, con su «Quitar»), el buscador del catálogo con su filtro por tipo
+   y las rutinas (un botón por tipo de examen). Los estudios van numerados con un contador de CSS, así que una fila que el script agrega
+   toma su número sin tocar nada. */
+.orden-lista {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: .5rem;
+}
+
+.orden-fila {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .5rem .4rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+}
+
+.orden-fila-datos { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: .9rem; }
+.orden-nombre { font-weight: 500; }
+.orden-quitar { flex: 0 0 auto; }
+
+.orden-lista-numerada { grid-template-columns: 1fr; counter-reset: orden; }
+.orden-lista-numerada .orden-fila::before {
+    counter-increment: orden;
+    content: counter(orden) ".";
+    flex: 0 0 auto;
+    min-width: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ds-texto-3);
+}
+
+.orden-buscador { display: flex; flex-wrap: wrap; gap: .5rem; }
+.orden-buscador .buscador-campo { flex: 1 1 14rem; }
+.orden-buscador .form-select { flex: 0 1 14rem; }
+
+.orden-subtitulo {
+    margin: 0 0 .25rem;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ds-texto-3);
+}
+
+.orden-rutinas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+@media (max-width: 575.98px) {
+    .orden-quitar { min-width: 40px; min-height: 40px; }
+    .orden-rutinas .btn { min-height: 40px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   Mensajes a pacientes (WEB-8.4)
+   --------------------------------------------------------------------------------------------------------- */
+
+/* Los botones de etiquetas del editor: se parten en varias líneas si no caben. */
+.plantilla-etiquetas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* El mensaje de ejemplo: una burbuja de texto plano, con los saltos de línea que escribió el médico. */
+.plantilla-previa {
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-violeta-50);
+    color: var(--ds-texto);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-height: 4rem;
+}
+
+/* Contadores de caracteres y de SMS, y los avisos de la plantilla (una etiqueta que no existe, falta de {paciente}…). */
+.plantilla-contadores { font-variant-numeric: tabular-nums; }
+.plantilla-avisos { display: grid; gap: .35rem; }
+.plantilla-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: .4rem .65rem;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radio-sm);
+    font-size: .875rem;
+}
+.plantilla-aviso > span { min-width: 0; overflow-wrap: anywhere; }
+.plantilla-aviso-aviso { background: var(--ds-aviso-bg); border-color: var(--ds-aviso-borde); color: var(--ds-aviso); }
+.plantilla-aviso-info { background: var(--ds-info-bg); border-color: var(--ds-info-borde); color: var(--ds-info); }
+
+@media (max-width: 575.98px) {
+    .plantilla-etiquetas .btn { min-height: 40px; }
+}
+
+/* El resumen del texto de una plantilla de texto en la lista (WEB-8.4): dos renglones como mucho. */
+.plantilla-resumen {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    max-width: 38rem;
+    font-size: .875rem;
+}
+
+/* Los filtros de la bitácora (WEB-8.5): fechas, quién, tipo de dato y paciente en una rejilla que baja a una columna en el celular. */
+.bitacora-filtros {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    align-items: end;
+    gap: .6rem .9rem;
+}
+.bitacora-filtros .campo { min-width: 0; }
+.bitacora-filtros .form-label { margin-bottom: .2rem; font-size: .8125rem; color: var(--ds-texto-2); }
+.bitacora-filtro-paciente { grid-column: span 2; }
+.bitacora-filtros-botones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bitacora-filtros-ayuda { grid-column: 1 / -1; margin: 0; }
+.bitacora-paginas { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+@media (max-width: 575.98px) {
+    .bitacora-filtros { grid-template-columns: 1fr; }
+    .bitacora-filtro-paciente { grid-column: auto; }
+}
+
+/* La clave temporal de una cuenta nueva o restablecida (WEB-8.5): grande, de ancho fijo y que se selecciona de un clic. */
+.clave-temporal-tarjeta { border-color: var(--ds-aviso-borde); background: var(--ds-aviso-bg); }
+.clave-temporal {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio-sm);
+    background: var(--ds-superficie);
+    color: var(--ds-texto);
+    font-size: 1.15rem;
+    letter-spacing: .08em;
+    user-select: all;
+    overflow-wrap: anywhere;
+}

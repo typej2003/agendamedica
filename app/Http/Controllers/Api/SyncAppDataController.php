@@ -2,6 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Agenda\AtenderCita;
+use App\Actions\Agenda\CitaNoAtendible;
+use App\Actions\Agenda\CobrarCita;
+use App\Actions\Agenda\ConfirmarCita;
+use App\Actions\Agenda\CrearCita;
+use App\Actions\Agenda\ReordenarCola;
+use App\Actions\Pacientes\CrearPaciente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Http\Resources\ConfiguracionMedicoResource;
@@ -35,7 +42,9 @@ use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\Vademecum;
 use App\Services\ServicioService;
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Sync\CreacionesClinicas;
+use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -339,26 +348,6 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * La `clave` de `evolucion` que le corresponde a [medico] dentro de este tenant — el mismo
-     * cruce que `medicosDelTenant`, pero al revés (por su propio correo). Es el default cuando el
-     * cliente crea una cita sin elegir médico explícitamente (Paso 22.C): el caso común, de un
-     * solo médico en la instancia. Nula si no hay fila de `evolucion` para él (pasa en los datos
-     * reales, que casi nunca tienen configuración).
-     */
-    private function claveDelMedico(Medico $medico, array $registrosMedicos): ?int
-    {
-        if (!$medico->email) {
-            return null;
-        }
-
-        $clave = Evolucion::whereIn('reg_medico', $registrosMedicos)
-            ->where('correo_med', $medico->email)
-            ->value('clave');
-
-        return $clave === null ? null : (int) $clave;
-    }
-
-    /**
      * Aplica las operaciones que mandó el cliente. Lo único que devuelve es lo que el cliente no
      * puede deducir solo: qué id real le tocó a cada fila que creó offline, y qué creaciones se
      * rechazaron. El resto del resultado se ve reflejado en el delta que se calcula después,
@@ -379,7 +368,18 @@ class SyncAppDataController extends Controller
         // paciente del mismo lote, una consulta de una historia y un récipe de una consulta. El
         // cliente no tiene forma de garantizar el orden del arreglo.
         $changes = $this->enOrdenDeDependencia($changes);
-        $clinicas = new CreacionesClinicas($medico, $registrosMedicos);
+        $clinicas = new CreacionesClinicas(
+            $medico,
+            $registrosMedicos,
+            app(AsignarHistoria::class),
+            // La regla del número de consulta vive en la Action compartida con la web (WEB-4.1).
+            app(\App\Actions\Consulta\CrearConsulta::class),
+            // Y las dos reglas de los motivos de una consulta, desde WEB-4.2.
+            app(\App\Actions\Consulta\AgregarMotivoALaConsulta::class),
+            app(\App\Actions\Consulta\QuitarMotivoDeLaConsulta::class),
+            // Y la regla del récipe (el número, la cabecera y las filas), desde WEB-5.1.
+            app(\App\Actions\Consulta\GuardarRecipe::class),
+        );
         $creadosAntes = count($creados);
 
         foreach ($changes as $change) {
@@ -434,10 +434,7 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            $yaEliminado = SyncChange::where('table_name', $table)
-                ->where('record_id', $recordId)
-                ->where('operation', 'deleted')
-                ->exists();
+            $yaEliminado = RegistroDeCambios::eliminado($table, (int) $recordId);
 
             if ($operation === 'deleted') {
                 if (!$yaEliminado) {
@@ -459,25 +456,27 @@ class SyncAppDataController extends Controller
 
                 $occurredAt = Carbon::parse($change['occurred_at'] ?? now());
 
+                $valor = $change['value'] ?? null;
+                if (!$this->valorPermitido($table, $column, $valor)) {
+                    continue;
+                }
+
+                // Confirmar, atender y cobrar **no son campos cualesquiera**: son acciones de
+                // agenda, y se aplican con las mismas Actions que usa la web. Si esto se
+                // reimplementara acá, la web y el móvil podrían empezar a comportarse distinto
+                // sobre la misma base (PLAN-WEB.md, R3).
+                if ($table === 'cola' && $this->aplicarAccionDeCita((int) $recordId, $column, $valor, $occurredAt)) {
+                    continue;
+                }
+
                 // Last-write-wins por columna: si ya hay un cambio más nuevo registrado para
                 // esta columna puntual, se descarta el que llegó (alguien escribió después).
-                $ultimoCambio = SyncChange::where('table_name', $table)
-                    ->where('record_id', $recordId)
-                    ->where('column_name', $column)
-                    ->orderByDesc('occurred_at')
-                    ->first();
-
-                if ($ultimoCambio && $ultimoCambio->occurred_at->greaterThanOrEqualTo($occurredAt)) {
+                if (!RegistroDeCambios::permite($table, (int) $recordId, $column, $occurredAt)) {
                     continue;
                 }
 
                 $model = $this->modelFor($table)::find($recordId);
                 if (!$model) {
-                    continue;
-                }
-
-                $valor = $change['value'] ?? null;
-                if (!$this->valorPermitido($table, $column, $valor)) {
                     continue;
                 }
 
@@ -659,33 +658,11 @@ class SyncAppDataController extends Controller
             return;
         }
 
-        $paciente = DB::transaction(function () use ($columnas, $medico, $regMedico) {
-            $paciente = Paciente::where('cedula', $columnas['cedula'])->first();
-
-            if ($paciente) {
-                // Ya existe (lo atiende otro médico, o el escritorio lo subió antes): se enlaza y
-                // solo se completan los campos vacíos. Pisar los datos de una ficha ajena con lo
-                // que escribió la secretaria en el teléfono sería perder información de otro.
-                $completar = [];
-                foreach ($columnas as $columna => $valor) {
-                    if ($valor !== null && $paciente->{$columna} === null) {
-                        $completar[$columna] = $valor;
-                    }
-                }
-                if ($completar !== []) {
-                    $paciente->fill($completar)->save();
-                }
-            } else {
-                $paciente = Paciente::create($columnas);
-            }
-
-            MedicoPaciente::firstOrCreate(
-                ['medico_id' => $medico->id, 'paciente_id' => $paciente->id],
-                ['reg_medico' => $regMedico, 'numhistoria' => null],
-            );
-
-            return $paciente;
-        });
+        // La regla del alta —enlazar por cédula en vez de duplicar la ficha, completar solo los
+        // campos vacíos de una ficha ajena, y no crear `historia`— vive en la Action, que es la
+        // **misma** que usa la web clínica (PLAN-WEB.md, R3). Acá queda lo que es del sync: el id
+        // temporal con el que el cliente reconoce la fila que creó estando offline.
+        $paciente = app(CrearPaciente::class)->ejecutar($columnas, $medico, $regMedico);
 
         SyncChange::create([
             'reg_medico' => $regMedico,
@@ -766,20 +743,18 @@ class SyncAppDataController extends Controller
         // respeta esa; si no (el caso común, un solo médico en la instancia), se resuelve la del
         // médico autenticado.
         if (!isset($columnas['medico'])) {
-            $columnas['medico'] = $this->claveDelMedico($medico, $registrosMedicos);
+            $columnas['medico'] = $medico->claveDeEvolucion($registrosMedicos);
         }
 
-        $cola = Cola::create($columnas);
-
-        SyncChange::create([
-            'reg_medico' => $cola->reg_medico,
-            'table_name' => 'cola',
-            'record_id' => $cola->id,
-            'client_temp_id' => $tempId,
-            'operation' => 'created',
-            'occurred_at' => $occurredAt,
-            'source' => 'mobile',
-        ]);
+        // La fila y su rastro en `sync_changes` los escribe la Action compartida con la web clínica
+        // (PLAN-WEB.md, R3); acá le llega el `reg_medico` ya resuelto y el id temporal del cliente.
+        $cola = app(CrearCita::class)->ejecutar(
+            $columnas['reg_medico'],
+            $columnas,
+            $occurredAt,
+            'mobile',
+            $tempId,
+        );
 
         $creados[] = ['table' => 'cola', 'temp_id' => $tempId, 'id' => $cola->id];
     }
@@ -811,72 +786,90 @@ class SyncAppDataController extends Controller
     /**
      * Mueve una fila dentro de su grupo (una cita dentro de su día) corriendo las demás.
      *
-     * **Por qué una operación propia y no N `updated`**: el cliente podría mandar el número de
-     * orden nuevo de cada fila desplazada, pero mover una cita en un día de 20 son 20 cambios
-     * para un gesto, 20 UPDATE, y —lo importante— 20 resoluciones de conflicto independientes:
-     * dos secretarias reordenando a la vez se pisan fila por fila y el resultado no es el de
-     * ninguna de las dos. Mandando **el movimiento** en vez del resultado, el desplazamiento son
-     * dos sentencias (`UPDATE … WHERE … BETWEEN`) y dos reordenamientos concurrentes se componen
-     * en vez de destruirse.
-     *
-     * - Hacia arriba (`to < from`): la fila movida pasa a `to` y las que estaban entre medio
-     *   **suben uno**.
-     * - Hacia abajo (`to > from`): la fila movida pasa a `to` y las de en medio **bajan uno**.
-     *
-     * Funciona con numeraciones con huecos (los datos legados las tienen): la fila movida libera
-     * su lugar, así que el corrimiento nunca colisiona.
+     * La regla vive en `ReordenarCola`, compartida con la web: acá solo queda lo del sync — resolver
+     * el tenant de la fila y pasar el movimiento tal como lo mandó el cliente (su `from` puede
+     * componerse con otros reordenamientos pendientes). El porqué de mandar el movimiento y no el
+     * resultado está en la Action.
      */
     private function applyReorder(array $change, array $registrosMedicos): void
     {
         $table = $change['table'] ?? null;
-        $columna = SyncAppDataRequest::ORDER_COLUMN[$table] ?? null;
-        $columnaGrupo = SyncAppDataRequest::ORDER_SCOPE_COLUMN[$table] ?? null;
-        if ($columna === null || $columnaGrupo === null) {
+        if ((SyncAppDataRequest::ORDER_COLUMN[$table] ?? null) === null
+            || (SyncAppDataRequest::ORDER_SCOPE_COLUMN[$table] ?? null) === null) {
             return;
         }
-
-        $recordId = (int) $change['record_id'];
-        $desde = (int) $change['from'];
-        $hasta = (int) $change['to'];
-        if ($desde === $hasta) {
-            return;
-        }
-
-        $modelo = $this->modelFor($table);
 
         // Tenancy: la fila tiene que ser de este médico, igual que en el resto del endpoint.
-        $fila = $modelo::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->first();
-        if (!$fila) {
+        $cita = Cola::where('id', (int) $change['record_id'])
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->first();
+        if (!$cita) {
             return;
         }
 
-        $grupo = fn () => $modelo::whereIn('reg_medico', $registrosMedicos)
-            ->whereDate($columnaGrupo, $change['scope_date'])
-            ->where('id', '!=', $recordId);
+        app(ReordenarCola::class)->ejecutar(
+            $cita,
+            (int) $change['from'],
+            (int) $change['to'],
+            (string) $change['scope_date'],
+            $registrosMedicos,
+            Carbon::parse($change['occurred_at'] ?? now()),
+            'mobile',
+        );
+    }
 
-        // En una transacción: entre el corrimiento y el movimiento de la fila, el orden está a
-        // medio aplicar y nadie debería leerlo así.
-        DB::transaction(function () use ($grupo, $fila, $columna, $desde, $hasta) {
-            if ($hasta < $desde) {
-                $grupo()->whereBetween($columna, [$hasta, $desde])->increment($columna);
-            } else {
-                $grupo()->whereBetween($columna, [$desde, $hasta])->decrement($columna);
+    /**
+     * Aplica una edición de `cola` que en realidad es una **acción de agenda** (confirmar, atender,
+     * cobrar) delegando en la Action compartida con la web. Devuelve `false` para las columnas que
+     * no son acciones, que siguen por el camino genérico.
+     *
+     * Las que sí lo son no pueden seguir por ahí: si cada superficie tuviera su propia copia de la
+     * regla (que atender implica confirmar, que el abono se suma o que el estado de pago se deriva)
+     * la web y el móvil empezarían a comportarse distinto sobre la misma base (PLAN-WEB.md, R3).
+     *
+     * **La regla "cita atendida ⇒ tiene historia" (WEB-4.8) se descarta acá, no rompe el lote.** Marcar
+     * `atendido = 1` sin historia lanza `CitaNoAtendible` (la regla vive en `AtenderCita`, que es la única
+     * puerta a esa columna en las dos superficies). Un cambio que incumple una regla de negocio **no es un
+     * lote mal formado**: se descarta —como el last-write-wins descarta el cambio que pierde—, el resto de
+     * los cambios se aplica, y el teléfono se corrige solo en la sincronización siguiente, porque
+     * sobreescribe su copia local con lo que el servidor le devuelve (el `atendido` sigue en 0). Es el
+     * "descartar" que TODO.md §9 dejó propuesto; el canal de rechazos visible sigue siendo sólo el de las
+     * **creaciones** (`rechazados`), que es una deuda anotada y no de esta tarea.
+     *
+     * El `catch` es puntual y no un `Throwable` genérico: cualquier otra excepción de la Action tiene que
+     * seguir subiendo y verse como el error que es.
+     */
+    private function aplicarAccionDeCita(int $recordId, string $column, $valor, Carbon $occurredAt): bool
+    {
+        if (!in_array($column, ['estado', 'atendido', 'monto', 'monto_pagado'], true)) {
+            return false;
+        }
+
+        $cita = Cola::find($recordId);
+        if (!$cita) {
+            return true; // la fila ya no existe: nada que aplicar, pero no cae al camino genérico
+        }
+
+        try {
+            switch ($column) {
+                case 'estado':
+                    app(ConfirmarCita::class)->ejecutar($cita, (int) $valor, $occurredAt, 'mobile');
+                    break;
+                case 'atendido':
+                    app(AtenderCita::class)->ejecutar($cita, (int) $valor === 1, $occurredAt, 'mobile');
+                    break;
+                case 'monto':
+                    app(CobrarCita::class)->fijarMonto($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
+                    break;
+                case 'monto_pagado':
+                    app(CobrarCita::class)->fijarPagado($cita, $valor === null ? null : (float) $valor, $occurredAt, 'mobile');
+                    break;
             }
+        } catch (CitaNoAtendible $e) {
+            // La cita se queda sin atender: el teléfono lo ve en el delta y revierte su marca.
+        }
 
-            $fila->{$columna} = $hasta;
-            $fila->save();
-        });
-
-        SyncChange::create([
-            'reg_medico' => $fila->reg_medico,
-            'table_name' => $table,
-            'record_id' => $recordId,
-            'operation' => 'reorder',
-            'column_name' => $columna,
-            'value' => "{$desde}->{$hasta}",
-            'occurred_at' => Carbon::parse($change['occurred_at'] ?? now()),
-            'source' => 'mobile',
-        ]);
+        return true;
     }
 
     private function regMedicoDePaciente($relaciones, int $pacienteId): ?string

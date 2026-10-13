@@ -1,21 +1,11 @@
-<div class="mt-4">
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-8">
-            <h4 class="fw-bold mb-0">API Keys</h4>
-            <small class="text-muted">
-                Credencial con la que el escritorio de cada consultorio (GinecoReport) sincroniza con la nube, y cuándo lo hizo por última vez.
-            </small>
-        </div>
-    </div>
+<div>
+    <x-ui.page-head titulo="API Keys"
+                    subtitulo="Credencial con la que el escritorio de cada consultorio (GinecoReport) sincroniza con la nube, y cuándo lo hizo por última vez." />
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-    @endif
+    <x-ui.avisos />
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
+        <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-5">
@@ -83,7 +73,7 @@
                                 </td>
                                 <td class="text-end text-nowrap">
                                     @if ($r['regs'])
-                                        <button wire:click="abrirEmitir({{ $medico->id }})" class="btn btn-sm btn-primary">
+                                        <button wire:click="abrirEmitir({{ $medico->id }})" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-key-fill me-1"></i> Generar API key
                                         </button>
                                         <button wire:click="verCredenciales({{ $medico->id }})" class="btn btn-sm btn-outline-secondary">

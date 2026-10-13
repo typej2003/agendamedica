@@ -1,124 +1,92 @@
-<div class="d-flex flex-column flex-shrink-0 h-100 {{ $isMinimized ? 'minimized' : '' }}">
-    <div class="sidebar-header d-flex align-items-center justify-content-between p-3">
-        @if(!$isMinimized)
-        <div class="user-info d-flex align-items-center">
-            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=6500da&color=fff&rounded=true" alt="User" class="me-2" width="40">
-            <div class="d-flex flex-column">
-                <span class="fw-bold fs-6">{{ Auth::user()->name }}</span>
-                <small class="text-muted">{{ Auth::user()->getRoleNames()->first() }}</small>
-            </div>
-        </div>
-        @endif
-        <button class="btn btn-link text-purple d-none d-lg-block" wire:click="toggleMinimize">
-            <i class="bi {{ $isMinimized ? 'bi-arrow-right-square' : 'bi-arrow-left-square' }} fs-4"></i>
-        </button>
-    </div>
-    <hr class="m-0">
+@php
+    $usuario = Auth::user();
+    $esAdmin = $usuario->esAdministrador();
+    // Quién trabaja en el consultorio: su pantalla es `/clinica`, no el panel.
+    $trabajaEnConsultorio = $usuario->hasAnyRole(['Medico', 'Secretaria']);
+    // El panel (Escritorio) es de administración; el paciente sigue entrando ahí mientras no exista
+    // `/consultorio` (decisión del 2026-10-08, ver ROADMAP).
+    $veEscritorio = $esAdmin || $usuario->hasRole('Paciente');
+@endphp
 
-    <ul class="nav nav-pills flex-column mb-auto p-2 sidebar-nav">
-        <li class="nav-item">
-            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i>
-                <span class="link-text">Escritorio</span>
-            </a>
-        </li>
+<div id="sidebarMenu" class="app-sidebar {{ $isMinimized ? 'minimizado' : '' }}">
+  <a class="app-sidebar-marca" href="{{ route('dashboard') }}">
+      <span class="app-marca-ficha" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></span>
+      <span class="app-marca-nombre"><strong>Doctorísimo</strong><small>Panel de administración</small></span>
+  </a>
 
-        @if(auth()->user()->hasRole('Root'))
-            <li class="nav-header">AGENDA MÉDICA</li>
-
+  <div class="app-sidebar-interior">
+    <ul class="nav flex-column">
+        @if ($veEscritorio)
             <li class="nav-item">
-                <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos') ? 'active' : '' }}">
-                    <i class="bi bi-person-badge"></i>
-                    <span class="link-text">Médicos</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.pacientes') }}" class="nav-link {{ request()->routeIs('admin.pacientes') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i>
-                    <span class="link-text">Pacientes</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.centros-medicos') }}" class="nav-link {{ request()->routeIs('admin.centros-medicos') ? 'active' : '' }}">
-                    <i class="bi bi-hospital"></i>
-                    <span class="link-text">Centros Médicos</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.medico-centro-medico') }}" class="nav-link {{ request()->routeIs('admin.medico-centro-medico') ? 'active' : '' }}">
-                    <i class="bi bi-link-45deg"></i>
-                    <span class="link-text">Asignar Médico a Centro</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.historias') }}" class="nav-link {{ request()->routeIs('admin.historias') ? 'active' : '' }}">
-                    <i class="bi bi-journal-medical"></i>
-                    <span class="link-text">Historias Médicas</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('admin.cargar-sql') }}" class="nav-link {{ request()->routeIs('admin.cargar-sql') ? 'active' : '' }}">
-                    <i class="bi bi-filetype-sql"></i>
-                    <span class="link-text">Cargar SQL</span>
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                   @if (request()->routeIs('dashboard')) aria-current="page" @endif title="Escritorio">
+                    <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                    <span class="link-text">Escritorio</span>
                 </a>
             </li>
         @endif
 
-        @if(auth()->user()->hasRole('Medico'))
-            <li class="nav-header">AGENDA MÉDICA</li>
-
+        @if ($trabajaEnConsultorio)
             <li class="nav-item">
-                <a href="{{ route('medico.pacientes') }}" class="nav-link {{ request()->routeIs('medico.pacientes') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i>
-                    <span class="link-text">Pacientes</span>
+                <a href="{{ route('clinica.inicio') }}" class="nav-link {{ request()->routeIs('clinica.*') ? 'active' : '' }}"
+                   @if (request()->routeIs('clinica.*')) aria-current="page" @endif title="Consultorio">
+                    <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
+                    <span class="link-text">Consultorio</span>
                 </a>
             </li>
         @endif
 
-        <li class="nav-header">ADMINISTRACIÓN</li>
+        @if ($esAdmin)
+            <li class="app-sidebar-titulo link-text">Administración</li>
 
-        @if(auth()->user()->esAdministrador())
-        <li class="nav-item">
-            <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}">
-                <i class="bi bi-people-fill"></i>
-                <span class="link-text">Usuarios</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}">
-                <i class="bi bi-key-fill"></i>
-                <span class="link-text">API Keys</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}">
-                <i class="bi bi-card-checklist"></i>
-                <span class="link-text">Planes y servicios</span>
-            </a>
-        </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.cuentas')) aria-current="page" @endif title="Usuarios">
+                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                    <span class="link-text">Usuarios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.especialidades') }}" class="nav-link {{ request()->routeIs('admin.especialidades') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.especialidades')) aria-current="page" @endif title="Especialidades">
+                    <i class="bi bi-stethoscope" aria-hidden="true"></i>
+                    <span class="link-text">Especialidades</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
+                    <i class="bi bi-key-fill" aria-hidden="true"></i>
+                    <span class="link-text">API Keys</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.servicios')) aria-current="page" @endif title="Planes y servicios">
+                    <i class="bi bi-card-checklist" aria-hidden="true"></i>
+                    <span class="link-text">Planes y servicios</span>
+                </a>
+            </li>
         @endif
-
-        <li class="nav-item mt-auto">
-            <a href="{{ route('logout') }}" class="nav-link"
-            onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
-                <i class="bi bi-box-arrow-left"></i>
-                <span class="link-text">Cerrar Sesión</span>
-            </a>
-
-            <!-- Formulario oculto necesario para procesar la petición POST con CSRF -->
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
-        </li>
-
     </ul>
-    <hr class="m-0">
-    <div class="sidebar-footer p-3 text-center">
-        <small class="text-muted">© {{ date('Y') }} Doctorisimo App</small>
-    </div>
+  </div>
+
+  <div class="app-sidebar-pie">
+      <a href="{{ route('logout') }}" class="nav-link" title="Cerrar sesión"
+         onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
+          <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
+          <span class="link-text">Cerrar sesión</span>
+      </a>
+
+      {{-- Formulario oculto necesario para procesar la petición POST con CSRF --}}
+      <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+          @csrf
+      </form>
+
+      <button class="app-sidebar-plegar" type="button" wire:click="toggleMinimize"
+              title="{{ $isMinimized ? 'Desplegar el menú' : 'Plegar el menú' }}"
+              aria-label="{{ $isMinimized ? 'Desplegar el menú' : 'Plegar el menú' }}">
+          <i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>
+      </button>
+  </div>
 </div>
