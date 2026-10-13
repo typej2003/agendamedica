@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consulta\GuardarEcoGinecologico;
+use App\Actions\Consulta\GuardarEcoObstetrico;
+use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -38,8 +40,13 @@ class ConsultaEstudioController extends Controller
     {
     }
 
-    public function guardar(Request $request, Consulta $consulta, string $tipo, GuardarEcoGinecologico $guardar)
-    {
+    public function guardar(
+        Request $request,
+        Consulta $consulta,
+        string $tipo,
+        GuardarEcoGinecologico $guardar,
+        GuardarEcoObstetrico $guardarObstetrico,
+    ) {
         $contexto = $request->attributes->get('contexto_clinico');
 
         // El `{consulta}` de la ruta se vuelve a resolver contra el contexto: una consulta de otro
@@ -50,15 +57,22 @@ class ConsultaEstudioController extends Controller
             $contexto['reg_medico'],
         );
 
-        if (! TiposDeEstudio::existe($tipo) || TiposDeEstudio::normalizar($tipo) !== TiposDeEstudio::GINECOLOGICO) {
+        if (! TiposDeEstudio::existe($tipo)) {
             abort(404);
         }
 
-        $destino = $this->destino($consulta, TiposDeEstudio::GINECOLOGICO);
+        // Cada tipo de estudio tiene su **Action** y su **mapa del dato**, pero el guardado es el mismo
+        // (una fila por consulta, sólo lo que cambió, con su rastro): lo único que cambia es qué columnas y
+        // con qué reglas. Un tipo nuevo suma su acción acá y su mapa en `reglasDe()`.
+        $tipo = TiposDeEstudio::normalizar($tipo);
+        $esObstetrico = $tipo === TiposDeEstudio::OBSTETRICO;
+        $accion = $esObstetrico ? $guardarObstetrico : $guardar;
+
+        $destino = $this->destino($consulta, $tipo);
 
         try {
-            $datos = $request->validate($this->reglas());
-            $resultado = $guardar->ejecutar($consulta, $datos, null, 'web');
+            $datos = $request->validate($this->reglasDe($tipo));
+            $resultado = $accion->ejecutar($consulta, $datos, null, 'web');
         } catch (InvalidArgumentException $excepcion) {
             // "El eco necesita algún dato": no es un error de validación de un campo, es que el formulario
             // entero venía vacío, así que se avisa y no se crea la fila.
@@ -75,7 +89,34 @@ class ConsultaEstudioController extends Controller
 
         return $destino->with('estado', $resultado->sinCambios()
             ? 'El eco no tenía cambios.'
-            : 'Eco pélvico guardado.');
+            : ($esObstetrico ? 'Eco obstétrico guardado.' : 'Eco pélvico guardado.'));
+    }
+
+    /**
+     * Las reglas de validación del tipo: cada columna del **mapa del dato** de ese estudio, con el tope de su
+     * control. Es lo que hace que un tipo nuevo no tenga que escribir sus reglas a mano.
+     */
+    private function reglasDe(string $tipo): array
+    {
+        if ($tipo !== TiposDeEstudio::OBSTETRICO) {
+            return $this->reglas();
+        }
+
+        $reglas = [];
+
+        foreach (EcoObstetrico::grupos() as $grupo) {
+            foreach ($grupo['campos'] as $campo) {
+                $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
+                    'fecha' => 'nullable|date',
+                    'numero' => 'nullable|numeric|min:0|max:99999',
+                    'area' => 'nullable|string|max:32000',
+                    'opciones' => 'nullable|string|max:20',
+                    default => 'nullable|string|max:20',
+                };
+            }
+        }
+
+        return $reglas;
     }
 
     /** La vuelta a la sección, en el tipo que se estaba mirando. */
