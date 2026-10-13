@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Consulta\QueEsUnDocumento;
 
 /**
  * **El eco pélvico de una consulta** (WEB-6.1, ítem 5 del panel del legado): el formulario con sus nueve
@@ -101,12 +102,12 @@ final class EcoGinecologicoVista
 
     /**
      * El estado del estudio como pastilla: "Sin cargar" mientras no haya ningún dato y "Cargado" cuando ya
-     * hay algo. La fecha sola no cuenta: un estudio sin datos no es el informe de nadie (es la misma regla
-     * que `QueEsUnDocumento::ecografia`, la que decide qué se ofrece imprimir).
+     * hay algo. La fecha sola no cuenta, pero el informe en texto libre del escritorio **sí**: es la misma
+     * regla que `QueEsUnDocumento::ecografia`, la que decide qué se ofrece imprimir.
      */
     public function estado(): array
     {
-        return $this->camposConDato() === 0
+        return ! $this->esUnDocumento()
             ? ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin cargar',
                 'titulo' => 'Todavía no hay nada cargado en el estudio de esta consulta']
             : ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Cargado',
@@ -241,6 +242,16 @@ final class EcoGinecologicoVista
         }
 
         return $columna === EcoGinecologico::COLUMNA_FUR ? (string) ($this->furSugerida ?? '') : '';
+    }
+
+    /**
+     * ¿El estudio es un documento? Es la regla de `QueEsUnDocumento::ecografia`, con el informe en texto
+     * libre del escritorio incluido: la usan la pastilla de estado y el botón de imprimir, para que la
+     * pantalla y la impresión no digan cosas distintas.
+     */
+    public function esUnDocumento(): bool
+    {
+        return QueEsUnDocumento::ecografia($this->camposConDato(), $this->hayPuroTexto());
     }
 
     /**

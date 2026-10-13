@@ -4,6 +4,7 @@ namespace App\Clinica\Impresion;
 
 use App\Actions\Consulta\AbrirConsulta;
 use App\Clinica\Agenda\CitaDeAgenda;
+use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Models\Cola;
 use App\Models\Consulta;
@@ -150,6 +151,24 @@ final class DocumentosPorCita
         $this->marcar($conAlgo, DB::table('radiologia_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('radiologia_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
             ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
+
+        //  - informe del eco pélvico (WEB-6.1): algún campo del estudio cargado o el informe en texto libre
+        //    del escritorio (`QueEsUnDocumento::ecografia`; la fecha sola no cuenta y el literal `none`
+        //    tampoco, como en `EstudioEcografico::limpiar`). La lista de columnas sale del mapa del dato,
+        //    así que un campo nuevo entra solo.
+        $this->marcar($conAlgo, DB::table('eco_pelvico')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+            ->where(function ($q) {
+                foreach (array_keys(EcoGinecologico::columnas()) as $columna) {
+                    if ($columna === EcoGinecologico::COLUMNA_FECHA) {
+                        continue;
+                    }
+
+                    $q->orWhere(function ($cada) use ($columna) {
+                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                    });
+                }
+            }), 'numhistoria', 'nroconsulta');
 
         $ids = [];
         foreach ($atendidas as $cita) {

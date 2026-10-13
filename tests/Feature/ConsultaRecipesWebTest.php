@@ -277,7 +277,7 @@ class ConsultaRecipesWebTest extends TestCase
 
     // ------------------------------------------------------------------------------------- La lectura
 
-    public function test_una_consulta_sin_recipes_muestra_el_estado_vacio_y_el_panel_dice_nueve_de_trece(): void
+    public function test_una_consulta_sin_recipes_muestra_el_estado_vacio_y_el_panel_dice_once_de_trece(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
@@ -286,8 +286,9 @@ class ConsultaRecipesWebTest extends TestCase
         $panel->assertOk();
         $panel->assertSee('11 de 13 disponibles', false);
         $panel->assertSee('seccion=recipes', false);
-        // Los que faltan: la eco y el control de embarazo (F6) y la pre-factura (F9). Las solicitudes (WEB-5.3a) ya están.
-        $this->assertSame(3, substr_count($panel->getContent(), 'Próximamente'));
+        // Los que faltan: el control de embarazo (WEB-6.6) y la pre-factura (F9). El estudio ecográfico
+        // (WEB-6.1) y las solicitudes (WEB-5.3a) ya están.
+        $this->assertSame(2, substr_count($panel->getContent(), 'Próximamente'));
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 

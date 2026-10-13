@@ -161,7 +161,16 @@ class FormatosEnBlancoWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConFormato();
         $web = $this->como($user, $medico, $gineco);
 
-        foreach (DocumentoImpreso::TITULOS as $clave => [$titulo]) {
+        // Cada formato en blanco imprime el título de la hoja real (`DocumentoImpreso::TITULOS`). Se saltea
+        // lo que no tiene formato en blanco: el eco pélvico (WEB-6.1) todavía no lo tiene, y el récipe
+        // tiene su propia familia de títulos.
+        foreach (array_keys(DocumentoImpreso::TITULOS) as $clave) {
+            if (! FormatosEnBlanco::existe($clave)) {
+                continue;
+            }
+
+            $titulo = DocumentoImpreso::TITULOS[$clave][0];
+
             $html = $web->get($this->url($clave))->assertOk()->getContent();
             $this->assertStringContainsString('>' . $titulo . '<', $html, "El título de {$clave}.");
         }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Clinica\Impresion\DocumentosPorCita;
@@ -221,6 +222,16 @@ class ImpresionDeDocumentosController extends Controller
 
         if ($tipo === 'recipe') {
             return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
+        }
+
+        // El informe del estudio ecográfico no es una pestaña de las solicitudes: vuelve a su sección
+        // (el ítem 5 del panel, WEB-6.1), en el tipo que existe.
+        if ($tipo === DocumentoImpreso::ECO_PELVICO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::GINECOLOGICO,
+            ]);
         }
 
         $pestana = $tipo === DocumentoImpreso::REFERENCIA ? PestanasDeSolicitudes::REFERENCIAS : ($tipo ?? PestanasDeSolicitudes::POR_DEFECTO);

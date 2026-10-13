@@ -5,6 +5,8 @@ namespace App\Clinica\Impresion;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\InformeDeLaConsulta;
@@ -12,6 +14,7 @@ use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
+use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
 use App\Models\Paciente;
 use App\Support\FechaClinica;
@@ -72,6 +75,7 @@ final class SolicitudesParaImprimir
         private DietaDeLaConsulta $dietas,
         private LaboratorioDeLaConsulta $laboratorios,
         private EstudiosDeLaConsulta $estudios,
+        private EcoGinecologico $ecos,
     ) {
     }
 
@@ -86,6 +90,21 @@ final class SolicitudesParaImprimir
     {
         $disponibles = [];
         $fechaDeLaConsulta = $this->fechaDeLaConsulta($consulta);
+
+        // El informe del estudio ecográfico (WEB-6.1, ítem 5 del panel de la consulta). Va primero: es el
+        // diagnóstico del estudio, no una solicitud.
+        $estudio = $this->ecos->de($consulta);
+        if ($this->elEcoEsDocumento($estudio)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_PELVICO,
+                'tipo' => DocumentoImpreso::ECO_PELVICO,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_PELVICO][1],
+                // Sin los hallazgos ni las conclusiones: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del eco pélvico',
+                // La fecha de la hoja es la de la consulta; la del estudio va como dato del informe.
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
 
         $examenes = $this->laboratorios->filas($consulta);
         if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
@@ -202,6 +221,12 @@ final class SolicitudesParaImprimir
 
         if ($clave === DocumentoImpreso::CONSTANCIA) {
             return $this->constancia($consulta, $paciente, $fechaDeLaConsulta);
+        }
+
+        if ($clave === DocumentoImpreso::ECO_PELVICO) {
+            $estudio = $this->ecos->de($consulta);
+
+            return $this->elEcoEsDocumento($estudio) ? $this->ecoPelvico($paciente, $estudio, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::LABORATORIO) {
@@ -436,6 +461,182 @@ final class SolicitudesParaImprimir
             $titulo === null ? [] : [['etiqueta' => 'DIETA:', 'valor' => (string) preg_replace('/\s+/u', ' ', $titulo)]],
             DocumentoImpreso::parrafosDe(TextoDeLaConsulta::limpio($dieta->descripcion)),
         );
+    }
+
+    /**
+     * El **informe del eco pélvico** (WEB-6.1): los datos del estudio, el útero, los ovarios, los hallazgos
+     * y las conclusiones, en el orden del informe del escritorio (`d_eco_pelvico_print.srd`).
+     *
+     * Los rótulos, los códigos de los desplegables y las unidades salen del **mapa del dato**
+     * (`EcoGinecologico`), que es el mismo que pinta el formulario: un campo nuevo aparece en la pantalla y
+     * en la hoja sin tocar esto. Los bloques cortos van como párrafo con su rótulo en la misma línea; los
+     * textos largos (anexos, hallazgos, observaciones y conclusiones) con el rótulo arriba, para que se
+     * lean como se escriben. Un bloque sin ningún dato no se imprime.
+     */
+    private function ecoPelvico(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    {
+        $fijos = [];
+
+        foreach (['fur' => 'FUR:', 'gesta' => 'Gesta:', 'PARA' => 'PARA:'] as $columna => $etiqueta) {
+            $valor = $estudio->valor($columna);
+
+            if ($valor !== null) {
+                $fijos[] = [
+                    'etiqueta' => $etiqueta,
+                    'valor' => $columna === EcoGinecologico::COLUMNA_FUR
+                        ? FechaClinica::formato($valor)
+                        : (string) EcoGinecologico::textoDe($columna, $valor),
+                ];
+            }
+        }
+
+        // La fecha del estudio sólo se imprime si no es la de la consulta: la de la cabecera es la de la
+        // consulta, como en el escritorio (`d_eco_pelvico_print.srd` imprime `consultas.fecha`).
+        $fechaDelEstudio = $estudio->fecha();
+        if ($fechaDelEstudio !== null && $fechaDelEstudio !== $fecha) {
+            $fijos[] = ['etiqueta' => 'Estudio del:', 'valor' => FechaClinica::formato($fechaDelEstudio)];
+        }
+
+        $parrafos = [];
+
+        $this->sumarParrafo($parrafos, 'Transductor:', $this->linea([
+            $this->datoDelEstudio($estudio, 'trans_convex'),
+            $this->datoDelEstudio($estudio, 'trans_transvaginal'),
+        ]));
+
+        $this->sumarParrafo($parrafos, 'Vejiga:', $this->linea([
+            $this->datoDelEstudio($estudio, 'vagina'),
+            $this->datoDelEstudio($estudio, 'vagina_llena'),
+        ]));
+
+        // ÚTERO: posición (con su lado), forma, borde y patrón miometrial.
+        $this->sumarParrafo($parrafos, 'Posición:', $this->linea([
+            $this->datoDelEstudio($estudio, 'posicionavf'),
+            $this->datoDelEstudio($estudio, 'posicionavf_d'),
+            $this->datoDelEstudio($estudio, 'posicionrvf_d'),
+        ]));
+        $this->sumarParrafo($parrafos, 'Forma:', $this->datoDelEstudio($estudio, 'fondosacolibre'));
+        $this->sumarParrafo($parrafos, 'Borde:', $this->datoDelEstudio($estudio, 'bordeutero'));
+        $this->sumarParrafo($parrafos, 'Patrón miometrial:', $this->datoDelEstudio($estudio, 'patron'));
+
+        // Las medidas del cuerpo uterino, con su unidad.
+        $this->sumarParrafo($parrafos, 'Medidas:', $this->linea([
+            $this->datoDelEstudio($estudio, 'cuerpo'),
+            $this->datoDelEstudio($estudio, 'transverso'),
+            $this->datoDelEstudio($estudio, 'antero'),
+        ]));
+
+        $this->sumarParrafo($parrafos, 'Endometrio:', $this->linea([
+            $this->datoDelEstudio($estudio, 'linea'),
+            $this->datoDelEstudio($estudio, 'linea_continuo'),
+            $this->datoDelEstudio($estudio, 'linea_homo'),
+            $this->datoDelEstudio($estudio, 'espesor'),
+        ]));
+
+        $this->sumarParrafo($parrafos, 'Cavidad uterina:', $this->datoDelEstudio($estudio, 'linea_cavidad_u'));
+        $this->sumarParrafo($parrafos, 'Fondo de saco de Douglas:', $this->datoDelEstudio($estudio, 'fondosacootro'));
+
+        // Anexos y los dos textos del final: largos, con el rótulo en su propia línea.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor('observacion'), 'Anexos:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        foreach (['der' => 'Ovario derecho:', 'izq' => 'Ovario izquierdo:'] as $lado => $etiqueta) {
+            $this->sumarParrafo($parrafos, $etiqueta, $this->linea([
+                $this->datoDelEstudio($estudio, 'ovario' . $lado . 'long'),
+                $this->datoDelEstudio($estudio, 'ovario' . $lado . 'ap'),
+                $this->datoDelEstudio($estudio, 'ovario' . $lado . 'tras'),
+                $this->datoDelEstudio($estudio, 'volumen_' . $lado),
+            ]));
+        }
+
+        foreach ([
+            'observacionovario' => 'Otros hallazgos:',
+            'idxecografico' => 'Observaciones:',
+            'sugerencias' => 'Conclusiones:',
+        ] as $columna => $etiqueta) {
+            foreach (DocumentoImpreso::parrafosDe($estudio->valor($columna), $etiqueta, true) as $parrafo) {
+                $parrafos[] = $parrafo;
+            }
+        }
+
+        // El modo "puro texto" del escritorio: si dejó un informe escrito así, se imprime tal cual.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor(EcoGinecologico::COLUMNA_PURO_TEXTO), 'Informe en texto libre:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_PELVICO,
+            DocumentoImpreso::ECO_PELVICO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_PELVICO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_PELVICO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * El dato de una columna del estudio con su rótulo y su unidad ("Cuerpo (longitud) 62,5 mm"), o `null`
+     * si no hay nada cargado. El rótulo se puede pasar para el caso en que el de la pantalla no sea el que
+     * conviene en la hoja.
+     */
+    private function datoDelEstudio(EstudioEcografico $estudio, string $columna, ?string $etiqueta = null): ?string
+    {
+        $valor = $estudio->valor($columna);
+
+        if ($valor === null) {
+            return null;
+        }
+
+        $texto = (string) (EcoGinecologico::textoDe($columna, $valor) ?? $valor);
+        $unidad = $this->unidadDe($columna);
+
+        return trim(($etiqueta ?? EcoGinecologico::etiquetaDe($columna)) . ' ' . $texto . ($unidad === null ? '' : ' ' . $unidad));
+    }
+
+    /** La unidad de una columna del estudio, del mapa del dato (la que imprime el informe del escritorio). */
+    private function unidadDe(string $columna): ?string
+    {
+        foreach (EcoGinecologico::campos() as $campo) {
+            if ($campo['columna'] === $columna) {
+                return $campo['unidad'];
+            }
+        }
+
+        return null;
+    }
+
+    /** Las partes con algo, unidas por ` · `; `null` si no hay ninguna. */
+    private function linea(array $partes): ?string
+    {
+        $partes = array_values(array_filter($partes, fn ($parte) => $parte !== null && $parte !== ''));
+
+        return $partes === [] ? null : implode(' · ', $partes);
+    }
+
+    /** Suma un párrafo con su rótulo en la misma línea, si hay texto. */
+    private function sumarParrafo(array &$parrafos, string $etiqueta, ?string $texto): void
+    {
+        if ($texto === null || $texto === '') {
+            return;
+        }
+
+        $parrafos[] = ['texto' => $texto, 'etiqueta' => $etiqueta, 'aparte' => false];
+    }
+
+    /** ¿El estudio es un documento de verdad? La misma regla que usa la pantalla (`QueEsUnDocumento::ecografia`). */
+    private function elEcoEsDocumento(EstudioEcografico $estudio): bool
+    {
+        $conDato = 0;
+        foreach (array_keys(EcoGinecologico::columnas()) as $columna) {
+            if ($columna !== EcoGinecologico::COLUMNA_FECHA && $estudio->valor($columna) !== null) {
+                $conDato++;
+            }
+        }
+
+        return QueEsUnDocumento::ecografia($conDato, $estudio->valor(EcoGinecologico::COLUMNA_PURO_TEXTO) !== null);
     }
 
     /** El lugar a hospitalizar en una sola línea (`hospital` es un `char(60)`), o `null` si no se escribió. */

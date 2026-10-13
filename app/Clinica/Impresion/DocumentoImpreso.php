@@ -38,6 +38,15 @@ final class DocumentoImpreso
     public const ESTUDIOS = 'estudios';
 
     /**
+     * El **informe del estudio ecográfico** (WEB-6.1). Es el informe de un estudio, no una solicitud: la hoja lleva los
+     * datos del estudio (medidas, hallazgos y conclusiones), no una orden.
+     *
+     * El título sale del DataWindow de impresión del escritorio (`d_eco_pelvico_print.srd:54`), con la tilde que a la
+     * fuente le falta («ECOSONOGRAFICO»): la hoja es de la web y va con la ortografía correcta.
+     */
+    public const ECO_PELVICO = 'eco-pelvico';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -52,6 +61,7 @@ final class DocumentoImpreso
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
         self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],
+        self::ECO_PELVICO => ['INFORME ECOSONOGRÁFICO GINECOLÓGICO', 'Eco pélvico'],
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */

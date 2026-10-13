@@ -134,9 +134,12 @@ final class QueEsUnDocumento
      * nada que imprimir. Misma vara para la pantalla (la pastilla de estado), la historia y la impresión.
      *
      * @param  int  $camposConDato  cuántas columnas del estudio traen algo (sin contar `fecha`)
+     * @param  bool  $textoLibre  el escritorio dejó un informe en texto libre (`puro_texto`, el modo "puro
+     *                            texto" de la ventana independiente): un estudio sin campos pero con ese
+     *                            texto **sí** es un documento, porque es lo que se imprime
      */
-    public static function ecografia(int $camposConDato): bool
+    public static function ecografia(int $camposConDato, bool $textoLibre = false): bool
     {
-        return $camposConDato > 0;
+        return $camposConDato > 0 || $textoLibre;
     }
 }

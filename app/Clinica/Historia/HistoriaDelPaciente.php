@@ -2,9 +2,12 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
+use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -342,6 +345,25 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // El informe del eco pélvico (WEB-6.1, ítem 5 del panel de la consulta): se lista si el estudio
+        // tiene algún dato o si el escritorio le dejó su informe en texto libre.
+        foreach ($this->ecos($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'], $estudio['textoLibre'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco pélvico',
+                'bi-activity',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco pélvico',
+                null,
+                null,
+                DocumentoImpreso::ECO_PELVICO,
+            ));
+        }
+
         foreach ($this->recipes($regMedico, $numero) as $recipe) {
             $nombres = $this->nombresDeMedicamentos($recipe->codemedicinas);
 
@@ -501,6 +523,43 @@ final class HistoriaDelPaciente
             fn (array $orden) => ['estudios' => $orden['examenes'], 'observacion' => $orden['observacion']],
             $this->ordenesDeVariasFilas('radiologia_paciente', 'radiologia_obs', $regMedico, $numero),
         );
+    }
+
+    /**
+     * Los informes de eco pélvico de la historia (WEB-6.1), por número de consulta: cuántos campos del
+     * estudio traen dato (sin contar la fecha) y si el escritorio le dejó su informe en texto libre. La
+     * lista de columnas sale del mapa del dato, así que un campo nuevo entra solo.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function ecos(string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table('eco_pelvico')
+            ->where('reg_medico', $regMedico)
+            ->where('numhistoria', $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_keys(EcoGinecologico::columnas()) as $columna) {
+                if ($columna !== EcoGinecologico::COLUMNA_FECHA && EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            $estudios[(int) $fila->nroconsulta] = [
+                'conDato' => $conDato,
+                'textoLibre' => EstudioEcografico::limpiar($atributos[EcoGinecologico::COLUMNA_PURO_TEXTO] ?? null) !== null,
+            ];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
     }
 
     /** @return array<int,array{examenes:int, observacion:?string}> */

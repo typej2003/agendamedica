@@ -38,7 +38,17 @@ class FormatosEnBlancoVistaTest extends TestCase
 
     public function test_los_titulos_salen_de_los_de_la_hoja_real(): void
     {
-        foreach (DocumentoImpreso::TITULOS as $clave => [$titulo, $nombre]) {
+        // Los formatos en blanco toman su título y su nombre de la hoja real (`DocumentoImpreso::TITULOS`),
+        // que es la única fuente de esos textos. Se saltea lo que no tiene formato en blanco: el **eco
+        // pélvico** (WEB-6.1) es un documento de la hoja real que todavía no lo tiene —el escritorio sí,
+        // `d_eco_pelvico_print_vacio.srd`—, y el **récipe** tiene su propia familia de títulos.
+        foreach (array_keys(DocumentoImpreso::TITULOS) as $clave) {
+            if (! FormatosEnBlanco::existe($clave)) {
+                continue;
+            }
+
+            [$titulo, $nombre] = DocumentoImpreso::TITULOS[$clave];
+
             $this->assertSame($titulo, FormatosEnBlanco::titulo($clave));
             $this->assertSame($nombre, FormatosEnBlanco::nombre($clave));
         }

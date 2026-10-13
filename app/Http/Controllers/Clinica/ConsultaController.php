@@ -51,6 +51,7 @@ use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Verificacion\VerificacionesDeLaConsulta;
@@ -289,10 +290,9 @@ class ConsultaController extends Controller
                     $eco->de($consulta),
                     route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                     route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
-                    // La hoja del informe se pide por la impresión de documentos de la consulta; mientras
-                    // esa parte de WEB-6.1 no esté, la sección no ofrece el botón (la vista lo esconde con
-                    // una URL vacía).
-                    '',
+                    // La hoja del informe: la impresión de documentos de la consulta, con la clave del
+                    // eco (WEB-6.1). Es la misma ruta que usan la constancia, el reposo y los demás.
+                    route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_PELVICO]),
                     // La FUR del control prenatal de la historia, como la busca el escritorio al entrar a
                     // la pestaña *Ginecologico* (`w_consulta_principal.srw:21391-21405`).
                     $furPrenatal->de($regMedico, (int) $consulta->numhistoria),

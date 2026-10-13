@@ -5,6 +5,7 @@ namespace App\Actions\Consulta;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Consulta;
 use App\Models\EcoPelvico;
 use Carbon\CarbonInterface;
@@ -59,9 +60,10 @@ final class GuardarEcoGinecologico
             $nuevos[$columna] = $this->normalizar($valores[$columna] ?? null);
         }
 
-        // La fecha del estudio es `NOT NULL`: si el formulario la deja vacía vale la de hoy, que es la
-        // que propone el escritorio al abrir el estudio (`w_cargar_visualizar_ecografia.srw:223`).
-        $nuevos[EcoGinecologico::COLUMNA_FECHA] ??= $this->estudios->filaParaEscribir($consulta)->fecha;
+        // La fecha del estudio es `NOT NULL`: si el formulario la deja vacía vale la **de hoy**, que es la
+        // que propone el escritorio al crear el estudio (`w_cargar_visualizar_ecografia.srw:223`). No se
+        // reusa la de la fila: si el médico borra el campo, la fecha vuelve a ser la del día del estudio.
+        $nuevos[EcoGinecologico::COLUMNA_FECHA] ??= FechaDelConsultorio::hoyComoFecha()->toDateString();
 
         if (! QueEsUnDocumento::ecografia($this->conDatos($nuevos))) {
             throw new InvalidArgumentException('El eco necesita algún dato: cargá lo que haya dado el estudio.');
@@ -73,10 +75,14 @@ final class GuardarEcoGinecologico
             $fila = $this->estudios->filaDe($consulta);
 
             if ($fila === null) {
+                // La fila nueva la arma el mapa del dato, que es donde vive la clave del DataWindow
+                // (`numhistoria` + `nroconsulta`), para no repetirla acá.
+                $nueva = $this->estudios->filaParaEscribir($consulta);
+
                 $this->crearFila(EcoPelvico::class, EcoGinecologico::TABLA, array_merge($nuevos, [
-                    'reg_medico' => (string) $consulta->reg_medico,
-                    EcoGinecologico::COLUMNA_HISTORIA => (int) $consulta->numhistoria,
-                    EcoGinecologico::COLUMNA_CONSULTA => (int) $consulta->nroconsulta,
+                    'reg_medico' => (string) $nueva->reg_medico,
+                    EcoGinecologico::COLUMNA_HISTORIA => (int) $nueva->numhistoria,
+                    EcoGinecologico::COLUMNA_CONSULTA => (int) $nueva->nroconsulta,
                 ]), $cuando, $origen);
 
                 return new ResultadoDeSolicitud(creado: true);
