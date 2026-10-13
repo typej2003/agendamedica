@@ -19,7 +19,8 @@
 |                columna NO se toca (el escritorio sigue leyéndola y su subida podría revertirla): el archivo queda
 |                sólo en `imagenes_de_la_pc`, a la espera de las pantallas que lo muestren.
 |
-| Una tabla que no exista en la base (p. ej. `paciente_chamo`, de pediatría) se ignora sola.
+| Una tabla que no exista en la base se ignora sola. `paciente_chamo` (la ficha del paciente pediátrico) estuvo en esa
+| situación hasta que WEB-7.4.1 la creó (2026-10-13): desde entonces su foto también sube, sin tocar la herramienta.
 |
 | Quedan FUERA a propósito:
 |  - `evolucion.logo` (y `evolucion_copy.logo`): el logo del membrete lo maneja WEB-8.2 y está en `columnas_excluidas`
