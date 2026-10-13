@@ -712,4 +712,10 @@
     if (prenatal) {
         avisoDeFormulario(prenatal, 'prenatal-sin-guardar');
     }
+
+    // Las pestañas del embarazo cuyas filas son fechas (Laboratorio y Controles) usan el mismo aviso: el
+    // cartel de cada una se llama como su formulario, más `-sin-guardar`.
+    document.querySelectorAll('[data-consulta-fechas]').forEach(function (formulario) {
+        avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
+    });
 })();

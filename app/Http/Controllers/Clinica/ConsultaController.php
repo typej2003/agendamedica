@@ -50,7 +50,9 @@ use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Embarazo\Gesta;
 use App\Clinica\Embarazo\GestasDeLaHistoria;
+use App\Clinica\Embarazo\Vistas\FechasDelEmbarazoVista;
 use App\Clinica\Embarazo\Vistas\PestanasDelEmbarazo;
 use App\Clinica\Embarazo\Vistas\PrenatalVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
@@ -64,6 +66,8 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\Medico;
+use App\Models\PrenaExamenB;
+use App\Models\PreNatalDesarrolloFino;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -330,14 +334,60 @@ class ConsultaController extends Controller
                 $parametros,
             ));
 
-            return new SeccionDeEmbarazoVista(
-                $pestana,
-                new PestanasDelEmbarazo(fn (string $clave) => route('clinica.consulta', [
-                    $consulta->id,
-                    'seccion' => ConsultaShellVista::SECCION_EMBARAZO,
-                    'pestana' => $clave,
-                ])),
-                new PrenatalVista(
+            $urlPestanas = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EMBARAZO,
+                'pestana' => $clave,
+            ]);
+
+            // La gesta a la que pertenecen las filas: la que se mira o, si todavía no hay ninguna, la
+            // siguiente (el número que le va a tocar cuando se guarde la primera).
+            $claveDeLaGesta = $elegida?->clave() ?? $gestas->siguienteClave($regMedico, $historia);
+
+            // Cada pestaña tiene su ViewModel: *Prenatal* es la de las gestas y las otras dos —*Laboratorio*
+            // y *Controles*— son una fila por fecha, que comparten ViewModel y parcial.
+            if ($pestana === PestanasDelEmbarazo::LABORATORIO || $pestana === PestanasDelEmbarazo::CONTROLES) {
+                $esLaboratorio = $pestana === PestanasDelEmbarazo::LABORATORIO;
+                $modelo = $esLaboratorio ? PrenaExamenB::class : PreNatalDesarrolloFino::class;
+                $campos = $modelo::campos();
+
+                $filas = $modelo::query()
+                    ->where('reg_medico', $regMedico)
+                    ->where('historia', $historia)
+                    ->where('gesta_clave', $claveDeLaGesta)
+                    ->orderBy('fecha')
+                    ->get()
+                    ->map(function ($fila) use ($campos) {
+                        $valores = [];
+                        foreach ($campos as $campo) {
+                            $valores[$campo['columna']] = Gesta::texto($fila->{$campo['columna']});
+                        }
+
+                        return ['fecha' => (string) $fila->fecha, 'valores' => $valores];
+                    })
+                    ->all();
+
+                $pestanaVm = new FechasDelEmbarazoVista(
+                    titulo: $esLaboratorio ? 'Laboratorio del embarazo' : 'Controles del embarazo',
+                    icono: $esLaboratorio ? 'bi-droplet-half' : 'bi-graph-up',
+                    campos: $campos,
+                    filas: $filas,
+                    fechaElegida: (string) request()->query('fecha', ''),
+                    gestaClave: $claveDeLaGesta,
+                    urlGuardar: route($esLaboratorio
+                        ? 'clinica.consulta.embarazo.laboratorio.guardar'
+                        : 'clinica.consulta.embarazo.controles.guardar', $consulta->id),
+                    urlVolver: $url(),
+                    urlNueva: $url(['gesta' => $claveDeLaGesta, 'nueva' => 1]),
+                    urlFecha: fn (string $fecha) => $url(['gesta' => $claveDeLaGesta, 'fecha' => $fecha]),
+                    ayuda: $esLaboratorio
+                        ? 'Cada fecha es un laboratorio de esta gesta: el hemograma, la glicemia, la orina y las serologías que el embarazo pide. Se guarda con el botón; si sales sin guardar, el navegador te avisa.'
+                        : 'Cada fecha es un control de esta gesta: el peso, la tensión, la altura uterina, la placenta y las medidas del feto. Se guarda con el botón; si sales sin guardar, el navegador te avisa.',
+                    aviso: 'Hay cambios sin guardar. Si sales ahora, se pierden.',
+                    old: (array) old(),
+                );
+            } else {
+                $pestanaVm = new PrenatalVista(
                     $deLaHistoria,
                     $elegida,
                     route('clinica.consulta.embarazo.prenatal.guardar', $consulta->id),
@@ -347,8 +397,10 @@ class ConsultaController extends Controller
                     $dia,
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
-                ),
-            );
+                );
+            }
+
+            return new SeccionDeEmbarazoVista($pestana, new PestanasDelEmbarazo($urlPestanas), $pestanaVm);
         }
 
         if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {

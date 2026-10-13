@@ -9,6 +9,8 @@ use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
+use App\Models\PreNatalDesarrolloFino;
+use App\Models\PrenaExamenB;
 use App\Models\PreNatalObservacion;
 use App\Models\Specialty;
 use App\Models\SyncChange;
@@ -353,5 +355,92 @@ class ConsultaPrenatalWebTest extends TestCase
 
         $this->conContexto($otroUser, $otroMedico, $otraGineco)->actingAs($otroUser)
             ->post($this->urlGuardar($consulta), $this->formulario(['fur' => $this->fur()]))->assertNotFound();
+    }
+
+    // ------------------------------------------------------ Las dos pestañas por fecha (WEB-6.6)
+
+    /** La URL de una pestaña por fecha (`?pestana=laboratorio&gesta=1&fecha=…`). */
+    private function urlFecha(Consulta $consulta, string $pestana, string $extra = ''): string
+    {
+        return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EMBARAZO, 'pestana' => $pestana]) . $extra;
+    }
+
+    public function test_las_pestanas_laboratorio_y_controles_abren_con_sus_campos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Las cuatro pestañas del escritorio: las tres que existen se ofrecen, el Reporte todavía no.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO));
+        $respuesta->assertOk()
+            ->assertSee('Laboratorio')->assertSee('Controles')->assertSee('Prenatal')
+            ->assertDontSee('Reporte')
+            ->assertSee('Laboratorio del embarazo')
+            // Los rótulos del DataWindow del laboratorio.
+            ->assertSee('Hb.')->assertSee('Hto')->assertSee('VDRL')->assertSee('Orina')
+            // El rótulo de las dos columnas que el escritorio rotula mal (PT/PTT).
+            ->assertSee('Progesterona')->assertSee('Prolactina');
+
+        // Y los del DataWindow de los controles, con la placenta (que en la tabla es `mf`).
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlFecha($consulta, PestanasDelEmbarazo::CONTROLES))
+            ->assertOk()
+            ->assertSee('Controles del embarazo')
+            ->assertSee('Presentación')->assertSee('Placenta')->assertSee('A.U.')
+            // La opción del desplegable de la presentación muestra el texto y guarda el código.
+            ->assertSee('Cefálica - Cefálica');
+    }
+
+    public function test_guardar_el_laboratorio_y_el_control_de_una_gesta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+
+        // El laboratorio: la fecha + los campos del DataWindow.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.embarazo.laboratorio.guardar', $consulta->id), [
+                'gesta' => '1', 'fecha' => '2026-08-14', 'hemoglobina' => '11,5', 'vdrl' => 'No reactivo',
+            ])
+            ->assertSessionHas('estado');
+
+        $lab = PrenaExamenB::where('historia', 1001)->first();
+        $this->assertNotNull($lab);
+        $this->assertSame(1, $lab->gesta_clave);
+        $this->assertSame(11.5, (float) $lab->hemoglobina);
+        $this->assertSame('No reactivo', $lab->vdrl);
+
+        // Los controles: la presentación guarda el código y la placenta el texto del desplegable.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.embarazo.controles.guardar', $consulta->id), [
+                'gesta' => '1', 'fecha' => '2026-08-14', 'peso' => '68', 'presentacion' => 'CC', 'mf' => 'Fúndica',
+            ])
+            ->assertSessionHas('estado');
+
+        $control = PreNatalDesarrolloFino::where('historia', 1001)->first();
+        $this->assertNotNull($control);
+        $this->assertSame('CC', $control->presentacion);
+        $this->assertSame('Fúndica', $control->mf);
+
+        // Y la pestaña ya ofrece la fecha cargada.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1'))
+            ->assertOk()->assertSee('14/08/2026');
+    }
+
+    public function test_una_fecha_sin_gesta_no_se_guarda_y_lo_dice(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Sin `gesta`: el laboratorio y los controles son de una gesta, y no se inventa cuál. La validación
+        // lo frena en el campo (la regla lo exige) y no se guarda nada.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO))
+            ->post(route('clinica.consulta.embarazo.laboratorio.guardar', $consulta->id), ['fecha' => '2026-08-14', 'gesta' => ''])
+            ->assertSessionHasErrors('gesta');
+
+        $this->assertSame(0, PrenaExamenB::where('historia', 1001)->count());
     }
 }

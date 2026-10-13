@@ -25,7 +25,7 @@
         <textarea class="form-control" rows="4" id="{{ $campo['columna'] }}"
                   name="{{ $campo['columna'] }}">{{ $campo['valor'] }}</textarea>
     @else
-        <input type="text" class="form-control" maxlength="10" id="{{ $campo['columna'] }}"
+        <input type="text" class="form-control" maxlength="{{ $campo['max'] ?? 10 }}" id="{{ $campo['columna'] }}"
                name="{{ $campo['columna'] }}" value="{{ $campo['valor'] }}">
     @endif
 </x-ui.campo>

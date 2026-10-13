@@ -23,12 +23,20 @@ final class PestanasDelEmbarazo
     /** Las **gestas**: la FUR, la menarquia, el tipiaje y las dos cuentas (EG y FPP). */
     public const PRENATAL = 'prenatal';
 
+    /** El **laboratorio** de la gesta: una fila por fecha (`prena_exames_b`). */
+    public const LABORATORIO = 'laboratorio';
+
+    /** Los **controles** de la gesta: una fila por fecha (`pre_natal_desarrollo_fino`). */
+    public const CONTROLES = 'controles';
+
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::PRENATAL;
 
     /** @var array<string,array{texto:string, icono:string}> */
     private const TODAS = [
         self::PRENATAL => ['texto' => 'Prenatal', 'icono' => 'bi-calendar-heart'],
+        self::LABORATORIO => ['texto' => 'Laboratorio', 'icono' => 'bi-droplet-half'],
+        self::CONTROLES => ['texto' => 'Controles', 'icono' => 'bi-graph-up'],
     ];
 
     /**

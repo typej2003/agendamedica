@@ -196,6 +196,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/embarazo/prenatal', [ConsultaEmbarazoController::class, 'guardarPrenatal'])
                     ->name('consulta.embarazo.prenatal.guardar');
 
+                // Las dos pestañas por fecha del control de embarazo: el laboratorio de la gesta
+                // (`prena_exames_b`) y sus controles (`pre_natal_desarrollo_fino`). Las dos llevan la gesta
+                // oculta en el formulario, porque la clave es historia + gesta_clave + fecha.
+                Route::post('/consulta/{consulta}/embarazo/laboratorio', [ConsultaEmbarazoController::class, 'guardarLaboratorio'])
+                    ->name('consulta.embarazo.laboratorio.guardar');
+                Route::post('/consulta/{consulta}/embarazo/controles', [ConsultaEmbarazoController::class, 'guardarControl'])
+                    ->name('consulta.embarazo.controles.guardar');
+
                 // Antecedentes del paciente (WEB-4.4): el ítem 3 del panel. **No son de la consulta** —
                 // `antece_paciente` se llavea por `numhistoria` y el escritorio los carga y los lee por
                 // historia (`w_consulta_principal.srw:7416`, `:7636`, `:7754`)—, así que la Action vive en
