@@ -50,6 +50,10 @@ use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Embarazo\GestasDeLaHistoria;
+use App\Clinica\Embarazo\Vistas\PestanasDelEmbarazo;
+use App\Clinica\Embarazo\Vistas\PrenatalVista;
+use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\MembreteDelMedico;
@@ -128,6 +132,7 @@ class ConsultaController extends Controller
         CatalogoParaPedirExamenes $catalogoDeExamenes,
         EcoGinecologico $eco,
         FurDelControlPrenatal $furPrenatal,
+        GestasDeLaHistoria $gestas,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -177,7 +182,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal, $gestas),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -233,6 +238,7 @@ class ConsultaController extends Controller
         Medico $medico,
         EcoGinecologico $eco,
         FurDelControlPrenatal $furPrenatal,
+        GestasDeLaHistoria $gestas,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -296,6 +302,49 @@ class ConsultaController extends Controller
                     // La FUR del control prenatal de la historia, como la busca el escritorio al entrar a
                     // la pestaña *Ginecologico* (`w_consulta_principal.srw:21391-21405`).
                     $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
+                    // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                    (array) old(),
+                ),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_EMBARAZO) {
+            // Las pestañas del ítem 6: hoy sólo *Prenatal*, así que lo demás cae en ella (como los tipos del
+            // estudio). El control prenatal es **de la historia**, no de la consulta: se lee y se escribe por
+            // el `numhistoria` de esta consulta.
+            $pestana = PestanasDelEmbarazo::normalizar((string) request()->query('pestana', ''));
+            $historia = (int) $consulta->numhistoria;
+            $deLaHistoria = $gestas->de($regMedico, $historia, $dia);
+
+            // Qué gesta se mira: la que pide la URL (`&gesta=2`), la actual (la de mayor número) o ninguna
+            // cuando se está creando una nueva (`&nueva=1`).
+            $pedida = (int) request()->query('gesta', 0);
+            $elegida = request()->boolean('nueva')
+                ? null
+                : ($pedida > 0
+                    ? collect($deLaHistoria)->first(fn ($gesta) => $gesta->clave() === $pedida)
+                    : $gestas->actual($regMedico, $historia, $dia));
+
+            $url = fn (array $parametros = []) => route('clinica.consulta', array_merge(
+                [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EMBARAZO, 'pestana' => $pestana],
+                $parametros,
+            ));
+
+            return new SeccionDeEmbarazoVista(
+                $pestana,
+                new PestanasDelEmbarazo(fn (string $clave) => route('clinica.consulta', [
+                    $consulta->id,
+                    'seccion' => ConsultaShellVista::SECCION_EMBARAZO,
+                    'pestana' => $clave,
+                ])),
+                new PrenatalVista(
+                    $deLaHistoria,
+                    $elegida,
+                    route('clinica.consulta.embarazo.prenatal.guardar', $consulta->id),
+                    $url(),
+                    $url(['nueva' => 1]),
+                    fn (int $clave) => $url(['gesta' => $clave]),
+                    $dia,
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
                 ),

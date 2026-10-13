@@ -29,6 +29,7 @@ use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
+use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
@@ -186,6 +187,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // otros seis estudios del ítem (WEB-6.2 a WEB-6.4) sin ruta nueva.
                 Route::post('/consulta/{consulta}/estudio/{tipo}', [ConsultaEstudioController::class, 'guardar'])
                     ->where('tipo', '[a-z]+')->name('consulta.estudio.guardar');
+
+                // Control de embarazo (WEB-6.6): el ítem 6 del panel, con sus pestañas
+                // (`?seccion=embarazo&pestana=…`). **El dato es del embarazo y no de la consulta**:
+                // `pre_natal_observaciones` se llavea por `historia` + `gesta_clave`, así que el controlador
+                // usa el `numhistoria` de la consulta del contexto. El `gesta` del formulario vacío crea la
+                // siguiente (*Nueva Gesta*).
+                Route::post('/consulta/{consulta}/embarazo/prenatal', [ConsultaEmbarazoController::class, 'guardarPrenatal'])
+                    ->name('consulta.embarazo.prenatal.guardar');
 
                 // Antecedentes del paciente (WEB-4.4): el ítem 3 del panel. **No son de la consulta** —
                 // `antece_paciente` se llavea por `numhistoria` y el escritorio los carga y los lee por

@@ -192,7 +192,7 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('11 de 13 disponibles');
+        $respuesta->assertSee('12 de 13 disponibles');
 
         // El contenedor con su tipo y el formulario con sus bloques.
         $respuesta->assertSee('Eco ginecológico');
@@ -219,7 +219,7 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('11 de 13 disponibles');
+        $respuesta->assertSee('12 de 13 disponibles');
         $respuesta->assertSee('Estudio ecográfico');
         // El enlace del panel es el de la sección a secas: el tipo por defecto es el ginecológico.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]), false);

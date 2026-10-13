@@ -284,11 +284,11 @@ class ConsultaRecipesWebTest extends TestCase
 
         $panel = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id));
         $panel->assertOk();
-        $panel->assertSee('11 de 13 disponibles', false);
+        $panel->assertSee('12 de 13 disponibles', false);
         $panel->assertSee('seccion=recipes', false);
-        // Los que faltan: el control de embarazo (WEB-6.6) y la pre-factura (F9). El estudio ecográfico
-        // (WEB-6.1) y las solicitudes (WEB-5.3a) ya están.
-        $this->assertSame(2, substr_count($panel->getContent(), 'Próximamente'));
+        // El que falta: la pre-factura (F9). El estudio ecográfico (WEB-6.1), el control de embarazo
+        // (WEB-6.6) y las solicitudes (WEB-5.3a) ya están.
+        $this->assertSame(1, substr_count($panel->getContent(), 'Próximamente'));
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 

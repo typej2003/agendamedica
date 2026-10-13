@@ -662,4 +662,54 @@
 
         pintarAvisoEstudio();
     }
+
+    // ------------------------------------------------- Control de embarazo (WEB-6.6)
+
+    // El mismo aviso de "hay cambios sin guardar", esta vez con una función genérica: el formulario de la
+    // gesta es un formulario más (campos y su cartel), sin nada propio como el IMC de la evaluación.
+    function avisoDeFormulario(formulario, idAviso) {
+        const campos = Array.prototype.slice.call(formulario.querySelectorAll('input, select, textarea'));
+        const guardados = campos.map(function (campo) {
+            return campo.value;
+        });
+        const aviso = document.getElementById(idAviso);
+
+        function sucio() {
+            return campos.some(function (campo, indice) {
+                return campo.value !== guardados[indice];
+            });
+        }
+
+        function pintar() {
+            if (aviso) aviso.hidden = !sucio();
+        }
+
+        campos.forEach(function (campo) {
+            campo.addEventListener('input', pintar);
+            campo.addEventListener('change', pintar);
+        });
+
+        const cancelar = formulario.querySelector('a[href]');
+        if (cancelar) {
+            cancelar.addEventListener('click', function (evento) {
+                if (sucio() && !window.confirm(formulario.dataset.aviso)) {
+                    evento.preventDefault();
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucio()) return;
+            evento.preventDefault();
+            evento.returnValue = formulario.dataset.aviso;
+        });
+
+        pintar();
+    }
+
+    const prenatal = document.querySelector('[data-consulta-prenatal]');
+
+    if (prenatal) {
+        avisoDeFormulario(prenatal, 'prenatal-sin-guardar');
+    }
 })();

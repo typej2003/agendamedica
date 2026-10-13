@@ -130,4 +130,33 @@ final class Gesta
 
         return ($texto === '' || strcasecmp($texto, 'none') === 0) ? null : $texto;
     }
+
+    /**
+     * **El mapa de los campos de la gesta**: qué columna, con qué rótulo y con qué control se pinta.
+     *
+     * Los rótulos son los del DataWindow de la pestaña (`d_pre_natal_observa.srd`): *FUR*, *Menarquia*,
+     * *Gestas*, *Tipiaje* (con *Madre* y *Padre* debajo: `tipiaje` es el de la madre y `tipiaje_cony` el del
+     * padre), *Parto* y *Observaciones*. El orden es el de la pantalla del escritorio.
+     *
+     * @return array<int,array{columna:string,etiqueta:string,tipo:string,ayuda:string}>
+     */
+    public static function campos(): array
+    {
+        return [
+            ['columna' => 'fur', 'etiqueta' => 'FUR', 'tipo' => 'fecha',
+                'ayuda' => 'Fecha de la última regla: de ella salen la edad gestacional y la FPP.'],
+            ['columna' => 'menarquia', 'etiqueta' => 'Menarquia', 'tipo' => 'texto',
+                'ayuda' => 'Cuándo le vino por primera vez.'],
+            ['columna' => 'gestas', 'etiqueta' => 'Gestas', 'tipo' => 'numero',
+                'ayuda' => 'Cuántos embarazos ha tenido (el campo *Gestas* del escritorio).'],
+            ['columna' => 'parto', 'etiqueta' => 'Parto', 'tipo' => 'texto',
+                'ayuda' => 'Cómo terminaron: parto, cesárea, cuántos… El escritorio lo deja como texto libre.'],
+            ['columna' => 'tipiaje', 'etiqueta' => 'Tipiaje (madre)', 'tipo' => 'texto',
+                'ayuda' => 'El grupo sanguíneo de la madre.'],
+            ['columna' => 'tipiaje_cony', 'etiqueta' => 'Tipiaje (padre)', 'tipo' => 'texto',
+                'ayuda' => 'El grupo sanguíneo de la pareja (la columna se llama `tipiaje_cony`).'],
+            ['columna' => 'observaciones', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
+                'ayuda' => 'Lo que haya que anotar de este embarazo.'],
+        ];
+    }
 }
