@@ -446,7 +446,9 @@ lista **histórica** (el núcleo y lo de ginecología, 101 tablas) y `tablas_por
 `sync.tablas`; hoy pediatría agrega 56). `App\Sync\Escritorio\TablasDelSync` combina: `para($especialidad)`
 es lo que se le **ofrece** al escritorio (`cambios/estado`, `carga-inicial/iniciar`, la restauración) y
 `aceptadas()` la **unión**, que es lo que el API acepta escribir; una especialidad sin manifiesto sigue con
-la histórica. `columnas_equivalentes` traduce nombres de columna que el escritorio llama distinto —en la
+la histórica. Para un médico con **varias especialidades** (el pivote `medico_specialty` lo permite) se le
+ofrece la unión de todas: con una sola, las tablas de la otra no recibirían triggers y no subirían nunca.
+`columnas_equivalentes` traduce nombres de columna que el escritorio llama distinto —en la
 fila **y en la clave** del cambio—: es lo que hace que `examen_fisico_nuevo` de pediatría (clave
 `nrohistoria`/`nroconsulta`) caiga en `historia`/`consulta` sin columnas nuevas. Tests en
 `tests/Feature/PediatriaSyncTest.php`. El relevamiento de una especialidad nueva son tres tools

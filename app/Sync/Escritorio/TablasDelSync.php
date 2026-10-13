@@ -89,18 +89,49 @@ final class TablasDelSync
      */
     public function especialidadDe(?Medico $medico): ?string
     {
+        return $this->especialidadesDe($medico)[0] ?? null;
+    }
+
+    /**
+     * **Todas** las especialidades del médico (activas si tiene alguna, si no las que tenga).
+     *
+     * `medico_specialty` es un pivote y el panel permite varias: un médico puede atender ginecología y
+     * pediatría. Para el sync eso significa que su base local tiene las tablas de las dos.
+     *
+     * @return array<int, string>
+     */
+    public function especialidadesDe(?Medico $medico): array
+    {
         if (! $medico) {
-            return null;
+            return [];
         }
 
         $activas = $medico->specialties->where('activo', true);
+        $especialidades = $activas->isNotEmpty() ? $activas : $medico->specialties;
 
-        return $activas->first()?->slug ?: $medico->specialties->first()?->slug;
+        return array_values($especialidades->pluck('slug')->filter()->all());
     }
 
-    /** Atajo: las tablas que se le ofrecen al escritorio del médico. */
+    /**
+     * Las tablas que se le ofrecen al escritorio del médico: la **unión de todas sus especialidades**.
+     *
+     * No alcanza con la primera: si un médico atiende dos especialidades y se le ofrece la lista de una
+     * sola, las tablas de la otra no reciben triggers y esos datos **no suben nunca** (sin error: el
+     * escritorio sólo vigila lo que el API le dice). Un médico sin especialidad en el pivote sigue
+     * recibiendo la lista histórica.
+     */
     public function paraMedico(?Medico $medico): array
     {
-        return $this->para($this->especialidadDe($medico));
+        $especialidades = $this->especialidadesDe($medico);
+        if ($especialidades === []) {
+            return $this->para(null);
+        }
+
+        $tablas = $this->historicas();
+        foreach ($especialidades as $especialidad) {
+            $tablas = array_merge($tablas, $this->deLaEspecialidad($especialidad));
+        }
+
+        return array_values(array_unique($tablas));
     }
 }

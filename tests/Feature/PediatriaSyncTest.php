@@ -92,6 +92,24 @@ class PediatriaSyncTest extends TestCase
         $this->assertNotContains('vacunas', $tablasGin);
     }
 
+    public function test_un_medico_con_dos_especialidades_recibe_las_tablas_de_las_dos(): void
+    {
+        // El pivote `medico_specialty` permite varias: si se tomara sólo la primera, las tablas de la
+        // otra no tendrían triggers y esos datos no subirían nunca.
+        $medico = $this->medicoConEspecialidad('mixto-t-001', 'ginecologia-y-obstetricia');
+        $medico->specialties()->attach(Specialty::where('slug', 'pediatria')->firstOrFail()->id);
+
+        $tablas = app(TablasDelSync::class)->paraMedico($medico->fresh());
+        $this->assertContains('paciente_chamo', $tablas, 'las de pediatría');
+        $this->assertContains('pre_natal_observaciones', $tablas, 'las de ginecología');
+        $this->assertContains('pacientes', $tablas, 'y el núcleo');
+
+        $porHttp = explode(',', (string) $this->post_('cambios/estado', ['reg_medico' => 'mixto-t-001'])
+            ->assertOk()->json('tablas'));
+        $this->assertContains('paciente_chamo', $porHttp);
+        $this->assertContains('pre_natal_observaciones', $porHttp);
+    }
+
     public function test_una_especialidad_sin_manifiesto_sigue_con_la_lista_historica(): void
     {
         $sync = app(TablasDelSync::class);
