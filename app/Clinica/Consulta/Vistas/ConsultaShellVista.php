@@ -52,6 +52,14 @@ final class ConsultaShellVista
     public const SECCION_SOLICITUDES = 'solicitudes';
 
     /**
+     * La clave de la sección del **estudio ecográfico** (ítem 5 del panel) en `?seccion=` (WEB-6.1).
+     *
+     * La sección agrupa los siete estudios del ítem; **cuál se abre** se elige con `&tipo=` entre los que
+     * ya existen, que son los de `TiposDeEstudio` (hoy, el eco pélvico o ginecológico).
+     */
+    public const SECCION_ESTUDIO = 'estudio';
+
+    /**
      * El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de
      * récipes. Los demás valores son `nuevo` (un récipe del paciente por crear) o el número de uno que existe.
      */
@@ -86,7 +94,8 @@ final class ConsultaShellVista
             'detalle' => 'Antropometría, examen por aparatos y ginecológico.', 'tarea' => 'WEB-4.3', 'estado' => 'listo',
             'seccion' => self::SECCION_EVALUACION],
         ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Estudio ecográfico', 'icono' => 'bi-activity',
-            'detalle' => 'Ecos ginecológicos, obstétricos, doppler y mamarío.', 'tarea' => 'F6', 'estado' => 'proximamente'],
+            'detalle' => 'Ecos ginecológicos, obstétricos, doppler y mamarío.', 'tarea' => 'WEB-6.1', 'estado' => 'listo',
+            'seccion' => self::SECCION_ESTUDIO],
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Control de embarazo', 'icono' => 'bi-gender-female',
             'detalle' => 'Prenatal, laboratorio, controles y reporte.', 'tarea' => 'F6', 'estado' => 'proximamente'],
         ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Exámenes', 'icono' => 'bi-droplet',
@@ -234,7 +243,8 @@ final class ConsultaShellVista
 
     /**
      * El parcial de la sección activa (`clinica.consulta._motivos` / `._enfermedad` / `._evaluacion` /
-     * `._antecedentes` / `._diagnostico` / `._evolucion` / `._recipes` / `._solicitudes`), o `null` si no hay ninguna. El mapa se arma con
+     * `._antecedentes` / `._diagnostico` / `._evolucion` / `._examenes` / `._recipes` / `._solicitudes` /
+     * `._estudio`), o `null` si no hay ninguna. El mapa se arma con
      * las claves del panel, así que agregar una sección es agregar una fila a `PANEL` y su parcial, no
      * tocar la vista.
      */
@@ -271,7 +281,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 10 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, exámenes, diagnóstico, evolución, récipes, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 11 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, exámenes, diagnóstico, evolución, récipes, solicitudes y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -281,8 +291,8 @@ final class ConsultaShellVista
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Con WEB-5.3a ya se pueden cargar los ítems 1, 2, 3, 4, 7, 8, 9,
-     * 10, 11 y 12, y el resto sigue llegando por tareas (F5, F6 y F9).
+     * las secciones se abren desde el panel. Con WEB-6.1 ya se pueden cargar los ítems 1, 2, 3, 4, 5, 7, 8, 9,
+     * 10, 11 y 12, y el resto sigue llegando por tareas (F6 y F9).
      */
     public function sinContenido(): array
     {
@@ -290,9 +300,9 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
-                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, exámenes, '
+                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, exámenes, '
                 . 'diagnóstico, evolución, récipes, solicitudes y los datos personales del paciente— se abren acá; el resto '
-                . 'llega con las tareas siguientes (estudios y pre-factura). Cuando termines la atención, la acción '
+                . 'llega con las tareas siguientes (control de embarazo y pre-factura). Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
     }

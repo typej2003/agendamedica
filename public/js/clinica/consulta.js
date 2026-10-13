@@ -612,4 +612,54 @@
 
         pintarAviso();
     }
+
+    // ------------------------------------------------- Estudio ecográfico (WEB-6.1)
+
+    // El formulario del eco pélvico: el mismo aviso de "hay cambios sin guardar" que la evaluación física,
+    // pero con los desplegables adentro (por eso también escucha `change`, que es el evento de un
+    // `<select>`), que son la mitad de los campos del estudio.
+    const estudio = document.querySelector('[data-consulta-estudio]');
+
+    if (estudio) {
+        const avisoEstudio = document.getElementById('estudio-sin-guardar');
+        const camposEstudio = Array.prototype.slice.call(estudio.querySelectorAll('input, select, textarea'));
+
+        // El valor de partida de cada control, tal como lo pintó el servidor (con el `old()` si el POST
+        // falló): es contra eso que se decide si algo cambió.
+        const guardadosEstudio = camposEstudio.map(function (campo) {
+            return campo.value;
+        });
+
+        function sucioEstudio() {
+            return camposEstudio.some(function (campo, indice) {
+                return campo.value !== guardadosEstudio[indice];
+            });
+        }
+
+        function pintarAvisoEstudio() {
+            if (avisoEstudio) avisoEstudio.hidden = !sucioEstudio();
+        }
+
+        camposEstudio.forEach(function (campo) {
+            campo.addEventListener('input', pintarAvisoEstudio);
+            campo.addEventListener('change', pintarAvisoEstudio);
+        });
+
+        const cancelarEstudio = estudio.querySelector('a[href]');
+        if (cancelarEstudio) {
+            cancelarEstudio.addEventListener('click', function (evento) {
+                if (sucioEstudio() && !window.confirm(estudio.dataset.aviso)) {
+                    evento.preventDefault();
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (!sucioEstudio()) return;
+            evento.preventDefault();
+            evento.returnValue = estudio.dataset.aviso;
+        });
+
+        pintarAvisoEstudio();
+    }
 })();

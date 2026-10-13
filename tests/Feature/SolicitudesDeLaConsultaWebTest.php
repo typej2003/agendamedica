@@ -97,7 +97,7 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $respuesta = $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id));
-        $respuesta->assertOk()->assertSee('10 de 13 disponibles', false);
+        $respuesta->assertOk()->assertSee('11 de 13 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']), false);
 
         $seccion = $this->como($user, $medico, $gineco)->get($this->seccion($consulta));

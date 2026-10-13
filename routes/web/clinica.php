@@ -18,6 +18,7 @@ use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaConstanciaController;
 use App\Http\Controllers\Clinica\ConsultaDietaController;
+use App\Http\Controllers\Clinica\ConsultaEstudioController;
 use App\Http\Controllers\Clinica\ConsultaEstudiosController;
 use App\Http\Controllers\Clinica\ConsultaHospitalizacionController;
 use App\Http\Controllers\Clinica\ConsultaInformeController;
@@ -177,6 +178,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+
+                // Estudio ecográfico (WEB-6.1): el ítem 5 del panel, con su sección propia
+                // (`?seccion=estudio&tipo=…`). El estudio es **una fila por consulta**, llaveada por
+                // `numhistoria` + `nroconsulta` (`d_eco_pelvico.srd:6`, `:19`), así que se corrige en el
+                // lugar y deja su rastro por columna en el sync. El `{tipo}` de la URL deja lugar a los
+                // otros seis estudios del ítem (WEB-6.2 a WEB-6.4) sin ruta nueva.
+                Route::post('/consulta/{consulta}/estudio/{tipo}', [ConsultaEstudioController::class, 'guardar'])
+                    ->where('tipo', '[a-z]+')->name('consulta.estudio.guardar');
 
                 // Antecedentes del paciente (WEB-4.4): el ítem 3 del panel. **No son de la consulta** —
                 // `antece_paciente` se llavea por `numhistoria` y el escritorio los carga y los lee por

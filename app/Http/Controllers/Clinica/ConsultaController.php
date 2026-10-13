@@ -9,8 +9,10 @@ use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
+use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
+use App\Clinica\Consulta\FurDelControlPrenatal;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
@@ -26,6 +28,7 @@ use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
+use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
@@ -40,11 +43,13 @@ use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
+use App\Clinica\Consulta\Vistas\SeccionDeEstudioVista;
 use App\Clinica\Consulta\Vistas\SeccionDeExamenesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipeDeLaParejaVista;
 use App\Clinica\Consulta\Vistas\SeccionDeRecipesVista;
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
@@ -120,6 +125,8 @@ class ConsultaController extends Controller
         LaboratorioDeLaConsulta $laboratorio,
         EstudiosDeLaConsulta $estudios,
         CatalogoParaPedirExamenes $catalogoDeExamenes,
+        EcoGinecologico $eco,
+        FurDelControlPrenatal $furPrenatal,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -169,7 +176,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico']),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -223,6 +230,8 @@ class ConsultaController extends Controller
         Carbon $dia,
         int $pacienteId,
         Medico $medico,
+        EcoGinecologico $eco,
+        FurDelControlPrenatal $furPrenatal,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -261,6 +270,35 @@ class ConsultaController extends Controller
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_ESTUDIO) {
+            // El tipo del estudio viaja en la URL (`&tipo=`): el contenedor muestra los que existen hoy
+            // (el ginecológico, WEB-6.1) y los demás llegan con las tareas siguientes de F6.
+            $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
+
+            return new SeccionDeEstudioVista(
+                $tipo,
+                new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
+                    $consulta->id,
+                    'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                    'tipo' => $clave,
+                ])),
+                new EcoGinecologicoVista(
+                    $eco->de($consulta),
+                    route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                    route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                    // La hoja del informe se pide por la impresión de documentos de la consulta; mientras
+                    // esa parte de WEB-6.1 no esté, la sección no ofrece el botón (la vista lo esconde con
+                    // una URL vacía).
+                    '',
+                    // La FUR del control prenatal de la historia, como la busca el escritorio al entrar a
+                    // la pestaña *Ginecologico* (`w_consulta_principal.srw:21391-21405`).
+                    $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
+                    // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                    (array) old(),
+                ),
             );
         }
 

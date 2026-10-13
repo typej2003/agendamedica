@@ -122,4 +122,21 @@ final class QueEsUnDocumento
     {
         return $estudios > 0 || TextoDeLaConsulta::limpio($observacion) !== null;
     }
+
+    /**
+     * **Estudio ecográfico** (WEB-6.1): es un documento si trae **algún dato** —cualquiera de las columnas
+     * que edita la pantalla, sin contar la fecha del estudio—.
+     *
+     * El escritorio **no** crea la fila de `eco_pelvico` al abrir la consulta (a diferencia de la
+     * constancia, el reposo o el informe): la crea cuando el médico entra al estudio, con la fecha del día
+     * (`w_cargar_visualizar_ecografia.srw:221-224`). Pero su `dw_1.Update()` guarda la fila **aunque no se
+     * haya cargado nada**, así que una fila con sólo la fecha existe y no es el informe de nadie: no tiene
+     * nada que imprimir. Misma vara para la pantalla (la pastilla de estado), la historia y la impresión.
+     *
+     * @param  int  $camposConDato  cuántas columnas del estudio traen algo (sin contar `fecha`)
+     */
+    public static function ecografia(int $camposConDato): bool
+    {
+        return $camposConDato > 0;
+    }
 }
