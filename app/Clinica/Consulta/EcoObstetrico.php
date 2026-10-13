@@ -56,9 +56,8 @@ final class EcoObstetrico
     {
         return [
             ['titulo' => 'El embarazo', 'icono' => 'bi-calendar-heart', 'campos' => [
-                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha', 'ayuda' => 'La fecha del estudio.'],
-                self::texto('fur', 'FUR', 'La fecha de la última regla: el escritorio la copia del control prenatal.'),
-                self::texto('eg', 'EG', 'La edad gestacional, como la escribe el médico («20s + 6d»).'),
+                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha', 'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
+                self::texto('fur', 'FUR', 'La fecha de la última regla: en el escritorio **se teclea** (su ventana no la lee del control prenatal).'),
                 self::lista('gesta', 'Gesta', ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5',
                     'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11'],
                     'El número de la gesta que se está siguiendo (el escritorio lo numera en romanos).'),
@@ -98,7 +97,6 @@ final class EcoObstetrico
                 self::texto('dbp', 'DBP', 'El diámetro biparietal.'),
                 self::texto('tn', 'TN', 'La translucencia nucal.'),
                 self::texto('sa_vit', 'Saco vitelino'),
-                self::texto('lcr', 'LCR'),
                 self::lista('dc_venoso', 'Ductus venoso', ['Normal' => 'N', 'Patológico' => 'P']),
             ]],
 

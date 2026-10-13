@@ -28,7 +28,9 @@ use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
+use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
+use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
@@ -137,6 +139,7 @@ class ConsultaController extends Controller
         EstudiosDeLaConsulta $estudios,
         CatalogoParaPedirExamenes $catalogoDeExamenes,
         EcoGinecologico $eco,
+        EcoObstetrico $ecoObstetrico,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -189,7 +192,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $furPrenatal, $gestas, $informePrenatal),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $furPrenatal, $gestas, $informePrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -244,6 +247,7 @@ class ConsultaController extends Controller
         int $pacienteId,
         Medico $medico,
         EcoGinecologico $eco,
+        EcoObstetrico $ecoObstetrico,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -300,7 +304,19 @@ class ConsultaController extends Controller
                     'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                     'tipo' => $clave,
                 ])),
-                new EcoGinecologicoVista(
+                $tipo === TiposDeEstudio::OBSTETRICO
+                    ? new EcoObstetricoVista(
+                        $ecoObstetrico->de($consulta),
+                        route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                        route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                        // La hoja del informe del obstétrico llega con su tarea (tiene formato en blanco en
+                        // el escritorio): hasta entonces la pantalla no ofrece el botón.
+                        '',
+                        $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
+                        $gestas->actual($regMedico, (int) $consulta->numhistoria)?->clave(),
+                        (array) old(),
+                    )
+                    : new EcoGinecologicoVista(
                     $eco->de($consulta),
                     route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                     route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),

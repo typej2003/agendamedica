@@ -33,11 +33,6 @@ final class TiposDeEstudio
     /**
      * El **eco obstétrico del primer trimestre**: el de WEB-6.2 (`w_cargar_visualizar_ecografia_obstetri_1`,
      * con el DataWindow `d_eco_obstetrico_nueva`).
-     *
-     * ⚠️ **Todavía no está en `TODOS`**: su mapa, su Action, su ViewModel y su parcial están hechos, pero
-     * falta el cableado del controlador (el despacho por tipo en `ConsultaEstudioController` y el ViewModel
-     * en el branch de la sección). Mientras no esté cableado **no se ofrece**, para no mostrar una pantalla
-     * a medio armar: agregar un tipo es agregar su fila acá **y** su cableado, en el mismo paso.
      */
     public const OBSTETRICO = 'obstetrico';
 
@@ -47,6 +42,7 @@ final class TiposDeEstudio
     /** @var array<string,array{texto:string, icono:string}> */
     private const TODOS = [
         self::GINECOLOGICO => ['texto' => 'Eco ginecológico', 'icono' => 'bi-activity'],
+        self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
     ];
 
     /**

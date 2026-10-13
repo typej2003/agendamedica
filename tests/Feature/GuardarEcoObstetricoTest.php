@@ -90,19 +90,21 @@ class GuardarEcoObstetricoTest extends TestCase
         return array_merge($campos, $valores);
     }
 
-    public function test_crea_el_estudio_con_la_fur_y_la_gesta_del_control_prenatal(): void
+    public function test_crea_el_estudio_con_la_fecha_de_hoy_y_lo_que_se_teclea(): void
     {
         $medico = $this->medico();
         $consulta = $this->consulta($medico);
 
-        // La gesta que el médico está siguiendo, con su FUR (es la que el eco tiene que heredar).
+        // El control prenatal existe, pero sus datos NO se copian: el escritorio teclea la FUR y elige la
+        // gesta en el desplegable (sus ventanas de eco no leen pre_natal).
         PreNatalObservacion::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 2,
             'fur' => '2026-05-20',
         ]);
 
         $resultado = app(GuardarEcoObstetrico::class)->ejecutar($consulta, $this->formulario([
-            'lcc' => '45', 'sa_vit' => 'Sí', 't_nucal' => '1.8', 'actividad_cardiaca' => 'S',
+            'fur' => '2026-06-01', 'gesta' => '2',
+            'lcc' => '45', 'sa_vit' => 'Sí', 'tn' => '1.8', 'actividad_cardiaca' => 'S',
             'saco_gestacional' => '1', 'observacion' => 'Embarazo temprano normal.',
         ]));
 
@@ -115,9 +117,10 @@ class GuardarEcoObstetricoTest extends TestCase
         $this->assertSame('45', (string) $fila->lcc);
         $this->assertSame('1', (string) $fila->saco_gestacional);
         $this->assertSame('Embarazo temprano normal.', $fila->observacion);
-        // Lo que el escritorio completa solo: la fecha de hoy, la FUR y la gesta del prenatal.
+        // La fecha la completa el servidor (el escritorio la propone con hoy) y la FUR y la gesta son las
+        // que se teclearon/eligieron, no las del control prenatal.
         $this->assertSame($this->hoy->toDateString(), (string) $fila->fecha);
-        $this->assertSame('2026-05-20', (string) $fila->fur);
+        $this->assertSame('2026-06-01', (string) $fila->fur);
         $this->assertSame(2, $fila->gesta);
 
         $this->assertDatabaseHas('sync_changes', [

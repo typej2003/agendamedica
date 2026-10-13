@@ -48,7 +48,7 @@
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">
                     <i class="bi bi-x-lg" aria-hidden="true"></i> Cancelar
                 </a>
-                @if ($vm->esUnDocumento())
+                @if ($vm->esUnDocumento() && $vm->urlImprimir() !== '')
                     <a class="btn btn-outline-primary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
                     </a>

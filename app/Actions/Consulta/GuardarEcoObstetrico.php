@@ -41,18 +41,17 @@ final class GuardarEcoObstetrico
     public const TABLA = EcoObstetrico::TABLA;
 
     /**
-     * Las columnas que se completan solas del embarazo cuando el formulario no las trae: no cuentan para
-     * decidir si el estudio "tiene datos" (si no, un eco vacío con su FUR copiada sería un documento).
+     * Las columnas que **no cuentan** para decidir si el estudio "tiene datos": la **fecha** (la completa el
+     * servidor con hoy, como el escritorio) y la **FUR** y la **gesta** (que identifican el embarazo, no son
+     * un hallazgo del estudio). Un eco con sólo su FUR no es un documento: no se crea la fila y su hoja no
+     * se ofrece.
      *
      * @var array<int,string>
      */
-    private const DEL_EMBARAZO = ['fecha', 'fur', 'gesta'];
+    private const NO_CUENTAN = ['fecha', 'fur', 'gesta'];
 
-    public function __construct(
-        private EcoObstetrico $ecos,
-        private \App\Clinica\Consulta\FurDelControlPrenatal $furPrenatal,
-        private GestasDeLaHistoria $gestas,
-    ) {
+    public function __construct(private EcoObstetrico $ecos)
+    {
     }
 
     /**
@@ -72,13 +71,16 @@ final class GuardarEcoObstetrico
             $nuevos[$columna] = EstudioEcografico::limpiar($valores[$columna] ?? null);
         }
 
-        // Lo que la pantalla no manda y el escritorio completa solo.
+        // ⚠️ **La FUR y la gesta NO se copian del control prenatal**: se creyó que el escritorio las copiaba
+        // (es lo que hace WEB-6.1 con el eco pélvico), pero el relevamiento de WEB-6.2 (2026-10-13) mostró
+        // que las ventanas vivas de los ecos **no leen `pre_natal_*`**: el único código que copiaba la FUR
+        // vive en pestañas declaradas `visible = false` (`w_consulta_principal.srw:21262`, `:21358`) que nada
+        // vuelve visibles, o sea código muerto. En el escritorio la FUR se **teclea** y la gesta se **elige**
+        // en su desplegable. La web hace lo mismo (la pantalla puede sugerirlas, pero no las inventa).
         $nuevos['fecha'] ??= FechaDelConsultorio::hoyComoFecha()->toDateString();
-        $nuevos['fur'] ??= $this->furPrenatal->de((string) $consulta->reg_medico, (int) $consulta->numhistoria);
-        $nuevos['gesta'] ??= $this->gestas->actual((string) $consulta->reg_medico, (int) $consulta->numhistoria)?->clave();
 
-        // ¿El estudio dice algo? La fecha, la FUR y la gesta no cuentan: las completa el servidor.
-        $delEstudio = array_diff_key($nuevos, array_flip(self::DEL_EMBARAZO));
+        // ¿El estudio dice algo? La fecha, la FUR y la gesta no cuentan (ver NO_CUENTAN).
+        $delEstudio = array_diff_key($nuevos, array_flip(self::NO_CUENTAN));
         $conDatos = count(array_filter($delEstudio, fn ($valor) => $valor !== null && $valor !== ''));
 
         if (! QueEsUnDocumento::ecografia($conDatos)) {
