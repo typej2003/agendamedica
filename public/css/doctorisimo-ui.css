@@ -2846,3 +2846,38 @@ body.auth-pagina {
     max-width: 38rem;
     font-size: .875rem;
 }
+
+/* Los filtros de la bitácora (WEB-8.5): fechas, quién, tipo de dato y paciente en una rejilla que baja a una columna en el celular. */
+.bitacora-filtros {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    align-items: end;
+    gap: .6rem .9rem;
+}
+.bitacora-filtros .campo { min-width: 0; }
+.bitacora-filtros .form-label { margin-bottom: .2rem; font-size: .8125rem; color: var(--ds-texto-2); }
+.bitacora-filtro-paciente { grid-column: span 2; }
+.bitacora-filtros-botones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bitacora-filtros-ayuda { grid-column: 1 / -1; margin: 0; }
+.bitacora-paginas { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+@media (max-width: 575.98px) {
+    .bitacora-filtros { grid-template-columns: 1fr; }
+    .bitacora-filtro-paciente { grid-column: auto; }
+}
+
+/* La clave temporal de una cuenta nueva o restablecida (WEB-8.5): grande, de ancho fijo y que se selecciona de un clic. */
+.clave-temporal-tarjeta { border-color: var(--ds-aviso-borde); background: var(--ds-aviso-bg); }
+.clave-temporal {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio-sm);
+    background: var(--ds-superficie);
+    color: var(--ds-texto);
+    font-size: 1.15rem;
+    letter-spacing: .08em;
+    user-select: all;
+    overflow-wrap: anywhere;
+}

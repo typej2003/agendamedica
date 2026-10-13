@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Clinica\AgendaController;
+use App\Http\Controllers\Clinica\BitacoraController;
 use App\Http\Controllers\Clinica\CatalogoController;
 use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\Clinica\RecordatorioController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
+use App\Http\Controllers\Clinica\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -381,6 +383,19 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/mensajes/{plantilla}', [PlantillasDeMensajeController::class, 'guardar'])->where('plantilla', 'cita|cumple')->name('mensajes.guardar');
                 Route::post('/mensajes/{plantilla}/restablecer', [PlantillasDeMensajeController::class, 'restablecer'])->where('plantilla', 'cita|cumple')->name('mensajes.restablecer');
                 Route::post('/mensajes/{plantilla}/vista-previa', [PlantillasDeMensajeController::class, 'vistaPrevia'])->where('plantilla', 'cita|cumple')->name('mensajes.vista-previa');
+
+                // **Usuarios del consultorio** (WEB-8.5): el médico gestiona a su secretaria (alta con clave temporal, restablecer la clave,
+                // bloquear, desbloquear y quitar el acceso). Sólo del médico: la secretaría recibe 403. `{usuario}` es una cuenta
+                // solo-secretaría vinculada a los registros del médico del contexto; cualquier otra responde 404.
+                Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios');
+                Route::post('/usuarios', [UsuarioController::class, 'crear'])->name('usuarios.crear');
+                Route::post('/usuarios/{usuario}/restablecer', [UsuarioController::class, 'restablecer'])->whereNumber('usuario')->name('usuarios.restablecer');
+                Route::post('/usuarios/{usuario}/bloquear', [UsuarioController::class, 'bloquear'])->whereNumber('usuario')->name('usuarios.bloquear');
+                Route::post('/usuarios/{usuario}/desbloquear', [UsuarioController::class, 'desbloquear'])->whereNumber('usuario')->name('usuarios.desbloquear');
+                Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'quitar'])->whereNumber('usuario')->name('usuarios.quitar');
+
+                // **Bitácora** (WEB-8.5): qué cambió en el registro del médico y quién lo hizo. De sólo lectura y sólo del médico.
+                Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

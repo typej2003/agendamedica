@@ -127,32 +127,32 @@ final class ArmazonVista
             ];
         }
 
-        // «Configuración» (WEB-8.2) es un grupo para lo que el médico ajusta de su propio consultorio; hoy tiene el formato de impresión
-        // (membrete, logo, firma y sello) y los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños); WEB-8.5
-        // suma su pantalla acá. Como los catálogos, es del médico y no de la secretaría.
+        // «Configuración» (WEB-8.2) es un grupo para lo que el médico ajusta de su propio consultorio: el formato de impresión (membrete, logo,
+        // firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios (WEB-8.5: su
+        // secretaria) y la bitácora de cambios (WEB-8.5). Como los catálogos, es del médico y no de la secretaría.
         if ($this->tieneContexto() && $this->trabajaLaConsulta) {
-            $esFormato = $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.formato');
-            $esMensajes = $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.mensajes');
+            $hijos = [];
+
+            foreach ([
+                ['clinica.formato', 'Formato de impresión', 'bi-printer'],
+                ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
+                ['clinica.usuarios', 'Usuarios', 'bi-people'],
+                ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
+            ] as [$ruta, $texto, $icono]) {
+                $hijos[] = [
+                    'texto'  => $texto,
+                    'icono'  => $icono,
+                    'url'    => route($ruta),
+                    'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, $ruta),
+                ];
+            }
 
             $menu[] = [
                 'texto'  => 'Configuración',
                 'icono'  => 'bi-gear',
                 'url'    => null,
-                'activo' => $esFormato || $esMensajes,
-                'hijos'  => [
-                    [
-                        'texto'  => 'Formato de impresión',
-                        'icono'  => 'bi-printer',
-                        'url'    => route('clinica.formato'),
-                        'activo' => $esFormato,
-                    ],
-                    [
-                        'texto'  => 'Mensajes a pacientes',
-                        'icono'  => 'bi-chat-text',
-                        'url'    => route('clinica.mensajes'),
-                        'activo' => $esMensajes,
-                    ],
-                ],
+                'activo' => in_array(true, array_column($hijos, 'activo'), true),
+                'hijos'  => $hijos,
             ];
         }
 

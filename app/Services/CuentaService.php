@@ -6,6 +6,7 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -456,6 +457,170 @@ class CuentaService
             DB::table('medico_registros')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
             DB::table('medico_pacientes')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
         });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* La secretaría del consultorio (WEB-8.5)                             */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Las cuentas **solo-secretaría** vinculadas a alguno de estos `reg_medico` (`medico_registros.user_id`). Es la lista que
+     * ve un médico en Configuración > Usuarios: una cuenta con otro rol además (médico, administrador) nunca aparece, así
+     * que no hay forma de tocarla desde ahí.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico
+     * @return Collection<int,User>  con `vinculos` = los `reg_medico` de la cuenta (todos, no sólo los del médico)
+     */
+    public function secretariasDe(array $registros): Collection
+    {
+        if ($registros === []) {
+            return collect();
+        }
+
+        $ids = MedicoRegistro::whereIn('reg_medico', $registros)->whereNotNull('user_id')->pluck('user_id')->unique();
+
+        return User::whereIn('id', $ids)
+            ->get()
+            ->filter(fn (User $user) => $this->esSoloSecretaria($user))
+            ->each(function (User $user) {
+                $user->setAttribute('vinculos', MedicoRegistro::where('user_id', $user->id)->pluck('reg_medico')->filter()->unique()->values()->all());
+            })
+            ->sortBy(fn (User $user) => mb_strtolower($user->name))
+            ->values();
+    }
+
+    /** ¿La cuenta es una secretaría vinculada a alguno de estos registros (y nada más que secretaría)? */
+    public function esSecretariaDe(User $user, array $registros): bool
+    {
+        return $registros !== []
+            && $this->esSoloSecretaria($user)
+            && MedicoRegistro::where('user_id', $user->id)->whereIn('reg_medico', $registros)->exists();
+    }
+
+    /**
+     * ¿Trabaja también con registros que **no son de este médico**? Entonces la cuenta es compartida: este médico puede
+     * quitarle SU acceso pero no tocar la cuenta (ni su clave, ni su bloqueo), porque lo que le haga lo sufre el otro consultorio
+     * y, con una clave que él conoce, vería los datos del otro.
+     */
+    public function secretariaCompartida(User $user, array $registros): bool
+    {
+        return MedicoRegistro::where('user_id', $user->id)->whereNotIn('reg_medico', $registros)->exists();
+    }
+
+    /**
+     * Da de alta a la secretaría de un consultorio: cuenta nueva con rol `Secretaria`, clave temporal (que debe cambiar al
+     * entrar) y acceso a UN `reg_medico`. Un correo que ya tiene cuenta se rechaza: nunca se "adopta" la cuenta de otra
+     * persona.
+     *
+     * @return array{user: User, clave: string} la clave en claro SOLO se devuelve acá (para mostrarla una vez)
+     */
+    public function crearSecretaria(string $nombre, string $email, string $regMedico, ?string $clave = null): array
+    {
+        $nombre = trim($nombre);
+        if ($nombre === '') {
+            throw ValidationException::withMessages(['name' => 'El nombre es obligatorio.']);
+        }
+
+        $regMedico = trim($regMedico);
+        if ($regMedico === '' || ! (Medico::where('reg_medico', $regMedico)->exists() || MedicoRegistro::where('reg_medico', $regMedico)->exists())) {
+            throw ValidationException::withMessages(['reg_medico' => 'Ese consultorio no existe.']);
+        }
+
+        $email = $this->normalizarCorreo($email);
+        try {
+            $this->exigirCorreoLibre($email);
+        } catch (ValidationException $e) {
+            // Nunca se adopta la cuenta de otra persona: el correo ya está en uso y se pide otro.
+            throw ValidationException::withMessages([
+                'email' => 'Ese correo ya tiene una cuenta (de otra persona o de otro consultorio) y no se puede reutilizar. Usa otro correo.',
+            ]);
+        }
+        $clave = $this->claveParaAlta($clave);
+
+        $user = DB::transaction(function () use ($nombre, $email, $clave, $regMedico) {
+            $user = User::create([
+                'name'                 => $nombre,
+                'email'                => $email,
+                'password'             => Hash::make($clave),
+                'must_change_password' => true,
+                'is_active'            => true,
+            ]);
+            $user->assignRole($this->rol('Secretaria'));
+            MedicoRegistro::create(['user_id' => $user->id, 'reg_medico' => $regMedico]);
+
+            return $user;
+        });
+
+        return ['user' => $user, 'clave' => $clave];
+    }
+
+    /** Clave temporal nueva para la secretaría (la misma regla que el panel). Una cuenta compartida no se toca. */
+    public function restablecerClaveDeSecretaria(User $secretaria, array $registros): string
+    {
+        $this->exigirSecretariaPropia($secretaria, $registros, 'restablecer su clave');
+
+        return $this->resetearClave($secretaria);
+    }
+
+    /** Bloquea la cuenta de la secretaría (la misma regla que el panel). Una cuenta compartida no se toca. */
+    public function bloquearSecretaria(User $secretaria, array $registros, string $motivo = '', ?User $actor = null): void
+    {
+        $this->exigirSecretariaPropia($secretaria, $registros, 'bloquear su cuenta');
+        $this->bloquear($secretaria, $motivo, $actor);
+    }
+
+    public function desbloquearSecretaria(User $secretaria, array $registros): void
+    {
+        $this->exigirSecretariaPropia($secretaria, $registros, 'desbloquear su cuenta');
+        $this->desbloquear($secretaria);
+    }
+
+    /**
+     * Le quita a la secretaría el acceso a los registros de ESTE médico. Nada se borra: si todavía trabaja con otro
+     * consultorio la cuenta sigue viva para él; si no le queda ningún acceso, la cuenta queda inactiva (sin sesiones ni
+     * tokens), lista para que un administrador la reutilice.
+     *
+     * @return array{activa: bool}  si la cuenta sigue activa porque conserva otros accesos
+     */
+    public function quitarAccesoDeSecretaria(User $secretaria, array $registros): array
+    {
+        if (! $this->esSecretariaDe($secretaria, $registros)) {
+            throw ValidationException::withMessages(['cuenta' => 'Esa cuenta no es una secretaría de tu consultorio.']);
+        }
+
+        return DB::transaction(function () use ($secretaria, $registros) {
+            MedicoRegistro::where('user_id', $secretaria->id)->whereIn('reg_medico', $registros)->delete();
+
+            if (MedicoRegistro::where('user_id', $secretaria->id)->exists()) {
+                return ['activa' => true];
+            }
+
+            $secretaria->forceFill(['is_active' => false, 'blocked_reason' => 'Sin acceso a ningún consultorio.'])->save();
+            $secretaria->tokens()->delete();
+
+            return ['activa' => false];
+        });
+    }
+
+    /** Solo el rol `Secretaria` (ni médico, ni administrador): lo único que un médico puede gestionar. */
+    private function esSoloSecretaria(User $user): bool
+    {
+        $roles = $user->getRoleNames();
+
+        return $roles->count() === 1 && $roles->first() === 'Secretaria' && ! Medico::where('user_id', $user->id)->exists();
+    }
+
+    private function exigirSecretariaPropia(User $secretaria, array $registros, string $accion): void
+    {
+        if (! $this->esSecretariaDe($secretaria, $registros)) {
+            throw ValidationException::withMessages(['cuenta' => 'Esa cuenta no es una secretaría de tu consultorio.']);
+        }
+
+        if ($this->secretariaCompartida($secretaria, $registros)) {
+            throw ValidationException::withMessages([
+                'cuenta' => "No puedes {$accion}: también trabaja con otro consultorio. Puedes quitarle tu acceso y pedirle a un administrador que gestione su cuenta.",
+            ]);
+        }
     }
 
     /* ------------------------------------------------------------------ */
