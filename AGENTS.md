@@ -7,8 +7,11 @@ y entorno) y la wiki indicada al final: este repo no lleva la especificación fu
 
 El working tree está en la rama **`desarrollo`** y el código está presente. Dos advertencias:
 
-- **La rama `main` de este repo contiene únicamente el archivo `leeme`.** No es una base limpia ni una
-  versión anterior útil: no cambies a `main` esperando encontrar el backend.
+- **Las dos ramas llevan el mismo código.** `main` y `desarrollo` tienen el **árbol idéntico** desde el
+  merge `7429df8` (2026-10-13): `desarrollo` es donde se trabaja y `main` es la punta publicada, que se
+  actualiza mergeando. (`main` **no** es "sólo el `leeme`": eso decía esta guía y era falso — antes del
+  merge tenía 354 archivos y su historial propio, con el fix de `sync_credentials.expires_at` del 07/10, que
+  el merge conservó.) Pushear `main` o `desarrollo` da lo mismo, pero **la rama de trabajo es `desarrollo`**.
 - Remoto: `github.com/typej2003/agendamedica` — es el repo compartido con el sistema legado, de ahí el
   nombre.
 
