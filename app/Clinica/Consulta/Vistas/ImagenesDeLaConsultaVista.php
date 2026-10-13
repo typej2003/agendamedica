@@ -81,15 +81,19 @@ final class ImagenesDeLaConsultaVista
                     'fecha' => FechaClinica::formato($imagen->fecha),
                     'nombre' => $imagen->nombre,
                     'puedeVerse' => (bool) $imagen->enElServidor,
+                    // HEIC/HEIF: el navegador no lo muestra, se descarga (WEB-T.1).
+                    'esDescarga' => (bool) ($imagen->descarga ?? false),
                     'url' => $imagen->enElServidor ? ($this->urlDescargar)($id) : null,
                     'urlQuitar' => ($this->urlQuitar)($id),
                     'origen' => $imagen->enElServidor
                         ? 'En el servidor'
                         : 'En el disco del consultorio',
                     'detalle' => $imagen->enElServidor
-                        ? 'Se abre en una pestaña nueva; sólo la ve el médico dueño de la historia.'
+                        ? (($imagen->descarga ?? false)
+                            ? 'Es una foto HEIC: el navegador no la muestra, se descarga. Sólo la baja el médico dueño de la historia.'
+                            : 'Se abre en una pestaña nueva; sólo la ve el médico dueño de la historia.')
                         : 'Quedó en la PC donde se cargó (el escritorio guarda la ruta del archivo). '
-                            . 'Copiarla a la nube es un proceso aparte.',
+                            . 'Todavía no se subió a la nube (se sube con la herramienta subir-imagenes) o se omitió por no ser una imagen.',
                 ];
             })
             ->values()
@@ -148,7 +152,7 @@ final class ImagenesDeLaConsultaVista
 
         return 'Las imágenes marcadas «En el disco del consultorio» las cargó el escritorio: la base '
             . 'guarda la ruta del archivo en esa PC, no el archivo. Se listan para que no se pierdan de '
-            . 'vista, pero no se pueden abrir desde la web.';
+            . 'vista, pero no se pueden abrir desde la web hasta que el consultorio corra la herramienta que sube las imágenes.';
     }
 
     /** La ayuda del campo del archivo: qué se acepta y qué pasa con el nombre del archivo. */

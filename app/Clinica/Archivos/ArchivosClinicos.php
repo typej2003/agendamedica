@@ -283,6 +283,110 @@ final class ArchivosClinicos
         return $nombre === '' ? null : $nombre;
     }
 
+    // ------------------------------------------------------------------------- Importación (WEB-T.1)
+
+    /**
+     * Las extensiones de lo que **se importa** desde el disco de la PC del consultorio (WEB-T.1): las de la
+     * subida de la web **más HEIC/HEIF** (las fotos de un celular). El formulario de la web **no** las acepta
+     * (`EXTENSIONES` y `mimes()` no cambiaron): un HEIC no se muestra en el navegador y sólo se importa para que
+     * el médico no pierda el archivo; se ofrece como descarga.
+     */
+    public const EXTENSIONES_IMPORTADAS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'];
+
+    /** El tope de un archivo importado, en bytes (el mismo de la subida de la web). */
+    public static function maximoBytes(): int
+    {
+        return self::MAXIMO_KB * 1024;
+    }
+
+    /**
+     * Los MIME reales que se importan: los de la web y los dos de HEIC/HEIF.
+     *
+     * @return array<int,string>
+     */
+    public static function mimesImportados(): array
+    {
+        return array_merge(self::mimes(), ['image/heic', 'image/heif']);
+    }
+
+    /**
+     * El MIME que se manda al **servir** un archivo según la extensión con la que se guardó (la fija el
+     * servidor, desde el contenido). `Storage::response()` lo deduce de `finfo`, que según la versión de
+     * libmagic da `application/octet-stream` para un HEIC: se dice explícito.
+     */
+    public static function tipoPorExtension(?string $ruta): ?string
+    {
+        return match (strtolower(pathinfo((string) $ruta, PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'gif'         => 'image/gif',
+            'webp'        => 'image/webp',
+            'heic'        => 'image/heic',
+            'heif'        => 'image/heif',
+            default       => null,
+        };
+    }
+
+    /** ¿El navegador no muestra este archivo y hay que ofrecerlo como descarga (HEIC/HEIF)? */
+    public static function esDeDescarga(?string $ruta): bool
+    {
+        return in_array(strtolower(pathinfo((string) $ruta, PATHINFO_EXTENSION)), ['heic', 'heif'], true);
+    }
+
+    /**
+     * La carpeta de lo que se importó de la PC: `importadas/<reg_medico>/<tabla>/<año-mes>`. Separada de
+     * `examenes/` (lo que sube la web) para que una auditoría o una copia de seguridad distinga el origen sin
+     * leer la base.
+     */
+    public static function carpetaImportada(string $regMedico, string $tabla, ?string $mes = null): string
+    {
+        $medico = preg_replace('/[^A-Za-z0-9._-]/', '_', $regMedico) ?: 'sin-registro';
+        $tablaLimpia = preg_replace('/[^A-Za-z0-9._-]/', '_', $tabla) ?: 'sin-tabla';
+
+        return 'importadas/' . $medico . '/' . $tablaLimpia . '/' . ($mes ?? now()->format('Y-m'));
+    }
+
+    /**
+     * La ruta (relativa al disco) de un archivo importado: carpeta + 40 caracteres al azar + **la extensión del
+     * contenido** (nunca la del nombre de la PC). Se comprueba que quede dentro de la carpeta, como `ruta()`.
+     */
+    public static function rutaImportada(string $regMedico, string $tabla, string $extension, ?string $mes = null): string
+    {
+        if (! in_array($extension, self::EXTENSIONES_IMPORTADAS, true)) {
+            throw new InvalidArgumentException('La extensión no está entre las que se importan.');
+        }
+
+        $carpeta = self::carpetaImportada($regMedico, $tabla, $mes);
+        $ruta = $carpeta . '/' . Str::random(40) . '.' . $extension;
+
+        if (! self::dentroDe($ruta, $carpeta)) {
+            throw new InvalidArgumentException('La ruta del archivo se sale de la carpeta del médico.');
+        }
+
+        return $ruta;
+    }
+
+    /**
+     * El nombre con el que se **muestra y se descarga** un archivo importado de la PC (WEB-T.1): el que tenía en el
+     * consultorio, limpio (sin barras, comillas ni caracteres de control: va dentro de un `Content-Disposition`) y con la
+     * extensión del contenido guardado si la del nombre original es otra (`escaneo.dat` que es un JPG se baja `escaneo.dat.jpg`).
+     */
+    public static function nombreDeDescarga(string $nombreOriginal, string $rutaGuardada): string
+    {
+        $limpio = preg_replace('~[[:cntrl:]"\\\\/:*?<>|;]+~u', '_', trim($nombreOriginal)) ?? '';
+        $limpio = mb_substr(trim($limpio, " ._"), 0, 120);
+
+        $extension = strtolower(pathinfo($rutaGuardada, PATHINFO_EXTENSION));
+        if ($limpio === '') {
+            return basename($rutaGuardada);
+        }
+
+        $propia = strtolower(pathinfo($limpio, PATHINFO_EXTENSION));
+        $equivalentes = $extension === 'jpg' ? ['jpg', 'jpeg'] : ($extension === 'heic' ? ['heic', 'heif'] : [$extension]);
+
+        return in_array($propia, $equivalentes, true) ? $limpio : $limpio . '.' . $extension;
+    }
+
     /** ¿Esta ruta es una de las que guarda la web (relativa al disco) y no una del disco de la PC? */
     public static function esRutaDelDisco(?string $ruta): bool
     {

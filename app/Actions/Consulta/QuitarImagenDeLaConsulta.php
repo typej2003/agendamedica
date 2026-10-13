@@ -4,6 +4,7 @@ namespace App\Actions\Consulta;
 
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Models\ImagenConsulta;
+use App\Models\ImagenDeLaPc;
 use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -49,6 +50,10 @@ final class QuitarImagenDeLaConsulta
         $regMedico = $imagen->reg_medico;
 
         $imagen->delete();
+
+        // Si el archivo venía de la PC del consultorio (WEB-T.1, `subir-imagenes`), su registro de importación ya no
+        // corresponde a ninguna fila: se saca para que `imagenes:estado` no cuente un archivo que acaba de borrarse.
+        ImagenDeLaPc::where('reg_medico', $regMedico)->where('tabla', 'imagen_consulta')->where('fila_id', $id)->delete();
 
         // El archivo, después de la fila: si la fila no se pudo borrar, el archivo tiene que seguir (es lo
         // que la fila referencia). Al revés —archivo primero— una fila viva apuntaría a un archivo que ya

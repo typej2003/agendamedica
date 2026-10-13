@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ConfiguracionMedicoController;
 use App\Http\Controllers\Api\MotivoConsultaController;
 use App\Http\Controllers\Api\CargaInicialController;
 use App\Http\Controllers\Api\CambiosEscritorioController;
+use App\Http\Controllers\Api\ImagenesPcController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
 
@@ -66,6 +67,19 @@ Route::prefix('sync/cambios')
     ->group(function () {
         Route::post('/estado', [CambiosEscritorioController::class, 'estado']);
         Route::post('/subir', [CambiosEscritorioController::class, 'subir']);
+    });
+
+// Imágenes clínicas que el escritorio guarda como RUTA del disco de la PC (WEB-T.1): la herramienta
+// `bridge/subir-imagenes` pide la lista de pendientes, sube cada archivo y registra lo que no pudo. Misma autenticación
+// que el resto del sync (`SyncAuthService`). Límite propio y con prefijo (un `throttle` sin nombre comparte contador con
+// los demás grupos, trampa 78): 300 por minuto alcanza de sobra para 1 o 2 archivos a la vez.
+Route::prefix('sync/imagenes')
+    ->withoutMiddleware('throttle:api')
+    ->middleware('throttle:300,1,imagenes-pc')
+    ->group(function () {
+        Route::post('/pendientes', [ImagenesPcController::class, 'pendientes']);
+        Route::post('/subir', [ImagenesPcController::class, 'subir']);
+        Route::post('/omitir', [ImagenesPcController::class, 'omitir']);
     });
 
 // ** App para notificación médica ** //

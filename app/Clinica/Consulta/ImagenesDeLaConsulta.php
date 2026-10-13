@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta;
 
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Models\ImagenConsulta;
+use App\Models\ImagenDeLaPc;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -55,13 +56,16 @@ final class ImagenesDeLaConsulta
      */
     public function deLaConsulta(string $regMedico, int $nrohistoria, int $nroconsulta): Collection
     {
-        return ImagenConsulta::where('reg_medico', $regMedico)
+        $filas = ImagenConsulta::where('reg_medico', $regMedico)
             ->where('nrohistoria', $nrohistoria)
             ->where('nroconsulta', $nroconsulta)
             ->orderBy('orden')
             ->orderByDesc('id')
-            ->get()
-            ->map(fn (ImagenConsulta $imagen) => $this->fila($imagen));
+            ->get();
+
+        $originales = $this->nombresOriginales($regMedico, $filas->pluck('id')->all());
+
+        return $filas->map(fn (ImagenConsulta $imagen) => $this->fila($imagen, $originales[(int) $imagen->id] ?? null));
     }
 
     /**
@@ -92,7 +96,29 @@ final class ImagenesDeLaConsulta
             ->where('nroconsulta', $nroconsulta)
             ->find($imagenId);
 
-        return $imagen === null ? null : $this->fila($imagen);
+        return $imagen === null
+            ? null
+            : $this->fila($imagen, $this->nombresOriginales((string) $imagen->reg_medico, [(int) $imagen->id])[(int) $imagen->id] ?? null);
+    }
+
+    /**
+     * El nombre que tenía el archivo en la PC del consultorio, para las filas que `subir-imagenes` migró (WEB-T.1): lo que
+     * el médico reconoce («20211025_121548.jpg») en vez del nombre aleatorio que el servidor le puso al archivo. Sale del
+     * registro de importación; sólo el nombre, nunca la ruta de la PC ni la del disco.
+     *
+     * @param  array<int,int>  $ids
+     * @return array<int,string>  id de la fila => nombre
+     */
+    private function nombresOriginales(string $regMedico, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return ImagenDeLaPc::where('reg_medico', $regMedico)->where('tabla', 'imagen_consulta')
+            ->where('estado', ImagenDeLaPc::SUBIDA)->whereIn('fila_id', $ids)->pluck('ruta_pc', 'fila_id')
+            ->map(fn ($ruta) => ArchivosClinicos::nombreVisible($ruta))
+            ->filter()->all();
     }
 
     /**
@@ -108,7 +134,7 @@ final class ImagenesDeLaConsulta
      * a la que alguien le hubiera puesto un `disco` a mano no se sirve igual, porque una ruta absoluta
      * (`C:\…` o `/…`) nunca es una ruta de este disco.
      */
-    public function fila(ImagenConsulta $imagen): object
+    public function fila(ImagenConsulta $imagen, ?string $nombreOriginal = null): object
     {
         $disco = trim((string) $imagen->disco);
         $imagen_guardada = trim((string) $imagen->imagen);
@@ -127,9 +153,15 @@ final class ImagenesDeLaConsulta
             // para poder mudar los archivos de disco sin tocar las filas viejas.
             'disco' => $enElServidor ? $disco : null,
             'archivo' => $enElServidor ? $imagen_guardada : null,
+            // Un HEIC/HEIF (WEB-T.1: las fotos de un celular que subió `subir-imagenes`) no se muestra en el
+            // navegador: se ofrece como descarga, con su Content-Type real.
+            'descarga' => $enElServidor && ArchivosClinicos::esDeDescarga($imagen_guardada),
+            'tipo' => $enElServidor ? ArchivosClinicos::tipoPorExtension($imagen_guardada) : null,
             // El nombre del archivo tal como lo tenía el consultorio: lo único que el médico reconoce de
             // una imagen vieja y lo único que se muestra (nunca la ruta del sistema).
-            'nombre' => ArchivosClinicos::nombreVisible($imagen_guardada),
+            'nombre' => $enElServidor && $nombreOriginal !== null
+                ? ArchivosClinicos::nombreDeDescarga($nombreOriginal, $imagen_guardada)
+                : ArchivosClinicos::nombreVisible($imagen_guardada),
         ];
     }
 

@@ -151,12 +151,17 @@ class ConsultaImagenesController extends Controller
 
         abort_unless($disco->exists($fila->archivo), 404);
 
-        return $disco->response($fila->archivo, $fila->nombre, [
-            'Content-Disposition' => 'inline; filename="' . $fila->nombre . '"',
+        // Un HEIC/HEIF (WEB-T.1) no se muestra en el navegador: va como descarga y con su Content-Type real (finfo,
+        // según la libmagic, lo daría como `application/octet-stream`). El resto se ve en la pestaña, como siempre.
+        $encabezados = $fila->descarga ? ['Content-Type' => $fila->tipo ?: 'application/octet-stream'] : [];
+
+        // Laravel arma el `Content-Disposition` con el nombre ya limpio y su versión ASCII de respaldo (un nombre con
+        // `ñ` o acentos, como el que tenía el archivo en la PC, no rompe el encabezado).
+        return $disco->response($fila->archivo, $fila->nombre, $encabezados + [
             // Una imagen clínica no se cachea en un proxy compartido ni se indexa.
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ], $fila->descarga ? 'attachment' : 'inline');
     }
 
     /** La vuelta a la sección, que es donde vive todo esto. */

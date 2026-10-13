@@ -32,7 +32,7 @@ sola —migrada y con los seeders— antes del primer test, así que no hay ning
 Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
-corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición, **tras WEB-5.5b (2026-10-12, los formatos en blanco), es 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
+corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), es 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
 medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1365 en
 verde y 3 que fallan**; **la última (2026-10-12, tras WEB-5.4, laboratorio y estudios) es 1514 en verde y 3 que fallan** (1453 + 61 nuevos; las 3 son las de WhatsApp; antes, tras WEB-5.3b, 1449; tras WEB-8.1c, 1400) (1365 + 41 nuevos − 6 del ViewModel anterior que se reemplazó; las 3 son las de WhatsApp) (2026-10-12, tras **WEB-8.2**: 1321 + 35 + 9; antes 1319 tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
@@ -386,6 +386,24 @@ Hasta el 2026-09-27 los tres `.../sincronizar` no tenían ninguna autenticación
 |---|---|---|
 | `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
+
+*Imágenes de la PC del consultorio (WEB-T.1, 2026-10-12)*: la herramienta `../bridge/subir-imagenes.exe` (Node, sin dependencias; instructivo
+`../bridge/LEEME-subir-imagenes.md`) sube los archivos cuya **ruta** guarda el escritorio. Misma autenticación del sync (`SyncAuthService`: credencial por equipo
+o `X-API-KEY` + `reg_medico` en el cuerpo; 403 `medico_ajeno`, 402 servicio vencido), `throttle:300,1,imagenes-pc`, controlador `ImagenesPcController`:
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| `POST` | `/api/sync/imagenes/pendientes` | `{reg_medico?, cursor?, limite?, reintentar_omitidas?, tabla?}` → `items[{tabla,fila_id,columna,ruta_pc}]`, `siguiente` (cursor), `pendientes_total` (1.ª página), `tope_bytes`. Sólo valores con ruta; excluye lo `subida`/`omitida` para el valor actual. |
+| `POST` | `/api/sync/imagenes/subir` | multipart: `archivo` + `tabla`, `fila_id`, `columna`, `ruta_pc`, `sha256`. Valida lista blanca, fila del médico (404 `fila_inexistente`), ruta vigente (409 `fila_cambio`), tope 10 MB (422 `demasiado_grande`), **tipo por cabecera** (422 `tipo_no_permitido`, con HEIC), sha256 (422 `sha256_no_coincide`), límites de PHP (413 `limite_del_servidor`). Idempotente (`ya_estaba`), `reemplazada` si cambió el contenido, borra el archivo si la base falla. |
+| `POST` | `/api/sync/imagenes/omitir` | `{items:[{tabla,fila_id,columna,ruta_pc,motivo}]}` (≤ 200): registra `omitida` con motivo (`no_existe`, `tipo_no_permitido`, `demasiado_grande`, `no_legible`, `ruta_no_valida`, `otro`); nunca degrada lo ya subido. |
+
+Tabla **nueva** `imagenes_de_la_pc` (`App\Models\ImagenDeLaPc`; única por `reg_medico`+`tabla`+`fila_id`+`columna`), lista blanca en `config/imagenes_pc.php`
+(`App\Sync\ImagenesPc\{CatalogoDeImagenes,ReferenciasDeImagenes}`), Actions `App\Actions\Imagenes\{SubirImagenDeLaPc,OmitirImagenDeLaPc,ResultadoDeImagenDeLaPc}`,
+detección `App\Clinica\Archivos\TipoRealDeImagen` y el lector `App\Clinica\Archivos\ImagenesMigradas` (fila legada → archivo en la nube, para cuando la web muestre
+`imagen_pacientes`/`imagenes`/`foto_pac`). Los archivos van a `storage/app/clinica/importadas/<reg_medico>/<tabla>/<año-mes>/<40 al azar>.<ext del contenido>`. Sólo
+`imagen_consulta` se reescribe (`imagen` relativa + `disco`, rastro `updated` por columna con `source = migracion`); la web muestra el nombre que tenía en la PC y un HEIC
+como descarga (`ConsultaImagenesController::descargar`); quitar una imagen migrada borra también su registro. Comando **`php artisan imagenes:estado --reg-medico=<m>|--todos`**
+(referencias / subidas / omitidas por motivo / pendientes / peso; sin escribir). Tests: `ImagenesDeLaPcTest` (30), `ImagenesDeLaPcWebTest` (5), `Unit/TipoRealDeImagenTest` (7). Ver las trampas 83 a 86.
 
 *Restauración de una base desde la nube* (una sola vez, para cuando se pierde la PC). **No** es la
 bajada: `cambios/bajar` (Fase 2.B) **está descartada** (decisión final del usuario, 2026-10-11: el

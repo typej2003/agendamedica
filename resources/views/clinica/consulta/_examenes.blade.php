@@ -99,7 +99,12 @@
                             <p class="texto-tenue small mb-0">{{ $imagen['detalle'] }}</p>
                         </div>
                         <div class="acciones-fila">
-                            @if ($imagen['puedeVerse'])
+                            @if ($imagen['puedeVerse'] && $imagen['esDescarga'])
+                                <a class="btn btn-outline-secondary btn-sm" href="{{ $imagen['url'] }}" download
+                                   aria-label="Descargar la imagen {{ $imagen['nombre'] ?: $imagen['id'] }}">
+                                    <i class="bi bi-download" aria-hidden="true"></i> Descargar
+                                </a>
+                            @elseif ($imagen['puedeVerse'])
                                 <a class="btn btn-outline-secondary btn-sm" href="{{ $imagen['url'] }}"
                                    target="_blank" rel="noopener"
                                    aria-label="Ver la imagen {{ $imagen['nombre'] ?: $imagen['id'] }}">
