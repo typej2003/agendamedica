@@ -266,7 +266,8 @@ ata por `data-consulta-fechas`). El panel pasa de 11 a **12 de 13**. Las **cuatr
 (*Prenatal*, *Laboratorio*, *Controles* y *Reporte*). ⚠️ **Tres tablas que no son las que parecen** (las tres de
 la solapa vieja y oculta, sin datos en el dump): `prena_exames_b` (no `pre_natal_examenes`),
 `pre_natal_desarrollo_fino` (no `pre_natal_desarrollo`) y el DataWindow `d_pre_natal_observa_2.srd` (no el
-huérfano sin `_2`): ver la **trampa 99**. **Falta** el verificador en Chrome de la sección.
+huérfano sin `_2`): ver la **trampa 99**. Verificación en Chrome:
+`../.agent-tools/verificar-consulta-prenatal-web.js`.
 
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
