@@ -34,6 +34,6 @@ final class EcoObstetricoTerceroVista extends EcoObstetricoVista
 
     public function icono(): string
     {
-        return TiposDeEstudio::icono(TiposDeEstudio::OBSTETRICO_TERCERO);
+        return TiposDeEstudio::icono(TiposDeEstudio::TERCERO);
     }
 }
