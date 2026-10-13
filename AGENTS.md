@@ -269,6 +269,25 @@ la solapa vieja y oculta, sin datos en el dump): `prena_exames_b` (no `pre_natal
 huérfano sin `_2`): ver la **trampa 99**. Verificación en Chrome:
 `../.agent-tools/verificar-consulta-prenatal-web.js`.
 
+Lo que **WEB-6.2 (2026-10-13)**, el **eco obstétrico** —el segundo de F6—, agregó: los **dos tipos nuevos de la
+sección de estudio** (`TiposDeEstudio::{OBSTETRICO,TERCERO}`; la clave va **sin guion** para no tocar el
+`where('tipo','[a-z]+')` de la ruta), `Consulta/{GuardarEcoObstetricoBase,GuardarEcoObstetrico,GuardarEcoObstetricoTercero}`
+(la regla de guardado **una sola vez** en la base abstracta —una fila por consulta, sólo lo que cambió, rastro
+`source = web`, y un eco sin datos no es documento— con dos subclases finas que dicen sólo su tabla, su modelo, su
+mapa y su lectura), `App\Clinica\Consulta\{EcoObstetrico,EcoObstetricoTercero,MapaDelEcoObstetrico}` (las dos
+lecturas —clave `historia` + `consulta`, una fila por consulta— y sus **mapas del dato**: 38 columnas en seis
+bloques el del 1.er trimestre y 55 el del 2.º/3.er, sacados del DataWindow **vivo** de cada uno —trampa 102—, con
+los códigos de sus desplegables), `Vistas/{EcoObstetricoVista,EcoObstetricoTerceroVista}` (el segundo **hereda**
+del primero: mismo formulario por bloques, otro mapa y otro título), los **parciales** `_estudio-obstetrico` y
+`_estudio-tercero` (el contenedor arma el nombre del parcial con la clave del tipo: **un tipo nuevo necesita el
+suyo**, trampa 103) y el **motor de las dos hojas** (`DocumentoImpreso::{ECO_OBSTETRICO,ECO_OBSTETRICO_TERCERO}` +
+`SolicitudesParaImprimir::hojaDelEcoObstetrico`, parametrizada por mapa/clave/sufijo: «ECOSONOGRAFÍA OBSTÉTRICA» +
+PRIMER o SEGUNDO/TERCER TRIMESTRE). ⚠️ **El 2.º y el 3.er trimestre son la misma tabla y la misma pantalla** en el
+escritorio (cargar el 3.º pisa el 2.º) y **no hay fetos múltiples**: el selector de gemelos no tiene respaldo (el
+`retrieve` de la ventana pasa tres argumentos a un DataWindow de dos, y el dump lo confirma). **Falta** el formato
+en blanco del obstétrico (el escritorio lo tiene: `d_eco_obstetrico_print_vacio_2` y
+`d_eco_obstetrico_trimestral_print_vacio`) y el verificador en Chrome.
+
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
