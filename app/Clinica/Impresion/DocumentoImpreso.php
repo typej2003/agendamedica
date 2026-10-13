@@ -84,8 +84,28 @@ final class DocumentoImpreso
         self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
     ];
 
+    /**
+     * El **sufijo del título** de los informes que lo llevan (WEB-6.2): el eco obstétrico no se llama sólo
+     * «ECOSONOGRAFÍA OBSTÉTRICA», sino que dice el trimestre. En el escritorio el sufijo vive en el propio
+     * DataWindow de impresión (`PRIMER TRIMESTRE` / `SEGUNDO Y TERCER TRIMESTRE`), así que la hoja **y su
+     * formato en blanco** lo comparten desde acá: sin esto, los dos formatos en blanco del obstétrico
+     * saldrían impresos con el mismo encabezado.
+     *
+     * @var array<string,string>
+     */
+    public const SUFIJOS = [
+        self::ECO_OBSTETRICO => ' · PRIMER TRIMESTRE',
+        self::ECO_OBSTETRICO_TERCERO => ' · SEGUNDO/TERCER TRIMESTRE',
+    ];
+
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
     public const SEPARADOR_DE_ITEMS = ' · ';
+
+    /** El título con el que sale impreso un documento: el suyo y, si lo lleva, su sufijo (el trimestre). */
+    public static function tituloConSufijo(string $clave): string
+    {
+        return self::TITULOS[$clave][0] . (self::SUFIJOS[$clave] ?? '');
+    }
 
     /**
      * @param  string  $titulo  lo que se imprime arriba del cuerpo (`CONSTANCIA`, `REPOSO MÉDICO`…)

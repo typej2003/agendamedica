@@ -93,7 +93,7 @@ class ConsultaEstudioController extends Controller
 
         return $destino->with('estado', $resultado->sinCambios()
             ? 'El eco no tenía cambios.'
-            : ($esObstetrico ? 'Eco obstétrico guardado.' : 'Eco pélvico guardado.'));
+            : (($esObstetrico || $esTercero) ? 'Eco obstétrico guardado.' : 'Eco pélvico guardado.'));
     }
 
     /**

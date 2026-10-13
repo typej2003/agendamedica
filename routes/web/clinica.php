@@ -395,7 +395,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/formato', [FormatoDeImpresionController::class, 'index'])->name('formato');
                 Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
                 // **Formatos en blanco** (WEB-5.5b): cada documento sin datos de paciente, para rellenar a mano. Sólo lee; la clave la acota el `where`.
-                Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z]+')->name('formato.en-blanco');
+                // El guion entra en la clave (`eco-obstetrico` y su hermano del 3.er trimestre, WEB-6.2): con `[a-z]+` la ruta no matcheaba y salía un 404 antes de llegar al controlador.
+                Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z][a-z-]*')->name('formato.en-blanco');
                 Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
                 Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
                 Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');

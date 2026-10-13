@@ -161,15 +161,15 @@ class FormatosEnBlancoWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConFormato();
         $web = $this->como($user, $medico, $gineco);
 
-        // Cada formato en blanco imprime el título de la hoja real (`DocumentoImpreso::TITULOS`). Se saltea
-        // lo que no tiene formato en blanco: el eco pélvico (WEB-6.1) todavía no lo tiene, y el récipe
-        // tiene su propia familia de títulos.
+        // Cada formato en blanco imprime el título de la hoja real (`DocumentoImpreso::tituloConSufijo`, que
+        // agrega el trimestre de los ecos). Se saltea lo que no tiene formato en blanco: el eco pélvico
+        // (WEB-6.1) todavía no lo tiene, y el récipe tiene su propia familia de títulos.
         foreach (array_keys(DocumentoImpreso::TITULOS) as $clave) {
             if (! FormatosEnBlanco::existe($clave)) {
                 continue;
             }
 
-            $titulo = DocumentoImpreso::TITULOS[$clave][0];
+            $titulo = DocumentoImpreso::tituloConSufijo($clave);
 
             $html = $web->get($this->url($clave))->assertOk()->getContent();
             $this->assertStringContainsString('>' . $titulo . '<', $html, "El título de {$clave}.");
@@ -259,7 +259,7 @@ class FormatosEnBlancoWebTest extends TestCase
 
     // ------------------------------------------------------------------------------- El acceso y lo real
 
-    public function test_la_pantalla_del_formato_ofrece_los_nueve_formatos_en_blanco(): void
+    public function test_la_pantalla_del_formato_ofrece_los_once_formatos_en_blanco(): void
     {
         [$user, $medico, $gineco] = $this->medicoConFormato();
 
@@ -269,7 +269,9 @@ class FormatosEnBlancoWebTest extends TestCase
         foreach (FormatosEnBlanco::claves() as $clave) {
             $this->assertStringContainsString($this->url($clave), $html);
         }
-        $this->assertCount(9, FormatosEnBlanco::catalogo());
+        $this->assertCount(11, FormatosEnBlanco::catalogo());
+        // El del eco obstétrico es el único documento de la hoja real que sigue sin formato en blanco.
+        $this->assertStringNotContainsString($this->url(DocumentoImpreso::ECO_PELVICO), $html);
     }
 
     public function test_las_hojas_reales_no_cambian(): void

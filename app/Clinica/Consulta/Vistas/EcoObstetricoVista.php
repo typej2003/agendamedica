@@ -71,6 +71,12 @@ class EcoObstetricoVista
             $campos = [];
             foreach ($grupo['campos'] as $campo) {
                 $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
+                // Un desplegable necesita sus opciones con la vacía adelante —y el código desconocido del
+                // escritorio al final—: sin eso el navegador manda su primera opción y un eco recién abierto
+                // guardaba «Sí» en todas sus casillas (la misma regla del eco pélvico).
+                $campo['opciones'] = ($campo['tipo'] ?? 'texto') === 'opciones'
+                    ? OpcionesDelDesplegable::de($campo, $campo['valor'])
+                    : [];
                 $campos[] = $campo;
             }
 

@@ -193,24 +193,14 @@ final class EcoGinecologicoVista
      * Las opciones del desplegable: una vacía para poder dejarlo en blanco, las del DataWindow, y **el
      * valor guardado si no está entre ellas** (los datos del escritorio pueden traer cualquier código).
      *
+     * La regla es la misma en los tres estudios del ítem 5 y vive en `OpcionesDelDesplegable`.
+     *
      * @param  array<string,mixed>  $campo
      * @return array<int,array{valor:string,texto:string}>
      */
     private function opciones(array $campo, string $valor): array
     {
-        $opciones = [['valor' => '', 'texto' => '—']];
-        $conocido = false;
-
-        foreach ($campo['opciones'] as $opcion) {
-            $opciones[] = $opcion;
-            $conocido = $conocido || $opcion['valor'] === $valor;
-        }
-
-        if ($valor !== '' && ! $conocido) {
-            $opciones[] = ['valor' => $valor, 'texto' => $valor . ' (del escritorio)'];
-        }
-
-        return $opciones;
+        return OpcionesDelDesplegable::de($campo, $valor);
     }
 
     /** La ayuda del campo, con el agregado de la FUR cuando el valor lo puso el control prenatal. */

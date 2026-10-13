@@ -799,19 +799,20 @@ final class SolicitudesParaImprimir
      */
     private function ecoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
     {
-        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetrico::grupos(), DocumentoImpreso::ECO_OBSTETRICO, ' · PRIMER TRIMESTRE');
+        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetrico::grupos(), DocumentoImpreso::ECO_OBSTETRICO);
     }
 
     /** La del 2.º/3.er trimestre: la misma hoja con su mapa y su título. */
     private function ecoObstetricoTercero(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
     {
-        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetricoTercero::grupos(), DocumentoImpreso::ECO_OBSTETRICO_TERCERO, ' · SEGUNDO/TERCER TRIMESTRE');
+        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetricoTercero::grupos(), DocumentoImpreso::ECO_OBSTETRICO_TERCERO);
     }
 
     /**
-     * La hoja de un eco obstétrico: un párrafo por bloque del mapa y la EG/FPP de su FUR.
+     * La hoja de un eco obstétrico: un párrafo por bloque del mapa y la EG/FPP de su FUR. El título con su
+     * trimestre sale de `DocumentoImpreso::tituloConSufijo()`, que también usa el formato en blanco.
      */
-    private function hojaDelEcoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha, array $grupos, string $clave, string $sufijo): DocumentoImpreso
+    private function hojaDelEcoObstetrico(Paciente $paciente, EstudioEcografico $estudio, string $fecha, array $grupos, string $clave): DocumentoImpreso
     {
         $parrafos = [];
 
@@ -850,7 +851,7 @@ final class SolicitudesParaImprimir
         return new DocumentoImpreso(
             $clave,
             $clave,
-            DocumentoImpreso::TITULOS[$clave][0] . $sufijo,
+            DocumentoImpreso::tituloConSufijo($clave),
             DocumentoImpreso::TITULOS[$clave][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),

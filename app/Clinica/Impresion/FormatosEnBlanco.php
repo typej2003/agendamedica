@@ -4,14 +4,16 @@ namespace App\Clinica\Impresion;
 
 /**
  * **Los formatos en blanco** (WEB-5.5b): el "Imprimir Formatos" de `w_configurar_recipes` del escritorio. Cada documento de la consulta
- * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) impreso **sin datos de paciente**,
- * con el membrete, la firma, el sello y el pie del médico, para rellenarlo a mano cuando la impresora normal está fuera de servicio.
+ * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio, estudios y —desde WEB-6.2— los dos informes del
+ * eco obstétrico) impreso **sin datos de paciente**, con el membrete, la firma, el sello y el pie del médico, para rellenarlo a mano
+ * cuando la impresora normal está fuera de servicio.
  *
  * Esta clase es **el catálogo**: qué formatos hay, cómo se llaman y qué lleva cada uno en blanco (los datos cortos con su línea y las
- * secciones de renglones). Los **títulos** no se repiten: salen de `DocumentoImpreso::TITULOS`, los mismos que imprime la hoja real.
- * Sin estado y sin base de datos: no escribe ni lee nada.
+ * secciones de renglones). Los **títulos** no se repiten: salen de `DocumentoImpreso` (los mismos que imprime la hoja real, con el sufijo
+ * del trimestre de los ecos). Sin estado y sin base de datos: no escribe ni lee nada.
  *
- * Quedan **fuera**, a propósito: las ecografías (F6, pertenecen a ginecología) y el récipe de la pareja.
+ * Quedan **fuera**, a propósito: el **eco pélvico** (WEB-6.1, que el escritorio sí tiene en
+ * `d_eco_pelvico_print_vacio.srd`: es la única ecografía que todavía no lo tiene) y el récipe de la pareja.
  */
 final class FormatosEnBlanco
 {
@@ -64,6 +66,38 @@ final class FormatosEnBlanco
             'fijos' => [],
             'secciones' => [['etiqueta' => 'ESTUDIOS SOLICITADOS:', 'peso' => 2], ['etiqueta' => 'RESUMEN CLÍNICO:', 'peso' => 1]],
         ],
+        // Los dos informes del eco obstétrico (WEB-6.2). Los **datos cortos** son la ficha del embarazo del
+        // encabezado de su DataWindow en blanco (`d_eco_obstetrico_print_vacio_2` / `…_trimestral_print_vacio`),
+        // y las **secciones**, los bloques del informe —de su mapa del dato— sin el bloque «El embarazo», que
+        // es esa ficha: así el médico escribe cada hallazgo donde lo lee la hoja impresa. Un unit test
+        // (`FormatosEnBlancoVistaTest`) fija que las secciones sean esos bloques.
+        //
+        // Todos los bloques pesan lo mismo **a propósito**: el alto del cuerpo es el de media hoja (decisión 17
+        // del plan: la web no reproduce el layout del DataWindow, que es una hoja entera) y repartirlo por la
+        // cantidad de campos dejaba a los bloques chicos sin ningún renglón. Así cada bloque tiene su rótulo y
+        // su línea, y lo que no entra en la mitad izquierda se escribe en la derecha, que va en blanco.
+        DocumentoImpreso::ECO_OBSTETRICO => [
+            'descripcion' => 'El embarazo temprano: la ficha, el útero, el saco y las medidas.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:'],
+            'secciones' => [
+                ['etiqueta' => 'El útero y los ovarios:', 'peso' => 2],
+                ['etiqueta' => 'El saco y la vitalidad:', 'peso' => 2],
+                ['etiqueta' => 'Las medidas y los marcadores:', 'peso' => 2],
+                ['etiqueta' => 'El riesgo del embarazo temprano:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
+        DocumentoImpreso::ECO_OBSTETRICO_TERCERO => [
+            'descripcion' => 'La biometría, la anatomía, la placenta y la función fetal.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:', 'FPP:'],
+            'secciones' => [
+                ['etiqueta' => 'Datos biométricos:', 'peso' => 2],
+                ['etiqueta' => 'Datos anatómicos:', 'peso' => 2],
+                ['etiqueta' => 'Placenta y líquido:', 'peso' => 2],
+                ['etiqueta' => 'El feto:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
     ];
 
     /**
@@ -108,10 +142,10 @@ final class FormatosEnBlanco
         return $clave === self::RECIPE;
     }
 
-    /** El título que se imprime arriba del cuerpo de un documento (el mismo de la hoja real). */
+    /** El título que se imprime arriba del cuerpo de un documento (el mismo de la hoja real, con su trimestre si lo lleva). */
     public static function titulo(string $clave): string
     {
-        return DocumentoImpreso::TITULOS[$clave][0];
+        return DocumentoImpreso::tituloConSufijo($clave);
     }
 
     /**
