@@ -19,8 +19,9 @@ use Closure;
  * `TODOS` es la lista de tipos **que existen hoy**, y es el único lugar donde se agregan: un tipo nuevo
  * suma su fila, su mapa del dato, su ViewModel y su parcial `_estudio-<clave>`, sin tocar el contenedor
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
- * ya dijo qué llegaba con cada tarea. Hoy el único es el eco pélvico, que es WEB-6.1 (el obstétrico es
- * WEB-6.2, el doppler y el ecocardiograma WEB-6.3 y los ultrasonidos WEB-6.4).
+ * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1) y el **eco obstétrico del primer
+ * trimestre** (WEB-6.2); el obstétrico del tercero, el doppler y el ecocardiograma son WEB-6.2/WEB-6.3 y los
+ * ultrasonidos, WEB-6.4.
  *
  * Sin base de datos.
  */
@@ -28,6 +29,17 @@ final class TiposDeEstudio
 {
     /** El **eco pélvico o ginecológico**: el de WEB-6.1 (`w_cargar_visualizar_ecografia`). */
     public const GINECOLOGICO = 'ginecologico';
+
+    /**
+     * El **eco obstétrico del primer trimestre**: el de WEB-6.2 (`w_cargar_visualizar_ecografia_obstetri_1`,
+     * con el DataWindow `d_eco_obstetrico_nueva`).
+     *
+     * ⚠️ **Todavía no está en `TODOS`**: su mapa, su Action, su ViewModel y su parcial están hechos, pero
+     * falta el cableado del controlador (el despacho por tipo en `ConsultaEstudioController` y el ViewModel
+     * en el branch de la sección). Mientras no esté cableado **no se ofrece**, para no mostrar una pantalla
+     * a medio armar: agregar un tipo es agregar su fila acá **y** su cableado, en el mismo paso.
+     */
+    public const OBSTETRICO = 'obstetrico';
 
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
