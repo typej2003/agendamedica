@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Admin\ApiKeys;
+use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
 use App\Http\Livewire\Admin\Especialidades;
 use App\Http\Livewire\Admin\Servicios;
@@ -20,5 +21,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
     Route::get('/api-keys', ApiKeys::class)->name('api-keys');
     // Planes de servicio y vencimiento por médico (Paso 27).
+    // **Ayúdanos a mejorar** (ROADMAP §9): la bandeja donde recibimos los comentarios del consultorio.
+    Route::get('/comentarios', Comentarios::class)->name('comentarios');
     Route::get('/servicios', Servicios::class)->name('servicios');
 });
+

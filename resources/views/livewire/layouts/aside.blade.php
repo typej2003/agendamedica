@@ -67,6 +67,13 @@
                     <span class="link-text">Planes y servicios</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif title="Ayúdanos a mejorar">
+                    <i class="bi bi-chat-heart" aria-hidden="true"></i>
+                    <span class="link-text">Ayúdanos a mejorar</span>
+                </a>
+            </li>
         @endif
     </ul>
   </div>
