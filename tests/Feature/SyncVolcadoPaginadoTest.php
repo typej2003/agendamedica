@@ -187,6 +187,24 @@ class SyncVolcadoPaginadoTest extends TestCase
         $this->assertNotEmpty($cuerpo['historias']);
     }
 
+    /**
+     * Un pedido lleva **varias tablas** (y las vacías no cuestan nada): con una tabla por pedido, la carga
+     * inicial eran decenas de micro-pedidos al servidor.
+     */
+    public function test_un_pedido_lleva_varias_tablas_y_las_vacias_no_cuestan(): void
+    {
+        Sanctum::actingAs($this->medicoConDatos('pag-e-' . uniqid()), ['*'], 'api');
+
+        // Con un cupo grande, un médico chico entra entero en un solo pedido.
+        $cuerpo = $this->sync(['volcado' => 'inicio', 'volcado_limite' => 500])->json();
+
+        $this->assertNull($cuerpo['volcado_siguiente'], 'entra todo en un pedido');
+        $conFilas = array_filter(self::CLAVES, fn ($clave) => count((array) $cuerpo[$clave]) > 0);
+        $this->assertGreaterThanOrEqual(5, count($conFilas), 'varias tablas en el mismo pedido');
+        // Y lo que no tiene filas viaja vacío, no como un pedido aparte.
+        $this->assertSame([], (array) $cuerpo['office_schedules']);
+    }
+
     public function test_un_cursor_invalido_se_rechaza(): void
     {
         Sanctum::actingAs($this->medicoConDatos('pag-d-' . uniqid()), ['*'], 'api');

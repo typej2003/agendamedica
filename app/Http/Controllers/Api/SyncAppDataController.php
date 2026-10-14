@@ -66,10 +66,10 @@ class SyncAppDataController extends Controller
     public const VOLCADO_INICIO = 'inicio';
 
     /** Filas por tramo del volcado paginado (el cliente puede pedir otro con `volcado_limite`). */
-    private const FILAS_POR_PAGINA = 2000;
+    private const FILAS_POR_PAGINA = 3000;
 
     /** Tope de filas por tramo, para que un cliente no pida una página que no entra en memoria. */
-    private const FILAS_POR_PAGINA_TOPE = 5000;
+    private const FILAS_POR_PAGINA_TOPE = 10000;
 
     /**
      * Hasta dónde atrás baja el volcado completo (días). El teléfono no necesita 15 años de historia: lo
@@ -398,21 +398,47 @@ class SyncAppDataController extends Controller
         $limite = (int) $request->input('volcado_limite', self::FILAS_POR_PAGINA);
         $limite = min(self::FILAS_POR_PAGINA_TOPE, max(1, $limite));
 
-        $clave = $claves[$indice];
-        $pagina = $plan[$clave]['consulta']
-            ->where($plan[$clave]['columna'], '>', $desde)
-            ->orderBy($plan[$clave]['columna'])
-            ->limit($limite)
-            ->get();
+        // El cupo de filas del pedido se reparte entre **varias tablas**: un pedido lleva tantas tablas
+        // como entren en `$limite` filas. Sin esto, cada tabla costaba un pedido propio —y las vacías o
+        // chicas también—, que es lo que hacía que la carga inicial fueran decenas de micro-pedidos.
+        $datos = [];
+        $filas = 0;
+        $siguiente = null;
 
-        // Si la tabla se terminó (vino menos que el tope), el cursor pasa a la siguiente; si no, sigue en
-        // esta desde el último id mandado. Al terminar la última tabla queda `null`.
-        $siguiente = $pagina->count() < $limite
-            ? ($indice + 1 < count($claves) ? ($indice + 1) . ':0' : null)
-            : $indice . ':' . $pagina->last()->{$plan[$clave]['columna']};
+        while ($indice < count($claves)) {
+            $clave = $claves[$indice];
+            $restante = $limite - $filas;
+
+            if ($restante <= 0) {
+                // Se acabó el cupo justo al terminar una tabla: el cursor la deja lista para empezar.
+                $siguiente = $indice . ':' . $desde;
+                break;
+            }
+
+            $pagina = $plan[$clave]['consulta']
+                ->where($plan[$clave]['columna'], '>', $desde)
+                ->orderBy($plan[$clave]['columna'])
+                ->limit($restante)
+                ->get();
+
+            $datos[$clave] = $pagina;
+            $filas += $pagina->count();
+
+            // Vino todo lo que se le pidió: la tabla puede tener más, así que el cursor sigue en ella desde
+            // el último id mandado (y el pedido termina acá, para no pasarse del cupo).
+            if ($pagina->count() >= $restante) {
+                $siguiente = $indice . ':' . $pagina->last()->{$plan[$clave]['columna']};
+                break;
+            }
+
+            // La tabla se terminó: sigue la próxima desde su primer id.
+            $indice++;
+            $desde = 0;
+            $siguiente = $indice < count($claves) ? $indice . ':0' : null;
+        }
 
         return response()->json($this->cuerpoDeLaRespuesta(
-            [$clave => $pagina], $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio,
+            $datos, $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio,
             $resultadoChanges, collect([]), $siguiente, Carbon::now()->subDays(self::DIAS_DE_VENTANA)->toDateString(),
         ));
     }
