@@ -14,6 +14,7 @@ use App\Http\Controllers\Clinica\MotivoConsultaCatalogoController;
 use App\Http\Controllers\Clinica\TipoExamenCatalogoController;
 use App\Http\Controllers\Clinica\MedicamentoCatalogoController;
 use App\Http\Controllers\Clinica\TratamientoCatalogoController;
+use App\Http\Controllers\Clinica\AyudaController;
 use App\Http\Controllers\Clinica\CitaController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
@@ -475,6 +476,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
             // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
             Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');
+
+            // **"Ayúdanos a mejorar"** (ROADMAP §9): el comentario del médico o de su secretaría, y la lista de
+            // los suyos con nuestra respuesta. La bandeja donde los recibimos es del panel (`/admin`).
+            Route::get('/ayuda', [AyudaController::class, 'index'])->name('ayuda');
+            Route::post('/ayuda', [AyudaController::class, 'guardar'])->name('ayuda.guardar');
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');
