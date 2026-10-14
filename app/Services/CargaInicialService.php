@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Specialty;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
 use App\Sync\Escritorio\AtencionCita;
@@ -12,6 +13,7 @@ use App\Sync\Escritorio\PacientesLegado;
 use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
@@ -135,6 +137,13 @@ class CargaInicialService
             }
         }
 
+        // Antes de armarle la lista: si este médico no tiene ninguna especialidad vinculada, se la deduce de
+        // las tablas que acaba de anunciar y se le asigna. Es la primera sincronización de esa instalación y
+        // el técnico no tiene que hacer este paso a mano —sin especialidad el médico no recibe su lista de
+        // tablas (recibe la histórica de ginecología) y en la web entra a un consultorio sin módulos—.
+        // Con evidencia insuficiente no se asigna nada (ver `especialidadesSegunTablas`).
+        $asignadas = $this->vincularEspecialidadDeducida($medico, array_keys($aceptadas));
+
         foreach ($aceptadas as $tabla => $filas) {
             $registro = SyncCargaTabla::firstOrNew(['sync_carga_id' => $carga->id, 'tabla' => $tabla]);
             $registro->filas_esperadas = $filas;
@@ -158,7 +167,56 @@ class CargaInicialService
             'orden'     => implode(',', $orden),
             'tablas'    => $tablas,
             'ignoradas' => implode(',', $ignoradas),
+            // Qué especialidad se le vinculó a este médico en esta primera sincronización (vacío si ya
+            // tenía o si no se pudo deducir). Queda en el log del escritorio para poder verlo.
+            'especialidad' => implode(',', $asignadas),
         ]];
+    }
+
+    /**
+     * Le vincula al médico la especialidad que se deduce de las tablas que anunció su escritorio, **si no
+     * tiene ninguna**. Devuelve los slugs asignados (vacío si no había nada que deducir o ya tenía).
+     *
+     * Es lo que hace que el técnico no tenga que asignar la especialidad a mano en la primera
+     * sincronización de una instalación nueva: el escritorio anuncia todas sus tablas antes de subir nada y
+     * las distintivas de cada especialidad están en su manifiesto.
+     *
+     * Sólo se asigna cuando hay **evidencia positiva** (ver `TablasDelSync::especialidadesSegunTablas`) y
+     * sólo si el médico no tenía ninguna: si ya tiene (por el panel, o porque la instalación atiende dos
+     * especialidades) no se le toca nada.
+     *
+     * @param  array<int, string>  $tablasAnunciadas
+     * @return array<int, string>
+     */
+    private function vincularEspecialidadDeducida(?Medico $medico, array $tablasAnunciadas): array
+    {
+        if (! $medico || $this->sync->especialidadesDe($medico) !== []) {
+            return [];
+        }
+
+        $asignadas = [];
+        foreach ($this->sync->especialidadesSegunTablas($tablasAnunciadas) as $slug) {
+            $especialidad = Specialty::where('slug', $slug)->first();
+            if (! $especialidad) {
+                // El catálogo no la tiene: falta `php artisan especialidades:sembrar` en esa base.
+                Log::warning('Carga inicial: la especialidad deducida no está en el catálogo', [
+                    'reg_medico' => $medico->reg_medico, 'especialidad' => $slug,
+                ]);
+                continue;
+            }
+
+            $medico->specialties()->syncWithoutDetaching([$especialidad->id]);
+            $asignadas[] = $slug;
+        }
+
+        if ($asignadas !== []) {
+            $medico->load('specialties');   // el resto del request ya la ve
+            Log::info('Carga inicial: especialidad vinculada desde las tablas del escritorio', [
+                'reg_medico' => $medico->reg_medico, 'especialidades' => $asignadas,
+            ]);
+        }
+
+        return $asignadas;
     }
 
     /* ------------------------------------------------------------------ */

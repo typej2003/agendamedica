@@ -409,6 +409,48 @@ class PediatriaSyncTest extends TestCase
         return array_values(array_filter(explode(',', (string) $respuesta->json('confirmados'))));
     }
 
+    /* ------------------------------------------------------------------ */
+    /* La especialidad se vincula sola en la primera sincronización        */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * El técnico no tiene que asignar la especialidad a mano: el escritorio anuncia **todas** sus tablas
+     * antes de subir nada, y las distintivas de cada especialidad están en su manifiesto. Sin esto, un
+     * médico nuevo recibe la lista histórica (la de ginecología) y en la web entra a un consultorio sin
+     * módulos.
+     */
+    public function test_la_primera_sincronizacion_le_vincula_la_especialidad_al_medico(): void
+    {
+        $medico = $this->medicoConEspecialidad('nuevo-t-001', null);
+        $this->assertSame([], app(TablasDelSync::class)->especialidadesDe($medico));
+
+        $respuesta = $this->post_('carga-inicial/iniciar', ['reg_medico' => 'nuevo-t-001', 'tablas' => [
+            'pacientes' => 0, 'paciente_chamo' => 2, 'vacunas' => 1, 'percentil_nino' => 5,
+        ]])->assertOk();
+
+        $this->assertSame('pediatria', (string) $respuesta->json('especialidad'));
+        $this->assertContains('pediatria', app(TablasDelSync::class)->especialidadesDe($medico->fresh()));
+
+        // A partir de ahí el escritorio recibe SU lista (y la web sabe qué módulos mostrar).
+        $tablas = explode(',', (string) $this->post_('cambios/estado', ['reg_medico' => 'nuevo-t-001'])
+            ->assertOk()->json('tablas'));
+        $this->assertContains('paciente_chamo', $tablas);
+    }
+
+    public function test_sin_evidencia_no_se_le_asigna_ninguna_especialidad(): void
+    {
+        $medico = $this->medicoConEspecialidad('core-t-001', null);
+
+        // Sólo tablas del núcleo: no hay de dónde deducir, y adivinar mal es peor que no adivinar (la
+        // especialidad decide los módulos de la web clínica).
+        $respuesta = $this->post_('carga-inicial/iniciar', ['reg_medico' => 'core-t-001', 'tablas' => [
+            'pacientes' => 1, 'consultas' => 1, 'cola' => 1,
+        ]])->assertOk();
+
+        $this->assertSame('', (string) $respuesta->json('especialidad'));
+        $this->assertSame([], app(TablasDelSync::class)->especialidadesDe($medico->fresh()));
+    }
+
     /**
      * Deja a `REG_PED` con la carga inicial completa y un paciente con su consulta (historias y
      * consultas por los endpoints reales: el escritorio manda SUS números).

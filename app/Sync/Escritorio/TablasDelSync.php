@@ -194,4 +194,40 @@ final class TablasDelSync
 
         return $tablas;
     }
+
+    /**
+     * Qué especialidades **se deducen** de las tablas que anunció un escritorio: las que declaran en su
+     * manifiesto alguna de esas tablas (las distintivas de cada especialidad, que son justo las que el
+     * manifiesto agrega a la lista histórica).
+     *
+     * Es lo que permite vincularle la especialidad al médico **en su primera sincronización**, sin que
+     * nadie tenga que hacerlo a mano: la instalación anuncia todas sus tablas antes de subir nada.
+     *
+     * Sin **evidencia positiva** no se deduce nada: ginecología no declara ninguna tabla (las suyas son la
+     * lista histórica) y una especialidad todavía sin manifiesto tampoco, así que no se les asigna nada por
+     * descarte — adivinar mal es peor que no adivinar, porque la especialidad decide los módulos de la web.
+     *
+     * @param  array<int, string>  $tablas  nombres de tabla tal como los anunció el escritorio
+     * @return array<int, string> slugs, de la que más tablas aporta a la que menos
+     */
+    public function especialidadesSegunTablas(array $tablas): array
+    {
+        $anunciadas = array_map(fn ($tabla) => strtolower(trim((string) $tabla)), $tablas);
+        $puntajes = [];
+
+        foreach (array_keys((array) config('sync_legado.tablas_por_especialidad', [])) as $especialidad) {
+            $declaradas = $this->deLaEspecialidad((string) $especialidad);
+            if ($declaradas === []) {
+                continue;
+            }
+            $coinciden = count(array_intersect($anunciadas, array_map('strtolower', $declaradas)));
+            if ($coinciden > 0) {
+                $puntajes[(string) $especialidad] = $coinciden;
+            }
+        }
+
+        arsort($puntajes);
+
+        return array_keys($puntajes);
+    }
 }
