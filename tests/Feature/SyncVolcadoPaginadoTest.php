@@ -36,10 +36,14 @@ class SyncVolcadoPaginadoTest extends TestCase
     }
 
     /**
-     * Un médico con carga inicial: dos pacientes con su historia, una cita cada uno y tres documentos, más
+     * Un médico con carga inicial: tres pacientes con su historia, una cita cada uno y tres documentos, más
      * los catálogos. Alcanza para que el volcado tenga varias tablas con filas.
+     *
+     * Las fechas son **dentro de la ventana del volcado** (ver `DIAS_DE_VENTANA`): así lo que baja el
+     * volcado paginado tiene que ser exactamente lo mismo que el volcado de una sola vez, que es lo que
+     * compara el test de la unión.
      */
-    private function medicoConDatos(string $reg): User
+    private function medicoConDatos(string $reg, ?string $fecha = null): User
     {
         $user = User::create(['name' => 'Médico', 'email' => "{$reg}@example.com", 'password' => Hash::make('x')]);
         $medico = Medico::create([
@@ -48,6 +52,8 @@ class SyncVolcadoPaginadoTest extends TestCase
         ]);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $reg]);
 
+        $cita = $fecha ?? now()->subDays(10)->toDateString();
+
         $filas = [
             'pacientes' => [
                 ['numhistoria' => 1, 'cedula' => "P1-{$reg}", 'apellidos' => 'UNO', 'nombres' => 'ANA', 'nac' => 'V', 'sexo' => 'F'],
@@ -55,12 +61,12 @@ class SyncVolcadoPaginadoTest extends TestCase
                 ['numhistoria' => 3, 'cedula' => "P3-{$reg}", 'apellidos' => 'TRES', 'nombres' => 'CAR', 'nac' => 'V', 'sexo' => 'M'],
             ],
             'consultas' => [
-                ['numhistoria' => 1, 'nroconsulta' => 1, 'fecha' => '2026-03-10'],
-                ['numhistoria' => 2, 'nroconsulta' => 1, 'fecha' => '2026-03-11'],
+                ['numhistoria' => 1, 'nroconsulta' => 1, 'fecha' => $cita],
+                ['numhistoria' => 2, 'nroconsulta' => 1, 'fecha' => $cita],
             ],
             'cola' => [
-                ['fecha' => '2026-03-10', 'hora_ini' => '08:00', 'numhistoria' => 1, 'atendido' => 1],
-                ['fecha' => '2026-03-11', 'hora_ini' => '09:00', 'numhistoria' => 2, 'atendido' => 0],
+                ['fecha' => $cita, 'hora_ini' => '08:00', 'numhistoria' => 1, 'atendido' => 1],
+                ['fecha' => $cita, 'hora_ini' => '09:00', 'numhistoria' => 2, 'atendido' => 0],
             ],
             'constancia_obs' => [['numhistoria' => 1, 'numconsulta' => 1, 'observacion01' => 'Asistió']],
             'diagnostico_paciente' => [['nrohistoria' => 1, 'nroconsulta' => 1, 'codediagnostico' => 'D01', 'orden' => 1]],
@@ -188,5 +194,87 @@ class SyncVolcadoPaginadoTest extends TestCase
         foreach (['cualquier-cosa', '0', '99:0', 'a:b'] as $malo) {
             $this->postJson('/api/app/sync-app-data', ['volcado' => $malo])->assertStatus(400);
         }
+    }
+
+    /**
+     * **La ventana del volcado** (2026-10-14): el teléfono no necesita 15 años de historia. Del volcado
+     * bajan todas las fichas —para poder buscar a cualquiera sin conexión—, las citas de los últimos meses
+     * y las futuras, y la historia **completa** de los pacientes que se atienden en ese período. Lo clínico
+     * de los demás no viaja: se pide en línea cuando hace falta.
+     */
+    public function test_el_volcado_trae_todos_los_pacientes_pero_solo_la_clinica_de_la_ventana(): void
+    {
+        $reg = 'pag-ventana-' . uniqid();
+        Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
+
+        // Un paciente que no se atiende desde hace medio año: su cita y su consulta son viejas.
+        $viejo = now()->subDays(200)->toDateString();
+        $this->escritorio('cambios/subir', ['reg_medico' => $reg, 'cambios' => [
+            ['id' => 1, 'tabla' => 'cola', 'op' => 'I', 'fecha' => $viejo . ' 08:00:00',
+                'clave' => ['numhistoria' => 3, 'fecha' => $viejo],
+                'fila' => ['fecha' => $viejo, 'hora_ini' => '08:00', 'numhistoria' => 3, 'atendido' => 1]],
+            ['id' => 2, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $viejo . ' 08:30:00',
+                'clave' => ['numhistoria' => 3, 'nroconsulta' => 1],
+                'fila' => ['numhistoria' => 3, 'nroconsulta' => 1, 'fecha' => $viejo, 'enfermedadactual' => 'VIEJA']],
+        ]]);
+
+        // Su ficha viaja igual: sin ella no se lo podría encontrar en el buscador sin conexión.
+        $paginas = $this->recorrerVolcado();
+        $cedulas = array_column($paginas['pacientes'], 'cedula');
+        $this->assertContains("P3-{$reg}", $cedulas, 'la ficha del paciente viejo baja aunque no se atienda');
+
+        // Y lo clínico del paciente viejo no viaja: su cita vieja queda afuera (y más abajo se ve que su
+        // consulta tampoco).
+        $fechas = array_map(fn ($f) => substr((string) $f, 0, 10), array_column($paginas['colas'], 'fecha'));
+        $this->assertNotContains($viejo, $fechas, 'la cita vieja no viaja');
+        $this->assertNotContains('VIEJA', array_column($paginas['consultas'], 'enfermedadactual'));
+
+        // ...pero la de los pacientes de la ventana sí, y **completa**: una consulta vieja de un paciente
+        // que se atiende hoy tiene que bajar (el médico la necesita para atenderlo).
+        $this->escritorio('cambios/subir', ['reg_medico' => $reg, 'cambios' => [
+            ['id' => 3, 'tabla' => 'consultas', 'op' => 'I', 'fecha' => $viejo . ' 09:00:00',
+                'clave' => ['numhistoria' => 1, 'nroconsulta' => 2],
+                'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => $viejo, 'enfermedadactual' => 'VIEJA DEL DE LA VENTANA']],
+        ]]);
+
+        $paginas = $this->recorrerVolcado();
+        $enfermedades = array_column($paginas['consultas'], 'enfermedadactual');
+        $this->assertContains('VIEJA DEL DE LA VENTANA', $enfermedades, 'el historial del paciente de la ventana va entero');
+        $this->assertNotContains('VIEJA', $enfermedades, 'y el del paciente que no se atiende, no');
+    }
+
+    /**
+     * Un volcado **sin** paginado (un app viejo, que no manda `volcado`) sigue bajando todo, sin ventana:
+     * el filtro es del app nuevo y no se le puede cambiar el comportamiento a una versión ya instalada.
+     */
+    public function test_sin_volcado_paginado_no_se_aplica_la_ventana(): void
+    {
+        $reg = 'pag-legado-' . uniqid();
+        Sanctum::actingAs($this->medicoConDatos($reg, now()->subDays(200)->toDateString()), ['*'], 'api');
+
+        $cuerpo = $this->sync([])->json();
+
+        $this->assertCount(2, $cuerpo['colas'], 'las citas viejas también, como hasta hoy');
+        $this->assertCount(2, $cuerpo['consultas']);
+        $this->assertNull($cuerpo['ventana_desde'], 'sin volcado paginado no hay ventana que informar');
+    }
+
+    /** Junta el volcado paginado entero (una fila por clave) siguiendo el cursor. */
+    private function recorrerVolcado(): array
+    {
+        $todo = array_fill_keys(self::CLAVES, []);
+        $cursor = 'inicio';
+
+        while ($cursor !== null) {
+            $cuerpo = $this->sync(['volcado' => $cursor, 'volcado_limite' => 50])->json();
+            foreach (self::CLAVES as $clave) {
+                foreach ((array) $cuerpo[$clave] as $fila) {
+                    $todo[$clave][] = $fila;
+                }
+            }
+            $cursor = $cuerpo['volcado_siguiente'];
+        }
+
+        return $todo;
     }
 }

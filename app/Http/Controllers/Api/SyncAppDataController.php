@@ -71,6 +71,17 @@ class SyncAppDataController extends Controller
     /** Tope de filas por tramo, para que un cliente no pida una página que no entra en memoria. */
     private const FILAS_POR_PAGINA_TOPE = 5000;
 
+    /**
+     * Hasta dónde atrás baja el volcado completo (días). El teléfono no necesita 15 años de historia: lo
+     * que necesita es **a quién va a atender**, y eso son las citas de los últimos meses y todas las
+     * futuras. Del paciente que sí se atiende en ese período baja la historia **completa** (consultas,
+     * documentos y récipes de cualquier fecha), y de los demás sólo su ficha para poder buscarlo.
+     *
+     * El resto se busca en línea cuando hace falta (ver el ROADMAP): abrir la ficha de un paciente o ir a
+     * un día de la agenda anterior a la ventana pide esos datos en ese momento.
+     */
+    private const DIAS_DE_VENTANA = 60;
+
     public function sync(SyncAppDataRequest $request)
     {
         // El volcado paginado existe justo para no necesitar esto (ver `paginaDelVolcado`), pero mientras
@@ -215,7 +226,18 @@ class SyncAppDataController extends Controller
         array $numHistorias,
         bool $completo,
         ?array $idsCentros = null,
+        bool $conVentana = false,
     ): array {
+        // Ventana del volcado: de acá para atrás no viaja lo clínico de los pacientes que no se atienden
+        // (ver `DIAS_DE_VENTANA`). Sólo la aplica el volcado paginado, que es el app nuevo: un app viejo
+        // —que manda el volcado entero sin `volcado`— sigue recibiendo todo, como hasta hoy.
+        $desde = Carbon::now()->subDays(self::DIAS_DE_VENTANA);
+        $historiaDeLaVentana = fn (string $columna) => Cola::whereIn('reg_medico', $registrosMedicos)
+            ->where('fecha', '>=', $desde->toDateString())
+            ->whereNotNull($columna)
+            ->select($columna)
+            ->distinct();
+
         // Documentos de la consulta que el app solo imprime (Paso 25): los carga el escritorio y bajan
         // por delta, con el mismo filtro doble que `consultas`. `constancia_obs` nombra sus columnas
         // `numhistoria`/`numconsulta`; las demás, `nrohistoria`/`nroconsulta`.
@@ -228,6 +250,7 @@ class SyncAppDataController extends Controller
         // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
         $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $modelo::whereIn($columnaHistoria, $numHistorias)
             ->whereIn('reg_medico', $registrosMedicos)
+            ->when($conVentana, fn ($q) => $q->whereIn($columnaHistoria, $historiaDeLaVentana($columnaHistoria)))
             ->when($completo && $conContenido !== null, $conContenido);
 
         return [
@@ -244,22 +267,26 @@ class SyncAppDataController extends Controller
                     $query->orWhereIn('reg_medico', $registrosMedicos);
                 }
             }), 'columna' => 'id'],
-            'colas' => ['consulta' => Cola::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'colas' => ['consulta' => Cola::whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->where('fecha', '>=', $desde->toDateString())), 'columna' => 'id'],
             // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
             // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
             'consultas' => ['consulta' => Consulta::whereIn('numhistoria', $numHistorias)
-                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiaDeLaVentana('numhistoria'))), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
             // los lee y puede agregar o quitar los de la consulta que está atendiendo.
             'motivos_consulta' => ['consulta' => MotivoConsulta::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'motivo_consulta_paciente' => ['consulta' => MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)
-                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiaDeLaVentana('nrohistoria'))), 'columna' => 'id'],
             // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
             // filtro doble que `consultas`.
             'recipes' => ['consulta' => Recipe::whereIn('nrohistoria', $numHistorias)
-                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiaDeLaVentana('nrohistoria'))), 'columna' => 'id'],
             // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
             // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
             'vademecum' => ['consulta' => Vademecum::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
@@ -351,7 +378,7 @@ class SyncAppDataController extends Controller
         array $resultadoChanges,
         string $cursor,
     ) {
-        $plan = $this->planDelVolcado($medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, true);
+        $plan = $this->planDelVolcado($medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, true, null, true);
         $claves = array_keys($plan);
 
         if ($cursor === self::VOLCADO_INICIO) {
@@ -386,7 +413,7 @@ class SyncAppDataController extends Controller
 
         return response()->json($this->cuerpoDeLaRespuesta(
             [$clave => $pagina], $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio,
-            $resultadoChanges, collect([]), $siguiente,
+            $resultadoChanges, collect([]), $siguiente, Carbon::now()->subDays(self::DIAS_DE_VENTANA)->toDateString(),
         ));
     }
 
@@ -406,6 +433,7 @@ class SyncAppDataController extends Controller
         array $resultadoChanges,
         $eliminados,
         ?string $volcadoSiguiente = null,
+        ?string $ventanaDesde = null,
     ): array {
         $vacio = collect([]);
 
@@ -464,6 +492,9 @@ class SyncAppDataController extends Controller
             // Volcado paginado: el cursor del tramo que sigue, o `null` si ya está todo. Sin volcado
             // paginado en curso es `null` y el app lo ignora.
             'volcado_siguiente' => $volcadoSiguiente,
+            // Hasta dónde atrás llega el volcado que acaba de bajar (ver `DIAS_DE_VENTANA`). El app lo
+            // guarda para saber qué días de la agenda y qué historiales le faltan pedir en línea.
+            'ventana_desde' => $ventanaDesde,
         ];
     }
 
