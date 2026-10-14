@@ -171,4 +171,27 @@ final class TablasDelSync
     {
         return array_key_exists($tabla, $this->pacientesDe($medico));
     }
+
+    /**
+     * **Todas** las tablas de pacientes que algún manifiesto declara (tabla => [escritorio => API]), sin
+     * `pacientes` (esa es la de siempre y no se declara).
+     *
+     * Sirve para reparar una carga cuando el médico **no tiene la especialidad asignada** en el pivote
+     * `medico_specialty`: el dato está en su tabla, aunque el API no sepa de qué especialidad es.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function fuentesDePacientesDeclaradas(): array
+    {
+        $tablas = [];
+
+        foreach ((array) config('sync_legado.pacientes_por_especialidad', []) as $declarado) {
+            $tabla = (string) ($declarado['tabla'] ?? '');
+            if ($tabla !== '' && $tabla !== 'pacientes' && ! array_key_exists($tabla, $tablas)) {
+                $tablas[$tabla] = (array) ($declarado['columnas'] ?? []);
+            }
+        }
+
+        return $tablas;
+    }
 }

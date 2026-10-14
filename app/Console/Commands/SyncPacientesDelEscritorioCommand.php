@@ -25,6 +25,7 @@ class SyncPacientesDelEscritorioCommand extends Command
 {
     protected $signature = 'sync:pacientes-del-escritorio
         {reg_medico : el `reg_medico` del médico (el de su `sync.ini`)}
+        {--tabla= : forzar la tabla de pacientes (por defecto: la que declare su especialidad, o la que tenga filas suyas)}
         {--simular : cuenta lo que haría y no escribe nada}';
 
     protected $description = 'Arma pacientes e historias desde la tabla de pacientes del escritorio que ya está en el API';
@@ -33,9 +34,10 @@ class SyncPacientesDelEscritorioCommand extends Command
     {
         $regMedico = (string) $this->argument('reg_medico');
         $simular = (bool) $this->option('simular');
+        $tabla = $this->option('tabla') ? (string) $this->option('tabla') : null;
 
         try {
-            $resultado = $cargas->pacientesDesdeLaTablaDelEscritorio($regMedico, $simular);
+            $resultado = $cargas->pacientesDesdeLaTablaDelEscritorio($regMedico, $simular, $tabla);
         } catch (Throwable $e) {
             $this->error($e->getMessage());
 
@@ -43,8 +45,13 @@ class SyncPacientesDelEscritorioCommand extends Command
         }
 
         if ($resultado['tablas'] === []) {
-            $this->info("El médico {$regMedico} no tiene ninguna tabla de pacientes propia de su especialidad.");
-            $this->line('Su especialidad los tiene en `pacientes`, que la carga inicial ya procesó.');
+            $this->warn("El médico {$regMedico} no tiene ninguna tabla de pacientes que se pueda usar.");
+            $this->line('Ni su especialidad declara una (su `pacientes` de siempre la procesa la carga inicial),');
+            $this->line('ni hay una tabla de pacientes suya con filas en el API.');
+            $this->newLine();
+            $this->line('Si la carga subió los pacientes a una tabla propia (pediatría: `paciente_chamo`), revisá');
+            $this->line('que el médico tenga su especialidad asignada en el panel (el pivote `medico_specialty`)');
+            $this->line('o pasá la tabla a mano: --tabla=paciente_chamo');
 
             return self::SUCCESS;
         }

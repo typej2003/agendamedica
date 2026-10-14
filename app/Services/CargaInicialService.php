@@ -445,7 +445,7 @@ class CargaInicialService
      *
      * @return array{tablas: array<string, array{filas: int, nuevas: int, existentes: int, omitidas: int}>, creados: int, actualizados: int}
      */
-    public function pacientesDesdeLaTablaDelEscritorio(string $regMedico, bool $simular = false): array
+    public function pacientesDesdeLaTablaDelEscritorio(string $regMedico, bool $simular = false, ?string $tabla = null): array
     {
         $medico = $this->medicoDe($regMedico);
         if (! $medico) {
@@ -460,13 +460,31 @@ class CargaInicialService
             );
         }
 
-        // Sólo las tablas que la especialidad declara como fuente propia: `pacientes` la carga ya la hizo (y
-        // si estuviera vacía, el problema es otro).
+        $declaradas = $this->sync->fuentesDePacientesDeclaradas();
+
+        // Las de su especialidad (`pacientes` no: esa la hizo la carga, y si estuviera vacía el problema es
+        // otro). Si se pide una tabla en particular, esa manda.
         $fuentes = array_filter(
             $this->sync->pacientesDe($medico),
-            fn ($mapa, $tabla) => $tabla !== 'pacientes',
+            fn ($mapa, $nombre) => $nombre !== 'pacientes',
             ARRAY_FILTER_USE_BOTH
         );
+        if ($tabla !== null && $tabla !== '') {
+            $fuentes = [$tabla => (array) ($declaradas[$tabla] ?? [])];
+        }
+
+        // Y además cualquier tabla de pacientes declarada **que tenga filas de este médico**: el dato está
+        // ahí aunque el médico no tenga la especialidad asignada en `medico_specialty` (que es justo lo que
+        // pasó en la prueba: la carga subió los 6.892 chamos y el pivote quedó vacío, así que el API no
+        // sabía de qué especialidad era).
+        foreach ($declaradas as $nombre => $mapa) {
+            if (! array_key_exists($nombre, $fuentes)
+                && Schema::hasTable($nombre)
+                && in_array('reg_medico', $this->tablas->columnasDe($nombre), true)
+                && DB::table($nombre)->where('reg_medico', $regMedico)->exists()) {
+                $fuentes[$nombre] = $mapa;
+            }
+        }
 
         $detalle = [];
         $creados = 0;
