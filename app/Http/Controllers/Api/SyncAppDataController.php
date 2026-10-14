@@ -64,6 +64,16 @@ class SyncAppDataController extends Controller
 {
     public function sync(SyncAppDataRequest $request)
     {
+        // La **primera** sincronización de un médico con años de historia baja todo de una sola vez (el app
+        // no manda `since`): decenas de miles de consultas, citas, récipes y documentos en una respuesta.
+        // El reloj de PHP (30 s por defecto) la cortaba a mitad y el teléfono se quedaba sin datos, así que
+        // acá se corre sin reloj y con más memoria que el default.
+        //
+        // ⚠️ Es un parche de servidor, no el diseño: la solución de fondo es **paginar el delta** (que el app
+        // pida de a tramos y siga por un cursor). Está anotado en el ROADMAP.
+        set_time_limit(0);
+        @ini_set('memory_limit', '512M');
+
         $user = $request->user();
         if (!$user) {
             return response()->json(['message' => 'Usuario no autenticado.'], 401);
