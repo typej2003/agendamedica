@@ -232,10 +232,14 @@ class SyncAppDataController extends Controller
         // (ver `DIAS_DE_VENTANA`). Sólo la aplica el volcado paginado, que es el app nuevo: un app viejo
         // —que manda el volcado entero sin `volcado`— sigue recibiendo todo, como hasta hoy.
         $desde = Carbon::now()->subDays(self::DIAS_DE_VENTANA);
-        $historiaDeLaVentana = fn (string $columna) => Cola::whereIn('reg_medico', $registrosMedicos)
+        // Los números de historia de los pacientes que se atienden en la ventana. **La cita los tiene en
+        // `cola.numhistoria`**: el `nrohistoria` de `cola` es una columna del legado que no lleva el número
+        // (medido el 2026-10-14 contra el servidor real: usarla dejaba pasar 49.955 récipes que no eran de
+        // la ventana). Cada tabla clínica después filtra por **su** columna, que no siempre se llama igual.
+        $historiasDeLaVentana = fn () => Cola::whereIn('reg_medico', $registrosMedicos)
             ->where('fecha', '>=', $desde->toDateString())
-            ->whereNotNull($columna)
-            ->select($columna)
+            ->whereNotNull('numhistoria')
+            ->select('numhistoria')
             ->distinct();
 
         // Documentos de la consulta que el app solo imprime (Paso 25): los carga el escritorio y bajan
@@ -250,7 +254,7 @@ class SyncAppDataController extends Controller
         // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
         $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $modelo::whereIn($columnaHistoria, $numHistorias)
             ->whereIn('reg_medico', $registrosMedicos)
-            ->when($conVentana, fn ($q) => $q->whereIn($columnaHistoria, $historiaDeLaVentana($columnaHistoria)))
+            ->when($conVentana, fn ($q) => $q->whereIn($columnaHistoria, $historiasDeLaVentana()))
             ->when($completo && $conContenido !== null, $conContenido);
 
         return [
@@ -273,7 +277,7 @@ class SyncAppDataController extends Controller
             // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
             'consultas' => ['consulta' => Consulta::whereIn('numhistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
-                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiaDeLaVentana('numhistoria'))), 'columna' => 'id'],
+                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -281,12 +285,12 @@ class SyncAppDataController extends Controller
             'motivos_consulta' => ['consulta' => MotivoConsulta::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'motivo_consulta_paciente' => ['consulta' => MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
-                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiaDeLaVentana('nrohistoria'))), 'columna' => 'id'],
+                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiasDeLaVentana())), 'columna' => 'id'],
             // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
             // filtro doble que `consultas`.
             'recipes' => ['consulta' => Recipe::whereIn('nrohistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
-                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiaDeLaVentana('nrohistoria'))), 'columna' => 'id'],
+                ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiasDeLaVentana())), 'columna' => 'id'],
             // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
             // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
             'vademecum' => ['consulta' => Vademecum::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],

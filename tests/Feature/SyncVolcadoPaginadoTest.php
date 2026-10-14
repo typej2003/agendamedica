@@ -6,6 +6,7 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -268,10 +269,27 @@ class SyncVolcadoPaginadoTest extends TestCase
                 'fila' => ['numhistoria' => 1, 'nroconsulta' => 2, 'fecha' => $viejo, 'enfermedadactual' => 'VIEJA DEL DE LA VENTANA']],
         ]]);
 
+        // Récipes: uno de cada paciente, para comprobar el filtro por `nrohistoria` (las tablas clínicas no
+        // todas usan `numhistoria`). Se insertan directo: acá se prueba **el filtro de la ventana**, no el
+        // camino del escritorio.
+        foreach ([[1, 'RECIPE VENTANA'], [3, 'RECIPE VIEJO']] as [$historia, $descripcion]) {
+            DB::table('recipes')->insert([
+                'reg_medico' => $reg, 'nrohistoria' => $historia, 'nroconsulta' => 1, 'recipe' => 1,
+                'codemedicina' => 'MED-01', 'descripcion' => $descripcion,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
         $paginas = $this->recorrerVolcado();
         $enfermedades = array_column($paginas['consultas'], 'enfermedadactual');
         $this->assertContains('VIEJA DEL DE LA VENTANA', $enfermedades, 'el historial del paciente de la ventana va entero');
         $this->assertNotContains('VIEJA', $enfermedades, 'y el del paciente que no se atiende, no');
+
+        // Las tablas que se filtran por `nrohistoria` (récipes, informes, diagnósticos…) tienen que
+        // respetar la ventana igual que las de `numhistoria`: es lo que se vio mal contra el servidor real.
+        $descripciones = array_column($paginas['recipes'], 'descripcion');
+        $this->assertContains('RECIPE VENTANA', $descripciones, 'el récipe del paciente de la ventana viaja');
+        $this->assertNotContains('RECIPE VIEJO', $descripciones, 'el del paciente viejo, no');
     }
 
     /**
