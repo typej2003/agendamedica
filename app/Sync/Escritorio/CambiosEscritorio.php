@@ -5,6 +5,7 @@ namespace App\Sync\Escritorio;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\SyncCarga;
 use App\Models\SyncChange;
@@ -44,8 +45,23 @@ class CambiosEscritorio
     /** @var array<string, ?array> "h|c" del escritorio -> [numhistoria, nroconsulta] del API */
     private array $consultas = [];
 
+    /** @var array<string, array<string, string>>|null tablas de pacientes del médico (perezoso) */
+    private ?array $pacientes = null;
+
     public function __construct(private TablasLegado $tablas, private TablasDelSync $sync)
     {
+    }
+
+    /**
+     * Las tablas de las que salen los **pacientes** de este médico, con su mapeo de columnas: `pacientes`
+     * y, si su especialidad declara otra (pediatría: `paciente_chamo`), también esa. Se resuelve una sola
+     * vez por request (el médico no cambia dentro de una subida).
+     *
+     * @return array<string, array<string, string>>
+     */
+    private function pacientesDe(SyncCarga $carga): array
+    {
+        return $this->pacientes ??= $this->sync->pacientesDe(Medico::find($carga->medico_id));
     }
 
     /**
@@ -59,7 +75,7 @@ class CambiosEscritorio
         $omitidos = 0;
         $parciales = 0;
 
-        foreach ($this->enOrden($cambios) as $cambio) {
+        foreach ($this->enOrden($cambios, $this->pacientesDe($carga)) as $cambio) {
             $id = $cambio['id'] ?? null;
             try {
                 $resultado = DB::transaction(fn () => $this->aplicar($carga, $cambio));
@@ -99,9 +115,13 @@ class CambiosEscritorio
      * Pacientes antes que consultas, y consultas antes que el resto: las consultas y las demás
      * tablas se traducen con lo que dejan pacientes y consultas. Los borrados, al revés.
      */
-    private function enOrden(array $cambios): array
+    private function enOrden(array $cambios, array $pacientes = []): array
     {
-        $prioridad = fn (string $tabla) => ['pacientes' => 0, 'consultas' => 1][$tabla] ?? 2;
+        // Las tablas de las que salen los pacientes van primero: la historia tiene que existir antes que lo
+        // que se referencia por su número. No alcanza con `pacientes`: pediatría los trae de `paciente_chamo`.
+        $prioridad = fn (string $tabla) => array_key_exists($tabla, $pacientes)
+            ? 0
+            : (['pacientes' => 0, 'consultas' => 1][$tabla] ?? 2);
         $conPos = [];
         foreach (array_values($cambios) as $i => $c) {
             $tabla = $this->tablas->normalizar((string) ($c['tabla'] ?? ''));
@@ -143,6 +163,27 @@ class CambiosEscritorio
         }
         if ($op !== 'D' && $fila === []) {
             throw new RechazoCambio('falta la fila');
+        }
+
+        // Las tablas de las que salen los pacientes de este médico (pediatría: `paciente_chamo`; el resto:
+        // `pacientes`, que tiene su propio `case` más abajo). El camino de pacientes busca por
+        // `numhistoria`, así que hay que traducir la clave **y** la fila: la clave que manda el escritorio
+        // es la primaria de SU tabla (`paciente_chamo` → `{historia}`).
+        if (($mapa = $this->pacientesDe($carga)[$tabla] ?? null) !== null) {
+            $resultado = $op === 'D'
+                ? $this->borrarPaciente($carga, $this->tablas->traducirPaciente($clave, $mapa), $fecha)
+                : $this->guardarPaciente($carga, $this->tablas->traducirPaciente($clave, $mapa), $this->tablas->traducirPaciente($fila, $mapa), $fecha);
+
+            // Además, la tabla propia de la especialidad se guarda **tal cual viene** (sin traducir
+            // números): es el espejo de la tabla del escritorio, y sus columnas que no existen en
+            // `pacientes` (alergia, notas, foto, representante, familia…) son las que usa el app.
+            if ($tabla !== 'pacientes') {
+                $op === 'D'
+                    ? $this->borrarGenerico($carga, $tabla, $clave, $fecha, false)
+                    : $this->guardarGenerico($carga, $tabla, $clave, $fila, $fecha, false);
+            }
+
+            return $resultado;
         }
 
         switch ($tabla) {
@@ -461,14 +502,19 @@ class CambiosEscritorio
     /* Resto de las tablas                                                 */
     /* ------------------------------------------------------------------ */
 
-    private function guardarGenerico(SyncCarga $carga, string $tabla, array $clave, array $fila, Carbon $fecha): string
+    private function guardarGenerico(SyncCarga $carga, string $tabla, array $clave, array $fila, Carbon $fecha, bool $traducirNumeros = true): string
     {
         $numeroConsulta = null;
-        $clave = $this->traducir($carga, $clave, $numeroConsulta);
+        if ($traducirNumeros) {
+            $clave = $this->traducir($carga, $clave, $numeroConsulta);
+        }
         $existentes = $this->filasPorClave($carga, $tabla, $clave)->get();
 
         $ignoradas = [];
-        $datos = $this->traducir($carga, $this->tablas->filtrar($tabla, $this->tablas->normalizarClaves($fila), $ignoradas));
+        $datos = $this->tablas->filtrar($tabla, $this->tablas->normalizarClaves($fila), $ignoradas);
+        if ($traducirNumeros) {
+            $datos = $this->traducir($carga, $datos);
+        }
         $datos['reg_medico'] = $carga->reg_medico;
 
         // ⚠️ `examen_fisico_nuevo.consulta` **no** es el id de la consulta: es su **número dentro de la
@@ -500,9 +546,11 @@ class CambiosEscritorio
         return 'aplicado';
     }
 
-    private function borrarGenerico(SyncCarga $carga, string $tabla, array $clave, Carbon $fecha): string
+    private function borrarGenerico(SyncCarga $carga, string $tabla, array $clave, Carbon $fecha, bool $traducirNumeros = true): string
     {
-        $clave = $this->traducir($carga, $clave);
+        if ($traducirNumeros) {
+            $clave = $this->traducir($carga, $clave);
+        }
 
         // Las tablas que el app guarda en su copia local se enteran del borrado por `sync_changes`
         // (como `pacientes` y `cola`). Sin esto, un reposo borrado en el escritorio se seguiría

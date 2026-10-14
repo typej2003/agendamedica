@@ -77,6 +77,43 @@ class TablasLegado
     }
 
     /**
+     * Renombra las columnas de una fila de **pacientes** del escritorio a los nombres del API, según el
+     * mapeo del manifiesto de la especialidad (`sync.pacientes.columnas`).
+     *
+     * Hace falta porque la tabla de pacientes no es la misma en todas las especialidades: ginecología los
+     * tiene en `pacientes` (los nombres coinciden y el mapeo es vacío) y pediatría en `paciente_chamo`,
+     * donde la historia es `historia`, el nombre es `nombre` y el teléfono es `celular`. Después de esto la
+     * fila se trata como una de `pacientes` y el resto del camino no cambia.
+     *
+     * Se aplica **también a la clave** de un cambio: la que manda el escritorio es la primaria de SU tabla
+     * (`paciente_chamo` → `{historia}`, `pacientes` → `{numhistoria}`) y el camino de pacientes busca por
+     * `numhistoria`.
+     */
+    public function traducirPaciente(array $fila, array $mapa): array
+    {
+        if ($mapa === []) {
+            return $this->normalizarClaves($fila);
+        }
+
+        // Se recorre en el orden que vino y, si aparecen las dos formas del mismo dato, gana la del API.
+        $salida = [];
+        $deAlias = [];
+        foreach ($this->normalizarClaves($fila) as $columna => $valor) {
+            $destino = $mapa[$columna] ?? $columna;
+            $esAlias = $destino !== $columna;
+
+            if (array_key_exists($destino, $salida) && ! ($deAlias[$destino] && ! $esAlias)) {
+                continue;
+            }
+
+            $salida[$destino] = $valor;
+            $deAlias[$destino] = $esAlias;
+        }
+
+        return $salida;
+    }
+
+    /**
      * Deja solo las columnas que existen en la tabla del API, sin `id`, `reg_medico` ni las
      * excluidas en `config/sync_legado.php`. Las que el API no tiene se agregan a $ignoradas: se
      * informan, no se pierden en silencio.

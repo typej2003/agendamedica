@@ -134,4 +134,41 @@ final class TablasDelSync
 
         return array_values(array_unique($tablas));
     }
+
+    /**
+     * Las tablas del escritorio de donde salen los **pacientes** de este médico, con el mapeo de columnas
+     * de cada una (tabla => [escritorio => API]).
+     *
+     * `pacientes` está siempre: es la tabla del legado compartido y la que usan ginecología y las demás
+     * especialidades. Una especialidad puede declarar **otra** en su manifiesto (`sync.pacientes`), como
+     * pediatría con `paciente_chamo` —su ABM real de pacientes, mientras su `pacientes` está vacía—. Un
+     * médico con dos especialidades tiene las dos tablas y las dos traen pacientes: por eso es un mapa y
+     * no una sola tabla.
+     *
+     * El camino de pacientes (crear el paciente, la relación con el médico y la historia) es el mismo
+     * para todas; el mapeo sólo traduce los nombres de columna antes de armarlo.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function pacientesDe(?Medico $medico): array
+    {
+        $tablas = ['pacientes' => []];
+
+        foreach ($this->especialidadesDe($medico) as $especialidad) {
+            $declarado = (array) config("sync_legado.pacientes_por_especialidad.{$especialidad}", []);
+            $tabla = (string) ($declarado['tabla'] ?? '');
+
+            if ($tabla !== '' && $tabla !== 'pacientes') {
+                $tablas[$tabla] = (array) ($declarado['columnas'] ?? []);
+            }
+        }
+
+        return $tablas;
+    }
+
+    /** ¿Esta tabla del escritorio trae pacientes para este médico? */
+    public function esTablaDePacientes(string $tabla, ?Medico $medico): bool
+    {
+        return array_key_exists($tabla, $this->pacientesDe($medico));
+    }
 }

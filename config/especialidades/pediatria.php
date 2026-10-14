@@ -139,6 +139,42 @@ return [
                 'nroconsulta' => 'consulta',
             ],
         ],
+
+        /*
+        | **De dónde salen los pacientes de esta especialidad** (2026-10-14).
+        |
+        | Ginecología y las demás especialidades los tienen en `pacientes` (la tabla del legado
+        | compartido, que ya está en la lista histórica). Pediatría **no la usa**: PediaReport es otro
+        | producto y su ABM de pacientes es `paciente_chamo` — el chamo con su familia y su
+        | representante (`d_a_pacientes_chamo.srd`; `d_a_pacientes.srd` existe y **ninguna ventana de
+        | pediatría lo usa**)—, mientras su `pacientes` está vacía. Medido el 2026-10-14 sobre las bases
+        | reales: `pacientes` = **0** filas contra **6.892** en `paciente_chamo` (y las otras seis
+        | especialidades sí tienen miles en `pacientes`).
+        |
+        | Sin esto, la carga sube los chamos a la tabla `paciente_chamo` del API —donde nadie los lee— y
+        | el médico queda **sin pacientes y sin historias**: sin historia no hay ficha, no se puede abrir
+        | una consulta y el app móvil abre en blanco. Pasó de verdad: la carga de pediatría terminó
+        | "Completa" con 1,19 M de filas y 0 pacientes.
+        |
+        | `columnas` traduce los nombres (escritorio => API) para armar la fila de `pacientes`; lo que no
+        | esté mapeado se queda en la tabla `paciente_chamo` del API, que se sigue subiendo entera.
+        */
+        'pacientes' => [
+            'tabla' => 'paciente_chamo',
+            'columnas' => [
+                'historia'     => 'numhistoria',
+                'nombre'       => 'nombres',
+                'f_nacimiento' => 'fnacimiento',
+                'l_nacimiento' => 'lnacimiento',
+                'f_ingreso'    => 'fingreso',
+                'celular'      => 'telefono',
+                'segu_empre'   => 'codesegemp',
+                // `cedula`, `sexo`, `escolaridad` y `email` se llaman igual en las dos tablas.
+                // Quedan sin mapear (y por lo tanto viven en `paciente_chamo`): `familia`, `representante`,
+                // `foto_paciente`, `nota_general`, `alergia`, `notas`, `sitio`, `medio*`, `pediatrico`,
+                // `vacunas` y `medico`. El representante, la alergia y la foto son la Fase 2 del mapeo.
+            ],
+        ],
     ],
 
     /*
