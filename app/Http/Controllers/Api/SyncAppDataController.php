@@ -11,6 +11,7 @@ use App\Actions\Agenda\ReordenarCola;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
+use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
 use App\Models\Cola;
@@ -252,9 +253,9 @@ class SyncAppDataController extends Controller
         // `constancia_obs` solo hace falta la observación. En la descarga
         // completa no se mandan (con datos reales, ~13 MB menos); por delta se manda todo, así el
         // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
-        $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $modelo::whereIn($columnaHistoria, $numHistorias)
+        $porConsulta = fn (string $modelo, string $tablaHistoria, ?\Closure $conContenido = null) => $modelo::whereIn(TablasLegado::columnaHistoria($tablaHistoria), $numHistorias)
             ->whereIn('reg_medico', $registrosMedicos)
-            ->when($conVentana, fn ($q) => $q->whereIn($columnaHistoria, $historiasDeLaVentana()))
+            ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria($tablaHistoria), $historiasDeLaVentana()))
             ->when($completo && $conContenido !== null, $conContenido);
 
         return [
@@ -297,17 +298,17 @@ class SyncAppDataController extends Controller
             // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
             'tratamientos' => ['consulta' => RecipeGrupo::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'tratamientos_detalle' => ['consulta' => RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
-            'constancia_obs' => ['consulta' => $porConsulta(ConstanciaObs::class, 'numhistoria', fn ($q) => $q
+            'constancia_obs' => ['consulta' => $porConsulta(ConstanciaObs::class, 'constancia_obs', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")), 'columna' => 'id'],
             // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
             // (decisión del usuario, 2026-09-27).
-            'reposo_paciente' => ['consulta' => $porConsulta(ReposoPaciente::class, 'nrohistoria', fn ($q) => $q->where(fn ($q) => $q
+            'reposo_paciente' => ['consulta' => $porConsulta(ReposoPaciente::class, 'reposo_paciente', fn ($q) => $q->where(fn ($q) => $q
                 ->where('numdias', '>', 1)
                 ->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''"))), 'columna' => 'id'],
-            'referencia' => ['consulta' => $porConsulta(Referencia::class, 'nrohistoria'), 'columna' => 'id'],
-            'informe' => ['consulta' => $porConsulta(Informe::class, 'nrohistoria', fn ($q) => $q
+            'referencia' => ['consulta' => $porConsulta(Referencia::class, 'referencia'), 'columna' => 'id'],
+            'informe' => ['consulta' => $porConsulta(Informe::class, 'informe', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
-            'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'nrohistoria'), 'columna' => 'id'],
+            'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'diagnostico_paciente'), 'columna' => 'id'],
             // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
             // (constancia), el médico al que se refiere y su especialidad (referencia).
             'diagnosticos' => ['consulta' => Diagnostico::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],

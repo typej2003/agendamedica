@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\User;
+use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -325,5 +327,23 @@ class SyncVolcadoPaginadoTest extends TestCase
         }
 
         return $todo;
+    }
+
+    /**
+     * El mapa de qué columna lleva la historia en cada tabla tiene que seguir siendo cierto: si una tabla
+     * cambia de nombre de columna (o el mapa se copia mal), cualquier filtro que lo use corta de más o de
+     * menos sin que nadie se entere. La trampa 122 nació justo de eso.
+     */
+    public function test_el_mapa_de_columnas_de_historia_sigue_siendo_cierto(): void
+    {
+        foreach (TablasLegado::columnasDeHistoria() as $tabla => $columna) {
+            $this->assertTrue(Schema::hasTable($tabla), "la tabla {$tabla} existe en el API");
+            $this->assertTrue(Schema::hasColumn($tabla, $columna), "la columna {$tabla}.{$columna} existe");
+        }
+
+        // `cola` tiene las DOS en el API, pero la que lleva el número de historia es `numhistoria`:
+        // el `nrohistoria` de esa tabla es viejo y no lo lleva (trampa 122).
+        $this->assertSame('numhistoria', TablasLegado::columnaHistoria('cola'));
+        $this->assertSame('nrohistoria', TablasLegado::columnaHistoria('recipes'));
     }
 }

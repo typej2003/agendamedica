@@ -15,6 +15,47 @@ class TablasLegado
     /** Columnas que guardan un número de historia, según la tabla del legado. */
     public const COLUMNAS_HISTORIA = ['numhistoria', 'nrohistoria', 'historia', 'histroria'];
 
+    /**
+     * **Qué columna lleva el número de historia en cada tabla del legado.** Es la fuente única de esa
+     * diferencia de nombres, y sale de los dumps del legado (`Docs/MICONSULTAGI-legado/esquemas-asa/*.sql`),
+     * no de lo que parece.
+     *
+     * Existe por una razón concreta: la tabla `cola` del API tiene **además** una columna `nrohistoria`,
+     * vieja de la primera migración, que **no** lleva el número. Un filtro que la usó dejó pasar 49.955
+     * récipes de pacientes que no se atendían (trampa 122 de `TRAMPAS.md`). Cualquier código nuevo que
+     * necesite el número de historia de una tabla clínica debe preguntar acá.
+     */
+    private const COLUMNA_HISTORIA = [
+        'cola' => 'numhistoria',
+        'consultas' => 'numhistoria',
+        'constancia_obs' => 'numhistoria',
+        'recipes' => 'nrohistoria',
+        'informe' => 'nrohistoria',
+        'referencia' => 'nrohistoria',
+        'reposo_paciente' => 'nrohistoria',
+        'diagnostico_paciente' => 'nrohistoria',
+        'motivo_consulta_paciente' => 'nrohistoria',
+        // Ojo con esta: el legado la llama `nrohistoria` y el API la tiene como `historia`, porque el
+        // manifiesto de la especialidad traduce el nombre al subir (`sync.columnas_equivalentes`). El mapa
+        // habla de las columnas **del API**.
+        'examen_fisico_nuevo' => 'historia',
+    ];
+
+    /**
+     * La columna del número de historia en esa tabla del legado. Sin dato, `numhistoria` (el nombre más
+     * común y el que usa la tabla de citas).
+     */
+    public static function columnaHistoria(string $tabla): string
+    {
+        return self::COLUMNA_HISTORIA[$tabla] ?? 'numhistoria';
+    }
+
+    /** El mapa completo (tabla => columna), para los tests que comprueban que siga siendo cierto. */
+    public static function columnasDeHistoria(): array
+    {
+        return self::COLUMNA_HISTORIA;
+    }
+
     /** Columnas que guardan un número de consulta (siempre junto a una de historia). */
     public const COLUMNAS_CONSULTA = ['nroconsulta', 'numconsulta', 'consulta', 'num_consulta'];
 
