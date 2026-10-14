@@ -109,8 +109,21 @@ class SyncVolcadoPaginadoTest extends TestCase
         $cursor = 'inicio';
         $paginas = 0;
         $vistas = [];
+        $indiceAnterior = -1;
+        $desdeAnterior = -1;
 
         while ($cursor !== null && $paginas < 200) {
+            // El cursor **nunca vuelve atrás**: el índice de tabla no puede bajar y, dentro de la misma
+            // tabla, el id tiene que crecer. Es lo que garantiza que una tabla no se repita en páginas
+            // salteadas (una tabla grande ocupa varias páginas **seguidas**, que es lo correcto).
+            [$indice, $desde] = array_map('intval', explode(':', $cursor === 'inicio' ? '0:0' : $cursor));
+            $this->assertGreaterThanOrEqual($indiceAnterior, $indice, "el cursor volvió atrás: {$cursor}");
+            if ($indice === $indiceAnterior) {
+                $this->assertGreaterThan($desdeAnterior, $desde, "el id del cursor no avanzó: {$cursor}");
+            }
+            $indiceAnterior = $indice;
+            $desdeAnterior = $desde;
+
             $respuesta = $this->sync(['volcado' => $cursor, 'volcado_limite' => 2]);
             $cuerpo = $respuesta->json();
 
