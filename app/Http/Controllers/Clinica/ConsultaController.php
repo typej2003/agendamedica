@@ -18,6 +18,7 @@ use App\Clinica\Consulta\FurDelControlPrenatal;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
+use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\Vistas\TextoDelExamenVista;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
@@ -152,6 +153,7 @@ class ConsultaController extends Controller
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
+        ResumenMedicoDeLaConsulta $resumenes,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -200,7 +202,7 @@ class ConsultaController extends Controller
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
-                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes)
+                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
                 : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $furPrenatal, $gestas, $informePrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
@@ -592,6 +594,7 @@ class ConsultaController extends Controller
         LaboratorioDeLaConsulta $laboratorio,
         EstudiosDeLaConsulta $estudios,
         CatalogoParaPedirExamenes $catalogoDeExamenes,
+        ResumenMedicoDeLaConsulta $resumenes,
     ): SeccionDeSolicitudesVista {
         $id = $consulta->id;
         $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'));
@@ -644,8 +647,16 @@ class ConsultaController extends Controller
                 FechaDelConsultorio::hoy()->toDateString(),
                 $informes->plantillas((string) $consulta->reg_medico),
                 $informes->anteriores($consulta),
-                ['guardar' => route('clinica.consulta.informe.guardar', $id), 'eliminar' => route('clinica.consulta.informe.eliminar', $id), 'imprimir' => $imprimir('informe')],
+                [
+                    'guardar' => route('clinica.consulta.informe.guardar', $id),
+                    'eliminar' => route('clinica.consulta.informe.eliminar', $id),
+                    'imprimir' => $imprimir('informe'),
+                    // El resumen médico (WEB-5.3c): la otra hoja de esta pestaña —el escritorio las tiene
+                    // juntas, `tabpage_14`, con un radio—. La web lo ofrece sólo si tiene algo que resumir.
+                    'imprimirResumen' => $imprimir(DocumentoImpreso::RESUMEN_MEDICO),
+                ],
                 $old,
+                $resumenes->de($consulta)->esDocumento(),
             );
         } elseif ($activa === PestanasDeSolicitudes::HOSPITALIZACION) {
             $fila = $hospitalizaciones->fila($consulta);

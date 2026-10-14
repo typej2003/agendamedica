@@ -6,6 +6,7 @@ use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Impresion\DocumentoImpreso;
@@ -44,6 +45,10 @@ final class HistoriaDelPaciente
      * `codeparentesco` de WEB-3.4).
      */
     public const TIPO2_ALERTA = 'A';
+
+    public function __construct(private ResumenMedicoDeLaConsulta $resumenes)
+    {
+    }
 
     /**
      * Las consultas de la historia, **la más reciente primero**, cada una con sus motivos y sus
@@ -168,6 +173,9 @@ final class HistoriaDelPaciente
      *  - **Referencia** y **récipes**: se listan todos (puede haber varias por consulta).
      *  - **Colposcopía** (WEB-6.5): sólo si la consulta tiene el texto del informe (`consultas.observaciones`,
      *    que es lo que imprime la hoja); el literal `none` del legado no cuenta.
+     *  - **Resumen médico** (WEB-5.3c): no es una fila, es una hoja auto-generada (motivo, enfermedad actual,
+     *    examen físico, examen ginecológico, resultado de exámenes, diagnóstico, tratamiento y plan). Se lista
+     *    si **algún** bloque de esa consulta tiene datos; si no, no hay nada que imprimir.
      *
      * La fecha de cada documento es la suya cuando la tiene (el `fdesde` del reposo, el `fe_cha` del
      * informe) y, si no, la de su consulta. El texto viene **sin recortar**: el recorte para el listado lo
@@ -389,6 +397,22 @@ final class HistoriaDelPaciente
                     $documento,
                 ));
             }
+        }
+
+        // El **resumen médico** (WEB-5.3c): la hoja que se arma sola con los datos de toda la consulta. No
+        // es la fila de ninguna tabla, así que su «¿es un documento?» lo contesta su lectura
+        // (`ResumenMedicoDeLaConsulta::conResumen`, la misma regla de su bloque con datos).
+        foreach ($this->resumenes->conResumen($regMedico, $numero) as $nroconsulta) {
+            $documentos->push($this->documento(
+                'Resumen médico',
+                'bi-journal-medical',
+                $nroconsulta,
+                $fechaDeLaConsulta,
+                'Resumen médico de la consulta',
+                null,
+                null,
+                DocumentoImpreso::RESUMEN_MEDICO,
+            ));
         }
 
         foreach ($this->recipes($regMedico, $numero) as $recipe) {

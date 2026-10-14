@@ -495,6 +495,10 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         [, $medico, , $consulta] = $this->escenario();
 
         $casos = [
+            // El resumen médico (WEB-5.3c) es una hoja auto-generada: es documento si algún bloque de la
+            // consulta tiene datos, y deja de serlo cuando no queda ninguno.
+            'resumen con enfermedad actual' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => 'Dolor de dos días.']), true],
+            'resumen vuelto a vaciar' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => null]), false],
             'constancia vacía' => [fn () => DB::table('constancia_obs')->insert(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'numconsulta' => 1, 'created_at' => now(), 'updated_at' => now()]), false],
             'constancia con observación' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => 'Algo']), true],
             'constancia con diagnósticos editados' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => null, 'observacion' => 'GASTRITIS.']), true],

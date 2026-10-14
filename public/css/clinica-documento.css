@@ -13,6 +13,22 @@
 .documento-titulo-fila { justify-content: center; }
 .documento-titulo { font-style: normal; text-align: center; letter-spacing: .06em; }
 
+/* ------------------------------------------------------------------------------------- Caja del destinatario
+   El `informe.para` del resumen médico (WEB-5.3c): en la cabecera, centrado y dentro de una caja con borde —el
+   `border="4"` del `column informe_para` del DataWindow—. Ocupa una franja fija de 9,9 mm (borde 0,5 + 0,5, relleno
+   1 + 1, una línea de 11 pt a 1,25 y 2 mm de aire abajo) que el servidor descuenta del cuerpo: `MedidasDeLaMitad::PARA_MM`. */
+
+.documento-para {
+    flex: none;
+    margin: 0 0 2mm;
+    padding: 1mm 3mm;
+    border: .5mm solid #000;
+    text-align: center;
+    font-size: 11pt;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
 /* ---------------------------------------------------------------------------------- Encabezado de la continuación
    Sin membrete: «PACIENTE: …» a la izquierda y «FECHA: …» a la derecha en una línea de 9 pt (`altoDelEncabezadoDeContinuacion`);
    luego la misma línea separadora (5 mm) y un título de 11 pt con 2,5 mm de aire (7,4 mm: `TITULO_CONTINUACION_MM`). */

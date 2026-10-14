@@ -78,6 +78,19 @@ final class DocumentoImpreso
     public const HISTEROSCOPIA = 'histeroscopia';
 
     /**
+     * El **resumen médico** (WEB-5.3c): la hoja que el escritorio arma sola con los datos de **toda** la
+     * consulta (`d_resumen_medico_gra`, el radio «Resumen médico» de la pestaña *Informe médico*,
+     * `w_consulta_principal.srw:18653`). No es una fila de nadie: no se guarda ni se edita, y sale —o no—
+     * según lo que la consulta tenga cargado.
+     *
+     * Es **otro** resumen que el de la historia clínica (`ResumenDeHistoriaVista`, que recorre todas las
+     * consultas): éste es de **una** consulta y lleva los rótulos de su DataWindow, que no son los de la
+     * historia (`consultas.oido` es «RESULTADO DE EXÁMENES» acá y «Oído» allá; `consultas.laringe`,
+     * «PLAN DE TRATAMIENTO» y «Laringe»).
+     */
+    public const RESUMEN_MEDICO = 'resumen-medico';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -102,6 +115,9 @@ final class DocumentoImpreso
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).
         self::HISTEROSCOPIA => ['INFORME DE HISTEROSCOPÍA', 'Histeroscopía'],
+        // El del resumen médico: el título del radio del escritorio; el DataWindow no imprime un título
+        // propio (su encabezado es el membrete), así que la hoja de la web lleva el nombre del documento.
+        self::RESUMEN_MEDICO => ['RESUMEN MÉDICO', 'Resumen médico'],
     ];
 
     /**
@@ -134,6 +150,9 @@ final class DocumentoImpreso
      * @param  array{nombre:string, cedula:?string, edad:?int, direccion:?string}  $persona
      * @param  array<int,array{etiqueta:string, valor:string}>  $fijos
      * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}>  $parrafos
+     * @param  ?string  $para  el destinatario que sale **en la cabecera, en una caja con borde** (`informe.para`
+     *                         del resumen médico, WEB-5.3c); en los demás documentos va en la cabecera del
+     *                         paciente y no se imprime: `null`
      */
     public function __construct(
         public readonly string $tipo,
@@ -144,6 +163,7 @@ final class DocumentoImpreso
         public readonly array $persona,
         public readonly array $fijos,
         public readonly array $parrafos,
+        public readonly ?string $para = null,
     ) {
     }
 

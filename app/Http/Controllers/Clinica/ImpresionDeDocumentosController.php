@@ -239,6 +239,12 @@ class ImpresionDeDocumentosController extends Controller
             ]);
         }
 
+        // El resumen médico (WEB-5.3c) no tiene pestaña propia: su botón vive en la pestaña *Informe
+        // médico* del escritorio (`tabpage_14`), que es a donde vuelve.
+        if ($tipo === DocumentoImpreso::RESUMEN_MEDICO) {
+            return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::INFORME]);
+        }
+
         $pestana = $tipo === DocumentoImpreso::REFERENCIA ? PestanasDeSolicitudes::REFERENCIAS : ($tipo ?? PestanasDeSolicitudes::POR_DEFECTO);
 
         return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $pestana]);

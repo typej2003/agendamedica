@@ -75,6 +75,13 @@ final class MedidasDeLaMitad
     private const TITULO_CONTINUACION_MM = 7.4;
 
     /**
+     * La **caja del destinatario** del resumen médico (WEB-5.3c, `informe.para`): el valor en negrita a 11 pt dentro de
+     * una caja con borde (`.documento-para`). El `para` es `char(50)`, así que a 11 pt entra en una línea de los 128,5 mm
+     * útiles y la franja es fija: borde (0,5 + 0,5) + relleno (1 + 1) + la línea (4,85) + el aire de abajo (2) = 9,9 mm.
+     */
+    private const PARA_MM = 9.9;
+
+    /**
      * Lo que ocupan la fecha y el «PACIENTE:» en el encabezado corto de una mitad de continuación
      * (`.documento-continuacion-datos`): «PACIENTE:» ~17 mm y «FECHA: dd/mm/aaaa» ~30 mm.
      */
@@ -147,14 +154,17 @@ final class MedidasDeLaMitad
      * @param  string  $paciente  el nombre que se imprime en `PACIENTE`
      * @param  bool  $primera  `true` para la primera mitad, `false` para una de continuación
      * @param  bool  $conFirma  `true` si es la última mitad del documento (lleva la firma), `false` si sigue en otra
+     * @param  ?string  $para  el destinatario que va **en la cabecera, en una caja con borde** (el resumen médico, WEB-5.3c);
+     *                         ocupa su franja sólo en la primera mitad
      */
-    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma): float
+    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null): float
     {
         $arriba = $primera
             ? $this->altoDelMembrete($membrete)
                 + self::LINEA_MM
                 + $this->altoDeLosDatos($paciente, null) + self::AIRE_DE_LOS_DATOS_MM
                 + self::TITULO_MM
+                + ($para === null ? 0.0 : self::PARA_MM)
             : $this->altoDelEncabezadoDeContinuacion($paciente)
                 + self::LINEA_MM
                 + self::TITULO_CONTINUACION_MM;

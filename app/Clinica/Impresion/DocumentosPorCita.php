@@ -37,7 +37,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Un récipe con medicamentos (del paciente o de la pareja) o un **documento de verdad** de los de `QueEsUnDocumento`: una
  * constancia con algo propio del médico, un reposo real, una referencia, un informe real, una orden de hospitalización, una dieta con texto, una orden de
- * laboratorio o una solicitud de estudios (al menos un examen o estudio, o un resumen clínico con texto). Es **la misma regla** que
+ * laboratorio o una solicitud de estudios (al menos un examen o estudio, o un resumen clínico con texto) o un **resumen médico** (WEB-5.3c: algún bloque
+ * con datos). Es **la misma regla** que
  * `SolicitudesParaImprimir::disponibles` aplica a una sola consulta, escrita acá como consulta de conjunto (SQL) porque es
  * por toda la agenda; los tests comparan las dos formas.
  *
@@ -165,6 +166,34 @@ final class DocumentosPorCita
             $this->marcar($conAlgo, DB::table('consultas')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
                 ->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")->whereRaw("LOWER(TRIM({$columna})) <> 'none'"), 'numhistoria', 'nroconsulta');
         }
+
+        //  - **resumen médico** (WEB-5.3c): la hoja que se arma sola con los datos de toda la consulta. Es
+        //    documento si **algún bloque tiene datos salvo el tratamiento** (la regla de
+        //    `ResumenMedico::esDocumento`, escrita acá en conjunto): las tres columnas de `consultas`
+        //    (enfermedad actual, resultado de exámenes y plan), los dos resúmenes del examen (`total_f` /
+        //    `total_g`, con la clave `historia` + `consulta` de esa tabla), un motivo o un diagnóstico. El
+        //    tratamiento —los medicamentos de un récipe— **no** cuenta (el récipe ya es su documento, y por
+        //    eso no se mira `recipes`), como tampoco el `informe.para` ni la fecha: son de la cabecera.
+        $this->marcar($conAlgo, DB::table('consultas')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+            ->where(function ($q) {
+                foreach (['enfermedadactual', 'oido', 'laringe'] as $columna) {
+                    $q->orWhere(function ($cada) use ($columna) {
+                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                    });
+                }
+            }), 'numhistoria', 'nroconsulta');
+        $this->marcar($conAlgo, DB::table('examen_fisico_nuevo')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+            ->where(function ($q) {
+                foreach (['total_f', 'total_g'] as $columna) {
+                    $q->orWhere(function ($cada) use ($columna) {
+                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                    });
+                }
+            }), 'historia', 'consulta');
+        $this->marcar($conAlgo, DB::table('motivo_consulta_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        $this->marcar($conAlgo, DB::table('diagnostico_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
 
         //  - informe del eco pélvico (WEB-6.1): algún campo del estudio cargado o el informe en texto libre
         //    del escritorio (`QueEsUnDocumento::ecografia`; la fecha sola no cuenta y el literal `none`

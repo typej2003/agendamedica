@@ -96,16 +96,19 @@ final class DistribuidorDeDocumento
 
         while (count($mitades) < self::MAXIMO_DE_MITADES) {
             $fijos = $primera ? $documento->fijos : [];
+            // La caja del destinatario (el resumen médico, WEB-5.3c) ocupa su franja en la cabecera de la primera
+            // mitad: el cuerpo de esa mitad tiene que medirse sin ella.
+            $para = $primera ? $documento->para : null;
 
             // ¿Lo que queda entra en esta mitad **con la firma**? Entonces es la última.
-            if ($this->alto($fijos, $restantes, $puntos) <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true)) {
+            if ($this->alto($fijos, $restantes, $puntos) <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para)) {
                 $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes];
 
                 return $mitades;
             }
 
             // Si no, se llena esta mitad (sin firma, con el «Continúa →») con todo lo que entra.
-            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false);
+            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para);
             $total = $this->palabras($restantes);
             $cuantas = $this->mayorCorteQueEntra($fijos, $restantes, $total, $puntos, $capacidad);
 

@@ -17,15 +17,20 @@ use Illuminate\Support\Collection;
  *
  * Elegir una plantilla o copiar un informe **es escribir**: el aviso de «cambios sin guardar» aparece igual y el guardado
  * sigue siendo el botón (lo resuelve `consulta-solicitudes.js` desde los `data-*`; el texto viaja en un atributo, no en
- * un `<option>`). Un **informe por consulta**, que se corrige en el lugar. Sin base de datos.
+ * un `<option>`). Un **informe por consulta**, que se corrige en el lugar.
+ *
+ * Desde WEB-5.3c esta pestaña ofrece además el **resumen médico** (`d_resumen_medico_gra`), la hoja que se arma sola con
+ * los datos de toda la consulta: es la otra mitad de la pestaña del escritorio y no se edita acá (`ResumenMedico`).
+ * Sin base de datos.
  */
 final class InformeVista
 {
     /**
      * @param  Collection<int,object{codigo:string, titulo:string, texto:string}>  $plantillas
      * @param  Collection<int,object{consulta:int, fecha:?string, para:?string, texto:string}>  $anteriores
-     * @param  array<string,string>  $urls  `guardar`, `eliminar` e `imprimir`
+     * @param  array<string,string>  $urls  `guardar`, `eliminar`, `imprimir` e `imprimirResumen`
      * @param  array<string,mixed>  $old  el `old()` de un POST que falló la validación
+     * @param  bool  $hayResumen  ¿el **resumen médico** de esta consulta (WEB-5.3c) tiene algo que imprimir?
      */
     public function __construct(
         private ?string $para,
@@ -37,6 +42,7 @@ final class InformeVista
         private Collection $anteriores,
         private array $urls,
         private array $old = [],
+        private bool $hayResumen = false,
     ) {
     }
 
@@ -114,6 +120,22 @@ final class InformeVista
     public function urlImprimir(): string
     {
         return $this->urls['imprimir'];
+    }
+
+    /**
+     * **El resumen médico** (WEB-5.3c): la hoja que se arma sola con los datos de toda la consulta. Vive en
+     * esta misma pestaña porque así la tiene el escritorio (`tabpage_14`: el texto del informe y, al lado,
+     * el radio del resumen); el botón se ofrece **sólo si hay algo que resumir**, que no es una fila que se
+     * cree al abrir la consulta sino lo que la consulta tenga cargado.
+     */
+    public function ofreceResumen(): bool
+    {
+        return $this->hayResumen;
+    }
+
+    public function urlImprimirResumen(): string
+    {
+        return $this->urls['imprimirResumen'];
     }
 
     public function puedeEliminar(): bool

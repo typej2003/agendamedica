@@ -38,6 +38,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::REPOSO => 'bi-bandaid',
         DocumentoImpreso::REFERENCIA => 'bi-person-up',
         DocumentoImpreso::INFORME => 'bi-file-earmark-text',
+        DocumentoImpreso::RESUMEN_MEDICO => 'bi-journal-medical',
         DocumentoImpreso::HOSPITALIZACION => 'bi-hospital',
         DocumentoImpreso::DIETA => 'bi-egg-fried',
     ];

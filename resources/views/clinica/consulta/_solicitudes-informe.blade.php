@@ -11,6 +11,13 @@
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
             </a>
         @endif
+        {{-- El resumen médico (WEB-5.3c): la hoja auto-generada de la consulta, la otra mitad de esta
+             pestaña del escritorio. Sólo se ofrece si hay algo que resumir. --}}
+        @if ($vm->ofreceResumen())
+            <a class="btn btn-sm btn-outline-secondary" href="{{ $vm->urlImprimirResumen() }}" target="_blank" rel="noopener">
+                <i class="bi bi-journal-medical" aria-hidden="true"></i> Resumen médico
+            </a>
+        @endif
     </x-slot>
 
     <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>

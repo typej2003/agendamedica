@@ -81,6 +81,9 @@ final class HojasDeDocumentoVista
             'cedula' => $persona['cedula'] ?? '',
             'edad' => $this->edad($persona['edad'] ?? null),
             'fecha' => FechaClinica::formato($documento->fecha),
+            // El destinatario del resumen médico (WEB-5.3c, `informe.para`): sale en la cabecera, en una
+            // caja con borde. En los demás documentos va en el cuerpo y esto es `null`.
+            'para' => $mitad['primera'] ? $documento->para : null,
             'fijos' => $mitad['fijos'],
             'parrafos' => $mitad['parrafos'],
             'sigue' => $mitad['sigue'],

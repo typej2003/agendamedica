@@ -15,6 +15,8 @@ use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
+use App\Clinica\Consulta\ResumenMedico;
+use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
@@ -59,6 +61,10 @@ use Throwable;
  *    tras otro, `DocumentoImpreso::parrafoDeLista`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
  *  - **Estudios** (`d_estudio_imagenes.srd`, *SOLICITUD DE ESTUDIOS*): los estudios en el orden de `radiologia_paciente.orden`, numerados
  *    («Estudios solicitados:»), y el *Resumen clínico* (`radiologia_obs.observacion`). Fecha: la de la consulta.
+ *  - **Resumen médico** (WEB-5.3c, `d_resumen_medico_gra`): la hoja que se **arma sola** con los datos de toda la consulta
+ *    (motivo, enfermedad actual, examen físico, examen ginecológico, resultado de exámenes, diagnóstico, tratamiento y plan de
+ *    tratamiento). No es la fila de ninguna tabla: la lee `ResumenMedicoDeLaConsulta` y la arma `ResumenMedico`. Su cabecera
+ *    lleva el `informe.para` y su fecha, y sus bloques sin datos no se imprimen.
  *
  *  «Resumen clínico» es sólo el **rótulo de la observación** de esa orden (el campo que el médico escribe), no un texto que el escritorio arme
  *  con los diagnósticos: la web no agrega ninguna línea automática.
@@ -87,6 +93,7 @@ final class SolicitudesParaImprimir
         private EcoObstetricoTercero $ecosObstetricosTerceros,
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
+        private ResumenMedicoDeLaConsulta $resumenes,
     ) {
     }
 
@@ -258,6 +265,21 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // El **resumen médico** (WEB-5.3c): la hoja que se arma sola con los datos de toda la consulta.
+        // No es una fila de nadie, así que se ofrece si hay algo que resumir y, si no, no existe: ofrecerlo
+        // vacío llenaría la lista de la secretaría con una hoja en blanco.
+        $resumen = $this->resumenes->de($consulta);
+        if ($resumen->esDocumento()) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::RESUMEN_MEDICO,
+                'tipo' => DocumentoImpreso::RESUMEN_MEDICO,
+                'titulo' => 'Resumen médico',
+                // Sin los datos clínicos: la lista de la cita la ve la secretaría.
+                'resumen' => 'Resumen médico de la consulta',
+                'fecha' => $resumen->fecha() ?? $fechaDeLaConsulta,
+            ];
+        }
+
         $dieta = $this->dietas->fila($consulta);
         if ($this->dietas->esReal($dieta)) {
             $disponibles[] = [
@@ -354,6 +376,12 @@ final class SolicitudesParaImprimir
             $informe = $this->informes->fila($consulta);
 
             return $this->informes->esReal($informe) ? $this->informe($paciente, $informe, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::RESUMEN_MEDICO) {
+            $resumen = $this->resumenes->de($consulta);
+
+            return $resumen->esDocumento() ? $this->resumenMedico($paciente, $resumen, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::HOSPITALIZACION) {
@@ -471,6 +499,32 @@ final class SolicitudesParaImprimir
             PacienteImpreso::datos($paciente, $fecha),
             $para === null ? [] : [['etiqueta' => 'PARA:', 'valor' => $para]],
             DocumentoImpreso::parrafosDe($informe->descripcion),
+        );
+    }
+
+    /**
+     * **El resumen médico de la consulta** (WEB-5.3c): la hoja que el escritorio arma sola
+     * (`d_resumen_medico_gra`) con los ocho bloques de `ResumenMedico`. El destinatario del informe
+     * (`informe.para`) sale **en la cabecera, en una caja con borde**, y la fecha de la cabecera es
+     * `informe.fe_cha` (o la de la consulta si no hay informe).
+     *
+     * El cuerpo lo arma el ViewModel de la hoja —con los rótulos literales y los bloques sin datos
+     * omitidos—, así que acá no se escribe ninguna regla del dato.
+     */
+    private function resumenMedico(Paciente $paciente, ResumenMedico $resumen, string $fechaDeLaConsulta): DocumentoImpreso
+    {
+        $fecha = $resumen->fecha() ?? $fechaDeLaConsulta;
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::RESUMEN_MEDICO,
+            DocumentoImpreso::RESUMEN_MEDICO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::RESUMEN_MEDICO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::RESUMEN_MEDICO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            $resumen->parrafos(),
+            $resumen->para(),
         );
     }
 
