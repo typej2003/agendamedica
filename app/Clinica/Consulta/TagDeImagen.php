@@ -51,6 +51,20 @@ final class TagDeImagen
     public const OBSTETRICO_3 = 'o3';
 
     /**
+     * La del **ecocardiograma fetal** (WEB-6.3): no es una solapa del examen sino un tipo de estudio, y su
+     * grilla de imágenes es la del propio estudio (`d_imagenes_e_fetal` de
+     * `w_cargar_visualizar_ecocardiograma_fetal.srw:433-434`).
+     */
+    public const FETAL = 'f';
+
+    /**
+     * La del **eco Doppler perinatal** (WEB-6.3): también es un tipo de estudio y su grilla es la suya
+     * (`d_imagenes_e_doppler.srd:11`, que filtra por esta etiqueta; la escribe
+     * `w_cargar_visualizar_eco_doppler.srw:671`).
+     */
+    public const DOPPLER = 'ed';
+
+    /**
      * La etiqueta **canónica** de cada solapa del examen: es la que la web escribe al subir una foto desde esa
      * solapa. Una solapa que todavía no existe no está en la lista.
      *
@@ -87,6 +101,8 @@ final class TagDeImagen
         self::ABDOMINAL => 'eco abdominal',
         self::OBSTETRICO_1 => 'eco obstétrico (1.er trimestre)',
         self::OBSTETRICO_3 => 'eco obstétrico (2.º/3.er trimestre)',
+        self::FETAL => 'ecocardiograma fetal',
+        self::DOPPLER => 'eco Doppler perinatal',
     ];
 
     /** ¿La solapa existe y tiene etiqueta? Es `null` para una solapa que no sube fotos. */
