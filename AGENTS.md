@@ -29,6 +29,10 @@ php artisan storage:link   # necesario para servir el logo (Paso 17) y la firma/
 php artisan route:list
 ```
 
+⚠️ **Agilizar el desarrollo (decisión del usuario, 2026-10-14): la suite completa NO se corre por rutina.** Se corre
+el filtro de la tarea (`php -d memory_limit=2G artisan test --filter=…`) y **el usuario avisa cuándo correrla entera**,
+antes de subir. Motivo: tarda unos seis minutos y frena el desarrollo. Los números de más abajo son mediciones
+puntuales, no un paso obligatorio de cada cambio.
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
 sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.
