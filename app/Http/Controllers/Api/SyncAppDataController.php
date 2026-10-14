@@ -69,10 +69,16 @@ class SyncAppDataController extends Controller
         // El reloj de PHP (30 s por defecto) la cortaba a mitad y el teléfono se quedaba sin datos, así que
         // acá se corre sin reloj y con más memoria que el default.
         //
+        // El caso medido es el peor de todos: un médico de pediatría con 6.893 pacientes, 24.762 consultas y
+        // 24.785 citas (2026-10-14). Con el default (128-256 MB) no entra ni de lejos; 512 MB alcanzaba pero
+        // justo, así que el techo es 1 GB. El `@` es a propósito: si el host tiene `ini_set` deshabilitado,
+        // esto no hace nada y el endpoint sigue funcionando como antes.
+        //
         // ⚠️ Es un parche de servidor, no el diseño: la solución de fondo es **paginar el delta** (que el app
-        // pida de a tramos y siga por un cursor). Está anotado en el ROADMAP.
+        // pida de a tramos y siga por un cursor), y para un médico con una historia más grande que esta va a
+        // hacer falta. Está anotado en el ROADMAP.
         set_time_limit(0);
-        @ini_set('memory_limit', '512M');
+        @ini_set('memory_limit', '1024M');
 
         $user = $request->user();
         if (!$user) {
