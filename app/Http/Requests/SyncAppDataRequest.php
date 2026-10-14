@@ -180,6 +180,12 @@ class SyncAppDataRequest extends FormRequest
             'changes.*.scope_date' => ['required_if:changes.*.operation,reorder', 'date'],
 
             'changes.*.occurred_at' => ['sometimes', 'nullable', 'date'],
+
+            // Volcado paginado (primera sincronización de un médico grande): `inicio` arranca y después
+            // viaja el cursor que devolvió el servidor, tal cual. `volcado_limite` es cuántas filas por
+            // tramo pide el cliente (el servidor lo acota).
+            'volcado' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'volcado_limite' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5000'],
         ];
     }
 

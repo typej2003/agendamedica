@@ -62,21 +62,24 @@ use Illuminate\Support\Facades\DB;
  */
 class SyncAppDataController extends Controller
 {
+    /** Primer cursor del volcado paginado: el app lo manda para pedir el dataset entero de a tramos. */
+    public const VOLCADO_INICIO = 'inicio';
+
+    /** Filas por tramo del volcado paginado (el cliente puede pedir otro con `volcado_limite`). */
+    private const FILAS_POR_PAGINA = 2000;
+
+    /** Tope de filas por tramo, para que un cliente no pida una página que no entra en memoria. */
+    private const FILAS_POR_PAGINA_TOPE = 5000;
+
     public function sync(SyncAppDataRequest $request)
     {
-        // La **primera** sincronización de un médico con años de historia baja todo de una sola vez (el app
-        // no manda `since`): decenas de miles de consultas, citas, récipes y documentos en una respuesta.
-        // El reloj de PHP (30 s por defecto) la cortaba a mitad y el teléfono se quedaba sin datos, así que
-        // acá se corre sin reloj y con más memoria que el default.
+        // El volcado paginado existe justo para no necesitar esto (ver `paginaDelVolcado`), pero mientras
+        // un app viejo siga pidiendo el dataset entero sin `volcado`, acá se corre sin reloj y con más
+        // memoria que el default de PHP.
         //
         // El caso medido es el peor de todos: un médico de pediatría con 6.893 pacientes, 24.762 consultas y
-        // 24.785 citas (2026-10-14). Con el default (128-256 MB) no entra ni de lejos; 512 MB alcanzaba pero
-        // justo, así que el techo es 1 GB. El `@` es a propósito: si el host tiene `ini_set` deshabilitado,
-        // esto no hace nada y el endpoint sigue funcionando como antes.
-        //
-        // ⚠️ Es un parche de servidor, no el diseño: la solución de fondo es **paginar el delta** (que el app
-        // pida de a tramos y siga por un cursor), y para un médico con una historia más grande que esta va a
-        // hacer falta. Está anotado en el ROADMAP.
+        // 24.785 citas (2026-10-14). Con el default (128-256 MB) moría en `json_encode`; con 512 MB también.
+        // El `@` es a propósito: si el host tiene `ini_set` deshabilitado, esto no hace nada.
         set_time_limit(0);
         @ini_set('memory_limit', '1024M');
 
@@ -138,55 +141,81 @@ class SyncAppDataController extends Controller
 
         $syncedAt = Carbon::now();
 
-        $pacientes = $this->deltaQuery(Paciente::whereIn('id', $pacienteIds), $since)->get();
+        // **Volcado paginado** (opt-in): el app pide el dataset entero de a un tramo —una tabla y un tramo
+        // de filas por pedido— en vez de una sola respuesta con todo. Es lo que evita quedarse sin memoria
+        // con un médico de años de historia: el 2026-10-14 el volcado de un pediatra (6.893 pacientes,
+        // 24.762 consultas y 24.785 citas) murió en `json_encode` con 512 MB de PHP.
+        //
+        // Es opt-in a propósito: sin `volcado` todo sigue igual que siempre, así que un app ya instalado
+        // (que no conoce el paginado) recibe el volcado completo de una sola vez como hasta hoy.
+        if (($cursor = $request->input('volcado')) !== null) {
+            return $this->paginaDelVolcado(
+                $request, $medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, $estadoServicio,
+                $syncedAt, $resultadoChanges, (string) $cursor,
+            );
+        }
 
-        // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también entraban
-        // las que tuvieran un número del pivote, pero el número es por médico desde el Paso 18.B1 (cada
-        // instalación del legado arranca en 1), así que un médico recibía las historias de cualquier otro con
-        // el mismo número, y el teléfono las mezclaba con las suyas. Una historia sin `medico_id` ni
-        // `reg_medico` no es de nadie y no se manda (no hay ninguna en los datos cargados).
-        $historias = $this->deltaQuery(
-            Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
-                $query->where('medico_id', $medicoModel->id);
-                if (!empty($registrosMedicos)) {
-                    $query->orWhereIn('reg_medico', $registrosMedicos);
-                }
-            }),
-            $since,
-        )->get();
+        // Todo lo que baja el app, acotado a este médico, en **una sola definición**: la usan el delta de
+        // siempre y el volcado paginado (el volcado manda lo mismo, sólo que de a tramos).
+        $plan = $this->planDelVolcado($medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, $since === null, []);
 
-        $colas = $this->deltaQuery(Cola::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
-        // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
-        $consultas = $this->deltaQuery(
-            Consulta::whereIn('numhistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
-            $since,
-        )->get();
-        $motivos = $this->deltaQuery(MotivoCita::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
-        // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
-        // los lee y puede agregar o quitar los de la consulta que está atendiendo.
-        $motivosConsulta = $this->deltaQuery(MotivoConsulta::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $motivosDeConsulta = $this->deltaQuery(
-            MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
-            $since,
-        )->get();
-        // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
-        // filtro doble que `consultas`.
-        $recipes = $this->deltaQuery(
-            Recipe::whereIn('nrohistoria', $numHistorias)->whereIn('reg_medico', $registrosMedicos),
-            $since,
-        )->get();
-        // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
-        // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
-        $vademecum = $this->deltaQuery(Vademecum::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
-        $tratamientos = $this->deltaQuery(RecipeGrupo::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $tratamientosDetalle = $this->deltaQuery(
-            RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos),
-            $since,
-        )->get();
+        // Estas tres se leen primero porque de ellas salen los centros médicos que viajan.
+        $historias = $this->deltaQuery($plan['historias']['consulta'], $since)->get();
+        $colas = $this->deltaQuery($plan['colas']['consulta'], $since)->get();
+        $offices = $this->deltaQuery($plan['offices']['consulta'], $since)->get();
 
+        // Los centros que necesita el teléfono son los de las historias **y** los de las sedes
+        // donde atiende: sin esto, una sede recién configurada llegaría sin nombre ni dirección.
+        $plan['centros_medicos']['consulta'] = MedicalCenter::whereIn('id', $historias->pluck('medical_center_id')
+            ->merge($offices->pluck('medical_center_id'))
+            ->merge($colas->pluck('medical_center_id'))
+            ->filter()
+            ->unique()
+            ->toArray());
+
+        $datos = ['historias' => $historias, 'colas' => $colas, 'offices' => $offices];
+        foreach ($plan as $clave => $entrada) {
+            if (! array_key_exists($clave, $datos)) {
+                $datos[$clave] = $this->deltaQuery($entrada['consulta'], $since)->get();
+            }
+        }
+
+        // Sin `since` (primera sincronización) el cliente no tiene nada que borrar todavía.
+        $eliminados = $since
+            ? SyncChange::where('operation', 'deleted')
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->where('occurred_at', '>', $since)
+                ->get(['table_name', 'record_id', 'occurred_at'])
+            : collect([]);
+
+        return response()->json($this->cuerpoDeLaRespuesta(
+            $datos, $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio, $resultadoChanges, $eliminados,
+        ));
+    }
+
+    /**
+     * Las consultas de **todo** lo que baja el app, por clave de la respuesta, ya acotadas a este médico.
+     *
+     * Es la definición única del volcado: la usan el delta de siempre y el volcado paginado, así que una
+     * tabla nueva o un filtro nuevo se agregan en un solo lugar (si se escribieran dos veces, el delta y el
+     * volcado terminarían mandando cosas distintas).
+     *
+     * @param  bool  $completo  sin `since`: es la primera sincronización (y entonces se aplican los filtros
+     *                          que sólo tienen sentido con el dataset entero, como no mandar las plantillas
+     *                          vacías de los documentos)
+     * @param  array|null  $idsCentros  ids de los centros médicos a mandar; `null` los resuelve con una
+     *                                  consulta (el volcado paginado); el delta pasa los suyos, que salen de
+     *                                  las filas que está mandando
+     * @return array<string, array{consulta: \Illuminate\Database\Eloquent\Builder, columna: string}>
+     */
+    private function planDelVolcado(
+        Medico $medicoModel,
+        array $registrosMedicos,
+        array $pacienteIds,
+        array $numHistorias,
+        bool $completo,
+        ?array $idsCentros = null,
+    ): array {
         // Documentos de la consulta que el app solo imprime (Paso 25): los carga el escritorio y bajan
         // por delta, con el mismo filtro doble que `consultas`. `constancia_obs` nombra sus columnas
         // `numhistoria`/`numconsulta`; las demás, `nrohistoria`/`nroconsulta`.
@@ -197,92 +226,213 @@ class SyncAppDataController extends Controller
         // `constancia_obs` solo hace falta la observación. En la descarga
         // completa no se mandan (con datos reales, ~13 MB menos); por delta se manda todo, así el
         // teléfono se entera si un documento se vació, y el app aplica la misma regla al mostrar.
-        $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $this->deltaQuery(
-            $modelo::whereIn($columnaHistoria, $numHistorias)
-                ->whereIn('reg_medico', $registrosMedicos)
-                ->when($since === null && $conContenido !== null, $conContenido),
-            $since,
-        )->get();
-        $constancias = $porConsulta(ConstanciaObs::class, 'numhistoria', fn ($q) => $q
-            ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''"));
-        // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
-        // (decisión del usuario, 2026-09-27).
-        $reposos = $porConsulta(ReposoPaciente::class, 'nrohistoria', fn ($q) => $q->where(fn ($q) => $q
-            ->where('numdias', '>', 1)
-            ->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''")));
-        $referencias = $porConsulta(Referencia::class, 'nrohistoria');
-        $informes = $porConsulta(Informe::class, 'nrohistoria', fn ($q) => $q
-            ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')"));
-        $diagnosticosPaciente = $porConsulta(DiagnosticoPaciente::class, 'nrohistoria');
-        // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
-        // (constancia), el médico al que se refiere y su especialidad (referencia).
-        $diagnosticos = $this->deltaQuery(Diagnostico::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $doctores = $this->deltaQuery(Doctor::whereIn('reg_medico', $registrosMedicos), $since)->get();
-        $especialidades = $this->deltaQuery(Especialidad::whereIn('reg_medico', $registrosMedicos), $since)->get();
+        $porConsulta = fn (string $modelo, string $columnaHistoria, ?\Closure $conContenido = null) => $modelo::whereIn($columnaHistoria, $numHistorias)
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->when($completo && $conContenido !== null, $conContenido);
 
-        // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
-        // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
-        // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
-        // la cita (ver la migración de `cola.medical_center_id`).
-        //
-        // Todas las sedes del **tenant**, no solo las del médico logueado (Paso 22.C): quien
-        // sincroniza puede agendar para cualquier médico del mismo consultorio, así que necesita
-        // ver dónde atiende cada uno. `Office.medico_id` sigue distinguiendo de quién es cada
-        // sede (o ninguno, si es compartida) — eso lo resuelve el cliente al elegir médico.
-        $offices = $this->deltaQuery(Office::whereIn('reg_medico', $registrosMedicos), $since)->get();
-
-        $officeSchedules = $this->deltaQuery(
-            OfficeSchedule::whereIn(
+        return [
+            'pacientes' => ['consulta' => Paciente::whereIn('id', $pacienteIds), 'columna' => 'id'],
+            // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también
+            // entraban las que tuvieran un número del pivote, pero el número es por médico desde el Paso
+            // 18.B1 (cada instalación del legado arranca en 1), así que un médico recibía las historias de
+            // cualquier otro con el mismo número, y el teléfono las mezclaba con las suyas. Una historia sin
+            // `medico_id` ni `reg_medico` no es de nadie y no se manda (no hay ninguna en los datos
+            // cargados).
+            'historias' => ['consulta' => Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
+                $query->where('medico_id', $medicoModel->id);
+                if (!empty($registrosMedicos)) {
+                    $query->orWhereIn('reg_medico', $registrosMedicos);
+                }
+            }), 'columna' => 'id'],
+            'colas' => ['consulta' => Cola::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // Por número de historia **y** por registro: el correlativo es por médico (Paso 18.B), así que
+            // la historia 1 de otro médico es otro paciente y sus consultas no pueden bajar a este teléfono.
+            'consultas' => ['consulta' => Consulta::whereIn('numhistoria', $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
+            // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
+            // los lee y puede agregar o quitar los de la consulta que está atendiendo.
+            'motivos_consulta' => ['consulta' => MotivoConsulta::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'motivo_consulta_paciente' => ['consulta' => MotivoConsultaPaciente::whereIn('nrohistoria', $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // Los récipes se crean con una creación `recipes` (Paso 18.B), no con `updated` por fila. Mismo
+            // filtro doble que `consultas`.
+            'recipes' => ['consulta' => Recipe::whereIn('nrohistoria', $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
+            // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
+            'vademecum' => ['consulta' => Vademecum::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
+            'tratamientos' => ['consulta' => RecipeGrupo::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'tratamientos_detalle' => ['consulta' => RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'constancia_obs' => ['consulta' => $porConsulta(ConstanciaObs::class, 'numhistoria', fn ($q) => $q
+                ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")), 'columna' => 'id'],
+            // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
+            // (decisión del usuario, 2026-09-27).
+            'reposo_paciente' => ['consulta' => $porConsulta(ReposoPaciente::class, 'nrohistoria', fn ($q) => $q->where(fn ($q) => $q
+                ->where('numdias', '>', 1)
+                ->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''"))), 'columna' => 'id'],
+            'referencia' => ['consulta' => $porConsulta(Referencia::class, 'nrohistoria'), 'columna' => 'id'],
+            'informe' => ['consulta' => $porConsulta(Informe::class, 'nrohistoria', fn ($q) => $q
+                ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
+            'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'nrohistoria'), 'columna' => 'id'],
+            // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
+            // (constancia), el médico al que se refiere y su especialidad (referencia).
+            'diagnosticos' => ['consulta' => Diagnostico::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'doctores' => ['consulta' => Doctor::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'especial' => ['consulta' => Especialidad::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
+            // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
+            // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
+            // la cita (ver la migración de `cola.medical_center_id`).
+            //
+            // Todas las sedes del **tenant**, no solo las del médico logueado (Paso 22.C): quien
+            // sincroniza puede agendar para cualquier médico del mismo consultorio, así que necesita
+            // ver dónde atiende cada uno. `Office.medico_id` sigue distinguiendo de quién es cada
+            // sede (o ninguno, si es compartida) — eso lo resuelve el cliente al elegir médico.
+            'offices' => ['consulta' => Office::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'office_schedules' => ['consulta' => OfficeSchedule::whereIn(
                 'office_id',
                 Office::whereIn('reg_medico', $registrosMedicos)->select('id'),
-            ),
-            $since,
-        )->get();
+            ), 'columna' => 'id'],
+            // Los centros médicos salen de las historias y de las sedes. En el delta se pasan los ids de
+            // las filas que se están mandando; en el volcado se resuelven con una consulta.
+            'centros_medicos' => ['consulta' => MedicalCenter::whereIn('id',
+                $idsCentros ?? $this->idsDeCentrosDeEsteMedico($medicoModel, $registrosMedicos)), 'columna' => 'id'],
+        ];
+    }
 
-        // Los centros que necesita el teléfono son los de las historias **y** los de las sedes
-        // donde atiende: sin esto, una sede recién configurada llegaría sin nombre ni dirección.
-        $medicalCenterIds = $historias->pluck('medical_center_id')
-            ->merge($offices->pluck('medical_center_id'))
-            ->merge($colas->pluck('medical_center_id'))
+    /**
+     * Los centros médicos que le sirven a este médico: los de sus historias, los de sus sedes y los de sus
+     * citas. Es lo que usa el volcado paginado (el delta los saca de las filas que ya tiene en la mano).
+     *
+     * @return array<int, int>
+     */
+    private function idsDeCentrosDeEsteMedico(Medico $medicoModel, array $registrosMedicos): array
+    {
+        $historias = Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
+            $query->where('medico_id', $medicoModel->id);
+            if (!empty($registrosMedicos)) {
+                $query->orWhereIn('reg_medico', $registrosMedicos);
+            }
+        })->whereNotNull('medical_center_id')->distinct()->pluck('medical_center_id');
+
+        return $historias
+            ->merge(Office::whereIn('reg_medico', $registrosMedicos)->whereNotNull('medical_center_id')
+                ->distinct()->pluck('medical_center_id'))
+            ->merge(Cola::whereIn('reg_medico', $registrosMedicos)->whereNotNull('medical_center_id')
+                ->distinct()->pluck('medical_center_id'))
             ->filter()
             ->unique()
-            ->toArray();
-        $centrosMedicos = $this->deltaQuery(MedicalCenter::whereIn('id', $medicalCenterIds), $since)->get();
+            ->values()
+            ->all();
+    }
 
-        // Sin `since` (primera sincronización) el cliente no tiene nada que borrar todavía.
-        $eliminados = $since
-            ? SyncChange::where('operation', 'deleted')
-                ->whereIn('reg_medico', $registrosMedicos)
-                ->where('occurred_at', '>', $since)
-                ->get(['table_name', 'record_id', 'occurred_at'])
-            : collect([]);
+    /**
+     * Una página del volcado paginado: **una** tabla y un tramo de sus filas.
+     *
+     * El cursor es `"<índice de la tabla>:<último id mandado>"`, y `inicio` arranca el volcado. El servidor
+     * es el que sabe el orden de las tablas (el plan): el cliente sólo devuelve el cursor tal como lo
+     * recibió. Cuando una tabla se termina, el cursor salta a la siguiente en la misma respuesta, y al
+     * terminar la última devuelve `null`.
+     *
+     * La memoria de cada pedido es la de un tramo, no la del volcado: es lo que hace que un médico con
+     * años de historia pueda bajar todo sin que el servidor ni el teléfono se queden sin RAM.
+     */
+    private function paginaDelVolcado(
+        SyncAppDataRequest $request,
+        Medico $medicoModel,
+        array $registrosMedicos,
+        array $pacienteIds,
+        array $numHistorias,
+        ?array $estadoServicio,
+        Carbon $syncedAt,
+        array $resultadoChanges,
+        string $cursor,
+    ) {
+        $plan = $this->planDelVolcado($medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, true);
+        $claves = array_keys($plan);
 
-        $medicos = $this->medicosDelTenant($registrosMedicos);
+        if ($cursor === self::VOLCADO_INICIO) {
+            $indice = 0;
+            $desde = 0;
+        } else {
+            $partes = explode(':', $cursor);
+            $valido = count($partes) === 2 && ctype_digit($partes[0]) && ctype_digit($partes[1])
+                && (int) $partes[0] < count($claves);
+            if (! $valido) {
+                return response()->json(['message' => 'El cursor del volcado no es válido.'], 400);
+            }
+            $indice = (int) $partes[0];
+            $desde = (int) $partes[1];
+        }
 
-        return response()->json([
+        $limite = (int) $request->input('volcado_limite', self::FILAS_POR_PAGINA);
+        $limite = min(self::FILAS_POR_PAGINA_TOPE, max(1, $limite));
+
+        $clave = $claves[$indice];
+        $pagina = $plan[$clave]['consulta']
+            ->where($plan[$clave]['columna'], '>', $desde)
+            ->orderBy($plan[$clave]['columna'])
+            ->limit($limite)
+            ->get();
+
+        // Si la tabla se terminó (vino menos que el tope), el cursor pasa a la siguiente; si no, sigue en
+        // esta desde el último id mandado. Al terminar la última tabla queda `null`.
+        $siguiente = $pagina->count() < $limite
+            ? ($indice + 1 < count($claves) ? ($indice + 1) . ':0' : null)
+            : $indice . ':' . $pagina->last()->{$plan[$clave]['columna']};
+
+        return response()->json($this->cuerpoDeLaRespuesta(
+            [$clave => $pagina], $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio,
+            $resultadoChanges, collect([]), $siguiente,
+        ));
+    }
+
+    /**
+     * El cuerpo del JSON de `/app/sync-app-data`, con **todas** sus claves: las que no vinieron en esta
+     * respuesta van vacías (el app recorre una lista fija y una tabla vacía no hace nada).
+     *
+     * Es uno solo para el delta y para el volcado paginado: así el teléfono recibe exactamente la misma
+     * forma de respuesta en los dos caminos.
+     */
+    private function cuerpoDeLaRespuesta(
+        array $datos,
+        Carbon $syncedAt,
+        Medico $medicoModel,
+        array $registrosMedicos,
+        ?array $estadoServicio,
+        array $resultadoChanges,
+        $eliminados,
+        ?string $volcadoSiguiente = null,
+    ): array {
+        $vacio = collect([]);
+
+        return [
             'synced_at' => $syncedAt->toIso8601String(),
-            'pacientes' => $pacientes,
-            'historias' => $historias,
-            'colas' => $colas,
-            'consultas' => $consultas,
-            'motivos' => $motivos,
-            'motivos_consulta' => $motivosConsulta,
-            'motivo_consulta_paciente' => $motivosDeConsulta,
-            'recipes' => $recipes,
-            'vademecum' => $vademecum,
-            'tratamientos' => $tratamientos,
-            'tratamientos_detalle' => $tratamientosDetalle,
-            'constancia_obs' => $constancias,
-            'reposo_paciente' => $reposos,
-            'referencia' => $referencias,
-            'informe' => $informes,
-            'diagnostico_paciente' => $diagnosticosPaciente,
-            'diagnosticos' => $diagnosticos,
-            'doctores' => $doctores,
-            'especial' => $especialidades,
-            'centros_medicos' => $centrosMedicos,
-            'offices' => $offices,
-            'office_schedules' => $officeSchedules,
+            'pacientes' => $datos['pacientes'] ?? $vacio,
+            'historias' => $datos['historias'] ?? $vacio,
+            'colas' => $datos['colas'] ?? $vacio,
+            'consultas' => $datos['consultas'] ?? $vacio,
+            'motivos' => $datos['motivos'] ?? $vacio,
+            'motivos_consulta' => $datos['motivos_consulta'] ?? $vacio,
+            'motivo_consulta_paciente' => $datos['motivo_consulta_paciente'] ?? $vacio,
+            'recipes' => $datos['recipes'] ?? $vacio,
+            'vademecum' => $datos['vademecum'] ?? $vacio,
+            'tratamientos' => $datos['tratamientos'] ?? $vacio,
+            'tratamientos_detalle' => $datos['tratamientos_detalle'] ?? $vacio,
+            'constancia_obs' => $datos['constancia_obs'] ?? $vacio,
+            'reposo_paciente' => $datos['reposo_paciente'] ?? $vacio,
+            'referencia' => $datos['referencia'] ?? $vacio,
+            'informe' => $datos['informe'] ?? $vacio,
+            'diagnostico_paciente' => $datos['diagnostico_paciente'] ?? $vacio,
+            'diagnosticos' => $datos['diagnosticos'] ?? $vacio,
+            'doctores' => $datos['doctores'] ?? $vacio,
+            'especial' => $datos['especial'] ?? $vacio,
+            'centros_medicos' => $datos['centros_medicos'] ?? $vacio,
+            'offices' => $datos['offices'] ?? $vacio,
+            'office_schedules' => $datos['office_schedules'] ?? $vacio,
             // La configuración va completa en cada respuesta, no por delta: son un puñado de
             // campos y el cliente la necesita entera para decidir cómo dibujar la agenda.
             // Si el médico no tiene fila de configuración (pasa: en el dump real está vacía),
@@ -299,7 +449,7 @@ class SyncAppDataController extends Controller
             // Catálogo de médicos del tenant (Paso 22.B), completo en cada respuesta por el mismo
             // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
             // no por delta.
-            'medicos' => $medicos,
+            'medicos' => $this->medicosDelTenant($registrosMedicos),
             // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
             // venza (y no intente sincronizar cuando ya venció).
             'servicio' => collect($estadoServicio)->only(
@@ -311,7 +461,10 @@ class SyncAppDataController extends Controller
             // Creaciones que no se aplicaron (y no se van a aplicar reintentando): el cliente las
             // saca de su cola en vez de reintentarlas para siempre, y le avisa al usuario.
             'rechazados' => $resultadoChanges['rechazados'],
-        ]);
+            // Volcado paginado: el cursor del tramo que sigue, o `null` si ya está todo. Sin volcado
+            // paginado en curso es `null` y el app lo ignora.
+            'volcado_siguiente' => $volcadoSiguiente,
+        ];
     }
 
     /**
