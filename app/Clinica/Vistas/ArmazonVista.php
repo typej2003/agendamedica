@@ -157,7 +157,7 @@ final class ArmazonVista
             ];
 
             // "Ayúdanos a mejorar" (ROADMAP §9): el comentario lo puede mandar cualquiera que trabaje en el
-            // consultorio —el médico y su secretaría—, así que va arriba y no dentro de "Configuración".
+            // consultorio —el médico y su secretaría—, así que va al final del menú, después de "Configuración".
             $menu[] = [
                 'texto'  => 'Ayúdanos a mejorar',
                 'icono'  => 'bi-chat-heart',
