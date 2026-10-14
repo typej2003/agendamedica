@@ -69,6 +69,36 @@ final class ImagenesDeLaConsulta
     }
 
     /**
+     * **Las imágenes de un examen de la consulta** (WEB-6.5): las que están etiquetadas para esa solapa
+     * (`colposcopia`, …). Misma forma de fila y mismo orden que `deLaConsulta()`.
+     *
+     * El filtro sale del vocabulario del legado (`TagDeImagen`): la etiqueta canónica del examen **y** sus
+     * alias, porque el escritorio marcó la colposcopía de dos maneras distintas.
+     *
+     * @return Collection<int,object>
+     */
+    public function deUnExamen(string $regMedico, int $nrohistoria, int $nroconsulta, string $examen): Collection
+    {
+        $etiquetas = TagDeImagen::aceptadasDe($examen);
+
+        if ($etiquetas === []) {
+            return collect();
+        }
+
+        $filas = ImagenConsulta::where('reg_medico', $regMedico)
+            ->where('nrohistoria', $nrohistoria)
+            ->where('nroconsulta', $nroconsulta)
+            ->whereIn('observacion', $etiquetas)
+            ->orderBy('orden')
+            ->orderByDesc('id')
+            ->get();
+
+        $originales = $this->nombresOriginales($regMedico, $filas->pluck('id')->all());
+
+        return $filas->map(fn (ImagenConsulta $imagen) => $this->fila($imagen, $originales[(int) $imagen->id] ?? null));
+    }
+
+    /**
      * **La imagen que este médico puede ver**, o `null` si no es suya / no es de esta consulta.
      *
      * Es la comprobación de la **ruta autorizada de descarga**, y por eso es una sola:
@@ -145,7 +175,13 @@ final class ImagenesDeLaConsulta
             // El modelo, para quien tiene que escribir sobre la fila (el borrado). El resto de la fila son
             // datos ya resueltos para la pantalla y la descarga.
             'modelo' => $imagen,
-            'descripcion' => TextoDeLaConsulta::limpio($imagen->observacion),
+            // La columna `observacion` tiene **dos contenidos** en el legado y hay que distinguirlos: la
+            // **etiqueta** del examen (WEB-6.5) o la **descripción** que teclea el médico en la sección
+            // genérica. Sólo una de las dos sale en cada campo (ver `TagDeImagen`).
+            'etiqueta' => TagDeImagen::nombre($imagen->observacion),
+            'descripcion' => TagDeImagen::esEtiqueta($imagen->observacion)
+                ? null
+                : TextoDeLaConsulta::limpio($imagen->observacion),
             'fecha' => $imagen->created_at ? (string) $imagen->created_at : null,
             'orden' => $imagen->orden === null ? null : (int) $imagen->orden,
             'enElServidor' => $enElServidor,

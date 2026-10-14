@@ -2219,6 +2219,10 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .examen-imagen .acciones-fila .btn { flex: 1 1 auto; }
 }
 
+/* El bloque de texto de una imagen se encoge: sin `min-width: 0` su ancho mínimo (el del contenido) empuja la
+   fila y la lista desborda a lo ancho en el celular (medido a 375 px: 9 px de scroll horizontal). */
+.examen-imagen > .flex-grow-1 { min-width: 0; }
+
 /* --- Enlace "Saltar al contenido" (teclado y lector de pantalla): fuera de pantalla hasta recibir el foco --- */
 .saltar-al-contenido {
     position: absolute;

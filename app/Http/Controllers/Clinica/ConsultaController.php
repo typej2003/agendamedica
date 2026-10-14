@@ -17,6 +17,7 @@ use App\Clinica\Consulta\FurDelControlPrenatal;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
+use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
@@ -909,17 +910,34 @@ class ConsultaController extends Controller
         string $regMedico,
         ImagenesDeLaConsulta $imagenes,
     ): ?object {
-        if ($seccion !== ConsultaShellVista::SECCION_EXAMENES) {
+        // La sección genérica de exámenes (WEB-4.7) muestra **todas** las imágenes de la consulta…
+        if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
+            return new ImagenesDeLaConsultaVista(
+                $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                route('clinica.consulta.examenes.subir', $consulta->id),
+                // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
+                // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
+                fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+                fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+            );
+        }
+
+        // …y la solapa de un examen (WEB-6.5) sólo las **suyas**: las que están etiquetadas para ese examen
+        // (`TagDeImagen`). Las rutas son las mismas tres —subir, servir y quitar—, con el examen de vuelta.
+        $pestana = $seccion === ConsultaShellVista::SECCION_EVALUACION
+            ? PestanasDelExamen::normalizar((string) request()->query('pestana', ''))
+            : null;
+
+        if ($pestana === null || TagDeImagen::deLaSolapa($pestana) === null) {
             return null;
         }
 
         return new ImagenesDeLaConsultaVista(
-            $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+            $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $pestana),
             route('clinica.consulta.examenes.subir', $consulta->id),
-            // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
-            // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
             fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
             fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+            $pestana,
         );
     }
 

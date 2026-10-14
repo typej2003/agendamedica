@@ -600,14 +600,15 @@
 
     // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)
 
-    // La única subida de archivo de la consulta: el formulario de la sección del ítem 7. Lo que hace el
-    // script es **avisar** —el archivo elegido y todavía sin subir se pierde si se sale—, nada más: el
-    // `POST` lo manda el navegador con el `multipart/form-data` del formulario y el archivo lo valida y lo
-    // guarda el servidor. El nombre del archivo no se toca acá ni allá: lo pone el servidor.
-    const subidaDeImagen = document.querySelector('[data-consulta-archivo]');
-
-    if (subidaDeImagen) {
-        const aviso = document.getElementById('examenes-sin-subir');
+    // La única subida de archivo de la consulta: los formularios de imagen (la sección del ítem 7 y las
+    // solapas del examen, WEB-6.5). Lo que hace el script es **avisar** —el archivo elegido y todavía sin
+    // subir se pierde si se sale—, nada más: el `POST` lo manda el navegador con el `multipart/form-data`
+    // del formulario y el archivo lo valida y lo guarda el servidor. El nombre del archivo no se toca acá ni
+    // allá: lo pone el servidor. El cartel de cada formulario se declara con `data-aviso-id` (el id del
+    // párrafo de aviso), porque el id del formulario y el del cartel no siguen la misma regla: el de la
+    // sección de exámenes es `examenes-sin-subir` y su formulario `examenes-subida`.
+    document.querySelectorAll('[data-consulta-archivo]').forEach(function (subidaDeImagen) {
+        const aviso = document.getElementById(subidaDeImagen.dataset.avisoId || (subidaDeImagen.id + '-sin-subir'));
         const archivo = subidaDeImagen.querySelector('input[type=file]');
 
         function sucio() {
@@ -634,7 +635,7 @@
         });
 
         pintarAviso();
-    }
+    });
 
     // ------------------------------------------------- Estudio ecográfico (WEB-6.1)
 

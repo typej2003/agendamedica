@@ -50,6 +50,11 @@ final class GuardarImagenDeLaConsulta
     public const LARGO_DESCRIPCION = 200;
 
     /**
+     * @param  string|null  $observacion  **la columna `observacion`**: la **etiqueta del examen** cuando la sube una
+     *                                    solapa del examen (WEB-6.5) o la **descripción** que teclea el médico en la
+     *                                    sección genérica de exámenes (WEB-4.7). La columna del legado es una etiqueta
+     *                                    de tipo (trampa 116); la web la comparte con la descripción y quien sube dice cuál de
+     *                                    las dos es (`App\Clinica\Consulta\TagDeImagen`)
      * @param  CarbonInterface|null  $cuando  el momento de la subida; por defecto, ahora
      * @param  string  $origen  `web` o `mobile`: quién sube, para el rastro de `sync_changes`
      *
@@ -58,7 +63,7 @@ final class GuardarImagenDeLaConsulta
     public function ejecutar(
         Consulta $consulta,
         UploadedFile $archivo,
-        ?string $descripcion,
+        ?string $observacion,
         ?CarbonInterface $cuando = null,
         string $origen = 'web',
     ): ImagenConsulta {
@@ -79,7 +84,7 @@ final class GuardarImagenDeLaConsulta
                 // número de historia como texto): la consulta ya las tiene como enteros.
                 'nrohistoria' => (int) $consulta->numhistoria,
                 'nroconsulta' => (int) $consulta->nroconsulta,
-                'observacion' => $this->descripcion($descripcion),
+                'observacion' => $this->descripcion($observacion),
                 // `imagen` es `NOT NULL` en el esquema del legado y guarda **la ruta**, que es lo que la
                 // columna quiere decir: en una fila del escritorio es la ruta absoluta de su PC
                 // (`SetItem(llRow, "imagen", ls_Path)`, `:10744`) y en una de la web es la ruta relativa al
@@ -114,10 +119,13 @@ final class GuardarImagenDeLaConsulta
         return $imagen;
     }
 
-    /** La descripción: el `""` del formulario y el `null` de la columna son el mismo estado (sin texto). */
-    private function descripcion(?string $descripcion): ?string
+    /**
+     * El valor de `observacion`: el `""` del formulario y el `null` de la columna son el mismo estado (sin
+     * etiqueta ni descripción).
+     */
+    private function descripcion(?string $observacion): ?string
     {
-        $texto = $descripcion === null ? null : trim($descripcion);
+        $texto = $observacion === null ? null : trim($observacion);
 
         return $texto === '' ? null : $texto;
     }

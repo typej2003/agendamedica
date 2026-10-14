@@ -3,6 +3,7 @@
 namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Archivos\ArchivosClinicos;
+use App\Clinica\Consulta\TagDeImagen;
 use App\Support\FechaClinica;
 use Illuminate\Support\Collection;
 
@@ -36,13 +37,39 @@ final class ImagenesDeLaConsultaVista
      * @param  string  $urlSubir  a dónde postea el formulario de subida
      * @param  callable(int):string  $urlDescargar  la ruta autorizada que sirve el archivo de esa fila
      * @param  callable(int):string  $urlQuitar  a dónde postea la baja de esa fila
+     * @param  string|null  $examen  la **solapa del examen** de la que son estas imágenes (WEB-6.5: `colposcopia`), o
+     *                               `null` para la sección genérica de exámenes. Cuando viene, la subida marca la
+     *                               etiqueta de ese examen (`TagDeImagen`) y **no** se pide descripción: la columna
+     *                               `observacion` es una sola (trampa 116)
      */
     public function __construct(
         private Collection $imagenes,
         private string $urlSubir,
         private $urlDescargar,
         private $urlQuitar,
+        private ?string $examen = null,
     ) {
+    }
+
+    /** La solapa del examen de estas imágenes, o `null` si son las de la sección genérica. */
+    public function examen(): ?string
+    {
+        return $this->examen;
+    }
+
+    /**
+     * La etiqueta con la que se marcan las imágenes que se suben desde acá: la del examen (`TagDeImagen`), o
+     * `null` en la sección genérica (donde la columna lleva la descripción que teclea el médico).
+     */
+    public function etiqueta(): ?string
+    {
+        return $this->examen === null ? null : TagDeImagen::deLaSolapa($this->examen);
+    }
+
+    /** ¿El formulario pide descripción? Sólo en la sección genérica: en un examen la columna lleva su etiqueta. */
+    public function pideDescripcion(): bool
+    {
+        return $this->examen === null;
     }
 
     public function total(): int
@@ -77,6 +104,8 @@ final class ImagenesDeLaConsultaVista
 
                 return [
                     'id' => $id,
+                    // Una imagen de un examen no tiene descripción: tiene la **etiqueta** de su examen.
+                    'etiqueta' => $imagen->etiqueta ?? null,
                     'descripcion' => $imagen->descripcion,
                     'fecha' => FechaClinica::formato($imagen->fecha),
                     'nombre' => $imagen->nombre,
@@ -127,6 +156,15 @@ final class ImagenesDeLaConsultaVista
     /** El estado vacío de la lista: qué es y cómo se llena. */
     public function sinImagenes(): array
     {
+        if ($this->examen !== null) {
+            return [
+                'icono' => 'bi-image',
+                'titulo' => 'Todavía no hay imágenes en ' . $this->nombreDelExamen(),
+                'texto' => 'Puedes subir las fotos de este examen. La imagen queda guardada en el servidor y '
+                    . 'sólo la ves tú, que eres el dueño de la historia.',
+            ];
+        }
+
         return [
             'icono' => 'bi-image',
             'titulo' => 'Todavía no hay imágenes en esta consulta',
@@ -134,6 +172,19 @@ final class ImagenesDeLaConsultaVista
                 . 'descripción. La imagen queda guardada en el servidor y sólo la ves tú, que eres el '
                 . 'dueño de la historia.',
         ];
+    }
+
+    /** El texto de la ayuda de la subida cuando las imágenes son de un examen. */
+    public function ayudaDelExamen(): string
+    {
+        return 'Son las fotos de ' . $this->nombreDelExamen() . ': se guardan con la etiqueta de este examen, '
+            . 'que es la que el escritorio usa para sus imágenes.';
+    }
+
+    /** Cómo se llama el examen del que son estas imágenes (`colposcopía`). */
+    private function nombreDelExamen(): string
+    {
+        return TagDeImagen::nombre(TagDeImagen::deLaSolapa((string) $this->examen)) ?? 'este examen';
     }
 
     /**

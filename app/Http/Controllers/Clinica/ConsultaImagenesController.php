@@ -7,12 +7,14 @@ use App\Actions\Consulta\QuitarImagenDeLaConsulta;
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
+use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -71,25 +73,41 @@ class ConsultaImagenesController extends Controller
             // La política del archivo (tipo real, extensión y tamaño) vive en `ArchivosClinicos`; acá se
             // dice el texto humano del error, que es el mismo de la ayuda del campo.
             'imagen' => ArchivosClinicos::reglasDeSubida(),
-            'descripcion' => 'nullable|string|max:' . GuardarImagenDeLaConsulta::LARGO_DESCRIPCION,
+            // La **solapa del examen** desde la que se sube (WEB-6.5): manda la etiqueta de la fila. En la
+            // sección genérica de exámenes no viene y la columna lleva la descripción que teclea el médico.
+            'examen' => ['nullable', 'string', Rule::in(TagDeImagen::solapas())],
+            'descripcion' => [
+                'nullable', 'string', 'max:' . GuardarImagenDeLaConsulta::LARGO_DESCRIPCION,
+                // La columna `observacion` es la etiqueta del examen (trampa 116): una descripción que fuera
+                // una etiqueta haría que la imagen apareciera en un examen que no es el suyo.
+                function (string $atributo, $valor, callable $fallar) {
+                    if (TagDeImagen::esEtiqueta($valor)) {
+                        $fallar('Esa descripción es la etiqueta de un examen. Escribe qué es la imagen.');
+                    }
+                },
+            ],
         ], [
             'imagen.required' => 'Elige la imagen que quieres subir.',
             'imagen.max' => 'La imagen no puede pesar más de ' . ArchivosClinicos::textoMaximo() . '.',
         ]);
 
+        $examen = $datos['examen'] ?? null;
+        $etiqueta = $examen === null ? null : TagDeImagen::deLaSolapa($examen);
+
         try {
-            $imagen = $guardar->ejecutar($consulta, $request->file('imagen'), $datos['descripcion'] ?? null);
+            $imagen = $guardar->ejecutar($consulta, $request->file('imagen'), $etiqueta ?? ($datos['descripcion'] ?? null));
         } catch (RuntimeException $e) {
             // Un disco lleno o sin permisos es un problema del servidor, no de lo que escribió el médico:
             // se dice sin lenguaje técnico y se deja lo escrito en el formulario.
-            return $this->volver($consulta)->withInput()
+            return $this->volver($consulta, $examen)->withInput()
                 ->with('error', 'No se pudo guardar la imagen en el servidor. Vuelve a intentarlo; si sigue igual, avísale al administrador.');
         }
 
-        $descripcion = trim((string) $imagen->observacion);
+        $texto = trim((string) $imagen->observacion);
+        $descripcion = TagDeImagen::esEtiqueta($texto) ? null : $texto;
 
-        return $this->volver($consulta)->with('estado', $descripcion === ''
-            ? 'Imagen subida a esta consulta.'
+        return $this->volver($consulta, $examen)->with('estado', $descripcion === null
+            ? 'Imagen subida a ' . ($etiqueta === null ? 'esta consulta' : 'este examen') . '.'
             : 'Imagen subida: «' . $descripcion . '».');
     }
 
@@ -103,6 +121,11 @@ class ConsultaImagenesController extends Controller
         $contexto = $request->attributes->get('contexto_clinico');
         $consulta = $this->delContexto($request, $consulta);
 
+        // La solapa (WEB-6.5) sólo decide a dónde se vuelve: el borrado es el mismo y la autorización
+        // también (la fila tiene que ser de esta consulta y de este médico).
+        $examen = $request->input('examen');
+        $examen = is_string($examen) && TagDeImagen::deLaSolapa($examen) !== null ? $examen : null;
+
         $fila = $this->imagenes->delContexto(
             $this->registrosDelMedico($contexto['medico']),
             $imagen,
@@ -114,7 +137,7 @@ class ConsultaImagenesController extends Controller
 
         $quitar->ejecutar($fila->modelo);
 
-        return $this->volver($consulta)->with('estado', $fila->descripcion === null
+        return $this->volver($consulta, $examen)->with('estado', $fila->descripcion === null
             ? 'Imagen quitada de la consulta.'
             : 'Imagen quitada: «' . $fila->descripcion . '».');
     }
@@ -164,13 +187,22 @@ class ConsultaImagenesController extends Controller
         ], $fila->descarga ? 'attachment' : 'inline');
     }
 
-    /** La vuelta a la sección, que es donde vive todo esto. */
-    private function volver(Consulta $consulta)
+    /**
+     * La vuelta: a la sección genérica de exámenes o, si la subida vino de la solapa de un examen, a **esa**
+     * solapa (con la consulta adentro, como arma el shell todas las secciones).
+     */
+    private function volver(Consulta $consulta, ?string $examen = null)
     {
-        return redirect()->route('clinica.consulta', [
+        $parametros = [
             $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EXAMENES,
-        ]);
+            'seccion' => $examen === null ? ConsultaShellVista::SECCION_EXAMENES : ConsultaShellVista::SECCION_EVALUACION,
+        ];
+
+        if ($examen !== null) {
+            $parametros['pestana'] = $examen;
+        }
+
+        return redirect()->route('clinica.consulta', $parametros);
     }
 
     /** La consulta del contexto (404 si es de otro médico). */

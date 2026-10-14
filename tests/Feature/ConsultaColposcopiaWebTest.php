@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Models\Consulta;
 use App\Models\ExamenFisico;
 use App\Models\Historia;
+use App\Models\ImagenConsulta;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
@@ -16,8 +18,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -48,11 +52,17 @@ class ConsultaColposcopiaWebTest extends TestCase
 {
     use DatabaseTransactions;
 
+    /** Un PNG de 1×1 válido (el más chico que existe): el contenido es real, así que el MIME se detecta. */
+    private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
     private Carbon $hoy;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Las imágenes viven en el disco privado `clinica`: los tests no escriben en el de verdad.
+        Storage::fake(ArchivosClinicos::DISCO);
 
         $this->hoy = Carbon::parse('2026-10-13 09:00:00');
         Carbon::setTestNow($this->hoy->copy());
@@ -497,5 +507,133 @@ class ConsultaColposcopiaWebTest extends TestCase
         $consulta->save();
 
         $this->assertStringContainsString('documento=colposcopia', $web->get($this->urlColposcopia($consulta))->getContent());
+    }
+
+    // ------------------------------------------------------------------------------------ Las imágenes
+
+    /** Un PNG real, con el nombre que se le pase (el nombre del cliente lo descarta el servidor). */
+    private function png(string $nombre = 'colposcopia.png'): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($nombre, base64_decode(self::PNG));
+    }
+
+    /** Una fila de `imagen_consulta` como la deja el escritorio (la ruta de su PC) o la web (`disco`). */
+    private function imagen(Medico $medico, Consulta $consulta, string $observacion, bool $enElServidor = false): ImagenConsulta
+    {
+        $ruta = $enElServidor ? 'examenes/' . $medico->reg_medico . '/foto.png' : 'C:\\Users\\IBYTE\\Downloads\\foto.jpg';
+
+        if ($enElServidor) {
+            Storage::disk(ArchivosClinicos::DISCO)->put($ruta, base64_decode(self::PNG));
+        }
+
+        return ImagenConsulta::create([
+            'reg_medico'  => $medico->reg_medico,
+            'nrohistoria' => (int) $consulta->numhistoria,
+            'nroconsulta' => (int) $consulta->nroconsulta,
+            'observacion' => $observacion,
+            'imagen'      => $ruta,
+            'disco'       => $enElServidor ? ArchivosClinicos::DISCO : null,
+            'orden'       => 1,
+        ]);
+    }
+
+    public function test_subir_una_imagen_desde_la_solapa_la_marca_con_la_etiqueta_del_examen(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'imagen' => $this->png(),
+                'examen' => PestanasDelExamen::COLPOSCOPIA,
+            ])
+            ->assertRedirect($this->urlColposcopia($consulta))
+            ->assertSessionHas('estado', 'Imagen subida a este examen.');
+
+        $imagen = ImagenConsulta::where('reg_medico', $medico->reg_medico)->firstOrFail();
+
+        // La etiqueta canónica del examen (la de su grilla) y el archivo en el disco privado.
+        $this->assertSame('@', $imagen->observacion);
+        $this->assertSame(ArchivosClinicos::DISCO, $imagen->disco);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($imagen->imagen);
+    }
+
+    public function test_la_solapa_lista_solo_las_imagenes_de_su_examen(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->imagen($medico, $consulta, '@');                  // la canónica de la colposcopía
+        $this->imagen($medico, $consulta, 'colpo');              // el alias del botón del escritorio
+        $this->imagen($medico, $consulta, 'Una descripción libre'); // de la sección genérica
+        $this->imagen($medico, $consulta, 'H');                  // de otra solapa (histeroscopía)
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+
+        // Las dos de la colposcopía se listan… y son dos, no cuatro.
+        $this->assertSame(2, substr_count($html, 'Imagen de colposcopía'));
+        $this->assertStringNotContainsString('Una descripción libre', $html);
+    }
+
+    public function test_la_seccion_generica_lista_todas_y_nombra_el_examen_de_cada_una(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->imagen($medico, $consulta, '@');
+        $this->imagen($medico, $consulta, 'Una descripción libre');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES]))
+            ->assertOk()->getContent();
+
+        // La etiqueta se traduce (el código `@` no le dice nada al médico) y la descripción se respeta.
+        $this->assertStringContainsString('Imagen de colposcopía', $html);
+        $this->assertStringContainsString('Una descripción libre', $html);
+    }
+
+    public function test_la_imagen_de_la_solapa_se_sirve_por_la_ruta_autorizada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta.examenes.descargar', [$consulta->id, $imagen->id]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_quitar_una_imagen_desde_la_solapa_vuelve_a_ella(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->delete(route('clinica.consulta.examenes.quitar', [$consulta->id, $imagen->id]), ['examen' => PestanasDelExamen::COLPOSCOPIA])
+            ->assertRedirect($this->urlColposcopia($consulta));
+
+        $this->assertNull(ImagenConsulta::find($imagen->id));
+        Storage::disk(ArchivosClinicos::DISCO)->assertMissing($imagen->imagen);
+    }
+
+    public function test_la_subida_generica_no_acepta_una_etiqueta_como_descripcion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // `H` es la etiqueta de la histeroscopía: como descripción haría que la imagen apareciera ahí.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES]))
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'imagen' => $this->png(),
+                'descripcion' => 'H',
+            ])
+            ->assertSessionHasErrors('descripcion');
+
+        $this->assertSame(0, ImagenConsulta::count());
+        $this->assertSame([], Storage::disk(ArchivosClinicos::DISCO)->allFiles());
     }
 }

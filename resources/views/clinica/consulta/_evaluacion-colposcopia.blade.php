@@ -69,4 +69,14 @@
             No tenés plantillas de colposcopía cargadas: el escrito va tal cual en el informe.
         </p>
     @endunless
+
+    {{-- Las imágenes del examen (WEB-6.5): las suyas, etiquetadas para la colposcopía. Es el parcial que
+         comparte con la sección genérica de exámenes, con el examen adentro del formulario. --}}
+    <div class="mt-3">
+        @include('clinica.consulta._imagenes', [
+            'imagenes' => $imagenes,
+            'titulo' => 'Imágenes de la colposcopía',
+            'prefijo' => 'colposcopia',
+        ])
+    </div>
 </x-ui.tarjeta>
