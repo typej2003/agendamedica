@@ -167,6 +167,23 @@ class SyncAppDataController extends Controller
             );
         }
 
+        // **Pedidos puntuales** (2026-10-14): como el volcado sólo trae la historia completa de los
+        // pacientes de la ventana (los 60 días), el app pide en línea lo que le falta —la ficha de un
+        // paciente o las citas de un día viejo de la agenda— y lo guarda en su copia. Son chicos y van
+        // enteros: no se paginan.
+        if ($request->filled('volcado_paciente')) {
+            return $this->volcadoDeUnPaciente(
+                $medicoModel, $registrosMedicos, $estadoServicio, $syncedAt, $resultadoChanges,
+                (int) $request->input('volcado_paciente'),
+            );
+        }
+        if ($request->filled('volcado_agenda')) {
+            return $this->volcadoDeLaAgenda(
+                $medicoModel, $registrosMedicos, $estadoServicio, $syncedAt, $resultadoChanges,
+                (string) $request->input('volcado_agenda'),
+            );
+        }
+
         // Todo lo que baja el app, acotado a este médico, en **una sola definición**: la usan el delta de
         // siempre y el volcado paginado (el volcado manda lo mismo, sólo que de a tramos).
         $plan = $this->planDelVolcado($medicoModel, $registrosMedicos, $pacienteIds, $numHistorias, $since === null, []);
@@ -455,6 +472,110 @@ class SyncAppDataController extends Controller
      * Es uno solo para el delta y para el volcado paginado: así el teléfono recibe exactamente la misma
      * forma de respuesta en los dos caminos.
      */
+    /**
+     * Todo lo clínico de **un** paciente, sin importar la ventana: sus citas, consultas, motivos, récipes y
+     * documentos. Es lo que el app pide al abrir una ficha cuyo historial no bajó completo, y es la red de
+     * seguridad de la ventana del volcado.
+     *
+     * El paciente se identifica por su **número de historia** (`numhistoria`), que es el que el app tiene en
+     * la mano — y que es **por médico**: antes de mandar nada se comprueba que la historia sea de este
+     * médico, así que pedir el número de otro devuelve 404 y no sus datos.
+     */
+    private function volcadoDeUnPaciente(
+        Medico $medicoModel,
+        array $registrosMedicos,
+        ?array $estadoServicio,
+        Carbon $syncedAt,
+        array $resultadoChanges,
+        int $numHistoria,
+    ) {
+        $historias = Historia::where(function ($query) use ($medicoModel, $registrosMedicos) {
+            $query->where('medico_id', $medicoModel->id);
+            if (! empty($registrosMedicos)) {
+                $query->orWhereIn('reg_medico', $registrosMedicos);
+            }
+        })->where('numhistoria', $numHistoria)->get();
+
+        if ($historias->isEmpty()) {
+            return response()->json(['message' => 'Ese paciente no es de este médico.'], 404);
+        }
+
+        // La columna del número de historia no se llama igual en todas las tablas (TablasLegado): acá se
+        // pregunta, en vez de escribir el nombre a mano.
+        $de = fn (string $tabla) => TablasLegado::columnaHistoria($tabla);
+        $colas = Cola::whereIn('reg_medico', $registrosMedicos)->where($de('cola'), $numHistoria)->get();
+
+        $datos = [
+            'pacientes' => Paciente::whereIn('id', $historias->pluck('paciente_id')->filter()->unique()->all())->get(),
+            'historias' => $historias,
+            'colas' => $colas,
+            'consultas' => Consulta::whereIn('reg_medico', $registrosMedicos)->where($de('consultas'), $numHistoria)->get(),
+            'motivo_consulta_paciente' => MotivoConsultaPaciente::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('motivo_consulta_paciente'), $numHistoria)->get(),
+            'recipes' => Recipe::whereIn('reg_medico', $registrosMedicos)->where($de('recipes'), $numHistoria)->get(),
+            // Los documentos, con la misma regla que el volcado: las plantillas vacías del legado no viajan.
+            'constancia_obs' => ConstanciaObs::whereIn('reg_medico', $registrosMedicos)->where($de('constancia_obs'), $numHistoria)
+                ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")->get(),
+            'reposo_paciente' => ReposoPaciente::whereIn('reg_medico', $registrosMedicos)->where($de('reposo_paciente'), $numHistoria)
+                ->where(fn ($q) => $q->where('numdias', '>', 1)->orWhereRaw("TRIM(COALESCE(obser_reposo, '')) <> ''"))->get(),
+            'referencia' => Referencia::whereIn('reg_medico', $registrosMedicos)->where($de('referencia'), $numHistoria)->get(),
+            'informe' => Informe::whereIn('reg_medico', $registrosMedicos)->where($de('informe'), $numHistoria)
+                ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")->get(),
+            'diagnostico_paciente' => DiagnosticoPaciente::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('diagnostico_paciente'), $numHistoria)->get(),
+            'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
+        ];
+
+        return response()->json($this->cuerpoDeLaRespuesta(
+            $datos, $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio, $resultadoChanges, collect([]),
+        ));
+    }
+
+    /**
+     * Las citas de un rango de días (`volcado_agenda=2026-03-10` o `2026-03-10,2026-03-20`), para cuando el
+     * médico navega la agenda a un día anterior a la ventana.
+     *
+     * No hace falta nada más: los catálogos, las sedes y las fichas ya están en la copia local, y las citas
+     * que llegan acá son citas **normales** —se pueden confirmar, cobrar y atender—, no una vista de sólo
+     * lectura.
+     */
+    private function volcadoDeLaAgenda(
+        Medico $medicoModel,
+        array $registrosMedicos,
+        ?array $estadoServicio,
+        Carbon $syncedAt,
+        array $resultadoChanges,
+        string $rango,
+    ) {
+        $partes = array_map('trim', explode(',', $rango));
+        try {
+            $desde = Carbon::parse($partes[0])->startOfDay();
+            $hasta = isset($partes[1]) && $partes[1] !== ''
+                ? Carbon::parse($partes[1])->endOfDay()
+                : $desde->copy()->endOfDay();
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'El rango de fechas no es válido.'], 400);
+        }
+
+        // Tope de un mes por pedido: el app pide por día o por semana, y así una fecha mal armada no se
+        // lleva años de citas en una sola respuesta.
+        if ($hasta->lessThan($desde) || $desde->diffInDays($hasta) > 31) {
+            return response()->json(['message' => 'El rango de fechas no es válido.'], 400);
+        }
+
+        $colas = Cola::whereIn('reg_medico', $registrosMedicos)
+            ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
+            ->get();
+
+        return response()->json($this->cuerpoDeLaRespuesta(
+            [
+                'colas' => $colas,
+                'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
+            ],
+            $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio, $resultadoChanges, collect([]),
+        ));
+    }
+
     private function cuerpoDeLaRespuesta(
         array $datos,
         Carbon $syncedAt,

@@ -186,6 +186,12 @@ class SyncAppDataRequest extends FormRequest
             // tramo pide el cliente (el servidor lo acota).
             'volcado' => ['sometimes', 'nullable', 'string', 'max:64'],
             'volcado_limite' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5000'],
+
+            // Pedidos puntuales del app (2026-10-14), para lo que la ventana del volcado deja afuera:
+            // el historial de **un** paciente (por su número de historia) y las citas de un rango de días.
+            // Las fechas y el tope del rango se validan en el controlador, que responde 400.
+            'volcado_paciente' => ['sometimes', 'nullable', 'integer'],
+            'volcado_agenda' => ['sometimes', 'nullable', 'string', 'max:30'],
         ];
     }
 

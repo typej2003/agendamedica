@@ -346,4 +346,78 @@ class SyncVolcadoPaginadoTest extends TestCase
         $this->assertSame('numhistoria', TablasLegado::columnaHistoria('cola'));
         $this->assertSame('nrohistoria', TablasLegado::columnaHistoria('recipes'));
     }
+    /**
+     * **El pedido en línea de un paciente** (2026-10-14). La ventana del volcado deja afuera a los pacientes
+     * que no se atienden, así que cuando el médico abre una ficha vieja el app pide su historia completa:
+     * consultas, citas, récipes y documentos de **cualquier fecha**, y sólo de ese paciente.
+     */
+    public function test_el_pedido_de_un_paciente_trae_su_historia_completa_y_solo_la_suya(): void
+    {
+        $reg = 'pag-pac-' . uniqid();
+        Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
+
+        // El paciente 3 no se atiende desde hace medio año: nada de él entró en el volcado.
+        $viejo = now()->subDays(200)->toDateString();
+        DB::table('cola')->insert([
+            'reg_medico' => $reg, 'fecha' => $viejo, 'hora_ini' => '08:00', 'numhistoria' => 3,
+            'atendido' => 1, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('consultas')->insert([
+            'reg_medico' => $reg, 'numhistoria' => 3, 'nroconsulta' => 1, 'fecha' => $viejo,
+            'enfermedadactual' => 'VIEJA DE UNO', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('recipes')->insert([
+            'reg_medico' => $reg, 'nrohistoria' => 3, 'nroconsulta' => 1, 'recipe' => 1,
+            'codemedicina' => 'MED-01', 'descripcion' => 'RECIPE VIEJO',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        // El volcado no lo trajo…
+        $this->assertNotContains('VIEJA DE UNO', array_column($this->recorrerVolcado()['consultas'], 'enfermedadactual'));
+
+        // …y el pedido puntual sí, con sus citas y sus documentos.
+        $cuerpo = $this->sync(['volcado_paciente' => 3])->json();
+
+        $this->assertSame('VIEJA DE UNO', $cuerpo['consultas'][0]['enfermedadactual'] ?? null);
+        $this->assertSame('RECIPE VIEJO', $cuerpo['recipes'][0]['descripcion'] ?? null);
+        $this->assertCount(1, $cuerpo['colas'], 'su cita vieja');
+        $this->assertSame($viejo, substr((string) $cuerpo['colas'][0]['fecha'], 0, 10));
+        $this->assertCount(1, $cuerpo['historias'], 'su historia');
+        // Y nada del otro paciente: la historia 1 quedó afuera.
+        $this->assertSame([3], array_unique(array_map('intval', array_column($cuerpo['consultas'], 'numhistoria'))));
+    }
+
+    public function test_el_historial_de_un_paciente_ajeno_no_se_manda(): void
+    {
+        $reg = 'pag-ajeno-' . uniqid();
+        Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
+
+        // El número de historia es **por médico**: el 999 no es de este.
+        $this->postJson('/api/app/sync-app-data', ['volcado_paciente' => 999])->assertStatus(404);
+    }
+
+    /**
+     * **El pedido en línea de la agenda**: el médico navega a un día anterior a la ventana y el app trae esas
+     * citas. Llegan como citas normales (se pueden confirmar, cobrar y atender), no como una vista de lectura.
+     */
+    public function test_el_pedido_de_la_agenda_trae_las_citas_de_esos_dias(): void
+    {
+        $reg = 'pag-agenda-' . uniqid();
+        Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
+
+        $viejo = now()->subDays(200)->toDateString();
+        DB::table('cola')->insert([
+            'reg_medico' => $reg, 'fecha' => $viejo, 'hora_ini' => '08:00', 'numhistoria' => 3,
+            'atendido' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $cuerpo = $this->sync(['volcado_agenda' => $viejo])->json();
+        $this->assertCount(1, $cuerpo['colas'], 'la cita de ese día');
+        $this->assertSame($viejo, substr((string) $cuerpo['colas'][0]['fecha'], 0, 10));
+
+        // Un día sin citas no trae nada, y un rango mal armado se rechaza.
+        $this->assertSame([], (array) $this->sync(['volcado_agenda' => now()->subDays(300)->toDateString()])->json()['colas']);
+        $this->postJson('/api/app/sync-app-data', ['volcado_agenda' => 'no-es-fecha'])->assertStatus(400);
+        $this->postJson('/api/app/sync-app-data', ['volcado_agenda' => '2026-01-01,2026-06-01'])->assertStatus(400);
+    }
 }
