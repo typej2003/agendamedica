@@ -48,7 +48,7 @@ final class SeccionDeEstudioVista
     {
         return 'Los estudios ecográficos de la consulta. Cada uno se carga en su formulario, se guarda con '
             . 'su botón y se imprime en media hoja con el membrete de tu consultorio. Los estudios que '
-            . 'faltan (obstétrico, doppler, mamarío y los demás ultrasonidos) llegan con las tareas '
+            . 'faltan (el ecocardiograma fetal, el mamarío y el abdominal) llegan con las tareas '
             . 'siguientes de F6.';
     }
 }

@@ -62,6 +62,16 @@ final class DocumentoImpreso
     public const ECO_OBSTETRICO_TERCERO = 'eco-obstetrico-tercero';
 
     /**
+     * El **informe del eco Doppler perinatal** (WEB-6.3): la hoja que el escritorio imprime con
+     * `d_eco_doppler_print`, cuyo título es «ECO DOPPLER PERINATAL» (`:55`) y cuyo bloque de la grilla de
+     * cuatro vasos se titula «Eco Doppler Obstétrico en 4 Vasos» (`:63`).
+     *
+     * Su formato en blanco del escritorio (`d_eco_doppler_print_vacio`) es **otro diseño** (encabezado
+     * condensado, grilla de 8 columnas en 2 y «Vena Umbilical:»); ver `FormatosEnBlanco`.
+     */
+    public const ECO_DOPPLER = 'eco-doppler';
+
+    /**
      * **El informe de la colposcopía** (WEB-6.5): la hoja del examen colposcópico del escritorio
      * (`d_colposcopia_1` / `d_colposcopia_2`, cuyo título es «INFORME DE COLPOSCOPÍA», `:25` y `:26`). Su
      * cuerpo es **el texto de `consultas.observaciones`** y el escritorio le anexa las fotos del examen
@@ -111,6 +121,9 @@ final class DocumentoImpreso
         // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
         self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
         self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
+        // El del eco Doppler perinatal, tal cual el DataWindow de impresión del escritorio
+        // (`d_eco_doppler_print.srd:55`).
+        self::ECO_DOPPLER => ['ECO DOPPLER PERINATAL', 'Eco Doppler perinatal'],
         // El del informe de colposcopía, tal cual el DataWindow del escritorio (`d_colposcopia_1.srd:25`).
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).

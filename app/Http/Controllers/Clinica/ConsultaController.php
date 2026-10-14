@@ -33,8 +33,10 @@ use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
+use App\Clinica\Consulta\Vistas\EcoDopplerVista;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
@@ -150,6 +152,7 @@ class ConsultaController extends Controller
         EcoGinecologico $eco,
         EcoObstetrico $ecoObstetrico,
         EcoObstetricoTercero $ecoObstetricoTercero,
+        EcoDoppler $ecoDoppler,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -203,7 +206,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $furPrenatal, $gestas, $informePrenatal),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $furPrenatal, $gestas, $informePrenatal),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -260,6 +263,7 @@ class ConsultaController extends Controller
         EcoGinecologico $eco,
         EcoObstetrico $ecoObstetrico,
         EcoObstetricoTercero $ecoObstetricoTercero,
+        EcoDoppler $ecoDoppler,
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
@@ -343,19 +347,22 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_ESTUDIO) {
             // El tipo del estudio viaja en la URL (`&tipo=`): el contenedor muestra los que existen hoy
-            // (el ginecológico, WEB-6.1) y los demás llegan con las tareas siguientes de F6.
+            // (el ginecológico de WEB-6.1, los dos obstétricos de WEB-6.2 y el Doppler de WEB-6.3) y los
+            // demás llegan con las tareas siguientes de F6.
             $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
+
+            $tipos = new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => $clave,
+            ]));
 
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
             if ($tipo === TiposDeEstudio::TERCERO) {
                 return new SeccionDeEstudioVista(
                     $tipo,
-                    new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
-                        $consulta->id,
-                        'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
-                        'tipo' => $clave,
-                    ])),
+                    $tipos,
                     new EcoObstetricoTerceroVista(
                         $ecoObstetricoTercero->de($consulta),
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
@@ -368,13 +375,28 @@ class ConsultaController extends Controller
                 );
             }
 
+            // El eco Doppler perinatal (WEB-6.3): su mapa, su tabla llaveada por `historia` + `consulta` y
+            // su propio parcial. Su ficha (`fur`, `gesta`, `para`) la teclea el médico: su ventana del
+            // escritorio no la copia del control prenatal.
+            if ($tipo === TiposDeEstudio::DOPPLER) {
+                return new SeccionDeEstudioVista(
+                    $tipo,
+                    $tipos,
+                    new EcoDopplerVista(
+                        $ecoDoppler->de($consulta),
+                        route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                        route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_DOPPLER]),
+                        null,
+                        null,
+                        (array) old(),
+                    ),
+                );
+            }
+
             return new SeccionDeEstudioVista(
                 $tipo,
-                new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
-                    $consulta->id,
-                    'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
-                    'tipo' => $clave,
-                ])),
+                $tipos,
                 $tipo === TiposDeEstudio::OBSTETRICO
                     ? new EcoObstetricoVista(
                         $ecoObstetrico->de($consulta),

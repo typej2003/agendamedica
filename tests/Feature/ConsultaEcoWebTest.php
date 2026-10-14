@@ -468,7 +468,7 @@ class ConsultaEcoWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlGuardar($consulta, 'doppler'), $this->formulario(['cuerpo' => '60']))
+            ->post($this->urlGuardar($consulta, 'inventado'), $this->formulario(['cuerpo' => '60']))
             ->assertNotFound();
 
         $this->assertSame(0, EcoPelvico::where('reg_medico', $medico->reg_medico)->count());

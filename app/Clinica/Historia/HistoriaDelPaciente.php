@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
@@ -375,6 +376,25 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // El informe del eco Doppler perinatal (WEB-6.3), con la misma vara: algún dato del estudio —la
+        // ficha no cuenta— o el informe en texto libre del escritorio.
+        foreach ($this->dopplers($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'], $estudio['textoLibre'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco Doppler perinatal',
+                'bi-soundwave',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco Doppler perinatal',
+                null,
+                null,
+                DocumentoImpreso::ECO_DOPPLER,
+            ));
+        }
+
         // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. El
         // texto vive en la **consulta** (su columna de `consultas`, que es la que imprime la hoja), así que se
         // recorre por consulta; las otras dos solapas de texto no tienen hoja.
@@ -623,6 +643,47 @@ final class HistoriaDelPaciente
             $estudios[(int) $fila->nroconsulta] = [
                 'conDato' => $conDato,
                 'textoLibre' => EstudioEcografico::limpiar($atributos[EcoGinecologico::COLUMNA_PURO_TEXTO] ?? null) !== null,
+            ];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
+    }
+
+    /**
+     * Los informes de eco Doppler perinatal de la historia (WEB-6.3), por número de consulta: cuántos campos
+     * del estudio traen dato (sin contar la ficha: la fecha, la FUR, la gesta y el `para`) y si el escritorio
+     * le dejó su informe en texto libre (`puro_texto`). La lista de columnas sale del mapa del dato, así que
+     * una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `eco_doppler` es **`historia` + `consulta`**, no `numhistoria`/`nroconsulta` como la del
+     * eco pélvico.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function dopplers(string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table('eco_doppler')
+            ->where('reg_medico', $regMedico)
+            ->where(EcoDoppler::COLUMNA_HISTORIA, $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff(EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            $estudios[(int) $fila->consulta] = [
+                'conDato' => $conDato,
+                'textoLibre' => EstudioEcografico::limpiar($atributos[EcoDoppler::COLUMNA_PURO_TEXTO] ?? null) !== null,
             ];
         }
 

@@ -19,9 +19,9 @@ use Closure;
  * `TODOS` es la lista de tipos **que existen hoy**, y es el único lugar donde se agregan: un tipo nuevo
  * suma su fila, su mapa del dato, su ViewModel y su parcial `_estudio-<clave>`, sin tocar el contenedor
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
- * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1) y el **eco obstétrico del primer
- * trimestre** (WEB-6.2); el obstétrico del tercero, el doppler y el ecocardiograma son WEB-6.2/WEB-6.3 y los
- * ultrasonidos, WEB-6.4.
+ * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1), el **eco obstétrico del primer
+ * trimestre** y el del **2.º/3.er** (WEB-6.2) y el **eco Doppler perinatal** (WEB-6.3); el ecocardiograma
+ * fetal sigue en WEB-6.3 y los ultrasonidos mamarío y abdominal, en WEB-6.4.
  *
  * Sin base de datos.
  */
@@ -42,6 +42,15 @@ final class TiposDeEstudio
      */
     public const TERCERO = 'tercero';
 
+    /**
+     * El **eco Doppler perinatal** (WEB-6.3): la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:22650`, con el DataWindow `d_eco_doppler`, que vive en
+     * `fuentes/ventana_consulta/` y no en `datawin_procesos/`: trampas 123 y 124).
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const DOPPLER = 'doppler';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -50,6 +59,7 @@ final class TiposDeEstudio
         self::GINECOLOGICO => ['texto' => 'Eco ginecológico', 'icono' => 'bi-activity'],
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
         self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
     ];
 
     /**

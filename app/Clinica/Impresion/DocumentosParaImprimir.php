@@ -32,6 +32,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::LABORATORIO => 'bi-droplet',
         DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::ECO_PELVICO => 'bi-activity',
+        DocumentoImpreso::ECO_DOPPLER => 'bi-soundwave',
         DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
         DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',

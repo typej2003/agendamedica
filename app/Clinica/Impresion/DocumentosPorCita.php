@@ -4,6 +4,7 @@ namespace App\Clinica\Impresion;
 
 use App\Actions\Consulta\AbrirConsulta;
 use App\Clinica\Agenda\CitaDeAgenda;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Consulta\TextosDelExamen;
@@ -37,7 +38,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Un récipe con medicamentos (del paciente o de la pareja) o un **documento de verdad** de los de `QueEsUnDocumento`: una
  * constancia con algo propio del médico, un reposo real, una referencia, un informe real, una orden de hospitalización, una dieta con texto, una orden de
- * laboratorio o una solicitud de estudios (al menos un examen o estudio, o un resumen clínico con texto) o un **resumen médico** (WEB-5.3c: algún bloque
+ * laboratorio o una solicitud de estudios (al menos un examen o estudio, o un resumen clínico con texto), un **eco** (el
+ * pélvico de WEB-6.1 o el Doppler perinatal de WEB-6.3 con algún dato del estudio o su informe en texto libre) o un **resumen médico** (WEB-5.3c: algún bloque
  * con datos). Es **la misma regla** que
  * `SolicitudesParaImprimir::disponibles` aplica a una sola consulta, escrita acá como consulta de conjunto (SQL) porque es
  * por toda la agenda; los tests comparan las dos formas.
@@ -212,6 +214,23 @@ final class DocumentosPorCita
                     });
                 }
             }), 'numhistoria', 'nroconsulta');
+
+        //  - informe del eco Doppler perinatal (WEB-6.3): algún campo del estudio cargado o el informe en
+        //    texto libre del escritorio (`puro_texto`, su modo «Plantillas»), con la misma vara
+        //    (`QueEsUnDocumento::ecografia`). **La clave es `historia` + `consulta`**, no
+        //    `numhistoria`/`nroconsulta` como el pélvico, y la ficha (fecha, FUR, gesta y `para`) no cuenta.
+        $this->marcar($conAlgo, DB::table('eco_doppler')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+            ->where(function ($q) {
+                foreach (array_merge(
+                    array_diff(EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN),
+                    [EcoDoppler::COLUMNA_PURO_TEXTO],
+                ) as $columna) {
+                    $q->orWhere(function ($cada) use ($columna) {
+                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                    });
+                }
+            }), 'historia', 'consulta');
 
         $ids = [];
         foreach ($atendidas as $cita) {

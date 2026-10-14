@@ -28,20 +28,21 @@ class FormatosEnBlancoVistaTest extends TestCase
         );
     }
 
-    public function test_el_catalogo_son_once_formatos_con_el_recipe_primero_y_sin_el_eco_pelvico(): void
+    public function test_el_catalogo_son_doce_formatos_con_el_recipe_primero_y_sin_el_eco_pelvico(): void
     {
         $this->assertSame(
             ['recipe', 'informe', 'constancia', 'reposo', 'referencia', 'hospitalizacion', 'dieta', 'laboratorio', 'estudios',
-                'eco-obstetrico', 'eco-obstetrico-tercero'],
+                'eco-obstetrico', 'eco-obstetrico-tercero', 'eco-doppler'],
             FormatosEnBlanco::claves(),
         );
         $this->assertSame(FormatosEnBlanco::claves(), array_column(FormatosEnBlanco::catalogo(), 'clave'));
         $this->assertFalse(FormatosEnBlanco::existe('ecografia'));
         // El único documento de la hoja real que todavía no tiene formato en blanco es el eco pélvico
-        // (WEB-6.1); los dos del obstétrico (WEB-6.2) sí.
+        // (WEB-6.1); los dos del obstétrico (WEB-6.2) y el del Doppler (WEB-6.3) sí.
         $this->assertFalse(FormatosEnBlanco::existe(DocumentoImpreso::ECO_PELVICO));
         $this->assertTrue(FormatosEnBlanco::existe(DocumentoImpreso::ECO_OBSTETRICO));
         $this->assertTrue(FormatosEnBlanco::existe(DocumentoImpreso::ECO_OBSTETRICO_TERCERO));
+        $this->assertTrue(FormatosEnBlanco::existe(DocumentoImpreso::ECO_DOPPLER));
     }
 
     public function test_los_titulos_salen_de_los_de_la_hoja_real(): void
@@ -99,6 +100,30 @@ class FormatosEnBlancoVistaTest extends TestCase
         $mitad = $this->vista(DocumentoImpreso::ECO_OBSTETRICO)->hojas()[0]['mitades'][0];
         $this->assertSame(['', '', ''], array_column($mitad['fijos'], 'valor'));
         $this->assertCount(5, $mitad['secciones']);
+        $this->assertTrue($mitad['enBlanco']);
+    }
+
+    /**
+     * El formato en blanco del **eco Doppler perinatal** (WEB-6.3) lleva los mismos bloques que su hoja real,
+     * vacíos, en su orden: el memo grande (sin rótulo), la grilla de cuatro vasos, los tres desplegables y las
+     * dos áreas del final, rotuladas como en la hoja («Sugerencias:» y «Conclusión:»).
+     *
+     * ⚠️ El diseño del escritorio (`d_eco_doppler_print_vacio`) es **otro** y no se copia: ver el comentario
+     * de la entrada en `FormatosEnBlanco`.
+     */
+    public function test_el_eco_doppler_en_blanco_trae_su_ficha_y_los_bloques_de_su_hoja(): void
+    {
+        $this->assertSame(['Gesta:', 'FUR:', 'EG:', 'PARA:'], FormatosEnBlanco::plano(DocumentoImpreso::ECO_DOPPLER)['fijos']);
+        $this->assertSame(
+            [null, 'Eco Doppler Obstétrico en 4 Vasos:', 'Ductos Venosos:', 'Señal Venoso Umbilical:',
+                'Relación Aorta-Cava:', 'Sugerencias:', 'Conclusión:'],
+            array_column(FormatosEnBlanco::plano(DocumentoImpreso::ECO_DOPPLER)['secciones'], 'etiqueta'),
+        );
+        $this->assertSame('ECO DOPPLER PERINATAL', FormatosEnBlanco::titulo(DocumentoImpreso::ECO_DOPPLER));
+
+        $mitad = $this->vista(DocumentoImpreso::ECO_DOPPLER)->hojas()[0]['mitades'][0];
+        $this->assertSame(['', '', '', ''], array_column($mitad['fijos'], 'valor'));
+        $this->assertCount(7, $mitad['secciones']);
         $this->assertTrue($mitad['enBlanco']);
     }
 

@@ -24,7 +24,9 @@ use App\Clinica\Consulta\EstudioEcografico;
 class EcoObstetricoVista
 {
     public function __construct(
-        private EstudioEcografico $estudio,
+        // `protected` para que el eco Doppler (WEB-6.3), que hereda de esta clase, pueda mostrar su informe
+        // en texto libre (`puro_texto`), que los obstétricos todavía no muestran.
+        protected EstudioEcografico $estudio,
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private string $urlImprimir = '',
@@ -44,6 +46,18 @@ class EcoObstetricoVista
     protected function columnasDelEstudio(): array
     {
         return EcoObstetrico::columnas();
+    }
+
+    /**
+     * Las columnas de la **ficha** de ese estudio: no cuentan como "campos cargados" porque las completa el
+     * servidor o son del embarazo, no hallazgos. Los dos obstétricos excluyen la fecha, la FUR y la gesta; el
+     * **eco Doppler** (WEB-6.3) reemplaza esta lista por la suya, que suma el `para`.
+     *
+     * @return array<int,string>
+     */
+    protected function columnasQueNoCuentan(): array
+    {
+        return ['fecha', 'fur', 'gesta'];
     }
 
     public function titulo(): string
@@ -122,12 +136,12 @@ class EcoObstetricoVista
         return 'Hay cambios sin guardar en el eco obstétrico. Si sales ahora, se pierden.';
     }
 
-    /** Cuántos campos del estudio tienen algo cargado (sin contar la fecha, la FUR ni la gesta). */
+    /** Cuántos campos del estudio tienen algo cargado (sin contar la ficha del embarazo). */
     public function cargados(): int
     {
         $cuenta = 0;
 
-        foreach (array_diff($this->columnasDelEstudio(), ['fecha', 'fur', 'gesta']) as $columna) {
+        foreach (array_diff($this->columnasDelEstudio(), $this->columnasQueNoCuentan()) as $columna) {
             $valor = $this->valorDe($columna);
 
             if ($valor !== null && $valor !== '') {
@@ -141,7 +155,7 @@ class EcoObstetricoVista
     /** Cuántos campos del estudio se pueden cargar. */
     public function totalCampos(): int
     {
-        return count($this->columnasDelEstudio()) - 3;
+        return count($this->columnasDelEstudio()) - count($this->columnasQueNoCuentan());
     }
 
     /** ¿El estudio dice algo? Es la regla de la Action, dicha en pantalla. */

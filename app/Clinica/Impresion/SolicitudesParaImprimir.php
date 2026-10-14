@@ -8,6 +8,7 @@ use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
@@ -91,6 +92,7 @@ final class SolicitudesParaImprimir
         private EcoGinecologico $ecos,
         private EcoObstetrico $ecosObstetricos,
         private EcoObstetricoTercero $ecosObstetricosTerceros,
+        private EcoDoppler $dopplers,
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
         private ResumenMedicoDeLaConsulta $resumenes,
@@ -160,6 +162,20 @@ final class SolicitudesParaImprimir
                 'tipo' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO_TERCERO][1],
                 'resumen' => 'Informe del eco obstétrico (2.º y 3.er trimestre)',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del eco Doppler perinatal (WEB-6.3): otro estudio más del ítem 5, con su propia ficha
+        // (fecha, FUR, gesta y `para`), y la misma regla para ofrecerlo.
+        $doppler = $this->dopplers->de($consulta);
+        if ($this->elEcoDopplerEsDocumento($doppler)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_DOPPLER,
+                'tipo' => DocumentoImpreso::ECO_DOPPLER,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_DOPPLER][1],
+                // Sin los índices ni la conclusión: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del eco Doppler perinatal',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -334,6 +350,12 @@ final class SolicitudesParaImprimir
             return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetricoTercero::columnas())
                 ? $this->ecoObstetricoTercero($paciente, $estudio, $fechaDeLaConsulta)
                 : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_DOPPLER) {
+            $estudio = $this->dopplers->de($consulta);
+
+            return $this->elEcoDopplerEsDocumento($estudio) ? $this->ecoDoppler($paciente, $estudio, $fechaDeLaConsulta) : null;
         }
 
         if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
@@ -781,7 +803,6 @@ final class SolicitudesParaImprimir
         $parrafos[] = ['texto' => $texto, 'etiqueta' => $etiqueta, 'aparte' => false];
     }
 
-    /** ¿El estudio es un documento de verdad? La misma regla que usa la pantalla (`QueEsUnDocumento::ecografia`). */
     /**
      * **El informe del control de embarazo** (WEB-6.6, la pestaña *Reporte*): la hoja «CONTROL DE EMBARAZO»
      * del escritorio (`d_informe_pre_nata_peque.srd`), con la gesta, sus controles y su laboratorio.
@@ -969,10 +990,135 @@ final class SolicitudesParaImprimir
         );
     }
 
+    /**
+     * **El informe del eco Doppler perinatal** (WEB-6.3): la hoja «ECO DOPPLER PERINATAL» del escritorio
+     * (`d_eco_doppler_print`), en el orden de su fuente: el **texto** libre del estudio (el memo grande, que
+     * no lleva rótulo), la **grilla de cuatro vasos** con su título, los **ductos venosos**, la **señal
+     * venoso umbilical**, la **relación aorta-cava**, las **sugerencias** y la **conclusión** (en singular,
+     * como el DataWindow de impresión, `:91-92`).
+     *
+     * La ficha del encabezado —la gesta, la FUR, la EG y el destinatario— va como **datos cortos**, como en
+     * el DataWindow: la EG se calcula de la FUR con la misma cuenta de siempre (`EdadGestacional::de`; el
+     * `compute` del DataWindow es idéntico al de los ecos obstétricos).
+     *
+     * Los rótulos de los desplegables y de la grilla salen del **mapa del dato** (`EcoDoppler`), el mismo
+     * que pinta el formulario: un campo nuevo del mapa aparece en la pantalla y en la hoja sin tocar esto.
+     */
+    private function ecoDoppler(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    {
+        $datos = [];
+
+        foreach ([
+            'Gesta:' => $estudio->valor('gesta'),
+            'FUR:' => $estudio->fur() === null ? null : FechaClinica::formato($estudio->fur()),
+            'EG:' => \App\Clinica\Embarazo\EdadGestacional::de($estudio->fur())?->texto(),
+            'PARA:' => $estudio->valor('para'),
+        ] as $etiqueta => $valor) {
+            if ($valor !== null && $valor !== '') {
+                $datos[] = ['etiqueta' => $etiqueta, 'valor' => (string) $valor];
+            }
+        }
+
+        $parrafos = [];
+
+        // El memo grande del estudio: el DataWindow no le pone rótulo.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor('texto')) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        // La grilla de cuatro vasos: una línea por arteria, con sus índices rotulados. El bloque sin ninguna
+        // medida no se imprime.
+        $filasDeLaGrilla = [];
+
+        foreach (EcoDoppler::grilla() as $fila) {
+            $valores = [];
+
+            foreach ($fila['campos'] as $campo) {
+                $valor = $estudio->valor($campo['columna']);
+
+                if ($valor !== null && $valor !== '') {
+                    $valores[] = $campo['eje'] . ': ' . $valor;
+                }
+            }
+
+            if ($valores !== []) {
+                $filasDeLaGrilla[] = ['etiqueta' => $fila['etiqueta'] . ':', 'texto' => implode(' · ', $valores)];
+            }
+        }
+
+        if ($filasDeLaGrilla !== []) {
+            // El título del bloque, con el rótulo que le puso el doctor al DataWindow de impresión
+            // (`d_eco_doppler_print.srd:63`), como un párrafo de su propia línea.
+            $parrafos[] = ['texto' => '', 'etiqueta' => 'Eco Doppler Obstétrico en 4 Vasos', 'aparte' => true];
+
+            foreach ($filasDeLaGrilla as $filaDeLaGrilla) {
+                $this->sumarParrafo($parrafos, $filaDeLaGrilla['etiqueta'], $filaDeLaGrilla['texto']);
+            }
+        }
+
+        // Los tres desplegables, con los rótulos de la hoja (la señal venoso umbilical va sin la
+        // «pulsatilidad» que sí dice la pantalla, como en el DataWindow de impresión).
+        foreach ([
+            'ductos_venosos' => 'Ductos Venosos:',
+            'ven_umbilical' => 'Señal Venoso Umbilical:',
+            'relac_aorta' => 'Relación Aorta-Cava:',
+        ] as $columna => $etiqueta) {
+            $this->sumarParrafo($parrafos, $etiqueta, EcoDoppler::textoDe($columna, $estudio->valor($columna)));
+        }
+
+        // Las dos áreas del final: la pantalla las rotula «Observaciones:» y «Conclusiones:»; la hoja,
+        // «Sugerencias:» y «Conclusión:» (singular), como el DataWindow de impresión.
+        foreach (['sugerencias' => 'Sugerencias:', 'conclusion' => 'Conclusión:'] as $columna => $etiqueta) {
+            foreach (DocumentoImpreso::parrafosDe($estudio->valor($columna), $etiqueta, true) as $parrafo) {
+                $parrafos[] = $parrafo;
+            }
+        }
+
+        // El modo «Plantillas» del escritorio: si dejó un informe escrito en texto libre, se imprime tal cual
+        // (la web lo muestra y no lo edita), como en el eco pélvico.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor(EcoDoppler::COLUMNA_PURO_TEXTO), 'Informe en texto libre:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_DOPPLER,
+            DocumentoImpreso::ECO_DOPPLER,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_DOPPLER][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_DOPPLER][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $datos,
+            $parrafos,
+        );
+    }
+
     /** ¿El eco obstétrico dice algo? La fecha, la FUR y la gesta no cuentan (son del embarazo, no hallazgos). */
     private function elEcoObstetricoEsDocumento(EstudioEcografico $estudio, array $columnas): bool
     {
-        $noCuentan = ['fecha', 'fur', 'gesta'];
+        return QueEsUnDocumento::ecografia($this->camposDelEstudioConDato($estudio, $columnas, ['fecha', 'fur', 'gesta']));
+    }
+
+    /**
+     * ¿El eco Doppler dice algo? Su ficha tiene una columna más —el `para`— y, como el eco pélvico, cuenta
+     * el **informe en texto libre** del escritorio (`puro_texto`): es lo que se imprime.
+     */
+    private function elEcoDopplerEsDocumento(EstudioEcografico $estudio): bool
+    {
+        return QueEsUnDocumento::ecografia(
+            $this->camposDelEstudioConDato($estudio, EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN),
+            $estudio->valor(EcoDoppler::COLUMNA_PURO_TEXTO) !== null,
+        );
+    }
+
+    /**
+     * Cuántas columnas de un estudio traen algo, sin contar las de su ficha. Es la misma vara que la pantalla
+     * y la Action (`QueEsUnDocumento::ecografia`).
+     *
+     * @param  array<int,string>  $columnas
+     * @param  array<int,string>  $noCuentan
+     */
+    private function camposDelEstudioConDato(EstudioEcografico $estudio, array $columnas, array $noCuentan): int
+    {
         $conDatos = 0;
 
         foreach (array_diff($columnas, $noCuentan) as $columna) {
@@ -983,7 +1129,7 @@ final class SolicitudesParaImprimir
             }
         }
 
-        return QueEsUnDocumento::ecografia($conDatos);
+        return $conDatos;
     }
 
     private function elEcoEsDocumento(EstudioEcografico $estudio): bool

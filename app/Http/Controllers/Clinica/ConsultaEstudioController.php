@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\GuardarEcoDoppler;
 use App\Actions\Consulta\GuardarEcoGinecologico;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\ConsultasDelContexto;
@@ -18,21 +20,22 @@ use Illuminate\Http\Request;
 use InvalidArgumentException;
 
 /**
- * **El estudio ecográfico de una consulta** (WEB-6.1, ítem 5 del panel del legado): guardar el eco pélvico.
+ * **El estudio ecográfico de una consulta** (WEB-6.1, ítem 5 del panel del legado): guardar el eco pélvico, los
+ * dos obstétricos (WEB-6.2) y el Doppler perinatal (WEB-6.3).
  *
  * La sección se **lee** en `ConsultaController::ver` (`?seccion=estudio&tipo=ginecologico`); acá sólo se
  * escribe, que es la partición que la guía de la arquitectura pide (controladores por responsabilidad).
  *
- * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el obstétrico de WEB-6.2,
- * el doppler y el ecocardiograma de WEB-6.3, los ultrasonidos de WEB-6.4) sumen su rama **sin ruta nueva**;
- * hoy el único que existe es el ginecológico (`TiposDeEstudio`), y cualquier otro da **404**.
+ * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el ecocardiograma fetal de
+ * WEB-6.3 y los ultrasonidos de WEB-6.4) sumen su rama **sin ruta nueva**; hoy existen los cuatro de
+ * `TiposDeEstudio` y cualquier otro da **404**.
  *
  * **Guardado explícito**, como la evaluación física: es un dato clínico y el médico decide cuándo queda
  * escrito. El aviso de "cambios sin guardar" y el bloqueo del navegador al salir los pone
  * `public/js/clinica/consulta.js` desde los `data-*` del formulario.
  *
  * La escritura —el rastro por columna en `sync_changes` y el last-write-wins que impide pisar una edición
- * más nueva del escritorio o del teléfono— es la Action `GuardarEcoGinecologico`.
+ * más nueva del escritorio o del teléfono— es la Action de cada estudio.
  */
 class ConsultaEstudioController extends Controller
 {
@@ -49,6 +52,7 @@ class ConsultaEstudioController extends Controller
         GuardarEcoGinecologico $guardar,
         GuardarEcoObstetrico $guardarObstetrico,
         GuardarEcoObstetricoTercero $guardarObstetricoTercero,
+        GuardarEcoDoppler $guardarDoppler,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -68,9 +72,12 @@ class ConsultaEstudioController extends Controller
         // (una fila por consulta, sólo lo que cambió, con su rastro): lo único que cambia es qué columnas y
         // con qué reglas. Un tipo nuevo suma su acción acá y su mapa en `reglasDe()`.
         $tipo = TiposDeEstudio::normalizar($tipo);
-        $esObstetrico = $tipo === TiposDeEstudio::OBSTETRICO;
-        $esTercero = $tipo === TiposDeEstudio::TERCERO;
-        $accion = $esTercero ? $guardarObstetricoTercero : ($esObstetrico ? $guardarObstetrico : $guardar);
+        $accion = match ($tipo) {
+            TiposDeEstudio::DOPPLER => $guardarDoppler,
+            TiposDeEstudio::TERCERO => $guardarObstetricoTercero,
+            TiposDeEstudio::OBSTETRICO => $guardarObstetrico,
+            default => $guardar,
+        };
 
         $destino = $this->destino($consulta, $tipo);
 
@@ -87,13 +94,17 @@ class ConsultaEstudioController extends Controller
         // otro equipo, el escritorio o el teléfono). Se dice **cuáles**, en vez de mostrar un "Guardado"
         // falso de lo que no se guardó. No confundir con "no había cambios", que no es un problema.
         if ($resultado->huboConflicto()) {
-            return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueadas)
+            return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueadas, $tipo)
                 . ' más recientemente y no se pisó: vuelve a cargar el estudio y guárdalo de nuevo.');
         }
 
         return $destino->with('estado', $resultado->sinCambios()
             ? 'El eco no tenía cambios.'
-            : (($esObstetrico || $esTercero) ? 'Eco obstétrico guardado.' : 'Eco pélvico guardado.'));
+            : match ($tipo) {
+                TiposDeEstudio::DOPPLER => 'Eco Doppler guardado.',
+                TiposDeEstudio::TERCERO, TiposDeEstudio::OBSTETRICO => 'Eco obstétrico guardado.',
+                default => 'Eco pélvico guardado.',
+            });
     }
 
     /**
@@ -102,13 +113,28 @@ class ConsultaEstudioController extends Controller
      */
     private function reglasDe(string $tipo): array
     {
+        if ($tipo === TiposDeEstudio::DOPPLER) {
+            return $this->reglasDelMapa(EcoDoppler::grupos());
+        }
+
         if ($tipo !== TiposDeEstudio::OBSTETRICO && $tipo !== TiposDeEstudio::TERCERO) {
             return $this->reglas();
         }
 
-        $reglas = [];
+        return $this->reglasDelMapa(
+            $tipo === TiposDeEstudio::TERCERO ? EcoObstetricoTercero::grupos() : EcoObstetrico::grupos()
+        );
+    }
 
-        $grupos = $tipo === TiposDeEstudio::TERCERO ? EcoObstetricoTercero::grupos() : EcoObstetrico::grupos();
+    /**
+     * Las reglas de las columnas de un mapa por bloques (los dos obstétricos y el Doppler). El tope de un
+     * texto sale del campo (`tope`) y, si no lo dice, es el de siempre: 20.
+     *
+     * @param  array<int,array<string,mixed>>  $grupos
+     */
+    private function reglasDelMapa(array $grupos): array
+    {
+        $reglas = [];
 
         foreach ($grupos as $grupo) {
             foreach ($grupo['campos'] as $campo) {
@@ -117,7 +143,7 @@ class ConsultaEstudioController extends Controller
                     'numero' => 'nullable|numeric|min:0|max:99999',
                     'area' => 'nullable|string|max:32000',
                     'opciones' => 'nullable|string|max:20',
-                    default => 'nullable|string|max:20',
+                    default => 'nullable|string|max:' . (int) ($campo['tope'] ?? 20),
                 };
             }
         }
@@ -172,11 +198,11 @@ class ConsultaEstudioController extends Controller
      *
      * @param  array<int,string>  $columnas
      */
-    private function listar(array $columnas): string
+    private function listar(array $columnas, string $tipo): string
     {
         $etiquetas = [];
         foreach ($columnas as $columna) {
-            $etiquetas[] = '«' . EcoGinecologico::etiquetaDe($columna) . '»';
+            $etiquetas[] = '«' . $this->etiquetaDe($columna, $tipo) . '»';
         }
 
         if (count($etiquetas) === 1) {
@@ -186,5 +212,17 @@ class ConsultaEstudioController extends Controller
         $ultimo = array_pop($etiquetas);
 
         return implode(', ', $etiquetas) . ' y ' . $ultimo;
+    }
+
+    /**
+     * El rótulo de pantalla de una columna del estudio que se está guardando: el mapa del Doppler tiene sus
+     * propios rótulos (sus celdas dicen la arteria y el eje) y los demás estudios comparten los del pélvico,
+     * que es de donde salían hasta ahora.
+     */
+    private function etiquetaDe(string $columna, string $tipo): string
+    {
+        return $tipo === TiposDeEstudio::DOPPLER
+            ? EcoDoppler::etiquetaDe($columna)
+            : EcoGinecologico::etiquetaDe($columna);
     }
 }

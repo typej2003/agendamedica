@@ -239,6 +239,15 @@ class ImpresionDeDocumentosController extends Controller
             ]);
         }
 
+        // El eco Doppler perinatal (WEB-6.3) es otro tipo de esa misma sección: vuelve a él.
+        if ($tipo === DocumentoImpreso::ECO_DOPPLER) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::DOPPLER,
+            ]);
+        }
+
         // El resumen médico (WEB-5.3c) no tiene pestaña propia: su botón vive en la pestaña *Informe
         // médico* del escritorio (`tabpage_14`), que es a donde vuelve.
         if ($tipo === DocumentoImpreso::RESUMEN_MEDICO) {
