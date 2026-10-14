@@ -37,7 +37,7 @@ return new class extends Migration
             }
             foreach (['espirometria_pef', 'espirometria_fev1'] as $columna) {
                 if (! Schema::hasColumn('consultas', $columna)) {
-                    $table->float($columna)->nullable();
+                    $table->double($columna)->nullable();
                 }
             }
         });
@@ -66,7 +66,7 @@ return new class extends Migration
         Schema::table('recipe_grupo_detalle', function (Blueprint $table) {
             foreach (['dosis', 'cada', 'pvc', 'pvs', 'concentracion'] as $columna) {
                 if (! Schema::hasColumn('recipe_grupo_detalle', $columna)) {
-                    $table->float($columna)->nullable();
+                    $table->double($columna)->nullable();
                 }
             }
             if (! Schema::hasColumn('recipe_grupo_detalle', 'durante')) {
