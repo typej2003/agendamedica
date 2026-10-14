@@ -32,10 +32,19 @@ final class SeccionDeEvaluacionVista
         return $this->pestanas->opciones($this->activa);
     }
 
-    /** El parcial de la solapa activa. */
+    /**
+     * El parcial de la solapa activa.
+     *
+     * Las **cuatro solapas de texto** (WEB-6.5: colposcopía, citología, histeroscopía y resultado de exámenes)
+     * comparten **un solo** parcial —lo que cambia es su dato, no su pantalla— y la evaluación física tiene el
+     * suyo (WEB-4.3). Una solapa que no sea ni eso deriva su nombre de su clave: **el archivo se llama como la
+     * clave** (trampa 114).
+     */
     public function parcial(): string
     {
-        return 'clinica.consulta._evaluacion-' . $this->activa;
+        return PestanasDelExamen::esDeTexto($this->activa)
+            ? 'clinica.consulta._evaluacion-texto'
+            : 'clinica.consulta._evaluacion-' . $this->activa;
     }
 
     /** El ViewModel de la solapa activa. */

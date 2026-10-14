@@ -1,5 +1,6 @@
 <?php
 
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\BitacoraController;
 use App\Http\Controllers\Clinica\CatalogoController;
@@ -27,7 +28,7 @@ use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
-use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
+use App\Http\Controllers\Clinica\ConsultaTextoDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
@@ -181,11 +182,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // son de F6 y no entran acá.
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
 
-                // Colposcopía (WEB-6.5): la solapa homónima del examen (`?seccion=evaluacion&pestana=colposcopia`).
-                // El texto es **uno** y el escritorio lo guarda en dos columnas de dos tablas —la canónica
-                // `consultas.observaciones`, que es la que imprime la hoja «INFORME DE COLPOSCOPÍA», y su copia
-                // `examen_fisico_nuevo.colposcopia`—, así que la Action escribe las dos con su rastro por columna.
-                Route::post('/consulta/{consulta}/colposcopia', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
+                // Los textos de las solapas del examen (WEB-6.5): la colposcopía, la citología, la
+                // histeroscopía y el resultado de exámenes. Las cuatro son **un texto en una columna de
+                // `consultas`** (ver `TextosDelExamen`) y las cuatro guardan igual, así que hay **una** ruta: la
+                // solapa viaja en la dirección y el `whereIn` del catálogo hace que una que no existe sea un
+                // **404** antes de llegar al controlador. La única que además tiene una copia en otra tabla es
+                // la colposcopía (`examen_fisico_nuevo.colposcopia`), y eso lo sabe la Action.
+                Route::post('/consulta/{consulta}/examen/{solapa}', [ConsultaTextoDelExamenController::class, 'guardar'])
+                    ->where('solapa', implode('|', TextosDelExamen::claves()))
+                    ->name('consulta.examen.texto.guardar');
 
                 // Estudio ecográfico (WEB-6.1): el ítem 5 del panel, con su sección propia
                 // (`?seccion=estudio&tipo=…`). El estudio es **una fila por consulta**, llaveada por

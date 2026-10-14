@@ -71,6 +71,13 @@ final class DocumentoImpreso
     public const COLPOSCOPIA = 'colposcopia';
 
     /**
+     * El **informe de histeroscopía** (WEB-6.5): la hoja del escritorio es `d_histeroscopia`, cuyo título es
+     * «INFORME DE HISTEROSCOPÍA» (`:27`) y cuyo cuerpo es el texto de `consultas.cuello` (`:29`, con las fotos
+     * de su subreporte `d_imagenes_consul_pac_histero`).
+     */
+    public const HISTEROSCOPIA = 'histeroscopia';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -93,6 +100,8 @@ final class DocumentoImpreso
         self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
         // El del informe de colposcopía, tal cual el DataWindow del escritorio (`d_colposcopia_1.srd:25`).
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
+        // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).
+        self::HISTEROSCOPIA => ['INFORME DE HISTEROSCOPÍA', 'Histeroscopía'],
     ];
 
     /**

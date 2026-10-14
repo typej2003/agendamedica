@@ -1,15 +1,15 @@
-{{-- La colposcopía de la consulta (WEB-6.5): el texto del informe del examen colposcópico, con las
-     plantillas del escritorio (`formato_print` tipo `CO`) al lado y guardado explícito.
+{{-- La solapa de **un texto del examen** (WEB-6.5): la colposcopía (`tabpage_31`), la citología (`tabpage_33`),
+     la histeroscopía (`tabpage_49`) o el resultado de exámenes (`tabpage_48`).
 
-     Es la solapa `tabpage_31` del escritorio (`w_consulta_principal.srw`), que escribe el mismo texto en
-     `consultas.observaciones` —la columna que imprime la hoja «INFORME DE COLPOSCOPÍA»— y en su copia
-     `examen_fisico_nuevo.colposcopia`. Acá el texto es uno: el mapa del dato está en
-     `App\Clinica\Consulta\ColposcopiaDeLaConsulta`.
-
-     El aviso de cambios sin guardar y las plantillas los pone `consulta.js` desde los `data-*` del
-     formulario (el aviso es el id del formulario más `-sin-guardar`); la vista no lleva JS ni estilos. --}}
+     Las cuatro son la misma pantalla —un texto con las plantillas del escritorio al lado, el aviso de cambios
+     sin guardar y, si la solapa tiene, sus fotos y su botón de imprimir—, así que hay **un solo** parcial y el
+     dato sale de `App\Clinica\Consulta\TextosDelExamen` (la columna de `consultas`, el `tipo` de plantillas y la
+     hoja de cada una). El campo y los ids se llaman como la **clave de la solapa** (`colposcopia`, `citologia`,
+     …): el aviso de cambios sin guardar y las plantillas los ata `consulta.js` desde los `data-*` del formulario
+     (el aviso es el id del formulario más `-sin-guardar`). La vista no lleva JS ni estilos. --}}
 @php
     $estado = $seccion->estado();
+    $clave = $seccion->clave();
 @endphp
 
 <x-ui.tarjeta :titulo="$seccion->titulo()" :icono="$seccion->icono()">
@@ -20,7 +20,7 @@
 
     <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
-    <form method="POST" action="{{ $seccion->urlGuardar() }}" id="colposcopia-form"
+    <form method="POST" action="{{ $seccion->urlGuardar() }}" id="{{ $clave }}-form"
           data-consulta-plantillas data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
@@ -42,11 +42,11 @@
             </ul>
         @endif
 
-        <label class="etiqueta" for="{{ $seccion->campo() }}">Informe de colposcopía</label>
+        <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
         <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
                   data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
 
-        <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="colposcopia-form-sin-guardar" hidden>
+        <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="{{ $clave }}-form-sin-guardar" hidden>
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
             <span>Hay cambios sin guardar.</span>
         </p>
@@ -59,24 +59,29 @@
                 </a>
             @endif
             <button class="btn btn-primary">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar la colposcopía
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : 'la ' . mb_strtolower($seccion->titulo()) }}
             </button>
         </div>
     </form>
 
-    @unless ($seccion->hayPlantillas())
-        <p class="texto-tenue small mt-3 mb-0">
-            No tenés plantillas de colposcopía cargadas: el escrito va tal cual en el informe.
-        </p>
-    @endunless
+    @if ($seccion->tienePlantillas())
+        @unless ($seccion->hayPlantillas())
+            <p class="texto-tenue small mt-3 mb-0">
+                No tenés plantillas de {{ mb_strtolower($seccion->titulo()) }} cargadas: el escrito va tal cual en el informe.
+            </p>
+        @endunless
+    @endif
 
-    {{-- Las imágenes del examen (WEB-6.5): las suyas, etiquetadas para la colposcopía. Es el parcial que
-         comparte con la sección genérica de exámenes, con el examen adentro del formulario. --}}
-    <div class="mt-3">
-        @include('clinica.consulta._imagenes', [
-            'imagenes' => $imagenes,
-            'titulo' => 'Imágenes de la colposcopía',
-            'prefijo' => 'colposcopia',
-        ])
-    </div>
+    {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
+         suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la
+         solapa adentro del formulario. --}}
+    @if ($imagenes !== null)
+        <div class="mt-3">
+            @include('clinica.consulta._imagenes', [
+                'imagenes' => $imagenes,
+                'titulo' => 'Imágenes de ' . mb_strtolower($seccion->titulo()),
+                'prefijo' => $clave,
+            ])
+        </div>
+    @endif
 </x-ui.tarjeta>

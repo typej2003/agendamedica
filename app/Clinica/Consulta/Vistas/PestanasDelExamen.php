@@ -2,94 +2,100 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Consulta\TextosDelExamen;
 use Closure;
 
 /**
- * **Las solapas del examen de la consulta** (WEB-6.5, ítem 4 del panel del legado): Evaluación física ·
- * Colposcopía · … (las tres que se agregan —citología, histeroscopía y resultado de exámenes— entran con sus
- * tareas).
+ * **Las solapas del examen** (WEB-6.5, el `tab_7` de `tabpage_examen` del escritorio): el catálogo de la fila de
+ * solapas del ítem 4 del panel, y **el único lugar donde se agrega una solapa**.
  *
- * El escritorio tiene estas solapas en el `tab_7` de `tabpage_examen` (`w_consulta_principal.srw`), **dentro
- * del examen**: *Examen Físico* (`tabpage_29`), *Examen Ginecológico* (`tabpage_30`), *Colposcopía*
- * (`tabpage_31`), *Citología* (`tabpage_33`), *Histeroscopía* (`tabpage_49`) y *Resultado de exámenes*
- * (`tabpage_48`). La web juntó las **dos primeras** en una sola sección —son la evaluación física de
- * WEB-4.3, que escribe las mismas dos tablas— y las demás son una solapa cada una.
+ * Las del escritorio son seis —*Examen Físico* (`tabpage_29`), *Examen Ginecológico* (`tabpage_30`),
+ * *Colposcopía* (`tabpage_31`), *Citología* (`tabpage_33`), *Histeroscopía* (`tabpage_49`) y *Resultado de
+ * exámenes* (`tabpage_48`)— y la web tiene cinco: la **evaluación física** (WEB-4.3) es una sola solapa que
+ * cubre las dos primeras —el examen general y el ginecológico viven en la misma pantalla desde F4— y las otras
+ * cuatro son las solapas de texto de `TextosDelExamen`, que traen su rótulo y su icono de ahí.
  *
- * Son enlaces —cada solapa es una URL de la misma sección (`?seccion=evaluacion&pestana=colposcopia`)—, no
- * JavaScript, como las de las solicitudes (`PestanasDeSolicitudes`) y las del embarazo: funcionan sin
- * script y la solapa activa se puede compartir y recargar.
- *
- * `TODAS` es la lista de solapas **que existen hoy**, y es el único lugar donde se agregan: una solapa nueva
- * suma su fila y su parcial `_evaluacion-<clave>`. **Una que todavía no existe no se muestra.** Sin base de
- * datos.
+ * ⚠️ **La clave de una solapa es su contrato**: es el `?pestana=`, el nombre de su parcial
+ * (`clinica.consulta._evaluacion-<clave>`, ver `SeccionDeEvaluacionVista`) y el `name` del campo del texto. Un
+ * desajuste entre la clave y el nombre del archivo es un **500** (trampa 114).
  */
 final class PestanasDelExamen
 {
-    /**
-     * La solapa de la **evaluación física** (WEB-4.3): el *Examen Físico* y el *Examen Ginecológico* del
-     * escritorio, que la web junta en una sola pantalla porque escriben las mismas dos tablas.
-     *
-     * La clave es `fisico` —y no `evaluacion`— porque el parcial de una solapa se **deriva** de su clave
-     * (`_evaluacion-<clave>`), como en las secciones de solicitudes y del embarazo: el rótulo que ve el
-     * médico es el de la solapa, no la clave de la URL.
-     */
+    /** La evaluación física (WEB-4.3): el examen general y el ginecológico. */
     public const FISICO = 'fisico';
 
-    public const COLPOSCOPIA = 'colposcopia';
+    /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
+    public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
 
-    /** La solapa con la que se abre la sección. */
     public const POR_DEFECTO = self::FISICO;
 
-    /** @var array<string,array{texto:string, icono:string}> */
-    private const TODAS = [
-        self::FISICO => ['texto' => 'Evaluación física', 'icono' => 'bi-heart-pulse'],
-        self::COLPOSCOPIA => ['texto' => 'Colposcopía', 'icono' => 'bi-search-heart'],
+    private const ROTULOS = [
+        self::FISICO => 'Evaluación física',
+    ];
+
+    private const ICONOS = [
+        self::FISICO => 'bi-clipboard2-pulse',
     ];
 
     /**
-     * @param  Closure  $url  `fn(string $clave): string` — la URL de esa solapa (la resuelve el controlador)
+     * @param  Closure(string):string  $url  arma la dirección de una solapa (el controlador la resuelve)
      */
     public function __construct(private Closure $url)
     {
     }
 
-    /** La clave de una solapa que existe; cualquier otro valor de la URL es la solapa por defecto. */
+    /**
+     * La clave de la solapa que se va a mostrar: la pedida si existe y, si no (o si no se pidió ninguna), la
+     * que abre la sección.
+     */
     public static function normalizar(?string $clave): string
     {
-        return $clave !== null && isset(self::TODAS[$clave]) ? $clave : self::POR_DEFECTO;
+        $clave = $clave === null ? '' : trim($clave);
+
+        return self::existe($clave) ? $clave : self::POR_DEFECTO;
     }
 
-    /** ¿La clave es una solapa que existe? Lo usa la **escritura** para rechazar (404) una que no existe. */
     public static function existe(?string $clave): bool
     {
-        return $clave !== null && isset(self::TODAS[$clave]);
+        return $clave !== null && in_array($clave, self::claves(), true);
     }
 
-    /** @return array<int,string> las claves de las solapas que existen */
+    /** Las claves, en el orden del escritorio. */
     public static function claves(): array
     {
-        return array_keys(self::TODAS);
+        return array_merge([self::FISICO], TextosDelExamen::claves());
     }
 
     /**
-     * Las opciones para `<x-ui.segmentado>`.
+     * Las solapas para el segmentado de `<x-ui.segmentado>`, que espera `texto`, `url` y `activa`.
      *
-     * @return array<int,array{texto:string, url:string, activa:bool}>
+     * @return array<int,array{texto:string, url:string, activa:bool, clave:string, icono:string}>
      */
     public function opciones(string $activa): array
     {
-        $opciones = [];
-
-        foreach (self::TODAS as $clave => $solapa) {
-            $opciones[] = ['texto' => $solapa['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
-        }
-
-        return $opciones;
+        return array_map(fn (string $clave) => [
+            'texto' => self::rotulo($clave),
+            'url' => ($this->url)($clave),
+            'activa' => $clave === $activa,
+            // La clave y el icono no los usa el control: los deja para quien tenga que distinguir la solapa.
+            'clave' => $clave,
+            'icono' => self::icono($clave),
+        ], self::claves());
     }
 
-    /** El icono de una solapa. */
+    public static function rotulo(string $clave): string
+    {
+        return self::ROTULOS[$clave] ?? TextosDelExamen::titulo($clave);
+    }
+
     public static function icono(string $clave): string
     {
-        return self::TODAS[$clave]['icono'] ?? 'bi-file-earmark';
+        return self::ICONOS[$clave] ?? TextosDelExamen::icono($clave);
+    }
+
+    /** ¿La solapa es una de las de texto? (Las cuatro comparten el ViewModel y el parcial.) */
+    public static function esDeTexto(string $clave): bool
+    {
+        return TextosDelExamen::existe($clave);
     }
 }

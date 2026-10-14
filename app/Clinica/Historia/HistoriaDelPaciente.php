@@ -7,6 +7,7 @@ use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
@@ -366,19 +367,28 @@ final class HistoriaDelPaciente
             ));
         }
 
-        // El informe de la colposcopía (WEB-6.5): el texto vive en la **consulta** (`consultas.observaciones`,
-        // lo que imprime la hoja «INFORME DE COLPOSCOPÍA»), así que se recorre por consulta.
-        foreach ($this->colposcopias($regMedico, $numero) as $colposcopia) {
-            $documentos->push($this->documento(
-                'Colposcopía',
-                'bi-search-heart',
-                (int) $colposcopia->nroconsulta,
-                $fechaDeLaConsulta,
-                'Informe de colposcopía',
-                null,
-                null,
-                DocumentoImpreso::COLPOSCOPIA,
-            ));
+        // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. El
+        // texto vive en la **consulta** (su columna de `consultas`, que es la que imprime la hoja), así que se
+        // recorre por consulta; las otras dos solapas de texto no tienen hoja.
+        foreach (TextosDelExamen::claves() as $solapa) {
+            $documento = TextosDelExamen::documento($solapa);
+
+            if ($documento === null) {
+                continue;
+            }
+
+            foreach ($this->textosDelExamen($regMedico, $numero, (string) TextosDelExamen::columna($solapa)) as $fila) {
+                $documentos->push($this->documento(
+                    TextosDelExamen::titulo($solapa),
+                    TextosDelExamen::icono($solapa),
+                    (int) $fila->nroconsulta,
+                    $fechaDeLaConsulta,
+                    'Informe de ' . mb_strtolower(TextosDelExamen::titulo($solapa)),
+                    null,
+                    null,
+                    $documento,
+                ));
+            }
         }
 
         foreach ($this->recipes($regMedico, $numero) as $recipe) {
@@ -510,21 +520,21 @@ final class HistoriaDelPaciente
     }
 
     /**
-     * Los informes de colposcopía de la historia (WEB-6.5), por número de consulta.
+     * Los informes de las solapas de texto del examen de la historia (WEB-6.5), por número de consulta.
      *
-     * El texto vive en `consultas.observaciones` —la columna de la **consulta**, que es la que imprime la
-     * hoja—, así que se leen de ahí y se descartan los "vacíos" del legado (`none`, el `""`), la misma vara
-     * que `QueEsUnDocumento::colposcopia`.
+     * El texto vive en una columna de `consultas` **de la consulta** —la que imprime la hoja—, así que se lee
+     * de ahí y se descartan los "vacíos" del legado (`none`, el `""`), la misma vara que
+     * `QueEsUnDocumento::texto`. La columna sale del catálogo `TextosDelExamen`, no de la entrada del usuario.
      */
-    private function colposcopias(string $regMedico, int $numero): Collection
+    private function textosDelExamen(string $regMedico, int $numero, string $columna): Collection
     {
         return DB::table('consultas')
             ->where('reg_medico', $regMedico)
             ->where('numhistoria', $numero)
-            ->whereRaw("TRIM(COALESCE(observaciones, '')) <> ''")
-            ->whereRaw("LOWER(TRIM(observaciones)) <> 'none'")
+            ->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+            ->whereRaw("LOWER(TRIM({$columna})) <> 'none'")
             ->orderBy('nroconsulta')
-            ->get(['nroconsulta', 'observaciones']);
+            ->get(['nroconsulta', $columna]);
     }
 
     /** Las órdenes de hospitalización de la historia (WEB-5.3b); las filas vacías del escritorio las descarta `documentos()`. */

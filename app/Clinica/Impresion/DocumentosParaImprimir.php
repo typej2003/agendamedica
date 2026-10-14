@@ -33,6 +33,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::ECO_PELVICO => 'bi-activity',
         DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
+        DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',
         DocumentoImpreso::REPOSO => 'bi-bandaid',
         DocumentoImpreso::REFERENCIA => 'bi-person-up',

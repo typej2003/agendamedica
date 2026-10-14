@@ -3,7 +3,8 @@
 namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
-use App\Clinica\Consulta\ColposcopiaDeLaConsulta;
+use App\Clinica\Consulta\TextoDelExamen;
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\EcoGinecologico;
@@ -85,7 +86,7 @@ final class SolicitudesParaImprimir
         private EcoObstetrico $ecosObstetricos,
         private EcoObstetricoTercero $ecosObstetricosTerceros,
         private InformePrenatal $informesPrenatales,
-        private ColposcopiaDeLaConsulta $colposcopias,
+        private TextoDelExamen $textos,
     ) {
     }
 
@@ -156,15 +157,22 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        // El informe de la colposcopía (WEB-6.5): el examen se ofrece si tiene texto —el escritorio **no**
-        // crea la fila al abrir la consulta, es una columna de `consultas`—.
-        if (QueEsUnDocumento::colposcopia($this->colposcopias->de($consulta))) {
+        // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. Cada
+        // una se ofrece si tiene texto —el escritorio **no** crea la fila al abrir la consulta: es una columna
+        // de `consultas`—, y las otras dos solapas de texto (citología y resultado de exámenes) no tienen hoja.
+        foreach (TextosDelExamen::claves() as $solapa) {
+            $documento = TextosDelExamen::documento($solapa);
+
+            if ($documento === null || ! QueEsUnDocumento::texto($this->textos->de($consulta, $solapa))) {
+                continue;
+            }
+
             $disponibles[] = [
-                'clave' => DocumentoImpreso::COLPOSCOPIA,
-                'tipo' => DocumentoImpreso::COLPOSCOPIA,
-                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::COLPOSCOPIA][1],
+                'clave' => $documento,
+                'tipo' => $documento,
+                'titulo' => DocumentoImpreso::TITULOS[$documento][1],
                 // Sin el texto: la lista de la cita la ve la secretaría.
-                'resumen' => 'Informe de colposcopía',
+                'resumen' => 'Informe de ' . mb_strtolower(DocumentoImpreso::TITULOS[$documento][1]),
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -306,10 +314,12 @@ final class SolicitudesParaImprimir
                 : null;
         }
 
-        if ($clave === DocumentoImpreso::COLPOSCOPIA) {
-            $texto = $this->colposcopias->de($consulta);
+        if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
+            $texto = $this->textos->de($consulta, $solapa);
 
-            return QueEsUnDocumento::colposcopia($texto) ? $this->colposcopia($paciente, $texto, $fechaDeLaConsulta) : null;
+            return QueEsUnDocumento::texto($texto)
+                ? $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta)
+                : null;
         }
 
         if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {
@@ -882,20 +892,22 @@ final class SolicitudesParaImprimir
     }
 
     /**
-     * **El informe de la colposcopía** (WEB-6.5): la hoja «INFORME DE COLPOSCOPÍA» del escritorio
-     * (`d_colposcopia_1` / `d_colposcopia_2`), cuyo **cuerpo es el texto de `consultas.observaciones`**.
+     * **El informe de una solapa de texto del examen** (WEB-6.5): la hoja «INFORME DE COLPOSCOPÍA»
+     * (`d_colposcopia_1` / `d_colposcopia_2`) y la «INFORME DE HISTEROSCOPÍA» (`d_histeroscopia`), cuyo
+     * **cuerpo es el texto de su columna de `consultas`** (`observaciones` y `cuello`; ver la cita en
+     * `TextosDelExamen` y, para la histeroscopía, `d_histeroscopia.srd:29`).
      *
      * Es el texto tal como lo escribió el médico, un párrafo por renglón: el escritorio imprime un solo
      * campo de texto con el informe, sin rótulos armados. Las **fotos** que el escritorio le anexa (su
-     * subreporte) llegan con la parte de imágenes por examen de WEB-6.5.
+     * subreporte, `d_imagenes_consul_pac_*`) llegan con la parte de imágenes por examen de WEB-6.5.
      */
-    private function colposcopia(Paciente $paciente, string $texto, string $fecha): DocumentoImpreso
+    private function textoDelExamen(Paciente $paciente, string $documento, string $texto, string $fecha): DocumentoImpreso
     {
         return new DocumentoImpreso(
-            DocumentoImpreso::COLPOSCOPIA,
-            DocumentoImpreso::COLPOSCOPIA,
-            DocumentoImpreso::tituloConSufijo(DocumentoImpreso::COLPOSCOPIA),
-            DocumentoImpreso::TITULOS[DocumentoImpreso::COLPOSCOPIA][1],
+            $documento,
+            $documento,
+            DocumentoImpreso::tituloConSufijo($documento),
+            DocumentoImpreso::TITULOS[$documento][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             [],

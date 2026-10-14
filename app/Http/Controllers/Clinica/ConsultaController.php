@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
-use App\Clinica\Consulta\ColposcopiaDeLaConsulta;
+use App\Clinica\Consulta\TagDeImagen;
+use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
@@ -17,7 +18,7 @@ use App\Clinica\Consulta\FurDelControlPrenatal;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
-use App\Clinica\Consulta\TagDeImagen;
+use App\Clinica\Consulta\Vistas\TextoDelExamenVista;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
@@ -28,7 +29,7 @@ use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
-use App\Clinica\Consulta\Vistas\ColposcopiaVista;
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoObstetrico;
@@ -293,8 +294,8 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_EVALUACION) {
             // Las **solapas del examen** (WEB-6.5): el `&pestana=` elige cuál, como el `&tipo=` del estudio.
-            // Hoy existen la evaluación física (WEB-4.3, el examen general y el ginecológico juntos) y la
-            // colposcopía; la citología, la histeroscopía y el resultado de exámenes llegan con sus tareas.
+            // Están la evaluación física (WEB-4.3, el examen general y el ginecológico juntos) y las cuatro
+            // solapas de texto (colposcopía, citología, histeroscopía y resultado de exámenes).
             $pestana = PestanasDelExamen::normalizar((string) request()->query('pestana', ''));
 
             $url = fn (string $clave) => route('clinica.consulta', [
@@ -303,22 +304,29 @@ class ConsultaController extends Controller
                 'pestana' => $clave,
             ]);
 
-            // La lectura de la colposcopía comparte la lectura del examen (`examen_fisico_nuevo`) con la
-            // evaluación física: es la misma fila.
-            $colposcopia = new ColposcopiaDeLaConsulta($examen);
+            // La lectura de las solapas de texto comparte la lectura del examen (`examen_fisico_nuevo`) con la
+            // evaluación física: la copia de la colposcopía es esa misma fila.
+            $texto = new TextoDelExamen($examen);
+
+            // La hoja de la solapa, si tiene (la colposcopía y la histeroscopía; la citología y el resultado de
+            // exámenes no tienen informe en el escritorio).
+            $documento = TextosDelExamen::documento($pestana);
 
             return new SeccionDeEvaluacionVista(
                 $pestana,
                 new PestanasDelExamen($url),
-                $pestana === PestanasDelExamen::COLPOSCOPIA
-                    ? new ColposcopiaVista(
-                        $colposcopia->de($consulta),
-                        $colposcopia->plantillas($regMedico),
-                        route('clinica.consulta.colposcopia.guardar', $consulta->id),
+                PestanasDelExamen::esDeTexto($pestana)
+                    ? new TextoDelExamenVista(
+                        $pestana,
+                        $texto->de($consulta, $pestana),
+                        $texto->plantillas($regMedico, $pestana),
+                        route('clinica.consulta.examen.texto.guardar', [$consulta->id, $pestana]),
                         $url($pestana),
                         // La hoja del informe (WEB-6.5): la impresión de documentos de la consulta, con la
                         // clave del examen.
-                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::COLPOSCOPIA]),
+                        $documento === null
+                            ? ''
+                            : route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]),
                         // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                         (array) old(),
                     )

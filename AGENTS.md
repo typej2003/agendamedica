@@ -35,7 +35,7 @@ sola —migrada y con los seeders— antes del primer test, así que no hay ning
 Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
-corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición, **tras WEB-6.5 (2026-10-13, la colposcopía con sus imágenes), es 1891 en verde y 3 que fallan** (las 3 son de `WhatsAppWebhookTest`, que espera 500 y recibe 200/403 porque faltan las credenciales de WhatsApp: es de entorno, no del código); la anterior, **tras el mismo WEB-6.5 sin las imágenes, fue 1885 en verde y 3 que fallan**; y la anterior, **tras WEB-6.2 (2026-10-13, el eco obstétrico y su formato en blanco), fue 1869 en verde y 3 que fallan**; la anterior, **tras WEB-6.1 (2026-10-13, el estudio ecográfico), fue 1788 en verde y 3 que fallan** (1758 + 30 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), fue 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
+corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición, **tras WEB-6.5 (2026-10-13, el examen con sus cuatro solapas de texto), es 1897 en verde y 3 que fallan** (las 3 son de `WhatsAppWebhookTest`, que espera 500 y recibe 200/403 porque faltan las credenciales de WhatsApp: es de entorno, no del código); la anterior, **tras el primer paso del mismo WEB-6.5 (la colposcopía y sus imágenes), fue 1891 en verde y 3 que fallan**; la anterior, **tras el mismo WEB-6.5 sin las imágenes, fue 1885 en verde y 3 que fallan**; y la anterior, **tras WEB-6.2 (2026-10-13, el eco obstétrico y su formato en blanco), fue 1869 en verde y 3 que fallan**; la anterior, **tras WEB-6.1 (2026-10-13, el estudio ecográfico), fue 1788 en verde y 3 que fallan** (1758 + 30 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), fue 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
 medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1365 en
 verde y 3 que fallan**; **la última (2026-10-12, tras WEB-5.4, laboratorio y estudios) es 1514 en verde y 3 que fallan** (1453 + 61 nuevos; las 3 son las de WhatsApp; antes, tras WEB-5.3b, 1449; tras WEB-8.1c, 1400) (1365 + 41 nuevos − 6 del ViewModel anterior que se reemplazó; las 3 son las de WhatsApp) (2026-10-12, tras **WEB-8.2**: 1321 + 35 + 9; antes 1319 tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
@@ -296,7 +296,7 @@ escritorio (cargar el 3.º pisa el 2.º) y **no hay fetos múltiples**: el selec
 `../.agent-tools/verificar-consulta-estudio-web.js` con `../.agent-tools/consulta-estudio-preparar.php` (los tres
 tipos de la sección). Trampas 103, 111 y 112.
 
-Lo que **WEB-6.5 (2026-10-13, en curso)**, las **solapas del examen** —el ítem 4 del panel—, agregó: el examen pasó a ser
+Lo que **WEB-6.5 (2026-10-13)**, las **solapas del examen** —el ítem 4 del panel—, agregó: el examen pasó a ser
 un **contenedor de solapas** (`?seccion=evaluacion&pestana=`: `Vistas/PestanasDelExamen` —el catálogo, donde se agrega una
 solapa— y `Vistas/SeccionDeEvaluacionVista`, con un parcial `_evaluacion-<clave>` por solapa; **la evaluación física de
 WEB-4.3 pasó a ser la solapa `fisico`**, con su contenido en `_evaluacion-fisico`, sin cambiar su comportamiento) y su
@@ -321,11 +321,21 @@ descripción que sea una etiqueta**), más `ImagenesDeLaConsultaVista` (su `$exa
 descripción), el parcial compartido `_imagenes` (lo usan la sección de exámenes y la solapa; el `examen` viaja en un campo
 oculto) y el JS de la subida, que ahora recorre `[data-consulta-archivo]` y lee el cartel de `data-aviso-id`. ⚠️ La columna
 `observacion` tiene **dos dueños** (trampa 116) y su significado viejo no se reescribe: las filas del escritorio quedan como
-están. Tests: `ConsultaColposcopiaWebTest` (22). Verificación en Chrome:
-`../.agent-tools/verificar-consulta-colposcopia-web.js` con `../.agent-tools/consulta-colposcopia-preparar.php` (y el de WEB-4.7,
-`verificar-consulta-examenes-web.js`, que comparte el parcial y se actualizó en sus tres aserciones del panel, que seguían
-esperando «8 de 13»). Trampas 114 a 118. **Falta**: las otras tres solapas (citología, histeroscopía —con su informe— y
-resultado de exámenes) y el informe de histeroscopía.
+están. Y las **cuatro solapas de texto** están: la regla se escribe **una vez** en `App\Clinica\Consulta\TextosDelExamen`
+(el mapa del dato: la columna de `consultas` de cada una, su `tipo` de plantillas, su hoja y su etiqueta de imágenes —la
+**colposcopía** `observaciones` + la copia `examen_fisico_nuevo.colposcopia`, **citología** `faringe` `CI`, **histeroscopía**
+`cuello` sin plantillas y **resultado de exámenes** `oido` `RE`—), `TextoDelExamen` (la lectura, con la copia donde existe),
+`Actions\Consulta\GuardarTextoDelExamen` (la escritura: sólo lo que cambió, rastro por columna en su tabla, `source = web` y
+last-write-wins), `Vistas\TextoDelExamenVista` (el ViewModel de las cuatro, con la clave como `name` del campo) y **un solo**
+parcial `_evaluacion-texto`, más **una** ruta `POST /consulta/{consulta}/examen/{solapa}` acotada al catálogo
+(`ConsultaTextoDelExamenController`); `SeccionDeEvaluacionVista::parcial()` manda las cuatro solapas de texto a ese parcial.
+El **«INFORME DE HISTEROSCOPÍA»** también entra al motor de documentos (`DocumentoImpreso::HISTEROSCOPIA`, el título de
+`d_histeroscopia.srd:27`, cuyo cuerpo es el texto de `cuello`; `SolicitudesParaImprimir` arma las dos hojas de texto con el
+mismo método). Tests: `ConsultaColposcopiaWebTest` (28). Verificación en Chrome:
+`../.agent-tools/verificar-consulta-colposcopia-web.js` con `../.agent-tools/consulta-colposcopia-preparar.php` (recorre las
+cuatro solapas: cada una con sus plantillas, su guardado y su columna, la hoja de histeroscopía y las tres anchuras) y el de
+WEB-4.7, `verificar-consulta-examenes-web.js`, que comparte el parcial `_imagenes` y se actualizó en sus tres aserciones del
+panel, que seguían esperando «8 de 13». Trampas 114 a 120. **WEB-6.5 queda cerrado.**
 
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 

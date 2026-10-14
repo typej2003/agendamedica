@@ -58,6 +58,7 @@ final class TagDeImagen
      */
     private const POR_SOLAPA = [
         'colposcopia' => self::COLPOSCOPIA,
+        'histeroscopia' => self::HISTEROSCOPIA,
     ];
 
     /**
@@ -68,6 +69,7 @@ final class TagDeImagen
      */
     private const ACEPTADAS = [
         'colposcopia' => [self::COLPOSCOPIA, self::COLPOSCOPIA_DEL_ESCRITORIO],
+        'histeroscopia' => [self::HISTEROSCOPIA],
     ];
 
     /**

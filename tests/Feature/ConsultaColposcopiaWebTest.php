@@ -200,7 +200,7 @@ class ConsultaColposcopiaWebTest extends TestCase
 
     private function urlGuardar(Consulta $consulta): string
     {
-        return route('clinica.consulta.colposcopia.guardar', $consulta->id);
+        return route('clinica.consulta.examen.texto.guardar', [$consulta->id, PestanasDelExamen::COLPOSCOPIA]);
     }
 
     /** Una plantilla del escritorio (`formato_print`), como la deja su ABM. */
@@ -635,5 +635,138 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         $this->assertSame(0, ImagenConsulta::count());
         $this->assertSame([], Storage::disk(ArchivosClinicos::DISCO)->allFiles());
+    }
+
+    // ------------------------------------------------------------- Las otras tres solapas de texto (WEB-6.5)
+
+    /** La dirección de una solapa del examen. */
+    private function urlSolapa(Consulta $consulta, string $clave): string
+    {
+        return route('clinica.consulta', [
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+            'pestana' => $clave,
+        ]);
+    }
+
+    public function test_la_fila_de_solapas_tiene_las_cinco_del_escritorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+
+        foreach (['Evaluación física', 'Colposcopía', 'Citología', 'Histeroscopía', 'Resultado de exámenes'] as $rotulo) {
+            $this->assertStringContainsString($rotulo, $html, "Falta la solapa «{$rotulo}».");
+        }
+    }
+
+    public function test_cada_solapa_de_texto_escribe_su_columna_con_su_rastro(): void
+    {
+        // La clave de la solapa y la columna de `consultas` que el escritorio escribe en cada una
+        // (`w_consulta_principal.srw:2830-2834`).
+        $columnas = [
+            PestanasDelExamen::COLPOSCOPIA => 'observaciones',
+            'citologia' => 'faringe',
+            'histeroscopia' => 'cuello',
+            'resultados' => 'oido',
+        ];
+
+        foreach ($columnas as $clave => $columna) {
+            [$user, $medico, $gineco] = $this->medicoConAcceso();
+            [, $consulta] = $this->pacienteYConsulta($medico);
+
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->post(route('clinica.consulta.examen.texto.guardar', [$consulta->id, $clave]), [
+                    $clave => 'Texto de la solapa ' . $clave . '.',
+                ])
+                ->assertRedirect($this->urlSolapa($consulta, $clave));
+
+            $this->assertSame('Texto de la solapa ' . $clave . '.', $consulta->fresh()->getAttribute($columna),
+                "La solapa {$clave} no escribió en {$columna}.");
+
+            $this->assertSame(1, SyncChange::where('table_name', 'consultas')
+                ->where('column_name', $columna)
+                ->where('value', 'Texto de la solapa ' . $clave . '.')
+                ->where('source', 'web')
+                ->count(), "La solapa {$clave} no dejó el rastro de {$columna}.");
+        }
+    }
+
+    public function test_la_histeroscopia_no_ofrece_plantillas_y_si_su_informe(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Sin texto: el campo está, el botón de imprimir no y el aviso de plantillas dice que no hay (el
+        // escritorio no tiene plantillas de histeroscopía: su solapa no hace `retrieve`).
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSolapa($consulta, 'histeroscopia'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="histeroscopia"', $html);
+        $this->assertStringNotContainsString('data-plantilla-texto', $html);
+        $this->assertStringNotContainsString('documento=histeroscopia', $html);
+
+        // Con texto, la solapa ofrece su hoja.
+        $consulta->cuello = 'Cavidad uterina sin lesiones.';
+        $consulta->save();
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSolapa($consulta, 'histeroscopia'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('documento=histeroscopia', $html);
+    }
+
+    public function test_las_solapas_sin_informe_no_ofrecen_imprimir(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        foreach (['citologia', 'resultados'] as $clave) {
+            $consulta->setAttribute($clave === 'citologia' ? 'faringe' : 'oido', 'Un texto cargado.');
+            $consulta->save();
+
+            $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get($this->urlSolapa($consulta, $clave))->assertOk()->getContent();
+
+            $this->assertStringNotContainsString('Imprimir el informe', $html, "La solapa {$clave} ofrece imprimir y no tiene hoja.");
+        }
+    }
+
+    public function test_una_solapa_que_no_existe_es_un_404(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta', $consulta->id) . '/examen/inventada', ['inventada' => 'x'])
+            ->assertNotFound();
+    }
+
+    public function test_el_informe_de_histeroscopia_sale_en_la_lista_de_la_cita_y_en_la_historia(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [$paciente, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.examen.texto.guardar', [$consulta->id, 'histeroscopia']), [
+                'histeroscopia' => 'Cavidad uterina sin lesiones.',
+            ]);
+
+        // La hoja: el título del DataWindow del escritorio (`d_histeroscopia.srd:27`) y el texto del médico.
+        $hoja = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'histeroscopia']))
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString('INFORME DE HISTEROSCOPÍA', $hoja);
+        $this->assertStringContainsString('Cavidad uterina sin lesiones.', $hoja);
+        $this->assertSame(1, substr_count($hoja, 'class="firmas"'));
+
+        // Y la historia del paciente lo lista.
+        $listado = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', $paciente))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Histeroscopía', $listado);
     }
 }
