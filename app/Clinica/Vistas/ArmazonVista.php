@@ -147,6 +147,15 @@ final class ArmazonVista
                 ];
             }
 
+
+            $menu[] = [
+                'texto'  => 'Configuración',
+                'icono'  => 'bi-gear',
+                'url'    => null,
+                'activo' => in_array(true, array_column($hijos, 'activo'), true),
+                'hijos'  => $hijos,
+            ];
+
             // "Ayúdanos a mejorar" (ROADMAP §9): el comentario lo puede mandar cualquiera que trabaje en el
             // consultorio —el médico y su secretaría—, así que va arriba y no dentro de "Configuración".
             $menu[] = [
@@ -156,13 +165,6 @@ final class ArmazonVista
                 'activo' => $this->rutaActual === 'clinica.ayuda',
             ];
 
-            $menu[] = [
-                'texto'  => 'Configuración',
-                'icono'  => 'bi-gear',
-                'url'    => null,
-                'activo' => in_array(true, array_column($hijos, 'activo'), true),
-                'hijos'  => $hijos,
-            ];
         }
 
         return $menu;
