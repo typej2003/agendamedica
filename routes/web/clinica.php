@@ -27,6 +27,7 @@ use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
+use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
@@ -179,6 +180,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+
+                // Colposcopía (WEB-6.5): la solapa homónima del examen (`?seccion=evaluacion&pestana=colposcopia`).
+                // El texto es **uno** y el escritorio lo guarda en dos columnas de dos tablas —la canónica
+                // `consultas.observaciones`, que es la que imprime la hoja «INFORME DE COLPOSCOPÍA», y su copia
+                // `examen_fisico_nuevo.colposcopia`—, así que la Action escribe las dos con su rastro por columna.
+                Route::post('/consulta/{consulta}/colposcopia', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
 
                 // Estudio ecográfico (WEB-6.1): el ítem 5 del panel, con su sección propia
                 // (`?seccion=estudio&tipo=…`). El estudio es **una fila por consulta**, llaveada por

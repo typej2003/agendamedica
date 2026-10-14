@@ -62,6 +62,15 @@ final class DocumentoImpreso
     public const ECO_OBSTETRICO_TERCERO = 'eco-obstetrico-tercero';
 
     /**
+     * **El informe de la colposcopía** (WEB-6.5): la hoja del examen colposcópico del escritorio
+     * (`d_colposcopia_1` / `d_colposcopia_2`, cuyo título es «INFORME DE COLPOSCOPÍA», `:25` y `:26`). Su
+     * cuerpo es **el texto de `consultas.observaciones`** y el escritorio le anexa las fotos del examen
+     * (`d_imagenes_consul_pac_colposco` en el `_1`, `d_imagen_colpo_fija_2` en el `_2`: los dos informes son
+     * el mismo con otra forma de anexarlas).
+     */
+    public const COLPOSCOPIA = 'colposcopia';
+
+    /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
      *
@@ -82,6 +91,8 @@ final class DocumentoImpreso
         // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
         self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
         self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
+        // El del informe de colposcopía, tal cual el DataWindow del escritorio (`d_colposcopia_1.srd:25`).
+        self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
     ];
 
     /**

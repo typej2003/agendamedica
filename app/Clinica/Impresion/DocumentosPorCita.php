@@ -151,6 +151,11 @@ final class DocumentosPorCita
         $this->marcar($conAlgo, DB::table('radiologia_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('radiologia_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
             ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
+        //  - informe de colposcopía (WEB-6.5): el texto vive en la **consulta** (`consultas.observaciones`, lo
+        //    que imprime la hoja), no en una tabla aparte (`QueEsUnDocumento::colposcopia`; el literal `none`
+        //    del DataWindow tampoco es texto).
+        $this->marcar($conAlgo, DB::table('consultas')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+            ->whereRaw("TRIM(COALESCE(observaciones, '')) <> ''")->whereRaw("LOWER(TRIM(observaciones)) <> 'none'"), 'numhistoria', 'nroconsulta');
 
         //  - informe del eco pélvico (WEB-6.1): algún campo del estudio cargado o el informe en texto libre
         //    del escritorio (`QueEsUnDocumento::ecografia`; la fecha sola no cuenta y el literal `none`

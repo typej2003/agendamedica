@@ -165,6 +165,8 @@ final class HistoriaDelPaciente
      *  - **Laboratorio y estudios** (WEB-5.4): sólo si la consulta tiene al menos un examen/estudio o un resumen clínico con texto
      *    (`QueEsUnDocumento::laboratorio` / `estudios`); la fila de observación vacía que el escritorio crea al agregar no cuenta.
      *  - **Referencia** y **récipes**: se listan todos (puede haber varias por consulta).
+     *  - **Colposcopía** (WEB-6.5): sólo si la consulta tiene el texto del informe (`consultas.observaciones`,
+     *    que es lo que imprime la hoja); el literal `none` del legado no cuenta.
      *
      * La fecha de cada documento es la suya cuando la tiene (el `fdesde` del reposo, el `fe_cha` del
      * informe) y, si no, la de su consulta. El texto viene **sin recortar**: el recorte para el listado lo
@@ -364,6 +366,21 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // El informe de la colposcopía (WEB-6.5): el texto vive en la **consulta** (`consultas.observaciones`,
+        // lo que imprime la hoja «INFORME DE COLPOSCOPÍA»), así que se recorre por consulta.
+        foreach ($this->colposcopias($regMedico, $numero) as $colposcopia) {
+            $documentos->push($this->documento(
+                'Colposcopía',
+                'bi-search-heart',
+                (int) $colposcopia->nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe de colposcopía',
+                null,
+                null,
+                DocumentoImpreso::COLPOSCOPIA,
+            ));
+        }
+
         foreach ($this->recipes($regMedico, $numero) as $recipe) {
             $nombres = $this->nombresDeMedicamentos($recipe->codemedicinas);
 
@@ -490,6 +507,24 @@ final class HistoriaDelPaciente
             ->where('reg_medico', $regMedico)
             ->where('nrohistoria', $numero)
             ->get(['nroconsulta', 'descripcion', 'fe_cha']);
+    }
+
+    /**
+     * Los informes de colposcopía de la historia (WEB-6.5), por número de consulta.
+     *
+     * El texto vive en `consultas.observaciones` —la columna de la **consulta**, que es la que imprime la
+     * hoja—, así que se leen de ahí y se descartan los "vacíos" del legado (`none`, el `""`), la misma vara
+     * que `QueEsUnDocumento::colposcopia`.
+     */
+    private function colposcopias(string $regMedico, int $numero): Collection
+    {
+        return DB::table('consultas')
+            ->where('reg_medico', $regMedico)
+            ->where('numhistoria', $numero)
+            ->whereRaw("TRIM(COALESCE(observaciones, '')) <> ''")
+            ->whereRaw("LOWER(TRIM(observaciones)) <> 'none'")
+            ->orderBy('nroconsulta')
+            ->get(['nroconsulta', 'observaciones']);
     }
 
     /** Las órdenes de hospitalización de la historia (WEB-5.3b); las filas vacías del escritorio las descarta `documentos()`. */

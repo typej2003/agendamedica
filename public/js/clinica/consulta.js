@@ -575,6 +575,29 @@
         });
     }
 
+    // ------------------------------------------- Plantillas de texto de las solapas del examen (WEB-6.5)
+
+    // Las solapas del examen que llegan con WEB-6.5 (hoy la colposcopía) usan el mismo mecanismo que la
+    // evolución: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar (el id del
+    // formulario más `-sin-guardar`) y botones `[data-plantilla-texto]` que copian su texto en el campo
+    // `[data-plantilla-destino]`, disparando `input` para que el aviso se entere por el mismo camino que si
+    // el médico hubiera escrito. La evolución (WEB-4.6) todavía tiene su propio bloque, con sus atributos.
+    document.querySelectorAll('[data-consulta-plantillas]').forEach(function (formulario) {
+        avisoDeTexto(formulario, formulario.id + '-sin-guardar');
+
+        const campo = formulario.querySelector('[data-plantilla-destino]');
+
+        formulario.querySelectorAll('[data-plantilla-texto]').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                if (!campo) return;
+
+                campo.value = boton.dataset.plantillaTexto;
+                campo.dispatchEvent(new Event('input', { bubbles: true }));
+                campo.focus();
+            });
+        });
+    });
+
     // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)
 
     // La única subida de archivo de la consulta: el formulario de la sección del ítem 7. Lo que hace el

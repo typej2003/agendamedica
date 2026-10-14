@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
+use App\Clinica\Consulta\ColposcopiaDeLaConsulta;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
@@ -26,6 +27,7 @@ use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\ColposcopiaVista;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoObstetrico;
@@ -41,6 +43,7 @@ use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
+use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\ReferenciasVista;
 use App\Clinica\Consulta\Vistas\ReposoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
@@ -48,6 +51,7 @@ use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEstudioVista;
+use App\Clinica\Consulta\Vistas\SeccionDeEvaluacionVista;
 use App\Clinica\Consulta\Vistas\SeccionDeExamenesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
@@ -287,12 +291,42 @@ class ConsultaController extends Controller
         }
 
         if ($seccion === ConsultaShellVista::SECCION_EVALUACION) {
-            return new EvaluacionFisicaVista(
-                $examen->de($consulta),
-                route('clinica.consulta.evaluacion.guardar', $consulta->id),
-                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION]),
-                // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
-                (array) old(),
+            // Las **solapas del examen** (WEB-6.5): el `&pestana=` elige cuál, como el `&tipo=` del estudio.
+            // Hoy existen la evaluación física (WEB-4.3, el examen general y el ginecológico juntos) y la
+            // colposcopía; la citología, la histeroscopía y el resultado de exámenes llegan con sus tareas.
+            $pestana = PestanasDelExamen::normalizar((string) request()->query('pestana', ''));
+
+            $url = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+                'pestana' => $clave,
+            ]);
+
+            // La lectura de la colposcopía comparte la lectura del examen (`examen_fisico_nuevo`) con la
+            // evaluación física: es la misma fila.
+            $colposcopia = new ColposcopiaDeLaConsulta($examen);
+
+            return new SeccionDeEvaluacionVista(
+                $pestana,
+                new PestanasDelExamen($url),
+                $pestana === PestanasDelExamen::COLPOSCOPIA
+                    ? new ColposcopiaVista(
+                        $colposcopia->de($consulta),
+                        $colposcopia->plantillas($regMedico),
+                        route('clinica.consulta.colposcopia.guardar', $consulta->id),
+                        $url($pestana),
+                        // La hoja del informe (WEB-6.5): la impresión de documentos de la consulta, con la
+                        // clave del examen.
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::COLPOSCOPIA]),
+                        // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
+                        (array) old(),
+                    )
+                    : new EvaluacionFisicaVista(
+                        $examen->de($consulta),
+                        route('clinica.consulta.evaluacion.guardar', $consulta->id),
+                        $url(PestanasDelExamen::FISICO),
+                        (array) old(),
+                    ),
             );
         }
 

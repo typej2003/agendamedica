@@ -3,6 +3,7 @@
 namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
+use App\Clinica\Consulta\ColposcopiaDeLaConsulta;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\EcoGinecologico;
@@ -84,6 +85,7 @@ final class SolicitudesParaImprimir
         private EcoObstetrico $ecosObstetricos,
         private EcoObstetricoTercero $ecosObstetricosTerceros,
         private InformePrenatal $informesPrenatales,
+        private ColposcopiaDeLaConsulta $colposcopias,
     ) {
     }
 
@@ -150,6 +152,19 @@ final class SolicitudesParaImprimir
                 'tipo' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO_TERCERO][1],
                 'resumen' => 'Informe del eco obstétrico (2.º y 3.er trimestre)',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe de la colposcopía (WEB-6.5): el examen se ofrece si tiene texto —el escritorio **no**
+        // crea la fila al abrir la consulta, es una columna de `consultas`—.
+        if (QueEsUnDocumento::colposcopia($this->colposcopias->de($consulta))) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::COLPOSCOPIA,
+                'tipo' => DocumentoImpreso::COLPOSCOPIA,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::COLPOSCOPIA][1],
+                // Sin el texto: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe de colposcopía',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -289,6 +304,12 @@ final class SolicitudesParaImprimir
             return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetricoTercero::columnas())
                 ? $this->ecoObstetricoTercero($paciente, $estudio, $fechaDeLaConsulta)
                 : null;
+        }
+
+        if ($clave === DocumentoImpreso::COLPOSCOPIA) {
+            $texto = $this->colposcopias->de($consulta);
+
+            return QueEsUnDocumento::colposcopia($texto) ? $this->colposcopia($paciente, $texto, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {
@@ -857,6 +878,28 @@ final class SolicitudesParaImprimir
             PacienteImpreso::datos($paciente, $fecha),
             $datos,
             $parrafos,
+        );
+    }
+
+    /**
+     * **El informe de la colposcopía** (WEB-6.5): la hoja «INFORME DE COLPOSCOPÍA» del escritorio
+     * (`d_colposcopia_1` / `d_colposcopia_2`), cuyo **cuerpo es el texto de `consultas.observaciones`**.
+     *
+     * Es el texto tal como lo escribió el médico, un párrafo por renglón: el escritorio imprime un solo
+     * campo de texto con el informe, sin rótulos armados. Las **fotos** que el escritorio le anexa (su
+     * subreporte) llegan con la parte de imágenes por examen de WEB-6.5.
+     */
+    private function colposcopia(Paciente $paciente, string $texto, string $fecha): DocumentoImpreso
+    {
+        return new DocumentoImpreso(
+            DocumentoImpreso::COLPOSCOPIA,
+            DocumentoImpreso::COLPOSCOPIA,
+            DocumentoImpreso::tituloConSufijo(DocumentoImpreso::COLPOSCOPIA),
+            DocumentoImpreso::TITULOS[DocumentoImpreso::COLPOSCOPIA][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            DocumentoImpreso::parrafosDe($texto),
         );
     }
 
