@@ -153,6 +153,9 @@ final class ConsultaShellVista
         // El navegador 1…N (WEB-11.5): las consultas de la misma historia, `[id, nroconsulta, fecha, url]`, y la actual.
         private array $consultasDelPaciente = [],
         private ?int $consultaActual = null,
+        // Las alertas de antecedentes del paciente (WEB-11.6): `[nombre, detalle]` de cada una, y si toca avisarlas con el diálogo.
+        private array $alertas = [],
+        private bool $avisarAlertas = false,
     ) {
     }
 
@@ -177,6 +180,28 @@ final class ConsultaShellVista
                 'activa' => (int) $consulta['id'] === $this->consultaActual,
             ];
         }, $this->consultasDelPaciente);
+    }
+
+    /**
+     * **Las alertas del paciente** (WEB-11.6): todos los antecedentes marcados «Alerta», con su detalle. Un aviso de seguridad clínica
+     * (una alergia, un anticoagulante…): se ve fijo en toda la consulta y no sólo en el antecedente.
+     *
+     * @return array<int,array{nombre:string, detalle:?string}>
+     */
+    public function alertas(): array
+    {
+        return $this->alertas;
+    }
+
+    public function hayAlertas(): bool
+    {
+        return $this->alertas !== [];
+    }
+
+    /** ¿Se abre el diálogo de «Entendido»? Una vez por atención: no reaparece en cada sección. */
+    public function avisarAlertas(): bool
+    {
+        return $this->avisarAlertas && $this->hayAlertas();
     }
 
     /** ¿Hay más de una consulta en la historia? (Con una sola, el navegador no se pinta.) */

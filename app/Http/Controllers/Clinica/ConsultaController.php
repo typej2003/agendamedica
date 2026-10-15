@@ -186,6 +186,19 @@ class ConsultaController extends Controller
         $seccion = (string) $request->query('seccion', '');
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
+        // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
+        // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
+        $alertas = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria)
+            ->where('alerta', true)
+            ->map(fn ($fila) => ['nombre' => $fila->nombre, 'detalle' => $fila->detalle])
+            ->values()
+            ->all();
+        $vistas = (array) $request->session()->get('alertas_vistas', []);
+        $avisar = $alertas !== [] && ! in_array((int) $consulta->id, $vistas, true);
+        if ($avisar) {
+            $request->session()->push('alertas_vistas', (int) $consulta->id);
+        }
+
         return view('clinica.consulta.ver', [
             'vm' => new ConsultaShellVista(
                 $paciente,
@@ -217,6 +230,8 @@ class ConsultaController extends Controller
                     'url' => route('clinica.consulta', $fila->id),
                 ])->all(),
                 (int) $consulta->id,
+                $alertas,
+                $avisar,
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**

@@ -39,6 +39,37 @@
          diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
     <x-ui.errores />
 
+    {{-- Las alertas del paciente (WEB-11.6): un aviso de seguridad clínica, fijo en todas las secciones, con **todas** las alertas. Al darle
+         «Atender» se abre además un diálogo que se cierra con «Entendido» y no reaparece en cada sección. La secretaría no ve esto (la
+         consulta es sólo del médico). --}}
+    @if ($vm->hayAlertas())
+        <div class="consulta-alertas" role="alert" id="consulta-alertas">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            <div>
+                <strong>Alertas de este paciente</strong>
+                <ul class="consulta-alertas-lista">
+                    @foreach ($vm->alertas() as $alerta)
+                        <li>{{ $alerta['nombre'] }}@if ($alerta['detalle']) <span class="texto-tenue">— {{ $alerta['detalle'] }}</span>@endif</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <x-ui.dialogo id="dialogo-alertas" titulo="Alertas de este paciente" :data-abrir-al-cargar="$vm->avisarAlertas() ? '1' : null">
+            <div class="dialogo-cuerpo">
+                <p class="mb-2">Antes de empezar la consulta, ten presente:</p>
+                <ul class="consulta-alertas-lista">
+                    @foreach ($vm->alertas() as $alerta)
+                        <li><strong>{{ $alerta['nombre'] }}</strong>@if ($alerta['detalle']) — {{ $alerta['detalle'] }}@endif</li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="dialogo-pie">
+                <button type="button" class="btn btn-primary" data-cerrar-dialogo>Entendido</button>
+            </div>
+        </x-ui.dialogo>
+    @endif
+
     {{-- La barra de la consulta (WEB-11.5): el navegador 1…N entre las consultas del paciente y, en un lugar fijo, Guardar / Guardar y salir /
          Salir con el indicador de guardado. Las secciones de texto se guardan solas al pausar la escritura y al cambiar de sección o de
          consulta (`consulta-barra.js`); las que cargan listas guardan al instante y no necesitan el botón. --}}
@@ -141,6 +172,8 @@
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
     <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
+    {{-- El diálogo de alertas (WEB-11.6): se abre solo cuando toca avisar. --}}
+    <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
     <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
     {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}

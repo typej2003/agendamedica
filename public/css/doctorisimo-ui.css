@@ -3059,3 +3059,20 @@ body.auth-pagina {
 .consulta-barra-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-left: auto; }
 .consulta-barra-estado { min-width: 6.5rem; text-align: right; }
 .consulta-barra-estado.es-error { color: var(--ds-peligro); font-weight: 600; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Alertas del paciente en la consulta (WEB-11.6): aviso de seguridad clínica, fijo en todas las secciones
+   --------------------------------------------------------------------------------------------------------- */
+.consulta-alertas {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-peligro-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-peligro-bg);
+    color: var(--ds-peligro);
+}
+.consulta-alertas > i { font-size: 1.25rem; line-height: 1.4; }
+.consulta-alertas-lista { margin: .25rem 0 0; padding-left: 1.1rem; }
