@@ -2885,3 +2885,23 @@ body.auth-pagina {
     user-select: all;
     overflow-wrap: anywhere;
 }
+
+/* Los filtros de un listado entre fechas (WEB-6.8): rango, edades y el modo por semanas en una rejilla que se
+   apila en el celular. Misma forma que la de la bitácora, con nombre propio para que las dos pantallas no
+   queden atadas la una a la otra. */
+.listados-filtros {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    align-items: end;
+    gap: .6rem .9rem;
+}
+.listados-filtros .campo { min-width: 0; }
+.listados-filtros .form-label { margin-bottom: .2rem; font-size: .8125rem; color: var(--ds-texto-2); }
+.listados-filtro-semanas .form-check { min-height: 2.25rem; display: flex; align-items: center; gap: .4rem; }
+.listados-filtros-botones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.listados-filtros-ayuda { grid-column: 1 / -1; margin: 0; }
+
+@media (max-width: 575.98px) {
+    .listados-filtros { grid-template-columns: 1fr; }
+}

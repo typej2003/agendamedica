@@ -110,6 +110,20 @@ final class ArmazonVista
             ];
         }
 
+        // Los **listados clínicos entre fechas** (WEB-6.8: embarazos / partos, y después los otros dos de la
+        // tarea) son reportes del médico: la secretaría recibe 403 en la ruta, así que la entrada sólo se
+        // ofrece a quien puede abrirlos —la misma regla que «Catálogos» y «Configuración»—.
+        // Va como ítem propio y no como grupo plegable porque hoy hay un solo listado; el submenú de
+        // «Catálogos» sigue siendo el único `<details class="nav-grupo">` del menú.
+        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+            $menu[] = [
+                'texto'  => 'Listados',
+                'icono'  => 'bi-clipboard2-data',
+                'url'    => Route::has('clinica.listados') ? route('clinica.listados') : null,
+                'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.listados'),
+            ];
+        }
+
         // Los catálogos clínicos (medicamentos, tratamientos…, WEB-8.1) son **del médico** —los de su contexto— y la
         // secretaría no los administra: la entrada sólo se ofrece a quien puede abrirlos (el resto recibiría un 403).
         // Va en la barra lateral y no en los accesos de la barra superior: ésa ya ocupa todo el ancho a 768 px con las

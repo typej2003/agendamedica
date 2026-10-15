@@ -47,6 +47,7 @@ use App\Http\Controllers\Clinica\CumpleanosController;
 use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
+use App\Http\Controllers\Clinica\ListadosController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
@@ -436,6 +437,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
 
                 // **Bitácora** (WEB-8.5): qué cambió en el registro del médico y quién lo hizo. De sólo lectura y sólo del médico.
                 Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora');
+
+                // **Listados clínicos entre fechas** (WEB-6.8): los reportes del médico sobre lo que ya está en su
+                // registro. Es **una pantalla parametrizada** —el rango, los filtros y la grilla— y no una pantalla
+                // por reporte: hoy entra el **listado de embarazos / partos** (el *Listado de Partos* del escritorio,
+                // `w_reportes_consultas.srw:449`) y los otros dos de la tarea suman su lectura y su ViewModel sin
+                // tocar estas dos rutas. Sólo el médico: son reportes de su consulta, así que la secretaría recibe
+                // **403** (mismo grupo que la consulta y los catálogos clínicos).
+                Route::get('/listados/imprimir', [ListadosController::class, 'imprimir'])->name('listados.imprimir');
+                Route::get('/listados', [ListadosController::class, 'index'])->name('listados');
             });
 
             // Agenda y secretaría (F2): la vista por sede y las acciones del mostrador. La ruta del

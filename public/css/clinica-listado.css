@@ -1,0 +1,47 @@
+/* Listado de embarazos / partos para imprimir (`/clinica/listados/imprimir`, WEB-6.8).
+   Pantalla aparte, sin el armazón de la web: es el papel que sale por la impresora del consultorio, como el
+   resumen de historia clínica (`clinica-resumen-historia.css`) y el listado del día (`clinica-imprimir.css`).
+   Los colores son los de la paleta (`gineco.css`), repetidos acá porque esta página no carga el sistema. */
+
+@page { size: portrait; margin: 1.5cm; }
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #201048;
+    font-size: 12px;
+    margin: 0 auto;
+    max-width: 19cm;
+    padding: 1.5rem 1rem;
+}
+
+header { border-bottom: 2px solid #783080; padding-bottom: .5rem; margin-bottom: .75rem; }
+.membrete { color: #55555f; font-size: 11px; }
+h1 { font-size: 16px; margin: 0; }
+
+.datos { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin: .5rem 0 0; }
+.datos div { display: flex; gap: .35rem; }
+.datos dt { font-weight: bold; margin: 0; }
+.datos dd { margin: 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #d8d8e0; padding: 3px 5px; text-align: center; vertical-align: top; }
+th { background: #f2f0f7; font-size: 11px; }
+td.izquierda, th.izquierda, td:first-child, td:last-child { text-align: left; }
+tbody tr { break-inside: avoid; }
+
+.total { margin-top: .5rem; color: #55555f; }
+.sin-datos { color: #55555f; }
+
+.acciones { margin-bottom: 1rem; }
+.acciones button {
+    font: inherit; padding: .5rem 1rem; border: 0; border-radius: .35rem;
+    background: #783080; color: #fff; cursor: pointer;
+}
+
+@media print {
+    .acciones { display: none; }
+    body { padding: 0; max-width: none; }
+    thead { display: table-header-group; }
+}
