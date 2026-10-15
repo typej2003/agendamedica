@@ -272,6 +272,14 @@ class PacienteController extends Controller
                 ->with('estado', $mensaje . ' Ahora elige la razón y la hora de la cita de hoy.');
         }
 
+        // Editada desde la consulta (WEB-11.25): se vuelve a ella, a la sección de datos, y no a la ficha.
+        $consulta = (int) $request->input('volver_a_consulta', 0);
+        if ($ficha !== null && $consulta > 0) {
+            return redirect()
+                ->route('clinica.consulta', [$consulta, 'seccion' => \App\Clinica\Consulta\Vistas\ConsultaShellVista::SECCION_DATOS])
+                ->with('estado', $mensaje);
+        }
+
         return redirect()
             ->route('clinica.pacientes.ver', $paciente->id)
             ->with('estado', $mensaje);
@@ -311,6 +319,7 @@ class PacienteController extends Controller
             'dependencia'  => ['nullable', 'string', 'max:30'],
             'fingreso'     => ['nullable', 'date_format:Y-m-d'],
             'atender_hoy'  => ['nullable', 'boolean'],
+            'volver_a_consulta' => ['nullable', 'integer'],
         ], $this->avisos());
     }
 
@@ -381,7 +390,7 @@ class PacienteController extends Controller
      */
     private function columnas(array $datos): array
     {
-        unset($datos['sin_cedula'], $datos['atender_hoy']);
+        unset($datos['sin_cedula'], $datos['atender_hoy'], $datos['volver_a_consulta']);
 
         if (trim((string) ($datos['cedula'] ?? '')) === '') {
             $datos['cedula'] = null;

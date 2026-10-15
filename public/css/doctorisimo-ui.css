@@ -3076,3 +3076,13 @@ body.auth-pagina {
 }
 .consulta-alertas > i { font-size: 1.25rem; line-height: 1.4; }
 .consulta-alertas-lista { margin: .25rem 0 0; padding-left: 1.1rem; }
+
+/* «Imprimir la ficha» (WEB-11.25): al imprimir desde la sección de datos sólo sale la ficha, sin el armazón ni el panel. */
+@media print {
+    body.imprimiendo-ficha * { visibility: hidden; }
+    body.imprimiendo-ficha #consulta-datos,
+    body.imprimiendo-ficha #consulta-datos * { visibility: visible; }
+    body.imprimiendo-ficha #consulta-datos { position: absolute; left: 0; top: 0; width: 100%; }
+    body.imprimiendo-ficha [data-imprimir-ficha],
+    body.imprimiendo-ficha #consulta-datos button { display: none; }
+}

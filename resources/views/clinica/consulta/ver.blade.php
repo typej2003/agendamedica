@@ -172,6 +172,8 @@
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
     <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
+    {{-- «Imprimir la ficha» de los datos personales (WEB-11.25). --}}
+    <script src="{{ asset('js/clinica/consulta-datos.js') }}"></script>
     {{-- El diálogo de alertas (WEB-11.6): se abre solo cuando toca avisar. --}}
     <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}

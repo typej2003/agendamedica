@@ -93,7 +93,7 @@ class ConsultaShellVistaTest extends TestCase
         // Y cada uno con la tarea que lo completa: es el mapa del shell, no decoración.
         $this->assertSame([
             'WEB-4.2', 'WEB-4.2', 'WEB-4.4', 'WEB-4.3', 'WEB-6.1', 'WEB-6.6', 'WEB-4.7', 'WEB-4.5',
-            'WEB-4.6', 'WEB-5.1', 'WEB-5.7', 'WEB-5.3a', 'F3', 'F9',
+            'WEB-4.6', 'WEB-5.1', 'WEB-5.7', 'WEB-5.3a', 'WEB-11.25', 'F9',
         ], array_column($items, 'tarea'));
     }
 
@@ -125,7 +125,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/consulta/42?seccion=recipes', $disponibles['Récipes']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=tratamiento', $disponibles['Tratamiento']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=solicitudes', $disponibles['Solicitudes']['url']);
-        $this->assertSame('/clinica/pacientes/5619', $disponibles['Datos personales']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=datos', $disponibles['Datos personales']['url']);
 
         foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'] as $titulo) {
             // Los disponibles no llevan pastilla: sólo "Próximamente" distingue a los que faltan.

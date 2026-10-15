@@ -249,6 +249,19 @@ class ConsultaController extends Controller
     }
 
     /**
+     * Lo obligatorio que le falta a la ficha para cerrar la consulta (WEB-11.25): depende de la especialidad del contexto (en pediatría
+     * se pide el teléfono del representante y no hay cédula).
+     *
+     * @return array<int,string>
+     */
+    private function datosQueFaltan(object $paciente, string $regMedico, ?string $numhistoria): array
+    {
+        return \App\Clinica\Pacientes\FiliacionPendiente::de(
+            $paciente, $regMedico, $numhistoria, request()->attributes->get('contexto_clinico')['specialty_id'] ?? null,
+        );
+    }
+
+    /**
      * ¿La consulta es de hoy en el consultorio? Es la condición de "Terminar la consulta" (WEB-4.8).
      *
      * Se compara contra `FechaDelConsultorio::hoy()` y no contra `now()`: "hoy" para el negocio es el día
@@ -330,6 +343,24 @@ class ConsultaController extends Controller
                 $pagina,
                 $motivos->existeEnElCatalogo($regMedico, $buscar),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_MOTIVOS]),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_DATOS) {
+            // Los datos personales (WEB-11.25): la ficha del paciente de esta historia, editable acá mismo.
+            $ficha = app(\App\Clinica\Pacientes\PacientesDelConsultorio::class)->editable($regMedico, $pacienteId);
+            abort_if($ficha === null, 404);
+
+            return new \App\Clinica\Consulta\Vistas\SeccionDeDatosPersonalesVista(
+                new \App\Clinica\Pacientes\Vistas\FormularioDePacienteVista(
+                    $ficha['paciente'],
+                    $ficha['numhistoria'],
+                    app(\App\Clinica\Pacientes\CatalogoDeSeguros::class)->de($regMedico),
+                ),
+                $ficha['paciente'],
+                $ficha['numhistoria'],
+                $this->datosQueFaltan($ficha['paciente'], $regMedico, $ficha['numhistoria']),
+                (int) $consulta->id,
             );
         }
 
