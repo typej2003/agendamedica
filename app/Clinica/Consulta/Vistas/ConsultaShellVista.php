@@ -51,6 +51,9 @@ final class ConsultaShellVista
     /** La clave de la sección de solicitudes (laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe, dieta) en `?seccion=` (WEB-5.3a, WEB-5.3b y WEB-5.4). */
     public const SECCION_SOLICITUDES = 'solicitudes';
 
+    /** El tratamiento: un texto libre de la consulta (`consultas.laringe`), el ítem TRATAMIENTO del panel del legado. */
+    public const SECCION_TRATAMIENTO = 'tratamiento';
+
     /**
      * La clave de la sección del **estudio ecográfico** (ítem 5 del panel) en `?seccion=` (WEB-6.1).
      *
@@ -119,12 +122,15 @@ final class ConsultaShellVista
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
             'detalle' => 'Varios por consulta, por medicamento o por tratamiento, y el de la pareja; se pueden corregir.',
             'tarea' => 'WEB-5.1', 'estado' => 'listo', 'seccion' => self::SECCION_RECIPES],
-        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
+        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Tratamiento', 'icono' => 'bi-capsule',
+            'detalle' => 'El plan de tratamiento en texto libre o por plantilla; sale en el resumen médico.',
+            'tarea' => 'WEB-5.7', 'estado' => 'listo', 'seccion' => self::SECCION_TRATAMIENTO],
+        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
             'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
             'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
-        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
+        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
             'detalle' => 'La filiación y el contacto del paciente.', 'tarea' => 'F3', 'estado' => 'listo'],
-        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente'],
     ];
 
@@ -290,7 +296,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -310,7 +316,7 @@ final class ConsultaShellVista
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
                 . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'exámenes, diagnóstico, evolución, récipes, solicitudes y los datos personales del paciente— se abren acá; el resto '
+                . 'exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el resto '
                 . 'llega con las tareas siguientes (pre-factura). Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];

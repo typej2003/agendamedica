@@ -33,6 +33,12 @@ php artisan route:list
 el filtro de la tarea (`php -d memory_limit=2G artisan test --filter=…`) y **el usuario avisa cuándo correrla entera**,
 antes de subir. Motivo: tarda unos seis minutos y frena el desarrollo. Los números de más abajo son mediciones
 puntuales, no un paso obligatorio de cada cambio.
+📝 **Tratamiento** (WEB-5.7, `?seccion=tratamiento`): el ítem TRATAMIENTO del legado, un texto libre con plantillas `TR` en
+`consultas.laringe`, entre Récipes y Solicitudes. **Es `TextosDelExamen::TRATAMIENTO`** (marcado `panel`, así que `claves()` no lo
+cuenta entre las solapas del examen; la ruta de guardado, que es la misma, usa `claves(true)`), con el mismo ViewModel
+(`TextoDelExamenVista`) y el mismo parcial (`_evaluacion-texto`, vía `_tratamiento`), y `ConsultaTextoDelExamenController` vuelve a
+su propia sección. Es el «PLAN DE TRATAMIENTO» del resumen médico. Tests: `ConsultaTratamientoWebTest`.
+
 📋 **Listados clínicos entre fechas** (WEB-6.8, `/clinica/listados`, sólo `role:Root|Medico`): una pantalla parametrizada por
 `?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con los tres del alcance hechos
 (2026-10-14): **embarazos y partos**, **pacientes por rango** y **consultas por rango**. Cada listado suma su filtro, su lectura
@@ -127,7 +133,7 @@ así que la cita se busca por `numhistoria` + fecha, y el segundo intento es el 
 regla **"cita atendida ⇒ tiene historia"** en `Actions/Agenda/{AtenderCita,CitaNoAtendible}`: al marcar
 sin número la resuelve del vínculo del paciente y, si no hay ninguno, **rechaza** —la web avisa y el sync
 la **descarta**—; `Vistas/ConsultaShellVista` ganó `urlTerminar()`/`avisoTerminar()` y el panel quedó entonces en
-**8 de 13** (hoy, tras F5 y F6, está en **12 de 13**: sólo falta el 13, facturación → F9).
+**8 de 13** (hoy, tras F5, F6 y WEB-5.7, está en **13 de 14**: sólo falta la pre-factura → F9).
 
 Lo que **WEB-5.1 (2026-10-11)**, los récipes de la consulta, agregó a esas tres filas es: `ConsultaRecipes`
 (**WEB-5.1: los récipes de una consulta** en `?seccion=recipes`, con `&recipe=nuevo` o `&recipe=2` para el

@@ -50,11 +50,10 @@ class ConsultaTextoDelExamenController extends Controller
 
         $resultado = $guardar->ejecutar($consulta, $solapa, $datos[$solapa] ?? null, null, 'web');
 
-        $destino = redirect()->route('clinica.consulta', [
-            $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-            'pestana' => $solapa,
-        ]);
+        // El tratamiento tiene su propio ítem del panel; las demás son solapas del examen.
+        $destino = redirect()->route('clinica.consulta', $solapa === TextosDelExamen::TRATAMIENTO
+            ? [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_TRATAMIENTO]
+            : [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => $solapa]);
 
         // El guard del sync puede rechazar una columna porque hay una edición **más nueva** sobre ella (de
         // otro equipo, el escritorio o el teléfono). Se dice, en vez de mostrar un "Guardado" falso.

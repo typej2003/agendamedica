@@ -191,7 +191,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **404** antes de llegar al controlador. La única que además tiene una copia en otra tabla es
                 // la colposcopía (`examen_fisico_nuevo.colposcopia`), y eso lo sabe la Action.
                 Route::post('/consulta/{consulta}/examen/{solapa}', [ConsultaTextoDelExamenController::class, 'guardar'])
-                    ->where('solapa', implode('|', TextosDelExamen::claves()))
+                    ->where('solapa', implode('|', TextosDelExamen::claves(true)))
                     ->name('consulta.examen.texto.guardar');
 
                 // Estudio ecográfico (WEB-6.1): el ítem 5 del panel, con su sección propia

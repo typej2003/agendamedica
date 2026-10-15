@@ -48,6 +48,15 @@ final class TextosDelExamen
     public const RESULTADOS = 'resultados';
 
     /**
+     * **El tratamiento** (ítem TRATAMIENTO del panel del legado, `tabpage_40`): un texto libre —con las plantillas
+     * `formato_print` de tipo `TR`— que el escritorio guarda en `consultas.laringe`
+     * (`tab_1.tabpage_40.mle_11.text`, `w_consulta_principal.srw:2762`). No es una solapa del examen: tiene su
+     * propio ítem del panel, así que `claves()` no lo incluye salvo que se pida (`$conLasDelPanel`), y es lo que la
+     * ruta de guardado sí acepta. Es el «PLAN DE TRATAMIENTO» del resumen médico.
+     */
+    public const TRATAMIENTO = 'tratamiento';
+
+    /**
      * El mapa del dato, por clave de solapa.
      *
      * `columna` es la de `consultas` que se lee y se escribe; `columna_espejo`, la copia en otra tabla (o
@@ -102,6 +111,22 @@ final class TextosDelExamen
             'ayuda' => 'El informe de la histeroscopía: el texto que se imprime en la hoja «INFORME DE '
                 . 'HISTEROSCOPÍA», con el membrete y (si cargaste imágenes en esta solapa) sus fotos.',
         ],
+        self::TRATAMIENTO => [
+            'panel' => true,
+            'titulo' => 'Tratamiento',
+            'articulo' => 'el',
+            'icono' => 'bi-capsule',
+            'guardado' => 'Tratamiento guardado.',
+            'sin_cambios' => 'El tratamiento no tenía cambios.',
+            'columna' => 'laringe',
+            'columna_espejo' => null,
+            'plantillas' => 'TR',
+            'documento' => null,
+            'imagenes' => null,
+            'marcador' => 'El plan de tratamiento: las indicaciones generales, el seguimiento, lo que debe cumplir la paciente…',
+            'ayuda' => 'El plan de tratamiento de esta consulta, en texto libre o a partir de una plantilla. Aparece como '
+                . '«PLAN DE TRATAMIENTO» en el resumen médico. Los medicamentos recetados van en los récipes.',
+        ],
         self::RESULTADOS => [
             'titulo' => 'Resultado de exámenes',
             'articulo' => 'el',
@@ -119,15 +144,22 @@ final class TextosDelExamen
         ],
     ];
 
-    /** Las claves de las solapas de texto, en el orden del escritorio. */
-    public static function claves(): array
+    /**
+     * Las claves de las solapas de texto **del examen**, en el orden del escritorio. Con `$conLasDelPanel` suma los
+     * textos que tienen su propio ítem del panel (el tratamiento): es lo que acepta la ruta de guardado, que es la
+     * misma para todos.
+     */
+    public static function claves(bool $conLasDelPanel = false): array
     {
-        return array_keys(self::TEXTOS);
+        return array_keys(array_filter(
+            self::TEXTOS,
+            fn (array $texto) => $conLasDelPanel || empty($texto['panel']),
+        ));
     }
 
-    public static function existe(?string $clave): bool
+    public static function existe(?string $clave, bool $conLasDelPanel = false): bool
     {
-        return $clave !== null && isset(self::TEXTOS[$clave]);
+        return $clave !== null && in_array($clave, self::claves($conLasDelPanel), true);
     }
 
     /** @return array<string,mixed>|null */

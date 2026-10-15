@@ -175,7 +175,7 @@ class ConsultaDopplerWebTest extends TestCase
 
         $respuesta->assertOk();
         // El ítem 5 ya estaba disponible desde WEB-6.1: el tipo nuevo no cambia el conteo del panel.
-        $respuesta->assertSee('12 de 13 disponibles');
+        $respuesta->assertSee('13 de 14 disponibles');
         $respuesta->assertSee('Estudio ecográfico');
         $respuesta->assertSee(
             route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]),

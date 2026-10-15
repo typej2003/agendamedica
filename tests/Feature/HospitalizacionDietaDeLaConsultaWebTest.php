@@ -92,7 +92,7 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('12 de 13 disponibles', false)
+            ->assertSee('13 de 14 disponibles', false)
             ->assertSee('hospitalización, informe médico y dieta / recomendaciones');
 
         $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'constancia'))->assertOk()->getContent();

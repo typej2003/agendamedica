@@ -644,6 +644,25 @@ class ConsultaController extends Controller
             );
         }
 
+        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {
+            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
+            // `TR`. Es la misma pantalla que las solapas de texto del examen —`TextoDelExamenVista` y su
+            // parcial—, con su propio ítem del panel; guarda por la misma ruta y vuelve a esta sección.
+            $texto = new TextoDelExamen($examen);
+            $clave = TextosDelExamen::TRATAMIENTO;
+            $volver = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_TRATAMIENTO]);
+
+            return new TextoDelExamenVista(
+                $clave,
+                $texto->de($consulta, $clave),
+                $texto->plantillas($regMedico, $clave),
+                route('clinica.consulta.examen.texto.guardar', [$consulta->id, $clave]),
+                $volver,
+                '',
+                (array) old(),
+            );
+        }
+
         if ($seccion === ConsultaShellVista::SECCION_EVOLUCION) {
             return new EvolucionVista(
                 // El texto del escritorio se lee **tal cual** (los "vacíos" del legado se limpian en la
