@@ -102,7 +102,7 @@ final class ConsultaShellVista
             'detalle' => 'Antropometría, examen por aparatos y ginecológico.', 'tarea' => 'WEB-4.3', 'estado' => 'listo',
             'seccion' => self::SECCION_EVALUACION],
         ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Estudio ecográfico', 'icono' => 'bi-activity',
-            'detalle' => 'Ecos ginecológicos, obstétricos, doppler y mamarío.', 'tarea' => 'WEB-6.1', 'estado' => 'listo',
+            'detalle' => 'Ecos ginecológicos, obstétricos, doppler y ecocardiograma fetal.', 'tarea' => 'WEB-6.1', 'estado' => 'listo',
             'seccion' => self::SECCION_ESTUDIO],
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Control de embarazo', 'icono' => 'bi-gender-female',
             'detalle' => 'Prenatal, laboratorio, controles y reporte.', 'tarea' => 'WEB-6.6', 'estado' => 'listo',

@@ -20,8 +20,8 @@ use Closure;
  * suma su fila, su mapa del dato, su ViewModel y su parcial `_estudio-<clave>`, sin tocar el contenedor
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
  * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1), el **eco obstétrico del primer
- * trimestre** y el del **2.º/3.er** (WEB-6.2) y el **eco Doppler perinatal** (WEB-6.3); el ecocardiograma
- * fetal sigue en WEB-6.3 y los ultrasonidos mamarío y abdominal, en WEB-6.4.
+ * trimestre** y el del **2.º/3.er** (WEB-6.2), el **eco Doppler perinatal** y el **ecocardiograma fetal**
+ * (WEB-6.3); los ultrasonidos mamarío y abdominal siguen en WEB-6.4.
  *
  * Sin base de datos.
  */
@@ -51,6 +51,18 @@ final class TiposDeEstudio
      */
     public const DOPPLER = 'doppler';
 
+    /**
+     * El **ecocardiograma fetal** (WEB-6.3): la ventana
+     * `w_cargar_visualizar_ecocardiograma_fetal` (`w_consulta_principal.srw:20477`), con el DataWindow
+     * `d_ecocardiograma_fetal`, que vive en `fuentes/ventana_consulta/` y no en `datawin_procesos/` (trampas
+     * 123 y 124).
+     *
+     * ⚠️ Su tabla (`ecocadiograma_fetal`) trae el **error de tipeo del legado**, sin la «r», y **no se
+     * renombra** (regla 2 de `AGENTS.md`). No confundir con la ecocardiografía adulta, que es de cardiología.
+     * La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const FETAL = 'fetal';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -60,6 +72,7 @@ final class TiposDeEstudio
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
         self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
         self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
+        self::FETAL => ['texto' => 'Ecocardiograma fetal', 'icono' => 'bi-heart'],
     ];
 
     /**

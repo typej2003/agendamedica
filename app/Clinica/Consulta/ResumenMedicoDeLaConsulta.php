@@ -80,6 +80,18 @@ final class ResumenMedicoDeLaConsulta
     }
 
     /**
+     * **Los motivos de una consulta**, ya resueltos y ordenados, fuera del resumen médico. Es lo que reusa la
+     * hoja del ecocardiograma fetal (WEB-6.3), que también abre con «MOTIVO DE CONSULTA:»: la lectura es **la
+     * misma** que la del bloque del resumen (una sola definición del dato, R3 de `PLAN-WEB.md`).
+     *
+     * @return array<int,string>
+     */
+    public function motivosDeLaConsulta(Consulta $consulta): array
+    {
+        return $this->motivos((string) $consulta->reg_medico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta);
+    }
+
+    /**
      * **Qué consultas de una historia tienen resumen médico**, por su `nroconsulta`.
      *
      * Es la misma regla que `ResumenMedico::esDocumento()` —algún bloque con datos **salvo el

@@ -33,6 +33,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::ECO_PELVICO => 'bi-activity',
         DocumentoImpreso::ECO_DOPPLER => 'bi-soundwave',
+        DocumentoImpreso::ECO_CARDIOGRAMA_FETAL => 'bi-heart',
         DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
         DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',

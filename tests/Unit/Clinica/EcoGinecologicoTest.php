@@ -133,22 +133,25 @@ class EcoGinecologicoTest extends TestCase
 
     /**
      * El registro de tipos: los que ya existen (el ginecológico de WEB-6.1, los dos obstétricos de WEB-6.2 y el
-     * Doppler perinatal de WEB-6.3), y un valor raro cae al que existe.
+     * Doppler perinatal y el ecocardiograma fetal de WEB-6.3), y un valor raro cae al que existe.
      *
      * ⚠️ Este test fija la **lista**, así que encender un tipo lo rompe: es el mismo caso de la trampa 96 (hay
      * aserciones de listas que no se ven en una búsqueda del contador del panel).
      */
     public function test_el_registro_de_tipos_tiene_los_que_existen_y_un_valor_raro_cae_al_primero(): void
     {
-        $this->assertSame(['ginecologico', 'obstetrico', 'tercero', 'doppler'], TiposDeEstudio::claves());
+        $this->assertSame(['ginecologico', 'obstetrico', 'tercero', 'doppler', 'fetal'], TiposDeEstudio::claves());
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar('inventado'));
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar(null));
         $this->assertTrue(TiposDeEstudio::existe('ginecologico'));
         $this->assertTrue(TiposDeEstudio::existe('obstetrico'));
         // La clave del Doppler va sin guion: la ruta del guardado acota `[a-z]+` (trampa 111).
         $this->assertTrue(TiposDeEstudio::existe('doppler'));
+        // La del ecocardiograma fetal, también: `fetal` y no `eco-fetal`.
+        $this->assertTrue(TiposDeEstudio::existe('fetal'));
         $this->assertSame('Eco ginecológico', TiposDeEstudio::texto('ginecologico'));
         $this->assertSame('Eco obstétrico (1.er trimestre)', TiposDeEstudio::texto('obstetrico'));
         $this->assertSame('Eco Doppler perinatal', TiposDeEstudio::texto('doppler'));
+        $this->assertSame('Ecocardiograma fetal', TiposDeEstudio::texto('fetal'));
     }
 }

@@ -2,8 +2,11 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
@@ -376,6 +379,42 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // Los dos informes del eco obstétrico (WEB-6.2). Se suman acá para cerrar el hueco que dejó esa tarea:
+        // su hoja se imprimía desde la consulta, pero la historia del paciente no la listaba (WEB-6.3).
+        foreach ($this->ecosObstetricos($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco obstétrico (1.er trimestre)',
+                'bi-heart-pulse',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco obstétrico (1.er trimestre)',
+                null,
+                null,
+                DocumentoImpreso::ECO_OBSTETRICO,
+            ));
+        }
+
+        foreach ($this->ecosObstetricosTerceros($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco obstétrico (2.º y 3.er trimestre)',
+                'bi-person-arms-up',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco obstétrico (2.º y 3.er trimestre)',
+                null,
+                null,
+                DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+            ));
+        }
+
         // El informe del eco Doppler perinatal (WEB-6.3), con la misma vara: algún dato del estudio —la
         // ficha no cuenta— o el informe en texto libre del escritorio.
         foreach ($this->dopplers($regMedico, $numero) as $nroconsulta => $estudio) {
@@ -392,6 +431,26 @@ final class HistoriaDelPaciente
                 null,
                 null,
                 DocumentoImpreso::ECO_DOPPLER,
+            ));
+        }
+
+        // El informe del ecocardiograma fetal (WEB-6.3), con la misma vara que los otros ecos: algún campo
+        // del estudio —su ficha, más ancha, tampoco cuenta— o, en su caso, los dos memos que el escritorio
+        // precarga.
+        foreach ($this->cardiogramasFetales($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Ecocardiograma fetal',
+                'bi-heart',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del ecocardiograma fetal',
+                null,
+                null,
+                DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
             ));
         }
 
@@ -644,6 +703,81 @@ final class HistoriaDelPaciente
                 'conDato' => $conDato,
                 'textoLibre' => EstudioEcografico::limpiar($atributos[EcoGinecologico::COLUMNA_PURO_TEXTO] ?? null) !== null,
             ];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
+    }
+
+    /**
+     * Los informes de los **dos ecos obstétricos** de la historia (WEB-6.2), por número de consulta: cuántos
+     * campos del estudio traen dato, sin contar su ficha (la fecha, la FUR y la gesta), que es la misma vara de
+     * `QueEsUnDocumento::ecografia`.
+     *
+     * ⚠️ La clave de las dos tablas es **`historia` + `consulta`**, no `numhistoria`/`nroconsulta` como la del
+     * eco pélvico. Se sumó en WEB-6.3 para cerrar el hueco que dejó WEB-6.2: la historia no listaba ninguna de
+     * las dos hojas.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function ecosObstetricos(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla('eco_obstetrico', EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /** El del 2.º/3.er trimestre: otra tabla, el mismo mapa del dato por bloques y la misma forma (`_o`/`_2`). */
+    private function ecosObstetricosTerceros(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla('eco_obstetrico_tercer', EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /**
+     * Los informes de **ecocardiograma fetal** de la historia (WEB-6.3), por número de consulta: cuántos campos
+     * del estudio traen dato, sin contar la ficha (la fecha, la FUR, la gesta y la paridad).
+     *
+     * ⚠️ Su tabla trae el **error de tipeo del legado** —`ecocadiograma_fetal`, sin la «r»— y su clave es
+     * `historia` + `consulta`, como la de los obstétricos. No confundir con la ecocardiografía adulta, que es
+     * de cardiología (trampa 124).
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function cardiogramasFetales(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla('ecocadiograma_fetal', EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /**
+     * Cuántos campos del estudio traen dato en cada fila de una tabla de eco llaveada por `historia` +
+     * `consulta`, indexado por el número de consulta. Es la lectura de conjunto que comparten los tres ecos del
+     * ítem 5 que no son el pélvico (los dos obstétricos y el ecocardiograma fetal).
+     *
+     * @param  array<int,string>  $columnas
+     * @param  array<int,string>  $noCuentan
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function ecosDeUnaTabla(string $tabla, array $columnas, array $noCuentan, string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table($tabla)
+            ->where('reg_medico', $regMedico)
+            ->where('historia', $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff($columnas, $noCuentan) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            // Ninguno de los tres tiene informe en texto libre en la web (el `puro_texto` del DataWindow no se
+            // edita): la bandera existe para compartir la forma con el pélvico y el Doppler.
+            $estudios[(int) $fila->consulta] = ['conDato' => $conDato, 'textoLibre' => false];
         }
 
         ksort($estudios);

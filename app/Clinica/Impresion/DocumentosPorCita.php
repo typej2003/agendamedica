@@ -4,8 +4,11 @@ namespace App\Clinica\Impresion;
 
 use App\Actions\Consulta\AbrirConsulta;
 use App\Clinica\Agenda\CitaDeAgenda;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Models\Cola;
@@ -232,6 +235,21 @@ final class DocumentosPorCita
                 }
             }), 'historia', 'consulta');
 
+        //  - informe de los dos ecos obstétricos (WEB-6.2): algún campo del estudio cargado, sin contar su
+        //    ficha (la fecha, la FUR y la gesta). Se suman acá para cerrar el hueco que dejó WEB-6.2: su hoja
+        //    se imprimía desde la consulta, pero la secretaría no la veía en «Imprimir documentos» de la cita
+        //    atendida. **Su clave también es `historia` + `consulta`**, y no `numhistoria`/`nroconsulta`.
+        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+
+        //  - informe del ecocardiograma fetal (WEB-6.3): otro estudio del ítem 5, con la misma clave
+        //    (`historia` + `consulta`) y su ficha más ancha (la fecha, la FUR, la gesta y la paridad). Su
+        //    tabla trae el error de tipeo del legado (`ecocadiograma_fetal`, sin la «r»).
+        $this->marcarEstudio($conAlgo, DB::table('ecocadiograma_fetal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+
         $ids = [];
         foreach ($atendidas as $cita) {
             $nroconsulta = $delDia[$cita->numHistoria . '|' . $cita->fecha] ?? null;
@@ -242,6 +260,27 @@ final class DocumentosPorCita
         }
 
         return $ids;
+    }
+
+    /**
+     * Anota en `$conAlgo` las consultas (`historia|número`) de una tabla de estudio ecográfico que tienen
+     * **algún campo del estudio** con dato: la ficha (las columnas de `$noCuentan`) no cuenta y el literal
+     * `none` que dejó el escritorio tampoco, que es la misma vara de `EstudioEcografico::limpiar`.
+     *
+     * @param  array<string,bool>  $conAlgo
+     * @param  array<int,string>  $columnas
+     * @param  array<int,string>  $noCuentan
+     */
+    private function marcarEstudio(array &$conAlgo, $consulta, array $columnas, array $noCuentan, string $columnaHistoria, string $columnaConsulta): void
+    {
+        $this->marcar($conAlgo, $consulta->where(function ($q) use ($columnas, $noCuentan) {
+            foreach (array_diff($columnas, $noCuentan) as $columna) {
+                $q->orWhere(function ($cada) use ($columna) {
+                    $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                        ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                });
+            }
+        }), $columnaHistoria, $columnaConsulta);
     }
 
     /**

@@ -5,7 +5,8 @@ namespace App\Clinica\Impresion;
 /**
  * **Los formatos en blanco** (WEB-5.5b): el "Imprimir Formatos" de `w_configurar_recipes` del escritorio. Cada documento de la consulta
  * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio, estudios, —desde WEB-6.2— los dos informes del
- * eco obstétrico y —desde WEB-6.3— el del eco Doppler perinatal) impreso **sin datos de paciente**, con el membrete, la firma, el sello y el pie
+ * eco obstétrico y —desde WEB-6.3— el del eco Doppler perinatal; el del **ecocardiograma fetal**, también de WEB-6.3, **no** está:
+ * el escritorio no lo tiene) impreso **sin datos de paciente**, con el membrete, la firma, el sello y el pie
  * del médico, para rellenarlo a mano cuando la impresora normal está fuera de servicio.
  *
  * Esta clase es **el catálogo**: qué formatos hay, cómo se llaman y qué lleva cada uno en blanco (los datos cortos con su línea y las
@@ -13,7 +14,10 @@ namespace App\Clinica\Impresion;
  * del trimestre de los ecos). Sin estado y sin base de datos: no escribe ni lee nada.
  *
  * Quedan **fuera**, a propósito: el **eco pélvico** (WEB-6.1, que el escritorio sí tiene en
- * `d_eco_pelvico_print_vacio.srd`: es la única ecografía que todavía no lo tiene) y el récipe de la pareja.
+ * `d_eco_pelvico_print_vacio.srd`: es la única ecografía con formato en blanco en el legado que todavía no lo
+ * tiene en la web), el **ecocardiograma fetal** (WEB-6.3, que el escritorio **no** tiene: su panel
+ * `miconsultat/w_panel_impresion_formatos.srw` lista seis formatos y el fetal no está entre ellos, así que no
+ * es un olvido de la web) y el récipe de la pareja.
  */
 final class FormatosEnBlanco
 {

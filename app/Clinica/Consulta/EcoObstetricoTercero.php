@@ -44,6 +44,16 @@ final class EcoObstetricoTercero
     public const COLUMNA_CONSULTA = 'consulta';
 
     /**
+     * Las columnas de la **ficha** del estudio: la fecha, la FUR y la gesta son del embarazo que se está
+     * siguiendo (no hallazgos), así que no cuentan para decidir si el eco dice algo. Es la misma lista del
+     * hermano del primer trimestre, y la que usan la historia del paciente y el lote de documentos de la cita
+     * al mirar la tabla en conjunto (WEB-6.3).
+     *
+     * @var array<int,string>
+     */
+    public const COLUMNAS_QUE_NO_CUENTAN = ['fecha', 'fur', 'gesta'];
+
+    /**
      * **El mapa del dato**, en los bloques del escritorio (que tiene rotulados *DATOS BIOMÉTRICOS*,
      * *DATOS ANATÓMICOS*, *PLACENTA* y *DATOS FUNCIONALES*).
      *

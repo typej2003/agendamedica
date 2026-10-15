@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\GuardarEcoCardiogramaFetal;
 use App\Actions\Consulta\GuardarEcoDoppler;
 use App\Actions\Consulta\GuardarEcoGinecologico;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -21,14 +23,14 @@ use InvalidArgumentException;
 
 /**
  * **El estudio ecográfico de una consulta** (WEB-6.1, ítem 5 del panel del legado): guardar el eco pélvico, los
- * dos obstétricos (WEB-6.2) y el Doppler perinatal (WEB-6.3).
+ * dos obstétricos (WEB-6.2), el Doppler perinatal y el ecocardiograma fetal (WEB-6.3).
  *
  * La sección se **lee** en `ConsultaController::ver` (`?seccion=estudio&tipo=ginecologico`); acá sólo se
  * escribe, que es la partición que la guía de la arquitectura pide (controladores por responsabilidad).
  *
- * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el ecocardiograma fetal de
- * WEB-6.3 y los ultrasonidos de WEB-6.4) sumen su rama **sin ruta nueva**; hoy existen los cuatro de
- * `TiposDeEstudio` y cualquier otro da **404**.
+ * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el mamarío y el abdominal de
+ * WEB-6.4) sumen su rama **sin ruta nueva**; hoy existen los cinco de `TiposDeEstudio` y cualquier otro da
+ * **404**.
  *
  * **Guardado explícito**, como la evaluación física: es un dato clínico y el médico decide cuándo queda
  * escrito. El aviso de "cambios sin guardar" y el bloqueo del navegador al salir los pone
@@ -53,6 +55,7 @@ class ConsultaEstudioController extends Controller
         GuardarEcoObstetrico $guardarObstetrico,
         GuardarEcoObstetricoTercero $guardarObstetricoTercero,
         GuardarEcoDoppler $guardarDoppler,
+        GuardarEcoCardiogramaFetal $guardarFetal,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -73,6 +76,7 @@ class ConsultaEstudioController extends Controller
         // con qué reglas. Un tipo nuevo suma su acción acá y su mapa en `reglasDe()`.
         $tipo = TiposDeEstudio::normalizar($tipo);
         $accion = match ($tipo) {
+            TiposDeEstudio::FETAL => $guardarFetal,
             TiposDeEstudio::DOPPLER => $guardarDoppler,
             TiposDeEstudio::TERCERO => $guardarObstetricoTercero,
             TiposDeEstudio::OBSTETRICO => $guardarObstetrico,
@@ -101,6 +105,7 @@ class ConsultaEstudioController extends Controller
         return $destino->with('estado', $resultado->sinCambios()
             ? 'El eco no tenía cambios.'
             : match ($tipo) {
+                TiposDeEstudio::FETAL => 'Ecocardiograma fetal guardado.',
                 TiposDeEstudio::DOPPLER => 'Eco Doppler guardado.',
                 TiposDeEstudio::TERCERO, TiposDeEstudio::OBSTETRICO => 'Eco obstétrico guardado.',
                 default => 'Eco pélvico guardado.',
@@ -113,6 +118,10 @@ class ConsultaEstudioController extends Controller
      */
     private function reglasDe(string $tipo): array
     {
+        if ($tipo === TiposDeEstudio::FETAL) {
+            return $this->reglasDelMapa(EcoCardiogramaFetal::grupos());
+        }
+
         if ($tipo === TiposDeEstudio::DOPPLER) {
             return $this->reglasDelMapa(EcoDoppler::grupos());
         }
@@ -127,8 +136,8 @@ class ConsultaEstudioController extends Controller
     }
 
     /**
-     * Las reglas de las columnas de un mapa por bloques (los dos obstétricos y el Doppler). El tope de un
-     * texto sale del campo (`tope`) y, si no lo dice, es el de siempre: 20.
+     * Las reglas de las columnas de un mapa por bloques (los dos obstétricos, el Doppler y el ecocardiograma
+     * fetal). El tope de un texto sale del campo (`tope`) y, si no lo dice, es el de siempre: 20.
      *
      * @param  array<int,array<string,mixed>>  $grupos
      */
@@ -215,14 +224,16 @@ class ConsultaEstudioController extends Controller
     }
 
     /**
-     * El rótulo de pantalla de una columna del estudio que se está guardando: el mapa del Doppler tiene sus
-     * propios rótulos (sus celdas dicen la arteria y el eje) y los demás estudios comparten los del pélvico,
-     * que es de donde salían hasta ahora.
+     * El rótulo de pantalla de una columna del estudio que se está guardando: el mapa del Doppler y el del
+     * ecocardiograma fetal tienen sus propios rótulos y los demás estudios comparten los del pélvico, que es de
+     * donde salían hasta ahora.
      */
     private function etiquetaDe(string $columna, string $tipo): string
     {
-        return $tipo === TiposDeEstudio::DOPPLER
-            ? EcoDoppler::etiquetaDe($columna)
-            : EcoGinecologico::etiquetaDe($columna);
+        return match ($tipo) {
+            TiposDeEstudio::FETAL => EcoCardiogramaFetal::etiquetaDe($columna),
+            TiposDeEstudio::DOPPLER => EcoDoppler::etiquetaDe($columna),
+            default => EcoGinecologico::etiquetaDe($columna),
+        };
     }
 }

@@ -72,6 +72,16 @@ final class DocumentoImpreso
     public const ECO_DOPPLER = 'eco-doppler';
 
     /**
+     * El **informe del ecocardiograma fetal** (WEB-6.3): la hoja que el escritorio imprime con
+     * `d_eco_ecocardiografia_fetal_print`, cuyo título es «ECOCARDIOGRAMA FETAL» (`:43`).
+     *
+     * ⚠️ **El escritorio NO tiene un formato en blanco para este estudio**: el panel
+     * `miconsultat/w_panel_impresion_formatos.srw` lista seis formatos y el fetal no está entre ellos. Por eso
+     * `FormatosEnBlanco` **no** lo ofrece (no es un olvido: es lo que la fuente tiene).
+     */
+    public const ECO_CARDIOGRAMA_FETAL = 'eco-cardiograma-fetal';
+
+    /**
      * **El informe de la colposcopía** (WEB-6.5): la hoja del examen colposcópico del escritorio
      * (`d_colposcopia_1` / `d_colposcopia_2`, cuyo título es «INFORME DE COLPOSCOPÍA», `:25` y `:26`). Su
      * cuerpo es **el texto de `consultas.observaciones`** y el escritorio le anexa las fotos del examen
@@ -124,6 +134,9 @@ final class DocumentoImpreso
         // El del eco Doppler perinatal, tal cual el DataWindow de impresión del escritorio
         // (`d_eco_doppler_print.srd:55`).
         self::ECO_DOPPLER => ['ECO DOPPLER PERINATAL', 'Eco Doppler perinatal'],
+        // El del ecocardiograma fetal, tal cual el DataWindow de impresión del escritorio
+        // (`d_eco_ecocardiografia_fetal_print.srd:43`).
+        self::ECO_CARDIOGRAMA_FETAL => ['ECOCARDIOGRAMA FETAL', 'Ecocardiograma fetal'],
         // El del informe de colposcopía, tal cual el DataWindow del escritorio (`d_colposcopia_1.srd:25`).
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).

@@ -39,6 +39,16 @@ final class EcoObstetrico
     public const COLUMNA_CONSULTA = 'consulta';
 
     /**
+     * Las columnas de la **ficha** del estudio: la fecha, la FUR y la gesta son del embarazo que se está
+     * siguiendo (no hallazgos), así que no cuentan para decidir si el eco dice algo. Es la misma lista de la
+     * Action (`GuardarEcoObstetricoBase::NO_CUENTAN`) y de la pantalla, y la que usa la historia del paciente y
+     * el lote de documentos de la cita al mirar la tabla en conjunto (WEB-6.3).
+     *
+     * @var array<int,string>
+     */
+    public const COLUMNAS_QUE_NO_CUENTAN = ['fecha', 'fur', 'gesta'];
+
+    /**
      * **El mapa del dato del eco obstétrico del primer trimestre**, en los bloques del escritorio.
      *
      * Los rótulos son los del DataWindow vivo; los `códigos` de cada lista, los del escritorio. Dos avisos:

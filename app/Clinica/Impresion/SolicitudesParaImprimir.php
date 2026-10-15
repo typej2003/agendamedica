@@ -7,6 +7,7 @@ use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EstudioEcografico;
@@ -93,6 +94,7 @@ final class SolicitudesParaImprimir
         private EcoObstetrico $ecosObstetricos,
         private EcoObstetricoTercero $ecosObstetricosTerceros,
         private EcoDoppler $dopplers,
+        private EcoCardiogramaFetal $cardiogramasFetales,
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
         private ResumenMedicoDeLaConsulta $resumenes,
@@ -176,6 +178,21 @@ final class SolicitudesParaImprimir
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_DOPPLER][1],
                 // Sin los índices ni la conclusión: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del eco Doppler perinatal',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del ecocardiograma fetal (WEB-6.3): otro estudio del ítem 5, con su ficha obstetricia
+        // (fecha, FUR, gesta y paridad) y la misma regla para ofrecerlo. Su clave también es `historia` +
+        // `consulta` y su tabla trae el error de tipeo del legado (`ecocadiograma_fetal`, sin la «r»).
+        $fetal = $this->cardiogramasFetales->de($consulta);
+        if ($this->elEcoCardiogramaFetalEsDocumento($fetal)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+                'tipo' => DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_CARDIOGRAMA_FETAL][1],
+                // Sin la biometría ni la conclusión: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del ecocardiograma fetal',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -356,6 +373,14 @@ final class SolicitudesParaImprimir
             $estudio = $this->dopplers->de($consulta);
 
             return $this->elEcoDopplerEsDocumento($estudio) ? $this->ecoDoppler($paciente, $estudio, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_CARDIOGRAMA_FETAL) {
+            $estudio = $this->cardiogramasFetales->de($consulta);
+
+            return $this->elEcoCardiogramaFetalEsDocumento($estudio)
+                ? $this->ecoCardiogramaFetal($consulta, $paciente, $estudio, $fechaDeLaConsulta)
+                : null;
         }
 
         if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
@@ -1092,10 +1117,170 @@ final class SolicitudesParaImprimir
         );
     }
 
+    /**
+     * **El informe del ecocardiograma fetal** (WEB-6.3): la hoja «ECOCARDIOGRAMA FETAL» del escritorio
+     * (`d_eco_ecocardiografia_fetal_print`), en el orden de su detalle: el **MOTIVO DE CONSULTA** (el mismo
+     * dato y el mismo orden que el resumen médico), la **paridad** del encabezado (PARA / ABORTOS / CESARÉAS /
+     * OTROS), el **texto del estudio** (el memo grande, que no lleva rótulo), la **biometría** (cada medida en
+     * milímetros y la «MEDIDA» con su «(Percentil)»), los **datos anatómicos**, los **datos placento -
+     * funiculares** y la **conclusión** (los signos y las sugerencias).
+     *
+     * Su cabecera lleva la GESTA, la FUR, la FPP y la EG como **datos cortos**, como en el DataWindow: la FPP
+     * es `fur + 283` —el número de los ecos y los reportes— y la EG es la cuenta de siempre, las dos de
+     * `EdadGestacional` (la regla está escrita una sola vez).
+     *
+     * ⚠️ **El «REFERIDO POR:» del escritorio imprime `pacientes.ocupacion`, no la columna `referido` del
+     * estudio** (`d_eco_ecocardiografia_fetal_print.srd:57-58`): es una rareza del legado y se replica tal
+     * cual. La columna `referido` existe, va oculta en el DataWindow y en ginecología no se usa.
+     *
+     * Los rótulos y las unidades de los bloques salen del **mapa del dato** (`EcoCardiogramaFetal::grupos()`),
+     * el mismo que pinta el formulario: un campo nuevo del mapa aparece en la pantalla y en la hoja sin tocar
+     * esto.
+     */
+    private function ecoCardiogramaFetal(Consulta $consulta, Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    {
+        $fur = $estudio->fur();
+        $eg = \App\Clinica\Embarazo\EdadGestacional::de($fur);
+        $fpp = \App\Clinica\Embarazo\EdadGestacional::fpp($fur, \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO);
+
+        $datos = [];
+
+        foreach ([
+            'GESTA:' => EcoCardiogramaFetal::textoDe('gesta', $estudio->valor('gesta')),
+            'FUR:' => $fur === null ? null : FechaClinica::formato($fur),
+            'FPP:' => $fpp === null ? null : FechaClinica::formato($fpp),
+            'EG:' => $eg?->texto(),
+            // La rareza del legado: el «REFERIDO POR:» del informe es la ocupación del paciente.
+            'REFERIDO POR:' => TextoDeLaConsulta::limpio($paciente->ocupacion ?? null),
+        ] as $etiqueta => $valor) {
+            if ($valor !== null && $valor !== '') {
+                $datos[] = ['etiqueta' => $etiqueta, 'valor' => (string) $valor];
+            }
+        }
+
+        $parrafos = [];
+
+        // El motivo de consulta, como lo imprime el resumen médico (el mismo dato y el mismo orden).
+        $motivos = $this->resumenes->motivosDeLaConsulta($consulta);
+        if ($motivos !== []) {
+            $parrafos[] = DocumentoImpreso::parrafoDeLista('MOTIVO DE CONSULTA:', $motivos);
+        }
+
+        // La paridad: el escritorio la imprime en su propia franja, sin rótulo de grupo.
+        $paridad = [];
+        foreach (['PARA:' => 'parto', 'ABORTOS:' => 'aborto', 'CESARÉAS:' => 'cesarea', 'OTROS:' => 'otros'] as $etiqueta => $columna) {
+            $valor = $estudio->valor($columna);
+
+            if ($valor !== null) {
+                $paridad[] = $etiqueta . ' ' . $valor;
+            }
+        }
+
+        if ($paridad !== []) {
+            $parrafos[] = ['texto' => implode(' · ', $paridad), 'etiqueta' => null, 'aparte' => false];
+        }
+
+        // El memo grande del estudio: el DataWindow no le pone rótulo.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor(EcoCardiogramaFetal::COLUMNA_TEXTO_INICIO)) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        // La biometría, cada medida con su unidad (los `compute` del informe) y la «MEDIDA» con su percentil.
+        $this->sumarParrafo($parrafos, 'DATOS BIOMETRICOS:', $this->linea(
+            $this->medidasDelEstudio($estudio, EcoCardiogramaFetal::camposDelBloque('Datos biométricos')),
+        ));
+
+        // Los datos anatómicos: es un memo largo, así que va con su rótulo en su propia línea.
+        foreach (DocumentoImpreso::parrafosDe($estudio->valor(EcoCardiogramaFetal::COLUMNA_ANATOMIA), 'DATOS ANATOMICOS:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        // Los datos placento-funiculares: sus desplegables traducidos y sus dos medidas con su sufijo.
+        $this->sumarParrafo($parrafos, 'DATOS PLACENTO - FUNICULARES:', $this->linea(
+            $this->medidasDelEstudio($estudio, EcoCardiogramaFetal::camposDelBloque('Datos placento - funiculares')),
+        ));
+
+        // La conclusión: el rótulo del bloque y, debajo, los signos y las sugerencias con los suyos.
+        $conclusion = $estudio->valor('conclusion');
+        $sugerencia = $estudio->valor('sugerencia');
+
+        if ($conclusion !== null || $sugerencia !== null) {
+            $parrafos[] = ['texto' => '', 'etiqueta' => 'CONCLUSIÓN:', 'aparte' => true];
+        }
+
+        foreach (DocumentoImpreso::parrafosDe($conclusion, 'SIGNOS ECOGRÁFICOS SUGESTIVOS DE:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        foreach (DocumentoImpreso::parrafosDe($sugerencia, 'SUGERENCIAS:', true) as $parrafo) {
+            $parrafos[] = $parrafo;
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+            DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_CARDIOGRAMA_FETAL][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_CARDIOGRAMA_FETAL][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $datos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * El texto de cada campo de un bloque del ecocardiograma fetal que tenga dato: "DBP: 25 mm", "PLACENTA:
+     * Anterior", "GRADO: II / III". El rótulo y —en los desplegables— la traducción del código salen del mapa;
+     * la unidad y el sufijo, del campo.
+     *
+     * @param  array<int,array<string,mixed>>  $campos
+     * @return array<int,string>
+     */
+    private function medidasDelEstudio(EstudioEcografico $estudio, array $campos): array
+    {
+        $valores = [];
+
+        foreach ($campos as $campo) {
+            $valor = $estudio->valor($campo['columna']);
+
+            if ($valor === null) {
+                continue;
+            }
+
+            $texto = ($campo['tipo'] ?? 'texto') === 'opciones'
+                ? (EcoCardiogramaFetal::textoDe($campo['columna'], $valor) ?? $valor)
+                : $valor;
+
+            foreach ([$campo['unidad'] ?? null, $campo['sufijo'] ?? null] as $agregado) {
+                if ($agregado !== null && $agregado !== '') {
+                    $texto .= ' ' . $agregado;
+                }
+            }
+
+            $valores[] = $campo['etiqueta'] . ': ' . $texto;
+        }
+
+        return $valores;
+    }
+
     /** ¿El eco obstétrico dice algo? La fecha, la FUR y la gesta no cuentan (son del embarazo, no hallazgos). */
     private function elEcoObstetricoEsDocumento(EstudioEcografico $estudio, array $columnas): bool
     {
         return QueEsUnDocumento::ecografia($this->camposDelEstudioConDato($estudio, $columnas, ['fecha', 'fur', 'gesta']));
+    }
+
+    /**
+     * ¿El ecocardiograma fetal dice algo? Su ficha es la más ancha de los ecos —la fecha, la FUR, la gesta y la
+     * paridad—, así que no cuentan siete columnas. Los dos memos (`texto_inicio` y `anatomi_datos`) **sí**: son
+     * el cuerpo del informe y el escritorio los precarga.
+     */
+    private function elEcoCardiogramaFetalEsDocumento(EstudioEcografico $estudio): bool
+    {
+        return QueEsUnDocumento::ecografia($this->camposDelEstudioConDato(
+            $estudio,
+            EcoCardiogramaFetal::columnas(),
+            EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN,
+        ));
     }
 
     /**
