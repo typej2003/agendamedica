@@ -19,6 +19,9 @@
          diagnóstico tildado y se agrega al guardar. --}}
     <x-ui.dos-listas titulo-izquierda="Diagnósticos de esta consulta" titulo-derecha="Tu catálogo de diagnósticos">
     <x-slot name="izquierda">
+    @if ($vm->tieneAnterior())
+        <div class="mb-2"><x-ui.anterior :url="$vm->urlAnterior('diagnosticos')" que="los diagnósticos" /></div>
+    @endif
     {{-- El `action` sale del ViewModel cuando hay pendientes: le agrega `?agregar[]=…` para que el POST no
          los pierda si la página se recargó (los `hidden` de abajo también los mandan, pero una recarga se
          los lleva y la query no). Sin pendientes es el `action` normal. --}}

@@ -32,6 +32,9 @@
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
+            @if ($vm->tieneAnterior())
+                <x-ui.anterior :url="$vm->urlAnterior('recipes')" que="los récipes" />
+            @endif
             @unless ($seccion->estaVacia())
                 {{-- La acción primaria de la sección. Con la lista vacía es la del estado vacío (una sola). --}}
                 <a class="btn btn-sm btn-primary" href="{{ $seccion->urlNuevo() }}">

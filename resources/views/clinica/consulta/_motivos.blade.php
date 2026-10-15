@@ -9,6 +9,9 @@
 
     <x-ui.dos-listas titulo-izquierda="Motivos de esta consulta" titulo-derecha="Tu catálogo de motivos" :resumen="$seccion->resumen()">
         <x-slot name="izquierda">
+            @if ($vm->tieneAnterior())
+                <div class="mb-2"><x-ui.anterior :url="$vm->urlAnterior('motivos')" que="los motivos" /></div>
+            @endif
             @if ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
                     Pasa los motivos de esta atención desde tu catálogo, a la derecha. Puedes cargar más de uno.

@@ -204,6 +204,20 @@ final class ConsultaShellVista
         return $this->avisarAlertas && $this->hayAlertas();
     }
 
+    /** ¿Esta consulta tiene una anterior en su historia? Es lo que ofrece el botón «Anterior» (sólo desde la 2.ª consulta). */
+    public function tieneAnterior(): bool
+    {
+        return $this->consultasDelPaciente !== []
+            && $this->consultaActual !== null
+            && (int) $this->consultasDelPaciente[0]['id'] !== $this->consultaActual;
+    }
+
+    /** La URL de «Anterior» para copiar `motivos`, `diagnosticos` o `recipes` de la consulta anterior (WEB-11.4). */
+    public function urlAnterior(string $que): string
+    {
+        return rtrim((string) $this->urlConsulta, '/') . '/anterior/' . $que;
+    }
+
     /** ¿Hay más de una consulta en la historia? (Con una sola, el navegador no se pinta.) */
     public function hayNavegador(): bool
     {

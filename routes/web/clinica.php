@@ -30,6 +30,7 @@ use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaTextoDelExamenController;
+use App\Http\Controllers\Clinica\ConsultaAnteriorController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
@@ -163,6 +164,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+
+                // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
+                Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])
+                    ->where('que', 'motivos|diagnosticos|recipes')->name('consulta.anterior');
 
                 // «Guardar como plantilla» desde cualquier sección de texto de la consulta (WEB-11.2): JSON, sin recargar.
                 Route::post('/plantillas-de-texto', [PlantillaDeTextoController::class, 'guardar'])->name('plantillas.guardar');

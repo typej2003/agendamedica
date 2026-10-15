@@ -1151,4 +1151,29 @@ class ConsultaRecipesWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->delete($this->urlEliminar($consulta, 1))->assertRedirect();
         $this->assertNotNull(DB::table('recipes')->find($ajena), 'la fila del otro registro sigue ahí');
     }
+
+    public function test_anterior_copia_los_recipes_completos_como_recipes_nuevos(): void
+    {
+        // WEB-11.4: «Anterior» copia cada récipe de la consulta previa (cantidad e indicaciones incluidas) a esta.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $primera->fecha]);
+        $this->fila($medico, 1001, 1, '0001', 1, ['cantidad' => 3, 'indicaciones' => 'Cada 6 horas']);
+        $this->fila($medico, 1001, 1, '0002', 1);
+        $this->fila($medico, 1001, 1, '0003', 2);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.anterior', [$segunda->id, 'recipes']))
+            ->assertRedirect()->assertSessionHas('estado', 'Copiados 2 récipes de la consulta N.º 1.');
+
+        $copiadas = $this->filasDe($medico, 1001, 2);
+        $this->assertCount(3, $copiadas);
+        $primero = $copiadas->firstWhere('codemedicina', '0001');
+        $this->assertSame(3, (int) $primero->cantidad);
+        $this->assertSame('Cada 6 horas', $primero->indicaciones);
+        $this->assertCount(2, $copiadas->pluck('recipe')->unique());
+        // Y la consulta de origen no se tocó.
+        $this->assertCount(3, $this->filasDe($medico, 1001, 1));
+    }
 }
