@@ -2905,3 +2905,13 @@ body.auth-pagina {
 @media (max-width: 575.98px) {
     .listados-filtros { grid-template-columns: 1fr; }
 }
+
+/* El listado de consultas por rango tiene siete columnas con listas dentro de la celda: entre el celular (donde la
+   tabla ya se apila en tarjetas) y el escritorio no entra a lo ancho, así que desplaza **su propio** contenedor en
+   vez de la página y la identidad del paciente no se aplasta hasta una letra por renglón. */
+.listados-tabla-ancha { overflow-x: auto; }
+.listados-tabla-ancha td.celda-principal { min-width: 12rem; }
+@media (max-width: 767.98px) {
+    .listados-tabla-ancha { overflow-x: visible; }
+    .listados-tabla-ancha td.celda-principal { min-width: 0; }
+}

@@ -176,14 +176,14 @@ class ListadoDeEmbarazosTest extends TestCase
 
     public function test_el_catalogo_de_listados_normaliza_la_clave(): void
     {
-        $this->assertSame(['embarazos', 'pacientes-por-rango'], ListadosDisponibles::claves());
+        $this->assertSame(['embarazos', 'pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves());
         $this->assertSame('embarazos', ListadosDisponibles::normalizar('embarazos'));
         $this->assertSame('Embarazos y partos', ListadosDisponibles::titulo('embarazos'));
         $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('pacientes-por-rango'));
         $this->assertSame('Pacientes por rango', ListadosDisponibles::titulo('pacientes-por-rango'));
 
         // Una clave que todavía no tiene pantalla vuelve al listado por defecto, no a una pantalla a medias.
-        $this->assertSame('embarazos', ListadosDisponibles::normalizar('consultas-por-rango'));
+        $this->assertSame('embarazos', ListadosDisponibles::normalizar('no-existe'));
         $this->assertSame('embarazos', ListadosDisponibles::normalizar(null));
         $this->assertFalse(ListadosDisponibles::existe('otro'));
     }

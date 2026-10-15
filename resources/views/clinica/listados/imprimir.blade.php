@@ -30,6 +30,8 @@
 
     @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
         @include('clinica.listados._imprimir-pacientes')
+    @elseif ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::CONSULTAS)
+        @include('clinica.listados._imprimir-consultas')
     @elseif ($vm->estaVacio())
         <p class="sin-datos">No hay embarazos que cumplan estos filtros.</p>
     @else

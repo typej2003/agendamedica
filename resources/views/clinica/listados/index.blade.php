@@ -3,9 +3,9 @@
 @section('titulo', 'Listados')
 
 @section('contenido')
-    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy están el listado de embarazos / partos —el
-         *Listado de Partos* del escritorio— y el de pacientes por rango —*Indicadores pacientes*—: la pantalla
-         es la misma y el título sale del ViewModel. Es de sólo lectura: no hay alta, y lo único
+    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy están el de embarazos / partos —el
+         *Listado de Partos* del escritorio—, el de pacientes por rango —*Indicadores pacientes*— y el de
+         consultas por rango —*Indicadores de Consultas*—: la pantalla es la misma y el título sale del ViewModel. Es de sólo lectura: no hay alta, y lo único
          que se hace con el resultado es imprimirlo. --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
@@ -32,6 +32,8 @@
          embarazos / partos, que es el de por defecto, sigue acá abajo. --}}
     @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
         @include('clinica.listados._pacientes')
+    @elseif ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::CONSULTAS)
+        @include('clinica.listados._consultas')
     @else
 
     {{-- Los filtros van en la barra de herramientas y no en el encabezado (guía de UI §3). Los campos son los

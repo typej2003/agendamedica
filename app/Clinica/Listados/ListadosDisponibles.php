@@ -12,11 +12,10 @@ namespace App\Clinica\Listados;
  * reúne en el mismo módulo (`app/Clinica/Listados/`, sus ViewModels en `Vistas/` y las vistas en
  * `resources/views/clinica/listados/`).
  *
- * **Hoy están dos**: *Embarazos / partos* (el *Listado de Partos* del escritorio) y *Pacientes por rango* (el
- * *Indicadores pacientes* del escritorio, `w_reprotes_pacientes.srw`). El tercero del alcance de WEB-6.8 entra
- * acá —una clave más, con su lectura y su ViewModel— sin tocar la ruta ni la pantalla:
- *
- *  - *consultas por rango*: las consultas de la historia entre dos fechas.
+ * **Hoy están los tres del alcance de WEB-6.8**: *Embarazos / partos* (el *Listado de Partos* del escritorio),
+ * *Pacientes por rango* (*Indicadores pacientes*, `w_reprotes_pacientes.srw`) y *Consultas por rango* (*Indicadores
+ * de Consultas*, `w_reporte_consulta_barbaro.srw`). Uno nuevo entra acá —una clave más, con su lectura y su
+ * ViewModel— sin tocar la ruta ni la pantalla.
  *
  * Una clave que no esté en la lista vuelve al listado por defecto en vez de mostrar una pantalla a medias,
  * con la misma vara que `FiltroDePacientes::normalizar` (trampa: un `?historia=` que no se entiende vuelve a
@@ -34,6 +33,12 @@ final class ListadosDisponibles
     public const PACIENTES = 'pacientes-por-rango';
 
     /**
+     * El listado de consultas entre dos fechas, con motivo, diagnóstico, medicamento y antecedente opcionales: los
+     * *Indicadores de Consultas* del escritorio (`w_reporte_consulta_barbaro.srw`).
+     */
+    public const CONSULTAS = 'consultas-por-rango';
+
+    /**
      * Las claves con pantalla, en el orden en que se ofrecen: `clave => título de la pantalla`.
      *
      * ⚠️ Agregar una acá **no alcanza**: cada listado necesita su lectura y su ViewModel. El título es el
@@ -42,6 +47,7 @@ final class ListadosDisponibles
     private const LISTADOS = [
         self::EMBARAZOS => 'Embarazos y partos',
         self::PACIENTES  => 'Pacientes por rango',
+        self::CONSULTAS  => 'Consultas por rango',
     ];
 
     /** El listado que se muestra cuando no se pidió ninguno. */
