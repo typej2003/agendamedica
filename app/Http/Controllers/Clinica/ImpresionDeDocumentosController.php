@@ -279,6 +279,14 @@ class ImpresionDeDocumentosController extends Controller
                 'tipo' => TiposDeEstudio::MAMARIO,
             ]);
         }
+
+        if ($tipo === DocumentoImpreso::ECO_ABDOMINAL) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::ABDOMINAL,
+            ]);
+        }
         // El resumen médico (WEB-5.3c) no tiene pestaña propia: su botón vive en la pestaña *Informe
         // médico* del escritorio (`tabpage_14`), que es a donde vuelve.
         if ($tipo === DocumentoImpreso::RESUMEN_MEDICO) {

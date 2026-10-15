@@ -7,6 +7,7 @@ use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -257,6 +258,13 @@ final class DocumentosPorCita
         //    tiene párrafos de texto libre (su modo «Plantillas» es otro DataWindow que la web no imprime).
         $this->marcarEstudio($conAlgo, DB::table('ultra_mama')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
             EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+
+        //  - informe del eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5: su clave también es
+        //    `historia` + `consulta` y su ficha es tan corta como la del mamario (sólo la fecha). Es una
+        //    ecografía abdominal general (la misma tabla la usan cirugía y pediatría) y `prostata`/`vejiga_urina`
+        //    no cuentan: no están en el mapa (son de urología y en ginecología van ocultas).
+        $this->marcarEstudio($conAlgo, DB::table('ultra_abdominal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoAbdominal::columnas(), EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
 
         $ids = [];
         foreach ($atendidas as $cita) {

@@ -19,9 +19,9 @@ use Closure;
  * `TODOS` es la lista de tipos **que existen hoy**, y es el único lugar donde se agregan: un tipo nuevo
  * suma su fila, su mapa del dato, su ViewModel y su parcial `_estudio-<clave>`, sin tocar el contenedor
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
- * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1), el **eco obstétrico del primer
- * trimestre** y el del **2.º/3.er** (WEB-6.2), el **eco Doppler perinatal** y el **ecocardiograma fetal**
- * (WEB-6.3) y el **eco mamario** (WEB-6.4); el ultrasonido abdominal sigue pendiente.
+ * ya dijo qué llegaba con cada tarea. Están **los siete** del ítem 5: el **eco pélvico** (WEB-6.1), el
+ * **eco obstétrico del primer trimestre** y el del **2.º/3.er** (WEB-6.2), el **eco Doppler perinatal** y
+ * el **ecocardiograma fetal** (WEB-6.3), el **eco mamario** y el **eco abdominal** (WEB-6.4).
  *
  * Sin base de datos.
  */
@@ -73,6 +73,19 @@ final class TiposDeEstudio
      */
     public const MAMARIO = 'mamario';
 
+    /**
+     * El **eco abdominal** (WEB-6.4), el séptimo y último del ítem 5: la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:23110`, `dw_67`, con el DataWindow **`d_ultasonido_abdominal`**, que vive en
+     * `fuentes/ventana_consulta/` y no en `datawin_procesos/`, y escribe en `ultra_abdominal`: trampas 102,
+     * 123 y 124) y el estudio propio `w_cargar_visualizar_eco_abdominal`.
+     *
+     * ⚠️ Es una **ecografía abdominal general**: la misma tabla y el mismo DataWindow los usan cirugía y
+     * pediatría.
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const ABDOMINAL = 'abdominal';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -84,6 +97,7 @@ final class TiposDeEstudio
         self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
         self::MAMARIO => ['texto' => 'Eco mamario', 'icono' => 'bi-clipboard2-pulse'],
         self::FETAL => ['texto' => 'Ecocardiograma fetal', 'icono' => 'bi-heart'],
+        self::ABDOMINAL => ['texto' => 'Eco abdominal', 'icono' => 'bi-clipboard2-data'],
     ];
 
     /**

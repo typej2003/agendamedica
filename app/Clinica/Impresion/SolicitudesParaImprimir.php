@@ -9,6 +9,7 @@ use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoMamario;
@@ -98,6 +99,7 @@ final class SolicitudesParaImprimir
         private EcoDoppler $dopplers,
         private EcoCardiogramaFetal $cardiogramasFetales,
         private EcoMamario $mamarios,
+        private EcoAbdominal $abdominales,
         private DoctoresDelMedico $doctores,
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
@@ -212,6 +214,22 @@ final class SolicitudesParaImprimir
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_MAMARIO][1],
                 // Sin los hallazgos ni la conclusión: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del eco mamario',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5: su clave también es
+        // `historia` + `consulta` y su ficha es tan corta como la del mamario (sólo la fecha). Es una
+        // ecografía abdominal general (la misma tabla la usan cirugía y pediatría) y `prostata`/`vejiga_urina`
+        // no cuentan: son de urología y en ginecología van ocultas.
+        $abdominal = $this->abdominales->de($consulta);
+        if ($this->elEcoAbdominalEsDocumento($abdominal)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_ABDOMINAL,
+                'tipo' => DocumentoImpreso::ECO_ABDOMINAL,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_ABDOMINAL][1],
+                // Sin los hallazgos ni las conclusiones: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del eco abdominal',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -407,6 +425,14 @@ final class SolicitudesParaImprimir
 
             return $this->elEcoMamarioEsDocumento($estudio)
                 ? $this->ecoMamario($paciente, $estudio, $fechaDeLaConsulta, $registros)
+                : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_ABDOMINAL) {
+            $estudio = $this->abdominales->de($consulta);
+
+            return $this->elEcoAbdominalEsDocumento($estudio)
+                ? $this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros)
                 : null;
         }
 
@@ -1324,6 +1350,94 @@ final class SolicitudesParaImprimir
     }
 
     /**
+     * **El informe del eco abdominal** (WEB-6.4): la hoja «ULTRASONIDO ABDOMINAL» del escritorio
+     * (`d_ultasonido_abdominal_print`, su título en `:37`), con los datos de su detalle **en el orden de la
+     * fuente**: el **transductor** y el **referido por** (los dos del encabezado), los hallazgos de cada
+     * **órgano** (hígado, vesícula biliar, porta y colédoco, páncreas y los dos riñones), los **cuatro
+     * desplegables** (el volumen residual, la ascitis, el retroperitoneo y los vasos), las **observaciones**
+     * (la columna `otros`, que la hoja rotula así) y las **conclusiones**.
+     *
+     * Los dos primeros son datos cortos (van juntos, sin partirse) y el resto va con su rótulo, como se
+     * escriben. Un dato sin valor no se imprime.
+     *
+     * El referido guarda la **cédula** del colega y la hoja imprime su nombre (el `displaycolumn` de su
+     * `dddw`); si el catálogo ya no lo tiene, se muestra la cédula en vez de inventar un nombre.
+     *
+     * ⚠️ **`puro_texto` no se imprime**: el modo «Plantillas» del escritorio es **otro** DataWindow de
+     * impresión (`d_ultasonido_abdominal_print_puro`), que la web no imprime —lo muestra en la pantalla y
+     * nada más—. Y **`prostata` y `vejiga_urina` tampoco**: son de urología y en ginecología van ocultas en
+     * el formulario y en la hoja del escritorio (`visible="0"`).
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico, para resolver el referido
+     */
+    private function ecoAbdominal(Paciente $paciente, EstudioEcografico $estudio, string $fecha, array $registros): DocumentoImpreso
+    {
+        $datos = [];
+
+        // Los dos datos cortos del encabezado, en el orden del DataWindow de impresión (el transductor y el
+        // referido por van en la misma franja; primero el transductor, como su x).
+        $referido = $estudio->valor(EcoAbdominal::COLUMNA_REFERIDO);
+        $medico = $referido === null ? null : $this->doctores->porCedula($registros, (int) $referido);
+
+        foreach ([
+            'Transductor' => $estudio->valor('transductor'),
+            'Referido por' => $referido === null
+                ? null
+                : (string) ($medico->nombre ?? ('Médico ' . $referido)),
+        ] as $etiqueta => $valor) {
+            if ($valor !== null && $valor !== '') {
+                $datos[] = ['etiqueta' => $etiqueta . ':', 'valor' => (string) $valor];
+            }
+        }
+
+        $parrafos = [];
+
+        // Los seis órganos, cada uno con su rótulo en su propia línea (son textos largos).
+        foreach ([
+            'higado' => 'Hígado:',
+            'vesicula_bilial' => 'Vesícula biliar:',
+            'porta_coledoco' => 'Porta y colédoco:',
+            'pancreas' => 'Páncreas:',
+            'rinon_derecho' => 'Rinón derecho:',
+            'rinon_izquierdo' => 'Rinón izquierdo:',
+        ] as $columna => $etiqueta) {
+            foreach (DocumentoImpreso::parrafosDe($estudio->valor($columna), $etiqueta, true) as $parrafo) {
+                $parrafos[] = $parrafo;
+            }
+        }
+
+        // Los cuatro desplegables, en el orden del DataWindow, con su código traducido (Si→Sí, No→No,
+        // Normal/Anormal tal cual). Son cortos: van con el rótulo en la misma línea.
+        foreach ([
+            'vol_res_v_p_m' => 'Volumen residual vesical Post-Micción:',
+            'ascitis' => 'Ascitis:',
+            'retroperitoneo' => 'Retroperitoneo:',
+            'vasos_sanguineos' => 'Vasos sanguíneos:',
+        ] as $columna => $etiqueta) {
+            $this->sumarParrafo($parrafos, $etiqueta, EcoAbdominal::textoDe($columna, $estudio->valor($columna)));
+        }
+
+        // Las dos áreas del final: la pantalla rotula `otros` como «Otros» y la hoja como «Observaciones»,
+        // como pide su DataWindow de impresión.
+        foreach (['otros' => 'Observaciones:', 'conclusiones' => 'Conclusiones:'] as $columna => $etiqueta) {
+            foreach (DocumentoImpreso::parrafosDe($estudio->valor($columna), $etiqueta, true) as $parrafo) {
+                $parrafos[] = $parrafo;
+            }
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_ABDOMINAL,
+            DocumentoImpreso::ECO_ABDOMINAL,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_ABDOMINAL][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_ABDOMINAL][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $datos,
+            $parrafos,
+        );
+    }
+
+    /**
      * El texto de cada campo de un bloque del ecocardiograma fetal que tenga dato: "DBP: 25 mm", "PLACENTA:
      * Anterior", "GRADO: II / III". El rótulo y —en los desplegables— la traducción del código salen del mapa;
      * la unidad y el sufijo, del campo.
@@ -1389,6 +1503,21 @@ final class SolicitudesParaImprimir
     {
         return QueEsUnDocumento::ecografia(
             $this->camposDelEstudioConDato($estudio, EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN),
+        );
+    }
+
+    /**
+     * ¿El eco abdominal dice algo? Su ficha es tan corta como la del mamario —**sólo la fecha**—, así que no
+     * cuenta una columna. Tampoco cuenta el informe en texto libre del escritorio (`puro_texto`): la hoja del
+     * abdominal no tiene párrafos de texto libre —su modo «Plantillas» es otro DataWindow de impresión
+     * (`d_ultasonido_abdominal_print_puro`), que la web no imprime—, así que una fila que sólo trae ese texto
+     * no ofrece un informe vacío. `prostata` y `vejiga_urina` no están en el mapa (son de urología): no
+     * cuentan ni se imprimen.
+     */
+    private function elEcoAbdominalEsDocumento(EstudioEcografico $estudio): bool
+    {
+        return QueEsUnDocumento::ecografia(
+            $this->camposDelEstudioConDato($estudio, EcoAbdominal::columnas(), EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN),
         );
     }
 

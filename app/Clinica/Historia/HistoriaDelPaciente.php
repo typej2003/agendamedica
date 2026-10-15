@@ -3,6 +3,7 @@
 namespace App\Clinica\Historia;
 
 use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoMamario;
@@ -475,6 +476,27 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // El informe del eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5, con la misma vara:
+        // algún campo del estudio —su ficha es sólo la fecha—. Su `puro_texto` **no** cuenta (su modo
+        // «Plantillas» es otro DataWindow que la web no imprime) y `prostata`/`vejiga_urina` tampoco (son de
+        // urología y en ginecología van ocultas: no están en el mapa del dato).
+        foreach ($this->abdominales($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco abdominal',
+                'bi-clipboard2-data',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco abdominal',
+                null,
+                null,
+                DocumentoImpreso::ECO_ABDOMINAL,
+            ));
+        }
+
         // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. El
         // texto vive en la **consulta** (su columna de `consultas`, que es la que imprime la hoja), así que se
         // recorre por consulta; las otras dos solapas de texto no tienen hoja.
@@ -808,9 +830,32 @@ final class HistoriaDelPaciente
     }
 
     /**
+     * Los informes de **eco abdominal** de la historia (WEB-6.4), por número de consulta: cuántos campos del
+     * estudio traen dato, sin contar la fecha (que es su única ficha). La lista de columnas sale del mapa del
+     * dato, así que una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `ultra_abdominal` es **`historia` + `consulta`**, como la de los otros ecos del ítem 5, y
+     * su DataWindow vivo (`d_ultasonido_abdominal`) no se llama como la tabla (trampas 102, 123 y 124). Es una
+     * ecografía abdominal general (la misma tabla la usan cirugía y pediatría). Su `puro_texto` **no** cuenta y
+     * `prostata`/`vejiga_urina` tampoco: no están en el mapa (son de urología y en ginecología van ocultas).
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function abdominales(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla(
+            EcoAbdominal::TABLA,
+            EcoAbdominal::columnas(),
+            EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN,
+            $regMedico,
+            $numero,
+        );
+    }
+
+    /**
      * Cuántos campos del estudio traen dato en cada fila de una tabla de eco llaveada por `historia` +
-     * `consulta`, indexado por el número de consulta. Es la lectura de conjunto que comparten los tres ecos del
-     * ítem 5 que no son el pélvico (los dos obstétricos y el ecocardiograma fetal).
+     * `consulta`, indexado por el número de consulta. Es la lectura de conjunto que comparten los cuatro ecos
+     * del ítem 5 que no son el pélvico (los dos obstétricos, el ecocardiograma fetal y el abdominal).
      *
      * @param  array<int,string>  $columnas
      * @param  array<int,string>  $noCuentan

@@ -1,6 +1,6 @@
 {{-- El estudio ecográfico de la consulta (WEB-6.1, ítem 5 del panel del legado): el contenedor de los
-     siete estudios del ítem, de los que hoy existen cinco (el eco pélvico, los dos obstétricos, el Doppler
-     perinatal y el ecocardiograma fetal).
+     siete estudios del ítem, que ya existen todos (el eco pélvico, los dos obstétricos, el Doppler
+     perinatal, el ecocardiograma fetal, el mamario y el abdominal).
 
      Cada tipo es un enlace de la misma sección (`?seccion=estudio&tipo=ginecologico`), no JavaScript, y
      tiene su propio parcial `_estudio-<clave>`. Los tipos que todavía no existen no se muestran —el panel

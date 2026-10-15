@@ -94,6 +94,18 @@ final class DocumentoImpreso
     public const ECO_MAMARIO = 'eco-mamario';
 
     /**
+     * El **informe del eco abdominal** (WEB-6.4): la hoja que el escritorio imprime con
+     * `d_ultasonido_abdominal_print`, cuyo título es «ULTRASONIDO ABDOMINAL» (`:37`). Es una ecografía
+     * abdominal general: la misma tabla (`ultra_abdominal`) y el mismo DataWindow los usan cirugía y
+     * pediatría, y su clave es `historia` + `consulta`.
+     *
+     * ⚠️ **El escritorio NO tiene un formato en blanco para este estudio**: el panel
+     * `miconsultat/w_panel_impresion_formatos.srw` lista seis formatos y el abdominal no está entre ellos. Por
+     * eso `FormatosEnBlanco` **no** lo ofrece (no es un olvido: es lo que la fuente tiene).
+     */
+    public const ECO_ABDOMINAL = 'eco-abdominal';
+
+    /**
      * **El informe de la colposcopía** (WEB-6.5): la hoja del examen colposcópico del escritorio
      * (`d_colposcopia_1` / `d_colposcopia_2`, cuyo título es «INFORME DE COLPOSCOPÍA», `:25` y `:26`). Su
      * cuerpo es **el texto de `consultas.observaciones`** y el escritorio le anexa las fotos del examen
@@ -152,6 +164,9 @@ final class DocumentoImpreso
         // El del eco mamario, tal cual el DataWindow de impresión del escritorio
         // (`d_ultasonido_mamas_print.srd:26`).
         self::ECO_MAMARIO => ['ULTRASONIDO DE MAMAS', 'Eco mamario'],
+        // El del eco abdominal, tal cual el DataWindow de impresión del escritorio
+        // (`d_ultasonido_abdominal_print.srd:37`).
+        self::ECO_ABDOMINAL => ['ULTRASONIDO ABDOMINAL', 'Eco abdominal'],
         // El del informe de colposcopía, tal cual el DataWindow del escritorio (`d_colposcopia_1.srd:25`).
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).

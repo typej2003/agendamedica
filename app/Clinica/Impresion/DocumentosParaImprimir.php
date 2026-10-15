@@ -35,6 +35,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::ECO_DOPPLER => 'bi-soundwave',
         DocumentoImpreso::ECO_CARDIOGRAMA_FETAL => 'bi-heart',
         DocumentoImpreso::ECO_MAMARIO => 'bi-clipboard2-pulse',
+        DocumentoImpreso::ECO_ABDOMINAL => 'bi-clipboard2-data',
         DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
         DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',

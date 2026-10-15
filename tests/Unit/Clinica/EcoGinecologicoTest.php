@@ -133,15 +133,15 @@ class EcoGinecologicoTest extends TestCase
 
     /**
      * El registro de tipos: los que ya existen (el ginecológico de WEB-6.1, los dos obstétricos de WEB-6.2, el
-     * Doppler perinatal y el ecocardiograma fetal de WEB-6.3 y el mamario de WEB-6.4), y un valor raro cae al
-     * que existe.
+     * Doppler perinatal y el ecocardiograma fetal de WEB-6.3 y el mamario y el abdominal de WEB-6.4: los
+     * **siete** del ítem 5), y un valor raro cae al que existe.
      *
      * ⚠️ Este test fija la **lista**, así que encender un tipo lo rompe: es el mismo caso de la trampa 96 (hay
      * aserciones de listas que no se ven en una búsqueda del contador del panel).
      */
     public function test_el_registro_de_tipos_tiene_los_que_existen_y_un_valor_raro_cae_al_primero(): void
     {
-        $this->assertSame(['ginecologico', 'obstetrico', 'tercero', 'doppler', 'mamario', 'fetal'], TiposDeEstudio::claves());
+        $this->assertSame(['ginecologico', 'obstetrico', 'tercero', 'doppler', 'mamario', 'fetal', 'abdominal'], TiposDeEstudio::claves());
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar('inventado'));
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar(null));
         $this->assertTrue(TiposDeEstudio::existe('ginecologico'));
@@ -152,10 +152,13 @@ class EcoGinecologicoTest extends TestCase
         $this->assertTrue(TiposDeEstudio::existe('mamario'));
         // La del ecocardiograma fetal, también: `fetal` y no `eco-fetal`.
         $this->assertTrue(TiposDeEstudio::existe('fetal'));
+        // Y la del abdominal, el séptimo y último: `abdominal` y no `eco-abdominal`.
+        $this->assertTrue(TiposDeEstudio::existe('abdominal'));
         $this->assertSame('Eco ginecológico', TiposDeEstudio::texto('ginecologico'));
         $this->assertSame('Eco obstétrico (1.er trimestre)', TiposDeEstudio::texto('obstetrico'));
         $this->assertSame('Eco Doppler perinatal', TiposDeEstudio::texto('doppler'));
         $this->assertSame('Eco mamario', TiposDeEstudio::texto('mamario'));
         $this->assertSame('Ecocardiograma fetal', TiposDeEstudio::texto('fetal'));
+        $this->assertSame('Eco abdominal', TiposDeEstudio::texto('abdominal'));
     }
 }

@@ -47,7 +47,8 @@ final class SeccionDeEstudioVista
     public function ayuda(): string
     {
         return 'Los estudios ecográficos de la consulta. Cada uno se carga en su formulario, se guarda con '
-            . 'su botón y se imprime en media hoja con el membrete de tu consultorio. El estudio que falta '
-            . '(el abdominal) llega con la tarea siguiente de F6.';
+            . 'su botón y se imprime en media hoja con el membrete de tu consultorio. Los siete del ítem 5 '
+            . 'están: el ginecológico, los dos obstétricos, el Doppler, el mamario, el abdominal y el '
+            . 'ecocardiograma fetal.';
     }
 }

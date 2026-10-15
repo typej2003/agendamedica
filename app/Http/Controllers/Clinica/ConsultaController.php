@@ -12,6 +12,7 @@ use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\EvolucionDeLaConsulta;
 use App\Clinica\Consulta\FurDelControlPrenatal;
@@ -39,6 +40,7 @@ use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\EcoCardiogramaFetalVista;
+use App\Clinica\Consulta\Vistas\EcoAbdominalVista;
 use App\Clinica\Consulta\Vistas\EcoDopplerVista;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EcoMamarioVista;
@@ -163,6 +165,7 @@ class ConsultaController extends Controller
         InformePrenatal $informePrenatal,
         ResumenMedicoDeLaConsulta $resumenes,
         EcoMamario $ecoMamario,
+        EcoAbdominal $ecoAbdominal,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -212,7 +215,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $doctores),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $ecoAbdominal, $doctores),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -275,6 +278,7 @@ class ConsultaController extends Controller
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
         EcoMamario $ecoMamario,
+        EcoAbdominal $ecoAbdominal,
         DoctoresDelMedico $doctores,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
@@ -440,6 +444,29 @@ class ConsultaController extends Controller
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_MAMARIO]),
+                        $doctores->delCatalogo($this->registrosDelMedico($medico))
+                            ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
+                            ->all(),
+                        (array) old(),
+                    ),
+                );
+            }
+
+            // El eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5: su mapa, su tabla llaveada por
+            // `historia` + `consulta` y su propio parcial. Es una ecografía abdominal general (la misma tabla
+            // y el mismo DataWindow los usan cirugía y pediatría). Comparte con el mamario el desplegable de
+            // médicos (`referido`) y la ficha corta (sólo la fecha); sus otros cuatro desplegables son códigos
+            // del DataWindow y salen del mapa. `prostata` y `vejiga_urina` no se ofrecen: son de urología y en
+            // ginecología van ocultas.
+            if ($tipo === TiposDeEstudio::ABDOMINAL) {
+                return new SeccionDeEstudioVista(
+                    $tipo,
+                    $tipos,
+                    new EcoAbdominalVista(
+                        $ecoAbdominal->de($consulta),
+                        route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                        route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_ABDOMINAL]),
                         $doctores->delCatalogo($this->registrosDelMedico($medico))
                             ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
                             ->all(),
