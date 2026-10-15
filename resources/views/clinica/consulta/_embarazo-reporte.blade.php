@@ -28,7 +28,7 @@
             </p>
         @else
         @if (count($vm->gestas()) > 1)
-            <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
+            <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
         @endif
 
         {{-- La ficha de la gesta, como sale en la hoja. --}}

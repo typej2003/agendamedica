@@ -27,7 +27,7 @@
 @if ($editor === null)
     {{-- ------------------------------------------------------------------------------------ La lista --}}
     {{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. --}}
-    <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
 
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">

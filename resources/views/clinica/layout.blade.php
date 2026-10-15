@@ -153,6 +153,7 @@
 </div>
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
+<script src="{{ asset('js/clinica/chips.js') }}"></script>
 
 {{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido: así el
      HTML de la vista queda solo el HTML. --}}

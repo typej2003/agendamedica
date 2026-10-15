@@ -23,7 +23,7 @@
 
         {{-- Las gestas de la historia: la que se está mirando se elige con un enlace, como las pestañas. --}}
         @if (! $vm->sinGestas())
-            <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
+            <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
         @else
             <p class="texto-tenue small mb-3">
                 Esta historia todavía no tiene ninguna gesta. Cargá la primera con su FUR y guardala.

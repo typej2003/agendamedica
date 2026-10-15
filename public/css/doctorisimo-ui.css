@@ -2915,3 +2915,47 @@ body.auth-pagina {
     .listados-tabla-ancha { overflow-x: visible; }
     .listados-tabla-ancha td.celda-principal { min-width: 0; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Chips de navegación (WEB-11.1): reemplazan las pestañas que se envolvían. Una sola fila que se desplaza
+   en horizontal cuando no entran; el elegido resaltado. Sin barra de desplazamiento visible pero usable con
+   rueda, dedo y teclado (cada chip es un enlace enfocable).
+   --------------------------------------------------------------------------------------------------------- */
+.chips {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding-bottom: .25rem;
+}
+.chips-lista {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: .4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.chip-opcion {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 .9rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: 999px;
+    background: var(--ds-superficie);
+    color: var(--ds-texto-2);
+    font-size: .875rem;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.chip-opcion:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.chip-opcion.activo {
+    background: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 600;
+}
+@media (max-width: 575.98px) {
+    .chip-opcion { min-height: 40px; }
+}
