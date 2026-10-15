@@ -150,7 +150,39 @@ final class ConsultaShellVista
         // sólo se decide qué se muestra (la guía de UI: el estado se ve, no se lee).
         private ?string $urlTerminar = null,
         private bool $terminable = false,
+        // El navegador 1…N (WEB-11.5): las consultas de la misma historia, `[id, nroconsulta, fecha, url]`, y la actual.
+        private array $consultasDelPaciente = [],
+        private ?int $consultaActual = null,
     ) {
+    }
+
+    /**
+     * **El navegador entre las consultas del paciente** (WEB-11.5): un chip por consulta (el número), la actual marcada. El enlace
+     * conserva la sección abierta, para cambiar de consulta sin perder el ítem en el que se estaba.
+     *
+     * @return array<int,array{texto:string, url:string, activa:bool}>
+     */
+    public function navegador(): array
+    {
+        if (count($this->consultasDelPaciente) < 2) {
+            return [];
+        }
+
+        return array_map(function (array $consulta) {
+            $url = $consulta['url'] . ($this->seccion ? '?seccion=' . urlencode($this->seccion) : '');
+
+            return [
+                'texto' => (string) $consulta['nroconsulta'],
+                'url' => $url,
+                'activa' => (int) $consulta['id'] === $this->consultaActual,
+            ];
+        }, $this->consultasDelPaciente);
+    }
+
+    /** ¿Hay más de una consulta en la historia? (Con una sola, el navegador no se pinta.) */
+    public function hayNavegador(): bool
+    {
+        return count($this->consultasDelPaciente) > 1;
     }
 
     public function nombre(): string

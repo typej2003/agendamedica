@@ -39,6 +39,30 @@
          diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
     <x-ui.errores />
 
+    {{-- La barra de la consulta (WEB-11.5): el navegador 1…N entre las consultas del paciente y, en un lugar fijo, Guardar / Guardar y salir /
+         Salir con el indicador de guardado. Las secciones de texto se guardan solas al pausar la escritura y al cambiar de sección o de
+         consulta (`consulta-barra.js`); las que cargan listas guardan al instante y no necesitan el botón. --}}
+    <div class="consulta-barra" data-consulta-barra data-url-salir="{{ $vm->urlVolver() }}">
+        @if ($vm->hayNavegador())
+            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente">
+                <span class="etiqueta">Consulta</span>
+                <x-ui.chips :opciones="$vm->navegador()" etiqueta="Consultas de este paciente" />
+            </nav>
+        @endif
+        <div class="consulta-barra-acciones">
+            <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar>
+                <i class="bi bi-save" aria-hidden="true"></i> Guardar
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar-salir>
+                <i class="bi bi-box-arrow-left" aria-hidden="true"></i> Guardar y salir
+            </button>
+            <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}" data-barra-salir>
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Salir
+            </a>
+        </div>
+    </div>
+
     <div class="row g-3">
         {{-- El panel de navegación del legado (`w_consulta_principal`): los 13 ítems con su estado. Los que
              todavía no tienen pantalla dicen "Próximamente" y con qué tarea llegan, en vez de ofrecer un
@@ -117,4 +141,6 @@
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
     <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
+    {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
+    <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection

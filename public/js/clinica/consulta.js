@@ -95,7 +95,7 @@
 
         if (!campo) return;
 
-        const guardado = campo.value;
+        let guardado = campo.value;
 
         function sucio() {
             return campo.value !== guardado;
@@ -106,6 +106,12 @@
         }
 
         campo.addEventListener('input', pintarAviso);
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que el texto ya quedó guardado: ese es el nuevo punto de partida.
+        formulario.addEventListener('consulta:guardado', function () {
+            guardado = campo.value;
+            pintarAviso();
+        });
 
         // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder el texto.
         const cancelar = formulario.querySelector('a[href]');

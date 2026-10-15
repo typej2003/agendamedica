@@ -3034,6 +3034,28 @@ body.auth-pagina {
 .dos-listas-fila[data-pasar] { cursor: pointer; }
 .dos-listas-fila[data-pasar]:hover { background: var(--ds-violeta-50); }
 .dos-listas-fila-texto { overflow-wrap: anywhere; }
-@media (max-width: 991.98px) {
+/* El área de la consulta no es ancha (el panel de secciones ocupa un tercio): hasta 1399 px las dos listas se apilan. */
+@media (max-width: 1399.98px) {
     .dos-listas { grid-template-columns: minmax(0, 1fr); }
 }
+.dos-listas-fila .btn { flex-shrink: 0; white-space: nowrap; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   La barra de la consulta (WEB-11.5): navegador 1…N + Guardar / Guardar y salir / Salir
+   --------------------------------------------------------------------------------------------------------- */
+.consulta-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    margin-bottom: 1rem;
+    padding: .5rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+}
+.consulta-barra-navegador { display: flex; align-items: center; gap: .6rem; min-width: 0; flex: 1 1 14rem; }
+.consulta-barra-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-left: auto; }
+.consulta-barra-estado { min-width: 6.5rem; text-align: right; }
+.consulta-barra-estado.es-error { color: var(--ds-peligro); font-weight: 600; }

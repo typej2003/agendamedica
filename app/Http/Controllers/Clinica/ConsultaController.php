@@ -209,6 +209,13 @@ class ConsultaController extends Controller
                 // La bandera sale de acá y no de la vista (guía de arquitectura: el rol y el estado no se
                 // consultan en el Blade).
                 $this->esDeHoy($dia) && $this->hayCitaTerminable($consulta, $dia, (int) $paciente->id, $citas),
+                // El navegador 1…N entre las consultas de la historia (WEB-11.5).
+                $this->consultas->delPaciente($consulta)->map(fn ($fila) => [
+                    'id' => $fila->id,
+                    'nroconsulta' => $fila->nroconsulta,
+                    'url' => route('clinica.consulta', $fila->id),
+                ])->all(),
+                (int) $consulta->id,
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**

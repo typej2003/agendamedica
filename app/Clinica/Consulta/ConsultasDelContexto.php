@@ -76,6 +76,27 @@ final class ConsultasDelContexto
     }
 
     /**
+     * **Las consultas de la misma historia** (WEB-11.5, el navegador 1…N): el número de cada una, en orden. Es la misma vara que la
+     * consulta —el `reg_medico` del contexto y el mismo `numhistoria`—, así que no se ve ninguna que la pantalla no abriría.
+     *
+     * @return \Illuminate\Support\Collection<int,object{id:int, nroconsulta:int, fecha:?string}>
+     */
+    public function delPaciente(Consulta $consulta): \Illuminate\Support\Collection
+    {
+        return Consulta::where('reg_medico', $consulta->reg_medico)
+            ->where('numhistoria', $consulta->numhistoria)
+            ->orderBy('nroconsulta')
+            ->orderBy('id')
+            ->get(['id', 'nroconsulta', 'fecha'])
+            ->map(fn (Consulta $fila) => (object) [
+                'id' => (int) $fila->id,
+                'nroconsulta' => (int) $fila->nroconsulta,
+                'fecha' => $fila->fecha ? substr((string) $fila->fecha, 0, 10) : null,
+            ])
+            ->values();
+    }
+
+    /**
      * La fila de `motivo_consulta_paciente` de una consulta, para quitarla. Se exige que cuelgue **de
      * esa** consulta: una fila de otro médico —o de otra consulta del mismo médico— no se toca.
      *

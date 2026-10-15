@@ -21,7 +21,7 @@
     <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="{{ $clave }}-form"
-          data-consulta-plantillas data-aviso="{{ $seccion->avisoSinGuardar() }}">
+          data-consulta-plantillas data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
         {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo. La histeroscopía no tiene plantillas en el escritorio. --}}

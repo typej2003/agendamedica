@@ -15,7 +15,7 @@
         </x-slot>
 
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="enfermedad-form"
-              data-consulta-enfermedad data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
+              data-consulta-enfermedad data-autoguardar data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
             @csrf
 
             <x-ui.campo etiqueta="Lo que el paciente tiene hoy" for="enfermedadactual"

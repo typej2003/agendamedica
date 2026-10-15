@@ -20,7 +20,7 @@
         </x-slot>
 
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="evolucion-form"
-              data-consulta-evolucion data-aviso="{{ $seccion->avisoSinGuardar() }}">
+              data-consulta-evolucion data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
 
             {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo: buscador, lista y «Guardar como plantilla». --}}
