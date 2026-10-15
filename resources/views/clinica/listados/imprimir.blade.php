@@ -28,7 +28,9 @@
         </dl>
     </header>
 
-    @if ($vm->estaVacio())
+    @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
+        @include('clinica.listados._imprimir-pacientes')
+    @elseif ($vm->estaVacio())
         <p class="sin-datos">No hay embarazos que cumplan estos filtros.</p>
     @else
         <table>

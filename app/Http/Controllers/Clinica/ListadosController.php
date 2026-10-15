@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Listados\EmbarazosEntreFechas;
 use App\Clinica\Listados\FiltroDeEmbarazos;
+use App\Clinica\Listados\FiltroDePacientesPorRango;
 use App\Clinica\Listados\ListadosDisponibles;
+use App\Clinica\Listados\PacientesPorRango;
 use App\Clinica\Listados\Vistas\ListadoDeEmbarazosVista;
+use App\Clinica\Listados\Vistas\ListadoDePacientesVista;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -37,6 +40,7 @@ class ListadosController extends Controller
 {
     public function __construct(
         private EmbarazosEntreFechas $embarazos,
+        private PacientesPorRango $pacientes,
         private CatalogoDeSeguros $seguros,
     ) {
     }
@@ -73,11 +77,16 @@ class ListadosController extends Controller
      *
      * @param  array{medico:object, reg_medico:string, office:object, specialty:object}  $contexto
      */
-    private function vista(Request $request, array $contexto): ListadoDeEmbarazosVista
+    private function vista(Request $request, array $contexto): ListadoDeEmbarazosVista|ListadoDePacientesVista
     {
-        // La clave del listado viaja en la dirección para que la parametrización esté puesta desde ahora;
-        // una que no exista vuelve al de por defecto en vez de mostrar una pantalla a medias.
+        // La clave del listado viaja en la dirección; una que no exista vuelve al de por defecto en vez de
+        // mostrar una pantalla a medias. Cada listado arma su filtro, su lectura y su ViewModel.
         $clave = ListadosDisponibles::normalizar($request->query('listado'));
+
+        if ($clave === ListadosDisponibles::PACIENTES) {
+            return $this->pacientesPorRango($request, $contexto, $clave);
+        }
+
         $filtro = FiltroDeEmbarazos::de($request->query(), FechaDelConsultorio::hoy());
 
         return new ListadoDeEmbarazosVista(
@@ -89,6 +98,27 @@ class ListadosController extends Controller
             route('clinica.listados'),
             route('clinica.listados.imprimir', $request->query()),
             // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
+            fn (int $paciente) => route('clinica.pacientes.ver', $paciente),
+            $clave,
+        );
+    }
+
+    /**
+     * El listado de pacientes por rango (*Indicadores pacientes* del escritorio): los pacientes del médico
+     * ingresados entre dos fechas, con los filtros de edad, sexo, estado civil y procedencia.
+     *
+     * @param  array{medico:object, reg_medico:string, office:object, specialty:object}  $contexto
+     */
+    private function pacientesPorRango(Request $request, array $contexto, string $clave): ListadoDePacientesVista
+    {
+        $filtro = FiltroDePacientesPorRango::de($request->query(), FechaDelConsultorio::hoy());
+
+        return new ListadoDePacientesVista(
+            $this->pacientes->filas($contexto['reg_medico'], $filtro),
+            $filtro,
+            $this->seguros->de($contexto['reg_medico']),
+            route('clinica.listados', ['listado' => $clave]),
+            route('clinica.listados.imprimir', $request->query()),
             fn (int $paciente) => route('clinica.pacientes.ver', $paciente),
             $clave,
         );

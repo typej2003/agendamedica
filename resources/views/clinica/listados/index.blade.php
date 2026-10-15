@@ -3,9 +3,9 @@
 @section('titulo', 'Listados')
 
 @section('contenido')
-    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy muestra el listado de embarazos / partos —el
-         *Listado de Partos* del escritorio— y la pantalla es la misma para los otros dos listados de la
-         tarea: el título y las columnas salen del ViewModel. Es de sólo lectura: no hay alta, y lo único
+    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy están el listado de embarazos / partos —el
+         *Listado de Partos* del escritorio— y el de pacientes por rango —*Indicadores pacientes*—: la pantalla
+         es la misma y el título sale del ViewModel. Es de sólo lectura: no hay alta, y lo único
          que se hace con el resultado es imprimirlo. --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
@@ -16,6 +16,23 @@
             @endunless
         </x-slot>
     </x-ui.page-head>
+
+    {{-- El selector de listados: la entrada del menú es una sola, así que los listados se cambian acá. --}}
+    @php
+        $claveActual = $vm->claveDelListado();
+        $listados = collect(\App\Clinica\Listados\ListadosDisponibles::claves())->map(fn ($clave) => [
+            'texto'  => \App\Clinica\Listados\ListadosDisponibles::titulo($clave),
+            'url'    => route('clinica.listados', ['listado' => $clave]),
+            'activa' => $clave === $claveActual,
+        ])->all();
+    @endphp
+    <x-ui.segmentado class="mb-3" :opciones="$listados" etiqueta="Listados" />
+
+    {{-- Cada listado trae sus filtros y su tabla: el de pacientes por rango vive en su parcial; el de
+         embarazos / partos, que es el de por defecto, sigue acá abajo. --}}
+    @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
+        @include('clinica.listados._pacientes')
+    @else
 
     {{-- Los filtros van en la barra de herramientas y no en el encabezado (guía de UI §3). Los campos son los
          del reporte del escritorio: el rango de fechas (que es de **FPP**, como el legado), las edades y el
@@ -133,4 +150,5 @@
             <i class="bi bi-info-circle" aria-hidden="true"></i> {{ $vm->notaDeProcedencia() }}
         </p>
     @endunless
+    @endif
 @endsection

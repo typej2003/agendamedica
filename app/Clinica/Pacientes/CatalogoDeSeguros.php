@@ -21,6 +21,12 @@ use Illuminate\Support\Facades\DB;
  */
 final class CatalogoDeSeguros
 {
+    /**
+     * El código de **PERSONAL**: el paciente que se atiende por su cuenta (el default del alta del
+     * escritorio, `w_agregar_pacientes.srw:378`). No se muestra como si fuera una empresa.
+     */
+    public const PERSONAL = '00';
+
     /** @return Collection<int,object> filas con `codesegemp` y `nombre`, ordenadas por nombre */
     public function de(string $regMedico): Collection
     {
@@ -58,5 +64,30 @@ final class CatalogoDeSeguros
         $nombre = $catalogo->firstWhere('codesegemp', $codigo)?->nombre;
 
         return $nombre !== null ? trim((string) $nombre) : null;
+    }
+
+    /**
+     * **El texto que muestra un listado** en su columna de empresa/procedencia, a partir del catálogo ya
+     * leído: el nombre del catálogo si está, y **el código tal cual** si no —un catálogo que todavía no bajó
+     * no puede hacer desaparecer el dato—. El código `00` (PERSONAL) y el vacío devuelven `null`, que la
+     * pantalla pinta con `—`: es la misma regla que ya usan la ficha (`FichaDePacienteVista::seguro()`) y el
+     * listado de embarazos, escrita una sola vez para los listados entre fechas.
+     *
+     * Es `static` porque los ViewModels ya tienen el catálogo en la mano y no necesitan la lectura por
+     * `reg_medico` (`de()`); así los dos listados resuelven la procedencia sin volver a la base.
+     *
+     * @param  Collection<int,object>  $catalogo
+     */
+    public static function paraMostrar(Collection $catalogo, ?string $codesegemp): ?string
+    {
+        $codigo = trim((string) $codesegemp);
+
+        if ($codigo === '' || $codigo === self::PERSONAL) {
+            return null;
+        }
+
+        $nombre = trim((string) ($catalogo->firstWhere('codesegemp', $codigo)?->nombre ?? ''));
+
+        return $nombre !== '' ? $nombre : $codigo;
     }
 }

@@ -12,11 +12,10 @@ namespace App\Clinica\Listados;
  * reúne en el mismo módulo (`app/Clinica/Listados/`, sus ViewModels en `Vistas/` y las vistas en
  * `resources/views/clinica/listados/`).
  *
- * **Hoy está el primero**: *Embarazos / partos* (el *Listado de Partos* del escritorio). Los otros dos
- * listados del alcance de WEB-6.8 entran acá —una clave cada uno, con su lectura y su ViewModel— sin
- * tocar la ruta ni la pantalla:
+ * **Hoy están dos**: *Embarazos / partos* (el *Listado de Partos* del escritorio) y *Pacientes por rango* (el
+ * *Indicadores pacientes* del escritorio, `w_reprotes_pacientes.srw`). El tercero del alcance de WEB-6.8 entra
+ * acá —una clave más, con su lectura y su ViewModel— sin tocar la ruta ni la pantalla:
  *
- *  - *pacientes por rango*: los pacientes ingresados entre dos fechas (`pacientes.fingreso`);
  *  - *consultas por rango*: las consultas de la historia entre dos fechas.
  *
  * Una clave que no esté en la lista vuelve al listado por defecto en vez de mostrar una pantalla a medias,
@@ -29,6 +28,12 @@ final class ListadosDisponibles
     public const EMBARAZOS = 'embarazos';
 
     /**
+     * El listado de pacientes ingresados entre dos fechas: los *Indicadores pacientes* del escritorio
+     * (`w_reprotes_pacientes.srw`).
+     */
+    public const PACIENTES = 'pacientes-por-rango';
+
+    /**
      * Las claves con pantalla, en el orden en que se ofrecen: `clave => título de la pantalla`.
      *
      * ⚠️ Agregar una acá **no alcanza**: cada listado necesita su lectura y su ViewModel. El título es el
@@ -36,6 +41,7 @@ final class ListadosDisponibles
      */
     private const LISTADOS = [
         self::EMBARAZOS => 'Embarazos y partos',
+        self::PACIENTES  => 'Pacientes por rango',
     ];
 
     /** El listado que se muestra cuando no se pidió ninguno. */
