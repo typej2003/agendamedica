@@ -10,7 +10,6 @@
      `data-*` de este formulario: la vista no lleva JS ni estilos. --}}
 @php
     $estado = $seccion->estado();
-    $vacio = $seccion->sinPlantillas();
 @endphp
 
 <div class="consulta-seccion" id="consulta-evolucion">
@@ -24,30 +23,18 @@
               data-consulta-evolucion data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
 
-            {{-- Las plantillas del escritorio, como fichas en una fila encima del campo: no le quitan ancho al
-                 texto. Sin plantillas no se pinta nada aquí; el aviso de abajo lo dice en una línea. --}}
-            @if ($seccion->hayPlantillas())
-                <div class="mb-3">
-                    <p class="etiqueta mb-2">Plantillas <span class="texto-tenue small fw-normal">· al elegir una se copia en el campo y la puedes editar antes de guardar</span></p>
-                    <ul class="evolucion-plantillas">
-                        @foreach ($seccion->plantillas() as $plantilla)
-                            <li>
-                                <button type="button" class="evolucion-plantilla"
-                                        data-evolucion-plantilla="{{ $plantilla['texto'] }}"
-                                        title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                                    <i class="bi bi-files" aria-hidden="true"></i>
-                                    <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
+            {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo: buscador, lista y «Guardar como plantilla». --}}
+            <div class="row g-3">
+                <div class="col-12 col-xl-8">
+                    <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion" :ayuda="$seccion->ayuda()">
+                        <textarea name="evolucion" id="evolucion" class="form-control" rows="12"
+                                  placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('evolucion', '')) }}</textarea>
+                    </x-ui.campo>
                 </div>
-            @endif
-
-            <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion" :ayuda="$seccion->ayuda()">
-                <textarea name="evolucion" id="evolucion" class="form-control" rows="12"
-                          placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('evolucion', '')) }}</textarea>
-            </x-ui.campo>
+                <div class="col-12 col-xl-4">
+                    <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#evolucion" tipo="EV" nombre="evolución" />
+                </div>
+            </div>
 
             {{-- El aviso de "hay cambios sin guardar" se muestra recién cuando el texto cambió: se
                  controla por `hidden`, que es lo que el script alterna. --}}
@@ -64,12 +51,5 @@
                 </button>
             </div>
         </form>
-
-        @unless ($seccion->hayPlantillas())
-            <p class="texto-tenue small d-flex align-items-start gap-2 mt-3 mb-0">
-                <i class="bi {{ $vacio['icono'] }}" aria-hidden="true"></i>
-                <span><strong>{{ $vacio['titulo'] }}.</strong> {{ $vacio['texto'] }}</span>
-            </p>
-        @endunless
     </x-ui.tarjeta>
 </div>

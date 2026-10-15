@@ -42,20 +42,7 @@
             </div>
 
             <div class="col-12 col-xl-4">
-                @if ($vm->hayPlantillas())
-                    <p class="etiqueta mb-2">Plantillas</p>
-                    <ul class="evolucion-plantillas mb-3">
-                        @foreach ($vm->plantillas() as $plantilla)
-                            <li>
-                                <button type="button" class="evolucion-plantilla" data-copiar-a="#informe-descripcion"
-                                        data-texto="{{ $plantilla['texto'] }}" title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                                    <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                                    <span class="texto-tenue small">Copiar en el campo</span>
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM" nombre="informe" class="mb-3" />
 
                 <p class="etiqueta mb-2">Informes anteriores del paciente</p>
                 @if ($vm->hayAnteriores())

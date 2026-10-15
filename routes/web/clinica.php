@@ -30,6 +30,7 @@ use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaTextoDelExamenController;
+use App\Http\Controllers\Clinica\PlantillaDeTextoController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
@@ -162,6 +163,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+
+                // «Guardar como plantilla» desde cualquier sección de texto de la consulta (WEB-11.2): JSON, sin recargar.
+                Route::post('/plantillas-de-texto', [PlantillaDeTextoController::class, 'guardar'])->name('plantillas.guardar');
 
                 // El contenido de las dos primeras secciones (WEB-4.2), que se abre **dentro** del shell
                 // con `?seccion=`. Son acciones —escriben— y por eso viven en controladores propios

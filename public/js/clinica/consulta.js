@@ -549,53 +549,20 @@
 
     // ------------------------------------------------------------------- Evolución (WEB-4.6)
 
-    // El mismo aviso de texto clínico que la enfermedad actual y, además, las plantillas del escritorio:
-    // cada botón copia su texto en el campo. `avisoDeTexto` engancha el aviso **antes** de que el script
-    // toque el campo, así que el valor de partida es el que pintó el servidor y copiar una plantilla deja el
-    // formulario sucio sin ningún estado extra.
+    // El mismo aviso de texto clínico que la enfermedad actual. Las plantillas las maneja el panel
+    // (`plantillas-panel.js`, WEB-11.2), que dispara `input` al copiar y así deja el formulario sucio.
     const evolucion = document.querySelector('[data-consulta-evolucion]');
 
     if (evolucion) {
         avisoDeTexto(evolucion, 'evolucion-sin-guardar');
-
-        // El `<textarea>`, no el primero que aparezca: la sección tiene un solo campo de texto.
-        const campo = document.getElementById('evolucion');
-
-        evolucion.querySelectorAll('[data-evolucion-plantilla]').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                if (!campo) return;
-
-                // Lo que el doble clic del `dw_84` hace: `mle_evolucion.text = desch`. Se dispara `input`
-                // para que el aviso de cambios sin guardar se entere por el mismo camino que si el médico
-                // hubiera escrito (el listener de `avisoDeTexto`).
-                campo.value = boton.dataset.evolucionPlantilla;
-                campo.dispatchEvent(new Event('input', { bubbles: true }));
-                campo.focus();
-            });
-        });
     }
 
     // ------------------------------------------- Plantillas de texto de las solapas del examen (WEB-6.5)
 
-    // Las solapas del examen que llegan con WEB-6.5 (hoy la colposcopía) usan el mismo mecanismo que la
-    // evolución: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar (el id del
-    // formulario más `-sin-guardar`) y botones `[data-plantilla-texto]` que copian su texto en el campo
-    // `[data-plantilla-destino]`, disparando `input` para que el aviso se entere por el mismo camino que si
-    // el médico hubiera escrito. La evolución (WEB-4.6) todavía tiene su propio bloque, con sus atributos.
+    // Las solapas del examen: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar
+    // (el id del formulario más `-sin-guardar`). Sus plantillas las copia el panel (`plantillas-panel.js`).
     document.querySelectorAll('[data-consulta-plantillas]').forEach(function (formulario) {
         avisoDeTexto(formulario, formulario.id + '-sin-guardar');
-
-        const campo = formulario.querySelector('[data-plantilla-destino]');
-
-        formulario.querySelectorAll('[data-plantilla-texto]').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                if (!campo) return;
-
-                campo.value = boton.dataset.plantillaTexto;
-                campo.dispatchEvent(new Event('input', { bubbles: true }));
-                campo.focus();
-            });
-        });
     });
 
     // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)

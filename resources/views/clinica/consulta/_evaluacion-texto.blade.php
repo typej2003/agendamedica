@@ -24,27 +24,20 @@
           data-consulta-plantillas data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
-        {{-- Las plantillas del escritorio, como fichas en una fila encima del campo: no le quitan ancho al
-             texto. Van **dentro del formulario** (como en la evolución): `consulta.js` las busca ahí.
-             Sin plantillas no se pinta nada aquí; el aviso de abajo lo dice en una línea. --}}
-        @if ($seccion->hayPlantillas())
-            <p class="etiqueta mb-2">Plantillas <span class="texto-tenue small fw-normal">· al elegir una se copia en el campo y la puedes editar antes de guardar</span></p>
-            <ul class="evolucion-plantillas">
-                @foreach ($seccion->plantillas() as $plantilla)
-                    <li>
-                        <button type="button" class="evolucion-plantilla"
-                                data-plantilla-texto="{{ $plantilla['texto'] }}"
-                                title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                            <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-
-        <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
-        <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
-                  data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
+        {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo. La histeroscopía no tiene plantillas en el escritorio. --}}
+        <div class="row g-3">
+            <div class="{{ $seccion->tienePlantillas() ? 'col-12 col-xl-8' : 'col-12' }}">
+                <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
+                <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
+                          data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
+            </div>
+            @if ($seccion->tienePlantillas())
+                <div class="col-12 col-xl-4">
+                    <x-ui.plantillas :plantillas="$seccion->plantillas()" :destino="'#' . $seccion->campo()"
+                                     :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" />
+                </div>
+            @endif
+        </div>
 
         <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="{{ $clave }}-form-sin-guardar" hidden>
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
@@ -63,14 +56,6 @@
             </button>
         </div>
     </form>
-
-    @if ($seccion->tienePlantillas())
-        @unless ($seccion->hayPlantillas())
-            <p class="texto-tenue small mt-3 mb-0">
-                No tenés plantillas de {{ mb_strtolower($seccion->titulo()) }} cargadas: el escrito va tal cual en el informe.
-            </p>
-        @endunless
-    @endif
 
     {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
          suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la

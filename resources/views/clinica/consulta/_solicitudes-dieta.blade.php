@@ -29,23 +29,8 @@
             </div>
 
             <div class="col-12 col-xl-4">
-                <p class="etiqueta mb-2">Plantillas</p>
-                @if ($vm->hayPlantillas())
-                    <ul class="evolucion-plantillas mb-3">
-                        @foreach ($vm->plantillas() as $plantilla)
-                            <li>
-                                <button type="button" class="evolucion-plantilla" data-copiar-a="#dieta-descripcion"
-                                        data-texto="{{ $plantilla['texto'] }}" data-copiar-para="#dieta-titulo" data-para="{{ $plantilla['titulo'] }}"
-                                        title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                                    <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                                    <span class="texto-tenue small">Copiar en el campo</span>
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="texto-tenue small mb-0">Todavía no tienes plantillas de dieta. Las que cargues aparecerán aquí.</p>
-                @endif
+                <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
+                                 nombre="dieta" titulo-destino="#dieta-titulo" />
             </div>
         </div>
 

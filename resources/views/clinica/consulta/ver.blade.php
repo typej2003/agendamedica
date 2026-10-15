@@ -113,4 +113,6 @@
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
     {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}
     <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
+    {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
+    <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
 @endsection

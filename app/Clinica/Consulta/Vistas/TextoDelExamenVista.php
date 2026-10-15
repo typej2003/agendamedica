@@ -150,6 +150,12 @@ final class TextoDelExamenVista
         return ! $this->hayPlantillas();
     }
 
+    /** El `tipo` de `formato_print` de esta solapa (para «Guardar como plantilla»), o null si no tiene. */
+    public function tipoDePlantillas(): ?string
+    {
+        return TextosDelExamen::tipoDePlantillas($this->clave);
+    }
+
     /** ¿Esta solapa tiene plantillas en el escritorio? (La histeroscopía, no.) */
     public function tienePlantillas(): bool
     {

@@ -554,7 +554,7 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
 
         $pantalla->assertOk()
             ->assertSee('INFORME DE CONTROL')
-            ->assertSee('data-texto="Paciente en control prenatal."', false)
+            ->assertSee('data-plantilla-texto="Paciente en control prenatal."', false)
             ->assertSee('Informe anterior del paciente.')
             ->assertSee('data-para="EL COLEGIO"', false)
             ->assertDontSee('ES DE EVOLUCION')

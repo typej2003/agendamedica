@@ -2959,3 +2959,40 @@ body.auth-pagina {
 @media (max-width: 575.98px) {
     .chip-opcion { min-height: 40px; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Panel lateral de plantillas con buscador (WEB-11.2)
+   --------------------------------------------------------------------------------------------------------- */
+.plantillas-panel {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    padding: .85rem 1rem;
+}
+.plantillas-lista {
+    list-style: none;
+    margin: 0 0 .75rem;
+    padding: 0;
+    max-height: 22rem;
+    overflow-y: auto;
+}
+.plantillas-lista [hidden] { display: none; }
+.plantillas-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    width: 100%;
+    padding: .45rem .5rem;
+    border: 0;
+    border-radius: var(--ds-radio-sm);
+    background: transparent;
+    color: var(--ds-texto);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+.plantillas-item:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.plantillas-guardar > summary { list-style: none; cursor: pointer; }
+.plantillas-guardar > summary::-webkit-details-marker { display: none; }
+@media (max-width: 575.98px) {
+    .plantillas-item { padding: .7rem .5rem; }
+}
