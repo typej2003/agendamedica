@@ -34,12 +34,16 @@ el filtro de la tarea (`php -d memory_limit=2G artisan test --filter=…`) y **e
 antes de subir. Motivo: tarda unos seis minutos y frena el desarrollo. Los números de más abajo son mediciones
 puntuales, no un paso obligatorio de cada cambio.
 📋 **Listados clínicos entre fechas** (WEB-6.8, `/clinica/listados`, sólo `role:Root|Medico`): una pantalla parametrizada por
-`?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con **embarazos y partos** y
-**pacientes por rango** hechos (2026-10-14); falta *consultas por rango*. Cada listado suma su filtro, su lectura
-(`EmbarazosEntreFechas`, `PacientesPorRango`), su ViewModel en `Listados/Vistas/` y su parcial en
+`?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con los tres del alcance hechos
+(2026-10-14): **embarazos y partos**, **pacientes por rango** y **consultas por rango**. Cada listado suma su filtro, su lectura
+(`EmbarazosEntreFechas`, `PacientesPorRango`, `ConsultasPorRango`), su ViewModel en `Listados/Vistas/` y su parcial en
 `resources/views/clinica/listados/`; la cuenta de edad (`RangoDeEdades`) y la de fechas (`RangoDeFechas`) se comparten. El
-estado civil se filtra por `codeestado` (no por `codesegemp`, como dos DataWindows del legado). Tests:
-`ListadosWebTest`, `ListadosPacientesWebTest`, `Unit/Clinica/{ListadoDeEmbarazosTest,ListadoDePacientesTest}`; verificador
+estado civil se filtra por `codeestado` (no por `codesegemp`, como dos DataWindows del legado). *Consultas por rango*: la fecha es
+la de la consulta, una fila por consulta (sus listas se leen por lote y se pegan) y motivo, diagnóstico, medicamento y
+antecedente son **texto escrito** que se busca por nombre (`BusquedaDePacientes`: sin acentos, todas las palabras, comodines
+de `LIKE` como texto; sin `||` porque en MySQL es un `OR`). Tests:
+`ListadosWebTest`, `ListadosPacientesWebTest`, `ListadosConsultasWebTest`,
+`Unit/Clinica/{ListadoDeEmbarazosTest,ListadoDePacientesTest,ListadoDeConsultasTest}`; verificador
 en Chrome `.agent-tools/verificar-listados-web.js`.
 
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
