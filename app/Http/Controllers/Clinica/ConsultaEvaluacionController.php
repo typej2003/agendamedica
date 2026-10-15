@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\ArmarResumenDelExamen;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EvaluacionFisica;
@@ -67,6 +68,30 @@ class ConsultaEvaluacionController extends Controller
         return $destino->with('estado', $resultado->sinCambios()
             ? 'La evaluación física no tenía cambios.'
             : 'Evaluación física guardada.');
+    }
+
+    /**
+     * **«Actualizar»** (WEB-11.8): arma los resúmenes del examen físico y del ginecológico con lo que hay **en el formulario** (no hace
+     * falta guardar antes) más la colposcopía y la citología de la consulta. No escribe nada: la pantalla pone el texto en los cuadros
+     * y el médico lo edita; se guarda con el botón o el autoguardado.
+     */
+    public function resumen(Request $request, Consulta $consulta)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $consulta = $this->consultas->consulta(
+            $this->registrosDelMedico($contexto['medico']),
+            (int) $consulta->id,
+            $contexto['reg_medico'],
+        );
+
+        $datos = $request->validate($this->reglas());
+        $datos['colposcopia'] = $consulta->observaciones;
+        $datos['citologia'] = $consulta->faringe;
+
+        return response()->json([
+            'fisico' => ArmarResumenDelExamen::fisico($datos),
+            'ginecologico' => ArmarResumenDelExamen::ginecologico($datos),
+        ]);
     }
 
     /**

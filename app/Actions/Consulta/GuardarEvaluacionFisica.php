@@ -68,6 +68,11 @@ final class GuardarEvaluacionFisica
         $sinCambios = [];
 
         foreach (EvaluacionFisica::columnas() as $columna => $tabla) {
+            // Un resumen que no vino en los valores no se toca (quien no lo manda —el móvil— no lo borra).
+            if (in_array($columna, EvaluacionFisica::COLUMNAS_RESUMEN, true) && ! array_key_exists($columna, $valores)) {
+                continue;
+            }
+
             $nuevo = $this->normalizar($valores[$columna] ?? null);
 
             if ($antes->valor($columna) === $nuevo) {

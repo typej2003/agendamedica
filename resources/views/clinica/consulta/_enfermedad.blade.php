@@ -18,11 +18,19 @@
               data-consulta-enfermedad data-autoguardar data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
             @csrf
 
-            <x-ui.campo etiqueta="Lo que el paciente tiene hoy" for="enfermedadactual"
-                        :ayuda="$seccion->ayuda()">
-                <textarea name="enfermedadactual" id="enfermedadactual" class="form-control" rows="10"
-                          placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('enfermedadactual', '')) }}</textarea>
-            </x-ui.campo>
+            {{-- El panel de plantillas (WEB-11.7, tipo `EA`) a la derecha del campo. --}}
+            <div class="row g-3">
+                <div class="col-12 col-xl-8">
+                    <x-ui.campo etiqueta="Lo que el paciente tiene hoy" for="enfermedadactual"
+                                :ayuda="$seccion->ayuda()">
+                        <textarea name="enfermedadactual" id="enfermedadactual" class="form-control" rows="10"
+                                  placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('enfermedadactual', '')) }}</textarea>
+                    </x-ui.campo>
+                </div>
+                <div class="col-12 col-xl-4">
+                    <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#enfermedadactual" tipo="EA" nombre="enfermedad actual" />
+                </div>
+            </div>
 
             {{-- El aviso de "hay cambios sin guardar" se muestra recién cuando el texto cambió: se
                  controla por `hidden`, que es lo que el script alterna. --}}

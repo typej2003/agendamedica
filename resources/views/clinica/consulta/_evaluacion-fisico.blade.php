@@ -27,7 +27,7 @@
     <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="evaluacion-form"
-          data-consulta-evaluacion data-aviso="{{ $seccion->avisoSinGuardar() }}">
+          data-consulta-evaluacion data-autoguardar data-url-resumen="{{ $seccion->urlResumen() }}" data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
         {{-- 1. Antropometría, signos y tensión: las siete columnas `double` de `consultas` (peso, talla,
@@ -56,6 +56,24 @@
             @endforeach
         </div>
 
+        {{-- El resumen narrativo (WEB-11.8): lo arma «Actualizar» con los datos no vacíos de arriba, es **editable** y se guarda con la sección.
+             Si ya hay un texto distinto del que se armaría, «Actualizar» pide confirmación antes de reemplazarlo. --}}
+        <div class="row g-3 mb-3" data-resumen="fisico">
+            <div class="col-12 col-xl-8">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                    <label class="etiqueta mb-0" for="total_f">Resumen del examen físico</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-resumen-actualizar="fisico">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Actualizar
+                    </button>
+                </div>
+                <textarea name="total_f" id="total_f" class="form-control" rows="5"
+                          placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalFisico() }}</textarea>
+            </div>
+            <div class="col-12 col-xl-4">
+                <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF" nombre="resumen físico" />
+            </div>
+        </div>
+
         {{-- 3. Examen ginecológico: las cuatro columnas de la solapa homónima. La colposcopia y la
              citología tienen su propia solapa (WEB-6.5) y no se editan acá. --}}
         <h3 class="paso-titulo mb-2">Examen ginecológico</h3>
@@ -65,8 +83,27 @@
             @endforeach
         </div>
 
+
+        {{-- El resumen narrativo (WEB-11.8): lo arma «Actualizar» con los datos no vacíos de arriba, es **editable** y se guarda con la sección.
+             Si ya hay un texto distinto del que se armaría, «Actualizar» pide confirmación antes de reemplazarlo. --}}
+        <div class="row g-3 mb-3" data-resumen="ginecologico">
+            <div class="col-12 col-xl-8">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                    <label class="etiqueta mb-0" for="total_g">Resumen del examen ginecológico</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-resumen-actualizar="ginecologico">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Actualizar
+                    </button>
+                </div>
+                <textarea name="total_g" id="total_g" class="form-control" rows="5"
+                          placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalGinecologico() }}</textarea>
+            </div>
+            <div class="col-12 col-xl-4">
+                <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG" nombre="examen ginecológico" />
+            </div>
+        </div>
+
         <p class="texto-tenue small mb-0">
-            La colposcopia se carga en su propia solapa; la citología llega con su tarea.
+            El resumen ginecológico incluye la colposcopía y la citología, que se cargan en sus propias solapas.
         </p>
 
         {{-- El aviso de "hay cambios sin guardar": `consulta.js` lo muestra cuando algún control del
@@ -85,27 +122,3 @@
         </div>
     </form>
 </x-ui.tarjeta>
-
-{{-- Los resúmenes narrativos del escritorio, fuera del formulario: son de lectura. --}}
-@if ($seccion->hayResumenes())
-    <x-ui.tarjeta titulo="Resúmenes del escritorio" icono="bi-card-text" class="mt-3">
-        <p class="texto-tenue small mb-2">
-            Los arma el botón <em>Actualizar</em> del examen físico del escritorio. Se muestran tal como
-            quedaron y no se regeneran desde acá.
-        </p>
-
-        @if ($seccion->resumenGeneral())
-            <div class="examen-resumen">
-                <span class="examen-resumen-titulo">Examen físico general</span>
-                {{ $seccion->resumenGeneral() }}
-            </div>
-        @endif
-
-        @if ($seccion->resumenGinecologico())
-            <div class="examen-resumen">
-                <span class="examen-resumen-titulo">Examen ginecológico</span>
-                {{ $seccion->resumenGinecologico() }}
-            </div>
-        @endif
-    </x-ui.tarjeta>
-@endif

@@ -23,7 +23,7 @@ use App\Clinica\Impresion\DocumentoImpreso;
  *
  *  - **Plantillas**: `formato_print` por `tipo` —`CO` la colposcopía (`dw_77`, `:3043`), `CI` la citología
  *    (`dw_78`, `:3046`), `RE` el resultado de exámenes (`dw_91`, `:4626`)—. La **histeroscopía no tiene**
- *    ninguna (su `tabpage_49` no hace `retrieve` de plantillas).
+ *    en el escritorio (su `tabpage_49` no hace `retrieve` de plantillas), pero la web las ofrece con el tipo `HI` (WEB-11.7).
  *  - **Informe**: la colposcopía (`d_colposcopia_1`/`_2`) y la histeroscopía (`d_histeroscopia`, cuyo título
  *    está en `:27` y su cuerpo es `consultas.cuello` —`column(band=detail ... name=consultas_cuello`, `:29`—
  *    con las fotos del subreporte). La citología y el resultado de exámenes **no tienen hoja**.
@@ -104,7 +104,7 @@ final class TextosDelExamen
             'sin_cambios' => 'La histeroscopía no tenía cambios.',
             'columna' => 'cuello',
             'columna_espejo' => null,
-            'plantillas' => null,
+            'plantillas' => 'HI',
             'documento' => DocumentoImpreso::HISTEROSCOPIA,
             'imagenes' => self::HISTEROSCOPIA,
             'marcador' => 'El hallazgo histeroscópico: el canal cervical, la cavidad, el endometrio…',

@@ -28,6 +28,7 @@ use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
+use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -322,6 +323,7 @@ class ConsultaController extends Controller
                 $consulta->enfermedadactual,
                 route('clinica.consulta.enfermedad.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ENFERMEDAD]),
+                PlantillasDelTexto::de($regMedico, 'EA')->all(),
             );
         }
 
@@ -368,6 +370,9 @@ class ConsultaController extends Controller
                         route('clinica.consulta.evaluacion.guardar', $consulta->id),
                         $url(PestanasDelExamen::FISICO),
                         (array) old(),
+                        route('clinica.consulta.evaluacion.resumen', $consulta->id),
+                        PlantillasDelTexto::de($regMedico, 'RF')->all(),
+                        PlantillasDelTexto::de($regMedico, 'EG')->all(),
                     ),
             );
         }

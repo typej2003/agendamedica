@@ -225,7 +225,7 @@ class PlantillasDeMensajeUnidadTest extends TestCase
         $this->assertSame('Tipo ZZ', TiposDePlantillaDeTexto::nombre('ZZ'));
         $this->assertSame('Sin tipo', TiposDePlantillaDeTexto::nombre(null));
         $this->assertTrue(TiposDePlantillaDeTexto::seUsaEnLaWeb('EV'));
-        $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb('CO'));
+        $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb('UG'));
         $this->assertCount(20, TiposDePlantillaDeTexto::nombres());
     }
 }

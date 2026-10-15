@@ -38,7 +38,51 @@ final class EvaluacionFisicaVista
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private array $old = [],
+        private string $urlResumen = '',
+        private array $plantillasFisico = [],
+        private array $plantillasGinecologico = [],
     ) {
+    }
+
+    /** Las columnas que cuentan como «campos con dato»: todas menos los dos resúmenes narrativos. */
+    private function camposDelExamen(): array
+    {
+        return array_diff_key(EvaluacionFisica::columnas(), array_flip(EvaluacionFisica::COLUMNAS_RESUMEN));
+    }
+
+    /** A dónde pide «Actualizar» el resumen armado con lo que hay en el formulario (WEB-11.8). */
+    public function urlResumen(): string
+    {
+        return $this->urlResumen;
+    }
+
+    /** El resumen del examen físico que muestra el cuadro (lo escrito, si falló el POST, o lo guardado). */
+    public function totalFisico(): string
+    {
+        return $this->valor('total_f');
+    }
+
+    /** El resumen del examen ginecológico que muestra el cuadro. */
+    public function totalGinecologico(): string
+    {
+        return $this->valor('total_g');
+    }
+
+    /** @return array<int,array{titulo:string, texto:string}> las plantillas `RF` (resumen físico) */
+    public function plantillasFisico(): array
+    {
+        return $this->paraElPanel($this->plantillasFisico);
+    }
+
+    /** @return array<int,array{titulo:string, texto:string}> las plantillas `EG` (examen ginecológico) */
+    public function plantillasGinecologico(): array
+    {
+        return $this->paraElPanel($this->plantillasGinecologico);
+    }
+
+    private function paraElPanel(array $plantillas): array
+    {
+        return array_map(fn ($p) => ['titulo' => (string) $p->titulo, 'texto' => (string) $p->texto], $plantillas);
     }
 
     /**
@@ -130,7 +174,7 @@ final class EvaluacionFisicaVista
     public function cargados(): int
     {
         $total = 0;
-        foreach (array_keys(EvaluacionFisica::columnas()) as $columna) {
+        foreach (array_keys($this->camposDelExamen()) as $columna) {
             if ($this->evaluacion->valor($columna) !== null) {
                 $total++;
             }
@@ -142,7 +186,7 @@ final class EvaluacionFisicaVista
     /** Cuántos campos edita la web: el denominador de la pastilla del encabezado. */
     public function totalCampos(): int
     {
-        return count(EvaluacionFisica::columnas());
+        return count($this->camposDelExamen());
     }
 
     /**

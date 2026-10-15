@@ -187,6 +187,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+                // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
+                Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');
 
                 // Los textos de las solapas del examen (WEB-6.5): la colposcopía, la citología, la
                 // histeroscopía y el resultado de exámenes. Las cuatro son **un texto en una columna de

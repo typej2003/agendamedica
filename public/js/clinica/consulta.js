@@ -145,12 +145,19 @@
 
     if (evaluacion) {
         const aviso = document.getElementById('evaluacion-sin-guardar');
-        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input, textarea'));
+        // Sólo los controles que se guardan (con `name`): el buscador y el título del panel de plantillas no cuentan.
+        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input[name], textarea[name]'));
 
         // El valor de partida de cada control, para saber si algo cambió. Se toma del `value`/`textContent`
         // con el que el servidor pintó el formulario (que ya trae el `old()` si el POST falló).
-        const guardados = campos.map(function (campo) {
+        let guardados = campos.map(function (campo) {
             return campo.value;
+        });
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que todo quedó guardado: nuevo punto de partida.
+        evaluacion.addEventListener('consulta:guardado', function () {
+            guardados = campos.map(function (campo) { return campo.value; });
+            pintarAviso();
         });
 
         function sucio() {

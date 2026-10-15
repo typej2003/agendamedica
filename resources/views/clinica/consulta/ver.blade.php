@@ -141,6 +141,8 @@
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
     <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
+    {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
+    <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
     {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection

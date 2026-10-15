@@ -234,7 +234,8 @@ class ConsultaEvaluacionWebTest extends TestCase
 
         // El resumen del escritorio se muestra tal cual (no se regenera).
         $respuesta->assertSee('PESO: 70.5 kg.  TALLA: 1,62 m.', false);
-        $respuesta->assertSee('Resúmenes del escritorio', false);
+        // Desde WEB-11.8 el resumen vive en un cuadro editable con su botón «Actualizar».
+        $respuesta->assertSee('data-resumen-actualizar="fisico"', false);
     }
 
     public function test_el_examen_se_lee_por_el_numero_de_la_consulta_y_no_por_su_id(): void
@@ -293,8 +294,39 @@ class ConsultaEvaluacionWebTest extends TestCase
         // El IMC sin peso ni talla: una raya, no un cero.
         $respuesta->assertSee('data-evaluacion-imc', false);
         $respuesta->assertSee('—', false);
-        // Y no hay tarjeta de resúmenes.
-        $respuesta->assertDontSee('Resúmenes del escritorio', false);
+        // Los cuadros del resumen están, vacíos, con su botón.
+        $respuesta->assertSee('data-resumen-actualizar="ginecologico"', false);
+    }
+
+    public function test_actualizar_arma_los_resumenes_con_lo_del_formulario_sin_guardar_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->forceFill(['observaciones' => 'Zona visible.', 'faringe' => 'Negativa.'])->save();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.consulta.evaluacion.resumen', $consulta->id), [
+                'peso' => '70.5', 'talla' => '1.62', 'tension' => '120/80', 'general' => 'Buen estado', 'genitales_externos' => 'Normales.',
+            ]);
+
+        $respuesta->assertOk()
+            ->assertJsonPath('fisico', 'PESO: 70.5 kg.  TALLA: 1.62 m.  TENSIÓN ARTERIAL: 120/80.  GENERAL: Buen estado.  .')
+            ->assertJsonPath('ginecologico', 'GENITALES EXTERNOS: Normales..  COLPOSCOPÍA: Zona visible..  CITOLOGÍA: Negativa..  .');
+        $this->assertSame(0, ExamenFisico::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_el_resumen_editado_se_guarda_con_la_evaluacion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+            'peso' => '70', 'total_f' => 'Resumen que escribió el médico.',
+        ])->assertRedirect();
+
+        $fila = ExamenFisico::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame('Resumen que escribió el médico.', $fila->total_f);
+        $this->assertSame(1, SyncChange::where('table_name', 'examen_fisico_nuevo')->where('column_name', 'total_f')->where('source', 'web')->count());
     }
 
     public function test_el_literal_none_del_escritorio_no_se_muestra_como_hallazgo(): void
