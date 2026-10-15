@@ -247,7 +247,38 @@ class ImpresionDeDocumentosController extends Controller
                 'tipo' => TiposDeEstudio::DOPPLER,
             ]);
         }
+        // Los otros tres estudios (WEB-6.3/6.4) son tipos de la misma seccion: cada uno vuelve al suyo.
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::OBSTETRICO,
+            ]);
+        }
 
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO_TERCERO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::TERCERO,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_CARDIOGRAMA_FETAL) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::FETAL,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_MAMARIO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::MAMARIO,
+            ]);
+        }
         // El resumen médico (WEB-5.3c) no tiene pestaña propia: su botón vive en la pestaña *Informe
         // médico* del escritorio (`tabpage_14`), que es a donde vuelve.
         if ($tipo === DocumentoImpreso::RESUMEN_MEDICO) {
