@@ -7,9 +7,11 @@ use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoDoppler;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
@@ -95,6 +97,8 @@ final class SolicitudesParaImprimir
         private EcoObstetricoTercero $ecosObstetricosTerceros,
         private EcoDoppler $dopplers,
         private EcoCardiogramaFetal $cardiogramasFetales,
+        private EcoMamario $mamarios,
+        private DoctoresDelMedico $doctores,
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
         private ResumenMedicoDeLaConsulta $resumenes,
@@ -193,6 +197,21 @@ final class SolicitudesParaImprimir
                 'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_CARDIOGRAMA_FETAL][1],
                 // Sin la biometría ni la conclusión: la lista de la cita la ve la secretaría.
                 'resumen' => 'Informe del ecocardiograma fetal',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El informe del eco mamario (WEB-6.4): otro estudio del ítem 5, con la misma clave (`historia` +
+        // `consulta`) y la ficha más corta de todas (sólo la fecha). Su tabla (`ultra_mama`) no se llama como
+        // su DataWindow (el vivo es `d_ultasonido_mamas`), y sus plantillas de texto son `formato_print` `UM`.
+        $mamario = $this->mamarios->de($consulta);
+        if ($this->elEcoMamarioEsDocumento($mamario)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ECO_MAMARIO,
+                'tipo' => DocumentoImpreso::ECO_MAMARIO,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_MAMARIO][1],
+                // Sin los hallazgos ni la conclusión: la lista de la cita la ve la secretaría.
+                'resumen' => 'Informe del eco mamario',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -380,6 +399,14 @@ final class SolicitudesParaImprimir
 
             return $this->elEcoCardiogramaFetalEsDocumento($estudio)
                 ? $this->ecoCardiogramaFetal($consulta, $paciente, $estudio, $fechaDeLaConsulta)
+                : null;
+        }
+
+        if ($clave === DocumentoImpreso::ECO_MAMARIO) {
+            $estudio = $this->mamarios->de($consulta);
+
+            return $this->elEcoMamarioEsDocumento($estudio)
+                ? $this->ecoMamario($paciente, $estudio, $fechaDeLaConsulta, $registros)
                 : null;
         }
 
@@ -1229,6 +1256,74 @@ final class SolicitudesParaImprimir
     }
 
     /**
+     * **El informe del eco mamario** (WEB-6.4): la hoja «ULTRASONIDO DE MAMAS» del escritorio
+     * (`d_ultasonido_mamas_print`), con los diez datos de su detalle **en el orden de la fuente**: el
+     * **referido por** (la cédula del catálogo `doctores` resuelta a su nombre, como el `dddw` del
+     * DataWindow), el **transductor**, la **menarquia**, los **quirúrgicos**, las **hormonas**, los hallazgos
+     * de cada **mama** y cada **axila** y la **conclusión**.
+     *
+     * Los cinco primeros son datos cortos (van juntos, sin partirse); los cinco textos largos van con su
+     * rótulo en su propia línea, como se escriben. Un campo sin dato no se imprime.
+     *
+     * ⚠️ **`para` no se imprime**: va oculto en el DataWindow y en el dump está siempre vacío; la web no lo
+     * ofrece ni lo lee. Y **`puro_texto` tampoco**: el modo «Plantillas» del escritorio es **otro** DataWindow
+     * de impresión (`d_ultasonido_mamas_print_puro`), que la web no imprime —lo muestra en la pantalla y nada
+     * más—.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico, para resolver el referido
+     */
+    private function ecoMamario(Paciente $paciente, EstudioEcografico $estudio, string $fecha, array $registros): DocumentoImpreso
+    {
+        $datos = [];
+
+        // Los cinco datos cortos del encabezado, en el orden del DataWindow de impresión. El referido guarda
+        // la cédula del colega y la hoja imprime su nombre (el `displaycolumn` de su `dddw`); si el catálogo ya
+        // no lo tiene, se muestra la cédula en vez de inventar un nombre.
+        $referido = $estudio->valor(EcoMamario::COLUMNA_REFERIDO);
+        $medico = $referido === null ? null : $this->doctores->porCedula($registros, (int) $referido);
+
+        foreach ([
+            'Referido por' => $referido === null
+                ? null
+                : (string) ($medico->nombre ?? ('Médico ' . $referido)),
+            'Transductor' => $estudio->valor('tranductor'),
+            'Menarquia' => $estudio->valor('menarquia'),
+            'Quirúrgicos' => $estudio->valor('quirurgicos'),
+            'Hormonas' => $estudio->valor('hormonas'),
+        ] as $etiqueta => $valor) {
+            if ($valor !== null && $valor !== '') {
+                $datos[] = ['etiqueta' => $etiqueta . ':', 'valor' => (string) $valor];
+            }
+        }
+
+        // Los cuatro hallazgos y la conclusión: textos largos, con el rótulo en su propia línea.
+        $parrafos = [];
+
+        foreach ([
+            'mama_derecha' => 'Mama derecha:',
+            'axila_derecha' => 'Axila derecha:',
+            'mama_izquierda' => 'Mama izquierda:',
+            'axila_izquierda' => 'Axila izquierda:',
+            'conclusion' => 'Conclusión:',
+        ] as $columna => $etiqueta) {
+            foreach (DocumentoImpreso::parrafosDe($estudio->valor($columna), $etiqueta, true) as $parrafo) {
+                $parrafos[] = $parrafo;
+            }
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ECO_MAMARIO,
+            DocumentoImpreso::ECO_MAMARIO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_MAMARIO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_MAMARIO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $datos,
+            $parrafos,
+        );
+    }
+
+    /**
      * El texto de cada campo de un bloque del ecocardiograma fetal que tenga dato: "DBP: 25 mm", "PLACENTA:
      * Anterior", "GRADO: II / III". El rótulo y —en los desplegables— la traducción del código salen del mapa;
      * la unidad y el sufijo, del campo.
@@ -1281,6 +1376,20 @@ final class SolicitudesParaImprimir
             EcoCardiogramaFetal::columnas(),
             EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN,
         ));
+    }
+
+    /**
+     * ¿El eco mamario dice algo? Su ficha es la más corta de los ecos —**sólo la fecha**—, así que no cuenta
+     * una columna. A diferencia del eco pélvico y del Doppler, **no** cuenta el informe en texto libre del
+     * escritorio (`puro_texto`): la hoja del mamario no tiene párrafos de texto libre —su modo «Plantillas» es
+     * otro DataWindow de impresión (`d_ultasonido_mamas_print_puro`), que la web no imprime—, así que una fila
+     * que sólo trae ese texto no ofrece un informe vacío.
+     */
+    private function elEcoMamarioEsDocumento(EstudioEcografico $estudio): bool
+    {
+        return QueEsUnDocumento::ecografia(
+            $this->camposDelEstudioConDato($estudio, EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN),
+        );
     }
 
     /**

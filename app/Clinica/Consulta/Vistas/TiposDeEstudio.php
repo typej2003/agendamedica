@@ -21,7 +21,7 @@ use Closure;
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
  * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1), el **eco obstétrico del primer
  * trimestre** y el del **2.º/3.er** (WEB-6.2), el **eco Doppler perinatal** y el **ecocardiograma fetal**
- * (WEB-6.3); los ultrasonidos mamarío y abdominal siguen en WEB-6.4.
+ * (WEB-6.3) y el **eco mamario** (WEB-6.4); el ultrasonido abdominal sigue pendiente.
  *
  * Sin base de datos.
  */
@@ -63,6 +63,16 @@ final class TiposDeEstudio
      */
     public const FETAL = 'fetal';
 
+    /**
+     * El **eco mamario** (WEB-6.4): la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:23018`, con el DataWindow **`d_ultasonido_mamas`** —con la «n» de menos—, que
+     * vive en `fuentes/ventana_consulta/` y no en `datawin_procesos/`, y escribe en `ultra_mama`: trampas 102,
+     * 123 y 124) y el estudio propio `w_cargar_visualizar_eco_mamario` (`:20814`).
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const MAMARIO = 'mamario';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -72,6 +82,7 @@ final class TiposDeEstudio
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
         self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
         self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
+        self::MAMARIO => ['texto' => 'Eco mamario', 'icono' => 'bi-clipboard2-pulse'],
         self::FETAL => ['texto' => 'Ecocardiograma fetal', 'icono' => 'bi-heart'],
     ];
 

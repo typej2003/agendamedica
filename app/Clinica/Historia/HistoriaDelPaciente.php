@@ -5,6 +5,7 @@ namespace App\Clinica\Historia;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\EstudioEcografico;
@@ -454,6 +455,26 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // El informe del eco mamario (WEB-6.4), con la misma vara que los otros ecos del ítem 5: algún campo
+        // del estudio —su ficha es sólo la fecha—. Su `puro_texto` **no** cuenta: la hoja del mamario no tiene
+        // párrafos de texto libre (su modo «Plantillas» es otro DataWindow que la web no imprime).
+        foreach ($this->mamarios($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco mamario',
+                'bi-clipboard2-pulse',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco mamario',
+                null,
+                null,
+                DocumentoImpreso::ECO_MAMARIO,
+            ));
+        }
+
         // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. El
         // texto vive en la **consulta** (su columna de `consultas`, que es la que imprime la hoja), así que se
         // recorre por consulta; las otras dos solapas de texto no tienen hoja.
@@ -745,6 +766,45 @@ final class HistoriaDelPaciente
     private function cardiogramasFetales(string $regMedico, int $numero): array
     {
         return $this->ecosDeUnaTabla('ecocadiograma_fetal', EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /**
+     * Los informes de **eco mamario** de la historia (WEB-6.4), por número de consulta: cuántos campos del
+     * estudio traen dato, sin contar la fecha (que es su única ficha). La lista de columnas sale del mapa del
+     * dato, así que una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `ultra_mama` es **`historia` + `consulta`**, como la de los otros ecos del ítem 5, y su
+     * DataWindow vivo (`d_ultasonido_mamas`) no se llama como la tabla (trampas 102, 123 y 124). Su
+     * `puro_texto` **no** cuenta: la hoja del mamario no tiene párrafos de texto libre (su modo «Plantillas» es
+     * otro DataWindow de impresión que la web no imprime), así que no hace de una fila un documento.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function mamarios(string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table(EcoMamario::TABLA)
+            ->where('reg_medico', $regMedico)
+            ->where(EcoMamario::COLUMNA_HISTORIA, $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff(EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            $estudios[(int) $fila->consulta] = ['conDato' => $conDato, 'textoLibre' => false];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
     }
 
     /**

@@ -74,6 +74,31 @@ final class DoctoresDelMedico
     }
 
     /**
+     * **Toda la libreta de colegas del médico** (`doctores`), para un desplegable que no busca: su cédula y su
+     * nombre, por apellido y nombre.
+     *
+     * Es la misma lectura que `buscar` —el buscador de la pestaña *Referencias*—, con la misma resolución del
+     * nombre y la especialidad, pero **sin su tope de resultados**: `MAX_RESULTADOS` es *para elegir*, no para
+     * listar la libreta, y el `referido` del eco mamario (WEB-6.4) elige de la libreta completa.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
+     * @return Collection<int,object{cedula:int, nombre:string, especialidad:?string, clinica:?string, telefono:?string, direccion:?string, ciudad:?string, codeespecial:?string}>
+     */
+    public function delCatalogo(array $registros): Collection
+    {
+        $especialidades = $this->nombresDeEspecialidad($registros);
+
+        return Doctor::whereIn('reg_medico', $registros)
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->orderBy('id')
+            ->get()
+            ->unique(fn (Doctor $doctor) => (int) $doctor->cedula)
+            ->map(fn (Doctor $doctor) => $this->resolver($doctor, $especialidades))
+            ->values();
+    }
+
+    /**
      * El médico por su código (la `cedula` del catálogo), o `null` si no está. Primero en los registros del médico y,
      * si no, en cualquiera.
      *

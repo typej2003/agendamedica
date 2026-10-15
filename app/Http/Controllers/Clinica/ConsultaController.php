@@ -35,11 +35,13 @@ use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\EcoCardiogramaFetalVista;
 use App\Clinica\Consulta\Vistas\EcoDopplerVista;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
+use App\Clinica\Consulta\Vistas\EcoMamarioVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
@@ -160,6 +162,7 @@ class ConsultaController extends Controller
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
         ResumenMedicoDeLaConsulta $resumenes,
+        EcoMamario $ecoMamario,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $registros = $this->registrosDelMedico($contexto['medico']);
@@ -209,7 +212,7 @@ class ConsultaController extends Controller
             // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $doctores),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -271,6 +274,8 @@ class ConsultaController extends Controller
         FurDelControlPrenatal $furPrenatal,
         GestasDeLaHistoria $gestas,
         InformePrenatal $informePrenatal,
+        EcoMamario $ecoMamario,
+        DoctoresDelMedico $doctores,
     ): ?object {
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
@@ -418,6 +423,27 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                         $guardado,
+                    ),
+                );
+            }
+
+            // El eco mamario (WEB-6.4): su mapa, su tabla llaveada por `historia` + `consulta` y su propio
+            // parcial. Su único desplegable es el de médicos (`referido`, que guarda la cédula): sus opciones
+            // salen de la libreta del médico —la misma lectura de la pestaña *Referencias*— y no del mapa del
+            // dato. El estudio no tiene ficha del embarazo: lo único que no cuenta es su fecha.
+            if ($tipo === TiposDeEstudio::MAMARIO) {
+                return new SeccionDeEstudioVista(
+                    $tipo,
+                    $tipos,
+                    new EcoMamarioVista(
+                        $ecoMamario->de($consulta),
+                        route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
+                        route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_MAMARIO]),
+                        $doctores->delCatalogo($this->registrosDelMedico($medico))
+                            ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
+                            ->all(),
+                        (array) old(),
                     ),
                 );
             }

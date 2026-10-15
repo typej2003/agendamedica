@@ -7,6 +7,7 @@ use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\PacienteDeLaCita;
@@ -249,6 +250,13 @@ final class DocumentosPorCita
         //    tabla trae el error de tipeo del legado (`ecocadiograma_fetal`, sin la «r»).
         $this->marcarEstudio($conAlgo, DB::table('ecocadiograma_fetal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
             EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+
+        //  - informe del eco mamario (WEB-6.4): otro estudio del ítem 5, con la misma clave (`historia` +
+        //    `consulta`) y su ficha corta (sólo la fecha). Su tabla (`ultra_mama`) no se llama como su
+        //    DataWindow: el vivo es `d_ultasonido_mamas`. Su `puro_texto` **no** cuenta: la hoja del mamario no
+        //    tiene párrafos de texto libre (su modo «Plantillas» es otro DataWindow que la web no imprime).
+        $this->marcarEstudio($conAlgo, DB::table('ultra_mama')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
 
         $ids = [];
         foreach ($atendidas as $cita) {

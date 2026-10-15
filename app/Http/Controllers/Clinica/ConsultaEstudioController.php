@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Consulta\GuardarEcoCardiogramaFetal;
 use App\Actions\Consulta\GuardarEcoDoppler;
 use App\Actions\Consulta\GuardarEcoGinecologico;
+use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\ConsultasDelContexto;
@@ -23,14 +25,13 @@ use InvalidArgumentException;
 
 /**
  * **El estudio ecográfico de una consulta** (WEB-6.1, ítem 5 del panel del legado): guardar el eco pélvico, los
- * dos obstétricos (WEB-6.2), el Doppler perinatal y el ecocardiograma fetal (WEB-6.3).
+ * dos obstétricos (WEB-6.2), el Doppler perinatal y el ecocardiograma fetal (WEB-6.3) y el mamario (WEB-6.4).
  *
  * La sección se **lee** en `ConsultaController::ver` (`?seccion=estudio&tipo=ginecologico`); acá sólo se
  * escribe, que es la partición que la guía de la arquitectura pide (controladores por responsabilidad).
  *
- * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el mamarío y el abdominal de
- * WEB-6.4) sumen su rama **sin ruta nueva**; hoy existen los cinco de `TiposDeEstudio` y cualquier otro da
- * **404**.
+ * El tipo viene en la URL (`{tipo}`) para que los estudios que llegan después (el abdominal) sumen su rama
+ * **sin ruta nueva**; hoy existen los seis de `TiposDeEstudio` y cualquier otro da **404**.
  *
  * **Guardado explícito**, como la evaluación física: es un dato clínico y el médico decide cuándo queda
  * escrito. El aviso de "cambios sin guardar" y el bloqueo del navegador al salir los pone
@@ -56,6 +57,7 @@ class ConsultaEstudioController extends Controller
         GuardarEcoObstetricoTercero $guardarObstetricoTercero,
         GuardarEcoDoppler $guardarDoppler,
         GuardarEcoCardiogramaFetal $guardarFetal,
+        GuardarEcoMamario $guardarMamario,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -78,6 +80,7 @@ class ConsultaEstudioController extends Controller
         $accion = match ($tipo) {
             TiposDeEstudio::FETAL => $guardarFetal,
             TiposDeEstudio::DOPPLER => $guardarDoppler,
+            TiposDeEstudio::MAMARIO => $guardarMamario,
             TiposDeEstudio::TERCERO => $guardarObstetricoTercero,
             TiposDeEstudio::OBSTETRICO => $guardarObstetrico,
             default => $guardar,
@@ -107,6 +110,7 @@ class ConsultaEstudioController extends Controller
             : match ($tipo) {
                 TiposDeEstudio::FETAL => 'Ecocardiograma fetal guardado.',
                 TiposDeEstudio::DOPPLER => 'Eco Doppler guardado.',
+                TiposDeEstudio::MAMARIO => 'Eco mamario guardado.',
                 TiposDeEstudio::TERCERO, TiposDeEstudio::OBSTETRICO => 'Eco obstétrico guardado.',
                 default => 'Eco pélvico guardado.',
             });
@@ -124,6 +128,10 @@ class ConsultaEstudioController extends Controller
 
         if ($tipo === TiposDeEstudio::DOPPLER) {
             return $this->reglasDelMapa(EcoDoppler::grupos());
+        }
+
+        if ($tipo === TiposDeEstudio::MAMARIO) {
+            return $this->reglasDelMapa(EcoMamario::grupos());
         }
 
         if ($tipo !== TiposDeEstudio::OBSTETRICO && $tipo !== TiposDeEstudio::TERCERO) {
@@ -233,6 +241,7 @@ class ConsultaEstudioController extends Controller
         return match ($tipo) {
             TiposDeEstudio::FETAL => EcoCardiogramaFetal::etiquetaDe($columna),
             TiposDeEstudio::DOPPLER => EcoDoppler::etiquetaDe($columna),
+            TiposDeEstudio::MAMARIO => EcoMamario::etiquetaDe($columna),
             default => EcoGinecologico::etiquetaDe($columna),
         };
     }

@@ -17,7 +17,8 @@ namespace App\Clinica\Impresion;
  * `d_eco_pelvico_print_vacio.srd`: es la única ecografía con formato en blanco en el legado que todavía no lo
  * tiene en la web), el **ecocardiograma fetal** (WEB-6.3, que el escritorio **no** tiene: su panel
  * `miconsultat/w_panel_impresion_formatos.srw` lista seis formatos y el fetal no está entre ellos, así que no
- * es un olvido de la web) y el récipe de la pareja.
+ * es un olvido de la web), el **eco mamario** (WEB-6.4, por lo mismo: ese panel tampoco lo lista) y el récipe
+ * de la pareja.
  */
 final class FormatosEnBlanco
 {
