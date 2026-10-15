@@ -199,6 +199,24 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee('necesita conexión', false);
     }
 
+    public function test_el_catalogo_de_motivos_se_ve_completo_y_por_paginas(): void
+    {
+        // WEB-11.3: la lista de la derecha no se corta en 30; se pagina y la página 2 trae el resto.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        foreach (range(1, 15) as $n) {
+            $this->motivo($medico, sprintf('%04d', $n), sprintf('MOTIVO %02d', $n));
+        }
+        $url = $this->urlSeccion($consulta, ConsultaShellVista::SECCION_MOTIVOS);
+
+        $uno = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+        $uno->assertOk()->assertSee('MOTIVO 01', false)->assertSee('MOTIVO 12', false)->assertDontSee('MOTIVO 13', false);
+        $uno->assertSee('pagina_catalogo=2', false)->assertSee('data-pasar', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url . '&pagina_catalogo=2')
+            ->assertOk()->assertSee('MOTIVO 13', false)->assertSee('MOTIVO 15', false)->assertDontSee('MOTIVO 01', false);
+    }
+
     public function test_agregar_un_motivo_del_catalogo_lo_guarda_en_la_consulta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

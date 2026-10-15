@@ -2996,3 +2996,44 @@ body.auth-pagina {
 @media (max-width: 575.98px) {
     .plantillas-item { padding: .7rem .5rem; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   «Dos listas con Pasar / Eliminar / Agregar» (WEB-11.3)
+   --------------------------------------------------------------------------------------------------------- */
+.dos-listas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+.dos-listas-columna {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    padding: .85rem 1rem;
+}
+.dos-listas-cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .75rem;
+}
+.dos-listas-titulo { margin: 0; font-size: 1rem; font-weight: 600; }
+.dos-listas-buscar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .75rem; }
+.dos-listas-buscar .form-control { flex: 1 1 10rem; min-width: 0; }
+.dos-listas-catalogo { list-style: none; margin: 0; padding: 0; }
+.dos-listas-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .4rem .25rem;
+    border-bottom: 1px solid var(--ds-borde);
+}
+.dos-listas-fila[data-pasar] { cursor: pointer; }
+.dos-listas-fila[data-pasar]:hover { background: var(--ds-violeta-50); }
+.dos-listas-fila-texto { overflow-wrap: anywhere; }
+@media (max-width: 991.98px) {
+    .dos-listas { grid-template-columns: minmax(0, 1fr); }
+}

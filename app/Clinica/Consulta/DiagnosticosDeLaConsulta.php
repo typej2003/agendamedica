@@ -6,6 +6,7 @@ use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Diagnostico;
 use App\Models\DiagnosticoPaciente;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -58,6 +59,9 @@ final class DiagnosticosDeLaConsulta
     /** El tope de resultados del buscador: es para elegir, no para listar el catálogo entero. */
     public const MAX_RESULTADOS = 30;
 
+    /** Cuántos diagnósticos del catálogo se ven por página en las «dos listas». */
+    public const POR_PAGINA = 12;
+
     /**
      * El catálogo del médico, un diagnóstico por nombre, ordenado alfabéticamente.
      *
@@ -65,6 +69,33 @@ final class DiagnosticosDeLaConsulta
      * @return Collection<int,Diagnostico>
      */
     public function buscar(string $regMedico, string $buscar = ''): Collection
+    {
+        return $this->unicos($regMedico, $buscar)->take(self::MAX_RESULTADOS);
+    }
+
+    /**
+     * **El catálogo completo a la vista, por páginas** (WEB-11.3): la lista de la derecha de las «dos listas», sin el tope de
+     * {@see self::MAX_RESULTADOS}. Misma lista del buscador (un diagnóstico por nombre, sin tildes).
+     *
+     * @param  array<string,mixed>  $conservar  lo que los enlaces de página deben mantener (`seccion`, `buscar`, `agregar`)
+     * @return LengthAwarePaginator<Diagnostico>
+     */
+    public function pagina(string $regMedico, string $buscar, int $pagina, string $ruta, array $conservar = [], int $porPagina = self::POR_PAGINA): LengthAwarePaginator
+    {
+        $todos = $this->unicos($regMedico, $buscar);
+        $pagina = max(1, $pagina);
+
+        return (new LengthAwarePaginator(
+            $todos->forPage($pagina, $porPagina)->values(),
+            $todos->count(),
+            $porPagina,
+            $pagina,
+            ['path' => $ruta, 'pageName' => 'pagina_catalogo'],
+        ))->appends($conservar);
+    }
+
+    /** @return Collection<int,Diagnostico> */
+    private function unicos(string $regMedico, string $buscar): Collection
     {
         $clave = BusquedaDePacientes::normalizar(trim($buscar));
 
@@ -79,8 +110,7 @@ final class DiagnosticosDeLaConsulta
             ->groupBy(fn (Diagnostico $diagnostico) => BusquedaDePacientes::normalizar((string) $diagnostico->descripcion))
             ->map(fn (Collection $iguales) => $iguales->sortBy('codediagnostico')->first())
             ->sortBy(fn (Diagnostico $diagnostico) => BusquedaDePacientes::normalizar((string) $diagnostico->descripcion))
-            ->values()
-            ->take(self::MAX_RESULTADOS);
+            ->values();
     }
 
     /**

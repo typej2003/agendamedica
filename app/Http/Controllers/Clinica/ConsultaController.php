@@ -287,8 +287,12 @@ class ConsultaController extends Controller
         if ($seccion === ConsultaShellVista::SECCION_MOTIVOS) {
             $buscar = trim((string) request()->query('buscar', ''));
 
+            $urlSeccion = route('clinica.consulta', [$consulta->id]);
+            $conservar = ['seccion' => ConsultaShellVista::SECCION_MOTIVOS] + ($buscar !== '' ? ['buscar' => $buscar] : []);
+            $pagina = $motivos->pagina($regMedico, $buscar, (int) request()->query('pagina_catalogo', 1), $urlSeccion, $conservar);
+
             return new SeccionDeMotivosVista(
-                $motivos->buscar($regMedico, $buscar),
+                $pagina->getCollection(),
                 $motivos->deLaConsulta($regMedico, $numero, $nroconsulta),
                 $buscar,
                 route('clinica.consulta.motivos.buscar', $consulta->id),
@@ -300,6 +304,9 @@ class ConsultaController extends Controller
                 // El diálogo de alta se abre solo si el POST falló: el error viaja en la bolsa y sin
                 // esto el médico tendría que volver a abrirlo para corregir lo que escribió.
                 session()->has('crear_motivo'),
+                $pagina,
+                $motivos->existeEnElCatalogo($regMedico, $buscar),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_MOTIVOS]),
             );
         }
 
@@ -626,21 +633,30 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_DIAGNOSTICO) {
             $buscar = trim((string) request()->query('buscar', ''));
+            $pendientes = array_values(array_filter((array) request()->query('agregar', []), 'is_string'));
+            $conservar = ['seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO]
+                + ($buscar !== '' ? ['buscar' => $buscar] : [])
+                + ($pendientes !== [] ? ['agregar' => $pendientes] : []);
+            $pagina = $diagnosticos->pagina(
+                $regMedico, $buscar, (int) request()->query('pagina_catalogo', 1),
+                route('clinica.consulta', [$consulta->id]), $conservar,
+            );
 
             return new SeccionDeDiagnosticosVista(
                 // Los diagnósticos de **esta** consulta: la fila se llavea por `nrohistoria` +
                 // `nroconsulta` + `codediagnostico` (`DiagnosticosDeLaConsulta`).
                 $diagnosticos->deLaConsulta($regMedico, (string) $consulta->numhistoria, (int) $consulta->nroconsulta),
-                $diagnosticos->buscar($regMedico, $buscar),
+                $pagina->getCollection(),
                 // Lo tildado del catálogo viaja en la query (el buscador es un `GET`): son los códigos que
                 // el botón de guardar agrega a la consulta.
-                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
+                $pendientes,
                 $buscar,
                 route('clinica.consulta.diagnosticos.guardar', $consulta->id),
                 // La base del buscador y del "Cancelar": esta misma sección, sin query.
                 route('clinica.consulta', [$consulta->id]),
                 route('clinica.consulta.diagnosticos.crear', $consulta->id),
                 (array) old(),
+                $pagina,
             );
         }
 

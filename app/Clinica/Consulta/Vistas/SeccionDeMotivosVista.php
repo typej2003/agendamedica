@@ -3,6 +3,7 @@
 namespace App\Clinica\Consulta\Vistas;
 
 use App\Models\MotivoConsulta;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -54,6 +55,9 @@ final class SeccionDeMotivosVista
         private $urlQuitar = null,
         private string $urlCrear = '',
         private bool $crearAbierto = false,
+        private ?LengthAwarePaginator $paginador = null,
+        private bool $buscadoExiste = false,
+        private string $urlSeccion = '',
     ) {
     }
 
@@ -133,6 +137,30 @@ final class SeccionDeMotivosVista
     public function largoMaximo(): int
     {
         return self::LARGO_MAXIMO;
+    }
+
+    /** La URL de la sección (con `?seccion=`): a donde vuelve «Limpiar». */
+    public function urlSeccion(): string
+    {
+        return $this->urlSeccion;
+    }
+
+    /** A donde manda el filtro del catálogo (la sección sin su query: el formulario `GET` la reemplaza). */
+    public function urlDelFiltro(): string
+    {
+        return (string) strtok($this->urlSeccion, '?');
+    }
+
+    /** Los enlaces de página del catálogo (WEB-11.3), o null si el catálogo no se pagina. */
+    public function paginador(): ?LengthAwarePaginator
+    {
+        return $this->paginador;
+    }
+
+    /** ¿Se ofrece «Crear "x"»? Cuando se buscó algo que **no** es ya un motivo del catálogo (con «dolor» y «dolor pélvico» en el catálogo, sí). */
+    public function ofreceCrearLoBuscado(): bool
+    {
+        return $this->buscar !== '' && ! $this->buscadoExiste;
     }
 
     /** ¿El buscador encontró algo? Distingue "el catálogo está vacío" de "tu búsqueda no encontró nada". */

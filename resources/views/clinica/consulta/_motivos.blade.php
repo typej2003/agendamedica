@@ -1,130 +1,107 @@
-{{-- Los motivos de consulta de esta consulta (WEB-4.2, ítem 1 del panel del legado): lo que ya tiene
-     cargado, el buscador de su catálogo y el alta del motivo que falta.
+{{-- Los motivos de consulta de esta consulta (WEB-4.2, ítem 1 del panel del legado) como **dos listas** (WEB-11.3): a la izquierda lo que la
+     consulta ya tiene (con «Eliminar») y a la derecha **todo el catálogo del médico a la vista**, por páginas y con buscador, donde cada
+     motivo se pasa con «Pasar» o con doble clic (el `dw` del escritorio). Y el alta del motivo que falta.
 
-     El buscador es en vivo (`consulta.js` pide el catálogo y pinta los resultados), pero **los resultados
-     también se pintan acá**: sin JavaScript la lista del catálogo se ve igual —un formulario por fila y
-     el botón Agregar— y la pantalla sigue sirviendo. Lo que sólo hace el script es filtrar sin recargar,
-     ofrecer "crear el que falta" y pedir confirmación al quitar. --}}
+     Todo son formularios y enlaces: la pantalla sirve sin JavaScript. `consulta.js` sólo abre el diálogo de «Crear» y `dos-listas.js`
+     agrega el doble clic. --}}
 <div class="consulta-seccion" id="consulta-motivos"
-     data-url-buscar="{{ $seccion->urlBuscar() }}"
-     data-url-crear="{{ $seccion->urlCrear() }}"
-     data-crear-abierto="{{ $seccion->crearAbierto() ? '1' : '0' }}"
-     data-texto-crear="Crear «{texto}» en mi catálogo">
+     data-crear-abierto="{{ $seccion->crearAbierto() ? '1' : '0' }}">
 
-    <x-ui.tarjeta titulo="Motivos de esta consulta" icono="bi-list-check" class="mb-3">
-        <x-slot name="acciones">
-            <x-ui.estado :tono="$seccion->estaVacio() ? 'neutro' : 'marca'"
-                         :icono="$seccion->estaVacio() ? 'bi-dash-circle' : 'bi-list-check'">{{ $seccion->resumen() }}</x-ui.estado>
-        </x-slot>
+    <x-ui.dos-listas titulo-izquierda="Motivos de esta consulta" titulo-derecha="Tu catálogo de motivos" :resumen="$seccion->resumen()">
+        <x-slot name="izquierda">
+            @if ($seccion->estaVacio())
+                <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
+                    Pasa los motivos de esta atención desde tu catálogo, a la derecha. Puedes cargar más de uno.
+                </x-ui.vacio>
+            @else
+                <ul class="motivos-lista">
+                    @foreach ($seccion->cargados() as $motivo)
+                        <li class="motivos-item">
+                            <div class="motivos-item-texto">
+                                <span class="motivos-item-nombre">{{ $motivo['descripcion'] }}</span>
+                                <span class="texto-tenue small">
+                                    <span class="chip">{{ $motivo['codigo'] }}</span>
+                                    @if ($motivo['avisoCatalogo'])
+                                        <span class="texto-tenue small"> · {{ $motivo['avisoCatalogo'] }}</span>
+                                    @endif
+                                </span>
+                            </div>
 
-        @if ($seccion->estaVacio())
-            <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
-                Busca en tu catálogo, abajo, y agrega los motivos de esta atención. Puedes cargar más de uno.
-            </x-ui.vacio>
-        @else
-            <ul class="motivos-lista">
-                @foreach ($seccion->cargados() as $motivo)
-                    <li class="motivos-item">
-                        <div class="motivos-item-texto">
-                            <span class="motivos-item-nombre">{{ $motivo['descripcion'] }}</span>
-                            <span class="texto-tenue small">
-                                <span class="chip">{{ $motivo['codigo'] }}</span>
-                                @if ($motivo['avisoCatalogo'])
-                                    <span class="texto-tenue small"> · {{ $motivo['avisoCatalogo'] }}</span>
-                                @endif
-                            </span>
-                        </div>
-
-                        <form method="POST" action="{{ $motivo['urlQuitar'] }}"
-                              data-confirmar="¿Quitar «{{ $motivo['descripcion'] }}» de esta consulta? El motivo sigue en tu catálogo.">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash" aria-hidden="true"></i> Quitar
-                            </button>
-                        </form>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-    </x-ui.tarjeta>
-
-    <x-ui.tarjeta titulo="Agregar un motivo" icono="bi-search">
-        <div class="position-relative" id="motivos-busqueda">
-            <label class="form-label" for="motivo-texto">Busca en tu catálogo o escribe uno nuevo</label>
-
-            {{-- El campo del buscador en vivo, **sin** `<x-ui.buscador-vivo>`: ese componente ya trae su
-                 propio `#motivo-resultados` y acá la lista se pinta con la plantilla (y el servidor la
-                 deja lista para cuando el JS no corre), así que el `id` quedaría repetido en la página. --}}
-            <div class="buscador-campo buscador-vivo">
-                <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="search" id="motivo-texto" value="{{ $seccion->buscar() }}"
-                       class="form-control form-control-sm" autocomplete="off"
-                       placeholder="Dolor, control, sangrado…"
-                       aria-label="Buscar un motivo de consulta" aria-controls="motivo-resultados">
-            </div>
-
-            {{-- El script clona esta fila por cada resultado (y le pone el formulario de agregar). --}}
-            <template id="motivo-plantilla">
-                <div class="resultado-paciente resultado-motivo">
-                    <span class="resultado-paciente-datos"></span>
-                    <form method="POST" action="{{ $seccion->urlAgregar() }}">
-                        @csrf
-                        <input type="hidden" name="codemotivo" value="">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar
-                        </button>
-                    </form>
-                </div>
-            </template>
-
-            {{-- La fila de "crear el que falta": la muestra el script cuando lo escrito no es un motivo del
-                 catálogo, y abre el diálogo de alta. --}}
-            <template id="motivo-crear-plantilla">
-                <button type="button" class="resultado-paciente resultado-motivo resultado-motivo-crear"
-                        id="motivo-crear-boton">
-                    <span class="resultado-paciente-datos"></span>
-                    <span class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear
-                    </span>
-                </button>
-            </template>
-
-            {{-- Los resultados sin JavaScript: las mismas filas, ya pintadas por el servidor. --}}
-            <div class="list-group resultados-flotantes" id="motivo-resultados" hidden>
-                @foreach ($seccion->resultados() as $resultado)
-                    <div class="resultado-paciente resultado-motivo">
-                        <span class="resultado-paciente-datos">
-                            {{ $resultado['descripcion'] }}
-                            @if ($resultado['yaEsta'])
-                                <span class="texto-tenue small">· ya está en la consulta</span>
-                            @endif
-                        </span>
-                        @unless ($resultado['yaEsta'])
-                            <form method="POST" action="{{ $resultado['urlAgregar'] }}">
+                            <form method="POST" action="{{ $motivo['urlQuitar'] }}"
+                                  data-confirmar="¿Quitar «{{ $motivo['descripcion'] }}» de esta consulta? El motivo sigue en tu catálogo.">
                                 @csrf
-                                <input type="hidden" name="codemotivo" value="{{ $resultado['codigo'] }}">
-                                <button class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash" aria-hidden="true"></i> Eliminar
                                 </button>
                             </form>
-                        @endunless
-                    </div>
-                @endforeach
-            </div>
-        </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-slot>
 
-        <p class="form-text mt-2 mb-0" id="motivo-ayuda">{{ $seccion->ayuda() }}</p>
+        <x-slot name="derecha">
+            {{-- El filtro del catálogo: un `GET` a esta misma sección. --}}
+            <form method="GET" action="{{ $seccion->urlDelFiltro() }}" class="dos-listas-buscar" role="search">
+                <input type="hidden" name="seccion" value="motivos">
+                <label class="visually-hidden" for="motivo-texto">Buscar un motivo en tu catálogo</label>
+                <input type="search" id="motivo-texto" name="buscar" value="{{ $seccion->buscar() }}"
+                       class="form-control form-control-sm" autocomplete="off" placeholder="Buscar:">
+                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                @if ($seccion->buscar() !== '')
+                    <a class="btn btn-sm btn-link" href="{{ $seccion->urlSeccion() }}">Limpiar</a>
+                @endif
+            </form>
 
-        {{-- El alta del motivo nuevo. El aviso de conexión va acá, donde se decide crearlo, y no en una
-             franja que se pierde: es la única parte de la pantalla que no funciona sin red. --}}
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="motivo-nuevo-boton">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un motivo nuevo
-        </button>
-        <p class="form-text mb-0 mt-1" id="motivo-aviso-conexion">
-            <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
-        </p>
-    </x-ui.tarjeta>
+            @if ($seccion->ofreceCrearLoBuscado())
+                <button type="button" class="btn btn-sm btn-outline-primary mb-2" data-motivo-crear="{{ $seccion->buscar() }}">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear «{{ $seccion->buscar() }}» en mi catálogo
+                </button>
+            @endif
+
+            @if ($seccion->hayResultados())
+                <ul class="dos-listas-catalogo">
+                    @foreach ($seccion->resultados() as $resultado)
+                        <li class="dos-listas-fila" @unless ($resultado['yaEsta']) data-pasar @endunless>
+                            <span class="dos-listas-fila-texto">
+                                {{ $resultado['descripcion'] }}
+                                <span class="chip">{{ $resultado['codigo'] }}</span>
+                            </span>
+                            @if ($resultado['yaEsta'])
+                                <span class="texto-tenue small"><i class="bi bi-check2-circle" aria-hidden="true"></i> ya está en la consulta</span>
+                            @else
+                                <form method="POST" action="{{ $resultado['urlAgregar'] }}">
+                                    @csrf
+                                    <input type="hidden" name="codemotivo" value="{{ $resultado['codigo'] }}">
+                                    <button class="btn btn-sm btn-outline-primary" data-pasar-boton>
+                                        <i class="bi bi-arrow-left" aria-hidden="true"></i> Pasar
+                                    </button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+
+                @if ($seccion->paginador() && $seccion->paginador()->hasPages())
+                    <div class="mt-2">{{ $seccion->paginador()->links() }}</div>
+                @endif
+            @else
+                <p class="texto-tenue small mb-2">{{ $seccion->ayuda() }}</p>
+            @endif
+
+            <p class="texto-tenue small mt-2 mb-2">Tip: doble clic en un motivo para pasarlo a la consulta.</p>
+
+            {{-- El alta del motivo nuevo. El aviso de conexión va acá, donde se decide crearlo, y no en una
+                 franja que se pierde: es la única parte de la pantalla que no funciona sin red. --}}
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="motivo-nuevo-boton">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar un motivo nuevo
+            </button>
+            <p class="form-text mb-0 mt-1" id="motivo-aviso-conexion">
+                <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
+            </p>
+        </x-slot>
+    </x-ui.dos-listas>
 
     <x-ui.dialogo id="dialogo-motivo" titulo="Crear un motivo en tu catálogo">
         <form method="POST" action="{{ $seccion->urlCrear() }}">

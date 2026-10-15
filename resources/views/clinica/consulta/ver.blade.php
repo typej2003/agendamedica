@@ -115,4 +115,6 @@
     <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
+    {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
+    <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
 @endsection
