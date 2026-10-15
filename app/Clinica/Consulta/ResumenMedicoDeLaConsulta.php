@@ -194,7 +194,14 @@ final class ResumenMedicoDeLaConsulta
 
     /**
      * El tratamiento: **todos** los medicamentos de los récipes de la consulta (`recipes`), con el nombre
-     * que el escritorio imprime —`nombrecomercial + '/' + presentacion`, el `compute` del subreporte—.
+     * que el escritorio imprime —`nombrecomercial + '/' + presentacion`, el `compute` del subreporte— **y sus
+     * indicaciones** («KEFORAL/Cap. 500 mg — una cada 8 horas por 7 días»).
+     *
+     * Las indicaciones son el **plan de tratamiento que la web sí tiene**: el escritorio copiaba el texto de su
+     * pestaña TRATAMIENTO a `consultas.laringe` (`PLAN_DE_TRATAMIENTO`, que ninguna pantalla de la web escribe y que
+     * queda sólo como respaldo de los datos migrados), y lo que la web guarda como tratamiento son los récipes, con
+     * sus indicaciones por medicamento. Se **calcula** acá y no se guarda en ningún lado (decisión del usuario,
+     * 2026-10-15), así que corregir un récipe corrige el resumen.
      *
      * Se resuelve con la lectura de los récipes (`RecipesDeLaConsulta::deLaConsulta`), que es la que ya
      * conoce el vademécum, el respaldo de la fila y el código: el resumen no vuelve a escribir esa regla.
@@ -204,8 +211,19 @@ final class ResumenMedicoDeLaConsulta
     private function tratamiento(string $regMedico, int $historia, int $nroconsulta): array
     {
         return $this->recipes->deLaConsulta($regMedico, $historia, $nroconsulta)
-            ->flatMap(fn (object $recipe) => $recipe->items->pluck('nombre'))
-            ->filter(fn (?string $nombre) => trim((string) $nombre) !== '')
+            ->flatMap(fn (object $recipe) => $recipe->items)
+            ->map(function (object $item) {
+                $nombre = trim((string) $item->nombre);
+                // Las indicaciones en una sola línea: el renglón de la lista no se parte entre dos medicamentos.
+                $indicaciones = trim((string) preg_replace('/\s+/u', ' ', (string) ($item->indicaciones ?? '')));
+
+                if ($nombre === '') {
+                    return '';
+                }
+
+                return $indicaciones === '' ? $nombre : $nombre . ' — ' . $indicaciones;
+            })
+            ->filter(fn (string $linea) => $linea !== '')
             ->values()
             ->all();
     }
