@@ -193,6 +193,13 @@ class ConsultaImagenesController extends Controller
      */
     private function volver(Consulta $consulta, ?string $examen = null)
     {
+        // Las imágenes de un estudio ecográfico (WEB-11.12) vuelven a su estudio (`?seccion=estudio&tipo=`).
+        $tipoDeEco = TagDeImagen::tipoDeEco($examen);
+
+        if ($tipoDeEco !== null) {
+            return redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipoDeEco]);
+        }
+
         $parametros = [
             $consulta->id,
             'seccion' => $examen === null ? ConsultaShellVista::SECCION_EXAMENES : ConsultaShellVista::SECCION_EVALUACION,

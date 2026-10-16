@@ -769,4 +769,26 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         $this->assertStringContainsString('Histeroscopía', $listado);
     }
+
+    public function test_los_estudios_ecograficos_suben_imagenes_una_a_una_y_cada_tipo_ve_las_suyas(): void
+    {
+        // WEB-11.12: sin límite de imágenes; cada tipo de estudio las guarda con su etiqueta del escritorio y vuelve a su estudio.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $volver = route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio', 'tipo' => 'mamario']);
+
+        foreach (['uno.png', 'dos.png', 'tres.png'] as $nombre) {
+            $web->post(route('clinica.consulta.examenes.subir', $consulta->id), ['imagen' => $this->png($nombre), 'examen' => 'eco-mamario'])
+                ->assertRedirect($volver);
+        }
+        $web->post(route('clinica.consulta.examenes.subir', $consulta->id), ['imagen' => $this->png(), 'examen' => 'eco-ginecologico']);
+
+        $this->assertSame(3, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', 'm')->count());
+        $this->assertSame(1, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', 'p')->count());
+
+        // El estudio mamario muestra sus tres y el ginecológico sólo la suya.
+        $this->assertSame(3, substr_count($web->get($volver)->assertOk()->assertSee('Imágenes del estudio')->getContent(), '<li class="examen-imagen '));
+        $this->assertSame(1, substr_count($web->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio', 'tipo' => 'ginecologico']))->getContent(), '<li class="examen-imagen '));
+    }
 }

@@ -1137,6 +1137,19 @@ class ConsultaController extends Controller
             );
         }
 
+        // …el estudio ecográfico (WEB-11.12) sólo las del **tipo de estudio** que se está mirando…
+        if ($seccion === ConsultaShellVista::SECCION_ESTUDIO) {
+            $clave = TagDeImagen::deUnEco(TiposDeEstudio::normalizar((string) request()->query('tipo', '')));
+
+            return new ImagenesDeLaConsultaVista(
+                $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $clave),
+                route('clinica.consulta.examenes.subir', $consulta->id),
+                fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+                fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+                $clave,
+            );
+        }
+
         // …y la solapa de un examen (WEB-6.5) sólo las **suyas**: las que están etiquetadas para ese examen
         // (`TagDeImagen`). Las rutas son las mismas tres —subir, servir y quitar—, con el examen de vuelta.
         $pestana = $seccion === ConsultaShellVista::SECCION_EVALUACION

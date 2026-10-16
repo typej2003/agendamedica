@@ -73,6 +73,14 @@ final class TagDeImagen
     private const POR_SOLAPA = [
         'colposcopia' => self::COLPOSCOPIA,
         'histeroscopia' => self::HISTEROSCOPIA,
+        // Los siete estudios ecográficos (WEB-11.12): la clave es `eco-<tipo del estudio>` y el escritorio las llama por su etiqueta.
+        'eco-ginecologico' => self::PELVICO,
+        'eco-obstetrico' => self::OBSTETRICO_1,
+        'eco-tercero' => self::OBSTETRICO_3,
+        'eco-doppler' => self::DOPPLER,
+        'eco-fetal' => self::FETAL,
+        'eco-mamario' => self::MAMAS,
+        'eco-abdominal' => self::ABDOMINAL,
     ];
 
     /**
@@ -84,6 +92,13 @@ final class TagDeImagen
     private const ACEPTADAS = [
         'colposcopia' => [self::COLPOSCOPIA, self::COLPOSCOPIA_DEL_ESCRITORIO],
         'histeroscopia' => [self::HISTEROSCOPIA],
+        'eco-ginecologico' => [self::PELVICO],
+        'eco-obstetrico' => [self::OBSTETRICO_1],
+        'eco-tercero' => [self::OBSTETRICO_3],
+        'eco-doppler' => [self::DOPPLER],
+        'eco-fetal' => [self::FETAL],
+        'eco-mamario' => [self::MAMAS],
+        'eco-abdominal' => [self::ABDOMINAL],
     ];
 
     /**
@@ -104,6 +119,18 @@ final class TagDeImagen
         self::FETAL => 'ecocardiograma fetal',
         self::DOPPLER => 'eco Doppler perinatal',
     ];
+
+    /** La clave con la que un estudio ecográfico sube y lee sus imágenes (`eco-ginecologico`…). */
+    public static function deUnEco(string $tipo): string
+    {
+        return 'eco-' . $tipo;
+    }
+
+    /** Si la clave es la de un estudio ecográfico, el tipo del estudio (`eco-mamario` → `mamario`); si no, `null`. */
+    public static function tipoDeEco(?string $clave): ?string
+    {
+        return is_string($clave) && str_starts_with($clave, 'eco-') && isset(self::POR_SOLAPA[$clave]) ? substr($clave, 4) : null;
+    }
 
     /** ¿La solapa existe y tiene etiqueta? Es `null` para una solapa que no sube fotos. */
     public static function deLaSolapa(string $solapa): ?string

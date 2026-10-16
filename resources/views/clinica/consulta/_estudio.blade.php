@@ -11,4 +11,16 @@
                      etiqueta="Estudios ecográficos" />
 
     @include($seccion->parcial(), ['vm' => $seccion->estudio()])
+
+    {{-- Las imágenes del estudio (WEB-11.12): se suben **una a una y sin límite**, etiquetadas para este tipo de estudio (la etiqueta que el
+         escritorio usa para sus grillas). --}}
+    @if ($imagenes ?? null)
+        <div class="mt-3">
+            @include('clinica.consulta._imagenes', [
+                'imagenes' => $imagenes,
+                'titulo' => 'Imágenes del estudio',
+                'prefijo' => 'estudio',
+            ])
+        </div>
+    @endif
 </div>
