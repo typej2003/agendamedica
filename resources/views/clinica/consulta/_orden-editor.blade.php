@@ -28,6 +28,20 @@
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="orden-form" data-orden-form data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
+            @if ($vm->esPareja())
+                {{-- Los datos de la pareja (WEB-11.21): la orden sale a su nombre; sin cédula y nombre no se guarda. --}}
+                <div class="row g-3 mb-3">
+                    <x-ui.campo etiqueta="C.I. de la pareja" for="orden-cedula" error="cedula" class="col-12 col-md-4">
+                        <input type="text" name="cedula" id="orden-cedula" class="form-control" maxlength="20" inputmode="numeric"
+                               value="{{ $vm->cedulaDeLaPareja() }}" autocomplete="off">
+                    </x-ui.campo>
+                    <x-ui.campo etiqueta="Nombre de la pareja" for="orden-nombre" error="nombre" class="col-12 col-md-8">
+                        <input type="text" name="nombre" id="orden-nombre" class="form-control" maxlength="100"
+                               value="{{ $vm->nombreDeLaPareja() }}" autocomplete="off">
+                    </x-ui.campo>
+                </div>
+            @endif
+
             <p class="texto-tenue small mb-2" id="orden-cuenta" aria-live="polite">{{ $vm->cuenta() }}</p>
 
             <ul class="orden-lista {{ $vm->numerada() ? 'orden-lista-numerada' : '' }}" id="orden-items" aria-label="{{ ucfirst($vm->cosas()) }} de la orden">

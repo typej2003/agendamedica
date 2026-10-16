@@ -39,6 +39,9 @@ final class PestanasDeSolicitudes
 
     public const DIETA = 'dieta';
 
+    /** La orden de laboratorio de la pareja (WEB-11.21): se abre con el botón «Pareja» del laboratorio y no es una pestaña de la fila. */
+    public const PAREJA = 'pareja';
+
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::CONSTANCIA;
 
@@ -64,7 +67,7 @@ final class PestanasDeSolicitudes
     /** La clave de una pestaña que existe; cualquier otro valor de la URL es la pestaña por defecto. */
     public static function normalizar(?string $clave): string
     {
-        return $clave !== null && isset(self::TODAS[$clave]) ? $clave : self::POR_DEFECTO;
+        return $clave !== null && (isset(self::TODAS[$clave]) || $clave === self::PAREJA) ? $clave : self::POR_DEFECTO;
     }
 
     /** @return array<int,string> las claves de las pestañas que existen */

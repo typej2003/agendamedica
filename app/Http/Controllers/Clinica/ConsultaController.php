@@ -27,6 +27,7 @@ use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\RecipeDeLaPareja;
@@ -826,7 +827,9 @@ class ConsultaController extends Controller
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
         $imprimir = fn (string $clave) => route('clinica.consulta.documentos.imprimir', [$id, 'documento' => $clave]);
 
-        if ($activa === PestanasDeSolicitudes::LABORATORIO) {
+        if ($activa === PestanasDeSolicitudes::PAREJA) {
+            $vista = $this->laboratorioDeLaPareja($consulta, app(LaboratorioDeLaPareja::class), $catalogoDeExamenes, $old, $imprimir(DocumentoImpreso::LABORATORIO_PAREJA));
+        } elseif ($activa === PestanasDeSolicitudes::LABORATORIO) {
             $vista = $this->laboratorio($consulta, $laboratorio, $catalogoDeExamenes, $old, $imprimir('laboratorio'));
         } elseif ($activa === PestanasDeSolicitudes::ESTUDIOS) {
             $vista = $this->estudios($consulta, $estudios, $catalogoDeExamenes, $old, $imprimir('estudios'));
@@ -949,6 +952,52 @@ class ConsultaController extends Controller
                 'catalogo' => route('clinica.consulta.laboratorio.catalogo', $id),
                 'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
                 'administrar' => route('clinica.catalogos.examenes'),
+                // El botón «Pareja» (WEB-11.21): su orden aparte.
+                'pareja' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA]),
+            ],
+        );
+    }
+
+    /**
+     * La orden de laboratorio de la **pareja** (WEB-11.21): la pantalla del laboratorio con la C.I. y el nombre de la pareja. Se abre con el botón
+     * «Pareja» del laboratorio. Si el último guardado falló, lo que quedó en el formulario (`old`) manda sobre lo guardado.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function laboratorioDeLaPareja(Consulta $consulta, LaboratorioDeLaPareja $pareja, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    {
+        $id = $consulta->id;
+        $regMedico = (string) $consulta->reg_medico;
+
+        $filas = $pareja->filas($consulta);
+        $datos = $pareja->datos($consulta);
+
+        $items = $filas->map(fn (object $fila) => [
+            'codigo' => $fila->codigo,
+            'nombre' => $fila->nombre,
+            'tipo' => $fila->tipo,
+            'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+        ])->all();
+
+        return OrdenVista::pareja(
+            $this->itemsDelFormulario($old, 'examenes', $items, $regMedico, false, $catalogo),
+            [
+                'cedula' => array_key_exists('cedula', $old) ? ($old['cedula'] ?? null) : $datos['cedula'],
+                'nombre' => array_key_exists('nombre', $old) ? ($old['nombre'] ?? null) : $datos['nombre'],
+            ],
+            array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $datos['observacion'],
+            $pareja->esReal($filas, $datos),
+            $catalogo->hay($regMedico, false),
+            $catalogo->rutinas($regMedico),
+            [
+                'guardar' => route('clinica.consulta.laboratorio-pareja.guardar', $id),
+                'eliminar' => route('clinica.consulta.laboratorio-pareja.eliminar', $id),
+                'imprimir' => $urlImprimir,
+                // El buscador y las rutinas son los de la orden de la paciente: el catálogo es el mismo.
+                'catalogo' => route('clinica.consulta.laboratorio.catalogo', $id),
+                'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
+                'administrar' => route('clinica.catalogos.examenes'),
+                'volver' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::LABORATORIO]),
             ],
         );
     }

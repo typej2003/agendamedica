@@ -25,6 +25,7 @@ use App\Http\Controllers\Clinica\ConsultaEstudiosController;
 use App\Http\Controllers\Clinica\ConsultaHospitalizacionController;
 use App\Http\Controllers\Clinica\ConsultaInformeController;
 use App\Http\Controllers\Clinica\ConsultaLaboratorioController;
+use App\Http\Controllers\Clinica\ConsultaLaboratorioParejaController;
 use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
@@ -346,6 +347,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'eliminar'])->name('consulta.laboratorio.eliminar');
                 Route::get('/consulta/{consulta}/laboratorio/catalogo', [ConsultaLaboratorioController::class, 'catalogo'])->name('consulta.laboratorio.catalogo');
                 Route::get('/consulta/{consulta}/laboratorio/rutinas/{tipo}', [ConsultaLaboratorioController::class, 'rutina'])->name('consulta.laboratorio.rutina');
+                // La orden de laboratorio de la **pareja** (WEB-11.21, el botón «Pareja»): se guarda entera y se elimina en la misma URL; el buscador y las
+                // rutinas son los de la orden de la paciente.
+                Route::post('/consulta/{consulta}/laboratorio-pareja', [ConsultaLaboratorioParejaController::class, 'guardar'])->name('consulta.laboratorio-pareja.guardar');
+                Route::delete('/consulta/{consulta}/laboratorio-pareja', [ConsultaLaboratorioParejaController::class, 'eliminar'])->name('consulta.laboratorio-pareja.eliminar');
                 Route::post('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'guardar'])->name('consulta.estudios.guardar');
                 Route::delete('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'eliminar'])->name('consulta.estudios.eliminar');
                 Route::get('/consulta/{consulta}/estudios/catalogo', [ConsultaEstudiosController::class, 'catalogo'])->name('consulta.estudios.catalogo');

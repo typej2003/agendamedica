@@ -30,6 +30,7 @@ use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
+use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
@@ -109,6 +110,7 @@ final class SolicitudesParaImprimir
         private TextoDelExamen $textos,
         private ResumenMedicoDeLaConsulta $resumenes,
         private ImagenesParaElInforme $imagenesDelInforme,
+        private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
     ) {
     }
 
@@ -271,6 +273,18 @@ final class SolicitudesParaImprimir
                 'titulo' => 'Laboratorio',
                 // Sin los exámenes ni el resumen: la lista de la cita la ve la secretaría y no lleva contenido clínico.
                 'resumen' => 'Orden de laboratorio',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // La orden de laboratorio de la pareja (WEB-11.21): una hoja aparte, a nombre de la pareja.
+        $examenesDeLaPareja = $this->laboratoriosDeLaPareja->filas($consulta);
+        if ($this->laboratoriosDeLaPareja->esReal($examenesDeLaPareja, $this->laboratoriosDeLaPareja->datos($consulta))) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::LABORATORIO_PAREJA,
+                'tipo' => DocumentoImpreso::LABORATORIO_PAREJA,
+                'titulo' => 'Laboratorio de la pareja',
+                'resumen' => 'Orden de laboratorio de la pareja',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -476,6 +490,13 @@ final class SolicitudesParaImprimir
             $resumen = $this->laboratorios->observacion($consulta);
 
             return $this->laboratorios->esReal($examenes, $resumen) ? $this->laboratorio($paciente, $examenes, $resumen, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::LABORATORIO_PAREJA) {
+            $examenes = $this->laboratoriosDeLaPareja->filas($consulta);
+            $datos = $this->laboratoriosDeLaPareja->datos($consulta);
+
+            return $this->laboratoriosDeLaPareja->esReal($examenes, $datos) ? $this->laboratorioDeLaPareja($examenes, $datos, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::ESTUDIOS) {
@@ -689,6 +710,32 @@ final class SolicitudesParaImprimir
             PacienteImpreso::datos($paciente, $fecha),
             [],
             array_merge($parrafos, DocumentoImpreso::parrafosDe($resumen, 'RESUMEN CLÍNICO:', true)),
+        );
+    }
+
+    /**
+     * La orden de laboratorio de la **pareja** (WEB-11.21): la hoja de laboratorio **a nombre de la pareja** (su nombre y su C.I., sin edad ni
+     * dirección: no son del paciente de la consulta), con los exámenes por tipo y su resumen clínico.
+     *
+     * @param  array{cedula:?string, nombre:?string, observacion:?string}  $datos
+     */
+    private function laboratorioDeLaPareja(Collection $examenes, array $datos, string $fecha): DocumentoImpreso
+    {
+        $parrafos = [];
+
+        foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::LABORATORIO_PAREJA,
+            DocumentoImpreso::LABORATORIO_PAREJA,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO_PAREJA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO_PAREJA][1],
+            $fecha,
+            ['nombre' => (string) ($datos['nombre'] ?? ''), 'cedula' => $datos['cedula'], 'edad' => null, 'direccion' => null],
+            [],
+            array_merge($parrafos, DocumentoImpreso::parrafosDe($datos['observacion'], 'RESUMEN CLÍNICO:', true)),
         );
     }
 

@@ -37,6 +37,9 @@ final class DocumentoImpreso
 
     public const ESTUDIOS = 'estudios';
 
+    /** La **orden de laboratorio de la pareja** (WEB-11.21): la hoja de laboratorio a nombre de la pareja. */
+    public const LABORATORIO_PAREJA = 'laboratorio-pareja';
+
     /**
      * El **informe del estudio ecográfico** (WEB-6.1). Es el informe de un estudio, no una solicitud: la hoja lleva los
      * datos del estudio (medidas, hallazgos y conclusiones), no una orden.
@@ -151,6 +154,7 @@ final class DocumentoImpreso
         self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
+        self::LABORATORIO_PAREJA => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio de la pareja'],
         self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],
         self::ECO_PELVICO => ['INFORME ECOSONOGRÁFICO GINECOLÓGICO', 'Eco pélvico'],
         // El título del DataWindow del informe prenatal, tal cual (`d_informe_pre_nata_peque.srd:19`).
