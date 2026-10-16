@@ -180,6 +180,7 @@ class ConsultaImagenesController extends Controller
             $imagen,
             (int) $consulta->numhistoria,
             (int) $consulta->nroconsulta,
+            $request->query('alcance') === 'todas',
         );
 
         // Sin fila, sin archivo en el servidor o archivo que ya no está: 404. Los tres casos son "no hay

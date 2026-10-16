@@ -1127,13 +1127,27 @@ class ConsultaController extends Controller
     ): ?object {
         // La sección genérica de exámenes (WEB-4.7) muestra **todas** las imágenes de la consulta…
         if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
+            // «Esta consulta | Todas» (WEB-11.22): con `?alcance=todas` se ven las imágenes de todas las consultas del paciente.
+            $todas = request()->query('alcance') === 'todas';
+            $url = fn (?string $alcance) => route('clinica.consulta', array_filter([
+                $consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES, 'alcance' => $alcance,
+            ]));
+
             return new ImagenesDeLaConsultaVista(
-                $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                $todas
+                    ? $imagenes->deLaHistoria($regMedico, (int) $consulta->numhistoria)
+                    : $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
                 route('clinica.consulta.examenes.subir', $consulta->id),
                 // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
                 // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
-                fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+                fn (int $fila) => route('clinica.consulta.examenes.descargar', array_filter([$consulta->id, $fila, 'alcance' => $todas ? 'todas' : null])),
                 fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+                null,
+                [
+                    ['texto' => 'Esta consulta', 'url' => $url(null), 'activa' => ! $todas],
+                    ['texto' => 'Todas', 'url' => $url('todas'), 'activa' => $todas],
+                ],
+                (int) $consulta->nroconsulta,
             );
         }
 

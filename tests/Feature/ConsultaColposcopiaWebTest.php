@@ -804,4 +804,28 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         $this->assertSame(1, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', '@')->count());
     }
+
+    public function test_la_galeria_ve_las_imagenes_de_todas_las_consultas_pero_solo_quita_las_de_esta(): void
+    {
+        // WEB-11.22: el chip «Todas» suma las imágenes de las otras consultas del paciente (se ven y se descargan, no se quitan desde acá).
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $this->hoy->toDateString()]);
+        $vieja = $this->imagen($medico, $primera, 'p', true);
+        $actual = $this->imagen($medico, $segunda, 'm', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $esta = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => 'examenes']))->assertOk()->assertSee('Esta consulta')->getContent();
+        $this->assertSame(1, substr_count($esta, '<li class="examen-imagen '));
+
+        $todas = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => 'examenes', 'alcance' => 'todas']))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($todas, '<li class="examen-imagen '));
+        $this->assertStringContainsString('Consulta N.º 1', $todas);
+        // Quitar sólo se ofrece para la imagen de esta consulta.
+        $this->assertSame(1, substr_count($todas, 'name="_method" value="DELETE"'));
+
+        // La de la otra consulta se descarga con el alcance «todas» y no sin él.
+        $web->get(route('clinica.consulta.examenes.descargar', [$segunda->id, $vieja->id]))->assertNotFound();
+        $web->get(route('clinica.consulta.examenes.descargar', [$segunda->id, $vieja->id, 'alcance' => 'todas']))->assertOk();
+    }
 }

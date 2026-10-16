@@ -69,6 +69,26 @@ final class ImagenesDeLaConsulta
     }
 
     /**
+     * **Las imágenes de toda la historia** (WEB-11.22, el «Todas» de la galería): las de todas las consultas del paciente, las más
+     * nuevas primero. Misma forma de fila que `deLaConsulta()` (con el número de la consulta de cada una).
+     *
+     * @return Collection<int,object>
+     */
+    public function deLaHistoria(string $regMedico, int $nrohistoria): Collection
+    {
+        $filas = ImagenConsulta::where('reg_medico', $regMedico)
+            ->where('nrohistoria', $nrohistoria)
+            ->orderByDesc('nroconsulta')
+            ->orderBy('orden')
+            ->orderByDesc('id')
+            ->get();
+
+        $originales = $this->nombresOriginales($regMedico, $filas->pluck('id')->all());
+
+        return $filas->map(fn (ImagenConsulta $imagen) => $this->fila($imagen, $originales[(int) $imagen->id] ?? null));
+    }
+
+    /**
      * **Las imágenes de un examen de la consulta** (WEB-6.5): las que están etiquetadas para esa solapa
      * (`colposcopia`, …). Misma forma de fila y mismo orden que `deLaConsulta()`.
      *
@@ -120,11 +140,11 @@ final class ImagenesDeLaConsulta
         int $imagenId,
         int $nrohistoria,
         int $nroconsulta,
+        bool $deLaHistoria = false,
     ): ?object {
-        $imagen = ImagenConsulta::whereIn('reg_medico', $registrosMedicos)
-            ->where('nrohistoria', $nrohistoria)
-            ->where('nroconsulta', $nroconsulta)
-            ->find($imagenId);
+        // `$deLaHistoria` (WEB-11.22, «Todas»): la imagen puede ser de **otra consulta de la misma historia**; sigue acotada al médico y a la historia.
+        $consultas = ImagenConsulta::whereIn('reg_medico', $registrosMedicos)->where('nrohistoria', $nrohistoria);
+        $imagen = ($deLaHistoria ? $consultas : $consultas->where('nroconsulta', $nroconsulta))->find($imagenId);
 
         return $imagen === null
             ? null
@@ -172,6 +192,7 @@ final class ImagenesDeLaConsulta
 
         return (object) [
             'id' => (int) $imagen->id,
+            'nroconsulta' => (int) $imagen->nroconsulta,
             // El modelo, para quien tiene que escribir sobre la fila (el borrado). El resto de la fila son
             // datos ya resueltos para la pantalla y la descarga.
             'modelo' => $imagen,
