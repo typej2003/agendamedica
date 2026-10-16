@@ -51,7 +51,7 @@
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="FPP" for="prenatal-fpp" class="col-6 col-md-4"
-                            ayuda="La FUR más 281 días, como la pestaña del escritorio. No se guarda.">
+                            ayuda="La FUR más 280 días (40 semanas). No se guarda.">
                     <output class="form-control-plaintext fw-semibold" id="prenatal-fpp">
                         {{ $vm->fpp() ? \App\Support\FechaClinica::formato($vm->fpp()) : '—' }}
                     </output>

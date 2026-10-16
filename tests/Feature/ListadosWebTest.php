@@ -141,7 +141,7 @@ class ListadosWebTest extends TestCase
         $respuesta->assertSee('12/03/2020');   // F. ingreso
         $respuesta->assertSee('34 años');      // Edad
         $respuesta->assertSee('15/01/2026');   // F.U.R.
-        $respuesta->assertSee('25/10/2026');   // F.P.P. = FUR + 283
+        $respuesta->assertSee('22/10/2026');   // F.P.P. = FUR + 283
         $respuesta->assertSee('PDVSA');        // Procedencia, el nombre del catálogo
 
         // La clave del listado viaja en el formulario: la pantalla es una sola y parametrizada.
@@ -152,11 +152,11 @@ class ListadosWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
-        $this->pacienteConGesta($medico, 1001, 'Adentro', ['fur' => '2026-01-15']);          // FPP 25/10/2026
-        $this->pacienteConGesta($medico, 1002, 'BordeInicial', ['fur' => '2025-12-22']);     // FPP 01/10/2026, el primero del rango
-        $this->pacienteConGesta($medico, 1003, 'BordeFinal', ['fur' => '2026-01-21']);       // FPP 31/10/2026, el último
-        $this->pacienteConGesta($medico, 1004, 'AntesDelRango', ['fur' => '2025-12-21']);    // FPP 30/09/2026
-        // Con la FUR **dentro** del rango pero la FPP muy lejos: es lo que prueba el −283. Si el filtro se
+        $this->pacienteConGesta($medico, 1001, 'Adentro', ['fur' => '2026-01-18']);          // FPP 22/10/2026
+        $this->pacienteConGesta($medico, 1002, 'BordeInicial', ['fur' => '2025-12-25']);     // FPP 01/10/2026, el primero del rango
+        $this->pacienteConGesta($medico, 1003, 'BordeFinal', ['fur' => '2026-01-24']);       // FPP 31/10/2026, el último
+        $this->pacienteConGesta($medico, 1004, 'AntesDelRango', ['fur' => '2025-12-24']);    // FPP 30/09/2026
+        // Con la FUR **dentro** del rango pero la FPP muy lejos: es lo que prueba el −280. Si el filtro se
         // aplicara a la FUR tal cual, esta gesta aparecería.
         $this->pacienteConGesta($medico, 1005, 'FurEnElRango', ['fur' => '2026-10-05']);
 
@@ -319,7 +319,7 @@ class ListadosWebTest extends TestCase
             ->get(route('clinica.listados.imprimir', ['desde' => '2026-10-01', 'hasta' => '2026-10-31']))
             ->assertOk()
             ->assertSee('Pérez, Ana')
-            ->assertSee('25/10/2026')
+            ->assertSee('22/10/2026')
             // La cabecera lleva los filtros: un listado sin su rango no dice nada en papel.
             ->assertSee('Desde')
             ->assertSee('01/10/2026')

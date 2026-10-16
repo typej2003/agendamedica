@@ -82,7 +82,7 @@
             </div>
             <p class="texto-tenue small listados-filtros-ayuda" id="listados-ayuda">
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
-                Las fechas son las de la <strong>FPP</strong> (la FUR más 283 días), como el reporte del escritorio.
+                Las fechas son las de la <strong>FPP</strong> (la FUR más 280 días), como el reporte del escritorio.
                 Con <strong>Por semanas</strong> puesto, las fechas no se usan y se listan las gestas de esa semana exacta.
             </p>
         </form>

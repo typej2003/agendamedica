@@ -144,7 +144,7 @@ class ImpresionDeEcoFetalWebTest extends TestCase
             // La ficha obstetricia de su cabecera, como en su DataWindow de impresión.
             ->assertSee('GESTA:')->assertSee('II')
             ->assertSee('FUR:')->assertSee('20/05/2026')
-            ->assertSee('FPP:')->assertSee('27/02/2027')
+            ->assertSee('FPP:')->assertSee('24/02/2027')
             ->assertSee('EG:')->assertSee('20 semanas y 0 días')
             // ⚠️ La rareza del legado: el «REFERIDO POR:» imprime `pacientes.ocupacion`, no la columna `referido`.
             ->assertSee('REFERIDO POR:')->assertSee('Abogada')

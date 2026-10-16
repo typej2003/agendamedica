@@ -156,7 +156,7 @@ final class PrenatalVista
     {
         return 'Cada gesta guarda su FUR, la menarquia, cuántas gestas, partos, cesáreas y abortos, el tipiaje '
             . 'de la madre y del padre y sus observaciones. La edad gestacional y la FPP se calculan de la FUR '
-            . '(la FPP suma 281 días, como la pestaña del escritorio) y no se guardan: se recalculan al '
+            . '(la FPP suma 280 días) y no se guardan: se recalculan al '
             . 'escribir. Lo cargado se guarda con el botón; si sales sin guardar, el navegador te avisa antes '
             . 'de perderlo.';
     }

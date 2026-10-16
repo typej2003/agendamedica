@@ -174,7 +174,7 @@ class ConsultaFetalWebTest extends TestCase
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
             ->assertSee('20 semanas y 0 días')
-            ->assertSee('27/02/2027');
+            ->assertSee('24/02/2027');
     }
 
     /**

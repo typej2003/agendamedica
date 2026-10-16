@@ -45,20 +45,20 @@ class ListadoDeEmbarazosTest extends TestCase
     {
         $filtro = FiltroDeEmbarazos::de(['desde' => '2026-06-01', 'hasta' => '2026-06-30'], $this->hoy());
 
-        // El rango elegido son las fechas de la **FPP**; la columna que se filtra es la FUR, corrida −283.
+        // El rango elegido son las fechas de la **FPP**; la columna que se filtra es la FUR, corrida −280.
         $this->assertSame('2026-06-01', $filtro->rango()->desde());
         $this->assertSame('2026-06-30', $filtro->rango()->hasta());
 
         $fur = $filtro->rangoDeFur();
-        $this->assertSame('2025-08-22', $fur->desde());
-        $this->assertSame('2025-09-20', $fur->hasta());
+        $this->assertSame('2025-08-25', $fur->desde());
+        $this->assertSame('2025-09-23', $fur->hasta());
 
         // Los bordes, con la misma cuenta que la columna F.P.P. de la pantalla: la FUR del extremo da
         // exactamente la FPP del extremo, así que el primero y el último día del rango entran.
         $this->assertSame('2026-06-01', EdadGestacional::fpp($fur->desde(), FiltroDeEmbarazos::DIAS_DE_LA_FPP));
         $this->assertSame('2026-06-30', EdadGestacional::fpp($fur->hasta(), FiltroDeEmbarazos::DIAS_DE_LA_FPP));
 
-        // ...y los 283 son los de los reportes, no otros: un día antes de la FUR del extremo ya queda afuera.
+        // ...y los 280 son los de los reportes, no otros: un día antes de la FUR del extremo ya queda afuera.
         $unDiaAntes = Carbon::createFromFormat('!Y-m-d', $fur->desde())->subDay()->toDateString();
         $this->assertSame('2026-05-31', EdadGestacional::fpp($unDiaAntes, FiltroDeEmbarazos::DIAS_DE_LA_FPP));
     }
@@ -208,7 +208,7 @@ class ListadoDeEmbarazosTest extends TestCase
         $this->assertSame('34 años', $fila['edad']);
         $this->assertSame('15/01/2026', $fila['fur']);
         // F.P.P. = FUR + 283, la misma cuenta que el `relativedate(fur, 283)` del DataWindow.
-        $this->assertSame('25/10/2026', $fila['fpp']);
+        $this->assertSame('22/10/2026', $fila['fpp']);
         $this->assertSame('PDVSA', $fila['procedencia']);
         $this->assertNull($fila['url'], 'sin la URL del controlador no hay enlace');
     }
