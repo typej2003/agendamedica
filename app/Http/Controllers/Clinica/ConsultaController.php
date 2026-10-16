@@ -48,6 +48,7 @@ use App\Clinica\Consulta\Vistas\EcoMamarioVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
+use App\Clinica\Consulta\ResumenesAnteriores;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -414,11 +415,13 @@ class ConsultaController extends Controller
                     : new EvaluacionFisicaVista(
                         $examen->de($consulta),
                         route('clinica.consulta.evaluacion.guardar', $consulta->id),
-                        $url(PestanasDelExamen::FISICO),
+                        $url($pestana),
                         (array) old(),
                         route('clinica.consulta.evaluacion.resumen', $consulta->id),
                         PlantillasDelTexto::de($regMedico, 'RF')->all(),
                         PlantillasDelTexto::de($regMedico, 'EG')->all(),
+                        $pestana,
+                        $pestana === PestanasDelExamen::GINECOLOGICO ? (new ResumenesAnteriores())->de($consulta, 'total_g') : [],
                     ),
             );
         }

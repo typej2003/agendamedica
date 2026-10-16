@@ -3098,3 +3098,6 @@ body.auth-pagina {
     color: var(--ds-texto-2);
 }
 .pasos-gesta li + li { margin-top: .25rem; }
+
+/* Resumen de una consulta anterior (WEB-11.9): respeta los saltos de línea que dejó el escritorio. */
+.resumen-anterior-texto { white-space: pre-line; }

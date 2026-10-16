@@ -17,7 +17,7 @@
     $estado = $seccion->estado();
 @endphp
 
-<x-ui.tarjeta titulo="Evaluación física" icono="bi-heart-pulse">
+<x-ui.tarjeta titulo="Examen físico" icono="bi-heart-pulse">
     <x-slot name="acciones">
         <span class="texto-tenue small me-2">{{ $seccion->cargados() }} de {{ $seccion->totalCampos() }} campos con dato</span>
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
@@ -29,6 +29,7 @@
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="evaluacion-form"
           data-consulta-evaluacion data-autoguardar data-url-resumen="{{ $seccion->urlResumen() }}" data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
+        <input type="hidden" name="pestana" value="fisico">
 
         {{-- 1. Antropometría, signos y tensión: las siete columnas `double` de `consultas` (peso, talla,
              FC, FR y las tres circunferencias) más `examen_fisico_nuevo.tension`. --}}
@@ -74,38 +75,6 @@
             </div>
         </div>
 
-        {{-- 3. Examen ginecológico: las cuatro columnas de la solapa homónima. La colposcopia y la
-             citología tienen su propia solapa (WEB-6.5) y no se editan acá. --}}
-        <h3 class="paso-titulo mb-2">Examen ginecológico</h3>
-        <div class="row g-3 mb-2">
-            @foreach ($seccion->ginecologico() as $campo)
-                @include('clinica.consulta._evaluacion-campo', ['campo' => $campo, 'columnas' => 'col-12 col-md-6'])
-            @endforeach
-        </div>
-
-
-        {{-- El resumen narrativo (WEB-11.8): lo arma «Actualizar» con los datos no vacíos de arriba, es **editable** y se guarda con la sección.
-             Si ya hay un texto distinto del que se armaría, «Actualizar» pide confirmación antes de reemplazarlo. --}}
-        <div class="row g-3 mb-3" data-resumen="ginecologico">
-            <div class="col-12 col-xl-8">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
-                    <label class="etiqueta mb-0" for="total_g">Resumen del examen ginecológico</label>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-resumen-actualizar="ginecologico">
-                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Actualizar
-                    </button>
-                </div>
-                <textarea name="total_g" id="total_g" class="form-control" rows="5"
-                          placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalGinecologico() }}</textarea>
-            </div>
-            <div class="col-12 col-xl-4">
-                <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG" nombre="examen ginecológico" />
-            </div>
-        </div>
-
-        <p class="texto-tenue small mb-0">
-            El resumen ginecológico incluye la colposcopía y la citología, que se cargan en sus propias solapas.
-        </p>
-
         {{-- El aviso de "hay cambios sin guardar": `consulta.js` lo muestra cuando algún control del
              formulario cambió respecto de lo guardado. --}}
         <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="evaluacion-sin-guardar" hidden>
@@ -117,7 +86,7 @@
             <a class="btn btn-outline-secondary" href="{{ $seccion->urlVolver() }}">Cancelar</a>
             {{-- La única acción primaria de la solapa: guardar lo cargado. --}}
             <button class="btn btn-primary">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar la evaluación física
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el examen físico
             </button>
         </div>
     </form>

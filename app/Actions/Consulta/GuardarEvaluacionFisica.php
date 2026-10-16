@@ -68,8 +68,9 @@ final class GuardarEvaluacionFisica
         $sinCambios = [];
 
         foreach (EvaluacionFisica::columnas() as $columna => $tabla) {
-            // Un resumen que no vino en los valores no se toca (quien no lo manda —el móvil— no lo borra).
-            if (in_array($columna, EvaluacionFisica::COLUMNAS_RESUMEN, true) && ! array_key_exists($columna, $valores)) {
+            // Una columna que no vino en los valores no se toca (WEB-11.9: el examen físico y el ginecológico son dos
+            // chips con su propio formulario; quien no manda una columna —el otro chip, el móvil— no la borra).
+            if (! array_key_exists($columna, $valores)) {
                 continue;
             }
 

@@ -214,23 +214,23 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Evaluación física', false);
-        $respuesta->assertSee('Guardar la evaluación física', false);
+        $respuesta->assertSee('Examen físico', false);
+        $respuesta->assertSee('Guardar el examen físico', false);
 
         // La antropometría y la tensión, tal cual están guardadas.
         $respuesta->assertSee('value="70.5"', false);
         $respuesta->assertSee('value="1.62"', false);
         $respuesta->assertSee('value="120/80"', false);
 
-        // El examen por aparatos y el ginecológico, en sus áreas de texto.
+        // El examen por aparatos, en sus áreas de texto (el ginecológico es otro chip, WEB-11.9).
         $respuesta->assertSee('Paciente en buen estado general.', false);
         $respuesta->assertSee('Blando, depresivo, indoloro.', false);
-        $respuesta->assertSee('Normales.', false);
+        $respuesta->assertDontSee('Normales.', false);
 
         // El IMC derivado (70,5 / 1,62² = 26,86) y el recuento de campos con dato: las siete columnas de
         // `consultas`, la tensión y los tres hallazgos del examen.
         $respuesta->assertSee('26,86', false);
-        $respuesta->assertSee('11 de 20 campos con dato', false);
+        $respuesta->assertSee('10 de 16 campos con dato', false);
 
         // El resumen del escritorio se muestra tal cual (no se regenera).
         $respuesta->assertSee('PESO: 70.5 kg.  TALLA: 1,62 m.', false);
@@ -263,7 +263,7 @@ class ConsultaEvaluacionWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertDontSee('El examen de la consulta 5.', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
 
         // Y al guardar, la fila que se escribe es la de **esta** consulta, no la de la otra.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -280,6 +280,47 @@ class ConsultaEvaluacionWebTest extends TestCase
         $this->assertNotNull(\App\Models\Paciente::find($pacienteId));
     }
 
+    public function test_el_chip_ginecologico_muestra_sus_cajas_y_los_resumenes_anteriores(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->examen($medico, $consulta, ['genitales_externos' => 'Normales.', 'total_g' => 'ESTA CONSULTA.']);
+
+        // Una consulta anterior de la misma historia, con su resumen.
+        $anterior = Consulta::create([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => $consulta->numhistoria,
+            'nroconsulta' => (int) $consulta->nroconsulta - 1, 'fecha' => '2026-09-01',
+        ]);
+        $this->examen($medico, $anterior, ['total_g' => 'RESUMEN VIEJO.']);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'ginecologico']);
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Guardar el examen ginecológico', false);
+        $respuesta->assertSee('Normales.', false);
+        $respuesta->assertDontSee('Guardar el examen físico', false);
+        $respuesta->assertSee('RESUMEN VIEJO.', false);
+        $respuesta->assertSee('01/09/2026', false);
+        $this->assertSame(1, substr_count($respuesta->getContent(), 'data-resumen-anterior'));
+    }
+
+    public function test_guardar_un_chip_no_borra_las_columnas_del_otro(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->examen($medico, $consulta, ['general' => 'Buen estado.', 'tacto_vaginal' => 'Útero normal.']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta), ['pestana' => 'ginecologico', 'genitales_externos' => 'Normales.'])
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'ginecologico']));
+
+        $fila = ExamenFisico::where('historia', (int) $consulta->numhistoria)->where('consulta', (int) $consulta->nroconsulta)->first();
+        $this->assertSame('Normales.', $fila->genitales_externos);
+        $this->assertSame('Buen estado.', $fila->general);
+        $this->assertSame('Útero normal.', $fila->tacto_vaginal);
+    }
+
     public function test_una_consulta_sin_examen_muestra_los_campos_vacios(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -290,12 +331,12 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta->assertOk();
         // El estado de la sección: vacía.
         $respuesta->assertSee('Sin cargar', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
         // El IMC sin peso ni talla: una raya, no un cero.
         $respuesta->assertSee('data-evaluacion-imc', false);
         $respuesta->assertSee('—', false);
         // Los cuadros del resumen están, vacíos, con su botón.
-        $respuesta->assertSee('data-resumen-actualizar="ginecologico"', false);
+        $respuesta->assertSee('data-resumen-actualizar="fisico"', false);
     }
 
     public function test_actualizar_arma_los_resumenes_con_lo_del_formulario_sin_guardar_nada(): void
@@ -341,7 +382,7 @@ class ConsultaEvaluacionWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertDontSee('>none<', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
     }
 
     // ------------------------------------------------------------------------------------- El guardado
@@ -377,7 +418,7 @@ class ConsultaEvaluacionWebTest extends TestCase
         ]);
 
         $respuesta->assertRedirect($this->urlSeccion($consulta));
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Evaluación física'));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Examen guardado'));
 
         // La antropometría quedó en `consultas`, como número y no como texto.
         $consulta->refresh();

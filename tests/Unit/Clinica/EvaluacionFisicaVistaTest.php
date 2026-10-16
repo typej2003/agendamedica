@@ -131,7 +131,7 @@ class EvaluacionFisicaVistaTest extends TestCase
 
         $conDatos = $this->vista(['peso' => 70.0]);
         $this->assertSame(1, $conDatos->cargados());
-        $this->assertSame(20, $conDatos->totalCampos());
+        $this->assertSame(16, $conDatos->totalCampos());
         $this->assertSame('Cargada', $conDatos->estado()['texto']);
         $this->assertSame('exito', $conDatos->estado()['tono']);
     }

@@ -41,13 +41,35 @@ final class EvaluacionFisicaVista
         private string $urlResumen = '',
         private array $plantillasFisico = [],
         private array $plantillasGinecologico = [],
+        private string $parte = PestanasDelExamen::FISICO,
+        private array $historial = [],
     ) {
     }
 
-    /** Las columnas que cuentan como «campos con dato»: todas menos los dos resúmenes narrativos. */
+    /** ¿Es el chip del examen ginecológico (WEB-11.9)? Si no, es el físico. */
+    public function esGinecologico(): bool
+    {
+        return $this->parte === PestanasDelExamen::GINECOLOGICO;
+    }
+
+    /**
+     * Los resúmenes de las consultas anteriores, de sólo lectura (WEB-11.9, G3).
+     *
+     * @return array<int,array{numero:int, fecha:?string, texto:string}>
+     */
+    public function historial(): array
+    {
+        return $this->historial;
+    }
+
+    /** Las columnas que cuentan como «campos con dato» **del chip**: todas menos los dos resúmenes narrativos. */
     private function camposDelExamen(): array
     {
-        return array_diff_key(EvaluacionFisica::columnas(), array_flip(EvaluacionFisica::COLUMNAS_RESUMEN));
+        $campos = $this->esGinecologico()
+            ? ExamenFisicoDeLaConsulta::ginecologico()
+            : array_merge(ExamenFisicoDeLaConsulta::antropometria(), ExamenFisicoDeLaConsulta::general());
+
+        return array_flip(array_column($campos, 'columna'));
     }
 
     /** A dónde pide «Actualizar» el resumen armado con lo que hay en el formulario (WEB-11.8). */
@@ -205,7 +227,8 @@ final class EvaluacionFisicaVista
     /** La ayuda del formulario: qué es la sección y qué pasa al salir sin guardar. */
     public function ayuda(): string
     {
-        return 'El examen físico general y el ginecológico de la consulta. Se guardan con el botón: si '
+        return ($this->esGinecologico() ? 'El examen ginecológico de la consulta.' : 'El examen físico general de la consulta.')
+            . ' Se guarda solo al pausar y con el botón: si '
             . 'sales sin guardar, el navegador te avisa antes de perder lo escrito.';
     }
 
