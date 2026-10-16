@@ -95,8 +95,16 @@ final class EmbarazosEntreFechas
     {
         return DB::table(self::TABLA)
             ->join('medico_pacientes', function ($join) {
-                $join->on('medico_pacientes.numhistoria', '=', self::TABLA . '.historia')
-                    ->on('medico_pacientes.reg_medico', '=', self::TABLA . '.reg_medico');
+                // En MySQL `pre_natal_observaciones.historia` (utf8mb4_general_ci, tabla del legado) y
+                // `medico_pacientes.numhistoria` (utf8mb4_unicode_ci) tienen collation distinta y el `=` falla
+                // con el error 1267 «Illegal mix of collations»: se fuerza la del pivote. SQLite no lo necesita.
+                if (DB::connection()->getDriverName() === 'mysql') {
+                    $join->whereRaw('medico_pacientes.numhistoria = ' . self::TABLA . '.historia COLLATE utf8mb4_unicode_ci')
+                        ->whereRaw('medico_pacientes.reg_medico = ' . self::TABLA . '.reg_medico COLLATE utf8mb4_unicode_ci');
+                } else {
+                    $join->on('medico_pacientes.numhistoria', '=', self::TABLA . '.historia')
+                        ->on('medico_pacientes.reg_medico', '=', self::TABLA . '.reg_medico');
+                }
             })
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where(self::TABLA . '.reg_medico', $regMedico)
