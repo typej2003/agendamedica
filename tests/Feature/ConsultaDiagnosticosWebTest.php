@@ -228,10 +228,10 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta->assertSee('Diagnósticos de esta consulta', false);
         $respuesta->assertSee('Guardar los diagnósticos', false);
 
-        // El nombre sale del catálogo por el código y el detalle es el texto editable de la fila.
+        // El nombre sale del catálogo por el código; sin detalle editable (WEB-11.18: como el escritorio).
         $respuesta->assertSee('LIE BAJO GRADO');
         $respuesta->assertSee('0518', false);
-        $respuesta->assertSee('value="LIE BAJO GRADO"', false);
+        $respuesta->assertDontSee('name="filas[', false);
     }
 
     public function test_dos_consultas_del_mismo_paciente_no_mezclan_sus_diagnosticos(): void
@@ -253,10 +253,8 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($segunda));
 
         $respuesta->assertOk();
-        // El detalle editable de la fila es el de la consulta 2; el del catálogo se ve en la tarjeta del
-        // buscador (que por eso no se mira acá).
-        $respuesta->assertSee('value="AMENAZA DE ABORTO"', false);
-        $respuesta->assertDontSee('value="LIE BAJO GRADO"', false);
+        // Cada consulta muestra sus propios diagnósticos (el nombre de la fila de la consulta 2).
+        $respuesta->assertSee('AMENAZA DE ABORTO', false);
     }
 
     public function test_una_consulta_sin_diagnosticos_muestra_el_estado_vacio(): void

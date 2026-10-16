@@ -47,7 +47,7 @@
 
             @if ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos">
-                    Búscalos en tu catálogo, abajo, y agrégalos. Puedes cargar más de uno y anotarles un detalle.
+                    Pásalos desde tu catálogo, a la derecha. Puedes cargar más de uno.
                 </x-ui.vacio>
             @else
                 <ul class="diagnosticos-lista">
@@ -62,18 +62,7 @@
                                     @endif
                                 </span>
 
-                                {{-- El detalle es la única columna editable de la fila (el DataWindow del
-                                     escritorio la deja con `edit.limit=100`) y es el texto que el escritorio
-                                     muestra en su pestaña: por eso se puede ajustar acá. --}}
-                                <label class="form-label visually-hidden" for="diagnostico-detalle-{{ $fila['id'] }}">
-                                    Detalle de {{ $fila['nombre'] }}
-                                </label>
-                                <input type="text" class="form-control form-control-sm"
-                                       id="diagnostico-detalle-{{ $fila['id'] }}"
-                                       name="filas[{{ $fila['id'] }}][detalle]"
-                                       value="{{ $fila['detalle'] }}"
-                                       maxlength="{{ $seccion->limiteDetalle() }}"
-                                       placeholder="Detalle (lado, grado, cuándo…)">
+                                {{-- Sin detalle por diagnóstico (WEB-11.18): como en el escritorio, cada diagnóstico es el nombre del catálogo, sin retocar. --}}
                             </div>
 
                             {{-- "Quitar" deja la fila marcada como "se quita al guardar": saca el diagnóstico

@@ -791,4 +791,17 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->assertSame(3, substr_count($web->get($volver)->assertOk()->assertSee('Imágenes del estudio')->getContent(), '<li class="examen-imagen '));
         $this->assertSame(1, substr_count($web->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio', 'tipo' => 'ginecologico']))->getContent(), '<li class="examen-imagen '));
     }
+
+    public function test_la_colposcopia_lleva_una_sola_imagen_la_nueva_reemplaza_a_la_anterior(): void
+    {
+        // WEB-11.11 (Alexander): una sola imagen por colposcopía.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.examenes.subir', $consulta->id), ['imagen' => $this->png('a.png'), 'examen' => 'colposcopia']);
+        $web->post(route('clinica.consulta.examenes.subir', $consulta->id), ['imagen' => $this->png('b.png'), 'examen' => 'colposcopia']);
+
+        $this->assertSame(1, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', '@')->count());
+    }
 }
