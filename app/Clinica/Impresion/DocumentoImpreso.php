@@ -225,7 +225,14 @@ final class DocumentoImpreso
         public readonly array $fijos,
         public readonly array $parrafos,
         public readonly ?string $para = null,
+        public readonly ?InformeDeEco $informe = null,
     ) {
+    }
+
+    /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
+    public function conInforme(InformeDeEco $informe): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe);
     }
 
     /**

@@ -147,13 +147,13 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
             ->assertSee('Páncreas:')->assertSee('Sin lesiones.')
             ->assertSee('Rinón derecho:')
             ->assertSee('Rinón izquierdo:')
-            // Los cuatro desplegables, con su código traducido.
-            ->assertSee('Volumen residual vesical Post-Micción:')->assertSee('Sí')
-            ->assertSee('Ascitis:')->assertSee('No')
-            ->assertSee('Retroperitoneo:')->assertSee('Normal')
-            ->assertSee('Vasos sanguíneos:')->assertSee('Anormal')
+            // Los cuatro desplegables, con todas sus opciones y la elegida marcada (WEB-11.13).
+            ->assertSeeInOrder(['Volumen residual vesical Post-Micción:', '●', 'Sí', '○', 'No'], false)
+            ->assertSeeInOrder(['Ascitis:', '○', 'Sí', '●', 'No'], false)
+            ->assertSeeInOrder(['Retroperitoneo:', '●', 'Normal', '○', 'Anormal'], false)
+            ->assertSeeInOrder(['Vasos sanguíneos:', '○', 'Normal', '●', 'Anormal'], false)
             // El área `otros` rotulada como la hoja y las conclusiones.
-            ->assertSee('Observaciones:')->assertSee('Sin otros hallazgos.')
+            ->assertSee('Otros:')->assertSee('Sin otros hallazgos.')
             ->assertSee('Conclusiones:')->assertSee('Estudio dentro de límites normales.')
             ->assertSee('Ginecología y Obstetricia');
 
@@ -176,7 +176,7 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
 
         $rotulos = ['Transductor:', 'Referido por:', 'Hígado:', 'Vesícula biliar:', 'Porta y colédoco:',
             'Páncreas:', 'Rinón derecho:', 'Rinón izquierdo:', 'Volumen residual vesical Post-Micción:',
-            'Ascitis:', 'Retroperitoneo:', 'Vasos sanguíneos:', 'Observaciones:', 'Conclusiones:'];
+            'Ascitis:', 'Retroperitoneo:', 'Vasos sanguíneos:', 'Otros:', 'Conclusiones:'];
 
         $anterior = -1;
         foreach ($rotulos as $rotulo) {
@@ -208,10 +208,10 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
             ->assertDontSee('Aumento del tamaño prostático.');
     }
 
-    public function test_los_bloques_sin_datos_no_se_imprimen(): void
+    public function test_un_estudio_con_solo_las_conclusiones_imprime_el_formulario_con_los_casilleros_en_blanco(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        // Sólo las conclusiones: los demás no se imprimen.
+        // Sólo las conclusiones: el informe es el formulario (WEB-11.13), con lo demás sin llenar.
         $this->abdominal($medico, [
             'transductor' => null, 'referido' => null, 'higado' => null, 'vesicula_bilial' => null,
             'porta_coledoco' => null, 'pancreas' => null, 'rinon_derecho' => null, 'rinon_izquierdo' => null,
@@ -223,19 +223,10 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('Conclusiones:')
-            ->assertDontSee('Transductor:')
-            ->assertDontSee('Referido por:')
-            ->assertDontSee('Hígado:')
-            ->assertDontSee('Vesícula biliar:')
-            ->assertDontSee('Porta y colédoco:')
-            ->assertDontSee('Páncreas:')
-            ->assertDontSee('Rinón derecho:')
-            ->assertDontSee('Rinón izquierdo:')
-            ->assertDontSee('Volumen residual vesical Post-Micción:')
-            ->assertDontSee('Ascitis:')
-            ->assertDontSee('Retroperitoneo:')
-            ->assertDontSee('Vasos sanguíneos:')
-            ->assertDontSee('Observaciones:');
+            ->assertSee('Hígado:')
+            ->assertSee('Ascitis:')
+            ->assertSeeInOrder(['Ascitis:', '○', 'Sí', '○', 'No'], false)
+            ->assertDontSee('●', false);
     }
 
     /** Si el catálogo ya no tiene al médico referido, la hoja muestra su cédula en vez de inventar un nombre. */

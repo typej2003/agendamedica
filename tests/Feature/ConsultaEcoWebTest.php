@@ -590,11 +590,10 @@ class ConsultaEcoWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · PRIMER TRIMESTRE')
-            ->assertSee('El embarazo:')->assertSee('2026-06-01')
-            ->assertSee('LCC: 45')
-            // Los bloques sin datos no se imprimen (la misma regla del eco pélvico): en este caso no se
-            // cargó nada del riesgo del embarazo temprano.
-            ->assertDontSee('El riesgo del embarazo temprano:')
+            ->assertSee('FUR:')->assertSee('01/06/2026')
+            ->assertSee('LCC:')->assertSee('45')
+            // El informe es el formulario lleno (WEB-11.13): los bloques sin datos también salen, con sus casilleros en blanco.
+            ->assertSee('El riesgo del embarazo temprano')
             ->assertSee('Conclusión:');
     }
 
@@ -691,10 +690,8 @@ class ConsultaEcoWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · TERCER TRIMESTRE')
-            ->assertSee('Datos biométricos:')
-            ->assertSee('Peso F.: 3200')
-            ->assertSee('Conclusiones: Embarazo a término.')
-            // Un bloque sin NINGÚN dato no se imprime (el del embarazo sí sale: lleva la fecha).
-            ->assertDontSee('El feto:');
+            ->assertSee('Datos biométricos')
+            ->assertSee('Peso F.:')->assertSee('3200')
+            ->assertSee('Conclusiones:')->assertSee('Embarazo a término.');
     }
 }

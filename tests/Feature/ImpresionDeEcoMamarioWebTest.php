@@ -171,10 +171,10 @@ class ImpresionDeEcoMamarioWebTest extends TestCase
         }
     }
 
-    public function test_los_bloques_sin_datos_no_se_imprimen(): void
+    public function test_un_estudio_con_solo_la_conclusion_imprime_el_formulario_con_los_campos_en_blanco(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        // Sólo la conclusión: los demás no se imprimen.
+        // Sólo la conclusión: el informe es el formulario (WEB-11.13), con lo demás sin llenar.
         $this->mamario($medico, [
             'referido' => null, 'tranductor' => null, 'menarquia' => null, 'quirurgicos' => null,
             'hormonas' => null, 'mama_derecha' => null, 'axila_derecha' => null,
@@ -185,15 +185,8 @@ class ImpresionDeEcoMamarioWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('Conclusión:')
-            ->assertDontSee('Referido por:')
-            ->assertDontSee('Transductor:')
-            ->assertDontSee('Menarquia:')
-            ->assertDontSee('Quirúrgicos:')
-            ->assertDontSee('Hormonas:')
-            ->assertDontSee('Mama derecha:')
-            ->assertDontSee('Axila derecha:')
-            ->assertDontSee('Mama izquierda:')
-            ->assertDontSee('Axila izquierda:');
+            ->assertSee('Mama derecha:')
+            ->assertSee('Axila izquierda:');
     }
 
     /** Si el catálogo ya no tiene al médico referido, la hoja muestra su cédula en vez de inventar un nombre. */

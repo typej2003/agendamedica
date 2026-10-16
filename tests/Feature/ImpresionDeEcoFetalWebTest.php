@@ -142,7 +142,7 @@ class ImpresionDeEcoFetalWebTest extends TestCase
             ->assertSee('C.I.:')->assertSee('V-14555666')
             ->assertSee('FECHA:')
             // La ficha obstetricia de su cabecera, como en su DataWindow de impresión.
-            ->assertSee('GESTA:')->assertSee('II')
+            ->assertSee('Gesta:')->assertSee('II')
             ->assertSee('FUR:')->assertSee('20/05/2026')
             ->assertSee('FPP:')->assertSee('24/02/2027')
             ->assertSee('EG:')->assertSee('20 semanas y 0 días')
@@ -150,44 +150,40 @@ class ImpresionDeEcoFetalWebTest extends TestCase
             ->assertSee('REFERIDO POR:')->assertSee('Abogada')
             // El motivo de consulta, primero como en el resumen médico.
             ->assertSee('MOTIVO DE CONSULTA:')->assertSee('CONTROL PRENATAL')
-            // La paridad del encabezado del estudio, en su propia línea.
-            ->assertSee('PARA: 2')->assertSee('ABORTOS: 0')->assertSee('CESARÉAS: 1')->assertSee('OTROS: Ninguno')
-            // El memo grande del estudio, sin rótulo y con sus dos renglones. ⚠️ La hoja colapsa los espacios
-            // de más de cada renglón (`DocumentoImpreso::parrafosDe`), así que los dos espacios del fuente
-            // salen con uno solo: el dato es el mismo.
-            ->assertSee('SE REALIZA EXPLORACIÓN CON TRANSDUCTOR DE 3,5 MHZ EVIDENCIÁNDOSE: FETO ÚNICO.')
+            // La paridad del encabezado del estudio.
+            ->assertSee('Para:')->assertSee('Abortos:')->assertSee('Cesáreas:')->assertSee('Otros:')->assertSee('Ninguno')
+            // El memo grande del estudio, con sus dos renglones.
+            ->assertSee('SE REALIZA EXPLORACIÓN CON TRANSDUCTOR DE 3,5 MHZ')->assertSee('FETO ÚNICO.')
             ->assertSee('MOVIMIENTOS Y ACTIVIDAD CARDÍACA PRESENTES.')
             // La biometría, cada medida con sus milímetros y la «MEDIDA» con su percentil.
-            ->assertSee('DATOS BIOMETRICOS:')
-            ->assertSee('DBP: 25 mm')->assertSee('DOF: 30 mm')->assertSee('CC: 100 mm')
-            ->assertSee('Húmero: 20 mm')->assertSee('Fémur: 22 mm')->assertSee('Sacro: 18 mm')
-            ->assertSee('CT: 40 mm')->assertSee('Cardíaca: 12 mm')->assertSee('Torácica: 30 mm')
-            ->assertSee('Medida: 45 (Percentil)')
-            // Los datos anatómicos, con su rótulo en su propia línea.
-            ->assertSee('DATOS ANATOMICOS:')->assertSee('CORAZON EN SITUS SOLITUS, TETRACAMERAL.')
-            // Los placento-funiculares, con sus códigos traducidos y sus sufijos.
-            ->assertSee('DATOS PLACENTO - FUNICULARES:')
-            ->assertSee('Placenta: Anterior')
-            ->assertSee('Grado: II / III')
-            ->assertSee('Groso: 12 mm')
-            ->assertSee('Cordón umbilical: 3 ELEMENTOS VASCULARES')
-            ->assertSee('Líquido amniótico: Oligohidramnios')
-            ->assertSee('Peso fetal: 2500 grs. (Percentil)')
-            ->assertSee('Sexo: Femenino')
-            // La conclusión: el bloque y, debajo, los signos y las sugerencias.
-            ->assertSee('CONCLUSIÓN:')
-            ->assertSee('SIGNOS ECOGRÁFICOS SUGESTIVOS DE:')->assertSee('Corazón estructuralmente normal.')
-            ->assertSee('SUGERENCIAS:')->assertSee('Control en 4 semanas.')
+            ->assertSee('Datos biométricos')
+            ->assertSee('DBP:')->assertSee('25 mm')->assertSee('DOF:')->assertSee('30 mm')->assertSee('CC:')->assertSee('100 mm')
+            ->assertSee('Húmero:')->assertSee('Fémur:')->assertSee('Sacro:')
+            ->assertSee('CT:')->assertSee('Cardíaca:')->assertSee('Torácica:')
+            ->assertSee('Medida:')->assertSee('45 (Percentil)')
+            // Los datos anatómicos.
+            ->assertSee('Datos anatómicos')->assertSee('CORAZON EN SITUS SOLITUS, TETRACAMERAL.')
+            // Los placento-funiculares, con todas las opciones y la elegida marcada (WEB-11.13).
+            ->assertSee('Datos placento - funiculares')
+            ->assertSeeInOrder(['Placenta:', '●', 'Anterior', '○', 'Posterior'], false)
+            ->assertSee('Groso:')->assertSee('12 mm')
+            ->assertSeeInOrder(['Cordón umbilical:', '●', '3 ELEMENTOS VASCULARES', '○', 'ANORMAL'], false)
+            ->assertSeeInOrder(['Líquido amniótico:', '○', 'Normal', '●', 'Oligohidramnios'], false)
+            ->assertSee('Peso fetal:')->assertSee('2500')
+            ->assertSeeInOrder(['Sexo:', '○', 'Masculino', '●', 'Femenino'], false)
+            // La conclusión: los signos y las sugerencias.
+            ->assertSee('Signos ecográficos sugestivos de:')->assertSee('Corazón estructuralmente normal.')
+            ->assertSee('Sugerencias:')->assertSee('Control en 4 semanas.')
             ->assertSee('Ginecología y Obstetricia');
 
         // Una sola firma, en la mitad donde termina el informe.
         $this->assertSame(1, substr_count($hoja->getContent(), 'class="firmas"'));
     }
 
-    public function test_los_bloques_sin_datos_no_se_imprimen(): void
+    public function test_una_sola_medida_imprime_el_formulario_con_lo_demas_en_blanco(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        // Sólo una medida: la biometría sale con esa y nada más; los demás bloques no se imprimen.
+        // Sólo una medida: el informe es el formulario (WEB-11.13), con lo demás sin llenar.
         $this->fetal($medico, [
             'biome_dbp' => 25, 'biome_dof' => null, 'biome_cc' => null, 'biome_humero' => null,
             'biome_femur' => null, 'biome_saco' => null, 'biome_ca' => null, 'biome_cardiaca' => null,
@@ -201,13 +197,12 @@ class ImpresionDeEcoFetalWebTest extends TestCase
         $hoja = $this->como($user, $medico, $gineco)->get($this->hoja($consulta));
 
         $hoja->assertOk()
-            ->assertSee('DATOS BIOMETRICOS:')
-            ->assertSee('DBP: 25 mm')
-            ->assertDontSee('DOF:')
-            ->assertDontSee('DATOS ANATOMICOS:')
-            ->assertDontSee('DATOS PLACENTO - FUNICULARES:')
-            ->assertDontSee('SIGNOS ECOGRÁFICOS SUGESTIVOS DE:')
-            ->assertDontSee('SUGERENCIAS:');
+            ->assertSee('Datos biométricos')
+            ->assertSee('DBP:')->assertSee('25 mm')
+            ->assertSee('DOF:')
+            ->assertSee('Datos placento - funiculares')
+            ->assertSeeInOrder(['Placenta:', '○', 'Anterior', '○', 'Posterior'], false)
+            ->assertDontSee('●', false);
     }
 
     public function test_una_fila_con_solo_la_ficha_no_se_ofrece_ni_se_imprime(): void

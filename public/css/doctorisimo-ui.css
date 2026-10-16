@@ -3108,3 +3108,10 @@ body.auth-pagina {
 .mama-lienzo { touch-action: none; cursor: crosshair; }
 .mamas-muestra { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #6c757d; background: var(--muestra, #000); padding: 0; }
 .mamas-muestra:hover, .mamas-muestra:focus-visible { box-shadow: 0 0 0 2px #0d6efd; }
+
+/* «Visualizar» (WEB-11.24): la vista previa de un documento en un diálogo grande, con «Modificar» e «Imprimir». */
+.dialogo-visualizar { width: min(1100px, 96vw); height: 92vh; max-width: none; padding: 0; border: 0; border-radius: .75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35); }
+.dialogo-visualizar::backdrop { background: rgba(20, 10, 40, .55); }
+.dialogo-visualizar-caja { display: flex; flex-direction: column; height: 100%; }
+.dialogo-visualizar-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--ds-borde, #dee2e6); }
+.dialogo-visualizar-marco { flex: 1 1 auto; width: 100%; border: 0; background: #f1f1f4; }

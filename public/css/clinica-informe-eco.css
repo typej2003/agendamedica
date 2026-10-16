@@ -1,0 +1,70 @@
+/*
+ * El informe de una ecografía a hoja completa (WEB-11.13): A4 vertical, el formulario lleno con la opción elegida marcada y, aparte, una hoja
+ * con las imágenes del estudio. Lo carga la vista previa de las hojas (`clinica/imprimir/hojas`). El resto de las hojas es horizontal
+ * (`clinica-recipe.css`): esta usa una **página con nombre** para cambiar de orientación sólo ella.
+ */
+
+@page informe { size: A4 portrait; margin: 0; }
+
+.informe-hoja {
+    page: informe;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 210mm;
+    min-height: 296.5mm;
+    flex: none;
+    box-sizing: border-box;
+    padding: 10mm 12mm 8mm;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(32, 16, 72, .18);
+    break-after: page;
+    font-size: 9.5pt;
+    line-height: 1.3;
+    color: #000;
+}
+
+.informe-titulo { margin: 2mm 0 2mm; font-size: 12pt; font-weight: 700; text-align: center; letter-spacing: .05em; text-decoration: underline; }
+.informe-titulo-imagenes { margin-bottom: 3mm; }
+.informe-datos { margin-top: 3mm; }
+.informe-ficha { display: flex; flex-wrap: wrap; gap: 1mm 6mm; margin: 0 0 3mm; }
+
+.informe-bloque { margin: 0 0 3mm; padding: 1.5mm 3mm 2mm; border: .25mm solid #444; border-radius: 1mm; break-inside: avoid; }
+.informe-bloque-titulo { margin: 0 0 1.5mm; font-size: 9pt; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+.informe-campos { display: flex; flex-wrap: wrap; gap: 1.2mm 6mm; }
+.informe-campo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 3mm; min-width: 0; }
+.informe-campo-area { flex: 1 1 100%; flex-direction: column; align-items: stretch; }
+.informe-etiqueta { font-weight: 700; }
+.informe-valor { min-width: 14mm; border-bottom: .2mm solid #777; }
+.informe-texto { margin: .5mm 0 0; min-height: 6mm; padding: 1mm 1.5mm; border: .2mm solid #999; white-space: pre-line; overflow-wrap: anywhere; }
+.informe-opcion { display: inline-flex; align-items: baseline; gap: 1mm; color: #555; }
+.informe-opcion.es-marcada { color: #000; font-weight: 700; }
+.informe-circulo { font-size: 10pt; }
+
+.informe-grilla { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.informe-grilla th, .informe-grilla td { padding: 1mm 1.5mm; border: .2mm solid #777; text-align: center; }
+.informe-grilla tbody th { text-align: left; }
+.informe-grilla td { height: 6mm; }
+
+.informe-pie { margin-top: auto; padding-top: 4mm; }
+
+/* La hoja de imágenes: dos columnas, cada imagen entera y con su descripción. */
+.informe-imagenes-paciente { margin: 0 0 3mm; }
+.informe-imagenes { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.informe-imagen { margin: 0; break-inside: avoid; text-align: center; }
+.informe-imagen img { max-width: 100%; max-height: 110mm; object-fit: contain; border: .2mm solid #999; }
+.informe-imagen figcaption { margin-top: 1mm; font-size: 8pt; }
+
+@media screen {
+    /* En la vista previa las hojas verticales van centradas, una debajo de otra, como las horizontales. */
+    .informe-hoja { margin: 0 auto; }
+    .recipe-hojas .informe-hoja { transform-origin: top center; }
+}
+
+@media print {
+    .informe-hoja { box-shadow: none; margin: 0; }
+    .informe-hoja:last-child { break-after: auto; }
+    .recipe-hojas { gap: 0; padding: 0; }
+    /* «Incluir imágenes» desmarcado: la hoja de imágenes no sale. */
+    .informe-hoja[hidden] { display: none; }
+}

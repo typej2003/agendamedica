@@ -208,3 +208,10 @@ body {
     body { background: #fff; }
     .barra-impresion, .dialogo-impresion { display: none !important; }
 }
+
+.barra-impresion-casilla { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; cursor: pointer; }
+
+/* La vista previa dentro del diálogo «Visualizar» (WEB-11.24, `?incrustado=1`): sin título ni «Volver» ni «Imprimir» (los pone el diálogo);
+   queda sólo lo que cambia lo impreso (la casilla «Incluir imágenes» y las opciones del récipe). */
+.es-incrustado .barra-impresion-texto, .es-incrustado .barra-impresion-volver, .es-incrustado [data-imprimir] { display: none; }
+.es-incrustado .barra-impresion { position: static; justify-content: flex-end; padding: .4rem 1rem; }
