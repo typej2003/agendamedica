@@ -80,6 +80,20 @@
                 </x-slot>
             </x-ui.vacio>
         @else
+            {{-- «Exámenes» y «Rutinas» como dos chips (WEB-11.20): en el escritorio son dos pestañas, una para pasar exámenes sueltos y otra para pasar
+                 una rutina completa. Sin JavaScript se ven las dos cosas, una debajo de la otra. --}}
+            @if ($vm->ofreceRutinas())
+                <div class="btn-group mb-3" role="group" aria-label="Qué agregar" data-orden-modos hidden>
+                    <button type="button" class="btn btn-outline-secondary active" data-orden-modo="sueltos" aria-pressed="true">
+                        <i class="bi bi-droplet" aria-hidden="true"></i> Exámenes
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-orden-modo="rutinas" aria-pressed="false">
+                        <i class="bi bi-collection" aria-hidden="true"></i> Rutinas
+                    </button>
+                </div>
+            @endif
+
+            <div id="orden-modo-sueltos">
             <div class="position-relative" id="orden-busqueda">
                 <label class="form-label" for="orden-texto">{{ $vm->etiquetaDelBuscador() }}</label>
 
@@ -104,6 +118,7 @@
             </div>
 
             <p class="form-text mt-2 mb-0" id="orden-ayuda" data-ayuda="{{ $vm->ayudaDelBuscador() }}">{{ $vm->ayudaDelBuscador() }}</p>
+            </div>
 
             @if ($vm->ofreceRutinas())
                 <div class="mt-3" id="orden-rutinas">

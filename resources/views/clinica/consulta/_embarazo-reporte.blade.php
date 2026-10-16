@@ -31,6 +31,13 @@
             <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
         @endif
 
+        @if ($vm->faltaLaFur())
+            <p class="alert alert-warning py-2 d-flex align-items-center gap-2" role="status" id="reporte-sin-fur">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <span>Esta gesta no tiene FUR: el informe saldrá sin edad gestacional ni FPP. Completa la FUR en la pestaña <em>Prenatal</em>.</span>
+            </p>
+        @endif
+
         {{-- La ficha de la gesta, como sale en la hoja. --}}
         <h3 class="h6 mt-2 mb-2">Gesta {{ $vm->clave() }}</h3>
         <dl class="row mb-3">

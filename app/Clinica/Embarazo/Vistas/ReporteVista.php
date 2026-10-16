@@ -42,6 +42,12 @@ final class ReporteVista
         return $this->partes !== null;
     }
 
+    /** ¿Falta la FUR de la gesta que se mira? Sin ella el informe sale sin edad gestacional ni FPP (WEB-11.17). */
+    public function faltaLaFur(): bool
+    {
+        return $this->hayInforme() && $this->gesta()->fur() === null;
+    }
+
     public function titulo(): string
     {
         return 'Informe del control de embarazo';
