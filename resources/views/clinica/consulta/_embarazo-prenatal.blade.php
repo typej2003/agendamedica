@@ -21,6 +21,14 @@
 
         <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
+        {{-- El orden del flujo (WEB-11.15): en el escritorio los botones de laboratorio y controles aparecían recién después de crear la gesta y
+             nadie lo entendía a la primera. Acá se explica. --}}
+        <ol class="pasos-gesta">
+            <li><strong>Crea la gesta</strong> (con «Nueva gesta», que sólo pregunta cuántos bebés son) y completa su FUR.</li>
+            <li><strong>Registra sus laboratorios y controles</strong> en las otras pestañas del control de embarazo.</li>
+            <li><strong>Al terminar el embarazo, marca «Final de embarazo»</strong>: sin eso no se puede crear la gesta siguiente.</li>
+        </ol>
+
         {{-- Las gestas de la historia: la que se está mirando se elige con un enlace, como las pestañas. --}}
         @if (! $vm->sinGestas())
             <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
@@ -66,9 +74,9 @@
             <div class="d-flex justify-content-end gap-2 mt-3">
                 {{-- "Nueva gesta" es un enlace que abre el formulario en blanco: la gesta se crea al guardar. --}}
                 @if (! $vm->sinGestas() && ! $vm->esNueva())
-                    <a class="btn btn-outline-secondary" href="{{ $vm->urlNueva() }}">
+                    <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="dialogo-gesta">
                         <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva gesta
-                    </a>
+                    </button>
                 @endif
                 <button class="btn btn-primary">
                     <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar la gesta
@@ -77,3 +85,20 @@
         </form>
     </x-ui.tarjeta>
 </div>
+
+{{-- «Nueva gesta» (WEB-11.15): sólo pregunta cuántos bebés son, como la ventana del escritorio. --}}
+<x-ui.dialogo id="dialogo-gesta" titulo="Nueva gesta">
+    <form method="POST" action="{{ $vm->urlCrearGesta() }}">
+        @csrf
+        <div class="dialogo-cuerpo">
+            <x-ui.campo etiqueta="¿Cuántos bebés son?" for="gesta-bebes" requerido
+                        ayuda="1 si es un solo bebé; con 2 o más el embarazo queda como múltiple. La FUR y lo demás se completan después.">
+                <input type="number" id="gesta-bebes" name="bebes" class="form-control" min="1" max="6" value="1">
+            </x-ui.campo>
+        </div>
+        <div class="dialogo-pie">
+            <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
+            <button class="btn btn-primary">Crear la gesta</button>
+        </div>
+    </form>
+</x-ui.dialogo>

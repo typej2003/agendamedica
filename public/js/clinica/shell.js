@@ -9,6 +9,7 @@
  *   data-atender              en el <form> de "Atender": abre el diálogo de la consulta (WEB-4.1) en vez
  *                             de enviarlo, para elegir entre la consulta de hoy y una nueva.
  *   data-cerrar-dialogo       en un botón: cierra el <dialog> que lo contiene.
+ *   data-abrir-dialogo="id"   en un botón: abre ese <dialog> (showModal).
  *   <details class="menu-acciones">   el menú "⋯" cierra al hacer clic afuera o con Escape.
  */
 (function () {
@@ -117,8 +118,14 @@
         });
     }
 
-    // ---- Diálogos nativos: el botón con data-cerrar-dialogo los cierra.
+    // ---- Diálogos nativos: el botón con data-cerrar-dialogo los cierra y el de data-abrir-dialogo abre el indicado.
     document.addEventListener('click', function (evento) {
+        const apertura = evento.target.closest('[data-abrir-dialogo]');
+        if (apertura) {
+            const destino = $(apertura.dataset.abrirDialogo);
+            if (destino && typeof destino.showModal === 'function') destino.showModal();
+        }
+
         const cierre = evento.target.closest('[data-cerrar-dialogo]');
         if (cierre) {
             const dialogo = cierre.closest('dialog');

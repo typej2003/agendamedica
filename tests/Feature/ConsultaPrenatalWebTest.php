@@ -243,7 +243,7 @@ class ConsultaPrenatalWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
         PreNatalObservacion::create([
-            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10',
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10', 'final' => 'S',
         ]);
 
         // El formulario sin `gesta` (el que abre "Nueva gesta") crea la 2.
@@ -470,5 +470,28 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSessionHasErrors('gesta');
 
         $this->assertSame(0, PrenaExamenB::where('historia', 1001)->count());
+    }
+
+    public function test_el_dialogo_de_nueva_gesta_crea_la_siguiente_y_respeta_la_regla(): void
+    {
+        // WEB-11.15: «Nueva gesta» sólo pregunta los bebés; con la anterior abierta avisa y no crea nada.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $primera = PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10',
+        ]);
+        $url = route('clinica.consulta.embarazo.gesta.crear', $consulta->id);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
+            ->assertOk()->assertSee('¿Cuántos bebés son?')->assertSee('Crea la gesta');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url, ['bebes' => 1])
+            ->assertRedirect()->assertSessionHas('error', fn ($e) => str_contains($e, 'Final de embarazo'));
+        $this->assertSame(1, PreNatalObservacion::where('reg_medico', $medico->reg_medico)->count());
+
+        $primera->forceFill(['final' => 'S'])->save();
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url, ['bebes' => 2])
+            ->assertRedirect()->assertSessionHas('estado', fn ($e) => str_contains($e, 'Gesta 2 creada'));
+        $this->assertSame('S', PreNatalObservacion::where('reg_medico', $medico->reg_medico)->where('gesta_clave', 2)->value('multiple'));
     }
 }

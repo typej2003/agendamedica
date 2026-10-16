@@ -63,6 +63,23 @@ final class GestasDeLaHistoria
         return $maximo === null ? 1 : (int) $maximo + 1;
     }
 
+    /**
+     * **¿Se puede crear una gesta nueva?** (WEB-11.15). No mientras la gesta en curso no tenga marcado «Final de embarazo»:
+     * una mujer no puede solapar embarazos (Alexander). Devuelve el mensaje que se le dice al médico, o `null` si se puede
+     * (la primera gesta de la historia siempre se puede).
+     */
+    public function motivoParaNoCrear(string $regMedico, int $numhistoria): ?string
+    {
+        $actual = $this->actual($regMedico, $numhistoria);
+
+        if ($actual === null || ($actual->valores()['final'] ?? null) === 'S') {
+            return null;
+        }
+
+        return 'No se puede crear una gesta nueva mientras la gesta ' . $actual->clave() . ' no tenga marcado «Final de embarazo». '
+            . 'Márcalo en esa gesta, guárdala y luego crea la siguiente.';
+    }
+
     /** La fila de una gesta, o `null`. */
     public function fila(string $regMedico, int $numhistoria, int $clave): ?object
     {

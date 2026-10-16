@@ -130,6 +130,12 @@ final class PrenatalVista
         return $this->urlVolver;
     }
 
+    /** A dónde postea el diálogo de «Nueva gesta» (sólo pregunta cuántos bebés son, WEB-11.15). */
+    public function urlCrearGesta(): string
+    {
+        return str_replace('/embarazo/prenatal', '/embarazo/gesta', $this->urlGuardar);
+    }
+
     /** La URL de "Nueva gesta" (la que crea la siguiente). */
     public function urlNueva(): string
     {

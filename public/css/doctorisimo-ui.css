@@ -3086,3 +3086,15 @@ body.auth-pagina {
     body.imprimiendo-ficha [data-imprimir-ficha],
     body.imprimiendo-ficha #consulta-datos button { display: none; }
 }
+
+/* El orden del flujo de las gestas (WEB-11.15): tres pasos explicados arriba de la pestaña Prenatal. */
+.pasos-gesta {
+    margin: 0 0 1rem;
+    padding: .6rem 1rem .6rem 2rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-fondo);
+    font-size: .875rem;
+    color: var(--ds-texto-2);
+}
+.pasos-gesta li + li { margin-top: .25rem; }

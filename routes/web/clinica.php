@@ -218,6 +218,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `pre_natal_observaciones` se llavea por `historia` + `gesta_clave`, así que el controlador
                 // usa el `numhistoria` de la consulta del contexto. El `gesta` del formulario vacío crea la
                 // siguiente (*Nueva Gesta*).
+                // «Nueva gesta» (WEB-11.15): sólo pregunta cuántos bebés son.
+                Route::post('/consulta/{consulta}/embarazo/gesta', [ConsultaEmbarazoController::class, 'crearGesta'])
+                    ->name('consulta.embarazo.gesta.crear');
                 Route::post('/consulta/{consulta}/embarazo/prenatal', [ConsultaEmbarazoController::class, 'guardarPrenatal'])
                     ->name('consulta.embarazo.prenatal.guardar');
 

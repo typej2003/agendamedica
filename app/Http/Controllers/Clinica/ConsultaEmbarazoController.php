@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Embarazo\GuardarControlDelEmbarazo;
+use App\Actions\Embarazo\CrearGestaDelEmbarazo;
 use App\Actions\Embarazo\GuardarGestaDelEmbarazo;
 use App\Actions\Embarazo\GuardarLaboratorioDelEmbarazo;
 use App\Clinica\Consulta\ConsultasDelContexto;
@@ -71,6 +72,34 @@ class ConsultaEmbarazoController extends Controller
         }
 
         return $destino->with('estado', $resultado->sinCambios() ? 'La gesta no tenía cambios.' : 'Gesta guardada.');
+    }
+
+    /**
+     * **«Nueva gesta»** (WEB-11.15): sólo pregunta cuántos bebés son. La regla —la anterior tiene que estar cerrada— es de la Action.
+     */
+    public function crearGesta(Request $request, Consulta $consulta, CrearGestaDelEmbarazo $crear)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        $consulta = $this->consultas->consulta(
+            $this->registrosDelMedico($contexto['medico']),
+            (int) $consulta->id,
+            $contexto['reg_medico'],
+        );
+
+        $datos = $request->validate(['bebes' => 'required|integer|min:1|max:' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES], [
+            'bebes.*' => 'Elige cuántos bebés son (de 1 a ' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES . ').',
+        ]);
+
+        try {
+            $clave = $crear->ejecutar((string) $consulta->reg_medico, (int) $consulta->numhistoria, (int) $datos['bebes'], null, 'web');
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->destino($consulta)->with('error', $excepcion->getMessage());
+        }
+
+        return redirect()
+            ->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EMBARAZO, 'pestana' => PestanasDelEmbarazo::PRENATAL, 'gesta' => $clave])
+            ->with('estado', 'Gesta ' . $clave . ' creada. Ahora completa su FUR y guárdala.');
     }
 
     /** La vuelta a la sección, en la pestaña *Prenatal* (la única que existe hoy). */
