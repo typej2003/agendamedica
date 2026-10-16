@@ -72,6 +72,14 @@
         </ul>
     </div>
 
+    {{-- El logo de la especialidad del consultorio —el mismo del escritorio de esa especialidad—, encima del
+         pie con el botón de plegar. Una especialidad que todavía no tiene logo no dibuja nada. --}}
+    @if ($logo = $armazon->logotipo())
+        <div class="app-sidebar-logo">
+            <img src="{{ $logo['url'] }}" alt="{{ $logo['texto'] }}">
+        </div>
+    @endif
+
     <div class="app-sidebar-pie">
         <button class="app-sidebar-plegar" type="button" data-plegar-barra
                 aria-label="Plegar el menú" title="Plegar el menú" aria-expanded="true" aria-controls="clinica-sidebar">

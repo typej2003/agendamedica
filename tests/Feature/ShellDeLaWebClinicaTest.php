@@ -131,6 +131,60 @@ class ShellDeLaWebClinicaTest extends TestCase
             ->assertDontSee('no tiene una especialidad asignada');
     }
 
+    // ------------------------------------------------------------------- Logo de la especialidad
+
+    /**
+     * El logo de la especialidad del consultorio, el mismo del escritorio de esa especialidad, va en la barra
+     * lateral **encima del pie**, que es la barra donde está el botón de plegar.
+     */
+    public function test_la_barra_lateral_muestra_el_logo_de_la_especialidad_encima_del_pie(): void
+    {
+        $conLogo = [
+            'pediatria' => 'pediatria.jpg',
+            'ginecologia-y-obstetricia' => 'ginecologia-y-obstetricia.jpg',
+        ];
+
+        foreach ($conLogo as $slug => $archivo) {
+            [$user, $medico, $especialidad] = $this->medicoConAcceso($slug);
+
+            $html = $this->conContexto($user, $medico, $especialidad)->get('/clinica')->assertOk()->getContent();
+
+            $this->assertMatchesRegularExpression(
+                '/<div class="app-sidebar-logo">\s*<img src="' . preg_quote(asset('img/especialidades/' . $archivo), '/') . '"[^>]*alt="' . preg_quote($especialidad->name, '/') . '"/s',
+                $html,
+                "Falta el logo de {$especialidad->name} en la barra lateral.",
+            );
+
+            // Encima del pie: el logo se dibuja antes de la barra del botón de plegar.
+            $this->assertLessThan(strpos($html, 'app-sidebar-pie'), strpos($html, 'app-sidebar-logo'));
+        }
+    }
+
+    /**
+     * Una especialidad que todavía no tiene su logo no dibuja nada: ni la imagen ni un hueco vacío. Hoy lo
+     * tienen pediatría y ginecología y obstetricia (`public/img/especialidades/<slug>.jpg`).
+     */
+    public function test_una_especialidad_sin_logo_no_dibuja_nada_en_la_barra(): void
+    {
+        [$user, $medico, $traumatologia] = $this->medicoConAcceso('traumatologia-y-ortopedia');
+
+        $this->conContexto($user, $medico, $traumatologia)->get('/clinica')
+            ->assertOk()
+            ->assertDontSee('app-sidebar-logo');
+    }
+
+    /** Con la barra plegada a 72 px el logo no entra: se esconde, como el nombre de la marca. */
+    public function test_el_logo_se_esconde_con_la_barra_plegada(): void
+    {
+        $css = file_get_contents(public_path('css/doctorisimo-ui.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.app-sidebar\.minimizado \.app-sidebar-logo[^{]*\{[^}]*display:\s*none/s',
+            $css,
+            'El logo tiene que apagarse con la barra plegada.',
+        );
+    }
+
     public function test_cada_pantalla_ofrece_saltar_al_contenido(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

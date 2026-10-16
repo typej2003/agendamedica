@@ -762,9 +762,24 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 
 .app-sidebar .app-sidebar-plegar:hover { background: var(--ds-barra-2); color: var(--ds-barra-texto); }
 
+/* El logo de la especialidad del consultorio: va **sobre el pie**, encima de la barra del botón de plegar. La
+   imagen es la del escritorio de esa especialidad y se adapta al ancho de la barra sin deformarse. */
+.app-sidebar .app-sidebar-logo {
+    flex: 0 0 auto;
+    padding: 0 .5rem .5rem;
+}
+
+.app-sidebar .app-sidebar-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--ds-radio-sm);
+}
+
 /* Plegado: sólo quedan los iconos, la ficha de la marca y el botón de desplegar. */
 .app-sidebar.minimizado .link-text,
 .app-sidebar.minimizado .app-sidebar-titulo,
+.app-sidebar.minimizado .app-sidebar-logo,
 .app-sidebar.minimizado .app-marca-nombre { display: none; }
 
 .app-sidebar.minimizado .app-sidebar-marca { justify-content: center; padding: 0; }
