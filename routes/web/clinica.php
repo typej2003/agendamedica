@@ -37,6 +37,7 @@ use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -191,6 +192,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // (`consultas` y `examen_fisico_nuevo`) y se guardan juntas, con el mismo botón explícito
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
+                // Imágenes de mamas (WEB-11.10): el trazo de cada mama, por consulta; PNG en el disco privado.
+                Route::get('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'ver'])->name('consulta.mamas.ver');
+                Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
+                Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
                 // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
                 Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Models\Consulta;
+use App\Models\DibujoDeMama;
 use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -17,7 +18,9 @@ use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -319,6 +322,72 @@ class ConsultaEvaluacionWebTest extends TestCase
         $this->assertSame('Normales.', $fila->genitales_externos);
         $this->assertSame('Buen estado.', $fila->general);
         $this->assertSame('Útero normal.', $fila->tacto_vaginal);
+    }
+
+    // ------------------------------------------------------------------------- Imágenes de mamas (WEB-11.10)
+
+    private function pngFalso(): UploadedFile
+    {
+        return UploadedFile::fake()->image('trazo.png', 40, 40);
+    }
+
+    public function test_el_chip_de_mamas_muestra_los_dos_lienzos_con_color_y_grosor(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'mamas']);
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('data-mama-lienzo="derecha"', false);
+        $respuesta->assertSee('data-mama-lienzo="izquierda"', false);
+        $respuesta->assertSee('data-mamas-color', false);
+        $respuesta->assertSee('data-mamas-grosor', false);
+    }
+
+    public function test_el_dibujo_se_guarda_por_consulta_se_sirve_y_se_quita(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])
+            ->assertOk()->assertJson(['guardado' => true]);
+
+        $fila = DibujoDeMama::where('lado', 'derecha')->firstOrFail();
+        $this->assertSame((int) $consulta->nroconsulta, (int) $fila->nroconsulta);
+        Storage::disk('clinica')->assertExists($fila->archivo);
+
+        // Guardar de nuevo reemplaza (una fila, el archivo viejo se borra).
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])->assertOk();
+        $this->assertSame(1, DibujoDeMama::where('lado', 'derecha')->count());
+        Storage::disk('clinica')->assertMissing($fila->archivo);
+
+        $web->get(route('clinica.consulta.mamas.ver', [$consulta->id, 'derecha']))->assertOk()->assertHeader('Content-Type', 'image/png');
+        $web->get(route('clinica.consulta.mamas.ver', [$consulta->id, 'izquierda']))->assertNotFound();
+
+        $web->delete(route('clinica.consulta.mamas.quitar', [$consulta->id, 'derecha']))->assertOk();
+        $this->assertSame(0, DibujoDeMama::count());
+    }
+
+    public function test_el_dibujo_rechaza_lados_y_archivos_que_no_son_png_y_es_del_medico(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'arriba']), ['dibujo' => $this->pngFalso()])->assertNotFound();
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']),
+            ['dibujo' => UploadedFile::fake()->image('foto.jpg')])->assertStatus(422);
+
+        // Otro médico no ve la consulta (404).
+        [$user2, $medico2, $gineco2] = $this->medicoConAcceso();
+        $this->conContexto($user2, $medico2, $gineco2)->actingAs($user2)
+            ->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])->assertNotFound();
+        $this->assertSame(0, DibujoDeMama::count());
     }
 
     public function test_una_consulta_sin_examen_muestra_los_campos_vacios(): void

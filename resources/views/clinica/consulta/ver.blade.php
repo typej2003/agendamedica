@@ -178,6 +178,7 @@
     <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
     <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
+    <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
     {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection

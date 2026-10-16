@@ -49,6 +49,7 @@ use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\ResumenesAnteriores;
+use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -397,7 +398,17 @@ class ConsultaController extends Controller
             return new SeccionDeEvaluacionVista(
                 $pestana,
                 new PestanasDelExamen($url),
-                PestanasDelExamen::esDeTexto($pestana)
+                $pestana === PestanasDelExamen::MAMAS
+                    ? new DibujosDeMamasVista(
+                        fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),
+                        fn (string $lado) => route('clinica.consulta.mamas.guardar', [$consulta->id, $lado]),
+                        \App\Models\DibujoDeMama::where([
+                            'reg_medico' => $consulta->reg_medico,
+                            'nrohistoria' => (int) $consulta->numhistoria,
+                            'nroconsulta' => (int) $consulta->nroconsulta,
+                        ])->pluck('lado')->all(),
+                    )
+                    : (PestanasDelExamen::esDeTexto($pestana)
                     ? new TextoDelExamenVista(
                         $pestana,
                         $texto->de($consulta, $pestana),
@@ -422,7 +433,7 @@ class ConsultaController extends Controller
                         PlantillasDelTexto::de($regMedico, 'EG')->all(),
                         $pestana,
                         $pestana === PestanasDelExamen::GINECOLOGICO ? (new ResumenesAnteriores())->de($consulta, 'total_g') : [],
-                    ),
+                    )),
             );
         }
 
