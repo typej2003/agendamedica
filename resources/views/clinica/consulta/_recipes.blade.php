@@ -78,6 +78,9 @@
                                             data-siguiente="{{ $receta['urlImprimir'] }}" data-titulo="{{ $receta['titulo'] }}">
                                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
                                     </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-visualizar="{{ $receta['urlImprimir'] }}" data-titulo="Vista previa del récipe">
+        <i class="bi bi-eye" aria-hidden="true"></i> Visualizar
+    </button>
                                 @endif
 
                                 {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}

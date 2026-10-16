@@ -47,9 +47,9 @@
         <div class="d-flex justify-content-end gap-2 mt-3">
             <a class="btn btn-outline-secondary" href="{{ $seccion->urlVolver() }}">Cancelar</a>
             @if ($seccion->esUnDocumento() && $seccion->urlImprimir() !== '')
-                <a class="btn btn-outline-primary" href="{{ $seccion->urlImprimir() }}" target="_blank" rel="noopener">
+                <x-ui.imprimir-con-vista :url="$seccion->urlImprimir()" class="btn btn-outline-primary">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                </a>
+                </x-ui.imprimir-con-vista>
             @endif
             <button class="btn btn-primary">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : ($clave === 'tratamiento' ? 'el tratamiento' : 'la ' . mb_strtolower($seccion->titulo())) }}

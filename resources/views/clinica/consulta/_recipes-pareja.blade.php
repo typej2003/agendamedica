@@ -28,6 +28,9 @@
                         data-siguiente="{{ $seccion->urlImprimirPareja() }}" data-titulo="Récipe de la pareja">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
                 </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-visualizar="{{ $seccion->urlImprimirPareja() }}" data-titulo="Vista previa del récipe">
+        <i class="bi bi-eye" aria-hidden="true"></i> Visualizar
+    </button>
             @endif
 
             {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}

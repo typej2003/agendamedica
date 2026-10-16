@@ -580,6 +580,8 @@ class ConsultaEcoWebTest extends TestCase
         $pantalla->assertOk()
             ->assertSee('Eco obstétrico guardado.')
             ->assertSee('Imprimir el informe')
+            // «Visualizar» (WEB-11.24): el botón y el diálogo de la vista previa, comunes a todas las solicitudes, récipes y ecos.
+            ->assertSee('data-visualizar="', false)->assertSee('id="dialogo-visualizar"', false)
             ->assertSee('documento=eco-obstetrico', false);
 
         // Y la hoja sale con su título, la FUR, la EG y lo que se cargó (con su FPP, que suma 283).

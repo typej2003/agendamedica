@@ -95,9 +95,9 @@
                     <i class="bi bi-x-lg" aria-hidden="true"></i> Cancelar
                 </a>
                 @if ($vm->esUnDocumento() && $vm->urlImprimir() !== '')
-                    <a class="btn btn-outline-primary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+                    <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-outline-primary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </a>
+                    </x-ui.imprimir-con-vista>
                 @endif
                 <button class="btn btn-primary">
                     <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el estudio

@@ -17,9 +17,9 @@
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
             @if ($vm->esReal())
-                <a class="btn btn-sm btn-outline-secondary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+                <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-                </a>
+                </x-ui.imprimir-con-vista>
             @endif
         </x-slot>
 

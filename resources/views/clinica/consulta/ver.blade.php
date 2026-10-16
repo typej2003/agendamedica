@@ -70,6 +70,9 @@
         </x-ui.dialogo>
     @endif
 
+    {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
+    @include('clinica.consulta._visualizar')
+
     {{-- La barra de la consulta (WEB-11.5): el navegador 1…N entre las consultas del paciente y, en un lugar fijo, Guardar / Guardar y salir /
          Salir con el indicador de guardado. Las secciones de texto se guardan solas al pausar la escritura y al cambiar de sección o de
          consulta (`consulta-barra.js`); las que cargan listas guardan al instante y no necesitan el botón. --}}
@@ -179,6 +182,7 @@
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
     <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
     <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
+    <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
     {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection
