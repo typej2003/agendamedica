@@ -6,7 +6,7 @@ use App\Models\Consulta;
 use App\Models\EcoObstetricoTercer;
 
 /**
- * **El eco obstétrico del 2.º y 3.er trimestre de una consulta** (WEB-6.2): el hermano mayor del de primer
+ * **El eco obstétrico del 3.er trimestre de una consulta** (WEB-6.2; el 2.º, WEB-11.14, es `EcoObstetricoSegundo`): el hermano mayor del de primer
  * trimestre, con la misma forma y otra tabla.
  *
  * La clave es la misma —**`reg_medico` + `historia` + `consulta`**— y el objeto de valores también
@@ -30,11 +30,11 @@ use App\Models\EcoObstetricoTercer;
  * **fuera** las columnas que el DataWindow no edita: sin control (`eg`, `bio_abdomen`, `ana_relacion`,
  * `ana_corte_tracameral`) y ocultas (`puro_texto`, `gemelo`, `ana_ex_muslo_ppd`, `ana_ex_muslo_ppi`).
  */
-final class EcoObstetricoTercero
+class EcoObstetricoTercero
 {
     use MapaDelEcoObstetrico;
 
-    /** La tabla del eco obstétrico del 2.º y 3.er trimestre. */
+    /** La tabla del eco obstétrico del 3.er trimestre (en el escritorio, también del 2.º). */
     public const TABLA = 'eco_obstetrico_tercer';
 
     /** La columna de la historia (parte de la clave). */
@@ -169,6 +169,18 @@ final class EcoObstetricoTercero
         return $columnas;
     }
 
+    /** La tabla de este estudio: la del 3.er trimestre; la del 2.º la redefine (`EcoObstetricoSegundo`, WEB-11.14). */
+    protected function tabla(): string
+    {
+        return self::TABLA;
+    }
+
+    /** El modelo de este estudio. */
+    protected function modelo(): string
+    {
+        return EcoObstetricoTercer::class;
+    }
+
     /** El estudio de una consulta, o el objeto vacío si esa consulta no lo tiene. */
     public function de(Consulta $consulta): EstudioEcografico
     {
@@ -180,7 +192,7 @@ final class EcoObstetricoTercero
     /** La fila de `eco_obstetrico_tercer` de una consulta, o `null`. */
     public function filaDe(Consulta $consulta): ?EcoObstetricoTercer
     {
-        return EcoObstetricoTercer::query()
+        return ($this->modelo())::query()
             ->where('reg_medico', $consulta->reg_medico)
             ->where(self::COLUMNA_HISTORIA, (int) $consulta->numhistoria)
             ->where(self::COLUMNA_CONSULTA, (int) $consulta->nroconsulta)
@@ -196,7 +208,9 @@ final class EcoObstetricoTercero
             return $fila;
         }
 
-        return new EcoObstetricoTercer([
+        $modelo = $this->modelo();
+
+        return new $modelo([
             'reg_medico' => $consulta->reg_medico,
             self::COLUMNA_HISTORIA => (int) $consulta->numhistoria,
             self::COLUMNA_CONSULTA => (int) $consulta->nroconsulta,

@@ -103,7 +103,7 @@ class ConsultaDopplerWebTest extends TestCase
         // Los cuatro tipos del ítem 5, con el Doppler entre ellos.
         $respuesta->assertSee('Eco ginecológico')
             ->assertSee('Eco obstétrico (1.er trimestre)')
-            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
+            ->assertSee('Eco obstétrico (3.er trimestre)')
             ->assertSee('Eco Doppler perinatal');
 
         // Sus cuatro bloques, con los rótulos del DataWindow vivo.

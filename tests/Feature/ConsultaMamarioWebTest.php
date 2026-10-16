@@ -114,7 +114,7 @@ class ConsultaMamarioWebTest extends TestCase
         // Los seis tipos del ítem 5, con el mamario entre ellos.
         $respuesta->assertSee('Eco ginecológico')
             ->assertSee('Eco obstétrico (1.er trimestre)')
-            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
+            ->assertSee('Eco obstétrico (3.er trimestre)')
             ->assertSee('Eco Doppler perinatal')
             ->assertSee('Eco mamario')
             ->assertSee('Ecocardiograma fetal');

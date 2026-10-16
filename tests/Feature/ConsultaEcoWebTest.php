@@ -610,6 +610,44 @@ class ConsultaEcoWebTest extends TestCase
         $this->assertSame(0, \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->count());
     }
 
+    public function test_el_segundo_trimestre_es_un_estudio_aparte_del_tercero(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->get($this->urlSeccion($consulta, 'segundo'))->assertOk()
+            ->assertSee('Eco obstétrico (2.º trimestre)')->assertSee('Datos biométricos');
+
+        $web->post($this->urlGuardar($consulta, 'segundo'), ['bio_peso_fetal' => '1100', 'conclusion' => 'Segundo.'])
+            ->assertSessionHas('estado');
+
+        // Vive en la tabla hermana y no pisa al tercero.
+        $this->assertSame(1, DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame(0, DB::table('eco_obstetrico_tercer')->where('reg_medico', $medico->reg_medico)->count());
+
+        $web->post($this->urlGuardar($consulta, 'tercero'), ['bio_peso_fetal' => '3200', 'conclusion' => 'Tercero.'])
+            ->assertSessionHas('estado');
+        $this->assertSame('1100', (string) DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $medico->reg_medico)->value('bio_peso_fetal'));
+        $this->assertSame('3200', (string) DB::table('eco_obstetrico_tercer')->where('reg_medico', $medico->reg_medico)->value('bio_peso_fetal'));
+
+        // Cada uno ofrece su propia hoja, con el trimestre en el título.
+        $hoja = $web->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'eco-obstetrico-segundo']));
+        $hoja->assertOk()->assertSee('SEGUNDO TRIMESTRE');
+    }
+
+    public function test_en_ginecologia_el_eco_abdominal_no_se_ofrece_como_chip(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'ginecologico'));
+
+        $pantalla->assertOk()->assertSee('Eco obstétrico (2.º trimestre)')->assertDontSee('Eco abdominal');
+        // Pero la dirección directa sigue abriendo (lo usa pediatría).
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'abdominal'))->assertOk()->assertSee('Eco abdominal');
+    }
+
     public function test_el_tipo_tercero_abre_con_sus_bloques_y_guarda_en_su_tabla(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -620,7 +658,7 @@ class ConsultaEcoWebTest extends TestCase
             ->get($this->urlSeccion($consulta, 'tercero'));
 
         $pantalla->assertOk()
-            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
+            ->assertSee('Eco obstétrico (3.er trimestre)')
             ->assertSee('Datos biométricos')->assertSee('Datos anatómicos')
             ->assertSee('Placenta y líquido')->assertSee('El feto')
             ->assertSee('Peso F.')->assertSee('ILA (Phelan)');
@@ -652,7 +690,7 @@ class ConsultaEcoWebTest extends TestCase
         ));
 
         $hoja->assertOk()
-            ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · SEGUNDO/TERCER TRIMESTRE')
+            ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA · TERCER TRIMESTRE')
             ->assertSee('Datos biométricos:')
             ->assertSee('Peso F.: 3200')
             ->assertSee('Conclusiones: Embarazo a término.')

@@ -39,6 +39,7 @@ use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\EcoCardiogramaFetalVista;
 use App\Clinica\Consulta\Vistas\EcoAbdominalVista;
@@ -46,6 +47,7 @@ use App\Clinica\Consulta\Vistas\EcoDopplerVista;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EcoMamarioVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
+use App\Clinica\Consulta\Vistas\EcoObstetricoSegundoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\ResumenesAnteriores;
@@ -259,7 +261,7 @@ class ConsultaController extends Controller
     private function datosQueFaltan(object $paciente, string $regMedico, ?string $numhistoria): array
     {
         return \App\Clinica\Pacientes\FiliacionPendiente::de(
-            $paciente, $regMedico, $numhistoria, request()->attributes->get('contexto_clinico')['specialty_id'] ?? null,
+            $paciente, $regMedico, $numhistoria, request()->attributes->get('contexto_clinico')['specialty']?->id,
         );
     }
 
@@ -443,23 +445,30 @@ class ConsultaController extends Controller
             // fetal de WEB-6.3) y los demás llegan con las tareas siguientes de F6.
             $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
 
+            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander).
+            $especialidad = request()->attributes->get('contexto_clinico')['specialty']?->slug;
             $tipos = new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
                 'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                 'tipo' => $clave,
-            ]));
+            ]), $especialidad === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : []);
 
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
-            if ($tipo === TiposDeEstudio::TERCERO) {
+            if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
+                // El 2.º trimestre (WEB-11.14) es la misma pantalla sobre la tabla hermana `eco_obstetrico_tercer_2`.
+                $esSegundo = $tipo === TiposDeEstudio::SEGUNDO;
+                $vistaDelTrimestre = $esSegundo ? EcoObstetricoSegundoVista::class : EcoObstetricoTerceroVista::class;
+                $lecturaDelTrimestre = $esSegundo ? app(EcoObstetricoSegundo::class) : $ecoObstetricoTercero;
+
                 return new SeccionDeEstudioVista(
                     $tipo,
                     $tipos,
-                    new EcoObstetricoTerceroVista(
-                        $ecoObstetricoTercero->de($consulta),
+                    new $vistaDelTrimestre(
+                        $lecturaDelTrimestre->de($consulta),
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
-                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $esSegundo ? DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO : DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
                         null,
                         null,
                         (array) old(),

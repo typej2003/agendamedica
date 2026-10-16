@@ -12,10 +12,10 @@ use App\Clinica\Consulta\EcoObstetricoTercero;
  * es un documento" (la fecha, la FUR y la gesta no cuentan) y el aviso de cambios sin guardar—, porque los
  * dos estudios tienen la misma forma: una fila por consulta con su clave.
  *
- * ⚠️ El rótulo dice «2.º y 3.er trimestre» a propósito: el escritorio usa **una sola tabla y una sola
- * pantalla** para los dos, y lo único que cambia es el informe que se imprime.
+ * Desde WEB-11.14 el 2.º y el 3.er trimestre están **separados** (Alexander): éste es el 3.º (`eco_obstetrico_tercer`) y
+ * `EcoObstetricoSegundoVista` es el 2.º, sobre la tabla hermana `eco_obstetrico_tercer_2`.
  */
-final class EcoObstetricoTerceroVista extends EcoObstetricoVista
+class EcoObstetricoTerceroVista extends EcoObstetricoVista
 {
     protected function mapa(): array
     {
@@ -29,7 +29,7 @@ final class EcoObstetricoTerceroVista extends EcoObstetricoVista
 
     public function titulo(): string
     {
-        return 'Eco obstétrico (2.º y 3.er trimestre)';
+        return 'Eco obstétrico (3.er trimestre)';
     }
 
     public function icono(): string

@@ -256,6 +256,14 @@ class ImpresionDeDocumentosController extends Controller
             ]);
         }
 
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::SEGUNDO,
+            ]);
+        }
+
         if ($tipo === DocumentoImpreso::ECO_OBSTETRICO_TERCERO) {
             return route('clinica.consulta', [
                 $consulta->id,

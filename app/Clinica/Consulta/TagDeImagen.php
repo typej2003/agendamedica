@@ -50,6 +50,9 @@ final class TagDeImagen
 
     public const OBSTETRICO_3 = 'o3';
 
+    /** La del eco obstétrico del 2.º trimestre (WEB-11.14): el escritorio no la usaba (compartía la `o3` con el tercero). */
+    public const OBSTETRICO_2 = 'o2';
+
     /**
      * La del **ecocardiograma fetal** (WEB-6.3): no es una solapa del examen sino un tipo de estudio, y su
      * grilla de imágenes es la del propio estudio (`d_imagenes_e_fetal` de
@@ -76,6 +79,7 @@ final class TagDeImagen
         // Los siete estudios ecográficos (WEB-11.12): la clave es `eco-<tipo del estudio>` y el escritorio las llama por su etiqueta.
         'eco-ginecologico' => self::PELVICO,
         'eco-obstetrico' => self::OBSTETRICO_1,
+        'eco-segundo' => self::OBSTETRICO_2,
         'eco-tercero' => self::OBSTETRICO_3,
         'eco-doppler' => self::DOPPLER,
         'eco-fetal' => self::FETAL,
@@ -94,6 +98,7 @@ final class TagDeImagen
         'histeroscopia' => [self::HISTEROSCOPIA],
         'eco-ginecologico' => [self::PELVICO],
         'eco-obstetrico' => [self::OBSTETRICO_1],
+        'eco-segundo' => [self::OBSTETRICO_2],
         'eco-tercero' => [self::OBSTETRICO_3],
         'eco-doppler' => [self::DOPPLER],
         'eco-fetal' => [self::FETAL],
@@ -115,7 +120,8 @@ final class TagDeImagen
         self::MAMAS => 'eco de mamas',
         self::ABDOMINAL => 'eco abdominal',
         self::OBSTETRICO_1 => 'eco obstétrico (1.er trimestre)',
-        self::OBSTETRICO_3 => 'eco obstétrico (2.º/3.er trimestre)',
+        self::OBSTETRICO_2 => 'eco obstétrico (2.º trimestre)',
+        self::OBSTETRICO_3 => 'eco obstétrico (3.er trimestre)',
         self::FETAL => 'ecocardiograma fetal',
         self::DOPPLER => 'eco Doppler perinatal',
     ];

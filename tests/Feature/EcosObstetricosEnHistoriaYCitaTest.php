@@ -109,15 +109,15 @@ class EcosObstetricosEnHistoriaYCitaTest extends TestCase
             ->assertSee('Informe del eco obstétrico (1.er trimestre)');
     }
 
-    public function test_la_historia_lista_el_eco_obstetrico_del_segundo_y_tercer_trimestre(): void
+    public function test_la_historia_lista_el_eco_obstetrico_del_tercer_trimestre(): void
     {
         [$user, $medico, $gineco, , , $pacienteId] = $this->escenario();
         $this->tercerTrimestre($medico);
 
         $this->como($user, $medico, $gineco)->get(route('clinica.pacientes.historia', $pacienteId))
             ->assertOk()
-            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
-            ->assertSee('Informe del eco obstétrico (2.º y 3.er trimestre)');
+            ->assertSee('Eco obstétrico (3.er trimestre)')
+            ->assertSee('Informe del eco obstétrico (3.er trimestre)');
     }
 
     public function test_la_historia_no_lista_un_eco_obstetrico_que_solo_trae_su_ficha(): void

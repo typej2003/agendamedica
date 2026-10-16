@@ -141,7 +141,7 @@ class EcoGinecologicoTest extends TestCase
      */
     public function test_el_registro_de_tipos_tiene_los_que_existen_y_un_valor_raro_cae_al_primero(): void
     {
-        $this->assertSame(['ginecologico', 'obstetrico', 'tercero', 'doppler', 'mamario', 'fetal', 'abdominal'], TiposDeEstudio::claves());
+        $this->assertSame(['ginecologico', 'obstetrico', 'segundo', 'tercero', 'doppler', 'mamario', 'fetal', 'abdominal'], TiposDeEstudio::claves());
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar('inventado'));
         $this->assertSame('ginecologico', TiposDeEstudio::normalizar(null));
         $this->assertTrue(TiposDeEstudio::existe('ginecologico'));

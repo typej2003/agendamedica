@@ -93,6 +93,17 @@ final class FormatosEnBlanco
                 ['etiqueta' => 'La conclusión:', 'peso' => 2],
             ],
         ],
+        DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO => [
+            'descripcion' => 'La biometría, la anatomía, la placenta y la función fetal.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:', 'FPP:'],
+            'secciones' => [
+                ['etiqueta' => 'Datos biométricos:', 'peso' => 2],
+                ['etiqueta' => 'Datos anatómicos:', 'peso' => 2],
+                ['etiqueta' => 'Placenta y líquido:', 'peso' => 2],
+                ['etiqueta' => 'El feto:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
         DocumentoImpreso::ECO_OBSTETRICO_TERCERO => [
             'descripcion' => 'La biometría, la anatomía, la placenta y la función fetal.',
             'fijos' => ['Gesta:', 'FUR:', 'EG:', 'FPP:'],

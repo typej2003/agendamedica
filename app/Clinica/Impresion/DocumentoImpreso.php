@@ -58,8 +58,11 @@ final class DocumentoImpreso
      */
     public const ECO_OBSTETRICO = 'eco-obstetrico';
 
-    /** El **informe del eco obstétrico del 2.º/3.er trimestre** (WEB-6.2): «… SEGUNDO/TERCER TRIMESTRE». */
+    /** El **informe del eco obstétrico del 3.er trimestre** (WEB-6.2): «… TERCER TRIMESTRE». */
     public const ECO_OBSTETRICO_TERCERO = 'eco-obstetrico-tercero';
+
+    /** El **informe del eco obstétrico del 2.º trimestre** (WEB-11.14): «… SEGUNDO TRIMESTRE» (tabla `eco_obstetrico_tercer_2`). */
+    public const ECO_OBSTETRICO_SEGUNDO = 'eco-obstetrico-segundo';
 
     /**
      * El **informe del eco Doppler perinatal** (WEB-6.3): la hoja que el escritorio imprime con
@@ -154,7 +157,8 @@ final class DocumentoImpreso
         self::CONTROL_DE_EMBARAZO => ['CONTROL DE EMBARAZO', 'Control de embarazo'],
         // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
         self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
-        self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
+        self::ECO_OBSTETRICO_SEGUNDO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º trimestre)'],
+        self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (3.er trimestre)'],
         // El del eco Doppler perinatal, tal cual el DataWindow de impresión del escritorio
         // (`d_eco_doppler_print.srd:55`).
         self::ECO_DOPPLER => ['ECO DOPPLER PERINATAL', 'Eco Doppler perinatal'],
@@ -187,7 +191,8 @@ final class DocumentoImpreso
      */
     public const SUFIJOS = [
         self::ECO_OBSTETRICO => ' · PRIMER TRIMESTRE',
-        self::ECO_OBSTETRICO_TERCERO => ' · SEGUNDO/TERCER TRIMESTRE',
+        self::ECO_OBSTETRICO_SEGUNDO => ' · SEGUNDO TRIMESTRE',
+        self::ECO_OBSTETRICO_TERCERO => ' · TERCER TRIMESTRE',
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */

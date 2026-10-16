@@ -245,6 +245,9 @@ final class DocumentosPorCita
             EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
         $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
             EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        // El 2.º trimestre (WEB-11.14) vive en la tabla hermana.
+        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
 
         //  - informe del ecocardiograma fetal (WEB-6.3): otro estudio del ítem 5, con la misma clave
         //    (`historia` + `consulta`) y su ficha más ancha (la fecha, la FUR, la gesta y la paridad). Su
