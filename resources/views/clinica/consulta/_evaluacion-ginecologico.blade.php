@@ -20,6 +20,12 @@
         @csrf
         <input type="hidden" name="pestana" value="ginecologico">
 
+        {{-- El panel de plantillas del resumen (`EG`) va **arriba** de todo: en el escritorio es una columna a la
+             derecha que arranca arriba y acá vivía dentro del bloque del resumen, al final de la página
+             (pedido del usuario, 2026-10-16). --}}
+        <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG"
+                         nombre="examen ginecológico" class="mb-3" />
+
         <h3 class="paso-titulo mb-2">Hallazgos</h3>
         <div class="row g-3 mb-3">
             @foreach ($seccion->ginecologico() as $campo)
@@ -28,7 +34,7 @@
         </div>
 
         <div class="row g-3 mb-3" data-resumen="ginecologico">
-            <div class="col-12 col-xl-8">
+            <div class="col-12">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
                     <label class="etiqueta mb-0" for="total_g">Resumen del examen ginecológico</label>
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-resumen-actualizar="ginecologico">
@@ -38,9 +44,6 @@
                 <textarea name="total_g" id="total_g" class="form-control" rows="5"
                           placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalGinecologico() }}</textarea>
                 <p class="texto-tenue small mt-1 mb-0">El resumen incluye la colposcopía y la citología, que se cargan en sus propios chips.</p>
-            </div>
-            <div class="col-12 col-xl-4">
-                <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG" nombre="examen ginecológico" />
             </div>
         </div>
 

@@ -17,22 +17,18 @@
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="dieta-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 
-        <div class="row g-3">
-            <div class="col-12 col-xl-8">
-                <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3" ayuda="Opcional. Sale en negrita sobre el texto.">
-                    <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
-                </x-ui.campo>
+        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
+             una columna a la derecha y acá, al no caber, caía debajo del texto. --}}
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
+                         nombre="dieta" titulo-destino="#dieta-titulo" class="mb-3" />
 
-                <x-ui.campo etiqueta="Texto de la dieta o de las recomendaciones" for="dieta-descripcion" error="descripcion" requerido>
-                    <textarea name="descripcion" id="dieta-descripcion" class="form-control" rows="14">{{ $vm->texto() }}</textarea>
-                </x-ui.campo>
-            </div>
+        <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3" ayuda="Opcional. Sale en negrita sobre el texto.">
+            <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
+        </x-ui.campo>
 
-            <div class="col-12 col-xl-4">
-                <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
-                                 nombre="dieta" titulo-destino="#dieta-titulo" />
-            </div>
-        </div>
+        <x-ui.campo etiqueta="Texto de la dieta o de las recomendaciones" for="dieta-descripcion" error="descripcion" requerido>
+            <textarea name="descripcion" id="dieta-descripcion" class="form-control" rows="14">{{ $vm->texto() }}</textarea>
+        </x-ui.campo>
 
         <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-3" data-solicitud-aviso hidden>
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>

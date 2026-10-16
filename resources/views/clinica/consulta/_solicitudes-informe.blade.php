@@ -25,6 +25,12 @@
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="informe-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 
+        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
+             una columna a la derecha y acá, al no caber, caía debajo del texto. Los informes anteriores siguen
+             al lado del editor: se copian, no son plantillas del médico. --}}
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM"
+                         nombre="informe" class="mb-3" />
+
         <div class="row g-3">
             <div class="col-12 col-xl-8">
                 <div class="row g-3 mb-3">
@@ -42,8 +48,6 @@
             </div>
 
             <div class="col-12 col-xl-4">
-                <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM" nombre="informe" class="mb-3" />
-
                 <p class="etiqueta mb-2">Informes anteriores del paciente</p>
                 @if ($vm->hayAnteriores())
                     <ul class="evolucion-plantillas">

@@ -23,18 +23,16 @@
               data-consulta-evolucion data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
 
-            {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo: buscador, lista y «Guardar como plantilla». --}}
-            <div class="row g-3">
-                <div class="col-12 col-xl-8">
-                    <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion" :ayuda="$seccion->ayuda()">
-                        <textarea name="evolucion" id="evolucion" class="form-control" rows="12"
-                                  placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('evolucion', '')) }}</textarea>
-                    </x-ui.campo>
-                </div>
-                <div class="col-12 col-xl-4">
-                    <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#evolucion" tipo="EV" nombre="evolución" />
-                </div>
-            </div>
+            {{-- El panel de plantillas (WEB-11.2) va **arriba** del campo: en el escritorio es una columna a la
+                 derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). Es
+                 buscador, lista y «Guardar como plantilla». --}}
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#evolucion" tipo="EV"
+                             nombre="evolución" class="mb-3" />
+
+            <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion" :ayuda="$seccion->ayuda()">
+                <textarea name="evolucion" id="evolucion" class="form-control" rows="12"
+                          placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('evolucion', '')) }}</textarea>
+            </x-ui.campo>
 
             {{-- El aviso de "hay cambios sin guardar" se muestra recién cuando el texto cambió: se
                  controla por `hidden`, que es lo que el script alterna. --}}

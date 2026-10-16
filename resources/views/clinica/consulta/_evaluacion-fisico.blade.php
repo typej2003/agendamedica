@@ -31,6 +31,12 @@
         @csrf
         <input type="hidden" name="pestana" value="fisico">
 
+        {{-- El panel de plantillas del resumen (`RF`) va **arriba** de todo: en el escritorio es una columna a la
+             derecha que arranca arriba y acá vivía dentro del bloque del resumen, al final de la página
+             (pedido del usuario, 2026-10-16). --}}
+        <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF"
+                         nombre="resumen físico" class="mb-3" />
+
         {{-- 1. Antropometría, signos y tensión: las siete columnas `double` de `consultas` (peso, talla,
              FC, FR y las tres circunferencias) más `examen_fisico_nuevo.tension`. --}}
         <h3 class="paso-titulo mb-2">Antropometría y signos</h3>
@@ -60,7 +66,7 @@
         {{-- El resumen narrativo (WEB-11.8): lo arma «Actualizar» con los datos no vacíos de arriba, es **editable** y se guarda con la sección.
              Si ya hay un texto distinto del que se armaría, «Actualizar» pide confirmación antes de reemplazarlo. --}}
         <div class="row g-3 mb-3" data-resumen="fisico">
-            <div class="col-12 col-xl-8">
+            <div class="col-12">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
                     <label class="etiqueta mb-0" for="total_f">Resumen del examen físico</label>
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-resumen-actualizar="fisico">
@@ -69,9 +75,6 @@
                 </div>
                 <textarea name="total_f" id="total_f" class="form-control" rows="5"
                           placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalFisico() }}</textarea>
-            </div>
-            <div class="col-12 col-xl-4">
-                <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF" nombre="resumen físico" />
             </div>
         </div>
 

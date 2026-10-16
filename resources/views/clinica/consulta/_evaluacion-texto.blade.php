@@ -24,20 +24,17 @@
           data-consulta-plantillas data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
-        {{-- El panel de plantillas (WEB-11.2) va a la derecha del campo. La histeroscopía no tiene plantillas en el escritorio. --}}
-        <div class="row g-3">
-            <div class="{{ $seccion->tienePlantillas() ? 'col-12 col-xl-8' : 'col-12' }}">
-                <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
-                <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
-                          data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
-            </div>
-            @if ($seccion->tienePlantillas())
-                <div class="col-12 col-xl-4">
-                    <x-ui.plantillas :plantillas="$seccion->plantillas()" :destino="'#' . $seccion->campo()"
-                                     :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" />
-                </div>
-            @endif
-        </div>
+        {{-- El panel de plantillas (WEB-11.2) va **arriba** del campo: en el escritorio es una columna a la
+             derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). La
+             histeroscopía no tiene plantillas en el escritorio. --}}
+        @if ($seccion->tienePlantillas())
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
+                             :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" class="mb-3" />
+        @endif
+
+        <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
+        <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
+                  data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
 
         <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="{{ $clave }}-form-sin-guardar" hidden>
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
