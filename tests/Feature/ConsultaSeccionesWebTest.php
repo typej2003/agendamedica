@@ -219,7 +219,8 @@ class ConsultaSeccionesWebTest extends TestCase
 
     public function test_la_barra_ofrece_el_navegador_entre_las_consultas_del_paciente(): void
     {
-        // WEB-11.5: con dos consultas en la historia aparecen los chips 1 y 2 (la actual marcada) y la barra Guardar / Guardar y salir / Salir.
+        // A-11: con dos consultas en la historia aparecen los chips 1 y 2 (la actual marcada) en la **fila única** del
+        // encabezado, junto a Guardar y «Terminar la consulta». «Guardar y salir» y «Salir» ya no existen como botones.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
         $segunda = Consulta::create([
@@ -231,7 +232,9 @@ class ConsultaSeccionesWebTest extends TestCase
 
         $respuesta->assertOk()
             ->assertSee('data-consulta-barra', false)
-            ->assertSee('Guardar y salir')
+            ->assertSee('Guardar')
+            ->assertDontSee('Guardar y salir')
+            ->assertDontSee('data-barra-guardar-salir', false)
             ->assertSee('Consultas de este paciente')
             ->assertSee(route('clinica.consulta', $primera->id) . '?seccion=motivos', false);
         $this->assertSame(1, substr_count($respuesta->getContent(), 'chip-opcion activo" href="' . route('clinica.consulta', $segunda->id) . '?seccion=motivos"'));

@@ -471,12 +471,58 @@ class ConsultaWebTest extends TestCase
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
-        $respuesta->assertSee(route('clinica.pacientes.ver', $pacienteId), false);
+        // A-11: el paciente se alcanza por la sección «Datos personales»; el encabezado ya no enlaza su ficha (el
+        // «Ver resumen» que llevaba a la historia se fue de la consulta).
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']), false);
 
         // Y la vuelta a la agenda del día de la consulta (con el `&` de la query ya escapado por Blade).
         $respuesta->assertSee(route('clinica.agenda', [
             'vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas',
         ]));
+
+        // A-11: «Ver resumen» se fue de la consulta (el resumen del paciente se ve desde su ficha).
+        $respuesta->assertDontSee('Ver resumen');
+    }
+
+    /**
+     * **La barra de contexto no se pinta dentro de la consulta** (A-11, decisión del usuario). La consulta es una
+     * pantalla de trabajo: ni las fichas del médico/sede, ni «Sedes», ni «Consultorios», ni «Cambiar consultorio», ni el
+     * menú de la cuenta (cerrar sesión). Es una **regla**: dentro de la consulta no queda ningún enlace ni atajo a esa
+     * pantalla. En la agenda la barra sigue igual.
+     */
+    public function test_la_consulta_no_pinta_la_barra_de_contexto_y_la_agenda_si(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $consulta = Consulta::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => 1001,
+            'nroconsulta' => 1,
+            'fecha'       => $this->hoy->toDateString(),
+        ]);
+
+        $enLaConsulta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlConsulta($consulta));
+
+        $enLaConsulta->assertOk();
+        $enLaConsulta->assertDontSee('Cambiar consultorio');
+        $enLaConsulta->assertDontSee(route('clinica.contexto'), false);
+        $enLaConsulta->assertDontSee('Cerrar sesión');
+        $enLaConsulta->assertDontSee('aria-label="Mi cuenta"', false);
+        $enLaConsulta->assertDontSee(route('clinica.sedes'), false);
+
+        // La salida sigue estando: la flecha del principio, que guarda lo escrito antes de volver.
+        $enLaConsulta->assertSee('Volver a la agenda');
+        $enLaConsulta->assertSee('data-barra-salir', false);
+
+        // En la agenda, la barra de contexto no cambió.
+        $enLaAgenda = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.agenda'));
+
+        $enLaAgenda->assertOk();
+        $enLaAgenda->assertSee('Cambiar consultorio');
+        $enLaAgenda->assertSee(route('clinica.contexto'), false);
+        $enLaAgenda->assertSee('Cerrar sesión');
+        $enLaAgenda->assertSee('aria-label="Mi cuenta"', false);
     }
 
     public function test_una_consulta_de_otro_medico_da_404(): void

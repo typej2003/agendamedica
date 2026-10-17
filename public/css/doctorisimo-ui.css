@@ -3227,24 +3227,71 @@ body.auth-pagina {
 }
 
 /* ---------------------------------------------------------------------------------------------------------
-   La barra de la consulta (WEB-11.5): navegador 1…N + Guardar / Guardar y salir / Salir
-   --------------------------------------------------------------------------------------------------------- */
-.consulta-barra {
+   La fila del encabezado de la consulta (A-11): volver + identidad del paciente + navegador 1…N + acciones
+   ---------------------------------------------------------------------------------------------------------
+   Una sola fila de ~48 px. Antes la consulta tenía tres bloques arriba (la barra de contexto del armazón, el
+   encabezado del paciente y la barra de la consulta) que ocupaban ~185 px en una pantalla de 768. El nombre ya no
+   es un título: tipografía normal y una línea que se recorta con puntos suspensivos (el texto completo va en el
+   `title`). En el celular la fila envuelve —identidad, navegador y acciones, cada uno en su renglón— y nunca
+   produce scroll horizontal: el navegador se desplaza dentro de su propio ancho. */
+.consulta-encabezado {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: .5rem 1rem;
+    gap: .5rem .75rem;
     margin-bottom: 1rem;
-    padding: .5rem .75rem;
+    padding: .35rem .5rem;
     border: 1px solid var(--ds-borde);
     border-radius: var(--ds-radio-card);
     background: var(--ds-superficie);
 }
-.consulta-barra-navegador { display: flex; align-items: center; gap: .6rem; min-width: 0; flex: 1 1 14rem; }
+.consulta-volver {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radio);
+    color: var(--ds-texto-2);
+    text-decoration: none;
+}
+.consulta-volver:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.consulta-identidad {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    flex: 1 1 12rem;
+    min-width: 0;
+    margin: 0;
+    font-size: .875rem;
+    color: var(--ds-texto-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.consulta-paciente { font-weight: 600; color: var(--ds-tinta); }
+.consulta-datos { overflow: hidden; text-overflow: ellipsis; }
+.consulta-barra-navegador { display: flex; align-items: center; gap: .5rem; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.consulta-encabezado .consulta-barra-navegador .chips { padding-bottom: 0; }
+.consulta-encabezado .consulta-barra-navegador .chip-opcion {
+    min-height: 30px;
+    padding: 0 .55rem;
+    border-radius: var(--ds-radio-sm);
+    font-size: .8125rem;
+}
 .consulta-barra-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-left: auto; }
-.consulta-barra-estado { min-width: 6.5rem; text-align: right; }
+.consulta-barra-estado { min-width: 5rem; text-align: right; }
 .consulta-barra-estado.es-error { color: var(--ds-peligro); font-weight: 600; }
+
+@media (max-width: 575.98px) {
+    /* En el celular los objetivos táctiles siguen midiendo 40 px; el navegador va en su propio renglón y se
+       desplaza dentro de su ancho (los chips ya lo hacen: `.chips { overflow-x: auto }`). */
+    .consulta-encabezado .consulta-barra-navegador .chip-opcion { min-height: 40px; }
+    .consulta-barra-acciones { margin-left: 0; }
+    .consulta-barra-estado { min-width: 0; text-align: left; }
+}
 
 /* ---------------------------------------------------------------------------------------------------------
    Alertas del paciente en la consulta (WEB-11.6): aviso de seguridad clínica, fijo en todas las secciones

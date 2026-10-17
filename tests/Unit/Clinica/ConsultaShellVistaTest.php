@@ -47,7 +47,9 @@ class ConsultaShellVistaTest extends TestCase
 
         $this->assertSame('Pérez, Ana', $vm->nombre());
         $this->assertSame('H. 1001', $vm->historia());
-        $this->assertSame('Consulta N.º 3 · H. 1001 · 05/10/2026', $vm->subtitulo());
+        // A-11: la fila es `NOMBRE · H. n.º · Consulta n.º · fecha`; el resto de la fila (lo que va detrás del nombre).
+        $this->assertSame('H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo());
+        $this->assertSame('Pérez, Ana · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->lineaDeCabecera());
         $this->assertSame('05/10/2026', $vm->fecha());
         $this->assertSame(3, $vm->nroconsulta());
     }
@@ -64,6 +66,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertNull($vm->historia());
         $this->assertSame('—', $vm->fecha());
         $this->assertSame('Consulta N.º 3 · —', $vm->subtitulo());
+        $this->assertSame('Paciente sin nombre · Consulta N.º 3 · —', $vm->lineaDeCabecera());
     }
 
     public function test_el_panel_tiene_los_catorce_items_en_su_orden_en_su_orden_y_con_su_tarea(): void

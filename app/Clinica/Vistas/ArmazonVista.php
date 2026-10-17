@@ -259,6 +259,20 @@ final class ArmazonVista
     }
 
     /**
+     * **La barra de contexto no se pinta dentro de la consulta** (A-11, decisión del usuario). La consulta es una
+     * pantalla de trabajo: el médico ya sabe con quién, en qué sede y con qué registro está, y la fila de arriba sólo
+     * le robaba alto. Lo que **no** se pinta es la barra superior completa (las fichas del médico, «Sedes»,
+     * «Consultorios», «Cambiar consultorio» y el menú de la cuenta): dentro de la consulta no se cambia de consultorio
+     * ni se cierra sesión, y no queda ningún enlace ni atajo a esa pantalla. Al salir a la agenda la barra vuelve. El
+     * botón del menú lateral en el celular sigue existiendo, porque sin él no habría cómo navegar en una pantalla
+     * táctil (lo pinta `clinica/layout`).
+     */
+    public function muestraLaBarraDeContexto(): bool
+    {
+        return ! $this->enLaConsulta();
+    }
+
+    /**
      * ¿La petición es la pantalla de una consulta (o una de sus secciones)? Las secciones **no son rutas**: comparten
      * la del shell y viajan en `?seccion=`, así que la ruta `clinica.consulta` alcanza; el `clinica.consulta.` cubre las
      * acciones que vuelven a ella. El prefijo se compara con el punto a propósito: `clinica.consultorios` empieza con

@@ -172,14 +172,25 @@ final class ConsultaShellVista
         return (int) $this->paciente->id;
     }
 
-    /** "Consulta N.º 3 · H. 1001 · 10/10/2026" — lo que identifica la atención que se está abriendo. */
+    /**
+     * "H. 1001 · Consulta N.º 3 · 10/10/2026" — lo que identifica la atención que se está abriendo.
+     *
+     * Va detrás del nombre del paciente en la **única fila** del encabezado de la consulta (A-11), en este orden:
+     * `NOMBRE · H. n.º · Consulta n.º · fecha` (el nombre lo pinta la vista y esto es el resto).
+     */
     public function subtitulo(): string
     {
         return collect([
-            'Consulta N.º ' . $this->nroconsulta,
             $this->historia(),
+            'Consulta N.º ' . $this->nroconsulta,
             FechaClinica::formato($this->fecha),
         ])->filter()->implode(' · ');
+    }
+
+    /** La fila completa del encabezado, para el `title` con el texto sin recortar: "Pérez, Ana · H. 1001 · …". */
+    public function lineaDeCabecera(): string
+    {
+        return collect([$this->nombre(), $this->subtitulo()])->filter()->implode(' · ');
     }
 
     /** "H. 1001", o `null` si el vínculo no tiene número (no debería pasar: sin historia no se abre). */

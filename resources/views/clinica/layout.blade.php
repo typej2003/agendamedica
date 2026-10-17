@@ -100,53 +100,69 @@
 </nav>
 
 <div class="app-columna">
-    <header class="app-topbar d-flex align-items-center justify-content-between gap-2 px-3 py-2">
-        <div class="d-flex align-items-center gap-2 min-w-0">
-            <button class="btn btn-sm btn-light d-lg-none" type="button" id="clinica-menu-boton"
+    @if ($armazon->muestraLaBarraDeContexto())
+        <header class="app-topbar d-flex align-items-center justify-content-between gap-2 px-3 py-2">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <button class="btn btn-sm btn-light d-lg-none" type="button" id="clinica-menu-boton"
+                        aria-label="Abrir menú" aria-controls="clinica-sidebar" aria-expanded="false">
+                    <i class="bi bi-list fs-5" aria-hidden="true"></i>
+                </button>
+
+                {{-- La marca vive en la barra lateral; en el celular, donde ésta se esconde, vuelve acá. --}}
+                <div class="app-marca d-lg-none">
+                    <i class="bi bi-heart-pulse-fill app-marca-icono" aria-hidden="true"></i>
+                    <span class="d-none d-sm-inline">Doctorísimo</span>
+                </div>
+
+                @if ($armazon->tieneContexto())
+                    <div class="d-none d-md-flex flex-wrap gap-1">
+                        @foreach ($armazon->fichas() as $ficha)
+                            <span class="chip"><i class="bi {{ $ficha['icono'] }}" aria-hidden="true"></i> {{ $ficha['texto'] }}</span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                @foreach ($armazon->accesos() as $acceso)
+                    <a href="{{ $acceso['url'] }}" class="btn btn-sm {{ $acceso['primario'] ? 'btn-outline-primary' : 'btn-outline-secondary' }}"
+                       title="{{ $acceso['texto'] }}">
+                        <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
+                    </a>
+                @endforeach
+
+                {{-- La cuenta: cambiar la contraseña y **cerrar sesión**. Antes no había cómo salir desde el consultorio
+                     (el cierre de sesión solo existía en el panel de administración). --}}
+                @auth
+                    <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="\Illuminate\Support\Str::words(auth()->user()->name, 1, '')">
+                        <a class="menu-item" href="{{ route('cuenta.password') }}">
+                            <i class="bi bi-key" aria-hidden="true"></i> Cambiar contraseña
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="menu-item menu-item-peligro">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Cerrar sesión
+                            </button>
+                        </form>
+                    </x-ui.menu>
+                @endauth
+            </div>
+        </header>
+    @else
+        {{-- Dentro de la consulta (A-11) no hay barra de contexto: ni fichas, ni «Cambiar consultorio», ni cuenta. En el
+             celular queda sólo la barra que abre el menú lateral —sin ella no habría forma de navegar— y en el
+             escritorio no se pinta nada, así que la pantalla empieza en la fila de la consulta (`d-lg-none`). --}}
+        <header class="app-topbar app-topbar-solo-menu d-lg-none d-flex align-items-center gap-2 px-3 py-2">
+            <button class="btn btn-sm btn-light" type="button" id="clinica-menu-boton"
                     aria-label="Abrir menú" aria-controls="clinica-sidebar" aria-expanded="false">
                 <i class="bi bi-list fs-5" aria-hidden="true"></i>
             </button>
-
-            {{-- La marca vive en la barra lateral; en el celular, donde ésta se esconde, vuelve acá. --}}
-            <div class="app-marca d-lg-none">
+            <div class="app-marca">
                 <i class="bi bi-heart-pulse-fill app-marca-icono" aria-hidden="true"></i>
                 <span class="d-none d-sm-inline">Doctorísimo</span>
             </div>
-
-            @if ($armazon->tieneContexto())
-                <div class="d-none d-md-flex flex-wrap gap-1">
-                    @foreach ($armazon->fichas() as $ficha)
-                        <span class="chip"><i class="bi {{ $ficha['icono'] }}" aria-hidden="true"></i> {{ $ficha['texto'] }}</span>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-            @foreach ($armazon->accesos() as $acceso)
-                <a href="{{ $acceso['url'] }}" class="btn btn-sm {{ $acceso['primario'] ? 'btn-outline-primary' : 'btn-outline-secondary' }}"
-                   title="{{ $acceso['texto'] }}">
-                    <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
-                </a>
-            @endforeach
-
-            {{-- La cuenta: cambiar la contraseña y **cerrar sesión**. Antes no había cómo salir desde el consultorio
-                 (el cierre de sesión solo existía en el panel de administración). --}}
-            @auth
-                <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="\Illuminate\Support\Str::words(auth()->user()->name, 1, '')">
-                    <a class="menu-item" href="{{ route('cuenta.password') }}">
-                        <i class="bi bi-key" aria-hidden="true"></i> Cambiar contraseña
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="menu-item menu-item-peligro">
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Cerrar sesión
-                        </button>
-                    </form>
-                </x-ui.menu>
-            @endauth
-        </div>
-    </header>
+        </header>
+    @endif
 
     <main class="app-contenido p-3 p-lg-4" id="contenido-principal" tabindex="-1">
         @if (session('estado'))

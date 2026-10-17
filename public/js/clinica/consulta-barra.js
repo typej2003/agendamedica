@@ -1,12 +1,16 @@
-// La barra de la consulta (WEB-11.5): Guardar / Guardar y salir / Salir, el autoguardado y el aviso al cambiar de sección o de consulta.
+// La fila del encabezado de la consulta (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta.
 //
 // Decisión de Alexander (2026-10-15): los datos se van guardando solos cuando se pueda. Las secciones de texto (`form[data-autoguardar]`:
 // enfermedad actual, evolución y las solapas de texto del examen) se guardan:
 //   - 2 segundos después de dejar de escribir,
-//   - al cambiar de sección (el panel), de solapa (los chips), de consulta (el navegador 1…N) o al salir,
+//   - al cambiar de sección (el menú lateral), de solapa (los chips), de consulta (el navegador 1…N), al volver a la
+//     agenda con la flecha o al terminar la consulta,
 // con el mismo `POST` del botón de la sección (la regla y el rastro del sync son los del servidor). El indicador dice «Guardado».
 // Las secciones que cargan listas (motivos, diagnósticos…) guardan al instante con cada botón y no tienen formulario de texto:
-// ahí los botones de la barra se deshabilitan.
+// ahí el botón Guardar se deshabilita.
+//
+// «Guardar y salir» y «Salir» se fueron con la fila nueva: la salida es la flecha «Volver a la agenda» y «Terminar la
+// consulta»; las dos guardan antes lo escrito (la flecha por `data-barra-salir`, el formulario por `data-barra-terminar`).
 (function () {
     'use strict';
 
@@ -15,9 +19,8 @@
 
     var estado = barra.querySelector('[data-barra-estado]');
     var botonGuardar = barra.querySelector('[data-barra-guardar]');
-    var botonGuardarSalir = barra.querySelector('[data-barra-guardar-salir]');
     var form = document.querySelector('form[data-autoguardar]');
-    var urlSalir = barra.dataset.urlSalir;
+    var formularioTerminar = barra.querySelector('[data-barra-terminar]');
     var pausa = null;
     var guardando = null;
 
@@ -32,10 +35,10 @@
     }
 
     if (!form) {
-        [botonGuardar, botonGuardarSalir].forEach(function (boton) {
-            boton.disabled = true;
-            boton.title = 'Esta sección guarda al instante con cada botón.';
-        });
+        if (botonGuardar) {
+            botonGuardar.disabled = true;
+            botonGuardar.title = 'Esta sección guarda al instante con cada botón.';
+        }
         return;
     }
 
@@ -97,12 +100,30 @@
 
     botonGuardar.addEventListener('click', function () { guardar(); });
 
-    botonGuardarSalir.addEventListener('click', function () {
-        guardar().then(function (ok) { if (ok) { window.location.href = urlSalir; } });
-    });
+    // «Terminar la consulta» (A-11): el formulario pide confirmación en `shell.js` (`data-confirmar`) y, si hay algo
+    // sin guardar, esto guarda primero y recién después lo envía. El envío de verdad se hace con `form.submit()`, que
+    // no vuelve a disparar los `submit` (una sola confirmación). Si el médico canceló la confirmación, `shell.js` ya
+    // dejó `defaultPrevented` y acá no se guarda ni se envía nada.
+    //
+    // El listener va en `document` y no en el formulario a propósito: `shell.js` (que es quien pide la confirmación)
+    // escucha también en `document` y se carga antes, así que el orden es confirmar → guardar → enviar. Escuchando en
+    // el formulario, este handler correría **antes** de la confirmación y, al enviar con `form.submit()`, la saltearía.
+    if (formularioTerminar) {
+        document.addEventListener('submit', function (evento) {
+            if (evento.target !== formularioTerminar) { return; }
+            if (evento.defaultPrevented || formularioTerminar.dataset.enviando === '1' || !sucio()) { return; }
 
-    // Cambiar de sección (el grupo «Consulta» del menú lateral), de solapa (los chips), de consulta (el navegador) o salir:
-    // primero se guarda lo escrito. El grupo se reconoce por su `data-menu` (el panel de la pantalla ya no existe).
+            evento.preventDefault();
+            guardar().then(function (ok) {
+                if (!ok) { return; }
+                formularioTerminar.dataset.enviando = '1';
+                formularioTerminar.submit();
+            });
+        });
+    }
+
+    // Cambiar de sección (el grupo «Consulta» del menú lateral), de solapa (los chips), de consulta (el navegador) o
+    // volver a la agenda con la flecha: primero se guarda lo escrito. El grupo se reconoce por su `data-menu`.
     document.addEventListener('click', function (evento) {
         var enlace = evento.target.closest('a[href]');
         if (!enlace || !enlace.closest('[data-menu="consulta"], [data-chips], [data-barra-salir]')) { return; }
