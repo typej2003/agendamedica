@@ -20,6 +20,9 @@ final class FiliacionPendiente
         $slug = $specialtyId === null ? null : Specialty::whereKey($specialtyId)->value('slug');
         $representante = (new RepresentanteDelPaciente())->de($regMedico, $numhistoria);
 
-        return DatosObligatoriosDelPaciente::faltantes($paciente, $slug, $representante->telefono ?? null);
+        // El teléfono del representante, o el de la familia del escritorio de pediatría (WEB-7.4.2c).
+        $telefono = CamposDePaciente::texto($representante->telefono ?? null) ?? (new TelefonoDeContacto())->de($regMedico, $numhistoria);
+
+        return DatosObligatoriosDelPaciente::faltantes($paciente, $slug, $telefono);
     }
 }

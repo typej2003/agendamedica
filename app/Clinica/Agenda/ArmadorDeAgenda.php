@@ -3,9 +3,11 @@
 namespace App\Clinica\Agenda;
 
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Cola;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
+use App\Notificaciones\Telefono;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -476,7 +478,7 @@ final class ArmadorDeAgenda
             return [];
         }
 
-        return DB::table('medico_pacientes')
+        $filas = DB::table('medico_pacientes')
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('medico_pacientes.reg_medico', $regMedico)
             ->whereIn('medico_pacientes.numhistoria', $numHistorias->all())
@@ -488,11 +490,19 @@ final class ArmadorDeAgenda
                 'pacientes.cedula',
                 'pacientes.telefono',
                 'pacientes.email',
-            ])
+            ]);
+
+        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c).
+        $contactos = (new TelefonoDeContacto())->deLasHistorias(
+            $regMedico,
+            $filas->filter(fn ($p) => Telefono::internacional($p->telefono) === null)->pluck('numhistoria'),
+        );
+
+        return $filas
             ->mapWithKeys(fn ($p) => [(int) $p->numhistoria => [
                 'id' => (int) $p->id,
                 'nombre' => $this->nombreDe($p),
-                'telefono' => $p->telefono,
+                'telefono' => Telefono::internacional($p->telefono) === null ? ($contactos[(int) $p->numhistoria] ?? $p->telefono) : $p->telefono,
                 'email' => $p->email,
                 'cedula' => $p->cedula,
             ]])

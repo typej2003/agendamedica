@@ -2,7 +2,9 @@
 
 namespace App\Cumpleanos;
 
+use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Paciente;
+use App\Notificaciones\Telefono;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +48,17 @@ class CumpleanosDeHoy
                 'pacientes.email',
                 'medico_pacientes.numhistoria',
             ]);
+
+        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c).
+        $contactos = (new TelefonoDeContacto())->deLasHistorias(
+            $regMedico,
+            $filas->filter(fn ($fila) => Telefono::internacional($fila->telefono) === null)->pluck('numhistoria'),
+        );
+        foreach ($filas as $fila) {
+            if (Telefono::internacional($fila->telefono) === null) {
+                $fila->telefono = $contactos[(int) $fila->numhistoria] ?? $fila->telefono;
+            }
+        }
 
         return $filas
             ->map(fn ($fila) => new Cumpleano(
