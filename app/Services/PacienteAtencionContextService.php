@@ -631,6 +631,18 @@ class PacienteAtencionContextService
             $nombreMedico = $medico->nombre_mostrar;
             $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
 
+            // Validar si el paciente ya tiene una cita activa pendiente (atendido = 0) con este médico
+            $citaPendiente = $this->obtenerCitaPendienteConMedico($paciente, $medico);
+            if ($citaPendiente) {
+                return [
+                    'exito' => false,
+                    'ya_tiene_cita' => true,
+                    'cita' => $citaPendiente['cita'],
+                    'mensaje' => $citaPendiente['mensaje'],
+                    'mensaje_confirmacion' => $citaPendiente['mensaje'],
+                ];
+            }
+
             // 3. Determinar y validar la fecha
             if (empty($fecha)) {
                 $disponible = $this->consultarProximoDiaDisponible($regMedico);
@@ -762,6 +774,134 @@ class PacienteAtencionContextService
         $msg .= "🏢 *Dirección:* {$datos['direccion']}\n\n";
         $msg .= "ℹ️ *Nota:* Te recomendamos llegar 15 minutos antes de tu hora estimada.\n\n";
         $msg .= "¿Deseas consultar alguna otra información o requerimiento para tu consulta? 😊";
+
+        return $msg;
+    }
+
+    /**
+     * Busca si un paciente tiene una cita activa pendiente (atendido = 0) con un médico determinado.
+     */
+    public function obtenerCitaPendienteConMedico($paciente, $criterioMedico): ?array
+    {
+        if (!$paciente) {
+            return null;
+        }
+
+        $medico = $criterioMedico instanceof Medico ? $criterioMedico : $this->resolverMedico((string) $criterioMedico);
+        if (!$medico) {
+            return null;
+        }
+
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+        $registrosDoctor = array_filter(array_unique(array_merge(
+            array_filter([$regMedico, $medico->reg_medico]),
+            $medico->registros()->pluck('reg_medico')->all()
+        )));
+        $claveMedico = $medico->claveDeEvolucion((array) $regMedico) ?? (int) $medico->id;
+
+        $historias = [];
+        if (!empty($paciente->numhistoria)) {
+            $historias[] = $paciente->numhistoria;
+        }
+        try {
+            $fromHistorias = $paciente->historias()->pluck('numhistoria')->all();
+            $historias = array_merge($historias, $fromHistorias);
+        } catch (\Throwable $e) {}
+        try {
+            $fromPivot = \DB::table('medico_pacientes')
+                ->where('paciente_id', $paciente->id)
+                ->whereNotNull('numhistoria')
+                ->pluck('numhistoria')
+                ->all();
+            $historias = array_merge($historias, $fromPivot);
+        } catch (\Throwable $e) {}
+        $historias = array_values(array_unique(array_filter($historias)));
+
+        $citaExistente = Cola::where('atendido', 0)
+            ->where(function ($qDoctor) use ($registrosDoctor, $claveMedico, $medico) {
+                if (!empty($registrosDoctor)) {
+                    $qDoctor->whereIn('reg_medico', $registrosDoctor);
+                }
+                if ($claveMedico) {
+                    $qDoctor->orWhere('medico', $claveMedico);
+                }
+                if (!empty($medico->id)) {
+                    $qDoctor->orWhere('medico', $medico->id);
+                }
+            })
+            ->where(function ($qPac) use ($paciente, $historias) {
+                $qPac->where('paciente_sinhistoria_id', $paciente->id);
+                if (!empty($historias)) {
+                    $qPac->orWhereIn('numhistoria', $historias);
+                }
+            })
+            ->orderByDesc('fecha')
+            ->first();
+
+        if (!$citaExistente) {
+            return null;
+        }
+
+        $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
+        if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
+            $nombrePaciente = $paciente->telefono ? "Paciente ({$paciente->telefono})" : 'Paciente';
+        }
+
+        return [
+            'cita' => $citaExistente,
+            'mensaje' => $this->generarMensajeCitaExistente($citaExistente, $nombrePaciente, $medico),
+        ];
+    }
+
+    /**
+     * Busca cita pendiente de atención (atendido = 0) identificando al paciente por su número de teléfono.
+     */
+    public function obtenerCitaPendienteConMedicoPorTelefono(string $telefono, $criterioMedico): ?array
+    {
+        $paciente = $this->buscarPacientePorTelefono($telefono);
+        if (!$paciente) {
+            return null;
+        }
+
+        return $this->obtenerCitaPendienteConMedico($paciente, $criterioMedico);
+    }
+
+    /**
+     * Genera el mensaje informativo de cita existente cuando el paciente ya tiene una cita activa (atendido = 0).
+     */
+    public function generarMensajeCitaExistente(Cola $cita, string $nombrePaciente, Medico $medico): string
+    {
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+        $consultorio = $this->obtenerDatosConsultorio($regMedico);
+        $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+
+        $fechaCarbon = Carbon::parse($cita->fecha);
+        $fechaFormateada = ucfirst($fechaCarbon->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+
+        $horaStr = '';
+        if (!empty($cita->hora_ini)) {
+            try {
+                $horaStr = Carbon::createFromFormat('H:i', substr($cita->hora_ini, 0, 5))->format('h:i A');
+            } catch (\Throwable $e) {
+                $horaStr = $cita->hora_ini;
+            }
+        } else {
+            $horaStr = '08:00 AM';
+        }
+
+        $turno = $cita->numorden ?? 1;
+
+        $msg = "⚠️ *YA TIENES UNA CITA PROGRAMADA*\n\n";
+        $msg .= "Estimado(a) *{$nombrePaciente}*, verificamos que ya cuentas con una cita pendiente de atención con el/la *{$medico->nombre_mostrar}* ({$especialidad}):\n\n";
+        $msg .= "📅 *Fecha:* {$fechaFormateada}\n";
+        $msg .= "🎫 *Turno asignado:* #{$turno}\n";
+        $msg .= "⏰ *Hora sugerida:* {$horaStr}\n";
+        if (!empty($cita->motivo)) {
+            $msg .= "📝 *Motivo:* {$cita->motivo}\n";
+        }
+        $msg .= "📍 *Consultorio:* " . ($consultorio['consultorio'] ?? 'Consultorio principal') . "\n";
+        $msg .= "🏢 *Dirección:* " . ($consultorio['direccion'] ?? 'Dirección no especificada') . "\n\n";
+        $msg .= "ℹ️ *Nota:* No es necesario registrar una nueva cita. Si deseas realizar algún cambio o necesitas información adicional, con gusto te atenderemos. 😊";
 
         return $msg;
     }

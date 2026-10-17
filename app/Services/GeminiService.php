@@ -118,6 +118,15 @@ class GeminiService
             $indice = (int)$trim - 1;
             if (isset($medicos[$indice])) {
                 $medicoElegido = $medicos[$indice];
+
+                // Si el paciente ya tiene una cita activa pendiente (atendido = 0) con ese médico, mostrar mensaje de la cita
+                if (!empty($contexto['telefono'])) {
+                    $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($contexto['telefono'], $medicoElegido['reg_medico']);
+                    if ($citaActiva) {
+                        return $citaActiva['mensaje'];
+                    }
+                }
+
                 $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
 
                 if (!empty($disponibilidad['disponible'])) {
@@ -331,6 +340,12 @@ class GeminiService
 
                         if ($functionName === 'consultar_proximo_cupo_disponible') {
                             $regMedico = $args['reg_medico'] ?? '';
+                            if (!empty($contexto['telefono'])) {
+                                $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($contexto['telefono'], $regMedico);
+                                if ($citaActiva) {
+                                    return $citaActiva['mensaje'];
+                                }
+                            }
                             $resultadoTool = $this->contextService->consultarProximoDiaDisponible($regMedico);
                         } elseif ($functionName === 'buscar_medicos_por_especialidad') {
                             $esp = $args['especialidad'] ?? '';
@@ -360,6 +375,9 @@ class GeminiService
                             );
                             if (!empty($resultadoTool['exito']) && !empty($resultadoTool['mensaje_confirmacion'])) {
                                 return $resultadoTool['mensaje_confirmacion'];
+                            }
+                            if (!empty($resultadoTool['mensaje'])) {
+                                return $resultadoTool['mensaje'];
                             }
                         }
 

@@ -416,4 +416,141 @@ class ChatbotInformationTest extends TestCase
             'numorden' => 1,
         ]);
     }
+
+    public function test_no_permite_registrar_otra_cita_si_ya_tiene_cita_con_atendido_cero_y_muestra_datos_de_cola()
+    {
+        $medico = Medico::create([
+            'name' => 'Marcos',
+            'lastname' => 'Pérez',
+            'prefix' => 'Dr.',
+            'reg_medico' => 'MED-TEST-99',
+            'is_active' => true,
+        ]);
+
+        Evolucion::create([
+            'reg_medico' => 'MED-TEST-99',
+            'clave' => 1,
+            'especialidad' => 'Cardiología',
+            'ciudad' => 'Caracas',
+            'consultorio' => 'Consultorio 402',
+            'linea_1' => 'Centro Médico Caracas',
+        ]);
+
+        $paciente = Paciente::create([
+            'nombres' => 'Fernando',
+            'apellidos' => 'Sucre',
+            'telefono' => '04123334455',
+        ]);
+
+        Historia::create([
+            'paciente_id' => $paciente->id,
+            'numhistoria' => 881122,
+            'reg_medico' => 'MED-TEST-99',
+        ]);
+
+        $fechaCita = Carbon::tomorrow();
+        if ($fechaCita->isSunday()) {
+            $fechaCita->addDay();
+        }
+
+        // Crear una cita previa pendiente de atención (atendido = 0)
+        $citaPrevia = Cola::create([
+            'reg_medico' => 'MED-TEST-99',
+            'fecha' => $fechaCita->toDateString(),
+            'numhistoria' => 881122,
+            'paciente_sinhistoria_id' => null,
+            'numorden' => 3,
+            'atendido' => 0,
+            'estado' => Cola::ESTADO_CONFIRMADA_PACIENTE,
+            'turno' => 'M',
+            'motivo' => 'Control cardiovascular',
+            'hora_ini' => '08:40',
+            'hora_fin' => '09:00',
+            'tiempo' => 20,
+            'tipo' => 'CONSULTA',
+            'medico' => $medico->id,
+        ]);
+
+        // Intentar registrar una nueva cita con el mismo médico
+        $res = $this->contextService->reservarCitaEnCola(
+            '584123334455',
+            'MED-TEST-99',
+            $fechaCita->copy()->addDays(2)->toDateString(),
+            'Nueva cita'
+        );
+
+        $this->assertFalse($res['exito']);
+        $this->assertTrue($res['ya_tiene_cita']);
+        $this->assertStringContainsString('YA TIENES UNA CITA PROGRAMADA', $res['mensaje']);
+        $this->assertStringContainsString('Fernando Sucre', $res['mensaje']);
+        $this->assertStringContainsString('Dr. Marcos Pérez', $res['mensaje']);
+        $this->assertStringContainsString('Turno asignado:* #3', $res['mensaje']);
+        $this->assertStringContainsString('08:40 AM', $res['mensaje']);
+        $this->assertStringContainsString('Control cardiovascular', $res['mensaje']);
+        $this->assertStringContainsString('Consultorio 402', $res['mensaje']);
+        $this->assertStringContainsString('Centro Médico Caracas', $res['mensaje']);
+
+        // Asegurar que no se insertó ninguna cita adicional en cola
+        $this->assertEquals(1, Cola::where('reg_medico', 'MED-TEST-99')->count());
+    }
+
+    public function test_resolver_opcion_directa_avisa_si_ya_tiene_cita_pendiente_en_cola()
+    {
+        $medico = Medico::create([
+            'name' => 'Carlos',
+            'lastname' => 'Mendoza',
+            'prefix' => 'Dr.',
+            'reg_medico' => 'MED-TEST-88',
+            'is_active' => true,
+        ]);
+
+        Evolucion::create([
+            'reg_medico' => 'MED-TEST-88',
+            'clave' => 1,
+            'especialidad' => 'Pediatría',
+            'ciudad' => 'Caracas',
+            'consultorio' => 'Consultorio 10',
+            'linea_1' => 'Clínica Sanatrix',
+        ]);
+
+        $paciente = Paciente::create([
+            'nombres' => 'José',
+            'apellidos' => 'Rosales',
+            'telefono' => '04165800403',
+        ]);
+
+        $medico->pacientes()->attach($paciente->id);
+
+        $fechaCita = Carbon::tomorrow();
+        if ($fechaCita->isSunday()) {
+            $fechaCita->addDay();
+        }
+
+        // Crear la cita previa con atendido = 0
+        Cola::create([
+            'reg_medico' => 'MED-TEST-88',
+            'fecha' => $fechaCita->toDateString(),
+            'paciente_sinhistoria_id' => $paciente->id,
+            'numorden' => 1,
+            'atendido' => 0,
+            'estado' => Cola::ESTADO_CONFIRMADA_PACIENTE,
+            'turno' => 'M',
+            'motivo' => 'Consulta general',
+            'hora_ini' => '08:00',
+            'hora_fin' => '08:20',
+            'tiempo' => 20,
+            'tipo' => 'CONSULTA',
+            'medico' => $medico->id,
+        ]);
+
+        $gemini = app(GeminiService::class);
+        // El paciente envía "1" para elegir al Dr. Carlos Mendoza
+        $respuesta = $gemini->generarRespuesta('1', '584165800403');
+
+        $this->assertStringContainsString('YA TIENES UNA CITA PROGRAMADA', $respuesta);
+        $this->assertStringContainsString('José Rosales', $respuesta);
+        $this->assertStringContainsString('Dr. Carlos Mendoza', $respuesta);
+        $this->assertStringContainsString('Turno asignado:* #1', $respuesta);
+        $this->assertStringContainsString('Clínica Sanatrix', $respuesta);
+    }
 }
