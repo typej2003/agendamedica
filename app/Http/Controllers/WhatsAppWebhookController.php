@@ -79,20 +79,29 @@ class WhatsAppWebhookController extends Controller
                         $timestamp = $messageData['timestamp'] ?? null;
                         $messageType = $messageData['type'] ?? null;
 
+                        $bodyText = '';
                         if ($messageType === 'text') {
                             $bodyText = trim($messageData['text']['body'] ?? '');
-
-                            Log::info("Mensaje recibido de {$from} (ID: {$messageId}, Time: {$timestamp}): {$bodyText}");
-
-                            if (!empty($bodyText)) {
-                                // Procesar con Gemini AI inyectando el número para contexto del paciente
-                                $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
-
-                                Log::info("Respuesta generada por Gemini para {$from}: {$aiReply}");
-
-                                // Enviar la respuesta vía WhatsApp asegurando el phone_number_id del destinatario original
-                                $this->whatsAppService->sendMessage($from, $aiReply, $incomingPhoneNumberId);
+                        } elseif ($messageType === 'interactive') {
+                            $interactive = $messageData['interactive'] ?? [];
+                            $type = $interactive['type'] ?? '';
+                            if ($type === 'button_reply') {
+                                $bodyText = trim($interactive['button_reply']['title'] ?? $interactive['button_reply']['id'] ?? '');
+                            } elseif ($type === 'list_reply') {
+                                $bodyText = trim($interactive['list_reply']['title'] ?? $interactive['list_reply']['id'] ?? '');
                             }
+                        }
+
+                        if (!empty($bodyText)) {
+                            Log::info("Mensaje procesable de {$from} (Tipo: {$messageType}, ID: {$messageId}): {$bodyText}");
+
+                            // Procesar con Gemini AI inyectando el número para contexto del paciente
+                            $aiReply = $this->geminiService->generarRespuesta($bodyText, $from);
+
+                            Log::info("Respuesta generada por Gemini para {$from}: {$aiReply}");
+
+                            // Enviar la respuesta vía WhatsApp asegurando el phone_number_id del destinatario original
+                            $this->whatsAppService->sendMessage($from, $aiReply, $incomingPhoneNumberId);
                         }
                     }
                 }
