@@ -3,6 +3,7 @@
 namespace App\Clinica\Vistas;
 
 use App\Clinica\Catalogos\CatalogosDisponibles;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Listados\ListadosDisponibles;
 use App\Support\IconoModulo;
 use App\Support\LogotipoEspecialidad;
@@ -31,6 +32,9 @@ final class ArmazonVista
         // El `?listado=` de la petición (WEB-6.8): «Listados» es un grupo y sus hijos se marcan por ruta **y** por la
         // clave del reporte, porque las tres pantallas comparten la misma ruta. Fuera de los listados no se usa.
         private ?string $listadoActual = null,
+        // La consulta que se está atendiendo (revisión de Alexander): `['id' => int, 'seccion' => ?string]`. Sólo se
+        // usa en la ruta de la consulta, donde el shell le pasa el ítem abierto al grupo «Consulta» del menú.
+        private ?array $consultaEnCurso = null,
     ) {
     }
 
@@ -122,6 +126,27 @@ final class ArmazonVista
             'activo' => $this->rutaActual === 'clinica.inicio',
         ]];
 
+        // **Los ítems de la consulta** (revisión de Alexander): la tarjeta «Secciones de la consulta» se fue de la
+        // pantalla y sus 14 ítems viven en este grupo plegable, con los mismos nombres y su icono, **sólo dentro de
+        // una consulta** y sólo para quien la trabaja (la consulta es del médico: `role:Root|Medico`). Afuera de la
+        // consulta el menú queda como siempre. El catálogo y los enlaces salen de `SeccionesDeLaConsulta`, la misma
+        // fuente que usa el shell: agregar una sección es una línea, y el ítem sin pantalla (la pre-factura) se
+        // dibuja deshabilitado en vez de ofrecer un enlace muerto.
+        if ($this->tieneContexto() && $this->trabajaLaConsulta && $this->enLaConsulta()) {
+            $consultaId = (int) ($this->consultaEnCurso['id'] ?? 0);
+            $seccion = $this->consultaEnCurso['seccion'] ?? null;
+
+            if ($consultaId > 0) {
+                $menu[] = [
+                    'texto'  => 'Consulta',
+                    'icono'  => 'bi-journal-medical',
+                    'url'    => null,
+                    'activo' => true,
+                    'hijos'  => SeccionesDeLaConsulta::submenu($consultaId, is_string($seccion) ? $seccion : null),
+                ];
+            }
+        }
+
         foreach ($this->modulos as $modulo) {
             $ruta = 'clinica.' . $modulo->slug;
             $existe = Route::has($ruta);
@@ -211,5 +236,17 @@ final class ArmazonVista
         }
 
         return $menu;
+    }
+
+    /**
+     * ¿La petición es la pantalla de una consulta (o una de sus secciones)? Las secciones **no son rutas**: comparten
+     * la del shell y viajan en `?seccion=`, así que la ruta `clinica.consulta` alcanza; el `clinica.consulta.` cubre las
+     * acciones que vuelven a ella. El prefijo se compara con el punto a propósito: `clinica.consultorios` empieza con
+     * las mismas letras y **no** es una consulta.
+     */
+    private function enLaConsulta(): bool
+    {
+        return $this->rutaActual !== null
+            && ($this->rutaActual === 'clinica.consulta' || str_starts_with($this->rutaActual, 'clinica.consulta.'));
     }
 }

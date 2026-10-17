@@ -457,13 +457,14 @@ class ConsultaWebTest extends TestCase
             $respuesta->assertSee($item, false);
         }
 
-        // Los que todavía no existen dicen que llegan después, con la tarea en el `title` del estado; y
-        // los ítems de WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física), WEB-4.4
-        // (antecedentes), WEB-4.5 (diagnóstico) y WEB-4.6 (evolución) ya están disponibles y se abren con
-        // `?seccion=` dentro de esta misma pantalla.
-        $respuesta->assertSee('Próximamente');
-        // Los disponibles no llevan pastilla "Disponible": el contador "N de 13 disponibles" sí queda.
+        // El único ítem que todavía no existe (la pre-factura) va **deshabilitado** en el grupo «Consulta» del menú
+        // lateral: sin enlace y con `aria-disabled`, para que la lista no se rompa cuando F9 lo habilite. Los ítems de
+        // WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física), WEB-4.4 (antecedentes), WEB-4.5
+        // (diagnóstico) y WEB-4.6 (evolución) ya están disponibles y se abren con `?seccion=` dentro de esta misma pantalla.
+        $respuesta->assertSee('aria-disabled="true"', false);
+        // Los disponibles no llevan pastilla "Disponible" ni el contador "N de 14 disponibles", que se fue con el panel.
         $respuesta->assertDontSee('>Disponible<', false);
+        $respuesta->assertDontSee('de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);

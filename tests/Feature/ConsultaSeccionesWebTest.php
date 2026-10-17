@@ -634,7 +634,7 @@ class ConsultaSeccionesWebTest extends TestCase
 
     // -------------------------------------------------------------------------------- El shell
 
-    public function test_el_panel_marca_los_items_disponibles_y_abre_sus_secciones(): void
+    public function test_el_menu_muestra_el_grupo_consulta_con_sus_items_y_abre_sus_secciones(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->paciente($medico, 1001);
@@ -649,7 +649,15 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles', false);
+
+        // El grupo «Consulta» del menú lateral (revisión de Alexander) reemplazó al panel de la pantalla.
+        $respuesta->assertSee('data-menu="consulta"', false);
+        $respuesta->assertDontSee('Secciones de la consulta', false);
+        $respuesta->assertDontSee('13 de 14 disponibles', false);
+
+        // Trae los 14 ítems: 13 enlazan a su sección dentro de esta consulta y la pre-factura va deshabilitada.
+        $respuesta->assertSee('Pre-factura');
+        $respuesta->assertSee('aria-disabled="true"', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
@@ -660,17 +668,40 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']), false);
         // Y las solicitudes (WEB-5.3a): el ítem 11 abre su sección dentro del shell.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']), false);
-        // El resto sigue diciendo que llega después, con la tarea que lo trae (F9 en la pre-factura).
-        $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('Llega con F9', false);
-        // Y ya **no** queda ningún ítem esperando a WEB-4.7, WEB-5.1, las solicitudes, el estudio ecográfico
-        // (WEB-6.1) ni el control de embarazo (WEB-6.6): sus paneles están disponibles.
-        $respuesta->assertDontSee('Llega con WEB-4.7', false);
-        $respuesta->assertDontSee('Llega con WEB-5.1', false);
-        $respuesta->assertDontSee('Llega con F5', false);
-        $respuesta->assertDontSee('Llega con WEB-5.3a', false);
-        $respuesta->assertDontSee('Llega con WEB-6.1', false);
-        $respuesta->assertDontSee('Llega con WEB-6.6', false);
+        // Y los datos personales (WEB-11.25): el ítem 13 es una sección más, dentro de la misma consulta.
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']), false);
+        // Y el estudio ecográfico y el control de embarazo, que ya tienen pantalla.
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio']), false);
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'embarazo']), false);
+    }
+
+    public function test_el_item_activo_del_menu_se_marca_por_la_seccion_abierta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, ConsultaShellVista::SECCION_RECIPES))
+            ->assertOk()
+            ->getContent();
+
+        // El grupo se abre solo y el hijo activo es Récipes (una sola marca de página actual en el menú).
+        preg_match('/data-menu="consulta".*?<\/details>/s', $html, $bloque);
+        $this->assertNotSame('', $bloque[0] ?? '', 'falta el grupo «Consulta» del menú');
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Récipes"/', $bloque[0]);
+        $this->assertSame(1, substr_count($bloque[0], 'aria-current="page"'));
+    }
+
+    public function test_fuera_de_una_consulta_el_grupo_no_aparece(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        // La agenda (y cualquier pantalla que no sea la consulta) no ofrece el grupo.
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.agenda'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('data-menu="consulta"', $html);
+        $this->assertStringNotContainsString('Pre-factura', $html);
     }
 
     public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void
@@ -688,7 +719,7 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Elige una sección en el panel', false);
+        $respuesta->assertSee('Elige una sección en el menú', false);
     }
 
     public function test_una_seccion_inventada_en_la_url_no_rompe_la_pantalla(): void
@@ -706,6 +737,6 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Elige una sección en el panel', false);
+        $respuesta->assertSee('Elige una sección en el menú', false);
     }
 }

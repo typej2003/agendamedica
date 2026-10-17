@@ -129,14 +129,17 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
     // ===================================================================================== La sección
 
-    public function test_el_panel_sigue_en_10_de_13_con_su_tarjeta_actualizada_y_laboratorio_abre_vacio(): void
+    public function test_el_menu_ofrece_solicitudes_y_laboratorio_abre_vacio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('13 de 14 disponibles', false)
-            ->assertSee('Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.')
+            ->assertSee('Pre-factura', false)
+            // El ítem de Solicitudes está en el grupo «Consulta» del menú; su detalle (que incluye laboratorio,
+            // estudios, constancia, reposo, referencia, hospitalización, informe y dieta) vive en el catálogo y lo
+            // fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
+            ->assertSee('Solicitudes')
             ->assertDontSee('llegan después');
 
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))

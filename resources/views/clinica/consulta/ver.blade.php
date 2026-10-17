@@ -97,56 +97,12 @@
     </div>
 
     <div class="row g-3">
-        {{-- El panel de navegación del legado (`w_consulta_principal`): los 13 ítems con su estado. Los que
-             todavía no tienen pantalla dicen "Próximamente" y con qué tarea llegan, en vez de ofrecer un
-             enlace muerto; los de WEB-4.2 (motivos y enfermedad actual) abren su sección dentro de esta
-             misma pantalla con `?seccion=`.
-
-             Ocupa más que un tercio a propósito (5 de 12 en pantalla grande): son trece renglones con
-             nombre, detalle y estado, y en una columna más angosta el estado se come el texto. --}}
-        <div class="col-12 col-lg-5 col-xl-4">
-            <x-ui.tarjeta id="consulta-panel" titulo="Secciones de la consulta" icono="bi-list-ul">
-                <p class="texto-tenue small mb-2">{{ $vm->totalListos() }} de {{ $vm->totalItems() }} disponibles</p>
-                @foreach ($vm->panel() as $bloque)
-                    <div class="consulta-panel-grupo">
-                        <h3 class="consulta-panel-titulo">{{ $bloque['titulo'] }}</h3>
-                        <ul class="consulta-panel">
-                            @foreach ($bloque['items'] as $item)
-                                <li class="consulta-panel-item {{ $item['listo'] ? '' : 'consulta-panel-item-pendiente' }} {{ $item['activo'] ? 'consulta-panel-item-activo' : '' }}">
-                                    <span class="consulta-panel-icono"><i class="bi {{ $item['icono'] }}" aria-hidden="true"></i></span>
-                                    <div class="consulta-panel-texto">
-                                        {{-- El estado va en la fila del título, a la derecha, para que la descripción de abajo
-                                             use todo el ancho del ítem. Sólo los que todavía no están lo llevan
-                                             ("Próximamente", color + icono + texto, como pide la guía de UI); los
-                                             disponibles se reconocen por su enlace. --}}
-                                        <div class="consulta-panel-cabecera">
-                                            @if ($item['url'])
-                                                <a class="consulta-panel-nombre" href="{{ $item['url'] }}"
-                                                   @if ($item['activo']) aria-current="true" @endif>{{ $item['titulo'] }}</a>
-                                            @else
-                                                <span class="consulta-panel-nombre">{{ $item['titulo'] }}</span>
-                                            @endif
-                                            @if ($item['estado'])
-                                                <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
-                                                             :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
-                                            @endif
-                                        </div>
-                                        <span class="consulta-panel-detalle">{{ $item['detalle'] }}</span>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
-            </x-ui.tarjeta>
-        </div>
-
-        {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
-             ninguna. Las secciones llegan por los parciales —`_motivos` y `_enfermedad` (WEB-4.2),
-             `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4), `_diagnostico` (WEB-4.5), `_evolucion`
-             (WEB-4.6), `_examenes` (WEB-4.7) y `_recipes` (WEB-5.1)— y las siguientes tareas agregan las suyas: el nombre del
-             parcial lo resuelve el ViewModel a partir del mapa del panel. --}}
-        <div class="col-12 col-lg-7 col-xl-8">
+        {{-- El área de trabajo ocupa **todo el ancho** (revisión de Alexander): los ítems de la consulta se eligen en el
+             grupo «Consulta» del menú lateral y la tarjeta «Secciones de la consulta» ya no existe. El contenido llega
+             por los parciales —`_motivos` y `_enfermedad` (WEB-4.2), `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4),
+             `_diagnostico` (WEB-4.5), `_evolucion` (WEB-4.6), `_examenes` (WEB-4.7), `_recipes` (WEB-5.1), etc.— y el
+             nombre del parcial lo resuelve el ViewModel a partir del catálogo de secciones. --}}
+        <div class="col-12">
             @if ($contenido && $vm->parcial())
                 @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null, 'imagenes' => $imagenes ?? null])
             @else

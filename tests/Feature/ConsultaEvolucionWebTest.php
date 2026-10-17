@@ -486,7 +486,7 @@ Sin novedades.",
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles', false);
+        $respuesta->assertSee('Pre-factura', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
         // Y el ítem ya no dice que llega después.

@@ -131,7 +131,7 @@ class ConsultaTratamientoWebTest extends TestCase
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))->assertOk()->getContent();
 
         $this->assertStringContainsString('seccion=tratamiento', $html);
-        $this->assertStringContainsString('13 de 14 disponibles', $html);
+        $this->assertStringContainsString('Pre-factura', $html);
 
         // El orden del legado: RECIPES, TRATAMIENTO, SOLICITUDES.
         $this->assertGreaterThan(strpos($html, 'seccion=recipes'), strpos($html, 'seccion=tratamiento'));

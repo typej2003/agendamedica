@@ -272,13 +272,15 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertNull($items[0]['url']);
     }
 
-    public function test_el_estado_vacio_del_contenido_dice_que_las_secciones_se_abren_del_panel(): void
+    public function test_el_estado_vacio_del_contenido_manda_al_menu_lateral(): void
     {
         $vacio = $this->vista()->sinContenido();
 
         $this->assertSame('bi-list-ul', $vacio['icono']);
-        $this->assertStringContainsString('panel', $vacio['texto']);
+        $this->assertStringContainsString('menú', $vacio['titulo'] . ' ' . $vacio['texto']);
         $this->assertStringContainsString('motivos de consulta', $vacio['texto']);
+        // El panel de la pantalla ya no existe: el texto no puede mandar a un lugar que no está.
+        $this->assertStringNotContainsString('panel', $vacio['texto']);
     }
 
     public function test_las_urls_las_resuelve_el_controlador(): void

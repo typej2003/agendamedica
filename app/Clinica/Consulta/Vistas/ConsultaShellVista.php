@@ -2,141 +2,75 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
 
 /**
  * **El shell de la consulta** (WEB-4.1): el encabezado con el paciente, su historia, la consulta y la
- * fecha, y el **panel de navegación del legado** con el estado de cada ítem.
+ * fecha, y el contenido de la sección elegida.
  *
- * Los 13 ítems son los del panel de `w_consulta_principal` (wiki `04-historia-clinica.md`, "Ítems de la
- * historia clínica"), en el mismo orden en que el médico los tiene en el escritorio. Acá **no hay
- * contenido**: el armazón y la navegación son el entregable de 4.1, y cada ítem llega con su tarea
- * (F4.2–F4.7, F3, F5, F6 y F9). Dos cosas que el ViewModel decide y no la vista:
+ * Los 14 ítems del legado —con su grupo, su icono, su detalle y su estado— viven en
+ * `App\Clinica\Consulta\SeccionesDeLaConsulta`, que es la **fuente única** del catálogo: la usan el shell
+ * (para saber qué sección abrir y cuál es su parcial) y el grupo «Consulta» del menú lateral (revisión de
+ * Alexander, 2026-10-17), que reemplazó al panel de la pantalla. Acá **no hay contenido**: cada sección llega
+ * con su parcial y su ViewModel.
  *
- *  - **El estado de cada ítem** (`Próximamente`, o implementado con su enlace). La guía de UI pide que
- *    el estado se vea —color + icono + texto— y no que se lea: por eso cada ítem trae su `estado()`.
- *  - **El grupo de cada ítem** (`Consulta` o `Documentos`), que es cómo el legado los tiene separados en
- *    el panel y lo que hace legible una lista de trece.
+ * Dos cosas que el ViewModel decide y no la vista:
+ *
+ *  - **La sección activa** (`?seccion=`), que se normaliza contra el catálogo: un valor que no se entiende se
+ *    trata como "ninguna".
+ *  - **El estado vacío del contenido**, que ahora manda al menú lateral y no a un panel.
  *
  * El ViewModel se prueba **sin base de datos** (`tests/Unit/Clinica/`): todo lo que necesita llega por
  * el constructor ya leído y las URLs las resuelve el controlador (mismo criterio que la ficha).
  */
 final class ConsultaShellVista
 {
+    // Las claves de `?seccion=` son las del catálogo (ver `SeccionesDeLaConsulta`); se reexportan acá porque los
+    // controladores y las rutas las usan con este nombre desde WEB-4.2. No hay dos listas: son alias de la misma
+    // constante.
     /** La clave de la sección de motivos en `?seccion=`. */
-    public const SECCION_MOTIVOS = 'motivos';
+    public const SECCION_MOTIVOS = SeccionesDeLaConsulta::SECCION_MOTIVOS;
 
     /** La clave de la sección de enfermedad actual en `?seccion=`. */
-    public const SECCION_ENFERMEDAD = 'enfermedad';
+    public const SECCION_ENFERMEDAD = SeccionesDeLaConsulta::SECCION_ENFERMEDAD;
 
     /** La clave de la sección de evaluación física en `?seccion=` (WEB-4.3). */
-    public const SECCION_EVALUACION = 'evaluacion';
+    public const SECCION_EVALUACION = SeccionesDeLaConsulta::SECCION_EVALUACION;
 
     /** La clave de la sección de antecedentes en `?seccion=` (WEB-4.4). */
-    public const SECCION_ANTECEDENTES = 'antecedentes';
+    public const SECCION_ANTECEDENTES = SeccionesDeLaConsulta::SECCION_ANTECEDENTES;
 
     /** La clave de la sección de diagnósticos en `?seccion=` (WEB-4.5). */
-    public const SECCION_DIAGNOSTICO = 'diagnostico';
+    public const SECCION_DIAGNOSTICO = SeccionesDeLaConsulta::SECCION_DIAGNOSTICO;
 
     /** La clave de la sección de evolución en `?seccion=` (WEB-4.6). */
-    public const SECCION_EVOLUCION = 'evolucion';
+    public const SECCION_EVOLUCION = SeccionesDeLaConsulta::SECCION_EVOLUCION;
 
     /** La clave de la sección de exámenes e imágenes en `?seccion=` (WEB-4.7). */
-    public const SECCION_EXAMENES = 'examenes';
+    public const SECCION_EXAMENES = SeccionesDeLaConsulta::SECCION_EXAMENES;
 
     /** La clave de la sección de récipes en `?seccion=` (WEB-5.1). */
-    public const SECCION_RECIPES = 'recipes';
+    public const SECCION_RECIPES = SeccionesDeLaConsulta::SECCION_RECIPES;
 
     /** La clave de la sección de solicitudes (laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe, dieta) en `?seccion=` (WEB-5.3a, WEB-5.3b y WEB-5.4). */
-    public const SECCION_SOLICITUDES = 'solicitudes';
+    public const SECCION_SOLICITUDES = SeccionesDeLaConsulta::SECCION_SOLICITUDES;
 
     /** El tratamiento: un texto libre de la consulta (`consultas.laringe`), el ítem TRATAMIENTO del panel del legado. */
-    public const SECCION_TRATAMIENTO = 'tratamiento';
+    public const SECCION_TRATAMIENTO = SeccionesDeLaConsulta::SECCION_TRATAMIENTO;
 
     /** Los datos personales del paciente, editables dentro de la consulta (WEB-11.25). */
-    public const SECCION_DATOS = 'datos';
+    public const SECCION_DATOS = SeccionesDeLaConsulta::SECCION_DATOS;
 
-    /**
-     * La clave de la sección del **estudio ecográfico** (ítem 5 del panel) en `?seccion=` (WEB-6.1).
-     *
-     * La sección agrupa los siete estudios del ítem; **cuál se abre** se elige con `&tipo=` entre los que
-     * ya existen, que son los de `TiposDeEstudio` (hoy, el eco pélvico o ginecológico).
-     */
-    public const SECCION_ESTUDIO = 'estudio';
+    /** La clave de la sección del **estudio ecográfico** (ítem 5 del panel) en `?seccion=` (WEB-6.1). */
+    public const SECCION_ESTUDIO = SeccionesDeLaConsulta::SECCION_ESTUDIO;
 
-    /**
-     * La clave de la sección del **control de embarazo** (ítem 6 del panel) en `?seccion=` (WEB-6.6).
-     *
-     * Como la del estudio, agrupa las pestañas del ítem: **cuál se abre** se elige con `&pestana=` entre las
-     * que ya existen, que son las de `PestanasDelEmbarazo` (hoy, *Prenatal*).
-     */
-    public const SECCION_EMBARAZO = 'embarazo';
+    /** La clave de la sección del **control de embarazo** (ítem 6 del panel) en `?seccion=` (WEB-6.6). */
+    public const SECCION_EMBARAZO = SeccionesDeLaConsulta::SECCION_EMBARAZO;
 
-    /**
-     * El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de
-     * récipes. Los demás valores son `nuevo` (un récipe del paciente por crear) o el número de uno que existe.
-     */
-    public const RECIPE_PAREJA = 'pareja';
-
-    /**
-     * El panel del legado, ítem por ítem: qué es, con qué tarea llega y —los que ya existen— a dónde
-     * lleva hoy.
-     *
-     * La clave es el **número del ítem en la wiki** (`04-historia-clinica.md`, "Ítems de la historia
-     * clínica", 1–13), que es lo que lo ata a su fuente y lo que hace que este mapa se pueda leer contra
-     * el documento. El orden del panel es el del legado y no se reordena.
-     *
-     * `tarea` es la tarea de la web que lo completa; `estado` es `listo` (ya hay pantalla a la que
-     * entrar) o `proximamente`. `seccion` es la clave del contenido que se abre **dentro de esta misma
-     * pantalla** (`?seccion=…`): los ítems que traen WEB-4.2 a WEB-4.5 no son otra pantalla —son la tarjeta
-     * de contenido del shell—, y su enlace lo arma `item()`. *Datos personales* no tiene `seccion`: su
-     * pantalla es la ficha del paciente (F3) y sigue siendo un enlace afuera.
-     */
-    private const PANEL = [
-        ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
-            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
-            'seccion' => self::SECCION_MOTIVOS],
-        ['numero' => 2, 'grupo' => 'Consulta', 'titulo' => 'Enfermedad actual', 'icono' => 'bi-file-text',
-            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
-            'seccion' => self::SECCION_ENFERMEDAD],
-        ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
-            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'listo',
-            'seccion' => self::SECCION_ANTECEDENTES],
-
-        ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
-            'detalle' => 'Antropometría, examen por aparatos y ginecológico.', 'tarea' => 'WEB-4.3', 'estado' => 'listo',
-            'seccion' => self::SECCION_EVALUACION],
-        ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Estudio ecográfico', 'icono' => 'bi-activity',
-            'detalle' => 'Ecos ginecológicos, obstétricos, doppler y ecocardiograma fetal.', 'tarea' => 'WEB-6.1', 'estado' => 'listo',
-            'seccion' => self::SECCION_ESTUDIO],
-        ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Control de embarazo', 'icono' => 'bi-gender-female',
-            'detalle' => 'Prenatal, laboratorio, controles y reporte.', 'tarea' => 'WEB-6.6', 'estado' => 'listo',
-            'seccion' => self::SECCION_EMBARAZO],
-        ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Exámenes', 'icono' => 'bi-droplet',
-            'detalle' => 'Laboratorio de rutina de la consulta y las imágenes de sus estudios.',
-            'tarea' => 'WEB-4.7', 'estado' => 'listo', 'seccion' => self::SECCION_EXAMENES],
-        ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
-            'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
-            'seccion' => self::SECCION_DIAGNOSTICO],
-        ['numero' => 9, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
-            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
-            'seccion' => self::SECCION_EVOLUCION],
-        ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
-            'detalle' => 'Varios por consulta, por medicamento o por tratamiento, y el de la pareja; se pueden corregir.',
-            'tarea' => 'WEB-5.1', 'estado' => 'listo', 'seccion' => self::SECCION_RECIPES],
-        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Tratamiento', 'icono' => 'bi-capsule',
-            'detalle' => 'El plan de tratamiento en texto libre o por plantilla; sale en el resumen médico.',
-            'tarea' => 'WEB-5.7', 'estado' => 'listo', 'seccion' => self::SECCION_TRATAMIENTO],
-        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
-            'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
-            'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
-        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
-            'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
-            'seccion' => self::SECCION_DATOS],
-        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
-            'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente'],
-    ];
+    /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
+    public const RECIPE_PAREJA = SeccionesDeLaConsulta::RECIPE_PAREJA;
 
     public function __construct(
         private object $paciente,
@@ -318,25 +252,15 @@ final class ConsultaShellVista
      */
     public function seccion(): ?string
     {
-        if ($this->seccion === null) {
-            return null;
-        }
-
-        foreach (self::PANEL as $item) {
-            if (($item['seccion'] ?? null) === $this->seccion) {
-                return $this->seccion;
-            }
-        }
-
-        return null;
+        return SeccionesDeLaConsulta::normalizar($this->seccion);
     }
 
     /**
      * El parcial de la sección activa (`clinica.consulta._motivos` / `._enfermedad` / `._evaluacion` /
      * `._antecedentes` / `._diagnostico` / `._evolucion` / `._examenes` / `._recipes` / `._solicitudes` /
      * `._estudio`), o `null` si no hay ninguna. El mapa se arma con
-     * las claves del panel, así que agregar una sección es agregar una fila a `PANEL` y su parcial, no
-     * tocar la vista.
+     * las claves del catálogo, así que agregar una sección es agregar una fila a `SeccionesDeLaConsulta` y su
+     * parcial, no tocar la vista.
      */
     public function parcial(): ?string
     {
@@ -346,7 +270,10 @@ final class ConsultaShellVista
     }
 
     /**
-     * El panel completo, agrupado como el legado: lo de la atención primero y los documentos después.
+     * El catálogo agrupado como el legado: lo de la atención primero y los documentos después.
+     *
+     * Ya no lo pinta la pantalla (los ítems viven en el menú lateral), pero es la lectura del catálogo que usan
+     * las pruebas del shell y cualquier consumidor que necesite los grupos.
      *
      * @return array<int,array{titulo:string, grupos:array<int,array{titulo:string, items:array<int,array<string,mixed>>}>}>
      */
@@ -354,7 +281,7 @@ final class ConsultaShellVista
     {
         $grupos = [];
 
-        foreach (self::PANEL as $item) {
+        foreach (SeccionesDeLaConsulta::todas() as $item) {
             $grupos[$item['grupo']][] = $this->item($item);
         }
 
@@ -368,31 +295,32 @@ final class ConsultaShellVista
 
     public function totalItems(): int
     {
-        return count(self::PANEL);
+        return SeccionesDeLaConsulta::total();
     }
 
     /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
-        return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
+        return SeccionesDeLaConsulta::disponibles();
     }
 
     /**
      * El estado vacío del contenido: el shell sin ninguna sección elegida.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
-     * las secciones se abren desde el panel. Con WEB-6.6 ya se pueden cargar los ítems 1, 2, 3, 4, 5, 6, 7, 8,
-     * 9, 10, 11 y 12, y el resto sigue llegando por tareas (F9).
+     * las secciones se abren desde el **menú lateral** (el grupo «Consulta», que reemplazó al panel). Con
+     * WEB-6.6 ya se pueden cargar los ítems 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 y 12, y el resto sigue llegando
+     * por tareas (F9).
      */
     public function sinContenido(): array
     {
         return [
             'icono' => 'bi-list-ul',
-            'titulo' => 'Elige una sección en el panel',
-            'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
+            'titulo' => 'Elige una sección en el menú',
+            'texto' => 'Esta es la pantalla de la consulta. Los ítems del grupo «Consulta» del menú lateral '
                 . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el resto '
-                . 'llega con las tareas siguientes (pre-factura). Cuando termines la atención, la acción '
+                . 'exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el que '
+                . 'todavía no tiene pantalla (la pre-factura) llega con la tarea siguiente. Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
     }

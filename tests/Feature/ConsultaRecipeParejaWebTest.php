@@ -248,7 +248,7 @@ class ConsultaRecipeParejaWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $panel = $this->medico($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id));
-        $panel->assertOk()->assertSee('13 de 14 disponibles', false);
+        $panel->assertOk()->assertSee('Pre-factura', false);
 
         $respuesta = $this->medico($user, $medico, $gineco)->get($this->urlSeccion($consulta));
         $respuesta->assertOk();

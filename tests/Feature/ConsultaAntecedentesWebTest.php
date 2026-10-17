@@ -813,7 +813,7 @@ class ConsultaAntecedentesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles', false);
+        $respuesta->assertSee('Pre-factura', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
     }
 

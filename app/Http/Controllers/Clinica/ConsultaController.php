@@ -204,6 +204,14 @@ class ConsultaController extends Controller
             $request->session()->push('alertas_vistas', (int) $consulta->id);
         }
 
+        // El grupo «Consulta» del menú lateral (revisión de Alexander): el armazón necesita saber qué consulta se está
+        // atendiendo y qué sección está abierta para armar sus ítems y marcar el activo. Se comparte acá —y no se lee
+        // de la ruta en el compositor— porque el `id` del paciente y la sección ya están resueltos en este método.
+        view()->share('consulta_en_curso', [
+            'id' => (int) $consulta->id,
+            'seccion' => $seccion,
+        ]);
+
         return view('clinica.consulta.ver', [
             'vm' => new ConsultaShellVista(
                 $paciente,

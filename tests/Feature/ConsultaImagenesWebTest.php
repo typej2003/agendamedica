@@ -267,7 +267,7 @@ class ConsultaImagenesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles', false);
+        $respuesta->assertSee('Pre-factura', false);
         $respuesta->assertSee('?seccion=examenes', false);
         $respuesta->assertDontSee('Llega con WEB-4.7', false);
     }

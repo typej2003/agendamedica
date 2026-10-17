@@ -47,11 +47,21 @@
                             <ul class="nav flex-column nav-submenu">
                                 @foreach ($item['hijos'] as $hijo)
                                     <li class="nav-item">
-                                        <a class="nav-link {{ $hijo['activo'] ? 'active' : '' }}" href="{{ $hijo['url'] }}"
-                                           @if ($hijo['activo']) aria-current="page" @endif title="{{ $hijo['texto'] }}">
-                                            <i class="bi {{ $hijo['icono'] }}" aria-hidden="true"></i>
-                                            <span class="link-text">{{ $hijo['texto'] }}</span>
-                                        </a>
+                                        @if (empty($hijo['url']))
+                                            {{-- Un ítem del grupo que todavía no tiene pantalla (la pre-factura de la consulta): se
+                                                 muestra, pero no navega. Es el mismo tratamiento que un módulo declarado sin
+                                                 pantalla, para que la lista no se rompa cuando la tarea lo habilite. --}}
+                                            <span class="nav-link disabled" aria-disabled="true" title="{{ $hijo['texto'] }}">
+                                                <i class="bi {{ $hijo['icono'] }}" aria-hidden="true"></i>
+                                                <span class="link-text">{{ $hijo['texto'] }}</span>
+                                            </span>
+                                        @else
+                                            <a class="nav-link {{ $hijo['activo'] ? 'active' : '' }}" href="{{ $hijo['url'] }}"
+                                               @if ($hijo['activo']) aria-current="page" @endif title="{{ $hijo['texto'] }}">
+                                                <i class="bi {{ $hijo['icono'] }}" aria-hidden="true"></i>
+                                                <span class="link-text">{{ $hijo['texto'] }}</span>
+                                            </a>
+                                        @endif
                                     </li>
                                 @endforeach
                             </ul>

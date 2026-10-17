@@ -101,10 +101,11 @@
         guardar().then(function (ok) { if (ok) { window.location.href = urlSalir; } });
     });
 
-    // Cambiar de sección (el panel), de solapa (los chips), de consulta (el navegador) o salir: primero se guarda lo escrito.
+    // Cambiar de sección (el grupo «Consulta» del menú lateral), de solapa (los chips), de consulta (el navegador) o salir:
+    // primero se guarda lo escrito. El grupo se reconoce por su `data-menu` (el panel de la pantalla ya no existe).
     document.addEventListener('click', function (evento) {
         var enlace = evento.target.closest('a[href]');
-        if (!enlace || !enlace.closest('.consulta-panel, [data-chips], [data-barra-salir]')) { return; }
+        if (!enlace || !enlace.closest('[data-menu="consulta"], [data-chips], [data-barra-salir]')) { return; }
         if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.shiftKey || !sucio()) { return; }
 
         evento.preventDefault();
