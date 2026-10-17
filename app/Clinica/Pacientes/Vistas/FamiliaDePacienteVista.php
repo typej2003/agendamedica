@@ -109,6 +109,12 @@ final class FamiliaDePacienteVista
             ?? CamposDePaciente::cedula($this->datos['chamo']->representante ?? null);
     }
 
+    /** Las alergias del niño (`paciente_chamo.alergia`): un aviso de seguridad, no un dato más (se muestra aparte, con énfasis). */
+    public function alergia(): ?string
+    {
+        return CamposDePaciente::texto($this->datos['chamo']->alergia ?? null);
+    }
+
     public function direccion(): ?string
     {
         return CamposDePaciente::texto($this->familia()->direccion ?? null);

@@ -93,6 +93,40 @@ final class FechaClinica
         return $fecha->diffInYears(Carbon::now());
     }
 
+    /**
+     * La edad como la dice un pediatra (WEB-7.4.2d): «5 días», «3 meses 12 días», «2 años 4 meses». En un adulto es sólo «34 años» (los meses
+     * no aportan), así que a partir de los 6 años se devuelve el mismo texto de siempre. `null` si no hay fecha válida.
+     */
+    public static function edadDetallada($fnacimiento): ?string
+    {
+        $anios = self::edad($fnacimiento);
+
+        if ($anios === null) {
+            return null;
+        }
+
+        if ($anios >= 6) {
+            return $anios . ' años';
+        }
+
+        $nacimiento = Carbon::parse(trim((string) $fnacimiento));
+        $diferencia = $nacimiento->diff(Carbon::now());
+        $partes = [];
+
+        if ($diferencia->y > 0) {
+            $partes[] = $diferencia->y . ($diferencia->y === 1 ? ' año' : ' años');
+        }
+        if ($diferencia->m > 0) {
+            $partes[] = $diferencia->m . ($diferencia->m === 1 ? ' mes' : ' meses');
+        }
+        // Los días sólo importan en los primeros meses.
+        if ($diferencia->y === 0 && $diferencia->d > 0 && $diferencia->m < 6) {
+            $partes[] = $diferencia->d . ($diferencia->d === 1 ? ' día' : ' días');
+        }
+
+        return $partes === [] ? '0 días' : implode(' ', $partes);
+    }
+
     private const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
     private const MESES = [

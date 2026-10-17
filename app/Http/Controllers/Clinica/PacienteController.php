@@ -306,7 +306,10 @@ class PacienteController extends Controller
         // El caso que obliga a mirar también **cómo está el paciente hoy**: editar a alguien que ya está
         // sin cédula y guardar cualquier otro dato (sin tocar la cédula, que el navegador ni manda porque
         // el campo está vacío) no puede quedar rechazado por un dato que el paciente no tiene.
+        // En pediatría no hay cédula del paciente (WEB-7.4.2d): el niño se identifica por nombre, nacimiento y sexo, y la cédula que
+        // importa es la del representante. Un niño con cédula (los más grandes) la puede escribir igual.
         $sinCedula = $request->boolean('sin_cedula')
+            || str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
             || ($paciente !== null && IdentidadDePaciente::esSinCedula($paciente->cedula));
 
         return $request->validate([

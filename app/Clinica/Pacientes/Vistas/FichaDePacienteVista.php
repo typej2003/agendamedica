@@ -105,9 +105,8 @@ final class FichaDePacienteVista
 
     public function edad(): ?string
     {
-        $edad = FechaClinica::edad($this->paciente->fnacimiento);
-
-        return $edad === null ? null : $edad . ($edad === 1 ? ' año' : ' años');
+        // A los menores de 6 años se les dice con meses y días, como lo lee un pediatra (WEB-7.4.2d); a los demás, en años.
+        return FechaClinica::edadDetallada($this->paciente->fnacimiento);
     }
 
     public function sexo(): ?string

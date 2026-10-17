@@ -284,4 +284,42 @@ class PacienteFamiliaWebTest extends TestCase
         $this->conContexto($medico, $gineco)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
             ->assertOk()->assertDontSee('id="ficha-familia"', false)->assertDontSee('Cargar la familia');
     }
+
+    // --------------------------------------------------------------------------------------- Alta pediátrica (WEB-7.4.2d)
+
+    public function test_en_pediatria_el_alta_no_pide_cedula_y_en_ginecologia_si(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $medico->specialties()->attach($gineco->id);
+        $datos = ['nac' => 'V', 'apellidos' => 'Rojas', 'nombres' => 'Valentina', 'sexo' => 'F', 'fnacimiento' => now()->subMonths(8)->toDateString()];
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post('/clinica/pacientes', $datos)->assertSessionHasNoErrors();
+        $this->assertSame(1, DB::table('pacientes')->where('apellidos', 'Rojas')->where('nombres', 'Valentina')->whereNull('cedula')->count());
+
+        $this->conContexto($medico, $gineco)->actingAs($user)->post('/clinica/pacientes', array_merge($datos, ['nombres' => 'Otra']))
+            ->assertSessionHasErrors('cedula');
+    }
+
+    public function test_la_ficha_de_un_nino_dice_la_edad_con_meses_y_las_alergias_se_destacan(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico, 'Mateo', 601);
+        DB::table('pacientes')->where('id', $id)->update(['fnacimiento' => now()->subYears(2)->subMonths(4)->toDateString()]);
+        $this->chamo($medico->reg_medico, 601, 61, 'PEREZ MATEO');
+        DB::table('paciente_chamo')->where('reg_medico', $medico->reg_medico)->where('historia', 601)->update(['alergia' => 'PENICILINA']);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
+            ->assertOk()->assertSee('2 años 4 meses')->assertSee('Alergias: PENICILINA');
+    }
+
+    public function test_la_edad_detallada_cuenta_dias_meses_y_anios_y_en_mayores_de_cinco_solo_anios(): void
+    {
+        $this->assertSame('5 días', \App\Support\FechaClinica::edadDetallada(now()->subDays(5)->toDateString()));
+        $this->assertSame('1 mes', \App\Support\FechaClinica::edadDetallada(now()->subMonth()->toDateString()));
+        $this->assertSame('1 año 1 mes', \App\Support\FechaClinica::edadDetallada(now()->subYear()->subMonth()->toDateString()));
+        $this->assertSame('8 años', \App\Support\FechaClinica::edadDetallada(now()->subYears(8)->subMonths(3)->toDateString()));
+        $this->assertNull(\App\Support\FechaClinica::edadDetallada(null));
+        $this->assertNull(\App\Support\FechaClinica::edadDetallada('2999-01-01'));
+    }
 }

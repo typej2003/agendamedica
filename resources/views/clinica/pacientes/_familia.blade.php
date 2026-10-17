@@ -10,6 +10,10 @@
             @endif
         </x-slot>
 
+        @if ($familia->alergia())
+            <x-ui.estado tono="peligro" icono="bi-exclamation-triangle" class="mb-3">Alergias: {{ $familia->alergia() }}</x-ui.estado>
+        @endif
+
         @if ($familia->conFamilia())
             @php
                 $padre = $familia->padre();
