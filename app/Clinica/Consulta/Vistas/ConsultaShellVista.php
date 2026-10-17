@@ -325,7 +325,7 @@ final class ConsultaShellVista
         ];
     }
 
-    /** @param array<string,string> $item */
+    /** @param array<string,mixed> $item una fila de `SeccionesDeLaConsulta` */
     private function item(array $item): array
     {
         $listo = $item['estado'] === 'listo';
