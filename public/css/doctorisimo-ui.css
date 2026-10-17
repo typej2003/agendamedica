@@ -1767,7 +1767,16 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
     .tabla-agenda td.celda-principal { order: 3; width: 100%; }
     .tabla-agenda td.celda-estado { order: 4; width: 100%; }
     .tabla-agenda td.celda-acciones { order: 5; width: 100%; text-align: left !important; justify-content: flex-start; }
-    .tabla-agenda .acciones-fila { justify-content: flex-start; }
+    /* Las acciones de la fila se envuelven dentro de la tarjeta: con «Editar consulta» + «Imprimir documentos» +
+       «Cobrar» + el menú, una sola línea se sale de la pantalla (medido: 7 px de scroll horizontal a 375 px). */
+    .tabla-agenda .acciones-fila { justify-content: flex-start; flex-wrap: wrap; }
+}
+
+/* En la tableta (768 a 991 px, la barra lateral es un panel) la celda de acciones no entra en una línea con las
+   cuatro acciones de una cita atendida: se envuelven ahí en vez de empujar la tabla —y la página— 144 px a la
+   derecha (medido a 768 px). De 992 px para arriba siguen en una línea, que es la pauta de la tabla. */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .tabla-agenda .celda-acciones .acciones-fila { flex-wrap: wrap; }
 }
 
 /* En la tabla (escritorio y tableta) las acciones de una cita van **en una sola línea**: la columna se ajusta a

@@ -118,7 +118,8 @@ class PlantillasDeTextoWebTest extends TestCase
         $web->delete(route('clinica.catalogos.plantillas-texto.quitar', $propia->id))->assertForbidden();
         $this->assertSame(1, $this->filas($medico)->count());
 
-        $this->como($secretaria, $medico, $gineco)->get(route('clinica.inicio'))->assertOk()->assertDontSee(route('clinica.catalogos.plantillas-texto'), false);
+        // A-12: la secretaría entra a la agenda, no al inicio del médico.
+        $this->como($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->assertDontSee(route('clinica.catalogos.plantillas-texto'), false);
 
         auth()->logout();
         $this->flushSession();
