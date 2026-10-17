@@ -1726,6 +1726,27 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 
 .acciones-fila form { margin: 0; }
 
+/* En una celda de tabla las acciones van en **una línea**: sin `flex-wrap` el ancho mínimo de la celda es la suma de
+   sus botones y la fila no se parte (pauta de Alexander, 2026-10-17: hasta dos acciones directas, alineadas). El
+   `<form>` no dibuja caja (`display: contents`), así el botón queda como un ítem más del flex y se alinea con su
+   vecino en lugar de quedar unos píxeles más abajo por la línea base. */
+.celda-acciones .acciones-fila { flex-wrap: nowrap; }
+.celda-acciones .acciones-fila form { display: contents; }
+
+/* Un renglón por fila (el catálogo de medicamentos): el texto largo se recorta con puntos suspensivos en una sola línea
+   y el completo queda en el `title`. `min-width: 0` deja que el texto ceda dentro de un flex. */
+.texto-una-linea { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+
+/* El catálogo de medicamentos es una tabla de **un renglón por fila**: con el ancho de las columnas fijo, el texto se
+   recorta en lugar de empujar la tabla fuera de la pantalla. La columna de acciones mide lo que miden sus dos botones
+   (Editar + papelera, con su separación): en una celda más angosta «Editar» se partiría en dos líneas y la fila
+   crecería, que es justo lo que la pauta evita. */
+.tabla-medicamentos { table-layout: fixed; }
+.tabla-medicamentos th:nth-child(1) { width: 30%; }
+.tabla-medicamentos th:nth-child(2) { width: 22%; }
+.tabla-medicamentos th:nth-child(3) { width: 28%; }
+.tabla-medicamentos th:nth-child(4) { width: 140px; white-space: nowrap; }
+
 /* En el celular cada cita es una tarjeta compacta: turno y hora arriba, el paciente, los estados y las
    acciones debajo (sin etiquetas por celda). */
 @media (max-width: 767.98px) {

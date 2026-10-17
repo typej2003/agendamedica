@@ -484,11 +484,11 @@ class CatalogosClinicosWebTest extends TestCase
             $submenu['textos']
         );
         $this->assertSame(['Diagnósticos'], $submenu['activos']);
-        $this->assertStringContainsString('<details class="nav-grupo" open>', $html);
+        $this->assertStringContainsString('<details class="nav-grupo" data-menu="catalogos" open>', $html);
 
         // Fuera de los catálogos el grupo está plegado y ninguno se marca.
         $fuera = $this->conContexto($user, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
-        $this->assertStringContainsString('<details class="nav-grupo" >', $fuera);
+        $this->assertStringContainsString('<details class="nav-grupo" data-menu="catalogos" >', $fuera);
         $this->assertSame([], $this->submenuDeCatalogos($fuera)['activos']);
 
         // Y el encabezado ya no trae el índice de pestañas ni formularios: el buscador va en su barra de herramientas.
@@ -511,7 +511,8 @@ class CatalogosClinicosWebTest extends TestCase
      */
     private function submenuDeCatalogos(string $html): array
     {
-        preg_match('/<ul class="nav flex-column nav-submenu">(.*?)<\/ul>/s', $html, $bloque);
+        // El grupo de «Catálogos» (y no el de «Listados», que también es un `<details>` del menú).
+        preg_match('/data-menu="catalogos".*?<ul class="nav flex-column nav-submenu">(.*?)<\/ul>/s', $html, $bloque);
         preg_match_all('/<a class="nav-link (active)?" href="[^"]*"[^>]*>\s*<i[^>]*><\/i>\s*<span class="link-text">([^<]+)<\/span>/s', $bloque[1] ?? '', $enlaces, PREG_SET_ORDER);
 
         return [
