@@ -7,8 +7,10 @@ use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
+use App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
@@ -51,6 +53,7 @@ class PacienteController extends Controller
     public function __construct(
         private PacientesDelConsultorio $pacientes,
         private CatalogoDeSeguros $seguros,
+        private FamiliaDelPaciente $familias,
     ) {
     }
 
@@ -120,6 +123,11 @@ class PacienteController extends Controller
         return view('clinica.pacientes.ver', [
             'vm'            => $vm,
             'representante' => $representante->bloque($request, $paciente),
+            // La familia del niño del escritorio de pediatría (WEB-7.4.2a): en cualquier otro paciente el bloque no existe.
+            'familia'       => new FamiliaDePacienteVista(
+                $this->familias->de($regMedico, $ficha->numhistoria),
+                fn (int $id) => route('clinica.pacientes.ver', $id),
+            ),
         ]);
     }
 

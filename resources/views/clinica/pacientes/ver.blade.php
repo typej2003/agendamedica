@@ -132,6 +132,8 @@
     </x-ui.tarjeta>
     @endif
 
+    @include('clinica.pacientes._familia', ['familia' => $familia])
+
     <div class="row g-3">
         <div class="col-12 col-lg-6">
             <x-ui.tarjeta titulo="Datos del paciente" icono="bi-person-vcard" class="h-100">
