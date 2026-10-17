@@ -59,6 +59,7 @@ use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
+use App\Http\Controllers\Clinica\FamiliaController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
@@ -141,6 +142,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // por `numhistoria`), así que cargar y editar son el mismo POST; el formulario vive en el
             // bloque de la ficha, que es la única pantalla que lo muestra.
             Route::post('/pacientes/{paciente}/representante', [RepresentanteController::class, 'guardar'])->name('pacientes.representante');
+            // La familia del niño (WEB-7.4.2b): los padres, los teléfonos y el representante del escritorio de pediatría.
+            Route::post('/pacientes/{paciente}/familia', [FamiliaController::class, 'guardar'])->name('pacientes.familia');
             Route::put('/pacientes/{paciente}', [PacienteController::class, 'actualizar'])->name('pacientes.actualizar');
             // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
             // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma

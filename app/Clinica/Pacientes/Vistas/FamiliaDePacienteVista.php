@@ -23,14 +23,44 @@ final class FamiliaDePacienteVista
      * @param  array{chamo:object, familia:?object, hermanos:Collection<int,object>}|null  $datos
      * @param  Closure(int):string|null  $urlFicha  arma el enlace a la ficha de un paciente por su `id`
      */
-    public function __construct(private ?array $datos, private ?Closure $urlFicha = null)
-    {
+    public function __construct(
+        private ?array $datos,
+        private ?Closure $urlFicha = null,
+        // La URL con la que se guarda; `null` si el niño no tiene historia (no hay clave) y entonces no se ofrece el formulario.
+        private ?string $urlGuardar = null,
+        // En pediatría el bloque se ofrece aunque el niño todavía no sea un `paciente_chamo` (se dio de alta en la web): guardar lo crea.
+        private bool $esPediatria = false,
+    ) {
     }
 
-    /** ¿El paciente es un niño del escritorio de pediatría? Decide si el bloque existe. */
+    /** ¿Se muestra el bloque? Para un niño del escritorio de pediatría y, en pediatría, para cualquier paciente (guardar lo crea). */
     public function cargada(): bool
     {
-        return $this->datos !== null;
+        return $this->datos !== null || $this->esPediatria;
+    }
+
+    /** ¿Se puede cargar o editar? Hace falta la clave (la historia) y que el controlador haya pasado la URL. */
+    public function puedeEditar(): bool
+    {
+        return $this->urlGuardar !== null;
+    }
+
+    public function urlGuardar(): ?string
+    {
+        return $this->urlGuardar;
+    }
+
+    public function botonEditar(): string
+    {
+        return $this->conFamilia() ? 'Editar la familia' : 'Cargar la familia';
+    }
+
+    /** El valor actual de un campo de `familia_bebe`, listo para el formulario (las fechas como `Y-m-d`). */
+    public function valor(string $campo): string
+    {
+        $valor = $this->familia()->{$campo} ?? null;
+
+        return str_starts_with($campo, 'fecn_') ? FechaClinica::paraInput($valor) : (string) ($valor ?? '');
     }
 
     /** ¿Hay datos de la familia (`familia_bebe`), o sólo el niño? */
@@ -131,8 +161,8 @@ final class FamiliaDePacienteVista
     {
         return [
             'titulo' => 'Sin datos de la familia',
-            'texto' => 'Este niño no tiene familia registrada en el escritorio de pediatría. Cuando se cargue podrás ver acá a los padres, '
-                . 'los teléfonos y los hermanos.',
+            'texto' => 'Todavía no se cargaron los padres ni los teléfonos de la familia. Son los que reciben los recordatorios de las citas '
+                . 'cuando el niño no tiene teléfono propio.',
         ];
     }
 

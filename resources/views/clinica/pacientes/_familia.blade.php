@@ -2,6 +2,14 @@
      para un paciente que no es un `paciente_chamo`. Sin estilos ni JS inline: usa la rejilla de datos y las tarjetas de la guía de UI. --}}
 @if ($familia->cargada())
     <x-ui.tarjeta id="ficha-familia" titulo="Familia" icono="bi-people" class="mb-3">
+        <x-slot name="acciones">
+            @if ($familia->puedeEditar())
+                <button type="button" class="btn btn-outline-primary" data-dialogo="dialogo-familia">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> {{ $familia->botonEditar() }}
+                </button>
+            @endif
+        </x-slot>
+
         @if ($familia->conFamilia())
             @php
                 $padre = $familia->padre();

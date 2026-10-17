@@ -127,6 +127,9 @@ class PacienteController extends Controller
             'familia'       => new FamiliaDePacienteVista(
                 $this->familias->de($regMedico, $ficha->numhistoria),
                 fn (int $id) => route('clinica.pacientes.ver', $id),
+                // Sin historia no hay clave con la que guardar: no se ofrece el formulario (misma decisión que el representante).
+                $ficha->numhistoria === null ? null : route('clinica.pacientes.familia', $ficha->id),
+                str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr'),
             ),
         ]);
     }

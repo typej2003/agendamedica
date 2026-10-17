@@ -162,10 +162,12 @@ class PacienteFamiliaWebTest extends TestCase
 
     public function test_un_paciente_que_no_es_un_chamo_no_ve_el_bloque(): void
     {
-        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [$user, $medico] = $this->medicoConAcceso();
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $medico->specialties()->attach($gineco->id);
         $id = $this->nino($medico, 'Adulto', 521);
 
-        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
+        $this->conContexto($medico, $gineco)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
             ->assertOk()
             ->assertDontSee('id="ficha-familia"', false);
     }
@@ -183,5 +185,103 @@ class PacienteFamiliaWebTest extends TestCase
             ->assertOk()
             ->assertSee('Sin datos de la familia')
             ->assertDontSee('MADRE AJENA')->assertDontSee('NIÑO AJENO');
+    }
+
+    // --------------------------------------------------------------------------------------- Guardar (WEB-7.4.2b)
+
+    public function test_guardar_edita_la_familia_del_chamo_sin_duplicarla_y_conserva_su_numero(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $id = $this->nino($medico, 'Mateo', 541);
+        $this->chamo($reg, 541, 55, 'PEREZ MATEO');
+        $this->familia($reg, 55);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $id), [
+            'nom_madre' => 'ROSA GÓMEZ DE PÉREZ', 'celu_madre' => '04140001111', 'fecn_madre' => '1991-02-03',
+            'ced_representante' => '12345678', 'dinamica_familiar' => 'VIVEN SOLOS',
+        ])->assertRedirect(route('clinica.pacientes.ver', $id))->assertSessionHas('estado');
+
+        $this->assertSame(1, DB::table('familia_bebe')->where('reg_medico', $reg)->where('familia', 55)->count());
+        $fila = DB::table('familia_bebe')->where('reg_medico', $reg)->where('familia', 55)->first();
+        $this->assertSame('ROSA GÓMEZ DE PÉREZ', $fila->nom_madre);
+        $this->assertSame('04140001111', $fila->celu_madre);
+        $this->assertSame('VIVEN SOLOS', $fila->dinamica_familiar);
+        // Lo que no viajó no se toca.
+        $this->assertSame('LUIS PÉREZ', $fila->nom_padre);
+        $this->assertSame(55, (int) DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', 541)->value('familia'));
+    }
+
+    public function test_un_nino_de_la_web_sin_chamo_se_crea_con_una_familia_nueva(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $this->chamo($reg, 900, 12, 'OTRO NIÑO');
+        $this->familia($reg, 12);
+        $id = $this->nino($medico, 'Sofía', 551);
+
+        // El bloque se ofrece aunque todavía no sea un chamo.
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
+            ->assertOk()->assertSee('Cargar la familia')->assertSee('Sin datos de la familia');
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $id), [
+            'nom_madre' => 'ANA RUIZ', 'celu_madre' => '04141112222',
+        ])->assertRedirect();
+
+        $chamo = DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', 551)->first();
+        $this->assertNotNull($chamo);
+        $this->assertSame(13, (int) $chamo->familia);
+        $this->assertSame('ANA RUIZ', DB::table('familia_bebe')->where('reg_medico', $reg)->where('familia', 13)->value('nom_madre'));
+        // Y la familia nueva ya respalda el teléfono de contacto (WEB-7.4.2c).
+        $this->assertSame('04141112222', (new \App\Clinica\Pacientes\TelefonoDeContacto())->de($reg, '551'));
+    }
+
+    public function test_un_formulario_vacio_no_crea_nada(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico, 'Mateo', 561);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $id), ['nom_madre' => ' '])
+            ->assertSessionHasErrors('nom_madre');
+
+        $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', $medico->reg_medico)->where('historia', 561)->count());
+    }
+
+    public function test_los_datos_invalidos_se_rechazan(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico, 'Mateo', 571);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $id), [
+            'nom_madre' => 'ANA', 'celu_madre' => '0414000111122223333', 'ced_representante' => 'ABC', 'email' => 'no-es-correo', 'fecn_madre' => '2999-01-01',
+        ])->assertSessionHasErrors(['celu_madre', 'ced_representante', 'email', 'fecn_madre']);
+    }
+
+    public function test_un_paciente_de_otro_consultorio_da_404_y_sin_historia_no_escribe(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [, $otro] = $this->medicoConAcceso();
+        $ajeno = $this->nino($otro, 'Ajeno', 581);
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $ajeno), ['nom_madre' => 'X'])->assertNotFound();
+
+        $sinHistoria = DB::table('pacientes')->insertGetId(['nombres' => 'Sin', 'apellidos' => 'Historia', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('medico_pacientes')->insert([
+            'medico_id' => $medico->id, 'paciente_id' => $sinHistoria, 'numhistoria' => null, 'reg_medico' => $medico->reg_medico,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $sinHistoria), ['nom_madre' => 'X'])
+            ->assertRedirect(route('clinica.pacientes.ver', $sinHistoria))->assertSessionHas('error');
+        $this->assertSame(0, DB::table('familia_bebe')->where('nom_madre', 'X')->count());
+    }
+
+    public function test_fuera_de_pediatria_el_bloque_no_se_ofrece_si_no_es_un_chamo(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $medico->specialties()->attach($gineco->id);
+        $id = $this->nino($medico, 'Adulta', 591);
+
+        $this->conContexto($medico, $gineco)->actingAs($user)->get(route('clinica.pacientes.ver', $id))
+            ->assertOk()->assertDontSee('id="ficha-familia"', false)->assertDontSee('Cargar la familia');
     }
 }

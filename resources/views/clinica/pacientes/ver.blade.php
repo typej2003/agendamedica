@@ -181,8 +181,14 @@
          de contacto. El botón del bloque lo abre (`public/js/clinica/representante.js`) y, si la validación
          falló, la página lo abre sola para que el error se lea (guía de UI §3). --}}
     @include('clinica.pacientes._dialogo-representante', ['rep' => $representante])
+    @if ($familia->cargada() && $familia->puedeEditar())
+        @include('clinica.pacientes._dialogo-familia', ['familia' => $familia])
+    @endif
 @endsection
 
 @section('scripts')
     <script src="{{ asset('js/clinica/representante.js') }}"></script>
+    @if ($familia->cargada() && $familia->puedeEditar())
+        <script src="{{ asset('js/clinica/familia.js') }}"></script>
+    @endif
 @endsection
