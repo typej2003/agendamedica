@@ -3,6 +3,7 @@
 namespace App\Clinica\Vistas;
 
 use App\Clinica\Catalogos\CatalogosDisponibles;
+use App\Clinica\Listados\ListadosDisponibles;
 use App\Support\IconoModulo;
 use App\Support\LogotipoEspecialidad;
 use Illuminate\Support\Collection;
@@ -27,6 +28,9 @@ final class ArmazonVista
         private bool $esAdministrador,
         private ?string $rutaActual,
         private bool $trabajaLaConsulta = false,
+        // El `?listado=` de la petición (WEB-6.8): «Listados» es un grupo y sus hijos se marcan por ruta **y** por la
+        // clave del reporte, porque las tres pantallas comparten la misma ruta. Fuera de los listados no se usa.
+        private ?string $listadoActual = null,
     ) {
     }
 
@@ -103,8 +107,9 @@ final class ArmazonVista
     /**
      * El menú lateral: Inicio y un ítem por módulo. Un módulo declarado sin pantalla se muestra apagado.
      *
-     * Un ítem con `hijos` es un **grupo plegable** (hoy sólo "Catálogos"): no navega por sí mismo, se abre solo cuando
-     * uno de sus hijos es el activo y marca `activo` al padre.
+     * Un ítem con `hijos` es un **grupo plegable** (hoy "Catálogos", "Listados", "Configuración" y —dentro de una
+     * consulta— "Consulta"): no navega por sí mismo, se abre solo cuando uno de sus hijos es el activo y marca
+     * `activo` al padre.
      *
      * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, hijos?:array<int,array{texto:string, icono:string, url:string, activo:bool}>}>
      */
@@ -129,17 +134,22 @@ final class ArmazonVista
             ];
         }
 
-        // Los **listados clínicos entre fechas** (WEB-6.8: embarazos / partos, y después los otros dos de la
-        // tarea) son reportes del médico: la secretaría recibe 403 en la ruta, así que la entrada sólo se
-        // ofrece a quien puede abrirlos —la misma regla que «Catálogos» y «Configuración»—.
-        // Va como ítem propio y no como grupo plegable porque hoy hay un solo listado; el submenú de
-        // «Catálogos» sigue siendo el único `<details class="nav-grupo">` del menú.
-        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+        // Los **listados clínicos entre fechas** (WEB-6.8: embarazos / partos, pacientes y consultas por rango) son
+        // reportes del médico: la secretaría recibe 403 en la ruta, así que la entrada sólo se ofrece a quien puede
+        // abrirlos —la misma regla que «Catálogos» y «Configuración»—.
+        // Desde la revisión de Alexander es un **grupo plegable** con un hijo por reporte, como «Catálogos»: los tres
+        // comparten la misma ruta y se eligen con `?listado=`, así que el activo lo decide `ListadosDisponibles`.
+        $listados = $this->tieneContexto() && $this->trabajaLaConsulta
+            ? ListadosDisponibles::submenu($this->rutaActual, $this->listadoActual)
+            : [];
+
+        if ($listados !== []) {
             $menu[] = [
                 'texto'  => 'Listados',
                 'icono'  => 'bi-clipboard2-data',
-                'url'    => Route::has('clinica.listados') ? route('clinica.listados') : null,
-                'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.listados'),
+                'url'    => null,
+                'activo' => in_array(true, array_column($listados, 'activo'), true),
+                'hijos'  => $listados,
             ];
         }
 

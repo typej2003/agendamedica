@@ -34,10 +34,11 @@
             @foreach ($armazon->menu() as $item)
                 <li class="nav-item">
                     @if (! empty($item['hijos']))
-                        {{-- Grupo plegable (Catálogos): `<details>` nativo, sin JS. Nace abierto cuando se está dentro de
-                             uno de sus hijos; el hijo activo lleva `aria-current`. Con la barra plegada a 72 px los hijos
-                             quedan como iconos con su `title`, como cualquier ítem. --}}
-                        <details class="nav-grupo" {{ $item['activo'] ? 'open' : '' }}>
+                        {{-- Grupo plegable (Catálogos, Listados, Configuración y —dentro de una consulta— Consulta): `<details>` nativo,
+                             sin JS. Nace abierto cuando se está dentro de uno de sus hijos; el hijo activo lleva `aria-current`. Con la
+                             barra plegada a 72 px los hijos quedan como iconos con su `title`, como cualquier ítem. `data-menu` es el
+                             asa estable del grupo (el nombre en slug) para los verificadores de Chrome. --}}
+                        <details class="nav-grupo" data-menu="{{ \Illuminate\Support\Str::slug($item['texto']) }}" {{ $item['activo'] ? 'open' : '' }}>
                             <summary class="nav-link {{ $item['activo'] ? 'activo-padre' : '' }}" title="{{ $item['texto'] }}">
                                 <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i>
                                 <span class="link-text">{{ $item['texto'] }}</span>
