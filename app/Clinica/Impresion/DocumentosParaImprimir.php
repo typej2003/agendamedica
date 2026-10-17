@@ -30,6 +30,7 @@ final class DocumentosParaImprimir
 
     private const ICONOS = [
         DocumentoImpreso::LABORATORIO => 'bi-droplet',
+        DocumentoImpreso::LABORATORIO_PAREJA => 'bi-people',
         DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::ECO_PELVICO => 'bi-activity',
         DocumentoImpreso::ECO_DOPPLER => 'bi-soundwave',

@@ -27,11 +27,14 @@
 @if ($editor === null)
     {{-- ------------------------------------------------------------------------------------ La lista --}}
     {{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. --}}
-    <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
 
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
+            @if ($vm->tieneAnterior())
+                <x-ui.anterior :url="$vm->urlAnterior('recipes')" que="los récipes" />
+            @endif
             @unless ($seccion->estaVacia())
                 {{-- La acción primaria de la sección. Con la lista vacía es la del estado vacío (una sola). --}}
                 <a class="btn btn-sm btn-primary" href="{{ $seccion->urlNuevo() }}">
@@ -75,6 +78,9 @@
                                             data-siguiente="{{ $receta['urlImprimir'] }}" data-titulo="{{ $receta['titulo'] }}">
                                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
                                     </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-visualizar="{{ $receta['urlImprimir'] }}" data-titulo="Vista previa del récipe">
+        <i class="bi bi-eye" aria-hidden="true"></i> Visualizar
+    </button>
                                 @endif
 
                                 {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}

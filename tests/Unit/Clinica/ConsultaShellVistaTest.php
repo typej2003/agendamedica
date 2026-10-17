@@ -66,7 +66,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('Consulta N.º 3 · —', $vm->subtitulo());
     }
 
-    public function test_el_panel_tiene_los_trece_items_del_legado_en_su_orden_y_con_su_tarea(): void
+    public function test_el_panel_tiene_los_catorce_items_en_su_orden_en_su_orden_y_con_su_tarea(): void
     {
         $vm = $this->vista();
         $panel = $vm->panel();
@@ -80,20 +80,20 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        $this->assertCount(13, $items);
-        $this->assertSame(13, $vm->totalItems());
+        $this->assertCount(14, $items);
+        $this->assertSame(14, $vm->totalItems());
 
         // Los títulos, en el orden del panel de `w_consulta_principal` (wiki 04-historia-clinica.md).
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
             'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución',
-            'Récipes', 'Solicitudes', 'Datos personales', 'Pre-factura',
+            'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura',
         ], array_column($items, 'titulo'));
 
         // Y cada uno con la tarea que lo completa: es el mapa del shell, no decoración.
         $this->assertSame([
             'WEB-4.2', 'WEB-4.2', 'WEB-4.4', 'WEB-4.3', 'WEB-6.1', 'WEB-6.6', 'WEB-4.7', 'WEB-4.5',
-            'WEB-4.6', 'WEB-5.1', 'WEB-5.3a', 'F3', 'F9',
+            'WEB-4.6', 'WEB-5.1', 'WEB-5.7', 'WEB-5.3a', 'WEB-11.25', 'F9',
         ], array_column($items, 'tarea'));
     }
 
@@ -112,7 +112,7 @@ class ConsultaShellVistaTest extends TestCase
         // evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución,
         // récipes y solicitudes, que se abren **dentro** del shell, y Datos personales, que enlaza a la
         // ficha (F3).
-        $this->assertSame(12, $vm->totalListos());
+        $this->assertSame(13, $vm->totalListos());
 
         $this->assertSame('/clinica/consulta/42?seccion=motivos', $disponibles['Motivos de consulta']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=enfermedad', $disponibles['Enfermedad actual']['url']);
@@ -123,10 +123,11 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/consulta/42?seccion=diagnostico', $disponibles['Diagnóstico']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=evolucion', $disponibles['Evolución']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=recipes', $disponibles['Récipes']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=tratamiento', $disponibles['Tratamiento']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=solicitudes', $disponibles['Solicitudes']['url']);
-        $this->assertSame('/clinica/pacientes/5619', $disponibles['Datos personales']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=datos', $disponibles['Datos personales']['url']);
 
-        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Solicitudes', 'Datos personales'] as $titulo) {
+        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'] as $titulo) {
             // Los disponibles no llevan pastilla: sólo "Próximamente" distingue a los que faltan.
             $this->assertNull($disponibles[$titulo]['estado'], $titulo);
             $this->assertNull($disponibles[$titulo]['titulo_estado'], $titulo);
@@ -134,7 +135,7 @@ class ConsultaShellVistaTest extends TestCase
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
         foreach ($disponibles as $titulo => $item) {
-            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Solicitudes', 'Datos personales'], true)) {
+            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'], true)) {
                 continue;
             }
 

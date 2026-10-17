@@ -68,26 +68,27 @@ class EdadGestacionalTest extends TestCase
 
     public function test_la_fpp_suma_los_dias_de_cada_pantalla(): void
     {
-        // 2026-01-01 + 281 días = 2026-10-09 (el 281 de la pestaña *Prenatal* viva del control prenatal).
-        $this->assertSame('2026-10-09', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
+        // 2026-01-01 + 280 días = 2026-10-08: una sola FPP para toda la web (WEB-11.16).
+        $this->assertSame('2026-10-08', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
 
-        // + 283 días = 2026-10-11 (el 283 del eco obstétrico y de los reportes, WEB-6.2): no son el mismo
-        // número, a propósito.
-        $this->assertSame('2026-10-11', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO));
+        // El eco obstétrico y los reportes usan el mismo número.
+        $this->assertSame('2026-10-08', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO));
+        $this->assertSame('2026-10-08', EdadGestacional::fpp('2026-01-01', EdadGestacional::DIAS_DE_LA_FPP));
 
         // Y sin FUR no hay FPP.
         $this->assertNull(EdadGestacional::fpp(null, EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
         $this->assertNull(EdadGestacional::fpp('', EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL));
     }
 
-    public function test_los_dos_numeros_de_la_fpp_son_los_de_la_fuente(): void
+    public function test_la_fpp_es_una_sola_constante(): void
     {
         // 281 es el de la pestaña VIVA (`d_pre_natal_observa_2.srd:38`, la que asigna
         // `w_consulta_principal.srw:24725`). El 270 que se creía el del control prenatal vive en
         // `d_pre_natal_observa.srd:20`, un DataWindow **huérfano** que ninguna ventana usa: es la trampa
         // de este módulo. 283 es el de los ecos y los reportes.
-        $this->assertSame(281, EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL);
-        $this->assertSame(283, EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO);
+        $this->assertSame(280, EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL);
+        $this->assertSame(280, EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO);
+        $this->assertSame(280, EdadGestacional::DIAS_DE_LA_FPP);
     }
 
     public function test_una_fur_absurda_del_legado_da_lo_que_el_dato_dice(): void

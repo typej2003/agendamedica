@@ -92,7 +92,7 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('12 de 13 disponibles', false)
+            ->assertSee('13 de 14 disponibles', false)
             ->assertSee('hospitalización, informe médico y dieta / recomendaciones');
 
         $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'constancia'))->assertOk()->getContent();
@@ -360,9 +360,9 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
         $pantalla->assertOk()
             ->assertSee('DIETA BLANDA')
-            ->assertSee('data-texto="Caldos y purés."', false)
-            ->assertSee('data-copiar-para="#dieta-titulo"', false)
-            ->assertSee('data-para="DIETA BLANDA"', false)
+            ->assertSee('data-plantilla-texto="Caldos y purés."', false)
+            ->assertSee('data-titulo-destino="#dieta-titulo"', false)
+            ->assertSee('data-plantilla-titulo="DIETA BLANDA"', false)
             ->assertDontSee('ES DE INFORME')
             ->assertDontSee('VACIA')
             ->assertDontSee('DE OTRO MEDICO');

@@ -17,7 +17,7 @@
 {{-- Las dos pestañas y, a la derecha, lo destructivo aparte: eliminar el récipe de la pareja entero. Es un
      formulario propio (no puede ir dentro del editor) y pide confirmación que nombra lo que se borra. --}}
 <div class="recipe-pestanas-barra mb-3">
-    <x-ui.segmentado class="recipe-pestanas" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
 
     @if ($seccion->existe())
         <div class="recipe-acciones">
@@ -28,6 +28,9 @@
                         data-siguiente="{{ $seccion->urlImprimirPareja() }}" data-titulo="Récipe de la pareja">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
                 </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-visualizar="{{ $seccion->urlImprimirPareja() }}" data-titulo="Vista previa del récipe">
+        <i class="bi bi-eye" aria-hidden="true"></i> Visualizar
+    </button>
             @endif
 
             {{-- El QR de verificación (WEB-5.6): su estado y anularlo o reactivarlo. --}}

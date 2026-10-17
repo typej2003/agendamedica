@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Models\Consulta;
+use App\Models\DibujoDeMama;
 use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -17,7 +18,9 @@ use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -214,27 +217,28 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Evaluación física', false);
-        $respuesta->assertSee('Guardar la evaluación física', false);
+        $respuesta->assertSee('Examen físico', false);
+        $respuesta->assertSee('Guardar el examen físico', false);
 
         // La antropometría y la tensión, tal cual están guardadas.
         $respuesta->assertSee('value="70.5"', false);
         $respuesta->assertSee('value="1.62"', false);
         $respuesta->assertSee('value="120/80"', false);
 
-        // El examen por aparatos y el ginecológico, en sus áreas de texto.
+        // El examen por aparatos, en sus áreas de texto (el ginecológico es otro chip, WEB-11.9).
         $respuesta->assertSee('Paciente en buen estado general.', false);
         $respuesta->assertSee('Blando, depresivo, indoloro.', false);
-        $respuesta->assertSee('Normales.', false);
+        $respuesta->assertDontSee('Normales.', false);
 
         // El IMC derivado (70,5 / 1,62² = 26,86) y el recuento de campos con dato: las siete columnas de
         // `consultas`, la tensión y los tres hallazgos del examen.
         $respuesta->assertSee('26,86', false);
-        $respuesta->assertSee('11 de 20 campos con dato', false);
+        $respuesta->assertSee('10 de 16 campos con dato', false);
 
         // El resumen del escritorio se muestra tal cual (no se regenera).
         $respuesta->assertSee('PESO: 70.5 kg.  TALLA: 1,62 m.', false);
-        $respuesta->assertSee('Resúmenes del escritorio', false);
+        // Desde WEB-11.8 el resumen vive en un cuadro editable con su botón «Actualizar».
+        $respuesta->assertSee('data-resumen-actualizar="fisico"', false);
     }
 
     public function test_el_examen_se_lee_por_el_numero_de_la_consulta_y_no_por_su_id(): void
@@ -262,7 +266,7 @@ class ConsultaEvaluacionWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertDontSee('El examen de la consulta 5.', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
 
         // Y al guardar, la fila que se escribe es la de **esta** consulta, no la de la otra.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -279,6 +283,113 @@ class ConsultaEvaluacionWebTest extends TestCase
         $this->assertNotNull(\App\Models\Paciente::find($pacienteId));
     }
 
+    public function test_el_chip_ginecologico_muestra_sus_cajas_y_los_resumenes_anteriores(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->examen($medico, $consulta, ['genitales_externos' => 'Normales.', 'total_g' => 'ESTA CONSULTA.']);
+
+        // Una consulta anterior de la misma historia, con su resumen.
+        $anterior = Consulta::create([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => $consulta->numhistoria,
+            'nroconsulta' => (int) $consulta->nroconsulta - 1, 'fecha' => '2026-09-01',
+        ]);
+        $this->examen($medico, $anterior, ['total_g' => 'RESUMEN VIEJO.']);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'ginecologico']);
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Guardar el examen ginecológico', false);
+        $respuesta->assertSee('Normales.', false);
+        $respuesta->assertDontSee('Guardar el examen físico', false);
+        $respuesta->assertSee('RESUMEN VIEJO.', false);
+        $respuesta->assertSee('01/09/2026', false);
+        $this->assertSame(1, substr_count($respuesta->getContent(), 'data-resumen-anterior'));
+    }
+
+    public function test_guardar_un_chip_no_borra_las_columnas_del_otro(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->examen($medico, $consulta, ['general' => 'Buen estado.', 'tacto_vaginal' => 'Útero normal.']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta), ['pestana' => 'ginecologico', 'genitales_externos' => 'Normales.'])
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'ginecologico']));
+
+        $fila = ExamenFisico::where('historia', (int) $consulta->numhistoria)->where('consulta', (int) $consulta->nroconsulta)->first();
+        $this->assertSame('Normales.', $fila->genitales_externos);
+        $this->assertSame('Buen estado.', $fila->general);
+        $this->assertSame('Útero normal.', $fila->tacto_vaginal);
+    }
+
+    // ------------------------------------------------------------------------- Imágenes de mamas (WEB-11.10)
+
+    private function pngFalso(): UploadedFile
+    {
+        return UploadedFile::fake()->image('trazo.png', 40, 40);
+    }
+
+    public function test_el_chip_de_mamas_muestra_los_dos_lienzos_con_color_y_grosor(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'mamas']);
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('data-mama-lienzo="derecha"', false);
+        $respuesta->assertSee('data-mama-lienzo="izquierda"', false);
+        $respuesta->assertSee('data-mamas-color', false);
+        $respuesta->assertSee('data-mamas-grosor', false);
+    }
+
+    public function test_el_dibujo_se_guarda_por_consulta_se_sirve_y_se_quita(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])
+            ->assertOk()->assertJson(['guardado' => true]);
+
+        $fila = DibujoDeMama::where('lado', 'derecha')->firstOrFail();
+        $this->assertSame((int) $consulta->nroconsulta, (int) $fila->nroconsulta);
+        Storage::disk('clinica')->assertExists($fila->archivo);
+
+        // Guardar de nuevo reemplaza (una fila, el archivo viejo se borra).
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])->assertOk();
+        $this->assertSame(1, DibujoDeMama::where('lado', 'derecha')->count());
+        Storage::disk('clinica')->assertMissing($fila->archivo);
+
+        $web->get(route('clinica.consulta.mamas.ver', [$consulta->id, 'derecha']))->assertOk()->assertHeader('Content-Type', 'image/png');
+        $web->get(route('clinica.consulta.mamas.ver', [$consulta->id, 'izquierda']))->assertNotFound();
+
+        $web->delete(route('clinica.consulta.mamas.quitar', [$consulta->id, 'derecha']))->assertOk();
+        $this->assertSame(0, DibujoDeMama::count());
+    }
+
+    public function test_el_dibujo_rechaza_lados_y_archivos_que_no_son_png_y_es_del_medico(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'arriba']), ['dibujo' => $this->pngFalso()])->assertNotFound();
+        $web->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']),
+            ['dibujo' => UploadedFile::fake()->image('foto.jpg')])->assertStatus(422);
+
+        // Otro médico no ve la consulta (404).
+        [$user2, $medico2, $gineco2] = $this->medicoConAcceso();
+        $this->conContexto($user2, $medico2, $gineco2)->actingAs($user2)
+            ->post(route('clinica.consulta.mamas.guardar', [$consulta->id, 'derecha']), ['dibujo' => $this->pngFalso()])->assertNotFound();
+        $this->assertSame(0, DibujoDeMama::count());
+    }
+
     public function test_una_consulta_sin_examen_muestra_los_campos_vacios(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -289,12 +400,43 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta->assertOk();
         // El estado de la sección: vacía.
         $respuesta->assertSee('Sin cargar', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
         // El IMC sin peso ni talla: una raya, no un cero.
         $respuesta->assertSee('data-evaluacion-imc', false);
         $respuesta->assertSee('—', false);
-        // Y no hay tarjeta de resúmenes.
-        $respuesta->assertDontSee('Resúmenes del escritorio', false);
+        // Los cuadros del resumen están, vacíos, con su botón.
+        $respuesta->assertSee('data-resumen-actualizar="fisico"', false);
+    }
+
+    public function test_actualizar_arma_los_resumenes_con_lo_del_formulario_sin_guardar_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->forceFill(['observaciones' => 'Zona visible.', 'faringe' => 'Negativa.'])->save();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.consulta.evaluacion.resumen', $consulta->id), [
+                'peso' => '70.5', 'talla' => '1.62', 'tension' => '120/80', 'general' => 'Buen estado', 'genitales_externos' => 'Normales.',
+            ]);
+
+        $respuesta->assertOk()
+            ->assertJsonPath('fisico', 'PESO: 70.5 kg.  TALLA: 1.62 m.  TENSIÓN ARTERIAL: 120/80.  GENERAL: Buen estado.  .')
+            ->assertJsonPath('ginecologico', 'GENITALES EXTERNOS: Normales..  COLPOSCOPÍA: Zona visible..  CITOLOGÍA: Negativa..  .');
+        $this->assertSame(0, ExamenFisico::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_el_resumen_editado_se_guarda_con_la_evaluacion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+            'peso' => '70', 'total_f' => 'Resumen que escribió el médico.',
+        ])->assertRedirect();
+
+        $fila = ExamenFisico::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame('Resumen que escribió el médico.', $fila->total_f);
+        $this->assertSame(1, SyncChange::where('table_name', 'examen_fisico_nuevo')->where('column_name', 'total_f')->where('source', 'web')->count());
     }
 
     public function test_el_literal_none_del_escritorio_no_se_muestra_como_hallazgo(): void
@@ -309,7 +451,7 @@ class ConsultaEvaluacionWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertDontSee('>none<', false);
-        $respuesta->assertSee('0 de 20 campos con dato', false);
+        $respuesta->assertSee('0 de 16 campos con dato', false);
     }
 
     // ------------------------------------------------------------------------------------- El guardado
@@ -345,7 +487,7 @@ class ConsultaEvaluacionWebTest extends TestCase
         ]);
 
         $respuesta->assertRedirect($this->urlSeccion($consulta));
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Evaluación física'));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Examen guardado'));
 
         // La antropometría quedó en `consultas`, como número y no como texto.
         $consulta->refresh();
@@ -628,7 +770,7 @@ class ConsultaEvaluacionWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('13 de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
     }
 }

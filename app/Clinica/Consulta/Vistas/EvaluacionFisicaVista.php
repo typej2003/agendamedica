@@ -38,7 +38,73 @@ final class EvaluacionFisicaVista
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private array $old = [],
+        private string $urlResumen = '',
+        private array $plantillasFisico = [],
+        private array $plantillasGinecologico = [],
+        private string $parte = PestanasDelExamen::FISICO,
+        private array $historial = [],
     ) {
+    }
+
+    /** ¿Es el chip del examen ginecológico (WEB-11.9)? Si no, es el físico. */
+    public function esGinecologico(): bool
+    {
+        return $this->parte === PestanasDelExamen::GINECOLOGICO;
+    }
+
+    /**
+     * Los resúmenes de las consultas anteriores, de sólo lectura (WEB-11.9, G3).
+     *
+     * @return array<int,array{numero:int, fecha:?string, texto:string}>
+     */
+    public function historial(): array
+    {
+        return $this->historial;
+    }
+
+    /** Las columnas que cuentan como «campos con dato» **del chip**: todas menos los dos resúmenes narrativos. */
+    private function camposDelExamen(): array
+    {
+        $campos = $this->esGinecologico()
+            ? ExamenFisicoDeLaConsulta::ginecologico()
+            : array_merge(ExamenFisicoDeLaConsulta::antropometria(), ExamenFisicoDeLaConsulta::general());
+
+        return array_flip(array_column($campos, 'columna'));
+    }
+
+    /** A dónde pide «Actualizar» el resumen armado con lo que hay en el formulario (WEB-11.8). */
+    public function urlResumen(): string
+    {
+        return $this->urlResumen;
+    }
+
+    /** El resumen del examen físico que muestra el cuadro (lo escrito, si falló el POST, o lo guardado). */
+    public function totalFisico(): string
+    {
+        return $this->valor('total_f');
+    }
+
+    /** El resumen del examen ginecológico que muestra el cuadro. */
+    public function totalGinecologico(): string
+    {
+        return $this->valor('total_g');
+    }
+
+    /** @return array<int,array{titulo:string, texto:string}> las plantillas `RF` (resumen físico) */
+    public function plantillasFisico(): array
+    {
+        return $this->paraElPanel($this->plantillasFisico);
+    }
+
+    /** @return array<int,array{titulo:string, texto:string}> las plantillas `EG` (examen ginecológico) */
+    public function plantillasGinecologico(): array
+    {
+        return $this->paraElPanel($this->plantillasGinecologico);
+    }
+
+    private function paraElPanel(array $plantillas): array
+    {
+        return array_map(fn ($p) => ['titulo' => (string) $p->titulo, 'texto' => (string) $p->texto], $plantillas);
     }
 
     /**
@@ -130,7 +196,7 @@ final class EvaluacionFisicaVista
     public function cargados(): int
     {
         $total = 0;
-        foreach (array_keys(EvaluacionFisica::columnas()) as $columna) {
+        foreach (array_keys($this->camposDelExamen()) as $columna) {
             if ($this->evaluacion->valor($columna) !== null) {
                 $total++;
             }
@@ -142,7 +208,7 @@ final class EvaluacionFisicaVista
     /** Cuántos campos edita la web: el denominador de la pastilla del encabezado. */
     public function totalCampos(): int
     {
-        return count(EvaluacionFisica::columnas());
+        return count($this->camposDelExamen());
     }
 
     /**
@@ -161,7 +227,8 @@ final class EvaluacionFisicaVista
     /** La ayuda del formulario: qué es la sección y qué pasa al salir sin guardar. */
     public function ayuda(): string
     {
-        return 'El examen físico general y el ginecológico de la consulta. Se guardan con el botón: si '
+        return ($this->esGinecologico() ? 'El examen ginecológico de la consulta.' : 'El examen físico general de la consulta.')
+            . ' Se guarda solo al pausar y con el botón: si '
             . 'sales sin guardar, el navegador te avisa antes de perder lo escrito.';
     }
 

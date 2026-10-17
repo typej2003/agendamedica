@@ -199,6 +199,53 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee('necesita conexión', false);
     }
 
+    public function test_el_catalogo_de_motivos_se_ve_completo_y_por_paginas(): void
+    {
+        // WEB-11.3: la lista de la derecha no se corta en 30; se pagina y la página 2 trae el resto.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        foreach (range(1, 15) as $n) {
+            $this->motivo($medico, sprintf('%04d', $n), sprintf('MOTIVO %02d', $n));
+        }
+        $url = $this->urlSeccion($consulta, ConsultaShellVista::SECCION_MOTIVOS);
+
+        $uno = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+        $uno->assertOk()->assertSee('MOTIVO 01', false)->assertSee('MOTIVO 12', false)->assertDontSee('MOTIVO 13', false);
+        $uno->assertSee('pagina_catalogo=2', false)->assertSee('data-pasar', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url . '&pagina_catalogo=2')
+            ->assertOk()->assertSee('MOTIVO 13', false)->assertSee('MOTIVO 15', false)->assertDontSee('MOTIVO 01', false);
+    }
+
+    public function test_la_barra_ofrece_el_navegador_entre_las_consultas_del_paciente(): void
+    {
+        // WEB-11.5: con dos consultas en la historia aparecen los chips 1 y 2 (la actual marcada) y la barra Guardar / Guardar y salir / Salir.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $this->hoy->toDateString(),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($segunda, ConsultaShellVista::SECCION_MOTIVOS));
+
+        $respuesta->assertOk()
+            ->assertSee('data-consulta-barra', false)
+            ->assertSee('Guardar y salir')
+            ->assertSee('Consultas de este paciente')
+            ->assertSee(route('clinica.consulta', $primera->id) . '?seccion=motivos', false);
+        $this->assertSame(1, substr_count($respuesta->getContent(), 'chip-opcion activo" href="' . route('clinica.consulta', $segunda->id) . '?seccion=motivos"'));
+    }
+
+    public function test_con_una_sola_consulta_no_se_pinta_el_navegador(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, ConsultaShellVista::SECCION_MOTIVOS))
+            ->assertOk()->assertSee('data-consulta-barra', false)->assertDontSee('Consultas de este paciente');
+    }
+
     public function test_agregar_un_motivo_del_catalogo_lo_guarda_en_la_consulta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -602,7 +649,7 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('13 de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);

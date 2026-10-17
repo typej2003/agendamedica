@@ -344,8 +344,8 @@ class EcoCardiogramaFetalTest extends TestCase
     {
         $vm = $this->vista(['fur' => '2026-05-20']);
 
-        // La FUR + 283 días: del 20/05/2026 al 27/02/2027.
-        $this->assertSame('27/02/2027', $vm->fpp());
+        // La FUR + 283 días: del 20/05/2026 al 24/02/2027.
+        $this->assertSame('24/02/2027', $vm->fpp());
         // Del 20/05/2026 al 07/10/2026 hay 140 días exactos: 20 semanas y 0 días.
         $this->assertSame('20 semanas y 0 días', $vm->edadGestacional());
 

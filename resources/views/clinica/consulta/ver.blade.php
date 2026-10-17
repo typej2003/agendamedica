@@ -39,6 +39,64 @@
          diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
     <x-ui.errores />
 
+    {{-- Las alertas del paciente (WEB-11.6): un aviso de seguridad clínica, fijo en todas las secciones, con **todas** las alertas. Al darle
+         «Atender» se abre además un diálogo que se cierra con «Entendido» y no reaparece en cada sección. La secretaría no ve esto (la
+         consulta es sólo del médico). --}}
+    @if ($vm->hayAlertas())
+        <div class="consulta-alertas" role="alert" id="consulta-alertas">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            <div>
+                <strong>Alertas de este paciente</strong>
+                <ul class="consulta-alertas-lista">
+                    @foreach ($vm->alertas() as $alerta)
+                        <li>{{ $alerta['nombre'] }}@if ($alerta['detalle']) <span class="texto-tenue">— {{ $alerta['detalle'] }}</span>@endif</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <x-ui.dialogo id="dialogo-alertas" titulo="Alertas de este paciente" :data-abrir-al-cargar="$vm->avisarAlertas() ? '1' : null">
+            <div class="dialogo-cuerpo">
+                <p class="mb-2">Antes de empezar la consulta, ten presente:</p>
+                <ul class="consulta-alertas-lista">
+                    @foreach ($vm->alertas() as $alerta)
+                        <li><strong>{{ $alerta['nombre'] }}</strong>@if ($alerta['detalle']) — {{ $alerta['detalle'] }}@endif</li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="dialogo-pie">
+                <button type="button" class="btn btn-primary" data-cerrar-dialogo>Entendido</button>
+            </div>
+        </x-ui.dialogo>
+    @endif
+
+    {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
+    @include('clinica.consulta._visualizar')
+
+    {{-- La barra de la consulta (WEB-11.5): el navegador 1…N entre las consultas del paciente y, en un lugar fijo, Guardar / Guardar y salir /
+         Salir con el indicador de guardado. Las secciones de texto se guardan solas al pausar la escritura y al cambiar de sección o de
+         consulta (`consulta-barra.js`); las que cargan listas guardan al instante y no necesitan el botón. --}}
+    <div class="consulta-barra" data-consulta-barra data-url-salir="{{ $vm->urlVolver() }}">
+        @if ($vm->hayNavegador())
+            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente">
+                <span class="etiqueta">Consulta</span>
+                <x-ui.chips :opciones="$vm->navegador()" etiqueta="Consultas de este paciente" />
+            </nav>
+        @endif
+        <div class="consulta-barra-acciones">
+            <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar>
+                <i class="bi bi-save" aria-hidden="true"></i> Guardar
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar-salir>
+                <i class="bi bi-box-arrow-left" aria-hidden="true"></i> Guardar y salir
+            </button>
+            <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}" data-barra-salir>
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Salir
+            </a>
+        </div>
+    </div>
+
     <div class="row g-3">
         {{-- El panel de navegación del legado (`w_consulta_principal`): los 13 ítems con su estado. Los que
              todavía no tienen pantalla dicen "Próximamente" y con qué tarea llegan, en vez de ofrecer un
@@ -113,4 +171,18 @@
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
     {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}
     <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
+    {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
+    <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
+    {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
+    <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
+    {{-- «Imprimir la ficha» de los datos personales (WEB-11.25). --}}
+    <script src="{{ asset('js/clinica/consulta-datos.js') }}"></script>
+    {{-- El diálogo de alertas (WEB-11.6): se abre solo cuando toca avisar. --}}
+    <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
+    {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
+    <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
+    <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
+    <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
+    {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
+    <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection

@@ -51,6 +51,12 @@ final class ConsultaShellVista
     /** La clave de la sección de solicitudes (laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe, dieta) en `?seccion=` (WEB-5.3a, WEB-5.3b y WEB-5.4). */
     public const SECCION_SOLICITUDES = 'solicitudes';
 
+    /** El tratamiento: un texto libre de la consulta (`consultas.laringe`), el ítem TRATAMIENTO del panel del legado. */
+    public const SECCION_TRATAMIENTO = 'tratamiento';
+
+    /** Los datos personales del paciente, editables dentro de la consulta (WEB-11.25). */
+    public const SECCION_DATOS = 'datos';
+
     /**
      * La clave de la sección del **estudio ecográfico** (ítem 5 del panel) en `?seccion=` (WEB-6.1).
      *
@@ -119,12 +125,16 @@ final class ConsultaShellVista
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
             'detalle' => 'Varios por consulta, por medicamento o por tratamiento, y el de la pareja; se pueden corregir.',
             'tarea' => 'WEB-5.1', 'estado' => 'listo', 'seccion' => self::SECCION_RECIPES],
-        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
+        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Tratamiento', 'icono' => 'bi-capsule',
+            'detalle' => 'El plan de tratamiento en texto libre o por plantilla; sale en el resumen médico.',
+            'tarea' => 'WEB-5.7', 'estado' => 'listo', 'seccion' => self::SECCION_TRATAMIENTO],
+        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
             'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
             'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
-        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
-            'detalle' => 'La filiación y el contacto del paciente.', 'tarea' => 'F3', 'estado' => 'listo'],
-        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
+            'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
+            'seccion' => self::SECCION_DATOS],
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente'],
     ];
 
@@ -144,7 +154,78 @@ final class ConsultaShellVista
         // sólo se decide qué se muestra (la guía de UI: el estado se ve, no se lee).
         private ?string $urlTerminar = null,
         private bool $terminable = false,
+        // El navegador 1…N (WEB-11.5): las consultas de la misma historia, `[id, nroconsulta, fecha, url]`, y la actual.
+        private array $consultasDelPaciente = [],
+        private ?int $consultaActual = null,
+        // Las alertas de antecedentes del paciente (WEB-11.6): `[nombre, detalle]` de cada una, y si toca avisarlas con el diálogo.
+        private array $alertas = [],
+        private bool $avisarAlertas = false,
     ) {
+    }
+
+    /**
+     * **El navegador entre las consultas del paciente** (WEB-11.5): un chip por consulta (el número), la actual marcada. El enlace
+     * conserva la sección abierta, para cambiar de consulta sin perder el ítem en el que se estaba.
+     *
+     * @return array<int,array{texto:string, url:string, activa:bool}>
+     */
+    public function navegador(): array
+    {
+        if (count($this->consultasDelPaciente) < 2) {
+            return [];
+        }
+
+        return array_map(function (array $consulta) {
+            $url = $consulta['url'] . ($this->seccion ? '?seccion=' . urlencode($this->seccion) : '');
+
+            return [
+                'texto' => (string) $consulta['nroconsulta'],
+                'url' => $url,
+                'activa' => (int) $consulta['id'] === $this->consultaActual,
+            ];
+        }, $this->consultasDelPaciente);
+    }
+
+    /**
+     * **Las alertas del paciente** (WEB-11.6): todos los antecedentes marcados «Alerta», con su detalle. Un aviso de seguridad clínica
+     * (una alergia, un anticoagulante…): se ve fijo en toda la consulta y no sólo en el antecedente.
+     *
+     * @return array<int,array{nombre:string, detalle:?string}>
+     */
+    public function alertas(): array
+    {
+        return $this->alertas;
+    }
+
+    public function hayAlertas(): bool
+    {
+        return $this->alertas !== [];
+    }
+
+    /** ¿Se abre el diálogo de «Entendido»? Una vez por atención: no reaparece en cada sección. */
+    public function avisarAlertas(): bool
+    {
+        return $this->avisarAlertas && $this->hayAlertas();
+    }
+
+    /** ¿Esta consulta tiene una anterior en su historia? Es lo que ofrece el botón «Anterior» (sólo desde la 2.ª consulta). */
+    public function tieneAnterior(): bool
+    {
+        return $this->consultasDelPaciente !== []
+            && $this->consultaActual !== null
+            && (int) $this->consultasDelPaciente[0]['id'] !== $this->consultaActual;
+    }
+
+    /** La URL de «Anterior» para copiar `motivos`, `diagnosticos` o `recipes` de la consulta anterior (WEB-11.4). */
+    public function urlAnterior(string $que): string
+    {
+        return rtrim((string) $this->urlConsulta, '/') . '/anterior/' . $que;
+    }
+
+    /** ¿Hay más de una consulta en la historia? (Con una sola, el navegador no se pinta.) */
+    public function hayNavegador(): bool
+    {
+        return count($this->consultasDelPaciente) > 1;
     }
 
     public function nombre(): string
@@ -290,7 +371,7 @@ final class ConsultaShellVista
         return count(self::PANEL);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
         return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
@@ -310,7 +391,7 @@ final class ConsultaShellVista
             'titulo' => 'Elige una sección en el panel',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems disponibles del panel '
                 . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'exámenes, diagnóstico, evolución, récipes, solicitudes y los datos personales del paciente— se abren acá; el resto '
+                . 'exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el resto '
                 . 'llega con las tareas siguientes (pre-factura). Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];

@@ -75,7 +75,7 @@ class PlantillasDeTextoWebTest extends TestCase
     /** El atributo con que cada sección de la consulta lleva el texto de la plantilla al botón que lo copia. */
     private function atributoDelTexto(string $tipo, string $texto): string
     {
-        return ($tipo === 'EV' ? 'data-evolucion-plantilla' : 'data-texto') . '="' . $texto . '"';
+        return 'data-plantilla-texto="' . $texto . '"';
     }
 
     private function filas(Medico $medico)
@@ -406,6 +406,6 @@ class PlantillasDeTextoWebTest extends TestCase
         // Quitada: ya no se ofrece.
         $web->delete(route('clinica.catalogos.plantillas-texto.quitar', $evolucion->id))->assertRedirect();
         // (El aviso de «Quitaste…» sale en la pantalla siguiente: se mide por el botón de la plantilla, no por el título suelto.)
-        $web->get($secciones['EV'])->assertDontSee('evolucion-plantilla-titulo">WEB84 EV', false);
+        $web->get($secciones['EV'])->assertDontSee('data-plantilla-titulo="WEB84 EV"', false);
     }
 }

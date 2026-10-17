@@ -37,6 +37,9 @@ final class DocumentoImpreso
 
     public const ESTUDIOS = 'estudios';
 
+    /** La **orden de laboratorio de la pareja** (WEB-11.21): la hoja de laboratorio a nombre de la pareja. */
+    public const LABORATORIO_PAREJA = 'laboratorio-pareja';
+
     /**
      * El **informe del estudio ecográfico** (WEB-6.1). Es el informe de un estudio, no una solicitud: la hoja lleva los
      * datos del estudio (medidas, hallazgos y conclusiones), no una orden.
@@ -58,8 +61,11 @@ final class DocumentoImpreso
      */
     public const ECO_OBSTETRICO = 'eco-obstetrico';
 
-    /** El **informe del eco obstétrico del 2.º/3.er trimestre** (WEB-6.2): «… SEGUNDO/TERCER TRIMESTRE». */
+    /** El **informe del eco obstétrico del 3.er trimestre** (WEB-6.2): «… TERCER TRIMESTRE». */
     public const ECO_OBSTETRICO_TERCERO = 'eco-obstetrico-tercero';
+
+    /** El **informe del eco obstétrico del 2.º trimestre** (WEB-11.14): «… SEGUNDO TRIMESTRE» (tabla `eco_obstetrico_tercer_2`). */
+    public const ECO_OBSTETRICO_SEGUNDO = 'eco-obstetrico-segundo';
 
     /**
      * El **informe del eco Doppler perinatal** (WEB-6.3): la hoja que el escritorio imprime con
@@ -148,13 +154,15 @@ final class DocumentoImpreso
         self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
+        self::LABORATORIO_PAREJA => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio de la pareja'],
         self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],
         self::ECO_PELVICO => ['INFORME ECOSONOGRÁFICO GINECOLÓGICO', 'Eco pélvico'],
         // El título del DataWindow del informe prenatal, tal cual (`d_informe_pre_nata_peque.srd:19`).
         self::CONTROL_DE_EMBARAZO => ['CONTROL DE EMBARAZO', 'Control de embarazo'],
         // El del eco obstétrico del primer trimestre (`d_eco_obstetrico_print_nuevo_grande`).
         self::ECO_OBSTETRICO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (1.er trimestre)'],
-        self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º y 3.er trimestre)'],
+        self::ECO_OBSTETRICO_SEGUNDO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (2.º trimestre)'],
+        self::ECO_OBSTETRICO_TERCERO => ['ECOSONOGRAFÍA OBSTÉTRICA', 'Eco obstétrico (3.er trimestre)'],
         // El del eco Doppler perinatal, tal cual el DataWindow de impresión del escritorio
         // (`d_eco_doppler_print.srd:55`).
         self::ECO_DOPPLER => ['ECO DOPPLER PERINATAL', 'Eco Doppler perinatal'],
@@ -187,7 +195,8 @@ final class DocumentoImpreso
      */
     public const SUFIJOS = [
         self::ECO_OBSTETRICO => ' · PRIMER TRIMESTRE',
-        self::ECO_OBSTETRICO_TERCERO => ' · SEGUNDO/TERCER TRIMESTRE',
+        self::ECO_OBSTETRICO_SEGUNDO => ' · SEGUNDO TRIMESTRE',
+        self::ECO_OBSTETRICO_TERCERO => ' · TERCER TRIMESTRE',
     ];
 
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
@@ -220,7 +229,14 @@ final class DocumentoImpreso
         public readonly array $fijos,
         public readonly array $parrafos,
         public readonly ?string $para = null,
+        public readonly ?InformeDeEco $informe = null,
     ) {
+    }
+
+    /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
+    public function conInforme(InformeDeEco $informe): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe);
     }
 
     /**

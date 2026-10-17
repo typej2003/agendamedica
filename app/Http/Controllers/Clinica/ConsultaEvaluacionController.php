@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\ArmarResumenDelExamen;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EvaluacionFisica;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
@@ -51,10 +53,13 @@ class ConsultaEvaluacionController extends Controller
         $datos = $request->validate($this->reglas());
         $resultado = $guardar->ejecutar($consulta, $datos, null, 'web');
 
-        $destino = redirect()->route('clinica.consulta', [
-            $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-        ]);
+        // El chip del que se guardó (examen físico o ginecológico, WEB-11.9): se vuelve al mismo.
+        $parametros = ['seccion' => ConsultaShellVista::SECCION_EVALUACION];
+        if ($request->filled('pestana') && PestanasDelExamen::existe((string) $request->input('pestana'))) {
+            $parametros['pestana'] = (string) $request->input('pestana');
+        }
+
+        $destino = redirect()->route('clinica.consulta', array_merge([$consulta->id], $parametros));
 
         // El guard del sync puede rechazar columnas porque hay una edición **más nueva** sobre ellas (de
         // otro equipo, el escritorio o el teléfono). Se dice **cuáles**, en vez de mostrar un "Guardado"
@@ -65,8 +70,32 @@ class ConsultaEvaluacionController extends Controller
         }
 
         return $destino->with('estado', $resultado->sinCambios()
-            ? 'La evaluación física no tenía cambios.'
-            : 'Evaluación física guardada.');
+            ? 'El examen no tenía cambios.'
+            : 'Examen guardado.');
+    }
+
+    /**
+     * **«Actualizar»** (WEB-11.8): arma los resúmenes del examen físico y del ginecológico con lo que hay **en el formulario** (no hace
+     * falta guardar antes) más la colposcopía y la citología de la consulta. No escribe nada: la pantalla pone el texto en los cuadros
+     * y el médico lo edita; se guarda con el botón o el autoguardado.
+     */
+    public function resumen(Request $request, Consulta $consulta)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $consulta = $this->consultas->consulta(
+            $this->registrosDelMedico($contexto['medico']),
+            (int) $consulta->id,
+            $contexto['reg_medico'],
+        );
+
+        $datos = $request->validate($this->reglas());
+        $datos['colposcopia'] = $consulta->observaciones;
+        $datos['citologia'] = $consulta->faringe;
+
+        return response()->json([
+            'fisico' => ArmarResumenDelExamen::fisico($datos),
+            'ginecologico' => ArmarResumenDelExamen::ginecologico($datos),
+        ]);
     }
 
     /**

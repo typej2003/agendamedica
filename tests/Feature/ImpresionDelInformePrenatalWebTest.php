@@ -147,9 +147,9 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
 
         // El título del DataWindow del escritorio.
         $respuesta->assertSee('CONTROL DE EMBARAZO');
-        // La ficha de la gesta, con la FPP del INFORME (283: 2026-05-20 + 283 = 27/02/2027).
+        // La ficha de la gesta, con la FPP del INFORME (283: 2026-05-20 + 283 = 24/02/2027).
         $respuesta->assertSee('FUR:')->assertSee('20/05/2026');
-        $respuesta->assertSee('FPP:')->assertSee('27/02/2027');
+        $respuesta->assertSee('FPP:')->assertSee('24/02/2027');
         $respuesta->assertSee('20 semanas y 6 días');
         $respuesta->assertSee('Tipiaje (madre):')->assertSee('O+');
         // Los controles y el laboratorio, una línea por fecha con los datos que tienen algo.

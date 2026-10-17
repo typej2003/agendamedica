@@ -399,8 +399,8 @@ class ConsultaEvolucionWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('CONTROL POST-OPERATORIO', false);
-        $respuesta->assertSee('data-evolucion-plantilla="Herida sin signos de infección."', false);
-        $respuesta->assertDontSee('Sin plantillas de evolución', false);
+        $respuesta->assertSee('data-plantilla-texto="Herida sin signos de infección."', false);
+        $respuesta->assertSee('data-plantilla-titulo="CONTROL POST-OPERATORIO"', false);
     }
 
     public function test_una_plantilla_de_otro_tipo_o_de_otro_medico_no_se_ofrece(): void
@@ -418,7 +418,7 @@ class ConsultaEvolucionWebTest extends TestCase
         $respuesta->assertDontSee('ENFERMEDAD ACTUAL', false);
         $respuesta->assertDontSee('AJENA', false);
         // Y sin ninguna plantilla de evolución, la sección lo dice.
-        $respuesta->assertSee('Sin plantillas de evolución', false);
+        $respuesta->assertSee('Todavía no tienes plantillas de evolución', false);
     }
 
     public function test_una_plantilla_sin_texto_no_es_una_plantilla(): void
@@ -433,9 +433,47 @@ class ConsultaEvolucionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Sin plantillas de evolución', false);
+        $respuesta->assertSee('Todavía no tienes plantillas de evolución', false);
         $respuesta->assertDontSee('SIN TEXTO', false);
         $respuesta->assertDontSee('CON NONE', false);
+    }
+
+    public function test_guardar_como_plantilla_crea_la_fila_del_medico_con_su_correlativo(): void
+    {
+        // WEB-11.2: el panel guarda el texto del campo como plantilla del tipo de la sección (JSON, sin recargar).
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->plantilla($medico, '0007', 'YA EXISTE', 'Otro texto');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->postJson(route('clinica.plantillas.guardar'), [
+            'tipo' => 'EV', 'titulo' => 'control   mensual', 'descripcion' => "Evolución favorable.
+Sin novedades.",
+        ]);
+
+        $respuesta->assertCreated()->assertJson(['titulo' => 'CONTROL MENSUAL']);
+        $fila = DB::table('formato_print')->where('reg_medico', $medico->reg_medico)->where('titulo', 'CONTROL MENSUAL')->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('0008', trim($fila->codigo));
+        $this->assertSame('EV', trim($fila->tipo));
+    }
+
+    public function test_guardar_como_plantilla_rechaza_un_titulo_repetido_en_el_mismo_tipo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->plantilla($medico, '0001', 'CONTROL', 'Texto');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->postJson(route('clinica.plantillas.guardar'), [
+            'tipo' => 'EV', 'titulo' => 'Control', 'descripcion' => 'Otro',
+        ])->assertStatus(422)->assertJsonStructure(['mensaje']);
+    }
+
+    public function test_la_secretaria_no_puede_guardar_plantillas(): void
+    {
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        $secretaria = $this->secretariaConAcceso($medico);
+
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)->postJson(route('clinica.plantillas.guardar'), [
+            'tipo' => 'EV', 'titulo' => 'X', 'descripcion' => 'Y',
+        ])->assertForbidden();
     }
 
     // ----------------------------------------------------------------------------------------- El panel
@@ -448,7 +486,7 @@ class ConsultaEvolucionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('13 de 14 disponibles', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
         // Y el ítem ya no dice que llega después.

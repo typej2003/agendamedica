@@ -8,6 +8,7 @@ use App\Actions\Consulta\GuardarEcoDoppler;
 use App\Actions\Consulta\GuardarEcoGinecologico;
 use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
+use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
@@ -58,6 +59,7 @@ class ConsultaEstudioController extends Controller
         GuardarEcoGinecologico $guardar,
         GuardarEcoObstetrico $guardarObstetrico,
         GuardarEcoObstetricoTercero $guardarObstetricoTercero,
+        GuardarEcoObstetricoSegundo $guardarObstetricoSegundo,
         GuardarEcoDoppler $guardarDoppler,
         GuardarEcoCardiogramaFetal $guardarFetal,
         GuardarEcoMamario $guardarMamario,
@@ -87,6 +89,7 @@ class ConsultaEstudioController extends Controller
             TiposDeEstudio::MAMARIO => $guardarMamario,
             TiposDeEstudio::ABDOMINAL => $guardarAbdominal,
             TiposDeEstudio::TERCERO => $guardarObstetricoTercero,
+            TiposDeEstudio::SEGUNDO => $guardarObstetricoSegundo,
             TiposDeEstudio::OBSTETRICO => $guardarObstetrico,
             default => $guardar,
         };
@@ -117,7 +120,7 @@ class ConsultaEstudioController extends Controller
                 TiposDeEstudio::DOPPLER => 'Eco Doppler guardado.',
                 TiposDeEstudio::MAMARIO => 'Eco mamario guardado.',
                 TiposDeEstudio::ABDOMINAL => 'Eco abdominal guardado.',
-                TiposDeEstudio::TERCERO, TiposDeEstudio::OBSTETRICO => 'Eco obstétrico guardado.',
+                TiposDeEstudio::SEGUNDO, TiposDeEstudio::TERCERO, TiposDeEstudio::OBSTETRICO => 'Eco obstétrico guardado.',
                 default => 'Eco pélvico guardado.',
             });
     }
@@ -144,12 +147,12 @@ class ConsultaEstudioController extends Controller
             return $this->reglasDelMapa(EcoAbdominal::grupos());
         }
 
-        if ($tipo !== TiposDeEstudio::OBSTETRICO && $tipo !== TiposDeEstudio::TERCERO) {
+        if (! in_array($tipo, [TiposDeEstudio::OBSTETRICO, TiposDeEstudio::SEGUNDO, TiposDeEstudio::TERCERO], true)) {
             return $this->reglas();
         }
 
         return $this->reglasDelMapa(
-            $tipo === TiposDeEstudio::TERCERO ? EcoObstetricoTercero::grupos() : EcoObstetrico::grupos()
+            $tipo === TiposDeEstudio::OBSTETRICO ? EcoObstetrico::grupos() : EcoObstetricoTercero::grupos()
         );
     }
 

@@ -110,7 +110,18 @@ final class GuardarGestaDelEmbarazo
         return DB::transaction(function () use ($regMedico, $numhistoria, $clave, $nuevos, $cuando, $origen) {
             $fila = $this->gestas->fila($regMedico, $numhistoria, $clave);
 
+            // Una gesta cerrada no se reabre (Alexander, 2026-10-15): «Final de embarazo» marcado queda marcado.
+            if ($fila !== null && trim((string) ($fila->final ?? '')) === 'S' && ($nuevos['final'] ?? null) !== 'S') {
+                throw new InvalidArgumentException('Una gesta con «Final de embarazo» marcado no se reabre.');
+            }
+
             if ($fila === null) {
+                // No se solapan embarazos: la gesta anterior tiene que estar cerrada.
+                $motivo = $this->gestas->motivoParaNoCrear($regMedico, $numhistoria);
+                if ($motivo !== null) {
+                    throw new InvalidArgumentException($motivo);
+                }
+
                 // Como el escritorio al crear una gesta (`w_agregar_nueva_gesta.srw:171-178`), el campo
                 // *Gestas* —cuántos embarazos ha tenido— arranca con el número de esta gesta si el
                 // formulario no trajo otro: estar en la gesta 3 quiere decir que hubo 3 embarazos.

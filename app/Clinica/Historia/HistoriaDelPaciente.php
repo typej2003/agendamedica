@@ -8,6 +8,7 @@ use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
@@ -400,21 +401,27 @@ final class HistoriaDelPaciente
             ));
         }
 
-        foreach ($this->ecosObstetricosTerceros($regMedico, $numero) as $nroconsulta => $estudio) {
-            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
-                continue;
-            }
+        // El 2.º trimestre (WEB-11.14, tabla hermana) y el 3.º: dos documentos separados.
+        foreach ([
+            [DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO, $this->ecosObstetricosDeLaTabla(EcoObstetricoSegundo::TABLA_DEL_SEGUNDO, $regMedico, $numero), '2.º'],
+            [DocumentoImpreso::ECO_OBSTETRICO_TERCERO, $this->ecosObstetricosTerceros($regMedico, $numero), '3.er'],
+        ] as [$claveDelTrimestre, $delTrimestre, $nombreDelTrimestre]) {
+            foreach ($delTrimestre as $nroconsulta => $estudio) {
+                if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                    continue;
+                }
 
-            $documentos->push($this->documento(
-                'Eco obstétrico (2.º y 3.er trimestre)',
-                'bi-person-arms-up',
-                (int) $nroconsulta,
-                $fechaDeLaConsulta,
-                'Informe del eco obstétrico (2.º y 3.er trimestre)',
-                null,
-                null,
-                DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
-            ));
+                $documentos->push($this->documento(
+                    'Eco obstétrico (' . $nombreDelTrimestre . ' trimestre)',
+                    'bi-person-arms-up',
+                    (int) $nroconsulta,
+                    $fechaDeLaConsulta,
+                    'Informe del eco obstétrico (' . $nombreDelTrimestre . ' trimestre)',
+                    null,
+                    null,
+                    $claveDelTrimestre,
+                ));
+            }
         }
 
         // El informe del eco Doppler perinatal (WEB-6.3), con la misma vara: algún dato del estudio —la
@@ -772,7 +779,13 @@ final class HistoriaDelPaciente
     /** El del 2.º/3.er trimestre: otra tabla, el mismo mapa del dato por bloques y la misma forma (`_o`/`_2`). */
     private function ecosObstetricosTerceros(string $regMedico, int $numero): array
     {
-        return $this->ecosDeUnaTabla('eco_obstetrico_tercer', EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+        return $this->ecosObstetricosDeLaTabla('eco_obstetrico_tercer', $regMedico, $numero);
+    }
+
+    /** Los ecos de una de las dos tablas del 2.º/3.er trimestre (WEB-11.14): el mismo mapa del dato. */
+    private function ecosObstetricosDeLaTabla(string $tabla, string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla($tabla, EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
     }
 
     /**

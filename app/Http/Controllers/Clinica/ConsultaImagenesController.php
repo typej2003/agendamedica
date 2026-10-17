@@ -48,6 +48,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ConsultaImagenesController extends Controller
 {
+    /** Los exámenes que llevan **una sola** imagen: la nueva reemplaza a la anterior (WEB-11.11). */
+    private const DE_UNA_SOLA_IMAGEN = ['colposcopia', 'histeroscopia'];
+
     use ResuelveLosRegistrosDelMedico;
 
     public function __construct(
@@ -101,6 +104,19 @@ class ConsultaImagenesController extends Controller
             // se dice sin lenguaje técnico y se deja lo escrito en el formulario.
             return $this->volver($consulta, $examen)->withInput()
                 ->with('error', 'No se pudo guardar la imagen en el servidor. Vuelve a intentarlo; si sigue igual, avísale al administrador.');
+        }
+
+        // Colposcopía e histeroscopía llevan **una sola imagen** (Alexander, WEB-11.11): la nueva reemplaza a la anterior.
+        if (in_array($examen, self::DE_UNA_SOLA_IMAGEN, true)) {
+            $contexto = $request->attributes->get('contexto_clinico');
+            $anteriores = $this->imagenes->deUnExamen($contexto['reg_medico'], (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $examen);
+
+            foreach ($anteriores as $anterior) {
+                if ((int) $anterior->id !== (int) $imagen->id) {
+                    $quitarAnterior = app(QuitarImagenDeLaConsulta::class);
+                    $quitarAnterior->ejecutar($anterior->modelo);
+                }
+            }
         }
 
         $texto = trim((string) $imagen->observacion);
@@ -164,6 +180,7 @@ class ConsultaImagenesController extends Controller
             $imagen,
             (int) $consulta->numhistoria,
             (int) $consulta->nroconsulta,
+            $request->query('alcance') === 'todas',
         );
 
         // Sin fila, sin archivo en el servidor o archivo que ya no está: 404. Los tres casos son "no hay
@@ -193,6 +210,13 @@ class ConsultaImagenesController extends Controller
      */
     private function volver(Consulta $consulta, ?string $examen = null)
     {
+        // Las imágenes de un estudio ecográfico (WEB-11.12) vuelven a su estudio (`?seccion=estudio&tipo=`).
+        $tipoDeEco = TagDeImagen::tipoDeEco($examen);
+
+        if ($tipoDeEco !== null) {
+            return redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipoDeEco]);
+        }
+
         $parametros = [
             $consulta->id,
             'seccion' => $examen === null ? ConsultaShellVista::SECCION_EXAMENES : ConsultaShellVista::SECCION_EVALUACION,

@@ -228,10 +228,10 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta->assertSee('Diagnósticos de esta consulta', false);
         $respuesta->assertSee('Guardar los diagnósticos', false);
 
-        // El nombre sale del catálogo por el código y el detalle es el texto editable de la fila.
+        // El nombre sale del catálogo por el código; sin detalle editable (WEB-11.18: como el escritorio).
         $respuesta->assertSee('LIE BAJO GRADO');
         $respuesta->assertSee('0518', false);
-        $respuesta->assertSee('value="LIE BAJO GRADO"', false);
+        $respuesta->assertDontSee('name="filas[', false);
     }
 
     public function test_dos_consultas_del_mismo_paciente_no_mezclan_sus_diagnosticos(): void
@@ -253,10 +253,8 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($segunda));
 
         $respuesta->assertOk();
-        // El detalle editable de la fila es el de la consulta 2; el del catálogo se ve en la tarjeta del
-        // buscador (que por eso no se mira acá).
-        $respuesta->assertSee('value="AMENAZA DE ABORTO"', false);
-        $respuesta->assertDontSee('value="LIE BAJO GRADO"', false);
+        // Cada consulta muestra sus propios diagnósticos (el nombre de la fila de la consulta 2).
+        $respuesta->assertSee('AMENAZA DE ABORTO', false);
     }
 
     public function test_una_consulta_sin_diagnosticos_muestra_el_estado_vacio(): void
@@ -716,9 +714,44 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('13 de 14 disponibles', false);
         $respuesta->assertSee('bi-clipboard2-check', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);
+    }
+
+    // ------------------------------------------------------------------------------ «Anterior» (WEB-11.4)
+
+    public function test_anterior_copia_los_diagnosticos_de_la_consulta_previa_sin_duplicar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $this->hoy->toDateString()]);
+        $this->catalogo($medico, '0001', 'HIPERTENSION');
+        $this->catalogo($medico, '0002', 'MIOMA');
+        $this->diagnostico($medico, 1001, 1, '0001', 'detalle viejo');
+        $this->diagnostico($medico, 1001, 1, '0002');
+        $this->diagnostico($medico, 1001, 2, '0002'); // ya está en la 2.ª
+
+        $url = route('clinica.consulta.anterior', [$segunda->id, 'diagnosticos']);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url)->assertRedirect()
+            ->assertSessionHas('estado', 'Copiados 1 diagnóstico de la consulta N.º 1.');
+
+        $codigos = DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->where('nroconsulta', 2)->orderBy('codediagnostico')->pluck('codediagnostico')->map(fn ($c) => trim($c))->all();
+        $this->assertSame(['0001', '0002'], $codigos);
+        // El detalle es de aquella atención: no se copia.
+        $this->assertNotSame('detalle viejo', DB::table('diagnostico_paciente')->where('nroconsulta', 2)->where('codediagnostico', '0001')->value('detalle_diagnostco'));
+    }
+
+    public function test_anterior_no_se_ofrece_en_la_primera_consulta_y_su_ruta_avisa(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($primera))
+            ->assertOk()->assertDontSee('Copiar los diagnósticos', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.consulta.anterior', [$primera->id, 'diagnosticos']))
+            ->assertRedirect()->assertSessionHas('error');
     }
 }

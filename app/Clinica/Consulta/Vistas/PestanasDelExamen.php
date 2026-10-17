@@ -24,17 +24,27 @@ final class PestanasDelExamen
     /** La evaluación física (WEB-4.3): el examen general y el ginecológico. */
     public const FISICO = 'fisico';
 
+    /** Las imágenes de mamas (WEB-11.10): un lienzo por mama, por consulta. */
+    public const MAMAS = 'mamas';
+
+    /** El examen ginecológico (WEB-11.9): chip propio, como la solapa del escritorio. */
+    public const GINECOLOGICO = 'ginecologico';
+
     /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
     public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
 
     public const POR_DEFECTO = self::FISICO;
 
     private const ROTULOS = [
-        self::FISICO => 'Evaluación física',
+        self::FISICO => 'Examen físico',
+        self::MAMAS => 'Imágenes de mamas',
+        self::GINECOLOGICO => 'Examen ginecológico',
     ];
 
     private const ICONOS = [
         self::FISICO => 'bi-clipboard2-pulse',
+        self::MAMAS => 'bi-brush',
+        self::GINECOLOGICO => 'bi-gender-female',
     ];
 
     /**
@@ -63,7 +73,7 @@ final class PestanasDelExamen
     /** Las claves, en el orden del escritorio. */
     public static function claves(): array
     {
-        return array_merge([self::FISICO], TextosDelExamen::claves());
+        return array_merge([self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
     }
 
     /**

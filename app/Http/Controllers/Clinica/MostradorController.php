@@ -195,6 +195,9 @@ class MostradorController extends Controller
     /** A la consulta, con el mensaje de qué pasó. */
     private function irALaConsulta(int $consultaId, string $mensaje): RedirectResponse
     {
+        // Al darle «Atender» las alertas del paciente se avisan de nuevo (WEB-11.6).
+        session()->put('alertas_vistas', array_values(array_diff((array) session('alertas_vistas', []), [$consultaId])));
+
         return redirect()->route('clinica.consulta', $consultaId)->with('estado', $mensaje);
     }
 

@@ -45,118 +45,17 @@
 (function () {
     'use strict';
 
-    // ------------------------------------------------------------------- Buscador de motivos
+    // ------------------------------------------------------------------- Motivos: alta del que falta
 
+    // La lista y el buscador del catálogo son del servidor (WEB-11.3: dos listas, formularios y enlaces).
+    // Acá sólo se abre el diálogo de «Crear»: desde el botón «Agregar un motivo nuevo» (campo vacío) o desde
+    // «Crear "x"» (que trae lo buscado en `data-motivo-crear`).
     const motivos = document.getElementById('consulta-motivos');
 
     if (motivos) {
-        const caja = document.getElementById('motivos-busqueda');
-        const texto = document.getElementById('motivo-texto');
-        const lista = document.getElementById('motivo-resultados');
-        const ayuda = document.getElementById('motivo-ayuda');
-        const plantilla = document.getElementById('motivo-plantilla');
-        const plantillaCrear = document.getElementById('motivo-crear-plantilla');
-        const botonNuevo = document.getElementById('motivo-nuevo-boton');
         const dialogo = document.getElementById('dialogo-motivo');
         const campoDescripcion = document.getElementById('motivo-descripcion');
-        const urlBuscar = motivos.dataset.urlBuscar;
-        const ayudaInicial = ayuda.textContent;
-        let temporizador = null;
-        let ultimaBusqueda = '';
 
-        function limpiar() {
-            lista.innerHTML = '';
-            lista.hidden = true;
-        }
-
-        function filaDelMotivo(motivo) {
-            const fila = plantilla.content.firstElementChild.cloneNode(true);
-            const datos = fila.querySelector('.resultado-paciente-datos');
-            datos.textContent = motivo.descripcion;
-
-            if (motivo.yaEsta) {
-                datos.insertAdjacentHTML('beforeend', ' <span class="texto-tenue small">· ya está en la consulta</span>');
-                fila.querySelector('form').remove();
-                return fila;
-            }
-
-            fila.querySelector('input[name=codemotivo]').value = motivo.codemotivo;
-            return fila;
-        }
-
-        function filaParaCrear() {
-            const fila = plantillaCrear.content.firstElementChild.cloneNode(true);
-            fila.querySelector('.resultado-paciente-datos').textContent =
-                motivos.dataset.textoCrear.replace('{texto}', ultimaBusqueda);
-            return fila;
-        }
-
-        function pintar(datos) {
-            lista.innerHTML = '';
-
-            // Crear sólo si lo escrito **no es** un motivo del catálogo: si ya existe uno igual, lo que
-            // corresponde es agregarlo, y el servidor tampoco lo duplicaría (el móvil hace lo mismo).
-            if (ultimaBusqueda !== '' && !datos.existe) {
-                lista.appendChild(filaParaCrear());
-            }
-
-            datos.motivos.forEach(function (motivo) {
-                lista.appendChild(filaDelMotivo(motivo));
-            });
-
-            if (lista.children.length === 0) {
-                limpiar();
-                ayuda.textContent = ultimaBusqueda === ''
-                    ? ayudaInicial
-                    : 'Tu catálogo no tiene motivos que coincidan con «' + ultimaBusqueda + '».';
-                return;
-            }
-
-            lista.hidden = false;
-
-            const cuantos = datos.motivos.length;
-            ayuda.textContent = cuantos === 0
-                ? 'Ningún motivo de tu catálogo coincide con «' + ultimaBusqueda + '»: puedes crearlo.'
-                : cuantos + (cuantos === 1 ? ' motivo' : ' motivos')
-                    + (ultimaBusqueda === '' ? ' en tu catálogo.' : ' que coinciden con «' + ultimaBusqueda + '».');
-        }
-
-        function buscar() {
-            const consulta = texto.value.trim();
-            ultimaBusqueda = consulta;
-
-            if (consulta === '') {
-                limpiar();
-                ayuda.textContent = ayudaInicial;
-                return;
-            }
-
-            fetch(urlBuscar + '?q=' + encodeURIComponent(consulta), { headers: { 'Accept': 'application/json' } })
-                .then(function (respuesta) { return respuesta.json(); })
-                .then(function (datos) {
-                    // Una respuesta vieja no pisa lo que se escribió después.
-                    if (datos.buscar !== texto.value.trim()) return;
-                    pintar(datos);
-                })
-                .catch(function () {
-                    limpiar();
-                    ayuda.textContent = 'No se pudo buscar en el catálogo: revisa la conexión con el servidor.';
-                });
-        }
-
-        texto.addEventListener('input', function () {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(buscar, 250);
-        });
-
-        document.addEventListener('click', function (evento) {
-            if (evento.target !== texto && !caja.contains(evento.target)) {
-                limpiar();
-            }
-        });
-
-        // El botón "Crear un motivo nuevo" y la fila "Crear «…»" del buscador abren el mismo diálogo: la
-        // fila le pasa lo escrito, el botón deja el campo vacío.
         function abrirCrear(textoInicial) {
             if (!dialogo) return;
 
@@ -164,21 +63,18 @@
                 campoDescripcion.value = textoInicial;
             }
 
-            limpiar();
             dialogo.showModal();
             if (campoDescripcion) campoDescripcion.focus();
         }
 
-        lista.addEventListener('click', function (evento) {
-            if (evento.target.closest('#motivo-crear-boton')) {
-                evento.preventDefault();
-                abrirCrear(ultimaBusqueda);
-            }
-        });
-
+        const botonNuevo = document.getElementById('motivo-nuevo-boton');
         if (botonNuevo) {
             botonNuevo.addEventListener('click', function () { abrirCrear(''); });
         }
+
+        motivos.querySelectorAll('[data-motivo-crear]').forEach(function (boton) {
+            boton.addEventListener('click', function () { abrirCrear(boton.dataset.motivoCrear); });
+        });
 
         // El diálogo se abre solo después de un error de validación: el servidor dejó `crear_motivo` en la
         // sesión y el campo conserva lo escrito (`old()`).
@@ -199,7 +95,7 @@
 
         if (!campo) return;
 
-        const guardado = campo.value;
+        let guardado = campo.value;
 
         function sucio() {
             return campo.value !== guardado;
@@ -210,6 +106,12 @@
         }
 
         campo.addEventListener('input', pintarAviso);
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que el texto ya quedó guardado: ese es el nuevo punto de partida.
+        formulario.addEventListener('consulta:guardado', function () {
+            guardado = campo.value;
+            pintarAviso();
+        });
 
         // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder el texto.
         const cancelar = formulario.querySelector('a[href]');
@@ -243,12 +145,19 @@
 
     if (evaluacion) {
         const aviso = document.getElementById('evaluacion-sin-guardar');
-        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input, textarea'));
+        // Sólo los controles que se guardan (con `name`): el buscador y el título del panel de plantillas no cuentan.
+        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input[name], textarea[name]'));
 
         // El valor de partida de cada control, para saber si algo cambió. Se toma del `value`/`textContent`
         // con el que el servidor pintó el formulario (que ya trae el `old()` si el POST falló).
-        const guardados = campos.map(function (campo) {
+        let guardados = campos.map(function (campo) {
             return campo.value;
+        });
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que todo quedó guardado: nuevo punto de partida.
+        evaluacion.addEventListener('consulta:guardado', function () {
+            guardados = campos.map(function (campo) { return campo.value; });
+            pintarAviso();
         });
 
         function sucio() {
@@ -549,53 +458,20 @@
 
     // ------------------------------------------------------------------- Evolución (WEB-4.6)
 
-    // El mismo aviso de texto clínico que la enfermedad actual y, además, las plantillas del escritorio:
-    // cada botón copia su texto en el campo. `avisoDeTexto` engancha el aviso **antes** de que el script
-    // toque el campo, así que el valor de partida es el que pintó el servidor y copiar una plantilla deja el
-    // formulario sucio sin ningún estado extra.
+    // El mismo aviso de texto clínico que la enfermedad actual. Las plantillas las maneja el panel
+    // (`plantillas-panel.js`, WEB-11.2), que dispara `input` al copiar y así deja el formulario sucio.
     const evolucion = document.querySelector('[data-consulta-evolucion]');
 
     if (evolucion) {
         avisoDeTexto(evolucion, 'evolucion-sin-guardar');
-
-        // El `<textarea>`, no el primero que aparezca: la sección tiene un solo campo de texto.
-        const campo = document.getElementById('evolucion');
-
-        evolucion.querySelectorAll('[data-evolucion-plantilla]').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                if (!campo) return;
-
-                // Lo que el doble clic del `dw_84` hace: `mle_evolucion.text = desch`. Se dispara `input`
-                // para que el aviso de cambios sin guardar se entere por el mismo camino que si el médico
-                // hubiera escrito (el listener de `avisoDeTexto`).
-                campo.value = boton.dataset.evolucionPlantilla;
-                campo.dispatchEvent(new Event('input', { bubbles: true }));
-                campo.focus();
-            });
-        });
     }
 
     // ------------------------------------------- Plantillas de texto de las solapas del examen (WEB-6.5)
 
-    // Las solapas del examen que llegan con WEB-6.5 (hoy la colposcopía) usan el mismo mecanismo que la
-    // evolución: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar (el id del
-    // formulario más `-sin-guardar`) y botones `[data-plantilla-texto]` que copian su texto en el campo
-    // `[data-plantilla-destino]`, disparando `input` para que el aviso se entere por el mismo camino que si
-    // el médico hubiera escrito. La evolución (WEB-4.6) todavía tiene su propio bloque, con sus atributos.
+    // Las solapas del examen: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar
+    // (el id del formulario más `-sin-guardar`). Sus plantillas las copia el panel (`plantillas-panel.js`).
     document.querySelectorAll('[data-consulta-plantillas]').forEach(function (formulario) {
         avisoDeTexto(formulario, formulario.id + '-sin-guardar');
-
-        const campo = formulario.querySelector('[data-plantilla-destino]');
-
-        formulario.querySelectorAll('[data-plantilla-texto]').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                if (!campo) return;
-
-                campo.value = boton.dataset.plantillaTexto;
-                campo.dispatchEvent(new Event('input', { bubbles: true }));
-                campo.focus();
-            });
-        });
     });
 
     // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)

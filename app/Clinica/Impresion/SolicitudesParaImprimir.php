@@ -27,6 +27,10 @@ use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\TagDeImagen;
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
+use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Models\Consulta;
@@ -96,6 +100,7 @@ final class SolicitudesParaImprimir
         private EcoGinecologico $ecos,
         private EcoObstetrico $ecosObstetricos,
         private EcoObstetricoTercero $ecosObstetricosTerceros,
+        private EcoObstetricoSegundo $ecosObstetricosSegundos,
         private EcoDoppler $dopplers,
         private EcoCardiogramaFetal $cardiogramasFetales,
         private EcoMamario $mamarios,
@@ -104,6 +109,8 @@ final class SolicitudesParaImprimir
         private InformePrenatal $informesPrenatales,
         private TextoDelExamen $textos,
         private ResumenMedicoDeLaConsulta $resumenes,
+        private ImagenesParaElInforme $imagenesDelInforme,
+        private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
     ) {
     }
 
@@ -162,16 +169,20 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        // El del 2.º/3.er trimestre: otro estudio (su tabla y su mapa), la misma regla para ofrecerlo.
-        $estudioTercero = $this->ecosObstetricosTerceros->de($consulta);
-        if ($this->elEcoObstetricoEsDocumento($estudioTercero, EcoObstetricoTercero::columnas())) {
-            $disponibles[] = [
-                'clave' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
-                'tipo' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
-                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::ECO_OBSTETRICO_TERCERO][1],
-                'resumen' => 'Informe del eco obstétrico (2.º y 3.er trimestre)',
-                'fecha' => $fechaDeLaConsulta,
-            ];
+        // El del 2.º trimestre (WEB-11.14: tabla hermana) y el del 3.º: otro estudio cada uno, la misma regla para ofrecerlos.
+        foreach ([
+            [DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO, $this->ecosObstetricosSegundos, '2.º'],
+            [DocumentoImpreso::ECO_OBSTETRICO_TERCERO, $this->ecosObstetricosTerceros, '3.er'],
+        ] as [$claveDelTrimestre, $lecturaDelTrimestre, $nombreDelTrimestre]) {
+            if ($this->elEcoObstetricoEsDocumento($lecturaDelTrimestre->de($consulta), EcoObstetricoTercero::columnas())) {
+                $disponibles[] = [
+                    'clave' => $claveDelTrimestre,
+                    'tipo' => $claveDelTrimestre,
+                    'titulo' => DocumentoImpreso::TITULOS[$claveDelTrimestre][1],
+                    'resumen' => 'Informe del eco obstétrico (' . $nombreDelTrimestre . ' trimestre)',
+                    'fecha' => $fechaDeLaConsulta,
+                ];
+            }
         }
 
         // El informe del eco Doppler perinatal (WEB-6.3): otro estudio más del ítem 5, con su propia ficha
@@ -262,6 +273,18 @@ final class SolicitudesParaImprimir
                 'titulo' => 'Laboratorio',
                 // Sin los exámenes ni el resumen: la lista de la cita la ve la secretaría y no lleva contenido clínico.
                 'resumen' => 'Orden de laboratorio',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // La orden de laboratorio de la pareja (WEB-11.21): una hoja aparte, a nombre de la pareja.
+        $examenesDeLaPareja = $this->laboratoriosDeLaPareja->filas($consulta);
+        if ($this->laboratoriosDeLaPareja->esReal($examenesDeLaPareja, $this->laboratoriosDeLaPareja->datos($consulta))) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::LABORATORIO_PAREJA,
+                'tipo' => DocumentoImpreso::LABORATORIO_PAREJA,
+                'titulo' => 'Laboratorio de la pareja',
+                'resumen' => 'Orden de laboratorio de la pareja',
                 'fecha' => $fechaDeLaConsulta,
             ];
         }
@@ -389,34 +412,44 @@ final class SolicitudesParaImprimir
         if ($clave === DocumentoImpreso::ECO_PELVICO) {
             $estudio = $this->ecos->de($consulta);
 
-            return $this->elEcoEsDocumento($estudio) ? $this->ecoPelvico($paciente, $estudio, $fechaDeLaConsulta) : null;
+            return $this->elEcoEsDocumento($estudio)
+                ? $this->conInformeDeEco($this->ecoPelvico($paciente, $estudio, $fechaDeLaConsulta), $consulta, $estudio, EcoGinecologico::grupos(), TiposDeEstudio::GINECOLOGICO, $estudio->valor(EcoGinecologico::COLUMNA_PURO_TEXTO))
+                : null;
         }
 
         if ($clave === DocumentoImpreso::ECO_OBSTETRICO) {
             $estudio = $this->ecosObstetricos->de($consulta);
 
-            return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetrico::columnas()) ? $this->ecoObstetrico($paciente, $estudio, $fechaDeLaConsulta) : null;
+            return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetrico::columnas())
+                ? $this->conInformeDeEco($this->ecoObstetrico($paciente, $estudio, $fechaDeLaConsulta), $consulta, $estudio, EcoObstetrico::grupos(), TiposDeEstudio::OBSTETRICO)
+                : null;
         }
 
-        if ($clave === DocumentoImpreso::ECO_OBSTETRICO_TERCERO) {
-            $estudio = $this->ecosObstetricosTerceros->de($consulta);
+        if ($clave === DocumentoImpreso::ECO_OBSTETRICO_TERCERO || $clave === DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO) {
+            $estudio = ($clave === DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO ? $this->ecosObstetricosSegundos : $this->ecosObstetricosTerceros)->de($consulta);
 
             return $this->elEcoObstetricoEsDocumento($estudio, EcoObstetricoTercero::columnas())
-                ? $this->ecoObstetricoTercero($paciente, $estudio, $fechaDeLaConsulta)
+                ? $this->conInformeDeEco(
+                    $this->ecoObstetricoTercero($paciente, $estudio, $fechaDeLaConsulta, $clave),
+                    $consulta, $estudio, EcoObstetricoTercero::grupos(),
+                    $clave === DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO ? TiposDeEstudio::SEGUNDO : TiposDeEstudio::TERCERO,
+                )
                 : null;
         }
 
         if ($clave === DocumentoImpreso::ECO_DOPPLER) {
             $estudio = $this->dopplers->de($consulta);
 
-            return $this->elEcoDopplerEsDocumento($estudio) ? $this->ecoDoppler($paciente, $estudio, $fechaDeLaConsulta) : null;
+            return $this->elEcoDopplerEsDocumento($estudio)
+                ? $this->conInformeDeEco($this->ecoDoppler($paciente, $estudio, $fechaDeLaConsulta), $consulta, $estudio, EcoDoppler::grupos(), TiposDeEstudio::DOPPLER, $estudio->valor(EcoDoppler::COLUMNA_PURO_TEXTO))
+                : null;
         }
 
         if ($clave === DocumentoImpreso::ECO_CARDIOGRAMA_FETAL) {
             $estudio = $this->cardiogramasFetales->de($consulta);
 
             return $this->elEcoCardiogramaFetalEsDocumento($estudio)
-                ? $this->ecoCardiogramaFetal($consulta, $paciente, $estudio, $fechaDeLaConsulta)
+                ? $this->conInformeDeEco($this->ecoCardiogramaFetal($consulta, $paciente, $estudio, $fechaDeLaConsulta), $consulta, $estudio, EcoCardiogramaFetal::grupos(), TiposDeEstudio::FETAL, null, $this->motivoParaElEncabezado($consulta))
                 : null;
         }
 
@@ -424,7 +457,7 @@ final class SolicitudesParaImprimir
             $estudio = $this->mamarios->de($consulta);
 
             return $this->elEcoMamarioEsDocumento($estudio)
-                ? $this->ecoMamario($paciente, $estudio, $fechaDeLaConsulta, $registros)
+                ? $this->conInformeDeEco($this->ecoMamario($paciente, $estudio, $fechaDeLaConsulta, $registros), $consulta, $estudio, EcoMamario::grupos(), TiposDeEstudio::MAMARIO)
                 : null;
         }
 
@@ -432,7 +465,7 @@ final class SolicitudesParaImprimir
             $estudio = $this->abdominales->de($consulta);
 
             return $this->elEcoAbdominalEsDocumento($estudio)
-                ? $this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros)
+                ? $this->conInformeDeEco($this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros), $consulta, $estudio, EcoAbdominal::grupos(), TiposDeEstudio::ABDOMINAL)
                 : null;
         }
 
@@ -457,6 +490,13 @@ final class SolicitudesParaImprimir
             $resumen = $this->laboratorios->observacion($consulta);
 
             return $this->laboratorios->esReal($examenes, $resumen) ? $this->laboratorio($paciente, $examenes, $resumen, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::LABORATORIO_PAREJA) {
+            $examenes = $this->laboratoriosDeLaPareja->filas($consulta);
+            $datos = $this->laboratoriosDeLaPareja->datos($consulta);
+
+            return $this->laboratoriosDeLaPareja->esReal($examenes, $datos) ? $this->laboratorioDeLaPareja($examenes, $datos, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::ESTUDIOS) {
@@ -674,6 +714,32 @@ final class SolicitudesParaImprimir
     }
 
     /**
+     * La orden de laboratorio de la **pareja** (WEB-11.21): la hoja de laboratorio **a nombre de la pareja** (su nombre y su C.I., sin edad ni
+     * dirección: no son del paciente de la consulta), con los exámenes por tipo y su resumen clínico.
+     *
+     * @param  array{cedula:?string, nombre:?string, observacion:?string}  $datos
+     */
+    private function laboratorioDeLaPareja(Collection $examenes, array $datos, string $fecha): DocumentoImpreso
+    {
+        $parrafos = [];
+
+        foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::LABORATORIO_PAREJA,
+            DocumentoImpreso::LABORATORIO_PAREJA,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO_PAREJA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::LABORATORIO_PAREJA][1],
+            $fecha,
+            ['nombre' => (string) ($datos['nombre'] ?? ''), 'cedula' => $datos['cedula'], 'edad' => null, 'direccion' => null],
+            [],
+            array_merge($parrafos, DocumentoImpreso::parrafosDe($datos['observacion'], 'RESUMEN CLÍNICO:', true)),
+        );
+    }
+
+    /**
      * La solicitud de estudios: uno por renglón, numerados en el orden de la lista, y el resumen clínico.
      *
      * @param  Collection<int,object>  $estudios
@@ -728,6 +794,35 @@ final class SolicitudesParaImprimir
      * textos largos (anexos, hallazgos, observaciones y conclusiones) con el rótulo arriba, para que se
      * lean como se escriben. Un bloque sin ningún dato no se imprime.
      */
+    /**
+     * El motivo de consulta, como dato de la franja de arriba del ecocardiograma (el escritorio lo imprime primero, como el resumen médico).
+     *
+     * @return array<int,array{etiqueta:string, valor:string}>
+     */
+    private function motivoParaElEncabezado(Consulta $consulta): array
+    {
+        $motivos = $this->resumenes->motivosDeLaConsulta($consulta);
+
+        return $motivos === [] ? [] : [['etiqueta' => 'MOTIVO DE CONSULTA:', 'valor' => implode(DocumentoImpreso::SEPARADOR_DE_ITEMS, $motivos)]];
+    }
+
+    /**
+     * El informe de un eco **a hoja completa** (WEB-11.13): el formulario lleno con las opciones marcadas y, en otra hoja, las imágenes del
+     * estudio. El documento en mitades que ya armó cada eco queda como base (sus datos cortos y su título).
+     *
+     * @param  array<int,array<string,mixed>>  $grupos  el mapa del dato del estudio
+     * @param  string  $tipo  el tipo del estudio (`TiposDeEstudio`), que dice cuáles son sus imágenes
+     * @param  string|null  $textoLibre  el `puro_texto` del escritorio, si el estudio lo trae (eco pélvico y Doppler)
+     * @param  array<int,array{etiqueta:string, valor:string}>  $encabezadoExtra  datos de la franja de arriba que no son del mapa (el motivo de consulta del ecocardiograma)
+     */
+    private function conInformeDeEco(DocumentoImpreso $base, Consulta $consulta, EstudioEcografico $estudio, array $grupos, string $tipo, ?string $textoLibre = null, array $encabezadoExtra = []): DocumentoImpreso
+    {
+        $informe = ArmadorDeInformeDeEco::armar($estudio, $grupos, array_merge($base->fijos, $encabezadoExtra), $textoLibre)
+            ->conLasImagenes($this->imagenesDelInforme->de($consulta, TagDeImagen::deUnEco($tipo)));
+
+        return $base->conInforme($informe);
+    }
+
     private function ecoPelvico(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
     {
         $fijos = [];
@@ -987,9 +1082,9 @@ final class SolicitudesParaImprimir
     }
 
     /** La del 2.º/3.er trimestre: la misma hoja con su mapa y su título. */
-    private function ecoObstetricoTercero(Paciente $paciente, EstudioEcografico $estudio, string $fecha): DocumentoImpreso
+    private function ecoObstetricoTercero(Paciente $paciente, EstudioEcografico $estudio, string $fecha, string $clave = DocumentoImpreso::ECO_OBSTETRICO_TERCERO): DocumentoImpreso
     {
-        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetricoTercero::grupos(), DocumentoImpreso::ECO_OBSTETRICO_TERCERO);
+        return $this->hojaDelEcoObstetrico($paciente, $estudio, $fecha, EcoObstetricoTercero::grupos(), $clave);
     }
 
     /**

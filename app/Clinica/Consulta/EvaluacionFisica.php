@@ -54,6 +54,12 @@ final class EvaluacionFisica
         'genitales_externos', 'especulos', 'tacto_vaginal', 'tacto_rectal',
     ];
 
+    /**
+     * Los dos resúmenes narrativos que arma el botón *Actualizar* (`ArmarResumenDelExamen`): desde WEB-11.8 la web los **edita** y los
+     * guarda (con el médico decidiendo cuándo pisar lo editado). No cuentan como «campos con dato» de la evaluación.
+     */
+    public const COLUMNAS_RESUMEN = ['total_f', 'total_g'];
+
     /** Las cuatro columnas del examen ginecológico: lo que el escritorio resume en `total_g`. */
     public const COLUMNAS_GINECOLOGICAS = [
         'genitales_externos', 'especulos', 'tacto_vaginal', 'tacto_rectal',
@@ -84,7 +90,7 @@ final class EvaluacionFisica
         foreach (self::COLUMNAS_CONSULTA as $columna) {
             $mapa[$columna] = 'consultas';
         }
-        foreach (array_merge(self::COLUMNAS_EXAMEN, [self::COLUMNA_TENSION]) as $columna) {
+        foreach (array_merge(self::COLUMNAS_EXAMEN, [self::COLUMNA_TENSION], self::COLUMNAS_RESUMEN) as $columna) {
             $mapa[$columna] = 'examen_fisico_nuevo';
         }
 

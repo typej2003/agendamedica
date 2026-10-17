@@ -67,9 +67,9 @@
                                 </p>
                             </div>
                             <div class="recipe-acciones">
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ $referencia['urlImprimir'] }}" target="_blank" rel="noopener">
+                                <x-ui.imprimir-con-vista :url="$referencia['urlImprimir']" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-                                </a>
+                                </x-ui.imprimir-con-vista>
                                 <form method="POST" action="{{ $referencia['urlEliminar'] }}" data-confirmar="{{ $referencia['avisoEliminar'] }}" data-solicitud-salir>
                                     @csrf
                                     @method('DELETE')

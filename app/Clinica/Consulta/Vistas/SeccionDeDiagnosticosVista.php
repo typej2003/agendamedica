@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Actions\Consulta\AgregarDiagnosticoAlCatalogo;
 use App\Actions\Consulta\GuardarDiagnosticosDeLaConsulta;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -51,6 +52,7 @@ final class SeccionDeDiagnosticosVista
         private string $urlBase = '',
         private string $urlCrear = '',
         private array $old = [],
+        private ?LengthAwarePaginator $paginador = null,
     ) {
         $this->catalogo = $catalogo ?? new Collection();
     }
@@ -118,6 +120,12 @@ final class SeccionDeDiagnosticosVista
     }
 
     // ------------------------------------------------------------------------------------ El buscador
+
+    /** Los enlaces de página del catálogo (WEB-11.3). */
+    public function paginador(): ?LengthAwarePaginator
+    {
+        return $this->paginador;
+    }
 
     public function buscar(): string
     {

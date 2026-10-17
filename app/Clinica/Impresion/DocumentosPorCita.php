@@ -156,6 +156,9 @@ final class DocumentosPorCita
         $this->marcar($conAlgo, DB::table('examen_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('examen_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
             ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
+        //  - orden de laboratorio de la pareja (WEB-11.21): algún examen o los datos de la pareja.
+        $this->marcar($conAlgo, DB::table('examen_pareja')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        $this->marcar($conAlgo, DB::table('examen_pareja_datos')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         //  - solicitud de estudios (WEB-5.4): lo mismo con `radiologia_paciente` y `radiologia_obs`.
         $this->marcar($conAlgo, DB::table('radiologia_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('radiologia_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
@@ -244,6 +247,9 @@ final class DocumentosPorCita
         $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
             EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
         $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+            EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        // El 2.º trimestre (WEB-11.14) vive en la tabla hermana.
+        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
             EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
 
         //  - informe del ecocardiograma fetal (WEB-6.3): otro estudio del ítem 5, con la misma clave

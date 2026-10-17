@@ -51,9 +51,9 @@
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">Cancelar</a>
                 @if ($vm->urlImprimir())
-                    <a class="btn btn-outline-secondary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+                    <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-outline-secondary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </a>
+                    </x-ui.imprimir-con-vista>
                 @endif
                 {{-- La única acción primaria de la sección: guardar lo cargado. --}}
                 <button class="btn btn-primary">

@@ -22,7 +22,7 @@
 
         {{-- Las fechas cargadas de esta gesta: la que se mira se elige con un enlace. --}}
         @if (! $vm->sinFilas())
-            <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$vm->fechas()" etiqueta="Fechas" />
+            <x-ui.chips class="mb-3" :opciones="$vm->fechas()" etiqueta="Fechas" />
         @else
             <p class="texto-tenue small mb-3">
                 Esta gesta todavía no tiene nada cargado en esta pestaña. Cargá la primera fecha y guardala.

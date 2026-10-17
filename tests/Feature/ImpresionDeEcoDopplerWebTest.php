@@ -113,38 +113,34 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
             // La ficha del encabezado, como en su DataWindow de impresión.
             ->assertSee('Gesta:')->assertSee('FUR:')->assertSee('20/05/2026')
             ->assertSee('EG:')->assertSee('20 semanas y 0 días')
-            ->assertSee('PARA:')->assertSee('1 cesárea')
+            ->assertSee('Para:')->assertSee('1 cesárea')
             // El memo grande del estudio va primero y sin rótulo.
             ->assertSee('Estudio dentro de límites normales.')
             ->assertSee('Sin signos de redistribución.')
-            // La grilla de cuatro vasos, con el título del bloque y sus cuatro ejes.
+            // La grilla de cuatro vasos, con el título del bloque, sus cuatro ejes y una fila por vaso.
             ->assertSee('Eco Doppler Obstétrico en 4 Vasos')
-            ->assertSee('Arteria Uterina Der.:')
-            ->assertSee('Índice de Pulsatibilidad: 0.85')
-            ->assertSee('Índice de Resistencia: 0.62')
-            ->assertSee('Relación S / D: 2.4')
-            ->assertSee('Pico de Velocidad Sistólica: 45')
-            ->assertSee('Arteria Cerebral Media:')
-            ->assertSee('Índice de Pulsatibilidad: 1.1')
-            // Los tres desplegables, con los rótulos de la HOJA y sus códigos traducidos.
-            ->assertSee('Ductos Venosos:')->assertSee('Trifásico sin Reversa')
-            ->assertSee('Señal Venoso Umbilical:')->assertSee('Sí')
-            ->assertSee('Relación Aorta-Cava:')->assertSee('Normal')
-            // Las dos áreas del final, en singular donde la hoja lo pide.
-            ->assertSee('Sugerencias:')->assertSee('Control en 4 semanas.')
-            ->assertSee('Conclusión:')->assertSee('Doppler normal.')
-            // El rótulo de la pantalla no es el de la hoja.
-            ->assertDontSee('Conclusiones:')
+            ->assertSee('Arteria Uterina Der.')
+            ->assertSee('Índice de Pulsatibilidad')->assertSee('Índice de Resistencia')
+            ->assertSee('Relación S / D')->assertSee('Pico de Velocidad Sistólica')
+            ->assertSeeInOrder(['0.85', '0.62', '2.4', '45'])
+            ->assertSee('Arteria Cerebral Media')->assertSee('1.1')
+            // Los tres desplegables, con todas sus opciones y la elegida marcada (WEB-11.13).
+            ->assertSeeInOrder(['Ductos Venosos:', '○', 'Trifásico con Reversa', '●', 'Trifásico sin Reversa'], false)
+            ->assertSeeInOrder(['Señal Venoso Umbilical', '●', 'Sí', '○', 'No'], false)
+            ->assertSeeInOrder(['Relación Aorta-Cava:', '●', 'Normal', '○', 'Anormal'], false)
+            // Las dos áreas del final, con los rótulos de la pantalla.
+            ->assertSee('Observaciones:')->assertSee('Control en 4 semanas.')
+            ->assertSee('Conclusiones:')->assertSee('Doppler normal.')
             ->assertSee('Ginecología y Obstetricia');
 
         // Una sola firma, en la mitad donde termina el informe.
         $this->assertSame(1, substr_count($hoja->getContent(), 'class="firmas"'));
     }
 
-    public function test_los_bloques_sin_datos_no_se_imprimen(): void
+    public function test_una_sola_medida_imprime_la_grilla_y_los_desplegables_en_blanco(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        // Sólo una medida de la arteria umbilical: la grilla sale con su fila y nada más.
+        // Sólo una medida de la arteria umbilical: el informe es el formulario (WEB-11.13), con lo demás sin llenar.
         $this->doppler($medico, [
             'arteria_umbilical_menor' => '0.9',
             'arteria_uraina_menor' => null, 'arteria_uraina_mayor' => null,
@@ -157,13 +153,9 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('Eco Doppler Obstétrico en 4 Vasos')
-            ->assertSee('Arteria Umbilical:')
-            ->assertDontSee('Arteria Uterina Der.:')
-            ->assertDontSee('Ductos Venosos:')
-            ->assertDontSee('Señal Venoso Umbilical:')
-            ->assertDontSee('Relación Aorta-Cava:')
-            ->assertDontSee('Sugerencias:')
-            ->assertDontSee('Conclusión:');
+            ->assertSee('Arteria Umbilical')->assertSee('0.9')
+            ->assertSeeInOrder(['Ductos Venosos:', '○', 'Trifásico con Reversa', '○', 'Trifásico sin Reversa'], false)
+            ->assertDontSee('●', false);
     }
 
     public function test_una_fila_con_solo_la_ficha_no_se_ofrece_ni_se_imprime(): void

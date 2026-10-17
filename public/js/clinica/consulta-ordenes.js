@@ -291,4 +291,28 @@
     });
 
     actualizar();
+
+    // «Exámenes | Rutinas» (WEB-11.20): dos chips que muestran una cosa a la vez. Sin JavaScript las dos se ven juntas.
+    var modos = document.querySelector('[data-orden-modos]');
+    var sueltos = document.getElementById('orden-modo-sueltos');
+    var rutinas = document.getElementById('orden-rutinas');
+
+    if (modos && sueltos && rutinas) {
+        modos.hidden = false;
+        rutinas.hidden = true;
+
+        modos.addEventListener('click', function (evento) {
+            var boton = evento.target.closest('[data-orden-modo]');
+            if (!boton) return;
+
+            var esRutinas = boton.dataset.ordenModo === 'rutinas';
+            sueltos.hidden = esRutinas;
+            rutinas.hidden = !esRutinas;
+            modos.querySelectorAll('[data-orden-modo]').forEach(function (otro) {
+                var activo = otro === boton;
+                otro.classList.toggle('active', activo);
+                otro.setAttribute('aria-pressed', activo ? 'true' : 'false');
+            });
+        });
+    }
 }());

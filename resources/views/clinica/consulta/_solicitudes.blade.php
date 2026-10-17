@@ -6,7 +6,7 @@
      El JS (`consulta-solicitudes.js`) pone el aviso de cambios sin guardar, copia las plantillas al campo y calcula las fechas
      del reposo; la vista no lleva JS ni estilos. --}}
 <div class="consulta-seccion" id="consulta-solicitudes">
-    <x-ui.segmentado class="recipe-pestanas pestanas-en-fila mb-3" :opciones="$seccion->pestanas()" etiqueta="Solicitudes de la consulta" />
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Solicitudes de la consulta" />
 
     @include($seccion->parcial(), ['vm' => $seccion->pestana()])
 </div>

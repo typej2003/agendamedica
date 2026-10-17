@@ -194,7 +194,12 @@ final class ResumenMedicoDeLaConsulta
 
     /**
      * El tratamiento: **todos** los medicamentos de los récipes de la consulta (`recipes`), con el nombre
-     * que el escritorio imprime —`nombrecomercial + '/' + presentacion`, el `compute` del subreporte—.
+     * que el escritorio imprime —`nombrecomercial + '/' + presentacion`, el `compute` del subreporte— **y sus
+     * indicaciones** («KEFORAL/Cap. 500 mg — una cada 8 horas por 7 días»).
+     *
+     * Las indicaciones de cada medicamento se **calculan** acá y no se guardan en ningún lado (decisión del usuario,
+     * 2026-10-15), así que corregir un récipe corrige el resumen. El texto libre del ítem TRATAMIENTO del escritorio
+     * (`consultas.laringe`) es otro bloque, `PLAN_DE_TRATAMIENTO`, que la web escribe desde WEB-5.7.
      *
      * Se resuelve con la lectura de los récipes (`RecipesDeLaConsulta::deLaConsulta`), que es la que ya
      * conoce el vademécum, el respaldo de la fila y el código: el resumen no vuelve a escribir esa regla.
@@ -204,8 +209,19 @@ final class ResumenMedicoDeLaConsulta
     private function tratamiento(string $regMedico, int $historia, int $nroconsulta): array
     {
         return $this->recipes->deLaConsulta($regMedico, $historia, $nroconsulta)
-            ->flatMap(fn (object $recipe) => $recipe->items->pluck('nombre'))
-            ->filter(fn (?string $nombre) => trim((string) $nombre) !== '')
+            ->flatMap(fn (object $recipe) => $recipe->items)
+            ->map(function (object $item) {
+                $nombre = trim((string) $item->nombre);
+                // Las indicaciones en una sola línea: el renglón de la lista no se parte entre dos medicamentos.
+                $indicaciones = trim((string) preg_replace('/\s+/u', ' ', (string) ($item->indicaciones ?? '')));
+
+                if ($nombre === '') {
+                    return '';
+                }
+
+                return $indicaciones === '' ? $nombre : $nombre . ' — ' . $indicaciones;
+            })
+            ->filter(fn (string $linea) => $linea !== '')
             ->values()
             ->all();
     }

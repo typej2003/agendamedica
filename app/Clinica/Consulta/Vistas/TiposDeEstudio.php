@@ -43,6 +43,12 @@ final class TiposDeEstudio
     public const TERCERO = 'tercero';
 
     /**
+     * El **eco obstétrico del 2.º trimestre** (WEB-11.14): Alexander lo quiere **separado** del 3.º (2026-10-15). Vive en la tabla
+     * hermana `eco_obstetrico_tercer_2` y `TERCERO` queda como el 3.er trimestre.
+     */
+    public const SEGUNDO = 'segundo';
+
+    /**
      * El **eco Doppler perinatal** (WEB-6.3): la pestaña viva de la consulta
      * (`w_consulta_principal.srw:22650`, con el DataWindow `d_eco_doppler`, que vive en
      * `fuentes/ventana_consulta/` y no en `datawin_procesos/`: trampas 123 y 124).
@@ -93,7 +99,8 @@ final class TiposDeEstudio
     private const TODOS = [
         self::GINECOLOGICO => ['texto' => 'Eco ginecológico', 'icono' => 'bi-activity'],
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
-        self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::SEGUNDO => ['texto' => 'Eco obstétrico (2.º trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::TERCERO => ['texto' => 'Eco obstétrico (3.er trimestre)', 'icono' => 'bi-person-arms-up'],
         self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
         self::MAMARIO => ['texto' => 'Eco mamario', 'icono' => 'bi-clipboard2-pulse'],
         self::FETAL => ['texto' => 'Ecocardiograma fetal', 'icono' => 'bi-heart'],
@@ -103,7 +110,8 @@ final class TiposDeEstudio
     /**
      * @param  Closure  $url  `fn(string $clave): string` — la URL de ese tipo (la resuelve el controlador)
      */
-    public function __construct(private Closure $url)
+    /** @param  array<int,string>  $ocultos  los tipos que no se ofrecen como chip (el abdominal en ginecología, WEB-11.14) */
+    public function __construct(private Closure $url, private array $ocultos = [])
     {
     }
 
@@ -139,6 +147,10 @@ final class TiposDeEstudio
         $opciones = [];
 
         foreach (self::TODOS as $clave => $tipo) {
+            if (in_array($clave, $this->ocultos, true) && $clave !== $activa) {
+                continue;
+            }
+
             $opciones[] = ['texto' => $tipo['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 

@@ -7,9 +7,9 @@
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+            <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-            </a>
+            </x-ui.imprimir-con-vista>
         @endif
         {{-- El resumen médico (WEB-5.3c): la hoja auto-generada de la consulta, la otra mitad de esta
              pestaña del escritorio. Sólo se ofrece si hay algo que resumir. --}}
@@ -24,6 +24,12 @@
 
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="informe-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
+
+        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
+             una columna a la derecha y acá, al no caber, caía debajo del texto. Los informes anteriores siguen
+             al lado del editor: se copian, no son plantillas del médico. --}}
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM"
+                         nombre="informe" class="mb-3" />
 
         <div class="row g-3">
             <div class="col-12 col-xl-8">
@@ -42,21 +48,6 @@
             </div>
 
             <div class="col-12 col-xl-4">
-                @if ($vm->hayPlantillas())
-                    <p class="etiqueta mb-2">Plantillas</p>
-                    <ul class="evolucion-plantillas mb-3">
-                        @foreach ($vm->plantillas() as $plantilla)
-                            <li>
-                                <button type="button" class="evolucion-plantilla" data-copiar-a="#informe-descripcion"
-                                        data-texto="{{ $plantilla['texto'] }}" title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                                    <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                                    <span class="texto-tenue small">Copiar en el campo</span>
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
                 <p class="etiqueta mb-2">Informes anteriores del paciente</p>
                 @if ($vm->hayAnteriores())
                     <ul class="evolucion-plantillas">

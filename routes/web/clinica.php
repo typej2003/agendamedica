@@ -25,16 +25,20 @@ use App\Http\Controllers\Clinica\ConsultaEstudiosController;
 use App\Http\Controllers\Clinica\ConsultaHospitalizacionController;
 use App\Http\Controllers\Clinica\ConsultaInformeController;
 use App\Http\Controllers\Clinica\ConsultaLaboratorioController;
+use App\Http\Controllers\Clinica\ConsultaLaboratorioParejaController;
 use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
 use App\Http\Controllers\Clinica\ConsultaTextoDelExamenController;
+use App\Http\Controllers\Clinica\ConsultaAnteriorController;
+use App\Http\Controllers\Clinica\PlantillaDeTextoController;
 use App\Http\Controllers\Clinica\ConsultaController;
 use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -163,6 +167,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
 
+                // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
+                Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])
+                    ->where('que', 'motivos|diagnosticos|recipes')->name('consulta.anterior');
+
+                // «Guardar como plantilla» desde cualquier sección de texto de la consulta (WEB-11.2): JSON, sin recargar.
+                Route::post('/plantillas-de-texto', [PlantillaDeTextoController::class, 'guardar'])->name('plantillas.guardar');
+
                 // El contenido de las dos primeras secciones (WEB-4.2), que se abre **dentro** del shell
                 // con `?seccion=`. Son acciones —escriben— y por eso viven en controladores propios
                 // (la guía de la web parte los controladores por responsabilidad, no por pantalla).
@@ -182,7 +193,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // (`consultas` y `examen_fisico_nuevo`) y se guardan juntas, con el mismo botón explícito
                 // de la enfermedad actual. La colposcopia y la citología —que viven en esa misma tabla—
                 // son de F6 y no entran acá.
+                // Imágenes de mamas (WEB-11.10): el trazo de cada mama, por consulta; PNG en el disco privado.
+                Route::get('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'ver'])->name('consulta.mamas.ver');
+                Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
+                Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+                // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
+                Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');
 
                 // Los textos de las solapas del examen (WEB-6.5): la colposcopía, la citología, la
                 // histeroscopía y el resultado de exámenes. Las cuatro son **un texto en una columna de
@@ -191,7 +208,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **404** antes de llegar al controlador. La única que además tiene una copia en otra tabla es
                 // la colposcopía (`examen_fisico_nuevo.colposcopia`), y eso lo sabe la Action.
                 Route::post('/consulta/{consulta}/examen/{solapa}', [ConsultaTextoDelExamenController::class, 'guardar'])
-                    ->where('solapa', implode('|', TextosDelExamen::claves()))
+                    ->where('solapa', implode('|', TextosDelExamen::claves(true)))
                     ->name('consulta.examen.texto.guardar');
 
                 // Estudio ecográfico (WEB-6.1): el ítem 5 del panel, con su sección propia
@@ -207,6 +224,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `pre_natal_observaciones` se llavea por `historia` + `gesta_clave`, así que el controlador
                 // usa el `numhistoria` de la consulta del contexto. El `gesta` del formulario vacío crea la
                 // siguiente (*Nueva Gesta*).
+                // «Nueva gesta» (WEB-11.15): sólo pregunta cuántos bebés son.
+                Route::post('/consulta/{consulta}/embarazo/gesta', [ConsultaEmbarazoController::class, 'crearGesta'])
+                    ->name('consulta.embarazo.gesta.crear');
                 Route::post('/consulta/{consulta}/embarazo/prenatal', [ConsultaEmbarazoController::class, 'guardarPrenatal'])
                     ->name('consulta.embarazo.prenatal.guardar');
 
@@ -327,6 +347,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'eliminar'])->name('consulta.laboratorio.eliminar');
                 Route::get('/consulta/{consulta}/laboratorio/catalogo', [ConsultaLaboratorioController::class, 'catalogo'])->name('consulta.laboratorio.catalogo');
                 Route::get('/consulta/{consulta}/laboratorio/rutinas/{tipo}', [ConsultaLaboratorioController::class, 'rutina'])->name('consulta.laboratorio.rutina');
+                // La orden de laboratorio de la **pareja** (WEB-11.21, el botón «Pareja»): se guarda entera y se elimina en la misma URL; el buscador y las
+                // rutinas son los de la orden de la paciente.
+                Route::post('/consulta/{consulta}/laboratorio-pareja', [ConsultaLaboratorioParejaController::class, 'guardar'])->name('consulta.laboratorio-pareja.guardar');
+                Route::delete('/consulta/{consulta}/laboratorio-pareja', [ConsultaLaboratorioParejaController::class, 'eliminar'])->name('consulta.laboratorio-pareja.eliminar');
                 Route::post('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'guardar'])->name('consulta.estudios.guardar');
                 Route::delete('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'eliminar'])->name('consulta.estudios.eliminar');
                 Route::get('/consulta/{consulta}/estudios/catalogo', [ConsultaEstudiosController::class, 'catalogo'])->name('consulta.estudios.catalogo');

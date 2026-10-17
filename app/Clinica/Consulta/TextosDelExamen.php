@@ -23,7 +23,7 @@ use App\Clinica\Impresion\DocumentoImpreso;
  *
  *  - **Plantillas**: `formato_print` por `tipo` —`CO` la colposcopía (`dw_77`, `:3043`), `CI` la citología
  *    (`dw_78`, `:3046`), `RE` el resultado de exámenes (`dw_91`, `:4626`)—. La **histeroscopía no tiene**
- *    ninguna (su `tabpage_49` no hace `retrieve` de plantillas).
+ *    en el escritorio (su `tabpage_49` no hace `retrieve` de plantillas), pero la web las ofrece con el tipo `HI` (WEB-11.7).
  *  - **Informe**: la colposcopía (`d_colposcopia_1`/`_2`) y la histeroscopía (`d_histeroscopia`, cuyo título
  *    está en `:27` y su cuerpo es `consultas.cuello` —`column(band=detail ... name=consultas_cuello`, `:29`—
  *    con las fotos del subreporte). La citología y el resultado de exámenes **no tienen hoja**.
@@ -46,6 +46,15 @@ final class TextosDelExamen
     public const HISTEROSCOPIA = 'histeroscopia';
 
     public const RESULTADOS = 'resultados';
+
+    /**
+     * **El tratamiento** (ítem TRATAMIENTO del panel del legado, `tabpage_40`): un texto libre —con las plantillas
+     * `formato_print` de tipo `TR`— que el escritorio guarda en `consultas.laringe`
+     * (`tab_1.tabpage_40.mle_11.text`, `w_consulta_principal.srw:2762`). No es una solapa del examen: tiene su
+     * propio ítem del panel, así que `claves()` no lo incluye salvo que se pida (`$conLasDelPanel`), y es lo que la
+     * ruta de guardado sí acepta. Es el «PLAN DE TRATAMIENTO» del resumen médico.
+     */
+    public const TRATAMIENTO = 'tratamiento';
 
     /**
      * El mapa del dato, por clave de solapa.
@@ -95,12 +104,28 @@ final class TextosDelExamen
             'sin_cambios' => 'La histeroscopía no tenía cambios.',
             'columna' => 'cuello',
             'columna_espejo' => null,
-            'plantillas' => null,
+            'plantillas' => 'HI',
             'documento' => DocumentoImpreso::HISTEROSCOPIA,
             'imagenes' => self::HISTEROSCOPIA,
             'marcador' => 'El hallazgo histeroscópico: el canal cervical, la cavidad, el endometrio…',
             'ayuda' => 'El informe de la histeroscopía: el texto que se imprime en la hoja «INFORME DE '
                 . 'HISTEROSCOPÍA», con el membrete y (si cargaste imágenes en esta solapa) sus fotos.',
+        ],
+        self::TRATAMIENTO => [
+            'panel' => true,
+            'titulo' => 'Tratamiento',
+            'articulo' => 'el',
+            'icono' => 'bi-capsule',
+            'guardado' => 'Tratamiento guardado.',
+            'sin_cambios' => 'El tratamiento no tenía cambios.',
+            'columna' => 'laringe',
+            'columna_espejo' => null,
+            'plantillas' => 'TR',
+            'documento' => null,
+            'imagenes' => null,
+            'marcador' => 'El plan de tratamiento: las indicaciones generales, el seguimiento, lo que debe cumplir la paciente…',
+            'ayuda' => 'El plan de tratamiento de esta consulta, en texto libre o a partir de una plantilla. Aparece como '
+                . '«PLAN DE TRATAMIENTO» en el resumen médico. Los medicamentos recetados van en los récipes.',
         ],
         self::RESULTADOS => [
             'titulo' => 'Resultado de exámenes',
@@ -119,15 +144,22 @@ final class TextosDelExamen
         ],
     ];
 
-    /** Las claves de las solapas de texto, en el orden del escritorio. */
-    public static function claves(): array
+    /**
+     * Las claves de las solapas de texto **del examen**, en el orden del escritorio. Con `$conLasDelPanel` suma los
+     * textos que tienen su propio ítem del panel (el tratamiento): es lo que acepta la ruta de guardado, que es la
+     * misma para todos.
+     */
+    public static function claves(bool $conLasDelPanel = false): array
     {
-        return array_keys(self::TEXTOS);
+        return array_keys(array_filter(
+            self::TEXTOS,
+            fn (array $texto) => $conLasDelPanel || empty($texto['panel']),
+        ));
     }
 
-    public static function existe(?string $clave): bool
+    public static function existe(?string $clave, bool $conLasDelPanel = false): bool
     {
-        return $clave !== null && isset(self::TEXTOS[$clave]);
+        return $clave !== null && in_array($clave, self::claves($conLasDelPanel), true);
     }
 
     /** @return array<string,mixed>|null */

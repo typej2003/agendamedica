@@ -6,7 +6,7 @@
      plantillas de texto vive en `consulta.js`. Las solapas que todavía no existen no se muestran —el panel
      de la consulta ya dijo qué llegaba con cada tarea—. --}}
 <div class="consulta-seccion" id="consulta-evaluacion">
-    <x-ui.segmentado class="recipe-pestanas pestanas-en-fila mb-3" :opciones="$seccion->pestanas()"
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()"
                      etiqueta="Examen" />
 
     @include($seccion->parcial(), ['seccion' => $seccion->vista()])

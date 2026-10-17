@@ -813,7 +813,39 @@ class ConsultaAntecedentesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('13 de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
+    }
+
+    // ---------------------------------------------------------------------------------- Alertas (WEB-11.6)
+
+    public function test_las_alertas_se_ven_todas_y_fijas_y_se_avisan_una_sola_vez(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->antecedente($medico, 1001, '0001', 'ALERGIA A PENICILINA', 'P', 'Anafilaxia', 'A');
+        $this->antecedente($medico, 1001, '0002', 'ANTICOAGULADO', 'P', null, 'A');
+        $this->antecedente($medico, 1001, '0003', 'ASMA', 'P', null, 'B');
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']);
+        $primera = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+        $primera->assertOk()->assertSee('Alertas de este paciente')
+            ->assertSee('ALERGIA A PENICILINA', false)->assertSee('Anafilaxia', false)->assertSee('ANTICOAGULADO', false)
+            ->assertDontSee('ASMA', false)
+            ->assertSee('data-abrir-al-cargar="1"', false);
+
+        // Otra sección de la misma atención: el banner sigue, el diálogo no se vuelve a abrir.
+        $segunda = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']));
+        $segunda->assertSee('ALERGIA A PENICILINA', false)->assertDontSee('data-abrir-al-cargar="1"', false);
+    }
+
+    public function test_sin_alertas_no_hay_banner_ni_dialogo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->antecedente($medico, 1001, '0003', 'ASMA', 'P', null, 'B');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id))
+            ->assertOk()->assertDontSee('Alertas de este paciente');
     }
 }

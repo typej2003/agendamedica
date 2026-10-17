@@ -97,7 +97,7 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $respuesta = $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id));
-        $respuesta->assertOk()->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertOk()->assertSee('13 de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']), false);
 
         $seccion = $this->como($user, $medico, $gineco)->get($this->seccion($consulta));
@@ -554,7 +554,7 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
 
         $pantalla->assertOk()
             ->assertSee('INFORME DE CONTROL')
-            ->assertSee('data-texto="Paciente en control prenatal."', false)
+            ->assertSee('data-plantilla-texto="Paciente en control prenatal."', false)
             ->assertSee('Informe anterior del paciente.')
             ->assertSee('data-para="EL COLEGIO"', false)
             ->assertDontSee('ES DE EVOLUCION')

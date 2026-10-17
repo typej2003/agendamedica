@@ -71,6 +71,18 @@ final class HojasImpresasVista
         return $this->recipes() !== [];
     }
 
+    /** ¿Alguna hoja es de imágenes de una eco (WEB-11.13)? Sólo entonces la barra ofrece «Incluir imágenes». */
+    public function conImagenesDeEco(): bool
+    {
+        foreach ($this->documentos as $documento) {
+            if ($documento instanceof DocumentoImpreso && $documento->informe?->conImagenes()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function urlVolver(): string
     {
         return $this->urls['volver'];
@@ -135,6 +147,17 @@ final class HojasImpresasVista
 
                 foreach ($delRecipe as $hoja) {
                     $hojas[] = ['tipo' => 'recipe'] + $hoja;
+                }
+
+                continue;
+            }
+
+            // Una eco se imprime a hoja completa (WEB-11.13): su informe y, si tiene imágenes, una segunda hoja.
+            if ($documento->informe !== null) {
+                $hojas[] = ['tipo' => 'informe', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento, 'imagenes' => false];
+
+                if ($documento->informe->conImagenes()) {
+                    $hojas[] = ['tipo' => 'informe', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento, 'imagenes' => true];
                 }
 
                 continue;

@@ -48,7 +48,16 @@ final class ImagenesDeLaConsultaVista
         private $urlDescargar,
         private $urlQuitar,
         private ?string $examen = null,
+        // «Esta consulta | Todas» (WEB-11.22): las opciones del chip, `[texto, url, activa]`, y la consulta que se está mirando.
+        private array $alcances = [],
+        private ?int $consultaActual = null,
     ) {
+    }
+
+    /** @return array<int,array{texto:string, url:string, activa:bool}> */
+    public function alcances(): array
+    {
+        return $this->alcances;
     }
 
     /** La solapa del examen de estas imágenes, o `null` si son las de la sección genérica. */
@@ -106,6 +115,9 @@ final class ImagenesDeLaConsultaVista
                     'id' => $id,
                     // Una imagen de un examen no tiene descripción: tiene la **etiqueta** de su examen.
                     'etiqueta' => $imagen->etiqueta ?? null,
+                    // De qué consulta es (sólo se muestra cuando se miran **todas**): las de otra consulta se ven pero no se quitan desde acá.
+                    'consulta' => (int) ($imagen->nroconsulta ?? 0),
+                    'deOtraConsulta' => $this->consultaActual !== null && (int) ($imagen->nroconsulta ?? 0) !== $this->consultaActual,
                     'descripcion' => $imagen->descripcion,
                     'fecha' => FechaClinica::formato($imagen->fecha),
                     'nombre' => $imagen->nombre,

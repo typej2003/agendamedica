@@ -8,6 +8,8 @@
          de la consulta (constancia, reposo, referencia, informe: WEB-5.3a). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}">
     <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}">
+    {{-- El informe de una eco a hoja completa, A4 vertical (WEB-11.13). --}}
+    <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}">
 @endsection
 
 @section('barra')
@@ -23,6 +25,12 @@
         @if ($vm->conOpciones())
             <button type="button" class="boton-impresion boton-impresion-secundario" data-abrir-opciones>Opciones</button>
         @endif
+        {{-- Las ecos con imágenes: un solo «Imprimir» y esta casilla decide si sale la hoja de las imágenes (WEB-11.13). --}}
+        @if ($vm->conImagenesDeEco())
+            <label class="barra-impresion-casilla">
+                <input type="checkbox" checked data-incluir-imagenes> Incluir imágenes
+            </label>
+        @endif
         <button type="button" class="boton-impresion" data-imprimir>Imprimir</button>
     </div>
 @endsection
@@ -30,6 +38,11 @@
 @section('contenido')
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
+            @if (($hoja['tipo'] ?? '') === 'informe')
+                @include('clinica.imprimir._informe-eco', ['hoja' => $hoja, 'membrete' => $vm->membrete()])
+                @continue
+            @endif
+
             {{-- Una hoja = una página A4 horizontal con dos mitades. En "solo indicaciones" de un récipe, y en cualquier
                  documento de una sola mitad, la mitad derecha queda en blanco (media hoja), como en el móvil. --}}
             <article class="recipe-hoja tamano-{{ $hoja['tamano'] }}">

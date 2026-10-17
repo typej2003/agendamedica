@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('titulo', 'Consultorio') · Doctorísimo</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -70,6 +71,14 @@
             @endforeach
         </ul>
     </div>
+
+    {{-- El logo de la especialidad del consultorio —el mismo del escritorio de esa especialidad—, encima del
+         pie con el botón de plegar. Una especialidad que todavía no tiene logo no dibuja nada. --}}
+    @if ($logo = $armazon->logotipo())
+        <div class="app-sidebar-logo">
+            <img src="{{ $logo['url'] }}" alt="{{ $logo['texto'] }}">
+        </div>
+    @endif
 
     <div class="app-sidebar-pie">
         <button class="app-sidebar-plegar" type="button" data-plegar-barra
@@ -153,6 +162,7 @@
 </div>
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
+<script src="{{ asset('js/clinica/chips.js') }}"></script>
 
 {{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido: así el
      HTML de la vista queda solo el HTML. --}}

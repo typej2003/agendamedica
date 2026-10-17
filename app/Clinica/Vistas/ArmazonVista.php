@@ -4,6 +4,7 @@ namespace App\Clinica\Vistas;
 
 use App\Clinica\Catalogos\CatalogosDisponibles;
 use App\Support\IconoModulo;
+use App\Support\LogotipoEspecialidad;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,24 @@ final class ArmazonVista
             ['icono' => 'bi-geo-alt', 'texto' => $sede->office_number ?? ($sede->medicalCenter->name ?? 'Sin sede')],
             ['icono' => 'bi-hash', 'texto' => (string) $this->contexto['reg_medico']],
         ];
+    }
+
+    /**
+     * El **logo de la especialidad** del contexto, el mismo del escritorio de esa especialidad. Va en la barra
+     * lateral, encima del pie con el botón de plegar.
+     *
+     * Sale del `slug` de la especialidad del contexto (`LogotipoEspecialidad`), así que no hay ninguna lista
+     * escrita a mano: una especialidad sin logo —o la pantalla sin contexto, como elegir consultorio— no
+     * dibuja nada.
+     *
+     * @return array{url:string, texto:string}|null
+     */
+    public function logotipo(): ?array
+    {
+        $especialidad = $this->contexto['specialty'] ?? null;
+        $url = LogotipoEspecialidad::url($especialidad->slug ?? null);
+
+        return $url === null ? null : ['url' => $url, 'texto' => $especialidad->name ?? ''];
     }
 
     /**

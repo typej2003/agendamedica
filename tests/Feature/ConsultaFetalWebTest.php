@@ -104,7 +104,7 @@ class ConsultaFetalWebTest extends TestCase
         // Los cinco tipos del ítem 5, con el ecocardiograma fetal entre ellos.
         $respuesta->assertSee('Eco ginecológico')
             ->assertSee('Eco obstétrico (1.er trimestre)')
-            ->assertSee('Eco obstétrico (2.º y 3.er trimestre)')
+            ->assertSee('Eco obstétrico (3.er trimestre)')
             ->assertSee('Eco Doppler perinatal')
             ->assertSee('Ecocardiograma fetal');
 
@@ -174,7 +174,7 @@ class ConsultaFetalWebTest extends TestCase
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
             ->assertSee('20 semanas y 0 días')
-            ->assertSee('27/02/2027');
+            ->assertSee('24/02/2027');
     }
 
     /**
@@ -222,7 +222,7 @@ class ConsultaFetalWebTest extends TestCase
 
         $respuesta->assertOk();
         // El ítem 5 ya estaba disponible desde WEB-6.1: el tipo nuevo no cambia el conteo del panel.
-        $respuesta->assertSee('12 de 13 disponibles');
+        $respuesta->assertSee('13 de 14 disponibles');
         $respuesta->assertSee('Estudio ecográfico');
     }
 

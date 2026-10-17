@@ -3,9 +3,9 @@
 @section('titulo', 'Listados')
 
 @section('contenido')
-    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy muestra el listado de embarazos / partos —el
-         *Listado de Partos* del escritorio— y la pantalla es la misma para los otros dos listados de la
-         tarea: el título y las columnas salen del ViewModel. Es de sólo lectura: no hay alta, y lo único
+    {{-- **Listados clínicos entre fechas** (WEB-6.8). Hoy están el de embarazos / partos —el
+         *Listado de Partos* del escritorio—, el de pacientes por rango —*Indicadores pacientes*— y el de
+         consultas por rango —*Indicadores de Consultas*—: la pantalla es la misma y el título sale del ViewModel. Es de sólo lectura: no hay alta, y lo único
          que se hace con el resultado es imprimirlo. --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
@@ -16,6 +16,25 @@
             @endunless
         </x-slot>
     </x-ui.page-head>
+
+    {{-- El selector de listados: la entrada del menú es una sola, así que los listados se cambian acá. --}}
+    @php
+        $claveActual = $vm->claveDelListado();
+        $listados = collect(\App\Clinica\Listados\ListadosDisponibles::claves())->map(fn ($clave) => [
+            'texto'  => \App\Clinica\Listados\ListadosDisponibles::titulo($clave),
+            'url'    => route('clinica.listados', ['listado' => $clave]),
+            'activa' => $clave === $claveActual,
+        ])->all();
+    @endphp
+    <x-ui.segmentado class="mb-3" :opciones="$listados" etiqueta="Listados" />
+
+    {{-- Cada listado trae sus filtros y su tabla: el de pacientes por rango vive en su parcial; el de
+         embarazos / partos, que es el de por defecto, sigue acá abajo. --}}
+    @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
+        @include('clinica.listados._pacientes')
+    @elseif ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::CONSULTAS)
+        @include('clinica.listados._consultas')
+    @else
 
     {{-- Los filtros van en la barra de herramientas y no en el encabezado (guía de UI §3). Los campos son los
          del reporte del escritorio: el rango de fechas (que es de **FPP**, como el legado), las edades y el
@@ -63,7 +82,7 @@
             </div>
             <p class="texto-tenue small listados-filtros-ayuda" id="listados-ayuda">
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
-                Las fechas son las de la <strong>FPP</strong> (la FUR más 283 días), como el reporte del escritorio.
+                Las fechas son las de la <strong>FPP</strong> (la FUR más 280 días), como el reporte del escritorio.
                 Con <strong>Por semanas</strong> puesto, las fechas no se usan y se listan las gestas de esa semana exacta.
             </p>
         </form>
@@ -133,4 +152,5 @@
             <i class="bi bi-info-circle" aria-hidden="true"></i> {{ $vm->notaDeProcedencia() }}
         </p>
     @endunless
+    @endif
 @endsection

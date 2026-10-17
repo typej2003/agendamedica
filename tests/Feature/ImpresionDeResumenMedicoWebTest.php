@@ -240,6 +240,26 @@ class ImpresionDeResumenMedicoWebTest extends TestCase
             ->assertSee('TRATAMIENTO:')->assertSee('KEFORAL/Cap. 500 mg');
     }
 
+    public function test_el_tratamiento_lleva_las_indicaciones_de_cada_medicamento_y_el_plan_no_sale_en_una_consulta_de_la_web(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        DB::table('consultas')->where('id', $consulta->id)->update(['enfermedadactual' => 'Dolor de dos días.']);
+        // Una indicación escrita en varios renglones, y un medicamento sin indicaciones.
+        $this->recipe($medico, 1001, 1, 1, [['0001', 1, "Una cápsula cada 8 horas\n  por 7 días."], ['0003', 1, '']], '2026-10-06');
+        DB::table('recipes')->where('nroconsulta', 1)->where('codemedicina', '0003')->update(['indicaciones' => null]);
+
+        $hoja = $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk();
+
+        // El plan de tratamiento se calcula de los récipes: nombre + indicaciones, en un solo renglón.
+        $hoja->assertSee('TRATAMIENTO:')
+            ->assertSee('KEFORAL/Cap. 500 mg — Una cápsula cada 8 horas por 7 días.')
+            ->assertSee('ÁCIDO FÓLICO/Tabletas 5 mg');
+        $hoja->assertDontSee('ÁCIDO FÓLICO/Tabletas 5 mg —');   // sin indicaciones no queda un guion colgando
+
+        // `consultas.laringe` no la escribe la web: sin ese texto el bloque de respaldo no sale.
+        $hoja->assertDontSee('PLAN DE TRATAMIENTO:');
+    }
+
     public function test_la_pestana_informe_ofrece_el_resumen_solo_si_hay_algo_que_resumir(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();

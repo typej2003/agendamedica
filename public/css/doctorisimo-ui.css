@@ -762,9 +762,24 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 
 .app-sidebar .app-sidebar-plegar:hover { background: var(--ds-barra-2); color: var(--ds-barra-texto); }
 
+/* El logo de la especialidad del consultorio: va **sobre el pie**, encima de la barra del botón de plegar. La
+   imagen es la del escritorio de esa especialidad y se adapta al ancho de la barra sin deformarse. */
+.app-sidebar .app-sidebar-logo {
+    flex: 0 0 auto;
+    padding: 0 .5rem .5rem;
+}
+
+.app-sidebar .app-sidebar-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--ds-radio-sm);
+}
+
 /* Plegado: sólo quedan los iconos, la ficha de la marca y el botón de desplegar. */
 .app-sidebar.minimizado .link-text,
 .app-sidebar.minimizado .app-sidebar-titulo,
+.app-sidebar.minimizado .app-sidebar-logo,
 .app-sidebar.minimizado .app-marca-nombre { display: none; }
 
 .app-sidebar.minimizado .app-sidebar-marca { justify-content: center; padding: 0; }
@@ -2905,3 +2920,213 @@ body.auth-pagina {
 @media (max-width: 575.98px) {
     .listados-filtros { grid-template-columns: 1fr; }
 }
+
+/* El listado de consultas por rango tiene siete columnas con listas dentro de la celda: entre el celular (donde la
+   tabla ya se apila en tarjetas) y el escritorio no entra a lo ancho, así que desplaza **su propio** contenedor en
+   vez de la página y la identidad del paciente no se aplasta hasta una letra por renglón. */
+.listados-tabla-ancha { overflow-x: auto; }
+.listados-tabla-ancha td.celda-principal { min-width: 12rem; }
+@media (max-width: 767.98px) {
+    .listados-tabla-ancha { overflow-x: visible; }
+    .listados-tabla-ancha td.celda-principal { min-width: 0; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   Chips de navegación (WEB-11.1): reemplazan las pestañas que se envolvían. Una sola fila que se desplaza
+   en horizontal cuando no entran; el elegido resaltado. Sin barra de desplazamiento visible pero usable con
+   rueda, dedo y teclado (cada chip es un enlace enfocable).
+   --------------------------------------------------------------------------------------------------------- */
+.chips {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding-bottom: .25rem;
+}
+.chips-lista {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: .4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.chip-opcion {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 .9rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: 999px;
+    background: var(--ds-superficie);
+    color: var(--ds-texto-2);
+    font-size: .875rem;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.chip-opcion:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.chip-opcion.activo {
+    background: var(--ds-violeta-700);
+    border-color: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 600;
+}
+@media (max-width: 575.98px) {
+    .chip-opcion { min-height: 40px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   Panel lateral de plantillas con buscador (WEB-11.2)
+   --------------------------------------------------------------------------------------------------------- */
+.plantillas-panel {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    padding: .85rem 1rem;
+}
+.plantillas-lista {
+    list-style: none;
+    margin: 0 0 .75rem;
+    padding: 0;
+    max-height: 22rem;
+    overflow-y: auto;
+}
+.plantillas-lista [hidden] { display: none; }
+.plantillas-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    width: 100%;
+    padding: .45rem .5rem;
+    border: 0;
+    border-radius: var(--ds-radio-sm);
+    background: transparent;
+    color: var(--ds-texto);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+.plantillas-item:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.plantillas-guardar > summary { list-style: none; cursor: pointer; }
+.plantillas-guardar > summary::-webkit-details-marker { display: none; }
+@media (max-width: 575.98px) {
+    .plantillas-item { padding: .7rem .5rem; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   «Dos listas con Pasar / Eliminar / Agregar» (WEB-11.3)
+   --------------------------------------------------------------------------------------------------------- */
+.dos-listas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+.dos-listas-columna {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    padding: .85rem 1rem;
+}
+.dos-listas-cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .75rem;
+}
+.dos-listas-titulo { margin: 0; font-size: 1rem; font-weight: 600; }
+.dos-listas-buscar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .75rem; }
+.dos-listas-buscar .form-control { flex: 1 1 10rem; min-width: 0; }
+.dos-listas-catalogo { list-style: none; margin: 0; padding: 0; }
+.dos-listas-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .4rem .25rem;
+    border-bottom: 1px solid var(--ds-borde);
+}
+.dos-listas-fila[data-pasar] { cursor: pointer; }
+.dos-listas-fila[data-pasar]:hover { background: var(--ds-violeta-50); }
+.dos-listas-fila-texto { overflow-wrap: anywhere; }
+/* El área de la consulta no es ancha (el panel de secciones ocupa un tercio): hasta 1399 px las dos listas se apilan. */
+@media (max-width: 1399.98px) {
+    .dos-listas { grid-template-columns: minmax(0, 1fr); }
+}
+.dos-listas-fila .btn { flex-shrink: 0; white-space: nowrap; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   La barra de la consulta (WEB-11.5): navegador 1…N + Guardar / Guardar y salir / Salir
+   --------------------------------------------------------------------------------------------------------- */
+.consulta-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    margin-bottom: 1rem;
+    padding: .5rem .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+}
+.consulta-barra-navegador { display: flex; align-items: center; gap: .6rem; min-width: 0; flex: 1 1 14rem; }
+.consulta-barra-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-left: auto; }
+.consulta-barra-estado { min-width: 6.5rem; text-align: right; }
+.consulta-barra-estado.es-error { color: var(--ds-peligro); font-weight: 600; }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Alertas del paciente en la consulta (WEB-11.6): aviso de seguridad clínica, fijo en todas las secciones
+   --------------------------------------------------------------------------------------------------------- */
+.consulta-alertas {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--ds-peligro-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-peligro-bg);
+    color: var(--ds-peligro);
+}
+.consulta-alertas > i { font-size: 1.25rem; line-height: 1.4; }
+.consulta-alertas-lista { margin: .25rem 0 0; padding-left: 1.1rem; }
+
+/* «Imprimir la ficha» (WEB-11.25): al imprimir desde la sección de datos sólo sale la ficha, sin el armazón ni el panel. */
+@media print {
+    body.imprimiendo-ficha * { visibility: hidden; }
+    body.imprimiendo-ficha #consulta-datos,
+    body.imprimiendo-ficha #consulta-datos * { visibility: visible; }
+    body.imprimiendo-ficha #consulta-datos { position: absolute; left: 0; top: 0; width: 100%; }
+    body.imprimiendo-ficha [data-imprimir-ficha],
+    body.imprimiendo-ficha #consulta-datos button { display: none; }
+}
+
+/* El orden del flujo de las gestas (WEB-11.15): tres pasos explicados arriba de la pestaña Prenatal. */
+.pasos-gesta {
+    margin: 0 0 1rem;
+    padding: .6rem 1rem .6rem 2rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-fondo);
+    font-size: .875rem;
+    color: var(--ds-texto-2);
+}
+.pasos-gesta li + li { margin-top: .25rem; }
+
+/* Resumen de una consulta anterior (WEB-11.9): respeta los saltos de línea que dejó el escritorio. */
+.resumen-anterior-texto { white-space: pre-line; }
+
+/* Imágenes de mamas (WEB-11.10): el lienzo sobre la imagen base. */
+.mama-lienzo-marco { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1 / 1; border: 1px solid var(--ds-borde, #dee2e6); border-radius: .5rem; overflow: hidden; background: #fff; }
+.mama-lienzo-base, .mama-lienzo { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mama-lienzo { touch-action: none; cursor: crosshair; }
+.mamas-muestra { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #6c757d; background: var(--muestra, #000); padding: 0; }
+.mamas-muestra:hover, .mamas-muestra:focus-visible { box-shadow: 0 0 0 2px #0d6efd; }
+
+/* «Visualizar» (WEB-11.24): la vista previa de un documento en un diálogo grande, con «Modificar» e «Imprimir». */
+.dialogo-visualizar { width: min(1100px, 96vw); height: 92vh; max-width: none; padding: 0; border: 0; border-radius: .75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35); }
+.dialogo-visualizar::backdrop { background: rgba(20, 10, 40, .55); }
+.dialogo-visualizar-caja { display: flex; flex-direction: column; height: 100%; }
+.dialogo-visualizar-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--ds-borde, #dee2e6); }
+.dialogo-visualizar-marco { flex: 1 1 auto; width: 100%; border: 0; background: #f1f1f4; }

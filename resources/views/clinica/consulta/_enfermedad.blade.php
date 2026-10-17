@@ -15,8 +15,13 @@
         </x-slot>
 
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="enfermedad-form"
-              data-consulta-enfermedad data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
+              data-consulta-enfermedad data-autoguardar data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
             @csrf
+
+            {{-- El panel de plantillas (WEB-11.7, tipo `EA`) va **arriba** del campo: en el escritorio es una columna
+                 a la derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). --}}
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#enfermedadactual" tipo="EA"
+                             nombre="enfermedad actual" class="mb-3" />
 
             <x-ui.campo etiqueta="Lo que el paciente tiene hoy" for="enfermedadactual"
                         :ayuda="$seccion->ayuda()">

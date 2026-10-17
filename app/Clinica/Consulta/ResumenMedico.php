@@ -25,14 +25,21 @@ use App\Clinica\Impresion\DocumentoImpreso;
  * | 4 | `EXAMEN GINECOLÓGICO:` | `examen_fisico_nuevo.total_g` | `d_exa_fisico_ginecologico_reporte_nuev.srd` |
  * | 5 | `RESULTADO DE EXÁMENES:` | `consultas.oido` | `d_examenes_info_nuevo.srd` |
  * | 6 | `DIAGNOSTICO` (sin dos puntos) | `diagnostico_paciente.codediagnostico` por `orden`, con la descripción del catálogo | `d_lista_diagnostic01.srd` |
- * | 7 | `TRATAMIENTO:` | `vademecum.nombrecomercial + '/' + vademecum.presentacion` de los `recipes` de la consulta | `d_tratamiento_consulta_reporte.srd` |
- * | 8 | `PLAN DE TRATAMIENTO:` | `consultas.laringe` | `d_enfermedad_tratamirnto_nuevo.srd` |
+ * | 7 | `TRATAMIENTO:` | `vademecum.nombrecomercial + '/' + vademecum.presentacion` **+ las indicaciones** de cada medicamento de los `recipes` de la consulta | `d_tratamiento_consulta_reporte.srd` |
+ * | 8 | `PLAN DE TRATAMIENTO:` | `consultas.laringe`: el texto libre del ítem **Tratamiento** (WEB-5.7) | `d_enfermedad_tratamirnto_nuevo.srd` |
  *
  * **No entra** lo que el DataWindow tampoco imprime: los antecedentes, la evolución, los ecos (pélvico,
  * obstétrico, Doppler, mamario, abdominal), el control prenatal, el laboratorio y los estudios, las
  * imágenes, el texto de `informe.descripcion` y los signos vitales.
  *
- * ## Las tres decisiones de la web (no las dice la fuente)
+ * ## El tratamiento (2026-10-15)
+
+`consultas.laringe` es, en el escritorio, el texto libre de su ítem TRATAMIENTO (un apartado distinto de los récipes,
+confirmado por Alexander). La web lo tiene desde WEB-5.7 (`?seccion=tratamiento`) y es el bloque 8, «PLAN DE
+TRATAMIENTO». El bloque 7 sigue calculando, de los récipes, cada medicamento con sus indicaciones: son dos cosas, el
+plan que escribe el médico y lo que recetó.
+
+## Las tres decisiones de la web (no las dice la fuente)
  *
  *  - **Un bloque sin datos no se imprime.** El escritorio imprime el rótulo igual (`band=header` con el
  *    `text` fijo) y el subreporte sale vacío; la web no imprime rótulos huérfanos, que es el mismo

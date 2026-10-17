@@ -21,25 +21,15 @@
     <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="{{ $clave }}-form"
-          data-consulta-plantillas data-aviso="{{ $seccion->avisoSinGuardar() }}">
+          data-consulta-plantillas data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
-        {{-- Las plantillas del escritorio, como fichas en una fila encima del campo: no le quitan ancho al
-             texto. Van **dentro del formulario** (como en la evolución): `consulta.js` las busca ahí.
-             Sin plantillas no se pinta nada aquí; el aviso de abajo lo dice en una línea. --}}
-        @if ($seccion->hayPlantillas())
-            <p class="etiqueta mb-2">Plantillas <span class="texto-tenue small fw-normal">· al elegir una se copia en el campo y la puedes editar antes de guardar</span></p>
-            <ul class="evolucion-plantillas">
-                @foreach ($seccion->plantillas() as $plantilla)
-                    <li>
-                        <button type="button" class="evolucion-plantilla"
-                                data-plantilla-texto="{{ $plantilla['texto'] }}"
-                                title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                            <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
+        {{-- El panel de plantillas (WEB-11.2) va **arriba** del campo: en el escritorio es una columna a la
+             derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). La
+             histeroscopía no tiene plantillas en el escritorio. --}}
+        @if ($seccion->tienePlantillas())
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
+                             :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" class="mb-3" />
         @endif
 
         <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
@@ -54,23 +44,15 @@
         <div class="d-flex justify-content-end gap-2 mt-3">
             <a class="btn btn-outline-secondary" href="{{ $seccion->urlVolver() }}">Cancelar</a>
             @if ($seccion->esUnDocumento() && $seccion->urlImprimir() !== '')
-                <a class="btn btn-outline-primary" href="{{ $seccion->urlImprimir() }}" target="_blank" rel="noopener">
+                <x-ui.imprimir-con-vista :url="$seccion->urlImprimir()" class="btn btn-outline-primary">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                </a>
+                </x-ui.imprimir-con-vista>
             @endif
             <button class="btn btn-primary">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : 'la ' . mb_strtolower($seccion->titulo()) }}
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : ($clave === 'tratamiento' ? 'el tratamiento' : 'la ' . mb_strtolower($seccion->titulo())) }}
             </button>
         </div>
     </form>
-
-    @if ($seccion->tienePlantillas())
-        @unless ($seccion->hayPlantillas())
-            <p class="texto-tenue small mt-3 mb-0">
-                No tenés plantillas de {{ mb_strtolower($seccion->titulo()) }} cargadas: el escrito va tal cual en el informe.
-            </p>
-        @endunless
-    @endif
 
     {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
          suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la

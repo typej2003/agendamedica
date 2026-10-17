@@ -6,9 +6,9 @@
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+            <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-            </a>
+            </x-ui.imprimir-con-vista>
         @endif
     </x-slot>
 
@@ -17,37 +17,18 @@
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="dieta-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 
-        <div class="row g-3">
-            <div class="col-12 col-xl-8">
-                <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3" ayuda="Opcional. Sale en negrita sobre el texto.">
-                    <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
-                </x-ui.campo>
+        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
+             una columna a la derecha y acá, al no caber, caía debajo del texto. --}}
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
+                         nombre="dieta" titulo-destino="#dieta-titulo" class="mb-3" />
 
-                <x-ui.campo etiqueta="Texto de la dieta o de las recomendaciones" for="dieta-descripcion" error="descripcion" requerido>
-                    <textarea name="descripcion" id="dieta-descripcion" class="form-control" rows="14">{{ $vm->texto() }}</textarea>
-                </x-ui.campo>
-            </div>
+        <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3" ayuda="Opcional. Sale en negrita sobre el texto.">
+            <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
+        </x-ui.campo>
 
-            <div class="col-12 col-xl-4">
-                <p class="etiqueta mb-2">Plantillas</p>
-                @if ($vm->hayPlantillas())
-                    <ul class="evolucion-plantillas mb-3">
-                        @foreach ($vm->plantillas() as $plantilla)
-                            <li>
-                                <button type="button" class="evolucion-plantilla" data-copiar-a="#dieta-descripcion"
-                                        data-texto="{{ $plantilla['texto'] }}" data-copiar-para="#dieta-titulo" data-para="{{ $plantilla['titulo'] }}"
-                                        title="Copiar «{{ $plantilla['titulo'] }}» en el campo">
-                                    <span class="evolucion-plantilla-titulo">{{ $plantilla['titulo'] }}</span>
-                                    <span class="texto-tenue small">Copiar en el campo</span>
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="texto-tenue small mb-0">Todavía no tienes plantillas de dieta. Las que cargues aparecerán aquí.</p>
-                @endif
-            </div>
-        </div>
+        <x-ui.campo etiqueta="Texto de la dieta o de las recomendaciones" for="dieta-descripcion" error="descripcion" requerido>
+            <textarea name="descripcion" id="dieta-descripcion" class="form-control" rows="14">{{ $vm->texto() }}</textarea>
+        </x-ui.campo>
 
         <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-3" data-solicitud-aviso hidden>
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>

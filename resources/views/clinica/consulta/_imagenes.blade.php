@@ -28,6 +28,11 @@
         <p class="texto-tenue small mb-3">{{ $imagenes->ayudaDelExamen() }}</p>
     @endif
 
+    {{-- «Esta consulta | Todas» (WEB-11.22): sólo en la galería genérica de la consulta. --}}
+    @if ($imagenes->alcances() !== [])
+        <x-ui.chips class="mb-3" :opciones="$imagenes->alcances()" etiqueta="Qué imágenes ver" />
+    @endif
+
     @if ($avisoEscritorio)
         <p class="alert alert-info py-2 d-flex align-items-start gap-2" id="{{ $prefijo }}-aviso-escritorio">
             <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
@@ -51,6 +56,9 @@
                             @endif
                         </p>
                         <p class="texto-tenue small mb-0">
+                            @if ($imagenes->alcances() !== [])
+                                Consulta N.º {{ $imagen['consulta'] }} ·
+                            @endif
                             {{ $imagen['nombre'] ?: 'Imagen sin nombre' }} · {{ $imagen['fecha'] }} ·
                             {{ $imagen['origen'] }}
                         </p>
@@ -69,6 +77,7 @@
                                 <i class="bi bi-eye" aria-hidden="true"></i> Ver
                             </a>
                         @endif
+                        @unless ($imagen['deOtraConsulta'])
                         <form method="POST" action="{{ $imagen['urlQuitar'] }}"
                               data-confirmar="¿Quitar esta imagen de la consulta? Se borra el archivo del servidor y no se puede deshacer.">
                             @csrf
@@ -80,6 +89,7 @@
                                 <i class="bi bi-trash" aria-hidden="true"></i> Quitar
                             </button>
                         </form>
+                        @endunless
                     </div>
                 </li>
             @endforeach

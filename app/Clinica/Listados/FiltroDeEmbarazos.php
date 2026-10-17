@@ -45,8 +45,8 @@ final class FiltroDeEmbarazos
     public const DIAS_DE_LA_FPP = EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO;
 
     /** Las edades con las que nace el reporte en el escritorio (`em_5`/`em_6`). */
-    public const EDAD_INICIAL_POR_DEFECTO = 1;
-    public const EDAD_FINAL_POR_DEFECTO = 110;
+    public const EDAD_INICIAL_POR_DEFECTO = RangoDeEdades::INICIAL_POR_DEFECTO;
+    public const EDAD_FINAL_POR_DEFECTO = RangoDeEdades::FINAL_POR_DEFECTO;
 
     /** La semana que el legado acepta en el modo "Por Semanas" (`w_reportes_consultas.srw:1295`). */
     public const SEMANA_MINIMA = 1;
@@ -80,13 +80,9 @@ final class FiltroDeEmbarazos
         $semanaPedida = self::texto($entrada['semana'] ?? null) ?? '';
         $semana = self::semanaValida($semanaPedida);
 
-        $inicial = self::edad($entrada['edad_inicial'] ?? null, self::EDAD_INICIAL_POR_DEFECTO);
-        $final = self::edad($entrada['edad_final'] ?? null, self::EDAD_FINAL_POR_DEFECTO);
-        $seVoltearonLasEdades = $inicial > $final;
-
-        if ($seVoltearonLasEdades) {
-            [$inicial, $final] = [$final, $inicial];
-        }
+        // La cuenta de las dos edades —el rango, el orden y el techo— vive en `RangoDeEdades`, que es la
+        // misma que usa el listado de pacientes por rango: acá sólo se guarda el resultado.
+        $edades = RangoDeEdades::de($entrada['edad_inicial'] ?? null, $entrada['edad_final'] ?? null);
 
         // "Limpiar" se ofrece sólo si algo se movió de los valores con los que nace la pantalla: el formulario
         // manda todos los campos siempre, así que la presencia de un parámetro no dice nada.
@@ -94,18 +90,17 @@ final class FiltroDeEmbarazos
         $hayFiltro = $porSemanas
             || $rango->desde() !== $porDefecto->desde()
             || $rango->hasta() !== $porDefecto->hasta()
-            || $inicial !== self::EDAD_INICIAL_POR_DEFECTO
-            || $final !== self::EDAD_FINAL_POR_DEFECTO;
+            || ! $edades->sonLasDePorDefecto();
 
         return new self(
             $rango,
-            $inicial,
-            $final,
+            $edades->inicial(),
+            $edades->final(),
             $porSemanas,
             $semana,
             $semanaPedida,
             $porSemanas && $semana === null,
-            $seVoltearonLasEdades,
+            $edades->seVoltearon(),
             $hayFiltro,
             $hoy,
         );
@@ -203,21 +198,6 @@ final class FiltroDeEmbarazos
         $semana = (int) $valor;
 
         return $semana >= self::SEMANA_MINIMA && $semana <= self::SEMANA_MAXIMA ? $semana : null;
-    }
-
-    /**
-     * La edad pedida, acotada a un rango razonable. Un valor vacío o ilegible vuelve al de por defecto, como
-     * el `integer('')` del escritorio daría 0: acá se prefiere el valor del reporte antes que un 0 silencioso.
-     */
-    private static function edad($valor, int $porDefecto): int
-    {
-        $texto = self::texto($valor);
-
-        if ($texto === null || ! preg_match('/^\d{1,3}$/', $texto)) {
-            return $porDefecto;
-        }
-
-        return min((int) $texto, 120);
     }
 
     private static function texto($valor): ?string

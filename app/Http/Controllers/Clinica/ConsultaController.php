@@ -27,7 +27,9 @@ use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
+use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -38,6 +40,7 @@ use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\EcoCardiogramaFetalVista;
 use App\Clinica\Consulta\Vistas\EcoAbdominalVista;
@@ -45,8 +48,11 @@ use App\Clinica\Consulta\Vistas\EcoDopplerVista;
 use App\Clinica\Consulta\Vistas\EcoGinecologicoVista;
 use App\Clinica\Consulta\Vistas\EcoMamarioVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
+use App\Clinica\Consulta\Vistas\EcoObstetricoSegundoVista;
 use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
+use App\Clinica\Consulta\ResumenesAnteriores;
+use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -185,6 +191,19 @@ class ConsultaController extends Controller
         $seccion = (string) $request->query('seccion', '');
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
+        // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
+        // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
+        $alertas = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria)
+            ->where('alerta', true)
+            ->map(fn ($fila) => ['nombre' => $fila->nombre, 'detalle' => $fila->detalle])
+            ->values()
+            ->all();
+        $vistas = (array) $request->session()->get('alertas_vistas', []);
+        $avisar = $alertas !== [] && ! in_array((int) $consulta->id, $vistas, true);
+        if ($avisar) {
+            $request->session()->push('alertas_vistas', (int) $consulta->id);
+        }
+
         return view('clinica.consulta.ver', [
             'vm' => new ConsultaShellVista(
                 $paciente,
@@ -209,6 +228,15 @@ class ConsultaController extends Controller
                 // La bandera sale de acá y no de la vista (guía de arquitectura: el rol y el estado no se
                 // consultan en el Blade).
                 $this->esDeHoy($dia) && $this->hayCitaTerminable($consulta, $dia, (int) $paciente->id, $citas),
+                // El navegador 1…N entre las consultas de la historia (WEB-11.5).
+                $this->consultas->delPaciente($consulta)->map(fn ($fila) => [
+                    'id' => $fila->id,
+                    'nroconsulta' => $fila->nroconsulta,
+                    'url' => route('clinica.consulta', $fila->id),
+                ])->all(),
+                (int) $consulta->id,
+                $alertas,
+                $avisar,
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
@@ -223,6 +251,19 @@ class ConsultaController extends Controller
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
         ]);
+    }
+
+    /**
+     * Lo obligatorio que le falta a la ficha para cerrar la consulta (WEB-11.25): depende de la especialidad del contexto (en pediatría
+     * se pide el teléfono del representante y no hay cédula).
+     *
+     * @return array<int,string>
+     */
+    private function datosQueFaltan(object $paciente, string $regMedico, ?string $numhistoria): array
+    {
+        return \App\Clinica\Pacientes\FiliacionPendiente::de(
+            $paciente, $regMedico, $numhistoria, request()->attributes->get('contexto_clinico')['specialty']?->id,
+        );
     }
 
     /**
@@ -287,8 +328,12 @@ class ConsultaController extends Controller
         if ($seccion === ConsultaShellVista::SECCION_MOTIVOS) {
             $buscar = trim((string) request()->query('buscar', ''));
 
+            $urlSeccion = route('clinica.consulta', [$consulta->id]);
+            $conservar = ['seccion' => ConsultaShellVista::SECCION_MOTIVOS] + ($buscar !== '' ? ['buscar' => $buscar] : []);
+            $pagina = $motivos->pagina($regMedico, $buscar, (int) request()->query('pagina_catalogo', 1), $urlSeccion, $conservar);
+
             return new SeccionDeMotivosVista(
-                $motivos->buscar($regMedico, $buscar),
+                $pagina->getCollection(),
                 $motivos->deLaConsulta($regMedico, $numero, $nroconsulta),
                 $buscar,
                 route('clinica.consulta.motivos.buscar', $consulta->id),
@@ -300,6 +345,27 @@ class ConsultaController extends Controller
                 // El diálogo de alta se abre solo si el POST falló: el error viaja en la bolsa y sin
                 // esto el médico tendría que volver a abrirlo para corregir lo que escribió.
                 session()->has('crear_motivo'),
+                $pagina,
+                $motivos->existeEnElCatalogo($regMedico, $buscar),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_MOTIVOS]),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_DATOS) {
+            // Los datos personales (WEB-11.25): la ficha del paciente de esta historia, editable acá mismo.
+            $ficha = app(\App\Clinica\Pacientes\PacientesDelConsultorio::class)->editable($regMedico, $pacienteId);
+            abort_if($ficha === null, 404);
+
+            return new \App\Clinica\Consulta\Vistas\SeccionDeDatosPersonalesVista(
+                new \App\Clinica\Pacientes\Vistas\FormularioDePacienteVista(
+                    $ficha['paciente'],
+                    $ficha['numhistoria'],
+                    app(\App\Clinica\Pacientes\CatalogoDeSeguros::class)->de($regMedico),
+                ),
+                $ficha['paciente'],
+                $ficha['numhistoria'],
+                $this->datosQueFaltan($ficha['paciente'], $regMedico, $ficha['numhistoria']),
+                (int) $consulta->id,
             );
         }
 
@@ -308,6 +374,7 @@ class ConsultaController extends Controller
                 $consulta->enfermedadactual,
                 route('clinica.consulta.enfermedad.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ENFERMEDAD]),
+                PlantillasDelTexto::de($regMedico, 'EA')->all(),
             );
         }
 
@@ -334,7 +401,17 @@ class ConsultaController extends Controller
             return new SeccionDeEvaluacionVista(
                 $pestana,
                 new PestanasDelExamen($url),
-                PestanasDelExamen::esDeTexto($pestana)
+                $pestana === PestanasDelExamen::MAMAS
+                    ? new DibujosDeMamasVista(
+                        fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),
+                        fn (string $lado) => route('clinica.consulta.mamas.guardar', [$consulta->id, $lado]),
+                        \App\Models\DibujoDeMama::where([
+                            'reg_medico' => $consulta->reg_medico,
+                            'nrohistoria' => (int) $consulta->numhistoria,
+                            'nroconsulta' => (int) $consulta->nroconsulta,
+                        ])->pluck('lado')->all(),
+                    )
+                    : (PestanasDelExamen::esDeTexto($pestana)
                     ? new TextoDelExamenVista(
                         $pestana,
                         $texto->de($consulta, $pestana),
@@ -352,9 +429,14 @@ class ConsultaController extends Controller
                     : new EvaluacionFisicaVista(
                         $examen->de($consulta),
                         route('clinica.consulta.evaluacion.guardar', $consulta->id),
-                        $url(PestanasDelExamen::FISICO),
+                        $url($pestana),
                         (array) old(),
-                    ),
+                        route('clinica.consulta.evaluacion.resumen', $consulta->id),
+                        PlantillasDelTexto::de($regMedico, 'RF')->all(),
+                        PlantillasDelTexto::de($regMedico, 'EG')->all(),
+                        $pestana,
+                        $pestana === PestanasDelExamen::GINECOLOGICO ? (new ResumenesAnteriores())->de($consulta, 'total_g') : [],
+                    )),
             );
         }
 
@@ -364,23 +446,30 @@ class ConsultaController extends Controller
             // fetal de WEB-6.3) y los demás llegan con las tareas siguientes de F6.
             $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
 
+            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander).
+            $especialidad = request()->attributes->get('contexto_clinico')['specialty']?->slug;
             $tipos = new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
                 'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                 'tipo' => $clave,
-            ]));
+            ]), $especialidad === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : []);
 
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
-            if ($tipo === TiposDeEstudio::TERCERO) {
+            if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
+                // El 2.º trimestre (WEB-11.14) es la misma pantalla sobre la tabla hermana `eco_obstetrico_tercer_2`.
+                $esSegundo = $tipo === TiposDeEstudio::SEGUNDO;
+                $vistaDelTrimestre = $esSegundo ? EcoObstetricoSegundoVista::class : EcoObstetricoTerceroVista::class;
+                $lecturaDelTrimestre = $esSegundo ? app(EcoObstetricoSegundo::class) : $ecoObstetricoTercero;
+
                 return new SeccionDeEstudioVista(
                     $tipo,
                     $tipos,
-                    new EcoObstetricoTerceroVista(
-                        $ecoObstetricoTercero->de($consulta),
+                    new $vistaDelTrimestre(
+                        $lecturaDelTrimestre->de($consulta),
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
-                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
+                        route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $esSegundo ? DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO : DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
                         null,
                         null,
                         (array) old(),
@@ -626,20 +715,48 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_DIAGNOSTICO) {
             $buscar = trim((string) request()->query('buscar', ''));
+            $pendientes = array_values(array_filter((array) request()->query('agregar', []), 'is_string'));
+            $conservar = ['seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO]
+                + ($buscar !== '' ? ['buscar' => $buscar] : [])
+                + ($pendientes !== [] ? ['agregar' => $pendientes] : []);
+            $pagina = $diagnosticos->pagina(
+                $regMedico, $buscar, (int) request()->query('pagina_catalogo', 1),
+                route('clinica.consulta', [$consulta->id]), $conservar,
+            );
 
             return new SeccionDeDiagnosticosVista(
                 // Los diagnósticos de **esta** consulta: la fila se llavea por `nrohistoria` +
                 // `nroconsulta` + `codediagnostico` (`DiagnosticosDeLaConsulta`).
                 $diagnosticos->deLaConsulta($regMedico, (string) $consulta->numhistoria, (int) $consulta->nroconsulta),
-                $diagnosticos->buscar($regMedico, $buscar),
+                $pagina->getCollection(),
                 // Lo tildado del catálogo viaja en la query (el buscador es un `GET`): son los códigos que
                 // el botón de guardar agrega a la consulta.
-                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
+                $pendientes,
                 $buscar,
                 route('clinica.consulta.diagnosticos.guardar', $consulta->id),
                 // La base del buscador y del "Cancelar": esta misma sección, sin query.
                 route('clinica.consulta', [$consulta->id]),
                 route('clinica.consulta.diagnosticos.crear', $consulta->id),
+                (array) old(),
+                $pagina,
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {
+            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
+            // `TR`. Es la misma pantalla que las solapas de texto del examen —`TextoDelExamenVista` y su
+            // parcial—, con su propio ítem del panel; guarda por la misma ruta y vuelve a esta sección.
+            $texto = new TextoDelExamen($examen);
+            $clave = TextosDelExamen::TRATAMIENTO;
+            $volver = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_TRATAMIENTO]);
+
+            return new TextoDelExamenVista(
+                $clave,
+                $texto->de($consulta, $clave),
+                $texto->plantillas($regMedico, $clave),
+                route('clinica.consulta.examen.texto.guardar', [$consulta->id, $clave]),
+                $volver,
+                '',
                 (array) old(),
             );
         }
@@ -710,7 +827,9 @@ class ConsultaController extends Controller
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
         $imprimir = fn (string $clave) => route('clinica.consulta.documentos.imprimir', [$id, 'documento' => $clave]);
 
-        if ($activa === PestanasDeSolicitudes::LABORATORIO) {
+        if ($activa === PestanasDeSolicitudes::PAREJA) {
+            $vista = $this->laboratorioDeLaPareja($consulta, app(LaboratorioDeLaPareja::class), $catalogoDeExamenes, $old, $imprimir(DocumentoImpreso::LABORATORIO_PAREJA));
+        } elseif ($activa === PestanasDeSolicitudes::LABORATORIO) {
             $vista = $this->laboratorio($consulta, $laboratorio, $catalogoDeExamenes, $old, $imprimir('laboratorio'));
         } elseif ($activa === PestanasDeSolicitudes::ESTUDIOS) {
             $vista = $this->estudios($consulta, $estudios, $catalogoDeExamenes, $old, $imprimir('estudios'));
@@ -833,6 +952,52 @@ class ConsultaController extends Controller
                 'catalogo' => route('clinica.consulta.laboratorio.catalogo', $id),
                 'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
                 'administrar' => route('clinica.catalogos.examenes'),
+                // El botón «Pareja» (WEB-11.21): su orden aparte.
+                'pareja' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA]),
+            ],
+        );
+    }
+
+    /**
+     * La orden de laboratorio de la **pareja** (WEB-11.21): la pantalla del laboratorio con la C.I. y el nombre de la pareja. Se abre con el botón
+     * «Pareja» del laboratorio. Si el último guardado falló, lo que quedó en el formulario (`old`) manda sobre lo guardado.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function laboratorioDeLaPareja(Consulta $consulta, LaboratorioDeLaPareja $pareja, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    {
+        $id = $consulta->id;
+        $regMedico = (string) $consulta->reg_medico;
+
+        $filas = $pareja->filas($consulta);
+        $datos = $pareja->datos($consulta);
+
+        $items = $filas->map(fn (object $fila) => [
+            'codigo' => $fila->codigo,
+            'nombre' => $fila->nombre,
+            'tipo' => $fila->tipo,
+            'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+        ])->all();
+
+        return OrdenVista::pareja(
+            $this->itemsDelFormulario($old, 'examenes', $items, $regMedico, false, $catalogo),
+            [
+                'cedula' => array_key_exists('cedula', $old) ? ($old['cedula'] ?? null) : $datos['cedula'],
+                'nombre' => array_key_exists('nombre', $old) ? ($old['nombre'] ?? null) : $datos['nombre'],
+            ],
+            array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $datos['observacion'],
+            $pareja->esReal($filas, $datos),
+            $catalogo->hay($regMedico, false),
+            $catalogo->rutinas($regMedico),
+            [
+                'guardar' => route('clinica.consulta.laboratorio-pareja.guardar', $id),
+                'eliminar' => route('clinica.consulta.laboratorio-pareja.eliminar', $id),
+                'imprimir' => $urlImprimir,
+                // El buscador y las rutinas son los de la orden de la paciente: el catálogo es el mismo.
+                'catalogo' => route('clinica.consulta.laboratorio.catalogo', $id),
+                'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
+                'administrar' => route('clinica.catalogos.examenes'),
+                'volver' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::LABORATORIO]),
             ],
         );
     }
@@ -1034,13 +1199,40 @@ class ConsultaController extends Controller
     ): ?object {
         // La sección genérica de exámenes (WEB-4.7) muestra **todas** las imágenes de la consulta…
         if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
+            // «Esta consulta | Todas» (WEB-11.22): con `?alcance=todas` se ven las imágenes de todas las consultas del paciente.
+            $todas = request()->query('alcance') === 'todas';
+            $url = fn (?string $alcance) => route('clinica.consulta', array_filter([
+                $consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES, 'alcance' => $alcance,
+            ]));
+
             return new ImagenesDeLaConsultaVista(
-                $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                $todas
+                    ? $imagenes->deLaHistoria($regMedico, (int) $consulta->numhistoria)
+                    : $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
                 route('clinica.consulta.examenes.subir', $consulta->id),
                 // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
                 // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
+                fn (int $fila) => route('clinica.consulta.examenes.descargar', array_filter([$consulta->id, $fila, 'alcance' => $todas ? 'todas' : null])),
+                fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+                null,
+                [
+                    ['texto' => 'Esta consulta', 'url' => $url(null), 'activa' => ! $todas],
+                    ['texto' => 'Todas', 'url' => $url('todas'), 'activa' => $todas],
+                ],
+                (int) $consulta->nroconsulta,
+            );
+        }
+
+        // …el estudio ecográfico (WEB-11.12) sólo las del **tipo de estudio** que se está mirando…
+        if ($seccion === ConsultaShellVista::SECCION_ESTUDIO) {
+            $clave = TagDeImagen::deUnEco(TiposDeEstudio::normalizar((string) request()->query('tipo', '')));
+
+            return new ImagenesDeLaConsultaVista(
+                $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $clave),
+                route('clinica.consulta.examenes.subir', $consulta->id),
                 fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
                 fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+                $clave,
             );
         }
 

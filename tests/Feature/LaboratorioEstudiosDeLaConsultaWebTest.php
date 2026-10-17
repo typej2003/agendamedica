@@ -135,7 +135,7 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('12 de 13 disponibles', false)
+            ->assertSee('13 de 14 disponibles', false)
             ->assertSee('Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.')
             ->assertDontSee('llegan después');
 

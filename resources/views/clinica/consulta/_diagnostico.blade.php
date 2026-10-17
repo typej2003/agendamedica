@@ -14,6 +14,14 @@
 @endphp
 
 <div class="consulta-seccion" id="consulta-diagnostico">
+    {{-- **Dos listas** (WEB-11.3): a la izquierda los diagnósticos de la consulta (con su detalle y el guardado explícito de siempre) y a la
+         derecha **todo el catálogo a la vista**, por páginas, donde cada uno se pasa con «Pasar» o con doble clic. «Pasar» deja el
+         diagnóstico tildado y se agrega al guardar. --}}
+    <x-ui.dos-listas titulo-izquierda="Diagnósticos de esta consulta" titulo-derecha="Tu catálogo de diagnósticos">
+    <x-slot name="izquierda">
+    @if ($vm->tieneAnterior())
+        <div class="mb-2"><x-ui.anterior :url="$vm->urlAnterior('diagnosticos')" que="los diagnósticos" /></div>
+    @endif
     {{-- El `action` sale del ViewModel cuando hay pendientes: le agrega `?agregar[]=…` para que el POST no
          los pierda si la página se recargó (los `hidden` de abajo también los mandan, pero una recarga se
          los lleva y la query no). Sin pendientes es el `action` normal. --}}
@@ -29,17 +37,17 @@
             <input type="hidden" name="agregar[{{ $codigo }}]" value="{{ $codigo }}">
         @endforeach
 
-        <x-ui.tarjeta titulo="Diagnósticos de esta consulta" icono="bi-clipboard2-check">
-            <x-slot name="acciones">
-                <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
-                             :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-            </x-slot>
+        <div class="mb-2">
+            <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
+                         :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
+        </div>
+        <div>
 
             <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
             @if ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos">
-                    Búscalos en tu catálogo, abajo, y agrégalos. Puedes cargar más de uno y anotarles un detalle.
+                    Pásalos desde tu catálogo, a la derecha. Puedes cargar más de uno.
                 </x-ui.vacio>
             @else
                 <ul class="diagnosticos-lista">
@@ -54,18 +62,7 @@
                                     @endif
                                 </span>
 
-                                {{-- El detalle es la única columna editable de la fila (el DataWindow del
-                                     escritorio la deja con `edit.limit=100`) y es el texto que el escritorio
-                                     muestra en su pestaña: por eso se puede ajustar acá. --}}
-                                <label class="form-label visually-hidden" for="diagnostico-detalle-{{ $fila['id'] }}">
-                                    Detalle de {{ $fila['nombre'] }}
-                                </label>
-                                <input type="text" class="form-control form-control-sm"
-                                       id="diagnostico-detalle-{{ $fila['id'] }}"
-                                       name="filas[{{ $fila['id'] }}][detalle]"
-                                       value="{{ $fila['detalle'] }}"
-                                       maxlength="{{ $seccion->limiteDetalle() }}"
-                                       placeholder="Detalle (lado, grado, cuándo…)">
+                                {{-- Sin detalle por diagnóstico (WEB-11.18): como en el escritorio, cada diagnóstico es el nombre del catálogo, sin retocar. --}}
                             </div>
 
                             {{-- "Quitar" deja la fila marcada como "se quita al guardar": saca el diagnóstico
@@ -106,10 +103,11 @@
                     <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar los diagnósticos
                 </button>
             </div>
-        </x-ui.tarjeta>
+        </div>
     </form>
+    </x-slot>
 
-    <x-ui.tarjeta titulo="Agregar un diagnóstico" icono="bi-search" class="mt-3">
+    <x-slot name="derecha">
         <p class="texto-tenue small mb-3">{{ $seccion->ayudaDelBuscador() }}</p>
 
         @if ($seccion->pendientesDelBuscador() !== [])
@@ -147,37 +145,33 @@
             @php $vacio = $seccion->sinResultados(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
         @else
-            <x-ui.tabla>
-                <thead>
-                    <tr>
-                        <th scope="col">Diagnóstico</th>
-                        <th scope="col" class="text-end">Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($seccion->resultados() as $resultado)
-                        <tr>
-                            <td data-etiqueta="Diagnóstico" class="celda-principal">
-                                {{ $resultado['descripcion'] }}
-                                <span class="chip">{{ $resultado['codigo'] }}</span>
-                            </td>
-                            <td data-etiqueta="Acción" class="text-end">
-                                @if ($resultado['pendiente'])
-                                    <span class="texto-tenue small">
-                                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Se agrega al guardar
-                                    </span>
-                                @elseif ($resultado['yaEsta'])
-                                    <span class="texto-tenue small">Ya está en la consulta</span>
-                                @else
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ $seccion->urlAgregar($resultado['codigo']) }}">
-                                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar
-                                    </a>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </x-ui.tabla>
+            <ul class="dos-listas-catalogo">
+                @foreach ($seccion->resultados() as $resultado)
+                    <li class="dos-listas-fila" @if (! $resultado['pendiente'] && ! $resultado['yaEsta']) data-pasar @endif>
+                        <span class="dos-listas-fila-texto">
+                            {{ $resultado['descripcion'] }}
+                            <span class="chip">{{ $resultado['codigo'] }}</span>
+                        </span>
+                        @if ($resultado['pendiente'])
+                            <span class="texto-tenue small">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i> Se agrega al guardar
+                            </span>
+                        @elseif ($resultado['yaEsta'])
+                            <span class="texto-tenue small"><i class="bi bi-check2-circle" aria-hidden="true"></i> Ya está en la consulta</span>
+                        @else
+                            <a class="btn btn-sm btn-outline-primary" data-pasar-boton href="{{ $seccion->urlAgregar($resultado['codigo']) }}">
+                                <i class="bi bi-arrow-left" aria-hidden="true"></i> Pasar
+                            </a>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+
+            @if ($seccion->paginador() && $seccion->paginador()->hasPages())
+                <div class="mt-2">{{ $seccion->paginador()->links() }}</div>
+            @endif
+
+            <p class="texto-tenue small mt-2 mb-0">Tip: doble clic en un diagnóstico para pasarlo a la consulta.</p>
         @endif
 
         {{-- El alta del diagnóstico que falta: es el botón *Agregar* del escritorio
@@ -209,5 +203,6 @@
                 </button>
             </div>
         </form>
-    </x-ui.tarjeta>
+    </x-slot>
+    </x-ui.dos-listas>
 </div>

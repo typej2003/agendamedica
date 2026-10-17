@@ -5,6 +5,7 @@ namespace App\Clinica\Consulta;
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Models\MotivoConsulta;
 use App\Models\MotivoConsultaPaciente;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -37,6 +38,9 @@ final class MotivosDeLaConsulta
     /** El tope de resultados del buscador: es para elegir, no para listar el catálogo entero. */
     public const MAX_RESULTADOS = 30;
 
+    /** Cuántos motivos del catálogo se ven por página en las «dos listas». */
+    public const POR_PAGINA = 12;
+
     /**
      * El catálogo del médico, un motivo por nombre, ordenado alfabéticamente.
      *
@@ -44,6 +48,34 @@ final class MotivosDeLaConsulta
      * @return Collection<int,MotivoConsulta>
      */
     public function buscar(string $regMedico, string $buscar = ''): Collection
+    {
+        return $this->unicos($regMedico, $buscar)->take(self::MAX_RESULTADOS);
+    }
+
+    /**
+     * **El catálogo completo a la vista, por páginas** (WEB-11.3): la lista de la derecha de las «dos listas». Es la misma lista del
+     * buscador (un motivo por nombre, filtrado sin tildes) pero sin el tope de {@see self::MAX_RESULTADOS}.
+     *
+     * @param  string  $ruta  la URL de la sección, para que los enlaces de página la conserven
+     * @param  array<string,mixed>  $conservar  lo que los enlaces deben mantener (`seccion`, `buscar`)
+     * @return LengthAwarePaginator<MotivoConsulta>
+     */
+    public function pagina(string $regMedico, string $buscar, int $pagina, string $ruta, array $conservar = [], int $porPagina = self::POR_PAGINA): LengthAwarePaginator
+    {
+        $todos = $this->unicos($regMedico, $buscar);
+        $pagina = max(1, $pagina);
+
+        return (new LengthAwarePaginator(
+            $todos->forPage($pagina, $porPagina)->values(),
+            $todos->count(),
+            $porPagina,
+            $pagina,
+            ['path' => $ruta, 'pageName' => 'pagina_catalogo'],
+        ))->appends($conservar);
+    }
+
+    /** @return Collection<int,MotivoConsulta> */
+    private function unicos(string $regMedico, string $buscar): Collection
     {
         $clave = BusquedaDePacientes::normalizar(trim($buscar));
 
@@ -58,8 +90,7 @@ final class MotivosDeLaConsulta
             ->groupBy(fn (MotivoConsulta $motivo) => BusquedaDePacientes::normalizar((string) $motivo->descripcion))
             ->map(fn (Collection $iguales) => $iguales->sortBy('codemotivo')->first())
             ->sortBy(fn (MotivoConsulta $motivo) => BusquedaDePacientes::normalizar((string) $motivo->descripcion))
-            ->values()
-            ->take(self::MAX_RESULTADOS);
+            ->values();
     }
 
     /**
