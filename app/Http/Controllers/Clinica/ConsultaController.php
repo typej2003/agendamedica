@@ -27,6 +27,7 @@ use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\PlantillasDelTexto;
@@ -237,6 +238,7 @@ class ConsultaController extends Controller
                 (int) $consulta->id,
                 $alertas,
                 $avisar,
+                $contexto['specialty']?->slug,
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
@@ -251,6 +253,12 @@ class ConsultaController extends Controller
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
         ]);
+    }
+
+    /** Qué partes de la consulta aplican a la especialidad del contexto (WEB-12.1). */
+    private function alcance(): AlcanceDeLaEspecialidad
+    {
+        return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
     }
 
     /**
@@ -382,7 +390,7 @@ class ConsultaController extends Controller
             // Las **solapas del examen** (WEB-6.5): el `&pestana=` elige cuál, como el `&tipo=` del estudio.
             // Están la evaluación física (WEB-4.3, el examen general y el ginecológico juntos) y las cuatro
             // solapas de texto (colposcopía, citología, histeroscopía y resultado de exámenes).
-            $pestana = PestanasDelExamen::normalizar((string) request()->query('pestana', ''));
+            $pestana = $this->alcance()->pestanaDelExamen((string) request()->query('pestana', ''));
 
             $url = fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
@@ -400,7 +408,7 @@ class ConsultaController extends Controller
 
             return new SeccionDeEvaluacionVista(
                 $pestana,
-                new PestanasDelExamen($url),
+                new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
                 $pestana === PestanasDelExamen::MAMAS
                     ? new DibujosDeMamasVista(
                         fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),
@@ -444,15 +452,15 @@ class ConsultaController extends Controller
             // El tipo del estudio viaja en la URL (`&tipo=`): el contenedor muestra los que existen hoy
             // (el ginecológico de WEB-6.1, los dos obstétricos de WEB-6.2, el Doppler y el ecocardiograma
             // fetal de WEB-6.3) y los demás llegan con las tareas siguientes de F6.
-            $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
+            $tipo = $this->alcance()->tipoDeEstudio((string) request()->query('tipo', ''));
 
-            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander).
-            $especialidad = request()->attributes->get('contexto_clinico')['specialty']?->slug;
+            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander). En pediatría es
+            // el único (WEB-12.1).
             $tipos = new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
                 'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                 'tipo' => $clave,
-            ]), $especialidad === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : []);
+            ]), $this->alcance()->tiposDeEstudioOcultos());
 
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
@@ -953,7 +961,9 @@ class ConsultaController extends Controller
                 'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
                 'administrar' => route('clinica.catalogos.examenes'),
                 // El botón «Pareja» (WEB-11.21): su orden aparte.
-                'pareja' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA]),
+                'pareja' => $this->alcance()->muestraLaPareja()
+                    ? route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA])
+                    : '',
             ],
         );
     }
@@ -1089,10 +1099,12 @@ class ConsultaController extends Controller
         $urlLista = route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
         $pestanas = new PestanasDeRecipes(
             $urlLista,
-            route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA]),
+            $this->alcance()->muestraLaPareja()
+                ? route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA])
+                : '',
         );
 
-        if ($editando === ConsultaShellVista::RECIPE_PAREJA) {
+        if ($editando === ConsultaShellVista::RECIPE_PAREJA && $this->alcance()->muestraLaPareja()) {
             return (new SeccionDeRecipeDeLaParejaVista(
                 // El récipe de la pareja de **esta** consulta (`recipes_pareja`: una por consulta, sin cabecera),
                 // o `null` si todavía no tiene. No se mezcla con los récipes del paciente.

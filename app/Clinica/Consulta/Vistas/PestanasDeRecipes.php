@@ -26,9 +26,13 @@ final class PestanasDeRecipes
      */
     public function opciones(string $activa): array
     {
-        return [
-            ['texto' => 'Récipes del paciente', 'url' => $this->urlPaciente, 'activa' => $activa === self::PACIENTE],
-            ['texto' => 'Récipe de la pareja', 'url' => $this->urlPareja, 'activa' => $activa === self::PAREJA],
-        ];
+        $opciones = [['texto' => 'Récipes del paciente', 'url' => $this->urlPaciente, 'activa' => $activa === self::PACIENTE]];
+
+        // Sin URL de la pareja (pediatría, WEB-12.1) no hay segunda pestaña.
+        if ($this->urlPareja !== '') {
+            $opciones[] = ['texto' => 'Récipe de la pareja', 'url' => $this->urlPareja, 'activa' => $activa === self::PAREJA];
+        }
+
+        return $opciones;
     }
 }

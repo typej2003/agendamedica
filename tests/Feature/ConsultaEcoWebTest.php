@@ -649,6 +649,22 @@ class ConsultaEcoWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'abdominal'))->assertOk()->assertSee('Eco abdominal');
     }
 
+    public function test_en_pediatria_el_panel_no_trae_el_embarazo_y_el_estudio_es_solo_la_eco_abdominal(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
+        $medico->specialties()->attach($pediatria->id);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $pediatra = $this->conContexto($user, $medico, $pediatria)->actingAs($user);
+
+        // El panel: sin «Control de embarazo» y sin el chip de ningún eco ginecológico.
+        $pediatra->get(route('clinica.consulta', $consulta->id))->assertOk()
+            ->assertDontSee('Control de embarazo')->assertSee('Estudio ecográfico');
+        $pediatra->get($this->urlSeccion($consulta, 'ginecologico'))->assertOk()->assertSee('Eco abdominal');
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio']))
+            ->assertOk()->assertSee('Eco abdominal')->assertDontSee('Eco ginecológico')->assertDontSee('Eco obstétrico (2.º trimestre)');
+    }
+
     public function test_el_tipo_tercero_abre_con_sus_bloques_y_guarda_en_su_tabla(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

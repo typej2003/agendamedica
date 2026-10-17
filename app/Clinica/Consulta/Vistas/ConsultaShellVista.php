@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
 
@@ -160,6 +161,8 @@ final class ConsultaShellVista
         // Las alertas de antecedentes del paciente (WEB-11.6): `[nombre, detalle]` de cada una, y si toca avisarlas con el diálogo.
         private array $alertas = [],
         private bool $avisarAlertas = false,
+        // El `slug` de la especialidad del contexto: decide qué ítems del panel se ofrecen (WEB-12.1). Sin él, el panel completo.
+        private ?string $especialidad = null,
     ) {
     }
 
@@ -322,7 +325,7 @@ final class ConsultaShellVista
             return null;
         }
 
-        foreach (self::PANEL as $item) {
+        foreach ($this->itemsDelPanel() as $item) {
             if (($item['seccion'] ?? null) === $this->seccion) {
                 return $this->seccion;
             }
@@ -354,7 +357,7 @@ final class ConsultaShellVista
     {
         $grupos = [];
 
-        foreach (self::PANEL as $item) {
+        foreach ($this->itemsDelPanel() as $item) {
             $grupos[$item['grupo']][] = $this->item($item);
         }
 
@@ -368,13 +371,13 @@ final class ConsultaShellVista
 
     public function totalItems(): int
     {
-        return count(self::PANEL);
+        return count($this->itemsDelPanel());
     }
 
     /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
-        return count(array_filter(self::PANEL, fn (array $item) => $item['estado'] === 'listo'));
+        return count(array_filter($this->itemsDelPanel(), fn (array $item) => $item['estado'] === 'listo'));
     }
 
     /**
@@ -395,6 +398,22 @@ final class ConsultaShellVista
                 . 'llega con las tareas siguientes (pre-factura). Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
+    }
+
+    /**
+     * Los ítems del panel que se ofrecen en esta especialidad (WEB-12.1): el panel es el del legado de ginecología y, en otra
+     * especialidad, sólo se quita lo que no aplica (el control de embarazo en pediatría). La numeración no se toca.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function itemsDelPanel(): array
+    {
+        $alcance = AlcanceDeLaEspecialidad::de($this->especialidad);
+
+        return array_values(array_filter(
+            self::PANEL,
+            fn (array $item) => ($item['seccion'] ?? null) !== self::SECCION_EMBARAZO || $alcance->muestraElEmbarazo(),
+        ));
     }
 
     /** @param array<string,string> $item */

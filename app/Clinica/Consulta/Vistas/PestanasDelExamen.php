@@ -50,7 +50,8 @@ final class PestanasDelExamen
     /**
      * @param  Closure(string):string  $url  arma la dirección de una solapa (el controlador la resuelve)
      */
-    public function __construct(private Closure $url)
+    /** @param  array<int,string>  $ocultas  las solapas que no se ofrecen en esta especialidad (WEB-12.1) */
+    public function __construct(private Closure $url, private array $ocultas = [])
     {
     }
 
@@ -83,6 +84,8 @@ final class PestanasDelExamen
      */
     public function opciones(string $activa): array
     {
+        $claves = array_values(array_diff(self::claves(), $this->ocultas));
+
         return array_map(fn (string $clave) => [
             'texto' => self::rotulo($clave),
             'url' => ($this->url)($clave),
@@ -90,7 +93,7 @@ final class PestanasDelExamen
             // La clave y el icono no los usa el control: los deja para quien tenga que distinguir la solapa.
             'clave' => $clave,
             'icono' => self::icono($clave),
-        ], self::claves());
+        ], $claves);
     }
 
     public static function rotulo(string $clave): string
