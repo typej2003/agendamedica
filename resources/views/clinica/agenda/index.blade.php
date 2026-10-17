@@ -115,11 +115,14 @@
 
     {{-- Un solo diálogo de cobro y uno de recordatorio para toda la página: el botón de cada cita los
          llena con sus datos (`public/js/clinica/agenda.js`). El de "Atender" (WEB-4.1) abre la consulta
-         del día y es el único que no pide confirmación con `window.confirm`: ofrece las dos formas de
-         abrirla (la de hoy o una nueva) y avisa que la cita queda atendida. --}}
+         del día y es el único que no pide confirmación con `window.confirm`: con la cita sin atender ofrece
+         abrirla y marcarla atendida; con la cita ya atendida, abrirla (y numerar la siguiente). **Es sólo del
+         médico** (WEB-4.9): a la secretaría ni el botón ni el diálogo se le pintan. --}}
     @include('clinica.agenda._dialogo-cobro')
     @include('clinica.agenda._dialogo-recordatorio', ['canales' => $vm->canales()])
-    @include('clinica.agenda._dialogo-atender')
+    @if ($vm->puedeAtender())
+        @include('clinica.agenda._dialogo-atender')
+    @endif
 @endsection
 
 @section('scripts')

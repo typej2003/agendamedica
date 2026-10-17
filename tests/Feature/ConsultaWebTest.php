@@ -374,6 +374,37 @@ class ConsultaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('Editar consulta');
+        // Y el formulario de la fila le avisa al diálogo que es el caso "ya atendida": `shell.js` muestra
+        // entonces «Consulta nueva» (revisión de Alexander, 2026-10-17).
+        $respuesta->assertSee('data-editar="1"', false);
+    }
+
+    /**
+     * Revisión de Alexander (2026-10-17): con la cita **sin atender** el diálogo de "Atender" ofrece
+     * **sólo** Cancelar y Atender. «Consulta nueva» —numerar la siguiente consulta de la historia— sólo
+     * aparece con la cita ya atendida ("Editar consulta"), cuando el médico ya no tiene nada que marcar.
+     *
+     * El botón viaja siempre en el HTML porque lo muestra `shell.js` según `data-editar`; sin JavaScript
+     * queda oculto, que es el comportamiento correcto por defecto.
+     */
+    public function test_el_dialogo_de_atender_no_ofrece_consulta_nueva_si_la_cita_no_esta_atendida(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $this->cita($medico, $sede, ['numhistoria' => 1001]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(
+            route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas'])
+        );
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('id="dialogo-atender"', false);
+        $respuesta->assertSee('Atender y abrir la consulta');
+        // El caso normal: el formulario de la fila no es "editar".
+        $respuesta->assertSee('data-editar="0"', false);
+        // «Consulta nueva» está en el HTML pero **oculta**: sin JS no se manda `nueva=1`.
+        $respuesta->assertSee('name="nueva" value="1" id="atender-nueva" hidden', false);
     }
 
     public function test_una_cita_ya_atendida_sin_consulta_del_dia_abre_una_al_editar(): void

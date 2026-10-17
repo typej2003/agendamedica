@@ -24,7 +24,7 @@ use Tests\TestCase;
  *  - un paciente **sin historia** no tiene historia que mostrar: estado vacío y el camino (WEB-3.3);
  *  - un paciente de **otro médico** da **404**, en la pantalla y en la impresión, y la historia no mezcla
  *    datos de dos médicos que usen el mismo `numhistoria` (el número es único **por médico**);
- *  - la **impresión** trae el encabezado "Resumen de historia clínica" con paciente, cédula, historia y
+ *  - la **impresión** trae el encabezado "Historia clínica" con paciente, cédula, historia y
  *    fecha, y las consultas con sus secciones.
  *
  * Es una pantalla de **sólo lectura**: estos tests no escriben nada que sobreviva al test
@@ -313,7 +313,7 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertSee('Ir a la ficha a asignarla');
         $respuesta->assertSee(route('clinica.pacientes.ver', $paciente), false);
         // No hay resumen que imprimir: el botón está, pero apagado y diciendo por qué.
-        $respuesta->assertSee('Todavía no hay consultas que resumir');
+        $respuesta->assertSee('Todavía no hay consultas en la historia');
         $respuesta->assertDontSee(route('clinica.pacientes.historia.imprimir', $paciente), false);
     }
 
@@ -388,7 +388,7 @@ class HistoriaDelPacienteWebTest extends TestCase
 
         $respuesta->assertOk();
         // El encabezado del documento, con el membrete del médico del contexto.
-        $respuesta->assertSee('Resumen de historia clínica');
+        $respuesta->assertSee('Historia clínica');
         $respuesta->assertSee('Dr. Carlos Mendoza'); // el `nombreMostrar` del médico de prueba
         $respuesta->assertSee('De Prueba, Juan');
         $respuesta->assertSee('12345678');
@@ -417,7 +417,7 @@ class HistoriaDelPacienteWebTest extends TestCase
             ->get(route('clinica.pacientes.historia.imprimir', $paciente));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Resumen de historia clínica');
+        $respuesta->assertSee('Historia clínica');
         $respuesta->assertSee('no tiene consultas registradas');
     }
 

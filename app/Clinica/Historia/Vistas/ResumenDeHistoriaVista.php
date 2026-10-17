@@ -8,9 +8,13 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
- * El **"Resumen de historia clínica"** que se imprime (`/clinica/pacientes/{id}/historia/imprimir`,
- * WEB-3.5). Es el `d_historia_clinica_resumen` del legado: el encabezado con el paciente, la cédula y la
- * fecha, y **todas** las consultas de la historia con sus secciones.
+ * El **"Historia clínica"** que se imprime (`/clinica/pacientes/{id}/historia/imprimir`, WEB-3.5). Es el
+ * `d_historia_clinica_resumen` del legado: el encabezado con el paciente, la cédula y la fecha, y **todas**
+ * las consultas de la historia con sus secciones.
+ *
+ * El nombre obedece a la regla de vocabulario de Alexander (2026-10-17): **"la historia" es el archivo
+ * impreso** y lo que se ve en pantalla es el **resumen**. Por eso la hoja se titula "Historia clínica" y la
+ * pantalla "Resumen del paciente"; la clase conserva su nombre viejo para no renombrar medio módulo.
  *
  * Qué **no** es: la hoja "HISTORIA CLINICA" de **una** consulta (`d_historia_clinica` /
  * `d_historia_clinica_ver`, con el examen físico completo, la evaluación por sistemas y el membrete
@@ -34,7 +38,7 @@ final class ResumenDeHistoriaVista
 
     public function titulo(): string
     {
-        return 'Resumen de historia clínica';
+        return 'Historia clínica';
     }
 
     public function medico(): string

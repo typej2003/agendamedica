@@ -8,6 +8,15 @@
          necesita al entrar es confirmar **a quién** está atendiendo. --}}
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlVolver()" volver-texto="Volver a la agenda">
         <x-slot name="acciones">
+            {{-- La barra tiene **dos** acciones (revisión de Alexander, 2026-10-17): el resumen del paciente
+                 —a la izquierda, secundario— y "Terminar la consulta", que es la acción primaria y va a la
+                 derecha (guía de UI §1). «Ver la ficha» se quitó: el médico llega a la ficha por el ítem
+                 *Datos personales* del panel. --}}
+            @if ($vm->urlHistoria())
+                <a class="btn btn-outline-secondary" href="{{ $vm->urlHistoria() }}">
+                    <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver resumen
+                </a>
+            @endif
             {{-- La **acción primaria** de la pantalla (guía de UI §1: un solo botón sólido): terminar la
                  atención. Es lo que el escritorio hace al cerrar `w_consulta_principal` —la cita ya había
                  quedado `atendido` en su `open`—, así que no hay ningún estado nuevo que inventar: la
@@ -21,16 +30,6 @@
                         <i class="bi bi-check2-circle" aria-hidden="true"></i> Terminar la consulta
                     </button>
                 </form>
-            @endif
-            @if ($vm->urlHistoria())
-                <a class="btn btn-outline-secondary" href="{{ $vm->urlHistoria() }}">
-                    <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia del paciente
-                </a>
-            @endif
-            @if ($vm->urlPaciente())
-                <a class="btn btn-outline-secondary" href="{{ $vm->urlPaciente() }}">
-                    <i class="bi bi-person-vcard" aria-hidden="true"></i> Ver la ficha
-                </a>
             @endif
         </x-slot>
     </x-ui.page-head>

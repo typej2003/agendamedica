@@ -1,6 +1,6 @@
 @extends('clinica.layout')
 
-@section('titulo', 'Historia del paciente')
+@section('titulo', 'Resumen del paciente')
 
 @section('contenido')
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlFicha()" volver-texto="Ficha del paciente">
@@ -11,15 +11,15 @@
             {{-- La acción primaria de una pantalla de sólo lectura es imprimir: es lo único que sale de acá.
                  Se abre aparte (`target="_blank"`) porque la vista de impresión es otra página, sin el
                  armazón de la web, como el listado del día de la agenda (WEB-2.7). Sin historia —o sin
-                 consultas— no se ofrece: no hay resumen que imprimir. --}}
+                 consultas— no se ofrece: no hay historia que imprimir. --}}
             @if ($vm->puedeImprimir())
                 <a class="btn btn-primary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
-                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir historia
                 </a>
             @else
                 <button type="button" class="btn btn-primary" disabled
-                        title="Todavía no hay consultas que resumir">
-                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                        title="Todavía no hay consultas en la historia">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir historia
                 </button>
             @endif
         </x-slot>

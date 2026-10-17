@@ -7,7 +7,8 @@
  *   data-autoenviar           en un <select>/<input>: al cambiar, envía su formulario.
  *   data-confirmar="texto"    en un <form>: pide confirmación antes de enviarlo.
  *   data-atender              en el <form> de "Atender": abre el diálogo de la consulta (WEB-4.1) en vez
- *                             de enviarlo, para elegir entre la consulta de hoy y una nueva.
+ *                             de enviarlo. Con la cita ya atendida (`data-editar="1"`) el diálogo ofrece
+ *                             además numerar la consulta siguiente.
  *   data-cerrar-dialogo       en un botón: cierra el <dialog> que lo contiene.
  *   data-abrir-dialogo="id"   en un botón: abre ese <dialog> (showModal).
  *   <details class="menu-acciones">   el menú "⋯" cierra al hacer clic afuera o con Escape.
@@ -104,11 +105,13 @@
             $('atender-paciente').textContent = formulario.dataset.paciente || '';
 
             // Con la cita ya atendida no hay nada que marcar (y el servidor tampoco lo hace): el diálogo
-            // lo dice y no ofrece "consulta nueva" sin avisar qué implica.
+            // lo dice y ofrece la consulta siguiente. Con la cita sin atender, el caso normal, sólo quedan
+            // Cancelar y Atender: "Consulta nueva" no se muestra (revisión de Alexander, 2026-10-17).
             aviso.hidden = !editar;
             aviso.textContent = editar
-                ? 'Esta cita ya está atendida. Se abre la consulta de ese día para seguir cargándola.'
+                ? 'Esta cita ya está atendida. Se abre la consulta de ese día para seguir cargándola; «Consulta nueva» numera la consulta siguiente de la historia.'
                 : '';
+            $('atender-nueva').hidden = !editar;
             $('atender-abrir').textContent = editar ? 'Abrir la consulta' : 'Atender y abrir la consulta';
             if (textoAyuda) {
                 textoAyuda.hidden = editar;
