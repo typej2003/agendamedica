@@ -7,6 +7,7 @@ use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\TextoDelExamen;
+use App\Clinica\Consulta\TipoDeAntecedentes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
@@ -711,13 +712,20 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
+            $tipos = $antecedentes->tipos();
 
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
+                $tipos,
+                // El chip elegido (A-06): el `?tipo=` de la pantalla, resuelto con el mismo criterio que la
+                // columna del catálogo, para que las dos columnas no puedan mostrar tipos distintos.
+                TipoDeAntecedentes::elegido((string) request()->query('tipo', ''), $delPaciente, $tipos),
                 route('clinica.consulta.antecedentes.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
+                // Lo que el buscador dejó tildado: los chips lo conservan en su URL.
+                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
             );
         }
 
@@ -1280,13 +1288,16 @@ class ConsultaController extends Controller
         }
 
         $buscar = trim((string) request()->query('buscar', ''));
-        $tipo = trim((string) request()->query('tipo', ''));
         $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
+        $tipos = $antecedentes->tipos();
+        $tipo = TipoDeAntecedentes::elegido((string) request()->query('tipo', ''), $delPaciente, $tipos);
 
         return new SeccionDeAntecedentesCatalogoVista(
+            // El catálogo del **tipo elegido** (A-06): el chip filtra las dos columnas, así que acá no hay
+            // «todos los tipos» ni un `?tipo=` distinto del de los antecedentes del paciente.
             $antecedentes->catalogo($regMedico, $buscar, $tipo),
             $delPaciente->pluck('codigo')->all(),
-            $antecedentes->tipos(),
+            $tipos,
             // La base del enlace "Agregar" de cada fila: vuelve a **esta misma sección** (el `?seccion=`
             // lo agrega el ViewModel) con el código tildado.
             route('clinica.consulta', [$consulta->id]),
@@ -1298,5 +1309,6 @@ class ConsultaController extends Controller
             // La base del `action` del guardado: el ViewModel le agrega la sección (para que la vuelta del
             // POST caiga acá) y los pendientes del buscador como query.
             route('clinica.consulta.antecedentes.guardar', $consulta->id),
-        );    }
+        );
+    }
 }

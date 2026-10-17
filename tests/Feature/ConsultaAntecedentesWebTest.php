@@ -242,9 +242,34 @@ class ConsultaAntecedentesWebTest extends TestCase
         return route('clinica.consulta.antecedentes.crear', $consulta->id);
     }
 
+    /**
+     * Los chips de tipo de la sección, leídos del HTML: nombre, si es el elegido, su URL y su `aria-current`.
+     *
+     * @return array<int,array{nombre:string, activo:bool, url:string, aria:bool}>
+     */
+    private function chipsDeLaRespuesta(string $html): array
+    {
+        preg_match_all('/<a class="chip-filtro([^"]*)" href="([^"]*)"([^>]*)>([^<]*)<\/a>/', $html, $filas, PREG_SET_ORDER);
+
+        return array_map(fn ($fila) => [
+            'nombre' => trim(html_entity_decode($fila[4])),
+            'activo' => str_contains($fila[1], 'activo'),
+            'url'    => html_entity_decode($fila[2]),
+            'aria'   => str_contains($fila[3], 'aria-current="true"'),
+        ], $filas);
+    }
+
+    /** El bloque de la columna del catálogo (para mirar qué ofrece), sin el resto de la sección. */
+    private function catalogoDeLaRespuesta(string $html): string
+    {
+        $desde = strpos($html, 'id="antecedente-buscar"');
+
+        return $desde === false ? '' : substr($html, $desde);
+    }
+
     // ------------------------------------------------------------------------------------- La lectura
 
-    public function test_la_seccion_muestra_los_antecedentes_agrupados_con_su_detalle_y_su_alerta(): void
+    public function test_la_seccion_muestra_los_antecedentes_del_tipo_elegido_con_su_detalle_y_su_alerta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
@@ -253,7 +278,7 @@ class ConsultaAntecedentesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->antecedente($medico, 1001, '0002', 'DIABETES', '02', 'la madre');
-        $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01', null, 'A');
+        $filaHipertension = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01', null, 'A');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
@@ -261,14 +286,29 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta->assertSee('Antecedentes del paciente', false);
         $respuesta->assertSee('Guardar los antecedentes', false);
 
-        // Los grupos son los del catálogo de tipos, con el nombre del tipo.
-        $respuesta->assertSee('PERSONAL', false);
-        $respuesta->assertSee('FAMILIAR', false);
+        // Los chips son los del catálogo de tipos y el elegido es el primero **con antecedentes** (Per.).
+        $chips = $this->chipsDeLaRespuesta($respuesta->getContent());
+        $this->assertSame(['PERSONAL', 'FAMILIAR', 'OBSTETRICOS', 'VARIOS'], array_column($chips, 'nombre'));
+        $this->assertSame(['PERSONAL'], array_column(array_filter($chips, fn ($c) => $c['activo']), 'nombre'));
 
-        // El detalle va en el control de la fila y la alerta tildada.
-        $respuesta->assertSee('value="la madre"', false);
+        // La columna muestra **sólo** los de ese tipo: el detalle de la fila y la alerta tildada.
+        $respuesta->assertSee('data-antecedente-fila="' . $filaHipertension . '"', false);
+        $respuesta->assertDontSee('value="la madre"', false);
         $respuesta->assertSee('Alerta', false);
         $respuesta->assertSee('2 antecedentes', false);
+
+        // Y con el otro chip, el mismo paciente al revés. (No se mira «HIPERTENSION» en toda la página: el
+        // aviso de alertas del encabezado del shell lo repite porque esa fila está marcada; se mira la fila.)
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=02');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('value="la madre"', false);
+        $respuesta->assertDontSee('data-antecedente-fila="' . $filaHipertension . '"', false);
+        $this->assertSame(['FAMILIAR'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($c) => $c['activo'],
+        ), 'nombre'));
 
         // La ayuda dice de quién son los antecedentes: es la decisión de la sección.
         $respuesta->assertSee('son del paciente, no de esta consulta', false);
@@ -321,6 +361,107 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Sin cargar', false);
         $respuesta->assertSee('Este paciente no tiene antecedentes cargados', false);
+        // Sin antecedentes, el tipo por defecto es el primero del catálogo: el alta arranca en un tipo concreto.
+        $this->assertSame(['PERSONAL'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($chip) => $chip['activo'],
+        ), 'nombre'));
+    }
+
+    // ------------------------------------------------------------------------------ Los chips de tipo (A-06)
+
+    /**
+     * El chip de tipo **filtra las dos columnas**: a la izquierda los antecedentes del paciente de ese tipo y a
+     * la derecha el catálogo de ese tipo. Es la solapa del escritorio, que Alexander pidió de vuelta.
+     */
+    public function test_el_chip_de_tipo_filtra_las_dos_columnas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        $this->catalogo($medico, '0001', 'ASMA', '01');
+        $this->catalogo($medico, '0002', 'DIABETES', '02');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '0001', 'ASMA', '01');
+
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Chip PERSONAL (el primero con antecedentes): la columna del paciente tiene ASMA y el catálogo, ASMA
+        // (marcado como «ya está»); DIABETES no aparece en ninguna de las dos.
+        $personal = $contexto->get($this->urlSeccion($consulta))->assertOk();
+        $personal->assertSee('data-antecedente-fila="' . $fila . '"', false);
+        $catalogoPersonal = $this->catalogoDeLaRespuesta($personal->getContent());
+        $this->assertStringContainsString('ASMA', $catalogoPersonal);
+        $this->assertStringContainsString('Ya está en el paciente', $catalogoPersonal);
+        $this->assertStringNotContainsString('DIABETES', $personal->getContent());
+
+        // Chip FAMILIAR: el paciente no tiene de ese tipo (lo dice) y el catálogo muestra el de ese tipo.
+        $familiar = $contexto->get($this->urlSeccion($consulta) . '&tipo=02')->assertOk();
+        $familiar->assertSee('Sin antecedentes de este tipo', false);
+        $familiar->assertDontSee('Este paciente no tiene antecedentes cargados', false);
+        $catalogoFamiliar = $this->catalogoDeLaRespuesta($familiar->getContent());
+        $this->assertStringContainsString('DIABETES', $catalogoFamiliar);
+        $this->assertStringNotContainsString('ASMA', $catalogoFamiliar);
+        // El contador de la cabecera sigue mostrando el **total** del paciente, no lo filtrado.
+        $familiar->assertSee('1 antecedente', false);
+    }
+
+    /** Un `?tipo=` que no es del catálogo no deja la pantalla vacía: cae en el primero con antecedentes. */
+    public function test_un_tipo_que_no_existe_cae_en_el_tipo_por_defecto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '02');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=99');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('data-antecedente-fila="' . $fila . '"', false);
+        $this->assertSame(['FAMILIAR'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($chip) => $chip['activo'],
+        ), 'nombre'));
+    }
+
+    /**
+     * Un antecedente del paciente **sin tipo** (la fila del legado no lo tiene y el catálogo tampoco lo
+     * resuelve) no puede quedar sin puerta de entrada: se agrega el chip «Sin clasificar» al final, y es el
+     * elegido si es lo único que el paciente tiene.
+     */
+    public function test_un_antecedente_sin_tipo_se_ve_en_el_chip_sin_clasificar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '9999', 'SIN CATALOGO', '');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk();
+        $chips = $this->chipsDeLaRespuesta($respuesta->getContent());
+        $this->assertSame('Sin clasificar', end($chips)['nombre']);
+        $this->assertTrue(end($chips)['activo'], 'Con lo único que hay sin tipo, la pantalla abre en ese chip.');
+        $respuesta->assertSee('data-antecedente-fila="' . $fila . '"', false);
+    }
+
+    /** Cambiar de chip no puede perder lo que el buscador dejó tildado para agregar. */
+    public function test_los_chips_conservan_lo_tildado_del_buscador(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        $this->catalogo($medico, '0013', 'DIABETES MELLITUS', '02');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&agregar[]=0013&tipo=01');
+
+        $respuesta->assertOk();
+        foreach ($this->chipsDeLaRespuesta($respuesta->getContent()) as $chip) {
+            $this->assertStringContainsString('seccion=antecedentes', $chip['url']);
+            $this->assertStringContainsString('tipo=', $chip['url']);
+            $this->assertStringContainsString('agregar[]=0013', $chip['url'], 'El chip tiene que llevar el pendiente.');
+        }
     }
 
     /**
