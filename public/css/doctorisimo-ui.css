@@ -1558,7 +1558,8 @@ dialog.dialogo[open] { animation: dialogo-entra var(--ds-dur-base) var(--ds-ease
 /* Variante lateral (`<x-ui.dialogo lateral>`): un formulario que entra por la derecha a alto completo y
    deja ver la pantalla de fondo. Para confirmaciones cortas sigue el diálogo centrado. */
 dialog.dialogo-lateral {
-    width: min(32rem, 100vw);
+    /* Cajón: ~416 px de ancho (el rango pedido es 380–420) y, en una pantalla más angosta, todo el ancho. */
+    width: min(26rem, 100vw);
     max-width: 100vw;
     height: 100%;
     max-height: none;
@@ -2976,14 +2977,15 @@ body.auth-pagina {
 }
 
 /* ---------------------------------------------------------------------------------------------------------
-   Panel lateral de plantillas con buscador (WEB-11.2)
-   --------------------------------------------------------------------------------------------------------- */
-.plantillas-panel {
-    border: 1px solid var(--ds-borde);
-    border-radius: var(--ds-radio-card);
-    background: var(--ds-superficie);
-    padding: .85rem 1rem;
-}
+   Plantillas: botón que abre el cajón (revisión de Alexander, 2026-10-17)
+   ---------------------------------------------------------------------------------------------------------
+   El panel de plantillas ya no ocupa una franja arriba del campo: arriba va **sólo el botón** (con el conteo
+   de plantillas) y el buscador, la lista y «Guardar como plantilla» viven en un cajón lateral
+   (`<x-ui.dialogo lateral>`), así el campo queda visible desde el principio. */
+.plantillas-disparador { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.plantillas-cajon { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.plantillas-cajon .plantillas-lista { flex: 1 1 auto; max-height: none; }
+
 .plantillas-lista {
     list-style: none;
     margin: 0 0 .75rem;
@@ -3014,9 +3016,17 @@ body.auth-pagina {
 
 /* ---------------------------------------------------------------------------------------------------------
    «Dos listas con Pasar / Eliminar / Agregar» (WEB-11.3)
-   --------------------------------------------------------------------------------------------------------- */
+   ---------------------------------------------------------------------------------------------------------
+   El ancho que decide es el del **área de la sección**, no el de la pantalla (revisión de Alexander,
+   2026-10-17). Antes había un `@media (max-width: 1399.98px)` que apilaba las dos columnas y a 1366 px —la
+   pantalla del consultorio— el catálogo se iba abajo; **plegar el menú lateral no lo arreglaba** porque el
+   viewport sigue midiendo 1366. Por eso `.consulta-seccion` es un *contenedor de consulta*
+   (`container-type: inline-size`) y el modo compacto y el apilado se preguntan por SU ancho. */
+.consulta-seccion { container-type: inline-size; }
+
 .dos-listas {
     display: grid;
+    /* Las dos listas, siempre lado a lado: el catálogo a la derecha es el punto de la pantalla. */
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
     align-items: start;
@@ -3049,11 +3059,49 @@ body.auth-pagina {
 .dos-listas-fila[data-pasar] { cursor: pointer; }
 .dos-listas-fila[data-pasar]:hover { background: var(--ds-violeta-50); }
 .dos-listas-fila-texto { overflow-wrap: anywhere; }
-/* El área de la consulta no es ancha (el panel de secciones ocupa un tercio): hasta 1399 px las dos listas se apilan. */
-@media (max-width: 1399.98px) {
+.dos-listas-fila .btn { flex-shrink: 0; white-space: nowrap; }
+
+/* Modo compacto (por el ancho de la sección, no de la pantalla): letra y relleno más chicos y las acciones
+   de cada fila —«Pasar», «Eliminar»— en **sólo icono**, con su `title` y su `aria-label` (el rótulo vive en
+   `.dos-listas-boton-texto`). El objetivo táctil no baja de 40 px de alto. */
+@container (max-width: 45rem) {
+    .dos-listas { gap: .5rem; font-size: .8rem; }
+    .dos-listas-columna { padding: .5rem .6rem; }
+    .dos-listas-cabecera { gap: .35rem; margin-bottom: .5rem; }
+    .dos-listas-titulo { font-size: .85rem; }
+    .dos-listas-buscar { gap: .25rem; margin-bottom: .5rem; }
+    .dos-listas-buscar .form-control,
+    .dos-listas-buscar .btn { font-size: .8rem; }
+    .dos-listas-fila { gap: .35rem; padding: .3rem .15rem; }
+    .dos-listas .chip { padding: .05rem .4rem; font-size: .65rem; }
+    .dos-listas-fila .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .3rem;
+        min-width: 40px;
+        min-height: 40px;
+        padding: .25rem .4rem;
+        font-size: .8rem;
+    }
+    .dos-listas-boton-texto { display: none; }
+    /* Las filas de Bootstrap (`.row g-2`) sangran a los costados con márgenes negativos: en una columna de
+       200 px eso es scroll horizontal de la página. */
+    .dos-listas .row { margin-left: 0; margin-right: 0; }
+    /* Y sus 9/12 + 3/12 no dejan lugar para el botón «Buscar»: el campo y el botón van uno debajo del otro. */
+    .dos-listas .row > [class*="col-md-"] { flex: 0 0 100%; max-width: 100%; }
+    /* Las páginas del catálogo no entran en una columna angosta: envuelven en vez de desbordar. */
+    .dos-listas .pagination { flex-wrap: wrap; gap: .15rem; margin-bottom: 0; font-size: .8rem; }
+    .dos-listas .page-link { padding: .2rem .45rem; }
+}
+
+/* Piso: las dos listas se apilan **sólo** cuando la sección mide 352 px o menos —en un teléfono la columna
+   de trabajo queda en ~335 px—, porque ahí cada columna baja de ~160 px y el texto clínico ya no se lee. Con
+   el menú desplegado a 1024 px la sección mide ~413 px y sigue lado a lado (dos columnas de ~198 px con la
+   letra del modo compacto): es lo que pidió Alexander. A 600 px de ventana la sección mide ~568 px. */
+@container (max-width: 22rem) {
     .dos-listas { grid-template-columns: minmax(0, 1fr); }
 }
-.dos-listas-fila .btn { flex-shrink: 0; white-space: nowrap; }
 
 /* ---------------------------------------------------------------------------------------------------------
    La barra de la consulta (WEB-11.5): navegador 1…N + Guardar / Guardar y salir / Salir

@@ -1,8 +1,12 @@
-// Panel lateral de plantillas con buscador (WEB-11.2).
+// Plantillas de texto de una sección (WEB-11.2 y revisión de Alexander, 2026-10-17).
+// El panel vive en un cajón lateral (`<x-ui.dialogo lateral>`): lo abre y lo cierra `shell.js`
+// (`data-abrir-dialogo` / `data-cerrar-dialogo`); acá sólo queda lo suyo:
 //  - Buscar: filtra la lista por título, sin tildes ni mayúsculas.
-//  - Elegir una plantilla REEMPLAZA el texto del campo; si el campo ya tiene texto pide confirmación.
-//    Dispara `input` para que el aviso de «cambios sin guardar» se entere como si se hubiera escrito.
-//  - Guardar como plantilla: manda el texto del campo y el título al servidor (JSON) y suma la plantilla a la lista.
+//  - Elegir una plantilla REEMPLAZA el texto del campo; si el campo ya tiene texto pide confirmación y después
+//    **cierra el cajón**. Dispara `input` para que el aviso de «cambios sin guardar» se entere como si se
+//    hubiera escrito.
+//  - Guardar como plantilla: manda el texto del campo y el título al servidor (JSON) y suma la plantilla a la
+//    lista del cajón (y al conteo del botón que lo abre).
 (function () {
     'use strict';
 
@@ -24,6 +28,15 @@
         var sinPlantillas = panel.querySelector('[data-plantillas-sin-plantillas]');
         var sinResultados = panel.querySelector('[data-plantillas-sin-resultados]');
         if (!campo || !lista) { return; }
+
+        // El cajón que lo contiene (el <dialog> nativo) y el botón que lo abre, para el conteo.
+        var dialogo = panel.closest('dialog');
+        var disparador = panel.dataset.boton ? document.getElementById(panel.dataset.boton) : null;
+        var cuenta = disparador ? disparador.querySelector('[data-plantillas-cuenta]') : null;
+
+        function cerrar() {
+            if (dialogo) { dialogo.close(); }
+        }
 
         function filtrar() {
             var q = normal(buscar.value.trim());
@@ -56,7 +69,8 @@
             }
             escribir(campo, boton.dataset.plantillaTexto);
             if (campoTitulo) { escribir(campoTitulo, boton.dataset.plantillaTitulo); }
-            campo.focus();
+            // Elegir una plantilla termina la tarea: el cajón se cierra y el foco vuelve solo al botón.
+            cerrar();
         });
 
         var titulo = panel.querySelector('[data-plantillas-titulo]');
@@ -67,6 +81,13 @@
             mensaje.hidden = false;
             mensaje.textContent = texto;
             mensaje.classList.toggle('text-danger', !!error);
+        }
+
+        // El conteo del botón sigue a la lista: «Plantillas (3)» después de guardar la cuarta.
+        function contar() {
+            if (!cuenta) { return; }
+            var total = lista.querySelectorAll('[data-plantilla-fila]').length;
+            cuenta.textContent = total > 0 ? '(' + total + ')' : '';
         }
 
         confirmar.addEventListener('click', function () {
@@ -106,6 +127,7 @@
                 titulo.value = '';
                 buscar.value = '';
                 filtrar();
+                contar();
                 decir('Plantilla «' + r.datos.titulo + '» guardada.', false);
             }).catch(function () {
                 decir('No se pudo guardar la plantilla. Revisa la conexión.', true);

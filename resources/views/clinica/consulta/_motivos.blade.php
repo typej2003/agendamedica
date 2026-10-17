@@ -34,8 +34,13 @@
                                   data-confirmar="¿Quitar «{{ $motivo['descripcion'] }}» de esta consulta? El motivo sigue en tu catálogo.">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash" aria-hidden="true"></i> Eliminar
+                                {{-- El rótulo vive en `.dos-listas-boton-texto`: en el modo compacto (por el ancho de la sección) queda sólo el
+                                     icono, con `title` y `aria-label` (doctorisimo-ui.css). El nombre del motivo está en la
+                                     fila, al lado del botón: el rótulo del botón no lo repite. --}}
+                                <button class="btn btn-sm btn-outline-danger"
+                                        title="Quitar de esta consulta" aria-label="Quitar de esta consulta">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                    <span class="dos-listas-boton-texto">Eliminar</span>
                                 </button>
                             </form>
                         </li>
@@ -77,8 +82,10 @@
                                 <form method="POST" action="{{ $resultado['urlAgregar'] }}">
                                     @csrf
                                     <input type="hidden" name="codemotivo" value="{{ $resultado['codigo'] }}">
-                                    <button class="btn btn-sm btn-outline-primary" data-pasar-boton>
-                                        <i class="bi bi-arrow-left" aria-hidden="true"></i> Pasar
+                                    <button class="btn btn-sm btn-outline-primary" data-pasar-boton
+                                            title="Pasar a la consulta" aria-label="Pasar a la consulta">
+                                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                                        <span class="dos-listas-boton-texto">Pasar</span>
                                     </button>
                                 </form>
                             @endif

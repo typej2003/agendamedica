@@ -159,8 +159,10 @@
                         @elseif ($resultado['yaEsta'])
                             <span class="texto-tenue small"><i class="bi bi-check2-circle" aria-hidden="true"></i> Ya está en la consulta</span>
                         @else
-                            <a class="btn btn-sm btn-outline-primary" data-pasar-boton href="{{ $seccion->urlAgregar($resultado['codigo']) }}">
-                                <i class="bi bi-arrow-left" aria-hidden="true"></i> Pasar
+                            <a class="btn btn-sm btn-outline-primary" data-pasar-boton href="{{ $seccion->urlAgregar($resultado['codigo']) }}"
+                               title="Pasar a la consulta" aria-label="Pasar a la consulta">
+                                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                                <span class="dos-listas-boton-texto">Pasar</span>
                             </a>
                         @endif
                     </li>
