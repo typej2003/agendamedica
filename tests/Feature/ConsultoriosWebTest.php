@@ -7,6 +7,7 @@ use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -128,7 +129,8 @@ class ConsultoriosWebTest extends TestCase
         $respuesta->assertSee('701');
         $respuesta->assertSee('Orden de llegada');
         $respuesta->assertSee('20 min');
-        $respuesta->assertSee('cargar horarios');   // los bloques se cargan en su pantalla (WEB-2.8b.3)
+        // Los bloques se editan en la misma fila (A-10): sin bloques, la fila lo dice.
+        $respuesta->assertSee('Todavía no tiene bloques');
     }
 
     public function test_crear_un_consultorio_escribe_el_registro_y_el_dueno_del_contexto(): void
@@ -360,5 +362,244 @@ class ConsultoriosWebTest extends TestCase
             ->assertOk()
             ->assertSee($sede->name)
             ->assertSee('C1');
+    }
+
+    // ------------------------------------------------------- Los bloques de horario, en la misma fila (A-10)
+
+    /**
+     * La duración de la cita y los horarios estaban cada uno en su pantalla y el médico no los encontraba
+     * juntos: desde A-10 la fila del consultorio los lista y los edita ahí mismo.
+     */
+    public function test_la_fila_muestra_los_bloques_de_horario_del_consultorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede('San José');
+        $consultorio = $this->consultorioDe($medico, $sede, '701');
+
+        OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 3, 'hora_inicio' => '14:00', 'hora_fin' => '18:00', 'cupo' => 12,
+        ]);
+        OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios');
+
+        $respuesta->assertOk();
+        // El orden es el de la semana (lunes antes que miércoles), no el de la carga.
+        $respuesta->assertSeeInOrder(['Lunes', '08:00 a 12:00', 'sin tope', 'Miércoles', '14:00 a 18:00', '12 pacientes'], false);
+        // Y el alta de un bloque está en la misma fila, con las rutas de siempre.
+        $respuesta->assertSee(route('clinica.consultorios.horarios.guardar', $consultorio) . '"', false);
+        $respuesta->assertSee('name="volver" value="consultorios"', false);
+    }
+
+    public function test_agregar_un_bloque_desde_el_listado_vuelve_al_listado(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(
+            '/clinica/consultorios/' . $consultorio->id . '/horarios',
+            [
+                'volver'      => 'consultorios',
+                'consultorio' => $consultorio->id,
+                'dia_semana'  => 1,
+                'hora_inicio' => '08:00',
+                'hora_fin'    => '12:00',
+                'cupo'        => 20,
+            ],
+        );
+
+        // La vuelta es al listado (de donde vino el formulario), no a la pantalla de horarios.
+        $respuesta->assertRedirect(route('clinica.consultorios'));
+        $respuesta->assertSessionHas('estado');
+        $this->assertDatabaseHas('office_schedules', [
+            'office_id'  => $consultorio->id,
+            'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 1,
+            'cupo'       => 20,
+        ]);
+    }
+
+    public function test_quitar_un_bloque_desde_el_listado_vuelve_al_listado(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $bloque = OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 2, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->delete(
+            '/clinica/consultorios/' . $consultorio->id . '/horarios/' . $bloque->id,
+            ['volver' => 'consultorios'],
+        );
+
+        $respuesta->assertRedirect(route('clinica.consultorios'));
+        $this->assertDatabaseMissing('office_schedules', ['id' => $bloque->id]);
+    }
+
+    /** La regla del solape es la de `GuardarBloqueHorario`: desde el listado se comporta igual. */
+    public function test_desde_el_listado_el_solape_del_mismo_consultorio_se_rechaza(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/consultorios')
+            ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', [
+                'volver'      => 'consultorios',
+                'consultorio' => $consultorio->id,
+                'dia_semana'  => 1,
+                'hora_inicio' => '11:00',
+                'hora_fin'    => '15:00',
+            ]);
+
+        $respuesta->assertSessionHasErrors('hora_inicio');
+        $this->assertSame(1, OfficeSchedule::where('office_id', $consultorio->id)->count());
+    }
+
+    /** El cruce con **otro** consultorio del mismo médico avisa y guarda igual (decisión del 2026-10-09). */
+    public function test_desde_el_listado_el_solape_con_otro_consultorio_avisa_y_guarda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $manana = $this->consultorioDe($medico, $this->sede('Hospital'), 'A');
+        $tarde = $this->consultorioDe($medico, $this->sede('Clínica'), 'B');
+
+        OfficeSchedule::create([
+            'office_id' => $manana->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 1, 'hora_inicio' => '09:00', 'hora_fin' => '11:00',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/consultorios/' . $tarde->id . '/horarios', [
+                'volver'      => 'consultorios',
+                'consultorio' => $tarde->id,
+                'dia_semana'  => 1,
+                'hora_inicio' => '08:00',
+                'hora_fin'    => '12:00',
+            ]);
+
+        $respuesta->assertSessionHasNoErrors();
+        $respuesta->assertSessionHas('avisos');
+        $this->assertDatabaseHas('office_schedules', ['office_id' => $tarde->id, 'dia_semana' => 1]);
+    }
+
+    /**
+     * El alta en línea es **un formulario por consultorio** y todos mandan los mismos nombres: lo escrito
+     * sólo se repone en el que lo mandó (hay uno por fila y sin el `consultorio` oculto aparecería en todos).
+     */
+    public function test_el_alta_en_linea_repone_lo_escrito_solo_en_su_consultorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $uno = $this->consultorioDe($medico, $this->sede('San José'), '701');
+        $dos = $this->consultorioDe($medico, $this->sede('San José'), '702');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/consultorios')
+            ->post('/clinica/consultorios/' . $uno->id . '/horarios', [
+                'volver'      => 'consultorios',
+                'consultorio' => $uno->id,
+                'dia_semana'  => 2,
+                'hora_inicio' => '10:00',
+                'hora_fin'    => '08:00',   // la hora de fin no es posterior: falla la validación
+            ])
+            ->assertSessionHasErrors('hora_fin');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios')->assertOk()->getContent();
+
+        preg_match('/id="bloque-desde-' . $uno->id . '"[^>]*value="([^"]*)"/', $html, $suyo);
+        preg_match('/id="bloque-desde-' . $dos->id . '"[^>]*value="([^"]*)"/', $html, $ajeno);
+
+        $this->assertSame('10:00', $suyo[1] ?? null, 'El consultorio que mandó el alta tiene que reponer lo escrito.');
+        $this->assertSame('', $ajeno[1] ?? 'x', 'El otro consultorio no tiene que heredar lo escrito.');
+    }
+
+    /** La duración de la cita queda donde estaba, pero la ayuda dice para qué sirve y no promete de más. */
+    public function test_la_duracion_de_la_cita_explica_para_que_sirve(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios');
+
+        $respuesta->assertOk();
+        // Sigue en su campo, con su rótulo de siempre.
+        $respuesta->assertSee('Duración de la cita');
+        $respuesta->assertSee('name="duracion_cita"', false);
+        // Y la ayuda dice qué hace y de dónde sale el tope de la jornada (del cupo del bloque).
+        $respuesta->assertSee('Lo que dura una cita en este consultorio', false);
+        $respuesta->assertSee('tope de pacientes de cada jornada lo pone el cupo', false);
+    }
+
+    /** Un consultorio del médico, para los casos de los bloques. */
+    private function consultorioDe(Medico $medico, MedicalCenter $sede, string $numero): Office
+    {
+        return Office::create([
+            'medical_center_id' => $sede->id,
+            'medico_id'         => $medico->id,
+            'reg_medico'        => $medico->reg_medico,
+            'office_number'     => $numero,
+            'modalidad'         => Office::MODALIDAD_ORDEN,
+            'duracion_cita'     => 30,
+            'activo'            => true,
+        ]);
+    }
+
+    // ---------------------------------------------------------------------------- El menú lateral (A-10)
+
+    /**
+     * La barra superior «Consultorios» desaparece si no hay consultorio elegido, así que los horarios y los
+     * días no laborables tienen que estar en el menú lateral: es lo que el médico no encontraba.
+     */
+    public function test_el_menu_lateral_ofrece_los_horarios_y_los_dias_no_laborables(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios')->assertOk()->getContent();
+
+        // El grupo «Configuración» existe, con las dos entradas nuevas y abierto (estamos en una de ellas).
+        $this->assertStringContainsString('<details class="nav-grupo" data-menu="configuracion" open>', $html);
+        preg_match('/data-menu="configuracion".*?<\/details>/s', $html, $bloque);
+        $grupo = $bloque[0] ?? '';
+        $this->assertStringContainsString('Consultorios y horarios', $grupo);
+        $this->assertStringContainsString('Días no laborables', $grupo);
+        $this->assertStringContainsString('href="' . route('clinica.consultorios') . '"', $grupo);
+        $this->assertStringContainsString('href="' . route('clinica.agenda.no-laborables') . '"', $grupo);
+        // Y el ítem de los horarios es el activo de la página.
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Consultorios y horarios"/', $grupo);
+
+        // La barra superior conserva «Consultorios» como atajo.
+        $this->assertStringContainsString('href="' . route('clinica.consultorios') . '"', $html);
+    }
+
+    /**
+     * «Configuración» era sólo del médico, pero los horarios y los días no laborables los carga también la
+     * secretaría (lo dicen los roles de sus rutas): ve esas dos entradas y ninguna de las que le dan 403.
+     */
+    public function test_la_secretaria_ve_en_configuracion_solo_lo_que_puede_abrir(): void
+    {
+        [$secretaria, $medico, $gineco] = $this->medicoConAcceso('Secretaria');
+        MedicoRegistro::where('medico_id', $medico->id)->update(['user_id' => $secretaria->id]);
+
+        $html = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->get('/clinica/consultorios')->assertOk()->getContent();
+
+        preg_match('/data-menu="configuracion".*?<\/details>/s', $html, $bloque);
+        $grupo = $bloque[0] ?? '';
+
+        $this->assertStringContainsString('Consultorios y horarios', $grupo);
+        $this->assertStringContainsString('Días no laborables', $grupo);
+        // Lo que la secretaría no administra no se le ofrece.
+        $this->assertStringNotContainsString('Formato de impresión', $grupo);
+        $this->assertStringNotContainsString('Usuarios', $grupo);
+        $this->assertStringNotContainsString('Bitácora', $grupo);
     }
 }

@@ -55,7 +55,7 @@
                         </select>
                     </x-ui.campo>
 
-                    <x-ui.campo etiqueta="Duración de la cita" for="duracion_cita" class="col-md-3" ayuda="Vacío = sin duración configurada.">
+                    <x-ui.campo etiqueta="Duración de la cita" for="duracion_cita" class="col-md-3" :ayuda="$vm->ayudaDuracion()">
                         <div class="input-group">
                             <input type="number" name="duracion_cita" id="duracion_cita" class="form-control" min="5" max="480" step="5"
                                    placeholder="{{ $vm->duracionPorDefecto() }}" value="{{ $vm->valor('duracion_cita') }}">
@@ -92,7 +92,12 @@
                 horario. Y sin horarios cargados (sus bloques de día y hora) la jornada no tiene tope de pacientes.
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            {{-- Los **bloques de horario** de cada consultorio se ven y se editan acá mismo (A-10): la duración
+                 de la cita y los horarios estaban cada uno en su pantalla y el médico no los encontraba juntos.
+                 Cada fila los lista, deja quitar uno y agrega otro con las mismas rutas de siempre
+                 (`clinica.consultorios.horarios.guardar` / `…eliminar`), así que las reglas de solape y el cupo
+                 opcional son las de `GuardarBloqueHorario` y no se repiten acá. --}}
+            <x-ui.tabla class="consultorios-tabla">
                 <thead>
                 <tr>
                     <th>Consultorio</th>
@@ -114,21 +119,90 @@
                             <x-ui.estado :tono="$fila['modalidad']['tono']" :icono="$fila['modalidad']['icono']">{{ $fila['modalidad']['texto'] }}</x-ui.estado>
                         </td>
                         <td data-etiqueta="Duración">{{ $fila['duracion'] ?? '—' }}</td>
-                        <td data-etiqueta="Horarios">
-                            {{-- Los bloques se cargan en su propia pantalla (WEB-2.8b.3): sin bloques el
-                                 atajo invita a cargarlos. --}}
-                            <a class="small" href="{{ $fila['urlHorarios'] }}">{{ $fila['bloques'] ?? 'cargar horarios' }}</a>
+                        <td data-etiqueta="Horarios" class="celda-bloques">
+                            @if ($fila['bloques'] === [])
+                                <p class="texto-tenue small mb-2">
+                                    Todavía no tiene bloques: la agenda no le pone tope de pacientes ni hora de apertura.
+                                </p>
+                            @else
+                                <ul class="bloques-lista">
+                                    @foreach ($fila['bloques'] as $bloque)
+                                        <li class="bloques-item">
+                                            <span class="bloques-item-texto">
+                                                <strong>{{ $bloque['dia'] }}</strong>
+                                                <span class="tnum">{{ $bloque['horario'] }}</span>
+                                                <span class="texto-tenue small">· {{ $bloque['cupo'] ?? 'sin tope' }}</span>
+                                            </span>
+                                            <form method="POST" action="{{ $bloque['urlEliminar'] }}" data-confirmar="{{ $bloque['confirmar'] }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <input type="hidden" name="volver" value="consultorios">
+                                                <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                        title="Quitar el bloque del {{ $bloque['dia'] }} de {{ $bloque['horario'] }}"
+                                                        aria-label="Quitar el bloque del {{ $bloque['dia'] }} de {{ $bloque['horario'] }}">
+                                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            {{-- El alta de un bloque, sin salir de la pantalla. El `consultorio` oculto es lo que
+                                 permite reponer lo escrito en **este** formulario si la validación falla (hay uno
+                                 por consultorio y todos mandan los mismos nombres). --}}
+                            <form method="POST" action="{{ $fila['urlGuardarBloque'] }}" class="bloques-alta">
+                                @csrf
+                                <input type="hidden" name="volver" value="consultorios">
+                                <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">
+                                <input type="hidden" name="consultorio" value="{{ $fila['id'] }}">
+
+                                <label class="visually-hidden" for="bloque-dia-{{ $fila['id'] }}">Día del bloque nuevo en {{ $fila['sede'] }} {{ $fila['consultorio'] }}</label>
+                                <select name="dia_semana" id="bloque-dia-{{ $fila['id'] }}" class="form-select form-select-sm" required>
+                                    <option value="">Día…</option>
+                                    @foreach ($fila['opcionesDeDia'] as $opcion)
+                                        <option value="{{ $opcion['valor'] }}" @if ($opcion['elegido']) selected @endif>{{ $opcion['texto'] }}</option>
+                                    @endforeach
+                                </select>
+
+                                <label class="visually-hidden" for="bloque-desde-{{ $fila['id'] }}">Desde qué hora</label>
+                                <input type="time" name="hora_inicio" id="bloque-desde-{{ $fila['id'] }}" class="form-control form-control-sm"
+                                       value="{{ $fila['alta']['hora_inicio'] }}" required aria-label="Desde qué hora">
+
+                                <label class="visually-hidden" for="bloque-hasta-{{ $fila['id'] }}">Hasta qué hora</label>
+                                <input type="time" name="hora_fin" id="bloque-hasta-{{ $fila['id'] }}" class="form-control form-control-sm"
+                                       value="{{ $fila['alta']['hora_fin'] }}" required aria-label="Hasta qué hora">
+
+                                <label class="visually-hidden" for="bloque-cupo-{{ $fila['id'] }}">Cupo del bloque (vacío = sin tope)</label>
+                                <input type="number" name="cupo" id="bloque-cupo-{{ $fila['id'] }}" class="form-control form-control-sm"
+                                       min="1" max="65535" placeholder="Cupo" value="{{ $fila['alta']['cupo'] }}"
+                                       aria-label="Cupo del bloque, vacío = sin tope">
+
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar
+                                </button>
+                            </form>
+                            <p class="form-text mb-0">
+                                El cupo es opcional (vacío = sin tope). Para cargar muchos bloques, entra a
+                                <a href="{{ $fila['urlHorarios'] }}">la pantalla de horarios de este consultorio</a>.
+                            </p>
                         </td>
                         <td data-etiqueta="Estado">
                             <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
                         </td>
                         <td class="celda-acciones text-end">
                             <div class="acciones-fila">
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlHorarios'] }}">
-                                    <i class="bi bi-clock" aria-hidden="true"></i> Horarios
+                                {{-- El rótulo de los botones vive en `.accion-texto`: en pantallas angostas
+                                     (`doctorisimo-ui.css`) queda sólo el icono, con su `title` y su
+                                     `aria-label`, para que la tabla no pida scroll horizontal. --}}
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlHorarios'] }}"
+                                   title="Horarios del consultorio" aria-label="Horarios del consultorio">
+                                    <i class="bi bi-clock" aria-hidden="true"></i> <span class="accion-texto">Horarios</span>
                                 </a>
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
-                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}"
+                                   title="Editar el consultorio" aria-label="Editar el consultorio">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> <span class="accion-texto">Editar</span>
                                 </a>
                                 <x-ui.menu>
                                     <form method="POST" action="{{ $fila['urlActivar'] }}">

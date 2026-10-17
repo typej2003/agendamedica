@@ -2061,6 +2061,70 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 }
 
 /* ==========================================================================
+   9b. Web clínica — los bloques de horario dentro del listado de consultorios (A-10)
+   ========================================================================== */
+
+/* Cada consultorio muestra sus bloques en su fila y los edita ahí mismo: la celda de los horarios es la que
+   se lleva el ancho que sobra. Sin `min-width` a propósito: con la barra lateral desplegada a 1024 px la
+   tabla tendría que pedir scroll horizontal, y lo que se prefiere es que el alta de un bloque **envuelva**
+   (los controles tienen `min-width: 0`). A 375 px la tabla ya se apila en tarjetas. */
+@media (min-width: 768px) {
+    .consultorios-tabla .celda-bloques { width: 38%; }
+}
+
+@media (min-width: 1200px) {
+    .consultorios-tabla .celda-bloques { width: 46%; }
+}
+
+.bloques-lista { list-style: none; margin: 0 0 .4rem; padding: 0; }
+
+.bloques-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: .5rem;
+    padding: .15rem 0;
+}
+
+/* El texto no se estira: la papelera de cada bloque va al lado del bloque, no al otro extremo de la celda. */
+.bloques-item-texto { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.bloques-item .btn { flex: 0 0 auto; }
+
+/* El alta en línea: día · desde · hasta · cupo · Agregar, en una línea si entra y envuelto si no. Los
+   controles no se estiran más de lo que necesitan: los de hora y cupo son angostos. */
+.bloques-alta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3rem;
+}
+
+.bloques-alta select { flex: 1 1 7rem; min-width: 0; }
+.bloques-alta input[type="time"] { flex: 0 1 6.5rem; min-width: 0; }
+.bloques-alta input[type="number"] { flex: 0 1 4.5rem; min-width: 0; }
+.bloques-alta .btn { flex: 0 0 auto; white-space: nowrap; }
+
+/* En el celular la tabla es una tarjeta por fila: la celda deja de ser «etiqueta a la izquierda, valor a la
+   derecha» y su rótulo pasa arriba, porque adentro va una lista y un formulario. */
+@media (max-width: 767.98px) {
+    .tabla-tarjetas td.celda-bloques { display: block; text-align: left; }
+    .tabla-tarjetas td.celda-bloques::before { display: block; margin-bottom: .25rem; }
+    .bloques-alta select,
+    .bloques-alta input[type="time"],
+    .bloques-alta input[type="number"] { flex: 1 1 5rem; }
+}
+
+/* Las acciones de la fila, en sólo icono cuando la ventana es angosta: con la barra lateral desplegada a
+   1024 px los dos botones con su rótulo son lo que hacía desbordar la tabla (medido). Siguen en una línea,
+   que es la pauta de la tabla, y el nombre lo llevan en el `title` y el `aria-label` del enlace. */
+@media (max-width: 1199.98px) {
+    .consultorios-tabla .accion-texto { display: none; }
+    /* Con seis columnas y una barra lateral de 264 px, 12 px de relleno por celda son ~70 px de tabla que a
+       1024 no entran: se ajusta el relleno de esta tabla, no el de todas. */
+    .consultorios-tabla > :not(caption) > * > * { padding-left: .45rem; padding-right: .45rem; }
+}
+
+/* ==========================================================================
    10. Web clínica — los antecedentes del paciente (WEB-4.4)
    ========================================================================== */
 

@@ -195,17 +195,22 @@ final class ArmazonVista
             ];
         }
 
-        // «Configuración» (WEB-8.2) es un grupo para lo que el médico ajusta de su propio consultorio: el formato de impresión (membrete, logo,
-        // firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios (WEB-8.5: su
-        // secretaria) y la bitácora de cambios (WEB-8.5). Como los catálogos, es del médico y no de la secretaría.
-        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+        // «Configuración» (WEB-8.2) es un grupo para lo que se ajusta del propio consultorio: el formato de impresión (membrete,
+        // logo, firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios
+        // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5).
+        //
+        // **No es un grupo sólo del médico** (revisión de Alexander, A-10): la duración de la cita y los bloques de horario viven
+        // en `clinica.consultorios` y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
+        // secretaría (es ella la que carga los horarios y marca las ausencias en la vida real). Por eso el grupo se arma con lo
+        // que cada rol **puede abrir** —las dos primeras entradas, las del consultorio y la agenda, para los dos; el resto, que
+        // responde 403 a la secretaría, sólo para el médico—, en vez de esconderlo entero. La barra superior conserva
+        // «Consultorios» como atajo.
+        if ($this->tieneContexto()) {
             $hijos = [];
 
             foreach ([
-                ['clinica.formato', 'Formato de impresión', 'bi-printer'],
-                ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
-                ['clinica.usuarios', 'Usuarios', 'bi-people'],
-                ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
+                ['clinica.consultorios', 'Consultorios y horarios', 'bi-clock-history'],
+                ['clinica.agenda.no-laborables', 'Días no laborables', 'bi-calendar-x'],
             ] as [$ruta, $texto, $icono]) {
                 $hijos[] = [
                     'texto'  => $texto,
@@ -215,6 +220,21 @@ final class ArmazonVista
                 ];
             }
 
+            if ($this->trabajaLaConsulta) {
+                foreach ([
+                    ['clinica.formato', 'Formato de impresión', 'bi-printer'],
+                    ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
+                    ['clinica.usuarios', 'Usuarios', 'bi-people'],
+                    ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
+                ] as [$ruta, $texto, $icono]) {
+                    $hijos[] = [
+                        'texto'  => $texto,
+                        'icono'  => $icono,
+                        'url'    => route($ruta),
+                        'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, $ruta),
+                    ];
+                }
+            }
 
             $menu[] = [
                 'texto'  => 'Configuración',
