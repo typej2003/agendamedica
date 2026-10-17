@@ -22,12 +22,12 @@
 
     <div class="row g-3">
         @foreach ($seccion->lienzos() as $lienzo)
-            <div class="col-12 col-lg-6" data-mama-lienzo="{{ $lienzo['lado'] }}"
+            <div class="col-12 col-xl-6" data-mama-lienzo="{{ $lienzo['lado'] }}"
                  data-url-guardar="{{ $lienzo['guardar'] }}" data-url-dibujo="{{ $lienzo['dibujo'] }}">
                 <h3 class="paso-titulo mb-2">{{ $lienzo['titulo'] }}</h3>
                 <div class="mama-lienzo-marco">
-                    <img src="{{ $lienzo['base'] }}" alt="Imagen base de la {{ strtolower($lienzo['titulo']) }}" class="mama-lienzo-base" width="400" height="400">
-                    <canvas class="mama-lienzo" width="400" height="400" aria-label="Lienzo para marcar la {{ strtolower($lienzo['titulo']) }}"></canvas>
+                    <img src="{{ $lienzo['base'] }}" alt="Imagen base de la {{ strtolower($lienzo['titulo']) }}" class="mama-lienzo-base" width="520" height="400">
+                    <canvas class="mama-lienzo" width="520" height="400" aria-label="Lienzo para marcar la {{ strtolower($lienzo['titulo']) }}"></canvas>
                 </div>
                 <div class="d-flex gap-2 mt-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-mama-deshacer>
