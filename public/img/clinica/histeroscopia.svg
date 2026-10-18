@@ -1,54 +1,86 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 400" width="520" height="400" role="img"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520" role="img"
      aria-label="Esquema de la cavidad uterina para histeroscopía">
   <defs>
-    <radialGradient id="cavidad" cx="50%" cy="38%" r="66%">
-      <stop offset="0%" stop-color="#f9d3c4"/>
-      <stop offset="45%" stop-color="#f0a893"/>
-      <stop offset="78%" stop-color="#dd7f70"/>
+    <radialGradient id="cavidad" cx="50%" cy="34%" r="62%">
+      <stop offset="0%" stop-color="#fbd8c8"/>
+      <stop offset="48%" stop-color="#f2ad96"/>
+      <stop offset="80%" stop-color="#dd7f70"/>
       <stop offset="100%" stop-color="#b85750"/>
     </radialGradient>
-    <radialGradient id="fondo" cx="50%" cy="60%" r="50%">
-      <stop offset="0%" stop-color="#f7c9b6" stop-opacity=".75"/>
+    <radialGradient id="luz" cx="50%" cy="62%" r="52%">
+      <stop offset="0%" stop-color="#f8cbba" stop-opacity=".85"/>
       <stop offset="100%" stop-color="#e58f7c" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="ostium" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#3d1311"/>
-      <stop offset="60%" stop-color="#6a2621"/>
+    <radialGradient id="ostium" cx="45%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#30100e"/>
+      <stop offset="55%" stop-color="#63231f"/>
       <stop offset="100%" stop-color="#a94a44"/>
     </radialGradient>
     <linearGradient id="canal" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8f3831"/>
-      <stop offset="100%" stop-color="#d98a76"/>
+      <stop offset="0%" stop-color="#8a332d"/>
+      <stop offset="55%" stop-color="#b9564a"/>
+      <stop offset="100%" stop-color="#e0a08e"/>
     </linearGradient>
-    <filter id="halo" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="12"/></filter>
-    <filter id="brillo" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10"/></filter>
-    <filter id="suave" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+    <linearGradient id="borde" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a94a44" stop-opacity=".45"/>
+      <stop offset="50%" stop-color="#a94a44" stop-opacity=".1"/>
+      <stop offset="100%" stop-color="#a94a44" stop-opacity=".45"/>
+    </linearGradient>
+    <filter id="halo" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="brillo" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="suave" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>
   </defs>
 
-  <rect width="520" height="400" fill="#ffffff"/>
-  <ellipse cx="260" cy="196" rx="150" ry="140" fill="#e8a08f" opacity=".45" filter="url(#halo)"/>
+  <rect width="520" height="520" fill="#ffffff"/>
+  <ellipse cx="260" cy="215" rx="200" ry="185" fill="#e8a08f" opacity=".40" filter="url(#halo)"/>
 
-  <!-- Cavidad: fondo (arriba) y cuerpo que baja al canal cervical. -->
-  <path d="M 260 62 C 330 62 372 104 372 152 C 372 200 330 236 300 262 L 300 330
-           C 300 344 288 352 276 352 L 244 352 C 232 352 220 344 220 330 L 220 262
-           C 190 236 148 200 148 152 C 148 104 190 62 260 62 Z"
-        fill="url(#cavidad)" stroke="#a94a44" stroke-opacity=".28" stroke-width="2"/>
-  <path d="M 260 74 C 322 74 358 112 358 152 C 358 194 320 226 290 252
-           C 280 260 272 272 272 286 L 272 326 C 272 334 266 338 260 338
-           C 254 338 248 334 248 326 L 248 286 C 248 272 240 260 230 252
-           C 200 226 162 194 162 152 C 162 112 198 74 260 74 Z"
-        fill="url(#fondo)" filter="url(#suave)"/>
+  <!-- Cuerpo uterino: piriforme, fondo ancho arriba y estrechamiento hacia el istmo. -->
+  <path d="M 260 28
+           C 352 28 404 86 404 158
+           C 404 214 372 252 330 286
+           L 322 320
+           C 320 338 306 350 286 350
+           L 234 350
+           C 214 350 200 338 198 320
+           L 190 286
+           C 148 252 116 214 116 158
+           C 116 86 168 28 260 28 Z"
+        fill="url(#cavidad)" stroke="url(#borde)" stroke-width="3"/>
 
-  <!-- Los dos ostium tubáricos, arriba a los costados. -->
-  <ellipse cx="196" cy="128" rx="21" ry="17" fill="url(#ostium)"/>
-  <ellipse cx="324" cy="128" rx="21" ry="17" fill="url(#ostium)"/>
-  <ellipse cx="196" cy="122" rx="15" ry="6" fill="#f3b9a6" opacity=".22"/>
-  <ellipse cx="324" cy="122" rx="15" ry="6" fill="#f3b9a6" opacity=".22"/>
+  <!-- La luz del endometrio, sin llegar a los bordes. -->
+  <path d="M 260 46
+           C 338 46 382 96 382 158
+           C 382 208 352 240 314 272
+           L 306 306
+           C 304 320 296 328 284 328
+           L 236 328
+           C 224 328 216 320 214 306
+           L 206 272
+           C 168 240 138 208 138 158
+           C 138 96 182 46 260 46 Z"
+        fill="url(#luz)" filter="url(#suave)"/>
 
-  <!-- Canal cervical, al centro abajo. -->
-  <path d="M 244 300 L 276 300 L 272 352 L 248 352 Z" fill="url(#canal)" opacity=".55"/>
+  <!-- Canal cervical: largo, angosto y continuo (no una banda pegada). -->
+  <path d="M 233 332 C 236 372 238 412 240 448
+           C 240 462 248 472 260 472
+           C 272 472 280 462 280 448
+           C 282 412 284 372 287 332 Z"
+        fill="url(#canal)"/>
+  <path d="M 244 344 C 246 380 248 416 250 444
+           C 250 452 254 458 260 458
+           C 266 458 270 452 270 444
+           C 272 416 274 380 276 344 Z"
+        fill="#7d2c26" opacity=".55"/>
+  <!-- Orificio cervical externo. -->
+  <ellipse cx="260" cy="470" rx="11" ry="7" fill="#501914"/>
+
+  <!-- Los dos ostium tubáricos del fondo. -->
+  <ellipse cx="196" cy="118" rx="23" ry="19" fill="url(#ostium)"/>
+  <ellipse cx="324" cy="118" rx="23" ry="19" fill="url(#ostium)"/>
+  <ellipse cx="196" cy="111" rx="16" ry="6" fill="#f3b9a6" opacity=".20"/>
+  <ellipse cx="324" cy="111" rx="16" ry="6" fill="#f3b9a6" opacity=".20"/>
 
   <!-- Brillos del endometrio. -->
-  <ellipse cx="222" cy="180" rx="46" ry="52" fill="#ffffff" opacity=".20" filter="url(#brillo)" transform="rotate(-14 222 180)"/>
-  <ellipse cx="312" cy="200" rx="30" ry="38" fill="#ffffff" opacity=".12" filter="url(#brillo)" transform="rotate(-10 312 200)"/>
+  <ellipse cx="212" cy="196" rx="52" ry="62" fill="#ffffff" opacity=".22" filter="url(#brillo)" transform="rotate(-12 212 196)"/>
+  <ellipse cx="316" cy="220" rx="32" ry="42" fill="#ffffff" opacity=".13" filter="url(#brillo)" transform="rotate(-8 316 220)"/>
 </svg>

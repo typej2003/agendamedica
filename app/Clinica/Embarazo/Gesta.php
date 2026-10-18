@@ -132,22 +132,22 @@ final class Gesta
     }
 
     /**
-     * **Los valores del tipiaje**, los del DataWindow del escritorio (`d_pre_natal_observa.srd:11` y `:13`,
-     * el `values=` de `tipiaje` y `tipiaje_cony`): ocho, **en ese orden**, con **`AB` sin Rh** y
-     * **«Incógnito»** como un valor elegible (en el escritorio no es "no se sabe": es un dato).
+     * **Los valores del tipiaje**, los del DataWindow **vivo** de la pestaña
+     * (`d_pre_natal_observa_2.srd:11`, el que asigna `w_consulta_principal.srw:24725`): **nueve**, en ese
+     * orden, con **`AB+` y `AB-`** y **«Incógnito»** como un valor elegible (en el escritorio no es "no se
+     * sabe": es un dato).
      *
      * ⚠️ **La lista no se inventa ni se moderniza** (O-24): el valor viaja al escritorio por el sync y se
      * compara con lo que él escribió, así que `A+` tiene que ser `A+` y no `A positivo` ni `Rh+`. La columna
      * es `char(10)` y «Incógnito» entra sin tocar el esquema.
      *
-     * El DataWindow **vivo** de la pestaña (`d_pre_natal_observa_2.srd:11`) declara **nueve**: muestra
-     * `AB+` en lugar de `AB` y agrega `AB-`. La lista de acá es la que la observación fijó (los ocho del
-     * `d_pre_natal_observa.srd`) y **un valor viejo con cualquiera de esas dos formas no se pierde**: se
-     * muestra como la opción elegida (`OpcionesDelDesplegable`). Cambiar la lista es cambiar esta constante.
+     * ⚠️ **El `d_pre_natal_observa.srd` (sin `_2`) es el huérfano** y declara ocho con `AB` sin Rh: es la
+     * trampa 99 otra vez, y por eso la lista sale del `_2`. Un valor viejo guardado como `AB` **no se
+     * pierde**: se muestra como la opción elegida (`OpcionesDelDesplegable`).
      *
      * @var array<int,string>
      */
-    public const TIPIAJES = ['A+', 'A-', 'B-', 'AB', 'O+', 'O-', 'B+', 'Incógnito'];
+    public const TIPIAJES = ['A+', 'A-', 'B-', 'B+', 'AB+', 'O+', 'O-', 'Incógnito', 'AB-'];
 
     /** El bloque de la ficha: los datos clínicos de los dos renglones del escritorio. */
     public const DATOS = 'datos';

@@ -437,9 +437,9 @@ class ConsultaPrenatalWebTest extends TestCase
             $this->assertStringContainsString('<select', $select, 'El campo «' . $id . '» no es un desplegable.');
 
             preg_match_all('/<option value="([^"]*)"/', $select, $valores);
-            // La opción vacía adelante y, después, los ocho del escritorio **en ese orden**.
+            // La opción vacía adelante y, después, los nueve del DataWindow **vivo** (`_2`) **en ese orden**.
             $this->assertSame(
-                ['', 'A+', 'A-', 'B-', 'AB', 'O+', 'O-', 'B+', 'Incógnito'],
+                ['', 'A+', 'A-', 'B-', 'B+', 'AB+', 'O+', 'O-', 'Incógnito', 'AB-'],
                 $valores[1],
             );
 
