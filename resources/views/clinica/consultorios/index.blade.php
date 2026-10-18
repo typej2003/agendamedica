@@ -85,7 +85,7 @@
         </form>
     @endif
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="consultorios-lista">
         @if ($vm->estaVacio())
             <x-ui.vacio icono="bi-door-closed" :titulo="$vm->textoVacio()">
                 Sin un consultorio cargado no se puede agendar: la agenda necesita saber la sede, la modalidad y el
@@ -119,7 +119,7 @@
                             <x-ui.estado :tono="$fila['modalidad']['tono']" :icono="$fila['modalidad']['icono']">{{ $fila['modalidad']['texto'] }}</x-ui.estado>
                         </td>
                         <td data-etiqueta="Duración">{{ $fila['duracion'] ?? '—' }}</td>
-                        <td data-etiqueta="Horarios" class="celda-bloques">
+                        <td data-etiqueta="Horarios" class="celda-bloques" data-tour="consultorios-bloques">
                             @if ($fila['bloques'] === [])
                                 <p class="texto-tenue small mb-2">
                                     Todavía no tiene bloques: la agenda no le pone tope de pacientes ni hora de apertura.
@@ -152,7 +152,7 @@
                             {{-- El alta de un bloque, sin salir de la pantalla. El `consultorio` oculto es lo que
                                  permite reponer lo escrito en **este** formulario si la validación falla (hay uno
                                  por consultorio y todos mandan los mismos nombres). --}}
-                            <form method="POST" action="{{ $fila['urlGuardarBloque'] }}" class="bloques-alta">
+                            <form method="POST" action="{{ $fila['urlGuardarBloque'] }}" class="bloques-alta" data-tour="consultorios-alta">
                                 @csrf
                                 <input type="hidden" name="volver" value="consultorios">
                                 <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">

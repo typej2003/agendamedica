@@ -11,7 +11,7 @@
         @csrf
         <input type="hidden" name="id" value="{{ $vm->idEditando() }}">
 
-        <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-clock-history" class="mb-3">
+        <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-clock-history" class="mb-3" data-tour="horarios-alta">
             <div class="row g-3">
                 <x-ui.campo etiqueta="Día" for="dia_semana" requerido class="col-md-3">
                     <select name="dia_semana" id="dia_semana" class="form-select" required>
@@ -44,7 +44,7 @@
         </x-ui.tarjeta>
     </form>
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="horarios-lista">
         @if ($vm->estaVacio())
             <x-ui.vacio icono="bi-clock-history" titulo="Este consultorio todavía no tiene horarios cargados.">
                 La agenda funciona igual, pero sin bloques no hay tope de pacientes y, por orden de llegada, la cita

@@ -18,7 +18,7 @@
            consulta» cierra la atención y vuelve a la agenda. «Ver resumen» también se fue: el resumen del paciente se ve
            desde su ficha (Pacientes).
          - **El indicador de cambios sin guardar** vive en esta misma fila (`data-barra-estado`). --}}
-    <div class="consulta-encabezado" data-consulta-barra>
+    <div class="consulta-encabezado" data-consulta-barra data-tour="consulta-encabezado">
         @if ($vm->urlVolver())
             <a class="consulta-volver" href="{{ $vm->urlVolver() }}" data-barra-salir
                title="Volver a la agenda" aria-label="Volver a la agenda">
@@ -34,14 +34,14 @@
         {{-- El navegador 1…N (WEB-11.5), compacto: menos ancho, sin el rótulo «CONSULTA» y con los números solos. Cambiar
              de consulta guarda antes lo escrito (`consulta-barra.js`, `[data-chips]`). --}}
         @if ($vm->hayNavegador())
-            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente">
+            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente" data-tour="consulta-navegador">
                 <x-ui.chips :opciones="$vm->navegador()" etiqueta="Consultas de este paciente" />
             </nav>
         @endif
 
         <div class="consulta-barra-acciones">
             <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
-            <button type="button" class="btn btn-outline-secondary" data-barra-guardar>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar data-tour="consulta-guardar">
                 <i class="bi bi-save" aria-hidden="true"></i> Guardar
             </button>
             {{-- La **acción primaria** de la pantalla (guía de UI §1: un solo botón sólido): terminar la atención. Es lo

@@ -13,7 +13,7 @@
          resuelve no es un módulo del menú, así que el inicio es el camino por el que el médico se entera de que hoy
          hay saludos para mandar. --}}
     @if ($vm->hayCumpleanosHoy())
-        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="alert">
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="alert" data-tour="inicio-cumpleanos">
             <i class="bi bi-balloon" aria-hidden="true"></i>
             <span>{{ $vm->textoCumpleanos() }}</span>
             <a class="ms-auto small fw-semibold" href="{{ $vm->urlCumpleanos() }}">Ver los cumpleaños y saludarlos</a>
@@ -22,7 +22,7 @@
 
     @if ($vm->estaVacio())
         @php $vacio = $vm->vacio(); @endphp
-        <x-ui.tarjeta>
+        <x-ui.tarjeta data-tour="inicio-lista">
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}
                 <x-slot name="acciones">
                     <a class="btn btn-primary" href="{{ $vm->urlAgenda() }}">
@@ -39,7 +39,7 @@
              `clinica.agenda._fila`, así que ofrece lo mismo: «Confirmar», «Atender»/«Editar consulta», «Cobrar»,
              «Imprimir documentos» y el menú con el recordatorio y las citas del paciente. No se arrastra: el inicio
              no reordena la cola. --}}
-        <x-ui.tarjeta sin-relleno>
+        <x-ui.tarjeta sin-relleno data-tour="inicio-lista">
             <x-ui.tabla class="tabla-agenda">
                 <thead>
                 <tr>

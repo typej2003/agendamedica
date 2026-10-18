@@ -34,14 +34,14 @@
                 </x-ui.menu>
             @endif
 
-            <a class="btn btn-primary" href="{{ $vm->urlNueva() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNueva() }}" data-tour="agenda-nueva">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva cita
             </a>
         </x-slot>
     </x-ui.page-head>
 
     {{-- Barra de la agenda: dónde estoy (anterior / hoy / siguiente + título), la vista y los filtros. --}}
-    <div class="agenda-barra">
+    <div class="agenda-barra" data-tour="agenda-barra">
         <div class="agenda-navegacion">
             <div class="btn-group" role="group" aria-label="Navegación">
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlAnterior() }}"

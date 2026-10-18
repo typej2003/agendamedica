@@ -7,7 +7,7 @@
          plantilla); el buscador y el filtro por tipo están en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Plantillas de texto" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}" data-tour="catalogos-nuevo">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva plantilla
             </a>
         </x-slot>
@@ -26,7 +26,7 @@
 
     <x-ui.errores />
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">

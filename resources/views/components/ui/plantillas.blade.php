@@ -33,7 +33,7 @@
     $urlAdministrar = route('clinica.catalogos.plantillas-texto', ['filtro' => $tipoPrincipal]);
 @endphp
 
-<div {{ $attributes->merge(['class' => 'plantillas-disparador']) }}>
+<div {{ $attributes->merge(['class' => 'plantillas-disparador']) }} data-tour="consulta-plantillas">
     <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="{{ $id }}"
             aria-haspopup="dialog" aria-controls="{{ $id }}" id="{{ $id }}-disparador">
         <i class="bi bi-files" aria-hidden="true"></i>

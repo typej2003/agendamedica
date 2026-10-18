@@ -37,9 +37,12 @@
                         {{-- Grupo plegable (Catálogos, Listados, Configuración y —dentro de una consulta— Consulta): `<details>` nativo,
                              sin JS. Nace abierto cuando se está dentro de uno de sus hijos; el hijo activo lleva `aria-current`. Con la
                              barra plegada a 72 px los hijos quedan como iconos con su `title`, como cualquier ítem. `data-menu` es el
-                             asa estable del grupo (el nombre en slug) para los verificadores de Chrome. --}}
+                             asa estable del grupo (el nombre en slug) para los verificadores de Chrome, y `data-tour` el asa
+                             del tour guiado (A-15): el paso del catálogo apunta al encabezado del grupo
+                             (`[data-tour=menu-consulta]`), que es lo que se ve. --}}
                         <details class="nav-grupo" data-menu="{{ \Illuminate\Support\Str::slug($item['texto']) }}" {{ $item['activo'] ? 'open' : '' }}>
-                            <summary class="nav-link {{ $item['activo'] ? 'activo-padre' : '' }}" title="{{ $item['texto'] }}">
+                            <summary class="nav-link {{ $item['activo'] ? 'activo-padre' : '' }}" title="{{ $item['texto'] }}"
+                                     data-tour="menu-{{ \Illuminate\Support\Str::slug($item['texto']) }}">
                                 <i class="bi {{ $item['icono'] }}" aria-hidden="true"></i>
                                 <span class="link-text">{{ $item['texto'] }}</span>
                                 <i class="bi bi-chevron-down nav-grupo-flecha link-text" aria-hidden="true"></i>
@@ -57,6 +60,7 @@
                                             </span>
                                         @else
                                             <a class="nav-link {{ $hijo['activo'] ? 'active' : '' }}" href="{{ $hijo['url'] }}"
+                                               data-tour="menu-{{ \Illuminate\Support\Str::slug($hijo['texto']) }}"
                                                @if ($hijo['activo']) aria-current="page" @endif title="{{ $hijo['texto'] }}">
                                                 <i class="bi {{ $hijo['icono'] }}" aria-hidden="true"></i>
                                                 <span class="link-text">{{ $hijo['texto'] }}</span>
@@ -184,12 +188,22 @@
             </div>
         @endforeach
 
+        {{-- El tour guiado de la pantalla (A-15), si la ruta tiene uno y el usuario todavía no lo vio: el botón
+             de reabrir y los pasos. Lo resuelve `TourDeLaPantallaComposer`; acá sólo se incluye. --}}
+        @if (! empty($tour))
+            @include('clinica._tour')
+        @endif
+
         @yield('contenido')
     </main>
 </div>
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
 <script src="{{ asset('js/clinica/chips.js') }}"></script>
+@if (! empty($tour))
+    {{-- El tour guiado (A-15) sólo se carga en las cinco pantallas que tienen uno. --}}
+    <script src="{{ asset('js/clinica/tour.js') }}"></script>
+@endif
 
 {{-- Los scripts de cada pantalla (buscadores, arrastre, diálogos) van acá y no dentro del contenido: así el
      HTML de la vista queda solo el HTML. --}}

@@ -63,6 +63,7 @@ use App\Http\Controllers\Clinica\RecordatorioController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
+use App\Http\Controllers\Clinica\TourController;
 use App\Http\Controllers\Clinica\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,6 +101,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
+
+            // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
+            // —una petición de lectura no escribe— y vive acá, fuera del grupo de la consulta, porque también
+            // lo usan la agenda y los consultorios, que son de la secretaría.
+            Route::post('/tour/{pantalla}', [TourController::class, 'marcar'])
+                ->where('pantalla', '[a-z]+')->name('tour.visto');
 
             // Consultorios del médico (WEB-2.8b.2): dónde atiende, con qué modalidad y con qué
             // duración. Es lo que la agenda necesita para calcular la jornada —y lo que un médico

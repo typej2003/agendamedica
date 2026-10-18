@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\View\Composers\ArmazonClinicaComposer;
+use App\Http\View\Composers\TourDeLaPantallaComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -34,5 +35,9 @@ class AppServiceProvider extends ServiceProvider
 
         // El armazón de la web clínica (barra, accesos y menú) lo arma un ViewModel, no el layout.
         View::composer('clinica.layout', ArmazonClinicaComposer::class);
+
+        // El tour guiado de la pantalla (A-15) también: el layout lo pinta si la ruta tiene uno y el usuario
+        // todavía no lo vio. Los controladores de las pantallas no se tocan.
+        View::composer('clinica.layout', TourDeLaPantallaComposer::class);
     }
 }

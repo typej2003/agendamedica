@@ -3385,3 +3385,55 @@ body.auth-pagina {
 .dialogo-visualizar-caja { display: flex; flex-direction: column; height: 100%; }
 .dialogo-visualizar-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--ds-borde, #dee2e6); }
 .dialogo-visualizar-marco { flex: 1 1 auto; width: 100%; border: 0; background: #f1f1f4; }
+
+/* Tour guiado de la pantalla (A-15): el botón de reabrir, el globo que señala cada elemento y el resalte del
+   elemento señalado. El globo es `position: fixed` y lo ubica `public/js/clinica/tour.js` (arriba o abajo del
+   elemento, siempre dentro de la ventana); acá sólo se define cómo se ve. Se apoya en los tokens: no hay
+   colores ni sombras inventadas. */
+.tour-reabrir-fila { display: flex; justify-content: flex-end; margin-bottom: .5rem; }
+.tour-reabrir {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .15rem .25rem; border: 0; border-radius: var(--ds-radio-sm);
+    background: transparent; color: var(--ds-texto-3);
+    font-size: .8125rem; line-height: 1.2;
+}
+.tour-reabrir:hover { color: var(--ds-violeta-700); text-decoration: underline; }
+.tour-reabrir:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+.tour-reabrir .bi { font-size: .95rem; }
+/* En el celular el texto no entra al lado del título: queda el «?» con su `aria-label` y su `title`. */
+@media (max-width: 575.98px) {
+    .tour-reabrir-texto { display: none; }
+}
+
+/* El elemento señalado: un contorno de la marca que no cambia el tamaño ni el lugar de nada. */
+.tour-resaltado {
+    outline: 3px solid var(--ds-violeta-700);
+    outline-offset: 2px;
+    border-radius: var(--ds-radio-sm);
+    scroll-margin: 5rem;
+}
+
+/* El globo: no tapa el elemento (el JS lo pone arriba o abajo), no bloquea la pantalla y a 375 px entra igual. */
+.tour-globo {
+    position: fixed;
+    z-index: 2080;
+    width: min(21rem, calc(100vw - 1rem));
+    padding: .75rem .875rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    box-shadow: var(--ds-sombra-3);
+    font-size: .875rem;
+    color: var(--ds-texto);
+}
+.tour-globo[hidden] { display: none; }
+.tour-globo:focus { outline: none; }
+.tour-globo-cuenta { margin: 0 0 .15rem; font-size: .72rem; text-transform: uppercase; letter-spacing: .02em; color: var(--ds-texto-3); }
+.tour-globo-titulo { margin: 0 0 .25rem; font-size: 1rem; font-weight: 600; line-height: 1.3; }
+.tour-globo-texto { margin: 0 0 .75rem; font-size: .875rem; line-height: 1.45; color: var(--ds-texto-2); }
+.tour-globo-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.tour-globo-acciones .btn-link { padding-left: 0; padding-right: 0; color: var(--ds-texto-3); }
+.tour-globo-botones { display: flex; gap: .5rem; margin-left: auto; }
+
+/* Los pasos son la fuente del texto: el JS los lee y los pinta en el globo. Nunca se ven. */
+.tour-pasos { display: none; }
