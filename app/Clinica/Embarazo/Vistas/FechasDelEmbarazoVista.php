@@ -117,7 +117,9 @@ final class FechasDelEmbarazoVista
      *
      * Un desplegable recibe sus **opciones resueltas** (`OpcionesDelDesplegable`): la opción vacía adelante
      * —sin ella un `<select>` mandaría siempre la primera, y una serología quedaría escrita sin que nadie la
-     * tocara— y el código desconocido del escritorio al final, sin perderlo.
+     * tocara— y el código desconocido del escritorio al final, sin perderlo. Antes se pasa el valor por
+     * `valorConocido`: un rótulo viejo («Negativo», de antes de la trampa 140) vuelve a ser el código que la
+     * columna guarda.
      *
      * @return array<int,array<string,mixed>>
      */
@@ -127,6 +129,7 @@ final class FechasDelEmbarazoVista
             $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
 
             if (($campo['tipo'] ?? 'texto') === 'opciones') {
+                $campo['valor'] = OpcionesDelDesplegable::valorConocido($campo, $campo['valor']);
                 $campo['opciones'] = OpcionesDelDesplegable::de($campo, $campo['valor']);
             }
 

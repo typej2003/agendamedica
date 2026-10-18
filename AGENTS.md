@@ -319,7 +319,10 @@ ata por `data-consulta-fechas`). El panel pasa de 11 a **12 de 13**. Las **cuatr
 (*Prenatal*, *Laboratorio*, *Controles* y *Reporte*). ⚠️ **Tres tablas que no son las que parecen** (las tres de
 la solapa vieja y oculta, sin datos en el dump): `prena_exames_b` (no `pre_natal_examenes`),
 `pre_natal_desarrollo_fino` (no `pre_natal_desarrollo`) y el DataWindow `d_pre_natal_observa_2.srd` (no el
-huérfano sin `_2`): ver la **trampa 99**. Verificación en Chrome:
+huérfano sin `_2`): ver la **trampa 99**. Los cuatro reactivos del laboratorio (`hiv`, `vdrl`, `toxo_igm`,
+`toxo_igg`) se guardan con el **código de una letra** del escritorio y no con su rótulo, y los números
+declaran el `char(5)` de su columna: guardar el texto desbordaba el `VARCHAR(1)` en el MySQL de producción
+(«1406 Data too long for column 'hiv'») sin que SQLite lo delatara —**trampa 140**—. Verificación en Chrome:
 `../.agent-tools/verificar-consulta-prenatal-web.js`.
 
 Lo que **WEB-6.2 (2026-10-13)**, el **eco obstétrico** —el segundo de F6—, agregó: los **dos tipos nuevos de la

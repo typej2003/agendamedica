@@ -82,8 +82,10 @@ class GuardarLaboratorioDelEmbarazoTest extends TestCase
         $this->assertSame('2026-08-14', $fila->fecha);
         // La coma decimal se guarda con punto, como en el escritorio.
         $this->assertSame(11.5, (float) $fila->hemoglobina);
-        $this->assertSame('Negativo', $fila->hiv);
-        $this->assertSame('No reactivo', $fila->vdrl);
+        // Los reactivos van con el código de una letra del escritorio, no con su rótulo: la columna es
+        // `char(1)` en MySQL (trampa 140). El rótulo sigue entrando: la Action lo traduce.
+        $this->assertSame('N', $fila->hiv);
+        $this->assertSame('N', $fila->vdrl);
         $this->assertSame('Normal', $fila->orina);
 
         $this->assertDatabaseHas('sync_changes', [
@@ -157,5 +159,38 @@ class GuardarLaboratorioDelEmbarazoTest extends TestCase
         $fila = PrenaExamenB::where('historia', 1005)->first();
         $this->assertNull($fila->hemoglobina);
         $this->assertSame('8200', $fila->glob_blanco);
+    }
+
+    /**
+     * **El bug que reventó en producción** (trampa 140): `SQLSTATE[22001] 1406 Data too long for column
+     * 'hiv'`. La columna es `char(1)` en MySQL y la web guardaba «Negativo». SQLite no mira el largo, así
+     * que lo que se fija acá es el **largo de lo guardado**, no que el guardado no falle.
+     */
+    public function test_los_reactivos_se_guardan_con_el_codigo_de_una_letra(): void
+    {
+        $medico = $this->medico();
+        $accion = app(GuardarLaboratorioDelEmbarazo::class);
+
+        // Lo que manda el formulario (su `value` es el código) y el rótulo viejo de un formulario abierto
+        // antes del arreglo: los dos tienen que terminar en una sola letra.
+        $accion->ejecutar($medico->reg_medico, 1006, 1, $this->formulario([
+            'fecha' => '2026-06-01', 'hiv' => 'P', 'vdrl' => 'No reactivo', 'toxo_igm' => 'Negativo',
+            'toxo_igg' => 'S',
+        ]));
+
+        $fila = PrenaExamenB::where('historia', 1006)->first();
+
+        $this->assertSame('P', $fila->hiv);
+        $this->assertSame('N', $fila->vdrl);
+        $this->assertSame('N', $fila->toxo_igm);
+        $this->assertSame('S', $fila->toxo_igg);
+
+        // Un valor que no es un código ni un rótulo no se guarda: no entra en la columna y, si entrara, el
+        // `INSERT` moriría en MySQL. Se guarda en blanco en vez de reventar.
+        $accion->ejecutar($medico->reg_medico, 1007, 1, $this->formulario([
+            'fecha' => '2026-06-01', 'hiv' => 'no concluyente',
+        ]));
+
+        $this->assertNull(PrenaExamenB::where('historia', 1007)->first()->hiv);
     }
 }

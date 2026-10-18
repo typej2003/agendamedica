@@ -23,6 +23,10 @@ use InvalidArgumentException;
  *
  * Las columnas que el DataWindow tiene **ocultas** (`PrenaExamenB::COLUMNAS_QUE_NO_SE_TOCAN`: plaquetas,
  * TSH, insulina…) quedan como estén: el escritorio las persiste pero el médico no las ve en esta pestaña.
+ *
+ * ⚠️ **Los cuatro reactivos se guardan con el código de una letra del escritorio** (`hiv`, `vdrl` y las dos
+ * toxo: `N`, `P`, `R`, `S`; ver `PrenaExamenB::REACTIVOS`), no con su rótulo: la columna es `char(1)` en
+ * MySQL y «Negativo» la desborda (trampa 140).
  */
 final class GuardarLaboratorioDelEmbarazo
 {
@@ -54,9 +58,15 @@ final class GuardarLaboratorioDelEmbarazo
 
         foreach (PrenaExamenB::campos() as $campo) {
             $columna = $campo['columna'];
-            $nuevos[$columna] = in_array($columna, self::NUMERICAS, true)
-                ? $this->numero($valores[$columna] ?? null)
-                : Gesta::texto($valores[$columna] ?? null);
+
+            if (in_array($columna, self::NUMERICAS, true)) {
+                $nuevos[$columna] = $this->numero($valores[$columna] ?? null);
+            } elseif (PrenaExamenB::esReactivo($columna)) {
+                // El reactivo va con su código de una letra: el rótulo no entra en la columna (trampa 140).
+                $nuevos[$columna] = PrenaExamenB::codigoDe($columna, $valores[$columna] ?? null);
+            } else {
+                $nuevos[$columna] = Gesta::texto($valores[$columna] ?? null);
+            }
         }
 
         if ($nuevos['fecha'] === null) {

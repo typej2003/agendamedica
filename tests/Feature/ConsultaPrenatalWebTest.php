@@ -661,7 +661,10 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->assertNotNull($lab);
         $this->assertSame(1, $lab->gesta_clave);
         $this->assertSame(11.5, (float) $lab->hemoglobina);
-        $this->assertSame('No reactivo', $lab->vdrl);
+        // El reactivo se guarda con el código de una letra del escritorio (la columna es `char(1)` en
+        // MySQL, trampa 140), aunque el formulario haya mandado el rótulo.
+        $this->assertSame('N', $lab->vdrl);
+        $this->assertSame(1, mb_strlen($lab->vdrl));
 
         // Los controles: la presentación guarda el código y la placenta el texto del desplegable.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -679,6 +682,30 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1'))
             ->assertOk()->assertSee('14/08/2026');
+    }
+
+    /**
+     * **La otra cara de la trampa 140**: los números del laboratorio también tienen su ancho. Las columnas
+     * son `char(5)` en el escritorio (`hemoglobina`, `glob_blanco`, `urea`…) y el `max` genérico de la
+     * validación era 20, así que un valor de seis caracteres habría llegado al `INSERT` y en MySQL —modo
+     * estricto— habría muerto igual que el «Negativo» del `hiv`. Se frena en el campo.
+     */
+    public function test_un_numero_mas_largo_que_su_columna_se_frena_en_el_campo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO))
+            ->post(route('clinica.consulta.embarazo.laboratorio.guardar', $consulta->id), [
+                'gesta' => '1', 'fecha' => '2026-08-14', 'glob_blanco' => '123456',
+            ])
+            ->assertSessionHasErrors('glob_blanco');
+
+        $this->assertSame(0, PrenaExamenB::where('historia', 1001)->count());
     }
 
     public function test_una_fecha_sin_gesta_no_se_guarda_y_lo_dice(): void

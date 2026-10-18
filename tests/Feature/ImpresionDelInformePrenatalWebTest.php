@@ -124,7 +124,8 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
         ]);
         PrenaExamenB::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => $gesta,
-            'fecha' => '2026-06-02', 'hemoglobina' => '11.5', 'vdrl' => 'No reactivo', 'hiv' => 'Negativo',
+            // Los reactivos, con el código de una letra que guarda el escritorio (trampa 140).
+            'fecha' => '2026-06-02', 'hemoglobina' => '11.5', 'vdrl' => 'N', 'hiv' => 'N',
         ]);
     }
 
@@ -158,6 +159,9 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
         $respuesta->assertSee('Placenta: Fúndica');
         $respuesta->assertSee('Laboratorio del 02/06/2026:');
         $respuesta->assertSee('Hb. 11.5');
+        // Los reactivos guardados con su código salen con el rótulo que lee el médico.
+        $respuesta->assertSee('HIV: Negativo');
+        $respuesta->assertSee('VDRL: No reactivo');
         // Las observaciones de la gesta, y el control sin datos no dejó su línea.
         $respuesta->assertSee('Observaciones:')->assertSee('Embarazo en curso, sin particularidades.');
         $respuesta->assertDontSee('Control del 15/06/2026');

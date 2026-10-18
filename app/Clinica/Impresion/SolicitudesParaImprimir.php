@@ -1064,9 +1064,12 @@ final class SolicitudesParaImprimir
             $valores = [];
 
             foreach ($campos as $campo) {
-                $valor = $fila->{$campo['columna']} ?? null;
+                // Los reactivos del laboratorio están guardados con el código de una letra: la hoja imprime
+                // su rótulo (`N` → «Negativo», trampa 140); en las demás columnas no cambia nada.
+                $crudo = $fila->{$campo['columna']} ?? null;
+                $valor = PrenaExamenB::textoDe($campo['columna'], $crudo === null ? null : (string) $crudo);
 
-                if ($valor !== null && (string) $valor !== '') {
+                if ($valor !== null && $valor !== '') {
                     // El rótulo se respeta tal cual (el escritorio abrevia con punto: «Hb.», «A.U.»): si ya
                     // termina en punto, el valor va después de un espacio, y si no, después de dos puntos.
                     $etiqueta = (string) $campo['etiqueta'];

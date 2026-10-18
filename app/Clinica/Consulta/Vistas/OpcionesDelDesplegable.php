@@ -22,6 +22,31 @@ namespace App\Clinica\Consulta\Vistas;
 final class OpcionesDelDesplegable
 {
     /**
+     * **El valor guardado, resuelto a la clave de la lista.** Un valor viejo que está escrito como el
+     * **texto** de una de las opciones —los rótulos que la web guardó en los reactivos del laboratorio antes
+     * de la trampa 140— vuelve a su clave (`Negativo` → `N`), así el `<select>` lo muestra elegido. Lo que ya
+     * es una clave, o un código desconocido del escritorio, queda como está.
+     *
+     * @param  array<string,mixed>  $campo  el campo del mapa (`opciones`: la lista del DataWindow)
+     */
+    public static function valorConocido(array $campo, string $valor): string
+    {
+        foreach ($campo['opciones'] ?? [] as $opcion) {
+            if ($opcion['valor'] === $valor) {
+                return $valor;
+            }
+        }
+
+        foreach ($campo['opciones'] ?? [] as $opcion) {
+            if (strcasecmp((string) $opcion['texto'], $valor) === 0) {
+                return $opcion['valor'];
+            }
+        }
+
+        return $valor;
+    }
+
+    /**
      * @param  array<string,mixed>  $campo  el campo del mapa (`opciones`: la lista del DataWindow)
      * @param  string  $valor  lo que tiene guardado la fila (`''` si no tiene nada)
      * @return array<int,array{valor:string,texto:string}>
