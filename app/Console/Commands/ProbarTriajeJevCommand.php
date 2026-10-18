@@ -37,6 +37,8 @@ class ProbarTriajeJevCommand extends Command
         {--archivo= : Corpus en JSON (por defecto database/datos/triaje-whatsapp.json)}
         {--limite=0 : Cuántos mensajes probar (0 = todos)}
         {--umbral= : Confianza mínima para automatizar (por defecto, la de config/services.php)}
+        {--modelo= : Modelo a usar (por defecto JEV_MODEL)}
+        {--protocolo= : systemone, chat o auto (por defecto JEV_PROTOCOLO)}
         {--detalle : Muestra las probabilidades de cada mensaje}
         {--json= : Guarda el resultado crudo y el resumen en este archivo}';
 
@@ -44,6 +46,15 @@ class ProbarTriajeJevCommand extends Command
 
     public function handle(): int
     {
+        // Las opciones pisan la config sólo para esta corrida: sirven para probar otro modelo o el camino de
+        // chat sin editar el .env.
+        if ($this->option('modelo')) {
+            config(['services.jev.model' => (string) $this->option('modelo')]);
+        }
+        if ($this->option('protocolo')) {
+            config(['services.jev.protocolo' => (string) $this->option('protocolo')]);
+        }
+
         $servicio = app(JevService::class);
 
         try {
@@ -130,7 +141,6 @@ class ProbarTriajeJevCommand extends Command
             $confianza = (float) ($intencion['confidence'] ?? 0);
             $probabilidad = (float) ($intencion['probabilities'][$elegida] ?? 0);
             $probUrgencia = (float) ($urgencia['noul'] ?? 0);
-
             $resultados[] = [
                 'id' => $mensaje['id'] ?? ($indice + 1),
                 'mensaje' => $texto,
@@ -161,6 +171,20 @@ class ProbarTriajeJevCommand extends Command
             return self::FAILURE;
         }
 
+        $protocolo = $servicio->protocoloUsado();
+
+        if ($protocolo !== null) {
+            $this->line(sprintf('Transporte usado: <info>%s</info>', $protocolo));
+        }
+
+        if ($protocolo === 'chat') {
+            $this->newLine();
+            $this->line('<comment>⚠️ El proveedor no expone /v1/systemone: la corrida fue por chat/completions.</comment>');
+            $this->line('   La categoría se puede medir igual, pero la <comment>confianza es autoinformada</comment> por el modelo,');
+            $this->line('   no calibrada: no sirve para fijar un umbral de derivación en producción. Para eso hace falta');
+            $this->line('   un proveedor con el protocolo propio de Jev (thejevai.com o DigitalOcean Inference).');
+        }
+
         $this->tablaDeMensajes($resultados);
         $resumen = $this->resumen($resultados, $umbral, $tokens, $ms, $creditos);
 
@@ -168,7 +192,14 @@ class ProbarTriajeJevCommand extends Command
             $ruta = (string) $this->option('json');
             file_put_contents(
                 $ruta,
-                json_encode(['modelo' => $servicio->modelo(), 'umbral' => $umbral, 'resumen' => $resumen, 'mensajes' => $resultados], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                json_encode([
+                    'modelo' => $servicio->modelo(),
+                    'protocolo' => $protocolo,
+                    'confianza_calibrada' => $servicio->confianzaCalibrada(),
+                    'umbral' => $umbral,
+                    'resumen' => $resumen,
+                    'mensajes' => $resultados,
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
             $this->newLine();
             $this->line("Resultado guardado en <info>{$ruta}</info>");

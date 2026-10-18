@@ -21,6 +21,9 @@ class TriajeJevTest extends TestCase
             'services.jev.api_key' => $clave,
             'services.jev.base_url' => 'https://thejevai.com',
             'services.jev.model' => 'typesafe/jev-1.14',
+            // El protocolo se fija acá y no se hereda del `.env`: con la clave de DefAPI cargada en la
+            // máquina, `JEV_PROTOCOLO=chat` hacía que los tests salieran a la red de verdad.
+            'services.jev.protocolo' => 'auto',
             'services.jev.umbral' => 0.7,
             'services.jev.timeout' => 5,
         ]);
@@ -196,5 +199,101 @@ class TriajeJevTest extends TestCase
         }
 
         Http::assertSentCount(2);
+    }
+
+    // ------------------------------------------------------------------- El camino de chat (DefAPI)
+
+    /**
+     * DefAPI sólo tiene `/v1/chat/completions`. El modo `chat` pide un JSON por prompt y lo vuelve a la
+     * forma de `answers`, pero deja dicho que la confianza **no** es calibrada.
+     */
+    public function test_el_modo_chat_pide_json_y_lo_normaliza(): void
+    {
+        $this->configurar();
+        config([
+            'services.jev.base_url' => 'https://api.defapi.org',
+            'services.jev.model' => 'typesafe/jev-1.13',
+            'services.jev.protocolo' => 'chat',
+        ]);
+
+        Http::fake([
+            'https://api.defapi.org/v1/chat/completions' => Http::response([
+                'model' => 'typesafe/jev-1.13',
+                'choices' => [[
+                    'message' => [
+                        'role' => 'assistant',
+                        // Los modelos suelen envolverlo en un bloque de código: hay que tolerarlo.
+                        'content' => "```json\n{\"intencion\": {\"choice\": \"agendar\", \"confidence\": 0.8}, \"es_urgencia\": {\"noul\": 0.1}}\n```",
+                    ],
+                ]],
+                'usage' => ['prompt_tokens' => 410, 'completion_tokens' => 24, 'total_tokens' => 434],
+            ], 200),
+        ]);
+
+        $servicio = app(JevService::class);
+        $resultado = $servicio->decidir('Quiero una cita', [
+            'intencion' => [
+                'type' => 'choice',
+                'instructions' => '¿Qué quiere?',
+                'criteria' => ['agendar' => 'Pide cita', 'administrativo' => 'Otra cosa'],
+            ],
+            'es_urgencia' => ['type' => 'noul', 'instructions' => '¿Es urgente?'],
+        ]);
+
+        $this->assertSame('agendar', $resultado['answers']['intencion']['choice']);
+        $this->assertEqualsWithDelta(0.8, $resultado['answers']['intencion']['confidence'], 0.001);
+        $this->assertEqualsWithDelta(0.1, $resultado['answers']['es_urgencia']['noul'], 0.001);
+        $this->assertSame('chat', $servicio->protocoloUsado());
+        $this->assertFalse($servicio->confianzaCalibrada());
+
+        Http::assertSent(function ($request) {
+            $system = $request['messages'][0]['content'] ?? '';
+
+            return $request->url() === 'https://api.defapi.org/v1/chat/completions'
+                && $request['model'] === 'typesafe/jev-1.13'
+                && ! isset($request['questions'])
+                && $request['messages'][1]['content'] === "Estado a evaluar:\nQuiero una cita"
+                && str_contains($system, 'JSON válido')
+                && str_contains($system, 'agendar')
+                && str_contains($system, 'es_urgencia');
+        });
+    }
+
+    /** `auto` (el default): el proveedor sin `/v1/systemone` no rompe la corrida, sigue por chat. */
+    public function test_auto_cae_a_chat_cuando_el_proveedor_no_tiene_systemone(): void
+    {
+        $this->configurar();
+        config(['services.jev.base_url' => 'https://api.defapi.org', 'services.jev.protocolo' => 'auto']);
+
+        Http::fake([
+            'https://api.defapi.org/v1/systemone' => Http::response(['message' => 'Route POST:/v1/systemone not found'], 404),
+            'https://api.defapi.org/v1/chat/completions' => Http::response([
+                'choices' => [['message' => ['content' => '{"intencion": {"choice": "cancelar", "confidence": 0.9}}']]],
+            ], 200),
+        ]);
+
+        $servicio = app(JevService::class);
+
+        $resultado = $servicio->decidir('Anulen mi cita', [
+            'intencion' => ['type' => 'choice', 'instructions' => '¿Qué quiere?', 'criteria' => ['cancelar' => 'Anula']],
+        ]);
+
+        $this->assertSame('cancelar', $resultado['answers']['intencion']['choice']);
+        $this->assertSame('chat', $servicio->protocoloUsado());
+    }
+
+    /** Con `systemone` explícito y un proveedor sin esa ruta, el error dice qué hacer. */
+    public function test_el_error_de_una_ruta_systemone_inexistente_explica_que_hacer(): void
+    {
+        $this->configurar();
+        config(['services.jev.base_url' => 'https://api.defapi.org', 'services.jev.protocolo' => 'systemone']);
+
+        Http::fake([
+            'https://api.defapi.org/v1/systemone' => Http::response(['message' => 'Route POST:/v1/systemone not found'], 404),
+        ]);
+
+        $this->expectExceptionMessage('JEV_PROTOCOLO=chat');
+
+        app(JevService::class)->decidir('Hola', []);
     }
 }

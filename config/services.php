@@ -79,6 +79,15 @@ return [
         'api_key' => env('JEV_API_KEY'),
         'base_url' => env('JEV_BASE_URL', 'https://thejevai.com'),
         'model' => env('JEV_MODEL', 'typesafe/jev-1.14'),
+        /*
+         * `systemone` (el protocolo de Jev: preguntas tipadas y probabilidades calibradas) o `chat` (el
+         * camino de los agregadores OpenAI, con JSON pedido por prompt y confianza autoinformada).
+         * `auto` intenta `systemone` y, si el proveedor no tiene la ruta, sigue por `chat`.
+         *
+         * ⚠️ DefAPI (defapi.org) **no expone** `/v1/systemone`: sólo `/v1/chat/completions` y
+         * `/v1/messages` (medido el 2026-10-18), así que ahí hay que usar `chat` —o `auto`, que cae solo—.
+         */
+        'protocolo' => env('JEV_PROTOCOLO', 'auto'),
         // Debajo de este umbral de confianza la decisión se deriva a la secretaría en vez de automatizarse.
         'umbral' => (float) env('JEV_UMBRAL', 0.7),
         'timeout' => (int) env('JEV_TIMEOUT', 25),

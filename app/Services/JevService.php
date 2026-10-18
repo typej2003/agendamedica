@@ -7,35 +7,39 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * Cliente de **Jev AI**, el modelo de **decisiones** (no de conversación): recibe un `state` y un mapa de
- * preguntas tipadas y devuelve, por cada una, un valor con **probabilidad y confianza**.
+ * Cliente de **Jev AI**, el modelo de **decisiones** (no de conversación): recibe un estado y preguntas
+ * tipadas y devuelve, por cada una, un valor con **probabilidad y confianza**.
  *
- * Contrato real (verificado el 2026-10-18 en <https://thejevai.com/docs>, no en el folleto de la portada,
- * que muestra un `POST /v1/decide` con `schema` que **no** es la API):
+ * Hay **dos transportes** y no dan lo mismo (medido el 2026-10-18):
  *
- *     POST {base_url}/v1/systemone
- *     Authorization: Bearer <JEV_API_KEY>
- *     { "model": "...", "state": "…"|{…}|[…], "questions": { "id": {…} } }
+ *  1. **`systemone`** — el protocolo propio de Jev: `POST {base}/v1/systemone` con `state` + `questions`
+ *     (`choice` / `score` / `noul`). Devuelve `probabilities` **calibradas** y `confidence` del modelo, y la
+ *     salida es gratis. Es el único que sirve para calibrar un umbral de derivación con fundamento.
+ *     Lo exponen el Jev oficial (`https://thejevai.com`) y DigitalOcean Inference.
+ *  2. **`chat`** — el camino degradado por los agregadores que sólo hablan OpenAI: `POST {base}/v1/chat/
+ *     completions` con un prompt que exige un JSON. Devuelve texto, y la **confianza pasa a ser
+ *     autoinformada** por el modelo (no calibrada): sirve para saber si acierta la categoría, **no** para
+ *     fijar un umbral en producción. **DefAPI (defapi.org) es de estos**: su API no tiene `/v1/systemone`
+ *     ni `/v1/decide`, sólo `/v1/chat/completions` y `/v1/messages` (comprobado el 2026-10-18; su catálogo
+ *     igual lista `typesafe/jev-1.13` a $0,084/MTok).
  *
- * Los tres tipos de pregunta:
- *   - `choice`: `criteria` es un mapa opción ⇒ descripción; devuelve `choice`, `probabilities` y `confidence`.
- *   - `score`:  `criteria` es un arreglo ordenado de niveles; devuelve `score`, `legend`, `probabilities`.
- *   - `noul`:   devuelve `noul` (probabilidad de que el enunciado sea cierto).
+ * `auto` intenta `systemone` y, si el servidor no tiene esa ruta (404/405), sigue por `chat`. `auto` es el
+ * default justamente para que la prueba funcione en los dos proveedores, pero el comando **dice cuál usó**.
  *
- * **Dos detalles del transporte que cuestan una tarde si no se saben:**
- *  1. El sobre de la respuesta depende del proveedor: el oficial envuelve todo en
- *     `data.result.{answers,usage,elapsedMs}` (+ `data.creditsUsed`), y el de DigitalOcean devuelve
- *     `answers`/`usage` planos. `decidir()` devuelve siempre la misma forma.
- *  2. Los límites son del **request**, no del modelo: 8 preguntas y 32 KiB de JSON, con 64k tokens en total.
- *     Un `state` gigante se rechaza con 400/422, no se trunca.
+ * Con `systemone` el sobre también varía por proveedor: el oficial envuelve en
+ * `data.result.{answers,usage,elapsedMs}`, DigitalOcean devuelve `answers`/`usage` planos. Acá se normaliza.
+ *
+ * Límites del `systemone` (del request, no del modelo): 8 preguntas, 32 KiB de JSON, 64k tokens en total.
  *
  * Esto es **infraestructura de la prueba de concepto** (`php artisan jev:triaje`): no está conectado al
  * chatbot de WhatsApp ni decidió nada de producción todavía.
  */
 class JevService
 {
-    /** @var array{api_key:?string, base_url:string, model:string, umbral:float, timeout:int} */
+    /** @var array{api_key:?string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int} */
     private array $config;
+
+    private ?string $protocoloUsado = null;
 
     public function __construct(?array $config = null)
     {
@@ -45,6 +49,7 @@ class JevService
             'api_key' => $config['api_key'] ?? null,
             'base_url' => rtrim((string) ($config['base_url'] ?? 'https://thejevai.com'), '/'),
             'model' => (string) ($config['model'] ?? 'typesafe/jev-1.14'),
+            'protocolo' => (string) ($config['protocolo'] ?? 'auto'),
             'umbral' => (float) ($config['umbral'] ?? 0.7),
             'timeout' => (int) ($config['timeout'] ?? 25),
         ];
@@ -65,8 +70,20 @@ class JevService
         return $this->config['umbral'];
     }
 
+    /** `systemone` o `chat`: cuál se usó de verdad en la última llamada (`auto` se resuelve acá). */
+    public function protocoloUsado(): ?string
+    {
+        return $this->protocoloUsado;
+    }
+
+    /** La confianza de este transporte, ¿es del modelo (calibrada) o autoinformada? */
+    public function confianzaCalibrada(): bool
+    {
+        return $this->protocoloUsado !== 'chat';
+    }
+
     /**
-     * Evalúa el `state` contra las preguntas y devuelve las respuestas ya desenvueltas.
+     * Evalúa el `state` contra las preguntas y devuelve las respuestas ya normalizadas.
      *
      * @param  string|array<int|string,mixed>  $estado
      * @param  array<string,array<string,mixed>>  $preguntas
@@ -82,13 +99,36 @@ class JevService
             );
         }
 
-        $cuerpo = [
+        $protocolo = $this->config['protocolo'];
+
+        if ($protocolo === 'chat') {
+            return $this->decidirPorChat($estado, $preguntas);
+        }
+
+        if ($protocolo === 'systemone') {
+            return $this->decidirPorSystemOne($estado, $preguntas);
+        }
+
+        // `auto`: primero el protocolo propio de Jev; si el proveedor no tiene esa ruta, el de chat.
+        try {
+            return $this->decidirPorSystemOne($estado, $preguntas);
+        } catch (JevSinRutaSystemOne $e) {
+            return $this->decidirPorChat($estado, $preguntas);
+        }
+    }
+
+    // ------------------------------------------------------------------------------- Protocolo propio
+
+    /**
+     * `POST /v1/systemone`: el protocolo de Jev, con preguntas tipadas y probabilidades calibradas.
+     */
+    private function decidirPorSystemOne(string|array $estado, array $preguntas): array
+    {
+        $respuesta = $this->enviar($this->config['base_url'] . '/v1/systemone', [
             'model' => $this->config['model'],
             'state' => $estado,
             'questions' => $preguntas,
-        ];
-
-        $respuesta = $this->enviar($cuerpo);
+        ]);
 
         $json = (array) $respuesta->json();
         $respuestas = $this->respuestas($json);
@@ -99,6 +139,8 @@ class JevService
             throw new RuntimeException('Jev respondió sin respuestas utilizables: ' . $this->recortar((string) $mensaje));
         }
 
+        $this->protocoloUsado = 'systemone';
+
         return [
             'answers' => $respuestas,
             'usage' => $this->uso($json),
@@ -108,11 +150,172 @@ class JevService
         ];
     }
 
+    // --------------------------------------------------------------------------------- Camino de chat
+
+    /**
+     * El camino degradado: un `chat/completions` que pide un JSON con la misma forma de `answers`.
+     *
+     * La confianza que devuelve es **autoinformada**: el modelo dice cuánto confía, en vez de repartir
+     * probabilidad entre las opciones. Para comparar categorías sirve; para fijar un umbral de derivación,
+     * hay que tratarla como una señal más y no como la calibrada de `systemone`.
+     */
+    private function decidirPorChat(string|array $estado, array $preguntas): array
+    {
+        $inicio = microtime(true);
+
+        $respuesta = $this->enviar(
+            $this->config['base_url'] . '/v1/chat/completions',
+            [
+                'model' => $this->config['model'],
+                'messages' => [
+                    ['role' => 'system', 'content' => $this->instruccionesParaChat($preguntas)],
+                    ['role' => 'user', 'content' => "Estado a evaluar:\n" . $this->estadoEnTexto($estado)],
+                ],
+                // Clasificación: sin creatividad. No es el muestreo de un modelo local de chat, es fijar la
+                // salida de un clasificador.
+                'temperature' => 0,
+            ],
+            [404, 405],
+        );
+
+        $json = (array) $respuesta->json();
+        $texto = (string) ($json['choices'][0]['message']['content'] ?? '');
+        $respuestas = $this->respuestasDelJsonDeChat($texto, $preguntas);
+
+        if ($respuestas === []) {
+            throw new RuntimeException(
+                'El proveedor respondió en modo chat, pero sin un JSON utilizable: ' . $this->recortar($texto)
+            );
+        }
+
+        $this->protocoloUsado = 'chat';
+
+        return [
+            'answers' => $respuestas,
+            'usage' => $this->uso($json),
+            'elapsed_ms' => (int) round((microtime(true) - $inicio) * 1000),
+            'credits' => $this->creditos($json),
+            'crudo' => $json,
+        ];
+    }
+
+    /**
+     * Las instrucciones para el modo chat: los criterios de las preguntas, el formato exacto del JSON y la
+     * regla de contestar **sólo** el JSON.
+     *
+     * @param  array<string,array<string,mixed>>  $preguntas
+     */
+    private function instruccionesParaChat(array $preguntas): string
+    {
+        $lineas = [
+            'Sos un clasificador. Respondés ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, sin bloques de código.',
+            'El JSON tiene que tener una clave por cada pregunta y, en cada una, exactamente los campos pedidos.',
+        ];
+
+        foreach ($preguntas as $id => $pregunta) {
+            $tipo = $pregunta['type'] ?? '';
+
+            $lineas[] = '';
+            $lineas[] = "Pregunta `{$id}`:";
+
+            $instrucciones = $pregunta['instructions'] ?? '';
+            $lineas[] = is_string($instrucciones) ? $instrucciones : json_encode($instrucciones, JSON_UNESCAPED_UNICODE);
+
+            if ($tipo === 'choice') {
+                $lineas[] = 'Elegí exactamente una de estas opciones:';
+                foreach ((array) ($pregunta['criteria'] ?? []) as $opcion => $descripcion) {
+                    $lineas[] = '- ' . $opcion . ': ' . (is_string($descripcion) ? $descripcion : json_encode($descripcion, JSON_UNESCAPED_UNICODE));
+                }
+                $lineas[] = "Devolvé: {\"{$id}\": {\"choice\": \"<una de las opciones>\", \"confidence\": <0 a 1>}}";
+            } elseif ($tipo === 'noul') {
+                $lineas[] = "Devolvé: {\"{$id}\": {\"noul\": <0 a 1, probabilidad de que sea cierto>}}";
+            } elseif ($tipo === 'score') {
+                $lineas[] = 'Niveles, de menor a mayor: ' . json_encode($pregunta['criteria'] ?? [], JSON_UNESCAPED_UNICODE);
+                $lineas[] = "Devolvé: {\"{$id}\": {\"score\": <número>, \"confidence\": <0 a 1>}}";
+            }
+        }
+
+        $lineas[] = '';
+        $lineas[] = 'No expliques nada. Si el estado no alcanza para decidir, elegí la opción más probable y bajá la confianza.';
+
+        return implode("\n", $lineas);
+    }
+
+    /** @param  string|array<int|string,mixed>  $estado */
+    private function estadoEnTexto(string|array $estado): string
+    {
+        return is_string($estado) ? $estado : (string) json_encode($estado, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Lee el JSON del mensaje y lo vuelve a la forma de `answers` del protocolo propio.
+     *
+     * @param  array<string,array<string,mixed>>  $preguntas
+     * @return array<string,array<string,mixed>>
+     */
+    private function respuestasDelJsonDeChat(string $texto, array $preguntas): array
+    {
+        $texto = trim($texto);
+
+        // Los modelos suelen envolverlo en ```json … ```; se recorta a las llaves si hace falta.
+        $inicio = strpos($texto, '{');
+        $fin = strrpos($texto, '}');
+        if ($inicio !== false && $fin !== false && $fin > $inicio) {
+            $texto = substr($texto, $inicio, $fin - $inicio + 1);
+        }
+
+        $datos = json_decode($texto, true);
+        if (! is_array($datos)) {
+            return [];
+        }
+
+        $respuestas = [];
+
+        foreach ($preguntas as $id => $pregunta) {
+            $valor = $datos[$id] ?? null;
+            $tipo = $pregunta['type'] ?? '';
+
+            if ($tipo === 'choice') {
+                $eleccion = is_array($valor) ? ($valor['choice'] ?? null) : $valor;
+                if (! is_string($eleccion) || $eleccion === '') {
+                    continue;
+                }
+
+                $confianza = is_array($valor) && isset($valor['confidence']) ? (float) $valor['confidence'] : 0.0;
+                $confianza = max(0.0, min(1.0, $confianza));
+
+                $respuestas[$id] = [
+                    'type' => 'choice',
+                    'choice' => $eleccion,
+                    'probabilities' => is_array($valor) && is_array($valor['probabilities'] ?? null)
+                        ? $valor['probabilities']
+                        : [$eleccion => $confianza],
+                    'confidence' => $confianza,
+                ];
+            } elseif ($tipo === 'noul') {
+                $noul = is_array($valor) ? ($valor['noul'] ?? null) : $valor;
+                if (! is_numeric($noul)) {
+                    continue;
+                }
+
+                $respuestas[$id] = ['type' => 'noul', 'noul' => max(0.0, min(1.0, (float) $noul))];
+            } elseif ($tipo === 'score' && is_array($valor) && is_numeric($valor['score'] ?? null)) {
+                $respuestas[$id] = [
+                    'type' => 'score',
+                    'score' => (float) $valor['score'],
+                    'confidence' => isset($valor['confidence']) ? max(0.0, min(1.0, (float) $valor['confidence'])) : 0.0,
+                ];
+            }
+        }
+
+        return $respuestas;
+    }
+
     // ------------------------------------------------------------------------------------- Transporte
 
-    private function enviar(array $cuerpo): Response
+    /** @param  array<int,int>  $reintentarEn  estados que sí valen un reintento con espera */
+    private function enviar(string $url, array $cuerpo, array $reintentarEn = [429, 529]): Response
     {
-        $url = $this->config['base_url'] . '/v1/systemone';
         $intentos = 0;
 
         while (true) {
@@ -124,8 +327,7 @@ class JevService
                 ->asJson()
                 ->post($url, $cuerpo);
 
-            // 429 (límite) y 529 (sobrecarga) se reintentan con espera; el resto es un error de la petición.
-            if (in_array($respuesta->status(), [429, 529], true) && $intentos < 3) {
+            if (in_array($respuesta->status(), $reintentarEn, true) && $intentos < 3) {
                 usleep(500_000 * $intentos);
                 continue;
             }
@@ -134,18 +336,35 @@ class JevService
                 return $respuesta;
             }
 
-            throw new RuntimeException($this->mensajeDeError($respuesta));
+            throw new RuntimeException($this->mensajeDeError($respuesta, $url));
         }
     }
 
-    private function mensajeDeError(Response $respuesta): string
+    private function mensajeDeError(Response $respuesta, string $url): string
     {
         $status = $respuesta->status();
         $detalle = $this->recortar((string) ($respuesta->json('message') ?? $respuesta->body()));
+        $ruta = parse_url($url, PHP_URL_PATH) ?: $url;
+
+        if (in_array($status, [404, 405], true) && $ruta === '/v1/systemone') {
+            throw new JevSinRutaSystemOne(
+                "El proveedor no tiene la ruta /v1/systemone (HTTP {$status}). Es el caso de DefAPI: usá "
+                . 'JEV_PROTOCOLO=chat, o JEV_BASE_URL=https://thejevai.com con una clave del Jev oficial.'
+            );
+        }
+
+        // DefAPI reconoce `typesafe/jev-1.13` pero no lo sirve: en chat y en messages responde
+        // «Model not supported» con 500. El mensaje crudo no dice qué hacer, así que se traduce.
+        if ($status === 500 && str_contains($detalle, 'Model not supported')) {
+            return "El proveedor conoce el modelo pero no lo sirve en esta superficie (HTTP 500: {$detalle}). "
+                . 'Es el caso de DefAPI con typesafe/jev-1.13: no expone /v1/systemone y rechaza el modelo en '
+                . 'chat/messages. Hace falta un proveedor con el protocolo de Jev (thejevai.com o DigitalOcean).';
+        }
 
         return match ($status) {
             401 => 'Jev respondió 401: la clave es inválida o falta el header Authorization.',
             400, 422 => "Jev rechazó la petición ({$status}): {$detalle}. Revisá el modelo, el `state` y las preguntas.",
+            404 => "El proveedor no tiene la ruta {$ruta} (HTTP 404): {$detalle}",
             429 => "Jev respondió 429 (límite de uso) después de reintentar: {$detalle}",
             529 => "Jev respondió 529 (sobrecarga) después de reintentar: {$detalle}",
             default => "Jev respondió {$status}: {$detalle}",
