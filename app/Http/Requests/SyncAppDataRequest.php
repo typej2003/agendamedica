@@ -39,6 +39,23 @@ class SyncAppDataRequest extends FormRequest
             'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
             'profesion', 'email', 'dependencia', 'sms',
         ],
+        // A1 de PLAN-MOVIL.md: lo que el teléfono puede **editar mientras se atiende**, y lo único —
+        // entrar en `TABLAS_EDITABLES` no habilita el resto de la tabla. Son las columnas clínicas que
+        // ya escribe la web por sus Actions: enfermedad actual y evolución
+        // (`GuardarEnfermedadActual`, `GuardarEvolucionDeLaConsulta`), las medidas y los hallazgos de
+        // la evaluación física (`GuardarEvaluacionFisica`) y el texto de tratamiento, que en el legado
+        // es `consultas.laringe` (WEB-5.7). No están los resúmenes narrativos del examen (`total_f`,
+        // `total_g`: los arma el escritorio, trampa de PLAN-MOVIL.md §7.6) ni columnas de otra
+        // especialidad.
+        'consultas' => [
+            'enfermedadactual', 'evolucion', 'laringe',
+            'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
+        ],
+        'examen_fisico_nuevo' => [
+            'tension', 'general', 'cardiopulmonar', 'tiroides', 'mamas', 'mama_derecha',
+            'abdomen', 'extremidades', 'neurologico', 'genitales_externos', 'especulos',
+            'tacto_vaginal', 'tacto_rectal',
+        ],
     ];
 
     /**
@@ -94,7 +111,43 @@ class SyncAppDataRequest extends FormRequest
         'cola' => ['fecha'],
     ];
 
-    public const DELETABLE_TABLES = ['cola', 'pacientes'];
+    /**
+     * Tablas que el app puede **editar** (`operation = updated`) por el camino genérico.
+     *
+     * Son las dos de siempre —la cita y la ficha del paciente— más las clínicas que el médico toca
+     * mientras atiende (A1 de PLAN-MOVIL.md). Cuáles columnas de cada una, lo dice `WRITABLE_COLUMNS`:
+     * esta lista abre la tabla, no sus campos.
+     *
+     * `diagnostico_paciente` y `antece_paciente` figuran porque **toda tabla de `TABLAS_BORRABLES`
+     * tiene que estar acá**: el borrado de una fila y su edición pasan por el mismo camino, y una baja
+     * fuera de esta lista no se aplicaría nunca.
+     */
+    public const TABLAS_EDITABLES = [
+        'cola', 'pacientes', 'consultas', 'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
+    ];
+
+    /**
+     * Tablas que el app puede **borrar** (`operation = deleted`).
+     *
+     * Un diagnóstico y un antecedente se agregan y se quitan desde la consulta, así que su baja entra
+     * desde el teléfono (con el camino de A1; su alta es de A4). Una **consulta** y un **examen físico**
+     * no: son la historia clínica y su evaluación —la consulta lleva el número que asigna el servidor y
+     * cuelga de ella todo lo demás—, y borrarlos desde el app dejaría filas huérfanas que el escritorio
+     * no sabe leer. Esa decisión se toma en la web.
+     */
+    public const TABLAS_BORRABLES = [
+        'cola', 'pacientes', 'diagnostico_paciente', 'antece_paciente',
+    ];
+
+    /**
+     * Nombre viejo de `TABLAS_BORRABLES`, cuando la lista era además el gate de las **ediciones**.
+     *
+     * Se conserva porque hay código y tests que la consultan por este nombre; lo que hace hoy el
+     * controlador es `TABLAS_EDITABLES` para `updated` y `TABLAS_BORRABLES` para `deleted`.
+     *
+     * @deprecated usar `TABLAS_BORRABLES`.
+     */
+    public const DELETABLE_TABLES = self::TABLAS_BORRABLES;
 
     /**
      * Creaciones clínicas del Paso 18.B (Atender → consulta → récipe). No van por
@@ -111,9 +164,15 @@ class SyncAppDataRequest extends FormRequest
     /**
      * Tablas que pueden aparecer en `changes`, con cualquier operación. `motivo_consulta_paciente`
      * además acepta `deleted` (quitar un motivo de la consulta; el catálogo nunca se borra desde el app).
+     *
+     * `examen_fisico_nuevo`, `diagnostico_paciente` y `antece_paciente` están desde A1 (PLAN-MOVIL.md):
+     * sin ellas en esta lista, `changes.*.table` falla con 422 y **el lote entero se rechaza** —incluido
+     * el pull—, que es justo lo que el comentario de la clase evita. La autorización de qué fila y qué
+     * columna sí se puede tocar sigue estando en `TABLAS_EDITABLES` / `WRITABLE_COLUMNS`.
      */
     public const SYNC_TABLES = [
         'cola', 'pacientes', 'historias', 'consultas', 'recipes', 'motivo_consulta_paciente',
+        'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
     ];
 
     /**

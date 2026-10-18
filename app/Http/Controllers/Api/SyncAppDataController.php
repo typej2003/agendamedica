@@ -14,6 +14,7 @@ use App\Http\Requests\SyncAppDataRequest;
 use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
+use App\Models\AntecePaciente;
 use App\Models\Cola;
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
@@ -22,6 +23,7 @@ use App\Models\DiagnosticoPaciente;
 use App\Models\Doctor;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
+use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\Informe;
 use App\Models\Medico;
@@ -746,8 +748,9 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `DELETABLE_TABLES`: esa lista
-            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`).
+            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `TABLAS_BORRABLES`: esa lista
+            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`) y de las
+            // clínicas que se dan de baja por su id (`diagnostico_paciente`, `antece_paciente`).
             if ($operation === 'deleted' && $table === 'motivo_consulta_paciente') {
                 if ($recordId) {
                     $clinicas->quitarMotivoDeConsulta((int) $recordId);
@@ -772,17 +775,21 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            if (!in_array($table, SyncAppDataRequest::DELETABLE_TABLES, true) || !$recordId || !$operation) {
+            // Qué se puede editar y qué se puede borrar son **dos listas distintas** desde A1
+            // (PLAN-MOVIL.md): una consulta y un examen físico se editan pero no se borran.
+            $tablasPermitidas = $operation === 'deleted'
+                ? SyncAppDataRequest::TABLAS_BORRABLES
+                : SyncAppDataRequest::TABLAS_EDITABLES;
+
+            if (!in_array($table, $tablasPermitidas, true) || !$recordId || !$operation) {
                 continue;
             }
 
-            // Autorización: el registro tiene que pertenecer al tenant de este médico.
-            if ($table === 'cola') {
-                $pertenece = Cola::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->exists();
-            } else {
-                $pertenece = in_array($recordId, $pacienteIdsDelMedico, true);
-            }
-            if (!$pertenece) {
+            // Autorización: la fila tiene que ser de este médico. Para las clínicas la resuelve **el
+            // `reg_medico` de la propia fila**, no el paciente: un diagnóstico de otro médico no se
+            // toca ni aunque el `nrohistoria` coincida (el número es por médico).
+            $fila = $this->filaDelMedico($table, (int) $recordId, $registrosMedicos, $pacienteIdsDelMedico);
+            if (!$fila) {
                 continue;
             }
 
@@ -790,7 +797,7 @@ class SyncAppDataController extends Controller
 
             if ($operation === 'deleted') {
                 if (!$yaEliminado) {
-                    $this->modelFor($table)::find($recordId)?->delete();
+                    $fila->delete();
                 }
                 continue;
             }
@@ -827,16 +834,16 @@ class SyncAppDataController extends Controller
                     continue;
                 }
 
-                $model = $this->modelFor($table)::find($recordId);
-                if (!$model) {
-                    continue;
-                }
+                $fila->{$column} = $valor;
+                $fila->save();
 
-                $model->{$column} = $valor;
-                $model->save();
-
+                // El rastro se escribe con el `reg_medico` **de la fila**: es el tenant de lo que se
+                // acaba de editar y el que después acota el delta del teléfono. En `pacientes` la fila
+                // no lo tiene (el paciente es uno solo para todos los médicos), así que sale del pivote.
                 SyncChange::create([
-                    'reg_medico' => $table === 'cola' ? $model->reg_medico : $this->regMedicoDePaciente($relaciones, $recordId),
+                    'reg_medico' => $table === 'pacientes'
+                        ? $this->regMedicoDePaciente($relaciones, (int) $recordId)
+                        : $fila->reg_medico,
                     'table_name' => $table,
                     'record_id' => $recordId,
                     'operation' => 'updated',
@@ -1229,9 +1236,49 @@ class SyncAppDataController extends Controller
         return $relaciones->firstWhere('paciente_id', $pacienteId)?->reg_medico;
     }
 
+    /**
+     * La fila que el teléfono quiere tocar, si es de este médico; `null` si no existe o es ajena.
+     *
+     * Devuelve el modelo y no un booleano porque el que llama necesita lo mismo para escribir que para
+     * el rastro (`sync_changes.reg_medico`): así la comprobación de tenant y el `find` son una sola
+     * consulta, y no hay forma de autorizar una fila y terminar escribiendo otra.
+     *
+     * La regla es la misma para todas las tablas clínicas: **el `reg_medico` de la fila** tiene que ser
+     * uno de los registros del médico autenticado. `pacientes` es la excepción, porque la ficha es una
+     * sola para todos los médicos y el tenant está en el pivote `medico_pacientes`.
+     *
+     * @param  list<string>  $registrosMedicos
+     * @param  list<int>  $pacienteIdsDelMedico
+     */
+    private function filaDelMedico(string $table, int $recordId, array $registrosMedicos, array $pacienteIdsDelMedico)
+    {
+        $fila = $this->modelFor($table)::find($recordId);
+
+        if (!$fila) {
+            return null;
+        }
+
+        if ($table === 'pacientes') {
+            return in_array($recordId, $pacienteIdsDelMedico, true) ? $fila : null;
+        }
+
+        return in_array((string) $fila->reg_medico, $registrosMedicos, true) ? $fila : null;
+    }
+
+    /**
+     * El modelo de cada tabla que el sync escribe por fila. Es la tabla de `TABLAS_EDITABLES` y
+     * `TABLAS_BORRABLES` mapeada a su modelo: una tabla nueva en esas listas necesita su línea acá.
+     */
     private function modelFor(string $table): string
     {
-        return $table === 'cola' ? Cola::class : Paciente::class;
+        return [
+            'cola' => Cola::class,
+            'pacientes' => Paciente::class,
+            'consultas' => Consulta::class,
+            'examen_fisico_nuevo' => ExamenFisico::class,
+            'diagnostico_paciente' => DiagnosticoPaciente::class,
+            'antece_paciente' => AntecePaciente::class,
+        ][$table];
     }
 
     private function deltaQuery($query, ?Carbon $since)
