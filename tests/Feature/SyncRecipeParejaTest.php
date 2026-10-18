@@ -303,4 +303,198 @@ class SyncRecipeParejaTest extends TestCase
         $this->assertFalse(Schema::hasColumn('recipes_pareja', 'consulta'), 'la tabla no tiene `consulta`');
         $this->assertFalse(Schema::hasColumn('recipes_pareja', 'recipe'), 'la pareja no lleva número de récipe');
     }
+
+    // ------------------------------------------------------------------------------------------------
+    // A5b: la escritura, desde el teléfono
+    // ------------------------------------------------------------------------------------------------
+
+    /** El cuerpo de una creación de la pareja, como lo arma `SyncSchema` del teléfono. */
+    private function creacion(Consulta $consulta, int $tempId, array $items = [
+        ['codemedicina' => 'MED001', 'cantidad' => 10, 'indicaciones' => 'Una cada 12 horas', 'descripcion' => 'MEDICAMENTO UNO'],
+        ['codemedicina' => 'MED002', 'cantidad' => 5, 'indicaciones' => 'Una diaria', 'descripcion' => 'MEDICAMENTO DOS'],
+    ], string $cedula = '12345678', string $nombre = 'Pareja De Prueba'): array
+    {
+        return [
+            'table' => 'recipes_pareja',
+            'operation' => 'created',
+            'temp_id' => $tempId,
+            'consulta_id' => $consulta->id,
+            'cedula' => $cedula,
+            'nombre' => $nombre,
+            'items' => $items,
+        ];
+    }
+
+    public function test_el_telefono_crea_la_pareja_con_sus_medicamentos(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $r = $this->sync(['changes' => [$this->creacion($consulta, 900001)]]);
+
+        // La respuesta le dice al teléfono cuál es su creación (para soltar la fila provisional).
+        $this->assertSame('recipes_pareja', $r->json('creados.0.table'));
+        $this->assertSame(900001, $r->json('creados.0.temp_id'));
+        $this->assertNotNull($r->json('creados.0.id'));
+        $this->assertSame([], $r->json('rechazados'));
+
+        // Y las filas quedaron con la clave del legado y la pareja repetida en las dos.
+        $filas = RecipePareja::where('reg_medico', $medico->reg_medico)
+            ->where('nrohistoria', $consulta->numhistoria)
+            ->where('nroconsulta', $consulta->nroconsulta)
+            ->orderBy('orden')
+            ->get();
+
+        $this->assertCount(2, $filas);
+        foreach ($filas as $fila) {
+            $this->assertSame('12345678', $fila->cedula);
+            $this->assertSame('Pareja De Prueba', $fila->nombre);
+        }
+        $this->assertSame(['MED001', 'MED002'], $filas->pluck('codemedicina')->all());
+        $this->assertSame(10, (int) $filas[0]->cantidad);
+        $this->assertSame('Una cada 12 horas', $filas[0]->indicaciones);
+        $this->assertSame([1, 2], $filas->pluck('orden')->map(fn ($o) => (int) $o)->all());
+
+        // El rastro: un `created` con el id temporal del lote, que es lo que protege estas filas del
+        // reemplazo de la tabla que hace el escritorio.
+        $this->assertSame(1, DB::table('sync_changes')
+            ->where('table_name', 'recipes_pareja')
+            ->where('client_temp_id', 900001)
+            ->where('operation', 'created')
+            ->where('source', 'mobile')
+            ->count());
+    }
+
+    public function test_el_reintento_con_el_mismo_temp_id_no_duplica_y_devuelve_el_mismo_id(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+        $cambio = $this->creacion($consulta, 900002);
+
+        $primera = $this->sync(['changes' => [$cambio]]);
+        $segunda = $this->sync(['changes' => [$cambio]]);
+
+        $this->assertSame($primera->json('creados.0.id'), $segunda->json('creados.0.id'), 'el reintento devuelve el mismo id');
+        $this->assertSame(2, RecipePareja::where('reg_medico', $medico->reg_medico)
+            ->where('nrohistoria', $consulta->numhistoria)->count(), 'no se duplican las filas');
+    }
+
+    /**
+     * **Corregir una pareja que ya existe**: la Action compara por `codemedicina`, así que una segunda
+     * creación sobre la misma consulta actualiza las filas que siguen y quita las que ya no vienen, en vez
+     * de crear un récipe al lado. El teléfono no manda esto hoy (una pareja ya subida es de solo lectura),
+     * pero el servidor no puede duplicar si algún día lo hace o si la pareja la cargó la web.
+     */
+    public function test_una_segunda_creacion_corrige_en_el_lugar_en_vez_de_duplicar(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->sync(['changes' => [$this->creacion($consulta, 900003)]]);
+        $r = $this->sync(['changes' => [$this->creacion(
+            $consulta,
+            900004,
+            [['codemedicina' => 'MED001', 'cantidad' => 20, 'indicaciones' => 'Cambiada', 'descripcion' => 'MEDICAMENTO UNO']],
+            '87654321',
+            'Otra Pareja',
+        )]]);
+
+        $this->assertSame([], $r->json('rechazados'));
+        $filas = RecipePareja::where('reg_medico', $medico->reg_medico)
+            ->where('nrohistoria', $consulta->numhistoria)
+            ->get();
+
+        $this->assertCount(1, $filas, 'queda un solo medicamento: el otro se quitó');
+        $this->assertSame('MED001', $filas[0]->codemedicina);
+        $this->assertSame(20, (int) $filas[0]->cantidad);
+        $this->assertSame('Cambiada', $filas[0]->indicaciones);
+        // La pareja se reescribe en todas las filas.
+        $this->assertSame('87654321', $filas[0]->cedula);
+        $this->assertSame('Otra Pareja', $filas[0]->nombre);
+    }
+
+    public function test_sin_la_cedula_o_el_nombre_la_creacion_se_rechaza_con_su_motivo(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $r = $this->sync(['changes' => [
+            $this->creacion($consulta, 900005, nombre: ''),
+        ]]);
+
+        $this->assertSame([], $r->json('creados'));
+        $this->assertSame('recipes_pareja', $r->json('rechazados.0.table'));
+        $this->assertSame(900005, $r->json('rechazados.0.temp_id'));
+        $this->assertStringContainsString('pareja', $r->json('rechazados.0.motivo'));
+        $this->assertSame(0, RecipePareja::where('nrohistoria', $consulta->numhistoria)->count(), 'no se escribió nada');
+    }
+
+    public function test_una_pareja_sin_medicamentos_se_rechaza(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $r = $this->sync(['changes' => [$this->creacion($consulta, 900006, items: [])]]);
+
+        $this->assertSame([], $r->json('creados'));
+        $this->assertStringContainsString('medicamentos', $r->json('rechazados.0.motivo'));
+    }
+
+    public function test_la_pareja_de_una_consulta_de_otro_medico_se_rechaza(): void
+    {
+        // La consulta es de otro médico (otro `reg_medico`); el teléfono no la puede usar.
+        $ajeno = $this->medico(autenticar: false);
+        $consultaAjena = $this->consulta($ajeno);
+        $medico = $this->medico();
+
+        $r = $this->sync(['changes' => [$this->creacion($consultaAjena, 900007)]]);
+
+        $this->assertSame([], $r->json('creados'));
+        $this->assertStringContainsString('no corresponde', $r->json('rechazados.0.motivo'));
+        $this->assertSame(0, RecipePareja::where('reg_medico', $ajeno->reg_medico)->count());
+    }
+
+    /**
+     * **La creación cuelga de una consulta creada en el mismo lote** (`consulta_temp_id`): es el caso real
+     * del teléfono —"Atender" abre la consulta sin conexión y el médico carga la pareja antes de que esa
+     * consulta exista en el servidor—. El servidor ordena las creaciones por dependencia, así que la
+     * consulta ya tiene sus números cuando la Action de la pareja los busca.
+     */
+    public function test_la_creacion_resuelve_una_consulta_creada_en_el_mismo_lote(): void
+    {
+        $medico = $this->medico();
+        $historia = $this->consulta($medico);
+
+        $r = $this->sync(['changes' => [
+            [
+                'table' => 'consultas',
+                'operation' => 'created',
+                'temp_id' => 900010,
+                'numhistoria' => $historia->numhistoria,
+                'fecha' => now()->toDateString(),
+            ],
+            [
+                'table' => 'recipes_pareja',
+                'operation' => 'created',
+                'temp_id' => 900011,
+                'consulta_temp_id' => 900010,
+                'cedula' => '11223344',
+                'nombre' => 'Pareja Del Mismo Lote',
+                'items' => [['codemedicina' => 'MED001', 'cantidad' => 3, 'indicaciones' => 'Una diaria']],
+            ],
+        ]]);
+
+        $this->assertSame([], $r->json('rechazados'));
+
+        $creadas = collect($r->json('creados'))->keyBy('temp_id');
+        $this->assertTrue($creadas->has(900010), 'se creó la consulta');
+        $this->assertTrue($creadas->has(900011), 'se creó la pareja');
+
+        // Y la pareja quedó con los números de la consulta nueva.
+        $nueva = Consulta::find($creadas[900010]['id']);
+        $this->assertSame(1, RecipePareja::where('nrohistoria', $nueva->numhistoria)
+            ->where('nroconsulta', $nueva->nroconsulta)
+            ->where('nombre', 'Pareja Del Mismo Lote')
+            ->count());
+    }
 }

@@ -865,6 +865,9 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\GuardarEcoObstetrico::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoSegundo::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class),
+            // Y la del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera,
+            // crea o corrige en el lugar. Es la misma Action de la pestaña de la web (WEB-5.1b).
+            app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class),
         );
         $creadosAntes = count($creados);
 
@@ -1029,6 +1032,10 @@ class SyncAppDataController extends Controller
             // (`numhistoria`/`nroconsulta`) cuando la Action del estudio busca la fila por la clave del legado.
             'eco_pelvico' => 4, 'eco_obstetrico' => 4,
             'eco_obstetrico_tercer_2' => 4, 'eco_obstetrico_tercer' => 4,
+            // El récipe de la pareja (ola §9) cuelga de la consulta como el del paciente: con 4 va después de
+            // `consultas`, así una consulta creada en este mismo lote ya tiene sus números cuando la Action
+            // busca la pareja por `nrohistoria` + `nroconsulta`.
+            'recipes_pareja' => 4,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
