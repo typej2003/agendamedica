@@ -28,7 +28,10 @@
     const botonAnterior = raiz.querySelector('[data-tour-anterior]');
     const botonSiguiente = raiz.querySelector('[data-tour-siguiente]');
     const botonSaltar = raiz.querySelector('[data-tour-saltar]');
-    const botonReabrir = raiz.querySelector('[data-tour-reabrir]');
+    // El botón de reabrir no siempre vive dentro de la raíz: en la consulta va en la fila de su encabezado,
+    // junto a Guardar y Terminar (O-31), para no gastar un renglón. Por eso, si no está en la raíz, se busca
+    // en la pantalla.
+    const botonReabrir = raiz.querySelector('[data-tour-reabrir]') || document.querySelector('[data-tour-reabrir]');
     const pasos = Array.prototype.slice.call(raiz.querySelectorAll('[data-tour-paso]'));
     const url = raiz.getAttribute('data-url');
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';

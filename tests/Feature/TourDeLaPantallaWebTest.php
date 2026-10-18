@@ -301,6 +301,36 @@ class TourDeLaPantallaWebTest extends TestCase
         $this->assertNotEmpty(ToursDisponibles::pasos(ToursDisponibles::CONSULTA, $medicoUser));
     }
 
+    /**
+     * **La ayuda no ocupa una fila en la consulta** (O-31): su encabezado es una sola fila de ~49 px y el
+     * botón de reabrir va dentro, al final, junto a Guardar y Terminar. En las demás pantallas el botón sigue
+     * arriba, en su propia fila.
+     */
+    public function test_en_la_consulta_el_boton_de_reabrir_va_dentro_del_encabezado(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consulta = $this->pacienteYConsulta($medico);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']);
+        $html = $this->conContexto($user, $medico, $gineco)->get($url)->assertOk()->getContent();
+
+        // La ayuda está, como botón redondo, con su nombre accesible y el tour abriéndose solo la primera vez.
+        $this->assertStringContainsString('class="tour-reabrir-redondo"', $html);
+        $this->assertStringContainsString('aria-label="¿Cómo funciona esta pantalla?"', $html);
+        $this->assertStringContainsString('title="¿Cómo funciona esta pantalla?"', $html);
+        $this->assertStringContainsString('data-mostrar="1"', $html);
+
+        // Dentro de la fila del encabezado y después de Guardar y Terminar: no hay renglón propio.
+        $this->assertStringNotContainsString('tour-reabrir-fila', $html, 'La consulta no debe gastar una fila en la ayuda.');
+        $this->assertGreaterThan(strpos($html, 'data-tour="consulta-encabezado"'), strpos($html, 'data-tour-reabrir'));
+        $this->assertGreaterThan(strpos($html, 'data-barra-guardar'), strpos($html, 'data-tour-reabrir'));
+
+        // En otra pantalla se queda como estaba: arriba del encabezado, en su fila.
+        $inicio = $this->conContexto($user, $medico, $gineco)->get(route('clinica.inicio'))->assertOk()->getContent();
+        $this->assertStringContainsString('tour-reabrir-fila', $inicio);
+        $this->assertStringNotContainsString('tour-reabrir-redondo', $inicio);
+    }
+
     /** Un catálogo que no está en la lista de pantallas con tour no lo recibe. */
     public function test_una_pantalla_sin_tour_no_pinta_el_boton_de_reabrir(): void
     {

@@ -58,6 +58,14 @@
                     </button>
                 </form>
             @endif
+            {{-- **La ayuda de la pantalla** (O-31): el botón redondo con «?» que reabre el tour, al final de la
+                 fila y junto a Guardar y Terminar. No tiene fila propia: la de ~49 px de §9.5 no crece, que es
+                 justo el alto que se ganó al quitar la barra de contexto. El tour sigue abriéndose solo la
+                 primera vez (`tours_vistos`). `$tour` lo deja `TourDeLaPantallaComposer`, que también compone
+                 esta vista para que el botón exista. --}}
+            @if (! empty($tour) && $tour->hayPasos() && $tour->enElEncabezado())
+                @include('clinica._tour-boton', ['redondo' => true])
+            @endif
         </div>
     </div>
 

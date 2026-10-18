@@ -3400,8 +3400,15 @@ body.auth-pagina {
     /* En el celular los objetivos táctiles siguen midiendo 40 px; el navegador va en su propio renglón y se
        desplaza dentro de su ancho (los chips ya lo hacen: `.chips { overflow-x: auto }`). */
     .consulta-encabezado .consulta-barra-navegador .chip-opcion { min-height: 40px; }
-    .consulta-barra-acciones { margin-left: 0; }
+    .consulta-barra-acciones { margin-left: 0; gap: .25rem; }
     .consulta-barra-estado { min-width: 0; text-align: left; }
+    /* **La ayuda entra en la fila de acciones también en el teléfono** (O-31): con los botones a su ancho
+       normal, Guardar + Terminar + «?» no entran en los ~343 px del encabezado y la ayuda caía a un tercer
+       renglón. Se aprieta sólo la fila de acciones (menos separación y menos relleno lateral); el alto táctil
+       no cambia. */
+    .consulta-barra-acciones .btn { padding-left: .5rem; padding-right: .5rem; font-size: .8125rem; }
+    /* El «?» es un control táctil: en el celular mide lo mismo que los demás botones de la fila (40 px). */
+    .consulta-encabezado .tour-reabrir-redondo { width: 40px; height: 40px; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------
@@ -3481,6 +3488,20 @@ body.auth-pagina {
 @media (max-width: 575.98px) {
     .tour-reabrir-texto { display: none; }
 }
+
+/* **El botón redondo de la consulta** (O-31): la ayuda no ocupa un renglón propio. Vive dentro de la fila del
+   encabezado, después de Guardar y Terminar, y mide lo mismo que la flecha de «Volver a la agenda» (36 px),
+   que es el alto que la fila ya tenía: no la hace crecer ni la parte en dos. Sin texto, el nombre lo dan el
+   `aria-label` y el `title`; el foco visible es el global. */
+.tour-reabrir-redondo {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto; width: 36px; height: 36px; padding: 0;
+    border: 1px solid var(--ds-borde); border-radius: 50%;
+    background: transparent; color: var(--ds-texto-3);
+    font-size: 1rem; line-height: 1;
+}
+.tour-reabrir-redondo:hover { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.tour-reabrir-redondo:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
 
 /* El elemento señalado: un contorno de la marca que no cambia el tamaño ni el lugar de nada. */
 .tour-resaltado {

@@ -7,7 +7,8 @@
 
     - el **botón de reabrir** («¿Cómo funciona esta pantalla?»), discreto, arriba del encabezado de la pantalla
       y alineado a la derecha. Vuelve a lanzar el tour aunque ya esté visto: no lo marca de nuevo hasta que se
-      termine o se salte.
+      termine o se salte. **En la consulta no se pinta acá** (O-31): su encabezado es una sola fila y el botón
+      va dentro, junto a Guardar y Terminar (`$tour->enElEncabezado()`); lo incluye `consulta/ver.blade.php`.
     - los **pasos**, ocultos, y el **globo** donde se muestran. El globo es `role="dialog"` sin `aria-modal`:
       no bloquea la pantalla (se puede cerrar con «Saltar», con `Esc` y con «Listo»).
 
@@ -18,13 +19,11 @@
     <div class="tour" data-tour-raiz data-url="{{ $tour->urlMarcarVisto() }}"
          data-mostrar="{{ $tour->debeMostrarse() ? '1' : '0' }}" data-pantalla="{{ $tour->pantalla() }}">
 
-        <div class="tour-reabrir-fila">
-            <button type="button" class="tour-reabrir" data-tour-reabrir
-                    aria-label="¿Cómo funciona esta pantalla?" title="¿Cómo funciona esta pantalla?">
-                <i class="bi bi-question-circle" aria-hidden="true"></i>
-                <span class="tour-reabrir-texto">¿Cómo funciona esta pantalla?</span>
-            </button>
-        </div>
+        @unless ($tour->enElEncabezado())
+            <div class="tour-reabrir-fila">
+                @include('clinica._tour-boton', ['redondo' => false])
+            </div>
+        @endunless
 
         {{-- Los pasos: cada uno sabe qué elemento señala y qué dice. `mostrar` no se usa en el HTML: el JS
              arma la lista con los selectores que existen en la pantalla. --}}

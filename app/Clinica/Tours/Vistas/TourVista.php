@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Tours\Vistas;
 
+use App\Clinica\Tours\ToursDisponibles;
+
 /**
  * El **tour de una pantalla** para el armazón (`clinica/layout`): los pasos ya filtrados por rol, si el
  * usuario ya lo vio y a dónde avisar cuando lo termine o lo salte.
@@ -52,5 +54,18 @@ final class TourVista
     public function urlMarcarVisto(): string
     {
         return $this->urlMarcarVisto;
+    }
+
+    /**
+     * ¿El botón de reabrir va **dentro del encabezado de la pantalla** en vez de en su propia fila?
+     *
+     * Sólo en la consulta (O-31, 2026-10-17): su encabezado es una sola fila de ~49 px que se ganó el alto
+     * de la barra de contexto, y la ayuda no puede gastarlo con un renglón propio. Ahí la vista de la
+     * consulta incluye `clinica/_tour-boton` junto a Guardar y Terminar, y `clinica/_tour` no pinta la fila.
+     * En las demás pantallas el botón sigue arriba del encabezado, como siempre.
+     */
+    public function enElEncabezado(): bool
+    {
+        return $this->pantalla === ToursDisponibles::CONSULTA;
     }
 }
