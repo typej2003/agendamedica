@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
 use App\Models\Consulta;
 use App\Models\FormatoPrint;
 use App\Models\Medico;
@@ -408,5 +409,168 @@ class PlantillasDeTextoWebTest extends TestCase
         $web->delete(route('clinica.catalogos.plantillas-texto.quitar', $evolucion->id))->assertRedirect();
         // (El aviso de «Quitaste…» sale en la pantalla siguiente: se mide por el botón de la plantilla, no por el título suelto.)
         $web->get($secciones['EV'])->assertDontSee('data-plantilla-titulo="WEB84 EV"', false);
+    }
+
+    // ----------------------------------------------- Los estudios ecográficos (A-14, revisión 2026-10-17)
+
+    /**
+     * Las plantillas de las ecografías se podían crear pero **no se ofrecían en ninguna pantalla**: el pedido de
+     * una médica que probó la web fue «plantillas listas para ecografías». Acá se fija que los siete tipos del
+     * ítem 5 entran en los «usados en la web», que el catálogo dice **en qué pantalla** se ofrece cada uno y que
+     * los dos que la web no tiene (el eco de cuello y el renal) siguen sin ofrecerse.
+     */
+    public function test_los_tipos_de_eco_se_ofrecen_en_la_web_y_el_catalogo_dice_en_que_pantalla(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        // El escritorio tiene nueve códigos de ecografía (`d_a_formatos.srd`); la web ofrece los siete del ítem 5.
+        $ofrecidos = [
+            'UG' => 'eco ginecológico',
+            'O1' => '1.er trimestre',
+            'O2' => '2.º trimestre',
+            'O3' => '3.er trimestre',
+            'ED' => 'Doppler',
+            'UA' => 'abdominal',
+            'UM' => 'mamario',
+        ];
+
+        foreach ($ofrecidos as $tipo => $pantalla) {
+            $this->assertTrue(TiposDePlantillaDeTexto::seUsaEnLaWeb($tipo), 'El tipo ' . $tipo . ' se ofrece en la web.');
+            $this->assertStringContainsString('estudio ecográfico', (string) TiposDePlantillaDeTexto::dondeSeUsa($tipo));
+            $this->assertStringContainsString($pantalla, (string) TiposDePlantillaDeTexto::dondeSeUsa($tipo));
+        }
+
+        // El eco de cuello y el renal son del escritorio: la web no tiene su pantalla, así que no se ofrecen.
+        foreach (['EM', 'ER'] as $tipo) {
+            $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb($tipo));
+            $this->assertNull(TiposDePlantillaDeTexto::dondeSeUsa($tipo));
+        }
+
+        $this->plantilla($medico, '0001', 'UG', 'ECO PELVICO NORMAL', 'Útero en anteversión, ovarios normales.');
+        $this->plantilla($medico, '0002', 'EM', 'ECO DE CUELLO', 'Un texto del escritorio.');
+
+        $web = $this->como($user, $medico, $gineco);
+
+        $web->get(route('clinica.catalogos.plantillas-texto'))
+            ->assertOk()
+            // El tipo ya está en el filtro con su cuenta (los tipos usados en la web se listan aunque tengan 0).
+            ->assertSee('Eco ginecológico (1)')
+            // Y la lista dice dónde se ofrece; el que la web no tiene lo dice también.
+            ->assertSee('Se ofrece en el estudio ecográfico, en el eco ginecológico.')
+            ->assertSee('Todavía no se ofrece en la consulta de la web.');
+
+        // El filtro por tipo (el parámetro `filtro` del catálogo) llega desde el cajón del estudio.
+        $web->get(route('clinica.catalogos.plantillas-texto', ['filtro' => 'UG']))
+            ->assertOk()
+            ->assertSee('ECO PELVICO NORMAL')
+            ->assertDontSee('ECO DE CUELLO');
+    }
+
+    /**
+     * **El cajón de cada estudio** ofrece las plantillas de **su** tipo y no las de otro, y las copia al campo
+     * libre del informe de ese estudio (el que la pantalla edita).
+     */
+    public function test_el_cajon_de_cada_estudio_ofrece_las_plantillas_de_su_tipo_y_no_las_de_otro(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // El tipo de `formato_print` de cada estudio y la columna a la que se copia la plantilla. Salen de la
+        // ventana del escritorio de cada uno (`retrieve('<tipo>')` de su `dw_76`): ver `PlantillasDelEstudio`.
+        $estudios = [
+            'ginecologico' => ['UG', 'observacion'],
+            'obstetrico' => ['O1', 'observacion'],
+            'segundo' => ['O2', 'observacion'],
+            'tercero' => ['O3', 'observacion'],
+            'doppler' => ['ED', 'texto'],
+            'mamario' => ['UM', 'conclusion'],
+            'abdominal' => ['UA', 'conclusiones'],
+        ];
+
+        foreach ($estudios as [$tipo, $columna]) {
+            $this->plantilla($medico, str_pad((string) (array_search($tipo, array_column($estudios, 0), true) + 1), 4, '0', STR_PAD_LEFT), $tipo, 'PLANTILLA ' . $tipo, 'Texto de ' . $tipo);
+        }
+
+        $web = $this->como($user, $medico, $gineco);
+
+        foreach ($estudios as $estudio => [$tipo, $columna]) {
+            $respuesta = $web->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio', 'tipo' => $estudio]));
+            $respuesta->assertOk();
+            $html = $respuesta->getContent();
+
+            $this->assertStringContainsString('data-plantilla-titulo="PLANTILLA ' . $tipo . '"', $html, 'El estudio ' . $estudio . ' ofrece sus plantillas.');
+            $this->assertStringContainsString('data-destino="#' . $columna . '"', $html, 'El estudio ' . $estudio . ' copia la plantilla a ' . $columna . '.');
+            $this->assertStringContainsString(route('clinica.catalogos.plantillas-texto', ['filtro' => $tipo]), $html, 'El estudio ' . $estudio . ' administra las de su tipo.');
+
+            foreach ($estudios as $otroEstudio => [$otroTipo]) {
+                if ($otroTipo === $tipo) {
+                    continue;
+                }
+
+                $this->assertStringNotContainsString('data-plantilla-titulo="PLANTILLA ' . $otroTipo . '"', $html, 'El estudio ' . $estudio . ' no ofrece las de ' . $otroTipo . '.');
+            }
+        }
+    }
+
+    /**
+     * **«Administrar plantillas»** al pie del cajón, en **todas** las secciones que lo usan: abre el catálogo
+     * filtrado por el tipo de esa sección (el descubrimiento que a la médica le faltaba).
+     */
+    public function test_el_cajon_lleva_a_administrar_las_plantillas_filtradas_por_su_tipo_en_todas_las_secciones(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $secciones = [
+            'EV' => ['seccion' => 'evolucion'],
+            'EA' => ['seccion' => 'enfermedad'],
+            'RF' => ['seccion' => 'evaluacion', 'pestana' => 'fisico'],
+            'EG' => ['seccion' => 'evaluacion', 'pestana' => 'ginecologico'],
+            'CO' => ['seccion' => 'evaluacion', 'pestana' => 'colposcopia'],
+            'TR' => ['seccion' => 'tratamiento'],
+            'IM' => ['seccion' => 'solicitudes', 'solicitud' => 'informe'],
+            'DI' => ['seccion' => 'solicitudes', 'solicitud' => 'dieta'],
+            'UG' => ['seccion' => 'estudio', 'tipo' => 'ginecologico'],
+        ];
+
+        $web = $this->como($user, $medico, $gineco);
+
+        foreach ($secciones as $tipo => $parametros) {
+            $html = $web->get(route('clinica.consulta', array_merge([$consulta->id], $parametros)))
+                ->assertOk()
+                ->getContent();
+
+            $this->assertStringContainsString('Administrar plantillas', $html, 'La sección ' . $tipo . ' enlaza al catálogo.');
+            $this->assertStringContainsString(route('clinica.catalogos.plantillas-texto', ['filtro' => $tipo]), $html, 'La sección ' . $tipo . ' filtra por su tipo.');
+        }
+    }
+
+    /**
+     * El componente acepta **una lista de tipos** (el caso del estudio que en el escritorio comparte plantillas
+     * entre dos): el cajón lista las de todos y el desplegable elige con cuál se guarda la nueva. Hoy cada
+     * estudio de la web tiene un solo tipo, así que el desplegable no se ve en las pantallas.
+     */
+    public function test_el_componente_acepta_una_lista_de_tipos_y_elige_con_cual_se_guarda(): void
+    {
+        $vista = $this->blade(
+            '<x-ui.plantillas :plantillas="$lista" destino="#observacion" :tipos="$tipos" nombre="eco obstétrico" />',
+            [
+                'lista' => [
+                    ['titulo' => 'DEL SEGUNDO', 'texto' => 'Texto del segundo.'],
+                    ['titulo' => 'DEL TERCERO', 'texto' => 'Texto del tercero.'],
+                ],
+                'tipos' => ['O2' => 'Obstétrico 2', 'O3' => 'Obstétrico 3'],
+            ]
+        );
+
+        $vista->assertSee('data-plantilla-titulo="DEL SEGUNDO"', false);
+        $vista->assertSee('data-plantilla-titulo="DEL TERCERO"', false);
+        // El desplegable para elegir con qué tipo se guarda, con el primero adelante.
+        $vista->assertSee('data-plantillas-tipo', false);
+        $vista->assertSee('<option value="O2">Obstétrico 2</option>', false);
+        $vista->assertSee('<option value="O3">Obstétrico 3</option>', false);
+        $vista->assertSee('data-tipo="O2"', false);
+        // Y el enlace al catálogo, filtrado por el primero (el JS lo sigue si se cambia el tipo).
+        $vista->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'O2']), false);
     }
 }

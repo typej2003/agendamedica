@@ -64,6 +64,9 @@
                         </td>
                         <td data-etiqueta="Tipo">
                             <x-ui.estado :tono="$fila['tipoEnLaWeb'] ? 'info' : 'neutro'" :icono="$fila['tipoEnLaWeb'] ? 'bi-check2-circle' : 'bi-file-earmark-text'">{{ $fila['tipo'] }}</x-ui.estado>
+                            {{-- Dónde se ofrece el tipo: la pantalla de la consulta. Sin esto, las de ecografía se creaban y no
+                                 se sabía que estaban a la vista en el estudio ecográfico (revisión de Alexander, 2026-10-17). --}}
+                            <span class="plantilla-resumen texto-tenue">{{ $fila['dondeSeUsa'] ?? 'Todavía no se ofrece en la consulta de la web.' }}</span>
                         </td>
                         <td data-etiqueta="Código" class="texto-tenue">{{ $fila['codigo'] }}</td>
                         <td class="celda-acciones text-end">
@@ -118,7 +121,7 @@
 
                 <div class="row g-3">
                     <x-ui.campo etiqueta="Tipo" for="plantilla-tipo" error="tipo" class="col-12" :requerido="true"
-                                ayuda="Dice dónde se ofrece: la evolución, el informe médico o las dietas y recomendaciones de la consulta.">
+                                ayuda="Dice dónde se ofrece: la evolución, el informe médico, las dietas, el tratamiento, las solapas del examen o el estudio ecográfico.">
                         <select name="tipo" id="plantilla-tipo" class="form-select" data-foco-inicial>
                             <option value="">Elige el tipo</option>
                             @foreach ($vm->gruposDeTipo() as $grupo)

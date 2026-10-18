@@ -130,6 +130,12 @@ class ConsultaFetalWebTest extends TestCase
         // El formulario apunta a la acción de guardar del tipo que se está mirando.
         $respuesta->assertSee($this->urlGuardar($consulta), false);
         $respuesta->assertSee('Guardar el estudio');
+
+        // El ecocardiograma fetal **no ofrece plantillas** (revisión de Alexander, 2026-10-17): su ventana del
+        // escritorio no tiene el panel de plantillas y el ABM (`d_a_formatos.srd`) no declara un tipo para él.
+        // Inventarlo lo haría aparecer como un código desconocido en el escritorio, que comparte `formato_print`.
+        $respuesta->assertDontSee('data-plantillas-panel', false);
+        $respuesta->assertDontSee('Administrar plantillas');
     }
 
     /**

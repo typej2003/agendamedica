@@ -31,6 +31,7 @@ use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
+use App\Clinica\Consulta\PlantillasDelEstudio;
 use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
@@ -467,6 +468,12 @@ class ConsultaController extends Controller
                 'tipo' => $clave,
             ]), $especialidad === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : []);
 
+            // Las plantillas de texto del estudio (revisión de Alexander, 2026-10-17): el tipo de `formato_print`
+            // que el escritorio usa en esa ventana y la columna del informe a la que se copian. El
+            // ecocardiograma fetal no tiene plantillas en el escritorio, así que `de()` devuelve `null` y ese
+            // estudio no ofrece el botón (ver `PlantillasDelEstudio`).
+            $plantillas = PlantillasDelEstudio::de($regMedico, $tipo);
+
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
             if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
@@ -487,6 +494,7 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -506,6 +514,7 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -530,6 +539,7 @@ class ConsultaController extends Controller
                         (array) old(),
                         $guardado,
                     ),
+                    $plantillas,
                 );
             }
 
@@ -551,6 +561,7 @@ class ConsultaController extends Controller
                             ->all(),
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -574,6 +585,7 @@ class ConsultaController extends Controller
                             ->all(),
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -605,6 +617,7 @@ class ConsultaController extends Controller
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
                 ),
+                $plantillas,
             );
         }
 

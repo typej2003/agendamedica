@@ -28,6 +28,8 @@
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
                 </h3>
 
+                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
+
                 <div class="row g-3">
                     @foreach ($grupo['campos'] as $campo)
                         @include('clinica.consulta._estudio-campo', [

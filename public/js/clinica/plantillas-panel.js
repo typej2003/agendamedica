@@ -7,6 +7,8 @@
 //    hubiera escrito.
 //  - Guardar como plantilla: manda el texto del campo y el título al servidor (JSON) y suma la plantilla a la
 //    lista del cajón (y al conteo del botón que lo abre).
+//  - Con más de un tipo (los estudios ecográficos que comparten plantillas), el desplegable del cajón elige con
+//    qué tipo se guarda la nueva y arrastra el filtro del enlace «Administrar plantillas».
 (function () {
     'use strict';
 
@@ -77,6 +79,30 @@
         var mensaje = panel.querySelector('[data-plantillas-mensaje]');
         var confirmar = panel.querySelector('[data-plantillas-confirmar]');
 
+        // El tipo con el que se guarda la plantilla nueva: el del desplegable (si el cajón ofrece más de uno) o
+        // el único de la sección. Y el enlace al catálogo sigue al tipo elegido, para administrar las de ese tipo.
+        var selectorTipo = panel.querySelector('[data-plantillas-tipo]');
+        var enlaceAdministrar = panel.querySelector('[data-plantillas-administrar]');
+
+        function tipoElegido() {
+            return selectorTipo ? selectorTipo.value : panel.dataset.tipo;
+        }
+
+        function seguirElTipo() {
+            if (!selectorTipo || !enlaceAdministrar || !panel.dataset.urlAdministrar) { return; }
+
+            try {
+                var url = new URL(panel.dataset.urlAdministrar, window.location.origin);
+                url.searchParams.set('filtro', selectorTipo.value);
+                enlaceAdministrar.href = url.pathname + url.search;
+            } catch (error) { /* Sin URL: el enlace se queda con el tipo principal. */ }
+        }
+
+        if (selectorTipo) {
+            selectorTipo.addEventListener('change', seguirElTipo);
+            seguirElTipo();
+        }
+
         function decir(texto, error) {
             mensaje.hidden = false;
             mensaje.textContent = texto;
@@ -103,7 +129,7 @@
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token ? token.content : '',
                 },
-                body: JSON.stringify({ tipo: panel.dataset.tipo, titulo: titulo.value, descripcion: campo.value }),
+                body: JSON.stringify({ tipo: tipoElegido(), titulo: titulo.value, descripcion: campo.value }),
             }).then(function (respuesta) {
                 return respuesta.json().then(function (datos) { return { ok: respuesta.ok, datos: datos }; });
             }).then(function (r) {

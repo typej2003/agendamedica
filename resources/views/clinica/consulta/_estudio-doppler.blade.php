@@ -30,6 +30,8 @@
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
                 </h3>
 
+                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
+
                 @if ($grupo['grilla'])
                     {{-- La grilla de cuatro vasos: una fila por arteria y una columna por índice, con los
                          rótulos del DataWindow. `sin-tarjetas` porque una tabla de medidas apilada como

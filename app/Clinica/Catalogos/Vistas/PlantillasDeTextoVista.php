@@ -60,7 +60,7 @@ final class PlantillasDeTextoVista
                 . ($this->tipo !== '' ? ' de tipo «' . TiposDePlantillaDeTexto::nombre($this->tipo) . '»' : '') . '.';
         }
 
-        return $this->total . ($this->total === 1 ? ' plantilla' : ' plantillas') . '. Son los textos que se copian al escribir la evolución, el informe o las dietas en la consulta.';
+        return $this->total . ($this->total === 1 ? ' plantilla' : ' plantillas') . '. Son los textos que se copian al escribir la evolución, el informe, las dietas o un estudio ecográfico.';
     }
 
     /** @return array{icono:string, titulo:string, texto:string} */
@@ -77,7 +77,7 @@ final class PlantillasDeTextoVista
         return [
             'icono' => 'bi-file-earmark-text',
             'titulo' => 'Todavía no tienes plantillas de texto',
-            'texto' => 'Crea la primera: es un texto que vas a poder copiar con un clic al escribir la evolución, el informe o las dietas.',
+            'texto' => 'Crea la primera: es un texto que vas a poder copiar con un clic al escribir la evolución, el informe, las dietas o un estudio ecográfico.',
         ];
     }
 
@@ -121,6 +121,9 @@ final class PlantillasDeTextoVista
             'resumen' => $texto === '' ? null : Str::limit($texto, 160),
             'tipo' => TiposDePlantillaDeTexto::nombre($codigoDelTipo),
             'tipoEnLaWeb' => TiposDePlantillaDeTexto::seUsaEnLaWeb($codigoDelTipo),
+            // Dónde se ofrece ese tipo en la consulta (la pantalla), o `null` si la web todavía no la tiene. Es
+            // lo que responde «¿dónde sale esta plantilla?», la pregunta de una médica que probó la web.
+            'dondeSeUsa' => TiposDePlantillaDeTexto::dondeSeUsa($codigoDelTipo),
             'codigo' => trim((string) $fila->codigo),
             'sinTexto' => $texto === '',
             'urlEditar' => $this->url(['editar' => $fila->id]),
