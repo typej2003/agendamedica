@@ -30,6 +30,10 @@ class TablasLegado
         'consultas' => 'numhistoria',
         'constancia_obs' => 'numhistoria',
         'recipes' => 'nrohistoria',
+        // El récipe de la pareja (ola §9 de PLAN-MOVIL.md) se llavea igual que `recipes` —`nrohistoria` +
+        // `nroconsulta` + `codemedicina`—, no como la consulta. Sin esta entrada el filtro pregunta por
+        // `numhistoria` (el default) y no baja ninguna fila.
+        'recipes_pareja' => 'nrohistoria',
         'informe' => 'nrohistoria',
         'referencia' => 'nrohistoria',
         'reposo_paciente' => 'nrohistoria',

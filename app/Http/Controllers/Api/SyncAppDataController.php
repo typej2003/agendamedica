@@ -43,6 +43,7 @@ use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\RecipeFormato;
+use App\Models\RecipePareja;
 use App\Models\Referencia;
 use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
@@ -352,6 +353,14 @@ class SyncAppDataController extends Controller
             'recipes' => ['consulta' => Recipe::whereIn('nrohistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiasDeLaVentana())), 'columna' => 'id'],
+            // **El récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera y sin
+            // columna `recipe`; cada fila es un medicamento y repite la cédula y el nombre de la pareja. Se
+            // llavea por `nrohistoria` + `nroconsulta`, así que baja con el mismo filtro doble que `recipes`.
+            // La columna del número de historia se pregunta a `TablasLegado` porque esta tabla la llama
+            // `nrohistoria` y no `numhistoria`.
+            'recipes_pareja' => ['consulta' => RecipePareja::whereIn(TablasLegado::columnaHistoria('recipes_pareja'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('recipes_pareja'), $historiasDeLaVentana())), 'columna' => 'id'],
             // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
             // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
             'vademecum' => ['consulta' => Vademecum::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
@@ -570,6 +579,11 @@ class SyncAppDataController extends Controller
             'motivo_consulta_paciente' => MotivoConsultaPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('motivo_consulta_paciente'), $numHistoria)->get(),
             'recipes' => Recipe::whereIn('reg_medico', $registrosMedicos)->where($de('recipes'), $numHistoria)->get(),
+            // El récipe de la pareja de la consulta (ola §9): se suma acá por el mismo motivo que el examen
+            // físico y los ecos —este pedido arma su payload a mano—; sin esta línea, la ficha de un paciente
+            // fuera de la ventana llegaba con sus récipes pero sin la pareja.
+            'recipes_pareja' => RecipePareja::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('recipes_pareja'), $numHistoria)->get(),
             // Los documentos, con la misma regla que el volcado: las plantillas vacías del legado no viajan.
             'constancia_obs' => ConstanciaObs::whereIn('reg_medico', $registrosMedicos)->where($de('constancia_obs'), $numHistoria)
                 ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")->get(),
@@ -679,6 +693,10 @@ class SyncAppDataController extends Controller
             'motivos_consulta' => $datos['motivos_consulta'] ?? $vacio,
             'motivo_consulta_paciente' => $datos['motivo_consulta_paciente'] ?? $vacio,
             'recipes' => $datos['recipes'] ?? $vacio,
+            // El récipe de la pareja (ola §9 de PLAN-MOVIL.md). El delta y el volcado lo arman desde `$plan`;
+            // el pedido puntual de una ficha lo trae en su payload armado a mano. La clave tiene que existir
+            // siempre: el app recorre una lista fija de tablas.
+            'recipes_pareja' => $datos['recipes_pareja'] ?? $vacio,
             'vademecum' => $datos['vademecum'] ?? $vacio,
             'tratamientos' => $datos['tratamientos'] ?? $vacio,
             'tratamientos_detalle' => $datos['tratamientos_detalle'] ?? $vacio,
