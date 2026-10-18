@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Admin\ApiKeys;
+use App\Http\Livewire\Admin\CatalogoInicialPercentiles;
 use App\Http\Livewire\Admin\CatalogoInicialVacunas;
 use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
@@ -22,6 +23,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
     // **Catálogo inicial · Vacunas** (WEB-12.8): lo que cada médico de pediatría recibe como punto de partida.
     Route::get('/catalogo-inicial/vacunas', CatalogoInicialVacunas::class)->name('catalogo-inicial.vacunas');
+    // **Catálogo inicial · Referencia de crecimiento** (WEB-7.4.3e): `percentil_nino` y `percentil_nina` sin dueño.
+    Route::get('/catalogo-inicial/percentiles', CatalogoInicialPercentiles::class)->name('catalogo-inicial.percentiles');
     Route::get('/api-keys', ApiKeys::class)->name('api-keys');
     // Planes de servicio y vencimiento por médico (Paso 27).
     // **Ayúdanos a mejorar** (ROADMAP §9): la bandeja donde recibimos los comentarios del consultorio.
