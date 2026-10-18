@@ -30,7 +30,7 @@
         { "id": 19, "mensaje": "Quiero pedir cita para mi control prenatal", "intencion": "agendar", "urgencia": false },
         { "id": 20, "mensaje": "Buenas, ¿me pueden enviar el récipe por aquí?", "intencion": "administrativo", "urgencia": false },
         { "id": 21, "mensaje": "Mi bebé tiene 39 de fiebre y no quiere comer", "intencion": "urgencia", "urgencia": true },
-        { "id": 22, "mensaje": "Necesito una cita urgente para hoy", "intencion": "agendar", "urgencia": true, "nota": "La intención es agendar; el apuro lo resuelve la pregunta de urgencia, no la categoría." },
+        { "id": 22, "mensaje": "Necesito una cita urgente para hoy", "intencion": "agendar", "urgencia": false, "nota": "La intención es agendar. Ojo: «urgente» acá es apuro administrativo, NO urgencia clínica — la primera corrida (2026-10-18) lo tenía marcado como urgencia y Jev, con razón, no lo escaló; ver Docs/tecnico/jev-triaje.md §8." },
         { "id": 23, "mensaje": "ola, kiero una cita pal martes porfa", "intencion": "agendar", "urgencia": false, "nota": "Faltas de ortografía y jerga venezolana." },
         { "id": 24, "mensaje": "Buenas tardes, ¿atienden con seguro? Soy de Mercantil Seguros", "intencion": "administrativo", "urgencia": false },
         { "id": 25, "mensaje": "Cancelé el vuelo, ¿puedo adelantar la cita?", "intencion": "reprogramar", "urgencia": false },

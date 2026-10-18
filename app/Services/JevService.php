@@ -36,6 +36,18 @@ use RuntimeException;
  */
 class JevService
 {
+    /**
+     * Las rutas del protocolo **de decisiones** de Jev (las que devuelven probabilidades calibradas).
+     *
+     * `systemone` es la del Jev oficial y la de DigitalOcean; `decisions` es la de DefAPI, que monta el
+     * servicio en `/api/v1/decisions` con **el mismo cuerpo** (`model` + `state` + `questions`) y el mismo
+     * sobre plano que DigitalOcean (medido el 2026-10-18 con la clave real).
+     */
+    private const RUTAS_DE_DECISION = [
+        'systemone' => '/v1/systemone',
+        'decisions' => '/api/v1/decisions',
+    ];
+
     /** @var array{api_key:?string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int} */
     private array $config;
 
@@ -87,7 +99,7 @@ class JevService
      *
      * @param  string|array<int|string,mixed>  $estado
      * @param  array<string,array<string,mixed>>  $preguntas
-     * @return array{answers:array<string,array<string,mixed>>,usage:array{input_tokens?:int,output_tokens?:int},elapsed_ms:?int,credits:?int,crudo:array}
+     * @return array{answers:array<string,array<string,mixed>>,usage:array<string,mixed>,elapsed_ms:?int,credits:?int,costo:?float,crudo:array}
      *
      * @throws RuntimeException con un mensaje accionable (sin la clave) si no hay credenciales o la API falla.
      */
@@ -105,26 +117,33 @@ class JevService
             return $this->decidirPorChat($estado, $preguntas);
         }
 
-        if ($protocolo === 'systemone') {
-            return $this->decidirPorSystemOne($estado, $preguntas);
+        if (isset(self::RUTAS_DE_DECISION[$protocolo])) {
+            return $this->decidirPorDecisiones($protocolo, $estado, $preguntas);
         }
 
-        // `auto`: primero el protocolo propio de Jev; si el proveedor no tiene esa ruta, el de chat.
-        try {
-            return $this->decidirPorSystemOne($estado, $preguntas);
-        } catch (JevSinRutaSystemOne $e) {
-            return $this->decidirPorChat($estado, $preguntas);
+        // `auto`: las rutas de decisión en orden y, si el proveedor no tiene ninguna, el camino de chat.
+        foreach (array_keys(self::RUTAS_DE_DECISION) as $candidato) {
+            try {
+                return $this->decidirPorDecisiones($candidato, $estado, $preguntas);
+            } catch (JevSinRutaDeDecision $e) {
+                continue;
+            }
         }
+
+        return $this->decidirPorChat($estado, $preguntas);
     }
 
     // ------------------------------------------------------------------------------- Protocolo propio
 
     /**
-     * `POST /v1/systemone`: el protocolo de Jev, con preguntas tipadas y probabilidades calibradas.
+     * `POST {ruta}` con `model` + `state` + `questions`: el protocolo de Jev, con preguntas tipadas y
+     * probabilidades **calibradas**. Devuelve `answers` con `probabilities`/`confidence` por pregunta.
      */
-    private function decidirPorSystemOne(string|array $estado, array $preguntas): array
+    private function decidirPorDecisiones(string $protocolo, string|array $estado, array $preguntas): array
     {
-        $respuesta = $this->enviar($this->config['base_url'] . '/v1/systemone', [
+        $inicio = microtime(true);
+
+        $respuesta = $this->enviar($this->config['base_url'] . self::RUTAS_DE_DECISION[$protocolo], [
             'model' => $this->config['model'],
             'state' => $estado,
             'questions' => $preguntas,
@@ -139,13 +158,15 @@ class JevService
             throw new RuntimeException('Jev respondió sin respuestas utilizables: ' . $this->recortar((string) $mensaje));
         }
 
-        $this->protocoloUsado = 'systemone';
+        $this->protocoloUsado = $protocolo;
 
         return [
             'answers' => $respuestas,
             'usage' => $this->uso($json),
-            'elapsed_ms' => $this->elapsed($json),
+            // DefAPI no informa `elapsedMs`: se mide acá para no reportar 0 ms.
+            'elapsed_ms' => $this->elapsed($json) ?? (int) round((microtime(true) - $inicio) * 1000),
             'credits' => $this->creditos($json),
+            'costo' => $this->costo($json),
             'crudo' => $json,
         ];
     }
@@ -195,6 +216,7 @@ class JevService
             'usage' => $this->uso($json),
             'elapsed_ms' => (int) round((microtime(true) - $inicio) * 1000),
             'credits' => $this->creditos($json),
+            'costo' => $this->costo($json),
             'crudo' => $json,
         ];
     }
@@ -346,19 +368,23 @@ class JevService
         $detalle = $this->recortar((string) ($respuesta->json('message') ?? $respuesta->body()));
         $ruta = parse_url($url, PHP_URL_PATH) ?: $url;
 
-        if (in_array($status, [404, 405], true) && $ruta === '/v1/systemone') {
-            throw new JevSinRutaSystemOne(
-                "El proveedor no tiene la ruta /v1/systemone (HTTP {$status}). Es el caso de DefAPI: usá "
-                . 'JEV_PROTOCOLO=chat, o JEV_BASE_URL=https://thejevai.com con una clave del Jev oficial.'
+        if (in_array($status, [404, 405], true) && in_array($ruta, self::RUTAS_DE_DECISION, true)) {
+            $otra = $ruta === '/v1/systemone' ? '/api/v1/decisions' : '/v1/systemone';
+
+            throw new JevSinRutaDeDecision(
+                $ruta,
+                "El proveedor no tiene la ruta {$ruta} (HTTP {$status}). Probá JEV_PROTOCOLO=decisions "
+                . "(o systemone), o JEV_PROTOCOLO=chat si el proveedor sólo habla OpenAI. La otra ruta de "
+                . "decisiones de Jev es {$otra}."
             );
         }
 
-        // DefAPI reconoce `typesafe/jev-1.13` pero no lo sirve: en chat y en messages responde
+        // DefAPI reconoce `typesafe/jev-1.13` en sus superficies de chat, pero no lo sirve: responde
         // «Model not supported» con 500. El mensaje crudo no dice qué hacer, así que se traduce.
         if ($status === 500 && str_contains($detalle, 'Model not supported')) {
             return "El proveedor conoce el modelo pero no lo sirve en esta superficie (HTTP 500: {$detalle}). "
-                . 'Es el caso de DefAPI con typesafe/jev-1.13: no expone /v1/systemone y rechaza el modelo en '
-                . 'chat/messages. Hace falta un proveedor con el protocolo de Jev (thejevai.com o DigitalOcean).';
+                . 'En DefAPI pasa con /v1/chat/completions y /v1/messages: el modelo de Jev se usa por '
+                . 'POST /api/v1/decisions (JEV_PROTOCOLO=decisions).';
         }
 
         return match ($status) {
@@ -415,6 +441,18 @@ class JevService
         $creditos = $json['data']['creditsUsed'] ?? null;
 
         return $creditos === null ? null : (int) $creditos;
+    }
+
+    /**
+     * El costo que informa el proveedor, si lo informa (`usage.cost` en DefAPI, `consumed` en la raíz).
+     *
+     * @param  array<string,mixed>  $json
+     */
+    private function costo(array $json): ?float
+    {
+        $costo = $json['usage']['cost'] ?? $json['consumed'] ?? null;
+
+        return is_numeric($costo) ? (float) $costo : null;
     }
 
     private function recortar(string $texto): string

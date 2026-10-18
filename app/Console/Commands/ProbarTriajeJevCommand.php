@@ -111,6 +111,7 @@ class ProbarTriajeJevCommand extends Command
         $tokens = 0;
         $ms = 0;
         $creditos = 0;
+        $costo = 0.0;
 
         $this->newLine();
 
@@ -133,6 +134,7 @@ class ProbarTriajeJevCommand extends Command
             $tokens += (int) ($respuesta['usage']['input_tokens'] ?? 0);
             $ms += (int) ($respuesta['elapsed_ms'] ?? 0);
             $creditos += (int) ($respuesta['credits'] ?? 0);
+            $costo += (float) ($respuesta['costo'] ?? 0);
 
             $intencion = $respuesta['answers']['intencion'] ?? [];
             $urgencia = $respuesta['answers']['es_urgencia'] ?? [];
@@ -186,7 +188,7 @@ class ProbarTriajeJevCommand extends Command
         }
 
         $this->tablaDeMensajes($resultados);
-        $resumen = $this->resumen($resultados, $umbral, $tokens, $ms, $creditos);
+        $resumen = $this->resumen($resultados, $umbral, $tokens, $ms, $creditos, $costo);
 
         if ($this->option('json')) {
             $ruta = (string) $this->option('json');
@@ -216,15 +218,15 @@ class ProbarTriajeJevCommand extends Command
         return [
             'intencion' => [
                 'type' => 'choice',
-                'instructions' => 'Sos la secretaría de un consultorio médico. ¿Qué quiere la persona que escribe este mensaje de WhatsApp? Elegí la categoría que mejor lo describa.',
+                'instructions' => 'Sos la secretaría de un consultorio médico. ¿Qué quiere la persona que escribe este mensaje de WhatsApp? Elegí la categoría que mejor lo describa. Regla para no confundir el apuro con el cuadro clínico: si PIDE O CAMBIA UNA CITA, la categoría es agendar, reprogramar o cancelar aunque diga «urgente», «para hoy» o «lo antes posible»; reservá `urgencia` para cuando relata un cuadro clínico grave y no está pidiendo una cita.',
                 'criteria' => $categorias,
             ],
             'es_urgencia' => [
                 'type' => 'noul',
-                'instructions' => '¿Este mensaje describe un cuadro que no puede esperar a una cita normal y hay que escalar de inmediato a un médico?',
+                'instructions' => '¿Este mensaje describe una URGENCIA CLÍNICA: un cuadro que puede poner en riesgo la salud y que hay que escalar de inmediato a un médico? El apuro por conseguir una cita («urgente», «para hoy», «lo antes posible») NO es urgencia clínica si no hay síntomas.',
                 'criteria' => [
-                    'true' => 'Síntomas agudos o potencialmente graves: dolor intenso, sangrado, fiebre alta, contracciones, desmayo, dificultad para respirar.',
-                    'false' => 'Consulta administrativa o clínica que puede esperar a una cita.',
+                    'true' => 'Síntomas agudos o potencialmente graves: dolor intenso, sangrado, fiebre alta, contracciones, desmayo, dificultad para respirar, riesgo para un bebé o un embarazo.',
+                    'false' => 'Pedido de cita (aunque sea «urgente»), consulta administrativa o duda clínica que puede esperar a una cita.',
                 ],
             ],
         ];
@@ -291,7 +293,7 @@ class ProbarTriajeJevCommand extends Command
      * @param  array<int,array<string,mixed>>  $resultados
      * @return array<string,mixed>
      */
-    private function resumen(array $resultados, float $umbral, int $tokens, int $ms, int $creditos): array
+    private function resumen(array $resultados, float $umbral, int $tokens, int $ms, int $creditos, float $costo = 0.0): array
     {
         $total = count($resultados);
         $aciertos = count(array_filter($resultados, fn (array $r) => $r['acierto_intencion']));
@@ -327,12 +329,13 @@ class ProbarTriajeJevCommand extends Command
             $urgenciasOmitidas
         ));
         $this->line(sprintf(
-            'Consumo: %d tokens de entrada · %d ms acumulados · %.0f ms por mensaje · costo ≈ $%s (a $%.3f/MTok)',
+            'Consumo: %d tokens de entrada · %d ms acumulados · %.0f ms por mensaje · costo %s',
             $tokens,
             $ms,
             $total ? $ms / $total : 0,
-            number_format($tokens * self::PRECIO_POR_MILLON / 1_000_000, 6, ',', '.'),
-            self::PRECIO_POR_MILLON
+            $costo > 0
+                ? sprintf('$%s (informado por Jev)', number_format($costo, 6, ',', '.'))
+                : sprintf('≈ $%s (a $%.3f/MTok)', number_format($tokens * self::PRECIO_POR_MILLON / 1_000_000, 6, ',', '.'), self::PRECIO_POR_MILLON)
         ));
 
         if ($creditos > 0) {
@@ -369,6 +372,7 @@ class ProbarTriajeJevCommand extends Command
             'umbral' => $umbral,
             'tokens' => $tokens,
             'ms' => $ms,
+            'costo_informado_usd' => round($costo, 6),
             'costo_estimado_usd' => round($tokens * self::PRECIO_POR_MILLON / 1_000_000, 6),
         ];
     }

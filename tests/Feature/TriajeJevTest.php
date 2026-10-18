@@ -267,6 +267,8 @@ class TriajeJevTest extends TestCase
 
         Http::fake([
             'https://api.defapi.org/v1/systemone' => Http::response(['message' => 'Route POST:/v1/systemone not found'], 404),
+            // `auto` también prueba la ruta de DefAPI antes de rendirse: si no se finge, sale a la red.
+            'https://api.defapi.org/api/v1/decisions' => Http::response(['message' => 'Route POST:/api/v1/decisions not found'], 404),
             'https://api.defapi.org/v1/chat/completions' => Http::response([
                 'choices' => [['message' => ['content' => '{"intencion": {"choice": "cancelar", "confidence": 0.9}}']]],
             ], 200),
@@ -280,6 +282,56 @@ class TriajeJevTest extends TestCase
 
         $this->assertSame('cancelar', $resultado['answers']['intencion']['choice']);
         $this->assertSame('chat', $servicio->protocoloUsado());
+    }
+
+    /**
+     * La ruta de DefAPI: `POST /api/v1/decisions` con el mismo cuerpo y el sobre plano. Devuelve
+     * probabilidades calibradas, así que es una respuesta de primera, no el camino degradado.
+     */
+    public function test_usa_decisions_cuando_el_proveedor_lo_expone(): void
+    {
+        $this->configurar();
+        config([
+            'services.jev.base_url' => 'https://api.defapi.org',
+            'services.jev.model' => 'typesafe/jev-1.13',
+            'services.jev.protocolo' => 'auto',
+        ]);
+
+        Http::fake([
+            'https://api.defapi.org/v1/systemone' => Http::response(['message' => 'Route POST:/v1/systemone not found'], 404),
+            'https://api.defapi.org/api/v1/decisions' => Http::response([
+                'model' => 'typesafe/jev-1.13-20260917',
+                'answers' => [
+                    'intencion' => [
+                        'type' => 'choice',
+                        'choice' => 'agendar',
+                        'probabilities' => ['agendar' => 0.82, 'administrativo' => 0.18],
+                        'confidence' => 0.73,
+                    ],
+                ],
+                'usage' => ['input_tokens' => 367, 'output_tokens' => 38, 'cost' => 0.000030828],
+                'provider' => 'TypeSafe',
+            ], 200),
+        ]);
+
+        $servicio = app(JevService::class);
+
+        $resultado = $servicio->decidir('Quiero una cita', [
+            'intencion' => ['type' => 'choice', 'instructions' => '¿Qué quiere?', 'criteria' => ['agendar' => 'Pide cita']],
+        ]);
+
+        $this->assertSame('agendar', $resultado['answers']['intencion']['choice']);
+        $this->assertSame('decisions', $servicio->protocoloUsado());
+        $this->assertTrue($servicio->confianzaCalibrada());
+        $this->assertEqualsWithDelta(0.000030828, $resultado['costo'], 1e-9);
+        // El proveedor no informa `elapsedMs`: se mide acá (con la respuesta fingida puede dar 0 ms).
+        $this->assertIsInt($resultado['elapsed_ms']);
+        $this->assertGreaterThanOrEqual(0, $resultado['elapsed_ms']);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.defapi.org/api/v1/decisions'
+            && $request['model'] === 'typesafe/jev-1.13'
+            && $request['state'] === 'Quiero una cita'
+            && $request['questions']['intencion']['type'] === 'choice');
     }
 
     /** Con `systemone` explícito y un proveedor sin esa ruta, el error dice qué hacer. */
