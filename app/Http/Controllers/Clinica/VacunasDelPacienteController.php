@@ -29,6 +29,13 @@ class VacunasDelPacienteController extends Controller
     ) {
     }
 
+    /** La entrada del menú: el calendario es de un niño, así que se llega desde su ficha. */
+    public function entrada()
+    {
+        return redirect()->route('clinica.pacientes')
+            ->with('estado', 'Elige al niño y abre su ficha: ahí está el botón «Vacunas» con su calendario y su carnet.');
+    }
+
     public function ver(Request $request, int $paciente)
     {
         $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];

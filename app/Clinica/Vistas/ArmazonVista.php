@@ -148,7 +148,7 @@ final class ArmazonVista
         // Va en la barra lateral y no en los accesos de la barra superior: ésa ya ocupa todo el ancho a 768 px con las
         // fichas del contexto, y un acceso más la desborda (medido al verificar WEB-8.1a; trampa 58 de `TRAMPAS.md`).
         // "Catálogos" es un grupo con un submenú por catálogo (`CatalogosDisponibles` es la fuente única de cuáles hay).
-        $catalogos = $this->tieneContexto() && $this->trabajaLaConsulta ? CatalogosDisponibles::submenu($this->rutaActual) : [];
+        $catalogos = $this->tieneContexto() && $this->trabajaLaConsulta ? CatalogosDisponibles::submenu($this->rutaActual, $this->contexto['specialty']->slug ?? null) : [];
 
         if ($catalogos !== []) {
             $menu[] = [

@@ -39,6 +39,7 @@ use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\CrecimientoController;
+use App\Http\Controllers\Clinica\VacunaCatalogoController;
 use App\Http\Controllers\Clinica\VacunasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
@@ -177,6 +178,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // hoja para imprimir. Es clínico —sólo del médico— y de un paciente: `/crecimiento` (la entrada del módulo en el menú) manda
                 // a elegirlo.
                 Route::get('/crecimiento', [CrecimientoController::class, 'entrada'])->name('crecimiento');
+                // La entrada del módulo Vacunas en el menú (WEB-7.4.4e): como el crecimiento, es de un paciente; manda a elegirlo.
+                Route::get('/vacunas', [VacunasDelPacienteController::class, 'entrada'])->name('vacunas');
                 Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
                 Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
                 // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
@@ -441,6 +444,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Plantillas de texto** (WEB-8.4): `formato_print` del médico —las plantillas de la evolución, del informe médico, de las dietas…—,
                 // con la misma forma que los otros catálogos clínicos (listado con buscador y filtro por tipo, alta y edición en un diálogo y
                 // «quitar»). Una plantilla se copia a la consulta al elegirla, así que siempre se puede quitar.
+                // **Vacunas del catálogo del médico** (WEB-7.4.4e): la vacuna, sus dosis y el botón «Cargar el catálogo inicial».
+                Route::get('/catalogos/vacunas', [VacunaCatalogoController::class, 'index'])->name('catalogos.vacunas');
+                Route::post('/catalogos/vacunas', [VacunaCatalogoController::class, 'guardar'])->name('catalogos.vacunas.guardar');
+                Route::post('/catalogos/vacunas/cargar-inicial', [VacunaCatalogoController::class, 'cargarInicial'])->name('catalogos.vacunas.cargar-inicial');
+                Route::delete('/catalogos/vacunas/{id}', [VacunaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.vacunas.quitar');
+                Route::post('/catalogos/vacunas/{id}/dosis', [VacunaCatalogoController::class, 'guardarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.guardar');
+                Route::delete('/catalogos/vacunas/dosis/{id}', [VacunaCatalogoController::class, 'quitarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.quitar');
                 Route::get('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'index'])->name('catalogos.plantillas-texto');
                 Route::post('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'guardar'])->name('catalogos.plantillas-texto.guardar');
                 Route::delete('/catalogos/plantillas-texto/{id}', [PlantillaDeTextoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.plantillas-texto.quitar');
