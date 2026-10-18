@@ -364,11 +364,24 @@ panel, que seguían esperando «8 de 13». Trampas 114 a 120. **WEB-6.5 queda ce
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
-(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` — están en `.env.example` con valor
-vacío, pero no en el `.env`) y, desde WEB-2.6, las del **SMS por Twilio** (`TWILIO_ACCOUNT_SID`,
-`TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor** (`MAIL_*`). Y **`SYNC_API_KEY`**
-(clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php` la lee con un default de
-transición (ver trampas conocidas).
+(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` y, desde el 2026-10-18,
+**`WHATSAPP_APP_SECRET`** —sin él el POST del webhook responde **503** y no acepta nada: es la firma de
+Meta—, están en `.env.example` con valor vacío, pero no en el `.env`) y, desde WEB-2.6, las del **SMS por
+Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor**
+(`MAIL_*`). Y **`SYNC_API_KEY`** (clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php`
+la lee con un default de transición (ver trampas conocidas).
+
+**El chatbot de WhatsApp (2026-10-18).** El agente virtual es el proyecto de otro desarrollador; lo que
+se hizo acá, con él ya informado, fue el **mínimo antes de producción** de la auditoría
+([Docs/tecnico/auditoria-chatbot-whatsapp.md](../Docs/tecnico/auditoria-chatbot-whatsapp.md), §6): la
+firma `X-Hub-Signature-256` (middleware `whatsapp.firma`, alias en `Kernel.php`), `throttle:120,1`, la
+deduplicación por `messageId` con 500 ante fallo (`WhatsAppWebhookController`), TLS verificado en
+`GeminiService`, las credenciales de `WhatsAppService` casteadas a `string` y **la reserva por
+`CrearCita`** con el lugar resuelto por `ArmadorDeAgenda` (`PacienteAtencionContextService::
+primerLugarDisponible`). `WhatsAppAIService` y el job `ProcessWhatsappMessage` eran código muerto y se
+borraron. Tests: `WhatsAppWebhookTest` (17) y `ChatbotReservaTest` (5). **No se le cambió el producto**
+(los atajos, el prompt, el registro y los mensajes siguen igual), y **sigue sin verificarse la identidad**
+de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 130 a 132.
 
 ## Qué es
 

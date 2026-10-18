@@ -84,5 +84,8 @@ class Kernel extends HttpKernel
 
         // Web clínica: exige que el usuario haya elegido con qué médico/registro opera (PLAN-WEB.md).
         'clinica.contexto' => \App\Http\Middleware\AsegurarContextoClinico::class,
+
+        // Webhook de WhatsApp: exige la firma `X-Hub-Signature-256` de Meta (auditoría del chatbot, 2026-10-17).
+        'whatsapp.firma' => \App\Http\Middleware\VerificaLaFirmaDeWhatsApp::class,
     ];
 }

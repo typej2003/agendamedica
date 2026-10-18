@@ -15,8 +15,8 @@ class GeminiService
 
     public function __construct(PacienteAtencionContextService $contextService)
     {
-        $this->apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY', '');
-        $this->model  = config('services.gemini.model') ?? env('GEMINI_MODEL', 'gemini-3.8-flash');
+        $this->apiKey = (string) config('services.gemini.api_key', '');
+        $this->model  = (string) config('services.gemini.model', 'gemini-3.8-flash');
         $this->contextService = $contextService;
     }
 
@@ -542,8 +542,7 @@ class GeminiService
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modeloActual}:generateContent";
 
             try {
-                $response = Http::withoutVerifying()
-                    ->timeout(25)
+                $response = Http::timeout(25)
                     ->withHeaders([
                         'x-goog-api-key' => $this->apiKey,
                         'Content-Type'   => 'application/json',
@@ -636,8 +635,7 @@ class GeminiService
                             ],
                         ];
 
-                        $followUpResponse = Http::withoutVerifying()
-                            ->timeout(25)
+                        $followUpResponse = Http::timeout(25)
                             ->withHeaders([
                                 'x-goog-api-key' => $this->apiKey,
                                 'Content-Type'   => 'application/json',

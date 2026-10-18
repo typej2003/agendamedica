@@ -124,9 +124,14 @@ Route::prefix('upload-servers')->group(function () {
     Route::get('/{id}', [UploadServerController::class, 'show']);
 });
 
-// Rutas de Webhook para Meta
+// Rutas de Webhook para Meta.
+//
+// El GET es la verificación de Meta (`hub.verify_token`) y el POST es el que trae los mensajes: ése va con
+// **firma obligatoria** (`whatsapp.firma`) y con `throttle`. Sin la firma, cualquiera con la URL podía
+// escribirle a las pacientes y crear citas — el mínimo de la auditoría del chatbot (2026-10-17, §6).
 Route::get('/whatsapp/webhook', [WhatsAppWebhookController::class, 'verify']);
-Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
+Route::middleware(['whatsapp.firma', 'throttle:120,1'])
+    ->post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
 
 // Ruta endpoint para enviar recordatorio a un paciente.
 //

@@ -34,6 +34,10 @@ return [
         'token' => env('WHATSAPP_TOKEN'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        // El secreto de la app de Meta (App settings → Basic). Con él se valida la firma
+        // `X-Hub-Signature-256` de cada POST del webhook: sin este valor el webhook **rechaza**
+        // todo (ver `App\Http\Middleware\VerificaLaFirmaDeWhatsApp`).
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
         'version' => env('WHATSAPP_API_VERSION', 'v19.0'),
     ],
 

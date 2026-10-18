@@ -2,11 +2,16 @@
 
 namespace App\Services;
 
+use App\Actions\Agenda\CrearCita;
+use App\Clinica\Agenda\ArmadorDeAgenda;
+use App\Clinica\Agenda\Jornada;
 use App\Models\Cola;
 use App\Models\Evolucion;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
+use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Specialty;
 use Carbon\Carbon;
@@ -20,6 +25,17 @@ class PacienteAtencionContextService
      * Cupos máximos de atención por día por médico por defecto
      */
     public const LIMITE_CUPOS_DIARIOS = 15;
+
+    /**
+     * Las dependencias de la agenda son opcionales para no romper a quien instancia el servicio a mano
+     * (los tests lo hacían con `new PacienteAtencionContextService()`); sin ellas se resuelven del
+     * contenedor la primera vez que se reserva una cita.
+     */
+    public function __construct(
+        private ?CrearCita $crearCita = null,
+        private ?ArmadorDeAgenda $armador = null,
+    ) {
+    }
 
     /**
      * Busca al paciente en el modelo Paciente probando variantes del número telefónico.
@@ -1098,6 +1114,18 @@ class PacienteAtencionContextService
 
     /**
      * Reserva e inserta un registro de cita en la tabla 'cola'.
+     *
+     * La fila **no se escribe acá**: sale por `App\Actions\Agenda\CrearCita`, la misma Action de la web y
+     * del sync del móvil, para que la cita nazca con el rastro de `sync_changes` y con la invariante de la
+     * fila que esa Action garantiza (auditoría del chatbot, 2026-10-17, §6: «agendar por `CrearCita` o no
+     * agendar»).
+     *
+     * **Dónde cae la cita** lo resuelve `ArmadorDeAgenda` + `Jornada`, el mismo lugar que la agenda de la
+     * web y del móvil: el primer bloque de `office_schedules` que quede con lugar, en la primera fecha que
+     * sirva, con la sede del bloque (`medical_center_id`), el número de la jornada y la hora del bloque.
+     * Antes la hora era inventada (`08:00 + 20 min × turno`) y la cita nacía **sin sede**; un médico **sin
+     * bloques configurados** (el caso de casi todas las instalaciones del legado) conserva esa cuenta
+     * vieja como respaldo, porque `cola.hora_ini` es obligatoria.
      */
     public function reservarCitaEnCola(string $telefono, string $criterioMedico, ?string $fecha = null, ?string $motivo = null): array
     {
@@ -1150,7 +1178,7 @@ class PacienteAtencionContextService
                 ];
             }
 
-            // 3. Determinar y validar la fecha
+            // 3. Determinar la fecha de partida
             if (empty($fecha)) {
                 $disponible = $this->consultarProximoDiaDisponible($regMedico);
                 if (!$disponible['disponible']) {
@@ -1176,53 +1204,45 @@ class PacienteAtencionContextService
                 }
             }
 
-            $fechaStr = $fechaCita->toDateString();
-
-            // 4. Verificar límite de cupos para ese día
-            $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
-            try {
-                $ev = Evolucion::where('reg_medico', $regMedico)->first();
-                if ($ev && !empty($ev->cantidad_paciente) && (int)$ev->cantidad_paciente > 0) {
-                    $limiteDiario = (int)$ev->cantidad_paciente;
-                }
-            } catch (\Throwable $e) {}
-
-            $citasExistentes = Cola::where('reg_medico', $regMedico)
-                ->whereDate('fecha', $fechaStr)
-                ->count();
-
-            if ($citasExistentes >= $limiteDiario) {
+            // 4. Dónde cae: el primer bloque con lugar (o el respaldo sin sedes configuradas).
+            $lugar = $this->primerLugarDisponible($regMedico, $medico, $fechaCita);
+            if (!$lugar['disponible']) {
                 return [
                     'exito' => false,
-                    'mensaje' => "Lamentablemente se han agotado los cupos para el {$nombreMedico} en la fecha {$fechaCita->format('d/m/Y')}. ¿Deseas consultar el próximo día disponible?",
+                    'mensaje' => $lugar['mensaje'],
                 ];
             }
 
-            // 5. Asignar orden de turno, hora y clave de evolución del médico
-            $claveMedico = $medico->claveDeEvolucion((array) $regMedico) ?? (int) $medico->id;
-            $turno = $citasExistentes + 1;
-            $horaCarbon = Carbon::createFromTime(8, 0)->addMinutes(($turno - 1) * 20);
-            $horaIni = $horaCarbon->format('H:i');
-            $horaFin = $horaCarbon->copy()->addMinutes(20)->format('H:i');
-            $turnoLetra = $horaCarbon->hour < 12 ? 'M' : 'T';
+            $fechaStr = $lugar['fecha'];
+            $fechaCita = Carbon::parse($fechaStr);
 
-            // 6. Insertar registro en la tabla cola
-            $nuevaCita = Cola::create([
-                'reg_medico' => $regMedico,
-                'fecha' => $fechaStr,
-                'numhistoria' => $numhistoria,
-                'paciente_sinhistoria_id' => $numhistoria ? null : $pacienteId,
-                'numorden' => $turno,
-                'atendido' => 0,
-                'estado' => Cola::ESTADO_CONFIRMADA_PACIENTE,
-                'turno' => $turnoLetra,
-                'motivo' => $motivo ?: 'Cita agendada vía WhatsApp',
-                'hora_ini' => $horaIni,
-                'hora_fin' => $horaFin,
-                'tiempo' => 20,
-                'tipo' => 'CONSULTA',
-                'medico' => $claveMedico,
-            ]);
+            // 5. La fila de `cola` y su escritura por la Action compartida.
+            $claveMedico = $medico->claveDeEvolucion((array) $regMedico) ?? (int) $medico->id;
+
+            $fila = [
+                'fecha'             => $fechaStr,
+                'hora_ini'          => $lugar['hora'],
+                'turno'             => Jornada::turnoDe($lugar['hora']),
+                'numorden'          => $lugar['numorden'],
+                'medical_center_id' => $lugar['centro_id'],
+                // El escritorio lee la razón de `tipo`; el bot no tiene un código del catálogo, así que
+                // deja la marca de origen y escribe lo que dijo la paciente en el `motivo` libre.
+                'tipo'              => 'CONSULTA',
+                'motivo'            => $motivo ?: 'Cita agendada vía WhatsApp',
+                'monto'             => null,
+                'medico'            => $claveMedico,
+                'atendido'          => 0,
+                'estado'            => Cola::ESTADO_CONFIRMADA_PACIENTE,
+                'tiempo'            => 20,
+            ];
+
+            if ($numhistoria) {
+                $fila['numhistoria'] = $numhistoria;
+            } else {
+                $fila['paciente_sinhistoria_id'] = $pacienteId;
+            }
+
+            $nuevaCita = $this->crearCita()->ejecutar($regMedico, $fila, Carbon::now(), 'whatsapp');
 
             // Vincular al paciente con el médico en medico_pacientes si aún no existe
             try {
@@ -1237,18 +1257,16 @@ class PacienteAtencionContextService
                 Log::warning('No se pudo vincular MedicoPaciente en reservarCitaEnCola: ' . $e->getMessage());
             }
 
-            // Registrar rastro en sync_changes si la clase está disponible
-            if (class_exists(\App\Sync\RegistroDeCambios::class)) {
-                try {
-                    \App\Sync\RegistroDeCambios::registrarOperacion('cola', (int) $nuevaCita->id, $regMedico, 'created', null, null, now(), 'whatsapp');
-                } catch (\Throwable $e) {
-                    Log::warning('No se pudo registrar operacion de sync para cola: ' . $e->getMessage());
-                }
-            }
+            // 6. La confirmación: la sede del bloque si la hubo, y si no el consultorio de `evolucion`.
+            $consultorio = $lugar['sede'] !== null
+                ? [
+                    'consultorio' => $lugar['sede']->office_number ?: ($lugar['sede']->medicalCenter->name ?? 'Consultorio principal'),
+                    'direccion' => $lugar['sede']->medicalCenter->address ?? 'Dirección no especificada',
+                ]
+                : $this->obtenerDatosConsultorio($regMedico);
 
-            // 7. Obtener dirección del consultorio para adjuntarla
-            $consultorio = $this->obtenerDatosConsultorio($regMedico);
             $fechaFormateada = ucfirst($fechaCita->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+            $horaCarbon = Carbon::createFromFormat('H:i', $lugar['hora']);
 
             $datosConfirmacion = [
                 'cita_id' => $nuevaCita->id,
@@ -1257,7 +1275,7 @@ class PacienteAtencionContextService
                 'especialidad' => $especialidad,
                 'fecha' => $fechaFormateada,
                 'hora_estimada' => $horaCarbon->format('h:i A'),
-                'turno' => $turno,
+                'turno' => $lugar['numorden'],
                 'consultorio' => $consultorio['consultorio'] ?? 'Consultorio principal',
                 'direccion' => $consultorio['direccion'] ?? 'Dirección no especificada',
             ];
@@ -1277,6 +1295,116 @@ class PacienteAtencionContextService
                 'error' => 'No fue posible registrar la cita en este momento: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * **Dónde entra una cita nueva**, a partir de una fecha: el primer bloque de `office_schedules` con
+     * lugar, de la primera sede del médico que atienda ese día. Devuelve también el número de la jornada
+     * (`Jornada::siguienteNumero()`) y la hora del bloque.
+     *
+     * Sin bloques configurados —el estado de las instalaciones del legado— se conserva la cuenta vieja
+     * (`08:00 + 20 min` por paciente y el tope diario de `LIMITE_CUPOS_DIARIOS`), porque una cita sin hora
+     * no es válida en el esquema.
+     *
+     * @return array{disponible: bool, mensaje?: string, fecha?: string, hora?: string, numorden?: int, centro_id?: ?int, sede?: ?Office}
+     */
+    public function primerLugarDisponible(string $regMedico, Medico $medico, Carbon $desde, int $diasMaximos = 30): array
+    {
+        $armador = $this->armador();
+        $sedes = $armador->sedes($regMedico, $medico->id);
+        $hoy = Carbon::today();
+
+        $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
+        try {
+            $evolucion = Evolucion::where('reg_medico', $regMedico)->first();
+            if ($evolucion && !empty($evolucion->cantidad_paciente) && (int) $evolucion->cantidad_paciente > 0) {
+                $limiteDiario = (int) $evolucion->cantidad_paciente;
+            }
+        } catch (\Throwable $e) {}
+
+        for ($i = 0; $i < $diasMaximos; $i++) {
+            $fecha = $hoy->copy()->addDays($i);
+
+            if ($fecha->lt($desde->copy()->startOfDay())) {
+                continue;
+            }
+
+            // La agenda no atiende domingos: una regla del legado que el bot ya aplicaba.
+            if ($fecha->isSunday()) {
+                continue;
+            }
+
+            if ($sedes->isEmpty()) {
+                $ocupadas = Cola::where('reg_medico', $regMedico)
+                    ->whereDate('fecha', $fecha->toDateString())
+                    ->count();
+
+                if ($ocupadas >= $limiteDiario) {
+                    continue;
+                }
+
+                return [
+                    'disponible' => true,
+                    'fecha' => $fecha->toDateString(),
+                    'hora' => Carbon::createFromTime(8, 0)->addMinutes($ocupadas * 20)->format('H:i'),
+                    'numorden' => $ocupadas + 1,
+                    'centro_id' => null,
+                    'sede' => null,
+                ];
+            }
+
+            foreach ($sedes as $sede) {
+                foreach ($sede->bloquesDe($fecha->dayOfWeekIso) as $bloque) {
+                    $inicio = substr((string) $bloque->hora_inicio, 0, 5);
+                    $jornada = $armador->jornadaPara($regMedico, $sedes, $fecha->copy(), $sede->medical_center_id, $inicio);
+
+                    if ($jornada->llena()) {
+                        continue;
+                    }
+
+                    $numero = $jornada->siguienteNumero();
+                    $duracion = $sede->duracion_cita ?: Office::DURACION_CITA_POR_DEFECTO;
+
+                    // Por orden de llegada la hora es la apertura del bloque (el paciente no elige hora);
+                    // con hora de cita, el primer hueco libre después de las que ya hay.
+                    $hora = $jornada->esPorOrdenDeLlegada()
+                        ? $inicio
+                        : Carbon::createFromFormat('H:i', $inicio)->addMinutes(($numero - 1) * $duracion)->format('H:i');
+
+                    $minutosHora = OfficeSchedule::aMinutos($hora);
+                    $minutosFin = OfficeSchedule::aMinutos($bloque->hora_fin);
+                    if ($minutosHora === null || ($minutosFin !== null && $minutosHora >= $minutosFin)) {
+                        continue;
+                    }
+
+                    return [
+                        'disponible' => true,
+                        'fecha' => $fecha->toDateString(),
+                        'hora' => $hora,
+                        'numorden' => $numero,
+                        'centro_id' => $sede->medical_center_id,
+                        'sede' => $sede,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'disponible' => false,
+            'mensaje' => "No hay lugar en la agenda del médico para los próximos {$diasMaximos} días.",
+        ];
+    }
+
+    /** `CrearCita`, la Action compartida de la web y del sync del móvil (se resuelve del contenedor). */
+    private function crearCita(): CrearCita
+    {
+        return $this->crearCita ??= app(CrearCita::class);
+    }
+
+    /** El armador de la agenda, la misma lectura que la web y el móvil (se resuelve del contenedor). */
+    private function armador(): ArmadorDeAgenda
+    {
+        return $this->armador ??= app(ArmadorDeAgenda::class);
     }
 
     /**
