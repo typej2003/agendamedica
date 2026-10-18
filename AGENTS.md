@@ -52,6 +52,23 @@ de `LIKE` como texto; sin `||` porque en MySQL es un `OR`). Tests:
 `Unit/Clinica/{ListadoDeEmbarazosTest,ListadoDePacientesTest,ListadoDeConsultasTest}`; verificador
 en Chrome `.agent-tools/verificar-listados-web.js`.
 
+🏷️ **Separación por especialidad (2026-10-18).** Lo que las pantallas compartidas ofrecen depende de la especialidad del
+contexto, y la decisión vive en un solo lugar por tema:
+- **Listados**: `ListadosDisponibles::ESPECIALIDAD` declara de qué especialidad es cada reporte. *Embarazos y partos* es de
+  ginecología/obstetricia: pediatría no lo ve en el menú y un `?listado=embarazos` **vuelve al listado por defecto** de la
+  especialidad (a diferencia de las secciones de la consulta, que siguen abriendo por URL directa: acá la pantalla es de sólo
+  lectura y no hay gestas que listar). Sin especialidad en el contexto no se filtra nada.
+- **Plantillas de texto**: `App\Clinica\Catalogos\PlantillasDeLaEspecialidad` traduce `AlcanceDeLaEspecialidad::tiposDePlantillaOcultos()`
+  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `EM` ni `ER`; quedan
+  `EV`, `IM`, `DI`, `EA`, `TR`, `RF` (su solapa *Examen físico* lo usa) y `UA`. Se filtra el listado, el filtro por tipo, el
+  `<select>` del diálogo y el subtotal. **Un tipo del legado que el catálogo no conoce no se oculta nunca** (esconderlo borraría
+  datos del médico), y editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo. Ginecología no cambia.
+- **Formatos en blanco**: los informes de los ecos que la especialidad no tiene no se ofrecen (`FormatosEnBlanco::porEstudio()` +
+  `AlcanceDeLaEspecialidad::formatosEnBlancoOcultos()`): en pediatría son los dos obstétricos y el Doppler. El resto del catálogo
+  (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) se ofrece siempre.
+Tests: `Unit/Clinica/{PlantillasDeLaEspecialidadTest,AlcanceDeLaEspecialidadTest,ListadoDeEmbarazosTest}`, `MenuDelArmazonWebTest`,
+`PlantillasDeTextoWebTest` y `FormatosEnBlancoWebTest`.
+
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
 sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.

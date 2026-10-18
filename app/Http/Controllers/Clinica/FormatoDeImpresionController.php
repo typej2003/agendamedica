@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Impresion\FormatoDelMedico;
 use App\Clinica\Impresion\FormatosEnBlanco;
 use App\Clinica\Impresion\MembreteDelMedico;
@@ -48,7 +49,11 @@ class FormatoDeImpresionController extends Controller
                 ],
                 array_map(
                     fn (array $formato) => $formato + ['url' => route('clinica.formato.en-blanco', ['formato' => $formato['clave']])],
-                    FormatosEnBlanco::catalogo(),
+                    // Los informes de los ecos que la especialidad del contexto no tiene no se ofrecen (en pediatría no hay
+                    // embarazo ni Doppler): la lista de lo que sobra la da `AlcanceDeLaEspecialidad`.
+                    FormatosEnBlanco::catalogo(
+                        AlcanceDeLaEspecialidad::de($contexto['specialty']->slug ?? null)->formatosEnBlancoOcultos(),
+                    ),
                 ),
             ),
         ]);

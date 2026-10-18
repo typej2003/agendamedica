@@ -14,6 +14,9 @@ namespace App\Clinica\Catalogos;
  * son los que el escritorio tiene y la web todavía **no ofrece** (el eco de cuello `EM` y el eco renal `ER`, que no tienen sección
  * en ginecología): se pueden mantener acá, con su nombre. Un código que no está en la lista (el legado puede traer cualquiera) se
  * muestra tal cual y no se pierde al guardar.
+ *
+ * ⚠️ Esta clase dice **qué existe**, no qué ve cada especialidad: qué tipos se ofrecen en el ABM lo decide
+ * `PlantillasDeLaEspecialidad` (en pediatría no se ofrecen los ginecológicos, 2026-10-18).
  */
 final class TiposDePlantillaDeTexto
 {

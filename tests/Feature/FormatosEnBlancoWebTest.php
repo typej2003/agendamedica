@@ -288,4 +288,44 @@ class FormatosEnBlancoWebTest extends TestCase
         $this->assertStringNotContainsString('cuerpo-en-blanco', $html);
         $this->assertStringNotContainsString('renglones-en-blanco', $html);
     }
+
+    /**
+     * **Los formatos en blanco de los ecos son de la especialidad** (revisión del usuario, 2026-10-18): en pediatría no se ofrecen los
+     * informes de los ecos que esa especialidad no tiene (los dos obstétricos y el Doppler), y el resto de los documentos sí.
+     */
+    public function test_en_pediatria_no_se_ofrecen_los_formatos_en_blanco_de_los_ecos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConFormato();
+        $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
+        // El contexto resuelve la especialidad entre las del médico: para mirar la pantalla como pediatra hay que tenerla.
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        $enBlanco = [
+            DocumentoImpreso::ECO_OBSTETRICO,
+            DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO,
+            DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+            DocumentoImpreso::ECO_DOPPLER,
+        ];
+
+        // Ginecología los sigue ofreciendo todos.
+        $html = $this->como($user, $medico, $gineco)->get(route('clinica.formato'))->assertOk()->getContent();
+
+        foreach ($enBlanco as $formato) {
+            $this->assertStringContainsString($this->url($formato), $html, 'Ginecología ofrece ' . $formato . '.');
+        }
+
+        // Pediatría: ni uno de los ecos, y el resto del catálogo intacto.
+        $htmlPediatra = $this->como($user, $medico, $pediatria)->get(route('clinica.formato'))->assertOk()->getContent();
+
+        foreach ($enBlanco as $formato) {
+            $this->assertStringNotContainsString($this->url($formato), $htmlPediatra, 'Pediatría no ofrece ' . $formato . '.');
+        }
+
+        foreach ([FormatosEnBlanco::RECIPE, DocumentoImpreso::INFORME, DocumentoImpreso::REPOSO, DocumentoImpreso::LABORATORIO] as $formato) {
+            $this->assertStringContainsString($this->url($formato), $htmlPediatra, 'Pediatría conserva ' . $formato . '.');
+        }
+
+        // La hoja en sí sigue abriendo por URL directa (lo oculto sólo se deja de ofrecer).
+        $this->como($user, $medico, $pediatria)->get($this->url(DocumentoImpreso::ECO_DOPPLER))->assertOk();
+    }
 }
