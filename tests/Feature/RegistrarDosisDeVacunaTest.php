@@ -46,10 +46,10 @@ class RegistrarDosisDeVacunaTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
-        $reg = 'dosis-test-' . uniqid();
+        $reg = 'dosis-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'dosis-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'dosis-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -293,7 +293,7 @@ class RegistrarDosisDeVacunaTest extends TestCase
         $datos = ['codi_vacuna' => 'POLI', 'dosis_numero' => 1, 'fecha_ejecutada' => '2026-09-01'];
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'dosis-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'dosis-secre-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

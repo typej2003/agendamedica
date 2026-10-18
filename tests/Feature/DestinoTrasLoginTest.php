@@ -34,7 +34,7 @@ class DestinoTrasLoginTest extends TestCase
     {
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'destino-' . uniqid() . '@example.com',
+            'email'                => 'destino-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make($clave),
             'is_active'            => true,
             'must_change_password' => false,

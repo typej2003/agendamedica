@@ -35,7 +35,7 @@ class CargaInicialTest extends TestCase
     {
         $user = User::create([
             'name'     => 'Médico ' . $regMedico,
-            'email'    => $regMedico . '-' . uniqid() . '@example.com',
+            'email'    => $regMedico . '-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 

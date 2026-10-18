@@ -35,7 +35,7 @@ class EspecialidadesDelMedicoTest extends TestCase
 
     private function admin(): User
     {
-        $user = app(CuentaService::class)->crearAdministrador('Admin Esp', 'admin-esp-' . uniqid() . '@example.com')['user'];
+        $user = app(CuentaService::class)->crearAdministrador('Admin Esp', 'admin-esp-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -58,7 +58,7 @@ class EspecialidadesDelMedicoTest extends TestCase
     {
         return Specialty::create([
             'name'   => $nombre,
-            'slug'   => 'prueba-' . uniqid(),
+            'slug'   => 'prueba-' . substr(uniqid(), -6),
             'codigo' => 'P' . random_int(10, 99),
             'activo' => $activo,
         ]);

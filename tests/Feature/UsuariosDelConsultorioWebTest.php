@@ -52,7 +52,7 @@ class UsuariosDelConsultorioWebTest extends TestCase
 
     private function nueva(string $nombre = 'María Gómez', ?string $correo = null): array
     {
-        return ['name' => $nombre, 'email' => $correo ?? 'maria-' . uniqid() . '@example.com'];
+        return ['name' => $nombre, 'email' => $correo ?? 'maria-' . substr(uniqid(), -6) . '@example.com'];
     }
 
     /** Crea la secretaria por la pantalla y devuelve su cuenta y la clave temporal que se mostró. */
@@ -70,7 +70,7 @@ class UsuariosDelConsultorioWebTest extends TestCase
     private function ajena(string $rol = 'Secretaria', ?string $reg = null): User
     {
         $cuenta = User::create([
-            'name' => 'Cuenta ajena', 'email' => 'ajena-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Cuenta ajena', 'email' => 'ajena-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $cuenta->assignRole($rol);
@@ -404,7 +404,7 @@ class UsuariosDelConsultorioWebTest extends TestCase
     {
         $this->expectException(\Illuminate\Validation\ValidationException::class);
 
-        app(CuentaService::class)->crearSecretaria('Ana', 'ana-' . uniqid() . '@example.com', 'registro-inventado');
+        app(CuentaService::class)->crearSecretaria('Ana', 'ana-' . substr(uniqid(), -6) . '@example.com', 'registro-inventado');
     }
 
     public function test_el_panel_de_administracion_sigue_viendo_la_cuenta_creada_desde_la_web(): void

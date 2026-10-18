@@ -72,7 +72,7 @@ class ImpresionDeLosSieteEcosWebTest extends TestCase
                 'documento' => DocumentoImpreso::ECO_OBSTETRICO,
                 'tabla' => 'eco_obstetrico',
                 'claves' => ['historia' => 1001, 'consulta' => 1],
-                'dato' => ['lcc' => '25 mm'],
+                'dato' => ['lcc' => '25'],
                 'titulo' => 'ECOSONOGRAFÍA OBSTÉTRICA',
             ],
             'obstétrico del 2.º' => [

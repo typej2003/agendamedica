@@ -37,7 +37,7 @@ class ServiciosPanelTest extends TestCase
 
     private function admin(): User
     {
-        $user = app(CuentaService::class)->crearAdministrador('Admin Serv', 'admin-serv-' . uniqid() . '@example.com')['user'];
+        $user = app(CuentaService::class)->crearAdministrador('Admin Serv', 'admin-serv-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -60,7 +60,7 @@ class ServiciosPanelTest extends TestCase
 
     private function plan(array $extra = []): Plan
     {
-        return Plan::create($extra + ['codigo' => 'p-' . uniqid(), 'nombre' => 'Plan prueba', 'frecuencia' => 'mensual', 'precio_usd' => 19.99]);
+        return Plan::create($extra + ['codigo' => 'p-' . substr(uniqid(), -6), 'nombre' => 'Plan prueba', 'frecuencia' => 'mensual', 'precio_usd' => 19.99]);
     }
 
     /* ------------------------------ acceso ------------------------------ */
@@ -70,7 +70,7 @@ class ServiciosPanelTest extends TestCase
         $this->get('/admin/servicios')->assertRedirect('/login');
 
         $comun = app(CuentaService::class)->crearMedico([
-            'name' => 'Comun', 'lastname' => 'Doc', 'email' => 'comun-' . uniqid() . '@example.com', 'reg_medico' => 'test-c-' . uniqid(),
+            'name' => 'Comun', 'lastname' => 'Doc', 'email' => 'comun-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-c-' . substr(uniqid(), -6),
         ])['user'];
         $comun->forceFill(['must_change_password' => false])->save();
         $this->actingAs($comun)->get('/admin/servicios')->assertForbidden();
@@ -485,7 +485,7 @@ class ServiciosPanelTest extends TestCase
     public function test_activar_y_desactivar_un_plan_y_los_contratos_que_tiene(): void
     {
         $plan = $this->plan(['nombre' => 'Alternable']);
-        app(ServicioService::class)->renovar('test-alt-' . uniqid(), $plan);
+        app(ServicioService::class)->renovar('test-alt-' . substr(uniqid(), -6), $plan);
         $this->actingAs($this->admin());
 
         $panel = Livewire::test(Servicios::class)->call('cambiarPestana', 'planes')->assertSee('Alternable');

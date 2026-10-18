@@ -73,6 +73,18 @@ Tests: `Unit/Clinica/{PlantillasDeLaEspecialidadTest,AlcanceDeLaEspecialidadTest
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
 sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.
 Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
+
+🧪 **La suite también corre contra MariaDB/MySQL** (2026-10-19): `phpunit.mariadb.xml` + `composer test:mariadb`
+(o `php vendor/bin/phpunit -c phpunit.mariadb.xml`). Es la única forma de ver lo que SQLite **no** ve: anchos de
+columna (`1406 Data too long`), tipos (`1366 Incorrect integer/decimal value`), fechas inválidas y colaciones.
+La base es `medicapi_testing` (el nombre tiene que terminar en `_testing`: el bootstrap la vacía con
+`migrate:fresh` y **no** toca ninguna otra), y el host/puerto/usuario/clave salen del bloque `mysql` del `.env`
+(acá, el MariaDB local en `127.0.0.1:3307`: `A:\Dev\Tools\mariadb-10.6.28-winx64\bin\mariadbd.exe
+--defaults-file=...\data\my.ini --port=3307`). **`php artisan test` siempre usa `phpunit.xml`**: el perfil se
+invoca con PHPUnit directo. La primera corrida destapó 1.378 errores que SQLite tapaba: casi todos fixtures de
+los tests con `reg_medico` de 23-25 caracteres en una columna `VARCHAR(20)`; la regla que quedó es que **todo
+valor de fixture respeta el ancho y el tipo reales de la columna del legado** (ver la trampa 141).
+
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
 corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición **completa**, tras «Ayúdanos a mejorar» (2026-10-14), fue **1977 en verde y 3 que fallan**; después, los cuatro estudios (WEB-6.3 y WEB-6.4, 2026-10-14: Doppler perinatal, ecocardiograma fetal, mamario y abdominal) se verificaron con los **filtros de la tarea** (275, 352, 501, 409 y 63 en verde según la tarea, el último del listado de embarazos y partos) y **no se volvió a correr la suite completa**, por la decisión de arriba (las 3 son las de WhatsApp; incluye «Ayúdanos a mejorar»: `Feature/AyudaWebTest`, 5 tests, y `Feature/ComentariosAdminTest`, 7); la anterior, **tras WEB-6.5 (2026-10-13, el examen con sus cuatro solapas de texto), fue 1897 en verde y 3 que fallan** (las 3 son de `WhatsAppWebhookTest`, que espera 500 y recibe 200/403 porque faltan las credenciales de WhatsApp: es de entorno, no del código); la anterior, **tras el primer paso del mismo WEB-6.5 (la colposcopía y sus imágenes), fue 1891 en verde y 3 que fallan**; la anterior, **tras el mismo WEB-6.5 sin las imágenes, fue 1885 en verde y 3 que fallan**; y la anterior, **tras WEB-6.2 (2026-10-13, el eco obstétrico y su formato en blanco), fue 1869 en verde y 3 que fallan**; la anterior, **tras WEB-6.1 (2026-10-13, el estudio ecográfico), fue 1788 en verde y 3 que fallan** (1758 + 30 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), fue 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de

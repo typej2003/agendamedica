@@ -28,10 +28,10 @@ class RecipeFormatoTest extends TestCase
 
     private function medicoAutenticado(): Medico
     {
-        $regMedico = 'test-rf-' . uniqid();
+        $regMedico = 'test-rf-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-rf-' . uniqid() . '@example.com',
+            'email' => 'doctora-rf-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 
@@ -165,7 +165,7 @@ class RecipeFormatoTest extends TestCase
             'nombrecomercial' => 'ATAMEL',
         ]);
         Vademecum::create([
-            'reg_medico' => 'otro-medico-' . uniqid(),
+            'reg_medico' => 'otro-medico-' . substr(uniqid(), -6),
             'codemedicina' => 'T002',
             'nombregenerico' => 'AJENO',
         ]);

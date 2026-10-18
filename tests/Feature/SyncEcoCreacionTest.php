@@ -55,10 +55,10 @@ class SyncEcoCreacionTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-eco-creacion-' . uniqid();
+        $regMedico = 'test-eco-crea' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-eco-' . uniqid() . '@example.com',
+            'email' => 'doctora-eco-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([
@@ -149,8 +149,9 @@ class SyncEcoCreacionTest extends TestCase
             ],
             'obstétrico del 1.er trimestre' => [
                 'eco_obstetrico', ModeloDelPrimero::class, 'historia', 'consulta',
-                ['cuerpo_utero' => '1', 'lcc' => '12.5', 'observacion' => 'EMBARAZO DE 8 SEMANAS'],
-                ['cuerpo_utero' => '1', 'lcc' => '12.5'],
+                // `lcc` es un entero en la tabla del escritorio: el 12,5 de antes lo redondeaba MySQL.
+                ['cuerpo_utero' => '1', 'lcc' => '12', 'observacion' => 'EMBARAZO DE 8 SEMANAS'],
+                ['cuerpo_utero' => '1', 'lcc' => '12'],
             ],
             'obstétrico del 2.º trimestre' => [
                 'eco_obstetrico_tercer_2', ModeloDelSegundo::class, 'historia', 'consulta',
@@ -159,7 +160,8 @@ class SyncEcoCreacionTest extends TestCase
             ],
             'obstétrico del 3.er trimestre' => [
                 'eco_obstetrico_tercer', ModeloDelTercero::class, 'historia', 'consulta',
-                ['bio_peso_fetal' => '2500', 'presentacion' => 'CEFALICA', 'conclusion' => 'FETO UNICO VIVO A TERMINO'],
+                // `presentacion` es `VARCHAR(1)` (el código del escritorio), no el nombre completo.
+                ['bio_peso_fetal' => '2500', 'presentacion' => 'C', 'conclusion' => 'FETO UNICO VIVO A TERMINO'],
                 ['bio_peso_fetal' => '2500', 'conclusion' => 'FETO UNICO VIVO A TERMINO'],
             ],
         ];
@@ -226,7 +228,7 @@ class SyncEcoCreacionTest extends TestCase
                 'operation' => 'created',
                 'temp_id' => -51,
                 'consulta_temp_id' => -22,
-                'columns' => ['lcc' => '15.5', 'observacion' => 'EMBARAZO DE 9 SEMANAS'],
+                'columns' => ['lcc' => '15', 'observacion' => 'EMBARAZO DE 9 SEMANAS'],
             ],
             [
                 'table' => 'consultas',
@@ -248,7 +250,7 @@ class SyncEcoCreacionTest extends TestCase
             ->first();
 
         $this->assertNotNull($fila, 'el estudio cuelga de la consulta del mismo lote');
-        $this->assertSame('15.5', (string) $fila->lcc);
+        $this->assertSame('15', (string) $fila->lcc);
         // La consulta del lote es la 2 de esa historia: la fila tiene que colgar de ese número y no del 1.
         $this->assertSame(2, (int) $fila->consulta);
         $this->assertSame((int) $fila->id, $this->creado($response, 'eco_obstetrico', -51)['id']);

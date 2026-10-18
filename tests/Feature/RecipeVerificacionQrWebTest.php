@@ -176,7 +176,7 @@ class RecipeVerificacionQrWebTest extends TestCase
                 DB::table('recipe_verificaciones')->insert($fila($cambios));
                 $this->fail('El índice único debía rechazar ' . $caso . '.');
             } catch (QueryException $excepcion) {
-                $this->assertStringContainsStringIgnoringCase('unique', $excepcion->getMessage(), $caso);
+                $this->assertMatchesRegularExpression('/unique|duplicate/i', $excepcion->getMessage(), $caso);
             }
         }
     }

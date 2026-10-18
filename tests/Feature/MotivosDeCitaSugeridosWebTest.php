@@ -26,10 +26,10 @@ class MotivosDeCitaSugeridosWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'motivo-sug-' . uniqid();
+        $reg = 'motivo-sug-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'motivo-sug-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'motivo-sug-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -101,7 +101,7 @@ class MotivosDeCitaSugeridosWebTest extends TestCase
         $this->assertSame(0, MotivoCita::where('reg_medico', $otro->reg_medico)->count());
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'motivo-sug-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'motivo-sug-se' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

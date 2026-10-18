@@ -37,10 +37,10 @@ class RecipeFormatoOpcionesDeImpresionTest extends TestCase
 
     private function medicoAutenticado(): Medico
     {
-        $regMedico = 'test-opciones-' . uniqid();
+        $regMedico = 'test-opciones' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-opciones-' . uniqid() . '@example.com',
+            'email' => 'doctora-opcio' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 
@@ -186,7 +186,7 @@ class RecipeFormatoOpcionesDeImpresionTest extends TestCase
     public function test_la_action_guarda_bajo_el_registro_principal_del_medico(): void
     {
         $medico = $this->medicoAutenticado();
-        $segundo = 'test-opciones-segundo-' . uniqid();
+        $segundo = 'test-opciones' . substr(uniqid(), -6);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $segundo]);
 
         $this->app->make(GuardarOpcionesDeImpresion::class)->ejecutar($medico->fresh(), 'solo_indicaciones', 'generico');

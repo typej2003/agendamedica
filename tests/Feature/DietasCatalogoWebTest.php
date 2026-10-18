@@ -30,10 +30,10 @@ class DietasCatalogoWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'die-cat-' . uniqid();
+        $reg = 'die-cat-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'die-cat-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'die-cat-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -230,7 +230,7 @@ class DietasCatalogoWebTest extends TestCase
             ->assertOk()->assertDontSee(route('clinica.catalogos.dietas'), false);
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'die-cat-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'die-cat-secre' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

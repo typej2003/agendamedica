@@ -69,11 +69,11 @@ class ConsultaEvolucionWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'evolucion-test-' . uniqid();
+        $regMedico = 'evolucion-tes' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'evolucion-' . uniqid() . '@example.com',
+            'email'                => 'evolucion-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -98,7 +98,7 @@ class ConsultaEvolucionWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'evolucion-secre-' . uniqid() . '@example.com',
+            'email'                => 'evolucion-sec' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

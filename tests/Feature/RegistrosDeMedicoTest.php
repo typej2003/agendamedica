@@ -38,7 +38,7 @@ class RegistrosDeMedicoTest extends TestCase
 
     private function admin(): User
     {
-        $user = $this->cuentas->crearAdministrador('Admin Panel', 'admin-reg-' . uniqid() . '@example.com')['user'];
+        $user = $this->cuentas->crearAdministrador('Admin Panel', 'admin-reg-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -102,7 +102,7 @@ class RegistrosDeMedicoTest extends TestCase
         foreach ([
             fn () => $this->cuentas->quitarRegistro($otro['medico'], $otro['medico']->reg_medico),   // el propio
             fn () => $this->cuentas->quitarRegistro($otro['medico'], $real['medico']->reg_medico),   // no lo tiene
-            fn () => $this->cuentas->asignarRegistro($otro['medico'], 'no-existe-' . uniqid()),      // inventado
+            fn () => $this->cuentas->asignarRegistro($otro['medico'], 'no-existe-' . substr(uniqid(), -6)),      // inventado
             fn () => $this->cuentas->asignarRegistro($otro['medico'], $otro['medico']->reg_medico),  // el propio otra vez
             fn () => $this->cuentas->asignarRegistro($otro['medico'], ''),
         ] as $intento) {

@@ -48,10 +48,10 @@ class CatalogosClinicosWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'cat-clin-' . uniqid();
+        $regMedico = 'cat-clin-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'catclin-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'catclin-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);
@@ -443,7 +443,7 @@ class CatalogosClinicosWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $otro] = $this->medicoConAcceso();
-        $secretaria = User::create(['name' => 'Secretaria', 'email' => 'catclin-s-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
+        $secretaria = User::create(['name' => 'Secretaria', 'email' => 'catclin-s-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
         $secretaria->assignRole('Secretaria');
         MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
 
@@ -532,7 +532,7 @@ class CatalogosClinicosWebTest extends TestCase
     public function test_la_secretaria_no_ve_el_grupo_de_catalogos_en_el_menu(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $secretaria = User::create(['name' => 'Secretaria', 'email' => 'catclin-m-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
+        $secretaria = User::create(['name' => 'Secretaria', 'email' => 'catclin-m-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
         $secretaria->assignRole('Secretaria');
         MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
 

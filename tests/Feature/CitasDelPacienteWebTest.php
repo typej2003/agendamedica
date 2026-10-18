@@ -31,11 +31,11 @@ class CitasDelPacienteWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'citas-pac-' . uniqid();
+        $regMedico = 'citas-pac-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'citas-pac-' . uniqid() . '@example.com',
+            'email'                => 'citas-pac-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

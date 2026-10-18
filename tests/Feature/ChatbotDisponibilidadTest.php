@@ -154,7 +154,7 @@ class ChatbotDisponibilidadTest extends TestCase
 
     private function medico(): Medico
     {
-        $regMedico = 'disp-test-' . uniqid();
+        $regMedico = 'disp-test-' . substr(uniqid(), -6);
 
         $medico = Medico::create([
             'name' => 'Dr. de prueba',
@@ -173,7 +173,7 @@ class ChatbotDisponibilidadTest extends TestCase
             'country_id' => DB::table('countries')->value('id'),
             'state_id' => DB::table('estados')->value('id'),
             'city_id' => DB::table('cities')->value('id'),
-            'name' => 'Centro ' . uniqid(),
+            'name' => 'Centro ' . substr(uniqid(), -6),
             'address' => 'Dirección de prueba',
         ]);
 

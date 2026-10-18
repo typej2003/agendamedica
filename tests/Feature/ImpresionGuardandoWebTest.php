@@ -76,7 +76,7 @@ class ImpresionGuardandoWebTest extends TestCase
             [
                 'fur' => '09/05/2026',
                 'gesta' => '2',
-                'lcc' => '25 mm',
+                'lcc' => '25',
                 'imprimir' => DocumentoImpreso::ECO_OBSTETRICO,
             ],
         );
@@ -89,7 +89,7 @@ class ImpresionGuardandoWebTest extends TestCase
             ->assertOk()
             ->assertSee('ECOSONOGRAFÍA OBSTÉTRICA')
             ->assertSee('PRIMER TRIMESTRE')
-            ->assertSee('25 mm');
+            ->assertSee('25');
     }
 
     public function test_imprimir_un_eco_vacio_no_crea_la_fila_y_dice_que_hay_que_guardar_los_datos(): void
@@ -158,7 +158,7 @@ class ImpresionGuardandoWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         DB::table('eco_obstetrico')->insert([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
-            'fecha' => '2026-06-01', 'fur' => '2026-05-09', 'lcc' => '25 mm',
+            'fecha' => '2026-06-01', 'fur' => '2026-05-09', 'lcc' => '25',
             'created_at' => now(), 'updated_at' => now(),
         ]);
 

@@ -23,10 +23,10 @@ class ReagendarCitaTest extends TestCase
 
     private function citaDeMedicoAutenticado(): Cola
     {
-        $regMedico = 'test-ra-' . uniqid();
+        $regMedico = 'test-ra-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-ra-' . uniqid() . '@example.com',
+            'email' => 'doctora-ra-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 

@@ -30,7 +30,7 @@ class EcosMapasCommandTest extends TestCase
     {
         parent::setUp();
 
-        $this->ruta = storage_path('app/testing/ecos-mapas-' . uniqid() . '.json');
+        $this->ruta = storage_path('app/testing/e' . substr(uniqid(), -6) . '.json');
         if (! is_dir(dirname($this->ruta))) {
             mkdir(dirname($this->ruta), 0775, true);
         }

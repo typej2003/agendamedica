@@ -32,7 +32,7 @@ class ComentariosAdminTest extends TestCase
     private function usuario(string $rol): User
     {
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'comentarios-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'comentarios-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);

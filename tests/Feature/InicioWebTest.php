@@ -64,11 +64,11 @@ class InicioWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'inicio-test-' . uniqid();
+        $regMedico = 'inicio-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'inicio-' . uniqid() . '@example.com',
+            'email'                => 'inicio-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -94,7 +94,7 @@ class InicioWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'inicio-secre-' . uniqid() . '@example.com',
+            'email'                => 'inicio-secre-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -110,7 +110,7 @@ class InicioWebTest extends TestCase
     {
         $root = User::create([
             'name'                 => 'Root',
-            'email'                => 'inicio-root-' . uniqid() . '@example.com',
+            'email'                => 'inicio-root-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

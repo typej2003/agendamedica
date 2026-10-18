@@ -30,7 +30,7 @@ class AsignarHistoriaTest extends TestCase
 
     private function medico(array $registrosExtra = []): Medico
     {
-        $regMedico = 'test-ah-' . uniqid();
+        $regMedico = 'test-ah-' . substr(uniqid(), -6);
         $medico = Medico::create([
             'name'       => 'Doctora',
             'lastname'   => 'De Prueba',

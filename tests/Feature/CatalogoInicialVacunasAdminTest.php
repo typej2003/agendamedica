@@ -31,7 +31,7 @@ class CatalogoInicialVacunasAdminTest extends TestCase
 
     private function admin(): User
     {
-        $user = app(CuentaService::class)->crearAdministrador('Admin Vac', 'admin-vac-' . uniqid() . '@example.com')['user'];
+        $user = app(CuentaService::class)->crearAdministrador('Admin Vac', 'admin-vac-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -40,7 +40,7 @@ class CatalogoInicialVacunasAdminTest extends TestCase
     private function conRol(string $rol): User
     {
         $user = User::create([
-            'name' => $rol, 'email' => strtolower($rol) . '-vac-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => $rol, 'email' => strtolower($rol) . '-vac-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);

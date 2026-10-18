@@ -32,7 +32,7 @@ class RestauracionEscritorioTest extends TestCase
     {
         parent::setUp();
 
-        $user = User::create(['name' => 'Médico restauración', 'email' => 'restaura-' . uniqid() . '@example.com', 'password' => Hash::make('x')]);
+        $user = User::create(['name' => 'Médico restauración', 'email' => 'restaura-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('x')]);
         $this->medico = Medico::create([
             'user_id' => $user->id, 'name' => 'Médico', 'lastname' => 'Restauración', 'email' => $user->email,
             'password' => $user->password, 'reg_medico' => self::REG,
@@ -63,7 +63,7 @@ class RestauracionEscritorioTest extends TestCase
         $lote('antece_paciente', [['numhistoria' => 1, 'codeantecedente' => 'A1', 'detalles' => "linea1\nlinea2\tfin"]]);
         $this->post_('carga-inicial/finalizar', ['carga_id' => $carga])->assertOk();
 
-        $this->carpeta = storage_path('app/restauracion-test-' . uniqid());
+        $this->carpeta = storage_path('app/restaurac' . substr(uniqid(), -6));
     }
 
     protected function tearDown(): void
@@ -231,7 +231,7 @@ class RestauracionEscritorioTest extends TestCase
     public function test_el_comando_avisa_si_el_medico_no_existe(): void
     {
         $this->artisan('sync:restaurar-escritorio', [
-            '--reg-medico' => 'no-existe-' . uniqid(),
+            '--reg-medico' => 'no-existe-' . substr(uniqid(), -6),
             '--salida'     => $this->carpeta,
         ])->expectsConfirmation('¿Exportar igual?', false)
           ->assertExitCode(1);
@@ -243,7 +243,7 @@ class RestauracionEscritorioTest extends TestCase
     {
         // --si es para instalaciones desatendidas: no puede quedar esperando una respuesta.
         $this->artisan('sync:restaurar-escritorio', [
-            '--reg-medico' => 'no-existe-' . uniqid(),
+            '--reg-medico' => 'no-existe-' . substr(uniqid(), -6),
             '--salida'     => $this->carpeta,
             '--si'         => true,
         ])->assertExitCode(0);

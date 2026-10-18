@@ -29,10 +29,10 @@ class AntecedentesPediatricosWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'antec-ped-' . uniqid();
+        $reg = 'antec-ped-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'antec-ped-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'antec-ped-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');

@@ -63,10 +63,10 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'prenatal-test-' . uniqid();
+        $regMedico = 'prenatal-test' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'prenatal-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'prenatal-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);
@@ -84,7 +84,7 @@ class ConsultaPrenatalWebTest extends TestCase
     private function secretariaConAcceso(Medico $medico): User
     {
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'prenatal-s-' . uniqid() . '@example.com',
+            'name' => 'Secretaria', 'email' => 'prenatal-s-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

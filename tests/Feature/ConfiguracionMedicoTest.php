@@ -26,7 +26,7 @@ class ConfiguracionMedicoTest extends TestCase
     {
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-prueba-' . uniqid() . '@example.com',
+            'email' => 'doctora-prueb' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 

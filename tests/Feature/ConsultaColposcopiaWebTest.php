@@ -85,11 +85,11 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'colposcopia-test-' . uniqid();
+        $regMedico = 'colposcopia-t' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'colposcopia-' . uniqid() . '@example.com',
+            'email'                => 'colposcopia-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -114,7 +114,7 @@ class ConsultaColposcopiaWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'colposcopia-secre-' . uniqid() . '@example.com',
+            'email'                => 'colposcopia-s' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -431,7 +431,7 @@ class ConsultaColposcopiaWebTest extends TestCase
     public function test_una_consulta_de_otro_consultorio_es_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $otro = 'colposcopia-otro-' . uniqid();
+        $otro = 'colposcopia-o' . substr(uniqid(), -6);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $otro]);
 
         [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);

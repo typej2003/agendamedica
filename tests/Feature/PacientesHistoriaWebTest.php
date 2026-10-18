@@ -47,11 +47,11 @@ class PacientesHistoriaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'pac-hist-' . uniqid();
+        $regMedico = 'pac-hist-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'pac-hist-' . uniqid() . '@example.com',
+            'email'                => 'pac-hist-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -245,12 +245,12 @@ class PacientesHistoriaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
 
-        $medico = Medico::create(['name' => 'Dr. Dueño', 'lastname' => 'Datos', 'reg_medico' => 'pac-hist-secre-' . uniqid()]);
+        $medico = Medico::create(['name' => 'Dr. Dueño', 'lastname' => 'Datos', 'reg_medico' => 'pac-hist-secr' . substr(uniqid(), -6)]);
         $medico->specialties()->attach($gineco->id);
 
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'pac-hist-secre-' . uniqid() . '@example.com',
+            'email'                => 'pac-hist-secr' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

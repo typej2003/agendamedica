@@ -41,7 +41,7 @@ class ServicioPlanesTest extends TestCase
 
     private function medico(string $reg, bool $autenticar = false): Medico
     {
-        $user = User::create(['name' => 'Doc', 'email' => 'srv-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123')]);
+        $user = User::create(['name' => 'Doc', 'email' => 'srv-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123')]);
         $medico = Medico::create([
             'user_id' => $user->id, 'name' => 'Doc', 'lastname' => 'Servicio', 'email' => $user->email,
             'password' => $user->password, 'reg_medico' => $reg,
@@ -139,7 +139,7 @@ class ServicioPlanesTest extends TestCase
     public function test_un_medico_nuevo_recibe_el_plan_por_defecto_gratis_por_un_mes(): void
     {
         Carbon::setTestNow('2026-10-05 10:00:00');
-        $reg = 'srv-nuevo-' . uniqid();
+        $reg = 'srv-nuevo-' . substr(uniqid(), -6);
         $this->medico($reg);
 
         $s = RegMedicoServicio::where('reg_medico', $reg)->get();
@@ -154,7 +154,7 @@ class ServicioPlanesTest extends TestCase
     public function test_si_el_plan_por_defecto_es_de_pago_el_primer_mes_igual_es_gratis(): void
     {
         Plan::create(['codigo' => 'pago-t', 'nombre' => 'De pago', 'frecuencia' => 'anual', 'precio_usd' => 199.99, 'es_default' => true]);
-        $reg = 'srv-pago-' . uniqid();
+        $reg = 'srv-pago-' . substr(uniqid(), -6);
         $this->medico($reg);
 
         $s = RegMedicoServicio::where('reg_medico', $reg)->first();
@@ -179,7 +179,7 @@ class ServicioPlanesTest extends TestCase
             'codigo' => 'limit-t', 'nombre' => 'Con límites', 'frecuencia' => 'mensual', 'precio_usd' => 19.99,
             'restricciones' => ['max_medicos' => 2, 'max_historico_meses' => 6],
         ]);
-        $reg = 'srv-limit-' . uniqid();
+        $reg = 'srv-limit-' . substr(uniqid(), -6);
         $s = $this->servicio()->renovar($reg, $plan);
         $plan->update(['restricciones' => ['max_medicos' => 10]]); // editar el plan no cambia lo ya contratado
 
@@ -192,7 +192,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_vigente_gracia_y_vencido_segun_la_fecha(): void
     {
-        $reg = 'srv-est-' . uniqid();
+        $reg = 'srv-est-' . substr(uniqid(), -6);
         $this->medico($reg);
         $this->vencerEl($reg, '2026-10-10');
 
@@ -211,7 +211,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_sin_ninguna_fila_es_sin_servicio_y_no_sincroniza(): void
     {
-        $e = $this->servicio()->estado('srv-nadie-' . uniqid());
+        $e = $this->servicio()->estado('srv-nadie-' . substr(uniqid(), -6));
 
         $this->assertSame('sin_servicio', $e['estado']);
         $this->assertFalse($e['permite_sync']);
@@ -220,7 +220,7 @@ class ServicioPlanesTest extends TestCase
     public function test_renovar_sigue_donde_termina_el_servicio_si_aun_no_vencio(): void
     {
         Carbon::setTestNow('2026-10-05');
-        $reg = 'srv-ren-' . uniqid();
+        $reg = 'srv-ren-' . substr(uniqid(), -6);
         $this->medico($reg); // prueba: vence 2026-11-05
         $anual = Plan::create(['codigo' => 'anual-t', 'nombre' => 'Anual', 'frecuencia' => 'anual', 'precio_usd' => 199.99, 'precio_tachado_usd' => 239.98]);
 
@@ -236,7 +236,7 @@ class ServicioPlanesTest extends TestCase
     public function test_renovar_un_servicio_ya_vencido_empieza_hoy(): void
     {
         Carbon::setTestNow('2026-10-05');
-        $reg = 'srv-renv-' . uniqid();
+        $reg = 'srv-renv-' . substr(uniqid(), -6);
         $this->medico($reg);
         $this->vencerEl($reg, '2026-08-01');
         $mensual = Plan::create(['codigo' => 'mens-t', 'nombre' => 'Mensual', 'frecuencia' => 'mensual', 'precio_usd' => 19.99]);
@@ -250,7 +250,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_un_servicio_cancelado_no_cuenta(): void
     {
-        $reg = 'srv-canc-' . uniqid();
+        $reg = 'srv-canc-' . substr(uniqid(), -6);
         $this->medico($reg);
         RegMedicoServicio::where('reg_medico', $reg)->update(['estado' => 'cancelado']);
 
@@ -262,7 +262,7 @@ class ServicioPlanesTest extends TestCase
     public function test_la_primera_vez_que_el_escritorio_habla_recibe_un_anio_gratis_una_sola_vez(): void
     {
         Carbon::setTestNow('2026-10-05');
-        $reg = 'srv-pb-' . uniqid();
+        $reg = 'srv-pb-' . substr(uniqid(), -6);
 
         $r = $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk();
         $this->assertSame('vigente', $r->json('servicio_estado'));
@@ -278,7 +278,7 @@ class ServicioPlanesTest extends TestCase
     public function test_un_medico_con_su_mes_de_prueba_tambien_recibe_el_anio_al_sincronizar_desde_el_escritorio(): void
     {
         Carbon::setTestNow('2026-10-05');
-        $reg = 'srv-prpb-' . uniqid();
+        $reg = 'srv-prpb-' . substr(uniqid(), -6);
         $this->medico($reg); // prueba hasta 2026-11-05
 
         $r = $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk();
@@ -290,7 +290,7 @@ class ServicioPlanesTest extends TestCase
     public function test_el_anio_de_cortesia_no_se_vuelve_a_regalar_cuando_vence(): void
     {
         Carbon::setTestNow('2026-10-05');
-        $reg = 'srv-pb2-' . uniqid();
+        $reg = 'srv-pb2-' . substr(uniqid(), -6);
         $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk();
         $this->vencerEl($reg, '2026-09-01');
 
@@ -304,7 +304,7 @@ class ServicioPlanesTest extends TestCase
 
     private function escritorioVencido(): string
     {
-        $reg = 'srv-venc-' . uniqid();
+        $reg = 'srv-venc-' . substr(uniqid(), -6);
         $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk(); // año de cortesía
         $this->vencerEl($reg, Carbon::today()->subDays(30)->toDateString());
 
@@ -344,7 +344,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_el_app_con_servicio_vencido_no_sincroniza_y_el_aviso_dice_cuando_vencio(): void
     {
-        $reg = 'srv-app-' . uniqid();
+        $reg = 'srv-app-' . substr(uniqid(), -6);
         $this->medico($reg, autenticar: true);
         $this->vencerEl($reg, Carbon::today()->subDays(30)->toDateString());
 
@@ -355,7 +355,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_el_app_con_servicio_vigente_sincroniza_y_recibe_el_estado_del_servicio(): void
     {
-        $reg = 'srv-app2-' . uniqid();
+        $reg = 'srv-app2-' . substr(uniqid(), -6);
         $this->medico($reg, autenticar: true);
 
         $r = $this->postJson('/api/app/sync-app-data', [])->assertOk();
@@ -367,7 +367,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_un_medico_del_app_que_quedo_sin_servicio_recibe_su_prueba_en_vez_de_quedar_bloqueado(): void
     {
-        $reg = 'srv-app3-' . uniqid();
+        $reg = 'srv-app3-' . substr(uniqid(), -6);
         $this->medico($reg, autenticar: true);
         RegMedicoServicio::where('reg_medico', $reg)->delete();
 

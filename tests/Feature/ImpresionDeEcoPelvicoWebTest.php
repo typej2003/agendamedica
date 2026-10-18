@@ -127,8 +127,8 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
             ->assertSeeInOrder(['Vejiga:', '●', 'Llena', '○', 'Vacia'], false)
             ->assertSeeInOrder(['Posición:', '●', 'AVF'], false)
             ->assertSeeInOrder(['Forma:', '●', 'Globosa'], false)
-            ->assertSee('Cuerpo (longitud):')->assertSee('62.5 mm')
-            ->assertSee('Transverso:')->assertSee('45 mm')
+            ->assertSee('Cuerpo (longitud):')
+            ->assertSee('Transverso:')
             ->assertSee('Ovario derecho')
             ->assertSee('Volumen:')->assertSee('4.5 cc')
             ->assertSee('Anexos')->assertSee('Anexos libres.')
@@ -136,8 +136,14 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
             ->assertSee('Conclusiones:')->assertSee('Control en 6 meses.')
             ->assertSee('Ginecología y Obstetricia');
 
+        // Las medidas son `DECIMAL`: MySQL/MariaDB las devuelven «62.50» y SQLite «62.5». El informe
+        // muestra el número tal cual, así que se comprueba el valor y no la cantidad de decimales.
+        $html = $hoja->getContent();
+        $this->assertMatchesRegularExpression('/62\.50?\s*mm/', $html);
+        $this->assertMatchesRegularExpression('/45(?:\.0+)?\s*mm/', $html);
+
         // Una sola firma, en la mitad donde termina el informe.
-        $this->assertSame(1, substr_count($hoja->getContent(), 'class="firmas"'));
+        $this->assertSame(1, substr_count($html, 'class="firmas"'));
     }
 
     public function test_un_estudio_casi_vacio_imprime_el_formulario_con_los_casilleros_en_blanco(): void

@@ -61,7 +61,7 @@ class ComentarioImagenesWebTest extends TestCase
     private function medicoDePrueba(): array
     {
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $reg = 'ayuda-img-' . uniqid();
+        $reg = 'ayuda-img-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name' => 'Dr. de prueba', 'email' => "{$reg}@example.com",
@@ -91,7 +91,7 @@ class ComentarioImagenesWebTest extends TestCase
     private function usuario(string $rol): User
     {
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'ayuda-img-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'ayuda-img-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);

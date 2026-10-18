@@ -195,7 +195,14 @@ class RastroConUsuarioTest extends TestCase
     {
         $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('sync_changes', 'user_id'));
 
-        $indices = collect(DB::select("PRAGMA index_list('sync_changes')"))->pluck('name')->all();
+        // Los índices de la bitácora, con la consulta de cada motor: SQLite no entiende `SHOW INDEX` y
+        // MySQL/MariaDB no entienden `PRAGMA`.
+        $conexion = DB::connection();
+
+        $indices = $conexion->getDriverName() === 'sqlite'
+            ? collect(DB::select("PRAGMA index_list('sync_changes')"))->pluck('name')->all()
+            : collect($conexion->select('SHOW INDEX FROM sync_changes'))->pluck('Key_name')->unique()->values()->all();
+
         $this->assertContains('sync_changes_bitacora_idx', $indices);
         $this->assertContains('sync_changes_bitacora_usuario_idx', $indices);
     }

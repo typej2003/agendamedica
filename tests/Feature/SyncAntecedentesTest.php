@@ -46,10 +46,10 @@ class SyncAntecedentesTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-antecedentes-' . uniqid();
+        $regMedico = 'test-antecede' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-ant-' . uniqid() . '@example.com',
+            'email' => 'doctora-ant-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([
@@ -101,7 +101,7 @@ class SyncAntecedentesTest extends TestCase
             'reg_medico' => $medico->reg_medico,
             'codetipo' => $codigo,
             'descripcion' => $descripcion,
-            'tipoantecedente' => $codigo,
+            'tipoantecedente' => substr($codigo, -1),
         ]);
     }
 

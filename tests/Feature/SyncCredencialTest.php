@@ -32,7 +32,7 @@ class SyncCredencialTest extends TestCase
     {
         $user = User::create([
             'name'     => 'Médico ' . $regMedico,
-            'email'    => $regMedico . '-' . uniqid() . '@example.com',
+            'email'    => $regMedico . '-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 
@@ -56,7 +56,7 @@ class SyncCredencialTest extends TestCase
 
         $cred = SyncCredential::create(array_merge([
             'reg_medico'       => $regMedico,
-            'machine_label'    => 'EQUIPO-TEST-' . uniqid(),
+            'machine_label'    => 'EQUIPO-TEST-' . substr(uniqid(), -6),
             'machine_host'     => 'PC-TEST',
             'bound_to_machine' => false,
             'token_hash'       => SyncCredential::hashToken($token),
@@ -390,7 +390,7 @@ class SyncCredencialTest extends TestCase
     {
         $this->artisan('sync:credencial', [
             'accion'       => 'emitir',
-            '--reg-medico' => 'no-existe-si-' . uniqid(),
+            '--reg-medico' => 'no-existe-si-' . substr(uniqid(), -6),
             '--equipo'     => 'EQUIPO-SI',
             '--si'         => true,
         ])->assertExitCode(0);  // si hubiera pedido confirmación, Mockery tiraría excepción

@@ -33,7 +33,7 @@ class PanelAdministracionTest extends TestCase
     {
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'panel-' . uniqid() . '@example.com',
+            'email'                => 'panel-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

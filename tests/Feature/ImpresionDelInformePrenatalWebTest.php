@@ -57,10 +57,10 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'informe-web-' . uniqid();
+        $regMedico = 'informe-web-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'informe-w-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'informe-w-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');

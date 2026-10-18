@@ -90,7 +90,7 @@ class CuentasTest extends TestCase
 
     public function test_crear_administrador_y_clave_generada_si_no_se_da_una(): void
     {
-        $r = $this->cuentas->crearAdministrador('Admin Prueba', 'admin-' . uniqid() . '@example.com');
+        $r = $this->cuentas->crearAdministrador('Admin Prueba', 'admin-' . substr(uniqid(), -6) . '@example.com');
 
         $this->assertTrue($r['user']->must_change_password);
         $this->assertTrue($r['user']->esAdministrador());
@@ -111,7 +111,7 @@ class CuentasTest extends TestCase
 
         try {
             $this->cuentas->crearMedico([
-                'name' => 'X', 'lastname' => 'Y', 'email' => 'otro-' . uniqid() . '@example.com',
+                'name' => 'X', 'lastname' => 'Y', 'email' => 'otro-' . substr(uniqid(), -6) . '@example.com',
                 'reg_medico' => $r['medico']->reg_medico,
             ]);
             $this->fail('Debió rechazar el reg_medico repetido.');
@@ -123,7 +123,7 @@ class CuentasTest extends TestCase
     public function test_una_clave_demasiado_corta_se_rechaza(): void
     {
         $this->expectException(ValidationException::class);
-        $this->cuentas->crearAdministrador('Admin', 'corta-' . uniqid() . '@example.com', 'abc');
+        $this->cuentas->crearAdministrador('Admin', 'corta-' . substr(uniqid(), -6) . '@example.com', 'abc');
     }
 
     public function test_dar_acceso_a_un_medico_que_no_tenia_cuenta(): void
@@ -281,7 +281,7 @@ class CuentasTest extends TestCase
         // La base de desarrollo ya trae administradores: se apartan dentro de esta transacción.
         User::administradores()->update(['is_active' => false]);
 
-        $a = $this->cuentas->crearAdministrador('Unico Admin', 'unico-' . uniqid() . '@example.com')['user'];
+        $a = $this->cuentas->crearAdministrador('Unico Admin', 'unico-' . substr(uniqid(), -6) . '@example.com')['user'];
 
         try {
             $this->cuentas->bloquear($a);
@@ -298,7 +298,7 @@ class CuentasTest extends TestCase
         }
 
         // Con otro administrador activo ya se puede, salvo a uno mismo.
-        $b = $this->cuentas->crearAdministrador('Segundo Admin', 'segundo-' . uniqid() . '@example.com')['user'];
+        $b = $this->cuentas->crearAdministrador('Segundo Admin', 'segundo-' . substr(uniqid(), -6) . '@example.com')['user'];
 
         try {
             $this->cuentas->bloquear($b, '', $b);
@@ -366,7 +366,7 @@ class CuentasTest extends TestCase
 
     public function test_comando_cuentas_admin_con_correo_inexistente_falla(): void
     {
-        $email = 'nadie-' . uniqid() . '@example.com';
+        $email = 'nadie-' . substr(uniqid(), -6) . '@example.com';
 
         $this->artisan('cuentas:admin', ['email' => $email])
             ->expectsOutput("No existe ninguna cuenta con el correo {$email}. Créala primero (por ejemplo desde el panel de médicos).")

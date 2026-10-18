@@ -37,7 +37,7 @@ class LoginUnificadoTest extends TestCase
     {
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'login-' . uniqid() . '@example.com',
+            'email'                => 'login-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make($clave),
             'is_active'            => true,
             'must_change_password' => false,
@@ -65,7 +65,7 @@ class LoginUnificadoTest extends TestCase
         return Paciente::create([
             'nombres'   => 'Paciente',
             'apellidos' => 'De Prueba',
-            'email'     => 'login-paciente-' . uniqid() . '@example.com',
+            'email'     => 'login-pacient' . substr(uniqid(), -6) . '@example.com',
             'password'  => Hash::make($clave),
         ]);
     }
@@ -140,7 +140,7 @@ class LoginUnificadoTest extends TestCase
     public function test_el_correo_no_distingue_mayusculas(): void
     {
         $user = $this->usuario('Root');
-        $user->forceFill(['email' => 'Login-Mayusculas-' . uniqid() . '@Example.com'])->save();
+        $user->forceFill(['email' => 'Login-Mayuscu' . substr(uniqid(), -6) . '@Example.com'])->save();
 
         $this->post('/login', [
             'email'    => mb_strtolower($user->email),
@@ -173,7 +173,7 @@ class LoginUnificadoTest extends TestCase
             ->assertSessionHasErrors(['email' => 'El correo o la contraseña no son correctos.']);
 
         // …y el correo no existe. Mismo mensaje.
-        $this->from('/login')->post('/login', ['email' => 'nadie-' . uniqid() . '@example.com', 'password' => 'mala'])
+        $this->from('/login')->post('/login', ['email' => 'nadie-' . substr(uniqid(), -6) . '@example.com', 'password' => 'mala'])
             ->assertRedirect('/login')
             ->assertSessionHasErrors(['email' => 'El correo o la contraseña no son correctos.']);
 

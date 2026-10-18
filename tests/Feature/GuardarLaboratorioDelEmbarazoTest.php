@@ -34,10 +34,10 @@ class GuardarLaboratorioDelEmbarazoTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'lab-write-' . uniqid();
+        $regMedico = 'lab-write-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'lab-w-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'lab-w-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -131,9 +131,11 @@ class GuardarLaboratorioDelEmbarazoTest extends TestCase
     public function test_no_toca_las_columnas_ocultas_del_datawindow(): void
     {
         $medico = $this->medico();
+        // Los valores respetan el ancho real de cada columna del escritorio (`char(5)` y `char(1)`):
+        // guardarlos mas largos revienta en MySQL/MariaDB y SQLite lo dejaba pasar (trampa 140).
         $fila = PrenaExamenB::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1004, 'gesta_clave' => 1, 'fecha' => '2026-06-01',
-            'plaquetas' => '250000', 'tsh' => '2.1', 'urocultivo' => 'negativo', 'insulina_basal' => '8',
+            'plaquetas' => '25000', 'tsh' => '2.1', 'urocultivo' => 'n', 'insulina_basal' => '8',
         ]);
 
         app(GuardarLaboratorioDelEmbarazo::class)->ejecutar($medico->reg_medico, 1004, 1, $this->formulario([
@@ -142,9 +144,9 @@ class GuardarLaboratorioDelEmbarazoTest extends TestCase
 
         $fresca = $fila->fresh();
         $this->assertSame('12', $fresca->hemoglobina);
-        $this->assertSame('250000', $fresca->plaquetas);
+        $this->assertSame('25000', $fresca->plaquetas);
         $this->assertSame('2.1', $fresca->tsh);
-        $this->assertSame('negativo', $fresca->urocultivo);
+        $this->assertSame('n', $fresca->urocultivo);
         $this->assertSame('8', $fresca->insulina_basal);
     }
 

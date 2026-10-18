@@ -42,10 +42,10 @@ class CarnetDeVacunacionWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
-        $reg = 'carnet-test-' . uniqid();
+        $reg = 'carnet-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'carnet-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'carnet-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -139,7 +139,7 @@ class CarnetDeVacunacionWebTest extends TestCase
         $id = $this->nino($medico);
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'carnet-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'carnet-secre-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

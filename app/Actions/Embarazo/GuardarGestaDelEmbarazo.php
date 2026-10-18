@@ -55,8 +55,12 @@ final class GuardarGestaDelEmbarazo
         'tipiaje', 'tipiaje_cony', 'final', 'multiple', 'cantidad', 'observaciones',
     ];
 
-    /** Las columnas que se guardan como número (el resto son texto). */
-    private const NUMERICAS = ['gestas', 'partos', 'cesarea', 'abortos', 'cantidad'];
+    /**
+     * Las columnas que se guardan como número (el resto son texto): `otros` es un `INT` en la tabla (y la
+     * validación del controlador lo exige numérico), así que lo que no es número queda vacío en vez de
+     * llegar al `INSERT` —en MySQL/MariaDB un texto ahí revienta con «Incorrect integer value»—.
+     */
+    private const NUMERICAS = ['gestas', 'partos', 'cesarea', 'abortos', 'otros', 'cantidad'];
 
     /**
      * La única columna de `pre_natal_observaciones` que esta pestaña **no** toca: **`parto`**.

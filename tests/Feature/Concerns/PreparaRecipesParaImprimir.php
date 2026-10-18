@@ -47,11 +47,11 @@ trait PreparaRecipesParaImprimir
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'imprimir-test-' . uniqid();
+        $regMedico = 'imprimir-test' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'imprimir-' . uniqid() . '@example.com',
+            'email'                => 'imprimir-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -77,7 +77,7 @@ trait PreparaRecipesParaImprimir
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'imprimir-secre-' . uniqid() . '@example.com',
+            'email'                => 'imprimir-secr' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

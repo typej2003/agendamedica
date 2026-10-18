@@ -138,10 +138,10 @@ class FechasDeFormularioWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'fechas-test-' . uniqid();
+        $regMedico = 'fechas-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'fechas-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'fechas-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -298,8 +298,13 @@ class FechasDeFormularioWebTest extends TestCase
             }
 
             // Y lo demás del estudio se guarda igual: las fechas no se llevaron nada por delante.
+            // Los `DECIMAL` se comparan como número: MySQL/MariaDB devuelven «60.00» y SQLite «60».
             foreach ($estudio['dato'] as $columna => $valor) {
-                $this->assertSame($valor, (string) $crudas[$columna], 'El campo `' . $columna . '` del ' . $nombre . ' no se guardó.');
+                if (is_numeric($valor)) {
+                    $this->assertSame((float) $valor, (float) $crudas[$columna], 'El campo `' . $columna . '` del ' . $nombre . ' no se guardó.');
+                } else {
+                    $this->assertSame($valor, (string) $crudas[$columna], 'El campo `' . $columna . '` del ' . $nombre . ' no se guardó.');
+                }
             }
         }
     }
@@ -426,6 +431,13 @@ class FechasDeFormularioWebTest extends TestCase
      */
     public function test_un_texto_que_no_es_fecha_se_muestra_vacio(): void
     {
+        if (DB::getDriverName() !== 'sqlite') {
+            // Una columna `DATE` de MySQL/MariaDB no puede guardar «5 semanas»: el dato sucio que prueba
+            // este caso sólo es representable en SQLite. El `0000-00-00` del legado lo cubre
+            // `FechaClinica::NULAS`, no este `INSERT`.
+            $this->markTestSkipped('El dato sucio «5 semanas» en un DATE sólo existe en SQLite.');
+        }
+
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 

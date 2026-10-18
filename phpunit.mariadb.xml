@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    **La suite contra MariaDB/MySQL** (la de todos los días sigue siendo `phpunit.xml`, con SQLite).
+
+    Por qué existe: SQLite **no mira el largo de las columnas**, así que un valor que desborda un
+    `VARCHAR(1)` pasa sin ruido en los tests y revienta en el servidor con `1406 Data too long` (le pasó al
+    laboratorio del embarazo: trampa 140 de `TRAMPAS.md`). Correr la suite contra el motor real es la única
+    forma de que un test vea esa clase de bug.
+
+    Cómo se corre:
+        php vendor/bin/phpunit -c phpunit.mariadb.xml
+        php vendor/bin/phpunit -c phpunit.mariadb.xml  (y el filtro de la tarea con `-c` igual)
+    (o `composer test:mariadb`). **No** se usa `php artisan test`: ese comando impone `phpunit.xml`.
+
+    La base la elige este archivo —`medicapi_testing`, que `tests/bootstrap.php` vuelve a vaciar en cada
+    corrida—; el **host, el puerto, el usuario y la clave salen del bloque `mysql` del `.env`** (acá,
+    127.0.0.1:3307, el MariaDB local de pruebas). En una máquina con otro servidor se cambia el `.env`, no
+    este archivo.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+    </coverage>
+    <php>
+        <!-- Mismo bloque que `phpunit.xml`, salvo la base: la suite pasa de 1.300 tests y cada uno arranca
+             la aplicacion con todas las rutas, asi que con los 128 MB por defecto aborta por memoria. -->
+        <ini name="memory_limit" value="1G"/>
+        <server name="APP_ENV" value="testing"/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="CACHE_DRIVER" value="array"/>
+        <server name="DB_CONNECTION" value="mysql"/>
+        <!-- El nombre tiene que terminar en `_testing`: `tests/bootstrap.php` no vacía ninguna otra base. -->
+        <server name="DB_DATABASE" value="medicapi_testing"/>
+        <server name="MAIL_MAILER" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+        <server name="TELESCOPE_ENABLED" value="false"/>
+    </php>
+</phpunit>

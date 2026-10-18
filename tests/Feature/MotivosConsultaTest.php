@@ -29,10 +29,10 @@ class MotivosConsultaTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-mc-' . uniqid();
+        $regMedico = 'test-mc-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-mc-' . uniqid() . '@example.com',
+            'email' => 'doctora-mc-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([

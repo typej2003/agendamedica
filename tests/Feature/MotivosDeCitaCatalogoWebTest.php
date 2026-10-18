@@ -57,10 +57,10 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'mcita-' . uniqid();
+        $regMedico = 'mcita-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'mcita-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'mcita-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -78,7 +78,7 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
     private function secretariaDe(Medico $medico): User
     {
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'mcita-s-' . uniqid() . '@example.com',
+            'name' => 'Secretaria', 'email' => 'mcita-s-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

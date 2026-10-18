@@ -150,7 +150,7 @@ class EspecialidadesTest extends TestCase
     /** Crea un directorio temporal con manifiestos y lo borra al terminar el test. */
     private function manifiestosDePrueba(array $manifiestos): string
     {
-        $dir = storage_path('framework/testing/especialidades-' . uniqid());
+        $dir = storage_path('framework/tes' . substr(uniqid(), -6));
         File::makeDirectory($dir, 0755, true);
 
         foreach ($manifiestos as $slug => $datos) {

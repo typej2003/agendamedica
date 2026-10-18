@@ -122,7 +122,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Cardiología',
             'ciudad' => 'Caracas',
-            'consultorio' => 'Consultorio 4-B',
+            'consultorio' => 'Cons. 4-B',
             'linea_1' => 'Centro Médico Las Mercedes',
             'linea_2' => 'Piso 4, Consultorio 4-B',
             'linea_3' => 'Av. Principal con Calle París',
@@ -133,7 +133,7 @@ class ChatbotInformationTest extends TestCase
         // Por reg_medico
         $datos = $this->contextService->obtenerDatosConsultorio('MED-TEST-88');
         $this->assertTrue($datos['encontrado']);
-        $this->assertEquals('Consultorio 4-B', $datos['consultorio']);
+        $this->assertEquals('Cons. 4-B', $datos['consultorio']);
         $this->assertEquals('Caracas', $datos['ciudad']);
         $this->assertStringContainsString('Centro Médico Las Mercedes', $datos['direccion']);
         $this->assertStringContainsString('Piso 4', $datos['direccion']);
@@ -160,14 +160,14 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Pediatría',
             'lunes' => '1',
-            'lunes_i' => '08:00 AM',
-            'lunes_f' => '12:00 PM',
+            'lunes_i' => '08:00:00',
+            'lunes_f' => '12:00:00',
             'miercoles' => '1',
-            'miercoles_i' => '02:00 PM',
-            'miercoles_f' => '06:00 PM',
+            'miercoles_i' => '14:00:00',
+            'miercoles_f' => '18:00:00',
             'viernes' => '1',
-            'vienes_i' => '08:00 AM',
-            'viernes_f' => '01:00 PM',
+            'vienes_i' => '08:00:00',
+            'viernes_f' => '13:00:00',
             'cita_previa' => '1',
             'tiempo_paci' => 20,
             'cantidad_paciente' => 12,
@@ -237,11 +237,11 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Oftalmología',
             'ciudad' => 'Valencia',
-            'consultorio' => 'Consultorio 12',
+            'consultorio' => 'Cons. 12',
             'linea_1' => 'Torre Médica Norte',
             'lunes' => '1',
-            'lunes_i' => '09:00 AM',
-            'lunes_f' => '01:00 PM',
+            'lunes_i' => '09:00:00',
+            'lunes_f' => '13:00:00',
         ]);
 
         $info = $this->contextService->obtenerInformacionMedico('MED-TEST-44');
@@ -270,7 +270,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Neurología',
             'ciudad' => 'Maracaibo',
-            'consultorio' => 'Consultorio 5',
+            'consultorio' => 'Cons. 5',
             'linea_1' => 'Policlínica Maracaibo',
             'telefono' => '0261-7000000',
         ]);
@@ -336,7 +336,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Traumatología',
             'ciudad' => 'Caracas',
-            'consultorio' => 'Consultorio 10-A',
+            'consultorio' => 'Cons. 10-A',
             'linea_1' => 'Hospital de Clínicas Caracas',
         ]);
 
@@ -388,7 +388,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Ginecología',
             'ciudad' => 'Barquisimeto',
-            'consultorio' => 'Consultorio 2',
+            'consultorio' => 'Cons. 2',
             'linea_1' => 'Centro Médico del Este',
         ]);
 
@@ -438,7 +438,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Cardiología',
             'ciudad' => 'Caracas',
-            'consultorio' => 'Consultorio 402',
+            'consultorio' => 'Cons. 402',
             'linea_1' => 'Centro Médico Caracas',
         ]);
 
@@ -493,7 +493,7 @@ class ChatbotInformationTest extends TestCase
         $this->assertStringContainsString('Turno asignado:* #3', $res['mensaje']);
         $this->assertStringContainsString('08:40 AM', $res['mensaje']);
         $this->assertStringContainsString('Control cardiovascular', $res['mensaje']);
-        $this->assertStringContainsString('Consultorio 402', $res['mensaje']);
+        $this->assertStringContainsString('Cons. 402', $res['mensaje']);
         $this->assertStringContainsString('Centro Médico Caracas', $res['mensaje']);
 
         // Asegurar que no se insertó ninguna cita adicional en cola
@@ -515,7 +515,7 @@ class ChatbotInformationTest extends TestCase
             'clave' => 1,
             'especialidad' => 'Pediatría',
             'ciudad' => 'Caracas',
-            'consultorio' => 'Consultorio 10',
+            'consultorio' => 'Cons. 10',
             'linea_1' => 'Clínica Sanatrix',
         ]);
 
@@ -584,7 +584,7 @@ class ChatbotInformationTest extends TestCase
             'reg_medico' => 'MED-GIN-01',
             'clave' => 1,
             'especialidad' => 'Ginecología Láser Avanzada',
-            'consultorio' => 'Consultorio 101',
+            'consultorio' => 'Cons. 101',
             'linea_1' => 'Torre Médica Sur',
         ]);
 
@@ -666,7 +666,7 @@ class ChatbotInformationTest extends TestCase
             'reg_medico' => 'MED-DIR-01',
             'clave' => 1,
             'especialidad' => 'Traumatología',
-            'consultorio' => 'Consultorio 204',
+            'consultorio' => 'Cons. 204',
             'linea_1' => 'Centro Traumatológico',
         ]);
 
@@ -826,7 +826,7 @@ class ChatbotInformationTest extends TestCase
         Evolucion::create([
             'reg_medico' => 'MED-CONS-01',
             'clave' => 1,
-            'consultorio' => 'Consultorio 5B',
+            'consultorio' => 'Cons. 5B',
             'telefono' => '0241-8889900',
             'linea_1' => 'Policlínica La Fe',
             'linea_2' => 'Piso 5, ala norte',
@@ -838,7 +838,7 @@ class ChatbotInformationTest extends TestCase
         // Consultar dirección del consultorio
         $respuestaDir = $gemini->generarRespuesta('¿Cuál es la dirección del consultorio del Dr. Fernando Suárez?', $tel);
         $this->assertStringContainsString('Dr. Fernando Suárez', $respuestaDir);
-        $this->assertStringContainsString('Consultorio 5B', $respuestaDir);
+        $this->assertStringContainsString('Cons. 5B', $respuestaDir);
         $this->assertStringContainsString('Policlínica La Fe', $respuestaDir);
         $this->assertStringContainsString('Valencia', $respuestaDir);
 

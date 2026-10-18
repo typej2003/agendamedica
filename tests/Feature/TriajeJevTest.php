@@ -151,7 +151,7 @@ class TriajeJevTest extends TestCase
         $this->configurar();
         config(['services.jev.umbral' => 0.7]);
 
-        $corpus = sys_get_temp_dir() . '/triaje-jev-' . uniqid() . '.json';
+        $corpus = sys_get_temp_dir() . '/triaje-jev-' . substr(uniqid(), -6) . '.json';
         file_put_contents($corpus, json_encode([
             'categorias' => [
                 'agendar' => 'Pide una cita nueva',

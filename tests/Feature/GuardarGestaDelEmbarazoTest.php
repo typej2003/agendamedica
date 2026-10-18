@@ -51,10 +51,10 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'gesta-write-' . uniqid();
+        $regMedico = 'gesta-write-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'gesta-w-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'gesta-w-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -167,7 +167,7 @@ class GuardarGestaDelEmbarazoTest extends TestCase
             'reg_medico' => $medico->reg_medico, 'historia' => 1004, 'gesta_clave' => 1,
             'fur' => '2026-05-20', 'parto' => '1 cesárea',
             'partos' => 2, 'cesarea' => 1, 'abortos' => 0,
-            'otros' => 'gemelos', 'final' => 'V', 'multiple' => 'S', 'cantidad' => 2,
+            'otros' => 4, 'final' => 'V', 'multiple' => 'S', 'cantidad' => 2,
         ]);
 
         app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1004, $this->formulario([
@@ -184,7 +184,8 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         $this->assertSame(3, $fresca->partos);
         $this->assertSame(2, $fresca->cesarea);
         $this->assertSame(1, $fresca->abortos);
-        $this->assertSame('un solo feto', $fresca->otros);
+        // `otros` es un `INT`: lo que no es número se guarda en blanco, no como texto (en MySQL reventaría).
+        $this->assertNull($fresca->otros);
         $this->assertSame('S', $fresca->final);
         $this->assertSame('N', $fresca->multiple);
         $this->assertSame(1, $fresca->cantidad);

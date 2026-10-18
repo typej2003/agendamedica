@@ -50,8 +50,8 @@ class ReservasPublicasWebTest extends TestCase
         $this->medico = Medico::create([
             'name' => 'Carlos',
             'lastname' => 'Reservas',
-            'email' => 'reservas-' . uniqid() . '@example.com',
-            'reg_medico' => 'test-reservas-' . uniqid(),
+            'email' => 'reservas-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-reservas' . substr(uniqid(), -6),
         ]);
         MedicoRegistro::create(['medico_id' => $this->medico->id, 'reg_medico' => $this->medico->reg_medico]);
 
@@ -112,8 +112,8 @@ class ReservasPublicasWebTest extends TestCase
         $sinAgenda = Medico::create([
             'name' => 'Sin',
             'lastname' => 'Agenda',
-            'email' => 'sin-agenda-' . uniqid() . '@example.com',
-            'reg_medico' => 'test-sin-agenda-' . uniqid(),
+            'email' => 'sin-agenda-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-sin-agen' . substr(uniqid(), -6),
         ]);
         $sinAgenda->specialties()->attach(\App\Models\Specialty::firstOrFail());
 
