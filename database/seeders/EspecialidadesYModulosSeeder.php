@@ -80,12 +80,15 @@ class EspecialidadesYModulosSeeder extends Seeder
      * Módulos **propios** de una especialidad que ya están construidos: slug del manifiesto => [módulo => roles].
      * Todo lo declarado en el manifiesto que no esté acá se siembra **oculto** (`implementado = false`).
      *
-     * Hoy no hay ninguno: los módulos de ginecología (ecografías, prenatal, procedimientos…) todavía no
-     * tienen pantalla. Cuando una especialidad estrene uno, se agrega acá y aparece en su menú.
+     * Hoy sólo **Crecimiento** de pediatría (WEB-7.4.3c): los módulos de ginecología (ecografías, prenatal,
+     * procedimientos…) todavía no tienen pantalla. Cuando una especialidad estrene uno, se agrega acá y
+     * aparece en su menú.
      */
     private const PROPIOS_IMPLEMENTADOS = [
         'ginecologia' => [],
-        'pediatria'   => [],
+        // Crecimiento (WEB-7.4.3c): las gráficas por paciente. Es clínico: sólo lo ve el médico. En una base ya desplegada se activa
+        // corriendo `php artisan especialidades:sembrar`.
+        'pediatria'   => ['crecimiento' => ['Medico']],
     ];
 
     public function run(): void
