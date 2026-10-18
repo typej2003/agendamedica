@@ -75,11 +75,16 @@
                         <td data-etiqueta="Edad inicial">{{ $fila['edad'] }}</td>
                         <td data-etiqueta="Tipo"><x-ui.estado :tono="$fila['tipoTono']">{{ $fila['tipo'] }}</x-ui.estado></td>
                         <td data-etiqueta="Dosis">
-                            @forelse ($fila['dosis'] as $dosis)
-                                <span class="badge bg-light text-dark border me-1 mb-1">{{ $dosis }}</span>
-                            @empty
+                            @if ($fila['dosis'] === [])
                                 <span class="texto-tenue small">Sin dosis: una sola, a la edad inicial.</span>
-                            @endforelse
+                            @else
+                                {{-- Una dosis por renglón de chips que se parten: en el celular la fila no puede ensancharse. --}}
+                                <div class="d-flex flex-wrap gap-1 justify-content-md-start justify-content-end">
+                                    @foreach ($fila['dosis'] as $dosis)
+                                        <span class="badge bg-light text-dark border text-wrap">{{ $dosis }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </td>
                         <td class="celda-acciones text-end">
                             <div class="acciones-fila">
