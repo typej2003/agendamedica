@@ -73,8 +73,9 @@ final class HojasImpresasVista
     }
 
     /**
-     * ¿Alguna hoja lleva **imágenes aparte**? Sólo entonces la barra ofrece «Incluir imágenes». Son las fotos de un eco
-     * (WEB-11.13) y, desde A-13, los dibujos del cuello uterino de la colposcopía, que entran por el mismo camino.
+     * ¿Alguna hoja lleva **imágenes**? Sólo entonces la barra ofrece «Incluir imágenes». Son las fotos de un eco
+     * (WEB-11.13), en una hoja aparte, y las de la **colposcopía y la histeroscopía** (A-13 y 2026-10-18), que van en la
+     * misma página de su informe (`DocumentoImpreso::imagenes`).
      */
     public function conImagenes(): bool
     {
@@ -179,12 +180,6 @@ final class HojasImpresasVista
 
             foreach ((new HojasDeDocumentoVista($this->membrete, [$documento]))->hojas() as $hoja) {
                 $hojas[] = $hoja;
-            }
-
-            // Un documento en mitades con imágenes propias (los dibujos del cuello uterino de la colposcopía, A-13):
-            // su texto sale como siempre y las imágenes en una hoja A4 vertical aparte, como la de un eco.
-            if ($documento->conImagenesDeLaHoja()) {
-                $hojas[] = ['tipo' => 'imagenes', 'documento' => $documento];
             }
         }
 

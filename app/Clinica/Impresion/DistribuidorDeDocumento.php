@@ -28,6 +28,11 @@ namespace App\Clinica\Impresion;
  *  5. Los **datos fijos** (los rótulos con su valor: `REPOSO DURANTE`, `REFERIDO A`…) no se parten: van en la primera mitad.
  *  6. Si todo el texto entra en la mitad sin firma pero no con ella, la firma **no queda sola** en la siguiente: pasa con ella
  *     el último párrafo (o, si hay uno solo, sus últimas palabras), como en el móvil.
+ *  7. **Las imágenes del documento van en la última mitad, debajo del texto** (la colposcopía y la histeroscopía, 2026-10-18):
+ *     su bloque ocupa un alto que se reserva (`MedidasDeLaMitad::altoDeLasImagenes()`, que depende de la hoja) y esta clase lo
+ *     **descuenta** al decidir si lo que queda entra en la mitad de la firma. Así el texto y la imagen salen en la misma página
+ *     —como el subreporte de la banda *detail* del escritorio— y, si el texto no entra, sigue en otra mitad y las imágenes
+ *     siguen viajando con la última: nunca quedan en una página suelta.
  *
  * Cada constante de la cuenta tiene su gemela en `public/css/clinica-documento.css` (el comentario de cada regla dice
  * cuál): el cuerpo se mide por el servidor y se dibuja por el navegador, y si una cambia sola el texto se desborda. Lo ata el
@@ -64,7 +69,7 @@ final class DistribuidorDeDocumento
     }
 
     /**
-     * @return array{puntos:int, mitades:array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array<int,array{etiqueta:string, valor:string}>, parrafos:array<int,array{texto:string, etiqueta:?string, aparte:bool}>}>}
+     * @return array{puntos:int, mitades:array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array<int,array{etiqueta:string, valor:string}>, parrafos:array<int,array{texto:string, etiqueta:?string, aparte:bool}>, imagenes:array<int,array{src:string, base?:?string, descripcion:?string}>}>}
      */
     public function distribuir(Membrete $membrete, DocumentoImpreso $documento): array
     {
@@ -85,7 +90,7 @@ final class DistribuidorDeDocumento
     /**
      * Llena las mitades en orden con el texto que entra en cada una.
      *
-     * @return array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array}>
+     * @return array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array, imagenes:array}>
      */
     private function acomodar(Membrete $membrete, DocumentoImpreso $documento, int $puntos): array
     {
@@ -94,15 +99,19 @@ final class DistribuidorDeDocumento
         $primera = true;
         $mitades = [];
 
+        // El bloque de imágenes viaja con la **última** mitad y su alto se descuenta de lo que entra en ella.
+        $imagenes = $documento->imagenes;
+        $reserva = $this->altoDeLasImagenes($documento);
+
         while (count($mitades) < self::MAXIMO_DE_MITADES) {
             $fijos = $primera ? $documento->fijos : [];
             // La caja del destinatario (el resumen médico, WEB-5.3c) ocupa su franja en la cabecera de la primera
             // mitad: el cuerpo de esa mitad tiene que medirse sin ella.
             $para = $primera ? $documento->para : null;
 
-            // ¿Lo que queda entra en esta mitad **con la firma**? Entonces es la última.
-            if ($this->alto($fijos, $restantes, $puntos) <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para)) {
-                $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes];
+            // ¿Lo que queda entra en esta mitad **con la firma** (y con el bloque de imágenes)? Entonces es la última.
+            if ($this->alto($fijos, $restantes, $puntos) + $reserva <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para)) {
+                $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes, 'imagenes' => $imagenes];
 
                 return $mitades;
             }
@@ -124,11 +133,12 @@ final class DistribuidorDeDocumento
 
             [$dentro, $resto] = $this->partir($restantes, $cuantas);
 
-            $mitades[] = ['primera' => $primera, 'sigue' => true, 'firma' => false, 'fijos' => $fijos, 'parrafos' => $dentro];
+            $mitades[] = ['primera' => $primera, 'sigue' => true, 'firma' => false, 'fijos' => $fijos, 'parrafos' => $dentro, 'imagenes' => []];
 
             if ($resto === []) {
-                // No queda texto pero sí falta la firma: va sola en una mitad de continuación (no debería pasar).
-                $mitades[] = ['primera' => false, 'sigue' => false, 'firma' => true, 'fijos' => [], 'parrafos' => []];
+                // No queda texto pero sí falta la firma: va sola en una mitad de continuación (no debería pasar). El bloque
+                // de imágenes no se pierde: se va con ella, que es la última mitad del documento.
+                $mitades[] = ['primera' => false, 'sigue' => false, 'firma' => true, 'fijos' => [], 'parrafos' => [], 'imagenes' => $imagenes];
 
                 return $mitades;
             }
@@ -184,6 +194,18 @@ final class DistribuidorDeDocumento
     }
 
     // ----------------------------------------------------------------------------------------------- Alturas
+
+    /**
+     * El alto que ocupa el **bloque de imágenes** del documento en la última mitad, en milímetros; `0` si no tiene.
+     *
+     * Las imágenes se imprimen debajo del texto y en la misma página (la colposcopía y la histeroscopía): este alto es lo que
+     * el reparto descuenta para que el texto no las empuje fuera de la hoja. Lo mide la hoja —`MedidasDeLaMitad`—, porque de
+     * eso depende lo que queda: no es lo mismo una hoja completa que su mitad superior.
+     */
+    private function altoDeLasImagenes(DocumentoImpreso $documento): float
+    {
+        return $this->medidas->altoDeLasImagenes(count($documento->imagenes));
+    }
 
     /**
      * El alto del cuerpo con esos datos fijos y esos párrafos a `$puntos` pt, en milímetros.

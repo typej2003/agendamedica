@@ -219,8 +219,8 @@ final class DocumentoImpreso
      *                         del resumen médico, WEB-5.3c); en los demás documentos va en la cabecera del
      *                         paciente y no se imprime: `null`
      * @param  array<int,array{src:string, base?:?string, descripcion:?string}>  $imagenes  las imágenes que se
-     *                         imprimen **en una hoja aparte** si se marca «Incluir imágenes» (los dibujos de la
-     *                         colposcopía, A-13). Un documento con `informe` las lleva adentro del informe.
+     *                         imprimen **en la misma página del documento**, debajo del texto (la colposcopía y la
+     *                         histeroscopía, 2026-10-18). Un documento con `informe` las lleva adentro del informe.
      */
     public function __construct(
         public readonly string $tipo,
@@ -262,8 +262,9 @@ final class DocumentoImpreso
     }
 
     /**
-     * El mismo documento con sus **imágenes para la hoja aparte** (A-13, los dibujos de la colposcopía). La hoja del
-     * texto sigue siendo la de siempre (media hoja); las imágenes salen en una hoja A4 vertical, como las de un eco.
+     * El mismo documento con sus **imágenes para la hoja del informe** (A-13: los dibujos de la colposcopía y la
+     * histeroscopía). Salen **en la misma página** que el texto, debajo de él (2026-10-18, como el subreporte del
+     * escritorio): el reparto del texto les reserva su alto (`DistribuidorDeDocumento`).
      *
      * @param  array<int,array{src:string, base?:?string, descripcion:?string}>  $imagenes
      */
@@ -272,7 +273,7 @@ final class DocumentoImpreso
         return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes);
     }
 
-    /** ¿Tiene imágenes propias para la hoja aparte (los dibujos de la colposcopía)? */
+    /** ¿Tiene imágenes propias para la hoja de su informe (la colposcopía y la histeroscopía)? */
     public function conImagenesDeLaHoja(): bool
     {
         return $this->imagenes !== [];

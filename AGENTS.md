@@ -239,6 +239,16 @@ Lo que **WEB-5.6 (2026-10-12)**, el QR de verificación del récipe, agregó: `V
 
 Lo que **WEB-5.5b (2026-10-12)**, los formatos en blanco, agregó: `FormatosEnBlancoController` (`GET /clinica/formato/en-blanco/{formato}`, `clinica.formato.en-blanco`, dentro del grupo `role:Root|Medico` de «Formato de impresión»), `App\Clinica\Impresion\FormatosEnBlanco` (el catálogo: **nueve** formatos entonces, **once** desde que WEB-6.2 sumó los dos del eco obstétrico —la clave del formato **lleva guion**, `[a-z][a-z-]*` en la ruta: trampa 111—), `Vistas\HojaEnBlancoVista` (arma las mitades con `enBlanco`), la constante `DocumentoImpreso::TITULOS` (los títulos que comparten la hoja real y la en blanco, más `SUFIJOS`/`tituloConSufijo()` para el trimestre de los ecos), los parciales `_datos-en-blanco` y `_seccion-en-blanco`, la vista `clinica/imprimir/en-blanco`, la tarjeta `clinica/formato/_en-blanco` y `public/css/clinica-en-blanco.css`. Sólo lee: ni filas, ni `sync_changes`, ni token, ni QR; el modo del récipe sale de `?modo=` sin guardarse. Tests: `FormatosEnBlancoWebTest` y `Unit/Clinica/FormatosEnBlancoVistaTest`. Trampas 81, 82 y 111.
 
+Lo que **la hoja de la colposcopía y la histeroscopía (2026-10-18)** agregó: un **tercer modo** en `App\Clinica\Impresion\ModoDeLaHoja`
+(`MITAD_SUPERIOR`, además de `MITAD` y `COMPLETA`) y en `MedidasDeLaMitad::deLaMitadSuperior()`: **la página es un A4 vertical y
+el informe usa sólo su mitad de arriba** (182 × 134,25 mm útiles; la mitad de abajo queda en blanco, como el escritorio), con la
+**imagen del examen en esa misma página y debajo del texto** —Alexander, 2026-10-18: dejó de salir en una hoja A4 aparte—. El
+reparto (`DistribuidorDeDocumento`) la reserva el alto del bloque de imágenes —`MedidasDeLaMitad::altoDeLasImagenes()`, 32 mm con
+una y 28 con dos, contra 96/76 de la hoja completa— y las imágenes viajan con la última mitad; el parcial de la figura es
+`_informe-imagen` (lo comparten la hoja del eco y el informe), la clase de la hoja la da `ModoDeLaHoja::clasesDeLaHoja()` y el CSS
+vive en `.recipe-hoja-mitad-superior` + `.documento-imagenes` de `clinica-documento.css`. Tests: `ConsultaColposcopiaWebTest`
+(la hoja de una sola página y el informe largo que sigue en otra media página con las imágenes al final), `ConsultaHisteroscopiaWebTest`
+e `ImpresionDeHojaCompletaWebTest`; verificador de Chrome `../.agent-tools/verificar-consulta-colposcopia-web.js`.
 Lo que **WEB-8.1a (2026-10-11)**, los catálogos de medicamentos y tratamientos, agregó: controladores `CatalogoController` (la entrada: redirige al primer catálogo),
 `MedicamentoCatalogoController` (`/clinica/catalogos/medicamentos`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición, `DELETE`
 quitar y el JSON `…/buscar` del editor de tratamientos) y `TratamientoCatalogoController` (`/clinica/catalogos/tratamientos`: lista, editor `nuevo`/`{id}/editar`, `POST` crear/guardar, `DELETE`),
