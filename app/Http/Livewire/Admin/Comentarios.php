@@ -131,7 +131,8 @@ class Comentarios extends Component
     public function render()
     {
         $comentarios = Comentario::query()
-            ->with(['usuario', 'medico'])
+            // Las capturas adjuntas (O-25) se leen con la lista: cada fila muestra sus miniaturas.
+            ->with(['usuario', 'medico', 'imagenes'])
             ->when($this->estado !== 'todos', fn ($query) => $query->where('estado', $this->estado))
             ->orderByDesc('created_at')
             ->paginate(15);
@@ -140,7 +141,7 @@ class Comentarios extends Component
             'comentarios' => $comentarios,
             'conteos' => $this->conteos(),
             'seleccionado' => $this->comentarioId
-                ? Comentario::with(['usuario', 'medico', 'respondedor'])->find($this->comentarioId)
+                ? Comentario::with(['usuario', 'medico', 'respondedor', 'imagenes'])->find($this->comentarioId)
                 : null,
         ]);
     }

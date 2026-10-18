@@ -3560,3 +3560,61 @@ body.auth-pagina {
 
 /* Los pasos son la fuente del texto: el JS los lee y los pinta en el globo. Nunca se ven. */
 .tour-pasos { display: none; }
+
+/* ---------------------------------------------------------------------------------------------
+   Las capturas adjuntas de «Ayúdanos a mejorar» (O-25).
+
+   La lista de miniaturas es la misma en el formulario (lo que se va a mandar), en «Mis comentarios»
+   (lo ya mandado) y en la bandeja del panel (lo que recibimos). En el celular las miniaturas se
+   achican y el «quitar» mantiene los 40 px de objetivo táctil (guia-ui.md §7).
+   --------------------------------------------------------------------------------------------- */
+.adjuntos-lista {
+    display: flex; flex-wrap: wrap; gap: .75rem;
+    list-style: none; padding: 0; margin: 1rem 0 0;
+}
+.adjuntos-lista-chica { gap: .5rem; margin-top: .35rem; }
+.adjunto {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    overflow: hidden;
+}
+.adjunto a { display: block; line-height: 0; }
+.adjunto-miniatura {
+    display: block;
+    width: 112px; height: 84px;
+    object-fit: cover;
+    background: var(--ds-fondo);
+}
+.adjuntos-lista-chica .adjunto-miniatura { width: 64px; height: 48px; }
+.adjunto-nombre {
+    display: block;
+    max-width: 112px;
+    padding: .15rem .35rem;
+    font-size: .72rem;
+    line-height: 1.2;
+    color: var(--ds-texto-3);
+}
+.adjunto-quitar {
+    position: absolute;
+    top: .2rem; right: .2rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    padding: 0;
+    border: 1px solid var(--ds-borde);
+    border-radius: 50%;
+    background: var(--ds-superficie);
+    color: var(--ds-peligro);
+    line-height: 1;
+    box-shadow: var(--ds-sombra-1);
+}
+.adjunto-quitar:hover { background: var(--ds-peligro); color: #fff; border-color: transparent; }
+.adjunto-quitar:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+
+@media (max-width: 575.98px) {
+    .adjunto-miniatura { width: 92px; height: 70px; }
+    .adjunto-nombre { max-width: 92px; }
+}

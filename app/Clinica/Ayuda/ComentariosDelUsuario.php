@@ -20,6 +20,9 @@ final class ComentariosDelUsuario
     public function de(Authenticatable $usuario, int $limite = 30): Collection
     {
         return Comentario::where('user_id', $usuario->getAuthIdentifier())
+            // Las capturas adjuntas (O-25) se leen de una vez: la pantalla pinta una miniatura por cada una y no
+            // puede hacer una consulta por comentario.
+            ->with('imagenes')
             ->orderByDesc('created_at')
             ->limit($limite)
             ->get();

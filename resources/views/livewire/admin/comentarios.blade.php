@@ -41,6 +41,29 @@
             <div class="card-body">
                 <p class="mb-3" style="white-space: pre-line">{{ $seleccionado->mensaje }}</p>
 
+                {{-- Las capturas adjuntas (O-25): se ven acá y se abren a tamaño real. La ruta del disco privado
+                     no se expone: el archivo lo sirve la ruta autorizada de la bandeja. --}}
+                @if ($seleccionado->imagenes->isNotEmpty())
+                    <div class="adjuntos mb-3">
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-images" aria-hidden="true"></i>
+                            {{ $seleccionado->imagenes->count() === 1 ? 'Una captura adjunta' : $seleccionado->imagenes->count() . ' capturas adjuntas' }}
+                        </p>
+                        <ul class="adjuntos-lista">
+                            @foreach ($seleccionado->imagenes as $imagen)
+                                @php($urlImagen = route('admin.comentarios.imagen', ['comentario' => $seleccionado->id, 'imagen' => $imagen->id]))
+                                <li class="adjunto">
+                                    <a href="{{ $urlImagen }}" target="_blank" rel="noopener"
+                                       aria-label="Abrir la captura {{ $loop->iteration }} de {{ $seleccionado->imagenes->count() }}">
+                                        <img class="adjunto-miniatura" src="{{ $urlImagen }}"
+                                             alt="Captura adjunta {{ $loop->iteration }}: {{ $imagen->nombreVisible() }}">
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 @if ($seleccionado->fueRespondido() && $seleccionado->respondido_el)
                     <p class="text-muted small mb-3">
                         Respondido por {{ $seleccionado->respondedor?->name ?? '—' }}
@@ -106,7 +129,25 @@
                                     </small>
                                 </td>
                                 <td>{{ $comentario->tipoLegible() }}</td>
-                                <td>{{ \Illuminate\Support\Str::limit($comentario->mensaje, 90) }}</td>
+                                <td>
+                                    <div>{{ \Illuminate\Support\Str::limit($comentario->mensaje, 90) }}</div>
+                                    {{-- Miniaturas de lo que adjuntó (O-25): la captura es la mitad del reporte, así
+                                         que se ve en la propia fila sin abrir el comentario. --}}
+                                    @if ($comentario->imagenes->isNotEmpty())
+                                        <ul class="adjuntos-lista adjuntos-lista-chica mb-0 mt-1">
+                                            @foreach ($comentario->imagenes as $imagen)
+                                                @php($urlImagen = route('admin.comentarios.imagen', ['comentario' => $comentario->id, 'imagen' => $imagen->id]))
+                                                <li class="adjunto">
+                                                    <a href="{{ $urlImagen }}" target="_blank" rel="noopener"
+                                                       aria-label="Abrir la captura {{ $loop->iteration }} del comentario">
+                                                        <img class="adjunto-miniatura" src="{{ $urlImagen }}"
+                                                             alt="Captura adjunta {{ $loop->iteration }}">
+                                                    </a>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                </td>
                                 <td>
                                     <div>{{ $comentario->created_at?->format('d/m/Y') }}</div>
                                     <small class="text-muted">{{ $comentario->created_at?->diffForHumans() }}</small>

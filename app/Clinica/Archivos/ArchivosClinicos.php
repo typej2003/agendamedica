@@ -64,7 +64,28 @@ final class ArchivosClinicos
     public const EXTENSIONES = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /**
-     * Los MIME **reales** aceptados. El orden es el de la lista anterior para que se lea junto.
+     * **Los dos perfiles de la política.** El de la imagen clínica es el de siempre y el que se usa si no se
+     * dice nada; el de la captura de un comentario (O-25) es más chico y más estricto porque un reporte no
+     * necesita un GIF ni 10 MB.
+     *
+     * La política sigue viviendo en **un solo lugar** (PLAN-WEB.md, R3): lo que cambia entre perfiles son tres
+     * valores —tipos, extensiones y tope—, no las reglas. Así una superficie nueva elige un perfil en vez de
+     * escribir su propia validación de archivos.
+     */
+    public const PERFIL_CLINICO = 'clinico';
+    public const PERFIL_COMENTARIO = 'comentario';
+
+    /** El tope de una captura de "Ayúdanos a mejorar", en KB: son 5 MB. */
+    public const MAXIMO_KB_COMENTARIO = 5120;
+
+    /**
+     * Los formatos de una captura: PNG, JPG y WEBP, que es lo que pega un navegador y muestra sin
+     * complementos. Sin GIF: una captura de pantalla nunca es una animación.
+     */
+    public const EXTENSIONES_COMENTARIO = ['jpg', 'jpeg', 'png', 'webp'];
+
+    /**
+     * Los MIME **reales** aceptados. El orden es el de la lista de extensiones para que se lea junto.
      *
      * Se comprueba contra el MIME detectado por PHP (`$file->getMimeType()`, que mira el contenido), no
      * contra `getClientMimeType()`: el cliente puede mentir, y además es lo que Laravel compara en la
@@ -72,9 +93,30 @@ final class ArchivosClinicos
      *
      * @return array<int,string>
      */
-    public static function mimes(): array
+    public static function mimes(?string $perfil = null): array
     {
+        if ($perfil === self::PERFIL_COMENTARIO) {
+            return ['image/jpeg', 'image/png', 'image/webp'];
+        }
+
         return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    }
+
+    /**
+     * Las extensiones del perfil, en minúscula (la lista blanca que se le exige al nombre que manda el
+     * cliente).
+     *
+     * @return array<int,string>
+     */
+    public static function extensiones(?string $perfil = null): array
+    {
+        return $perfil === self::PERFIL_COMENTARIO ? self::EXTENSIONES_COMENTARIO : self::EXTENSIONES;
+    }
+
+    /** El tope del perfil, en KB (Laravel valida `max:` en KB). */
+    public static function maximoKb(?string $perfil = null): int
+    {
+        return $perfil === self::PERFIL_COMENTARIO ? self::MAXIMO_KB_COMENTARIO : self::MAXIMO_KB;
     }
 
     /**
@@ -94,22 +136,22 @@ final class ArchivosClinicos
      *
      * @return array<int,mixed>
      */
-    public static function reglas(): array
+    public static function reglas(?string $perfil = null): array
     {
         return [
             'file',
-            'max:' . self::MAXIMO_KB,
-            function (string $atributo, $archivo, callable $fallar) {
+            'max:' . self::maximoKb($perfil),
+            function (string $atributo, $archivo, callable $fallar) use ($perfil) {
                 if (! $archivo instanceof UploadedFile) {
                     return;
                 }
 
-                if (! in_array($archivo->getMimeType(), self::mimes(), true)) {
-                    $fallar('El archivo no es una imagen de un tipo aceptado (' . self::textosAceptados() . ').');
+                if (! in_array($archivo->getMimeType(), self::mimes($perfil), true)) {
+                    $fallar('El archivo no es una imagen de un tipo aceptado (' . self::textosAceptados($perfil) . ').');
                 }
 
-                if (! self::extensionPermitida($archivo->getClientOriginalName())) {
-                    $fallar('La imagen tiene que ser ' . self::textosAceptados() . '.');
+                if (! self::extensionPermitida($archivo->getClientOriginalName(), $perfil)) {
+                    $fallar('La imagen tiene que ser ' . self::textosAceptados($perfil) . '.');
                 }
             },
         ];
@@ -126,9 +168,9 @@ final class ArchivosClinicos
      *
      * @return array<int,mixed>
      */
-    public static function reglasDeSubida(): array
+    public static function reglasDeSubida(?string $perfil = null): array
     {
-        return array_merge(['required'], self::reglas());
+        return array_merge(['required'], self::reglas($perfil));
     }
 
     /**
@@ -136,18 +178,18 @@ final class ArchivosClinicos
      * **tal cual lo mandó el cliente**, que es justamente lo que se está auditando; la extensión con la
      * que el archivo se guarda sale del contenido (`extension()`).
      */
-    public static function extensionPermitida(string $nombre): bool
+    public static function extensionPermitida(string $nombre, ?string $perfil = null): bool
     {
         $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
 
-        return in_array($extension, self::EXTENSIONES, true);
+        return in_array($extension, self::extensiones($perfil), true);
     }
 
     /** "JPG, PNG, GIF o WEBP": el texto humano de lo que se acepta (una vez cada formato). */
-    public static function textosAceptados(): string
+    public static function textosAceptados(?string $perfil = null): string
     {
         // `jpeg` y `jpg` son el mismo formato: se muestra una sola vez.
-        $formatos = array_values(array_diff(array_unique(self::EXTENSIONES), ['jpeg']));
+        $formatos = array_values(array_diff(array_unique(self::extensiones($perfil)), ['jpeg']));
         $formatos = array_map('strtoupper', $formatos);
         $ultimo = array_pop($formatos);
 
@@ -155,9 +197,9 @@ final class ArchivosClinicos
     }
 
     /** "10 MB": el texto humano del tope. */
-    public static function textoMaximo(): string
+    public static function textoMaximo(?string $perfil = null): string
     {
-        return round(self::MAXIMO_KB / 1024) . ' MB';
+        return round(self::maximoKb($perfil) / 1024) . ' MB';
     }
 
     /**
@@ -166,15 +208,19 @@ final class ArchivosClinicos
      *
      * @return string|null  `null` si el contenido no es de un tipo aceptado
      */
-    public static function extension(UploadedFile $archivo): ?string
+    public static function extension(UploadedFile $archivo, ?string $perfil = null): ?string
     {
-        return match ($archivo->getMimeType()) {
+        $extension = match ($archivo->getMimeType()) {
             'image/jpeg' => 'jpg',
             'image/png'  => 'png',
             'image/gif'  => 'gif',
             'image/webp' => 'webp',
             default      => null,
         };
+
+        // El perfil de comentario no acepta GIF: el contenido lo dice el MIME, pero la extensión con la que se
+        // guardaría no está en su lista blanca, así que el archivo no entra.
+        return $extension !== null && in_array($extension, self::extensiones($perfil), true) ? $extension : null;
     }
 
     /**
@@ -189,9 +235,9 @@ final class ArchivosClinicos
      *    y aunque colisionaran, cada una vive bajo la carpeta de su `reg_medico`.
      *  - **No se puede adivinar**: la URL no es el nombre del archivo, es el id de su fila.
      */
-    public static function nombreNuevo(UploadedFile $archivo): string
+    public static function nombreNuevo(UploadedFile $archivo, ?string $perfil = null): string
     {
-        $extension = self::extension($archivo);
+        $extension = self::extension($archivo, $perfil);
 
         if ($extension === null) {
             throw new InvalidArgumentException('El archivo no es una imagen de un tipo aceptado.');
@@ -222,10 +268,10 @@ final class ArchivosClinicos
      * reutilizar cuando otra superficie suba archivos, y una comprobación acá vale más que confiar en el
      * llamador).
      */
-    public static function ruta(string $regMedico, UploadedFile $archivo, ?string $mes = null): string
+    public static function ruta(string $regMedico, UploadedFile $archivo, ?string $mes = null, ?string $perfil = null): string
     {
         $carpeta = self::carpeta($regMedico, $mes);
-        $ruta = $carpeta . '/' . self::nombreNuevo($archivo);
+        $ruta = $carpeta . '/' . self::nombreNuevo($archivo, $perfil);
 
         if (! self::dentroDe($ruta, $carpeta)) {
             throw new InvalidArgumentException('La ruta del archivo se sale de la carpeta del médico.');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 use App\Http\Livewire\Admin\ApiKeys;
 use App\Http\Livewire\Admin\CatalogoInicialPercentiles;
 use App\Http\Livewire\Admin\CatalogosIniciales;
@@ -32,6 +33,10 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     // Planes de servicio y vencimiento por médico (Paso 27).
     // **Ayúdanos a mejorar** (ROADMAP §9): la bandeja donde recibimos los comentarios del consultorio.
     Route::get('/comentarios', Comentarios::class)->name('comentarios');
+    // **La captura adjunta** (O-25): la bandeja la muestra y la abre. El archivo vive en un disco privado y
+    // esta ruta es el único camino a él, con el permiso comprobado en el controlador.
+    Route::get('/comentarios/{comentario}/imagenes/{imagen}', [ImagenDelComentarioController::class, 'deLaBandeja'])
+        ->name('comentarios.imagen');
     Route::get('/servicios', Servicios::class)->name('servicios');
 });
 

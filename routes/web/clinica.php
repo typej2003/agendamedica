@@ -2,6 +2,7 @@
 
 use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
+use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\BitacoraController;
 use App\Http\Controllers\Clinica\CatalogoController;
@@ -619,6 +620,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // los suyos con nuestra respuesta. La bandeja donde los recibimos es del panel (`/admin`).
             Route::get('/ayuda', [AyudaController::class, 'index'])->name('ayuda');
             Route::post('/ayuda', [AyudaController::class, 'guardar'])->name('ayuda.guardar');
+            // **La captura adjunta** (O-25), sólo para el autor: es el único camino al archivo, que vive en un
+            // disco privado. Un comentario de otra cuenta da 404 (no se confirma que exista).
+            Route::get('/ayuda/comentarios/{comentario}/imagenes/{imagen}', [ImagenDelComentarioController::class, 'delAutor'])
+                ->name('ayuda.imagen');
 
             Route::post('/agenda', [CitaController::class, 'crear'])->name('agenda.crear');
             Route::post('/agenda/reordenar', [MostradorController::class, 'reordenar'])->name('agenda.reordenar');
