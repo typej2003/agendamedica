@@ -120,9 +120,11 @@ class ConsultaDopplerWebTest extends TestCase
         }
 
         // Los tres desplegables y sus rótulos (la señal venoso umbilical lleva la «Pulsatilidad» del
-        // DataWindow), y las dos áreas del final con los rótulos de la pantalla.
-        $respuesta->assertSee('Ductos Venosos')->assertSee('Señal Venoso Umbilical (Pulsatilidad)')
+        // DataWindow), y las dos áreas del final con los rótulos de la pantalla. El rótulo del ductus se
+        // corrigió de la errata del escritorio («Ductos Venosos», 2026-10-17).
+        $respuesta->assertSee('Ductus venoso')->assertSee('Señal Venoso Umbilical (Pulsatilidad)')
             ->assertSee('Relación Aorta-Cava')->assertSee('Observaciones')->assertSee('Conclusiones');
+        $respuesta->assertDontSee('Ductos Venosos');
         $respuesta->assertSee('Trifásico con Reversa')->assertSee('Anormal');
 
         // Y el formulario apunta a la acción de guardar del tipo que se está mirando.

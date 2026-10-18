@@ -116,7 +116,7 @@ class FormatosEnBlancoVistaTest extends TestCase
     {
         $this->assertSame(['Gesta:', 'FUR:', 'EG:', 'PARA:'], FormatosEnBlanco::plano(DocumentoImpreso::ECO_DOPPLER)['fijos']);
         $this->assertSame(
-            [null, 'Eco Doppler Obstétrico en 4 Vasos:', 'Ductos Venosos:', 'Señal Venoso Umbilical:',
+            [null, 'Eco Doppler Obstétrico en 4 Vasos:', 'Ductus venoso:', 'Señal Venoso Umbilical:',
                 'Relación Aorta-Cava:', 'Sugerencias:', 'Conclusión:'],
             array_column(FormatosEnBlanco::plano(DocumentoImpreso::ECO_DOPPLER)['secciones'], 'etiqueta'),
         );

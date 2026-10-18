@@ -124,8 +124,9 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
             ->assertSee('Relación S / D')->assertSee('Pico de Velocidad Sistólica')
             ->assertSeeInOrder(['0.85', '0.62', '2.4', '45'])
             ->assertSee('Arteria Cerebral Media')->assertSee('1.1')
-            // Los tres desplegables, con todas sus opciones y la elegida marcada (WEB-11.13).
-            ->assertSeeInOrder(['Ductos Venosos:', '○', 'Trifásico con Reversa', '●', 'Trifásico sin Reversa'], false)
+            // Los tres desplegables, con todas sus opciones y la elegida marcada (WEB-11.13). El rótulo del
+            // ductus es el corregido de la errata del escritorio («Ductos Venosos», 2026-10-17).
+            ->assertSeeInOrder(['Ductus venoso:', '○', 'Trifásico con Reversa', '●', 'Trifásico sin Reversa'], false)
             ->assertSeeInOrder(['Señal Venoso Umbilical', '●', 'Sí', '○', 'No'], false)
             ->assertSeeInOrder(['Relación Aorta-Cava:', '●', 'Normal', '○', 'Anormal'], false)
             // Las dos áreas del final, con los rótulos de la pantalla.
@@ -154,7 +155,7 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
         $hoja->assertOk()
             ->assertSee('Eco Doppler Obstétrico en 4 Vasos')
             ->assertSee('Arteria Umbilical')->assertSee('0.9')
-            ->assertSeeInOrder(['Ductos Venosos:', '○', 'Trifásico con Reversa', '○', 'Trifásico sin Reversa'], false)
+            ->assertSeeInOrder(['Ductus venoso:', '○', 'Trifásico con Reversa', '○', 'Trifásico sin Reversa'], false)
             ->assertDontSee('●', false);
     }
 

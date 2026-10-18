@@ -1177,7 +1177,7 @@ final class SolicitudesParaImprimir
     /**
      * **El informe del eco Doppler perinatal** (WEB-6.3): la hoja «ECO DOPPLER PERINATAL» del escritorio
      * (`d_eco_doppler_print`), en el orden de su fuente: el **texto** libre del estudio (el memo grande, que
-     * no lleva rótulo), la **grilla de cuatro vasos** con su título, los **ductos venosos**, la **señal
+     * no lleva rótulo), la **grilla de cuatro vasos** con su título, el **ductus venoso**, la **señal
      * venoso umbilical**, la **relación aorta-cava**, las **sugerencias** y la **conclusión** (en singular,
      * como el DataWindow de impresión, `:91-92`).
      *
@@ -1243,7 +1243,9 @@ final class SolicitudesParaImprimir
         // Los tres desplegables, con los rótulos de la hoja (la señal venoso umbilical va sin la
         // «pulsatilidad» que sí dice la pantalla, como en el DataWindow de impresión).
         foreach ([
-            'ductos_venosos' => 'Ductos Venosos:',
+            // «Ductus venoso:» y no el «Ductos Venosos:» del DataWindow: la errata del escritorio se corrigió a
+            // pedido de una médica que probó la web (2026-10-17). La columna sigue llamándose `ductos_venosos`.
+            'ductos_venosos' => 'Ductus venoso:',
             'ven_umbilical' => 'Señal Venoso Umbilical:',
             'relac_aorta' => 'Relación Aorta-Cava:',
         ] as $columna => $etiqueta) {

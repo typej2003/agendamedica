@@ -119,9 +119,14 @@ final class EcoDoppler
             ]],
 
             ['titulo' => 'El flujo venoso y la aorta', 'icono' => 'bi-droplet-half', 'campos' => [
-                self::lista('ductos_venosos', 'Ductos Venosos',
+                // La errata del escritorio («Ductos Venosos») se corrigió a pedido de una médica que probó la
+                // web (2026-10-17): el vaso es el **ductus venoso**, en singular. La columna se sigue llamando
+                // `ductos_venosos` (es el nombre del dato y del `formato_print` del legado) y la hoja impresa
+                // sale de este mismo mapa, así que también dice «Ductus venoso».
+                self::lista('ductos_venosos', 'Ductus venoso',
                     ['Trifásico con Reversa' => 'N', 'Trifásico sin Reversa' => 'S'],
-                    'El rótulo del escritorio es «Ductos Venosos:».'),
+                    'El rótulo del escritorio decía «Ductos»; en la web es «Ductus venoso» (errata del '
+                    . 'escritorio corregida el 2026-10-17).'),
                 self::lista('ven_umbilical', 'Señal Venoso Umbilical (Pulsatilidad)',
                     ['Sí' => 'N', 'No' => 'A'],
                     'Ojo con los códigos: **Sí guarda `N` y No guarda `A`**, al revés de lo que parece '
