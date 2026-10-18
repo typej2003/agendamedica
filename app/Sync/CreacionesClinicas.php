@@ -8,6 +8,7 @@ use App\Actions\Consulta\CrearConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
+use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Http\Requests\SyncAppDataRequest;
@@ -65,6 +66,10 @@ use InvalidArgumentException;
  * mitad del agregar/quitar que el teléfono ya tenía a medias: la baja entra desde A1 por el camino
  * genérico (`TABLAS_BORRABLES`) y el alta es una creación clínica porque la fila cuelga de la consulta,
  * igual que un motivo (ver [self::crearDiagnostico]).
+ *
+ * A4b suma el **alta de un antecedente del paciente** (`antece_paciente`): misma forma —alta por creación y
+ * baja por A1—, pero la fila **no cuelga de la consulta** sino de la historia (ver
+ * [self::crearAntecedente]).
  */
 class CreacionesClinicas
 {
@@ -95,6 +100,9 @@ class CreacionesClinicas
         // El alta de un diagnóstico de la consulta (A4a): la regla del código del catálogo, la copia de la
         // descripción y el `orden`, en una Action de `Actions\Consulta` (la fila cuelga de la consulta).
         private AgregarDiagnosticoALaConsulta $agregarDiagnostico,
+        // El alta de un antecedente del paciente (A4b): la misma clase de Action fina, pero en
+        // `Actions\Pacientes` porque la fila es **del paciente** y no de la consulta.
+        private AgregarAntecedenteAlPaciente $agregarAntecedente,
     ) {
     }
 
@@ -126,6 +134,8 @@ class CreacionesClinicas
             'motivo_consulta_paciente' => $this->crearMotivoDeConsulta($change, $tempId, $rechazar),
             'examen_fisico_nuevo' => $this->crearExamenFisico($change, $tempId, $rechazar),
             'diagnostico_paciente' => $this->crearDiagnostico($change, $tempId, $rechazar),
+            // A4b: el alta de un antecedente del paciente, que cuelga de la **historia**.
+            'antece_paciente' => $this->crearAntecedente($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -380,6 +390,75 @@ class CreacionesClinicas
     }
 
     /**
+     * El **alta de un antecedente del paciente** cargado sin conexión (A4b de PLAN-MOVIL.md).
+     *
+     * La baja ya entraba desde A1 por el camino genérico de `TABLAS_BORRABLES`; lo que faltaba era el
+     * alta, que va como creación clínica aunque **no cuelgue de la consulta**: `antece_paciente` es del
+     * paciente y se llavea por `numhistoria` + `codeantecedente` (el mapa del dato es
+     * `AntecedentesDelPaciente`). Por eso lo que resuelve esta rama es la **historia** —real o creada en
+     * este mismo lote—, no una consulta.
+     *
+     * La regla de escritura **no vive acá**: es `AgregarAntecedenteAlPaciente`, que valida el código
+     * contra el catálogo `antecedentes` del médico, copia el nombre y el tipo como el `INSERT` del
+     * escritorio y no duplica si ese paciente ya tiene el código (devuelve la fila que estaba).
+     *
+     * Lo único propio del sync es el rastro con el **id temporal** del lote (`anotar`), que es lo que le
+     * permite al teléfono soltar su fila provisional y reintentar sin duplicar.
+     */
+    private function crearAntecedente(array $change, int $tempId, callable $rechazar): ?array
+    {
+        // La historia: por su número si el paciente ya existe en el servidor, o por `historia_temp_id` si
+        // se llenó en este mismo lote (el helper que ya usan la consulta y el récipe).
+        $historia = $this->resolverHistoria($change);
+        if (! $historia) {
+            $rechazar('El antecedente no corresponde a una historia de este médico.');
+            return null;
+        }
+
+        // El código viaja al mismo nivel que las referencias (como `codemotivo`) o dentro de `columns`
+        // (la forma de las creaciones con datos): se aceptan las dos, igual que en A3 y A4a.
+        $codigo = $this->campoDelCambio($change, 'codeantecedente');
+        $codigo = is_string($codigo) ? trim($codigo) : '';
+        if ($codigo === '') {
+            $rechazar('El antecedente no indica el código del catálogo.');
+            return null;
+        }
+
+        $fila = $this->agregarAntecedente->ejecutar(
+            (string) $historia->reg_medico,
+            (int) $historia->numhistoria,
+            $codigo,
+            $this->textoDelCambio($change, 'detalles'),
+            $this->textoDelCambio($change, 'tipo2'),
+            $this->textoDelCambio($change, 'descripcion'),
+            $this->textoDelCambio($change, 'tipo'),
+            'mobile',
+        );
+
+        if ($fila === null) {
+            // No se escribe nada: una fila sin nombre ni tipo no la puede leer ni el escritorio ni la web.
+            $rechazar('El antecedente no está en el catálogo de este médico.');
+            return null;
+        }
+
+        $this->anotar('antece_paciente', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaAntecedente($tempId, $fila->id);
+    }
+
+    /**
+     * Un campo de texto de la creación (`detalles`, `tipo2`, …): suelto o dentro de `columns`, como
+     * `campoDelCambio`, pero sólo si es texto. Lo que no es texto se descarta y la Action pone su
+     * valor por defecto.
+     */
+    private function textoDelCambio(array $change, string $campo): ?string
+    {
+        $valor = $this->campoDelCambio($change, $campo);
+
+        return is_string($valor) ? $valor : null;
+    }
+
+    /**
      * Un campo de la creación que puede venir suelto (al mismo nivel que `consulta_id`, como
      * `codemotivo` y `codediagnostico`) o dentro de `columns` (donde viajan las columnas de una tabla).
      * Gana `columns`, que es la forma explícita.
@@ -543,6 +622,10 @@ class CreacionesClinicas
             // teléfono ya guardó), no por la clave del legado.
             return $this->respuestaDiagnostico($tempId, $recordId);
         }
+        if ($table === 'antece_paciente') {
+            // Igual que las anteriores: el reintento de un alta de antecedente devuelve el mismo id.
+            return $this->respuestaAntecedente($tempId, $recordId);
+        }
         $detalle = RecipeDetalle::find($recordId);
         if (!$detalle) {
             return null;
@@ -600,6 +683,15 @@ class CreacionesClinicas
     private function respuestaDiagnostico(int $tempId, int $id): array
     {
         return ['table' => 'diagnostico_paciente', 'temp_id' => $tempId, 'id' => $id];
+    }
+
+    /**
+     * La respuesta del alta de un antecedente es **sólo su id**, como la del diagnóstico y la del examen:
+     * la fila se llavea por el número de historia, que el teléfono ya tiene en su copia local.
+     */
+    private function respuestaAntecedente(int $tempId, int $id): array
+    {
+        return ['table' => 'antece_paciente', 'temp_id' => $tempId, 'id' => $id];
     }
 
     /** `ids`: las filas de `recipes`, en el mismo orden que los `items` que mandó el teléfono. */

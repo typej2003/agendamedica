@@ -14,6 +14,7 @@ use App\Http\Requests\SyncAppDataRequest;
 use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
+use App\Models\Antecedente;
 use App\Models\AntecePaciente;
 use App\Models\Cola;
 use App\Models\ConstanciaObs;
@@ -43,6 +44,7 @@ use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
+use App\Models\TipoAntecedente;
 use App\Models\Vademecum;
 use App\Services\ServicioService;
 use App\Actions\Pacientes\AsignarHistoria;
@@ -339,11 +341,25 @@ class SyncAppDataController extends Controller
             'informe' => ['consulta' => $porConsulta(Informe::class, 'informe', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
             'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'diagnostico_paciente'), 'columna' => 'id'],
+            // **Los antecedentes del paciente** (A4b de PLAN-MOVIL.md). Son del paciente y no de la
+            // consulta: se llavean por `numhistoria` + `codeantecedente` y no tienen columna de consulta,
+            // así que bajan con el mismo filtro doble que `consultas` (por número de historia y por
+            // `reg_medico`, porque el número es por médico) más la ventana del volcado. La columna del
+            // número es `numhistoria` (la tabla del legado lo llama así; no hace falta preguntarla).
+            'antece_paciente' => ['consulta' => AntecePaciente::whereIn('numhistoria', $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
             // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
             // (constancia), el médico al que se refiere y su especialidad (referencia).
             'diagnosticos' => ['consulta' => Diagnostico::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'doctores' => ['consulta' => Doctor::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'especial' => ['consulta' => Especialidad::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // **El catálogo de antecedentes y el de sus tipos** (A4b): el teléfono los necesita para
+            // ofrecer el antecedente que se agrega y para agrupar los del paciente igual que la web. Los
+            // dos son por médico —el catálogo es de su consultorio— y bajan enteros (los repetidos del
+            // legado no importan acá: `AntecedentesDelPaciente` es quien deduplica al mostrarlos).
+            'antecedentes' => ['consulta' => Antecedente::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'tipo_antecedente' => ['consulta' => TipoAntecedente::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
             // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
             // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
@@ -633,10 +649,14 @@ class SyncAppDataController extends Controller
             // La evaluación física de la consulta (A2 de PLAN-MOVIL.md). El delta la arma solo desde
             // `$plan`, pero la clave tiene que estar siempre: el app recorre una lista fija de tablas.
             'examen_fisico_nuevo' => $datos['examen_fisico_nuevo'] ?? $vacio,
-            // Los antecedentes del paciente (A4a): el delta todavía no los manda —eso es de A4b—, pero el
-            // pedido puntual de una ficha sí los trae, y la clave tiene que existir siempre por el mismo
-            // motivo que las de arriba.
+            // Los antecedentes del paciente (A4a/A4b). El delta y el volcado los arman desde `$plan`; el
+            // pedido puntual de una ficha (`volcado_paciente`) los trae en su payload armado a mano. La
+            // clave tiene que existir siempre por el mismo motivo que las de arriba.
             'antece_paciente' => $datos['antece_paciente'] ?? $vacio,
+            // Los dos catálogos del antecedente (A4b de PLAN-MOVIL.md): de dónde sale el nombre que se
+            // agrega y de dónde el de su tipo/agrupación.
+            'antecedentes' => $datos['antecedentes'] ?? $vacio,
+            'tipo_antecedente' => $datos['tipo_antecedente'] ?? $vacio,
             'diagnosticos' => $datos['diagnosticos'] ?? $vacio,
             'doctores' => $datos['doctores'] ?? $vacio,
             'especial' => $datos['especial'] ?? $vacio,
@@ -769,6 +789,9 @@ class SyncAppDataController extends Controller
             // Y el alta de un diagnóstico de la consulta (A4a), con el mapa del dato que valida el código
             // contra el catálogo `diagnosticos` del médico.
             app(\App\Actions\Consulta\AgregarDiagnosticoALaConsulta::class),
+            // Y el alta de un antecedente del paciente (A4b), con el mismo mapa del dato de la sección
+            // —`AntecedentesDelPaciente`— validando el código contra el catálogo `antecedentes` del médico.
+            app(\App\Actions\Pacientes\AgregarAntecedenteAlPaciente::class),
         );
         $creadosAntes = count($creados);
 
@@ -902,8 +925,9 @@ class SyncAppDataController extends Controller
 
     /**
      * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, y lo que cuelga de
-     * la consulta: motivos, récipes, la evaluación física y —desde A4a— el alta de un diagnóstico); el
-     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
+     * la consulta: motivos, récipes, la evaluación física y —desde A4a— el alta de un diagnóstico; y
+     * —desde A4b— el alta de un antecedente, que cuelga de la historia); el resto (ediciones, borrados,
+     * reordenamientos, citas nuevas) después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
@@ -921,6 +945,11 @@ class SyncAppDataController extends Controller
             // tres y no depende de ellas, así que comparte el 4 — lo que importa es que vaya **después** de
             // la consulta, porque si la consulta se creó en este mismo lote necesita su número primero.
             'diagnostico_paciente' => 4,
+            // El alta de un **antecedente del paciente** (A4b) no cuelga de la consulta sino de la
+            // **historia**: con 3 queda después de `historias` y de `consultas`, así una historia llenada en
+            // este mismo lote (`historia_temp_id`) ya tiene número cuando se resuelve. No depende de nada
+            // más, así que comparte el grupo con los motivos del catálogo.
+            'antece_paciente' => 3,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);

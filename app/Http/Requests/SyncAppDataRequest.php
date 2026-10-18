@@ -56,6 +56,13 @@ class SyncAppDataRequest extends FormRequest
             'abdomen', 'extremidades', 'neurologico', 'genitales_externos', 'especulos',
             'tacto_vaginal', 'tacto_rectal',
         ],
+        // A4b de PLAN-MOVIL.md: el detalle y la casilla de **Alerta** (`tipo2`) del antecedente, que es
+        // lo único que la sección deja editar de una fila que ya existe (el DataWindow del escritorio
+        // sólo actualiza esas dos columnas; ver `GuardarAntecedentes`). `descripcion` y `tipo` están
+        // porque son la copia del catálogo que la fila guarda y el teléfono puede reenviarla al corregir.
+        // **`numhistoria` y `codeantecedente` no están**: cambiar de paciente o de antecedente no es una
+        // edición, es otra fila.
+        'antece_paciente' => ['detalles', 'descripcion', 'tipo', 'tipo2'],
     ];
 
     /**
@@ -170,6 +177,12 @@ class SyncAppDataRequest extends FormRequest
         // números (`nrohistoria` + `nroconsulta`), y el `codediagnostico` que manda el cliente tiene que
         // estar en el catálogo `diagnosticos` del médico. Su baja ya viaja por `TABLAS_BORRABLES` desde A1.
         'diagnostico_paciente',
+        // A4b de PLAN-MOVIL.md: el **alta de un antecedente del paciente** (`antece_paciente`). A
+        // diferencia de un diagnóstico, la fila **no cuelga de la consulta**: es del paciente y se llavea
+        // por `numhistoria` + `codeantecedente`, así que la creación resuelve la historia (real o del
+        // mismo lote) y valida el código contra el catálogo `antecedentes` del médico. Su baja ya viaja
+        // por `TABLAS_BORRABLES` desde A1.
+        'antece_paciente',
     ];
 
     /**
