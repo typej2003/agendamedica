@@ -104,6 +104,12 @@ class GeminiService
             return $respuestaMedicoDirecto;
         }
 
+        // 7b. Si el paciente realiza una pregunta directa sobre teléfono de médico, dónde atiende, consultorio o dirección
+        $respuestaInformativa = $this->contextService->resolverPreguntaInformativa($mensajeUsuario, $contexto);
+        if ($respuestaInformativa !== null) {
+            return $respuestaInformativa;
+        }
+
         // 8. Si es una consulta conversacional, procesar con Gemini AI y Function Calling
         if (empty($this->apiKey)) {
             Log::error('GeminiService: API Key no configurada o vacía.');
@@ -460,6 +466,34 @@ class GeminiService
                         ]
                     ],
                     [
+                        'name' => 'consultar_telefono_medico',
+                        'description' => 'Obtiene el número de teléfono o contacto del médico desde su ficha en el modelo Medico.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nombre o código reg_medico del médico.'
+                                ]
+                            ],
+                            'required' => ['medico']
+                        ]
+                    ],
+                    [
+                        'name' => 'consultar_donde_atiende_medico',
+                        'description' => 'Obtiene los centros médicos, clínicas, sedes o instituciones donde atiende el médico según la relación MedicoMedicalCenter / MedicalCenter.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nombre o código reg_medico del médico.'
+                                ]
+                            ],
+                            'required' => ['medico']
+                        ]
+                    ],
+                    [
                         'name' => 'reservar_cita',
                         'description' => 'Registra e inserta una cita en la tabla Cola para el paciente con el médico en la fecha seleccionada. Retorna la confirmación oficial con el turno y datos del consultorio.',
                         'parameters' => [
@@ -552,6 +586,12 @@ class GeminiService
                         } elseif ($functionName === 'consultar_informacion_medico') {
                             $medico = $args['medico'] ?? '';
                             $resultadoTool = $this->contextService->obtenerInformacionMedico($medico);
+                        } elseif ($functionName === 'consultar_telefono_medico') {
+                            $medico = $args['medico'] ?? '';
+                            $resultadoTool = $this->contextService->obtenerTelefonoMedico($medico);
+                        } elseif ($functionName === 'consultar_donde_atiende_medico') {
+                            $medico = $args['medico'] ?? '';
+                            $resultadoTool = $this->contextService->obtenerCentrosDondeAtiende($medico);
                         } elseif ($functionName === 'reservar_cita') {
                             $regMedico = $args['reg_medico'] ?? '';
                             $fecha = $args['fecha'] ?? null;
@@ -692,6 +732,8 @@ class GeminiService
 
         $prompt .= "\nREGLAS DE CONSULTA Y HERRAMIENTAS (TOOLS):\n";
         $prompt .= "- Si el paciente CONFIRMA O SOLICITA RESERVAR, AGENDAR O APARTAR UNA CITA (o dice 'sí', 'reserva', 'agéndala', etc.): DEBES invocar OBLIGATORIAMENTE la herramienta 'reservar_cita'.\n";
+        $prompt .= "- Si el paciente pregunta por el TELÉFONO O NÚMERO DE CONTACTO directo de un médico: DEBES invocar la herramienta 'consultar_telefono_medico'.\n";
+        $prompt .= "- Si el paciente pregunta DÓNDE ATIENDE un médico, en qué clínicas, hospitales o centros médicos presta servicio: DEBES invocar la herramienta 'consultar_donde_atiende_medico'.\n";
         $prompt .= "- Si el paciente pregunta por la DIRECCIÓN, UBICACIÓN FÍSICA, CIUDAD O TELÉFONO del consultorio de un médico: DEBES invocar la herramienta 'consultar_datos_consultorio'.\n";
         $prompt .= "- Si el paciente pregunta por los HORARIOS, DÍAS DE ATENCIÓN o MODALIDAD (orden de llegada o cita previa): DEBES invocar 'consultar_horarios_atencion'.\n";
         $prompt .= "- Si el paciente pregunta por CUPOS, TURNOS O DISPONIBILIDAD DE FECHAS para una cita: DEBES invocar 'consultar_proximo_cupo_disponible'.\n";

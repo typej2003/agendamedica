@@ -466,7 +466,7 @@ class PacienteAtencionContextService
         }
 
         // 1. Búsqueda exacta por reg_medico o ID numérico
-        $medico = Medico::with(['specialties', 'registro'])
+        $medico = Medico::with(['specialties', 'registro', 'medicalCenters'])
             ->where('reg_medico', $criterio)
             ->orWhere('id', $criterio)
             ->first();
@@ -478,7 +478,7 @@ class PacienteAtencionContextService
         // 2. Búsqueda mediante la tabla MedicoRegistro
         $reg = MedicoRegistro::where('reg_medico', $criterio)->first();
         if ($reg && $reg->medico) {
-            return $reg->medico->load(['specialties', 'registro']);
+            return $reg->medico->load(['specialties', 'registro', 'medicalCenters']);
         }
 
         // 3. Limpiar prefijos de cortesía habituales
@@ -487,7 +487,7 @@ class PacienteAtencionContextService
         // 4. Búsqueda por coincidencia de nombre, apellido o nombre completo
         $partes = array_values(array_filter(explode(' ', $limpio)));
 
-        return Medico::with(['specialties', 'registro'])
+        return Medico::with(['specialties', 'registro', 'medicalCenters'])
             ->where(function ($q) use ($limpio, $partes) {
                 $q->where('name', 'like', "%{$limpio}%")
                   ->orWhere('lastname', 'like', "%{$limpio}%");
@@ -505,7 +505,90 @@ class PacienteAtencionContextService
     }
 
     /**
-     * Consulta en la tabla evolucion la dirección del consultorio y los datos de contacto del médico.
+     * Consulta el número de teléfono directo o de contacto del médico (modelo Medico).
+     */
+    public function obtenerTelefonoMedico(string $criterioMedico): array
+    {
+        $medico = $this->resolverMedico($criterioMedico);
+        if (!$medico) {
+            return [
+                'encontrado' => false,
+                'mensaje' => "No encontramos registrado(a) al médico '{$criterioMedico}' en nuestro sistema.",
+            ];
+        }
+
+        $nombre = $medico->nombre_mostrar;
+        $telefono = $medico->phone;
+
+        return [
+            'encontrado' => true,
+            'medico' => $nombre,
+            'reg_medico' => $medico->regMedicoPrincipal() ?? $medico->reg_medico,
+            'telefono' => $telefono ?: 'No registrado',
+            'email' => $medico->email ?: 'No registrado',
+            'mensaje' => !empty($telefono)
+                ? "📞 El número de teléfono de contacto de *{$nombre}* es *{$telefono}*."
+                : "ℹ️ *{$nombre}* no tiene un número de teléfono de contacto personal registrado en el sistema.",
+        ];
+    }
+
+    /**
+     * Consulta las sedes, clínicas o centros médicos donde atiende el médico
+     * a través de la relación medicalCenters (modelo MedicoMedicalCenter / MedicalCenter).
+     */
+    public function obtenerCentrosDondeAtiende(string $criterioMedico): array
+    {
+        $medico = $this->resolverMedico($criterioMedico);
+        if (!$medico) {
+            return [
+                'encontrado' => false,
+                'mensaje' => "No encontramos registrado(a) al médico '{$criterioMedico}' en nuestro sistema.",
+            ];
+        }
+
+        $nombre = $medico->nombre_mostrar;
+        $centros = $medico->medicalCenters;
+
+        if ($centros->isEmpty()) {
+            return [
+                'encontrado' => true,
+                'medico' => $nombre,
+                'centros' => [],
+                'mensaje' => "ℹ️ Actualmente no tenemos registradas sedes o clínicas asociadas para *{$nombre}*.",
+            ];
+        }
+
+        $listaCentros = [];
+        $textoCentros = "🏥 *Sedes donde atiende {$nombre}:*\n\n";
+
+        foreach ($centros as $idx => $c) {
+            $num = $this->obtenerNumeroEmoji($idx + 1);
+            $ciudadStr = $c->city?->name ? " ({$c->city->name})" : '';
+            $dirStr = $c->address ?: 'Dirección no especificada';
+            $telStr = $c->phone ? "\n   📞 Teléfono: {$c->phone}" : '';
+
+            $textoCentros .= "{$num} *{$c->name}*{$ciudadStr}\n   📍 Dirección: {$dirStr}{$telStr}\n\n";
+
+            $listaCentros[] = [
+                'id' => $c->id,
+                'nombre' => $c->name,
+                'direccion' => $c->address,
+                'telefono' => $c->phone,
+                'ciudad' => $c->city?->name,
+                'estado' => $c->estado?->name,
+            ];
+        }
+
+        return [
+            'encontrado' => true,
+            'medico' => $nombre,
+            'centros' => $listaCentros,
+            'mensaje' => trim($textoCentros),
+        ];
+    }
+
+    /**
+     * Consulta en la tabla evolucion la dirección del consultorio y los datos de contacto del médico (reg_medico).
      */
     public function obtenerDatosConsultorio(string $criterioMedico): array
     {
@@ -529,6 +612,7 @@ class PacienteAtencionContextService
                     'medico' => $nombreMedico,
                     'especialidad' => $especialidad,
                     'reg_medico' => $regMedico,
+                    'telefono_medico' => $medico?->phone ?: 'No registrado',
                     'mensaje' => "No se encontraron datos registrados de la ubicación del consultorio para {$nombreMedico}.",
                 ];
             }
@@ -541,16 +625,30 @@ class PacienteAtencionContextService
             ]);
             $direccion = !empty($lineas) ? implode(', ', $lineas) : 'Dirección no especificada';
 
+            $consultorioNombre = $evolucion->consultorio ?: 'Consultorio principal';
+            $telefonoConsultorio = $evolucion->telefono ?: 'No especificado';
+            $telefonoMedico = $medico?->phone ?: 'No especificado';
+
+            $mensajeTexto = "📍 *Consultorio:* {$consultorioNombre}\n"
+                . "🏢 *Dirección:* {$direccion} ({$evolucion->ciudad})\n"
+                . "📞 *Teléfono del consultorio:* {$telefonoConsultorio}\n";
+            if (!empty($medico?->phone)) {
+                $mensajeTexto .= "📱 *Teléfono de contacto del médico:* {$medico->phone}\n";
+            }
+
             return [
                 'encontrado' => true,
                 'medico' => $nombreMedico,
                 'especialidad' => $especialidad,
                 'reg_medico' => $regMedico,
-                'consultorio' => $evolucion->consultorio ?: 'Consultorio principal',
+                'consultorio' => $consultorioNombre,
                 'ciudad' => $evolucion->ciudad ?: 'No especificada',
                 'direccion' => $direccion,
                 'telefono' => $evolucion->telefono ?: ($medico?->phone ?: 'No especificado'),
+                'telefono_consultorio' => $telefonoConsultorio,
+                'telefono_medico' => $telefonoMedico,
                 'correo' => $evolucion->correo_med ?: ($medico?->email ?: 'No especificado'),
+                'mensaje' => trim($mensajeTexto),
             ];
         } catch (\Throwable $e) {
             Log::error('PacienteAtencionContextService::obtenerDatosConsultorio error: ' . $e->getMessage());
@@ -644,16 +742,90 @@ class PacienteAtencionContextService
      */
     public function obtenerInformacionMedico(string $criterioMedico): array
     {
+        $medico = $this->resolverMedico($criterioMedico);
         $consultorio = $this->obtenerDatosConsultorio($criterioMedico);
         $horarios = $this->obtenerHorariosAtencion($criterioMedico);
+        $telefono = $this->obtenerTelefonoMedico($criterioMedico);
+        $centros = $this->obtenerCentrosDondeAtiende($criterioMedico);
 
         return [
-            'medico' => $consultorio['medico'] ?? $horarios['medico'] ?? $criterioMedico,
+            'medico' => $consultorio['medico'] ?? $horarios['medico'] ?? ($medico?->nombre_mostrar ?? $criterioMedico),
             'especialidad' => $consultorio['especialidad'] ?? $horarios['especialidad'] ?? 'Consulta',
             'reg_medico' => $consultorio['reg_medico'] ?? $horarios['reg_medico'] ?? $criterioMedico,
+            'telefono_medico' => $telefono['telefono'] ?? ($medico?->phone ?: 'No registrado'),
+            'centros_donde_atiende' => $centros['centros'] ?? [],
             'consultorio' => $consultorio,
             'horarios' => $horarios,
         ];
+    }
+
+    /**
+     * Resuelve preguntas informativas directas de los pacientes sobre:
+     * 1. Teléfono del médico (modelo Medico: campo phone).
+     * 2. Dónde atiende el médico / clínicas / sedes (relación MedicoMedicalCenter).
+     * 3. Teléfono o dirección del consultorio (tabla evolucion: consultorio, linea_1, telefono).
+     */
+    public function resolverPreguntaInformativa(string $mensaje, array $contexto = []): ?string
+    {
+        $limpio = trim($mensaje);
+
+        // A) Dónde atiende el médico / clínicas / sedes
+        $esDondeAtiende = preg_match('/(?:donde|d[oó]nde|en\s+qu[eé]\s+(?:cl[ií]nica|hospital|centro|sede))\s+(?:atiende|pasa\s+consulta|labora|trabaja|ubicar)/iu', $limpio);
+
+        // B) Teléfono del médico (modelo Medico)
+        $esTelefonoMedico = preg_match('/(?:tel[eé]fono|celular|tlf|n[uú]mero)\s+(?:del?\s+)?(?:m[eé]dico|doctor(?:a)?|dr\.?|dra\.?)/iu', $limpio)
+            || preg_match('/(?:tel[eé]fono|celular|tlf|n[uú]mero)\s+(?:de\s+contacto\s+)?(?:de\s+)?(?:el\s+|la\s+)?(?:dr\.?|dra\.?|doctor(?:a)?)/iu', $limpio);
+
+        // C) Teléfono o dirección del consultorio (tabla evolucion)
+        $esConsultorio = preg_match('/consultorio/iu', $limpio) && (
+            preg_match('/(?:donde\s+queda|d[oó]nde\s+queda|direcci[oó]n|ubicaci[oó]n|tel[eé]fono|tlf|n[uú]mero)/iu', $limpio)
+        );
+
+        // D) Dirección general del médico
+        $esDireccionMedico = preg_match('/(?:donde\s+queda|d[oó]nde\s+queda|direcci[oó]n|ubicaci[oó]n)\s+(?:de(?:l)?\s+)?(?:el\s+|la\s+)?(?:dr\.?|dra\.?|doctor(?:a)?)/iu', $limpio);
+
+        if (!$esDondeAtiende && !$esTelefonoMedico && !$esConsultorio && !$esDireccionMedico) {
+            return null;
+        }
+
+        // Extraer nombre del médico si se menciona explícitamente
+        $criterioMedico = null;
+        if (preg_match('/(?:dr\.?|dra\.?|doctor(?:a)?|m[eé]dico)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/iu', $limpio, $m)) {
+            $cand = preg_replace('/\s+(por\s+favor|porfa|gracias|\?)\s*$/iu', '', trim($m[1]));
+            $criterioMedico = trim($cand);
+        }
+
+        // Si no se extrajo del mensaje, pero el paciente tiene 1 solo médico registrado en su contexto
+        if (empty($criterioMedico) && !empty($contexto['medicos_asociados']) && count($contexto['medicos_asociados']) === 1) {
+            $criterioMedico = $contexto['medicos_asociados'][0]['reg_medico'] ?? $contexto['medicos_asociados'][0]['nombre'];
+        }
+
+        if (empty($criterioMedico)) {
+            return null;
+        }
+
+        // 1. Dónde atiende el médico (sedes/MedicalCenter)
+        if ($esDondeAtiende) {
+            $res = $this->obtenerCentrosDondeAtiende($criterioMedico);
+            return $res['mensaje'] ?? null;
+        }
+
+        // 2. Teléfono personal/profesional del médico (modelo Medico)
+        if ($esTelefonoMedico && !$esConsultorio) {
+            $res = $this->obtenerTelefonoMedico($criterioMedico);
+            return $res['mensaje'] ?? null;
+        }
+
+        // 3. Consultorio (dirección o teléfono de evolucion)
+        if ($esConsultorio || $esDireccionMedico) {
+            $res = $this->obtenerDatosConsultorio($criterioMedico);
+            if (!empty($res['encontrado']) && !empty($res['mensaje'])) {
+                return "🏥 *Datos del consultorio de {$res['medico']}:*\n\n" . $res['mensaje'];
+            }
+            return $res['mensaje'] ?? null;
+        }
+
+        return null;
     }
 
     /**
@@ -823,9 +995,10 @@ class PacienteAtencionContextService
             return null;
         }
 
-        // Descartar si el mensaje es una consulta sobre dirección, ubicación, horarios o teléfono
+        // Descartar si el mensaje es una consulta sobre dirección, ubicación, horarios, teléfono o dónde atiende
         $patronesInformativos = [
-            'donde queda', 'dónde queda', 'direccion', 'dirección', 'ubicacion', 'ubicación',
+            'donde queda', 'dónde queda', 'donde atiende', 'dónde atiende', 'donde consulta', 'dónde consulta',
+            'donde trabaja', 'dónde trabaja', 'direccion', 'dirección', 'ubicacion', 'ubicación',
             'horario', 'horarios', 'dias atencion', 'días de atención', 'como llegar', 'cómo llegar',
             'telefono', 'teléfono', 'contacto', 'informacion', 'información'
         ];

@@ -730,4 +730,120 @@ class ChatbotInformationTest extends TestCase
         $this->assertStringContainsString('No encontramos registrado(a) en nuestra clínica al *Dr(a). Gregory House*', $respuesta);
         $this->assertStringContainsString('especialidades disponibles', $respuesta);
     }
+
+    public function test_paciente_consulta_telefono_directo_del_medico()
+    {
+        $tel = '584149998877';
+
+        Paciente::create([
+            'nombres' => 'Gabriela',
+            'apellidos' => 'Mendoza',
+            'cedula' => '22333444',
+            'telefono' => $tel,
+        ]);
+
+        Medico::create([
+            'name' => 'Roberto',
+            'lastname' => 'Paredes',
+            'prefix' => 'Dr.',
+            'phone' => '0414-5556677',
+            'reg_medico' => 'MED-TEL-01',
+            'is_active' => true,
+        ]);
+
+        $gemini = app(GeminiService::class);
+
+        $respuesta = $gemini->generarRespuesta('¿Cuál es el teléfono del Dr. Roberto Paredes?', $tel);
+
+        $this->assertStringContainsString('Dr. Roberto Paredes', $respuesta);
+        $this->assertStringContainsString('0414-5556677', $respuesta);
+    }
+
+    public function test_paciente_consulta_donde_atiende_el_medico()
+    {
+        $tel = '584149998878';
+
+        Paciente::create([
+            'nombres' => 'Daniel',
+            'apellidos' => 'Vargas',
+            'cedula' => '22333445',
+            'telefono' => $tel,
+        ]);
+
+        $medico = Medico::create([
+            'name' => 'Carla',
+            'lastname' => 'Morales',
+            'prefix' => 'Dra.',
+            'phone' => '0424-1112233',
+            'reg_medico' => 'MED-SEDE-01',
+            'is_active' => true,
+        ]);
+
+        $centro = \App\Models\MedicalCenter::create([
+            'country_id' => 1,
+            'state_id' => 1,
+            'city_id' => 1,
+            'name' => 'Centro Médico San José',
+            'address' => 'Av. Bolívar, Torre Médica Piso 3',
+            'phone' => '0212-9988776',
+            'activo' => true,
+        ]);
+
+        $medico->medicalCenters()->attach($centro->id, ['reg_medico' => 'MED-SEDE-01']);
+
+        $gemini = app(GeminiService::class);
+
+        $respuesta = $gemini->generarRespuesta('¿Dónde atiende la Dra. Carla Morales?', $tel);
+
+        $this->assertStringContainsString('Dra. Carla Morales', $respuesta);
+        $this->assertStringContainsString('Centro Médico San José', $respuesta);
+        $this->assertStringContainsString('Av. Bolívar, Torre Médica Piso 3', $respuesta);
+        $this->assertStringContainsString('0212-9988776', $respuesta);
+    }
+
+    public function test_paciente_consulta_telefono_y_direccion_del_consultorio()
+    {
+        $tel = '584149998879';
+
+        Paciente::create([
+            'nombres' => 'Esteban',
+            'apellidos' => 'Quintero',
+            'cedula' => '22333446',
+            'telefono' => $tel,
+        ]);
+
+        Medico::create([
+            'name' => 'Fernando',
+            'lastname' => 'Suárez',
+            'prefix' => 'Dr.',
+            'phone' => '0416-3334455',
+            'reg_medico' => 'MED-CONS-01',
+            'is_active' => true,
+        ]);
+
+        Evolucion::create([
+            'reg_medico' => 'MED-CONS-01',
+            'clave' => 1,
+            'consultorio' => 'Consultorio 5B',
+            'telefono' => '0241-8889900',
+            'linea_1' => 'Policlínica La Fe',
+            'linea_2' => 'Piso 5, ala norte',
+            'ciudad' => 'Valencia',
+        ]);
+
+        $gemini = app(GeminiService::class);
+
+        // Consultar dirección del consultorio
+        $respuestaDir = $gemini->generarRespuesta('¿Cuál es la dirección del consultorio del Dr. Fernando Suárez?', $tel);
+        $this->assertStringContainsString('Dr. Fernando Suárez', $respuestaDir);
+        $this->assertStringContainsString('Consultorio 5B', $respuestaDir);
+        $this->assertStringContainsString('Policlínica La Fe', $respuestaDir);
+        $this->assertStringContainsString('Valencia', $respuestaDir);
+
+        // Consultar teléfono del consultorio
+        $respuestaTel = $gemini->generarRespuesta('¿Cuál es el teléfono del consultorio del Dr. Fernando Suárez?', $tel);
+        $this->assertStringContainsString('Dr. Fernando Suárez', $respuestaTel);
+        $this->assertStringContainsString('0241-8889900', $respuestaTel);
+    }
 }
+
