@@ -5,6 +5,7 @@ namespace App\Clinica\Vistas;
 use App\Clinica\Catalogos\CatalogosDisponibles;
 use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Listados\ListadosDisponibles;
+use App\Especialidades\ConfiguracionDeLaEspecialidad;
 use App\Support\IconoModulo;
 use App\Support\LogotipoEspecialidad;
 use Illuminate\Support\Collection;
@@ -115,6 +116,12 @@ final class ArmazonVista
      * consulta— "Consulta"): no navega por sí mismo, se abre solo cuando uno de sus hijos es el activo y marca
      * `activo` al padre.
      *
+     * El manifiesto de la especialidad puede declarar en `menu.ocultos` los módulos que **no** se ofrecen acá
+     * (O-32: Crecimiento y Vacunas en pediatría), con su motivo: son entradas de un paciente y su acción
+     * redirige a Pacientes, así que desde el menú parecían botones muertos. No se toca `modulosVisibles`: el
+     * módulo sigue existiendo para la historia, la consulta, los permisos y su ruta. Una especialidad que no
+     * declara nada —ginecología— no cambia ni un ítem.
+     *
      * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, hijos?:array<int,array{texto:string, icono:string, url:string, activo:bool}>}>
      */
     public function menu(): array
@@ -147,7 +154,17 @@ final class ArmazonVista
             }
         }
 
+        $fueraDelMenu = (array) ConfiguracionDeLaEspecialidad::valor(
+            $this->contexto['specialty'] ?? null,
+            'menu.ocultos',
+            [],
+        );
+
         foreach ($this->modulos as $modulo) {
+            if (array_key_exists($modulo->slug, $fueraDelMenu)) {
+                continue;
+            }
+
             $ruta = 'clinica.' . $modulo->slug;
             $existe = Route::has($ruta);
 

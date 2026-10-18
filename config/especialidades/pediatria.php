@@ -50,6 +50,25 @@ return [
     ],
 
     /*
+    | Módulos que **no van en el menú lateral** (O-32, 2026-10-17), con el motivo escrito al lado. No se
+    | sacan de `modulos`: el módulo sigue existiendo para la historia, la consulta, los permisos y sus rutas
+    | (`clinica.crecimiento`, `clinica.vacunas`); lo único que no se hace es ofrecerlo como entrada del menú.
+    |
+    | Los dos son **entradas de un paciente**, no pantallas: su acción `entrada()` redirige a Pacientes
+    | («Elige al niño y abre su ficha»), así que desde el menú parecían botones que no hacían nada. Las dos
+    | funciones ya se alcanzan desde donde se usan: Crecimiento con «Ver el crecimiento» de la solapa
+    | *Mediciones* (`_evaluacion-mediciones`) y Vacunas con el aviso de vacunas pendientes de la consulta y
+    | el bloque «Vacunas aplicadas» de la historia pediátrica. El día que tengan pantalla propia (con su
+    | selector de paciente) se borran de acá y vuelven al menú.
+    */
+    'menu' => [
+        'ocultos' => [
+            'crecimiento' => 'Es de un paciente: la entrada del menú sólo redirige a Pacientes. Se llega desde «Ver el crecimiento» en las mediciones de la consulta.',
+            'vacunas'     => 'Es de un paciente: la entrada del menú sólo redirige a Pacientes. Se llega desde el aviso de vacunas de la consulta y desde la historia pediátrica.',
+        ],
+    ],
+
+    /*
     | Tablas del módulo: las usa SOLO esta especialidad (30 de las 56 que el API no tenía). Las que
     | comparte con otra versión del escritorio van en `compartidas`.
     */
