@@ -241,6 +241,12 @@ class ConsultaRecipesWebTest extends TestCase
         return route('clinica.consulta', [$consulta->id] + $query);
     }
 
+    /** La **lista** de los récipes de la consulta (O-28): con el editor como puerta de entrada, vive acá. */
+    private function urlLista(Consulta $consulta): string
+    {
+        return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'lista' => 1]);
+    }
+
     private function urlCrear(Consulta $consulta): string
     {
         return route('clinica.consulta.recipes.crear', $consulta->id);
@@ -277,7 +283,7 @@ class ConsultaRecipesWebTest extends TestCase
 
     // ------------------------------------------------------------------------------------- La lectura
 
-    public function test_una_consulta_sin_recipes_muestra_el_estado_vacio_y_el_panel_dice_once_de_trece(): void
+    public function test_entrar_sin_recipes_abre_el_editor_y_no_crea_ninguna_fila(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
@@ -290,15 +296,91 @@ class ConsultaRecipesWebTest extends TestCase
         // ecográfico (WEB-6.1), el control de embarazo (WEB-6.6) y las solicitudes (WEB-5.3a) ya están.
         $this->assertSame(1, substr_count($panel->getContent(), 'aria-disabled="true"'));
 
+        // O-28: entrar a Récipes **es** el editor del récipe nuevo (todavía no hay ninguno)…
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Récipes de esta consulta', false);
-        $respuesta->assertSee('Esta consulta todavía no tiene récipes', false);
-        $respuesta->assertSee('Sin récipes', false);
-        $respuesta->assertSee('Crear el primer récipe', false);
-        // La acción primaria es una sola: con la lista vacía no se repite en el encabezado.
-        $this->assertSame(0, substr_count($respuesta->getContent(), 'Nuevo récipe'));
+        $respuesta->assertSee('Récipe nuevo', false);
+        $respuesta->assertSee('Guardar el récipe', false);
+        $respuesta->assertSee('Todavía no hay medicamentos en este récipe', false);
+        $respuesta->assertSee('data-url-medicamentos', false);
+        // …y no el estado vacío con «Crear el primer récipe» como puerta de entrada.
+        $respuesta->assertDontSee('Crear el primer récipe', false);
+
+        // La regla que no se puede romper: abrir el editor **no** crea la fila.
+        $this->assertSame(0, DB::table('recipes')->where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame(0, DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_entrar_con_recipes_abre_el_primero_y_las_pestanas_listan_los_que_hay(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->fila($medico, 1001, 1, '0001', null, ['orden' => 0]);
+        $this->fila($medico, 1001, 1, '0003', 2, ['orden' => 1]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk();
+        $contenido = $respuesta->getContent();
+
+        // El editor del récipe actual (el 1) con lo que tiene…
+        $respuesta->assertSee('KEFORAL/Cap. 500 mg');
+        $this->assertStringContainsString('/recipes/1"', $contenido, 'el formulario postea al récipe 1');
+
+        // …y las pestañas de los que hay más «+ Nuevo».
+        $this->assertStringContainsString('recipe=1', $contenido);
+        $this->assertStringContainsString('recipe=2', $contenido);
+        $this->assertStringContainsString('Récipe 1', $contenido);
+        $this->assertStringContainsString('Récipe 2', $contenido);
+        $this->assertStringContainsString('+ Nuevo', $contenido);
+        $this->assertStringContainsString('recipe=nuevo', $contenido);
+        // La lista sigue existiendo, con su enlace desde el editor.
+        $this->assertStringContainsString('lista=1', $contenido);
+    }
+
+    public function test_mas_nuevo_abre_un_editor_vacio_sin_crear_y_guardar_crea_el_que_corresponde(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->fila($medico, 1001, 1, '0001', null);
+
+        // «+ Nuevo» abre el editor vacío y no crea nada.
+        $nuevo = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'nuevo'));
+        $nuevo->assertOk();
+        $nuevo->assertSee('Récipe nuevo', false);
+        $nuevo->assertSee('Todavía no hay medicamentos en este récipe', false);
+        $this->assertSame(1, DB::table('recipes')->where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame(0, DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->count());
+
+        // Al guardarlo, el récipe que corresponde es el 2 y la vuelta es **a su editor**.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlCrear($consulta), ['editor' => 1, 'items' => [$this->item('0001')]]);
+        $respuesta->assertRedirect($this->urlSeccion($consulta, 2));
+        $this->assertSame(2, (int) DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->value('recipe'));
+    }
+
+    public function test_la_lista_se_abre_con_lista_uno_y_muestra_lo_que_tiene(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Sin récipes: la lista no es la entrada, pero se llega por su URL y avisa.
+        $vacia = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlLista($consulta));
+        $vacia->assertOk();
+        $vacia->assertSee('Esta consulta todavía no tiene récipes', false);
+        $vacia->assertSee('Abrir el editor', false);
+
+        $this->fila($medico, 1001, 1, '0001', null, ['orden' => 0]);
+        $this->fila($medico, 1001, 1, '0002', null, ['orden' => 1]);
+
+        $lista = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlLista($consulta));
+        $lista->assertOk();
+        $lista->assertSee('Récipes de esta consulta', false);
+        $lista->assertSee('KEFORAL/Cap. 500 mg');
     }
 
     public function test_la_lista_agrupa_como_el_legado_y_resuelve_el_nombre_por_el_vademecum(): void
@@ -314,7 +396,7 @@ class ConsultaRecipesWebTest extends TestCase
         $this->fila($medico, 1001, 1, '0003', 2, ['orden' => 1, 'fecha' => '2026-10-05']);
         $this->cabecera($medico, 1001, 1, 2, '2026-10-05');
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlLista($consulta));
 
         $respuesta->assertOk();
         $respuesta->assertSee('2 récipes', false);
@@ -331,7 +413,8 @@ class ConsultaRecipesWebTest extends TestCase
         $respuesta->assertSee('Emitido el 05/10/2026', false);
         $respuesta->assertSee('Emitido el —', false);
         $respuesta->assertSee('vigencia de 30 días', false);
-        $respuesta->assertSee('Nuevo récipe');
+        // La lista ya no es la puerta de entrada (O-28): desde acá se vuelve al editor.
+        $respuesta->assertSee('Volver al editor', false);
     }
 
     public function test_dos_consultas_del_mismo_paciente_no_mezclan_sus_recipes(): void
@@ -347,7 +430,7 @@ class ConsultaRecipesWebTest extends TestCase
         $this->fila($medico, 1001, 1, '0001', 1);
         $this->fila($medico, 1001, 2, '0002', 1);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($segunda));
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlLista($segunda));
 
         $respuesta->assertOk();
         $respuesta->assertSee('DIFLUCAN G/Cap. 150 mg');
@@ -400,7 +483,7 @@ class ConsultaRecipesWebTest extends TestCase
                 ],
             ]);
 
-        $respuesta->assertRedirect($this->urlSeccion($consulta));
+        $respuesta->assertRedirect($this->urlSeccion($consulta, 1));
         $respuesta->assertSessionHas('estado');
         $this->assertStringContainsString('Récipe 1 creado', session('estado'));
 
@@ -577,7 +660,7 @@ class ConsultaRecipesWebTest extends TestCase
                 'items' => [$this->item('0001', 4, 'Nueva indicación'), $this->item('0002', 1, 'Sin cambio')],
             ]);
 
-        $respuesta->assertRedirect($this->urlSeccion($consulta));
+        $respuesta->assertRedirect($this->urlSeccion($consulta, 1));
         $this->assertStringContainsString('Récipe 1 actualizado', session('estado'));
         $this->assertStringContainsString('modificado', session('estado'));
 
@@ -843,7 +926,7 @@ class ConsultaRecipesWebTest extends TestCase
             'descripcion' => 'VITAMINA X/gotas', 'cantidad' => 1, 'orden' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlCrear($consulta), ['editor' => 1, 'items' => [$this->item('9999')]])->assertRedirect($this->urlSeccion($consulta));
+            ->post($this->urlCrear($consulta), ['editor' => 1, 'items' => [$this->item('9999')]])->assertRedirect($this->urlSeccion($consulta, 1));
 
         $this->assertSame('VITAMINA X/gotas', DB::table('recipes')->where('reg_medico', $medico->reg_medico)->value('descripcion'));
     }

@@ -216,7 +216,7 @@ class ConsultaRecipesController extends Controller
             'web',
         );
 
-        $destino = redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
+        $destino = $this->alEditor($consulta, $numero ?? $resultado->numero);
 
         if ($resultado->huboConflicto()) {
             return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueados)
@@ -258,6 +258,19 @@ class ConsultaRecipesController extends Controller
                 'recipe' => $numero ?? 'nuevo',
             ])
             ->withInput($request->all());
+    }
+
+    /**
+     * La vuelta después de guardar: **al editor de ese récipe** (O-28), no a la entrada de la sección —que
+     * abre el primero—, para que el médico vea lo que acaba de guardar.
+     */
+    private function alEditor(Consulta $consulta, int $numero): RedirectResponse
+    {
+        return redirect()->route('clinica.consulta', [
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_RECIPES,
+            'recipe' => $numero,
+        ]);
     }
 
     /** "Récipe 2 creado: …", "Récipe 2 actualizado: agregado …, quitado …, guardado …": lo que pasó, con sus nombres. */

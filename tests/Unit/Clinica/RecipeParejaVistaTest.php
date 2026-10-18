@@ -143,7 +143,7 @@ class RecipeParejaVistaTest extends TestCase
         $this->assertSame([true, false], array_column($enElPaciente, 'activa'));
     }
 
-    public function test_la_lista_del_paciente_ofrece_las_pestanas_pero_su_editor_no(): void
+    public function test_las_pestanas_de_la_seccion_se_ofrecen_en_la_lista_y_en_el_editor(): void
     {
         $urls = ['lista' => '/l', 'nuevo' => '/n', 'guardarNuevo' => '/g', 'medicamentos' => '/m', 'tratamientos' => '/t', 'crearMedicamento' => '/c'];
         $crear = fn (?string $editando) => new SeccionDeRecipesVista(
@@ -151,8 +151,11 @@ class RecipeParejaVistaTest extends TestCase
             fn (int $n) => "/e/$n", fn (int $n) => "/g/$n", fn (int $n) => "/x/$n", [], $this->pestanas(),
         );
 
+        // O-28: el editor es la puerta de entrada, así que el camino al récipe de la pareja tiene que estar
+        // también ahí (si no, desde el editor no se llegaría nunca a la segunda pestaña).
         $this->assertCount(2, $crear(null)->pestanas());
-        $this->assertSame([], $crear('nuevo')->pestanas(), 'mientras se edita no se cambia de pestaña');
+        $this->assertCount(2, $crear('nuevo')->pestanas());
+        $this->assertCount(2, $crear('2')->pestanas());
     }
 
     public function test_las_dos_vistas_comparten_los_topes_y_las_herramientas(): void

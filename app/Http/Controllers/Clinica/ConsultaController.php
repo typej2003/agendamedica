@@ -1260,12 +1260,17 @@ class ConsultaController extends Controller
     }
 
     /**
-     * El ViewModel de los **récipes** de la consulta (WEB-5.1): la lista de los que tiene, el editor de uno
-     * (`?recipe=nuevo` o `?recipe=2`) o —**WEB-5.1b**— el **récipe de la pareja** (`?recipe=pareja`), la segunda
-     * pestaña de la sección.
+     * El ViewModel de los **récipes** de la consulta (WEB-5.1).
      *
-     * Un `?recipe=` que no es `nuevo`, `pareja` ni el número de un récipe de **esta** consulta da **404**: no hay
-     * nada que editar y no se confirma qué récipes existen en otra consulta.
+     * **La puerta de entrada es el editor** (O-28): sin `?recipe=` se abre el editor del récipe que
+     * corresponde —el 1 si la consulta todavía no tiene ninguno, que es el editor de un récipe **nuevo** y
+     * no crea ninguna fila— y arriba quedan las pestañas de los que hay más «+ Nuevo». La lista —con
+     * «Imprimir», «Editar» y «Eliminar»— sigue en `?seccion=recipes&lista=1`.
+     *
+     * `?recipe=nuevo` sigue abriendo el editor vacío (es a donde lleva «+ Nuevo») y `?recipe=2` el de un
+     * récipe existente; el `?recipe=pareja` (WEB-5.1b) es la segunda pestaña de la sección. Un `?recipe=`
+     * que no es `nuevo`, `pareja` ni el número de un récipe de **esta** consulta da **404**: no hay nada
+     * que editar y no se confirma qué récipes existen en otra consulta.
      */
     private function recipes(Consulta $consulta, string $regMedico, RecipesDeLaConsulta $recipes, RecipeDeLaPareja $pareja, Carbon $dia, int $pacienteId, Medico $medico): object
     {
@@ -1274,9 +1279,20 @@ class ConsultaController extends Controller
 
         $id = $consulta->id;
 
-        $urlLista = route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
+        // La lista completa de los récipes de la consulta: la usan las pestañas (O-28) y el editor.
+        $deLaConsulta = $recipes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta);
+
+        // Sin `recipe` se entra al editor (O-28): el del primer récipe que exista o, si no hay ninguno, el de
+        // uno nuevo —que no crea la fila hasta que se guarda—. `?lista=1` es la lista de siempre.
+        $verLista = filter_var(request()->query('lista', false), FILTER_VALIDATE_BOOLEAN);
+        if ($editando === null && ! $verLista) {
+            $primero = $deLaConsulta->sortBy(fn (object $recipe) => (int) $recipe->numero)->first();
+            $editando = $primero === null ? 'nuevo' : (string) (int) $primero->numero;
+        }
+
+        $urlLista = route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'lista' => 1]);
         $pestanas = new PestanasDeRecipes(
-            $urlLista,
+            route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]),
             $this->alcance()->muestraLaPareja()
                 ? route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA])
                 : '',
@@ -1309,7 +1325,7 @@ class ConsultaController extends Controller
         return (new SeccionDeRecipesVista(
             // Los récipes de **esta** consulta, agrupados como el legado (`nrohistoria` + `nroconsulta` +
             // `recipe`, con el `NULL` del escritorio como el récipe 1).
-            $recipes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+            $deLaConsulta,
             $editando === null ? null : ($editando === 'nuevo' ? 'nuevo' : (string) (int) $editando),
             // O-13: la fecha de emisión de un récipe **nuevo** abre con hoy del consultorio. Es la fecha del
             // documento —no la de la consulta que se edita— y una fecha guardada manda (el editor de un récipe

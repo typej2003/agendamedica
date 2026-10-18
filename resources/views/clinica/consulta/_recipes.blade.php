@@ -29,12 +29,16 @@
     $estado = $seccion->estado();
 @endphp
 
+{{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. Se ven en los dos
+     modos, porque el editor es la puerta de entrada (O-28). --}}
+@if (count($seccion->pestanas()) > 1)
+    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+@endif
+
 @if ($editor === null)
     {{-- ------------------------------------------------------------------------------------ La lista --}}
-    {{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. --}}
-    @if (count($seccion->pestanas()) > 1)
-        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
-    @endif
+    {{-- La lista de los récipes de la consulta (`?seccion=recipes&lista=1`): sirve para ver qué récipes tiene,
+         imprimir cada uno y borrar. Ya no es la puerta de entrada (O-28): se llega desde el editor. --}}
 
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
@@ -42,12 +46,9 @@
             @if ($vm->tieneAnterior())
                 <x-ui.anterior :url="$vm->urlAnterior('recipes')" que="los récipes" />
             @endif
-            @unless ($seccion->estaVacia())
-                {{-- La acción primaria de la sección. Con la lista vacía es la del estado vacío (una sola). --}}
-                <a class="btn btn-sm btn-primary" href="{{ $seccion->urlNuevo() }}">
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo récipe
-                </a>
-            @endunless
+            <a class="btn btn-sm btn-outline-secondary" href="{{ $seccion->urlEntrada() }}">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i> Volver al editor
+            </a>
         </x-slot>
 
         <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
@@ -58,10 +59,10 @@
 
         @if ($seccion->estaVacia())
             <x-ui.vacio icono="bi-prescription2" titulo="Esta consulta todavía no tiene récipes">
-                Crea el primero: busca los medicamentos en tu vademécum o carga un tratamiento completo.
+                El récipe se escribe en el editor: ábrelo, carga los medicamentos y guárdalo.
                 <x-slot name="acciones">
-                    <a class="btn btn-primary" href="{{ $seccion->urlNuevo() }}">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear el primer récipe
+                    <a class="btn btn-primary" href="{{ $seccion->urlEntrada() }}">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Abrir el editor
                     </a>
                 </x-slot>
             </x-ui.vacio>
@@ -159,6 +160,16 @@
 
     <x-ui.dos-listas :titulo-izquierda="$editor['titulo']" titulo-derecha="Tu vademécum y tus tratamientos">
         <x-slot name="izquierda">
+            {{-- **El selector de récipes** (O-28): las pestañas de los que la consulta ya tiene y «+ Nuevo», el
+                 mismo patrón de las pestañas de la sección. «+ Nuevo» abre el editor vacío y **no crea la fila**
+                 hasta que se guarda; a la lista (imprimir y eliminar) se llega por su enlace. --}}
+            <div class="recipe-pestanas-barra mb-3">
+                <x-ui.chips :opciones="$seccion->pestanasDeLosRecipes()" etiqueta="Récipes de esta consulta" />
+                <a class="btn btn-sm btn-link" href="{{ $seccion->urlLista() }}">
+                    <i class="bi bi-list-ul" aria-hidden="true"></i> Ver todos
+                </a>
+            </div>
+
             {{-- El contador vivo de medicamentos: `consulta-recipes.js` lo mantiene al agregar y quitar. --}}
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <x-ui.estado id="recipe-contador" :tono="$contador['tono']" :icono="$contador['icono']">{{ $contador['texto'] }}</x-ui.estado>
@@ -196,7 +207,8 @@
                 </p>
 
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
-                    <a class="btn btn-outline-secondary" href="{{ $seccion->urlLista() }}">Cancelar</a>
+                    {{-- La lista de la consulta (imprimir cada récipe y eliminar), que ya no es la entrada (O-28). --}}
+                    <a class="btn btn-outline-secondary" href="{{ $seccion->urlLista() }}">Ir a la lista</a>
                     {{-- La única acción primaria del editor: guardar el récipe entero. --}}
                     <button class="btn btn-primary">
                         <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el récipe

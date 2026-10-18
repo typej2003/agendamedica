@@ -199,6 +199,59 @@ class RecipesVistaTest extends TestCase
         $this->assertSame([], $vm->editor()['filas']);
     }
 
+    public function test_las_pestanas_de_la_seccion_listan_los_recipes_que_hay_y_mas_nuevo(): void
+    {
+        // O-28: el editor es la puerta de entrada y arriba van las pestañas de los récipes que hay.
+        $vm = $this->vista([
+            $this->recipe(2, null, [[]]),
+            $this->recipe(1, '2026-10-05', [[]]),
+        ], '2');
+
+        $pestanas = $vm->pestanasDeLosRecipes();
+
+        $this->assertSame(['Récipe 1', 'Récipe 2', '+ Nuevo'], array_column($pestanas, 'texto'));
+        $this->assertSame(
+            ['/clinica/consulta/42?seccion=recipes&recipe=1', '/clinica/consulta/42?seccion=recipes&recipe=2', '/clinica/consulta/42?seccion=recipes&recipe=nuevo'],
+            array_column($pestanas, 'url'),
+        );
+        $this->assertSame([false, true, false], array_column($pestanas, 'activa'));
+
+        // En el editor de uno nuevo, «+ Nuevo» es la activa.
+        $nuevo = $this->vista([$this->recipe(1, null, [[]])], 'nuevo');
+        $this->assertSame([false, true], array_column($nuevo->pestanasDeLosRecipes(), 'activa'));
+
+        // Sin récipes, la única pestaña es «+ Nuevo» y la entrada es el editor vacío.
+        $vacia = $this->vista();
+        $this->assertSame(['+ Nuevo'], array_column($vacia->pestanasDeLosRecipes(), 'texto'));
+        $this->assertSame('/clinica/consulta/42?seccion=recipes&recipe=nuevo', $vacia->urlEntrada());
+    }
+
+    public function test_la_entrada_de_la_seccion_es_el_editor_y_no_la_lista(): void
+    {
+        $vm = new SeccionDeRecipesVista(
+            new Collection([]),
+            'nuevo',
+            '2026-10-07',
+            [
+                'lista' => '/clinica/consulta/42?seccion=recipes&lista=1',
+                'nuevo' => '/clinica/consulta/42?seccion=recipes&recipe=nuevo',
+                'guardarNuevo' => '/clinica/consulta/42/recipes',
+                'medicamentos' => '/clinica/consulta/42/recipes/medicamentos',
+                'tratamientos' => '/clinica/consulta/42/recipes/tratamientos',
+                'crearMedicamento' => '/clinica/consulta/42/recipes/medicamentos',
+            ],
+            fn (int $numero) => "/clinica/consulta/42?seccion=recipes&recipe={$numero}",
+            fn (int $numero) => "/clinica/consulta/42/recipes/{$numero}",
+            fn (int $numero) => "/clinica/consulta/42/recipes/{$numero}/eliminar",
+            [],
+            new \App\Clinica\Consulta\Vistas\PestanasDeRecipes('/clinica/consulta/42?seccion=recipes', ''),
+        );
+
+        $this->assertSame('/clinica/consulta/42?seccion=recipes', $vm->urlEntrada());
+        $this->assertSame('/clinica/consulta/42?seccion=recipes&lista=1', $vm->urlLista());
+        $this->assertSame([['texto' => 'Récipes del paciente', 'url' => '/clinica/consulta/42?seccion=recipes', 'activa' => true]], $vm->pestanas());
+    }
+
     public function test_los_topes_y_las_ayudas_salen_de_las_reglas(): void
     {
         $vm = $this->vista();
