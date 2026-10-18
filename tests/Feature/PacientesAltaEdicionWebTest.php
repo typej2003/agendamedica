@@ -17,11 +17,12 @@ use Tests\TestCase;
  * El **alta y la edición de paciente** de la web clínica (`/clinica/pacientes/nuevo` y
  * `/clinica/pacientes/{paciente}/editar`, WEB-3.2).
  *
- * Lo que se prueba es el criterio: dar de alta deja al paciente **sin historia** y enlazado al médico del
- * contexto; una cédula que ya existe **enlaza** la ficha en vez de duplicarla y **solo completa los campos
- * vacíos** (un campo ya cargado no cambia, ni siquiera cuando lo manda el mismo médico); la edición sí
- * cambia los datos de la ficha propia; una ficha ajena o inexistente da **404**; y la cédula que ya es de
- * otro paciente se **rechaza** nombrando al otro, con la misma regla del cambio de cédula (WEB-2.15).
+ * Lo que se prueba es el criterio: dar de alta **numera la historia en el mismo paso** (O-04, desde
+ * 2026-10-17) y enlaza al médico del contexto; una cédula que ya existe **enlaza** la ficha en vez de
+ * duplicarla y **solo completa los campos vacíos** (un campo ya cargado no cambia, ni siquiera cuando lo
+ * manda el mismo médico); la edición sí cambia los datos de la ficha propia; una ficha ajena o inexistente
+ * da **404**; y la cédula que ya es de otro paciente se **rechaza** nombrando al otro, con la misma regla
+ * del cambio de cédula (WEB-2.15).
  *
  * Se corre con `DatabaseTransactions`, como el resto de los tests de la web clínica. Cada médico de prueba
  * usa su propio `reg_medico` (los pacientes que siembra el seeder de desarrollo, `gineco-00001`, no entran
@@ -149,8 +150,7 @@ class PacientesAltaEdicionWebTest extends TestCase
         $respuesta->assertSee('Nuevo paciente');
         foreach (['Cédula', 'Sin cédula (S.C.)', 'Apellidos', 'Nombres', 'Sexo', 'Fecha de nacimiento',
                   'Lugar de nacimiento', 'Estado civil', 'Dirección', 'Celular', 'E-mail', 'Profesión',
-                  'Ocupación', 'Escolaridad', 'Seguro / empresa', 'Referido por', 'Fecha de ingreso',
-                  '¿Atenderá a este paciente hoy?'] as $etiqueta) {
+                  'Ocupación', 'Escolaridad', 'Seguro / empresa', 'Referido por', 'Fecha de ingreso'] as $etiqueta) {
             $respuesta->assertSee($etiqueta, false);
         }
 
@@ -174,8 +174,10 @@ class PacientesAltaEdicionWebTest extends TestCase
         $respuesta->assertDontSee('<option value="01" selected>', false);
     }
 
-    public function test_el_alta_nueva_crea_la_ficha_y_la_deja_sin_historia(): void
+    public function test_el_alta_nueva_crea_la_ficha_y_le_asigna_la_historia_en_el_mismo_paso(): void
     {
+        // O-04 (2026-10-17): el alta **desde la web** numera la historia. El número lo sigue dando
+        // `AsignarHistoria`; lo que cambió es cuándo se pide.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -185,18 +187,25 @@ class PacientesAltaEdicionWebTest extends TestCase
 
         $this->assertNotNull($paciente);
         $respuesta->assertRedirect(route('clinica.pacientes.ver', $paciente->id));
-        $respuesta->assertSessionHas('estado', 'Paciente registrado. Todavía no tiene número de historia: '
-            . 'se lo asigna el servidor cuando se complete la historia.');
+        $respuesta->assertSessionHas('estado', 'Paciente registrado y con historia H. 1. Ya se lo puede atender.');
 
-        // El vínculo es con el médico del contexto y **sin número**: la historia la asigna el servidor
-        // cuando se completa (WEB-3.3), no el alta.
+        // El vínculo es con el médico del contexto y **con número**: el primero del correlativo.
         $vinculo = DB::table('medico_pacientes')->where('paciente_id', $paciente->id)->first();
         $this->assertSame($medico->id, $vinculo->medico_id);
         $this->assertSame($medico->reg_medico, $vinculo->reg_medico);
-        $this->assertNull($vinculo->numhistoria);
+        $this->assertSame('1', $vinculo->numhistoria);
 
-        // El alta **no** crea historia.
-        $this->assertSame(0, DB::table('historias')->where('paciente_id', $paciente->id)->count());
+        // Y la fila de `historias` quedó creada, que es lo que hace que el paciente sea atendible.
+        $historia = DB::table('historias')->where('paciente_id', $paciente->id)->first();
+        $this->assertNotNull($historia);
+        $this->assertSame('1', $historia->numhistoria);
+        $this->assertSame($medico->id, $historia->medico_id);
+
+        // Al volver a la ficha se ofrece atender (O-05): es el paso que sigue al alta.
+        $respuesta->assertSessionHas('ofrecer_atender', $paciente->id);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes/' . $paciente->id)
+            ->assertSee('¿Atender ahora?', false);
 
         // Y no se toca nada más del paciente que el formulario no traiga.
         $this->assertNull($paciente->foto_pac);
@@ -250,13 +259,23 @@ class PacientesAltaEdicionWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $ajeno = $this->otroMedico();
 
-        // La ficha la creó **otro** médico y tiene los datos cargados: apellido, dirección y teléfono.
+        // La ficha la creó **otro** médico, con los datos cargados (apellido, dirección y teléfono) y con su
+        // propia historia (77): ese número es del otro consultorio y no se toca.
         $existente = $this->paciente($ajeno, [
             'nombres'   => 'Luisa',
             'apellidos' => 'Mendoza',
             'cedula'    => '24680135',
             'direccion' => 'La dirección que ya tenía',
             'telefono'  => '02121234567',
+        ], 77);
+        // La fila de `historias` del otro consultorio: su número 77 es el que no se puede tocar.
+        DB::table('historias')->insert([
+            'numhistoria' => '77',
+            'reg_medico'  => $ajeno->reg_medico,
+            'paciente_id' => $existente,
+            'medico_id'   => $ajeno->id,
+            'created_at'  => now(),
+            'updated_at'  => now(),
         ]);
         $antes = DB::table('pacientes')->count();
 
@@ -268,7 +287,6 @@ class PacientesAltaEdicionWebTest extends TestCase
             'telefono'   => '04149999999',
             'email'      => 'luisa@example.com',
             'ocupacion'  => 'Docente',
-            'atención'   => null,
         ]));
 
         // No se duplicó la ficha: se enlazó la que ya existía.
@@ -286,12 +304,22 @@ class PacientesAltaEdicionWebTest extends TestCase
         $this->assertSame('luisa@example.com', $paciente->email);
         $this->assertSame('Docente', $paciente->ocupacion);
 
-        // Y queda enlazado al médico del contexto, sin historia.
+        // Queda enlazado a **este** médico con **su propio** correlativo…
         $vinculo = DB::table('medico_pacientes')
             ->where('paciente_id', $existente)->where('reg_medico', $medico->reg_medico)->first();
         $this->assertNotNull($vinculo);
-        $this->assertNull($vinculo->numhistoria);
-        $this->assertSame(0, DB::table('historias')->where('paciente_id', $existente)->count());
+        $this->assertSame('1', $vinculo->numhistoria);
+
+        $propia = DB::table('historias')
+            ->where('paciente_id', $existente)->where('medico_id', $medico->id)->first();
+        $this->assertNotNull($propia);
+        $this->assertSame('1', $propia->numhistoria);
+
+        // …y **no le toca** el número del otro médico: su vínculo y su historia siguen como estaban.
+        $this->assertSame('77', DB::table('medico_pacientes')
+            ->where('paciente_id', $existente)->where('medico_id', $ajeno->id)->value('numhistoria'));
+        $this->assertSame(77, (int) DB::table('historias')
+            ->where('paciente_id', $existente)->where('medico_id', $ajeno->id)->value('numhistoria'));
     }
 
     public function test_el_alta_de_una_cedula_que_ya_es_del_mismo_medico_tampoco_pisa_lo_cargado(): void
@@ -383,16 +411,41 @@ class PacientesAltaEdicionWebTest extends TestCase
         $this->assertSame(0, DB::table('pacientes')->where('apellidos', 'Mendoza')->count());
     }
 
-    public function test_el_si_de_atender_hoy_lleva_al_alta_de_la_cita_con_el_paciente(): void
+    /**
+     * **El alta del chatbot y la del móvil siguen sin número** (O-04): las dos crean por `CrearPaciente`
+     * sin consultorio de contexto, así que no hay quién reciba al paciente. El número se pide **sólo**
+     * cuando hay consultorio de contexto (la web); si se hubiera metido dentro de `CrearPaciente`, el bot
+     * empezaría a numerar pacientes que nadie recibió.
+     */
+    public function test_el_alta_del_chatbot_y_la_del_movil_siguen_sin_historia(): void
+    {
+        $medico = $this->otroMedico();
+
+        $paciente = app(\App\Actions\Pacientes\CrearPaciente::class)->ejecutar([
+            'cedula'    => '24680135',
+            'nombres'   => 'Online',
+            'apellidos' => 'Paciente',
+        ], $medico, $medico->reg_medico);
+
+        $vinculo = DB::table('medico_pacientes')->where('paciente_id', $paciente->id)->first();
+        $this->assertNotNull($vinculo, 'el paciente online queda enlazado al médico');
+        $this->assertNull($vinculo->numhistoria);
+        $this->assertSame(0, DB::table('historias')->where('paciente_id', $paciente->id)->count());
+    }
+
+    /**
+     * El alta ya **no** pregunta «¿Atenderá a este paciente hoy?» (O-04/O-05): numera la historia y, al
+     * volver a la ficha, la pregunta es «¿Atender ahora?», que es donde se abre la consulta o se crea la
+     * cita del día. La pregunta vieja llevaba al formulario de la cita y ya no tiene lugar.
+     */
+    public function test_el_formulario_de_alta_ya_no_pregunta_si_atiende_hoy(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post('/clinica/pacientes', $this->formulario(['atender_hoy' => '1']));
-
-        $paciente = DB::table('pacientes')->where('cedula', '24680135')->first();
-
-        $respuesta->assertRedirect(route('clinica.agenda.nueva', ['fecha' => now()->toDateString(), 'paciente_id' => $paciente->id]));
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/pacientes/nuevo')
+            ->assertOk()
+            ->assertDontSee('¿Atenderá a este paciente hoy?', false)
+            ->assertDontSee('name="atender_hoy"', false);
     }
 
     // --------------------------------------------------------------------------------------- Edición
@@ -584,14 +637,13 @@ class PacientesAltaEdicionWebTest extends TestCase
                 'codesegemp'  => 'ABCD',
                 'dependencia' => str_repeat('R', 31),
                 'fingreso'    => 'ayer',
-                'atender_hoy' => 'quizas',
             ]);
 
         $errores = session('errors')->getBag('default')->toArray();
 
         foreach (['nac', 'sin_cedula', 'cedula', 'apellidos', 'nombres', 'sexo', 'fnacimiento', 'lnacimiento', 'codeestado',
                   'direccion', 'telefono', 'email', 'profesion', 'ocupacion', 'escolaridad', 'codesegemp', 'dependencia',
-                  'fingreso', 'atender_hoy'] as $campo) {
+                  'fingreso'] as $campo) {
             $this->assertArrayHasKey($campo, $errores, "«{$campo}» mal escrito tiene que dar su aviso.");
         }
 
@@ -725,6 +777,16 @@ class PacientesAltaEdicionWebTest extends TestCase
         $paciente = DB::table('pacientes')->where('cedula', '24680135')->first();
         $this->assertNotNull($paciente);
         $respuesta->assertRedirect(route('clinica.pacientes.ver', $paciente->id));
+
+        // El alta de la secretaría también numera (O-04): es el alta **desde la web** y la secretaría es
+        // quien recibe al paciente. Lo que no puede es **atenderlo** (eso es clínico): por eso la ficha no
+        // le ofrece el diálogo de «¿Atender ahora?».
+        $this->assertSame('1', DB::table('medico_pacientes')->where('paciente_id', $paciente->id)->value('numhistoria'));
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes/' . $paciente->id)
+            ->assertOk()
+            ->assertDontSee('¿Atender ahora?', false);
     }
 
     // ------------------------------------------- Valores por defecto del alta (O-01 y O-02, 2026-10-17)

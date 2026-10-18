@@ -199,11 +199,21 @@
     @if ($familia->cargada() && $familia->puedeEditar())
         @include('clinica.pacientes._dialogo-familia', ['familia' => $familia])
     @endif
+
+    {{-- «¿Atender ahora?» (O-05): sólo en el momento en que el paciente acaba de quedar atendible —después del
+         alta o de asignarle la historia— y sólo para quien trabaja la consulta. La pregunta va después de la
+         acción que la provoca y no antes: el paciente ya tiene su historia. --}}
+    @if ($vm->ofreceAtender())
+        @include('clinica.pacientes._dialogo-atender', ['vm' => $vm])
+    @endif
 @endsection
 
 @section('scripts')
     <script src="{{ asset('js/clinica/representante.js') }}"></script>
     @if ($familia->cargada() && $familia->puedeEditar())
         <script src="{{ asset('js/clinica/familia.js') }}"></script>
+    @endif
+    @if ($vm->ofreceAtender())
+        <script src="{{ asset('js/clinica/atender-paciente.js') }}"></script>
     @endif
 @endsection

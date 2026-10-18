@@ -681,8 +681,10 @@ class AgendaWebTest extends TestCase
             ->value('source'));
     }
 
-    public function test_agendar_da_de_alta_al_paciente_nuevo_sin_historia(): void
+    public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
     {
+        // O-04 (2026-10-17): el alta rápida del paso 2 es un alta **desde la web**, así que numera en el
+        // mismo paso y la cita nace enlazada por `numhistoria`.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
         $this->bloque($sede, '08:00', '12:00');
@@ -700,14 +702,15 @@ class AgendaWebTest extends TestCase
         $paciente = Paciente::where('cedula', '12345678')->firstOrFail();
         $this->assertSame('Nueva', $paciente->nombres);
 
-        // El vínculo nace **sin número de historia**: lo asigna el API cuando se complete la historia.
+        // El vínculo nace **con número**: el primero del correlativo del médico.
         $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $paciente->id)->firstOrFail();
-        $this->assertNull($relacion->numhistoria);
+        $this->assertSame('1', $relacion->numhistoria);
+        $this->assertSame('1', Historia::where('paciente_id', $paciente->id)->value('numhistoria'));
 
-        // Y la cita queda anclada al paciente, no a una historia que no existe.
+        // Y la cita queda enlazada por la historia, no por el ancla de "sin historia".
         $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
-        $this->assertNull($cita->numhistoria);
-        $this->assertSame($paciente->id, (int) $cita->paciente_sinhistoria_id);
+        $this->assertSame(1, (int) $cita->numhistoria);
+        $this->assertNull($cita->paciente_sinhistoria_id);
     }
 
     public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
@@ -739,9 +742,10 @@ class AgendaWebTest extends TestCase
         $this->assertSame('Vieja', $ajena->fresh()->nombres);
         $this->assertSame('0212-0000000', $ajena->fresh()->telefono);
 
-        // Pero sí queda enlazada a este médico y la cita apunta a ella.
-        $this->assertSame(1, MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->count());
-        $this->assertSame($ajena->id, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->paciente_sinhistoria_id);
+        // Pero sí queda enlazada a este médico, **con su número** (O-04), y la cita apunta a esa historia.
+        $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->firstOrFail();
+        $this->assertSame('1', $relacion->numhistoria);
+        $this->assertSame(1, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->numhistoria);
     }
 
     public function test_una_cita_pendiente_se_pregunta_antes_de_agendar(): void

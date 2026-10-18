@@ -182,6 +182,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // comparten. El controlador resuelve el paciente para el encabezado y responde 404 si la
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
+                // **Atender ahora** al paciente que acaba de quedar atendible (O-05): el «sí» del diálogo que
+                // la ficha ofrece después del alta web o de asignarle la historia. Abre la cita de hoy si el
+                // paciente tiene una sin atender y, si no, se la crea; por eso vive acá y no en el grupo de la
+                // secretaría: atender es del médico (WEB-4.9), y la Action que lo resuelve es
+                // `App\Clinica\Consulta\AtencionInmediata`.
+                Route::post('/pacientes/{paciente}/atender', [PacienteController::class, 'atender'])->name('pacientes.atender');
+
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
 
                 // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la

@@ -278,17 +278,6 @@ class FormularioDePacienteVistaTest extends TestCase
         $this->assertSame('2020-03-15', $this->vista($this->paciente(['fingreso' => '2020-03-15']))->fecha('fingreso'));
     }
 
-    // ------------------------------------------------------------------------------------------- Atender
-
-    public function test_el_si_de_atender_hoy_lleva_al_alta_de_la_cita_con_el_paciente_elegido(): void
-    {
-        $url = $this->vista($this->paciente(), '01001')->urlAtenderHoy();
-
-        $this->assertStringContainsString('/clinica/agenda/nueva', $url);
-        $this->assertStringContainsString('paciente_id=7', $url);
-        $this->assertStringContainsString('fecha=' . now()->toDateString(), $url);
-    }
-
     // ------------------------------------------------------------------- La ficha muestra el seguro
 
     public function test_la_ficha_muestra_el_nombre_del_seguro_y_no_un_codigo(): void

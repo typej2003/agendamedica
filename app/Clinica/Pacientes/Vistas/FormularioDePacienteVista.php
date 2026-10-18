@@ -269,23 +269,7 @@ final class FormularioDePacienteVista
         return $this->seguros->isEmpty();
     }
 
-    // --------------------------------------------------------------------------------------- Atender
-
-    /**
-     * A dónde ir si el usuario contesta que sí a "¿Atenderá a este paciente hoy?".
-     *
-     * El escritorio, cuando la respuesta es sí, **pasa al paciente a la cola del día** y pregunta la razón
-     * de consulta (`04-historia-clinica.md`). La web no duplica ese flujo —la cola del día y la razón son
-     * de la agenda—: el atajo abre el alta de cita con el paciente ya elegido, que es donde la razón se
-     * pide (WEB-2.2). La respuesta por defecto es **no**: agendar es una decisión, no un efecto del alta.
-     */
-    public function urlAtenderHoy(): string
-    {
-        return route('clinica.agenda.nueva', [
-            'fecha'       => FechaDelConsultorio::hoy()->toDateString(),
-            'paciente_id' => $this->editando?->getKey(),
-        ]);
-    }
+    // --------------------------------------------------------------------------------------- Acciones
 
     public function urlCancelar(): string
     {

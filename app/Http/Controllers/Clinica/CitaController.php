@@ -80,7 +80,13 @@ class CitaController extends Controller
     public function crear(GuardarCitaRequest $request)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $resultado = $this->agendamiento->agendar($contexto, $request->validated());
+        // Los `reg_medico` del médico van al agendamiento porque el alta rápida del paso 2 **numera la
+        // historia** (O-04) con la misma regla que la ficha: el correlativo se lee de todos sus registros.
+        $resultado = $this->agendamiento->agendar(
+            $contexto,
+            $request->validated(),
+            $this->registrosDelMedico($contexto['medico']),
+        );
         $volverA = $this->vueltaDe($request, $contexto, $request->validated()['volver_consulta'] ?? null);
 
         if ($resultado->esPregunta()) {
