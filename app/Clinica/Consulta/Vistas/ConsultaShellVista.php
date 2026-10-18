@@ -99,7 +99,28 @@ final class ConsultaShellVista
         private bool $avisarAlertas = false,
         // El `slug` de la especialidad del contexto: decide qué ítems del panel se ofrecen (WEB-12.1). Sin él, el panel completo.
         private ?string $especialidad = null,
+        // La pestaña abierta de la sección de solicitudes (`?solicitud=`), normalizada. Es lo que decide si el
+        // encabezado ofrece el panel con el resumen del paciente (O-30: sólo donde se redacta un documento).
+        private ?string $pestanaDeSolicitudes = null,
     ) {
+    }
+
+    /**
+     * **¿El encabezado ofrece el panel con la historia y el resumen del paciente?** (O-30)
+     *
+     * Sólo en las pantallas donde se redacta un documento —los récipes y las cinco pestañas de solicitudes que
+     * son un documento—, porque es donde salir de la consulta a mirar la historia cuesta el trabajo sin
+     * guardar. Fuera de ahí no se ofrece: el resumen se ve desde la ficha del paciente.
+     */
+    public function ofreceElResumen(): bool
+    {
+        $seccion = $this->seccion();
+
+        if ($seccion === self::SECCION_RECIPES) {
+            return true;
+        }
+
+        return $seccion === self::SECCION_SOLICITUDES && PestanasDeSolicitudes::esDeDocumento($this->pestanaDeSolicitudes);
     }
 
     /**

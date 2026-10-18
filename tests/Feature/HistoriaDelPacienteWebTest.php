@@ -331,6 +331,50 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertSee('Sin documentos');
     }
 
+    // --------------------------------------------------------------------- El cajón de la consulta (O-30)
+
+    public function test_el_panel_de_la_consulta_es_el_mismo_resumen_sin_el_armazon(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Fina');
+        $this->consulta($medico, '1001', 1, ['enfermedadactual' => 'Dolor pélvico de tres días.']);
+        $this->catalogoDeAntecedentes($medico);
+        $this->antecedente($medico, '1001', ['detalles' => 'Penicilina']);
+
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $pantalla = $contexto->get(route('clinica.pacientes.historia', $paciente))->assertOk();
+        $panel = $contexto->get(route('clinica.pacientes.historia', [$paciente, 'panel' => 1]))->assertOk();
+
+        // Es el mismo resumen: el nombre, la historia, la consulta y sus antecedentes están en los dos.
+        foreach (['De Prueba, Fina', 'Historia N.º 1001', 'Dolor pélvico de tres días.', 'Penicilina'] as $dato) {
+            $pantalla->assertSee($dato);
+            $panel->assertSee($dato);
+        }
+
+        // Y el del cajón **no** trae el armazón de la web, para inyectarlo en el panel lateral.
+        $panel->assertDontSee('clinica-sidebar', false);
+        $panel->assertDontSee('<html', false);
+        $panel->assertDontSee('Ficha del paciente');
+
+        // El paciente sin historia también: el cajón muestra el camino para asignarla.
+        $sinHistoria = $this->paciente($medico, 'Gloria', null);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', [$sinHistoria, 'panel' => 1]))
+            ->assertOk()
+            ->assertSee('Este paciente todavía no tiene historia');
+    }
+
+    public function test_el_panel_de_la_consulta_respeta_el_404_del_paciente_ajeno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $otro] = $this->medicoConAcceso();
+        $ajeno = $this->paciente($otro, 'Hayde');
+
+        // La única puerta es la de la historia: no hay un endpoint nuevo con su propia regla de dueño.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', [$ajeno, 'panel' => 1]))->assertNotFound();
+    }
+
     // ---------------------------------------------------------------------------------- Aislamiento
 
     public function test_un_paciente_de_otro_medico_da_404_en_la_pantalla_y_en_la_impresion(): void

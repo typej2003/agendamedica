@@ -41,6 +41,21 @@
 
         <div class="consulta-barra-acciones">
             <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
+            {{-- **La historia y el resumen del paciente sin salir de la consulta** (O-30): un botón redondo que abre
+                 el cajón lateral con el resumen, al lado de Guardar y Terminar. Sólo se ofrece donde se redacta un
+                 documento —récipes, constancia, reposo, referencia, informe y dieta—: ahí salir de la consulta cuesta
+                 el trabajo sin guardar. Sin texto, igual que el «?» de la ayuda (O-31), para que la fila de ~49 px
+                 no crezca; el nombre lo dan el `aria-label` y el `title`. No se abre solo y no se recuerda entre
+                 consultas: es una acción del médico, no un estado guardado. --}}
+            @if ($vm->ofreceElResumen() && $vm->urlHistoria())
+                <button type="button" class="consulta-resumen-boton" data-abrir-resumen
+                        data-url="{{ $vm->urlHistoria() }}"
+                        aria-haspopup="dialog" aria-controls="dialogo-resumen"
+                        aria-label="Historia y resumen del paciente"
+                        title="Historia y resumen del paciente">
+                    <i class="bi bi-journal-medical" aria-hidden="true"></i>
+                </button>
+            @endif
             <button type="button" class="btn btn-outline-secondary" data-barra-guardar data-tour="consulta-guardar">
                 <i class="bi bi-save" aria-hidden="true"></i> Guardar
             </button>
@@ -72,6 +87,12 @@
     {{-- Los errores de validación de la sección (el nombre del motivo nuevo) van arriba y no dentro del
          diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
     <x-ui.errores />
+
+    {{-- El cajón de la historia y el resumen (O-30): el mismo contenido que la pantalla de la historia, que se
+         pide al abrirlo (`?panel=1`) para no pagar esa lectura en cada carga de la consulta. --}}
+    @if ($vm->ofreceElResumen() && $vm->urlHistoria())
+        @include('clinica.consulta._resumen-panel', ['url' => $vm->urlHistoria()])
+    @endif
 
     {{-- Las alertas del paciente (WEB-11.6): un aviso de seguridad clínica, fijo en todas las secciones, con **todas** las alertas. Al darle
          «Atender» se abre además un diálogo que se cierra con «Entendido» y no reaparece en cada sección. La secretaría no ve esto (la
@@ -178,4 +199,7 @@
     {{-- Las fechas que se teclean (O-18 y O-19): la máscara de la FUR pone las barras y no deja escribir un
          mes 13 ni un día 32. El dato viaja y se guarda en `AAAA-MM-DD`. --}}
     <script src="{{ asset('js/clinica/mascara-fecha.js') }}"></script>
+    {{-- El cajón con la historia y el resumen del paciente (O-30): lo abre el botón del encabezado y trae el
+         resumen de la pantalla de la historia sin salir de la consulta. --}}
+    <script src="{{ asset('js/clinica/resumen-panel.js') }}"></script>
 @endsection

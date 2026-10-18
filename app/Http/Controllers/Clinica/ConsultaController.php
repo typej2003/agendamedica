@@ -287,6 +287,9 @@ class ConsultaController extends Controller
                 $alertas,
                 $avisar,
                 $contexto['specialty']?->slug,
+                // La pestaña de solicitudes (O-30): el shell decide con ella si el encabezado ofrece el panel
+                // con el resumen del paciente (sólo en las pantallas donde se redacta un documento).
+                (string) $request->query('solicitud', ''),
             ),
             // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
             // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el

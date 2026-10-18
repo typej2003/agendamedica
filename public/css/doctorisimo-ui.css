@@ -3403,15 +3403,18 @@ body.auth-pagina {
     /* En el celular los objetivos táctiles siguen midiendo 40 px; el navegador va en su propio renglón y se
        desplaza dentro de su ancho (los chips ya lo hacen: `.chips { overflow-x: auto }`). */
     .consulta-encabezado .consulta-barra-navegador .chip-opcion { min-height: 40px; }
-    .consulta-barra-acciones { margin-left: 0; gap: .25rem; }
+    .consulta-barra-acciones { margin-left: 0; gap: 0; }
     .consulta-barra-estado { min-width: 0; text-align: left; }
     /* **La ayuda entra en la fila de acciones también en el teléfono** (O-31): con los botones a su ancho
        normal, Guardar + Terminar + «?» no entran en los ~343 px del encabezado y la ayuda caía a un tercer
        renglón. Se aprieta sólo la fila de acciones (menos separación y menos relleno lateral); el alto táctil
-       no cambia. */
-    .consulta-barra-acciones .btn { padding-left: .5rem; padding-right: .5rem; font-size: .8125rem; }
+       no cambia. **Con el botón del resumen** (O-30) son cuatro controles: se aprieta un poco más —2 px de
+       separación y 1,6 px de relleno por lado— para que sigan entrando en **una** fila. */
+    .consulta-barra-acciones .btn { padding-left: .4rem; padding-right: .4rem; font-size: .8125rem; }
     /* El «?» es un control táctil: en el celular mide lo mismo que los demás botones de la fila (40 px). */
     .consulta-encabezado .tour-reabrir-redondo { width: 40px; height: 40px; }
+    /* El botón del resumen (O-30) mide lo mismo: es el cuarto control táctil de la fila. */
+    .consulta-encabezado .consulta-resumen-boton { width: 40px; height: 40px; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------
@@ -3527,6 +3530,30 @@ body.auth-pagina {
 }
 .tour-reabrir-redondo:hover { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
 .tour-reabrir-redondo:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+
+/* **El botón redondo del cajón de la historia** (O-30): el mismo molde que el «?» de la ayuda —36 px, sin
+   texto, con `aria-label` y `title`—, porque vive en la misma fila de ~49 px del encabezado de la consulta y no
+   puede hacerla crecer. Abre el panel lateral con el resumen del paciente donde se redacta un documento. */
+.consulta-resumen-boton {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto; width: 36px; height: 36px; padding: 0;
+    border: 1px solid var(--ds-borde); border-radius: 50%;
+    background: transparent; color: var(--ds-texto-3);
+    font-size: 1rem; line-height: 1;
+}
+.consulta-resumen-boton:hover { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); color: var(--ds-violeta-700); }
+.consulta-resumen-boton:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+
+/* El resumen del paciente dentro del cajón (O-30): el mismo contenido de la pantalla de la historia, con la
+   identidad del paciente arriba. En un cajón de ~416 px las tarjetas van sin márgenes de más. */
+.resumen-cajon .resumen-panel-identidad {
+    display: flex; flex-direction: column; gap: .1rem;
+    margin: 0 0 .75rem; padding-bottom: .6rem;
+    border-bottom: 1px solid var(--ds-borde);
+    font-size: .95rem;
+}
+.resumen-cajon .resumen-panel .card:last-child { margin-bottom: 0; }
+.resumen-cajon .es-error { color: var(--ds-peligro); }
 
 /* El elemento señalado: un contorno de la marca que no cambia el tamaño ni el lugar de nada. */
 .tour-resaltado {

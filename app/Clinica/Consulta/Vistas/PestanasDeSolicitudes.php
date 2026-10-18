@@ -45,6 +45,22 @@ final class PestanasDeSolicitudes
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::CONSTANCIA;
 
+    /**
+     * Las pestañas en las que se **redacta un documento** (O-30): la constancia, el reposo, la referencia, el
+     * informe y la dieta. Son las que ofrecen en el encabezado de la consulta el panel con la historia y el
+     * resumen del paciente, porque salir de la consulta a buscarlo cuesta el trabajo sin guardar.
+     *
+     * El laboratorio, los estudios y la hospitalización **no** están: no son de la lista cerrada de la
+     * observación (y el laboratorio y los estudios se cargan con el catálogo, no redactando un texto).
+     */
+    public const DE_DOCUMENTO = [self::CONSTANCIA, self::REPOSO, self::REFERENCIAS, self::INFORME, self::DIETA];
+
+    /** ¿Esta pestaña redacta un documento? (La que no existe se normaliza antes, como en el resto de la sección.) */
+    public static function esDeDocumento(?string $clave): bool
+    {
+        return in_array(self::normalizar($clave), self::DE_DOCUMENTO, true);
+    }
+
     /** @var array<string,array{texto:string, icono:string}> */
     private const TODAS = [
         self::LABORATORIO => ['texto' => 'Laboratorio', 'icono' => 'bi-droplet'],

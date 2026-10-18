@@ -37,30 +37,37 @@ class HistoriaDelPacienteController extends Controller
         $ficha = $this->ficha($contexto['reg_medico'], $paciente);
         $consultas = $this->historia->consultas($contexto['reg_medico'], $ficha->numhistoria);
 
-        return view('clinica.historia.ver', [
-            'vm' => new HistoriaDePacienteVista(
-                $ficha,
-                $consultas,
-                $this->historia->antecedentes($contexto['reg_medico'], $ficha->numhistoria),
-                $this->historia->documentos($contexto['reg_medico'], $ficha->numhistoria, $consultas),
-                // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
-                route('clinica.pacientes.ver', $paciente),
-                route('clinica.pacientes.historia.imprimir', $paciente),
-                // La hoja impresa de cada récipe (WEB-5.2): sólo para quien puede abrir la consulta —el médico—.
-                // La secretaría imprime desde la fila de la cita en la agenda; este enlace le daría 403.
-                $request->user()?->trabajaLaConsulta()
-                    ? fn (int $consulta, int $numero) => route('clinica.consulta.recipes.imprimir', [$consulta, $numero])
-                    : null,
-                // Y la de la constancia, el reposo, las referencias y el informe (WEB-5.3a), con la misma restricción.
-                $request->user()?->trabajaLaConsulta()
-                    ? fn (int $consulta, string $clave) => route('clinica.consulta.documentos.imprimir', [$consulta, 'documento' => $clave])
-                    : null,
-                // Y la consulta misma, con la misma restricción: el título de cada fila del listado la abre.
-                $request->user()?->trabajaLaConsulta()
-                    ? fn (int $consulta) => route('clinica.consulta', $consulta)
-                    : null,
-            ),
-        ]);
+        $vista = new HistoriaDePacienteVista(
+            $ficha,
+            $consultas,
+            $this->historia->antecedentes($contexto['reg_medico'], $ficha->numhistoria),
+            $this->historia->documentos($contexto['reg_medico'], $ficha->numhistoria, $consultas),
+            // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
+            route('clinica.pacientes.ver', $paciente),
+            route('clinica.pacientes.historia.imprimir', $paciente),
+            // La hoja impresa de cada récipe (WEB-5.2): sólo para quien puede abrir la consulta —el médico—.
+            // La secretaría imprime desde la fila de la cita en la agenda; este enlace le daría 403.
+            $request->user()?->trabajaLaConsulta()
+                ? fn (int $consulta, int $numero) => route('clinica.consulta.recipes.imprimir', [$consulta, $numero])
+                : null,
+            // Y la de la constancia, el reposo, las referencias y el informe (WEB-5.3a), con la misma restricción.
+            $request->user()?->trabajaLaConsulta()
+                ? fn (int $consulta, string $clave) => route('clinica.consulta.documentos.imprimir', [$consulta, 'documento' => $clave])
+                : null,
+            // Y la consulta misma, con la misma restricción: el título de cada fila del listado la abre.
+            $request->user()?->trabajaLaConsulta()
+                ? fn (int $consulta) => route('clinica.consulta', $consulta)
+                : null,
+        );
+
+        // **El cajón de la consulta** (O-30): la misma lectura y el mismo ViewModel que la pantalla, en un
+        // fragmento sin el armazón, para inyectarlo en el panel lateral mientras el médico escribe. El permiso
+        // es el de la ruta (el médico del contexto), así que no hay una segunda puerta de acceso.
+        if ($request->boolean('panel')) {
+            return view('clinica.historia.panel', ['vm' => $vista]);
+        }
+
+        return view('clinica.historia.ver', ['vm' => $vista]);
     }
 
     /**

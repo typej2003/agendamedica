@@ -783,4 +783,69 @@ class ConsultaSeccionesWebTest extends TestCase
             'pestana' => 'imagenes',
         ]));
     }
+
+    /**
+     * **El cajón con la historia y el resumen** (O-30): el botón del encabezado se ofrece **sólo donde se
+     * redacta un documento** —los récipes y las cinco pestañas de solicitudes que son un documento—, que es
+     * donde salir de la consulta cuesta el trabajo sin guardar. En el resto de la consulta no está: ahí el
+     * resumen se ve desde la ficha del paciente.
+     */
+    public function test_el_cajon_del_resumen_se_ofrece_solo_donde_se_redacta_un_documento(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $url = route('clinica.consulta', $consulta->id);
+
+        $conCajon = [
+            ['seccion' => 'recipes'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'constancia'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'reposo'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'referencias'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'informe'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'dieta'],
+            // La sección de solicitudes abre en la constancia: sin `solicitud` también se ofrece.
+            ['seccion' => 'solicitudes'],
+        ];
+
+        foreach ($conCajon as $parametros) {
+            $respuesta = $contexto->get($url . '?' . http_build_query($parametros));
+            $respuesta->assertOk();
+            $respuesta->assertSee('data-abrir-resumen', false);
+            $respuesta->assertSee('aria-label="Historia y resumen del paciente"', false);
+            $respuesta->assertSee('id="dialogo-resumen"', false);
+            // El cajón lleva a la historia del paciente que se está atendiendo, y a la pantalla completa.
+            $respuesta->assertSee(route('clinica.pacientes.historia', $pacienteId), false);
+            $respuesta->assertSee('Abrir en otra pestaña', false);
+        }
+
+        $sinCajon = [
+            ['seccion' => 'motivos'],
+            ['seccion' => 'enfermedad'],
+            ['seccion' => 'evaluacion'],
+            ['seccion' => 'antecedentes'],
+            ['seccion' => 'diagnostico'],
+            ['seccion' => 'evolucion'],
+            ['seccion' => 'estudio'],
+            ['seccion' => 'embarazo'],
+            ['seccion' => 'tratamiento'],
+            // Las pestañas de solicitudes que no redactan un documento no están en la lista cerrada de O-30.
+            ['seccion' => 'solicitudes', 'solicitud' => 'laboratorio'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'estudios'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'hospitalizacion'],
+        ];
+
+        foreach ($sinCajon as $parametros) {
+            $respuesta = $contexto->get($url . '?' . http_build_query($parametros));
+            $respuesta->assertOk();
+            $respuesta->assertDontSee('data-abrir-resumen', false);
+            $respuesta->assertDontSee('id="dialogo-resumen"', false);
+        }
+
+        // Y no se abre solo: el `<dialog>` se sirve cerrado (sin el atributo `open`) y no hay nada guardado
+        // que lo recuerde entre consultas.
+        $respuesta = $contexto->get($url . '?seccion=recipes');
+        $respuesta->assertDontSee('id="dialogo-resumen" open', false);
+        $respuesta->assertDontSee('localStorage', false);
+    }
 }
