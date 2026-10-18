@@ -14,6 +14,25 @@
         </x-slot>
     </x-ui.page-head>
 
+    {{-- Los motivos que sugiere la especialidad (WEB-7.4.4f; pediatría: «Control de niño sano»). Se ofrecen, no se agregan solos. --}}
+    @if ($sugeridos !== [])
+        <x-ui.tarjeta id="motivos-sugeridos" class="mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-lightbulb fs-4" aria-hidden="true"></i>
+                <p class="mb-0 flex-grow-1">
+                    Para tu especialidad se sugiere {{ collect($sugeridos)->map(fn ($r) => '«' . mb_strtoupper($r) . '»')->implode(', ') }} como motivo de cita:
+                    es el acceso rápido a la consulta de niño sano. Lo agregas con el precio y la sede que quieras.
+                </p>
+                <form method="POST" action="{{ route('clinica.catalogos.motivos-cita.sugeridos') }}">
+                    @csrf
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar a mis motivos
+                    </button>
+                </form>
+            </div>
+        </x-ui.tarjeta>
+    @endif
+
     <x-ui.barra-herramientas>
         <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        placeholder="Nombre, código o sede" etiqueta="Buscar motivo de cita" />

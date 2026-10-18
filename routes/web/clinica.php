@@ -427,6 +427,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // (`alternar`) y el alta/edición pasan por la misma Action. El motivo de otro médico, 404; la secretaría, 403.
                 Route::get('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'index'])->name('catalogos.motivos-cita');
                 Route::post('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'guardar'])->name('catalogos.motivos-cita.guardar');
+                Route::post('/catalogos/motivos-cita/sugeridos', [MotivoCitaCatalogoController::class, 'agregarSugeridos'])->name('catalogos.motivos-cita.sugeridos');
                 Route::patch('/catalogos/motivos-cita/{id}/alternar', [MotivoCitaCatalogoController::class, 'alternar'])->whereNumber('id')->name('catalogos.motivos-cita.alternar');
                 Route::delete('/catalogos/motivos-cita/{id}', [MotivoCitaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-cita.quitar');
                 // La dirección vieja de WEB-2.17 (con su mismo nombre de ruta) lleva a la nueva. Va antes de `/agenda/{cola}`.
