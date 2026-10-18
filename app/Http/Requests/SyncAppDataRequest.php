@@ -165,6 +165,11 @@ class SyncAppDataRequest extends FormRequest
         // su id— con la Action de la web (`GuardarEvaluacionFisica`). Sólo se aceptan las columnas de
         // `WRITABLE_COLUMNS['examen_fisico_nuevo']`.
         'examen_fisico_nuevo',
+        // A4a de PLAN-MOVIL.md: el **alta de un diagnóstico de la consulta** (`diagnostico_paciente`). Es
+        // una creación clínica y no una fila que el teléfono numere: la fila cuelga de la consulta por sus
+        // números (`nrohistoria` + `nroconsulta`), y el `codediagnostico` que manda el cliente tiene que
+        // estar en el catálogo `diagnosticos` del médico. Su baja ya viaja por `TABLAS_BORRABLES` desde A1.
+        'diagnostico_paciente',
     ];
 
     /**

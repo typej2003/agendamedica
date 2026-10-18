@@ -536,6 +536,16 @@ class SyncAppDataController extends Controller
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")->get(),
             'diagnostico_paciente' => DiagnosticoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('diagnostico_paciente'), $numHistoria)->get(),
+            // La evaluación física de la consulta (A4a de PLAN-MOVIL.md). Se sumó acá porque este pedido
+            // arma su payload a mano y no pasa por el plan del volcado: sin ella, la ficha de un paciente
+            // fuera de la ventana llegaba con la consulta y sus récipes pero **sin el examen**, y el médico
+            // no podía ver lo que ya estaba cargado.
+            'examen_fisico_nuevo' => ExamenFisico::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('examen_fisico_nuevo'), $numHistoria)->get(),
+            // Y los antecedentes del paciente (son del paciente, no de la consulta: se llavean sólo por
+            // `numhistoria`). Viajan con el mismo filtro por registro y por número que el resto.
+            'antece_paciente' => AntecePaciente::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('antece_paciente'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
         ];
 
@@ -623,6 +633,10 @@ class SyncAppDataController extends Controller
             // La evaluación física de la consulta (A2 de PLAN-MOVIL.md). El delta la arma solo desde
             // `$plan`, pero la clave tiene que estar siempre: el app recorre una lista fija de tablas.
             'examen_fisico_nuevo' => $datos['examen_fisico_nuevo'] ?? $vacio,
+            // Los antecedentes del paciente (A4a): el delta todavía no los manda —eso es de A4b—, pero el
+            // pedido puntual de una ficha sí los trae, y la clave tiene que existir siempre por el mismo
+            // motivo que las de arriba.
+            'antece_paciente' => $datos['antece_paciente'] ?? $vacio,
             'diagnosticos' => $datos['diagnosticos'] ?? $vacio,
             'doctores' => $datos['doctores'] ?? $vacio,
             'especial' => $datos['especial'] ?? $vacio,
@@ -752,6 +766,9 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\GuardarEvaluacionFisica::class),
             // El mapa del dato de esa evaluación, para devolverle al teléfono el id real de la fila.
             app(\App\Clinica\Consulta\ExamenFisicoDeLaConsulta::class),
+            // Y el alta de un diagnóstico de la consulta (A4a), con el mapa del dato que valida el código
+            // contra el catálogo `diagnosticos` del médico.
+            app(\App\Actions\Consulta\AgregarDiagnosticoALaConsulta::class),
         );
         $creadosAntes = count($creados);
 
@@ -885,8 +902,8 @@ class SyncAppDataController extends Controller
 
     /**
      * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, y lo que cuelga de
-     * la consulta: motivos, récipes y la evaluación física); el resto (ediciones, borrados,
-     * reordenamientos, citas nuevas) después, en el orden en que llegó.
+     * la consulta: motivos, récipes, la evaluación física y —desde A4a— el alta de un diagnóstico); el
+     * resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
@@ -900,6 +917,10 @@ class SyncAppDataController extends Controller
             // es lo que hace que una consulta creada en el mismo lote ya tenga número cuando se busca su
             // fila; con la prioridad del "resto" el examen se rechazaría por no encontrar la consulta.
             'motivo_consulta_paciente' => 4, 'recipes' => 4, 'examen_fisico_nuevo' => 4,
+            // Y el alta de un diagnóstico de la consulta (A4a): cuelga de `consultas` igual que las otras
+            // tres y no depende de ellas, así que comparte el 4 — lo que importa es que vaya **después** de
+            // la consulta, porque si la consulta se creó en este mismo lote necesita su número primero.
+            'diagnostico_paciente' => 4,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);

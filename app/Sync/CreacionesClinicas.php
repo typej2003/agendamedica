@@ -2,6 +2,7 @@
 
 namespace App\Sync;
 
+use App\Actions\Consulta\AgregarDiagnosticoALaConsulta;
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
@@ -59,6 +60,11 @@ use InvalidArgumentException;
  * aparta de las tres reglas de arriba en un punto: **no tiene número que asignar**, así que el teléfono
  * manda las columnas que el médico cargó y el servidor resuelve a qué fila del legado van. La regla de
  * esa escritura no vive acá (ver [self::crearExamenFisico]).
+ *
+ * A4a de PLAN-MOVIL.md suma el **alta de un diagnóstico de la consulta** (`diagnostico_paciente`), la otra
+ * mitad del agregar/quitar que el teléfono ya tenía a medias: la baja entra desde A1 por el camino
+ * genérico (`TABLAS_BORRABLES`) y el alta es una creación clínica porque la fila cuelga de la consulta,
+ * igual que un motivo (ver [self::crearDiagnostico]).
  */
 class CreacionesClinicas
 {
@@ -86,6 +92,9 @@ class CreacionesClinicas
         // números de la consulta y no por su id (trampa del §7.4 de PLAN-MOVIL.md), así que el id que se
         // le devuelve al teléfono sale de acá y no de un `where` suelto.
         private ExamenFisicoDeLaConsulta $examenFisico,
+        // El alta de un diagnóstico de la consulta (A4a): la regla del código del catálogo, la copia de la
+        // descripción y el `orden`, en una Action de `Actions\Consulta` (la fila cuelga de la consulta).
+        private AgregarDiagnosticoALaConsulta $agregarDiagnostico,
     ) {
     }
 
@@ -116,6 +125,7 @@ class CreacionesClinicas
             'recipes' => $this->crearRecipe($change, $tempId, $rechazar),
             'motivo_consulta_paciente' => $this->crearMotivoDeConsulta($change, $tempId, $rechazar),
             'examen_fisico_nuevo' => $this->crearExamenFisico($change, $tempId, $rechazar),
+            'diagnostico_paciente' => $this->crearDiagnostico($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -316,6 +326,76 @@ class CreacionesClinicas
     }
 
     /**
+     * El **alta de un diagnóstico de la consulta** cargado sin conexión (A4a de PLAN-MOVIL.md).
+     *
+     * La baja ya entraba desde A1 por el camino genérico de `TABLAS_BORRABLES`; lo que faltaba era el
+     * alta, y va como creación clínica porque la fila **cuelga de la consulta** (como un motivo) y no
+     * tiene número propio: el teléfono manda el `codediagnostico` del catálogo y el servidor resuelve los
+     * números de la consulta, el orden y la copia de la descripción.
+     *
+     * La regla de escritura **no vive acá**: es `AgregarDiagnosticoALaConsulta`, que valida el código
+     * contra el catálogo `diagnosticos` del médico, copia la descripción como el `INSERT` del escritorio y
+     * no duplica si esa consulta ya tiene el código (devuelve la fila que estaba). El catálogo se consulta
+     * con `DiagnosticosDeLaConsulta` —el mapa del dato— y no con un `where` suelto.
+     *
+     * Lo único propio del sync es el rastro con el **id temporal** del lote (`anotar`), que es lo que le
+     * permite al teléfono soltar su fila provisional y reintentar sin duplicar.
+     *
+     * ⚠️ `nrohistoria` y `nroconsulta` son los **números** de la consulta (`consultas.numhistoria` y
+     * `consultas.nroconsulta`), no el id de `consultas` (§7.4 de PLAN-MOVIL.md).
+     */
+    private function crearDiagnostico(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if (!$consulta) {
+            $rechazar('El diagnóstico no corresponde a una consulta de este médico.');
+            return null;
+        }
+
+        // El código viaja al mismo nivel que las referencias (como `codemotivo`) o dentro de `columns`
+        // (la forma de las creaciones con datos): se aceptan las dos, igual que en A3.
+        $codigo = $this->campoDelCambio($change, 'codediagnostico');
+        $codigo = is_string($codigo) ? trim($codigo) : '';
+        if ($codigo === '') {
+            $rechazar('El diagnóstico no indica el código del catálogo.');
+            return null;
+        }
+
+        // El detalle es opcional: si no viene, la Action copia la descripción del catálogo.
+        $detalle = $this->campoDelCambio($change, 'detalle_diagnostco')
+            ?? $this->campoDelCambio($change, 'detalle');
+        $detalle = is_string($detalle) ? $detalle : null;
+
+        $fila = $this->agregarDiagnostico->ejecutar($consulta, $codigo, $detalle, 'mobile');
+
+        if ($fila === null) {
+            // No se escribe nada: una fila sin nombre no la puede leer ni el escritorio ni la web.
+            $rechazar('El diagnóstico no está en el catálogo de este médico.');
+            return null;
+        }
+
+        $this->anotar('diagnostico_paciente', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaDiagnostico($tempId, $fila->id);
+    }
+
+    /**
+     * Un campo de la creación que puede venir suelto (al mismo nivel que `consulta_id`, como
+     * `codemotivo` y `codediagnostico`) o dentro de `columns` (donde viajan las columnas de una tabla).
+     * Gana `columns`, que es la forma explícita.
+     */
+    private function campoDelCambio(array $change, string $campo)
+    {
+        $columnas = (array) ($change['columns'] ?? []);
+
+        if (array_key_exists($campo, $columnas)) {
+            return $columnas[$campo];
+        }
+
+        return $change[$campo] ?? null;
+    }
+
+    /**
      * Las columnas de la evaluación física que mandó el cliente, ya filtradas por la lista blanca.
      *
      * Se leen de `columns` —la forma que tienen todas las creaciones con datos— y también sueltas en la
@@ -457,6 +537,12 @@ class CreacionesClinicas
             // el id que anotó el rastro, no por la clave del legado: es el id que el teléfono ya guardó.
             return $this->respuestaExamen($tempId, $recordId);
         }
+        if ($table === 'diagnostico_paciente') {
+            // Igual que el motivo y el examen: el reintento devuelve el **mismo id** de la fila, sin
+            // volver a escribir ni duplicar. La fila se busca por el id que anotó el rastro (es el que el
+            // teléfono ya guardó), no por la clave del legado.
+            return $this->respuestaDiagnostico($tempId, $recordId);
+        }
         $detalle = RecipeDetalle::find($recordId);
         if (!$detalle) {
             return null;
@@ -504,6 +590,16 @@ class CreacionesClinicas
     private function respuestaExamen(int $tempId, int $id): array
     {
         return ['table' => 'examen_fisico_nuevo', 'temp_id' => $tempId, 'id' => $id];
+    }
+
+    /**
+     * La respuesta del alta de un diagnóstico es **sólo su id**, como la de la evaluación física: la fila
+     * cuelga de una consulta que el teléfono ya tiene (o recibió en este lote) y su clave del legado son
+     * los números de esa consulta, no datos propios que el teléfono necesite.
+     */
+    private function respuestaDiagnostico(int $tempId, int $id): array
+    {
+        return ['table' => 'diagnostico_paciente', 'temp_id' => $tempId, 'id' => $id];
     }
 
     /** `ids`: las filas de `recipes`, en el mismo orden que los `items` que mandó el teléfono. */
