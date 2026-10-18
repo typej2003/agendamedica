@@ -13,21 +13,23 @@ use Tests\TestCase;
  */
 class SeccionesDeLaConsultaTest extends TestCase
 {
-    public function test_el_catalogo_tiene_los_catorce_items_en_el_orden_del_legado(): void
+    public function test_el_catalogo_tiene_los_trece_items_en_el_orden_del_legado(): void
     {
         $todas = SeccionesDeLaConsulta::todas();
 
-        $this->assertCount(14, $todas);
-        $this->assertSame(14, SeccionesDeLaConsulta::total());
-        $this->assertSame(range(1, 14), array_column($todas, 'numero'));
+        // O-22 (2026-10-17) retiró *Exámenes* (el ítem 7): la numeración del legado **no se renumera**, así
+        // que queda el hueco del 7 y son 13 ítems.
+        $this->assertCount(13, $todas);
+        $this->assertSame(13, SeccionesDeLaConsulta::total());
+        $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], array_column($todas, 'numero'));
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
-            'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución',
+            'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución',
             'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura',
         ], array_column($todas, 'titulo'));
 
-        // Trece con pantalla (la pre-factura llega con F9), agrupados como el legado.
-        $this->assertSame(13, SeccionesDeLaConsulta::disponibles());
+        // Doce con pantalla (la pre-factura llega con F9), agrupados como el legado.
+        $this->assertSame(12, SeccionesDeLaConsulta::disponibles());
         $this->assertSame(['Consulta', 'Documentos'], array_values(array_unique(array_column($todas, 'grupo'))));
     }
 
@@ -40,23 +42,27 @@ class SeccionesDeLaConsultaTest extends TestCase
         $this->assertNull(SeccionesDeLaConsulta::normalizar(''));
         $this->assertNull(SeccionesDeLaConsulta::normalizar(null));
         $this->assertNull(SeccionesDeLaConsulta::porSeccion('no-existe'));
+        // O-22: `examenes` dejó de ser una sección (el controlador redirige los enlaces viejos).
+        $this->assertNull(SeccionesDeLaConsulta::normalizar(SeccionesDeLaConsulta::SECCION_EXAMENES));
+        $this->assertFalse(SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_EXAMENES));
+        $this->assertNull(SeccionesDeLaConsulta::porSeccion('examenes'));
     }
 
     public function test_el_submenu_del_menu_lateral_lleva_a_cada_seccion_y_marca_el_activo(): void
     {
         $items = SeccionesDeLaConsulta::submenu(42, 'diagnostico');
 
-        $this->assertCount(14, $items);
+        $this->assertCount(13, $items);
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
-            'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución',
+            'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución',
             'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura',
         ], array_column($items, 'texto'));
 
         // Cada ítem enlaza a la consulta que se está atendiendo, con su sección en la query.
         $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'motivos']), $items[0]['url']);
-        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'datos']), $items[12]['url']);
-        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'diagnostico']), $items[7]['url']);
+        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'datos']), $items[11]['url']);
+        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'diagnostico']), $items[6]['url']);
 
         // Uno solo activo, y es el de la sección pedida.
         $activos = array_values(array_filter($items, fn (array $item) => $item['activo']));
@@ -64,9 +70,12 @@ class SeccionesDeLaConsultaTest extends TestCase
         $this->assertSame('Diagnóstico', $activos[0]['texto']);
 
         // La pre-factura todavía no tiene pantalla: no ofrece enlace y va deshabilitada.
-        $this->assertNull($items[13]['url']);
-        $this->assertTrue($items[13]['deshabilitado']);
-        $this->assertFalse($items[13]['activo']);
+        $this->assertNull($items[12]['url']);
+        $this->assertTrue($items[12]['deshabilitado']);
+        $this->assertFalse($items[12]['activo']);
+
+        // «Exámenes» ya no está: no hay ítem ni enlace a esa sección.
+        $this->assertNotContains('Exámenes', array_column($items, 'texto'));
 
         // Sin sección (el shell recién abierto) no hay ningún ítem activo y el ítem sin pantalla sigue deshabilitado.
         $this->assertSame([], array_values(array_filter(SeccionesDeLaConsulta::submenu(42, null), fn (array $item) => $item['activo'])));
@@ -78,7 +87,7 @@ class SeccionesDeLaConsultaTest extends TestCase
         $items = SeccionesDeLaConsulta::submenu(7, null);
 
         $this->assertSame('bi-list-check', $items[0]['icono']);
-        $this->assertSame('bi-receipt', $items[13]['icono']);
+        $this->assertSame('bi-receipt', $items[12]['icono']);
         $this->assertFalse($items[0]['deshabilitado']);
     }
 

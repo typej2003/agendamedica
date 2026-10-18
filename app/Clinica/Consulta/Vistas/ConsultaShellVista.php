@@ -10,7 +10,7 @@ use App\Support\FechaClinica;
  * **El shell de la consulta** (WEB-4.1): el encabezado con el paciente, su historia, la consulta y la
  * fecha, y el contenido de la sección elegida.
  *
- * Los 14 ítems del legado —con su grupo, su icono, su detalle y su estado— viven en
+ * Los ítems del legado —con su grupo, su icono, su detalle y su estado— viven en
  * `App\Clinica\Consulta\SeccionesDeLaConsulta`, que es la **fuente única** del catálogo: la usan el shell
  * (para saber qué sección abrir y cuál es su parcial) y el grupo «Consulta» del menú lateral (revisión de
  * Alexander, 2026-10-17), que reemplazó al panel de la pantalla. Acá **no hay contenido**: cada sección llega
@@ -48,7 +48,10 @@ final class ConsultaShellVista
     /** La clave de la sección de evolución en `?seccion=` (WEB-4.6). */
     public const SECCION_EVOLUCION = SeccionesDeLaConsulta::SECCION_EVOLUCION;
 
-    /** La clave de la sección de exámenes e imágenes en `?seccion=` (WEB-4.7). */
+    /**
+     * La clave de la sección de exámenes e imágenes en `?seccion=`, **retirada en O-22 (2026-10-17)**: se
+     * conserva para que el controlador redirija los enlaces viejos a *Evaluación física*.
+     */
     public const SECCION_EXAMENES = SeccionesDeLaConsulta::SECCION_EXAMENES;
 
     /** La clave de la sección de récipes en `?seccion=` (WEB-5.1). */
@@ -270,7 +273,7 @@ final class ConsultaShellVista
 
     /**
      * El parcial de la sección activa (`clinica.consulta._motivos` / `._enfermedad` / `._evaluacion` /
-     * `._antecedentes` / `._diagnostico` / `._evolucion` / `._examenes` / `._recipes` / `._solicitudes` /
+     * `._antecedentes` / `._diagnostico` / `._evolucion` / `._recipes` / `._solicitudes` /
      * `._estudio`), o `null` si no hay ninguna. El mapa se arma con
      * las claves del catálogo, así que agregar una sección es agregar una fila a `SeccionesDeLaConsulta` y su
      * parcial, no tocar la vista.
@@ -311,7 +314,7 @@ final class ConsultaShellVista
         return SeccionesDeLaConsulta::total($this->especialidad);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
         return SeccionesDeLaConsulta::disponibles($this->especialidad);
@@ -326,8 +329,7 @@ final class ConsultaShellVista
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
      * las secciones se abren desde el **menú lateral** (el grupo «Consulta», que reemplazó al panel). Con
-     * WEB-6.6 ya se pueden cargar los ítems 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 y 12, y el resto sigue llegando
-     * por tareas (F9).
+     * WEB-6.6 ya se pueden cargar los ítems 1 a 6 y 8 a 13, y el resto sigue llegando por tareas (F9).
      */
     public function sinContenido(): array
     {
@@ -336,7 +338,7 @@ final class ConsultaShellVista
             'titulo' => 'Elige una sección en el menú',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems del grupo «Consulta» del menú lateral '
                 . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el que '
+                . 'diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el que '
                 . 'todavía no tiene pantalla (la pre-factura) llega con la tarea siguiente. Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];

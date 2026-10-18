@@ -112,7 +112,7 @@
         {{-- El área de trabajo ocupa **todo el ancho** (revisión de Alexander): los ítems de la consulta se eligen en el
              grupo «Consulta» del menú lateral y la tarjeta «Secciones de la consulta» ya no existe. El contenido llega
              por los parciales —`_motivos` y `_enfermedad` (WEB-4.2), `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4),
-             `_diagnostico` (WEB-4.5), `_evolucion` (WEB-4.6), `_examenes` (WEB-4.7), `_recipes` (WEB-5.1), etc.— y el
+             `_diagnostico` (WEB-4.5), `_evolucion` (WEB-4.6), `_recipes` (WEB-5.1), etc.— y el
              nombre del parcial lo resuelve el ViewModel a partir del catálogo de secciones. --}}
         <div class="col-12">
             @if ($contenido && $vm->parcial())

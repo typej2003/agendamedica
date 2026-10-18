@@ -32,12 +32,13 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         ));
     }
 
-    public function test_ginecologia_y_sin_especialidad_conservan_el_panel_de_catorce_items(): void
+    public function test_ginecologia_y_sin_especialidad_conservan_el_panel_de_trece_items(): void
     {
         foreach ([self::GINECO, null, 'cirugia'] as $slug) {
             $vm = $this->shell($slug);
-            $this->assertSame(range(1, 14), $this->numeros($vm), (string) $slug);
-            $this->assertSame(14, $vm->totalItems());
+            // O-22 retiró *Exámenes* (el ítem 7): la numeración del legado no se renumera.
+            $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm), (string) $slug);
+            $this->assertSame(13, $vm->totalItems());
         }
     }
 
@@ -45,9 +46,10 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $vm = $this->shell('pediatria');
 
-        $this->assertSame([1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(13, $vm->totalItems());
-        $this->assertSame(12, $vm->totalListos());
+        $this->assertSame([1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
+        $this->assertSame(12, $vm->totalItems());
+        // Doce disponibles menos el control de embarazo (que en pediatría no aplica) = once.
+        $this->assertSame(11, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void
@@ -87,7 +89,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $pediatria->pestanasDelExamenOcultas());
 
         $this->assertSame(
-            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO],
+            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO, PestanasDelExamen::IMAGENES],
             array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
         );
         // Arranca en las mediciones, como el escritorio; la URL directa sigue abriendo el examen de ginecología.

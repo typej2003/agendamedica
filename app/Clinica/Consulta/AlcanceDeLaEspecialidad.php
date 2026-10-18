@@ -81,8 +81,8 @@ final class AlcanceDeLaEspecialidad
 
     /**
      * Las solapas del examen (ítem 4) que **no** se ofrecen: en pediatría, todas las ginecológicas (examen físico general, examen
-     * ginecológico, mamas y las cuatro de texto); quedan las propias: *Mediciones*, *Examen físico* y *Cuestionario* (WEB-7.4.3a y WEB-12.2). Fuera de
-     * pediatría se ocultan esas tres.
+     * ginecológico, mamas y las cuatro de texto); quedan las propias: *Mediciones*, *Examen físico* y *Cuestionario* (WEB-7.4.3a y WEB-12.2).
+     * Fuera de pediatría se ocultan esas tres. La **galería de imágenes** (O-22) no es clínica de una especialidad: se ofrece siempre.
      *
      * @return array<int,string>
      */
@@ -92,7 +92,10 @@ final class AlcanceDeLaEspecialidad
             return PestanasDelExamen::PEDIATRICAS;
         }
 
-        return array_values(array_diff(PestanasDelExamen::claves(), PestanasDelExamen::PEDIATRICAS));
+        return array_values(array_diff(
+            PestanasDelExamen::claves(),
+            array_merge(PestanasDelExamen::PEDIATRICAS, PestanasDelExamen::COMUNES),
+        ));
     }
 
     /**

@@ -22,9 +22,11 @@ use InvalidArgumentException;
  * que son acciones y por eso viven en un controlador propio (la guía de la web parte los controladores por
  * responsabilidad, no por pantalla: la enfermedad actual y la evaluación física hacen lo mismo).
  *
- * **Guardado explícito**, como las otras secciones: el formulario manda las tres cosas de una vez —lo que
- * se editó, lo que se agregó y lo que se quitó— y un solo botón las aplica. Eso evita que un destildado
- * accidental se guarde al instante y que el médico tenga que apretar "Guardar" dos veces.
+ * **Desde O-07 (2026-10-17) el agregado y la baja son inmediatos**: *Agregar* y *Quitar* son un `POST` cada
+ * uno y escriben en el acto (una escritura por clic, con su rastro y el last-write-wins de siempre), como
+ * «Pasar» en motivos y diagnósticos. Lo que sigue siendo explícito es el **detalle** y la **casilla de
+ * Alerta** de las filas que ya están: eso lo aplica el botón «Guardar los antecedentes», porque es texto que
+ * el médico está escribiendo y no un clic sobre el catálogo.
  *
  * Dos cosas que este controlador no hace y está bien que no haga:
  *
@@ -42,52 +44,108 @@ class ConsultaAntecedentesController extends Controller
     {
     }
 
-    /** Guardar el formulario completo: lo editado, lo agregado y lo quitado. */
+    /**
+     * **Guardar el detalle y la casilla de Alerta** de las filas que ya están (O-07: el agregado y la baja
+     * dejaron de venir en este formulario, ahora son `agregar()` y `quitar()`).
+     *
+     * El formulario nunca deduce una baja de lo que no vino: la pantalla no puede borrar lo que no mostró.
+     */
     public function guardar(Request $request, Consulta $consulta, GuardarAntecedentes $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $datos = $request->validate($this->reglas());
 
-        // `quitar` son los códigos que el médico marcó con el botón de la fila: la baja **no** es
-        // inmediata —el botón aplica lo editado, lo agregado y lo quitado juntos—, así que el navegador los
-        // manda como `hidden` al guardar (`consulta.js`). El formulario nunca deduce una baja de lo que no
-        // vino: la pantalla no puede borrar lo que no mostró.
-        //
-        // Los `agregar` del buscador llegan por los `hidden` del formulario **y/o** por la query del
-        // `action` (la deja `SeccionDeAntecedentesCatalogoVista::urlGuardar`): se juntan, porque una recarga
-        // de la página se lleva los `hidden` pero no la query, y lo tildado no se puede perder al guardar.
-        // Se aceptan las dos formas (un código suelto o una lista de códigos): así el POST no depende de
-        // cómo el navegador arme el cuerpo.
-        $agregar = [];
-        foreach ((array) ($datos['agregar'] ?? []) as $codigo) {
-            if (is_string($codigo) && trim($codigo) !== '') {
-                $agregar[trim($codigo)] = true;
-            }
-        }
-        foreach ((array) $request->query('agregar', []) as $codigo) {
-            if (is_string($codigo) && trim($codigo) !== '') {
-                $agregar[trim($codigo)] = true;
-            }
-        }
-        $agregar = array_keys($agregar);
-
-        $quitar = array_values(array_filter(
-            array_map(fn ($codigo) => trim((string) $codigo), (array) ($datos['quitar'] ?? [])),
-            fn ($codigo) => $codigo !== '' && ! in_array($codigo, $agregar, true),
-        ));
-
         $resultado = $guardar->ejecutar(
             (string) $consulta->reg_medico,
             (string) $consulta->numhistoria,
             (array) ($datos['filas'] ?? []),
-            $agregar,
-            $quitar,
+            [],
+            [],
             null,
             'web',
         );
 
         return $this->volver($consulta, $resultado);
+    }
+
+    /**
+     * **Agregar un antecedente del catálogo al paciente** (O-07): una escritura, un clic, y la fila aparece en
+     * la lista sin apretar el botón de guardar. La regla es la misma Action de siempre (`GuardarAntecedentes`),
+     * que copia el nombre y el tipo como el `INSERT` del escritorio y deja su rastro `source = web`.
+     *
+     * El `tipo` y lo que se estaba buscando vuelven en la redirección para no perder el chip ni el filtro.
+     */
+    public function agregar(Request $request, Consulta $consulta, GuardarAntecedentes $guardar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:4',
+            'tipo' => 'nullable|string|max:2',
+            'buscar' => 'nullable|string|max:200',
+        ]);
+
+        $resultado = $guardar->ejecutar(
+            (string) $consulta->reg_medico,
+            (string) $consulta->numhistoria,
+            [],
+            [trim((string) $datos['codigo'])],
+            [],
+            null,
+            'web',
+        );
+
+        $destino = $this->destino($consulta, $datos);
+
+        // Una fila nueva no puede chocar con el last-write-wins (no existía), así que si no se agregó nada
+        // es porque el código ya estaba en el paciente o no es del catálogo del médico. Las dos cosas se
+        // dicen distinto, y **nunca** se disfrazan de "otro equipo lo editó".
+        if ($resultado->agregados === []) {
+            return $resultado->bloqueados !== []
+                ? $destino->with('error', 'Ese antecedente no está en tu catálogo de antecedentes, así que no se agregó.')
+                : $destino->with('estado', 'Ese antecedente ya estaba cargado en el paciente.');
+        }
+
+        return $destino->with('estado', 'Agregado ' . $this->listar($resultado->agregados) . ' a los antecedentes del paciente.');
+    }
+
+    /**
+     * **Quitar un antecedente del paciente** (O-07): una escritura, un clic, y la fila desaparece de la lista
+     * en el acto. Se lleva **sólo la relación** del paciente, nunca el catálogo (el `DELETE` del escritorio).
+     */
+    public function quitar(Request $request, Consulta $consulta, GuardarAntecedentes $guardar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:4',
+            'tipo' => 'nullable|string|max:2',
+            'buscar' => 'nullable|string|max:200',
+        ]);
+
+        $resultado = $guardar->ejecutar(
+            (string) $consulta->reg_medico,
+            (string) $consulta->numhistoria,
+            [],
+            [],
+            [trim((string) $datos['codigo'])],
+            null,
+            'web',
+        );
+
+        $destino = $this->destino($consulta, $datos);
+
+        if ($resultado->huboConflicto()) {
+            return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueados)
+                . ' más recientemente y no se pisó: vuelve a cargar los antecedentes y quítalo de nuevo.');
+        }
+
+        if ($resultado->quitados === []) {
+            return $destino->with('estado', 'Ese antecedente ya no estaba en el paciente.');
+        }
+
+        return $destino->with('estado', 'Quitado ' . $this->listar($resultado->quitados) . ' de los antecedentes del paciente.');
     }
 
     /**
@@ -182,13 +240,11 @@ class ConsultaAntecedentesController extends Controller
     }
 
     /**
-     * Las reglas del formulario.
+     * Las reglas del formulario de guardado: sólo las filas.
      *
-     * `filas` llega por **id de `antece_paciente`**; `agregar` es un arreglo de **códigos** del catálogo
-     * (los que el buscador dejó tildados más los que la lista ya tenía) y `quitar` los códigos que el
-     * médico sacó con el botón de la fila. El detalle lleva el tope de la columna (`text`) para no aceptar
-     * un cuerpo absurdo, y la alerta los dos valores del DataWindow del escritorio (`A` encendida, `B`
-     * apagada).
+     * `filas` llega por **id de `antece_paciente`**. El detalle lleva el tope de la columna (`text`) para no
+     * aceptar un cuerpo absurdo, y la alerta los dos valores del DataWindow del escritorio (`A` encendida,
+     * `B` apagada).
      */
     private function reglas(): array
     {
@@ -196,11 +252,27 @@ class ConsultaAntecedentesController extends Controller
             'filas' => 'nullable|array|max:200',
             'filas.*.detalle' => 'nullable|string|max:' . GuardarAntecedentes::LARGO_DETALLE,
             'filas.*.alerta' => 'nullable|in:A,B',
-            'agregar' => 'nullable',
-            'agregar.*' => 'string|max:4',
-            'quitar' => 'nullable|array|max:200',
-            'quitar.*' => 'string|max:4',
         ];
+    }
+
+    /**
+     * La vuelta a la sección con el chip y la búsqueda que el médico estaba mirando (O-07: el agregado y la
+     * baja conservan el filtro, que es lo que hace que la fila nueva se vea en el acto).
+     *
+     * @param  array<string,mixed>  $datos  el `tipo` y el `buscar` del formulario
+     */
+    private function destino(Consulta $consulta, array $datos): \Illuminate\Http\RedirectResponse
+    {
+        $parametros = [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES];
+
+        if (trim((string) ($datos['tipo'] ?? '')) !== '') {
+            $parametros['tipo'] = trim((string) $datos['tipo']);
+        }
+        if (trim((string) ($datos['buscar'] ?? '')) !== '') {
+            $parametros['buscar'] = trim((string) $datos['buscar']);
+        }
+
+        return redirect()->route('clinica.consulta', $parametros);
     }
 
     /**
@@ -209,10 +281,7 @@ class ConsultaAntecedentesController extends Controller
      */
     private function volver(Consulta $consulta, ResultadoDeAntecedentes $resultado)
     {
-        $destino = redirect()->route('clinica.consulta', [
-            $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES,
-        ]);
+        $destino = $this->destino($consulta, []);
 
         if ($resultado->huboConflicto()) {
             return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueados)

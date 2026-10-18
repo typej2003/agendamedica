@@ -17,9 +17,9 @@ use Illuminate\Support\Collection;
  * Lo que decide esta clase y no la vista:
  *
  *  - **Los chips de tipo** (`chips()`): los siete tipos del catálogo en el orden de `codetipo`, **siempre uno
- *    elegido** —no hay «todos»— y el `?tipo=` de cada uno con los pendientes del buscador, para que cambiar de
- *    chip no pierda lo tildado. Si el paciente tiene antecedentes sin tipo, se agrega el chip «Sin clasificar»
- *    al final: son datos clínicos y no pueden quedar sin puerta de entrada.
+ *    elegido** —no hay «todos»— y el `?tipo=` de cada uno, para que cambiar de chip no pierda el filtro. Si el
+ *    paciente tiene antecedentes sin tipo, se agrega el chip «Sin clasificar» al final: son datos clínicos y no
+ *    pueden quedar sin puerta de entrada.
  *  - **El filtro es el del tipo elegido** (`filas()`): la columna muestra sólo los antecedentes de ese tipo,
  *    igual que la solapa del escritorio. El **total** del paciente (`total()`) sigue siendo el de todos, que es
  *    lo que dice el contador de la cabecera.
@@ -38,10 +38,11 @@ final class SeccionDeAntecedentesVista
      * @param  Collection<int,object>  $antecedentes  lo que devolvió `AntecedentesDelPaciente::delPaciente()`
      * @param  array<int,array{codigo:string, nombre:string}>  $tipos  el catálogo de tipos, en el orden de `codetipo`
      * @param  string  $tipo  el tipo elegido, ya resuelto (`TipoDeAntecedentes::elegido`)
-     * @param  string  $urlGuardar  a dónde postea "Guardar los antecedentes"
+     * @param  string  $urlGuardar  a dónde postea "Guardar los antecedentes" (detalle y alerta)
      * @param  string  $urlVolver  la vuelta a la sección (el "Cancelar" de la guía de UI)
      * @param  array<string,mixed>  $old  el `old()` de un POST que falló la validación (`[]` en la primera carga)
-     * @param  array<int,string>  $pendientes  los códigos del catálogo que el buscador dejó tildados (`?agregar=…`)
+     * @param  string  $urlQuitar  a dónde postea el "Quitar" de cada fila (O-07: es inmediato, el código va en el
+     *                              cuerpo del formulario de la fila)
      */
     public function __construct(
         private Collection $antecedentes,
@@ -50,13 +51,19 @@ final class SeccionDeAntecedentesVista
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private array $old = [],
-        private array $pendientes = [],
+        private string $urlQuitar = '',
     ) {
     }
 
     public function urlGuardar(): string
     {
         return $this->urlGuardar;
+    }
+
+    /** A dónde postea el "Quitar" de una fila (el código viaja como campo oculto). */
+    public function urlQuitar(): string
+    {
+        return $this->urlQuitar;
     }
 
     public function urlVolver(): string
@@ -75,8 +82,8 @@ final class SeccionDeAntecedentesVista
      * catálogo, más «Sin clasificar» si el paciente tiene antecedentes que no caen en ninguno; siempre uno
      * activo (el pedido fue explícito: no hay «todos los tipos»).
      *
-     * La `url` de cada chip conserva la sección y los pendientes del buscador (`?agregar=`), así cambiar de chip
-     * no pierde lo tildado para agregar.
+     * La `url` de cada chip conserva la sección y el tipo. Ya no hay pendientes del buscador que conservar:
+     * desde O-07 «Agregar» es un `POST` inmediato y no deja códigos tildados en la URL.
      *
      * @return array<int,array{codigo:string, nombre:string, activa:bool, url:string}>
      */
@@ -180,7 +187,8 @@ final class SeccionDeAntecedentesVista
     }
 
     /**
-     * La ayuda del formulario, que dice lo más importante de la sección: **de quién son** los antecedentes.
+     * La ayuda del formulario, que dice lo más importante de la sección: **de quién son** los antecedentes y
+     * qué se guarda con el botón (O-07: el agregado y la baja son inmediatos).
      *
      * Es una decisión clínica y de la fuente (ver `AntecedentesDelPaciente`): no son de esta consulta, son
      * del paciente, así que lo que se cargue acá se ve en su historia y en su próxima consulta.
@@ -188,7 +196,8 @@ final class SeccionDeAntecedentesVista
     public function ayuda(): string
     {
         return 'Estos antecedentes son del paciente, no de esta consulta: los que ves —y los que agregues— '
-            . 'quedan en su historia clínica y los verás en sus próximas consultas. Se guardan con el botón.';
+            . 'quedan en su historia clínica y los verás en sus próximas consultas. Agregar y Quitar se aplican '
+            . 'al instante; el detalle y la casilla de Alerta se guardan con el botón.';
     }
 
     /** El aviso que `consulta.js` muestra y usa para el `beforeunload`. */
@@ -233,8 +242,8 @@ final class SeccionDeAntecedentesVista
     }
 
     /**
-     * La URL de un chip: la sección, el tipo y **los pendientes del buscador**. Se arma acá y no en la vista
-     * porque es una URL con parámetros (la vista no arma URLs en la web clínica).
+     * La URL de un chip: la sección y el tipo. Se arma acá y no en la vista porque es una URL con parámetros
+     * (la vista no arma URLs en la web clínica).
      */
     private function urlConTipo(string $codigo): string
     {
@@ -246,10 +255,6 @@ final class SeccionDeAntecedentesVista
         }
 
         $query[] = 'tipo=' . urlencode($codigo);
-
-        foreach ($this->pendientes as $pendiente) {
-            $query[] = 'agregar[]=' . urlencode((string) $pendiente);
-        }
 
         return $this->urlVolver . (str_contains($this->urlVolver, '?') ? '&' : '?') . implode('&', $query);
     }

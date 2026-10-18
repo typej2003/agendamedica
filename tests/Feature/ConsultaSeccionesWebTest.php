@@ -657,16 +657,18 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee('data-menu="consulta"', false);
         $respuesta->assertDontSee('Secciones de la consulta', false);
         $respuesta->assertDontSee('13 de 14 disponibles', false);
+        $respuesta->assertDontSee('12 de 13 disponibles', false);
 
-        // Trae los 14 ítems: 13 enlazan a su sección dentro de esta consulta y la pre-factura va deshabilitada.
+        // Trae los 13 ítems (O-22 retiró *Exámenes*): 12 enlazan a su sección dentro de esta consulta y la
+        // pre-factura va deshabilitada.
         $respuesta->assertSee('Pre-factura');
         $respuesta->assertSee('aria-disabled="true"', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
-        // Los exámenes (WEB-4.7) también: desde esta tarea el ítem 7 abre su sección dentro del shell.
-        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']), false);
+        // *Exámenes* ya no es una sección (O-22): no queda su enlace en el menú.
+        $respuesta->assertDontSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']), false);
         // Y los récipes (WEB-5.1): el ítem 10 abre su sección dentro del shell.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']), false);
         // Y las solicitudes (WEB-5.3a): el ítem 11 abre su sección dentro del shell.
@@ -759,5 +761,26 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Elige una sección en el menú', false);
         $respuesta->assertDontSee('id="consulta-motivos"', false);
+    }
+
+    /**
+     * O-22 (2026-10-17): `?seccion=examenes` dejó de ser una sección. Los enlaces viejos y el historial del
+     * navegador no quedan muertos: se redirige (302) a la galería, que ahora es la solapa *Imágenes* de
+     * *Evaluación física*.
+     */
+    public function test_la_seccion_de_examenes_redirige_a_la_galeria_de_evaluacion_fisica(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']));
+
+        $respuesta->assertStatus(302);
+        $respuesta->assertRedirect(route('clinica.consulta', [
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+            'pestana' => 'imagenes',
+        ]));
     }
 }

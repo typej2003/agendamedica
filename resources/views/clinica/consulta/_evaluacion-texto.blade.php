@@ -63,6 +63,12 @@
         </div>
     @endif
 
+    {{-- Los exámenes informados por el laboratorio (O-22): la lista de sólo lectura de la sección *Exámenes*
+         retirada, dentro de su solapa *Resultado de exámenes*, junto a la nota del médico. --}}
+    @if ($seccion->informados() !== null)
+        @include('clinica.consulta._examenes-informados', ['seccion' => $seccion->informados()])
+    @endif
+
     {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
          suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la
          solapa adentro del formulario. --}}

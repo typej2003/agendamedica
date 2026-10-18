@@ -22,11 +22,10 @@ use InvalidArgumentException;
  * responsabilidad, no por pantalla: los motivos, la enfermedad, la evaluación y los antecedentes hacen lo
  * mismo).
  *
- * **Guardado explícito**, como las otras secciones: el formulario manda las tres cosas de una vez —el
- * detalle de lo que ya está, lo que se tildó del catálogo y lo que el médico sacó de la lista— y un solo
- * botón las aplica. Es lo que el escritorio hace al apretar *Guardar*: su pestaña de diagnósticos también
- * deja el `dw_8.update()` para el `ue_guardar` de la ventana (`w_consulta_principal.srw:2709`), aunque sus
- * botones de *Pasar diag.* y *Eliminar* inserten y borren al instante.
+ * **Desde O-27 (2026-10-17) «Pasar» y «Quitar» son inmediatos**: cada uno es un `POST` que escribe en el acto
+ * —una escritura por clic, con su rastro `source = web` y el last-write-wins de siempre—, igual que los
+ * antecedentes desde O-07. Lo que sigue siendo explícito es el **detalle** de una fila que ya está: eso lo
+ * aplica el botón «Guardar los diagnósticos».
  *
  * Dos cosas que este controlador no hace y está bien que no haga:
  *
@@ -45,46 +44,18 @@ class ConsultaDiagnosticosController extends Controller
     {
     }
 
-    /** Guardar el formulario completo: el detalle editado, lo agregado y lo quitado. */
+    /** Guardar el detalle de las filas que ya están (O-27: lo agregado y lo quitado ya no vienen acá). */
     public function guardar(Request $request, Consulta $consulta, GuardarDiagnosticosDeLaConsulta $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $datos = $request->validate($this->reglas());
 
-        // `quitar` son los **id** de las filas que el médico marcó con el botón: la baja no es inmediata
-        // —el botón aplica lo editado, lo agregado y lo quitado juntos—, así que el navegador los manda
-        // como `hidden` al guardar (`consulta.js`). El formulario nunca deduce una baja de lo que no vino:
-        // la pantalla no puede borrar lo que no mostró.
-        //
-        // Los `agregar` del buscador llegan por los `hidden` del formulario **y/o** por la query del
-        // `action` (la deja `SeccionDeDiagnosticosVista::urlGuardar`): se juntan, porque una recarga de la
-        // página se lleva los `hidden` pero no la query, y lo tildado no se puede perder al guardar. Se
-        // aceptan las dos formas (un código suelto o una lista): así el POST no depende de cómo el
-        // navegador arme el cuerpo.
-        $agregar = [];
-        foreach ((array) ($datos['agregar'] ?? []) as $codigo) {
-            if (is_string($codigo) && trim($codigo) !== '') {
-                $agregar[trim($codigo)] = true;
-            }
-        }
-        foreach ((array) $request->query('agregar', []) as $codigo) {
-            if (is_string($codigo) && trim($codigo) !== '') {
-                $agregar[trim($codigo)] = true;
-            }
-        }
-        $agregar = array_keys($agregar);
-
-        $quitar = array_values(array_filter(
-            array_map(fn ($id) => (int) $id, (array) ($datos['quitar'] ?? [])),
-            fn (int $id) => $id > 0,
-        ));
-
         $resultado = $guardar->ejecutar(
             $consulta,
             (array) ($datos['filas'] ?? []),
-            $agregar,
-            $quitar,
+            [],
+            [],
             null,
             'web',
         );
@@ -93,18 +64,92 @@ class ConsultaDiagnosticosController extends Controller
     }
 
     /**
+     * **Pasar un diagnóstico del catálogo a la consulta** (O-27): una escritura, un clic, y la fila aparece en
+     * la lista de la izquierda sin apretar el botón de guardar. La regla es la misma Action de siempre.
+     *
+     * Lo que se estaba buscando vuelve en la redirección para no perder el filtro del catálogo.
+     */
+    public function agregar(Request $request, Consulta $consulta, GuardarDiagnosticosDeLaConsulta $guardar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:5',
+            'buscar' => 'nullable|string|max:200',
+        ]);
+
+        $resultado = $guardar->ejecutar(
+            $consulta,
+            [],
+            [trim((string) $datos['codigo'])],
+            [],
+            null,
+            'web',
+        );
+
+        $destino = $this->destino($consulta, $datos);
+
+        // Una fila nueva no puede chocar con el last-write-wins; si no se agregó nada es porque el código ya
+        // estaba en la consulta o no es del catálogo del médico.
+        if ($resultado->agregados === []) {
+            return $resultado->bloqueados !== []
+                ? $destino->with('error', 'Ese diagnóstico no está en tu catálogo, así que no se pasó.')
+                : $destino->with('estado', 'Ese diagnóstico ya estaba en la consulta.');
+        }
+
+        return $destino->with('estado', 'Agregado ' . $this->listar($resultado->agregados) . ' a los diagnósticos de la consulta.');
+    }
+
+    /**
+     * **Quitar un diagnóstico de la consulta** (O-27): una escritura, un clic, y la fila desaparece en el acto.
+     * Se lleva **sólo la fila de la consulta**, nunca el catálogo (el `DELETE` del escritorio).
+     */
+    public function quitar(Request $request, Consulta $consulta, GuardarDiagnosticosDeLaConsulta $guardar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'id' => 'required|integer|min:1',
+            'buscar' => 'nullable|string|max:200',
+        ]);
+
+        $resultado = $guardar->ejecutar(
+            $consulta,
+            [],
+            [],
+            [(int) $datos['id']],
+            null,
+            'web',
+        );
+
+        $destino = $this->destino($consulta, $datos);
+
+        if ($resultado->huboConflicto()) {
+            return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueados)
+                . ' más recientemente y no se pisó: vuelve a cargar los diagnósticos y quítalo de nuevo.');
+        }
+
+        if ($resultado->quitados === []) {
+            return $destino->with('estado', 'Ese diagnóstico ya no estaba en la consulta.');
+        }
+
+        return $destino->with('estado', 'Quitado ' . $this->listar($resultado->quitados) . ' de los diagnósticos de la consulta.');
+    }
+
+    /**
      * **Crear el diagnóstico que falta** en el catálogo (`w_nuevo_diagnostico` del escritorio): el código lo
      * da el servidor y la descripción se guarda en mayúsculas. Si ya existe uno igual, se usa el existente
      * y **no se duplica** (la misma regla del móvil con los motivos y de WEB-4.2).
      *
-     * Es **online-only** (PLAN-WEB.md §3.15) y el diagnóstico nuevo queda **tildado** para agregarse a la
-     * consulta con el mismo botón de guardar: la sección es de guardado explícito y el alta del catálogo no
-     * puede ser lo único que escriba solo.
+     * Es **online-only** (PLAN-WEB.md §3.15) y el diagnóstico nuevo queda **agregado a la consulta** en el
+     * mismo paso (como los antecedentes): desde O-27 no hay nada tildado que esperar, así que hacerlo en dos
+     * pasos obligaría al médico a apretar «Guardar» para ver lo que ya creó.
      */
     public function crear(
         Request $request,
         Consulta $consulta,
         AgregarDiagnosticoAlCatalogo $catalogo,
+        GuardarDiagnosticosDeLaConsulta $guardar,
     ) {
         $contexto = $request->attributes->get('contexto_clinico');
         $consulta = $this->delContexto($request, $consulta);
@@ -133,55 +178,50 @@ class ConsultaDiagnosticosController extends Controller
         $codigo = trim((string) $diagnostico->codediagnostico);
         $nombre = trim((string) $diagnostico->descripcion);
 
-        // Lo que ya estaba tildado en el buscador viaja con el alta (el formulario lo manda como `hidden` y
-        // la query también lo puede traer): crear un diagnóstico nuevo **no** puede perder los pendientes,
-        // que son de la pantalla y no de la base. El que se acaba de crear (o el existente) entra último.
-        $agregar = [];
-        // Del **cuerpo** se lee con `input()` y no con `$datos`: `validate()` sólo devuelve lo que valida
-        // (acá, la descripción) y los pendientes no son un campo del alta sino el estado del buscador.
-        foreach ((array) $request->input('agregar', []) as $pendiente) {
-            if (is_string($pendiente) && trim($pendiente) !== '') {
-                $agregar[trim($pendiente)] = true;
-            }
-        }
-        foreach ((array) $request->query('agregar', []) as $pendiente) {
-            if (is_string($pendiente) && trim($pendiente) !== '') {
-                $agregar[trim($pendiente)] = true;
-            }
-        }
-        $agregar[$codigo] = true;
-        $agregar = array_keys($agregar);
+        $resultado = $guardar->ejecutar($consulta, [], [$codigo], [], null, 'web');
+
+        $mensaje = $resultado->agregados === []
+            // El código ya estaba en la consulta: la Action no lo duplica. Pasa si el médico crea el
+            // diagnóstico que ya tenía pasado (el catálogo no lo ofrece, el alta sí puede).
+            ? ($creado ? 'Creado «' . $nombre . '» en tu catálogo' : '«' . $nombre . '» ya estaba en tu catálogo')
+                . '; la consulta ya lo tenía.'
+            : ($creado ? 'Creado «' . $nombre . '» en tu catálogo' : '«' . $nombre . '» ya estaba en tu catálogo')
+                . ' y agregado a los diagnósticos de la consulta.';
 
         return redirect()
-            ->route('clinica.consulta', [
-                $consulta->id,
-                'seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO,
-                'agregar' => $agregar,
-            ])
-            ->with('estado', ($creado
-                ? 'Creado «' . $nombre . '» en tu catálogo'
-                : '«' . $nombre . '» ya estaba en tu catálogo')
-                . '; se agrega a la consulta cuando guardes.');
+            ->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO])
+            ->with('estado', $mensaje);
     }
 
     /**
-     * Las reglas del formulario.
+     * Las reglas del formulario de guardado: sólo el detalle de las filas.
      *
-     * `filas` llega por **id de `diagnostico_paciente`** (el detalle es la única columna editable) y
-     * `quitar` por esos mismos ids. `agregar` es un arreglo de **códigos** del catálogo (los que el
-     * buscador dejó tildados). El detalle lleva el tope de la columna (`varchar(100)`) para no aceptar un
-     * cuerpo absurdo.
+     * `filas` llega por **id de `diagnostico_paciente`** (el detalle es la única columna editable). Lleva el
+     * tope de la columna (`varchar(100)`) para no aceptar un cuerpo absurdo.
      */
     private function reglas(): array
     {
         return [
             'filas' => 'nullable|array|max:200',
             'filas.*.detalle' => 'nullable|string|max:' . GuardarDiagnosticosDeLaConsulta::LARGO_DETALLE,
-            'agregar' => 'nullable',
-            'agregar.*' => 'string|max:5',
-            'quitar' => 'nullable|array|max:200',
-            'quitar.*' => 'integer',
         ];
+    }
+
+    /**
+     * La vuelta a la sección con la búsqueda que el médico estaba mirando (O-27: el «Pasar» y el «Quitar»
+     * conservan el filtro del catálogo).
+     *
+     * @param  array<string,mixed>  $datos  el `buscar` del formulario
+     */
+    private function destino(Consulta $consulta, array $datos): \Illuminate\Http\RedirectResponse
+    {
+        $parametros = [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO];
+
+        if (trim((string) ($datos['buscar'] ?? '')) !== '') {
+            $parametros['buscar'] = trim((string) $datos['buscar']);
+        }
+
+        return redirect()->route('clinica.consulta', $parametros);
     }
 
     /**

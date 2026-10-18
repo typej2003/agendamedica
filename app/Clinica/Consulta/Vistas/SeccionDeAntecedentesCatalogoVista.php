@@ -27,9 +27,10 @@ use Illuminate\Support\Collection;
  *    fila no se ofrece para agregar y la segunda si el buscador ofrece **crear** lo escrito.
  *
  * El buscador es un **`GET`** (no hay JS que lo haga por `fetch`, a diferencia del de motivos): la pantalla
- * se recarga con el filtro y "Agregar" es un enlace que vuelve con ese antecedente **tildado como
- * pendiente**. Así la sección entera funciona sin JavaScript y el agregado no se guarda hasta que el médico
- * aprieta el botón de la tarjeta de arriba, que es la única acción que escribe.
+ * se recarga con el filtro y **«Agregar» es un `POST` inmediato** (O-07, 2026-10-17): el antecedente se
+ * escribe en el paciente en el acto y la fila aparece en la lista de la izquierda sin apretar el botón de
+ * guardar —el botón sólo aplica el detalle y la casilla de Alerta—. Así la sección entera funciona sin
+ * JavaScript.
  *
  * Desde A-06 (revisión de Alexander) el catálogo es la **columna derecha** de la sección, su buscador está
  * **siempre a la vista** (no detrás de un botón) y el filtro por tipo es el **chip elegido**, que comparten las
@@ -41,11 +42,8 @@ final class SeccionDeAntecedentesCatalogoVista
      * @param  Collection<int,object>  $resultados  lo que devolvió `AntecedentesDelPaciente::catalogo()`
      * @param  array<int,string>  $codigosDelPaciente  los `codeantecedente` que el paciente ya tiene
      * @param  array<int,array{codigo:string, nombre:string}>  $tipos  el catálogo de tipos (`tipo_antecedente`)
-     * @param  string  $urlAgregar  la base del enlace "Agregar" de cada fila (recibe el código)
+     * @param  string  $urlAgregar  a dónde postea el "Agregar" de cada fila (el código va en el cuerpo)
      * @param  string  $urlCrear  a dónde postea el alta del catálogo
-     * @param  string  $urlGuardar  la base del `action` del formulario de guardado (los pendientes se le
-     *                              agregan como query para que el `POST` no los pierda)
-     * @param  array<string,mixed>  $consulta  el `?…` de la URL (para saber qué quedó tildado para agregar)
      */
     public function __construct(
         private Collection $resultados,
@@ -55,60 +53,21 @@ final class SeccionDeAntecedentesCatalogoVista
         private string $urlCrear = '',
         private string $buscar = '',
         private string $tipo = '',
-        private array $consulta = [],
-        private string $urlGuardar = '',
     ) {
     }
 
     /**
-     * La URL del "Agregar" de una fila: vuelve a esta misma sección con **ese** código tildado además de
-     * los que ya estaban. Se arma acá y no en la vista porque es una URL con parámetros (y la vista no
-     * arma URLs en la web clínica).
+     * La URL del "Agregar" de una fila (O-07): un `POST` inmediato. El código y el filtro viajan en campos
+     * ocultos del formulario de la fila, así que la URL no lleva parámetros.
      */
-    public function urlAgregar(string $codigo): string
+    public function urlAgregar(): string
     {
-        $query = ['seccion=' . ConsultaShellVista::SECCION_ANTECEDENTES];
-
-        // El filtro no se pierde al agregar (A-06): el tipo elegido y lo buscado vuelven con la sección.
-        if ($this->tipo !== '') {
-            $query[] = 'tipo=' . urlencode($this->tipo);
-        }
-        if ($this->buscar !== '') {
-            $query[] = 'buscar=' . urlencode($this->buscar);
-        }
-
-        foreach (array_merge($this->pendientesDelBuscador(), [$codigo]) as $pendiente) {
-            $query[] = 'agregar[]=' . urlencode($pendiente);
-        }
-
-        return $this->urlAgregar . '?' . implode('&', $query);
+        return $this->urlAgregar;
     }
 
     public function urlCrear(): string
     {
         return $this->urlCrear;
-    }
-
-    /**
-     * La URL del botón de guardar de la tarjeta de antecedentes, **con la sección y los pendientes del
-     * buscador**.
-     *
-     * Existe por una razón concreta: los `hidden` de `agregar[…]` que el buscador dejó tildados no
-     * sobreviven a una recarga de la página, pero la query del `action` sí, así que el `POST` del guardado
-     * no pierde lo tildado (el controlador junta el `POST` y la query). El `seccion` va porque la vuelta
-     * del guardado tiene que caer en esta misma sección del shell.
-     */
-    public function urlGuardar(): string
-    {
-        $query = [];
-        foreach ($this->pendientesDelBuscador() as $codigo) {
-            $query[] = 'agregar[]=' . urlencode($codigo);
-        }
-        $query[] = 'seccion=' . ConsultaShellVista::SECCION_ANTECEDENTES;
-
-        $url = $this->urlGuardar;
-
-        return $url . (str_contains($url, '?') ? '&' : '?') . implode('&', $query);
     }
 
     public function buscar(): string
@@ -137,51 +96,18 @@ final class SeccionDeAntecedentesCatalogoVista
     }
 
     /**
-     * Los códigos que el buscador dejó tildados para agregar (`?agregar=…`, y también `?agregar[]=…`): la
-     * tarjeta de arriba los manda como pendientes y el médico los confirma con el botón de guardar.
+     * Las filas del buscador, ya listas para pintar. `yaEsta` es lo único que decide si la fila se puede
+     * agregar: desde O-07 no hay estado intermedio de «pendiente».
      *
-     * @return array<int,string>
-     */
-    public function pendientesDelBuscador(): array
-    {
-        $codigos = [];
-
-        foreach ((array) ($this->consulta['agregar'] ?? []) as $codigo) {
-            $codigo = trim((string) $codigo);
-
-            if ($codigo !== '') {
-                $codigos[$codigo] = true;
-            }
-        }
-
-        return array_keys($codigos);
-    }
-
-    /** El aviso de la tarjeta cuando hay algo tildado: qué va a pasar y dónde se confirma. */
-    public function avisoDePendientes(): string
-    {
-        $pendientes = $this->pendientesDelBuscador();
-
-        return count($pendientes) === 1
-            ? 'Tildaste un antecedente: se agrega al paciente cuando aprietes «Guardar los antecedentes», arriba.'
-            : 'Tildaste ' . count($pendientes) . ' antecedentes: se agregan al paciente cuando aprietes «Guardar los antecedentes», arriba.';
-    }
-
-    /**
-     * Las filas del buscador, ya listas para pintar.
-     *
-     * @return array<int,array{codigo:string, descripcion:string, tipo:?string, yaEsta:bool, pendiente:bool}>
+     * @return array<int,array{codigo:string, descripcion:string, tipo:?string, yaEsta:bool}>
      */
     public function resultados(): array
     {
-        $pendientes = $this->pendientesDelBuscador();
-
         return $this->resultados->map(fn ($antecedente) => [
             'codigo' => (string) $antecedente->codigo,
             'descripcion' => (string) $antecedente->nombre,
             'tipo' => $antecedente->tipoNombre,
             'yaEsta' => in_array((string) $antecedente->codigo, $this->codigosDelPaciente, true),
-            'pendiente' => in_array((string) $antecedente->codigo, $pendientes, true),
         ])->all();
     }
 

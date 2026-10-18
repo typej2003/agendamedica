@@ -586,7 +586,7 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->imagen($medico, $consulta, 'Una descripción libre');
 
         $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES]))
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
             ->assertOk()->getContent();
 
         // La etiqueta se traduce (el código `@` no le dice nada al médico) y la descripción se respeta.
@@ -627,7 +627,7 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         // `H` es la etiqueta de la histeroscopía: como descripción haría que la imagen apareciera ahí.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->from(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES]))
+            ->from(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
             ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
                 'imagen' => $this->png(),
                 'descripcion' => 'H',
@@ -816,10 +816,10 @@ class ConsultaColposcopiaWebTest extends TestCase
         $actual = $this->imagen($medico, $segunda, 'm', true);
         $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
-        $esta = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => 'examenes']))->assertOk()->assertSee('Esta consulta')->getContent();
+        $esta = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))->assertOk()->assertSee('Esta consulta')->getContent();
         $this->assertSame(1, substr_count($esta, '<li class="examen-imagen '));
 
-        $todas = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => 'examenes', 'alcance' => 'todas']))->assertOk()->getContent();
+        $todas = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes', 'alcance' => 'todas']))->assertOk()->getContent();
         $this->assertSame(2, substr_count($todas, '<li class="examen-imagen '));
         $this->assertStringContainsString('Consulta N.º 1', $todas);
         // Quitar sólo se ofrece para la imagen de esta consulta.
