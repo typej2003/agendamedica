@@ -54,6 +54,7 @@ use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
 use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
+use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\ListadosController;
@@ -185,6 +186,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
                 // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
                 Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
+                // **La historia pediátrica imprimible** (WEB-12.5): familia, antecedentes, mediciones y vacunas del niño. Es clínica: sólo del médico.
+                Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->name('pacientes.historia-pediatrica');
                 Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->name('pacientes.vacunas.carnet');
                 Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
 

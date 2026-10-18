@@ -44,6 +44,33 @@ final class ArmarResumenDelExamen
     }
 
     /**
+     * Las **mediciones** del niño como texto (WEB-12.5, el bloque *MEDICIONES* del resumen médico pediátrico): peso, talla, perímetros, pulso, presión e IMC.
+     *
+     * @param  array<string,mixed>  $datos  `peso`, `talla`, `c_cefalica`, `c_brazo`, `pulso`, `p_a_sistolica`, `p_a_diastolica`, `imc`
+     */
+    public static function mediciones(array $datos): string
+    {
+        $presion = ($datos['p_a_sistolica'] ?? null) !== null && ($datos['p_a_diastolica'] ?? null) !== null
+            ? self::numero($datos['p_a_sistolica']) . '/' . self::numero($datos['p_a_diastolica'])
+            : null;
+
+        return self::armar(array_merge($datos, ['presion' => $presion]), [
+            ['peso', 'PESO', ' Kg'],
+            ['talla', 'TALLA', ' Cm'],
+            ['c_cefalica', 'CIRCUNFERENCIA CEFÁLICA', ' Cm'],
+            ['c_brazo', 'PERÍMETRO DEL BRAZO', ' Cm'],
+            ['imc', 'IMC', ''],
+            ['pulso', 'PULSO', ' lpm'],
+            ['presion', 'PRESIÓN ARTERIAL', ' mmHg'],
+        ]);
+    }
+
+    private static function numero($valor): string
+    {
+        return rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.');
+    }
+
+    /**
      * El resumen del **examen físico de pediatría** (WEB-12.2): `ue_fisico` del escritorio (`w_consulta_principal.srw:11424`) —peso, talla y
      * circunferencia cefálica de las mediciones, y los cuadros del examen con **los rótulos de la pantalla** (no los de sus columnas)—.
      * La temperatura no se guarda en ninguna tabla (`em_tem` sólo la usa este resumen) y por eso no entra.

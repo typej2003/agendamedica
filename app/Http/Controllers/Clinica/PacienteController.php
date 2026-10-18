@@ -129,6 +129,10 @@ class PacienteController extends Controller
                 && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
                 ? route('clinica.pacientes.crecimiento', $ficha->id)
                 : null,
+            'urlHistoriaPediatrica' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.historia-pediatrica', $ficha->id)
+                : null,
             'urlVacunas' => $request->user()?->trabajaLaConsulta()
                 && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
                 ? route('clinica.pacientes.vacunas', $ficha->id)
