@@ -12,6 +12,7 @@ use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\NumeroDeFormulario;
 use Illuminate\Http\Request;
 
 /**
@@ -34,6 +35,24 @@ class ConsultaEvaluacionController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
+    /**
+     * Las **columnas numéricas** del examen y su tope. De acá salen las dos cosas que tienen que coincidir:
+     * la validación (`numeric` con su rango) y la conversión de la coma al punto decimal, que se hace antes
+     * de validar (`App\Support\NumeroDeFormulario`).
+     *
+     * La tensión no está: es un `char(8)` de texto con la máscara `###/###` del escritorio y su formato de
+     * pantalla (`120/80`) es también el que se guarda.
+     */
+    private const RANGOS = [
+        'peso' => 500,
+        'talla' => 3,
+        'fc' => 400,
+        'pp' => 200,
+        'circcefalica' => 120,
+        'circtoraxica' => 250,
+        'circabdominal' => 250,
+    ];
+
     public function __construct(private ConsultasDelContexto $consultas)
     {
     }
@@ -50,6 +69,11 @@ class ConsultaEvaluacionController extends Controller
             $contexto['reg_medico'],
         );
 
+        // La pantalla teclea con coma (`1,62`) y la columna es `double` con punto: la diferencia se resuelve
+        // **antes de validar** y en un solo lugar (`App\Support\NumeroDeFormulario`, la misma idea que
+        // `FechaDeFormulario` para las fechas de O-18). Lo que no es un número queda como vino, para que la
+        // validación lo rechace con su mensaje.
+        $request->merge(NumeroDeFormulario::normalizar($request->all(), array_keys(self::RANGOS)));
         $datos = $request->validate($this->reglas());
         $resultado = $guardar->ejecutar($consulta, $datos, null, 'web');
 
@@ -88,6 +112,7 @@ class ConsultaEvaluacionController extends Controller
             $contexto['reg_medico'],
         );
 
+        $request->merge(NumeroDeFormulario::normalizar($request->all(), array_keys(self::RANGOS)));
         $datos = $request->validate($this->reglas());
         $datos['colposcopia'] = $consulta->observaciones;
         $datos['citologia'] = $consulta->faringe;
@@ -109,15 +134,11 @@ class ConsultaEvaluacionController extends Controller
      */
     private function reglas(): array
     {
-        $reglas = [
-            'peso' => 'nullable|numeric|min:0|max:500',
-            'talla' => 'nullable|numeric|min:0|max:3',
-            'fc' => 'nullable|numeric|min:0|max:400',
-            'pp' => 'nullable|numeric|min:0|max:200',
-            'circcefalica' => 'nullable|numeric|min:0|max:120',
-            'circtoraxica' => 'nullable|numeric|min:0|max:250',
-            'circabdominal' => 'nullable|numeric|min:0|max:250',
-        ];
+        $reglas = [];
+
+        foreach (self::RANGOS as $columna => $maximo) {
+            $reglas[$columna] = 'nullable|numeric|min:0|max:' . $maximo;
+        }
 
         foreach (array_keys(EvaluacionFisica::columnas()) as $columna) {
             if (! array_key_exists($columna, $reglas)) {

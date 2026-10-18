@@ -244,7 +244,10 @@ final class EvaluacionFisicaVista
      * Las filas del formulario: el rótulo, la columna (que es el `name` del control) y el valor que se
      * muestra —el `old()` si se acaba de escribir, si no lo guardado—.
      *
-     * @param  array<int,array{columna:string,etiqueta:string,unidad:?string,ayuda:string,tipo:string}>  $campos
+     * Las claves de la máscara (`mascara`, `enteros`, `decimales`, O-08) pasan tal cual al parcial: acá no
+     * se decide nada, la regla del control está en el mapa del dato.
+     *
+     * @param  array<int,array{columna:string,etiqueta:string,unidad:?string,ayuda:string,tipo:string,mascara?:string,enteros?:int,decimales?:int}>  $campos
      * @return array<int,array<string,mixed>>
      */
     private function filas(array $campos): array
@@ -256,6 +259,10 @@ final class EvaluacionFisicaVista
                 'unidad' => $campo['unidad'],
                 'ayuda' => $campo['ayuda'],
                 'tipo' => $campo['tipo'],
+                // La máscara de la pantalla (O-08): el examen por aparatos es texto libre y no lleva.
+                'mascara' => $campo['mascara'] ?? null,
+                'enteros' => $campo['enteros'] ?? 0,
+                'decimales' => $campo['decimales'] ?? 0,
                 'valor' => $this->valor($campo['columna']),
             ];
         }, $campos);

@@ -773,4 +773,103 @@ class ConsultaEvaluacionWebTest extends TestCase
         $respuesta->assertSee('Pre-factura', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
     }
+
+    // ------------------------------------------------------------------------------- La máscara (O-08)
+
+    public function test_los_campos_numericos_declaran_su_mascara_en_la_pantalla(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk();
+
+        // La talla: un entero y dos decimales (la coma se pone sola y `162` queda `1,62`).
+        $respuesta->assertSee('id="talla"', false);
+        $respuesta->assertSee('data-mascara="decimal"', false);
+        $respuesta->assertSee('data-enteros="1"', false);
+        $respuesta->assertSee('data-decimales="2"', false);
+
+        // El peso y las circunferencias: también decimales, con tres enteros.
+        $respuesta->assertSee('data-enteros="3"', false);
+
+        // Las frecuencias: enteros. La tensión: la máscara `###/###` del escritorio.
+        $respuesta->assertSee('data-mascara="entero"', false);
+        $respuesta->assertSee('data-mascara="tension"', false);
+        $respuesta->assertSee('placeholder="120/80"', false);
+
+        // El control de la talla ya **no** es `type="number"`: un número del navegador no puede mostrar `1,62`.
+        $this->assertStringNotContainsString('type="number"', $respuesta->getContent());
+        // Y el script de la máscara se carga en la consulta.
+        $respuesta->assertSee('js/clinica/mascara-numero.js', false);
+    }
+
+    public function test_la_coma_de_la_pantalla_se_guarda_como_el_punto_de_la_base(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Lo que manda el formulario de la pantalla: la talla tecleada `162` se ve `1,62` y el peso `70,5`.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+            'peso' => '70,5',
+            'talla' => '1,62',
+            'fc' => '80',
+            'pp' => '18',
+            'circabdominal' => '88,5',
+            'tension' => '120/80',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        // En la base, el decimal va con punto y las frecuencias son números; la tensión sigue siendo texto.
+        $consulta->refresh();
+        $this->assertSame(70.5, $consulta->peso);
+        $this->assertSame(1.62, $consulta->talla);
+        $this->assertSame(80.0, $consulta->fc);
+        $this->assertSame(18.0, $consulta->pp);
+        $this->assertSame(88.5, $consulta->circabdominal);
+
+        $fila = ExamenFisico::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame('120/80', $fila->tension);
+
+        // Y el dato guardado se vuelve a ver con coma en la pantalla (el servidor pinta el de la base; la
+        // máscara lo formatea al cargar).
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+        $respuesta->assertSee('value="1.62"', false);
+    }
+
+    public function test_un_numero_que_no_se_entiende_se_rechaza_y_no_se_guarda_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->forceFill(['peso' => 70])->save();
+
+        // `1,6,2` no es `1.62`: no se «corrige» a otra cosa —eso inventaría una medida—, se rechaza.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from($this->urlSeccion($consulta))
+            ->post($this->urlGuardar($consulta), [
+                'talla' => '1,6,2',
+                'abdomen' => 'Blando',
+            ]);
+
+        $respuesta->assertRedirect($this->urlSeccion($consulta));
+        $respuesta->assertSessionHasErrors('talla');
+
+        $this->assertNull($consulta->fresh()->talla);
+        $this->assertNull(ExamenFisico::where('reg_medico', $medico->reg_medico)->first());
+    }
+
+    public function test_actualizar_el_resumen_acepta_la_coma_de_la_pantalla(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // El formulario manda lo que el médico ve (`1,62`); el texto del resumen sale con el número de la base.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.consulta.evaluacion.resumen', $consulta->id), [
+                'peso' => '70,5', 'talla' => '1,62', 'tension' => '120/80',
+            ]);
+
+        $respuesta->assertOk()
+            ->assertJsonPath('fisico', 'PESO: 70.5 kg.  TALLA: 1.62 m.  TENSIÓN ARTERIAL: 120/80.  .');
+    }
 }

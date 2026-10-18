@@ -136,6 +136,11 @@
 @endsection
 
 @section('scripts')
+    {{-- La máscara de los números de la evaluación física (O-08): la talla, el peso, las circunferencias, las
+         frecuencias y la tensión. Va **antes** que `consulta.js` a propósito: ese script toma el valor inicial de
+         cada control para saber si hay cambios sin guardar, y lo tiene que tomar ya formateado (`1,62`, no el
+         `1.62` de la base) o el formulario aparecería sucio apenas se abre. --}}
+    <script src="{{ asset('js/clinica/mascara-numero.js') }}"></script>
     <script src="{{ asset('js/clinica/consulta.js') }}"></script>
     {{-- El editor de récipes (WEB-5.1): el buscador del vademécum y de los tratamientos, las filas del
          récipe y el aviso de cambios sin guardar. Se inicializa sólo si la sección está en pantalla. --}}

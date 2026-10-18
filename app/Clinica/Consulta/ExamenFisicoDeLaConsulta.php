@@ -108,30 +108,47 @@ final class ExamenFisicoDeLaConsulta
      * (`:9030` y `:8819`). La columna se llama distinto que el rótulo en las tres circunferencias: el
      * nombre es el del esquema del legado y no se renombra.
      *
-     * `tipo` dice con qué control se pinta: `numero` es un `<input type="number">` (una columna `double`
-     * de `consultas` o el entero del examen) y `texto` un `<input type="text">` (el `char(8)` de
-     * `tension`, con su máscara `###/###`).
+     * `tipo` dice con qué control se pinta: `numero` es una medida que se teclea y `texto` el `char(8)` de
+     * `tension` (la máscara `###/###` del escritorio). `mascara` dice **cómo se llena en la pantalla**
+     * (O-08, `public/js/clinica/mascara-numero.js`):
      *
-     * @return array<int,array{columna:string,etiqueta:string,unidad:?string,ayuda:string,tipo:string}>
+     *  - `decimal` — dígitos y una coma decimal: `enteros` es el máximo de dígitos de la parte entera y
+     *    `decimales` el de la parte decimal. Con **un solo** dígito entero (la talla en metros) la coma se
+     *    pone sola al llegar al máximo, que es lo que hace `162` → `1,62`.
+     *  - `entero` — sólo dígitos: las frecuencias no llevan decimales.
+     *  - `tension` — dígitos con la barra: `12080` → `120/80`.
+     *
+     * La máscara es de la pantalla: en la base la talla y el peso siguen siendo `double` con punto
+     * (`1.62`) y la tensión sigue siendo el texto `120/80` (`App\Support\NumeroDeFormulario`).
+     *
+     * @return array<int,array{columna:string,etiqueta:string,unidad:?string,ayuda:string,tipo:string,mascara:string,enteros:int,decimales:int}>
      */
     public static function antropometria(): array
     {
         return [
             ['columna' => 'peso', 'etiqueta' => 'Peso', 'unidad' => 'kg', 'tipo' => 'numero',
+                'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
                 'ayuda' => 'El peso de hoy.'],
             ['columna' => 'talla', 'etiqueta' => 'Talla', 'unidad' => 'm', 'tipo' => 'numero',
+                'mascara' => 'decimal', 'enteros' => 1, 'decimales' => 2,
                 'ayuda' => 'En metros (1,62), como en el escritorio.'],
             ['columna' => 'tension', 'etiqueta' => 'Tensión arterial', 'unidad' => 'mmHg', 'tipo' => 'texto',
-                'ayuda' => 'Sistólica/diastólica (120/80).'],
+                'mascara' => 'tension', 'enteros' => 3, 'decimales' => 0,
+                'ayuda' => 'Sistólica/diastólica (120/80): escribe 12080 y la barra se pone sola.'],
             ['columna' => 'fc', 'etiqueta' => 'Frecuencia cardiaca', 'unidad' => 'x min', 'tipo' => 'numero',
+                'mascara' => 'entero', 'enteros' => 3, 'decimales' => 0,
                 'ayuda' => 'Latidos por minuto.'],
             ['columna' => 'pp', 'etiqueta' => 'Frecuencia respiratoria', 'unidad' => 'x min', 'tipo' => 'numero',
+                'mascara' => 'entero', 'enteros' => 3, 'decimales' => 0,
                 'ayuda' => 'Respiraciones por minuto.'],
             ['columna' => 'circabdominal', 'etiqueta' => 'Circunferencia abdominal', 'unidad' => 'cm', 'tipo' => 'numero',
+                'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
                 'ayuda' => 'En la columna `circabdominal` (solapa *Abdominal* del escritorio).'],
             ['columna' => 'circtoraxica', 'etiqueta' => 'Circunferencia toráxica', 'unidad' => 'cm', 'tipo' => 'numero',
+                'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
                 'ayuda' => 'En la columna `circtoraxica` (solapa *Toráxica* del escritorio).'],
             ['columna' => 'circcefalica', 'etiqueta' => 'Circunferencia cefálica', 'unidad' => 'cm', 'tipo' => 'numero',
+                'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
                 'ayuda' => 'En la columna `circcefalica` (solapa *Cefálica* del escritorio).'],
         ];
     }
