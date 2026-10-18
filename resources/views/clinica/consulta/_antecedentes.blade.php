@@ -14,6 +14,11 @@
 @endphp
 
 <div class="consulta-seccion" id="consulta-antecedentes">
+    {{-- Las categorías del escritorio de pediatría (WEB-12.3): un chip por tipo, con cuántos tiene el niño; el elegido filtra la lista y el catálogo. --}}
+    @if ($seccion->chips() !== [])
+        <x-ui.chips class="mb-3" :opciones="$seccion->chips()" etiqueta="Categoría" />
+    @endif
+
     {{-- El `action` sale del buscador cuando hay pendientes: le agrega `?agregar=…` para que el POST no los
          pierda si la página se recargó (los `hidden` de abajo también los mandan, pero una recarga se los
          lleva y la query no). Sin pendientes es el `action` normal. --}}
@@ -38,7 +43,11 @@
 
             <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
-            @if ($seccion->estaVacio())
+            @if ($seccion->hayCategoria() && $seccion->grupos() === [])
+                <x-ui.vacio icono="bi-clipboard2-pulse" :titulo="'Sin antecedentes de ' . $seccion->nombreDeLaCategoria()">
+                    Búscalos en el catálogo de abajo y agrégalos. Quedan en la historia clínica del paciente, no en esta consulta.
+                </x-ui.vacio>
+            @elseif ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados">
                     Búscalos en el catálogo de abajo y agrégalos. Quedan en su historia clínica, no en esta consulta.
                 </x-ui.vacio>

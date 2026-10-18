@@ -197,6 +197,11 @@ class ConsultaController extends Controller
 
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
         // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
+        // Pediatría (WEB-12.3): sus siete tipos de antecedente (Patológicos, C.A., Madre…) se siembran en el catálogo del médico la primera vez.
+        if ($this->alcance()->esPediatria()) {
+            app(\App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos::class)->ejecutar($contexto['reg_medico']);
+        }
+
         $alertas = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria)
             ->where('alerta', true)
             ->map(fn ($fila) => ['nombre' => $fila->nombre, 'detalle' => $fila->detalle])
@@ -779,12 +784,18 @@ class ConsultaController extends Controller
         if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
 
+            // Pediatría (WEB-12.3): las siete categorías del escritorio como chips, con el nombre que cada médico les da. Ginecología no cambia.
+            $esPediatria = $this->alcance()->esPediatria();
+
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
                 route('clinica.consulta.antecedentes.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
+                $esPediatria ? $antecedentes->tipos($regMedico) : [],
+                $esPediatria ? trim((string) request()->query('tipo', '')) : '',
+                fn (string $tipo) => route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES] + ($tipo === '' ? [] : ['tipo' => $tipo])),
             );
         }
 
@@ -1357,7 +1368,7 @@ class ConsultaController extends Controller
         return new SeccionDeAntecedentesCatalogoVista(
             $antecedentes->catalogo($regMedico, $buscar, $tipo),
             $delPaciente->pluck('codigo')->all(),
-            $antecedentes->tipos(),
+            $antecedentes->tipos($regMedico),
             // La base del enlace "Agregar" de cada fila: vuelve a **esta misma sección** (el `?seccion=`
             // lo agrega el ViewModel) con el código tildado.
             route('clinica.consulta', [$consulta->id]),

@@ -36,7 +36,55 @@ final class SeccionDeAntecedentesVista
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private array $old = [],
+        // Los chips de categoría de pediatría (WEB-12.3): los tipos del médico, el que está activo (`''` = todos) y el enlace de cada uno. Sin tipos no hay chips.
+        private array $categorias = [],
+        private string $tipoActivo = '',
+        private ?\Closure $urlDeTipo = null,
     ) {
+    }
+
+    /**
+     * Los chips de categoría (*Todos*, *Patológicos*, *C.A.*, *Madre*…) con cuántos antecedentes tiene el paciente en cada una. Vacío en las especialidades que
+     * no los usan (ginecología conserva su pantalla).
+     *
+     * @return array<int,array{texto:string, url:string, activa:bool}>
+     */
+    public function chips(): array
+    {
+        if ($this->categorias === [] || $this->urlDeTipo === null) {
+            return [];
+        }
+
+        $chips = [['texto' => 'Todos (' . $this->antecedentes->count() . ')', 'url' => ($this->urlDeTipo)(''), 'activa' => $this->tipoActivo === '']];
+
+        foreach ($this->categorias as $categoria) {
+            $cuantos = $this->antecedentes->filter(fn ($a) => ($a->tipoCodigo ?? null) === $categoria['codigo'])->count();
+            $chips[] = [
+                'texto' => $categoria['nombre'] . ' (' . $cuantos . ')',
+                'url' => ($this->urlDeTipo)($categoria['codigo']),
+                'activa' => $this->tipoActivo === $categoria['codigo'],
+            ];
+        }
+
+        return $chips;
+    }
+
+    /** ¿Hay una categoría elegida? Entonces la lista muestra sólo esa. */
+    public function hayCategoria(): bool
+    {
+        return $this->tipoActivo !== '' && $this->categorias !== [];
+    }
+
+    /** El nombre de la categoría elegida, para decirlo cuando no tiene antecedentes. */
+    public function nombreDeLaCategoria(): string
+    {
+        foreach ($this->categorias as $categoria) {
+            if ($categoria['codigo'] === $this->tipoActivo) {
+                return $categoria['nombre'];
+            }
+        }
+
+        return '';
     }
 
     public function urlGuardar(): string
@@ -78,6 +126,10 @@ final class SeccionDeAntecedentesVista
         $grupos = [];
 
         foreach ($this->antecedentes as $antecedente) {
+            if ($this->hayCategoria() && ($antecedente->tipoCodigo ?? null) !== $this->tipoActivo) {
+                continue;
+            }
+
             $titulo = $antecedente->tipoNombre ?? 'Sin clasificar';
 
             $grupos[$titulo] ??= ['titulo' => $titulo, 'filas' => []];
