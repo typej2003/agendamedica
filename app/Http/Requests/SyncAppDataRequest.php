@@ -159,6 +159,12 @@ class SyncAppDataRequest extends FormRequest
         'historias', 'consultas', 'recipes',
         // Paso 18.B2: agregar un motivo (del catálogo) a una consulta.
         'motivo_consulta_paciente',
+        // A3 de PLAN-MOVIL.md: la **evaluación física** de la consulta. Es la única creación clínica que
+        // **sí** trae columnas: no tiene número que asignar, cuelga de la consulta y el servidor resuelve
+        // la clave del legado `(historia, consulta)` —donde `consulta` es el **número** de la consulta, no
+        // su id— con la Action de la web (`GuardarEvaluacionFisica`). Sólo se aceptan las columnas de
+        // `WRITABLE_COLUMNS['examen_fisico_nuevo']`.
+        'examen_fisico_nuevo',
     ];
 
     /**

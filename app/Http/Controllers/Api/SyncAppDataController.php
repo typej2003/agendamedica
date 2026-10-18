@@ -747,6 +747,11 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\QuitarMotivoDeLaConsulta::class),
             // Y la regla del récipe (el número, la cabecera y las filas), desde WEB-5.1.
             app(\App\Actions\Consulta\GuardarRecipe::class),
+            // Y la de la evaluación física (la clave del legado `(historia, consulta)`, la fila que se
+            // crea si falta y el "sólo lo que cambió"), desde A3 de PLAN-MOVIL.md.
+            app(\App\Actions\Consulta\GuardarEvaluacionFisica::class),
+            // El mapa del dato de esa evaluación, para devolverle al teléfono el id real de la fila.
+            app(\App\Clinica\Consulta\ExamenFisicoDeLaConsulta::class),
         );
         $creadosAntes = count($creados);
 
@@ -879,9 +884,9 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos de
-     * la consulta y récipes); el resto (ediciones, borrados, reordenamientos, citas nuevas)
-     * después, en el orden en que llegó.
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, y lo que cuelga de
+     * la consulta: motivos, récipes y la evaluación física); el resto (ediciones, borrados,
+     * reordenamientos, citas nuevas) después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
@@ -889,7 +894,12 @@ class SyncAppDataController extends Controller
     {
         $prioridad = [
             'pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'motivos_consulta' => 3,
-            'motivo_consulta_paciente' => 4, 'recipes' => 4,
+            // Todo lo que **cuelga de la consulta** va después de ella: un motivo, un récipe y —desde A3
+            // de PLAN-MOVIL.md— la evaluación física. La evaluación física comparte prioridad con las
+            // otras dos porque no depende de ellas (las tres dependen sólo de la consulta), y ponerla en 4
+            // es lo que hace que una consulta creada en el mismo lote ya tenga número cuando se busca su
+            // fila; con la prioridad del "resto" el examen se rechazaría por no encontrar la consulta.
+            'motivo_consulta_paciente' => 4, 'recipes' => 4, 'examen_fisico_nuevo' => 4,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
