@@ -5,6 +5,7 @@ namespace App\Clinica\Impresion\Vistas;
 use App\Clinica\Impresion\DistribuidorDeDocumento;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\Membrete;
+use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Support\FechaClinica;
 
 /**
@@ -15,6 +16,12 @@ use App\Support\FechaClinica;
  * queda en blanco. Si el texto no entra, **sigue en la otra mitad** (`DistribuidorDeDocumento`): la primera lleva «Continúa →»
  * y la segunda es la continuación, con la firma. Si ni así entra, sigue en una hoja más.
  *
+ * **Los dos modos de hoja (O-26):** el documento declara el suyo (`DocumentoImpreso::modo()`, que lo lee de `ModoDeLaHoja`) y
+ * esta vista lo respeta: en **hoja completa vertical** el documento ocupa una página entera, el reparto se mide con las medidas
+ * de la hoja completa y cada trozo va en su propia página (`ModoDeLaHoja::porPagina()`). La cuenta del reparto es la misma
+ * clase; lo único que cambia son las medidas con las que mide. Es el caso del **informe del control de embarazo** y de los
+ * **formatos en blanco** de los ecos.
+ *
  * Como todo ViewModel de la web clínica **no consulta la base**: recibe los documentos y el membrete ya leídos. Se prueba sin
  * base de datos.
  */
@@ -22,32 +29,41 @@ final class HojasDeDocumentoVista
 {
     /**
      * @param  array<int,DocumentoImpreso>  $documentos
+     * @param  DistribuidorDeDocumento|null  $distribuidor  el reparto de la media hoja; `null` usa el de siempre (el que inyecta
+     *                                                      el contenedor)
      */
     public function __construct(
         private Membrete $membrete,
         private array $documentos,
-        private DistribuidorDeDocumento $distribuidor = new DistribuidorDeDocumento(),
+        private ?DistribuidorDeDocumento $distribuidor = null,
     ) {
+        $this->distribuidor ??= new DistribuidorDeDocumento();
     }
 
     /**
      * Las hojas, en el orden en que salen de la impresora.
      *
-     * Cada hoja trae el `tamano` de la letra del cuerpo en puntos y sus `mitades`: una o dos, cada una con su título, los datos
-     * del paciente (en la primera) o el encabezado corto (en la continuación), los datos fijos, los párrafos y si lleva la
-     * firma o el «Continúa →».
+     * Cada hoja trae su `modo` (`mitad` o `completa`, que decide el tamaño y la orientación de la página), el `tamano` de la
+     * letra del cuerpo en puntos y sus `mitades`: una o dos, cada una con su título, los datos del paciente (en la primera) o
+     * el encabezado corto (en la continuación), los datos fijos, los párrafos y si lleva la firma o el «Continúa →».
      *
-     * @return array<int,array{tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
+     * @return array<int,array{modo:string, tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
      */
     public function hojas(): array
     {
         $hojas = [];
 
         foreach ($this->documentos as $documento) {
-            $reparto = $this->distribuidor->distribuir($this->membrete, $documento);
+            $modo = $documento->modo();
+            $distribuidor = $modo === ModoDeLaHoja::COMPLETA
+                ? new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo))
+                : $this->distribuidor;
 
-            foreach (array_chunk($reparto['mitades'], 2) as $par) {
+            $reparto = $distribuidor->distribuir($this->membrete, $documento);
+
+            foreach (array_chunk($reparto['mitades'], ModoDeLaHoja::porPagina($modo)) as $par) {
                 $hojas[] = [
+                    'modo' => $modo,
                     'tipo' => 'documento',
                     'etiqueta' => null,
                     'tamano' => $reparto['puntos'],

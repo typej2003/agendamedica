@@ -9,12 +9,13 @@ use App\Clinica\Impresion\OpcionesDeRecipe;
 
 /**
  * **La vista previa de lo que se imprime** (WEB-5.3a): una o varias hojas, cada una de un récipe (WEB-5.2) o de un documento
- * de la consulta —constancia, reposo, referencia o informe—, una detrás de otra en el orden pedido.
+ * de la consulta —constancia, reposo, referencia, informe, el informe de una eco o el del control de embarazo—, una detrás de
+ * otra en el orden pedido.
  *
- * Es la vista de la **página de impresión** cuando lo que se imprime puede ser de las dos familias (la secretaría imprime
- * «todos» los documentos de una cita). No reparte nada por su cuenta: cada documento lo reparte su propia clase
- * (`HojasDeRecipeVista` para los récipes, `HojasDeDocumentoVista` para el resto) y esta sólo las pone en orden y les agrega
- * la barra: el título, el resumen de la impresión y el enlace de vuelta. Tiene los mismos métodos que `HojasDeRecipeVista`,
+ * Cada documento trae **su modo de hoja** (O-26: `DocumentoImpreso::modo()`, que lo declara `ModoDeLaHoja`): media hoja
+ * horizontal para los récipes y las solicitudes, A4 vertical completa para los informes de los ecos y el del control de
+ * embarazo. Esta vista los pone en orden y les agrega la barra; el reparto de cada uno lo hace su propia clase
+ * (`HojasDeRecipeVista`, `HojasDeDocumentoVista`, y el formulario de una eco). Tiene los mismos métodos que `HojasDeRecipeVista`,
  * que sigue siendo la vista de la página cuando se imprime un solo récipe.
  *
  * El diálogo de las opciones (modo y nombre del medicamento) sólo tiene sentido si hay récipes: `conOpciones()`.

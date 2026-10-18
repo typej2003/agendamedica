@@ -67,3 +67,28 @@
    `MedidasDeLaMitad::CONTINUA_MM`). Reemplaza a la franja de firma, que sólo lleva la última mitad. */
 
 .documento-continua { flex: none; margin: 1.5mm 0 0; text-align: right; font-size: 8pt; font-style: italic; line-height: 1.25; }
+
+/* --------------------------------------------------------------------------------- Hoja completa vertical (O-26)
+   El informe del control de embarazo y los formatos en blanco de los ecos salen en un **A4 vertical entero**, una hoja por
+   documento, y no en la mitad izquierda de un A4 horizontal. La regla de qué documento va en cada modo vive en
+   `App\Clinica\Impresion\ModoDeLaHoja`; las medidas de esta hoja, en `MedidasDeLaMitad::deLaHojaCompleta()` (210 × 296,5 mm con
+   9 arriba, 8 abajo y 14 a los lados = 182 × 279,5 mm útiles) y tienen que cambiar juntas con esto.
+
+   Se usa la **página con nombre** (`page: documento-completo`), la misma técnica que el informe de una eco
+   (`clinica-informe-eco.css`): el resto de las hojas de la corrida sigue en A4 horizontal, así un lote mixto —un récipe, un
+   informe de eco y un control de embarazo— sale cada hoja en su orientación. */
+
+@page documento-completo { size: A4 portrait; margin: 0; }
+
+.recipe-hoja-completa {
+    page: documento-completo;
+    width: 210mm;
+    /* 296,5 y no 297: con la altura exacta de la página, un redondeo del navegador empuja una hoja en blanco. */
+    height: 296.5mm;
+}
+
+/* Sin línea de corte: la hoja es de un solo documento. */
+.recipe-hoja-completa::before { display: none; }
+
+/* El mismo cuerpo de las dos hojas: el aire de arriba y abajo es el de la mitad y sólo cambia el ancho (que es el de la hoja). */
+.recipe-hoja-completa .recipe-mitad { width: 210mm; padding: 9mm 14mm 8mm; }

@@ -237,6 +237,24 @@ final class DocumentoImpreso
     ) {
     }
 
+    /**
+     * **El modo de la hoja de este documento** (O-26): media hoja horizontal o A4 vertical completa.
+     *
+     * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
+     * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
+     * ocupa una página entera.
+     */
+    public function modo(): string
+    {
+        return $this->informe !== null ? ModoDeLaHoja::COMPLETA : ModoDeLaHoja::de($this->tipo);
+    }
+
+    /** ¿Se imprime en hoja completa vertical (una por A4) y no en media hoja? */
+    public function enHojaCompleta(): bool
+    {
+        return $this->modo() === ModoDeLaHoja::COMPLETA;
+    }
+
     /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
     public function conInforme(InformeDeEco $informe): self
     {
