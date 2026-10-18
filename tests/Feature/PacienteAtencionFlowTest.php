@@ -15,36 +15,30 @@ use Tests\TestCase;
 
 class PacienteAtencionFlowTest extends TestCase
 {
-    public function test_saludo_paciente_no_registrado_da_bienvenida_y_pregunta_especialidad()
+    public function test_saludo_paciente_no_registrado_inicia_flujo_de_registro()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
-        $mockContext->shouldReceive('obtenerContextoPaciente')
+        $mockContext->shouldReceive('gestionarRegistroPaciente')
             ->once()
-            ->with('584129998877')
-            ->andReturn([
-                'existe' => false,
-                'nombre' => null,
-                'numhistoria' => null,
-                'medicos_asociados' => [],
-                'tiene_medicos' => false,
-                'especialidades' => ['Medicina General', 'Cardiología', 'Pediatría'],
-            ]);
-
-        $mockContext->shouldReceive('generarMensajePrimerContacto')
-            ->once()
-            ->andReturn("¡Hola! 👋 Te damos la bienvenida a *Doctorisimo*.\n\n¿A cuál especialidad médica deseas buscar un médico para agendar tu cita?\n\n1️⃣ Medicina General\n2️⃣ Cardiología\n3️⃣ Pediatría");
+            ->with('584129998877', 'Hola')
+            ->andReturn("¡Hola! Te damos la bienvenida a *Doctorisimo*. 👋\n\nNotamos que tu número de teléfono no se encuentra registrado en nuestro sistema. Para poder brindarte atención médica y agendar tus citas, te ofrecemos registrarte.\n\nPara completar tu registro, te solicitaremos los siguientes datos:\n1️⃣ Tu número de cédula de identidad\n2️⃣ Tus apellidos\n3️⃣ Tus nombres\n\nPara comenzar, por favor indícanos tu número de *cédula de identidad* (ejemplo: V-12345678):");
 
         $gemini = app(GeminiService::class);
         $respuesta = $gemini->generarRespuesta('Hola', '584129998877');
 
         $this->assertStringContainsString('Doctorisimo', $respuesta);
-        $this->assertStringContainsString('especialidad médica', $respuesta);
-        $this->assertStringContainsString('Cardiología', $respuesta);
+        $this->assertStringContainsString('cédula de identidad', $respuesta);
+        $this->assertStringContainsString('apellidos', $respuesta);
     }
 
     public function test_saludo_paciente_registrado_con_multiples_medicos_pregunta_a_cual_referenciar()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
+        $mockContext->shouldReceive('gestionarRegistroPaciente')
+            ->once()
+            ->with('584165800403', 'Hola buenas tardes')
+            ->andReturn(null);
+
         $mockContext->shouldReceive('obtenerContextoPaciente')
             ->once()
             ->with('584165800403')
@@ -131,6 +125,11 @@ class PacienteAtencionFlowTest extends TestCase
     public function test_seleccion_de_medico_consulta_cola_y_devuelve_proximo_cupo()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
+        $mockContext->shouldReceive('gestionarRegistroPaciente')
+            ->once()
+            ->with('584165800403', '1')
+            ->andReturn(null);
+
         $mockContext->shouldReceive('obtenerContextoPaciente')
             ->once()
             ->with('584165800403')

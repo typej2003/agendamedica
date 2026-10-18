@@ -27,6 +27,16 @@ class GeminiService
      */
     public function generarRespuesta(string $mensajeUsuario, ?string $telefono = null): string
     {
+        $cleanTel = $telefono ? preg_replace('/\D/', '', $telefono) : null;
+
+        // 0. Si se proporciona teléfono, verificar si el paciente está en proceso de registro o si no existe en Paciente
+        if ($telefono) {
+            $respuestaRegistro = $this->contextService->gestionarRegistroPaciente($telefono, $mensajeUsuario);
+            if ($respuestaRegistro !== null) {
+                return $respuestaRegistro;
+            }
+        }
+
         // 1. Obtener contexto del paciente por su teléfono
         $contexto = $telefono
             ? $this->contextService->obtenerContextoPaciente($telefono)
@@ -42,8 +52,7 @@ class GeminiService
 
         // 2. Si el usuario confirma directamente una cita ofrecida previamente ("sí", "confirmo", "resérvala", "1")
         if (!empty($contexto['telefono']) && $this->esConfirmacionDeReserva($mensajeUsuario, $contexto['telefono'])) {
-            $cleanTel = preg_replace('/\D/', '', $contexto['telefono']);
-            $pendiente = Cache::get("wa_pendiente_{$contexto['telefono']}") ?? Cache::get("wa_pendiente_{$cleanTel}");
+            $pendiente = Cache::get("wa_pendiente_{$contexto['telefono']}") ?? ($cleanTel ? Cache::get("wa_pendiente_{$cleanTel}") : null);
             if ($pendiente) {
                 $resultado = $this->contextService->reservarCitaEnCola(
                     $contexto['telefono'],
@@ -51,7 +60,9 @@ class GeminiService
                     $pendiente['fecha'] ?? null
                 );
                 Cache::forget("wa_pendiente_{$contexto['telefono']}");
-                Cache::forget("wa_pendiente_{$cleanTel}");
+                if ($cleanTel) {
+                    Cache::forget("wa_pendiente_{$cleanTel}");
+                }
                 if (!empty($resultado['exito']) && !empty($resultado['mensaje_confirmacion'])) {
                     return $resultado['mensaje_confirmacion'];
                 }
@@ -64,18 +75,42 @@ class GeminiService
             }
         }
 
-        // 3. Manejo directo si el usuario responde con el número de opción del médico mostrado
+        // 3. Manejo directo si el usuario seleccionó un médico de una especialidad previamente consultada
+        $respuestaMedicoEspecialidad = $this->resolverOpcionMedicoDeEspecialidad($mensajeUsuario, $contexto);
+        if ($respuestaMedicoEspecialidad !== null) {
+            return $respuestaMedicoEspecialidad;
+        }
+
+        // 4. Manejo directo si el usuario responde con el número de opción del médico mostrado en su menú habitual
         $respuestaDirectaOpcion = $this->resolverOpcionDirecta($mensajeUsuario, $contexto);
         if ($respuestaDirectaOpcion !== null) {
             return $respuestaDirectaOpcion;
         }
 
-        // 4. Si el mensaje es un saludo o la primera petición, responder según el flujo exacto requerido
+        // 5. Si el mensaje es un saludo o comando de inicio ("Hola", "Buenas tardes", etc.)
         if ($this->esSaludoOPrimerMensaje($mensajeUsuario)) {
             return $this->contextService->generarMensajePrimerContacto($contexto);
         }
 
-        // 5. Si es una consulta conversacional, procesar con Gemini AI y Function Calling
+        // 6. Si el usuario seleccionó una especialidad médica (por número de opción o por nombre)
+        $respuestaEspecialidad = $this->resolverSeleccionEspecialidad($mensajeUsuario, $contexto);
+        if ($respuestaEspecialidad !== null) {
+            return $respuestaEspecialidad;
+        }
+
+        // 7. Si el usuario solicita directamente un médico ("o si solicita directamente un medico")
+        $respuestaMedicoDirecto = $this->resolverSolicitudDirectaMedico($mensajeUsuario, $contexto);
+        if ($respuestaMedicoDirecto !== null) {
+            return $respuestaMedicoDirecto;
+        }
+
+        // 7b. Si el paciente realiza una pregunta directa sobre teléfono de médico, dónde atiende, consultorio o dirección
+        $respuestaInformativa = $this->contextService->resolverPreguntaInformativa($mensajeUsuario, $contexto);
+        if ($respuestaInformativa !== null) {
+            return $respuestaInformativa;
+        }
+
+        // 8. Si es una consulta conversacional, procesar con Gemini AI y Function Calling
         if (empty($this->apiKey)) {
             Log::error('GeminiService: API Key no configurada o vacía.');
             return $this->contextService->generarMensajePrimerContacto($contexto);
@@ -152,6 +187,166 @@ class GeminiService
         }
 
         return null;
+    }
+
+    /**
+     * Resuelve si el usuario seleccionó un médico de la lista de una especialidad consultada previamente.
+     */
+    protected function resolverOpcionMedicoDeEspecialidad(string $mensajeUsuario, array $contexto): ?string
+    {
+        $telefono = $contexto['telefono'] ?? null;
+        if (!$telefono) {
+            return null;
+        }
+
+        $cleanTel = preg_replace('/\D/', '', $telefono);
+        $medicos = Cache::get("wa_medicos_especialidad_{$telefono}") ?? Cache::get("wa_medicos_especialidad_{$cleanTel}");
+
+        if (empty($medicos) || !is_array($medicos)) {
+            return null;
+        }
+
+        $trim = trim($mensajeUsuario);
+        $medicoElegido = null;
+
+        if (is_numeric($trim)) {
+            $indice = (int)$trim - 1;
+            if (isset($medicos[$indice])) {
+                $medicoElegido = $medicos[$indice];
+            }
+        } else {
+            foreach ($medicos as $m) {
+                if (mb_stripos($m['nombre'], $trim) !== false || mb_stripos($trim, $m['nombre']) !== false) {
+                    $medicoElegido = $m;
+                    break;
+                }
+            }
+        }
+
+        if (!$medicoElegido) {
+            return null;
+        }
+
+        // Limpiar la lista de médicos de la especialidad para evitar colisiones posteriores
+        Cache::forget("wa_medicos_especialidad_{$telefono}");
+        Cache::forget("wa_medicos_especialidad_{$cleanTel}");
+
+        // Si el paciente ya tiene una cita activa pendiente (atendido = 0) con ese médico, mostrar mensaje de la cita
+        $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($telefono, $medicoElegido['reg_medico']);
+        if ($citaActiva) {
+            return $citaActiva['mensaje'];
+        }
+
+        $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
+
+        if (!empty($disponibilidad['disponible'])) {
+            $datosPendientes = [
+                'reg_medico' => $medicoElegido['reg_medico'],
+                'fecha' => $disponibilidad['fecha'],
+            ];
+            Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
+            Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+
+            return "¡Perfecto! Hemos consultado la agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}):\n\n"
+                . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
+                . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
+                . "¿Deseas que reservemos tu cita para esta fecha?";
+        } else {
+            return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
+        }
+    }
+
+    /**
+     * Resuelve si el usuario seleccionó una especialidad médica (por número o por nombre)
+     * y presenta los médicos disponibles en esa especialidad.
+     */
+    protected function resolverSeleccionEspecialidad(string $mensajeUsuario, array $contexto): ?string
+    {
+        $telefono = $contexto['telefono'] ?? null;
+        $resultado = $this->contextService->resolverSeleccionEspecialidad($mensajeUsuario, $telefono);
+
+        if (!$resultado) {
+            return null;
+        }
+
+        $esp = $resultado['especialidad'];
+        $medicos = $resultado['medicos'];
+
+        if (empty($medicos)) {
+            return "Actualmente no disponemos de médicos con cupos registrados para la especialidad de *{$esp}*.\n\n"
+                . "¿Deseas consultar otra especialidad o solicitar un médico directamente?";
+        }
+
+        if ($telefono) {
+            $cleanTel = preg_replace('/\D/', '', $telefono);
+            Cache::put("wa_medicos_especialidad_{$telefono}", $medicos, now()->addMinutes(30));
+            Cache::put("wa_medicos_especialidad_{$cleanTel}", $medicos, now()->addMinutes(30));
+        }
+
+        $msg = "👨‍⚕️ *Médicos disponibles en {$esp}:*\n\n";
+        foreach ($medicos as $idx => $med) {
+            $numEmoji = $this->contextService->obtenerNumeroEmoji($idx + 1);
+            $msg .= "{$numEmoji} *{$med['nombre']}*\n";
+        }
+
+        $msg .= "\n¿Con cuál médico deseas agendar tu cita?\n"
+            . "*(Escribe el número o el nombre de tu doctor, o indícanos si prefieres otra especialidad)*.";
+
+        return $msg;
+    }
+
+    /**
+     * Resuelve si el usuario solicita directamente a un médico específico en su mensaje.
+     */
+    protected function resolverSolicitudDirectaMedico(string $mensajeUsuario, array $contexto): ?string
+    {
+        $infoMedico = $this->contextService->identificarSolicitudDirectaMedico($mensajeUsuario);
+        if (!$infoMedico || empty($infoMedico['solicitado'])) {
+            return null;
+        }
+
+        // Si el médico solicitado NO está registrado en la clínica
+        if (empty($infoMedico['registrado']) || empty($infoMedico['medico'])) {
+            $nombreBuscado = $infoMedico['nombre_solicitado'] ?? 'el doctor solicitado';
+            return "No encontramos registrado(a) en nuestra clínica al *Dr(a). {$nombreBuscado}*.\n\n"
+                . "¿Deseas consultar nuestras especialidades disponibles o verificar con otro médico?";
+        }
+
+        $medico = $infoMedico['medico'];
+        $telefono = $contexto['telefono'] ?? null;
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+
+        // Si el paciente ya tiene una cita activa pendiente (atendido = 0) con ese médico
+        if ($telefono) {
+            $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($telefono, $regMedico);
+            if ($citaActiva) {
+                return $citaActiva['mensaje'];
+            }
+        }
+
+        $disponibilidad = $this->contextService->consultarProximoDiaDisponible($regMedico);
+        $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+
+        if (!empty($disponibilidad['disponible'])) {
+            if ($telefono) {
+                $cleanTel = preg_replace('/\D/', '', $telefono);
+                $datosPendientes = [
+                    'reg_medico' => $regMedico,
+                    'fecha' => $disponibilidad['fecha'],
+                ];
+                Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
+                Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+            }
+
+            return "¡Perfecto! Hemos consultado la agenda del *{$medico->nombre_mostrar}* ({$especialidad}):\n\n"
+                . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
+                . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
+                . "¿Deseas que reservemos tu cita para esta fecha?";
+        } else {
+            return "Hemos verificado la agenda del *{$medico->nombre_mostrar}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
+        }
     }
 
     /**
@@ -271,6 +466,34 @@ class GeminiService
                         ]
                     ],
                     [
+                        'name' => 'consultar_telefono_medico',
+                        'description' => 'Obtiene el número de teléfono o contacto del médico desde su ficha en el modelo Medico.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nombre o código reg_medico del médico.'
+                                ]
+                            ],
+                            'required' => ['medico']
+                        ]
+                    ],
+                    [
+                        'name' => 'consultar_donde_atiende_medico',
+                        'description' => 'Obtiene los centros médicos, clínicas, sedes o instituciones donde atiende el médico según la relación MedicoMedicalCenter / MedicalCenter.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nombre o código reg_medico del médico.'
+                                ]
+                            ],
+                            'required' => ['medico']
+                        ]
+                    ],
+                    [
                         'name' => 'reservar_cita',
                         'description' => 'Registra e inserta una cita en la tabla Cola para el paciente con el médico en la fecha seleccionada. Retorna la confirmación oficial con el turno y datos del consultorio.',
                         'parameters' => [
@@ -363,6 +586,12 @@ class GeminiService
                         } elseif ($functionName === 'consultar_informacion_medico') {
                             $medico = $args['medico'] ?? '';
                             $resultadoTool = $this->contextService->obtenerInformacionMedico($medico);
+                        } elseif ($functionName === 'consultar_telefono_medico') {
+                            $medico = $args['medico'] ?? '';
+                            $resultadoTool = $this->contextService->obtenerTelefonoMedico($medico);
+                        } elseif ($functionName === 'consultar_donde_atiende_medico') {
+                            $medico = $args['medico'] ?? '';
+                            $resultadoTool = $this->contextService->obtenerCentrosDondeAtiende($medico);
                         } elseif ($functionName === 'reservar_cita') {
                             $regMedico = $args['reg_medico'] ?? '';
                             $fecha = $args['fecha'] ?? null;
@@ -503,6 +732,8 @@ class GeminiService
 
         $prompt .= "\nREGLAS DE CONSULTA Y HERRAMIENTAS (TOOLS):\n";
         $prompt .= "- Si el paciente CONFIRMA O SOLICITA RESERVAR, AGENDAR O APARTAR UNA CITA (o dice 'sí', 'reserva', 'agéndala', etc.): DEBES invocar OBLIGATORIAMENTE la herramienta 'reservar_cita'.\n";
+        $prompt .= "- Si el paciente pregunta por el TELÉFONO O NÚMERO DE CONTACTO directo de un médico: DEBES invocar la herramienta 'consultar_telefono_medico'.\n";
+        $prompt .= "- Si el paciente pregunta DÓNDE ATIENDE un médico, en qué clínicas, hospitales o centros médicos presta servicio: DEBES invocar la herramienta 'consultar_donde_atiende_medico'.\n";
         $prompt .= "- Si el paciente pregunta por la DIRECCIÓN, UBICACIÓN FÍSICA, CIUDAD O TELÉFONO del consultorio de un médico: DEBES invocar la herramienta 'consultar_datos_consultorio'.\n";
         $prompt .= "- Si el paciente pregunta por los HORARIOS, DÍAS DE ATENCIÓN o MODALIDAD (orden de llegada o cita previa): DEBES invocar 'consultar_horarios_atencion'.\n";
         $prompt .= "- Si el paciente pregunta por CUPOS, TURNOS O DISPONIBILIDAD DE FECHAS para una cita: DEBES invocar 'consultar_proximo_cupo_disponible'.\n";
