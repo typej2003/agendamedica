@@ -42,6 +42,10 @@ use Tests\TestCase;
  *     `source = mobile`.
  *  7. Que los cuatro estudios **no se pisen entre sí**: son cuatro tablas, y el pélvico y el 3.º pueden
  *     convivir en la misma consulta.
+ *  8. Que un estudio **con sólo la ficha del embarazo** (la FUR, la gesta, la fecha) o **sin ninguna
+ *     columna** se acepte y cree la fila con la clave del legado: la regla de «sin datos» es de la hoja
+ *     impresa (web), no de la fila — el escritorio también la crea vacía y el teléfono perdería la
+ *     creación si se rechazara.
  *
  * `DatabaseTransactions`: los tests no limpian la base (ver MedicAPI/AGENTS.md).
  */
@@ -471,10 +475,22 @@ class SyncEcoCreacionTest extends TestCase
     }
 
     /**
-     * Un estudio **sin ningún dato** no es un documento: la Action de la web lo rechaza y el teléfono recibe el
-     * motivo en vez de una fila vacía (y el resto del lote sigue).
+     * **El comienzo normal de un eco obstétrico: sólo la ficha del embarazo.** La FUR y la gesta no cuentan
+     * para decidir si hay hoja que imprimir, pero sí son datos que el médico cargó: la creación se acepta y la
+     * fila queda con ellos, como la dejaría el escritorio.
+     *
+     * @return array<string,array{0:string,1:string}>
      */
-    public function test_un_estudio_sin_datos_se_rechaza_sin_crear_la_fila(): void
+    public static function soloLaFichaDelEmbarazo(): array
+    {
+        return [
+            'sólo la FUR' => ['fur', '2026-03-01'],
+            'sólo la gesta' => ['gesta', '2'],
+        ];
+    }
+
+    /** @dataProvider soloLaFichaDelEmbarazo */
+    public function test_crear_un_eco_obstetrico_con_solo_la_fur_o_la_gesta_se_acepta(string $columna, string $valor): void
     {
         $medico = $this->medico();
         $consulta = $this->consulta($medico);
@@ -484,17 +500,120 @@ class SyncEcoCreacionTest extends TestCase
             'operation' => 'created',
             'temp_id' => -58,
             'consulta_id' => $consulta->id,
-            'columns' => ['puro_texto' => 'SOLO UNA COLUMNA QUE NO ES DEL MAPA'],
+            'columns' => [$columna => $valor],
         ]]);
 
-        $this->assertSame([], $response->json('creados'));
-        $this->assertCount(1, $response->json('rechazados'));
-        $this->assertSame(
-            'El eco necesita algún dato: cargá lo que haya dado el estudio.',
-            $response->json('rechazados.0.motivo'),
-        );
-        $this->assertSame(0, ModeloDelPrimero::where('reg_medico', $medico->reg_medico)
-            ->where('historia', (int) $consulta->numhistoria)
-            ->count(), 'no se creó una fila vacía');
+        $this->assertSame([], $response->json('rechazados'), 'la creación se acepta');
+
+        $fila = $this->fila(ModeloDelPrimero::class, $medico, $consulta, 'historia', 'consulta');
+        $this->assertNotNull($fila, 'la fila existe con la clave del legado');
+        $this->assertSame((int) $consulta->numhistoria, (int) $fila->historia);
+        $this->assertSame((int) $consulta->nroconsulta, (int) $fila->consulta);
+        $this->assertSame($valor, (string) $fila->{$columna}, "se guardó `{$columna}`");
+        $this->assertNotNull($fila->fecha, 'la fecha del estudio se completa con hoy');
+        $this->assertSame(now()->toDateString(), substr((string) $fila->fecha, 0, 10));
+
+        $creado = $this->creado($response, 'eco_obstetrico', -58);
+        $this->assertNotNull($creado, 'la creación contesta con su id');
+        $this->assertSame((int) $fila->id, $creado['id']);
+
+        $rastro = SyncChange::where('table_name', 'eco_obstetrico')->where('client_temp_id', -58)->first();
+        $this->assertNotNull($rastro);
+        $this->assertSame('created', $rastro->operation);
+        $this->assertSame('mobile', $rastro->source);
+        $this->assertSame($medico->reg_medico, $rastro->reg_medico);
+    }
+
+    public function test_crear_un_eco_pelvico_con_solo_la_fecha_se_acepta(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $response = $this->sync([[
+            'table' => 'eco_pelvico',
+            'operation' => 'created',
+            'temp_id' => -59,
+            'consulta_id' => $consulta->id,
+            'columns' => ['fecha' => '2026-05-05'],
+        ]]);
+
+        $this->assertSame([], $response->json('rechazados'), 'la creación se acepta');
+
+        $fila = $this->fila(EcoPelvico::class, $medico, $consulta, 'numhistoria', 'nroconsulta');
+        $this->assertNotNull($fila, 'la fila existe con la clave del legado');
+        $this->assertSame('2026-05-05', substr((string) $fila->fecha, 0, 10), 'se guardó la fecha del estudio');
+        $this->assertSame((int) $fila->id, $this->creado($response, 'eco_pelvico', -59)['id']);
+    }
+
+    /**
+     * **Un estudio sin ninguna columna también se acepta.** Es el caso del escritorio: abre la consulta y crea
+     * la fila del estudio con su clave y la fecha, aunque el médico todavía no haya cargado nada. La regla de
+     * «sin datos» es de la hoja impresa (web), no de la fila; si el sync la aplicara, el teléfono descartaría
+     * la creación.
+     */
+    public function test_un_estudio_sin_ninguna_columna_se_acepta_como_el_escritorio(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $response = $this->sync([[
+            'table' => 'eco_obstetrico',
+            'operation' => 'created',
+            'temp_id' => -60,
+            'consulta_id' => $consulta->id,
+        ]]);
+
+        $this->assertSame([], $response->json('rechazados'), 'la creación se acepta');
+
+        $fila = $this->fila(ModeloDelPrimero::class, $medico, $consulta, 'historia', 'consulta');
+        $this->assertNotNull($fila, 'la fila se creó con la clave del legado');
+        $this->assertSame((int) $consulta->numhistoria, (int) $fila->historia);
+        $this->assertSame((int) $consulta->nroconsulta, (int) $fila->consulta);
+        $this->assertSame($medico->reg_medico, $fila->reg_medico);
+        $this->assertNotNull($fila->fecha, 'la fecha que pone el escritorio al crear la fila');
+        $this->assertNull($fila->lcc, 'no se inventó ningún hallazgo');
+        $this->assertSame((int) $fila->id, $this->creado($response, 'eco_obstetrico', -60)['id']);
+    }
+
+    /**
+     * **La edición de la FUR no pasa por la Action de la web**: va por el camino genérico de A1 (`updated` por
+     * columna, con el mapa del estudio como lista blanca), así que una fila que ya existe —como la que deja el
+     * escritorio al abrir la consulta— acepta la FUR sin la regla de «sin datos».
+     */
+    public function test_editar_la_fur_de_una_fila_ya_existente_por_updated_aplica(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        // La fila mínima del escritorio: la clave y la fecha, sin ningún hallazgo.
+        $fila = ModeloDelPrimero::create([
+            'reg_medico' => $medico->reg_medico,
+            'historia' => (int) $consulta->numhistoria,
+            'consulta' => (int) $consulta->nroconsulta,
+            'fecha' => '2026-02-01',
+        ]);
+
+        $response = $this->sync([[
+            'table' => 'eco_obstetrico',
+            'operation' => 'updated',
+            'record_id' => $fila->id,
+            'column' => 'fur',
+            'value' => '2026-02-15',
+            'occurred_at' => now()->toIso8601String(),
+        ]]);
+
+        $this->assertSame([], $response->json('rechazados'), 'una edición no se rechaza');
+
+        $fila->refresh();
+        $this->assertSame('2026-02-15', (string) $fila->fur, 'la FUR se aplicó');
+
+        $rastro = SyncChange::where('table_name', 'eco_obstetrico')
+            ->where('record_id', $fila->id)
+            ->where('operation', 'updated')
+            ->where('column_name', 'fur')
+            ->first();
+        $this->assertNotNull($rastro, 'la edición deja su rastro por columna');
+        $this->assertSame('mobile', $rastro->source);
+        $this->assertSame('2026-02-15', $rastro->value);
     }
 }
