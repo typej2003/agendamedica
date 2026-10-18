@@ -86,7 +86,7 @@ final class EcoDoppler
         return [
             ['titulo' => 'Ficha', 'icono' => 'bi-calendar-heart', 'campos' => [
                 self::fecha('fecha', 'Fecha',
-                    'La fecha del estudio: la propone el servidor con hoy si no la escribís.'),
+                    'La fecha del estudio: abre con la de hoy y se puede cambiar.'),
                 self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa.'),
                 ['columna' => 'gesta', 'etiqueta' => 'Gesta', 'tipo' => 'opciones',
                     'opciones' => self::romanos(), 'ayuda' => 'El número de la gesta que se está siguiendo.'],

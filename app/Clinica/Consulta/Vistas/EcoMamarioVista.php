@@ -38,8 +38,9 @@ final class EcoMamarioVista extends EcoObstetricoVista
         string $urlImprimir = '',
         private array $medicos = [],
         array $old = [],
+        ?string $fechaPorDefecto = null,
     ) {
-        parent::__construct($estudio, $urlGuardar, $urlVolver, $urlImprimir, null, null, $old);
+        parent::__construct($estudio, $urlGuardar, $urlVolver, $urlImprimir, null, null, $old, $fechaPorDefecto);
     }
 
     /**

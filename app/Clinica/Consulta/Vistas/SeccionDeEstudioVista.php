@@ -22,6 +22,7 @@ final class SeccionDeEstudioVista
         private TiposDeEstudio $tipos,
         private object $estudio,
         private ?array $plantillas = null,
+        private ?array $formato = null,
     ) {
     }
 
@@ -61,6 +62,24 @@ final class SeccionDeEstudioVista
     public function plantillas(): ?array
     {
         return $this->plantillas;
+    }
+
+    /**
+     * Las **plantillas del formato** del estudio activo (O-17), o `null` si la sección no las ofrece.
+     *
+     * Lo arma el controlador con `PlantillasDelFormato` y el contenedor pinta el panel arriba del formulario:
+     *
+     *  - `plantillas`: la lista, cada una con su título y sus `valores` (columna => valor);
+     *  - `campos`: las columnas descriptivas del estudio, que son las que se guardan y se completan;
+     *  - `bloques`: los títulos de los bloques que toca, para decirlo en la pantalla;
+     *  - `queHace`: la frase con la regla (sólo completa los vacíos, no toca las medidas ni las fechas);
+     *  - `urlGuardar` y `tipo`: a dónde postea «Guardar como plantilla» y con qué estudio.
+     *
+     * @return array{plantillas:array<int,array{titulo:string, valores:array<string,string>}>, campos:array<int,string>, bloques:array<int,string>, queHace:string, urlGuardar:string, tipo:string}|null
+     */
+    public function formato(): ?array
+    {
+        return $this->formato;
     }
 
     public function ayuda(): string

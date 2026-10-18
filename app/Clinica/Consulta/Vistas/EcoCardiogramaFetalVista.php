@@ -41,8 +41,9 @@ final class EcoCardiogramaFetalVista extends EcoObstetricoVista
         ?int $gestaSugerida = null,
         array $old = [],
         private bool $hayFila = true,
+        ?string $fechaPorDefecto = null,
     ) {
-        parent::__construct($estudio, $urlGuardar, $urlVolver, $urlImprimir, $furSugerida, $gestaSugerida, $old);
+        parent::__construct($estudio, $urlGuardar, $urlVolver, $urlImprimir, $furSugerida, $gestaSugerida, $old, $fechaPorDefecto);
     }
 
     protected function mapa(): array

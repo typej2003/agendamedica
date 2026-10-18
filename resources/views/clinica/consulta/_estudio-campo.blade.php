@@ -16,8 +16,11 @@
             @endforeach
         </select>
     @elseif ($campo['tipo'] === 'numero')
+        {{-- O-15: el campo arranca **vacío** cuando el legado dejó su marcador `-1` (el mapa ya lo lee como
+             «sin dato») y el incremento **empieza en 0**: `min="0"` es el mismo piso que valida el servidor, así
+             que las flechas del control no pueden llevar a un negativo que después se rechace. --}}
         <div class="examen-unidad">
-            <input type="number" step="any" inputmode="decimal" class="form-control"
+            <input type="number" step="any" min="0" inputmode="decimal" class="form-control"
                    id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                    value="{{ $campo['valor'] }}">
             @if (($campo['unidad'] ?? null))

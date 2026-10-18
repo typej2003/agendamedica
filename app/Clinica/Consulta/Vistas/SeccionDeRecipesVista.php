@@ -46,7 +46,8 @@ final class SeccionDeRecipesVista
      * @param  Collection<int,object>  $recipes  lo que devolvió `RecipesDeLaConsulta::deLaConsulta()`
      * @param  string|null  $editando  `null` = la lista; `'nuevo'` = el editor de un récipe nuevo; un número
      *                                 = el editor de ese récipe. El controlador ya comprobó que existe.
-     * @param  string  $fechaDeLaConsulta  `AAAA-MM-DD`: la fecha de emisión por defecto de un récipe nuevo
+     * @param  string  $fechaDeLaConsulta  `AAAA-MM-DD`: la fecha de emisión por defecto de un récipe **nuevo**
+     *                                     —hoy del consultorio (O-13)—; el editor de uno existente usa la suya
      * @param  array<string,string>  $urls  `lista`, `nuevo`, `guardarNuevo`, `medicamentos`, `tratamientos`,
      *                                      `crearMedicamento`: las URLs de la sección (sin parámetros)
      * @param  Closure  $urlEditar  `fn(int $numero): string` — el editor de ese récipe

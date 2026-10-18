@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\MapaDelEstudio;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Models\Consulta;
 use App\Models\EcoPelvico;
 use App\Models\Historia;
@@ -724,5 +726,215 @@ class ConsultaEcoWebTest extends TestCase
             ->assertSee('Datos biométricos')
             ->assertSee('Peso F.:')->assertSee('3200')
             ->assertSee('Conclusiones:')->assertSee('Embarazo a término.');
+    }
+
+    // ------------------------------------------------------- O-13: la fecha del estudio abre con hoy
+
+    /**
+     * **Los ocho tipos de estudio abren su fecha con hoy del consultorio** (O-13), sin fila guardada.
+     *
+     * El `setUp` deja el reloj en `2026-10-06 09:00` UTC y la consulta es de ese día, así que "hoy" y la
+     * fecha de la consulta coinciden: lo que se prueba acá es que el campo **no llega vacío**.
+     */
+    public function test_la_fecha_del_estudio_abre_con_hoy_en_todos_los_tipos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        foreach (TiposDeEstudio::claves() as $tipo) {
+            $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, $tipo));
+
+            $respuesta->assertOk();
+            $this->assertMatchesRegularExpression(
+                '/<input type="date"[^>]*name="fecha"[^>]*value="' . preg_quote($this->hoy->toDateString(), '/') . '"/s',
+                $respuesta->getContent(),
+                'El estudio ' . $tipo . ' no abrió su fecha con hoy.',
+            );
+        }
+    }
+
+    /**
+     * **La fecha es la del consultorio, no la del servidor** (trampa 59): a las 20:30 de Caracas el reloj UTC
+     * ya está en el día siguiente y `now()` daría otro día. `FechaDelConsultorio::hoy()` da el 6.
+     */
+    public function test_la_fecha_del_estudio_es_la_del_consultorio_a_las_2030_de_caracas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // 20:30 del 6 de octubre en Caracas (UTC-4) = 00:30 del 7 en UTC.
+        Carbon::setTestNow(Carbon::parse('2026-10-07 00:30:00'));
+
+        $contenido = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/name="fecha"[^>]*value="2026-10-06"/s', $contenido);
+        $this->assertDoesNotMatchRegularExpression('/name="fecha"[^>]*value="2026-10-07"/s', $contenido);
+    }
+
+    /** Una fecha ya guardada manda: el default es sólo para el campo vacío (O-13). */
+    public function test_la_fecha_guardada_no_se_pisa_con_la_de_hoy(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        EcoPelvico::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => 1001,
+            'nroconsulta' => 1,
+            'fecha'       => '2026-01-15',
+            'cuerpo'      => 60,
+        ]);
+
+        $contenido = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/name="fecha"[^>]*value="2026-01-15"/s', $contenido);
+        $this->assertDoesNotMatchRegularExpression('/name="fecha"[^>]*value="' . $this->hoy->toDateString() . '"/s', $contenido);
+    }
+
+    // ------------------------------------- O-15: el `-1` del legado es «sin dato» y los mensajes en español
+
+    /** El `-1` del escritorio se lee vacío, no se pinta; y el incremento arranca en 0. */
+    public function test_el_menos_uno_del_legado_se_lee_vacio_y_el_incremento_empieza_en_cero(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        EcoPelvico::create([
+            'reg_medico'   => $medico->reg_medico,
+            'numhistoria'  => 1001,
+            'nroconsulta'  => 1,
+            'fecha'        => $this->hoy->toDateString(),
+            'cuerpo'       => -1,
+            'ovarioderap'  => -1,
+            'volumen_der'  => -1,
+        ]);
+
+        $contenido = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        // Los tres campos del marcador se pintan vacíos y el `-1` no aparece como valor de ningún control.
+        foreach (['cuerpo', 'ovarioderap', 'volumen_der'] as $columna) {
+            $this->assertMatchesRegularExpression(
+                '/id="' . $columna . '"[^>]*value=""/s',
+                $contenido,
+                'El campo ' . $columna . ' con -1 no se pintó vacío.',
+            );
+        }
+        $this->assertStringNotContainsString('value="-1"', $contenido);
+
+        // El incremento empieza en 0: el control numérico declara el mismo piso que valida el servidor.
+        $this->assertMatchesRegularExpression('/min="0"[^>]*id="cuerpo"/s', $contenido);
+        $this->assertMatchesRegularExpression('/min="0"[^>]*id="ovarioderap"/s', $contenido);
+    }
+
+    /**
+     * Guardar el estudio con el marcador **escribe «sin dato»**: lo guardado no se migra, pero al guardar se
+     * escribe `NULL` (O-15).
+     */
+    public function test_guardar_un_estudio_con_el_marcador_escribe_sin_dato(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $fila = EcoPelvico::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => 1001,
+            'nroconsulta' => 1,
+            'fecha'       => $this->hoy->toDateString(),
+            'cuerpo'      => -1,
+            'ovarioderap' => -1,
+        ]);
+
+        // El navegador manda los campos como se ven: el del marcador va vacío.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta), $this->formulario([
+                'observacion' => 'Sin particularidades.',
+            ]))
+            ->assertSessionHas('estado');
+
+        $this->assertNull($fila->fresh()->cuerpo);
+        $this->assertNull($fila->fresh()->ovarioderap);
+        $this->assertSame('Sin particularidades.', $fila->fresh()->observacion);
+    }
+
+    /** Un número negativo da **su mensaje en español, con el rótulo de la pantalla** (O-15). */
+    public function test_un_numero_negativo_da_su_mensaje_en_espanol_con_el_rotulo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta), $this->formulario([
+                'ovarioderap' => '-1',
+                'cuerpo'      => '60',
+            ]));
+
+        $respuesta->assertSessionHasErrors([
+            'ovarioderap' => 'El campo transverso del ovario derecho no puede ser negativo (el mínimo es 0).',
+        ]);
+    }
+
+    /** Una fecha imposible da su mensaje en español con el rótulo, y no se guarda nada (O-15). */
+    public function test_una_fecha_imposible_da_su_mensaje_en_espanol_con_el_rotulo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // La FUR del obstétrico se **teclea** `dd/mm/aaaa` (O-18): el 32/13 no existe y el mensaje dice cómo
+        // se escribe, con el rótulo de la pantalla.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '32/13/2026']);
+
+        $errores = $respuesta->assertSessionHasErrors('fur')->baseResponse->getSession()->get('errors');
+        $mensaje = $errores->first('fur');
+
+        $this->assertStringContainsString('FUR', $mensaje);
+        $this->assertStringContainsString('no es una fecha válida', $mensaje);
+        $this->assertStringContainsString('dd/mm/aaaa', $mensaje);
+        $this->assertStringNotContainsString('The ', $mensaje);
+    }
+
+    /**
+     * **Ningún campo numérico de ningún estudio tiene su mensaje en inglés** (O-15): se recorre el mapa del
+     * dato de los ocho tipos y se manda el `-1` del marcador en cada primer campo numérico.
+     */
+    public function test_ningun_campo_numerico_de_los_ecos_tiene_su_mensaje_en_ingles(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $conNumericos = 0;
+
+        foreach (TiposDeEstudio::claves() as $tipo) {
+            $numerico = null;
+            foreach (MapaDelEstudio::campos($tipo) as $campo) {
+                if (($campo['tipo'] ?? 'texto') === 'numero') {
+                    $numerico = $campo['columna'];
+                    break;
+                }
+            }
+
+            // Los estudios que declaran sus medidas como texto no pasan por las reglas numéricas: el `-1`
+            // igual se lee vacío (lo hace `EstudioEcografico::limpiar`), pero no hay mensaje que revisar.
+            if ($numerico === null) {
+                continue;
+            }
+
+            $conNumericos++;
+
+            $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->post($this->urlGuardar($consulta, $tipo), [$numerico => '-1']);
+
+            $errores = $respuesta->baseResponse->getSession()->get('errors');
+            $this->assertNotNull($errores, 'El estudio ' . $tipo . ' no rechazó el -1.');
+            $mensaje = (string) $errores->first($numerico);
+
+            $this->assertStringContainsString('no puede ser negativo', $mensaje, 'Mensaje raro en ' . $tipo . ': ' . $mensaje);
+            $this->assertStringNotContainsString('The ', $mensaje, 'Mensaje en inglés en ' . $tipo . ': ' . $mensaje);
+        }
+
+        $this->assertGreaterThanOrEqual(3, $conNumericos, 'Se esperaban los estudios con medidas numéricas.');
     }
 }

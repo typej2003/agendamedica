@@ -389,6 +389,25 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Cefálica - Cefálica');
     }
 
+    /**
+     * **La fecha de un laboratorio nuevo abre con hoy** (O-13): es la fecha del estudio, no la de la consulta.
+     * Una fila que ya existe manda con su fecha (lo cubre la pestaña con `&fecha=`).
+     */
+    public function test_el_laboratorio_nuevo_abre_con_la_fecha_de_hoy(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&nueva=1'));
+
+        $respuesta->assertOk();
+        $this->assertMatchesRegularExpression(
+            '/id="fecha"[^>]*value="' . $this->hoy->toDateString() . '"/s',
+            $respuesta->getContent(),
+        );
+    }
+
     public function test_la_pestana_reporte_abre_con_la_ficha_de_la_gesta_y_el_boton_de_imprimir(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

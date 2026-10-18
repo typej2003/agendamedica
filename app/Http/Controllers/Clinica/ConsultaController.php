@@ -34,7 +34,9 @@ use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\PlantillasDelEstudio;
+use App\Clinica\Consulta\PlantillasDelFormato;
 use App\Clinica\Consulta\PlantillasDelTexto;
+use App\Clinica\Consulta\MapaDelEstudio;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -599,6 +601,16 @@ class ConsultaController extends Controller
             // estudio no ofrece el botón (ver `PlantillasDelEstudio`).
             $plantillas = PlantillasDelEstudio::de($regMedico, $tipo);
 
+            // Las plantillas del **formato** del estudio (O-17): los campos descriptivos del estudio
+            // guardados con un título, para completar los vacíos de la próxima paciente. Viaja con la
+            // sección porque el panel se pinta arriba del formulario y la lista es la del estudio activo.
+            $formato = $this->formatoDelEstudio($consulta, $tipo);
+
+            // O-13: la fecha con la que abre un estudio que todavía no tiene fecha guardada: **hoy del
+            // consultorio** (`FechaDelConsultorio::hoy()`, nunca `now()`: pasadas las 20:00 de Caracas son
+            // días distintos, trampa 59). Los ViewModels no consultan el reloj: se la pasan.
+            $hoyDelEstudio = FechaDelConsultorio::hoy()->toDateString();
+
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
             if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
@@ -618,8 +630,10 @@ class ConsultaController extends Controller
                         null,
                         null,
                         (array) old(),
+                        $hoyDelEstudio,
                     ),
                     $plantillas,
+                    $formato,
                 );
             }
 
@@ -638,8 +652,10 @@ class ConsultaController extends Controller
                         null,
                         null,
                         (array) old(),
+                        $hoyDelEstudio,
                     ),
                     $plantillas,
+                    $formato,
                 );
             }
 
@@ -663,8 +679,12 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                         $guardado,
+                        // O-13: la fecha del estudio abre con hoy aunque la fila todavía no exista (la
+                        // precarga del escritorio trae los dos textos, no la fecha).
+                        $hoyDelEstudio,
                     ),
                     $plantillas,
+                    $formato,
                 );
             }
 
@@ -685,8 +705,10 @@ class ConsultaController extends Controller
                             ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
                             ->all(),
                         (array) old(),
+                        $hoyDelEstudio,
                     ),
                     $plantillas,
+                    $formato,
                 );
             }
 
@@ -709,8 +731,10 @@ class ConsultaController extends Controller
                             ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
                             ->all(),
                         (array) old(),
+                        $hoyDelEstudio,
                     ),
                     $plantillas,
+                    $formato,
                 );
             }
 
@@ -728,6 +752,7 @@ class ConsultaController extends Controller
                         $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
                         $gestas->actual($regMedico, (int) $consulta->numhistoria)?->clave(),
                         (array) old(),
+                        $hoyDelEstudio,
                     )
                     : new EcoGinecologicoVista(
                     $eco->de($consulta),
@@ -741,8 +766,10 @@ class ConsultaController extends Controller
                     $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
+                    $hoyDelEstudio,
                 ),
                 $plantillas,
+                $formato,
             );
         }
 
@@ -834,6 +861,9 @@ class ConsultaController extends Controller
                         : 'Cada fecha es un control de esta gesta: el peso, la tensión, la altura uterina, la placenta y las medidas del feto. Se guarda con el botón; si sales sin guardar, el navegador te avisa.',
                     aviso: 'Hay cambios sin guardar. Si sales ahora, se pierden.',
                     old: (array) old(),
+                    // O-13: un laboratorio o un control **nuevo** abre con la fecha de hoy del consultorio
+                    // (una fila que ya existe manda con su fecha, y la FUR nunca se toca).
+                    fechaPorDefecto: FechaDelConsultorio::hoy()->toDateString(),
                 );
             } else {
                 $pestanaVm = new PrenatalVista(
@@ -984,7 +1014,10 @@ class ConsultaController extends Controller
                 $fila?->fdesde?->toDateString(),
                 $fila?->obser_reposo,
                 $reposos->esReal($fila),
-                $dia->toDateString(),
+                // O-13: la fecha de inicio del reposo abre con **hoy** (la del consultorio): es la fecha del
+                // documento, no la de la consulta que se está editando. Se puede cambiar (un reposo que empieza
+                // mañana) y una fecha guardada manda.
+                FechaDelConsultorio::hoy()->toDateString(),
                 ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')],
                 $old,
             );
@@ -1274,7 +1307,10 @@ class ConsultaController extends Controller
             // `recipe`, con el `NULL` del escritorio como el récipe 1).
             $recipes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
             $editando === null ? null : ($editando === 'nuevo' ? 'nuevo' : (string) (int) $editando),
-            $dia->toDateString(),
+            // O-13: la fecha de emisión de un récipe **nuevo** abre con hoy del consultorio. Es la fecha del
+            // documento —no la de la consulta que se edita— y una fecha guardada manda (el editor de un récipe
+            // existente usa la suya).
+            FechaDelConsultorio::hoy()->toDateString(),
             [
                 'lista' => $urlLista,
                 'nuevo' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => 'nuevo']),
@@ -1470,5 +1506,38 @@ class ConsultaController extends Controller
             $buscar,
             $tipo,
         );
+    }
+
+    /**
+     * **Las plantillas del formato del estudio** (O-17), listas para el panel: las del tipo activo, los
+     * campos descriptivos que se guardan y la frase que dice qué hace.
+     *
+     * La lectura está en `PlantillasDelFormato`; acá sólo se arma lo que la vista necesita. `null` si el
+     * tipo no es de los que admiten plantillas del formato (hoy, todos los del ítem 5).
+     *
+     * @return array{plantillas:array<int,array{titulo:string, valores:array<string,string>}>, campos:array<int,string>, bloques:array<int,string>, queHace:string, urlGuardar:string, tipo:string}|null
+     */
+    private function formatoDelEstudio(Consulta $consulta, string $tipo): ?array
+    {
+        if (! PlantillasDelFormato::admite($tipo)) {
+            return null;
+        }
+
+        $plantillas = PlantillasDelFormato::de((string) $consulta->reg_medico, $tipo)
+            ->map(fn (array $plantilla) => [
+                'titulo' => $plantilla['titulo'],
+                'valores' => $plantilla['valores'],
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'plantillas' => $plantillas,
+            'campos' => MapaDelEstudio::columnasDescriptivas($tipo),
+            'bloques' => PlantillasDelFormato::bloquesQueToca($tipo),
+            'queHace' => PlantillasDelFormato::queHace(),
+            'urlGuardar' => route('clinica.consulta.estudio.plantilla.guardar', [$consulta->id, 'tipo' => $tipo]),
+            'tipo' => $tipo,
+        ];
     }
 }

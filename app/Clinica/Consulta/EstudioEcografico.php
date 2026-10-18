@@ -26,6 +26,11 @@ final class EstudioEcografico
      * Se aplica la misma vara que en la evaluación física (trampa 29): `NULL`, la cadena vacía **y** el
      * literal `none` que el escritorio dejó escrito en varias tablas son el mismo "sin dato", para no
      * mostrar `none` como si fuera un hallazgo.
+     *
+     * Además, **el `-1` del escritorio es «sin dato» y no una medida** (O-15): el PowerBuilder lo usaba como
+     * marcador de vacío en los campos numéricos, y leerlo como número pintaba un `-1` que el `min:0` después
+     * rechazaba —un error en un valor que el médico nunca escribió—. Un negativo no es una medida posible en
+     * estos estudios, así que se lee vacío; lo guardado no se migra (ver {@see self::limpiar()}).
      */
     public function valor(string $columna): ?string
     {
@@ -86,7 +91,14 @@ final class EstudioEcografico
         return $this->valor('fur');
     }
 
-    /** El mismo "sin dato" en todas partes: `null`, `''` y el literal `none` del escritorio. */
+    /**
+     * El mismo "sin dato" en todas partes: `null`, `''`, el literal `none` del escritorio y **los negativos
+     * del marcador** (el `-1` de O-15).
+     *
+     * El `-1` **no se migra**: si el estudio se guarda, la columna se escribe como «sin dato» porque lo que la
+     * web manda es el vacío del campo, no el marcador. El `0` sigue siendo un valor del legado (el `gesta`
+     * `0` de las opciones): la regla es el signo, no el valor.
+     */
     public static function limpiar($crudo): ?string
     {
         if ($crudo === null) {
@@ -94,12 +106,22 @@ final class EstudioEcografico
         }
 
         if (is_float($crudo) || is_int($crudo)) {
-            // Un número no se recorta ni se convierte a "0": el 0 de `gesta` es un valor del legado.
-            return (string) $crudo;
+            // Un número no se recorta ni se convierte a "0": el 0 de `gesta` es un valor del legado. Pero un
+            // negativo es el marcador de vacío del escritorio, no una medida (O-15).
+            return $crudo < 0 ? null : (string) $crudo;
         }
 
         $texto = trim((string) $crudo);
 
-        return ($texto === '' || strcasecmp($texto, 'none') === 0) ? null : $texto;
+        if ($texto === '' || strcasecmp($texto, 'none') === 0) {
+            return null;
+        }
+
+        // El marcador también puede llegar como texto (`'-1'`, `'-1.00'`): es el mismo «sin dato».
+        if (is_numeric($texto) && (float) $texto < 0) {
+            return null;
+        }
+
+        return $texto;
     }
 }

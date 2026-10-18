@@ -18,6 +18,8 @@ use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\MapaDelEstudio;
+use App\Clinica\Consulta\RotulosDeValidacion;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
@@ -105,7 +107,15 @@ class ConsultaEstudioController extends Controller
         $request->merge(FechaDeFormulario::normalizar($request->all(), array_keys($camposDeFecha)));
 
         try {
-            $datos = $request->validate($this->reglasDe($tipo), $this->mensajesDeFecha($camposDeFecha));
+            // O-15: los mensajes salen en español (`lang/es/validation.php`) y el campo se nombra con el
+            // **rótulo de la pantalla**, no con la columna: «El campo transverso del ovario derecho no puede
+            // ser negativo», no «The ovarioderap must be at least 0.». El diccionario de rótulos sale del
+            // mapa del dato del estudio que se está guardando.
+            $datos = $request->validate(
+                $this->reglasDe($tipo),
+                $this->mensajesDeFecha($camposDeFecha),
+                RotulosDeValidacion::deLosGrupos($this->gruposDe($tipo)),
+            );
             $resultado = $accion->ejecutar($consulta, $datos, null, 'web');
         } catch (InvalidArgumentException $excepcion) {
             // "El eco necesita algún dato": no es un error de validación de un campo, es que el formulario
@@ -144,7 +154,7 @@ class ConsultaEstudioController extends Controller
         // `double`) y sus textos son más largos: es la diferencia que ya existía entre `reglas()` y
         // `reglasDelMapa()`. Ahora las dos salen de la misma lista de campos, así que una columna nueva se
         // valida sin escribirse dos veces.
-        $pelvico = $this->mapaDe($tipo) === null;
+        $pelvico = $tipo === TiposDeEstudio::GINECOLOGICO;
 
         foreach ($this->camposDe($tipo) as $campo) {
             $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
@@ -185,26 +195,24 @@ class ConsultaEstudioController extends Controller
     }
 
     /**
+     * El mapa **por bloques** de ese estudio: es lo que necesitan los rótulos de los mensajes (O-15), que
+     * agregan el bloque cuando la etiqueta se repite («transverso del ovario derecho»).
+     *
+     * @return array<int,array{titulo:string,campos:array<int,array<string,mixed>>}>
+     */
+    private function gruposDe(string $tipo): array
+    {
+        return MapaDelEstudio::grupos($tipo);
+    }
+
+    /**
      * Los campos del mapa de ese estudio, en una sola lista.
      *
      * @return array<int,array<string,mixed>>
      */
     private function camposDe(string $tipo): array
     {
-        $mapa = $this->mapaDe($tipo);
-
-        if ($mapa === null) {
-            return EcoGinecologico::campos();
-        }
-
-        $campos = [];
-        foreach ($mapa as $grupo) {
-            foreach ($grupo['campos'] as $campo) {
-                $campos[] = $campo;
-            }
-        }
-
-        return $campos;
+        return MapaDelEstudio::campos($tipo);
     }
 
     /**

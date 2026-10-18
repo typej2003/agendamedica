@@ -19,7 +19,7 @@
 
         <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
-        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form"
+        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form" novalidate
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 

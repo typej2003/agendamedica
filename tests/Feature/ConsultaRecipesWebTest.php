@@ -436,7 +436,7 @@ class ConsultaRecipesWebTest extends TestCase
         $this->assertSame('web', $creados[0]->source);
     }
 
-    public function test_la_fecha_de_emision_por_defecto_es_la_de_la_consulta(): void
+    public function test_la_fecha_de_emision_por_defecto_es_la_de_hoy(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->vademecum($medico);
@@ -449,6 +449,33 @@ class ConsultaRecipesWebTest extends TestCase
         $cabecera = DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->first();
         $this->assertSame('2026-10-07', substr((string) $cabecera->fe_emision, 0, 10));
         $this->assertStringStartsWith('2026-10-07', (string) $this->filasDe($medico, 1001, 1)[0]->fecha);
+    }
+
+    /**
+     * **La fecha de emisión de un récipe nuevo es hoy, no la de la consulta que se está editando** (O-13):
+     * la fecha es del documento. Una fecha guardada, en cambio, manda (se prueba más abajo, al editar).
+     */
+    public function test_la_fecha_de_emision_de_un_recipe_nuevo_no_copia_la_de_una_consulta_vieja(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->update(['fecha' => '2026-09-01']);
+
+        $editor = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'nuevo'));
+
+        $editor->assertOk();
+        // El reloj de la prueba está en el 7 de octubre: la consulta es del 1.º de septiembre.
+        $this->assertMatchesRegularExpression('/name="fecha"[^>]*value="2026-10-07"/s', $editor->getContent());
+        $this->assertDoesNotMatchRegularExpression('/name="fecha"[^>]*value="2026-09-01"/s', $editor->getContent());
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlCrear($consulta), ['editor' => 1, 'items' => [$this->item('0001')]])
+            ->assertRedirect();
+
+        $cabecera = DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->first();
+        $this->assertSame('2026-10-07', substr((string) $cabecera->fe_emision, 0, 10));
     }
 
     public function test_el_segundo_recipe_es_el_2_y_el_nulo_del_legado_cuenta_como_el_1(): void

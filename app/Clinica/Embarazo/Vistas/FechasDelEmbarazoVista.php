@@ -26,6 +26,8 @@ final class FechasDelEmbarazoVista
      * @param  array<int,array{fecha:string,valores:array<string,string|null>}>  $filas  las filas guardadas
      * @param  Closure|null  $urlFecha  `fn(string $fecha): string` — la URL de cada fecha
      * @param  array<string,mixed>  $old  el `old()` del formulario
+     * @param  string  $fechaPorDefecto  la fecha que abre un laboratorio o un control **nuevo** (`AAAA-MM-DD`):
+     *                                   hoy del consultorio (O-13). Lo guardado y lo elegido mandan.
      */
     public function __construct(
         private string $titulo = '',
@@ -41,6 +43,7 @@ final class FechasDelEmbarazoVista
         private string $ayuda = '',
         private string $aviso = '',
         private array $old = [],
+        private string $fechaPorDefecto = '',
     ) {
     }
 
@@ -156,14 +159,14 @@ final class FechasDelEmbarazoVista
         return array_column($this->filas, null, 'fecha');
     }
 
-    /** La fecha del formulario: lo que se mandó, lo que se eligió o vacío (una fecha nueva). */
+    /** La fecha del formulario: lo que se mandó, lo que se eligió o —si es nueva— la de hoy (O-13). */
     private function valorDeLaFecha(): string
     {
         if (array_key_exists('fecha', $this->old) && $this->old['fecha'] !== null) {
             return (string) $this->old['fecha'];
         }
 
-        return $this->fechaElegida;
+        return $this->fechaElegida !== '' ? $this->fechaElegida : $this->fechaPorDefecto;
     }
 
     /** Lo escrito en el POST que falló, si no lo guardado en esa fecha. */

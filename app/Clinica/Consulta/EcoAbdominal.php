@@ -113,7 +113,7 @@ final class EcoAbdominal
         return [
             ['titulo' => 'El encabezado', 'icono' => 'bi-calendar-heart', 'campos' => [
                 ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha',
-                    'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
+                    'ayuda' => 'La fecha del estudio: abre con la de hoy y se puede cambiar.'],
                 // ⚠️ `transductor` es el nombre real de la columna (a diferencia del `tranductor` con el typo
                 // del eco mamario): no se renombra.
                 ['columna' => 'transductor', 'etiqueta' => 'Transductor', 'tipo' => 'texto', 'tope' => 30,

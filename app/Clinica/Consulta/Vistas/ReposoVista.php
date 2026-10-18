@@ -45,7 +45,7 @@ final class ReposoVista
         return (string) ($this->old['dias'] ?? $this->dias ?? 1);
     }
 
-    /** La fecha de inicio para el `<input type="date">`: lo escrito, lo guardado o el día de la consulta. */
+    /** La fecha de inicio para el `<input type="date">`: lo escrito, lo guardado o —si no hay nada— hoy (O-13). */
     public function desde(): string
     {
         return (string) ($this->old['desde'] ?? ReposoDeLaConsulta::fechaDeInicio($this->desde, ReposoDeLaConsulta::fechaDeInicio($this->fechaDeLaConsulta, '')));

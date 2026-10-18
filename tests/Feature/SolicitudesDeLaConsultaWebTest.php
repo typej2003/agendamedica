@@ -121,8 +121,22 @@ class SolicitudesDeLaConsultaWebTest extends TestCase
             ->assertSee('Constancia de asistencia');
     }
 
-    // ===================================================================================== Constancia
+    /**
+     * **La fecha de inicio de un reposo nuevo abre con hoy** (O-13), aunque la consulta sea de otro día: la
+     * fecha es la del documento. Se puede cambiar y una fecha guardada manda.
+     */
+    public function test_el_reposo_nuevo_abre_con_la_fecha_de_hoy_aunque_la_consulta_sea_vieja(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $consulta->update(['fecha' => '2026-09-01']);
 
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'reposo'));
+
+        $respuesta->assertOk();
+        $this->assertMatchesRegularExpression('/id="reposo-desde"[^>]*value="2026-10-07"/s', $respuesta->getContent());
+    }
+
+    // ===================================================================================== Constancia
     public function test_la_constancia_trae_el_texto_base_y_los_diagnosticos_de_la_consulta(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();

@@ -45,6 +45,9 @@ final class EcoGinecologicoVista
         private string $urlImprimir = '',
         private ?string $furSugerida = null,
         private array $old = [],
+        // La fecha con la que abre el estudio si todavía no tiene una guardada (O-13): la pasa el controlador
+        // —hoy del consultorio— para que el ViewModel no consulte el reloj ni la configuración.
+        private ?string $fechaPorDefecto = null,
     ) {
     }
 
@@ -104,7 +107,10 @@ final class EcoGinecologicoVista
     /** La fecha del estudio (`AAAA-MM-DD`) que se está mostrando: la del formulario o la guardada. */
     public function fecha(): string
     {
-        return $this->valor(EcoGinecologico::COLUMNA_FECHA);
+        $fecha = $this->valor(EcoGinecologico::COLUMNA_FECHA);
+
+        // O-13: sin fecha guardada ni escrita, la del estudio es **hoy** (la misma que abre el campo).
+        return $fecha !== '' ? $fecha : (string) $this->fechaPorDefecto;
     }
 
     /**
@@ -184,6 +190,16 @@ final class EcoGinecologicoVista
     private function campo(array $campo): array
     {
         $valor = $this->valor($campo['columna']);
+
+        // O-13: **la fecha del estudio abre con hoy** (la del consultorio, no la del servidor) cuando el
+        // estudio todavía no tiene fecha guardada. Es lo que hace el escritorio al crear la fila
+        // (`w_cargar_visualizar_ecografia.srw:223`, `fecha = today()`), y lo que la ayuda del campo prometía
+        // mientras el formulario abría el campo vacío. Una fecha ya guardada —o la que volvió en un POST que
+        // falló— manda: el default es sólo para el campo vacío.
+        if (($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
+            && ! array_key_exists($campo['columna'], $this->old)) {
+            $valor = (string) $this->fechaPorDefecto;
+        }
 
         return [
             'columna' => $campo['columna'],

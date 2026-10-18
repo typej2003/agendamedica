@@ -35,6 +35,10 @@ class EcoObstetricoVista
         private ?string $furSugerida = null,
         private ?int $gestaSugerida = null,
         private array $old = [],
+        // La fecha con la que abre el estudio si todavía no tiene una guardada (O-13). La pasa el
+        // controlador —hoy del consultorio, `FechaDelConsultorio::hoy()`— para que el ViewModel no consulte
+        // el reloj ni la configuración: así se puede probar sin arrancar la app.
+        private ?string $fechaPorDefecto = null,
     ) {
     }
 
@@ -218,8 +222,20 @@ class EcoObstetricoVista
     private function valorDelCampo(array $campo): string
     {
         $columna = $campo['columna'];
+        $tipo = $campo['tipo'] ?? 'texto';
 
-        if (($campo['tipo'] ?? 'texto') !== 'fecha-tecleada') {
+        // O-13: **la fecha del estudio abre con hoy** (la del consultorio) cuando todavía no hay una guardada;
+        // es lo que hace el escritorio al abrir la consulta sin fila (`fecha = today()`). La guardada manda y
+        // lo que volvió en un POST que falló también: el default es sólo para el campo que estaba vacío.
+        if ($tipo === 'fecha') {
+            if (array_key_exists($columna, $this->old)) {
+                return (string) ($this->old[$columna] ?? '');
+            }
+
+            return $this->estudio->valor($columna) ?? (string) $this->fechaPorDefecto;
+        }
+
+        if ($tipo !== 'fecha-tecleada') {
             return (string) ($this->valorDe($columna) ?? '');
         }
 

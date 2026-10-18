@@ -99,7 +99,7 @@ final class EcoMamario
         return [
             ['titulo' => 'El encabezado', 'icono' => 'bi-calendar-heart', 'campos' => [
                 ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha',
-                    'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
+                    'ayuda' => 'La fecha del estudio: abre con la de hoy y se puede cambiar.'],
                 // El desplegable de médicos: guarda la cédula y muestra el nombre (su `dddw` del escritorio,
                 // `d_dwww_medicos`, tiene `cedula` como data column y `nombres + ' ' + apellidos` como display).
                 // Las opciones las completa `EcoMamarioVista` con la libreta del médico.
