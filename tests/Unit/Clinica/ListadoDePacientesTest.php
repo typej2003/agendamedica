@@ -99,6 +99,11 @@ class ListadoDePacientesTest extends TestCase
         $this->assertNull($filtro->procedencia());
         $this->assertNull($filtro->codigoDeProcedencia());
         $this->assertFalse($filtro->hayFiltro());
+
+        // La edad del reporte es la **abierta** y no filtra (O-14): por eso entra el paciente sin fecha
+        // de nacimiento. En cuanto se pone un rango, filtra.
+        $this->assertFalse($filtro->filtraPorEdad());
+        $this->assertTrue(FiltroDePacientesPorRango::de(['edad_inicial' => '30', 'edad_final' => '40'], $this->hoy())->filtraPorEdad());
     }
 
     public function test_cualquier_filtro_puesto_se_puede_limpiar(): void
@@ -231,11 +236,16 @@ class ListadoDePacientesTest extends TestCase
             ['sexo' => 'F', 'desde' => '2024-01-01', 'hasta' => '2024-12-31'],
         );
 
+        // La edad abierta no se anuncia (O-14): no se filtró por ella.
         $this->assertSame(
-            '2 pacientes · ingresados entre el 01/01/2024 y el 31/12/2024 · de 1 a 110 años · Femenino.',
+            '2 pacientes · ingresados entre el 01/01/2024 y el 31/12/2024 · Femenino.',
             $vm->subtitulo(),
         );
         $this->assertSame('1 paciente', explode(' · ', $this->vista([$this->paciente()])->subtitulo())[0]);
+
+        // Con un rango de edad puesto, sí se dice (y es lo que se aplicó).
+        $conEdad = $this->vista([], ['edad_inicial' => '30', 'edad_final' => '40']);
+        $this->assertStringContainsString(' · de 30 a 40 años', $conEdad->subtitulo());
 
         $conEmpresa = $this->vista([], ['procedencia' => '02'], [(object) ['codesegemp' => '02', 'nombre' => 'PDVSA']]);
         $this->assertStringContainsString(' · empresa: PDVSA.', $conEmpresa->subtitulo());
@@ -259,12 +269,17 @@ class ListadoDePacientesTest extends TestCase
 
     public function test_la_cabecera_impresa_lleva_el_rango_la_edad_y_los_filtros_puestos(): void
     {
+        // Sin rango de edad no se declara "Edad" (O-14): no se aplicó. Con rango, sí.
         $sinFiltros = $this->vista([])->descripcionDeLosFiltros();
-        $this->assertSame(['Ingreso desde', 'Ingreso hasta', 'Edad'], array_column($sinFiltros, 'etiqueta'));
+        $this->assertSame(['Ingreso desde', 'Ingreso hasta'], array_column($sinFiltros, 'etiqueta'));
+
+        $conEdad = $this->vista([], ['edad_inicial' => '18', 'edad_final' => '65'])->descripcionDeLosFiltros();
+        $this->assertSame(['Ingreso desde', 'Ingreso hasta', 'Edad'], array_column($conEdad, 'etiqueta'));
+        $this->assertSame('18 a 65 años', $conEdad[2]['valor']);
 
         $conFiltros = $this->vista(
             [],
-            ['sexo' => 'F', 'estado_civil' => 'S', 'procedencia' => '02'],
+            ['edad_inicial' => '18', 'edad_final' => '65', 'sexo' => 'F', 'estado_civil' => 'S', 'procedencia' => '02'],
             [(object) ['codesegemp' => '02', 'nombre' => 'PDVSA']],
         )->descripcionDeLosFiltros();
 

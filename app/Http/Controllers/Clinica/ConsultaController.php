@@ -22,6 +22,7 @@ use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\TextoDelExamenVista;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
@@ -192,11 +193,26 @@ class ConsultaController extends Controller
 
         abort_unless($paciente !== null, 404);
 
+        // **O-22 (2026-10-17): `?seccion=examenes` ya no es una sección.** La galería de imágenes vive ahora
+        // como solapa de *Evaluación física* y los exámenes informados, dentro de *Resultado de exámenes*. Se
+        // redirige (302) para no dejar enlaces viejos muertos ni romper el historial del navegador.
+        if ((string) $request->query('seccion', '') === ConsultaShellVista::SECCION_EXAMENES) {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+                'pestana' => PestanasDelExamen::IMAGENES,
+            ]);
+        }
+
         // El día de la consulta, ya interpretado una sola vez: es lo que muestra el encabezado y lo que
         // elige la agenda a la que se vuelve.
         $dia = $consulta->fecha ? Carbon::parse($consulta->fecha) : FechaDelConsultorio::hoy();
 
-        $seccion = (string) $request->query('seccion', '');
+        // **La consulta abre en Motivos de consulta** (O-06, 2026-10-17): sin `?seccion=` se trata como
+        // `motivos` —el ítem 1 del catálogo—, sin redirect (la URL queda limpia) y con el mismo valor para el
+        // contenido, el shell y el grupo «Consulta» del menú. Un `?seccion=` que no existe **no** se pisa: cae
+        // en el estado vacío del shell, como siempre.
+        $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
@@ -268,12 +284,13 @@ class ConsultaController extends Controller
                 $avisar,
                 $contexto['specialty']?->slug,
             ),
-            // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
-            // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
-            // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
+            // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
+            // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el
+            // nombre del **ViewModel** para los parciales de cada sección (el shell y la sección no pueden
+            // llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
-                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $ecoAbdominal, $doctores),
+                : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $imagenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $ecoAbdominal, $doctores),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
             // son herramientas de la sección —una agrega antecedentes, la otra sube un archivo—, no su
@@ -364,6 +381,7 @@ class ConsultaController extends Controller
         DiagnosticosDeLaConsulta $diagnosticos,
         EvolucionDeLaConsulta $evolucion,
         ExamenesDeLaConsulta $examenes,
+        ImagenesDeLaConsulta $imagenes,
         RecipesDeLaConsulta $recipes,
         RecipeDeLaPareja $pareja,
         Carbon $dia,
@@ -449,6 +467,17 @@ class ConsultaController extends Controller
                 'pestana' => $clave,
             ]);
 
+            // La **galería de imágenes de los estudios** (O-22): una solapa más, al final, que no es de texto.
+            // Es la que vivía en la sección *Exámenes* retirada: «Esta consulta / Todas» y la subida, con el
+            // parcial `_imagenes` de siempre (la columna `observacion` sigue teniendo dos dueños, trampa 116).
+            if ($pestana === PestanasDelExamen::IMAGENES) {
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    $this->galeria($consulta, $regMedico, $imagenes),
+                );
+            }
+
             // Las mediciones de pediatría (WEB-7.4.3a): su propia tabla (`percentiles_paciente`) y su propio ViewModel.
             if ($pestana === PestanasDelExamen::MEDICIONES) {
                 return new SeccionDeEvaluacionVista(
@@ -491,6 +520,21 @@ class ConsultaController extends Controller
             // exámenes no tienen informe en el escritorio).
             $documento = TextosDelExamen::documento($pestana);
 
+            // **Los exámenes informados por el laboratorio** (O-22): la lista de sólo lectura que estaba en
+            // la sección *Exámenes* retirada se muestra dentro de la solapa *Resultado de exámenes*, junto a
+            // la nota que escribe el médico. La fila se llavea por `nrohistoria` + `nroconsulta`
+            // (`examen_paciente`, el `dw_12` de la pestaña de laboratorio del escritorio) y su observación de
+            // conjunto es `examen_obs.observacion`.
+            $informados = $pestana === TextosDelExamen::RESULTADOS
+                ? new SeccionDeExamenesVista(
+                    $examenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                    $examenes->observacion($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+                    $examenes->tieneCatalogo($regMedico),
+                    // *Solicitudes → Laboratorio* (WEB-5.4): donde se piden y se corrigen esos mismos exámenes.
+                    route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::LABORATORIO]),
+                )
+                : null;
+
             return new SeccionDeEvaluacionVista(
                 $pestana,
                 new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
@@ -518,6 +562,8 @@ class ConsultaController extends Controller
                             : route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]),
                         // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                         (array) old(),
+                        // O-22: la lista de exámenes informados sólo en *Resultado de exámenes*.
+                        $informados,
                     )
                     : new EvaluacionFisicaVista(
                         $examen->de($consulta),
@@ -821,20 +867,17 @@ class ConsultaController extends Controller
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
-                // Lo que el buscador dejó tildado: los chips lo conservan en su URL.
-                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
+                // El "Quitar" de cada fila (O-07): un POST inmediato, con el código en el cuerpo.
+                route('clinica.consulta.antecedentes.quitar', $consulta->id),
             );
         }
 
         if ($seccion === ConsultaShellVista::SECCION_DIAGNOSTICO) {
             $buscar = trim((string) request()->query('buscar', ''));
-            $pendientes = array_values(array_filter((array) request()->query('agregar', []), 'is_string'));
-            $conservar = ['seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO]
-                + ($buscar !== '' ? ['buscar' => $buscar] : [])
-                + ($pendientes !== [] ? ['agregar' => $pendientes] : []);
             $pagina = $diagnosticos->pagina(
                 $regMedico, $buscar, (int) request()->query('pagina_catalogo', 1),
-                route('clinica.consulta', [$consulta->id]), $conservar,
+                route('clinica.consulta', [$consulta->id]),
+                ['seccion' => ConsultaShellVista::SECCION_DIAGNOSTICO] + ($buscar !== '' ? ['buscar' => $buscar] : []),
             );
 
             return new SeccionDeDiagnosticosVista(
@@ -842,16 +885,16 @@ class ConsultaController extends Controller
                 // `nroconsulta` + `codediagnostico` (`DiagnosticosDeLaConsulta`).
                 $diagnosticos->deLaConsulta($regMedico, (string) $consulta->numhistoria, (int) $consulta->nroconsulta),
                 $pagina->getCollection(),
-                // Lo tildado del catálogo viaja en la query (el buscador es un `GET`): son los códigos que
-                // el botón de guardar agrega a la consulta.
-                $pendientes,
                 $buscar,
                 route('clinica.consulta.diagnosticos.guardar', $consulta->id),
-                // La base del buscador y del "Cancelar": esta misma sección, sin query.
+                // La base del buscador, del "Cancelar" y de la vuelta: esta misma sección.
                 route('clinica.consulta', [$consulta->id]),
                 route('clinica.consulta.diagnosticos.crear', $consulta->id),
                 (array) old(),
                 $pagina,
+                // O-27: las dos escrituras inmediatas.
+                route('clinica.consulta.diagnosticos.agregar', $consulta->id),
+                route('clinica.consulta.diagnosticos.quitar', $consulta->id),
             );
         }
 
@@ -882,20 +925,6 @@ class ConsultaController extends Controller
                 $evolucion->plantillas($regMedico),
                 route('clinica.consulta.evolucion.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVOLUCION]),
-            );
-        }
-
-        if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
-            return new SeccionDeExamenesVista(
-                // Los exámenes de **esta** consulta: la fila se llavea por `nrohistoria` + `nroconsulta`
-                // (`examen_paciente`, el `dw_12` de la pestaña de laboratorio del escritorio).
-                $examenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
-                // La observación del conjunto (`examen_obs.observacion`), que no es el resultado de una
-                // fila: es el texto que el escritorio deja para el grupo de exámenes.
-                $examenes->observacion($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
-                $examenes->tieneCatalogo($regMedico),
-                // *Solicitudes → Laboratorio* (WEB-5.4): donde se piden y se corrigen esos mismos exámenes.
-                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::LABORATORIO]),
             );
         }
 
@@ -1306,14 +1335,50 @@ class ConsultaController extends Controller
     }
 
     /**
-     * El ViewModel de la **subida de imágenes** de la consulta (WEB-4.7), o `null` si la sección activa no
-     * es la de exámenes.
+     * **La galería de imágenes de los estudios** (O-22): todas las imágenes de la consulta —o las de toda la
+     * historia con `?alcance=todas`— con su subida, el parcial `_imagenes` de siempre.
      *
-     * Es la otra mitad del ítem 7 y la única parte de la consulta que mueve un archivo: el archivo va al
-     * disco privado `clinica` y se sirve por la ruta autorizada de `ConsultaImagenesController`, que
-     * comprueba que la historia es de este médico. La tarjeta se arma aparte de la lista de exámenes
-     * porque son dos cosas distintas —una lee lo que hizo el escritorio, la otra escribe—, igual que la
-     * tarjeta del catálogo de antecedentes.
+     * Era la mitad de la sección *Exámenes* (ítem 7, retirado) y ahora es una solapa de *Evaluación física*.
+     * No se le pide nada nuevo a la tabla: `imagen_consulta.observacion` sigue teniendo dos dueños (trampa
+     * 116) y la fila del escritorio se sigue leyendo como se leía.
+     */
+    private function galeria(Consulta $consulta, string $regMedico, ImagenesDeLaConsulta $imagenes): ImagenesDeLaConsultaVista
+    {
+        $todas = request()->query('alcance') === 'todas';
+
+        $url = fn (?string $alcance) => route('clinica.consulta', array_filter([
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+            'pestana' => PestanasDelExamen::IMAGENES,
+            'alcance' => $alcance,
+        ]));
+
+        return new ImagenesDeLaConsultaVista(
+            $todas
+                ? $imagenes->deLaHistoria($regMedico, (int) $consulta->numhistoria)
+                : $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
+            route('clinica.consulta.examenes.subir', $consulta->id),
+            // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae en
+            // otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
+            fn (int $fila) => route('clinica.consulta.examenes.descargar', array_filter([$consulta->id, $fila, 'alcance' => $todas ? 'todas' : null])),
+            fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+            null,
+            [
+                ['texto' => 'Esta consulta', 'url' => $url(null), 'activa' => ! $todas],
+                ['texto' => 'Todas', 'url' => $url('todas'), 'activa' => $todas],
+            ],
+            (int) $consulta->nroconsulta,
+        );
+    }
+
+    /**
+     * El ViewModel de la **subida de imágenes** de la consulta (WEB-4.7), o `null` si la sección activa no
+     * ofrece la galería.
+     *
+     * La galería de la consulta (O-22) vive en la solapa *Imágenes* de *Evaluación física* y la arma
+     * `seccion()`; acá queda lo que cuelga de las **otras** solapas —las imágenes de un examen y las de un
+     * estudio ecográfico—, que es el mismo parcial con la etiqueta de su examen (`TagDeImagen`). El archivo va
+     * al disco privado `clinica` y se sirve por la ruta autorizada de `ConsultaImagenesController`.
      */
     private function imagenesDeLaConsulta(
         string $seccion,
@@ -1321,33 +1386,7 @@ class ConsultaController extends Controller
         string $regMedico,
         ImagenesDeLaConsulta $imagenes,
     ): ?object {
-        // La sección genérica de exámenes (WEB-4.7) muestra **todas** las imágenes de la consulta…
-        if ($seccion === ConsultaShellVista::SECCION_EXAMENES) {
-            // «Esta consulta | Todas» (WEB-11.22): con `?alcance=todas` se ven las imágenes de todas las consultas del paciente.
-            $todas = request()->query('alcance') === 'todas';
-            $url = fn (?string $alcance) => route('clinica.consulta', array_filter([
-                $consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES, 'alcance' => $alcance,
-            ]));
-
-            return new ImagenesDeLaConsultaVista(
-                $todas
-                    ? $imagenes->deLaHistoria($regMedico, (int) $consulta->numhistoria)
-                    : $imagenes->deLaConsulta($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta),
-                route('clinica.consulta.examenes.subir', $consulta->id),
-                // Una función por fila: la ruta lleva el id de la imagen y armar la URL concatenando ids cae
-                // en otra ruta (trampa 22 del repo, que ya costó una vez en los motivos).
-                fn (int $fila) => route('clinica.consulta.examenes.descargar', array_filter([$consulta->id, $fila, 'alcance' => $todas ? 'todas' : null])),
-                fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
-                null,
-                [
-                    ['texto' => 'Esta consulta', 'url' => $url(null), 'activa' => ! $todas],
-                    ['texto' => 'Todas', 'url' => $url('todas'), 'activa' => $todas],
-                ],
-                (int) $consulta->nroconsulta,
-            );
-        }
-
-        // …el estudio ecográfico (WEB-11.12) sólo las del **tipo de estudio** que se está mirando…
+        // El estudio ecográfico (WEB-11.12) sólo las del **tipo de estudio** que se está mirando…
         if ($seccion === ConsultaShellVista::SECCION_ESTUDIO) {
             $clave = TagDeImagen::deUnEco(TiposDeEstudio::normalizar((string) request()->query('tipo', '')));
 
@@ -1425,17 +1464,11 @@ class ConsultaController extends Controller
             $antecedentes->catalogo($regMedico, $buscar, $tipo),
             $delPaciente->pluck('codigo')->all(),
             $tipos,
-            // La base del enlace "Agregar" de cada fila: vuelve a **esta misma sección** (el `?seccion=`
-            // lo agrega el ViewModel) con el código tildado.
-            route('clinica.consulta', [$consulta->id]),
+            // «Agregar» es un `POST` inmediato (O-07); el código va en el cuerpo del formulario de la fila.
+            route('clinica.consulta.antecedentes.agregar', $consulta->id),
             route('clinica.consulta.antecedentes.crear', $consulta->id),
             $buscar,
             $tipo,
-            // El `?…` de la URL: es lo que dice qué quedó tildado para agregar (`?agregar=…`).
-            request()->query(),
-            // La base del `action` del guardado: el ViewModel le agrega la sección (para que la vuelta del
-            // POST caiga acá) y los pendientes del buscador como query.
-            route('clinica.consulta.antecedentes.guardar', $consulta->id),
         );
     }
 }

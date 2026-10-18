@@ -420,7 +420,10 @@ class ConsultaCierreWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertDontSee('Terminar la consulta');
+        // No se busca el texto «Terminar la consulta»: el tour de la pantalla (A-15) lo nombra en su paso del
+        // encabezado, así que la frase está en el HTML aunque la acción no se ofrezca. Lo que no puede estar
+        // es el formulario de la acción.
+        $respuesta->assertDontSee('data-barra-terminar', false);
         $respuesta->assertDontSee($this->urlCerrar($consulta), false);
         // Y la vuelta sigue estando: la pantalla no se queda sin salida.
         $respuesta->assertSee('Volver a la agenda');

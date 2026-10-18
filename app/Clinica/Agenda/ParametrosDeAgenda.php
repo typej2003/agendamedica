@@ -46,7 +46,19 @@ final class ParametrosDeAgenda
         }
     }
 
-    /** La sede pedida: por defecto la del contexto; `todas` (o 0) muestra todas. */
+    /**
+     * La sede pedida. Tres casos, y el orden importa:
+     *
+     *  1. **No viene `sede` en la URL** ⇒ la sede **del consultorio del contexto** (la de la barra
+     *     superior). Es lo que hace que «Nueva cita» abra donde el médico está trabajando, venga desde la
+     *     agenda, del buscador de pacientes o de «Hacer cita» en los récipes (O-03, 2026-10-17). Si el
+     *     contexto está en «todos mis consultorios» no hay ninguna que proponer y queda `null`.
+     *  2. **`sede=todas` o `sede=0`** ⇒ `null`: es una elección **explícita** de la agenda (mirar todas las
+     *     sedes juntas) y no se pisa con la del contexto. En el formulario de la cita el `null` se muestra
+     *     como «— Elige una sede —», porque una cita siempre es en una sede.
+     *  3. **`sede=<id>`** ⇒ esa, siempre que sea un id positivo. Un valor que no se entiende vuelve a
+     *     `null` (nunca revienta).
+     */
     public static function sedeDe(Request $request, array $contexto): ?int
     {
         $pedida = $request->query('sede');
@@ -62,6 +74,42 @@ final class ParametrosDeAgenda
         $id = (int) $pedida;
 
         return $id > 0 ? $id : null;
+    }
+
+    /**
+     * La sede con la que abre el **formulario de la cita** («Nueva cita», O-03b del 2026-10-17).
+     *
+     * Es `sedeDe()` más un solo caso: cuando **no hay sede del contexto** (la barra en «Todos mis
+     * consultorios») y **la URL no pidió `sede`**, si el médico tiene **exactamente una** sede vigente se
+     * propone esa. Con varias —o con ninguna— se sigue pidiendo elegir, porque la sede decide la jornada y
+     * el lugar.
+     *
+     * `sede=todas` es una elección **explícita** (la agenda mirando todas las sedes juntas) y **no se
+     * pisa**: eso ya lo resuelve `sedeDe()` devolviendo `null` con la query presente, y por eso el default
+     * sólo entra cuando la URL no trae `sede`. Tampoco se toca la agenda: su filtro por sede sigue siendo
+     * el de `sedeDe()`, que en «todos mis consultorios» no filtra (una lista de citas con y sin sede).
+     *
+     * Las sedes salen de `$contexto['sedes']` —las **vigentes** del médico, la misma lectura con la que
+     * `ContextoTrabajo` arma la barra y con la que `ArmadorDeAgenda::sedes()` arma el formulario—: el
+     * criterio vive acá y en un solo lugar, no en el Blade ni en el controlador.
+     */
+    public static function sedeDelFormulario(Request $request, array $contexto): ?int
+    {
+        $sede = self::sedeDe($request, $contexto);
+
+        if ($sede !== null || $request->query('sede') !== null) {
+            return $sede;
+        }
+
+        return self::laUnicaSedeDe($contexto);
+    }
+
+    /** La sede del médico si tiene **exactamente una** vigente; `null` con varias o con ninguna. */
+    private static function laUnicaSedeDe(array $contexto): ?int
+    {
+        $sedes = collect($contexto['sedes'] ?? []);
+
+        return $sedes->count() === 1 ? (int) $sedes->first()->id : null;
     }
 
     /** @return array{0: Carbon, 1: Carbon} El primer y el último día que cubre la vista. */

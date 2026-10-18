@@ -25,6 +25,13 @@ use InvalidArgumentException;
  *
  * Lo que **no** hace: crear la `historia` ni asignar `numhistoria` (eso es `AsignarHistoria`, WEB-3.3),
  * tocar la foto, el representante o el login del paciente.
+ *
+ * ⚠️ **O-04 (2026-10-17): el alta desde la web sí numera, pero no acá.** La Action sigue sin crear la
+ * historia a propósito —la comparten el alta del médico y la de la secretaría, y el número es otra regla—;
+ * quien la llama (`PacienteController::persistir`) invoca a `AsignarHistoria` **inmediatamente después** del
+ * alta y sólo del alta. Por eso la regla no se metió adentro: `CrearPaciente`, que es la que comparten el
+ * chatbot de WhatsApp y el sync del móvil, tiene que seguir creando pacientes **sin número** (el paciente
+ * online se numera cuando alguien lo recibe).
  */
 final class GuardarPaciente
 {

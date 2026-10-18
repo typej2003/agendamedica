@@ -11,10 +11,12 @@
      siempre hay uno elegido (no hay «todos») y viaja en `?tipo=`. El `x-ui.segmentado` no sirve para esto
      porque tiene que poder desbordar en horizontal; el patrón es `.chips-filtro` (doctorisimo-ui.css).
 
-     El formulario es **uno solo** y hace todo lo que el escritorio hace en su pestaña: escribe el detalle
-     y la casilla de Alerta de lo que ya está, agrega lo que se tildó del catálogo y quita lo que el médico
-     sacó de la lista. El aviso de "cambios sin guardar" y el "Quitar" de cada fila los resuelve
-     `consulta.js` desde los `data-*`: la vista no lleva JS ni estilos. --}}
+     El formulario es **uno solo** y hace lo que el escritorio hace al guardar su pestaña: escribe el detalle
+     y la casilla de Alerta de lo que ya está. **Agregar y Quitar son inmediatos** (O-07, 2026-10-17): cada
+     uno es su propio `POST` —una escritura por clic, como «Pasar» en motivos y diagnósticos— y la fila
+     aparece o desaparece de la lista del paciente sin apretar el botón de guardar. El aviso de "cambios sin
+     guardar" del detalle y la alerta lo resuelve `consulta.js` desde los `data-*`: la vista no lleva JS ni
+     estilos. --}}
 @php
     $estado = $seccion->estado();
 @endphp
@@ -45,20 +47,11 @@
 
             <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
-            {{-- El `action` sale del buscador cuando hay pendientes: le agrega `?agregar=…` para que el POST no los
-                 pierda si la página se recargó (los `hidden` de abajo también los mandan, pero una recarga se los
-                 lleva y la query no). Sin pendientes es el `action` normal. --}}
-            <form method="POST" action="{{ $catalogo ? $catalogo->urlGuardar() : $seccion->urlGuardar() }}" id="antecedentes-form"
+            {{-- El `action` es el del guardado del detalle y la alerta. El agregado y la baja ya no vienen en
+                 este formulario: cada uno tiene su propio `POST` inmediato (O-07). --}}
+            <form method="POST" action="{{ $seccion->urlGuardar() }}" id="antecedentes-form"
                   data-consulta-antecedentes data-aviso="{{ $seccion->avisoSinGuardar() }}">
                 @csrf
-
-                {{-- Los antecedentes que el buscador dejó tildados y todavía no se guardaron: entran al `POST` del
-                     botón de guardar como `agregar[código]`. El buscador es un `GET` y no puede mandarlos.
-                     Lo que ya tenía el paciente **no** se manda como `agregar`: se quita con el botón de la fila,
-                     que agrega su código a `quitar[]` (`consulta.js`). --}}
-                @foreach ($catalogo ? $catalogo->pendientesDelBuscador() : [] as $codigo)
-                    <input type="hidden" name="agregar[{{ $codigo }}]" value="{{ $codigo }}">
-                @endforeach
 
                 @if ($seccion->estaVacio())
                     <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados">
@@ -113,25 +106,19 @@
                                         <span class="form-check-label">Alerta</span>
                                     </label>
 
-                                    {{-- "Quitar" deja la fila marcada como "se quita al guardar": saca el
-                                         antecedente **del paciente** y no toca el catálogo (el `DELETE`
-                                         del escritorio, `w_consulta_principal.srw:7636`). Sin guardar,
-                                         no se borra nada: el `hidden` lo inserta `consulta.js` y lo manda
-                                         el mismo botón de siempre. --}}
+                                    {{-- "Quitar" es **inmediato** (O-07): su propio `POST` saca el antecedente
+                                         **del paciente** en el acto y no toca el catálogo (el `DELETE` del
+                                         escritorio, `w_consulta_principal.srw:7636`). El formulario de la baja
+                                         vive al final de esta columna (no se pueden anidar formularios) y el
+                                         botón lo referencia con `form=`. --}}
                                     <div class="antecedentes-acciones">
-                                        <button type="button" class="btn btn-sm btn-outline-danger antecedentes-quitar"
+                                        <button type="submit" class="btn btn-sm btn-outline-danger antecedentes-quitar"
+                                                form="antecedente-quitar-{{ $fila['id'] }}"
                                                 data-antecedente-quitar="{{ $fila['codigo'] }}"
                                                 data-antecedente-nombre="{{ $fila['nombre'] }}"
                                                 title="Quitar «{{ $fila['nombre'] }}» de los antecedentes del paciente"
                                                 aria-label="Quitar {{ $fila['nombre'] }}">
                                             <i class="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                        <span class="texto-tenue small antecedentes-aviso-quitar" hidden>
-                                            Se quita al guardar
-                                        </span>
-                                        <button type="button" class="btn btn-sm btn-link antecedentes-restaurar" hidden
-                                                data-antecedente-restaurar>
-                                            Volver a dejarlo
                                         </button>
                                     </div>
                                 </div>
@@ -155,29 +142,31 @@
                     </button>
                 </div>
             </form>
+
+            {{-- Los formularios del "Quitar" inmediato (O-07): uno por fila, fuera del formulario de guardado
+                 —los formularios no se anidan— y referenciados por el botón de su fila con `form=`. Conservan
+                 el chip y la búsqueda para que la vuelta deje la pantalla donde estaba. --}}
+            @foreach ($seccion->filas() as $fila)
+                <form method="POST" action="{{ $seccion->urlQuitar() }}" id="antecedente-quitar-{{ $fila['id'] }}">
+                    @csrf
+                    <input type="hidden" name="codigo" value="{{ $fila['codigo'] }}">
+                    <input type="hidden" name="tipo" value="{{ $seccion->tipo() }}">
+                    @if ($catalogo && $catalogo->buscar() !== '')
+                        <input type="hidden" name="buscar" value="{{ $catalogo->buscar() }}">
+                    @endif
+                </form>
+            @endforeach
         </x-slot>
 
         <x-slot name="derecha">
             @if ($catalogo)
                 <p class="texto-tenue small mb-3">{{ $catalogo->ayuda() }}</p>
 
-                @if ($catalogo->pendientesDelBuscador() !== [])
-                    <p class="alert alert-info py-2 d-flex align-items-center gap-2" id="antecedentes-pendientes">
-                        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-                        <span>{{ $catalogo->avisoDePendientes() }}</span>
-                    </p>
-                @endif
-
                 {{-- El buscador del catálogo, **siempre a la vista** (A-06: antes estaba detrás de un botón):
-                     es un `GET` a esta misma sección. El tipo viaja oculto para que buscar no cambie el chip, y
-                     los pendientes también, para no perder lo tildado al buscar otra cosa. --}}
+                     es un `GET` a esta misma sección. El tipo viaja oculto para que buscar no cambie el chip. --}}
                 <form method="GET" action="{{ $seccion->urlVolver() }}" class="dos-listas-buscar" role="search" id="antecedente-buscar-form">
                     <input type="hidden" name="seccion" value="antecedentes">
                     <input type="hidden" name="tipo" value="{{ $catalogo->tipo() }}">
-
-                    @foreach ($catalogo->pendientesDelBuscador() as $codigo)
-                        <input type="hidden" name="agregar[]" value="{{ $codigo }}">
-                    @endforeach
 
                     <label class="visually-hidden" for="antecedente-buscar">Buscar un antecedente en tu catálogo</label>
                     <input type="search" id="antecedente-buscar" name="buscar" value="{{ $catalogo->buscar() }}"
@@ -198,29 +187,32 @@
                 @else
                     <ul class="dos-listas-catalogo">
                         @foreach ($catalogo->resultados() as $resultado)
-                            <li class="dos-listas-fila" @if (! $resultado['pendiente'] && ! $resultado['yaEsta']) data-pasar @endif>
+                            <li class="dos-listas-fila" @if (! $resultado['yaEsta']) data-pasar @endif>
                                 <span class="dos-listas-fila-texto">
                                     {{ $resultado['descripcion'] }}
                                     <span class="chip">{{ $resultado['codigo'] }}</span>
                                 </span>
 
-                                @if ($resultado['pendiente'])
-                                    <span class="texto-tenue small">
-                                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Se agrega al guardar
-                                    </span>
-                                @elseif ($resultado['yaEsta'])
+                                @if ($resultado['yaEsta'])
                                     <span class="texto-tenue small">Ya está en el paciente</span>
                                 @else
-                                    {{-- El buscador es un `GET`: "Agregar" vuelve a la sección con ese
-                                         antecedente tildado como pendiente, y el botón de la columna izquierda
-                                         lo guarda. Sin JS la pantalla sigue sirviendo. --}}
-                                    <a class="btn btn-sm btn-outline-primary" data-pasar-boton
-                                       href="{{ $catalogo->urlAgregar($resultado['codigo']) }}"
-                                       title="Agregar a los antecedentes del paciente"
-                                       aria-label="Agregar {{ $resultado['descripcion'] }}">
-                                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                                        <span class="dos-listas-boton-texto">Agregar</span>
-                                    </a>
+                                    {{-- «Agregar» es un `POST` **inmediato** (O-07): el antecedente se escribe en
+                                         el paciente en el acto y la fila aparece en la columna izquierda. Sin JS
+                                         la pantalla sigue sirviendo: es un formulario común. --}}
+                                    <form method="POST" action="{{ $catalogo->urlAgregar() }}" class="d-inline">
+                                        @csrf
+                                        <input type="hidden" name="codigo" value="{{ $resultado['codigo'] }}">
+                                        <input type="hidden" name="tipo" value="{{ $catalogo->tipo() }}">
+                                        @if ($catalogo->buscar() !== '')
+                                            <input type="hidden" name="buscar" value="{{ $catalogo->buscar() }}">
+                                        @endif
+                                        <button class="btn btn-sm btn-outline-primary" data-pasar-boton
+                                                title="Agregar a los antecedentes del paciente"
+                                                aria-label="Agregar {{ $resultado['descripcion'] }}">
+                                            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                            <span class="dos-listas-boton-texto">Agregar</span>
+                                        </button>
+                                    </form>
                                 @endif
                             </li>
                         @endforeach

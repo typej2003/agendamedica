@@ -22,6 +22,9 @@ use Illuminate\Support\Collection;
  *    (`QueEsUnDocumento::texto`): un examen en blanco no es el informe de nadie.
  *  - **Las fotos**: sólo la colposcopía y la histeroscopía anexan; el bloque lo arma el parcial compartido
  *    `_imagenes`, que recibe su propio ViewModel.
+ *  - **Los exámenes informados por el laboratorio** (O-22): la solapa *Resultado de exámenes* los muestra —
+ *    de sólo lectura— junto a la nota del médico, con el mismo ViewModel que usaba la sección *Exámenes*
+ *    retirada.
  *
  * No sabe de `Request` ni de base de datos: recibe el texto y las plantillas ya leídos.
  */
@@ -32,6 +35,8 @@ final class TextoDelExamenVista
      * @param  string|null  $texto  el texto guardado (`null` si la consulta no tiene nada en esa solapa)
      * @param  Collection<int,object{codigo:string, titulo:string, texto:string}>  $plantillas
      * @param  array<string,mixed>  $old  el `old()` del formulario (`[]` en la primera carga)
+     * @param  SeccionDeExamenesVista|null  $informados  los exámenes informados por el laboratorio, que desde O-22
+     *                              (2026-10-17) se leen dentro de la solapa *Resultado de exámenes*; `null` en las otras
      */
     public function __construct(
         private string $clave,
@@ -41,7 +46,17 @@ final class TextoDelExamenVista
         private string $urlVolver = '',
         private string $urlImprimir = '',
         private array $old = [],
+        private ?SeccionDeExamenesVista $informados = null,
     ) {
+    }
+
+    /**
+     * La lista de exámenes informados por el laboratorio (O-22), o `null` si esta solapa no la muestra (sólo
+     * *Resultado de exámenes*). Es de **sólo lectura**: el ABM es *Solicitudes → Laboratorio*.
+     */
+    public function informados(): ?SeccionDeExamenesVista
+    {
+        return $this->informados;
     }
 
     /** La clave de la solapa: es también el `name` del campo y el prefijo de los ids del DOM. */

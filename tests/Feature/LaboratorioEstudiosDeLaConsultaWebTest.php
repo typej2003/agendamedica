@@ -486,15 +486,17 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->assertSame(1, $this->trazas('examen_paciente', 'created'));
     }
 
-    // ============================================================ La sección Exámenes (WEB-4.7)
+    // ================================================ La solapa Resultado de exámenes (WEB-4.7 y O-22)
 
-    public function test_la_seccion_de_examenes_ve_lo_que_se_arma_en_laboratorio(): void
+    public function test_la_solapa_de_resultados_ve_lo_que_se_arma_en_laboratorio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001', '010'], 'observacion' => 'HIV, VDRL']);
 
-        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']))
+        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [
+            $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
+        ]))
             ->assertOk()
             ->assertSee('GLICEMIA')->assertSee('ELECTROCARDIOGRAMA')->assertSee('PREOPERATORIOS')
             ->assertSee('HIV, VDRL')
@@ -502,11 +504,13 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             ->assertSee(e($this->seccion($consulta, 'laboratorio')), false);
     }
 
-    public function test_la_seccion_de_examenes_vacia_manda_a_laboratorio(): void
+    public function test_la_solapa_de_resultados_vacia_manda_a_laboratorio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']))
+        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [
+            $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
+        ]))
             ->assertOk()
             ->assertSee('Esta consulta no tiene exámenes pedidos')
             ->assertSee('se piden en Solicitudes → Laboratorio');

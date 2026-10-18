@@ -23,6 +23,7 @@ use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -96,8 +97,15 @@ class ConsultaEstudioController extends Controller
 
         $destino = $this->destino($consulta, $tipo);
 
+        // **Las fechas se pasan a `AAAA-MM-DD` antes de validar** (O-18 y O-19): la FUR se teclea
+        // `dd/mm/aaaa` y su columna es `date`. La conversión vive en `FechaDeFormulario` —el único lugar
+        // donde esa regla está escrita—; lo que no es una fecha se queda como vino y la validación lo
+        // rechaza con su mensaje en español.
+        $camposDeFecha = $this->camposDeFecha($tipo);
+        $request->merge(FechaDeFormulario::normalizar($request->all(), array_keys($camposDeFecha)));
+
         try {
-            $datos = $request->validate($this->reglasDe($tipo));
+            $datos = $request->validate($this->reglasDe($tipo), $this->mensajesDeFecha($camposDeFecha));
             $resultado = $accion->ejecutar($consulta, $datos, null, 'web');
         } catch (InvalidArgumentException $excepcion) {
             // "El eco necesita algún dato": no es un error de validación de un campo, es que el formulario
@@ -131,55 +139,116 @@ class ConsultaEstudioController extends Controller
      */
     private function reglasDe(string $tipo): array
     {
-        if ($tipo === TiposDeEstudio::FETAL) {
-            return $this->reglasDelMapa(EcoCardiogramaFetal::grupos());
-        }
-
-        if ($tipo === TiposDeEstudio::DOPPLER) {
-            return $this->reglasDelMapa(EcoDoppler::grupos());
-        }
-
-        if ($tipo === TiposDeEstudio::MAMARIO) {
-            return $this->reglasDelMapa(EcoMamario::grupos());
-        }
-
-        if ($tipo === TiposDeEstudio::ABDOMINAL) {
-            return $this->reglasDelMapa(EcoAbdominal::grupos());
-        }
-
-        if (! in_array($tipo, [TiposDeEstudio::OBSTETRICO, TiposDeEstudio::SEGUNDO, TiposDeEstudio::TERCERO], true)) {
-            return $this->reglas();
-        }
-
-        return $this->reglasDelMapa(
-            $tipo === TiposDeEstudio::OBSTETRICO ? EcoObstetrico::grupos() : EcoObstetricoTercero::grupos()
-        );
-    }
-
-    /**
-     * Las reglas de las columnas de un mapa por bloques (los dos obstétricos, el Doppler, el ecocardiograma
-     * fetal, el mamario y el abdominal). El tope de un texto sale del campo (`tope`) y, si no lo dice, es el
-     * de siempre: 20.
-     *
-     * @param  array<int,array<string,mixed>>  $grupos
-     */
-    private function reglasDelMapa(array $grupos): array
-    {
         $reglas = [];
+        // El eco pélvico tiene sus propios topes numéricos (sus medidas son `decimal(5,2)` y sus volúmenes
+        // `double`) y sus textos son más largos: es la diferencia que ya existía entre `reglas()` y
+        // `reglasDelMapa()`. Ahora las dos salen de la misma lista de campos, así que una columna nueva se
+        // valida sin escribirse dos veces.
+        $pelvico = $this->mapaDe($tipo) === null;
 
-        foreach ($grupos as $grupo) {
-            foreach ($grupo['campos'] as $campo) {
-                $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
-                    'fecha' => 'nullable|date',
-                    'numero' => 'nullable|numeric|min:0|max:99999',
-                    'area' => 'nullable|string|max:32000',
-                    'opciones' => 'nullable|string|max:20',
-                    default => 'nullable|string|max:' . (int) ($campo['tope'] ?? 20),
-                };
-            }
+        foreach ($this->camposDe($tipo) as $campo) {
+            $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
+                // La columna es `date`: el formato se fija, no se acepta «lo que parezca una fecha».
+                'fecha', 'fecha-tecleada' => FechaDeFormulario::REGLA,
+                'numero' => $pelvico
+                    ? 'nullable|numeric|min:0|' . $this->topeNumerico($campo['columna'])
+                    : 'nullable|numeric|min:0|max:99999',
+                'area' => 'nullable|string|max:32000',
+                'opciones' => 'nullable|string|max:20',
+                'texto' => $pelvico
+                    ? 'nullable|string|max:80'
+                    : 'nullable|string|max:' . (int) ($campo['tope'] ?? 20),
+                default => 'nullable|string|max:' . ($pelvico ? 10 : (int) ($campo['tope'] ?? 20)),
+            };
         }
 
         return $reglas;
+    }
+
+    /**
+     * El **mapa por bloques** de ese tipo de estudio, o `null` para el eco pélvico, cuyo mapa es una lista
+     * plana (`EcoGinecologico::campos()`). Es lo que comparten las reglas y las fechas que hay que convertir.
+     *
+     * @return array<int,array<string,mixed>>|null
+     */
+    private function mapaDe(string $tipo): ?array
+    {
+        return match ($tipo) {
+            TiposDeEstudio::FETAL => EcoCardiogramaFetal::grupos(),
+            TiposDeEstudio::DOPPLER => EcoDoppler::grupos(),
+            TiposDeEstudio::MAMARIO => EcoMamario::grupos(),
+            TiposDeEstudio::ABDOMINAL => EcoAbdominal::grupos(),
+            TiposDeEstudio::OBSTETRICO => EcoObstetrico::grupos(),
+            TiposDeEstudio::SEGUNDO, TiposDeEstudio::TERCERO => EcoObstetricoTercero::grupos(),
+            default => null,
+        };
+    }
+
+    /**
+     * Los campos del mapa de ese estudio, en una sola lista.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function camposDe(string $tipo): array
+    {
+        $mapa = $this->mapaDe($tipo);
+
+        if ($mapa === null) {
+            return EcoGinecologico::campos();
+        }
+
+        $campos = [];
+        foreach ($mapa as $grupo) {
+            foreach ($grupo['campos'] as $campo) {
+                $campos[] = $campo;
+            }
+        }
+
+        return $campos;
+    }
+
+    /**
+     * Las columnas de **fecha** de ese estudio, con su rótulo y si se teclean `dd/mm/aaaa` (la FUR) o con el
+     * calendario del navegador (la fecha del estudio).
+     *
+     * @return array<string,array{etiqueta:string, tecleada:bool}>
+     */
+    private function camposDeFecha(string $tipo): array
+    {
+        $fechas = [];
+
+        foreach ($this->camposDe($tipo) as $campo) {
+            $control = $campo['tipo'] ?? 'texto';
+
+            if ($control !== 'fecha' && $control !== 'fecha-tecleada') {
+                continue;
+            }
+
+            $fechas[$campo['columna']] = [
+                'etiqueta' => $campo['etiqueta'],
+                'tecleada' => $control === 'fecha-tecleada',
+            ];
+        }
+
+        return $fechas;
+    }
+
+    /**
+     * Los mensajes de esas fechas, en español y con el rótulo de la pantalla (O-15): el de Laravel dice «The
+     * fur does not match the format Y-m-d», que no le sirve a nadie.
+     *
+     * @param  array<string,array{etiqueta:string, tecleada:bool}>  $camposDeFecha
+     * @return array<string,string>
+     */
+    private function mensajesDeFecha(array $camposDeFecha): array
+    {
+        $mensajes = [];
+
+        foreach ($camposDeFecha as $columna => $campo) {
+            $mensajes[$columna . '.date_format'] = FechaDeFormulario::mensaje($campo['etiqueta'], $campo['tecleada']);
+        }
+
+        return $mensajes;
     }
 
     /** La vuelta a la sección, en el tipo que se estaba mirando. */
@@ -190,31 +259,6 @@ class ConsultaEstudioController extends Controller
             'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
             'tipo' => $tipo,
         ]);
-    }
-
-    /**
-     * Las reglas de las columnas que edita la web, armadas del **mapa del dato** (`EcoGinecologico`), para
-     * que una columna nueva no se olvide de validar.
-     *
-     * Los topes de los números no son decorativos: las medidas son `decimal(5,2)` y los volúmenes `double`,
-     * así que un valor fuera de rango lo rechaza la base con un error 500 en vez de un aviso al médico.
-     * Los `text` largos llevan el tope del legado (`edit.limit=32000` en el DataWindow).
-     */
-    private function reglas(): array
-    {
-        $reglas = [];
-
-        foreach (EcoGinecologico::campos() as $campo) {
-            $reglas[$campo['columna']] = match ($campo['tipo']) {
-                'numero' => 'nullable|numeric|min:0|' . $this->topeNumerico($campo['columna']),
-                'fecha' => 'nullable|date',
-                'area' => 'nullable|string|max:32000',
-                'texto' => 'nullable|string|max:80',
-                default => 'nullable|string|max:10',
-            };
-        }
-
-        return $reglas;
     }
 
     /** Hasta dónde entra un número en su columna: los `double` aguantan más que los `decimal(5,2)`. */

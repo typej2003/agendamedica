@@ -4,8 +4,8 @@ namespace App\Clinica\Consulta;
 
 /**
  * **Las secciones de la consulta** (la revisión de Alexander, 2026-10-17): la **fuente única** del catálogo de ítems
- * del legado —la lista de 14 de `w_consulta_principal` (wiki `04-historia-clinica.md`, "Ítems de la historia
- * clínica")— y de cómo se navega a cada una.
+ * del legado —la lista de `w_consulta_principal` (wiki `04-historia-clinica.md`, "Ítems de la historia
+ * clínica"), **13 desde O-22** porque *Exámenes* se retiró— y de cómo se navega a cada una.
  *
  * Antes vivía dentro de `Vistas\ConsultaShellVista`, que la usaba para dibujar el panel lateral de la pantalla. El
  * panel se fue: los ítems ahora son un **grupo plegable del menú lateral** («Consulta», sólo visible dentro de una
@@ -44,7 +44,12 @@ final class SeccionesDeLaConsulta
     /** La clave de la sección de evolución en `?seccion=` (WEB-4.6). */
     public const SECCION_EVOLUCION = 'evolucion';
 
-    /** La clave de la sección de exámenes e imágenes en `?seccion=` (WEB-4.7). */
+    /**
+     * La clave de la sección de exámenes e imágenes en `?seccion=`, **retirada en O-22 (2026-10-17)**: la
+     * galería de imágenes vive ahora como solapa de *Evaluación física* y los exámenes informados, dentro de
+     * la solapa *Resultado de exámenes*. La clave se conserva **sólo** para redirigir los enlaces viejos
+     * (`ConsultaController::ver`); ya no es una sección del catálogo y `normalizar()` la rechaza.
+     */
     public const SECCION_EXAMENES = 'examenes';
 
     /** La clave de la sección de récipes en `?seccion=` (WEB-5.1). */
@@ -78,10 +83,14 @@ final class SeccionesDeLaConsulta
     public const RECIPE_PAREJA = 'pareja';
 
     /**
-     * Los 14 ítems, en el orden del legado.
+     * Los **13 ítems** del panel, en el orden del legado (O-22 quitó *Exámenes*, el ítem 7: su galería de
+     * imágenes pasó a *Evaluación física* y los exámenes informados a la solapa *Resultado de exámenes*).
      *
      * El `estado` es `listo` (ya hay pantalla a la que entrar) o `proximamente`; `seccion` es la clave del contenido que
      * se abre **dentro de la misma consulta** (`?seccion=…`) y falta sólo en el ítem que todavía no tiene pantalla.
+     *
+     * La **numeración no se renumera** al quitar un ítem: `numero` es el del legado y es lo que lo ata a su
+     * fuente (quedan el 1 a 6 y el 8 a 14).
      */
     private const ITEMS = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
@@ -103,9 +112,6 @@ final class SeccionesDeLaConsulta
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Control de embarazo', 'icono' => 'bi-gender-female',
             'detalle' => 'Prenatal, laboratorio, controles y reporte.', 'tarea' => 'WEB-6.6', 'estado' => 'listo',
             'seccion' => self::SECCION_EMBARAZO],
-        ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Exámenes', 'icono' => 'bi-droplet',
-            'detalle' => 'Laboratorio de rutina de la consulta y las imágenes de sus estudios.',
-            'tarea' => 'WEB-4.7', 'estado' => 'listo', 'seccion' => self::SECCION_EXAMENES],
         ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],
@@ -160,7 +166,7 @@ final class SeccionesDeLaConsulta
         return count(self::delaEspecialidad($especialidad));
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (sólo falta la pre-factura → F9). */
+    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (sólo falta la pre-factura → F9). */
     public static function disponibles(?string $especialidad = null): int
     {
         return count(array_filter(self::delaEspecialidad($especialidad), fn (array $item) => $item['estado'] === 'listo'));
@@ -192,6 +198,20 @@ final class SeccionesDeLaConsulta
     public static function existeSeccion(?string $seccion, ?string $especialidad = null): bool
     {
         return self::porSeccion($seccion, $especialidad) !== null;
+    }
+
+    /**
+     * **La sección con la que abre la consulta** cuando la URL no pide ninguna (O-06, 2026-10-17): sin
+     * `?seccion=` la consulta abre en **Motivos de consulta**, que es el ítem 1 del catálogo.
+     *
+     * Se resuelve en el controlador —que es el que arma la sección— y **sin redirect**: la URL queda limpia.
+     * Una sección **pedida** se devuelve tal cual, exista o no, para que un `?seccion=` desconocido siga
+     * cayendo en el estado vacío del shell como siempre: acá sólo se decide el punto de entrada, no se
+     * valida la sección.
+     */
+    public static function deEntrada(?string $seccion): string
+    {
+        return $seccion === null || $seccion === '' ? self::SECCION_MOTIVOS : $seccion;
     }
 
     /** La clave normalizada: la pedida si es una sección con pantalla, `null` en cualquier otro caso. */

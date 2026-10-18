@@ -392,7 +392,13 @@ class PacienteFamiliaWebTest extends TestCase
             ])->assertSessionHasNoErrors();
             $id = DB::table('pacientes')->where('nombres', 'Nene' . $n)->value('id');
             $this->assertNotNull($id);
-            $this->assertNull(DB::table('medico_pacientes')->where('paciente_id', $id)->value('numhistoria'));
+
+            // El alta web numera en el mismo paso (O-04), pero **no** lo une a ninguna familia: el hermano
+            // no es un niño del consultorio con familia.
+            $historia = DB::table('medico_pacientes')->where('paciente_id', $id)->value('numhistoria');
+            $this->assertNotNull($historia);
+            $this->assertSame(0, DB::table('paciente_chamo')
+                ->where('reg_medico', $reg)->where('historia', (int) $historia)->count());
         }
 
         $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', $reg)->count());

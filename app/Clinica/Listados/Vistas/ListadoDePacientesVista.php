@@ -74,8 +74,13 @@ final class ListadoDePacientesVista
         $partes = [
             $total === 1 ? '1 paciente' : $total . ' pacientes',
             'ingresados entre el ' . $this->desdeFormateado() . ' y el ' . $this->hastaFormateado(),
-            'de ' . $this->filtro->edadInicial() . ' a ' . $this->filtro->edadFinal() . ' años',
         ];
+
+        // La edad abierta no filtra (O-14): decir el rango cuando no se aplicó sería anunciar un filtro
+        // que la tabla no usó.
+        if ($this->filtro->filtraPorEdad()) {
+            $partes[] = 'de ' . $this->filtro->edadInicial() . ' a ' . $this->filtro->edadFinal() . ' años';
+        }
 
         foreach ($this->descripcionDeLosFiltrosOpcionales() as $filtro) {
             // Sexo y estado civil se leen solos («Femenino», «Casado(a)»); una empresa necesita su rótulo.
@@ -206,7 +211,9 @@ final class ListadoDePacientesVista
                 'icono'  => 'bi-search',
                 'titulo' => 'Ningún paciente con esos filtros',
                 'texto'  => 'Prueba con otro rango de ingreso, otra edad o sin los filtros de sexo, estado civil y procedencia. '
-                    . 'Un paciente sin fecha de nacimiento no aparece mientras se filtre por edad.',
+                    . ($this->filtro->filtraPorEdad()
+                        ? 'Un paciente sin fecha de nacimiento no aparece mientras se filtre por edad.'
+                        : 'Los pacientes sin fecha de nacimiento también entran: la edad está abierta.'),
             ];
         }
 
@@ -243,11 +250,17 @@ final class ListadoDePacientesVista
      */
     public function descripcionDeLosFiltros(): array
     {
-        return array_merge([
+        $filtros = [
             ['etiqueta' => 'Ingreso desde', 'valor' => $this->desdeFormateado()],
             ['etiqueta' => 'Ingreso hasta', 'valor' => $this->hastaFormateado()],
-            ['etiqueta' => 'Edad', 'valor' => $this->filtro->edadInicial() . ' a ' . $this->filtro->edadFinal() . ' años'],
-        ], $this->descripcionDeLosFiltrosOpcionales());
+        ];
+
+        // La edad abierta no filtra (O-14): la cabecera impresa sólo la declara si se aplicó.
+        if ($this->filtro->filtraPorEdad()) {
+            $filtros[] = ['etiqueta' => 'Edad', 'valor' => $this->filtro->edadInicial() . ' a ' . $this->filtro->edadFinal() . ' años'];
+        }
+
+        return array_merge($filtros, $this->descripcionDeLosFiltrosOpcionales());
     }
 
     /** De dónde sale la columna «Empresa», dicho en la pantalla. */

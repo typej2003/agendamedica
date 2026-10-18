@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Support\FechaDeFormulario;
 
 /**
  * **El eco obstétrico del primer trimestre en la sección de estudio** (WEB-6.2): el formulario de sus seis
@@ -84,7 +85,7 @@ class EcoObstetricoVista
         foreach ($this->mapa() as $grupo) {
             $campos = [];
             foreach ($grupo['campos'] as $campo) {
-                $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
+                $campo['valor'] = $this->valorDelCampo($campo);
                 // Un desplegable necesita sus opciones con la vacía adelante —y el código desconocido del
                 // escritorio al final—: sin eso el navegador manda su primera opción y un eco recién abierto
                 // guardaba «Sí» en todas sus casillas (la misma regla del eco pélvico).
@@ -191,5 +192,32 @@ class EcoObstetricoVista
         }
 
         return $this->estudio->valor($columna);
+    }
+
+    /**
+     * El valor que se pinta en un campo del mapa.
+     *
+     * Una **fecha tecleada** (la FUR de los obstétricos, el Doppler y el cardiograma fetal) se muestra
+     * `dd/mm/aaaa`, que es como se escribe en la pantalla, aunque en la columna esté en `AAAA-MM-DD`
+     * (O-18 y O-19). Lo que hay en la columna y **no** es una fecha —un dato viejo escrito a mano, el
+     * literal `none` del legado— se muestra **vacío**: no se inventa una fecha.
+     *
+     * Los demás campos salen tal cual, como siempre.
+     */
+    private function valorDelCampo(array $campo): string
+    {
+        $columna = $campo['columna'];
+
+        if (($campo['tipo'] ?? 'texto') !== 'fecha-tecleada') {
+            return (string) ($this->valorDe($columna) ?? '');
+        }
+
+        // Lo que se acaba de teclear se muestra como se escribió (aunque no sea una fecha: el error está
+        // abajo y así el médico lo corrige); lo guardado, sólo si es una fecha.
+        if (array_key_exists($columna, $this->old) && $this->old[$columna] !== null) {
+            return FechaDeFormulario::comoSeTecleo($this->old[$columna]);
+        }
+
+        return FechaDeFormulario::paraTeclear($this->estudio->valor($columna));
     }
 }

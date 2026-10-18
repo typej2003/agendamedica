@@ -681,8 +681,10 @@ class AgendaWebTest extends TestCase
             ->value('source'));
     }
 
-    public function test_agendar_da_de_alta_al_paciente_nuevo_sin_historia(): void
+    public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
     {
+        // O-04 (2026-10-17): el alta rápida del paso 2 es un alta **desde la web**, así que numera en el
+        // mismo paso y la cita nace enlazada por `numhistoria`.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
         $this->bloque($sede, '08:00', '12:00');
@@ -700,14 +702,15 @@ class AgendaWebTest extends TestCase
         $paciente = Paciente::where('cedula', '12345678')->firstOrFail();
         $this->assertSame('Nueva', $paciente->nombres);
 
-        // El vínculo nace **sin número de historia**: lo asigna el API cuando se complete la historia.
+        // El vínculo nace **con número**: el primero del correlativo del médico.
         $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $paciente->id)->firstOrFail();
-        $this->assertNull($relacion->numhistoria);
+        $this->assertSame('1', $relacion->numhistoria);
+        $this->assertSame('1', Historia::where('paciente_id', $paciente->id)->value('numhistoria'));
 
-        // Y la cita queda anclada al paciente, no a una historia que no existe.
+        // Y la cita queda enlazada por la historia, no por el ancla de "sin historia".
         $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
-        $this->assertNull($cita->numhistoria);
-        $this->assertSame($paciente->id, (int) $cita->paciente_sinhistoria_id);
+        $this->assertSame(1, (int) $cita->numhistoria);
+        $this->assertNull($cita->paciente_sinhistoria_id);
     }
 
     public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
@@ -739,9 +742,10 @@ class AgendaWebTest extends TestCase
         $this->assertSame('Vieja', $ajena->fresh()->nombres);
         $this->assertSame('0212-0000000', $ajena->fresh()->telefono);
 
-        // Pero sí queda enlazada a este médico y la cita apunta a ella.
-        $this->assertSame(1, MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->count());
-        $this->assertSame($ajena->id, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->paciente_sinhistoria_id);
+        // Pero sí queda enlazada a este médico, **con su número** (O-04), y la cita apunta a esa historia.
+        $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->firstOrFail();
+        $this->assertSame('1', $relacion->numhistoria);
+        $this->assertSame(1, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->numhistoria);
     }
 
     public function test_una_cita_pendiente_se_pregunta_antes_de_agendar(): void
@@ -1754,6 +1758,9 @@ class AgendaWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        // Con **dos** sedes no hay ninguna que proponer (O-03b: la única del médico se propone sola), así que
+        // el alta abre pidiendo elegir, que es el caso de este test.
+        $this->sede($medico, $this->centro('La Trinidad')->id, Office::MODALIDAD_HORA, 'C2');
         $pacienteId = $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
 
         // Sin sede elegida el alta no guarda (lo dice el aviso de arriba): si al elegirla se perdiera el
@@ -1774,5 +1781,196 @@ class AgendaWebTest extends TestCase
         $conSede->assertSee('Elegido:');
         $conSede->assertSee('Alvarez, Ana');
         $conSede->assertSee('name="paciente_id" id="paciente-id" value="' . $pacienteId . '"', false);
+    }
+
+    // -------------------------------------- La sede por defecto de "Nueva cita" es la del contexto (O-03)
+
+    public function test_el_alta_de_cita_sin_sede_en_la_url_toma_la_del_contexto(): void
+    {
+        // O-03 (2026-10-17): si no viene `sede` en la URL, el paso 1 abre con la sede del consultorio que
+        // se eligió en la barra superior. Antes abría en «— Elige una sede —» aunque hubiera una elegida.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString());
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
+        // Y el aviso de «elegí la sede» deja de aparecer en el camino normal.
+        $respuesta->assertDontSee('— Elige una sede —');
+        $respuesta->assertDontSee('Elige la sede para ver su jornada');
+    }
+
+    public function test_el_alta_de_cita_respeta_la_sede_pedida_en_la_url(): void
+    {
+        // Con `sede=<id>` manda la URL, aunque el contexto esté en otra: es la agenda de esa sede la que
+        // está agendando.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $delContexto = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pedida = $this->sede($medico, $this->centro('La Trinidad')->id, Office::MODALIDAD_HORA, 'C2');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $delContexto->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&sede=' . $pedida->id);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $pedida->id . '" selected>', false);
+        $respuesta->assertDontSee('<option value="' . $delContexto->id . '" selected>', false);
+    }
+
+    public function test_el_alta_de_cita_con_sede_todas_no_fuerza_la_del_contexto(): void
+    {
+        // `sede=todas` es una elección explícita de la agenda (mirar todas las sedes juntas): no se pisa
+        // con la del contexto y la cita —que siempre es en una sede— sigue pidiendo que se elija.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('— Elige una sede —');
+        $respuesta->assertDontSee('<option value="' . $sede->id . '" selected>', false);
+    }
+
+    public function test_el_buscador_de_pacientes_de_la_agenda_lleva_la_sede_del_contexto(): void
+    {
+        // El "Hacer cita" de cada fila del buscador (y el de los récipes) llega sin `sede`: tiene que
+        // quedar la del contexto igual. Acá se comprueba el camino completo desde la agenda.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pacienteId = $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&paciente_id=' . $pacienteId);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
+        $respuesta->assertSee('Alvarez, Ana');
+    }
+
+    public function test_el_alta_rapida_del_paso_2_propone_el_sexo_de_la_especialidad(): void
+    {
+        // O-01: la otra forma de dar de alta un paciente en la web —el alta mínima del paso 2 de «Nueva
+        // cita»— usa la misma regla que la ficha: en ginecología arranca en Femenino.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $url = '/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString();
+
+        $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertSee('<option value="F" selected>Femenino</option>', false);
+
+        // En una especialidad que no declara la clave queda el «Sin dato» de siempre.
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->attach($pediatria->id);
+
+        $this->conContexto($user, $medico, $pediatria, $sede->id)->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertSee('<option value="F" >Femenino</option>', false);
+    }
+
+    // ------------------------- La única sede se propone en «Todos mis consultorios» (O-03b, 2026-10-17)
+
+    public function test_el_alta_de_cita_sin_contexto_propone_la_unica_sede_del_medico(): void
+    {
+        // O-03b: sin consultorio elegido (la barra en «Todos mis consultorios») y con **una sola** sede
+        // vigente, el paso 1 la propone. Antes abría en «— Elige una sede —».
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString());
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
+        $respuesta->assertDontSee('— Elige una sede —');
+    }
+
+    public function test_el_alta_de_cita_sin_contexto_con_varias_sedes_sigue_pidiendo_elegir(): void
+    {
+        // Con más de una sede no hay nada que proponer: la sede decide la jornada y el lugar.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $primera = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $segunda = $this->sede($medico, $this->centro('La Trinidad')->id, Office::MODALIDAD_HORA, 'C2');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString());
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('— Elige una sede —');
+        $respuesta->assertDontSee('<option value="' . $primera->id . '" selected>', false);
+        $respuesta->assertDontSee('<option value="' . $segunda->id . '" selected>', false);
+    }
+
+    public function test_el_alta_de_cita_con_sede_todas_no_propone_la_unica_sede(): void
+    {
+        // `sede=todas` es una elección explícita (mirar todas las sedes juntas): no se pisa con la única.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('— Elige una sede —');
+        $respuesta->assertDontSee('<option value="' . $sede->id . '" selected>', false);
+    }
+
+    // ------------------------- El alta rápida de la cita deja la fecha de ingreso (O-02b, 2026-10-17)
+
+    public function test_el_alta_rapida_del_paso_2_deja_la_fecha_de_ingreso_del_consultorio(): void
+    {
+        // O-02b: el alta mínima del paso 2 no tiene el campo `fingreso`, y sin él el paciente no aparecía en
+        // «pacientes por rango». Un paciente **nuevo** nace con **hoy**, y el hoy es el del consultorio: las
+        // 20:30 del sábado 10/10/2026 en Caracas ya son el domingo 11 en UTC (trampa 59).
+        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'            => '09:00',
+                'nuevo_cedula'    => '11223344',
+                'nuevo_nombres'   => 'Nueva',
+                'nuevo_apellidos' => 'Paciente',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $paciente = Paciente::where('cedula', '11223344')->firstOrFail();
+        $this->assertSame('2026-10-10', $paciente->fingreso?->toDateString(), 'la fecha de ingreso es la del consultorio, no la de UTC');
+    }
+
+    public function test_el_alta_rapida_que_enlaza_por_cedula_no_toca_la_fecha_de_ingreso(): void
+    {
+        // O-02b: si al guardar **enlaza** con una ficha que ya existía (de este médico o de otro), la fecha no
+        // se toca: «sólo completa vacíos», y estampar hoy una ficha vieja sería un dato falso. Vale también
+        // cuando la ficha existente la tenía en `null`.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $sinFecha = Paciente::create(['cedula' => '55667788', 'nombres' => 'Vieja', 'apellidos' => 'Sin fecha']);
+        $conFecha = Paciente::create(['cedula' => '55667799', 'nombres' => 'Vieja', 'apellidos' => 'Con fecha', 'fingreso' => '2020-03-15']);
+
+        foreach (['55667788' => 'Sin fecha', '55667799' => 'Con fecha'] as $cedula => $apellidos) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                    'hora'            => '09:00',
+                    'nuevo_cedula'    => (string) $cedula,
+                    'nuevo_nombres'   => 'Otra',
+                    'nuevo_apellidos' => $apellidos,
+                ]))
+                ->assertRedirect($this->urlDeLaAgenda($sede));
+        }
+
+        // La que estaba en `null` sigue en `null`; la que tenía fecha conserva la suya.
+        $this->assertNull($sinFecha->fresh()->fingreso);
+        $this->assertSame('2020-03-15', $conFecha->fresh()->fingreso?->toDateString());
+        // Y no se duplicó ninguna ficha.
+        $this->assertSame(1, Paciente::where('cedula', '55667788')->count());
+        $this->assertSame(1, Paciente::where('cedula', '55667799')->count());
     }
 }

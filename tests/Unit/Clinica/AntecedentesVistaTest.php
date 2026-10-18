@@ -62,7 +62,7 @@ class AntecedentesVistaTest extends TestCase
         ];
     }
 
-    private function vista(array $antecedentes = [], array $old = [], string $tipo = '01', array $pendientes = []): SeccionDeAntecedentesVista
+    private function vista(array $antecedentes = [], array $old = [], string $tipo = '01', string $urlQuitar = '/clinica/consulta/42/antecedentes/quitar'): SeccionDeAntecedentesVista
     {
         return new SeccionDeAntecedentesVista(
             new Collection($antecedentes),
@@ -71,7 +71,7 @@ class AntecedentesVistaTest extends TestCase
             '/clinica/consulta/42/antecedentes',
             '/clinica/consulta/42?seccion=antecedentes',
             $old,
-            $pendientes,
+            $urlQuitar,
         );
     }
 
@@ -117,14 +117,17 @@ class AntecedentesVistaTest extends TestCase
         $this->assertStringContainsString('tipo=' . TipoDeAntecedentes::SIN_CLASIFICAR, $chips[7]['url']);
     }
 
-    public function test_cambiar_de_chip_no_pierde_lo_tildado_del_buscador(): void
+    /** Los chips no arrastran códigos pendientes: desde O-07 «Agregar» escribe en el acto. */
+    public function test_los_chips_no_arrastran_pendientes(): void
     {
-        $vista = $this->vista([], [], '01', ['0013', '0285']);
+        $vista = $this->vista();
 
         foreach ($vista->chips() as $chip) {
-            $this->assertStringContainsString('agregar[]=0013', $chip['url']);
-            $this->assertStringContainsString('agregar[]=0285', $chip['url']);
+            $this->assertStringNotContainsString('agregar', $chip['url']);
         }
+
+        // El «Quitar» de una fila es un `POST` inmediato: la URL no lleva parámetros.
+        $this->assertSame('/clinica/consulta/42/antecedentes/quitar', $vista->urlQuitar());
     }
 
     // ------------------------------------------------------------------------------ El filtro
@@ -292,22 +295,20 @@ class AntecedentesVistaTest extends TestCase
 
     // --------------------------------------------------------------------------- El buscador
 
-    private function catalogo(array $resultados = [], array $yaEsta = [], string $buscar = '', string $tipo = '', array $consulta = []): SeccionDeAntecedentesCatalogoVista
+    private function catalogo(array $resultados = [], array $yaEsta = [], string $buscar = '', string $tipo = ''): SeccionDeAntecedentesCatalogoVista
     {
         return new SeccionDeAntecedentesCatalogoVista(
             new Collection($resultados),
             $yaEsta,
             self::TIPOS,
-            '/clinica/consulta/42',
+            '/clinica/consulta/42/antecedentes/agregar',
             '/clinica/consulta/42/antecedentes/crear',
             $buscar,
             $tipo,
-            $consulta,
-            '/clinica/consulta/42/antecedentes',
         );
     }
 
-    public function test_el_buscador_marca_lo_que_el_paciente_ya_tiene_y_lo_pendiente(): void
+    public function test_el_buscador_marca_lo_que_el_paciente_ya_tiene(): void
     {
         $catalogo = $this->catalogo(
             [
@@ -318,45 +319,35 @@ class AntecedentesVistaTest extends TestCase
             ['0001'],
             '',
             '01',
-            ['agregar' => '0003'],
         );
 
         $resultados = $catalogo->resultados();
 
         $this->assertTrue($resultados[0]['yaEsta'], 'ASMA ya está en el paciente');
-        $this->assertFalse($resultados[0]['pendiente']);
         $this->assertFalse($resultados[1]['yaEsta']);
-        $this->assertTrue($resultados[2]['pendiente'], 'TABACO quedó tildado en el buscador');
+        $this->assertFalse($resultados[2]['yaEsta']);
         $this->assertSame('FAMILIAR', $resultados[1]['tipo']);
-        $this->assertSame(['0003'], $catalogo->pendientesDelBuscador());
-        $this->assertStringContainsString('Tildaste un antecedente', $catalogo->avisoDePendientes());
-        // El "Agregar" de una fila conserva lo que ya estaba tildado y suma el suyo.
-        $urlAgregar = $catalogo->urlAgregar('0002');
-        $this->assertStringContainsString('/clinica/consulta/42?seccion=antecedentes', $urlAgregar);
-        $this->assertStringContainsString('agregar[]=0003', $urlAgregar);
-        $this->assertStringContainsString('agregar[]=0002', $urlAgregar);
-        // Y la URL del guardado lleva los dos: la sección y los pendientes.
-        $this->assertStringContainsString('seccion=antecedentes', $catalogo->urlGuardar());
-        $this->assertStringContainsString('agregar[]=0003', $catalogo->urlGuardar());
+        // O-07: no hay estado intermedio de «pendiente»; «Agregar» es un POST inmediato.
+        $this->assertArrayNotHasKey('pendiente', $resultados[2]);
+        $this->assertSame('/clinica/consulta/42/antecedentes/agregar', $catalogo->urlAgregar());
     }
 
-    /** Agregar no puede perder el chip ni la búsqueda: la columna vuelve al tipo y al texto que se miraban. */
+    /** «Agregar» conserva el chip y la búsqueda en los campos ocultos del formulario, no en la URL. */
     public function test_agregar_conserva_el_tipo_y_la_busqueda(): void
     {
         $catalogo = $this->catalogo([], [], 'diab', '02');
 
-        $this->assertStringContainsString('tipo=02', $catalogo->urlAgregar('0002'));
-        $this->assertStringContainsString('buscar=diab', $catalogo->urlAgregar('0002'));
+        $this->assertSame('02', $catalogo->tipo());
+        $this->assertSame('diab', $catalogo->buscar());
         // «Limpiar» se lleva la búsqueda pero **no** el tipo.
         $this->assertStringContainsString('tipo=02', $catalogo->urlLimpiar());
         $this->assertStringNotContainsString('buscar=', $catalogo->urlLimpiar());
     }
 
-    public function test_el_buscador_sin_pendientes_no_avisa_nada(): void
+    public function test_el_buscador_sin_resultados_no_avisa_nada(): void
     {
         $catalogo = $this->catalogo();
 
-        $this->assertSame([], $catalogo->pendientesDelBuscador());
         $this->assertSame([], $catalogo->resultados());
         $this->assertSame('Tu catálogo no tiene antecedentes que coincidan', $catalogo->sinResultados()['titulo']);
     }

@@ -282,6 +282,50 @@ class ListadosPacientesWebTest extends TestCase
         $respuesta->assertDontSee('app-sidebar', false);
     }
 
+    // ----------------------------------------------------------------------------- Edad abierta (O-14)
+
+    public function test_sin_rango_de_edad_aparece_el_paciente_sin_fecha_de_nacimiento(): void
+    {
+        // O-14 (2026-10-17): el rango **abierto** (el de la pantalla) no filtra por `fnacimiento`, así que un
+        // paciente sin fecha de nacimiento —el que carga el alta rápida de «Nueva cita»— aparece igual.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'SinFecha', ['fnacimiento' => null, 'fingreso' => '2024-05-10']);
+
+        $this->conContexto($user, $medico, $gineco)->get($this->listado())
+            ->assertOk()
+            ->assertSee('SinFecha, Ana')
+            // Y el subtítulo no anuncia una edad que no se filtró.
+            ->assertDontSee('de 1 a 110 años');
+    }
+
+    public function test_con_rango_de_edad_se_sigue_filtrando_como_hoy(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'SinFecha', ['fnacimiento' => null, 'fingreso' => '2024-05-10']);
+        $this->paciente($medico, 2, 'Treintaycuatro', ['fnacimiento' => '1992-10-14']);
+
+        // Con la edad puesta, el que no tiene fecha de nacimiento no puede cumplir el rango: no aparece.
+        $this->conContexto($user, $medico, $gineco)
+            ->get($this->listado(['edad_inicial' => '30', 'edad_final' => '40']))
+            ->assertOk()
+            ->assertSee('Treintaycuatro, Ana')
+            ->assertDontSee('SinFecha, Ana');
+    }
+
+    public function test_el_subtitulo_dice_la_edad_solo_cuando_filtra(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'Uno');
+
+        $this->conContexto($user, $medico, $gineco)->get($this->listado())
+            ->assertSee('ingresados entre el')
+            ->assertDontSee('de 1 a 110 años');
+
+        $this->conContexto($user, $medico, $gineco)
+            ->get($this->listado(['edad_inicial' => '30', 'edad_final' => '40']))
+            ->assertSee('de 30 a 40 años');
+    }
+
     // ------------------------------------------------------------------------------------- Permisos
 
     public function test_la_secretaria_recibe_403(): void

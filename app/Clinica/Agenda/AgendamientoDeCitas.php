@@ -4,6 +4,7 @@ namespace App\Clinica\Agenda;
 
 use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\EditarCita;
+use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Models\Cola;
 use App\Models\Office;
@@ -39,6 +40,7 @@ class AgendamientoDeCitas
         private PacientesDeCita $pacientes,
         private CrearCita $crear,
         private CrearPaciente $crearPaciente,
+        private AsignarHistoria $asignarHistoria,
         private EditarCita $editar,
     ) {
     }
@@ -52,8 +54,11 @@ class AgendamientoDeCitas
      * existe: se agenda directo (WEB-2.17).
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
+     * @param  array<int,string>  $registrosMedicos  los `reg_medico` del médico: los necesita el número de
+     *                                               historia que se le asigna al paciente del alta rápida
+     *                                               (O-04), para que el correlativo sea el mismo de siempre
      */
-    public function agendar(array $contexto, array $valores): ResultadoDeAgendamiento
+    public function agendar(array $contexto, array $valores, array $registrosMedicos): ResultadoDeAgendamiento
     {
         $regMedico = $contexto['reg_medico'];
 
@@ -92,9 +97,20 @@ class AgendamientoDeCitas
         // enlaza (completando solo lo que estaba vacío) en vez de duplicarla. Cuando el paciente se
         // eligió del listado ya está enlazado y no hay nada que crear; y la ficha nueva se crea recién
         // acá, para que cancelar la pregunta no deje un paciente suelto.
-        $paciente = ! empty($valores['paciente_id'])
-            ? $objetivo['paciente']
-            : $this->crearPaciente->ejecutar($this->pacientes->columnasDelNuevo($valores), $contexto['medico'], $regMedico);
+        if (! empty($valores['paciente_id'])) {
+            $paciente = $objetivo['paciente'];
+        } else {
+            $paciente = $this->crearPaciente->ejecutar($this->pacientes->columnasDelNuevo($valores), $contexto['medico'], $regMedico);
+
+            // **El alta rápida del paso 2 numera la historia en el mismo paso** (O-04, 2026-10-17): es un
+            // alta **desde la web** (hay consultorio de contexto), así que el paciente queda atendible de
+            // inmediato y la cita nace enlazada por `numhistoria`. El número lo sigue dando
+            // `AsignarHistoria`, la única regla del correlativo; el chatbot y el móvil, que crean por
+            // `CrearPaciente` sin contexto, siguen sin número.
+            $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $registrosMedicos, (int) $paciente->getKey());
+
+            $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
+        }
 
         $jornada = $this->armador->jornadaPara($regMedico, $sedes, $fecha, $centroId, $hora);
         $monto = $this->montoDe($valores, $contexto, $sede);

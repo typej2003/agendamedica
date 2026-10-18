@@ -6,7 +6,8 @@ use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\GuardarFamilia;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
-use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Consulta\AtencionInmediata;
+use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
@@ -17,6 +18,7 @@ use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
+use App\Models\Historia;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -118,6 +120,13 @@ class PacienteController extends Controller
         // contenedor): la ficha la usa sólo si el paciente todavía no tiene número.
         $vm = $vm->conUrlAsignarHistoria(route('clinica.pacientes.asignar-historia', $ficha->id));
 
+        // «¿Atender ahora?» (O-05): la ficha lo ofrece **sólo en el momento en que el paciente quedó
+        // atendible** —lo deja dicho el flash de la acción que le puso el número— y sólo a quien trabaja la
+        // consulta: atender es del médico (WEB-4.9).
+        if ($this->ofreceAtender($request, $ficha->numhistoria, (int) $ficha->id)) {
+            $vm = $vm->conUrlAtender(route('clinica.pacientes.atender', $ficha->id));
+        }
+
         // El representante es **de la ficha** (WEB-3.4): no tiene pantalla propia, así que su bloque —con
         // su catálogo de parentescos ya leído y su URL de guardado— lo arma su controlador y la ficha lo
         // incluye, igual que el resto de los datos de la pantalla.
@@ -197,7 +206,74 @@ class PacienteController extends Controller
             ->route('clinica.pacientes.ver', $paciente)
             ->with('estado', $yaTenia
                 ? 'Este paciente ya tenía historia: H. ' . $historia->numhistoria . '. No se le asignó otra.'
-                : 'Se le asignó la historia H. ' . $historia->numhistoria . ' y ya se lo puede atender.');
+                : 'Se le asignó la historia H. ' . $historia->numhistoria . ' y ya se lo puede atender.')
+            // O-05: el paciente acaba de quedar atendible, así que la ficha ofrece atenderlo.
+            ->with('ofrecer_atender', $paciente);
+    }
+
+    /**
+     * **Atender ahora al paciente que acaba de quedar atendible** (O-05, 2026-10-17).
+     *
+     * Es el «sí» del diálogo «¿Atender ahora?» que la ficha muestra después de asignarle la historia o
+     * después del alta web (O-04). La regla vive en `AtencionInmediata`: si el paciente tiene una cita hoy
+     * sin atender se abre esa; si no, se le crea la cita del día con la sede del contexto y se abre la
+     * consulta. Acá sólo se resuelve de quién es el paciente y qué historia tiene, y se traduce el
+     * resultado a una redirección.
+     *
+     * **Es del médico**: abrir la consulta es clínica y la secretaría recibe 403 —la misma regla de
+     * WEB-4.9—. El botón no se le ofrece, y la ruta tampoco se le abre si la pide a mano.
+     */
+    public function atender(Request $request, int $paciente, AtencionInmediata $atencion, PacienteDeLaCita $pacienteDeLaCita)
+    {
+        abort_unless((bool) $request->user()?->trabajaLaConsulta(), 403);
+
+        $contexto = $request->attributes->get('contexto_clinico');
+        $vinculo = $this->pacientes->vinculo($contexto['reg_medico'], $paciente);
+
+        // Un paciente de otro médico no se atiende ni se confirma que exista (el mismo 404 de la ficha).
+        abort_unless($vinculo !== null, 404);
+
+        $registros = $this->registrosDelMedico($contexto['medico']);
+        // La historia se resuelve igual que al abrir la consulta (por el pivote del paciente): si no la
+        // tiene, no hay nada que atender y se lo manda a la ficha, que es donde vive la acción.
+        $historia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, $registros);
+
+        if ($historia === null) {
+            return redirect()
+                ->route('clinica.pacientes.ver', $paciente)
+                ->with('error', 'Este paciente todavía no tiene número de historia: asígnaselo antes de atenderlo.');
+        }
+
+        $resultado = $atencion->ejecutar($contexto, $registros, $historia);
+
+        if (! $resultado->abrio()) {
+            return redirect()
+                ->route('clinica.pacientes.ver', $paciente)
+                ->with('error', $resultado->motivo());
+        }
+
+        // Al entrar a la consulta las alertas del paciente se avisan de nuevo (WEB-11.6), como en «Atender».
+        session()->put('alertas_vistas', array_values(array_diff((array) session('alertas_vistas', []), [$resultado->consultaId()])));
+
+        return redirect()
+            ->route('clinica.consulta', $resultado->consultaId())
+            ->with('estado', $resultado->mensaje());
+    }
+
+    /**
+     * ¿La ficha tiene que ofrecer «¿Atender ahora?»? (O-05)
+     *
+     * Tres condiciones, y las tres importan: el paciente **acaba** de quedar atendible (lo dice el flash que
+     * deja la acción que le puso el número, con su id, para que no se ofrezca en la ficha de otro), **tiene
+     * historia** (sin ella no hay consulta) y quien mira **trabaja la consulta** (atender es del médico,
+     * WEB-4.9). Fuera de ese momento la ficha no ofrece atender: no es una acción de la ficha, es el paso
+     * que sigue al alta.
+     */
+    private function ofreceAtender(Request $request, ?string $numhistoria, int $pacienteId): bool
+    {
+        return (int) session('ofrecer_atender') === $pacienteId
+            && $numhistoria !== null
+            && (bool) $request->user()?->trabajaLaConsulta();
     }
 
     /**
@@ -208,8 +284,9 @@ class PacienteController extends Controller
      *  - **Foto** (`foto_pac`): el proyecto todavía no define dónde se guardan los archivos clínicos
      *    (WEB-T.1/WEB-4.7); una ruta de disco del escritorio no sirve desde la web.
      *  - **Representante** (`representante`): es **WEB-3.4**, con sus columnas nullable nuevas.
-     *  - **`numhistoria`**: no es un dato del formulario, lo asigna el servidor cuando la historia se
-     *    completa (WEB-3.3, `AsignarHistoria`).
+     *  - **`numhistoria`**: no es un dato del formulario. Desde O-04 (2026-10-17) el alta web **numera en
+     *    el mismo paso**, con `AsignarHistoria` (WEB-3.3): el número lo calcula el servidor y el médico no
+     *    lo elige.
      *  - **`password`/`user_id`**: el login del paciente no existe en AppDDR.
      *  - **`sms`** (el tilde de recordatorios del escritorio): la web manda recordatorios desde la agenda
      *    por cita (WEB-2.6) y no escribe esa columna (misma decisión que WEB-2.6/2.7).
@@ -272,6 +349,9 @@ class PacienteController extends Controller
                 $ficha['paciente'] ?? null,
                 $ficha['numhistoria'] ?? null,
                 $this->seguros->de($contexto['reg_medico']),
+                // La especialidad del contexto decide los valores por defecto del alta (O-01: en
+                // ginecología el sexo arranca en Femenino; una especialidad sin la clave, en «— Sin dato —»).
+                $contexto['specialty'] ?? null,
             ),
             'hermano' => $hermano,
         ]);
@@ -317,26 +397,32 @@ class PacienteController extends Controller
             throw ValidationException::withMessages([$campo => $excepcion->getMessage()]);
         }
 
-        $unido = $hermano !== null ? $this->unirComoHermano($contexto, $paciente, $hermano) : null;
+        // **El alta desde la web numera la historia en el mismo paso** (O-04, 2026-10-17): el número lo
+        // sigue dando `AsignarHistoria` —la única regla del correlativo, compartida con el sync y con
+        // «Pasar a cita formal»—; lo que cambia es *cuándo* se pide. La edición de la ficha no numera.
+        //
+        // Es el alta **de la web** (la del médico, la de la secretaría y la rápida del paso 2 de «Nueva
+        // cita»), no la del chatbot ni la del móvil: esas dos crean por `CrearPaciente` sin consultorio de
+        // contexto y siguen sin número (el paciente online se numera cuando alguien lo recibe).
+        $historia = $ficha === null
+            ? app(AsignarHistoria::class)->ejecutar(
+                $contexto['medico'],
+                $this->registrosDelMedico($contexto['medico']),
+                (int) $paciente->getKey(),
+            )
+            : null;
+
+        $unido = $hermano !== null ? $this->unirComoHermano($contexto, $paciente, $hermano, $historia) : null;
 
         $mensaje = $ficha !== null
             ? 'Se guardaron los cambios de la ficha.'
-            : 'Paciente registrado. Todavía no tiene número de historia: se lo asigna el servidor cuando '
-                . 'se complete la historia.';
+            : 'Paciente registrado y con historia H. ' . $historia->numhistoria . '. Ya se lo puede atender.';
 
         if ($hermano !== null) {
             $mensaje = $unido !== null
                 ? 'Se registró a ' . $paciente->nombres . ' como hermano(a) de ' . $hermano->nombres . ': comparten la familia y el teléfono de contacto. '
                     . 'Le tocó la historia H. ' . $unido . '.'
                 : 'Paciente registrado, pero no se pudo unir a la familia de ' . $hermano->nombres . '. Entra a su ficha y cárgale la familia.';
-        }
-
-        // "¿Atenderá a este paciente hoy?": la pregunta del alta del legado. El sí lleva al alta de cita
-        // con el paciente ya elegido, donde la agenda pide la razón y arma la cola del día.
-        if ($ficha === null && $request->boolean('atender_hoy')) {
-            return redirect()
-                ->route('clinica.agenda.nueva', ['fecha' => FechaDelConsultorio::hoy()->toDateString(), 'paciente_id' => $paciente->id])
-                ->with('estado', $mensaje . ' Ahora elige la razón y la hora de la cita de hoy.');
         }
 
         // Editada desde la consulta (WEB-11.25): se vuelve a ella, a la sección de datos, y no a la ficha.
@@ -349,21 +435,25 @@ class PacienteController extends Controller
 
         return redirect()
             ->route('clinica.pacientes.ver', $paciente->id)
-            ->with('estado', $mensaje);
+            ->with('estado', $mensaje)
+            // O-05: el paciente acaba de quedar atendible. La ficha le ofrece «¿Atender ahora?» a quien
+            // trabaja la consulta; «después» es cerrar el diálogo y quedarse en la ficha.
+            ->with('ofrecer_atender', $ficha === null ? $paciente->id : null);
     }
 
     /**
      * Le asigna la historia al niño recién creado (la familia se guarda por ese número) y lo une a la familia de su hermano. Devuelve el
      * número de historia, o `null` si no se pudo unir. Las reglas son las Actions `AsignarHistoria` y `GuardarFamilia::comoHermano`.
+     *
+     * La historia **ya viene puesta por el alta** (O-04): acá no se numera de nuevo, se usa la que le tocó.
      */
-    private function unirComoHermano(array $contexto, Paciente $paciente, object $hermano): ?string
+    private function unirComoHermano(array $contexto, Paciente $paciente, object $hermano, ?Historia $historia): ?string
     {
+        if ($historia === null) {
+            return null;
+        }
+
         try {
-            $historia = app(AsignarHistoria::class)->ejecutar(
-                $contexto['medico'],
-                $this->registrosDelMedico($contexto['medico']),
-                (int) $paciente->getKey(),
-            );
             $numero = (string) $historia->numhistoria;
 
             $familia = app(GuardarFamilia::class)->comoHermano($contexto['reg_medico'], $hermano->numhistoria, $numero, $paciente);
@@ -410,7 +500,6 @@ class PacienteController extends Controller
             'codesegemp'   => ['nullable', 'string', 'max:3'],
             'dependencia'  => ['nullable', 'string', 'max:30'],
             'fingreso'     => ['nullable', 'date_format:Y-m-d'],
-            'atender_hoy'  => ['nullable', 'boolean'],
             'volver_a_consulta' => ['nullable', 'integer'],
             'hermano_de'   => ['nullable', 'integer'],
         ], $this->avisos());
@@ -469,7 +558,6 @@ class PacienteController extends Controller
             'codesegemp.max'          => 'El seguro elegido no es válido.',
             'dependencia.max'         => 'El campo "Referido por" no puede pasar de 30 caracteres.',
             'fingreso.date_format'    => 'La fecha de ingreso va como día/mes/año.',
-            'atender_hoy.boolean'     => 'La opción "¿Atenderá hoy?" no es válida.',
         ];
     }
 
@@ -483,7 +571,7 @@ class PacienteController extends Controller
      */
     private function columnas(array $datos): array
     {
-        unset($datos['sin_cedula'], $datos['atender_hoy'], $datos['volver_a_consulta'], $datos['hermano_de']);
+        unset($datos['sin_cedula'], $datos['volver_a_consulta'], $datos['hermano_de']);
 
         if (trim((string) ($datos['cedula'] ?? '')) === '') {
             $datos['cedula'] = null;

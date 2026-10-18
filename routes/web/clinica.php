@@ -184,6 +184,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // comparten. El controlador resuelve el paciente para el encabezado y responde 404 si la
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
+                // **Atender ahora** al paciente que acaba de quedar atendible (O-05): el «sí» del diálogo que
+                // la ficha ofrece después del alta web o de asignarle la historia. Abre la cita de hoy si el
+                // paciente tiene una sin atender y, si no, se la crea; por eso vive acá y no en el grupo de la
+                // secretaría: atender es del médico (WEB-4.9), y la Action que lo resuelve es
+                // `App\Clinica\Consulta\AtencionInmediata`.
+                Route::post('/pacientes/{paciente}/atender', [PacienteController::class, 'atender'])->name('pacientes.atender');
+
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
 
                 // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la
@@ -291,6 +298,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // panel. `buscar` es el buscador del catálogo (JSON) y va **antes** de las rutas con
                 // parámetro.
                 Route::get('/consulta/{consulta}/antecedentes/buscar', [ConsultaAntecedentesController::class, 'buscar'])->name('consulta.antecedentes.buscar');
+                // O-07 (2026-10-17): **Agregar** y **Quitar** son POST inmediatos —una escritura por clic, como
+                // «Pasar» en motivos y diagnósticos—; el botón de guardar sólo aplica el detalle y la casilla de
+                // Alerta de las filas que ya están.
+                Route::post('/consulta/{consulta}/antecedentes/agregar', [ConsultaAntecedentesController::class, 'agregar'])->name('consulta.antecedentes.agregar');
+                Route::post('/consulta/{consulta}/antecedentes/quitar', [ConsultaAntecedentesController::class, 'quitar'])->name('consulta.antecedentes.quitar');
                 Route::post('/consulta/{consulta}/antecedentes', [ConsultaAntecedentesController::class, 'guardar'])->name('consulta.antecedentes.guardar');
                 Route::post('/consulta/{consulta}/antecedentes/crear', [ConsultaAntecedentesController::class, 'crear'])->name('consulta.antecedentes.crear');
 
@@ -302,6 +314,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // detalle editado, lo tildado del catálogo y lo quitado (el `dw_8.update()` del escritorio
                 // también espera al *Guardar* de la ventana, `:2709`).
                 Route::post('/consulta/{consulta}/diagnosticos', [ConsultaDiagnosticosController::class, 'guardar'])->name('consulta.diagnosticos.guardar');
+                // O-27 (2026-10-17): «Pasar» y «Quitar» son POST inmediatos —la misma regla que los
+                // antecedentes en O-07—; el botón de guardar sólo aplica el detalle.
+                Route::post('/consulta/{consulta}/diagnosticos/agregar', [ConsultaDiagnosticosController::class, 'agregar'])->name('consulta.diagnosticos.agregar');
+                Route::post('/consulta/{consulta}/diagnosticos/quitar', [ConsultaDiagnosticosController::class, 'quitar'])->name('consulta.diagnosticos.quitar');
                 Route::post('/consulta/{consulta}/diagnosticos/crear', [ConsultaDiagnosticosController::class, 'crear'])->name('consulta.diagnosticos.crear');
 
                 // Evolución de la consulta (WEB-4.6): el ítem 9 del panel. **Es una columna de la

@@ -108,6 +108,22 @@ final class FiltroDePacientesPorRango
         return $this->edades->rangoDeNacimiento($this->hoy);
     }
 
+    /**
+     * ¿El listado tiene que filtrar por edad? (O-14, 2026-10-17.)
+     *
+     * El rango **abierto** —el que trae la pantalla: 1 a 110, `RangoDeEdades::sonLasDePorDefecto()`— **no
+     * filtra**: si lo hiciera, un paciente sin fecha de nacimiento no aparecería nunca aunque haya
+     * ingresado dentro del rango, y el alta rápida de «Nueva cita» no pide ese dato. El filtro por edad
+     * sigue funcionando en cuanto el médico pone un rango propio.
+     *
+     * La regla vive acá, junto a `rangoDeNacimiento()`, y la usan la consulta (`PacientesPorRango`) y lo
+     * que la pantalla dice de sus filtros: si no se filtra, no se anuncia la edad.
+     */
+    public function filtraPorEdad(): bool
+    {
+        return ! $this->edades->sonLasDePorDefecto();
+    }
+
     public function edadInicial(): int
     {
         return $this->edades->inicial();

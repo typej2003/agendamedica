@@ -14,8 +14,8 @@ use PHPUnit\Framework\TestCase;
  *
  * Lo que se fija acá es lo que la pantalla decide: el estado vacío y el estado con diagnósticos, la fila
  * con su detalle editable y el aviso del código que ya no está en el catálogo, qué fila del buscador se
- * ofrece para agregar y cuál no (la que ya está en la consulta o la que ya está tildada), los pendientes
- * que sobreviven en la query y el `old()` de un POST que falló la validación.
+ * ofrece para pasar y cuál no (la que ya está en la consulta), las URLs de las escrituras inmediatas (O-27)
+ * y el `old()` de un POST que falló la validación.
  */
 class DiagnosticosVistaTest extends TestCase
 {
@@ -40,12 +40,14 @@ class DiagnosticosVistaTest extends TestCase
         return new SeccionDeDiagnosticosVista(
             $extra['diagnosticos'] ?? $this->deLaConsulta([]),
             $extra['catalogo'] ?? $this->catalogo([['0518', 'LIE BAJO GRADO'], ['0474', 'AMENAZA DE ABORTO']]),
-            $extra['pendientes'] ?? [],
             $extra['buscar'] ?? '',
             $extra['urlGuardar'] ?? '/clinica/consulta/42/diagnosticos',
             $extra['urlBase'] ?? '/clinica/consulta/42',
             $extra['urlCrear'] ?? '/clinica/consulta/42/diagnosticos/crear',
             $extra['old'] ?? [],
+            null,
+            $extra['urlAgregar'] ?? '/clinica/consulta/42/diagnosticos/agregar',
+            $extra['urlQuitar'] ?? '/clinica/consulta/42/diagnosticos/quitar',
         );
     }
 
@@ -112,61 +114,37 @@ class DiagnosticosVistaTest extends TestCase
         $this->assertSame('lo que el médico escribió', $vm->filas()[0]['detalle']);
     }
 
-    public function test_el_buscador_distingue_lo_que_ya_esta_de_lo_que_esta_tildado(): void
+    public function test_el_buscador_distingue_lo_que_ya_esta_de_lo_que_se_puede_pasar(): void
     {
         $vm = $this->vista([
             'diagnosticos' => $this->deLaConsulta([
                 ['id' => 7, 'codigo' => '0518', 'nombre' => 'LIE BAJO GRADO', 'detalle' => null, 'enCatalogo' => true],
             ]),
             'catalogo' => $this->catalogo([['0518', 'LIE BAJO GRADO'], ['0474', 'AMENAZA DE ABORTO'], ['0305', 'ALERGIA']]),
-            'pendientes' => ['0474'],
         ]);
 
         $resultados = $vm->resultados();
 
         $this->assertTrue($resultados[0]['yaEsta']);
-        $this->assertFalse($resultados[0]['pendiente']);
         $this->assertFalse($resultados[1]['yaEsta']);
-        $this->assertTrue($resultados[1]['pendiente']);
         $this->assertFalse($resultados[2]['yaEsta']);
-        $this->assertFalse($resultados[2]['pendiente']);
+        // Desde O-27 no hay estado intermedio de «pendiente»: «Pasar» escribe.
+        $this->assertArrayNotHasKey('pendiente', $resultados[1]);
     }
 
-    public function test_los_pendientes_del_buscador_se_normalizan_y_sobreviven_en_las_urls(): void
+    public function test_las_urls_de_las_escrituras_inmediatas_son_sus_rutas(): void
     {
-        $vm = $this->vista(['pendientes' => ['0474', ' 0474 ', '', '0305'], 'buscar' => 'aborto']);
+        // O-27: «Pasar» y «Quitar» son POST inmediatos; el código y el id viajan en el cuerpo del formulario.
+        $vm = $this->vista(['buscar' => 'aborto']);
 
-        $this->assertSame(['0474', '0305'], $vm->pendientesDelBuscador());
+        $this->assertSame('/clinica/consulta/42/diagnosticos/agregar', $vm->urlAgregar());
+        $this->assertSame('/clinica/consulta/42/diagnosticos/quitar', $vm->urlQuitar());
 
-        // El guardado se lleva los pendientes y la sección: una recarga se lleva los `hidden` pero no la query.
-        $this->assertSame(
-            '/clinica/consulta/42/diagnosticos?agregar[]=0474&agregar[]=0305&seccion=diagnostico',
-            $vm->urlGuardar()
-        );
+        // El guardado del detalle ya no arrastra pendientes: sólo la sección para volver a ella.
+        $this->assertSame('/clinica/consulta/42/diagnosticos', $vm->urlGuardar());
 
-        // "Agregar" acumula lo tildado y vuelve a la misma sección, conservando la búsqueda.
-        $this->assertSame(
-            '/clinica/consulta/42?seccion=diagnostico&agregar[]=0474&agregar[]=0305&agregar[]=0518&buscar=aborto#consulta-diagnostico',
-            $vm->urlAgregar('0518')
-        );
-
-        // El "Cancelar" vuelve a la sección, sin query de pendientes.
+        // El "Cancelar" vuelve a la sección.
         $this->assertSame('/clinica/consulta/42?seccion=diagnostico', $vm->urlVolver());
-    }
-
-    public function test_un_pendiente_que_la_consulta_ya_tiene_no_es_un_pendiente(): void
-    {
-        // La pantalla no puede decir "se agrega al guardar" de algo que ya está cargado: el código que la
-        // consulta tiene se cae de la lista (y con él de los `hidden` y de la query del `action`).
-        $vm = $this->vista([
-            'diagnosticos' => $this->deLaConsulta([
-                ['id' => 7, 'codigo' => '0518', 'nombre' => 'LIE BAJO GRADO', 'detalle' => null, 'enCatalogo' => true],
-            ]),
-            'pendientes' => ['0518', '0474'],
-        ]);
-
-        $this->assertSame(['0474'], $vm->pendientesDelBuscador());
-        $this->assertSame('/clinica/consulta/42/diagnosticos?agregar[]=0474&seccion=diagnostico', $vm->urlGuardar());
     }
 
     public function test_los_topes_son_los_de_las_columnas_del_legado(): void

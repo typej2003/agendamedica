@@ -9,6 +9,7 @@ use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
@@ -19,13 +20,14 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * **Las imágenes de una consulta** (WEB-4.7, ítem 7 del panel del legado): subir una imagen con su
+ * **Las imágenes de una consulta** (WEB-4.7, ítem 7 del panel del legado hasta O-22): subir una imagen con su
  * descripción, quitarla y **abrirla**.
  *
- * Es el controlador de la parte nueva del ítem *Exámenes*. La lectura de la sección (los exámenes de
- * laboratorio de la consulta y la lista de sus imágenes) la arma `ConsultaController::ver`
- * (`?seccion=examenes`), como todas las secciones del shell; acá están las tres cosas que **escriben o
- * sirven un archivo**, y viven juntas porque son la misma responsabilidad: el ciclo de vida de una imagen.
+ * La galería de la consulta vive desde O-22 (2026-10-17) en la solapa *Imágenes* de *Evaluación física*
+ * (`?seccion=evaluacion&pestana=imagenes`): la sección *Exámenes* dejó de existir y `?seccion=examenes`
+ * redirige ahí. La lectura la arma `ConsultaController` como todas las secciones del shell; acá están las tres
+ * cosas que **escriben o sirven un archivo**, y viven juntas porque son la misma responsabilidad: el ciclo de
+ * vida de una imagen.
  *
  * ## Las tres reglas de la subida (y dónde están)
  *
@@ -205,8 +207,9 @@ class ConsultaImagenesController extends Controller
     }
 
     /**
-     * La vuelta: a la sección genérica de exámenes o, si la subida vino de la solapa de un examen, a **esa**
-     * solapa (con la consulta adentro, como arma el shell todas las secciones).
+     * La vuelta: a la **galería de la solapa *Imágenes* de Evaluación física** (O-22: era la sección genérica
+     * de exámenes) o, si la subida vino de la solapa de un examen, a **esa** solapa (con la consulta adentro,
+     * como arma el shell todas las secciones).
      */
     private function volver(Consulta $consulta, ?string $examen = null)
     {
@@ -219,12 +222,9 @@ class ConsultaImagenesController extends Controller
 
         $parametros = [
             $consulta->id,
-            'seccion' => $examen === null ? ConsultaShellVista::SECCION_EXAMENES : ConsultaShellVista::SECCION_EVALUACION,
+            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+            'pestana' => $examen === null ? PestanasDelExamen::IMAGENES : $examen,
         ];
-
-        if ($examen !== null) {
-            $parametros['pestana'] = $examen;
-        }
 
         return redirect()->route('clinica.consulta', $parametros);
     }

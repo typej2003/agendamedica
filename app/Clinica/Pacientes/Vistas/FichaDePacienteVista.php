@@ -21,6 +21,7 @@ final class FichaDePacienteVista
         private Collection $consultas,
         private ?string $seguro = null,
         private ?string $urlAsignarHistoria = null,
+        private ?string $urlAtender = null,
     ) {
     }
 
@@ -33,7 +34,17 @@ final class FichaDePacienteVista
      */
     public function conUrlAsignarHistoria(string $url): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $url);
+        return new self($this->paciente, $this->consultas, $this->seguro, $url, $this->urlAtender);
+    }
+
+    /**
+     * El mismo ViewModel con la **URL de «Atender ahora»** (O-05): la ficha la recibe sólo en el momento en
+     * que el paciente acaba de quedar atendible (después del alta o de asignarle la historia) y sólo para
+     * quien trabaja la consulta. Fuera de ese caso la ficha no ofrece atender.
+     */
+    public function conUrlAtender(string $url): self
+    {
+        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $url);
     }
 
     /**
@@ -45,7 +56,22 @@ final class FichaDePacienteVista
      */
     public function conSeguro(?string $seguro): self
     {
-        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria);
+        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria, $this->urlAtender);
+    }
+
+    /**
+     * La URL del «sí» de «¿Atender ahora?» (O-05), o `null` si la ficha no lo ofrece. Sólo se resuelve en el
+     * momento en que el paciente quedó atendible; ver `conUrlAtender()`.
+     */
+    public function urlAtender(): ?string
+    {
+        return $this->urlAtender;
+    }
+
+    /** ¿La ficha muestra el diálogo de «¿Atender ahora?»? (sólo después de numerar y para el médico). */
+    public function ofreceAtender(): bool
+    {
+        return $this->urlAtender !== null;
     }
 
     public function nombre(): string

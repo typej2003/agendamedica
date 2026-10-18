@@ -63,6 +63,12 @@ class SyncAppDataRequest extends FormRequest
         // **`numhistoria` y `codeantecedente` no están**: cambiar de paciente o de antecedente no es una
         // edición, es otra fila.
         'antece_paciente' => ['detalles', 'descripcion', 'tipo', 'tipo2'],
+        // El detalle de un diagnóstico: `detalle_diagnostco` es **el texto propio del diagnóstico** —la corrección
+        // que el médico escribe sobre la descripción del catálogo— y `orden`, el lugar que ocupa en la
+        // lista; las dos se pueden corregir sobre una fila que ya está cargada. `codediagnostico`,
+        // `nrohistoria` y `nroconsulta` **no** están: cambiar de diagnóstico, de consulta o de paciente
+        // no es una edición de la fila, es otra fila (se quita una y se agrega la otra).
+        'diagnostico_paciente' => ['detalle_diagnostco', 'orden'],
     ];
 
     /**

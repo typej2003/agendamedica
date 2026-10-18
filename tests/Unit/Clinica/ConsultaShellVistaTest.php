@@ -10,10 +10,10 @@ use PHPUnit\Framework\TestCase;
  * HTTP: datos de entrada → textos de salida (Docs/Web/guia-arquitectura-web.md).
  *
  * Lo que se fija acá: el encabezado (paciente, consulta, historia y fecha), que el panel tenga los
- * **13 ítems del legado** en su orden y con su tarea, **qué ítems están disponibles y a dónde lleva
- * cada uno** —los de WEB-4.2 abren su sección dentro de la pantalla (`?seccion=`), *Datos personales*
- * enlaza a la ficha— y que lo que todavía no existe diga "Próximamente" en vez de ofrecer un enlace
- * muerto.
+ * **13 ítems del legado** (O-22 retiró *Exámenes*) en su orden y con su tarea, **qué ítems están disponibles
+ * y a dónde lleva cada uno** —los de WEB-4.2 abren su sección dentro de la pantalla (`?seccion=`), *Datos
+ * personales* enlaza a la ficha— y que lo que todavía no existe diga "Próximamente" en vez de ofrecer un
+ * enlace muerto.
  */
 class ConsultaShellVistaTest extends TestCase
 {
@@ -69,7 +69,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('Paciente sin nombre · Consulta N.º 3 · —', $vm->lineaDeCabecera());
     }
 
-    public function test_el_panel_tiene_los_catorce_items_en_su_orden_en_su_orden_y_con_su_tarea(): void
+    public function test_el_panel_tiene_los_trece_items_en_su_orden_y_con_su_tarea(): void
     {
         $vm = $this->vista();
         $panel = $vm->panel();
@@ -83,19 +83,20 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        $this->assertCount(14, $items);
-        $this->assertSame(14, $vm->totalItems());
+        $this->assertCount(13, $items);
+        $this->assertSame(13, $vm->totalItems());
 
-        // Los títulos, en el orden del panel de `w_consulta_principal` (wiki 04-historia-clinica.md).
+        // Los títulos, en el orden del panel de `w_consulta_principal` (wiki 04-historia-clinica.md), sin
+        // *Exámenes* (O-22: su galería pasó a Evaluación física y sus exámenes a Resultado de exámenes).
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
-            'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución',
+            'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución',
             'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura',
         ], array_column($items, 'titulo'));
 
         // Y cada uno con la tarea que lo completa: es el mapa del shell, no decoración.
         $this->assertSame([
-            'WEB-4.2', 'WEB-4.2', 'WEB-4.4', 'WEB-4.3', 'WEB-6.1', 'WEB-6.6', 'WEB-4.7', 'WEB-4.5',
+            'WEB-4.2', 'WEB-4.2', 'WEB-4.4', 'WEB-4.3', 'WEB-6.1', 'WEB-6.6', 'WEB-4.5',
             'WEB-4.6', 'WEB-5.1', 'WEB-5.7', 'WEB-5.3a', 'WEB-11.25', 'F9',
         ], array_column($items, 'tarea'));
     }
@@ -111,18 +112,16 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        // Con WEB-6.6 ya hay **doce** ítems con pantalla: motivos, enfermedad actual, antecedentes,
-        // evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución,
-        // récipes y solicitudes, que se abren **dentro** del shell, y Datos personales, que enlaza a la
-        // ficha (F3).
-        $this->assertSame(13, $vm->totalListos());
+        // Con O-22 hay **doce** ítems con pantalla: motivos, enfermedad actual, antecedentes, evaluación
+        // física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento y
+        // solicitudes, que se abren **dentro** del shell, y Datos personales, que enlaza a la ficha (F3).
+        $this->assertSame(12, $vm->totalListos());
 
         $this->assertSame('/clinica/consulta/42?seccion=motivos', $disponibles['Motivos de consulta']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=enfermedad', $disponibles['Enfermedad actual']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=antecedentes', $disponibles['Antecedentes']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=evaluacion', $disponibles['Evaluación física']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=estudio', $disponibles['Estudio ecográfico']['url']);
-        $this->assertSame('/clinica/consulta/42?seccion=examenes', $disponibles['Exámenes']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=diagnostico', $disponibles['Diagnóstico']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=evolucion', $disponibles['Evolución']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=recipes', $disponibles['Récipes']['url']);
@@ -130,7 +129,10 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/consulta/42?seccion=solicitudes', $disponibles['Solicitudes']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=datos', $disponibles['Datos personales']['url']);
 
-        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'] as $titulo) {
+        // La sección *Exámenes* ya no existe (O-22): ni ítem ni enlace.
+        $this->assertArrayNotHasKey('Exámenes', $disponibles);
+
+        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'] as $titulo) {
             // Los disponibles no llevan pastilla: sólo "Próximamente" distingue a los que faltan.
             $this->assertNull($disponibles[$titulo]['estado'], $titulo);
             $this->assertNull($disponibles[$titulo]['titulo_estado'], $titulo);
@@ -138,7 +140,7 @@ class ConsultaShellVistaTest extends TestCase
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
         foreach ($disponibles as $titulo => $item) {
-            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'], true)) {
+            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'], true)) {
                 continue;
             }
 
@@ -212,7 +214,7 @@ class ConsultaShellVistaTest extends TestCase
         }
 
         $this->assertTrue($items['Diagnóstico']['activo']);
-        $this->assertFalse($items['Exámenes']['activo']);
+        $this->assertFalse($items['Evolución']['activo']);
 
         // WEB-4.6: la evolución es la sexta sección que se abre dentro del shell.
         $conEvolucion = $this->vista(['seccion' => ConsultaShellVista::SECCION_EVOLUCION]);
@@ -229,22 +231,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertTrue($items['Evolución']['activo']);
         $this->assertFalse($items['Récipes']['activo']);
 
-        // WEB-4.7: los exámenes son la séptima sección que se abre dentro del shell.
-        $conExamenes = $this->vista(['seccion' => ConsultaShellVista::SECCION_EXAMENES]);
-        $this->assertSame('examenes', $conExamenes->seccion());
-        $this->assertSame('clinica.consulta._examenes', $conExamenes->parcial());
-
-        $items = [];
-        foreach ($conExamenes->panel() as $bloque) {
-            foreach ($bloque['items'] as $item) {
-                $items[$item['titulo']] = $item;
-            }
-        }
-
-        $this->assertTrue($items['Exámenes']['activo']);
-        $this->assertFalse($items['Diagnóstico']['activo']);
-
-        // WEB-5.1: los récipes son la octava sección que se abre dentro del shell.
+        // WEB-5.1: los récipes son la séptima sección que se abre dentro del shell.
         $conRecipes = $this->vista(['seccion' => ConsultaShellVista::SECCION_RECIPES]);
         $this->assertSame('recipes', $conRecipes->seccion());
         $this->assertSame('clinica.consulta._recipes', $conRecipes->parcial());
@@ -257,7 +244,7 @@ class ConsultaShellVistaTest extends TestCase
         }
 
         $this->assertTrue($items['Récipes']['activo']);
-        $this->assertFalse($items['Exámenes']['activo']);
+        $this->assertFalse($items['Evolución']['activo']);
     }
 
     public function test_una_seccion_que_no_existe_es_como_no_haber_abierto_ninguna(): void

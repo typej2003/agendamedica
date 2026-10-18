@@ -13,9 +13,12 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->token = config('services.whatsapp.token', env('WHATSAPP_TOKEN', ''));
-        $this->phoneNumberId = config('services.whatsapp.phone_number_id', env('WHATSAPP_PHONE_NUMBER_ID', ''));
-        $this->apiVersion = config('services.whatsapp.version', env('WHATSAPP_API_VERSION', 'v19.0'));
+        // Se castea a `string` porque las propiedades están tipadas: sin las variables en el `.env`,
+        // `config()` devuelve `null` y el constructor reventaba con un `TypeError` (auditoría del chatbot,
+        // 2026-10-17, riesgo 6). Sin credenciales los métodos avisan y devuelven `false`, no explotan.
+        $this->token = (string) config('services.whatsapp.token', '');
+        $this->phoneNumberId = (string) config('services.whatsapp.phone_number_id', '');
+        $this->apiVersion = (string) config('services.whatsapp.version', 'v19.0') ?: 'v19.0';
     }
 
     /**

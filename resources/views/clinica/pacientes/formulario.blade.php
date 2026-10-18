@@ -23,20 +23,9 @@
 
         @include('clinica.pacientes._campos')
 
-        @unless ($vm->editando())
-            <x-ui.tarjeta class="mb-3">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="atender_hoy" id="atender_hoy" value="1">
-                    <label class="form-check-label" for="atender_hoy">
-                        ¿Atenderá a este paciente hoy?
-                    </label>
-                </div>
-                <p class="form-text mb-0" id="atender-hoy-ayuda">
-                    Si lo marcas, al guardar te llevo a la cita de hoy con el paciente ya elegido: ahí se pide la
-                    razón de la consulta y se arma la cola del día.
-                </p>
-            </x-ui.tarjeta>
-        @endunless
+        {{-- «¿Atenderá a este paciente hoy?» ya no se pregunta acá: el alta desde la web **numera la historia**
+             en el mismo paso (O-04) y, al volver a la ficha, la pregunta es «¿Atender ahora?» (O-05), que es
+             donde se abre la consulta o se le crea la cita del día. --}}
 
         <div class="d-flex justify-content-end gap-2 mb-3">
             <a class="btn btn-outline-secondary" href="{{ $vm->urlCancelar() }}">Cancelar</a>

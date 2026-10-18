@@ -61,7 +61,9 @@ class CitaController extends Controller
             'cita'            => null,
             'accion'          => route('clinica.agenda.crear'),
             'fecha'           => ParametrosDeAgenda::fechaDe($request->query('fecha')),
-            'sedeId'          => ParametrosDeAgenda::sedeDe($request, $contexto),
+            // La sede con la que abre: la pedida, la del contexto o —sin contexto y con una sola sede— esa
+            // (O-03 y O-03b). El criterio vive en `ParametrosDeAgenda`, no acá.
+            'sedeId'          => ParametrosDeAgenda::sedeDelFormulario($request, $contexto),
             'valores'         => ['paciente_id' => $paciente?->id],
             'pacienteElegido' => $paciente ? $this->pacientes->ficha($paciente, $this->pacientes->numHistoriaDe($contexto, $paciente)) : null,
             'pendiente'       => null,
@@ -78,7 +80,13 @@ class CitaController extends Controller
     public function crear(GuardarCitaRequest $request)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $resultado = $this->agendamiento->agendar($contexto, $request->validated());
+        // Los `reg_medico` del médico van al agendamiento porque el alta rápida del paso 2 **numera la
+        // historia** (O-04) con la misma regla que la ficha: el correlativo se lee de todos sus registros.
+        $resultado = $this->agendamiento->agendar(
+            $contexto,
+            $request->validated(),
+            $this->registrosDelMedico($contexto['medico']),
+        );
         $volverA = $this->vueltaDe($request, $contexto, $request->validated()['volver_consulta'] ?? null);
 
         if ($resultado->esPregunta()) {

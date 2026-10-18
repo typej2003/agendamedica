@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -53,7 +54,11 @@ class ConsultaEmbarazoController extends Controller
         );
 
         $destino = $this->destino($consulta);
-        $datos = $request->validate($this->reglas());
+        // La FUR se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita (acepta también lo que
+        // llegue tecleado `dd/mm/aaaa`): la columna `pre_natal_observaciones.fur` es `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fur']));
+
+        $datos = $request->validate($this->reglas(), $this->mensajes());
 
         // Sin `gesta` en el formulario, la Action crea la **siguiente** (*Nueva Gesta*).
         $clave = $request->filled('gesta') ? (int) $request->input('gesta') : null;
@@ -143,7 +148,12 @@ class ConsultaEmbarazoController extends Controller
         );
 
         $destino = $this->destino($consulta, $pestana);
-        $datos = $request->validate($this->reglasDeLaFecha());
+        // La fecha se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
+        $datos = $request->validate($this->reglasDeLaFecha(), [
+            'fecha.required' => 'Indica la fecha: es parte de la clave de la fila.',
+            'fecha.date_format' => FechaDeFormulario::mensaje('Fecha'),
+        ]);
 
         // La gesta viene oculta en el formulario: es parte de la clave (`historia` + `gesta_clave` + `fecha`).
         $gesta = (int) $request->input('gesta', 0);
@@ -173,7 +183,7 @@ class ConsultaEmbarazoController extends Controller
     private function reglas(): array
     {
         return [
-            'fur' => 'required|date',
+            'fur' => 'required|' . FechaDeFormulario::FORMATO,
             'menarquia' => 'nullable|string|max:10',
             'gestas' => 'nullable|numeric|min:0|max:99',
             'parto' => 'nullable|string|max:10',
@@ -181,6 +191,19 @@ class ConsultaEmbarazoController extends Controller
             'tipiaje_cony' => 'nullable|string|max:10',
             'observaciones' => 'nullable|string|max:32000',
             'gesta' => 'nullable|numeric|min:1',
+        ];
+    }
+
+    /**
+     * Los mensajes de la gesta, en español (O-15): el de Laravel diría «The fur field is required».
+     *
+     * @return array<string,string>
+     */
+    private function mensajes(): array
+    {
+        return [
+            'fur.required' => 'La FUR es obligatoria: de ella salen la edad gestacional y la FPP.',
+            'fur.date_format' => FechaDeFormulario::mensaje('FUR'),
         ];
     }
 
@@ -193,7 +216,7 @@ class ConsultaEmbarazoController extends Controller
      */
     private function reglasDeLaFecha(): array
     {
-        $reglas = ['fecha' => 'required|date', 'gesta' => 'required|numeric|min:1'];
+        $reglas = ['fecha' => 'required|' . FechaDeFormulario::FORMATO, 'gesta' => 'required|numeric|min:1'];
 
         foreach (array_merge(PrenaExamenB::campos(), PreNatalDesarrolloFino::campos()) as $campo) {
             $reglas[$campo['columna']] = 'nullable|string|max:'

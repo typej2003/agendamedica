@@ -13,7 +13,9 @@ use Closure;
  * *Colposcopía* (`tabpage_31`), *Citología* (`tabpage_33`), *Histeroscopía* (`tabpage_49`) y *Resultado de
  * exámenes* (`tabpage_48`)— y la web tiene cinco: la **evaluación física** (WEB-4.3) es una sola solapa que
  * cubre las dos primeras —el examen general y el ginecológico viven en la misma pantalla desde F4— y las otras
- * cuatro son las solapas de texto de `TextosDelExamen`, que traen su rótulo y su icono de ahí.
+ * cuatro son las solapas de texto de `TextosDelExamen`, que traen su rótulo y su icono de ahí. Además, desde
+ * O-22 (2026-10-17), la **galería de imágenes** de los estudios es una solapa más —al final y no de texto—, la
+ * que vivía en la sección *Exámenes*, retirada del panel.
  *
  * ⚠️ **La clave de una solapa es su contrato**: es el `?pestana=`, el nombre de su parcial
  * (`clinica.consulta._evaluacion-<clave>`, ver `SeccionDeEvaluacionVista`) y el `name` del campo del texto. Un
@@ -45,6 +47,16 @@ final class PestanasDelExamen
     /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
     public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
 
+    /**
+     * **La galería de imágenes de los estudios** (O-22, 2026-10-17): una solapa más, al final, pero **no de
+     * texto**: es el parcial `_imagenes` con «Esta consulta / Todas» y la subida, el que antes vivía en la
+     * sección *Exámenes* (ítem 7 del panel, retirado). No es clínica de una especialidad: se ofrece en todas.
+     */
+    public const IMAGENES = 'imagenes';
+
+    /** Las solapas que se ofrecen en **todas** las especialidades, además de las de cada una. */
+    public const COMUNES = [self::IMAGENES];
+
     public const POR_DEFECTO = self::FISICO;
 
     private const ROTULOS = [
@@ -54,6 +66,7 @@ final class PestanasDelExamen
         self::CUESTIONARIO => 'Cuestionario',
         self::MAMAS => 'Imágenes de mamas',
         self::GINECOLOGICO => 'Examen ginecológico',
+        self::IMAGENES => 'Imágenes',
     ];
 
     private const ICONOS = [
@@ -63,6 +76,7 @@ final class PestanasDelExamen
         self::CUESTIONARIO => 'bi-chat-left-dots',
         self::MAMAS => 'bi-brush',
         self::GINECOLOGICO => 'bi-gender-female',
+        self::IMAGENES => 'bi-images',
     ];
 
     /**
@@ -89,10 +103,14 @@ final class PestanasDelExamen
         return $clave !== null && in_array($clave, self::claves(), true);
     }
 
-    /** Las claves, en el orden del escritorio. */
+    /** Las claves, en el orden del escritorio; la galería de imágenes va al final (O-22). */
     public static function claves(): array
     {
-        return array_merge([self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
+        return array_merge(
+            [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::FISICO, self::MAMAS, self::GINECOLOGICO],
+            TextosDelExamen::claves(),
+            self::COMUNES,
+        );
     }
 
     /**
