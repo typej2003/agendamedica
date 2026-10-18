@@ -6,6 +6,7 @@ use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Examen;
 use App\Models\TipoExamen;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -46,6 +47,9 @@ final class CatalogoParaPedirExamenes
     /** Cuántos resultados le entrega el buscador a la pantalla como máximo. */
     public const MAX_RESULTADOS = 30;
 
+    /** Cuántos exámenes o estudios muestra cada página del catálogo a la vista (la columna derecha de O-29). */
+    public const POR_PAGINA = 25;
+
     /** El nombre del grupo de los exámenes cuyo tipo no está en el catálogo de tipos. */
     public const SIN_TIPO = 'Otros exámenes';
 
@@ -77,6 +81,57 @@ final class CatalogoParaPedirExamenes
             ->sortBy(fn (array $examen) => ($palabras !== [] && str_starts_with(BusquedaDePacientes::normalizar($examen['nombre']), $palabras[0]) ? '0' : '1')
                 . BusquedaDePacientes::normalizar($examen['nombre']) . '|' . str_pad($examen['codigo'], 8, '0', STR_PAD_LEFT))
             ->values();
+    }
+
+    /**
+     * **El catálogo completo a la vista, por páginas** (O-29): lo mismo que `buscar` pero sin el tope de `MAX_RESULTADOS`, que es
+     * *para elegir en un desplegable*, no para listar el catálogo. Es la lista de la derecha de la pantalla, como la de motivos.
+     *
+     * @param  array<string,mixed>  $conservar  lo que los enlaces de página deben mantener (`seccion`, `solicitud`, `buscar`, `tipo`)
+     * @return LengthAwarePaginator<int,array{codigo:string, nombre:string, codetipo:?string, tipo:?string}>
+     */
+    public function pagina(
+        string $regMedico,
+        bool $estudios,
+        string $buscar,
+        string $tipo,
+        int $pagina,
+        string $ruta,
+        array $conservar = [],
+        int $porPagina = self::POR_PAGINA,
+    ): LengthAwarePaginator {
+        $todos = $this->buscar($regMedico, $estudios, $buscar, $tipo);
+        $pagina = max(1, $pagina);
+
+        return (new LengthAwarePaginator(
+            $todos->forPage($pagina, $porPagina)->values(),
+            $todos->count(),
+            $porPagina,
+            $pagina,
+            ['path' => $ruta, 'pageName' => 'pagina_catalogo'],
+        ))->appends($conservar);
+    }
+
+    /**
+     * Los **tipos** de examen del catálogo que se está mostrando, para el filtro de la pantalla: sólo los que tienen algún examen en
+     * esa lista (`código => nombre`). Los estudios (`002`) no tienen filtro: son una sola lista.
+     *
+     * @return array<string,string>
+     */
+    public function tiposDeLaLista(string $regMedico, bool $estudios): array
+    {
+        $tipos = $this->tipos($regMedico);
+        $usados = [];
+
+        foreach ($this->delCatalogo($regMedico, $estudios) as $examen) {
+            if ($examen['codetipo'] !== null) {
+                $usados[$examen['codetipo']] = $examen['tipo'] ?? $tipos[$examen['codetipo']] ?? ('Tipo ' . $examen['codetipo']);
+            }
+        }
+
+        asort($usados, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $usados;
     }
 
     /**

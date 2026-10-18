@@ -988,9 +988,12 @@ class CambiosEscritorioTest extends TestCase
             ['reg_medico' => self::REG, 'codeexamen' => '099', 'examen' => 'MAMOGRAFIA', 'codetipo' => '002'],
         ]);
 
-        // Lo que escribe la web, con las Actions reales (cada fila deja su `created` con `source = web`).
-        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->ejecutar($consulta, ['001'], 'OBS WEB', null, 'web');
-        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->ejecutar($consulta, ['099'], 'RESUMEN WEB', null, 'web');
+        // Lo que escribe la web, con las Actions reales (cada fila deja su `created` con `source = web`). Desde O-29 cada
+        // examen entra con su alta inmediata y el resumen con su botón: la orden ya no se guarda entera.
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->agregar($consulta, ['001'], null, 'web');
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->guardarResumen($consulta, 'OBS WEB', null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->agregar($consulta, ['099'], null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->guardarResumen($consulta, 'RESUMEN WEB', null, 'web');
 
         // El escritorio crea otra consulta (1|2), le sube sus filas y después las borra.
         $fecha = '2026-10-02 10:00:00';

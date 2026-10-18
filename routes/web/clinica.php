@@ -424,11 +424,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/consulta/{consulta}/hospitalizacion', [ConsultaHospitalizacionController::class, 'eliminar'])->name('consulta.hospitalizacion.eliminar');
                 Route::post('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'guardar'])->name('consulta.dieta.guardar');
                 Route::delete('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'eliminar'])->name('consulta.dieta.eliminar');
-                // **Laboratorio y estudios** (WEB-5.4): las dos pestañas de las Solicitudes que arman una orden de varias filas. Se guardan **enteras**
-                // (`POST` con la lista completa; lo marcado es lo que queda), se eliminan en la misma URL cambiando el verbo y tienen su buscador JSON
-                // del catálogo (`catalogo`) y, en laboratorio, las rutinas (un tipo de examen completo).
+                // **Laboratorio y estudios** (WEB-5.4, como Motivos de consulta desde O-29): el catálogo a la vista con su «Pasar» por
+                // fila, y **cada alta y cada baja es una escritura** (`agregar` / `quitar`, rastro `source = web`); el `POST` de la
+                // ruta sin sufijo guarda **sólo el resumen clínico**, que sigue siendo un formulario con su botón. El buscador JSON
+                // (`catalogo`) y las rutinas por GET quedan para el editor de la orden de la **pareja**, que se sigue guardando entera.
                 Route::post('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'guardar'])->name('consulta.laboratorio.guardar');
                 Route::delete('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'eliminar'])->name('consulta.laboratorio.eliminar');
+                Route::post('/consulta/{consulta}/laboratorio/examen', [ConsultaLaboratorioController::class, 'agregar'])->name('consulta.laboratorio.agregar');
+                Route::delete('/consulta/{consulta}/laboratorio/examen', [ConsultaLaboratorioController::class, 'quitar'])->name('consulta.laboratorio.quitar');
+                Route::post('/consulta/{consulta}/laboratorio/rutinas/{tipo}', [ConsultaLaboratorioController::class, 'rutinaAgregar'])->name('consulta.laboratorio.rutinas.agregar');
                 Route::get('/consulta/{consulta}/laboratorio/catalogo', [ConsultaLaboratorioController::class, 'catalogo'])->name('consulta.laboratorio.catalogo');
                 Route::get('/consulta/{consulta}/laboratorio/rutinas/{tipo}', [ConsultaLaboratorioController::class, 'rutina'])->name('consulta.laboratorio.rutina');
                 // La orden de laboratorio de la **pareja** (WEB-11.21, el botón «Pareja»): se guarda entera y se elimina en la misma URL; el buscador y las
@@ -437,6 +441,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/consulta/{consulta}/laboratorio-pareja', [ConsultaLaboratorioParejaController::class, 'eliminar'])->name('consulta.laboratorio-pareja.eliminar');
                 Route::post('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'guardar'])->name('consulta.estudios.guardar');
                 Route::delete('/consulta/{consulta}/estudios', [ConsultaEstudiosController::class, 'eliminar'])->name('consulta.estudios.eliminar');
+                Route::post('/consulta/{consulta}/estudios/examen', [ConsultaEstudiosController::class, 'agregar'])->name('consulta.estudios.agregar');
+                Route::delete('/consulta/{consulta}/estudios/examen', [ConsultaEstudiosController::class, 'quitar'])->name('consulta.estudios.quitar');
                 Route::get('/consulta/{consulta}/estudios/catalogo', [ConsultaEstudiosController::class, 'catalogo'])->name('consulta.estudios.catalogo');
                 // `medicos` (buscador JSON y alta) va antes de las rutas con `{cedula}`.
                 Route::get('/consulta/{consulta}/referencias/medicos', [ConsultaReferenciasController::class, 'buscar'])->name('consulta.referencias.buscar');

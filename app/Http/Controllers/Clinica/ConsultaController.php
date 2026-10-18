@@ -67,6 +67,7 @@ use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
+use App\Clinica\Consulta\Vistas\OrdenDeCatalogoVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\MedicionesVista;
@@ -1026,8 +1027,21 @@ class ConsultaController extends Controller
                 $old,
             );
         } elseif ($activa === PestanasDeSolicitudes::REFERENCIAS) {
+            $buscar = trim((string) request()->query('buscar', ''));
+
             $vista = new ReferenciasVista(
                 $referencias->deLaConsulta($consulta, $registros),
+                // O-29: la libreta de colegas **a la vista**, paginada y con su buscador, como el catálogo de motivos.
+                $doctores->pagina(
+                    $registros,
+                    $buscar,
+                    (int) request()->query('pagina_catalogo', 1),
+                    route('clinica.consulta', [$id]),
+                    ['seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::REFERENCIAS]
+                        + ($buscar !== '' ? ['buscar' => $buscar] : []),
+                ),
+                $buscar,
+                route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::REFERENCIAS]),
                 $doctores->especialidades($registros),
                 [
                     'buscar' => route('clinica.consulta.referencias.buscar', $id),
@@ -1105,12 +1119,12 @@ class ConsultaController extends Controller
     }
 
     /**
-     * La pestaña **Laboratorio** (WEB-5.4): la orden de exámenes de la consulta, el catálogo del que se pide y las rutinas (los tipos de
-     * examen con exámenes). Si el último guardado falló la validación, la lista es la que quedó en el formulario (`old`), no la guardada.
+     * La pestaña **Laboratorio** (WEB-5.4) como Motivos de consulta (O-29): la orden de exámenes de la consulta —cada fila con su baja
+     * inmediata— el catálogo del médico **siempre a la vista** con su «Pasar» por fila, y las rutinas (los tipos de examen con exámenes).
      *
      * @param  array<string,mixed>  $old
      */
-    private function laboratorio(Consulta $consulta, LaboratorioDeLaConsulta $laboratorio, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    private function laboratorio(Consulta $consulta, LaboratorioDeLaConsulta $laboratorio, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenDeCatalogoVista
     {
         $id = $consulta->id;
         $regMedico = (string) $consulta->reg_medico;
@@ -1125,8 +1139,8 @@ class ConsultaController extends Controller
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
         ])->all();
 
-        return OrdenVista::laboratorio(
-            $this->itemsDelFormulario($old, 'examenes', $items, $regMedico, false, $catalogo),
+        $orden = OrdenVista::laboratorio(
+            $items,
             array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $observacion,
             $laboratorio->esReal($filas, $observacion),
             $catalogo->hay($regMedico, false),
@@ -1144,6 +1158,14 @@ class ConsultaController extends Controller
                     : '',
             ],
         );
+
+        return $this->ordenDeCatalogo($consulta, $orden, $catalogo, false, [
+            'agregar' => route('clinica.consulta.laboratorio.agregar', $id),
+            'quitar' => route('clinica.consulta.laboratorio.quitar', $id),
+            'resumen' => route('clinica.consulta.laboratorio.guardar', $id),
+            'rutina' => route('clinica.consulta.laboratorio.rutinas.agregar', [$id, '__TIPO__']),
+            'administrar' => route('clinica.catalogos.examenes'),
+        ]);
     }
 
     /**
@@ -1195,7 +1217,7 @@ class ConsultaController extends Controller
      *
      * @param  array<string,mixed>  $old
      */
-    private function estudios(Consulta $consulta, EstudiosDeLaConsulta $estudios, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenVista
+    private function estudios(Consulta $consulta, EstudiosDeLaConsulta $estudios, CatalogoParaPedirExamenes $catalogo, array $old, string $urlImprimir): OrdenDeCatalogoVista
     {
         $id = $consulta->id;
         $regMedico = (string) $consulta->reg_medico;
@@ -1210,8 +1232,8 @@ class ConsultaController extends Controller
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
         ])->all();
 
-        return OrdenVista::estudios(
-            $this->itemsDelFormulario($old, 'estudios', $items, $regMedico, true, $catalogo),
+        $orden = OrdenVista::estudios(
+            $items,
             array_key_exists('observacion', $old) ? ($old['observacion'] ?? null) : $observacion,
             $estudios->esReal($filas, $observacion),
             $catalogo->hay($regMedico, true),
@@ -1222,6 +1244,59 @@ class ConsultaController extends Controller
                 'catalogo' => route('clinica.consulta.estudios.catalogo', $id),
                 'administrar' => route('clinica.catalogos.examenes'),
             ],
+        );
+
+        return $this->ordenDeCatalogo($consulta, $orden, $catalogo, true, [
+            'agregar' => route('clinica.consulta.estudios.agregar', $id),
+            'quitar' => route('clinica.consulta.estudios.quitar', $id),
+            'resumen' => route('clinica.consulta.estudios.guardar', $id),
+            'rutina' => '',
+            'administrar' => route('clinica.catalogos.examenes'),
+        ]);
+    }
+
+    /**
+     * **El catálogo a la vista de la orden** (O-29): la página del catálogo que se está mirando (`?buscar=` y `?tipo=`), el filtro y las
+     * rutinas, con las URLs de las escrituras inmediatas.
+     *
+     * El paginador reusa la ruta de la consulta con `seccion` y `solicitud`, como el catálogo de motivos y diagnósticos.
+     *
+     * @param  array<string,string>  $urls
+     */
+    private function ordenDeCatalogo(Consulta $consulta, OrdenVista $orden, CatalogoParaPedirExamenes $catalogo, bool $estudios, array $urls): OrdenDeCatalogoVista
+    {
+        $id = $consulta->id;
+        $regMedico = (string) $consulta->reg_medico;
+        $solicitud = $estudios ? PestanasDeSolicitudes::ESTUDIOS : PestanasDeSolicitudes::LABORATORIO;
+
+        $buscar = trim((string) request()->query('buscar', ''));
+        // El filtro por tipo es del laboratorio: los estudios son todos del mismo tipo (`002`).
+        $tipo = $estudios ? '' : trim((string) request()->query('tipo', ''));
+
+        $pagina = $catalogo->pagina(
+            $regMedico,
+            $estudios,
+            $buscar,
+            $tipo,
+            (int) request()->query('pagina_catalogo', 1),
+            route('clinica.consulta', [$id]),
+            ['seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $solicitud]
+                + ($buscar !== '' ? ['buscar' => $buscar] : [])
+                + ($tipo !== '' ? ['tipo' => $tipo] : []),
+        );
+
+        return new OrdenDeCatalogoVista(
+            $orden,
+            $pagina->getCollection()->all(),
+            $buscar,
+            $tipo,
+            $catalogo->tiposDeLaLista($regMedico, $estudios),
+            $catalogo->rutinas($regMedico),
+            $urls + ['seccion' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $solicitud])],
+            // La baja es un `DELETE` con el código en el cuerpo: la misma URL para todas las filas.
+            fn (string $codigo) => $urls['quitar'],
+            $catalogo->hay($regMedico, $estudios),
+            $pagina,
         );
     }
 

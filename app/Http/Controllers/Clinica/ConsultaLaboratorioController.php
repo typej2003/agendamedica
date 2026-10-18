@@ -18,13 +18,18 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
- * **La orden de exámenes de laboratorio de una consulta** (WEB-5.4, pestaña *Laboratorio* de las *Solicitudes*): guardarla entera,
- * eliminarla y los dos JSON que alimentan el editor (el buscador del catálogo y las rutinas).
+ * **La orden de exámenes de laboratorio de una consulta** (WEB-5.4, pestaña *Laboratorio* de las *Solicitudes*): agregar un examen,
+ * quitarlo, guardar el resumen clínico, eliminar la orden entera y los dos JSON que alimentan el editor de la orden de la pareja (el
+ * buscador del catálogo y las rutinas).
  *
- * La pestaña se **lee** en `ConsultaController::ver` (`?seccion=solicitudes&solicitud=laboratorio`); acá están las escrituras y los
- * buscadores, que son acciones. La regla (qué es una orden, que un examen nuevo salga del catálogo, qué se crea y qué se borra) y el
- * rastro en `sync_changes` son de la Action `GuardarOrdenDeLaboratorio`. Sólo del médico: el `reg_medico` sale del contexto y una consulta
- * de otro consultorio da 404.
+ * ## Como Motivos de consulta (O-29)
+ *
+ * La pestaña se pinta con el catálogo a la vista y **cada clic escribe**: `agregar` (un examen, o todos los de una rutina) y `quitar`
+ * son POST/DELETE con redirect, así que el ítem aparece y desaparece de la lista en el acto y la sección se relee de la base. El
+ * `POST` de la ruta sin sufijo guarda **sólo el «Resumen clínico»**, que sigue siendo un formulario con su botón.
+ *
+ * La regla (qué es una orden, que un examen nuevo salga del catálogo, qué se crea y qué se borra) y el rastro en `sync_changes` son de
+ * la Action `GuardarOrdenDeLaboratorio`. Sólo del médico: el `reg_medico` sale del contexto y una consulta de otro consultorio da 404.
  */
 class ConsultaLaboratorioController extends Controller
 {
@@ -34,23 +39,24 @@ class ConsultaLaboratorioController extends Controller
     {
     }
 
+    /**
+     * Guardar el **resumen clínico** (O-29): es lo único que sigue siendo un formulario con su botón.
+     *
+     * Los exámenes ya se escribieron al agregarlos o quitarlos; el `POST` **no** manda la lista ni borra nada que no haya tocado el
+     * médico (la tabla se sube por fila y el escritorio también la escribe).
+     */
     public function guardar(Request $request, Consulta $consulta, GuardarOrdenDeLaboratorio $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $datos = $request->validate([
-            'examenes' => 'nullable|array|max:500',
-            'examenes.*' => 'string|max:8',
             'observacion' => 'nullable|string|max:' . LaboratorioDeLaConsulta::LARGO_OBSERVACION,
         ], [
-            'examenes.array' => 'La lista de exámenes no es válida.',
-            'examenes.max' => 'La orden admite hasta 500 exámenes.',
-            'examenes.*.max' => 'Uno de los exámenes tiene un código inválido.',
             'observacion.max' => 'El resumen clínico es demasiado largo.',
         ]);
 
         try {
-            $resultado = $guardar->ejecutar($consulta, $datos['examenes'] ?? [], $datos['observacion'] ?? null);
+            $resultado = $guardar->guardarResumen($consulta, $datos['observacion'] ?? null);
         } catch (InvalidArgumentException $excepcion) {
             throw ValidationException::withMessages(['observacion' => $excepcion->getMessage()]);
         }
@@ -58,22 +64,85 @@ class ConsultaLaboratorioController extends Controller
         $destino = $this->destino($consulta);
 
         if ($resultado->huboConflicto()) {
-            return $destino->with('error', 'Hay un cambio más reciente en el resumen clínico (de otro equipo) y no se pisó: vuelve a cargar la orden y guárdala de nuevo.');
+            return $destino->with('error', 'Hay un cambio más reciente en el resumen clínico (de otro equipo) y no se pisó: vuelve a cargarlo y guárdalo de nuevo.');
         }
 
         if ($resultado->sinCambios()) {
-            return $destino->with('estado', 'La orden ya estaba guardada así.');
+            return $destino->with('estado', 'El resumen clínico ya estaba guardado así.');
         }
 
-        $partes = [];
-        if ($resultado->agregados > 0) {
-            $partes[] = $resultado->agregados . ($resultado->agregados === 1 ? ' examen agregado' : ' exámenes agregados');
-        }
-        if ($resultado->quitados > 0) {
-            $partes[] = $resultado->quitados . ($resultado->quitados === 1 ? ' examen quitado' : ' exámenes quitados');
+        return $destino->with('estado', 'Resumen clínico guardado.');
+    }
+
+    /** **Agregar un examen** del catálogo a la orden (O-29): la escritura de un clic en «Pasar». */
+    public function agregar(Request $request, Consulta $consulta, GuardarOrdenDeLaboratorio $agregar, CatalogoParaPedirExamenes $catalogo)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:8',
+        ], [
+            'codigo.required' => 'Elige el examen que quieres agregar a la orden.',
+            'codigo.max' => 'Ese examen no es válido.',
+        ]);
+
+        $codigo = trim((string) $datos['codigo']);
+
+        // La lectura del catálogo, para el nombre del aviso y para no confirmar un código que no existe (404, como motivos). La
+        // **regla** —que un examen nuevo tiene que ser del catálogo del médico— vive en la Action, que la vuelve a comprobar.
+        $examen = $catalogo->resolver((string) $consulta->reg_medico, false, [$codigo])[$codigo] ?? null;
+        abort_if($examen === null, 404);
+
+        try {
+            $resultado = $agregar->agregar($consulta, [$codigo]);
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->destino($consulta)->with('error', $excepcion->getMessage());
         }
 
-        return $destino->with('estado', 'Orden de laboratorio guardada' . ($partes === [] ? '.' : ' (' . implode(', ', $partes) . ').'));
+        return $this->destino($consulta)->with('estado', $resultado->agregados > 0
+            ? 'Agregado «' . $examen['nombre'] . '» a la orden.'
+            : '«' . $examen['nombre'] . '» ya estaba en la orden.');
+    }
+
+    /** **Quitar un examen** de la orden (O-29): la baja de un clic, de esa fila y de ninguna otra. */
+    public function quitar(Request $request, Consulta $consulta, GuardarOrdenDeLaboratorio $quitar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:8',
+        ], [
+            'codigo.required' => 'Elige el examen que quieres quitar de la orden.',
+        ]);
+
+        $quitados = $quitar->quitar($consulta, (string) $datos['codigo']);
+
+        return $this->destino($consulta)->with('estado', $quitados > 0 ? 'Examen quitado de la orden.' : 'Ese examen ya no estaba en la orden.');
+    }
+
+    /**
+     * **Pasar una rutina completa** (O-29): todos los exámenes de un tipo, de una vez. Es la misma alta de un examen, repetida —
+     * la comprobación de catálogo y el rastro son los de la Action.
+     */
+    public function rutinaAgregar(Request $request, Consulta $consulta, string $tipo, GuardarOrdenDeLaboratorio $agregar, CatalogoParaPedirExamenes $catalogo)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+        $regMedico = (string) $consulta->reg_medico;
+
+        $examenes = $catalogo->deLaRutina($regMedico, $tipo);
+        abort_if($examenes === null, 404);
+
+        try {
+            $resultado = $agregar->agregar($consulta, $examenes->pluck('codigo')->all());
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->destino($consulta)->with('error', $excepcion->getMessage());
+        }
+
+        $nombre = $catalogo->tipos($regMedico)[trim($tipo)] ?? trim($tipo);
+
+        return $this->destino($consulta)->with('estado', $resultado->agregados > 0
+            ? 'Rutina «' . $nombre . '» agregada: ' . $resultado->agregados . ($resultado->agregados === 1 ? ' examen nuevo.' : ' exámenes nuevos.')
+            : 'Los exámenes de «' . $nombre . '» ya estaban en la orden.');
     }
 
     public function eliminar(Request $request, Consulta $consulta, EliminarOrdenDeLaboratorio $eliminar)

@@ -3282,6 +3282,9 @@ body.auth-pagina {
 .dos-listas-buscar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .75rem; }
 .dos-listas-buscar .form-control { flex: 1 1 10rem; min-width: 0; }
 .dos-listas-catalogo { list-style: none; margin: 0; padding: 0; }
+/* Las páginas del catálogo a la vista envuelven **siempre**: con un catálogo largo (once páginas) la fila de enlaces no
+   entra en la columna derecha y empujaba el ancho de la página (scroll horizontal a 768 px). */
+.dos-listas .pagination { flex-wrap: wrap; margin-bottom: 0; }
 .dos-listas-fila {
     display: flex;
     align-items: center;

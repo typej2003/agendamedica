@@ -164,7 +164,9 @@ class OrdenDeLaboratorioDeLaParejaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $web = $this->como($user, $medico, $gineco);
 
-        $web->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['002'], 'observacion' => 'De la paciente.']);
+        // La orden de la paciente, por su alta inmediata (O-29) y su resumen con el botón.
+        $web->post(route('clinica.consulta.laboratorio.agregar', $consulta->id), ['codigo' => '002']);
+        $web->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['observacion' => 'De la paciente.']);
         $web->post($this->guardar($consulta), ['cedula' => '1', 'nombre' => 'María', 'examenes' => ['001']]);
 
         $web->delete(route('clinica.consulta.laboratorio-pareja.eliminar', $consulta->id))

@@ -18,11 +18,12 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
- * **La solicitud de estudios de una consulta** (WEB-5.4, pestaña *Estudios* de las *Solicitudes*): guardarla entera, eliminarla y el
- * buscador JSON del catálogo de estudios (los exámenes de tipo `002`).
+ * **La solicitud de estudios de una consulta** (WEB-5.4, pestaña *Estudios* de las *Solicitudes*): agregar un estudio, quitarlo, guardar el
+ * resumen clínico, eliminar la solicitud entera y el buscador JSON del catálogo (los exámenes de tipo `002`).
  *
- * Misma forma que `ConsultaLaboratorioController`, con su Action (`GuardarSolicitudDeEstudios`) y sin rutinas: los estudios se piden de a
- * uno y salen en el orden de la lista. Sólo del médico.
+ * Como Motivos de consulta (O-29): el catálogo a la vista con un «Pasar» por fila y **cada clic escribe** (`agregar` / `quitar`); el
+ * `POST` de la ruta sin sufijo guarda **sólo el «Resumen clínico»**. Misma forma que `ConsultaLaboratorioController`, con su Action
+ * (`GuardarSolicitudDeEstudios`) y sin rutinas: los estudios se piden de a uno y salen en el orden de la lista. Sólo del médico.
  */
 class ConsultaEstudiosController extends Controller
 {
@@ -32,23 +33,19 @@ class ConsultaEstudiosController extends Controller
     {
     }
 
+    /** Guardar el **resumen clínico** (O-29): lo único que sigue siendo un formulario con su botón. */
     public function guardar(Request $request, Consulta $consulta, GuardarSolicitudDeEstudios $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $datos = $request->validate([
-            'estudios' => 'nullable|array|max:200',
-            'estudios.*' => 'string|max:8',
             'observacion' => 'nullable|string|max:' . EstudiosDeLaConsulta::LARGO_OBSERVACION,
         ], [
-            'estudios.array' => 'La lista de estudios no es válida.',
-            'estudios.max' => 'La solicitud admite hasta 200 estudios.',
-            'estudios.*.max' => 'Uno de los estudios tiene un código inválido.',
             'observacion.max' => 'El resumen clínico es demasiado largo.',
         ]);
 
         try {
-            $resultado = $guardar->ejecutar($consulta, $datos['estudios'] ?? [], $datos['observacion'] ?? null);
+            $resultado = $guardar->guardarResumen($consulta, $datos['observacion'] ?? null);
         } catch (InvalidArgumentException $excepcion) {
             throw ValidationException::withMessages(['observacion' => $excepcion->getMessage()]);
         }
@@ -56,22 +53,59 @@ class ConsultaEstudiosController extends Controller
         $destino = $this->destino($consulta);
 
         if ($resultado->huboConflicto()) {
-            return $destino->with('error', 'Hay un cambio más reciente en la solicitud (de otro equipo) y no se pisó por completo: vuelve a cargarla y guárdala de nuevo.');
+            return $destino->with('error', 'Hay un cambio más reciente en el resumen clínico (de otro equipo) y no se pisó: vuelve a cargarlo y guárdalo de nuevo.');
         }
 
         if ($resultado->sinCambios()) {
-            return $destino->with('estado', 'La solicitud ya estaba guardada así.');
+            return $destino->with('estado', 'El resumen clínico ya estaba guardado así.');
         }
 
-        $partes = [];
-        if ($resultado->agregados > 0) {
-            $partes[] = $resultado->agregados . ($resultado->agregados === 1 ? ' estudio agregado' : ' estudios agregados');
-        }
-        if ($resultado->quitados > 0) {
-            $partes[] = $resultado->quitados . ($resultado->quitados === 1 ? ' estudio quitado' : ' estudios quitados');
+        return $destino->with('estado', 'Resumen clínico guardado.');
+    }
+
+    /** **Agregar un estudio** del catálogo a la solicitud (O-29): la escritura de un clic en «Pasar». */
+    public function agregar(Request $request, Consulta $consulta, GuardarSolicitudDeEstudios $agregar, CatalogoParaPedirExamenes $catalogo)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:8',
+        ], [
+            'codigo.required' => 'Elige el estudio que quieres agregar a la solicitud.',
+            'codigo.max' => 'Ese estudio no es válido.',
+        ]);
+
+        $codigo = trim((string) $datos['codigo']);
+
+        // La lectura del catálogo, para el aviso y para no confirmar un código que no existe (404). La **regla** vive en la Action.
+        $estudio = $catalogo->resolver((string) $consulta->reg_medico, true, [$codigo])[$codigo] ?? null;
+        abort_if($estudio === null, 404);
+
+        try {
+            $resultado = $agregar->agregar($consulta, [$codigo]);
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->destino($consulta)->with('error', $excepcion->getMessage());
         }
 
-        return $destino->with('estado', 'Solicitud de estudios guardada' . ($partes === [] ? '.' : ' (' . implode(', ', $partes) . ').'));
+        return $this->destino($consulta)->with('estado', $resultado->agregados > 0
+            ? 'Agregado «' . $estudio['nombre'] . '» a la solicitud.'
+            : '«' . $estudio['nombre'] . '» ya estaba en la solicitud.');
+    }
+
+    /** **Quitar un estudio** de la solicitud (O-29): la baja de un clic, de esa fila y de ninguna otra. */
+    public function quitar(Request $request, Consulta $consulta, GuardarSolicitudDeEstudios $quitar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'codigo' => 'required|string|max:8',
+        ], [
+            'codigo.required' => 'Elige el estudio que quieres quitar de la solicitud.',
+        ]);
+
+        $quitados = $quitar->quitar($consulta, (string) $datos['codigo']);
+
+        return $this->destino($consulta)->with('estado', $quitados > 0 ? 'Estudio quitado de la solicitud.' : 'Ese estudio ya no estaba en la solicitud.');
     }
 
     public function eliminar(Request $request, Consulta $consulta, EliminarSolicitudDeEstudios $eliminar)
