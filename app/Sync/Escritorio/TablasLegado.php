@@ -39,6 +39,15 @@ class TablasLegado
         // manifiesto de la especialidad traduce el nombre al subir (`sync.columnas_equivalentes`). El mapa
         // habla de las columnas **del API**.
         'examen_fisico_nuevo' => 'historia',
+        // Los cuatro estudios ecográficos que baja el app (EC-A2 de PLAN-MOVIL.md). El eco pélvico es el
+        // único que conserva los nombres del DataWindow `d_eco_pelvico` (`numhistoria`/`nroconsulta`); los
+        // tres obstétricos usan `historia`/`consulta` como `examen_fisico_nuevo`. Sin esta entrada, el
+        // filtro por historia de las obstétricas preguntaría por `numhistoria` —que no existe— y no
+        // bajaría nada.
+        'eco_pelvico' => 'numhistoria',
+        'eco_obstetrico' => 'historia',
+        'eco_obstetrico_tercer_2' => 'historia',
+        'eco_obstetrico_tercer' => 'historia',
     ];
 
     /**
