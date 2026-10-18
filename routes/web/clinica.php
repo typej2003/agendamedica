@@ -38,6 +38,7 @@ use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
@@ -201,6 +202,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
                 Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+                // Las mediciones de pediatría (WEB-7.4.3a): talla, peso, perímetros, pulso y presión en `percentiles_paciente`.
+                Route::post('/consulta/{consulta}/mediciones', [ConsultaMedicionesController::class, 'guardar'])->name('consulta.mediciones.guardar');
                 // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
                 Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');
 

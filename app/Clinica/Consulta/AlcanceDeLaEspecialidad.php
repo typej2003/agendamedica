@@ -81,22 +81,30 @@ final class AlcanceDeLaEspecialidad
 
     /**
      * Las solapas del examen (ítem 4) que **no** se ofrecen: en pediatría, todas las ginecológicas (examen ginecológico, mamas y
-     * las cuatro de texto). Quedan el examen físico y, con las tareas pediátricas, *Mediciones* y *Cuestionario*.
+     * las cuatro de texto); quedan *Mediciones* y el examen físico (y, con las tareas pediátricas, *Cuestionario*). Fuera de pediatría
+     * se oculta *Mediciones*, que es pediátrica.
      *
      * @return array<int,string>
      */
     public function pestanasDelExamenOcultas(): array
     {
         if (! $this->esPediatria()) {
-            return [];
+            return [PestanasDelExamen::MEDICIONES];
         }
 
-        return array_values(array_diff(PestanasDelExamen::claves(), [PestanasDelExamen::FISICO]));
+        return array_values(array_diff(PestanasDelExamen::claves(), [PestanasDelExamen::FISICO, PestanasDelExamen::MEDICIONES]));
     }
 
-    /** La solapa del examen que se abre: la pedida si existe (la URL directa sigue abriendo lo oculto) y, si no, la de siempre. */
+    /**
+     * La solapa del examen que se abre: la pedida si existe (la URL directa sigue abriendo lo oculto) y, si no se pidió ninguna, la de
+     * siempre; en pediatría, las mediciones, que es con lo que arranca el escritorio (`tabpage_29`).
+     */
     public function pestanaDelExamen(string $pedida): string
     {
+        if ($this->esPediatria() && trim($pedida) === '') {
+            return PestanasDelExamen::MEDICIONES;
+        }
+
         return PestanasDelExamen::normalizar($pedida);
     }
 }

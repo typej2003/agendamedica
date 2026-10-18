@@ -171,6 +171,8 @@
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
     {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}
     <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
+    {{-- Las mediciones de pediatría (WEB-7.4.3a): el IMC y el AC se recalculan al escribir el peso o la talla. --}}
+    <script src="{{ asset('js/clinica/consulta-mediciones.js') }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}

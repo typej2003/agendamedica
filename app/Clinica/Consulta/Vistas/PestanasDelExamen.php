@@ -30,6 +30,9 @@ final class PestanasDelExamen
     /** El examen ginecológico (WEB-11.9): chip propio, como la solapa del escritorio. */
     public const GINECOLOGICO = 'ginecologico';
 
+    /** Las mediciones (WEB-7.4.3a): talla, peso, perímetros, pulso y presión de pediatría (`percentiles_paciente`). */
+    public const MEDICIONES = 'mediciones';
+
     /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
     public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
 
@@ -37,12 +40,14 @@ final class PestanasDelExamen
 
     private const ROTULOS = [
         self::FISICO => 'Examen físico',
+        self::MEDICIONES => 'Mediciones',
         self::MAMAS => 'Imágenes de mamas',
         self::GINECOLOGICO => 'Examen ginecológico',
     ];
 
     private const ICONOS = [
         self::FISICO => 'bi-clipboard2-pulse',
+        self::MEDICIONES => 'bi-rulers',
         self::MAMAS => 'bi-brush',
         self::GINECOLOGICO => 'bi-gender-female',
     ];
@@ -74,7 +79,7 @@ final class PestanasDelExamen
     /** Las claves, en el orden del escritorio. */
     public static function claves(): array
     {
-        return array_merge([self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
+        return array_merge([self::MEDICIONES, self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
     }
 
     /**

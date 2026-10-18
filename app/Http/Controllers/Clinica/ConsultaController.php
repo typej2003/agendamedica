@@ -61,7 +61,10 @@ use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
+use App\Clinica\Consulta\Vistas\MedicionesVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
+use App\Clinica\Crecimiento\MedicionesDeLaConsulta;
+use App\Clinica\Crecimiento\ReferenciaDeCrecimiento;
 use App\Clinica\Consulta\Vistas\ReferenciasVista;
 use App\Clinica\Consulta\Vistas\ReposoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
@@ -255,6 +258,26 @@ class ConsultaController extends Controller
         ]);
     }
 
+    /**
+     * La solapa *Mediciones* (WEB-7.4.3a): la fila de la consulta, el niño (sexo y nacimiento) y la referencia de crecimiento del consultorio.
+     * Sin referencia cargada, el ViewModel lo dice en vez de fallar.
+     */
+    private function vistaDeMediciones(Consulta $consulta, string $regMedico, int $pacienteId, string $urlVolver): MedicionesVista
+    {
+        $paciente = \App\Models\Paciente::find($pacienteId);
+
+        return new MedicionesVista(
+            (new MedicionesDeLaConsulta())->de($consulta),
+            $paciente?->fnacimiento ? (string) \Illuminate\Support\Carbon::parse($paciente->fnacimiento)->toDateString() : null,
+            $paciente?->sexo,
+            $consulta->fecha?->toDateString(),
+            (new ReferenciaDeCrecimiento())->cargar($regMedico),
+            route('clinica.consulta.mediciones.guardar', $consulta->id),
+            $urlVolver,
+            (array) old(),
+        );
+    }
+
     /** Qué partes de la consulta aplican a la especialidad del contexto (WEB-12.1). */
     private function alcance(): AlcanceDeLaEspecialidad
     {
@@ -397,6 +420,15 @@ class ConsultaController extends Controller
                 'seccion' => ConsultaShellVista::SECCION_EVALUACION,
                 'pestana' => $clave,
             ]);
+
+            // Las mediciones de pediatría (WEB-7.4.3a): su propia tabla (`percentiles_paciente`) y su propio ViewModel.
+            if ($pestana === PestanasDelExamen::MEDICIONES) {
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    $this->vistaDeMediciones($consulta, $regMedico, $pacienteId, $url($pestana)),
+                );
+            }
 
             // La lectura de las solapas de texto comparte la lectura del examen (`examen_fisico_nuevo`) con la
             // evaluación física: la copia de la colposcopía es esa misma fila.
