@@ -13,6 +13,8 @@
         </x-slot>
     </x-ui.page-head>
 
+    @include('clinica.catalogos._novedades-iniciales')
+
     <x-ui.barra-herramientas>
         <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        placeholder="Nombre comercial, principio activo o presentación" etiqueta="Buscar medicamento" />
