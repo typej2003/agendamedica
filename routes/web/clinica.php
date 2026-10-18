@@ -39,6 +39,8 @@ use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\CrecimientoController;
+use App\Http\Controllers\Clinica\CatalogoInicialController;
+use App\Http\Controllers\Clinica\DietaCatalogoController;
 use App\Http\Controllers\Clinica\VacunaCatalogoController;
 use App\Http\Controllers\Clinica\VacunasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaExamenPediatricoController;
@@ -492,6 +494,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/catalogos/vacunas/{id}', [VacunaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.vacunas.quitar');
                 Route::post('/catalogos/vacunas/{id}/dosis', [VacunaCatalogoController::class, 'guardarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.guardar');
                 Route::delete('/catalogos/vacunas/dosis/{id}', [VacunaCatalogoController::class, 'quitarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.quitar');
+                // **Dietas del médico** (WEB-12.4b): el catálogo `dietas` que alimenta la pestaña Alimentación de la consulta pediátrica.
+                // **«Cargar el catálogo inicial»** de los catálogos con versión inicial (WEB-12.8): copia lo que el médico no tiene, sin pisar lo suyo.
+                Route::post('/catalogos/{catalogo}/cargar-inicial', [CatalogoInicialController::class, 'cargar'])->where('catalogo', '[a-z][a-z-]*')->name('catalogos.cargar-inicial');
+                Route::get('/catalogos/dietas', [DietaCatalogoController::class, 'index'])->name('catalogos.dietas');
+                Route::post('/catalogos/dietas', [DietaCatalogoController::class, 'guardar'])->name('catalogos.dietas.guardar');
+                Route::delete('/catalogos/dietas/{id}', [DietaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.dietas.quitar');
                 Route::get('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'index'])->name('catalogos.plantillas-texto');
                 Route::post('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'guardar'])->name('catalogos.plantillas-texto.guardar');
                 Route::delete('/catalogos/plantillas-texto/{id}', [PlantillaDeTextoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.plantillas-texto.quitar');
