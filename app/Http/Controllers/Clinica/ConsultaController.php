@@ -908,6 +908,8 @@ class ConsultaController extends Controller
 
         $pestanas = new PestanasDeSolicitudes(
             fn (string $clave) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $clave]),
+            // En pediatría la pestaña de la dieta es *Alimentación* (WEB-12.4): la misma fila de `dieta_paciente`, con el catálogo de `dietas` además de las plantillas.
+            $this->alcance()->esPediatria() ? 'Alimentación' : null,
         );
 
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
@@ -983,9 +985,14 @@ class ConsultaController extends Controller
                 $fila?->dieta,
                 $fila?->descripcion,
                 $dietas->esReal($fila),
-                $dietas->plantillas((string) $consulta->reg_medico),
+                $this->alcance()->esPediatria()
+                    ? $dietas->plantillas((string) $consulta->reg_medico)->concat(
+                        (new \App\Clinica\Consulta\DietasDelCatalogo())->de((string) $consulta->reg_medico),
+                    )->unique('titulo')->sortBy('titulo')->values()
+                    : $dietas->plantillas((string) $consulta->reg_medico),
                 ['guardar' => route('clinica.consulta.dieta.guardar', $id), 'eliminar' => route('clinica.consulta.dieta.eliminar', $id), 'imprimir' => $imprimir('dieta')],
                 $old,
+                $this->alcance()->esPediatria() ? 'Alimentación' : 'Dieta / Recomendaciones',
             );
         } else {
             $fila = $constancias->fila($consulta);
