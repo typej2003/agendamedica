@@ -2944,6 +2944,31 @@ body.auth-pagina {
 
 .orden-rutinas { display: flex; flex-wrap: wrap; gap: .4rem; }
 
+/* La columna derecha de una orden (A-04) es el catálogo con su buscador a la vista. Los resultados van **en línea**
+   debajo del buscador (no son un desplegable flotante) y cada fila mide **una sola línea**: el nombre se trunca con
+   puntos suspensivos (el completo va en el `title`), el tipo va como chip y «Agregar» queda a la derecha. La fila
+   usa `.dos-listas-fila`, así que hereda el renglón y el modo compacto de las otras dos listas. */
+.orden-resultados {
+    margin-top: .5rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+.orden-resultado { width: 100%; text-align: left; }
+.orden-resultado-datos { display: flex; align-items: center; gap: .4rem; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.orden-resultado-datos strong { font-size: .9rem; }
+.orden-resultado-datos [data-resultado-detalle] { flex: 0 0 auto; }
+.orden-resultado-datos [data-resultado-detalle]:empty { display: none; }
+.orden-resultado [data-resultado-accion] { flex: 0 0 auto; white-space: nowrap; }
+
+/* En una sección angosta el tipo del examen es lo secundario: se va de la fila —el nombre se queda con el ancho y el
+   tipo sigue en el `title`—. Con la sección ancha (1366) el tipo va como chip al lado del nombre. */
+@container (max-width: 46rem) {
+    .dos-listas .orden-resultado [data-resultado-detalle] { display: none; }
+}
+
 @media (max-width: 575.98px) {
     .orden-quitar { min-width: 40px; min-height: 40px; }
     .orden-rutinas .btn { min-height: 40px; }

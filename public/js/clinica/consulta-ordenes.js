@@ -162,6 +162,8 @@
             var fila = plantillaResultado.content.firstElementChild.cloneNode(true);
             fila.querySelector('[data-resultado-nombre]').textContent = examen.nombre;
             fila.querySelector('[data-resultado-detalle]').textContent = examen.tipo || '';
+            // La fila del catálogo va en una línea: si el nombre no entra se trunca, y el completo queda en el `title`.
+            fila.title = examen.tipo ? examen.nombre + ' · ' + examen.tipo : examen.nombre;
 
             if (yaEstan.indexOf(examen.codigo) !== -1) {
                 fila.disabled = true;
