@@ -70,6 +70,15 @@
         </x-ui.dialogo>
     @endif
 
+    {{-- El aviso de vacunas pendientes (WEB-7.4.4d), sólo pediatría: discreto —no es la alerta de antecedentes— y sin diálogo. --}}
+    @if ($avisoVacunas)
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2" role="status" id="consulta-aviso-vacunas">
+            <i class="bi bi-capsule" aria-hidden="true"></i>
+            <span>{{ $avisoVacunas['texto'] }}</span>
+            <a href="{{ $avisoVacunas['url'] }}" class="ms-auto">Ver el calendario</a>
+        </div>
+    @endif
+
     {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
     @include('clinica.consulta._visualizar')
 

@@ -208,7 +208,16 @@ class ConsultaController extends Controller
             $request->session()->push('alertas_vistas', (int) $consulta->id);
         }
 
+        // El aviso de vacunas pendientes (WEB-7.4.4d): sólo en pediatría y sólo en la consulta (la agenda de la secretaría no lo ve).
+        $avisoVacunas = $this->alcance()->esPediatria()
+            ? app(\App\Clinica\Vacunas\AvisoDeVacunas::class)->de(
+                $contexto['reg_medico'], (int) $paciente->id, \App\Clinica\Pacientes\CamposDePaciente::historiaNumerica($paciente->numhistoria),
+                FechaDelConsultorio::hoy()->toDateString(),
+            )
+            : null;
+
         return view('clinica.consulta.ver', [
+            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
             'vm' => new ConsultaShellVista(
                 $paciente,
                 (int) $consulta->nroconsulta,
