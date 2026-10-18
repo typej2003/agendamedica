@@ -158,4 +158,7 @@
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
     {{-- La fila del encabezado (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
+    {{-- Las fechas que se teclean (O-18 y O-19): la máscara de la FUR pone las barras y no deja escribir un
+         mes 13 ni un día 32. El dato viaja y se guarda en `AAAA-MM-DD`. --}}
+    <script src="{{ asset('js/clinica/mascara-fecha.js') }}"></script>
 @endsection

@@ -85,9 +85,9 @@ final class EcoDoppler
     {
         return [
             ['titulo' => 'Ficha', 'icono' => 'bi-calendar-heart', 'campos' => [
-                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha',
-                    'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
-                self::texto('fur', 'FUR', 'La fecha de la última regla.'),
+                self::fecha('fecha', 'Fecha',
+                    'La fecha del estudio: la propone el servidor con hoy si no la escribís.'),
+                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa.'),
                 ['columna' => 'gesta', 'etiqueta' => 'Gesta', 'tipo' => 'opciones',
                     'opciones' => self::romanos(), 'ayuda' => 'El número de la gesta que se está siguiendo.'],
                 // `para` es `char(10)`: el rótulo parece pedir un número, pero el escritorio la guarda como

@@ -13,6 +13,7 @@ use App\Http\Controllers\Clinica\Concerns\ItemsDeUnRecipeEnElFormulario;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -188,6 +189,10 @@ class ConsultaRecipesController extends Controller
         RecipesDeLaConsulta $lectura,
         GuardarRecipe $guardar,
     ): RedirectResponse {
+        // La fecha de emisión se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita (acepta
+        // también lo que llegue tecleado `dd/mm/aaaa`): las columnas `fe_emision` y `recipes.fecha` son `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
+
         $datos = $request->validate($this->reglas(), $this->mensajes());
 
         $resolucion = $lectura->resolverItems($consulta, $numero, (array) $datos['items']);

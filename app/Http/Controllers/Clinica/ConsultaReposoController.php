@@ -11,6 +11,7 @@ use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -34,6 +35,10 @@ class ConsultaReposoController extends Controller
     public function guardar(Request $request, Consulta $consulta, GuardarReposoDeLaConsulta $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
+
+        // La fecha se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita (acepta también lo
+        // que llegue tecleado `dd/mm/aaaa`): la columna `fdesde` es `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['desde']));
 
         $datos = $request->validate([
             'dias' => 'required|integer|min:1|max:' . ReposoDeLaConsulta::DIAS_MAXIMO,

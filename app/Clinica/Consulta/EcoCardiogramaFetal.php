@@ -112,9 +112,9 @@ final class EcoCardiogramaFetal
     {
         return [
             ['titulo' => 'Ficha', 'icono' => 'bi-calendar-heart', 'campos' => [
-                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha',
-                    'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
-                self::texto('fur', 'FUR', 'La fecha de la última regla: de ella salen la EG y la FPP (la FUR + 280 días).'),
+                self::fecha('fecha', 'Fecha',
+                    'La fecha del estudio: la propone el servidor con hoy si no la escribís.'),
+                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa (de ella salen la EG y la FPP: la FUR + 280 días).'),
                 ['columna' => 'gesta', 'etiqueta' => 'Gesta', 'tipo' => 'opciones',
                     'opciones' => self::romanos(), 'ayuda' => 'El número de la gesta que se está siguiendo.'],
                 self::numero('parto', 'Para', 'Los partos de la paciente (el «PARA:» del escritorio).'),

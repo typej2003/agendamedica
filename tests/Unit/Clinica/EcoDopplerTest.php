@@ -197,10 +197,11 @@ class EcoDopplerTest extends TestCase
         $grupos = $vm->grupos();
         $this->assertCount(4, $grupos);
 
-        // La ficha, con sus valores (la gesta guarda el código y muestra el romano).
+        // La ficha, con sus valores (la gesta guarda el código y muestra el romano). La FUR se guarda en
+        // `AAAA-MM-DD` y se muestra como se teclea, `dd/mm/aaaa` (O-18 y O-19).
         $this->assertNull($grupos[0]['grilla']);
         $this->assertSame('FUR', $grupos[0]['campos'][1]['etiqueta']);
-        $this->assertSame('2026-05-20', $grupos[0]['campos'][1]['valor']);
+        $this->assertSame('20/05/2026', $grupos[0]['campos'][1]['valor']);
         $this->assertSame('2', $grupos[0]['campos'][2]['valor']);
         $this->assertSame('1 cesárea', $grupos[0]['campos'][3]['valor']);
 

@@ -66,8 +66,8 @@ final class EcoObstetrico
     {
         return [
             ['titulo' => 'El embarazo', 'icono' => 'bi-calendar-heart', 'campos' => [
-                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha', 'ayuda' => 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'],
-                self::texto('fur', 'FUR', 'La fecha de la última regla: en el escritorio **se teclea** (su ventana no la lee del control prenatal).'),
+                self::fecha('fecha', 'Fecha', 'La fecha del estudio: la propone el servidor con hoy si no la escribís.'),
+                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa (en el escritorio se teclea a mano: su ventana no la lee del control prenatal).'),
                 self::lista('gesta', 'Gesta', ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5',
                     'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11'],
                     'El número de la gesta que se está siguiendo (el escritorio lo numera en romanos).'),
