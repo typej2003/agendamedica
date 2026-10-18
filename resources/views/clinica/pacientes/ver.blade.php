@@ -12,6 +12,11 @@
             <a class="btn btn-outline-secondary" href="{{ route('clinica.pacientes.historia', $vm->id()) }}">
                 <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia
             </a>
+            @if ($urlVacunas)
+                <a class="btn btn-outline-secondary" href="{{ $urlVacunas }}">
+                    <i class="bi bi-capsule" aria-hidden="true"></i> Vacunas
+                </a>
+            @endif
             @if ($urlCrecimiento)
                 <a class="btn btn-outline-secondary" href="{{ $urlCrecimiento }}">
                     <i class="bi bi-graph-up" aria-hidden="true"></i> Crecimiento

@@ -129,6 +129,10 @@ class PacienteController extends Controller
                 && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
                 ? route('clinica.pacientes.crecimiento', $ficha->id)
                 : null,
+            'urlVacunas' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.vacunas', $ficha->id)
+                : null,
             // La familia del niño del escritorio de pediatría (WEB-7.4.2a): en cualquier otro paciente el bloque no existe.
             'familia'       => new FamiliaDePacienteVista(
                 $this->familias->de($regMedico, $ficha->numhistoria),
