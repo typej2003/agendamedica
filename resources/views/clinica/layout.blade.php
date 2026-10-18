@@ -12,6 +12,7 @@
          `doctorisimo-ui.css`. Ese orden importa: el sistema va después de Bootstrap. --}}
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
+    @yield('estilos')
 </head>
 <body>
 

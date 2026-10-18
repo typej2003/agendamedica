@@ -124,6 +124,11 @@ class PacienteController extends Controller
         return view('clinica.pacientes.ver', [
             'vm'            => $vm,
             'representante' => $representante->bloque($request, $paciente),
+            // Las gráficas de crecimiento del niño (WEB-7.4.3c): sólo en pediatría y sólo para quien trabaja la consulta (la secretaría no ve lo clínico).
+            'urlCrecimiento' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.crecimiento', $ficha->id)
+                : null,
             // La familia del niño del escritorio de pediatría (WEB-7.4.2a): en cualquier otro paciente el bloque no existe.
             'familia'       => new FamiliaDePacienteVista(
                 $this->familias->de($regMedico, $ficha->numhistoria),

@@ -1,0 +1,32 @@
+/* Las gráficas de crecimiento (WEB-7.4.3c): SVG propio, sin librería. Los colores son los de la paleta (`gineco.css`, tokens `--ds-*`); la hoja
+   impresa (`clinica-crecimiento-impresion.css`) no carga el sistema de la aplicación, así que cada color lleva su valor de respaldo. */
+
+.grafica-crecimiento { max-width: 760px; }
+
+.grafica-svg { display: block; width: 100%; height: auto; font-family: var(--ds-fuente, Arial, Helvetica, sans-serif); }
+
+.grafica-marco { fill: var(--ds-superficie, #fff); stroke: var(--ds-borde-2, #d5d0e4); stroke-width: 1; }
+.grafica-rejilla { stroke: var(--ds-borde, #e6e2ec); stroke-width: 1; }
+.grafica-marca { fill: var(--ds-texto-3, #6b6580); font-size: 11px; }
+.grafica-eje { fill: var(--ds-texto-2, #4a4463); font-size: 12px; font-weight: 600; }
+.grafica-rotulo { fill: var(--ds-texto-2, #4a4463); font-size: 10px; }
+
+/* La franja entre la curva baja y la alta, y las tres curvas: el celeste del logo para la referencia, el violeta para el niño. */
+.grafica-franja { fill: var(--ds-celeste-50, #e6f4fa); stroke: none; }
+.grafica-curva { fill: none; stroke-width: 1.75; stroke-linejoin: round; }
+.grafica-curva-baja,
+.grafica-curva-alta { stroke: var(--ds-celeste-700, #0d5e7d); stroke-dasharray: 6 4; }
+.grafica-curva-media { stroke: var(--ds-celeste-700, #0d5e7d); }
+
+.grafica-nino-linea { fill: none; stroke: var(--ds-violeta-700, #783080); stroke-width: 2.25; stroke-linejoin: round; }
+.grafica-nino-punto { fill: var(--ds-violeta-700, #783080); stroke: var(--ds-superficie, #fff); stroke-width: 1.5; }
+
+.grafica-leyenda { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .5rem; font-size: .8125rem; color: var(--ds-texto-2, #4a4463); }
+.grafica-leyenda-item { display: inline-flex; align-items: center; gap: .4rem; }
+.grafica-muestra { display: inline-block; width: 1.5rem; height: 0; border-top: 2px solid var(--ds-celeste-700, #0d5e7d); }
+.grafica-muestra-baja,
+.grafica-muestra-alta { border-top-style: dashed; }
+.grafica-muestra-nino { border-top: 3px solid var(--ds-violeta-700, #783080); }
+
+.crecimiento-tabla th,
+.crecimiento-tabla td { white-space: nowrap; }

@@ -12,6 +12,11 @@
             <a class="btn btn-outline-secondary" href="{{ route('clinica.pacientes.historia', $vm->id()) }}">
                 <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia
             </a>
+            @if ($urlCrecimiento)
+                <a class="btn btn-outline-secondary" href="{{ $urlCrecimiento }}">
+                    <i class="bi bi-graph-up" aria-hidden="true"></i> Crecimiento
+                </a>
+            @endif
             {{-- Cuando falta la historia, **esa** es la acción primaria de la pantalla: es lo que hay que
                  hacer para poder atender al paciente (wiki `04-historia-clinica.md`: "No se atiende sin
                  historia"). Editar la ficha queda al lado, en secundario. Con la historia puesta, la

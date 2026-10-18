@@ -275,6 +275,7 @@ class ConsultaController extends Controller
             route('clinica.consulta.mediciones.guardar', $consulta->id),
             $urlVolver,
             (array) old(),
+            route('clinica.pacientes.crecimiento', $pacienteId),
         );
     }
 

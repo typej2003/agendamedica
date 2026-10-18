@@ -38,6 +38,7 @@ use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\CrecimientoController;
 use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
@@ -170,6 +171,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+
+                // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la
+                // hoja para imprimir. Es clínico —sólo del médico— y de un paciente: `/crecimiento` (la entrada del módulo en el menú) manda
+                // a elegirlo.
+                Route::get('/crecimiento', [CrecimientoController::class, 'entrada'])->name('crecimiento');
+                Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
+                Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
                 Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])

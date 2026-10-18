@@ -40,6 +40,17 @@ final class PosicionEnBandas
         return self::TEXTOS[$this->zona];
     }
 
+    /** La posición en pocas palabras, para una celda de tabla. */
+    public function corto(): string
+    {
+        return match ($this->zona) {
+            self::DEBAJO => 'Debajo de la baja',
+            self::BAJO_MEDIO => 'Baja–media',
+            self::MEDIO_ALTO => 'Media–alta',
+            default => 'Sobre la alta',
+        };
+    }
+
     /** ¿Está dentro de las curvas (entre la baja y la alta)? */
     public function enRango(): bool
     {

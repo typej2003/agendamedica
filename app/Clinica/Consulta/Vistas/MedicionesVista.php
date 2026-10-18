@@ -2,10 +2,10 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Crecimiento\EdadEnTexto;
 use App\Clinica\Crecimiento\MedidasAntropometricas;
 use App\Clinica\Crecimiento\PercentilesDeCrecimiento;
 use App\Models\PercentilesPaciente;
-use Carbon\Carbon;
 
 /**
  * **Las mediciones de una consulta** (WEB-7.4.3a): la solapa *Mediciones* de la evaluación física de pediatría. Talla, peso, perímetro
@@ -68,35 +68,7 @@ final class MedicionesVista
     /** La edad del niño a la fecha de la consulta, como el escritorio: «2 años 4 meses 3 días». */
     public function edad(): ?string
     {
-        if (! $this->nacimiento || ! $this->fechaDeLaConsulta) {
-            return null;
-        }
-
-        try {
-            $nacimiento = Carbon::parse($this->nacimiento)->startOfDay();
-            $fecha = Carbon::parse($this->fechaDeLaConsulta)->startOfDay();
-        } catch (\Throwable) {
-            return null;
-        }
-
-        if ($fecha->lt($nacimiento)) {
-            return null;
-        }
-
-        $d = $nacimiento->diff($fecha);
-        $partes = [];
-
-        if ($d->y > 0) {
-            $partes[] = $d->y . ($d->y === 1 ? ' año' : ' años');
-        }
-        if ($d->m > 0) {
-            $partes[] = $d->m . ($d->m === 1 ? ' mes' : ' meses');
-        }
-        if ($d->d > 0 || $partes === []) {
-            $partes[] = $d->d . ($d->d === 1 ? ' día' : ' días');
-        }
-
-        return implode(' ', $partes);
+        return EdadEnTexto::entre($this->nacimiento, $this->fechaDeLaConsulta);
     }
 
     /**
