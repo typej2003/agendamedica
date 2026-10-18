@@ -382,6 +382,12 @@ primerLugarDisponible`). `WhatsAppAIService` y el job `ProcessWhatsappMessage` e
 borraron. Tests: `WhatsAppWebhookTest` (17) y `ChatbotReservaTest` (5). **No se le cambió el producto**
 (los atajos, el prompt, el registro y los mensajes siguen igual), y **sigue sin verificarse la identidad**
 de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 130 a 132.
+**Puesta en el servidor:** `php artisan whatsapp:diagnostico` (lee la config y dice qué falta),
+`--firmar` (POST firmado al `APP_URL` con un evento de status: valida firma/throttle sin contestarle a
+nadie; `--url=` apunta a un `serve` local) y `--enviar-a=<número>` (texto real por la Graph API). Sin
+`WHATSAPP_APP_SECRET` el POST responde **503** y, si el deploy usa `config:cache`, la variable nueva no se
+ve hasta `config:clear`/`config:cache`. Procedimiento completo en
+`../Docs/tecnico/auditoria-chatbot-whatsapp.md` §11-§12.
 
 **El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
 **urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:
