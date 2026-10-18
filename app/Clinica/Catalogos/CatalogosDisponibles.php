@@ -30,6 +30,7 @@ final class CatalogosDisponibles
         'plantillas-texto' => ['texto' => 'Plantillas de texto', 'icono' => 'bi-file-earmark-text', 'ruta' => 'clinica.catalogos.plantillas-texto'],
         // Propio de pediatría (WEB-7.4.4e): el submenú sólo se ofrece a esa especialidad (`especialidad` es un fragmento del slug).
         'vacunas' => ['texto' => 'Vacunas', 'icono' => 'bi-shield-plus', 'ruta' => 'clinica.catalogos.vacunas', 'especialidad' => 'pediatr'],
+        'dietas' => ['texto' => 'Dietas', 'icono' => 'bi-egg-fried', 'ruta' => 'clinica.catalogos.dietas', 'especialidad' => 'pediatr'],
     ];
 
     /** La URL de `/clinica/catalogos` (la entrada histórica de la zona): el primer catálogo que tiene pantalla. */
