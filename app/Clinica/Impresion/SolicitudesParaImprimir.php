@@ -111,6 +111,7 @@ final class SolicitudesParaImprimir
         private ResumenMedicoDeLaConsulta $resumenes,
         private ImagenesParaElInforme $imagenesDelInforme,
         private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
+        private DibujosParaElInforme $dibujosDeLaColposcopia,
     ) {
     }
 
@@ -472,9 +473,19 @@ final class SolicitudesParaImprimir
         if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
             $texto = $this->textos->de($consulta, $solapa);
 
-            return QueEsUnDocumento::texto($texto)
-                ? $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta)
-                : null;
+            if (! QueEsUnDocumento::texto($texto)) {
+                return null;
+            }
+
+            $documento = $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
+
+            // La colposcopía lleva, además de su texto, los dibujos del cuello uterino (A-13): salen en una hoja
+            // aparte cuando se imprime «con imágenes», por el mismo camino que las fotos de un eco.
+            if ($clave === DocumentoImpreso::COLPOSCOPIA) {
+                $documento = $documento->conImagenes($this->dibujosDeLaColposcopia->de($consulta));
+            }
+
+            return $documento;
         }
 
         if ($clave === DocumentoImpreso::CONTROL_DE_EMBARAZO) {

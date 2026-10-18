@@ -54,6 +54,15 @@
         </div>
     </form>
 
+    {{-- La colposcopía con imagen editable (A-13): la tarjeta con los dos lienzos del cuello uterino. Es **una tarjeta
+         más** de la solapa —el texto, sus plantillas y sus fotos no cambian—; la vista la recibe ya armada
+         (`DibujosDeColposcopiaVista`) y sólo la incluye la solapa que la tiene. --}}
+    @if (($dibujos ?? null) !== null)
+        <div class="mt-3">
+            @include('clinica.consulta._colposcopia-lienzos', ['seccion' => $dibujos])
+        </div>
+    @endif
+
     {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
          suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la
          solapa adentro del formulario. --}}

@@ -11,6 +11,7 @@ use App\Clinica\Consulta\TipoDeAntecedentes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
+use App\Clinica\Consulta\DibujosDeColposcopiaDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -54,6 +55,7 @@ use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\ResumenesAnteriores;
 use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
+use App\Clinica\Consulta\Vistas\DibujosDeColposcopiaVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -259,6 +261,8 @@ class ConsultaController extends Controller
             // cuerpo, y por eso viajan aparte.
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
+            // La tarjeta que agrega la colposcopía (A-13): sus dos lienzos del cuello uterino, con su base y su trazo.
+            'dibujos' => $this->dibujosDeLaColposcopia($seccion, (string) request()->query('pestana', ''), $consulta),
         ]);
     }
 
@@ -1268,6 +1272,25 @@ class ConsultaController extends Controller
             fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
             fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
             $pestana,
+        );
+    }
+
+    /**
+     * La tarjeta de los **lienzos del cuello uterino** de la colposcopía (A-13), o `null` si la solapa que se está
+     * mirando no es la colposcopía. Las dos variantes se leen de una vez y el ViewModel recibe el estado ya resuelto
+     * (la base elegida y si hay trazo), sin consultar la base.
+     */
+    private function dibujosDeLaColposcopia(string $seccion, string $pestana, Consulta $consulta): ?DibujosDeColposcopiaVista
+    {
+        if ($seccion !== ConsultaShellVista::SECCION_EVALUACION
+            || PestanasDelExamen::normalizar($pestana) !== PestanasDelExamen::COLPOSCOPIA) {
+            return null;
+        }
+
+        return new DibujosDeColposcopiaVista(
+            fn (string $variante) => route('clinica.consulta.colposcopia.ver', [$consulta->id, $variante]),
+            fn (string $variante) => route('clinica.consulta.colposcopia.guardar', [$consulta->id, $variante]),
+            app(DibujosDeColposcopiaDeLaConsulta::class)->estado($consulta),
         );
     }
 

@@ -6,6 +6,7 @@ use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Models\Consulta;
+use App\Models\DibujoDeColposcopia;
 use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\ImagenConsulta;
@@ -827,5 +828,229 @@ class ConsultaColposcopiaWebTest extends TestCase
         // La de la otra consulta se descarga con el alcance «todas» y no sin él.
         $web->get(route('clinica.consulta.examenes.descargar', [$segunda->id, $vieja->id]))->assertNotFound();
         $web->get(route('clinica.consulta.examenes.descargar', [$segunda->id, $vieja->id, 'alcance' => 'todas']))->assertOk();
+    }
+
+    // -------------------------------------------------------------------- El dibujo del cuello uterino (A-13)
+
+    private function urlLienzo(Consulta $consulta, string $variante, string $verbo = 'ver'): string
+    {
+        return route('clinica.consulta.colposcopia.' . $verbo, [$consulta->id, $variante]);
+    }
+
+    /** La tarjeta de los dos lienzos, en la solapa de la colposcopía. */
+    public function test_la_solapa_muestra_los_dos_lienzos_con_sus_dos_bases_y_la_vectorial_por_defecto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+
+        // Las dos variantes del escritorio, cada una con su lienzo.
+        $this->assertStringContainsString('data-variante="nulipara"', $html);
+        $this->assertStringContainsString('data-variante="multipara"', $html);
+        $this->assertSame(2, substr_count($html, 'data-lienzo-canvas'));
+        $this->assertStringContainsString('Cuello nulípara', $html);
+        $this->assertStringContainsString('Cuello multípara', $html);
+
+        // Las dos imágenes base, con la **vectorial** elegida por defecto (la limpieza nueva).
+        $this->assertStringContainsString('img/clinica/colposcopia-nulipara.svg', $html);
+        $this->assertStringContainsString('img/clinica/colposcopia-multipara.svg', $html);
+        $this->assertStringContainsString('img/clinica/colposcopia-nulipara.png', $html);
+        $this->assertStringContainsString('img/clinica/colposcopia-multipara.png', $html);
+        $this->assertSame(2, preg_match_all('/<option value="vector"[^>]*selected>/', $html));
+        $this->assertSame(0, preg_match_all('/<option value="escritorio"[^>]*selected>/', $html));
+
+        // Y el lienzo del texto sigue estando: el dibujo es una tarjeta más, no reemplaza la colposcopía.
+        $this->assertStringContainsString('id="colposcopia-form"', $html);
+        $this->assertStringContainsString('name="colposcopia"', $html);
+    }
+
+    public function test_el_trazo_se_guarda_por_variante_se_sirve_y_se_quita(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), [
+            'base' => 'vector',
+            'dibujo' => $this->png(),
+        ])->assertOk()->assertJson(['guardado' => true, 'base' => 'vector', 'dibujo' => true]);
+
+        $fila = DibujoDeColposcopia::where('variante', 'nulipara')->firstOrFail();
+        $this->assertSame((int) $consulta->nroconsulta, (int) $fila->nroconsulta);
+        $this->assertSame('vector', $fila->base);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($fila->archivo);
+
+        // Se sirve sólo la que tiene trazo.
+        $web->get($this->urlLienzo($consulta, 'nulipara'))->assertOk()->assertHeader('Content-Type', 'image/png');
+        $web->get($this->urlLienzo($consulta, 'multipara'))->assertNotFound();
+
+        // Guardar de nuevo reemplaza: una fila y el archivo viejo se borra.
+        $viejo = $fila->archivo;
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), [
+            'base' => 'vector',
+            'dibujo' => $this->png(),
+        ])->assertOk();
+        $this->assertSame(1, DibujoDeColposcopia::where('variante', 'nulipara')->count());
+        Storage::disk(ArchivosClinicos::DISCO)->assertMissing($viejo);
+
+        // Quitar borra el trazo (el archivo y el `archivo` de la fila) pero **conserva la fila y la base**.
+        $web->delete($this->urlLienzo($consulta, 'nulipara', 'quitar') . '?base=vector')->assertOk()->assertJson(['quitado' => true]);
+        $this->assertSame(0, DibujoDeColposcopia::whereNotNull('archivo')->count());
+        $this->assertSame(1, DibujoDeColposcopia::where('variante', 'nulipara')->count());
+        $this->assertSame('vector', DibujoDeColposcopia::where('variante', 'nulipara')->value('base'));
+        $web->get($this->urlLienzo($consulta, 'nulipara'))->assertNotFound();
+    }
+
+    public function test_cambiar_la_base_conserva_el_trazo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), [
+            'base' => 'vector',
+            'dibujo' => $this->png(),
+        ])->assertOk();
+
+        $archivo = DibujoDeColposcopia::where('variante', 'multipara')->value('archivo');
+        $this->assertNotNull($archivo);
+
+        // Cambiar la base manda **sólo la base**: el trazo no se toca ni se pierde.
+        $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), ['base' => 'escritorio'])
+            ->assertOk()->assertJson(['guardado' => true, 'base' => 'escritorio', 'dibujo' => true]);
+
+        $fila = DibujoDeColposcopia::where('variante', 'multipara')->firstOrFail();
+        $this->assertSame('escritorio', $fila->base);
+        $this->assertSame($archivo, $fila->archivo);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($archivo);
+        $web->get($this->urlLienzo($consulta, 'multipara'))->assertOk();
+
+        // Y la pantalla recuerda la base elegida en su selector.
+        $html = $web->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<option value="escritorio"[^>]*selected>Del escritorio<\/option>/', $html);
+        $this->assertStringContainsString('img/clinica/colposcopia-multipara.png', $html);
+    }
+
+    public function test_la_base_se_recuerda_aunque_todavia_no_haya_trazo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'escritorio'])
+            ->assertOk()->assertJson(['guardado' => true, 'base' => 'escritorio', 'dibujo' => false]);
+
+        $fila = DibujoDeColposcopia::where('variante', 'nulipara')->firstOrFail();
+        $this->assertNull($fila->archivo);
+        $this->assertSame('escritorio', $fila->base);
+
+        $html = $web->get($this->urlColposcopia($consulta))->getContent();
+        $this->assertMatchesRegularExpression('/<option value="escritorio"[^>]*selected>Del escritorio<\/option>/', $html);
+    }
+
+    public function test_el_lienzo_rechaza_variantes_y_bases_invalidas_y_archivos_que_no_son_png(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post(route('clinica.consulta.colposcopia.guardar', [$consulta->id, 'arriba']), [
+            'base' => 'vector', 'dibujo' => $this->png(),
+        ])->assertNotFound();
+        $web->get(route('clinica.consulta.colposcopia.ver', [$consulta->id, 'arriba']))->assertNotFound();
+        $web->delete(route('clinica.consulta.colposcopia.quitar', [$consulta->id, 'arriba']))->assertNotFound();
+
+        // El lienzo siempre habla JSON (`Accept: application/json`), como el `fetch` del navegador.
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'otra', 'dibujo' => $this->png()],
+            ['Accept' => 'application/json'])
+            ->assertStatus(422);
+
+        // Un JPG no es el PNG transparente que guarda el lienzo.
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), [
+            'base' => 'vector',
+            'dibujo' => UploadedFile::fake()->image('foto.jpg'),
+        ], ['Accept' => 'application/json'])->assertStatus(422);
+
+        $this->assertSame(0, DibujoDeColposcopia::count());
+    }
+
+    public function test_la_secretaria_no_dibuja_y_el_medico_ajeno_recibe_404(): void
+    {
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $secretaria = $this->secretariaConAcceso($medico);
+
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])
+            ->assertForbidden();
+        $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->delete($this->urlLienzo($consulta, 'nulipara', 'quitar'))->assertForbidden();
+
+        [$otroUser, $otroMedico, $otraGineco] = $this->medicoConAcceso();
+        $ajeno = $this->conContexto($otroUser, $otroMedico, $otraGineco)->actingAs($otroUser);
+
+        $ajeno->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])
+            ->assertNotFound();
+        $ajeno->get($this->urlLienzo($consulta, 'nulipara'))->assertNotFound();
+        $ajeno->delete($this->urlLienzo($consulta, 'nulipara', 'quitar'))->assertNotFound();
+
+        $this->assertSame(0, DibujoDeColposcopia::count());
+    }
+
+    /** El dibujo es una tarjeta más: el texto de la colposcopía se sigue guardando como antes (las dos columnas). */
+    public function test_la_solapa_sigue_guardando_el_texto_como_antes(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta), ['colposcopia' => 'Zona de transformación tipo 1.'])
+            ->assertSessionHas('estado', 'Colposcopía guardada.');
+
+        $consulta->refresh();
+        $this->assertSame('Zona de transformación tipo 1.', $consulta->observaciones);
+        $this->assertSame('Zona de transformación tipo 1.', ExamenFisico::where('historia', 1001)->value('colposcopia'));
+    }
+
+    // ----------------------------------------------------------------- La impresión con imágenes (A-13)
+
+    public function test_el_informe_ofrece_incluir_imagenes_con_los_dibujos_del_cuello(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->observaciones = 'Un texto de colposcopía.';
+        $consulta->save();
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Sin dibujos, la hoja es la de siempre y no ofrece imágenes.
+        $sinDibujos = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
+        $this->assertStringNotContainsString('data-incluir-imagenes', $sinDibujos);
+        $this->assertStringNotContainsString('data-hoja-imagenes', $sinDibujos);
+
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'escritorio', 'dibujo' => $this->png()])->assertOk();
+        $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])->assertOk();
+
+        $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
+
+        // La casilla de la barra (la misma de las ecos) y la hoja aparte con los dos dibujos compuestos.
+        $this->assertStringContainsString('data-incluir-imagenes', $html);
+        $this->assertStringContainsString('Incluir imágenes', $html);
+        $this->assertSame(1, substr_count($html, 'data-hoja-imagenes'));
+        $this->assertStringContainsString('INFORME DE COLPOSCOPÍA · IMÁGENES', $html);
+        $this->assertSame(2, substr_count($html, '<figure class="informe-imagen informe-imagen-dibujo">'));
+
+        // La base elegida en cada variante viaja a la hoja, y el trazo va incrustado (data URI).
+        $this->assertStringContainsString('img/clinica/colposcopia-nulipara.png', $html);
+        $this->assertStringContainsString('img/clinica/colposcopia-multipara.svg', $html);
+        $this->assertSame(2, substr_count($html, 'class="informe-dibujo-trazo"'));
+        $this->assertStringContainsString('src="data:image/', $html);
+        $this->assertStringContainsString('Cuello nulípara (orificio transverso)', $html);
+        $this->assertStringContainsString('Cuello multípara (orificio redondo)', $html);
+
+        // El texto del informe no cambió: sigue en su media hoja, con su título y su firma.
+        $this->assertStringContainsString('Un texto de colposcopía.', $html);
+        $this->assertSame(1, substr_count($html, 'class="firmas"'));
     }
 }

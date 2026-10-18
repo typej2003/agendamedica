@@ -39,6 +39,7 @@ use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
+use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -197,6 +198,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'ver'])->name('consulta.mamas.ver');
                 Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
                 Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
+                // La colposcopía con imagen editable (A-13): el trazo y la imagen base de cada variante del cuello
+                // uterino (`nulipara` / `multipara`), por consulta; PNG en el disco privado. La `{variante}` fuera del
+                // catálogo la rechaza el controlador con 404.
+                Route::get('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'ver'])->name('consulta.colposcopia.ver');
+                Route::post('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
+                Route::delete('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'quitar'])->name('consulta.colposcopia.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
                 // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
                 Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');

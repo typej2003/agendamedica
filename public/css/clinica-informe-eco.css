@@ -55,6 +55,11 @@
 .informe-imagen img { max-width: 100%; max-height: 110mm; object-fit: contain; border: .2mm solid #999; }
 .informe-imagen figcaption { margin-top: 1mm; font-size: 8pt; }
 
+/* El dibujo del cuello uterino (A-13): la imagen base elegida con el trazo transparente encima, en el mismo marco. */
+.informe-imagen-dibujo .informe-dibujo { position: relative; display: inline-block; width: 82mm; max-width: 100%; }
+.informe-dibujo .informe-dibujo-base { display: block; width: 100%; max-height: none; object-fit: contain; border: .2mm solid #999; }
+.informe-dibujo .informe-dibujo-trazo { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; border: 0; object-fit: fill; }
+
 @media screen {
     /* En la vista previa las hojas verticales van centradas, una debajo de otra, como las horizontales. */
     .informe-hoja { margin: 0 auto; }

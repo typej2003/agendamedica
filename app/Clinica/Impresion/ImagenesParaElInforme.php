@@ -51,6 +51,26 @@ final class ImagenesParaElInforme
         return $salida;
     }
 
+    /**
+     * Un PNG **con transparencia**, incrustado sin aplanarlo (data URI). Es lo que necesita el trazo del cuello uterino
+     * (A-13): la reducción de `incrustar()` lo recodifica como JPEG sobre fondo blanco —bien para una foto, pero taparía
+     * la imagen base sobre la que se compone el dibujo—.
+     */
+    public function dePngTransparente(string $ruta): ?string
+    {
+        try {
+            $almacen = Storage::disk(ArchivosClinicos::DISCO);
+
+            if (! $almacen->exists($ruta)) {
+                return null;
+            }
+
+            return 'data:image/png;base64,' . base64_encode($almacen->get($ruta));
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     private function incrustar(string $disco, string $ruta): ?string
     {
         try {

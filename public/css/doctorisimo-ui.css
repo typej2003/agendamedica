@@ -3369,12 +3369,15 @@ body.auth-pagina {
 /* Resumen de una consulta anterior (WEB-11.9): respeta los saltos de línea que dejó el escritorio. */
 .resumen-anterior-texto { white-space: pre-line; }
 
-/* Imágenes de mamas (WEB-11.10): el lienzo sobre la imagen base. */
-.mama-lienzo-marco { position: relative; width: 100%; max-width: 520px; aspect-ratio: 520 / 400; border: 1px solid var(--ds-borde, #dee2e6); border-radius: .5rem; overflow: hidden; background: #fff; }
-.mama-lienzo-base, .mama-lienzo { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mama-lienzo { touch-action: none; cursor: crosshair; }
-.mamas-muestra { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #6c757d; background: var(--muestra, #000); padding: 0; }
-.mamas-muestra:hover, .mamas-muestra:focus-visible { box-shadow: 0 0 0 2px #0d6efd; }
+/* Lienzos de dibujo clínico (A-13): el marco y las herramientas que comparten las imágenes de mamas (WEB-11.10) y el
+   cuello uterino de la colposcopía. Las clases `.mama-*` y `.mamas-*` quedan como alias de las de mamas para no tocar
+   su vista ni su aspecto. */
+.lienzo-marco, .mama-lienzo-marco { position: relative; width: 100%; max-width: 520px; aspect-ratio: 520 / 400; border: 1px solid var(--ds-borde, #dee2e6); border-radius: .5rem; overflow: hidden; background: #fff; }
+.lienzo-base, .lienzo, .mama-lienzo-base, .mama-lienzo { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lienzo, .mama-lienzo { touch-action: none; cursor: crosshair; }
+.lienzo-muestra, .mamas-muestra { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #6c757d; background: var(--muestra, #000); padding: 0; }
+.lienzo-muestra:hover, .lienzo-muestra:focus-visible, .mamas-muestra:hover, .mamas-muestra:focus-visible { box-shadow: 0 0 0 2px #0d6efd; }
+.lienzos-herramientas .form-control-color { width: 2.5rem; }
 
 /* «Visualizar» (WEB-11.24): la vista previa de un documento en un diálogo grande, con «Modificar» e «Imprimir». */
 .dialogo-visualizar { width: min(1100px, 96vw); height: 92vh; max-width: none; padding: 0; border: 0; border-radius: .75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35); }

@@ -71,16 +71,29 @@ final class HojasImpresasVista
         return $this->recipes() !== [];
     }
 
-    /** ¿Alguna hoja es de imágenes de una eco (WEB-11.13)? Sólo entonces la barra ofrece «Incluir imágenes». */
-    public function conImagenesDeEco(): bool
+    /**
+     * ¿Alguna hoja lleva **imágenes aparte**? Sólo entonces la barra ofrece «Incluir imágenes». Son las fotos de un eco
+     * (WEB-11.13) y, desde A-13, los dibujos del cuello uterino de la colposcopía, que entran por el mismo camino.
+     */
+    public function conImagenes(): bool
     {
         foreach ($this->documentos as $documento) {
-            if ($documento instanceof DocumentoImpreso && $documento->informe?->conImagenes()) {
+            if (! $documento instanceof DocumentoImpreso) {
+                continue;
+            }
+
+            if ($documento->informe?->conImagenes() || $documento->conImagenesDeLaHoja()) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /** El nombre histórico del método (WEB-11.13): hoy también devuelve `true` con los dibujos de la colposcopía. */
+    public function conImagenesDeEco(): bool
+    {
+        return $this->conImagenes();
     }
 
     public function urlVolver(): string
@@ -165,6 +178,12 @@ final class HojasImpresasVista
 
             foreach ((new HojasDeDocumentoVista($this->membrete, [$documento]))->hojas() as $hoja) {
                 $hojas[] = $hoja;
+            }
+
+            // Un documento en mitades con imágenes propias (los dibujos del cuello uterino de la colposcopía, A-13):
+            // su texto sale como siempre y las imágenes en una hoja A4 vertical aparte, como la de un eco.
+            if ($documento->conImagenesDeLaHoja()) {
+                $hojas[] = ['tipo' => 'imagenes', 'documento' => $documento];
             }
         }
 
