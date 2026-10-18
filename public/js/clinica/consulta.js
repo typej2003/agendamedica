@@ -439,14 +439,18 @@
     // gesta es un formulario más (campos y su cartel), sin nada propio como el IMC de la evaluación.
     function avisoDeFormulario(formulario, idAviso) {
         const campos = Array.prototype.slice.call(formulario.querySelectorAll('input, select, textarea'));
-        const guardados = campos.map(function (campo) {
-            return campo.value;
-        });
+        // El estado de cada control: el valor y, en las casillas, si está marcada. Una casilla tiene siempre
+        // el mismo `value` —`S`, el del formulario—, así que sin el `checked` marcar «Final de embarazo» no
+        // contaba como un cambio y el aviso no aparecía (O-21: las dos casillas del estado del embarazo).
+        const estadoDe = function (campo) {
+            return campo.value + (campo.type === 'checkbox' || campo.type === 'radio' ? '|' + campo.checked : '');
+        };
+        const guardados = campos.map(estadoDe);
         const aviso = document.getElementById(idAviso);
 
         function sucio() {
             return campos.some(function (campo, indice) {
-                return campo.value !== guardados[indice];
+                return estadoDe(campo) !== guardados[indice];
             });
         }
 

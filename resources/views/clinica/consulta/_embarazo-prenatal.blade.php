@@ -2,32 +2,41 @@
      menarquia, el tipiaje y las dos cuentas que el escritorio muestra calculadas —la edad gestacional y la
      FPP—, con **guardado explícito**.
 
+     **El orden y el agrupamiento son los del escritorio** (O-21, captura
+     `24-control-de-embarazo-prenatal-con-gesta.png`): primer renglón `FUR · FPP · EG · Menarquia · Gestas`;
+     segundo `Partos · Césareas · Abortos · Otros · Tipiaje (madre) · Tipiaje (padre)`; abajo el **memo**
+     grande de observaciones; y al pie, **juntos y discretos**, los tres controles que el escritorio tiene en
+     su barra lateral: `Embarazo múltiple` (casilla), `Cantidad` (un número corto) y `Final de embarazo`
+     (casilla). En la web no hay columna derecha: no se copia la barra lateral, se agrupan al final.
+
      Los campos salen del mapa del dato (`App\Clinica\Embarazo\Gesta::campos()`), que es el mismo que usan la
-     Action y el resto de la sección. Las dos cuentas van **fuera del formulario** como `output`: se calculan
-     de la FUR —el `compute` del DataWindow— y no se guardan en ninguna columna.
+     Action y el resto de la sección, y cada bloque se pinta con su `bloque`. Las dos cuentas van **fuera del
+     formulario** como `output`: se calculan de la FUR —el `compute` del DataWindow— y no se guardan en
+     ninguna columna; el DataWindow las pone en el primer renglón, entre la FPP y la menarquia.
+
+     **Una línea de ayuda como máximo** (O-23): el párrafo y los tres pasos que abrían la pestaña están en el
+     diálogo del «¿Cómo funciona?» del encabezado. No se pierde texto y los campos suben media pantalla.
 
      El `gesta` oculto dice **qué** gesta se guarda: vacío significa la siguiente (*Nueva Gesta*), y el número
      lo asigna el servidor. El aviso de cambios sin guardar lo pone `consulta.js` desde los `data-*`. --}}
 @php
     $estado = $vm->estado();
+    $observaciones = $vm->observaciones();
 @endphp
 
 <div class="consulta-seccion" id="consulta-embarazo-prenatal">
     <x-ui.tarjeta titulo="{{ $vm->titulo() }}" icono="bi-calendar-heart">
         <x-slot name="acciones">
+            {{-- El «¿Cómo funciona?» va al lado del título: abre un diálogo nativo, el mismo patrón del tour y
+                 de los diálogos de la consulta (`data-abrir-dialogo` lo resuelve `shell.js`). --}}
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-abrir-dialogo="dialogo-prenatal">
+                <i class="bi bi-question-circle" aria-hidden="true"></i> ¿Cómo funciona?
+            </button>
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
         <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
-        {{-- El orden del flujo (WEB-11.15): en el escritorio los botones de laboratorio y controles aparecían recién después de crear la gesta y
-             nadie lo entendía a la primera. Acá se explica. --}}
-        <ol class="pasos-gesta">
-            <li><strong>Crea la gesta</strong> (con «Nueva gesta», que sólo pregunta cuántos bebés son) y completa su FUR.</li>
-            <li><strong>Registra sus laboratorios y controles</strong> en las otras pestañas del control de embarazo.</li>
-            <li><strong>Al terminar el embarazo, marca «Final de embarazo»</strong>: sin eso no se puede crear la gesta siguiente.</li>
-        </ol>
 
         {{-- Las gestas de la historia: la que se está mirando se elige con un enlace, como las pestañas. --}}
         @if (! $vm->sinGestas())
@@ -44,26 +53,42 @@
             {{-- La gesta que se guarda: el número de la que se está mirando, o vacío para crear la siguiente. --}}
             <input type="hidden" name="gesta" value="{{ $vm->clave() ?? '' }}">
 
-            <div class="row g-3 mb-3">
-                @foreach ($vm->campos() as $campo)
-                    @include('clinica.consulta._embarazo-campo', [
-                        'campo' => $campo,
-                        'columnas' => $campo['tipo'] === 'area' ? 'col-12' : 'col-6 col-md-4',
-                    ])
+            {{-- Los dos renglones del escritorio: `FUR · FPP · EG · Menarquia · Gestas` y
+                 `Partos · Césareas · Abortos · Otros · Tipiaje (madre y padre)`. --}}
+            @foreach ($vm->renglones() as $renglon)
+                <div class="row g-2 mb-2">
+                    @foreach ($renglon as $campo)
+                        @include('clinica.consulta._embarazo-campo', ['campo' => $campo])
+                    @endforeach
+                </div>
+            @endforeach
+
+            {{-- El memo grande del escritorio: las observaciones, a todo el ancho. --}}
+            <div class="row g-2 mt-1 mb-2">
+                @include('clinica.consulta._embarazo-campo', ['campo' => $observaciones])
+            </div>
+
+            {{-- El estado del embarazo: los tres controles de la barra lateral del escritorio, juntos y
+                 discretos al pie del bloque (O-21). La casilla guarda `S`/`N` como la escribe el escritorio;
+                 el `hidden` que va antes hace que el formulario mande siempre el estado completo. --}}
+            <div class="estado-embarazo">
+                @foreach ($vm->estadoDelEmbarazo() as $campo)
+                    @if ($campo['tipo'] === 'casilla')
+                        <div class="form-check mb-0">
+                            <input type="hidden" name="{{ $campo['columna'] }}" value="N">
+                            <input class="form-check-input" type="checkbox" name="{{ $campo['columna'] }}"
+                                   id="{{ $campo['columna'] }}" value="S" @if ($campo['marcada']) checked @endif>
+                            <label class="form-check-label" for="{{ $campo['columna'] }}">{{ $campo['etiqueta'] }}</label>
+                        </div>
+                    @else
+                        <div class="estado-embarazo-numero">
+                            <label class="form-label mb-0" for="{{ $campo['columna'] }}">{{ $campo['etiqueta'] }}</label>
+                            <input type="number" step="1" min="1" max="6" class="form-control form-control-sm"
+                                   id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
+                                   value="{{ $campo['valor'] }}">
+                        </div>
+                    @endif
                 @endforeach
-
-                {{-- Las dos cuentas del escritorio, calculadas de la FUR (no se guardan). --}}
-                <x-ui.campo etiqueta="Edad gestacional" for="prenatal-eg" class="col-6 col-md-4"
-                            ayuda="Calculada de la FUR. No se guarda.">
-                    <output class="form-control-plaintext fw-semibold" id="prenatal-eg">{{ $vm->edadGestacional() ?? '—' }}</output>
-                </x-ui.campo>
-
-                <x-ui.campo etiqueta="FPP" for="prenatal-fpp" class="col-6 col-md-4"
-                            ayuda="La FUR más 280 días (40 semanas). No se guarda.">
-                    <output class="form-control-plaintext fw-semibold" id="prenatal-fpp">
-                        {{ $vm->fpp() ? \App\Support\FechaClinica::formato($vm->fpp()) : '—' }}
-                    </output>
-                </x-ui.campo>
             </div>
 
             <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mt-3 mb-0" id="prenatal-sin-guardar" hidden>
@@ -85,6 +110,25 @@
         </form>
     </x-ui.tarjeta>
 </div>
+
+{{-- «¿Cómo funciona?» (O-23): lo que antes era el párrafo de apertura y la lista de tres pasos, detrás de un
+     botón al lado del título. Es un diálogo nativo, el mismo patrón del tour y de los diálogos de alertas. --}}
+<x-ui.dialogo id="dialogo-prenatal" titulo="¿Cómo funciona el control prenatal?">
+    <div class="dialogo-cuerpo">
+        <p>{{ $vm->comoFunciona() }}</p>
+
+        <ol class="pasos-gesta">
+            @foreach ($vm->pasosDelUso() as $paso)
+                <li><strong>{{ $paso['titulo'] }}</strong> {{ $paso['texto'] }}</li>
+            @endforeach
+        </ol>
+
+        <p class="texto-tenue small mb-0">{{ $vm->comoSeGuarda() }}</p>
+    </div>
+    <div class="dialogo-pie">
+        <button type="button" class="btn btn-primary" data-cerrar-dialogo>Entendido</button>
+    </div>
+</x-ui.dialogo>
 
 {{-- «Nueva gesta» (WEB-11.15): sólo pregunta cuántos bebés son, como la ventana del escritorio. --}}
 <x-ui.dialogo id="dialogo-gesta" titulo="Nueva gesta">

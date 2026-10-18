@@ -132,7 +132,35 @@ final class Gesta
     }
 
     /**
-     * **El mapa de los campos de la gesta**: qué columna, con qué rótulo y con qué control se pinta.
+     * **Los valores del tipiaje**, los del DataWindow del escritorio (`d_pre_natal_observa.srd:11` y `:13`,
+     * el `values=` de `tipiaje` y `tipiaje_cony`): ocho, **en ese orden**, con **`AB` sin Rh** y
+     * **«Incógnito»** como un valor elegible (en el escritorio no es "no se sabe": es un dato).
+     *
+     * ⚠️ **La lista no se inventa ni se moderniza** (O-24): el valor viaja al escritorio por el sync y se
+     * compara con lo que él escribió, así que `A+` tiene que ser `A+` y no `A positivo` ni `Rh+`. La columna
+     * es `char(10)` y «Incógnito» entra sin tocar el esquema.
+     *
+     * El DataWindow **vivo** de la pestaña (`d_pre_natal_observa_2.srd:11`) declara **nueve**: muestra
+     * `AB+` en lugar de `AB` y agrega `AB-`. La lista de acá es la que la observación fijó (los ocho del
+     * `d_pre_natal_observa.srd`) y **un valor viejo con cualquiera de esas dos formas no se pierde**: se
+     * muestra como la opción elegida (`OpcionesDelDesplegable`). Cambiar la lista es cambiar esta constante.
+     *
+     * @var array<int,string>
+     */
+    public const TIPIAJES = ['A+', 'A-', 'B-', 'AB', 'O+', 'O-', 'B+', 'Incógnito'];
+
+    /** El bloque de la ficha: los datos clínicos de los dos renglones del escritorio. */
+    public const DATOS = 'datos';
+
+    /** El bloque del memo: las observaciones, en su campo grande debajo de los dos renglones. */
+    public const MEMO = 'memo';
+
+    /** El bloque del estado del embarazo: los tres controles chicos que el escritorio tiene en su barra lateral. */
+    public const ESTADO = 'estado';
+
+    /**
+     * **El mapa de los campos de la gesta**: qué columna, con qué rótulo, con qué control y en qué lugar de la
+     * pantalla se pinta.
      *
      * Los rótulos son los del DataWindow **vivo** de la pestaña (`d_pre_natal_observa_2.srd`, el que asigna
      * `w_consulta_principal.srw:24725`): *FUR*, *Menarquia*, *Gestas*, *Partos*, *Cesareas*, *Abortos*,
@@ -141,39 +169,68 @@ final class Gesta
      * DataWindow: **Final de Embarazo** (`final`, `S`/`N`), **Embarazo multiple** (`multiple`, `S`/`N`) y
      * **Cantidad** (`cantidad`).
      *
+     * **El orden y el agrupamiento son los del escritorio** (O-21, ver la captura
+     * `24-control-de-embarazo-prenatal-con-gesta.png`): el DataWindow pone en el primer renglón
+     * *FUR · FPP · EG · Menarquia · Gestas* (la FPP y la EG son `compute`, no columnas) y en el segundo
+     * *Partos · Cesareas · Abortos · Otros · Tipiaje* (madre y padre); abajo va el **memo** de observaciones
+     * y en su barra lateral, chiquitos, *Embarazo multiple*, *Cantidad* y *Final de Embarazo*. De ahí sale
+     * `bloque`: **`DATOS`** (los dos renglones), **`MEMO`** (el memo grande) y **`ESTADO`** (los tres del
+     * final, que en la web —sin barra lateral— van juntos y discretos al pie del bloque).
+     *
+     * `ancho` es la columna de la grilla de Bootstrap de cada campo, para que los renglones se lean como los
+     * del escritorio y no como una lista de campos anchos iguales.
+     *
      * ⚠️ **`parto` no está acá**: es la columna del rótulo *Parto:* del **otro** DataWindow
      * (`d_pre_natal_observa.srd`, el huérfano), y en la pestaña viva está `visible="0"`. La web no la toca.
+     * **`otros` es un número** en la tabla (`integer`) y en el DataWindow (`long`): cuenta los embarazos que
+     * no fueron parto, cesárea ni aborto.
      *
-     * @return array<int,array{columna:string,etiqueta:string,tipo:string,ayuda:string,opciones?:array<int,array{valor:string,texto:string}>}>
+     * @return array<int,array<string,mixed>>
      */
     public static function campos(): array
     {
         return [
-            ['columna' => 'fur', 'etiqueta' => 'FUR', 'tipo' => 'fecha',
-                'ayuda' => 'Fecha de la última regla: de ella salen la edad gestacional y la FPP.'],
-            ['columna' => 'menarquia', 'etiqueta' => 'Menarquia', 'tipo' => 'texto',
-                'ayuda' => 'Cuándo le vino por primera vez.'],
-            ['columna' => 'gestas', 'etiqueta' => 'Gestas', 'tipo' => 'numero',
-                'ayuda' => 'Cuántos embarazos ha tenido. El escritorio también escribe acá el número de la gesta al crearla.'],
-            ['columna' => 'partos', 'etiqueta' => 'Partos', 'tipo' => 'numero', 'ayuda' => 'Cuántos partos.'],
-            ['columna' => 'cesarea', 'etiqueta' => 'Cesáreas', 'tipo' => 'numero', 'ayuda' => 'Cuántas cesáreas.'],
-            ['columna' => 'abortos', 'etiqueta' => 'Abortos', 'tipo' => 'numero', 'ayuda' => 'Cuántos abortos.'],
-            ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'texto',
-                'ayuda' => 'Lo que no entra en las otras casillas.'],
-            ['columna' => 'tipiaje', 'etiqueta' => 'Tipiaje (madre)', 'tipo' => 'texto',
-                'ayuda' => 'El grupo sanguíneo de la madre.'],
-            ['columna' => 'tipiaje_cony', 'etiqueta' => 'Tipiaje (padre)', 'tipo' => 'texto',
-                'ayuda' => 'El grupo sanguíneo de la pareja (la columna se llama `tipiaje_cony`).'],
-            ['columna' => 'final', 'etiqueta' => 'Final de embarazo', 'tipo' => 'opciones',
-                'ayuda' => 'El embarazo ya terminó. El escritorio pide marcarlo antes de crear la gesta siguiente.',
-                'opciones' => [['valor' => 'S', 'texto' => 'Sí'], ['valor' => 'N', 'texto' => 'No']]],
-            ['columna' => 'multiple', 'etiqueta' => 'Embarazo múltiple', 'tipo' => 'opciones',
-                'ayuda' => 'Si son dos o más fetos.',
-                'opciones' => [['valor' => 'S', 'texto' => 'Sí'], ['valor' => 'N', 'texto' => 'No']]],
-            ['columna' => 'cantidad', 'etiqueta' => 'Cantidad', 'tipo' => 'numero',
-                'ayuda' => 'Cuántos fetos, cuando el embarazo es múltiple.'],
+            ['columna' => 'fur', 'etiqueta' => 'FUR', 'tipo' => 'fecha', 'fila' => 1,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-3'],
+            ['columna' => 'menarquia', 'etiqueta' => 'Menarquia', 'tipo' => 'texto', 'fila' => 1,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'gestas', 'etiqueta' => 'Gestas', 'tipo' => 'numero', 'fila' => 1,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'partos', 'etiqueta' => 'Partos', 'tipo' => 'numero', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'cesarea', 'etiqueta' => 'Cesáreas', 'tipo' => 'numero', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'abortos', 'etiqueta' => 'Abortos', 'tipo' => 'numero', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'numero', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2'],
+            ['columna' => 'tipiaje', 'etiqueta' => 'Tipiaje (madre)', 'tipo' => 'opciones', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2',
+                'opciones' => self::opcionesDelTipiaje()],
+            ['columna' => 'tipiaje_cony', 'etiqueta' => 'Tipiaje (padre)', 'tipo' => 'opciones', 'fila' => 2,
+                'bloque' => self::DATOS, 'ancho' => 'col-6 col-md-2',
+                'opciones' => self::opcionesDelTipiaje()],
             ['columna' => 'observaciones', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
-                'ayuda' => 'Lo que haya que anotar de este embarazo.'],
+                'bloque' => self::MEMO, 'ancho' => 'col-12', 'filas' => 6],
+            // La barra lateral del escritorio, en su orden: la casilla del múltiple, la cantidad y la casilla
+            // del final. En la web no hay columna derecha: van juntas al pie del bloque, discretas.
+            ['columna' => 'multiple', 'etiqueta' => 'Embarazo múltiple', 'tipo' => 'casilla',
+                'bloque' => self::ESTADO],
+            ['columna' => 'cantidad', 'etiqueta' => 'Cantidad', 'tipo' => 'numero',
+                'bloque' => self::ESTADO],
+            ['columna' => 'final', 'etiqueta' => 'Final de embarazo', 'tipo' => 'casilla',
+                'bloque' => self::ESTADO],
         ];
+    }
+
+    /**
+     * Los **ocho** valores del tipiaje como opciones de un desplegable (`valor` = `texto`: lo que se guarda es
+     * lo que se ve, que es lo que el escritorio escribe en su columna).
+     *
+     * @return array<int,array{valor:string,texto:string}>
+     */
+    public static function opcionesDelTipiaje(): array
+    {
+        return array_map(fn (string $valor) => ['valor' => $valor, 'texto' => $valor], self::TIPIAJES);
     }
 }

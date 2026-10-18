@@ -2,8 +2,10 @@
 
 namespace App\Clinica\Embarazo\Vistas;
 
+use App\Clinica\Consulta\Vistas\OpcionesDelDesplegable;
 use App\Clinica\Embarazo\EdadGestacional;
 use App\Clinica\Embarazo\Gesta;
+use App\Support\FechaClinica;
 use Carbon\CarbonInterface;
 use Closure;
 
@@ -111,13 +113,74 @@ final class PrenatalVista
     }
 
     /**
-     * Los campos del formulario, en el orden de la pantalla, con su valor ya resuelto.
+     * **Los datos de la ficha**, en el orden de la pantalla del escritorio (O-21): los dos renglones
+     * —*FUR · Menarquia · Gestas* y *Partos · Césareas · Abortos · Otros · Tipiaje*—, cada uno con su valor
+     * ya resuelto, su ancho de grilla y, en los tipajes, las opciones del desplegable.
      *
      * @return array<int,array<string,mixed>>
      */
     public function campos(): array
     {
-        return array_map(fn (array $campo) => $campo + ['valor' => (string) ($this->valor($campo['columna']) ?? '')], Gesta::campos());
+        return $this->camposDelBloque(Gesta::DATOS);
+    }
+
+    /**
+     * **Los renglones de la ficha, en el orden del escritorio** (O-21): una lista de renglones y, en cada uno,
+     * las piezas que van de izquierda a derecha.
+     *
+     * El primer renglón del DataWindow es `FUR · FPP · EG · Menarquia · Gestas`, y la FPP y la EG no son
+     * columnas: son los dos `compute` que el escritorio calcula de la FUR y muestra **entre la FUR y la
+     * menarquia**. Por eso esta clase arma el renglón con las dos cuentas en su lugar, como piezas de tipo
+     * `calculo` (se pintan como `output`, no viajan en el formulario). El segundo renglón es
+     * `Partos · Césareas · Abortos · Otros · Tipiaje (madre) · Tipiaje (padre)`.
+     *
+     * @return array<int,array<int,array<string,mixed>>>
+     */
+    public function renglones(): array
+    {
+        $renglones = [];
+
+        foreach ($this->campos() as $campo) {
+            $fila = $campo['fila'] ?? 1;
+            $renglones[$fila][] = $campo;
+
+            if ($campo['columna'] === 'fur') {
+                // Las dos cuentas del escritorio, en el lugar que les da el DataWindow.
+                $renglones[$fila][] = $this->calculo('prenatal-fpp', 'FPP', 'col-6 col-md-2',
+                    'La FUR más 280 días.', $this->fpp() ? FechaClinica::formato($this->fpp()) : null);
+                $renglones[$fila][] = $this->calculo('prenatal-eg', 'Edad gestacional', 'col-6 col-md-3',
+                    'Se calcula de la FUR.', $this->edadGestacional());
+            }
+        }
+
+        ksort($renglones);
+
+        return array_values($renglones);
+    }
+
+    /**
+     * El **memo** de observaciones, que en el escritorio va debajo de los dos renglones y ocupa el ancho
+     * entero.
+     *
+     * @return array<string,mixed>
+     */
+    public function observaciones(): array
+    {
+        return $this->camposDelBloque(Gesta::MEMO)[0] ?? [];
+    }
+
+    /**
+     * **El estado del embarazo**: `Embarazo múltiple` (casilla), `Cantidad` (un número corto) y
+     * `Final de embarazo` (casilla), en el orden de la barra lateral del escritorio. En la web no hay barra
+     * lateral: van juntos y discretos al final del bloque, no como una fila de campos anchos (O-21).
+     *
+     * `marcada` es lo que pinta la casilla; la columna guarda `S`/`N`, como la escribe el escritorio.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function estadoDelEmbarazo(): array
+    {
+        return $this->camposDelBloque(Gesta::ESTADO);
     }
 
     public function urlGuardar(): string
@@ -157,14 +220,45 @@ final class PrenatalVista
                 'titulo' => 'La edad gestacional de hoy, calculada desde la FUR'];
     }
 
-    /** La ayuda de la pestaña: qué es y qué pasa al salir sin guardar. */
+    /**
+     * **La ayuda del cuerpo: una sola línea** (O-23). Lo que antes era un párrafo explicativo más la lista de
+     * tres pasos —media pantalla de lectura antes del primer campo— está detrás del «¿Cómo funciona?» del
+     * encabezado (`comoFunciona()` y `pasosDelUso()`).
+     */
     public function ayuda(): string
+    {
+        return 'Cada gesta guarda su FUR, sus antecedentes y su tipiaje; la edad gestacional y la FPP salen de la FUR.';
+    }
+
+    /** El párrafo del diálogo «¿Cómo funciona?»: qué guarda la gesta y qué se calcula. */
+    public function comoFunciona(): string
     {
         return 'Cada gesta guarda su FUR, la menarquia, cuántas gestas, partos, cesáreas y abortos, el tipiaje '
             . 'de la madre y del padre y sus observaciones. La edad gestacional y la FPP se calculan de la FUR '
-            . '(la FPP suma 280 días) y no se guardan: se recalculan al '
-            . 'escribir. Lo cargado se guarda con el botón; si sales sin guardar, el navegador te avisa antes '
-            . 'de perderlo.';
+            . '(la FPP suma 280 días) y no se guardan: se recalculan al escribir.';
+    }
+
+    /**
+     * Los **tres pasos** del diálogo (WEB-11.15), los mismos que antes eran la lista del cuerpo.
+     *
+     * @return array<int,array{titulo:string,texto:string}>
+     */
+    public function pasosDelUso(): array
+    {
+        return [
+            ['titulo' => 'Crea la gesta',
+                'texto' => 'con «Nueva gesta», que sólo pregunta cuántos bebés son, y completa su FUR.'],
+            ['titulo' => 'Registra sus laboratorios y controles',
+                'texto' => 'en las otras pestañas del control de embarazo.'],
+            ['titulo' => 'Al terminar el embarazo, marca «Final de embarazo»',
+                'texto' => 'sin eso no se puede crear la gesta siguiente.'],
+        ];
+    }
+
+    /** Lo que el diálogo dice del guardado: es explícito y el navegador avisa al salir sin guardar. */
+    public function comoSeGuarda(): string
+    {
+        return 'Lo cargado se guarda con el botón; si sales sin guardar, el navegador te avisa antes de perderlo.';
     }
 
     /** El aviso que `consulta.js` muestra y usa para el `beforeunload`. */
@@ -177,6 +271,53 @@ final class PrenatalVista
     private function esLaQueSeMira(Gesta $gesta): bool
     {
         return $this->gesta !== null && $gesta->clave() === $this->gesta->clave();
+    }
+
+    /**
+     * Los campos de un bloque del mapa (`Gesta::DATOS`, `MEMO` o `ESTADO`) con su valor ya resuelto.
+     *
+     * Un desplegable recibe sus **opciones resueltas** (`OpcionesDelDesplegable`): la opción vacía adelante y,
+     * si la fila trae un valor que no está en la lista del escritorio —un tipiaje viejo del escritorio, por
+     * ejemplo—, **ese valor como última opción y elegido** (O-24): no se pierde ni se cambia sin que el
+     * médico elija otra cosa.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function camposDelBloque(string $bloque): array
+    {
+        $salida = [];
+
+        foreach (Gesta::campos() as $campo) {
+            if (($campo['bloque'] ?? Gesta::DATOS) !== $bloque) {
+                continue;
+            }
+
+            $valor = (string) ($this->valor($campo['columna']) ?? '');
+            $campo['valor'] = $valor;
+            $campo['marcada'] = $campo['tipo'] === 'casilla' && $valor === 'S';
+
+            if ($campo['tipo'] === 'opciones') {
+                $campo['opciones'] = OpcionesDelDesplegable::de($campo, $valor);
+            }
+
+            $salida[] = $campo;
+        }
+
+        return $salida;
+    }
+
+    /**
+     * Una de las **dos cuentas** del escritorio como una pieza más de su renglón: se pinta como `output` —no
+     * tiene `name` y no se manda— y su rótulo y su ayuda son los del DataWindow.
+     *
+     * @return array<string,mixed>
+     */
+    private function calculo(string $columna, string $etiqueta, string $ancho, string $ayuda, ?string $valor): array
+    {
+        return [
+            'columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'calculo',
+            'ancho' => $ancho, 'ayuda' => $ayuda, 'valor' => $valor ?? '—',
+        ];
     }
 
     /** Lo escrito en el POST que falló, si no lo guardado. */

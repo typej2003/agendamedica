@@ -55,19 +55,25 @@ class PreNatalDesarrolloFino extends Model
      * **El mapa de los campos del control**: qué columna, con qué rótulo y con qué control.
      *
      * Los rótulos son los del DataWindow (`d_pre_natal_rutin_eco_multiple.srd:36-68`) y el orden es el de la
-     * grilla del escritorio. `presentacion`, `edemas` y `mf` (la **placenta**) son desplegables con los
-     * valores del `.srd`, que no son inventados: son la lista que el médico ve.
+     * grilla del escritorio (O-21, captura `22-control-de-embarazo-controles.png`): *A.U. · Peso · T.A. ·
+     * Presentación · Edemas · DBP · Placenta · Foco Fetal · Fémur · EG-FUR · EG-ECO · Peso F.*, de izquierda a
+     * derecha. `presentacion`, `edemas` y `mf` (la **placenta**) son desplegables con los valores del `.srd`,
+     * que no son inventados: son la lista que el médico ve.
      *
      * @return array<int,array<string,mixed>>
      */
     public static function campos(): array
     {
         return [
-            ['columna' => 'peso', 'etiqueta' => 'Peso', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'El peso de la madre (el escritorio admite 5 caracteres).'],
-            ['columna' => 'ta', 'etiqueta' => 'T.A.', 'tipo' => 'texto', 'max' => 7, 'ayuda' => 'Tensión arterial, como «120/80».'],
-            ['columna' => 'au', 'etiqueta' => 'A.U.', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'Altura uterina.'],
+            ['columna' => 'au', 'etiqueta' => 'A.U.', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'Altura uterina.'],
+            ['columna' => 'peso', 'etiqueta' => 'Peso', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'El peso de la madre.'],
+            ['columna' => 'ta', 'etiqueta' => 'T.A.', 'tipo' => 'texto', 'max' => 7, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'Tensión arterial, como «120/80».'],
             ['columna' => 'presentacion', 'etiqueta' => 'Presentación', 'tipo' => 'opciones',
-                'ayuda' => 'La presentación fetal. La columna guarda el código del escritorio (C, P, T, CC…), no el texto.',
+                'ancho' => 'col-6 col-md-3',
+                'ayuda' => 'La columna guarda el código del escritorio (C, P, T, CC…).',
                 // Los pares del `values` del DataWindow (`:39`): `texto<TAB>código` separados por `/`. El
                 // escritorio guarda el **código**, así que la web también (la columna es `char(20)`).
                 'opciones' => self::conCodigos([
@@ -75,20 +81,24 @@ class PreNatalDesarrolloFino extends Model
                     'Cefálica - Cefálica' => 'CC', 'Podálica - Podálica' => 'PP', 'Podálica - Cefálica' => 'PC',
                     'Cefálica - Transversa' => 'CT', 'Transversa - Cefálica' => 'TC', 'Transversa - Transversa' => 'TT',
                 ])],
-            ['columna' => 'mf', 'etiqueta' => 'Placenta', 'tipo' => 'opciones',
-                'ayuda' => 'Dónde está la placenta. La columna se llama `mf` (el escritorio reusa la de movimientos fetales).',
-                'opciones' => self::opciones('Anterior', 'Posterior', 'Fúndica', 'Lateral Derecho', 'Lateral Izquierdo', 'Previa')],
-            ['columna' => 'edemas', 'etiqueta' => 'Edemas', 'tipo' => 'opciones',
+            ['columna' => 'edemas', 'etiqueta' => 'Edemas', 'tipo' => 'opciones', 'ancho' => 'col-6 col-md-2',
                 'ayuda' => 'Los edemas, por grado.',
                 'opciones' => self::opciones('Grado I', 'Grado II', 'Grado III', 'Grado IV')],
-            ['columna' => 'dbp', 'etiqueta' => 'DBP', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'Diámetro biparietal.'],
-            ['columna' => 'femur', 'etiqueta' => 'Fémur', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'La longitud del fémur.'],
-            ['columna' => 'foco_f', 'etiqueta' => 'Foco Fetal', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'La frecuencia cardíaca fetal (el escritorio admite 5 caracteres).'],
-            ['columna' => 'peso_fetal', 'etiqueta' => 'Peso F.', 'tipo' => 'texto', 'max' => 5, 'ayuda' => 'El peso fetal estimado.'],
-            ['columna' => 'eg_fur', 'etiqueta' => 'EG-FUR', 'tipo' => 'texto', 'max' => 20,
-                'ayuda' => 'La edad gestacional por la FUR, como la escribe el médico («20s + 6d»). La web puede sugerir la de la FUR de la gesta.'],
-            ['columna' => 'eg_eco', 'etiqueta' => 'EG-ECO', 'tipo' => 'texto', 'max' => 20,
+            ['columna' => 'dbp', 'etiqueta' => 'DBP', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'Diámetro biparietal.'],
+            ['columna' => 'mf', 'etiqueta' => 'Placenta', 'tipo' => 'opciones', 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'La posición de la placenta.',
+                'opciones' => self::opciones('Anterior', 'Posterior', 'Fúndica', 'Lateral Derecho', 'Lateral Izquierdo', 'Previa')],
+            ['columna' => 'foco_f', 'etiqueta' => 'Foco Fetal', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'La frecuencia cardíaca fetal.'],
+            ['columna' => 'femur', 'etiqueta' => 'Fémur', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'La longitud del fémur.'],
+            ['columna' => 'eg_fur', 'etiqueta' => 'EG-FUR', 'tipo' => 'texto', 'max' => 20, 'ancho' => 'col-6 col-md-3',
+                'ayuda' => 'La edad gestacional por la FUR, como la escribe el médico («20s + 6d»).'],
+            ['columna' => 'eg_eco', 'etiqueta' => 'EG-ECO', 'tipo' => 'texto', 'max' => 20, 'ancho' => 'col-6 col-md-3',
                 'ayuda' => 'La edad gestacional por la ecografía, como la escribe el médico.'],
+            ['columna' => 'peso_fetal', 'etiqueta' => 'Peso F.', 'tipo' => 'texto', 'max' => 5, 'ancho' => 'col-6 col-md-2',
+                'ayuda' => 'El peso fetal estimado.'],
         ];
     }
 

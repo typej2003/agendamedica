@@ -77,12 +77,9 @@
             @endif
         @endforeach
 
-        {{-- La FPP del informe no es la de la pantalla: el escritorio imprime una y muestra otra, y se dice. --}}
-        <p class="texto-tenue small mt-4 mb-0">
-            La hoja imprime la FPP del informe ({{ $vm->fpp() ? \App\Support\FechaClinica::formato($vm->fpp()) : '—' }});
-            la pestaña *Prenatal* muestra la suya ({{ $vm->fppDeLaPantalla() ? \App\Support\FechaClinica::formato($vm->fppDeLaPantalla()) : '—' }}),
-            como el escritorio.
-        </p>
+        {{-- La FPP que sale en la hoja. Desde WEB-11.16 es la misma de la pantalla, así que la nota sólo
+             explica la diferencia si alguna vez no lo fueran (un dato viejo). --}}
+        <p class="texto-tenue small mt-4 mb-0">{{ $vm->notaDeLaFpp() }}</p>
         @endif
     </x-ui.tarjeta>
 </div>

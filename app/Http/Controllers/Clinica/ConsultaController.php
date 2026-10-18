@@ -858,9 +858,11 @@ class ConsultaController extends Controller
                     urlVolver: $url(),
                     urlNueva: $url(['gesta' => $claveDeLaGesta, 'nueva' => 1]),
                     urlFecha: fn (string $fecha) => $url(['gesta' => $claveDeLaGesta, 'fecha' => $fecha]),
+                    // Una línea de ayuda como máximo en el cuerpo (O-23): lo que era un párrafo con la lista
+                    // de lo que se carga en cada pestaña ya lo dice el rótulo de sus campos.
                     ayuda: $esLaboratorio
-                        ? 'Cada fecha es un laboratorio de esta gesta: el hemograma, la glicemia, la orina y las serologías que el embarazo pide. Se guarda con el botón; si sales sin guardar, el navegador te avisa.'
-                        : 'Cada fecha es un control de esta gesta: el peso, la tensión, la altura uterina, la placenta y las medidas del feto. Se guarda con el botón; si sales sin guardar, el navegador te avisa.',
+                        ? 'Cada fecha es un laboratorio de esta gesta; se guarda con el botón.'
+                        : 'Cada fecha es un control de esta gesta; se guarda con el botón.',
                     aviso: 'Hay cambios sin guardar. Si sales ahora, se pierden.',
                     old: (array) old(),
                     // O-13: un laboratorio o un control **nuevo** abre con la fecha de hoy del consultorio

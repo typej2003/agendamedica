@@ -46,8 +46,7 @@ final class SeccionDeEmbarazoVista
 
     public function ayuda(): string
     {
-        return 'El control del embarazo: las gestas con su FUR, su edad gestacional y su FPP (pestaña '
-            . '*Prenatal*), los exámenes de laboratorio y los controles por fecha. El laboratorio, los '
-            . 'controles y el reporte llegan con el resto de esta tarea.';
+        return 'El control del embarazo: las gestas (pestaña *Prenatal*), sus exámenes de laboratorio, sus '
+            . 'controles por fecha y la hoja que se imprime.';
     }
 }

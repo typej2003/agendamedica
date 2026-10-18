@@ -3,6 +3,11 @@
      entra por el ViewModel (`App\Clinica\Embarazo\Vistas\FechasDelEmbarazoVista`), que a su vez recibe el
      mapa del dato de cada tabla (`PrenaExamenB::campos()` y `PreNatalDesarrolloFino::campos()`).
 
+     **Los campos van agrupados como en la grilla del escritorio** (O-21): el laboratorio tiene su panel de
+     exámenes y, en un renglón aparte, Urea · Crea. · Orina · Heces · Otros; los controles son un solo
+     renglón. El agrupamiento y el ancho de cada campo los decide el mapa del dato (`bloque`, `ancho`), no
+     esta vista, que sólo recorre los bloques del ViewModel.
+
      `$claveTab` es la clave de la pestaña (`laboratorio` o `controles`) y se usa para el id del formulario:
      el aviso de cambios sin guardar de `consulta.js` se ata al formulario por `data-consulta-fechas` y al
      cartel por `<id del formulario>-sin-guardar`. --}}
@@ -35,17 +40,22 @@
             {{-- La gesta a la que pertenece la fila: la clave es `historia` + `gesta_clave` + `fecha`. --}}
             <input type="hidden" name="gesta" value="{{ $vm->gestaClave() }}">
 
-            <div class="row g-3 mb-3">
-                <x-ui.campo etiqueta="Fecha" for="fecha" class="col-6 col-md-4"
-                            ayuda="La fecha del examen: con ella se identifica la fila de la gesta.">
+            <div class="row g-2 mb-3">
+                <x-ui.campo etiqueta="Fecha" for="fecha" class="col-6 col-md-3"
+                            ayuda="La fecha del examen: identifica la fila de la gesta.">
                     <input type="date" class="form-control" id="fecha" name="fecha" value="{{ $vm->fecha() }}">
                 </x-ui.campo>
 
-                @foreach ($vm->campos() as $campo)
-                    @include('clinica.consulta._embarazo-campo', [
-                        'campo' => $campo,
-                        'columnas' => ($campo['tipo'] ?? 'texto') === 'area' ? 'col-12' : 'col-6 col-md-4',
-                    ])
+                @foreach ($vm->bloques() as $bloque)
+                    @if ($bloque['rotulo'])
+                        <div class="col-12 pt-1">
+                            <p class="etiqueta mb-0">{{ $bloque['rotulo'] }}</p>
+                        </div>
+                    @endif
+
+                    @foreach ($bloque['campos'] as $campo)
+                        @include('clinica.consulta._embarazo-campo', ['campo' => $campo])
+                    @endforeach
                 @endforeach
             </div>
 

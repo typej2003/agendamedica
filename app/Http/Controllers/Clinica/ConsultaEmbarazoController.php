@@ -179,6 +179,12 @@ class ConsultaEmbarazoController extends Controller
     /**
      * Las reglas de los campos de la gesta. El tope de cada texto es el del DataWindow (`char(10)` en cuatro
      * de ellos) y `fur` es obligatoria —la Action también la exige, pero así el error llega al campo—.
+     *
+     * ⚠️ **Tienen que estar las trece columnas** que el formulario manda (`GuardarGestaDelEmbarazo::COLUMNAS`):
+     * `validate()` devuelve **sólo** lo declarado, así que una columna que falte acá no se guarda y, peor,
+     * la Action la recibe vacía y **borra lo que tenía** (los partos de una gesta del escritorio, por
+     * ejemplo). Las casillas `final` y `multiple` guardan `S`/`N`, como las escribe el escritorio, y
+     * `cantidad` es el número de fetos cuando el embarazo es múltiple.
      */
     private function reglas(): array
     {
@@ -186,9 +192,17 @@ class ConsultaEmbarazoController extends Controller
             'fur' => 'required|' . FechaDeFormulario::FORMATO,
             'menarquia' => 'nullable|string|max:10',
             'gestas' => 'nullable|numeric|min:0|max:99',
+            'partos' => 'nullable|numeric|min:0|max:99',
+            'cesarea' => 'nullable|numeric|min:0|max:99',
+            'abortos' => 'nullable|numeric|min:0|max:99',
+            // `otros` es un número en la tabla (`integer`) y en el DataWindow (`long`).
+            'otros' => 'nullable|numeric|min:0|max:99',
             'parto' => 'nullable|string|max:10',
             'tipiaje' => 'nullable|string|max:10',
             'tipiaje_cony' => 'nullable|string|max:10',
+            'final' => 'nullable|in:S,N',
+            'multiple' => 'nullable|in:S,N',
+            'cantidad' => 'nullable|numeric|min:0|max:' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES,
             'observaciones' => 'nullable|string|max:32000',
             'gesta' => 'nullable|numeric|min:1',
         ];

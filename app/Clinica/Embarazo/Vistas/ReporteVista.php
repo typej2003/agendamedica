@@ -7,6 +7,7 @@ use App\Clinica\Embarazo\Gesta;
 use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
+use App\Support\FechaClinica;
 use Closure;
 
 /**
@@ -53,10 +54,13 @@ final class ReporteVista
         return 'Informe del control de embarazo';
     }
 
+    /**
+     * La ayuda del cuerpo, **en una línea** (O-23): lo que es y de dónde salen sus datos. El detalle de la
+     * hoja —y de las dos FPP— está más abajo, junto a lo que explica.
+     */
     public function ayuda(): string
     {
-        return 'Esto es lo que sale en la hoja «CONTROL DE EMBARAZO»: la ficha de la gesta, sus controles y '
-            . 'su laboratorio. Los datos se cargan en las otras pestañas; acá sólo se imprime.';
+        return 'Lo que sale en la hoja «CONTROL DE EMBARAZO»; los datos se cargan en las otras pestañas.';
     }
 
     /** La gesta que se está mirando. */
@@ -204,9 +208,30 @@ final class ReporteVista
                 'titulo' => 'Los controles y los laboratorios que salen en la hoja'];
     }
 
-    /** La FPP de la pantalla del control prenatal (281), para explicar la diferencia en la ayuda. */
+    /** La FPP de la pantalla del control prenatal (la de la pestaña *Prenatal*). */
     public function fppDeLaPantalla(): ?string
     {
         return EdadGestacional::fpp($this->gesta()->fur(), EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL);
+    }
+
+    /**
+     * La nota del pie de la pestaña: **qué FPP se imprime**.
+     *
+     * Desde WEB-11.16 la web usa un solo número (280 días) en todas las pantallas, así que la hoja y la
+     * pestaña *Prenatal* muestran la misma fecha. Antes el escritorio imprimía una (283) y la pantalla otra
+     * (281) y la pestaña lo explicaba; hoy sólo queda decirlo cuando —por un dato viejo— las dos difieran.
+     */
+    public function notaDeLaFpp(): string
+    {
+        $deLaHoja = $this->fpp();
+        $deLaPantalla = $this->fppDeLaPantalla();
+        $formato = fn (?string $fecha) => $fecha ? FechaClinica::formato($fecha) : '—';
+
+        if ($deLaHoja === $deLaPantalla) {
+            return 'La hoja imprime la FPP de la gesta (' . $formato($deLaHoja) . ').';
+        }
+
+        return 'La hoja imprime la FPP del informe (' . $formato($deLaHoja) . '); la pestaña *Prenatal* '
+            . 'muestra la suya (' . $formato($deLaPantalla) . ').';
     }
 }
