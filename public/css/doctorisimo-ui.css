@@ -2602,10 +2602,15 @@ body.auth-pagina {
    en lugar de empujar la página. */
 .recipe-pestanas-barra {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: .75rem;
+    gap: .5rem .75rem;
 }
+/* En la columna izquierda de las dos listas (A-04) la barra de la pareja tiene los chips y las acciones en el mismo
+   renglón: los chips se quedan con el ancho que sobra y, si no alcanza, las acciones bajan a su renglón. */
+.recipe-pestanas-barra .chips { flex: 1 1 12rem; min-width: 0; margin-bottom: 0; }
+.recipe-pestanas-barra .recipe-acciones { flex-wrap: wrap; }
 .recipe-pestanas { max-width: 100%; }
 .recipe-pestanas .btn { white-space: normal; }
 
@@ -2711,6 +2716,14 @@ body.auth-pagina {
 .recipe-cantidad-campo { flex: 0 0 5.5rem; }
 .recipe-indicaciones-campo { flex: 1 1 auto; min-width: 0; }
 
+/* El editor de récipes vive en la columna izquierda de `<x-ui.dos-listas>` (A-04): con la sección muy angosta —menos
+   de 40rem, o sea dos columnas de menos de ~310 px— la cantidad y las indicaciones ya no entran en la misma línea y se
+   apilan. La medida es la de la **sección**, no la de la pantalla (`container-type: inline-size` en `.consulta-seccion`). */
+@container (max-width: 40rem) {
+    .recipe-fila-campos { flex-wrap: wrap; gap: .4rem; }
+    .recipe-indicaciones-campo { flex: 1 1 100%; }
+}
+
 .recipe-fila .form-label {
     font-size: .72rem;
     text-transform: uppercase;
@@ -2740,6 +2753,9 @@ body.auth-pagina {
     .recipe-quitar { order: 2; margin-left: auto; }
     .recipe-fila-campos { flex-wrap: wrap; }
     .recipe-cantidad-campo { flex-basis: 100%; }
+    /* Las acciones de un récipe de la lista (Imprimir, Visualizar, el QR, Editar y el menú) no entran en una línea de
+       un teléfono: ocupan su renglón y envuelven, en vez de empujar la página a lo ancho. */
+    .recipe-acciones { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------
@@ -2959,8 +2975,11 @@ body.auth-pagina {
 .orden-resultado { width: 100%; text-align: left; }
 .orden-resultado-datos { display: flex; align-items: center; gap: .4rem; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .orden-resultado-datos strong { font-size: .9rem; }
-.orden-resultado-datos [data-resultado-detalle] { flex: 0 0 auto; }
+.orden-resultado-datos [data-resultado-detalle] { flex: 0 1 auto; min-width: 0; max-width: 45%; }
 .orden-resultado-datos [data-resultado-detalle]:empty { display: none; }
+/* El dato secundario (el tipo del examen, el principio activo del medicamento) no empuja el nombre fuera de la fila: se
+   recorta con puntos suspensivos y el texto completo queda en su `title`. */
+.orden-resultado-datos .chip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .orden-resultado [data-resultado-accion] { flex: 0 0 auto; white-space: nowrap; }
 
 /* En una sección angosta el tipo del examen es lo secundario: se va de la fila —el nombre se queda con el ancho y el
