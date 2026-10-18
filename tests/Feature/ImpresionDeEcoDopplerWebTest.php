@@ -171,7 +171,7 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_DOPPLER, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     public function test_el_informe_en_texto_libre_del_escritorio_se_imprime_tal_cual(): void

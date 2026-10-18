@@ -199,7 +199,11 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_PELVICO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+
+        // O-16: en vez de la página 404, el aviso de que falta guardar los datos para poder imprimir.
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))
+            ->assertOk()
+            ->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     // ================================================================== La secretaría desde la cita

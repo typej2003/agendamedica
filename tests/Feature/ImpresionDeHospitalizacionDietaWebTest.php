@@ -226,7 +226,7 @@ class ImpresionDeHospitalizacionDietaWebTest extends TestCase
         $this->dieta($medico, ['descripcion' => '']);
 
         foreach (['hospitalizacion', 'dieta', 'todos'] as $clave) {
-            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))->assertNotFound();
+            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
         }
 
         DB::table('hospitalizacion')->where('reg_medico', $medico->reg_medico)->update(['hospital' => 'CLINICA A']);

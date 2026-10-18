@@ -220,7 +220,7 @@ class ImpresionDeEcoFetalWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_CARDIOGRAMA_FETAL, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     /** Una consulta sin fila no tiene informe: la lectura de la hoja no aplica la precarga del escritorio. */
@@ -230,7 +230,7 @@ class ImpresionDeEcoFetalWebTest extends TestCase
 
         $this->assertSame(0, EcoCardiogramaFetalModelo::where('reg_medico', $medico->reg_medico)->count());
         $this->assertNotContains(DocumentoImpreso::ECO_CARDIOGRAMA_FETAL, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     // ================================================================== La secretaría desde la cita

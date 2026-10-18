@@ -7,9 +7,9 @@
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
-            <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
+            <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="hospitalizacion-form" documento="hospitalizacion" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-            </x-ui.imprimir-con-vista>
+            </x-ui.imprimir-guardando>
         @endif
     </x-slot>
 

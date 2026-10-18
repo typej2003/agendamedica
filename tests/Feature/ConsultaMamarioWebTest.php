@@ -278,10 +278,10 @@ class ConsultaMamarioWebTest extends TestCase
 
         $this->assertSame(0, UltraMama::where('reg_medico', $medico->reg_medico)->count());
 
-        // Y la pantalla no ofrece el informe de un estudio que no existe.
+        // O-16/O-20: el botón sigue ahí (imprime guardando antes); la hoja, no, porque no hay estudio que imprimir.
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertDontSee('Imprimir el informe');
+            ->assertSee('name="imprimir" value="eco-mamario"', false);
     }
 
     public function test_un_texto_mas_largo_que_su_tope_no_se_guarda(): void
@@ -419,9 +419,9 @@ class ConsultaMamarioWebTest extends TestCase
             ->assertSee('Segunda línea.')
             // El campo del escritorio no se pinta como un control del formulario.
             ->assertDontSee('name="puro_texto"', false)
-            // Y como la hoja del mamario no imprime ese modo, no ofrece un informe que saldría vacío.
-            ->assertDontSee('Imprimir el informe')
-            ->assertDontSee('documento=eco-mamario', false);
+            // O-16/O-20: el botón de imprimir está —guarda e imprime, y sin hoja lo dice—, aunque el informe en texto
+            // libre no sea la hoja del mamario.
+            ->assertSee('name="imprimir" value="eco-mamario"', false);
     }
 
     /** Un estudio con datos cargados **sí** ofrece la hoja, además del texto libre del escritorio. */

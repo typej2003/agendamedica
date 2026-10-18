@@ -5,6 +5,7 @@ namespace App\Clinica\Consulta\Vistas;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
+use App\Clinica\Impresion\DocumentosParaImprimir;
 
 /**
  * **El eco pélvico de una consulta** (WEB-6.1, ítem 5 del panel del legado): el formulario con sus nueve
@@ -92,6 +93,12 @@ final class EcoGinecologicoVista
     public function urlImprimir(): string
     {
         return $this->urlImprimir;
+    }
+
+    /** La clave del documento que imprime el botón (la de su hoja): la manda el botón para guardar e imprimir (O-16). */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urlImprimir);
     }
 
     /** La fecha del estudio (`AAAA-MM-DD`) que se está mostrando: la del formulario o la guardada. */

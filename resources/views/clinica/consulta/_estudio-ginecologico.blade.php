@@ -52,10 +52,13 @@
 
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">Cancelar</a>
-                @if ($vm->urlImprimir())
-                    <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-outline-secondary">
+                {{-- O-16/O-20: el botón se ofrece siempre que la sección tenga hoja: «Imprimir» **guarda lo escrito y
+                     después imprime**, así un estudio recién cargado se imprime sin apretar «Guardar» primero. Si no hay
+                     nada que imprimir, la hoja lo dice («Guarda los datos del estudio para poder imprimir»). --}}
+                @if ($vm->urlImprimir() !== '')
+                    <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="estudio-form" documento="{{ $vm->documento() }}" class="btn btn-outline-secondary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </x-ui.imprimir-con-vista>
+                    </x-ui.imprimir-guardando>
                 @endif
                 {{-- La única acción primaria de la sección: guardar lo cargado. --}}
                 <button class="btn btn-primary">

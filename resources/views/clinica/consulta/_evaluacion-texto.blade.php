@@ -44,9 +44,12 @@
         <div class="d-flex justify-content-end gap-2 mt-3">
             <a class="btn btn-outline-secondary" href="{{ $seccion->urlVolver() }}">Cancelar</a>
             @if ($seccion->esUnDocumento() && $seccion->urlImprimir() !== '')
-                <x-ui.imprimir-con-vista :url="$seccion->urlImprimir()" class="btn btn-outline-primary">
+                {{-- «Imprimir» guarda el texto y después imprime la hoja (O-16): es un `submit` de este mismo formulario y el
+                     servidor lo redirige a la hoja del documento de la solapa. --}}
+                <x-ui.imprimir-guardando :url="$seccion->urlImprimir()" form="{{ $clave }}-form"
+                                         documento="{{ $seccion->documento() }}" class="btn btn-outline-primary">
                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                </x-ui.imprimir-con-vista>
+                </x-ui.imprimir-guardando>
             @endif
             <button class="btn btn-primary">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : ($clave === 'tratamiento' ? 'el tratamiento' : 'la ' . mb_strtolower($seccion->titulo())) }}

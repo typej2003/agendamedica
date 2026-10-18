@@ -255,7 +255,7 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_ABDOMINAL, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     /**
@@ -275,7 +275,7 @@ class ImpresionDeEcoAbdominalWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_ABDOMINAL, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     /**

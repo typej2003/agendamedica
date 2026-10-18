@@ -212,7 +212,7 @@ class ImpresionDeEcoMamarioWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_MAMARIO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     /**
@@ -233,7 +233,7 @@ class ImpresionDeEcoMamarioWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_MAMARIO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     // ================================================================== La secretaría desde la cita

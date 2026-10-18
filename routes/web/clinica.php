@@ -181,7 +181,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // historia** (`numhistoria` + `nroconsulta`), y ese es el vínculo que el escritorio y el sync
             // comparten. El controlador resuelve el paciente para el encabezado y responde 404 si la
             // consulta es de otro consultorio.
-            Route::middleware('role:Root|Medico')->group(function () {
+            // `clinica.imprimir`: el «Imprimir» de una sección guarda primero y después imprime (O-16). Va en el
+            // grupo para que la regla sea una sola y valga para todos los imprimibles de la consulta.
+            Route::middleware(['role:Root|Medico', 'clinica.imprimir'])->group(function () {
                 // **Atender ahora** al paciente que acaba de quedar atendible (O-05): el «sí» del diálogo que
                 // la ficha ofrece después del alta web o de asignarle la historia. Abre la cita de hoy si el
                 // paciente tiene una sin atender y, si no, se la crea; por eso vive acá y no en el grupo de la

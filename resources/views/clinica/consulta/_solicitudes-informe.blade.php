@@ -7,9 +7,9 @@
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
-            <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
+            <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="informe-form" documento="informe" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-            </x-ui.imprimir-con-vista>
+            </x-ui.imprimir-guardando>
         @endif
         {{-- El resumen médico (WEB-5.3c): la hoja auto-generada de la consulta, la otra mitad de esta
              pestaña del escritorio. Sólo se ofrece si hay algo que resumir. --}}

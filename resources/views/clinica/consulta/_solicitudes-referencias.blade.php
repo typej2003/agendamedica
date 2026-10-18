@@ -67,9 +67,11 @@
                                 </p>
                             </div>
                             <div class="recipe-acciones">
-                                <x-ui.imprimir-con-vista :url="$referencia['urlImprimir']" class="btn btn-sm btn-outline-secondary">
+                                {{-- «Imprimir» guarda el motivo y después imprime la referencia (O-16). --}}
+                                <x-ui.imprimir-guardando :url="$referencia['urlImprimir']" form="referencia-form-{{ $referencia['cedula'] }}"
+                                                         documento="referencia-{{ $referencia['cedula'] }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-                                </x-ui.imprimir-con-vista>
+                                </x-ui.imprimir-guardando>
                                 <form method="POST" action="{{ $referencia['urlEliminar'] }}" data-confirmar="{{ $referencia['avisoEliminar'] }}" data-solicitud-salir>
                                     @csrf
                                     @method('DELETE')
@@ -80,7 +82,8 @@
                             </div>
                         </header>
 
-                        <form method="POST" action="{{ $referencia['urlGuardar'] }}" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
+                        <form method="POST" action="{{ $referencia['urlGuardar'] }}" id="referencia-form-{{ $referencia['cedula'] }}"
+                              data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
                             @csrf
                             <input type="hidden" name="cedula" value="{{ $referencia['cedula'] }}">
                             <x-ui.campo etiqueta="Motivo de la referencia" :for="'referencia-motivo-' . $referencia['cedula']" error="motivo" class="mb-2">

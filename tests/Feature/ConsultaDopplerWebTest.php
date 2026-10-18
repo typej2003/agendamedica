@@ -280,10 +280,11 @@ class ConsultaDopplerWebTest extends TestCase
 
         $this->assertSame(0, EcoDopplerModelo::where('reg_medico', $medico->reg_medico)->count());
 
-        // Y la pantalla no ofrece el informe de un estudio que no existe.
+        // O-16/O-20: el **botón** sigue en la pantalla —imprime guardando antes—, pero no hay hoja que imprimir hasta
+        // que el estudio tenga datos (y pedirla lo dice en vez de dar 404).
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertDontSee('Imprimir el informe');
+            ->assertSee('name="imprimir" value="eco-doppler"', false);
     }
 
     // ------------------------------------------------------------------------------------- Permisos

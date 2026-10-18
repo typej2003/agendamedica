@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Support\FechaDeFormulario;
 
 /**
@@ -114,6 +115,16 @@ class EcoObstetricoVista
     public function urlImprimir(): string
     {
         return $this->urlImprimir;
+    }
+
+    /**
+     * La **clave del documento** que imprime el botón de la sección (`eco-obstetrico`, `eco-doppler`…): la que el botón
+     * manda para guardar y después imprimir (O-16). Sale de la URL de la hoja, que ya la lleva, así que un tipo nuevo no
+     * tiene que declararla dos veces.
+     */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urlImprimir);
     }
 
     /** La ayuda de la pantalla: qué es el estudio y de dónde salen la FUR y la gesta. */

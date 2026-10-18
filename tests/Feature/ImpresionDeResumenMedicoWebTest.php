@@ -217,7 +217,7 @@ class ImpresionDeResumenMedicoWebTest extends TestCase
         $this->informe($medico);
 
         $this->assertNotContains(DocumentoImpreso::RESUMEN_MEDICO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     public function test_una_consulta_cuyo_unico_dato_son_los_medicamentos_no_ofrece_el_resumen(): void
@@ -228,8 +228,7 @@ class ImpresionDeResumenMedicoWebTest extends TestCase
         // El tratamiento es un bloque de la hoja, pero no alcanza para ofrecerla: los medicamentos ya
         // tienen su documento (el récipe) y la lista de la secretaría se queda como estaba.
         $this->assertNotContains(DocumentoImpreso::RESUMEN_MEDICO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
-
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
         // Con un dato clínico más, la hoja sale y lleva el tratamiento con el resto.
         DB::table('consultas')->where('id', $consulta->id)->update(['enfermedadactual' => 'Dolor de dos días.']);
 

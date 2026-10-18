@@ -157,8 +157,9 @@ class ConsultaFetalWebTest extends TestCase
             ->assertSee('CORAZON EN SITUS SOLITUS, TETRACAMERAL.', false)
             ->assertSee('RELACION CARDIOTORACICA 1/3.', false)
             ->assertSee('Sin guardar')
-            // La hoja sale de lo guardado: mientras no haya fila, no se ofrece (la impresión daría 404).
-            ->assertDontSee('Imprimir el informe');
+            // O-16/O-20: el botón está —imprime guardando antes—, pero no hay hoja que imprimir hasta que el estudio
+            // tenga datos.
+            ->assertSee('name="imprimir" value="eco-cardiograma-fetal"', false);
 
         // La precarga es **sólo de la pantalla**: no crea la fila.
         $this->assertSame(0, EcoCardiogramaFetalModelo::where('reg_medico', $medico->reg_medico)->count());
@@ -357,10 +358,10 @@ class ConsultaFetalWebTest extends TestCase
 
         $this->assertSame(0, EcoCardiogramaFetalModelo::where('reg_medico', $medico->reg_medico)->count());
 
-        // Y la pantalla no ofrece el informe de un estudio que no existe.
+        // O-16/O-20: el botón sigue ahí (imprime guardando antes); la hoja, no, porque no hay estudio que imprimir.
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertDontSee('Imprimir el informe');
+            ->assertSee('name="imprimir" value="eco-cardiograma-fetal"', false);
     }
 
     // ------------------------------------------------------------------------------------- Permisos

@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Impresion\DocumentosParaImprimir;
 
 /**
  * **Las pestañas Laboratorio y Estudios** (WEB-5.4): una orden de varias filas —exámenes de laboratorio o estudios de imágenes— con su
@@ -217,6 +218,15 @@ final class OrdenVista
     public function urlImprimir(): string
     {
         return $this->urls['imprimir'];
+    }
+
+    /**
+     * La clave del documento que imprime el botón (`laboratorio`, `estudios`, `laboratorio-pareja`): la manda el botón
+     * para guardar y después imprimir (O-16). Sale de la URL de la hoja, que ya la lleva.
+     */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urls['imprimir']);
     }
 
     public function urlCatalogo(): string

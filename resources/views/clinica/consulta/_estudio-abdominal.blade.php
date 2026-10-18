@@ -53,10 +53,13 @@
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">
                     <i class="bi bi-x-lg" aria-hidden="true"></i> Cancelar
                 </a>
-                @if ($vm->esUnDocumento() && $vm->urlImprimir() !== '')
-                    <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-outline-primary">
+                {{-- O-16/O-20: el botón se ofrece siempre que la sección tenga hoja: «Imprimir» **guarda lo escrito y
+                     después imprime**, así un estudio recién cargado se imprime sin apretar «Guardar» primero. Si no hay
+                     nada que imprimir, la hoja lo dice («Guarda los datos del estudio para poder imprimir»). --}}
+                @if ($vm->urlImprimir() !== '')
+                    <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="estudio-abdominal-form" documento="{{ $vm->documento() }}" class="btn btn-outline-primary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </x-ui.imprimir-con-vista>
+                    </x-ui.imprimir-guardando>
                 @endif
                 <button class="btn btn-primary">
                     <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el estudio

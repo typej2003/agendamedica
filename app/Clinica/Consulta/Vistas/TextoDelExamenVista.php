@@ -91,6 +91,15 @@ final class TextoDelExamenVista
         return $this->urlImprimir;
     }
 
+    /**
+     * La clave del documento que imprime el botón (`colposcopia`, `histeroscopia`), o `''` si esta solapa no tiene hoja.
+     * La manda el botón para guardar y después imprimir (O-16).
+     */
+    public function documento(): string
+    {
+        return (string) (TextosDelExamen::documento($this->clave) ?? '');
+    }
+
     /** ¿Esta solapa tiene hoja? (La colposcopía y la histeroscopía, por ahora.) */
     public function tieneHoja(): bool
     {

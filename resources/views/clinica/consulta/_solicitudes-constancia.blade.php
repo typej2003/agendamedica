@@ -5,9 +5,9 @@
 <x-ui.tarjeta titulo="Constancia de asistencia" icono="bi-file-earmark-medical">
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-        <x-ui.imprimir-con-vista :url="$vm->urlImprimir()" class="btn btn-sm btn-outline-secondary">
+        <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="constancia-form" documento="constancia" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
-        </x-ui.imprimir-con-vista>
+        </x-ui.imprimir-guardando>
     </x-slot>
 
     <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
