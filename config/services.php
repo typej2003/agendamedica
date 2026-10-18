@@ -61,4 +61,27 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-3.8-flash'),
     ],
 
+    /*
+     * **Jev AI — modelo de decisiones, no de conversación** (evaluado el 2026-10-17, ver
+     * `Docs/tecnico/auditoria-chatbot-whatsapp.md` §10.3 y `ROADMAP.md` §10.3). Devuelve valores tipados
+     * con probabilidad y confianza sobre un `state` y un mapa de preguntas (`choice`, `score`, `noul`).
+     *
+     * Por ahora **sólo lo usa la prueba de concepto** `php artisan jev:triaje`
+     * (`App\Console\Commands\ProbarTriajeJevCommand`): no está conectado al chatbot de WhatsApp.
+     *
+     * La clave vive en el `.env` (ignorado por git) como `JEV_API_KEY`; **nunca** en el código ni en un
+     * documento. `base_url` y `model` cambian según de dónde salga la clave:
+     *
+     *   Jev AI (oficial)      https://thejevai.com      typesafe/jev-1.14
+     *   DigitalOcean Inference https://inference.do-ai.run  typesafe-jev-1.13.0
+     */
+    'jev' => [
+        'api_key' => env('JEV_API_KEY'),
+        'base_url' => env('JEV_BASE_URL', 'https://thejevai.com'),
+        'model' => env('JEV_MODEL', 'typesafe/jev-1.14'),
+        // Debajo de este umbral de confianza la decisión se deriva a la secretaría en vez de automatizarse.
+        'umbral' => (float) env('JEV_UMBRAL', 0.7),
+        'timeout' => (int) env('JEV_TIMEOUT', 25),
+    ],
+
 ];

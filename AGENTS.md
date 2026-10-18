@@ -383,6 +383,13 @@ borraron. Tests: `WhatsAppWebhookTest` (17) y `ChatbotReservaTest` (5). **No se 
 (los atajos, el prompt, el registro y los mensajes siguen igual), y **sigue sin verificarse la identidad**
 de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 130 a 132.
 
+**El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
+**urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:
+`App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`).
+Corpus **sintético** de 28 mensajes en `database/datos/triaje-whatsapp.json`; la clave va en el `.env` como
+**`JEV_API_KEY`** (nunca en el código) y hay `JEV_BASE_URL`/`JEV_MODEL` para el Jev oficial o DigitalOcean.
+Tests: `TriajeJevTest` (6, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`.
+
 ## Qué es
 
 Backend / API en la nube de AppDDR, y a la vez el **receptor de la sincronización del sistema legado**
