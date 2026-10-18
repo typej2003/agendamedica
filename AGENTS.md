@@ -198,7 +198,10 @@ lectura: la cédula y el nombre salen de la **primera** fila, y `resolverItems` 
 catálogo que el récipe del paciente, `RecipesDeLaConsulta::resolverItemsContra`) más `Vistas/{SeccionDeRecipeDeLaParejaVista,
 PestanasDeRecipes,ComparteElEditorDeRecipes}` (siempre es el editor; el trait lleva la caja de herramientas, los topes y
 las filas del editor que comparten los dos ViewModels) y el modelo `App\Models\RecipePareja`. **Sin columnas ni
-tablas nuevas, y el móvil no sincroniza `recipes_pareja`.** Ver las trampas 43 a 45.
+tablas nuevas.** ⚠️ Esa nota decía que «el móvil no sincroniza `recipes_pareja`» y **ya no es cierto**: desde la ola
+§9 de [PLAN-MOVIL.md](../PLAN-MOVIL.md) el app la **baja** (delta, volcado y `volcado_paciente`, con la columna
+**`nrohistoria`**) y **la crea** (`CLINICAL_TABLES` + `CreacionesClinicas::crearRecipeDeLaPareja`, que llama a esta
+misma Action con los `items` y la cédula y el nombre en el change, no en `columns`). Ver las trampas 43 a 45.
 
 Lo que **WEB-5.2 (2026-10-11)**, imprimir el récipe, agregó: `ImpresionDeRecipeController` (**la hoja A4 horizontal que imprime el
 navegador**: `GET /clinica/consulta/{consulta}/recipes/{n}/imprimir` y `…/recipe-pareja/imprimir` en el grupo `role:Root|Medico`,
