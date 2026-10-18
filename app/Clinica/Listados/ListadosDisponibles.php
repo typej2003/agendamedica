@@ -54,6 +54,18 @@ final class ListadosDisponibles
     ];
 
     /**
+     * **De qué especialidad es cada listado** (revisión del usuario, 2026-10-18): el de embarazos y partos es de obstetricia, así
+     * que sólo lo ven ginecología y los médicos **sin especialidad elegida**. Es el mismo criterio que `CatalogosDisponibles` usa
+     * para sus catálogos propios: un fragmento del `slug` de la especialidad.
+     *
+     * Los listados que no están acá los ve cualquier especialidad. Si no hay especialidad en el contexto (`null`) no se filtra nada
+     * —un médico sin especialidad asignada conserva todo el catálogo—, y el fragmento se compara con el `slug` de la que sí hay.
+     */
+    private const ESPECIALIDAD = [
+        self::EMBARAZOS => 'ginecolog',
+    ];
+
+    /**
      * El icono de cada listado en el menú lateral: el de su reporte en el escritorio. Se mantiene acá, junto a las
      * claves, para que el submenú y cualquier otro consumidor no tengan un mapa paralelo.
      */
@@ -63,16 +75,28 @@ final class ListadosDisponibles
         self::CONSULTAS => 'bi-clipboard2-data',
     ];
 
-    /** El listado que se muestra cuando no se pidió ninguno. */
-    public static function porDefecto(): string
+    /** El listado que se muestra cuando no se pidió ninguno: el primero que ofrece la especialidad. */
+    public static function porDefecto(?string $especialidad = null): string
     {
-        return self::EMBARAZOS;
+        return self::claves($especialidad)[0] ?? self::EMBARAZOS;
     }
 
-    /** @return array<int,string> las claves con pantalla, en el orden en que se ofrecen */
-    public static function claves(): array
+    /**
+     * Las claves con pantalla **que ofrece la especialidad**, en el orden en que se ofrecen: las de `LISTADOS` menos las que son
+     * de otra especialidad (`ESPECIALIDAD`). Sin especialidad en el contexto salen todas, y los listados que no declaran
+     * especialidad los ve cualquiera.
+     *
+     * @return array<int,string>
+     */
+    public static function claves(?string $especialidad = null): array
     {
-        return array_keys(self::LISTADOS);
+        return array_keys(self::ofrecidos($especialidad));
+    }
+
+    /** ¿La especialidad del contexto tiene este listado? (ver `claves`) */
+    public static function seOfrece(string $clave, ?string $especialidad = null): bool
+    {
+        return array_key_exists($clave, self::ofrecidos($especialidad));
     }
 
     public static function existe(?string $clave): bool
@@ -80,19 +104,27 @@ final class ListadosDisponibles
         return $clave !== null && array_key_exists($clave, self::LISTADOS);
     }
 
-    /** La clave pedida, si existe; la del listado por defecto en cualquier otro caso. */
-    public static function normalizar(?string $clave): string
+    /**
+     * La clave pedida, si existe **y la especialidad la ofrece**; la del listado por defecto de esa especialidad en cualquier otro
+     * caso.
+     *
+     * A diferencia de las secciones de la consulta —donde lo que se deja de ofrecer sigue abriendo por URL directa—, acá un
+     * `?listado=` de otra especialidad **vuelve al listado por defecto**: la pantalla es de sólo lectura y mostrarle a un pediatra
+     * el reporte de partos no aporta nada (ni hay gestas que listar).
+     */
+    public static function normalizar(?string $clave, ?string $especialidad = null): string
     {
-        return self::existe($clave) ? $clave : self::porDefecto();
+        return self::seOfrece((string) $clave, $especialidad) ? (string) $clave : self::porDefecto($especialidad);
     }
 
     public static function titulo(string $clave): string
     {
-        return self::LISTADOS[self::normalizar($clave)];
+        return self::LISTADOS[self::existe($clave) ? $clave : self::EMBARAZOS];
     }
 
     /**
-     * El **submenú del menú lateral** para «Listados» (el grupo plegable): un hijo por reporte, con el activo marcado.
+     * El **submenú del menú lateral** para «Listados» (el grupo plegable): un hijo por reporte de la especialidad, con el activo
+     * marcado.
      *
      * El listado no está en la URL de la ruta sino en la query (`?listado=…`), así que el activo se decide por la
      * ruta **y** por la clave pedida: en `/clinica/listados` sin `listado` está activo el de por defecto, que es el
@@ -100,16 +132,17 @@ final class ListadosDisponibles
      *
      * @param  string|null  $rutaActual  el nombre de la ruta de la petición (`clinica.listados`…)
      * @param  string|null  $listadoActual  el `?listado=` de la petición (se normaliza como la pantalla)
+     * @param  string|null  $especialidad  el `slug` de la especialidad del contexto
      * @return array<int,array{texto:string, icono:string, url:string, activo:bool}>
      */
-    public static function submenu(?string $rutaActual, ?string $listadoActual): array
+    public static function submenu(?string $rutaActual, ?string $listadoActual, ?string $especialidad = null): array
     {
         $enLosListados = $rutaActual !== null
             && ($rutaActual === self::RUTA || str_starts_with($rutaActual, self::RUTA . '.'));
-        $actual = self::normalizar($listadoActual);
+        $actual = self::normalizar($listadoActual, $especialidad);
         $items = [];
 
-        foreach (self::LISTADOS as $clave => $titulo) {
+        foreach (self::ofrecidos($especialidad) as $clave => $titulo) {
             $items[] = [
                 'texto' => $titulo,
                 'icono' => self::ICONOS[$clave] ?? 'bi-clipboard2-data',
@@ -119,5 +152,23 @@ final class ListadosDisponibles
         }
 
         return $items;
+    }
+
+    /**
+     * Los listados que ofrece la especialidad, con su título, en el orden de `LISTADOS`.
+     *
+     * @return array<string,string>
+     */
+    private static function ofrecidos(?string $especialidad): array
+    {
+        $clave = mb_strtolower(trim((string) $especialidad));
+
+        return array_filter(
+            self::LISTADOS,
+            fn (string $titulo, string $listado) => $clave === ''
+                || ! isset(self::ESPECIALIDAD[$listado])
+                || str_contains($clave, self::ESPECIALIDAD[$listado]),
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 }

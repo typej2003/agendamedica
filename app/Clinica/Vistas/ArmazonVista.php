@@ -181,8 +181,10 @@ final class ArmazonVista
         // abrirlos —la misma regla que «Catálogos» y «Configuración»—.
         // Desde la revisión de Alexander es un **grupo plegable** con un hijo por reporte, como «Catálogos»: los tres
         // comparten la misma ruta y se eligen con `?listado=`, así que el activo lo decide `ListadosDisponibles`.
+        // Y desde el 2026-10-18 el grupo **depende de la especialidad**: el listado de embarazos y partos es de obstetricia y no
+        // se le ofrece a pediatría (`ListadosDisponibles` es el catálogo que lo declara, igual que `CatalogosDisponibles`).
         $listados = $this->tieneContexto() && $this->trabajaLaConsulta
-            ? ListadosDisponibles::submenu($this->rutaActual, $this->listadoActual)
+            ? ListadosDisponibles::submenu($this->rutaActual, $this->listadoActual, $this->contexto['specialty']->slug ?? null)
             : [];
 
         if ($listados !== []) {

@@ -188,6 +188,42 @@ class ListadoDeEmbarazosTest extends TestCase
         $this->assertFalse(ListadosDisponibles::existe('otro'));
     }
 
+    /**
+     * **El listado de embarazos y partos es de ginecología** (2026-10-18): pediatría no lo tiene en el catálogo —ni en el menú— y su
+     * pantalla abre en el listado de pacientes. Ginecología y las especialidades sin regla no cambian; sin especialidad tampoco.
+     */
+    public function test_el_listado_de_embarazos_es_solo_de_ginecologia(): void
+    {
+        $gineco = 'ginecologia-y-obstetricia';
+
+        $this->assertSame(
+            ['embarazos', 'pacientes-por-rango', 'consultas-por-rango'],
+            ListadosDisponibles::claves($gineco),
+        );
+
+        // Pediatría: sin el de embarazos, y el de por defecto es el de pacientes.
+        $this->assertSame(
+            ['pacientes-por-rango', 'consultas-por-rango'],
+            ListadosDisponibles::claves('pediatria'),
+        );
+        $this->assertFalse(ListadosDisponibles::seOfrece('embarazos', 'pediatria'));
+        $this->assertSame('pacientes-por-rango', ListadosDisponibles::porDefecto('pediatria'));
+
+        // Un enlace viejo a los embarazos vuelve al listado de pacientes: no se muestra el reporte de otra especialidad.
+        $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('embarazos', 'pediatria'));
+        $this->assertSame('consultas-por-rango', ListadosDisponibles::normalizar('consultas-por-rango', 'pediatria'));
+
+        // Sin especialidad en el contexto (médico sin especialidad asignada) el catálogo sigue completo; otra especialidad no ve el
+        // reporte de partos, que es de obstetricia.
+        foreach ([null, ''] as $slug) {
+            $this->assertSame(['embarazos', 'pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves($slug));
+            $this->assertSame('embarazos', ListadosDisponibles::normalizar('embarazos', $slug));
+        }
+
+        $this->assertSame(['pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves('cirugia'));
+        $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('embarazos', 'cirugia'));
+    }
+
     // ------------------------------------------------------------------------------ El ViewModel
 
     public function test_las_filas_salen_con_los_textos_formateados(): void

@@ -6,6 +6,7 @@ use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Impresion\DocumentoImpreso;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -117,5 +118,56 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertFalse(AlcanceDeLaEspecialidad::de('pediatria')->muestraElEmbarazo());
         $this->assertTrue(AlcanceDeLaEspecialidad::de(self::GINECO)->muestraLaPareja());
         $this->assertTrue(AlcanceDeLaEspecialidad::de(null)->muestraElEmbarazo());
+    }
+
+    /**
+     * **Las plantillas de lo que la especialidad no tiene** (2026-10-18): en pediatría no se ofrecen las de colposcopía, citología,
+     * histeroscopía, resultado de exámenes, examen ginecológico ni los ecos, porque no tiene esas solapas ni esos estudios.
+     */
+    public function test_pediatria_no_ofrece_las_plantillas_ginecologicas(): void
+    {
+        $ocultos = AlcanceDeLaEspecialidad::de('pediatria')->tiposDePlantillaOcultos();
+
+        // Las de las cuatro solapas de texto del examen, el resumen ginecológico y los siete ecos menos el abdominal.
+        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM'] as $tipo) {
+            $this->assertContains($tipo, $ocultos, 'Pediatría no ofrece las plantillas de ' . $tipo . '.');
+        }
+
+        // Los dos ecos que la web no ofrece en ninguna especialidad tampoco.
+        $this->assertContains('EM', $ocultos);
+        $this->assertContains('ER', $ocultos);
+
+        // Y se quedan las de las secciones que sí tiene, incluido el resumen físico de su solapa «Examen físico» y el eco
+        // abdominal, que es el único estudio de pediatría.
+        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF', 'UA'] as $tipo) {
+            $this->assertNotContains($tipo, $ocultos, 'Pediatría conserva las plantillas de ' . $tipo . '.');
+        }
+    }
+
+    public function test_ginecologia_y_las_demas_conservan_todas_las_plantillas(): void
+    {
+        foreach ([self::GINECO, 'cirugia', null] as $slug) {
+            $this->assertSame([], AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(), (string) $slug);
+        }
+    }
+
+    /**
+     * Los **formatos en blanco** de los ecos que la especialidad no tiene se deducen de los estudios que no ofrece, no de una lista
+     * de formatos paralela: en pediatría son los cuatro del ítem 5 (los dos obstétricos y el Doppler).
+     */
+    public function test_pediatria_no_ofrece_los_formatos_en_blanco_de_los_ecos(): void
+    {
+        $this->assertEqualsCanonicalizing(
+            [
+                DocumentoImpreso::ECO_OBSTETRICO,
+                DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO,
+                DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+                DocumentoImpreso::ECO_DOPPLER,
+            ],
+            AlcanceDeLaEspecialidad::de('pediatria')->formatosEnBlancoOcultos(),
+        );
+
+        $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->formatosEnBlancoOcultos());
+        $this->assertSame([], AlcanceDeLaEspecialidad::de(null)->formatosEnBlancoOcultos());
     }
 }

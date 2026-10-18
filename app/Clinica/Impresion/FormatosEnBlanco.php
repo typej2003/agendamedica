@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+
 /**
  * **Los formatos en blanco** (WEB-5.5b): el "Imprimir Formatos" de `w_configurar_recipes` del escritorio. Cada documento de la consulta
  * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio, estudios, —desde WEB-6.2— los dos informes del
@@ -146,11 +148,36 @@ final class FormatosEnBlanco
     ];
 
     /**
+     * **El estudio del que es la hoja**, para los formatos que son un informe de ecografía (todos menos el informe, la
+     * constancia, el reposo, la referencia, la hospitalización, la dieta, el laboratorio y los estudios).
+     *
+     * Lo usa `AlcanceDeLaEspecialidad` para no ofrecer en pediatría los informes de los ecos que esa especialidad no tiene: la
+     * regla sale de acá y no de una lista de formatos repetida allá, así que un formato nuevo de un estudio escondido queda
+     * escondido solo.
+     *
+     * @return array<string,string> clave del formato => tipo de estudio (`TiposDeEstudio`)
+     */
+    public static function porEstudio(): array
+    {
+        return [
+            DocumentoImpreso::ECO_OBSTETRICO => TiposDeEstudio::OBSTETRICO,
+            DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO => TiposDeEstudio::SEGUNDO,
+            DocumentoImpreso::ECO_OBSTETRICO_TERCERO => TiposDeEstudio::TERCERO,
+            DocumentoImpreso::ECO_DOPPLER => TiposDeEstudio::DOPPLER,
+        ];
+    }
+
+    /**
      * Los formatos que se ofrecen, en orden: el récipe primero.
      *
+     * `$ocultos` son las claves que **no** se ofrecen en la especialidad del contexto —los informes de los ecos que esa
+     * especialidad no tiene—; las calcula `AlcanceDeLaEspecialidad::formatosEnBlancoOcultos()` a partir de `porEstudio()`, así
+     * que acá no se decide ninguna especialidad. Sin la lista salen todos.
+     *
+     * @param  array<int,string>  $ocultos  claves de formato que no se ofrecen
      * @return array<int,array{clave:string, nombre:string, descripcion:string}>
      */
-    public static function catalogo(): array
+    public static function catalogo(array $ocultos = []): array
     {
         $catalogo = [[
             'clave' => self::RECIPE,
@@ -159,6 +186,10 @@ final class FormatosEnBlanco
         ]];
 
         foreach (self::DOCUMENTOS as $clave => $documento) {
+            if (in_array($clave, $ocultos, true)) {
+                continue;
+            }
+
             $catalogo[] = ['clave' => $clave, 'nombre' => self::nombre($clave), 'descripcion' => $documento['descripcion']];
         }
 

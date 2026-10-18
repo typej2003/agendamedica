@@ -135,4 +135,43 @@ class MenuDelArmazonWebTest extends TestCase
         $this->assertStringNotContainsString(route('clinica.crecimiento'), $barra);
         $this->assertStringNotContainsString(route('clinica.vacunas'), $barra);
     }
+
+    /**
+     * **El listado de embarazos y partos es de ginecología** (revisión del usuario, 2026-10-18): el grupo «Listados» sigue en el menú
+     * de pediatría —con sus dos reportes— pero sin el de partos, y un enlace viejo a ese listado abre el de pacientes. En ginecología
+     * los tres siguen.
+     */
+    public function test_el_listado_de_embarazos_solo_se_ofrece_en_ginecologia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+
+        $barra = $this->barraLateral(
+            $this->conContexto($user, $medico, $pediatria)->get('/clinica')->assertOk()->getContent()
+        );
+
+        $this->assertStringContainsString('Listados', $barra);
+        $this->assertStringContainsString(route('clinica.listados', ['listado' => 'pacientes-por-rango']), $barra);
+        $this->assertStringContainsString(route('clinica.listados', ['listado' => 'consultas-por-rango']), $barra);
+        $this->assertStringNotContainsString(route('clinica.listados', ['listado' => 'embarazos']), $barra, 'Pediatría no ofrece el listado de partos.');
+
+        // La URL directa no muestra el reporte de obstetricia: cae en el listado de pacientes, que es el primero que le queda.
+        $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.listados', ['listado' => 'embarazos']))
+            ->assertOk()
+            ->assertSee('Pacientes por rango')
+            ->assertDontSee('Embarazos y partos');
+
+        // Ginecología lo conserva.
+        [$userGineco, $medicoGineco, $gineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
+
+        $barraGineco = $this->barraLateral(
+            $this->conContexto($userGineco, $medicoGineco, $gineco)->get('/clinica')->assertOk()->getContent()
+        );
+
+        $this->assertStringContainsString(route('clinica.listados', ['listado' => 'embarazos']), $barraGineco);
+        $this->conContexto($userGineco, $medicoGineco, $gineco)
+            ->get(route('clinica.listados', ['listado' => 'embarazos']))
+            ->assertOk()
+            ->assertSee('Embarazos y partos');
+    }
 }
