@@ -39,6 +39,36 @@ class SyncAppDataRequest extends FormRequest
             'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
             'profesion', 'email', 'dependencia', 'sms',
         ],
+        // A1 de PLAN-MOVIL.md: lo que el teléfono puede **editar mientras se atiende**, y lo único —
+        // entrar en `TABLAS_EDITABLES` no habilita el resto de la tabla. Son las columnas clínicas que
+        // ya escribe la web por sus Actions: enfermedad actual y evolución
+        // (`GuardarEnfermedadActual`, `GuardarEvolucionDeLaConsulta`), las medidas y los hallazgos de
+        // la evaluación física (`GuardarEvaluacionFisica`) y el texto de tratamiento, que en el legado
+        // es `consultas.laringe` (WEB-5.7). No están los resúmenes narrativos del examen (`total_f`,
+        // `total_g`: los arma el escritorio, trampa de PLAN-MOVIL.md §7.6) ni columnas de otra
+        // especialidad.
+        'consultas' => [
+            'enfermedadactual', 'evolucion', 'laringe',
+            'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
+        ],
+        'examen_fisico_nuevo' => [
+            'tension', 'general', 'cardiopulmonar', 'tiroides', 'mamas', 'mama_derecha',
+            'abdomen', 'extremidades', 'neurologico', 'genitales_externos', 'especulos',
+            'tacto_vaginal', 'tacto_rectal',
+        ],
+        // A4b de PLAN-MOVIL.md: el detalle y la casilla de **Alerta** (`tipo2`) del antecedente, que es
+        // lo único que la sección deja editar de una fila que ya existe (el DataWindow del escritorio
+        // sólo actualiza esas dos columnas; ver `GuardarAntecedentes`). `descripcion` y `tipo` están
+        // porque son la copia del catálogo que la fila guarda y el teléfono puede reenviarla al corregir.
+        // **`numhistoria` y `codeantecedente` no están**: cambiar de paciente o de antecedente no es una
+        // edición, es otra fila.
+        'antece_paciente' => ['detalles', 'descripcion', 'tipo', 'tipo2'],
+        // El detalle de un diagnóstico: `detalle_diagnostco` es **el texto propio del diagnóstico** —la corrección
+        // que el médico escribe sobre la descripción del catálogo— y `orden`, el lugar que ocupa en la
+        // lista; las dos se pueden corregir sobre una fila que ya está cargada. `codediagnostico`,
+        // `nrohistoria` y `nroconsulta` **no** están: cambiar de diagnóstico, de consulta o de paciente
+        // no es una edición de la fila, es otra fila (se quita una y se agrega la otra).
+        'diagnostico_paciente' => ['detalle_diagnostco', 'orden'],
     ];
 
     /**
@@ -94,7 +124,43 @@ class SyncAppDataRequest extends FormRequest
         'cola' => ['fecha'],
     ];
 
-    public const DELETABLE_TABLES = ['cola', 'pacientes'];
+    /**
+     * Tablas que el app puede **editar** (`operation = updated`) por el camino genérico.
+     *
+     * Son las dos de siempre —la cita y la ficha del paciente— más las clínicas que el médico toca
+     * mientras atiende (A1 de PLAN-MOVIL.md). Cuáles columnas de cada una, lo dice `WRITABLE_COLUMNS`:
+     * esta lista abre la tabla, no sus campos.
+     *
+     * `diagnostico_paciente` y `antece_paciente` figuran porque **toda tabla de `TABLAS_BORRABLES`
+     * tiene que estar acá**: el borrado de una fila y su edición pasan por el mismo camino, y una baja
+     * fuera de esta lista no se aplicaría nunca.
+     */
+    public const TABLAS_EDITABLES = [
+        'cola', 'pacientes', 'consultas', 'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
+    ];
+
+    /**
+     * Tablas que el app puede **borrar** (`operation = deleted`).
+     *
+     * Un diagnóstico y un antecedente se agregan y se quitan desde la consulta, así que su baja entra
+     * desde el teléfono (con el camino de A1; su alta es de A4). Una **consulta** y un **examen físico**
+     * no: son la historia clínica y su evaluación —la consulta lleva el número que asigna el servidor y
+     * cuelga de ella todo lo demás—, y borrarlos desde el app dejaría filas huérfanas que el escritorio
+     * no sabe leer. Esa decisión se toma en la web.
+     */
+    public const TABLAS_BORRABLES = [
+        'cola', 'pacientes', 'diagnostico_paciente', 'antece_paciente',
+    ];
+
+    /**
+     * Nombre viejo de `TABLAS_BORRABLES`, cuando la lista era además el gate de las **ediciones**.
+     *
+     * Se conserva porque hay código y tests que la consultan por este nombre; lo que hace hoy el
+     * controlador es `TABLAS_EDITABLES` para `updated` y `TABLAS_BORRABLES` para `deleted`.
+     *
+     * @deprecated usar `TABLAS_BORRABLES`.
+     */
+    public const DELETABLE_TABLES = self::TABLAS_BORRABLES;
 
     /**
      * Creaciones clínicas del Paso 18.B (Atender → consulta → récipe). No van por
@@ -106,14 +172,37 @@ class SyncAppDataRequest extends FormRequest
         'historias', 'consultas', 'recipes',
         // Paso 18.B2: agregar un motivo (del catálogo) a una consulta.
         'motivo_consulta_paciente',
+        // A3 de PLAN-MOVIL.md: la **evaluación física** de la consulta. Es la única creación clínica que
+        // **sí** trae columnas: no tiene número que asignar, cuelga de la consulta y el servidor resuelve
+        // la clave del legado `(historia, consulta)` —donde `consulta` es el **número** de la consulta, no
+        // su id— con la Action de la web (`GuardarEvaluacionFisica`). Sólo se aceptan las columnas de
+        // `WRITABLE_COLUMNS['examen_fisico_nuevo']`.
+        'examen_fisico_nuevo',
+        // A4a de PLAN-MOVIL.md: el **alta de un diagnóstico de la consulta** (`diagnostico_paciente`). Es
+        // una creación clínica y no una fila que el teléfono numere: la fila cuelga de la consulta por sus
+        // números (`nrohistoria` + `nroconsulta`), y el `codediagnostico` que manda el cliente tiene que
+        // estar en el catálogo `diagnosticos` del médico. Su baja ya viaja por `TABLAS_BORRABLES` desde A1.
+        'diagnostico_paciente',
+        // A4b de PLAN-MOVIL.md: el **alta de un antecedente del paciente** (`antece_paciente`). A
+        // diferencia de un diagnóstico, la fila **no cuelga de la consulta**: es del paciente y se llavea
+        // por `numhistoria` + `codeantecedente`, así que la creación resuelve la historia (real o del
+        // mismo lote) y valida el código contra el catálogo `antecedentes` del médico. Su baja ya viaja
+        // por `TABLAS_BORRABLES` desde A1.
+        'antece_paciente',
     ];
 
     /**
      * Tablas que pueden aparecer en `changes`, con cualquier operación. `motivo_consulta_paciente`
      * además acepta `deleted` (quitar un motivo de la consulta; el catálogo nunca se borra desde el app).
+     *
+     * `examen_fisico_nuevo`, `diagnostico_paciente` y `antece_paciente` están desde A1 (PLAN-MOVIL.md):
+     * sin ellas en esta lista, `changes.*.table` falla con 422 y **el lote entero se rechaza** —incluido
+     * el pull—, que es justo lo que el comentario de la clase evita. La autorización de qué fila y qué
+     * columna sí se puede tocar sigue estando en `TABLAS_EDITABLES` / `WRITABLE_COLUMNS`.
      */
     public const SYNC_TABLES = [
         'cola', 'pacientes', 'historias', 'consultas', 'recipes', 'motivo_consulta_paciente',
+        'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
     ];
 
     /**
