@@ -18,7 +18,9 @@ use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
+use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
+use App\Clinica\FechaDelConsultorio;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Cola;
 use App\Models\Consulta;
@@ -30,6 +32,7 @@ use App\Models\RecipeDetalle;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
@@ -104,6 +107,18 @@ class CreacionesClinicas
     private const COLUMNAS_NUMERICAS_DE_LA_CONSULTA = [
         'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
     ];
+
+    /**
+     * El **único** rechazo de las Actions de los ecos del que el sync se aparta: el estudio «sin datos», que
+     * para la web significa «no hay hoja que imprimir» y para el teléfono **no** es un motivo para perder lo
+     * que el médico escribió (ver [self::crearEco]).
+     *
+     * Se compara el texto exacto para no tragarse otros rechazos de la misma Action (hoy no hay ninguno, pero
+     * una validación nueva tiene que seguir llegando al teléfono como `rechazados`, no crear una fila). El
+     * texto lo lanzan `GuardarEcoGinecologico` y `GuardarEcoObstetricoBase`: si cambia allá, este catch deja de
+     * reconocerlo y el caso vuelve a rechazarse —por eso el test lo fija de punta a punta—.
+     */
+    private const ECO_SIN_DATOS = 'El eco necesita algún dato: cargá lo que haya dado el estudio.';
 
     /** @var array<int, int> id temporal → id real de las historias creadas en este lote */
     private array $historias = [];
@@ -633,6 +648,16 @@ class CreacionesClinicas
      * Lo único propio del sync es el `created` con el id temporal del lote (`anotar`), que es lo que le
      * permite al teléfono soltar su fila provisional y reintentar sin duplicar, y **el id real de la fila**
      * en la respuesta: el mapa lo busca por la clave del legado (`filaDe`), no con un `where` suelto.
+     *
+     * **Y un apartamiento deliberado: el estudio «sin datos» sí se crea.** La regla de la Action
+     * (`QueEsUnDocumento::ecografia`) mira las columnas *con dato* —`fecha`, `fur` y `gesta` no cuentan— y
+     * existe porque la web decide con ellas si ofrece la hoja impresa. Eso es impresión, no almacenamiento: el
+     * escritorio crea la fila al abrir la consulta aunque no tenga datos, y el teléfono manda la creación con
+     * lo que el médico cargó, así que **rechazarla le hace descartar lo escrito** (una creación perdida no se
+     * reintenta: la cola local ya quedó limpia, ver el párrafo de A4c). Por eso el rechazo «sin datos» se
+     * atrapa por su texto exacto —`ECO_SIN_DATOS`, para no tragarse otras validaciones— y se crea la fila con
+     * la clave del legado y las columnas que sí vinieron ([self::crearEcoSinDatos]). El resto sigue igual: si
+     * el estudio tiene datos, escribe la Action de la web.
      */
     private function crearEco(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -668,17 +693,31 @@ class CreacionesClinicas
             }
         }
 
+        $creada = null;
+
         try {
             $accion->ejecutar($consulta, $valores, null, 'mobile');
         } catch (InvalidArgumentException $e) {
-            // Un estudio sin ningún dato no es un documento: no se crea una fila vacía y se le dice al
-            // teléfono por qué, sin trabar el resto del lote.
-            $rechazar($e->getMessage());
-            return null;
+            if ($e->getMessage() !== self::ECO_SIN_DATOS) {
+                // Cualquier otro rechazo (una validación que se agregue mañana) sigue su camino: el teléfono
+                // lo ve en `rechazados` y no se escribe nada.
+                $rechazar($e->getMessage());
+                return null;
+            }
+
+            // **«Sin datos» es una regla de la hoja impresa, no del almacenamiento.** La Action es la de la
+            // web y ahí un estudio que sólo trae la FUR, la gesta o la fecha no tiene informe que ofrecer, así
+            // que no crea la fila. Pero el **escritorio sí la crea**: al abrir la consulta hace
+            // `InsertRow` + `numhistoria` + `fecha` (`w_cargar_visualizar_ecografia.srw:221-224`) y la guarda
+            // con lo que haya; y el comienzo normal de un eco obstétrico es cargar sólo la FUR y/o la gesta.
+            // Rechazar la creación acá hace que el teléfono **descarte** lo escrito —es una creación, no una
+            // edición—, que es justo lo que no puede pasar. Se crea la fila vacía con la clave del legado,
+            // como el escritorio, y se guarda lo que sí vino (FUR, gesta, fecha).
+            $creada = $this->crearEcoSinDatos($tabla, $consulta, $valores, $lectura);
         }
 
         // El id real de la fila, que es el `remote_id` que el teléfono guarda para seguir editándola.
-        $fila = $lectura->filaDe($consulta);
+        $fila = $creada ?? $lectura->filaDe($consulta);
         if ($fila === null) {
             $rechazar('El estudio no se pudo guardar.');
             return null;
@@ -687,6 +726,43 @@ class CreacionesClinicas
         $this->anotar($tabla, (int) $fila->id, $tempId, $consulta->reg_medico);
 
         return $this->respuestaEco($tabla, $tempId, (int) $fila->id);
+    }
+
+    /**
+     * **La fila del estudio que sólo trae la FUR, la gesta o la fecha**, que es el comienzo normal de un eco
+     * obstétrico: se crea igual que la crea el escritorio al abrir la consulta, con la clave del legado
+     * (`filaParaEscribir`) y lo que haya viajado del mapa.
+     *
+     * Es el apartamiento **deliberado** de la regla de la web (ver [self::crearEco]): la Action no crea una
+     * fila que no tiene informe que imprimir, pero el teléfono no puede perder una creación —lo escrito se
+     * descarta y no vuelve—, y el escritorio sí la guarda. No escribe nada que no esté en el mapa, ni la
+     * clave, ni `reg_medico`: eso lo pone el mapa del dato.
+     *
+     * Usa la misma normalización de «sin dato» que la Action (`EstudioEcografico::limpiar`: `''`, `none` y
+     * el `-1` del escritorio son vacío) para que la fila quede igual que si la hubiera guardado la web.
+     *
+     * @param  EcoGinecologico|EcoObstetrico|EcoObstetricoTercero  $lectura
+     */
+    private function crearEcoSinDatos(string $tabla, Consulta $consulta, array $valores, $lectura): Model
+    {
+        $fila = $lectura->filaParaEscribir($consulta);
+
+        foreach (SyncAppDataRequest::columnasEditables($tabla) as $columna) {
+            if (array_key_exists($columna, $valores)) {
+                $fila->setAttribute($columna, EstudioEcografico::limpiar($valores[$columna]));
+            }
+        }
+
+        // `fecha` es NOT NULL y el escritorio la pone al crear la fila: si el teléfono no la mandó —o la
+        // mandó vacía—, vale hoy, que es lo que propone el escritorio al abrir el estudio.
+        $fila->setAttribute(
+            'fecha',
+            EstudioEcografico::limpiar($valores['fecha'] ?? null) ?? FechaDelConsultorio::hoyComoFecha()->toDateString(),
+        );
+
+        $fila->save();
+
+        return $fila;
     }
 
     /**
