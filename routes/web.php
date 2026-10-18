@@ -8,6 +8,7 @@ use App\Http\Livewire\Components\ViewCalendar;
 use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\Auth\CambiarPasswordWebController;
+use App\Http\Controllers\Auth\ElegirPanelController;
 use App\Http\Controllers\DashboardController;
 
 
@@ -20,9 +21,12 @@ use App\Http\Controllers\DashboardController;
 Route::get('/', Welcome::class)->name('welcome');
 
 // 1. Deshabilitamos las rutas de login por defecto de Auth::routes()
-Auth::routes(['login' => false]);
+//    El alta de cuentas también: el registro de médicos (con aprobación) y el de pacientes son las
+//    fases siguientes del login; el formulario de `/register` creaba una cuenta sin rol y no se usa.
+Auth::routes(['login' => false, 'register' => false]);
 
-// 2. Definimos las rutas de Login personalizada (GET para mostrar el form y POST para autenticar)
+// 2. Definimos las rutas de Login personalizada (GET para mostrar el form y POST para autenticar).
+//    Es **un solo login**: el tipo de cuenta lo resuelve `AutenticacionPorCorreo`, no la pantalla.
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
@@ -35,6 +39,9 @@ Route::redirect('/home', '/dashboard');
 Route::middleware(['auth'])->group(function () {
     // Usamos un controlador para la vista del dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // «¿Dónde quieres entrar?»: sólo la ven las cuentas con más de un área (ver `User::rutaDeEntrada`).
+    Route::get('/elegir-panel', [ElegirPanelController::class, 'index'])->name('elegir-panel');
 
     // Cambio de contraseña (obligatorio si la clave es temporal — ver EnsurePasswordChanged).
     Route::get('/cambiar-password', [CambiarPasswordWebController::class, 'formulario'])->name('cuenta.password');

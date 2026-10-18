@@ -459,12 +459,16 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     separadora es un `border-top` y no un fondo** (Chrome no imprime los fondos sin «gráficos de fondo»; `print-color-adjust: exact`
     cubre el resto); y en pantalla la hoja se achica con `zoom` (que sí cambia el layout, a diferencia de `transform`), con
     `zoom: 1 !important` al imprimir.
-49. **La secretaría entra por el acceso de SISTEMA, no por «Médico» ni «Paciente».** Un verificador que intenta loguearla con
-    `label[for=type_medico]` o `type_paciente` se queda en `/login` **sin ningún error**, y lo que se ve parece un bug de la pantalla
-    (el botón «no está»): la cuenta es de `users` con rol `Secretaria`, y ese modelo se autentica con el interruptor
-    `#systemAccessCheck` (`user_type = Root`, que en realidad significa «modelo `User`»). Se verifica en una **sesión nueva**
-    (`browser.newContext()`), así que no hace falta cerrar sesión. Los 403 que el verificador provoca a propósito dejan un
-    «Failed to load resource» en la consola: se tolera sólo ese número, no el resto.
+49. **El login es uno solo: no hay selector de tipo de cuenta que marcar.** Hasta el 2026-10-19 la pantalla pedía
+    «Médico»/«Paciente» o el interruptor «acceso de administración / sistema», y un verificador que no marcaba el
+    correcto se quedaba en `/login` **sin ningún error** (parecía un bug de la pantalla). Hoy el formulario es
+    correo + contraseña y el tipo lo resuelve `App\Services\AutenticacionPorCorreo` probando `users`, `medicos` y
+    `pacientes` en ese orden: **no hay `#type_medico`, `#type_paciente`, `#systemAccessCheck` ni `user_type`**, y
+    cualquier verificador que los espere falla por timeout. La secretaría entra igual que el médico; una cuenta con
+    **dos áreas** (por ejemplo médico + administrador) no entra directo a ninguna: cae en `/elegir-panel`
+    (`User::rutaDeEntrada`), así que un verificador con esa cuenta tiene que elegir el área o usar una de un solo
+    rol. La verificación de esta pantalla es `.agent-tools/verificar-login-unificado-web.js`. Los 403 que un verificador
+    provoca a propósito dejan un «Failed to load resource» en la consola: se tolera sólo ese número, no el resto.
 50. **Para leer un PDF desde un verificador sólo hay `pdftotext`.** En esta máquina existe `pdftotext` (poppler, `/mingw64/bin`) y **no**
     `pdfinfo`/`pdftoppm`: las páginas de un PDF de Chrome se cuentan por los `\f` que `pdftotext` deja entre ellas, el tamaño sale del
     `/MediaBox` del archivo (A4 horizontal = 841,9 × 595,3 pt; Chrome lo escribe como 841,92 × 594,96) y la «rasterización» de la hoja

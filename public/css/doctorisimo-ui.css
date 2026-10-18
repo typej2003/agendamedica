@@ -2582,6 +2582,51 @@ body.auth-pagina {
 
 .auth-links a:hover { text-decoration: underline; }
 
+/* «¿Dónde quieres entrar?»: una tarjeta-enlace por área (sólo aparece si la cuenta tiene más de una). */
+.auth-panel-opciones { display: grid; gap: .75rem; }
+
+.auth-panel-opcion {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    padding: .9rem 1rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    color: var(--ds-tinta);
+    text-decoration: none;
+    transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.auth-panel-opcion:hover,
+.auth-panel-opcion:focus-visible {
+    border-color: var(--ds-violeta-700);
+    background: var(--ds-violeta-50);
+    color: var(--ds-tinta);
+    text-decoration: none;
+}
+
+.auth-panel-opcion:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+
+.auth-panel-opcion-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--ds-radio);
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+    font-size: 1.3rem;
+}
+
+.auth-panel-opcion-texto { display: flex; flex-direction: column; min-width: 0; }
+.auth-panel-opcion-titulo { font-weight: 700; }
+.auth-panel-opcion-descripcion { color: var(--ds-texto-2); font-size: .85rem; }
+
+.auth-panel-opcion-flecha { margin-left: auto; color: var(--ds-texto-2); flex: none; }
+
 /* Selector del tipo de usuario */
 .user-type-selector .btn { border-color: var(--ds-borde-control); color: var(--ds-texto-2); }
 .user-type-selector .btn:hover { background: var(--ds-violeta-50); color: var(--ds-violeta-800); }

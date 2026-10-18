@@ -3,127 +3,44 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Medico;
-use App\Models\Paciente;
+use App\Services\AutenticacionPorCorreo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * **El login web, uno solo**: correo y contraseña, sin preguntar si la persona es médico, paciente o
+ * administrador. Lo que antes se elegía en la pantalla ahora lo resuelve
+ * `AutenticacionPorCorreo` mirando las tres tablas donde puede vivir la cuenta.
+ *
+ * A dónde entra lo decide `User::rutaDeEntrada()`: directo a su área si tiene una sola, o a
+ * `/elegir-panel` si la cuenta puede trabajar en más de una (por ejemplo, un médico que además
+ * administra).
+ */
 class CustomLoginController extends Controller
 {
-    public function login(Request $request)
+    public function login(Request $request, AutenticacionPorCorreo $autenticacion)
     {
-        
         $request->validate([
-            'email'     => 'required|email',
-            'password'  => 'required|string',
-            'user_type' => 'required|in:Medico,Paciente,Root',
+            'email'    => 'required|email',
+            'password' => 'required|string',
         ]);
 
-        $email    = $request->email;
-        $password = $request->password;
-        $userType = $request->user_type;
-        $remember = $request->has('remember');
+        $user = $autenticacion->autenticar((string) $request->input('email'), (string) $request->input('password'));
 
-        // 1. Caso Root / Administrador (Modelo User)
-        if ($userType === 'Root') {
-            $user = User::where('email', $email)->first();
-
-            if (!$user || !Hash::check($password, $user->password)) {
-                throw ValidationException::withMessages([
-                    'email' => ['Las credenciales ingresadas son incorrectas para el usuario Root.'],
-                ]);
-            }
-
-            Auth::login($user, $remember);
-            $request->session()->regenerate();
-
-            // Cada rol entra a su área (`User::rutaDeInicio`): administración al panel, médico y
-            // secretaría al consultorio.
-            return redirect()->intended(route($user->rutaDeInicio()));
+        if (! $user) {
+            // Un solo mensaje para los dos casos (correo inexistente y clave equivocada): no se revela
+            // qué correos están registrados.
+            throw ValidationException::withMessages([
+                'email' => ['El correo o la contraseña no son correctos.'],
+            ]);
         }
 
-        // 2. Caso Médico (Modelo Medico)
-        if ($userType === 'Medico') {
-            $medico = Medico::where('email', $email)->first();
-            if (!$medico) {
-                throw ValidationException::withMessages([
-                    'email' => ["No existe ningún médico registrado con el correo {$email}."],
-                ]);
-            }
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
 
-            // Validar la contraseña directamente contra el modelo Medico
-            if (!Hash::check($password, $medico->password)) {
-                throw ValidationException::withMessages([
-                    'password' => ['La contraseña ingresada es incorrecta.'],
-                ]);
-            }
-
-            // Sincronizar o vincular con la tabla `users` para el Auth de Laravel / Spatie
-            $user = User::where('email', $email)->first();
-            if (!$user) {
-                $user = User::create([
-                    'name'     => $medico->nombre ?? $medico->name ?? 'Dr. ' . $medico->apellido,
-                    'email'    => $medico->email,
-                    'password' => $medico->password, // Mismo hash ya encriptado
-                ]);
-                $medico->user_id = $user->id;
-                $medico->save();
-            }
-
-            if (!$user->hasRole('Medico')) {
-                $user->assignRole('Medico');
-            }
-
-            Auth::login($user, $remember);
-            $request->session()->regenerate();
-
-            // El médico entra directo a su consultorio (`/clinica`), no al panel de administración.
-            // Si todavía no eligió contexto, `clinica.contexto` lo manda a elegirlo.
-            return redirect()->intended(route($user->rutaDeInicio()));
-        }
-
-        // 3. Caso Paciente (Modelo Paciente)
-        if ($userType === 'Paciente') {
-            $paciente = Paciente::where('email', $email)->first();
-
-            if (!$paciente) {
-                throw ValidationException::withMessages([
-                    'email' => ["No existe ningún paciente registrado con el correo {$email}."],
-                ]);
-            }
-
-            // Validar la contraseña directamente contra el modelo Paciente
-            if (!Hash::check($password, $paciente->password)) {
-                throw ValidationException::withMessages([
-                    'password' => ['La contraseña ingresada es incorrecta.'],
-                ]);
-            }
-
-            // Sincronizar o vincular con la tabla `users` para el Auth de Laravel / Spatie
-            $user = User::where('email', $email)->first();
-            if (!$user) {
-                $user = User::create([
-                    'name'     => $paciente->nombres ?? $paciente->nombres ??  $paciente->apellidos,
-                    'email'    => $paciente->email,
-                    'password' => $paciente->password, // Mismo hash ya encriptado
-                ]);
-                $paciente->user_id = $user->id;
-                $paciente->save();
-            }
-
-            if (!$user->hasRole('Paciente')) {
-                $user->assignRole('Paciente');
-            }
-
-            Auth::login($user, $remember);
-            $request->session()->regenerate();
-
-            // El paciente sigue entrando al panel mientras no exista `/consultorio` (ver el TODO en
-            // `User::rutaDeInicio`).
-            return redirect()->intended(route($user->rutaDeInicio()));
-        }
+        // `intended` primero: si la persona venía de una página protegida, se sigue por ahí (ese es el
+        // único caso en que no se pregunta el área, porque ya la eligió al pedir la página).
+        return redirect()->intended(route($user->rutaDeEntrada()));
     }
 }

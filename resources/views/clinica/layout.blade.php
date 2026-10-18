@@ -140,6 +140,11 @@
                      (el cierre de sesión solo existía en el panel de administración). --}}
                 @auth
                     <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="\Illuminate\Support\Str::words(auth()->user()->name, 1, '')">
+                        @if (count(auth()->user()->panelesDisponibles()) > 1)
+                            <a class="menu-item" href="{{ route('elegir-panel') }}">
+                                <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Cambiar de área
+                            </a>
+                        @endif
                         <a class="menu-item" href="{{ route('cuenta.password') }}">
                             <i class="bi bi-key" aria-hidden="true"></i> Cambiar contraseña
                         </a>
