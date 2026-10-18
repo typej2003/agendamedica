@@ -69,7 +69,51 @@ class SyncAppDataRequest extends FormRequest
         // `nrohistoria` y `nroconsulta` **no** están: cambiar de diagnóstico, de consulta o de paciente
         // no es una edición de la fila, es otra fila (se quita una y se agrega la otra).
         'diagnostico_paciente' => ['detalle_diagnostco', 'orden'],
+        // ⚠️ Los **cuatro estudios ecográficos** (`eco_pelvico`, `eco_obstetrico`, `eco_obstetrico_tercer_2` y
+        // `eco_obstetrico_tercer`, EC-A3 de PLAN-MOVIL.md) **no están acá a propósito**: sus columnas editables
+        // son las del mapa del dato de cada estudio —181 nombres entre los cuatro— y duplicarlas en esta lista
+        // se desincroniza en cuanto el mapa gane o pierda un campo. Las resuelve [self::columnasEditables].
     ];
+
+    /**
+     * Los **mapas del dato** de los estudios ecográficos, por tabla (EC-A3 de PLAN-MOVIL.md): 34 columnas el
+     * pélvico, 38 el obstétrico del 1.er trimestre y 55 cada uno de los del 2.º y 3.º.
+     *
+     * @var array<string,class-string>
+     */
+    public const MAPAS_DE_LOS_ECOS = [
+        'eco_pelvico' => \App\Clinica\Consulta\EcoGinecologico::class,
+        'eco_obstetrico' => \App\Clinica\Consulta\EcoObstetrico::class,
+        'eco_obstetrico_tercer_2' => \App\Clinica\Consulta\EcoObstetricoSegundo::class,
+        'eco_obstetrico_tercer' => \App\Clinica\Consulta\EcoObstetricoTercero::class,
+    ];
+
+    /**
+     * **Las columnas que el cliente puede escribir en una tabla**, y la única puerta que consultan el
+     * controlador (las ediciones de `updated`) y `CreacionesClinicas` (las creaciones con columnas).
+     *
+     * Para los cuatro estudios ecográficos la fuente es **su mapa del dato** —el mismo que pinta la pantalla
+     * de la web, valida su formulario y escribe su Action—: duplicar esos ~180 nombres en `WRITABLE_COLUMNS`
+     * haría que una columna nueva del mapa se guardara desde la web y se descartara desde el teléfono, en
+     * silencio. Para el resto es la lista blanca de toda la vida.
+     *
+     * @return array<int,string>
+     */
+    public static function columnasEditables(string $tabla): array
+    {
+        $mapa = self::MAPAS_DE_LOS_ECOS[$tabla] ?? null;
+
+        if ($mapa === null) {
+            return self::WRITABLE_COLUMNS[$tabla] ?? [];
+        }
+
+        $columnas = $mapa::columnas();
+
+        // Los mapas no tienen la misma forma: los obstétricos devuelven una **lista** de columnas y el
+        // pélvico un **mapa** `columna => tabla` (lo comparte con la validación de su controlador). Se
+        // aceptan las dos para que el accesor no dependa de cuál estudio pregunta.
+        return array_is_list($columnas) ? array_values($columnas) : array_keys($columnas);
+    }
 
     /**
      * Columnas aceptadas al *crear*. Lista aparte porque hay campos que solo tienen sentido al
@@ -128,8 +172,9 @@ class SyncAppDataRequest extends FormRequest
      * Tablas que el app puede **editar** (`operation = updated`) por el camino genérico.
      *
      * Son las dos de siempre —la cita y la ficha del paciente— más las clínicas que el médico toca
-     * mientras atiende (A1 de PLAN-MOVIL.md). Cuáles columnas de cada una, lo dice `WRITABLE_COLUMNS`:
-     * esta lista abre la tabla, no sus campos.
+     * mientras atiende (A1 de PLAN-MOVIL.md). Cuáles columnas de cada una, lo dice `columnasEditables`
+     * (la lista blanca de toda la vida, o el mapa del dato en los estudios ecográficos): esta lista
+     * abre la tabla, no sus campos.
      *
      * `diagnostico_paciente` y `antece_paciente` figuran porque **toda tabla de `TABLAS_BORRABLES`
      * tiene que estar acá**: el borrado de una fila y su edición pasan por el mismo camino, y una baja
@@ -137,6 +182,10 @@ class SyncAppDataRequest extends FormRequest
      */
     public const TABLAS_EDITABLES = [
         'cola', 'pacientes', 'consultas', 'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
+        // EC-A3 de PLAN-MOVIL.md: los cuatro estudios ecográficos. El médico los corrige en el teléfono
+        // —lo que el escritorio le mostró, más lo que cargó él— y cada columna va por el camino de A1, con
+        // su last-write-wins y su rastro. Cuáles columnas de cada estudio, lo dice `columnasEditables`.
+        'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
     ];
 
     /**
@@ -189,6 +238,12 @@ class SyncAppDataRequest extends FormRequest
         // mismo lote) y valida el código contra el catálogo `antecedentes` del médico. Su baja ya viaja
         // por `TABLAS_BORRABLES` desde A1.
         'antece_paciente',
+        // EC-A3 de PLAN-MOVIL.md: los **cuatro estudios ecográficos**. Son creaciones clínicas porque la fila
+        // cuelga de la consulta con la clave del legado —`numhistoria` + `nroconsulta` en el pélvico,
+        // `historia` + `consulta` en los obstétricos— y no tiene número propio: el teléfono manda las
+        // columnas que el médico cargó y el servidor resuelve a qué fila van con la Action de la web de cada
+        // estudio. Las columnas aceptadas son las de su mapa del dato (`columnasEditables`).
+        'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
     ];
 
     /**
@@ -203,6 +258,11 @@ class SyncAppDataRequest extends FormRequest
     public const SYNC_TABLES = [
         'cola', 'pacientes', 'historias', 'consultas', 'recipes', 'motivo_consulta_paciente',
         'examen_fisico_nuevo', 'diagnostico_paciente', 'antece_paciente',
+        // EC-A3 de PLAN-MOVIL.md: los cuatro estudios ecográficos, que el teléfono carga y corrige sin
+        // conexión. Tienen que estar acá aunque su camino sea el de las creaciones clínicas y el de las
+        // ediciones de A1: sin ellas, `changes.*.table` responde **422 y rechaza el lote entero** —también
+        // el pull—, que es justo lo que el comentario de la clase evita.
+        'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
     ];
 
     /**

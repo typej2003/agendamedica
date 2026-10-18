@@ -5,11 +5,19 @@ namespace App\Sync;
 use App\Actions\Consulta\AgregarDiagnosticoALaConsulta;
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
+use App\Actions\Consulta\GuardarEcoGinecologico;
+use App\Actions\Consulta\GuardarEcoObstetrico;
+use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
+use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Cola;
@@ -77,6 +85,12 @@ use InvalidArgumentException;
  * misma creación —todavía no hay `remote_id` con el que mandarlas como `updated`—. Si el servidor las
  * ignorara, la consulta nacería vacía y el delta siguiente, que empareja por `remote_id`, pisaría la copia
  * local con `null`: se perdería lo que el médico escribió.
+ *
+ * EC-A3 de PLAN-MOVIL.md suma los **cuatro estudios ecográficos** —pélvico, obstétrico del 1.er trimestre y
+ * los del 2.º y el 3.º— (ver [self::crearEco]): el teléfono los carga y los corrige sin conexión, sobre una
+ * fila que puede no existir todavía en el servidor. La regla de escritura no vive acá sino en la Action de
+ * la web de cada estudio, y las columnas aceptadas no son una lista blanca propia sino **el mapa del dato**
+ * de cada uno (`SyncAppDataRequest::columnasEditables`).
  */
 class CreacionesClinicas
 {
@@ -121,6 +135,15 @@ class CreacionesClinicas
         // El alta de un antecedente del paciente (A4b): la misma clase de Action fina, pero en
         // `Actions\Pacientes` porque la fila es **del paciente** y no de la consulta.
         private AgregarAntecedenteAlPaciente $agregarAntecedente,
+        // Los **cuatro estudios ecográficos** (EC-A3): la regla de guardado de cada uno es la Action de su
+        // pantalla de la web —la misma que resolvió el mapa, la clave del legado, el "sólo lo que cambió" y
+        // el `-1`/`none` = sin dato—, así que acá no se reimplementa nada. El **mapa del dato** de cada uno se
+        // resuelve en [self::crearEco] (es una lectura sin estado y son cuatro clases más: no engordan este
+        // constructor, que ya lleva las once reglas de arriba).
+        private GuardarEcoGinecologico $guardarEcoPelvico,
+        private GuardarEcoObstetrico $guardarEcoObstetrico,
+        private GuardarEcoObstetricoSegundo $guardarEcoObstetricoSegundo,
+        private GuardarEcoObstetricoTercero $guardarEcoObstetricoTercero,
     ) {
     }
 
@@ -161,6 +184,11 @@ class CreacionesClinicas
             'diagnostico_paciente' => $this->crearDiagnostico($change, $tempId, $rechazar),
             // A4b: el alta de un antecedente del paciente, que cuelga de la **historia**.
             'antece_paciente' => $this->crearAntecedente($change, $tempId, $rechazar),
+            // EC-A3: el alta de cada uno de los **cuatro estudios ecográficos**, que cuelgan de la consulta.
+            'eco_pelvico' => $this->crearEco($change, $tempId, $rechazar),
+            'eco_obstetrico' => $this->crearEco($change, $tempId, $rechazar),
+            'eco_obstetrico_tercer_2' => $this->crearEco($change, $tempId, $rechazar),
+            'eco_obstetrico_tercer' => $this->crearEco($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -584,6 +612,84 @@ class CreacionesClinicas
     }
 
     /**
+     * El **alta de un estudio ecográfico** cargado sin conexión (EC-A3 de PLAN-MOVIL.md): el pélvico, el
+     * obstétrico del 1.er trimestre o el del 2.º o el 3.º.
+     *
+     * Es una creación clínica aunque **no numere nada**: la fila cuelga de la consulta con la clave del
+     * legado —⚠️ `numhistoria` + `nroconsulta` en `eco_pelvico` y `historia` + `consulta` en las tres
+     * obstétricas, donde `consulta` es el **número** de la consulta y no su id (§7.4 de PLAN-MOVIL.md)— y
+     * puede no existir todavía en el servidor. Por eso el teléfono manda las columnas que el médico cargó,
+     * como en la evaluación física (A3).
+     *
+     * La regla de escritura **no vive acá**: es la Action de la web de ese estudio (`GuardarEcoGinecologico`,
+     * `GuardarEcoObstetrico`, `GuardarEcoObstetricoSegundo`, `GuardarEcoObstetricoTercero`), que ya sabe
+     * buscar la fila por la clave del legado, crearla si falta, escribir **sólo lo que cambió** con su
+     * last-write-wins, dejar el rastro por columna, completar la fecha con hoy y rechazar un estudio **sin
+     * ningún dato** (`QueEsUnDocumento::ecografia`); también sabe que el `-1` del escritorio y el literal
+     * `none` son «sin dato». Las columnas aceptadas son las de **su mapa del dato**
+     * (`SyncAppDataRequest::columnasEditables`): lo que no esté en el mapa —`puro_texto`, los resúmenes del
+     * escritorio— se descarta en silencio, igual que en las ediciones.
+     *
+     * Lo único propio del sync es el `created` con el id temporal del lote (`anotar`), que es lo que le
+     * permite al teléfono soltar su fila provisional y reintentar sin duplicar, y **el id real de la fila**
+     * en la respuesta: el mapa lo busca por la clave del legado (`filaDe`), no con un `where` suelto.
+     */
+    private function crearEco(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $tabla = (string) $change['table'];
+
+        $consulta = $this->resolverConsulta($change);
+        if (! $consulta) {
+            $rechazar('El estudio no corresponde a una consulta de este médico.');
+            return null;
+        }
+
+        // La Action y la lectura de cada estudio. La lectura se resuelve por el contenedor porque es una
+        // clase sin estado que sólo sabe encontrar la fila del estudio.
+        [$accion, $lectura] = match ($tabla) {
+            'eco_pelvico' => [$this->guardarEcoPelvico, app(EcoGinecologico::class)],
+            'eco_obstetrico' => [$this->guardarEcoObstetrico, app(EcoObstetrico::class)],
+            'eco_obstetrico_tercer_2' => [$this->guardarEcoObstetricoSegundo, app(EcoObstetricoSegundo::class)],
+            'eco_obstetrico_tercer' => [$this->guardarEcoObstetricoTercero, app(EcoObstetricoTercero::class)],
+        };
+
+        $valores = $this->columnasDelCliente($change, $tabla);
+
+        // La pantalla de la web manda el estudio **entero**; el teléfono puede mandar sólo lo que cambió.
+        // Las columnas del mapa que no viajan se completan con lo que la fila ya tiene porque la Action
+        // normaliza **todas** las del mapa: las ausentes quedarían en `null` —el «sin dato» del legado— y una
+        // carga parcial borraría lo que el escritorio ya había guardado.
+        $fila = $lectura->filaDe($consulta);
+        if ($fila !== null) {
+            foreach (SyncAppDataRequest::columnasEditables($tabla) as $columna) {
+                if (! array_key_exists($columna, $valores)) {
+                    $valores[$columna] = $fila->getAttribute($columna);
+                }
+            }
+        }
+
+        try {
+            $accion->ejecutar($consulta, $valores, null, 'mobile');
+        } catch (InvalidArgumentException $e) {
+            // Un estudio sin ningún dato no es un documento: no se crea una fila vacía y se le dice al
+            // teléfono por qué, sin trabar el resto del lote.
+            $rechazar($e->getMessage());
+            return null;
+        }
+
+        // El id real de la fila, que es el `remote_id` que el teléfono guarda para seguir editándola.
+        $fila = $lectura->filaDe($consulta);
+        if ($fila === null) {
+            $rechazar('El estudio no se pudo guardar.');
+            return null;
+        }
+
+        $this->anotar($tabla, (int) $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaEco($tabla, $tempId, (int) $fila->id);
+    }
+
+    /**
      * Un campo de texto de la creación (`detalles`, `tipo2`, …): suelto o dentro de `columns`, como
      * `campoDelCambio`, pero sólo si es texto. Lo que no es texto se descarta y la Action pone su
      * valor por defecto.
@@ -622,14 +728,18 @@ class CreacionesClinicas
     }
 
     /**
-     * Las columnas de **una tabla** que mandó el cliente en una creación, filtradas por la lista blanca de
-     * `SyncAppDataRequest::WRITABLE_COLUMNS`.
+     * Las columnas de **una tabla** que mandó el cliente en una creación, filtradas por las columnas
+     * editables de esa tabla (`SyncAppDataRequest::columnasEditables`).
      *
      * Se leen de `columns` —la forma que tienen todas las creaciones con datos— y también sueltas en la
      * misma creación, porque lo que dice de qué cuelga (`consulta_id`/`consulta_temp_id`) viaja al mismo
      * nivel: así el teléfono no necesita dos formas de cuerpo para lo mismo. En los dos casos la lista
      * blanca es la que decide: abre la tabla, no sus campos. Lo que no está se descarta en silencio, igual
      * que en las ediciones (y así `numhistoria`, `nroconsulta`, `reg_medico` y `fecha` no pueden colarse).
+     *
+     * Para los cuatro estudios ecográficos esa lista es **el mapa del dato** del estudio y no
+     * `WRITABLE_COLUMNS`: son ~180 columnas que ya están escritas en el mapa que pinta la web, y tenerlas
+     * dos veces haría que una columna nueva se guardara desde la web y se descartara desde el teléfono.
      *
      * @return array<string,mixed>
      */
@@ -638,7 +748,7 @@ class CreacionesClinicas
         $columnas = (array) ($change['columns'] ?? []);
 
         $valores = [];
-        foreach (SyncAppDataRequest::WRITABLE_COLUMNS[$tabla] as $columna) {
+        foreach (SyncAppDataRequest::columnasEditables($tabla) as $columna) {
             if (array_key_exists($columna, $columnas)) {
                 $valores[$columna] = $columnas[$columna];
             } elseif (array_key_exists($columna, $change)) {
@@ -775,6 +885,12 @@ class CreacionesClinicas
             // Igual que las anteriores: el reintento de un alta de antecedente devuelve el mismo id.
             return $this->respuestaAntecedente($tempId, $recordId);
         }
+        if (isset(SyncAppDataRequest::MAPAS_DE_LOS_ECOS[$table])) {
+            // EC-A3: el reintento de un estudio ya creado devuelve el **mismo id** de la fila, sin volver a
+            // escribir ni duplicar. Se busca por el id que anotó el rastro (es el que el teléfono guardó) y
+            // no por la clave del legado, igual que en la evaluación física.
+            return $this->respuestaEco($table, $tempId, $recordId);
+        }
         $detalle = RecipeDetalle::find($recordId);
         if (!$detalle) {
             return null;
@@ -841,6 +957,17 @@ class CreacionesClinicas
     private function respuestaAntecedente(int $tempId, int $id): array
     {
         return ['table' => 'antece_paciente', 'temp_id' => $tempId, 'id' => $id];
+    }
+
+    /**
+     * La respuesta de un estudio ecográfico (EC-A3) es **sólo su id**, como la de la evaluación física: la
+     * fila cuelga de una consulta que el teléfono ya tiene (o recibió en este lote) y lo que necesita es el
+     * id real para reemplazar el provisional de su fila local. La tabla viaja porque los cuatro estudios
+     * comparten forma pero son cuatro tablas distintas.
+     */
+    private function respuestaEco(string $tabla, int $tempId, int $id): array
+    {
+        return ['table' => $tabla, 'temp_id' => $tempId, 'id' => $id];
     }
 
     /** `ids`: las filas de `recipes`, en el mismo orden que los `items` que mandó el teléfono. */
