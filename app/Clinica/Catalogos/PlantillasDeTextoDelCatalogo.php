@@ -30,12 +30,14 @@ final class PlantillasDeTextoDelCatalogo
 
     public function total(string $regMedico): int
     {
-        return FormatoPrint::where('reg_medico', $regMedico)->count();
+        return FormatoPrint::where('reg_medico', $regMedico)->whereNull('formato')->count();
     }
 
     public function encontrar(string $regMedico, int $id): FormatoPrint
     {
-        return FormatoPrint::where('reg_medico', $regMedico)->whereKey($id)->firstOrFail();
+        // Una plantilla del **formato** (O-17) no es una plantilla de texto: por acá da 404, igual que la de
+        // otro médico.
+        return FormatoPrint::where('reg_medico', $regMedico)->whereNull('formato')->whereKey($id)->firstOrFail();
     }
 
     /**
@@ -46,7 +48,9 @@ final class PlantillasDeTextoDelCatalogo
      */
     public function tipos(string $regMedico): array
     {
-        $cantidades = FormatoPrint::where('reg_medico', $regMedico)->get(['tipo'])->countBy(fn (FormatoPrint $fila) => trim((string) $fila->tipo));
+        // Sólo las plantillas **de texto**: las del formato del eco (O-17) viven en la misma tabla y no son
+        // de este catálogo (no tienen `tipo`).
+        $cantidades = FormatoPrint::where('reg_medico', $regMedico)->whereNull('formato')->get(['tipo'])->countBy(fn (FormatoPrint $fila) => trim((string) $fila->tipo));
         $tipos = [];
 
         foreach (TiposDePlantillaDeTexto::USADOS_EN_LA_WEB as $codigo) {
@@ -68,7 +72,7 @@ final class PlantillasDeTextoDelCatalogo
         $palabras = array_map([BusquedaDePacientes::class, 'normalizar'], BusquedaDePacientes::palabras($buscar));
         $titulo = fn (FormatoPrint $fila) => BusquedaDePacientes::normalizar(trim((string) preg_replace('/\s+/u', ' ', (string) $fila->titulo)));
 
-        return FormatoPrint::where('reg_medico', $regMedico)->get()
+        return FormatoPrint::where('reg_medico', $regMedico)->whereNull('formato')->get()
             ->filter(fn (FormatoPrint $fila) => $tipo === '' || trim((string) $fila->tipo) === $tipo)
             ->filter(function (FormatoPrint $fila) use ($palabras, $titulo) {
                 $pajar = $titulo($fila) . ' ' . BusquedaDePacientes::normalizar(

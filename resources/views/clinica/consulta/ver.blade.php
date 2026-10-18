@@ -142,6 +142,9 @@
     <script src="{{ asset('js/clinica/consulta-mediciones.js') }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
+    {{-- Las plantillas del **formato** del estudio (O-17): completan sólo los campos vacíos del eco y guardan
+         los campos descriptivos como plantilla, sin pisar lo escrito. --}}
+    <script src="{{ asset('js/clinica/plantillas-formato.js') }}"></script>
     {{-- Las «dos listas» (WEB-11.3): el doble clic en el catálogo pasa el elemento a la consulta. --}}
     <script src="{{ asset('js/clinica/dos-listas.js') }}"></script>
     {{-- «Imprimir la ficha» de los datos personales (WEB-11.25). --}}

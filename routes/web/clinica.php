@@ -22,6 +22,7 @@ use App\Http\Controllers\Clinica\ConsultaConstanciaController;
 use App\Http\Controllers\Clinica\ConsultaDietaController;
 use App\Http\Controllers\Clinica\ConsultaEstudioController;
 use App\Http\Controllers\Clinica\ConsultaEstudiosController;
+use App\Http\Controllers\Clinica\ConsultaPlantillaDelFormatoController;
 use App\Http\Controllers\Clinica\ConsultaHospitalizacionController;
 use App\Http\Controllers\Clinica\ConsultaInformeController;
 use App\Http\Controllers\Clinica\ConsultaLaboratorioController;
@@ -271,6 +272,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // otros seis estudios del ítem (WEB-6.2 a WEB-6.4) sin ruta nueva.
                 Route::post('/consulta/{consulta}/estudio/{tipo}', [ConsultaEstudioController::class, 'guardar'])
                     ->where('tipo', '[a-z]+')->name('consulta.estudio.guardar');
+
+                // Las plantillas del **formato** del estudio (O-17): «Guardar como plantilla» del panel del
+                // formato. Guarda los campos **descriptivos** del estudio —no las medidas— en
+                // `formato_print.formato` y responde JSON para no recargar la consulta (no se pierde lo
+                // escrito). Se aplican sin servidor: el panel completa los campos vacíos del formulario.
+                Route::post('/consulta/{consulta}/estudio/{tipo}/plantilla', [ConsultaPlantillaDelFormatoController::class, 'guardar'])
+                    ->where('tipo', '[a-z]+')->name('consulta.estudio.plantilla.guardar');
 
                 // Control de embarazo (WEB-6.6): el ítem 6 del panel, con sus pestañas
                 // (`?seccion=embarazo&pestana=…`). **El dato es del embarazo y no de la consulta**:

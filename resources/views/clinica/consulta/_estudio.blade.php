@@ -12,6 +12,10 @@
                          etiqueta="Estudios ecográficos" />
     @endif
 
+    {{-- Las plantillas del **formato** del estudio (O-17): se aplican a los campos vacíos del formulario que
+         viene abajo, sin pisar lo escrito. Van arriba del formulario y se alcanzan por su `action`. --}}
+    @include('clinica.consulta._estudio-formato', ['formato' => $seccion->formato()])
+
     @include($seccion->parcial(), ['vm' => $seccion->estudio(), 'plantillas' => $seccion->plantillas()])
 
     {{-- Las imágenes del estudio (WEB-11.12): se suben **una a una y sin límite**, etiquetadas para este tipo de estudio (la etiqueta que el
