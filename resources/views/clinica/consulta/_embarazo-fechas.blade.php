@@ -10,7 +10,10 @@
 
      `$claveTab` es la clave de la pestaña (`laboratorio` o `controles`) y se usa para el id del formulario:
      el aviso de cambios sin guardar de `consulta.js` se ata al formulario por `data-consulta-fechas` y al
-     cartel por `<id del formulario>-sin-guardar`. --}}
+     cartel por `<id del formulario>-sin-guardar`.
+
+     **Una fecha nueva es este mismo formulario sin `&fecha=`**: la gesta no cambia («Agregar una fecha» es
+     la pestaña con `&gesta=`), así que se pueden cargar las fechas que haga falta dentro de la misma gesta. --}}
 @php
     $estado = $vm->estado();
     $idFormulario = $claveTab . '-form';
@@ -31,6 +34,15 @@
         @else
             <p class="texto-tenue small mb-3">
                 Esta gesta todavía no tiene nada cargado en esta pestaña. Cargá la primera fecha y guardala.
+            </p>
+        @endif
+
+        {{-- La fecha nueva es una fila **más** de la gesta: el formulario en blanco no es que no haya nada,
+             y sin este aviso parece que «Agregar una fecha» perdió lo que se estaba mirando. --}}
+        @if ($avisoDeFechaNueva = $vm->avisoDeFechaNueva())
+            <p class="alert alert-info py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                <span>{{ $avisoDeFechaNueva }}</span>
             </p>
         @endif
 

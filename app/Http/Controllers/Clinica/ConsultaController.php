@@ -788,9 +788,17 @@ class ConsultaController extends Controller
             $deLaHistoria = $gestas->de($regMedico, $historia, $dia);
 
             // Qué gesta se mira: la que pide la URL (`&gesta=2`), la actual (la de mayor número) o ninguna
-            // cuando se está creando una nueva (`&nueva=1`).
+            // cuando se está creando una **gesta** nueva (`&nueva=1`).
+            //
+            // `nueva` es **sólo de la pestaña *Prenatal***: en las pestañas por fecha (*Laboratorio*,
+            // *Controles* y *Reporte*) una fecha nueva no lleva marca —se reconoce por la **ausencia de
+            // `&fecha=`** (`FechasDelEmbarazoVista::esNueva()`)—. Ignorarla ahí además blinda el enlace: un
+            // `?nueva=1` viejo en *Laboratorio* anulaba la gesta elegida y caía en `siguienteClave()`, una
+            // gesta que todavía no existe; el formulario en blanco viajaba con ese número y la fila se
+            // guardaba huérfana, fuera de la vista del médico.
             $pedida = (int) request()->query('gesta', 0);
-            $elegida = request()->boolean('nueva')
+            $creandoGesta = $pestana === PestanasDelEmbarazo::PRENATAL && request()->boolean('nueva');
+            $elegida = $creandoGesta
                 ? null
                 : ($pedida > 0
                     ? collect($deLaHistoria)->first(fn ($gesta) => $gesta->clave() === $pedida)
@@ -860,7 +868,11 @@ class ConsultaController extends Controller
                         ? 'clinica.consulta.embarazo.laboratorio.guardar'
                         : 'clinica.consulta.embarazo.controles.guardar', $consulta->id),
                     urlVolver: $url(),
-                    urlNueva: $url(['gesta' => $claveDeLaGesta, 'nueva' => 1]),
+                    // «Agregar una fecha»: la misma pestaña con la gesta en curso y **sin `fecha`** —y sin
+                    // `nueva`, que es la marca de la gesta nueva de *Prenatal*—. Así el formulario se abre
+                    // en blanco (la fecha de hoy y los campos vacíos) pero **en esta misma gesta**: antes la
+                    // marca `nueva` hacía que la pantalla saltara a la gesta siguiente, que no existe.
+                    urlNueva: $url(['gesta' => $claveDeLaGesta]),
                     urlFecha: fn (string $fecha) => $url(['gesta' => $claveDeLaGesta, 'fecha' => $fecha]),
                     // Una línea de ayuda como máximo en el cuerpo (O-23): lo que era un párrafo con la lista
                     // de lo que se carga en cada pestaña ya lo dice el rótulo de sus campos.

@@ -19,6 +19,10 @@ use Closure;
  * Como en la pestaña *Prenatal*, la fecha que se está mirando se elige con un enlace —así se puede
  * compartir y recargar—, y los valores del formulario son los de `old()` si el POST falló y los guardados
  * si no.
+ *
+ * **Una fecha nueva no lleva ninguna marca**: es esta misma pestaña **sin `&fecha=`** (ver `esNueva()`), y
+ * el formulario abre en blanco con la fecha de hoy. La **gesta no cambia**: agregar una fecha suma una fila
+ * a la gesta en curso, no crea una gesta (el `gesta_clave` viaja oculto y es el de la pestaña).
  */
 final class FechasDelEmbarazoVista
 {
@@ -80,10 +84,24 @@ final class FechasDelEmbarazoVista
         return $this->filas === [];
     }
 
-    /** ¿El formulario está cargando una fecha nueva? */
+    /**
+     * **¿El formulario está agregando una fecha a la gesta?** Es la pestaña con la gesta y **sin `&fecha=`**:
+     * no hace falta —ni se usa— una marca aparte, y así una fecha nueva nunca cambia de gesta.
+     */
     public function esNueva(): bool
     {
         return $this->fechaElegida === '' || ! array_key_exists($this->fechaElegida, $this->porFecha());
+    }
+
+    /**
+     * El aviso corto de la fecha nueva, cuando la gesta ya tiene filas: el formulario en blanco es una fila
+     * **más**, no la primera, y «Agregar una fecha» tiene que decir que se está sumando.
+     */
+    public function avisoDeFechaNueva(): ?string
+    {
+        return $this->esNueva() && ! $this->sinFilas()
+            ? 'Fecha nueva: completá y guardá para agregarla a la gesta.'
+            : null;
     }
 
     /** La fecha que se está mirando, como la manda el formulario (vacía si es una fecha nueva). */
