@@ -68,7 +68,17 @@
                                                 <span class="d-block small texto-tenue">Lote {{ $d['lote'] }}</span>
                                             @endif
                                         </td>
-                                        <td><x-ui.estado :tono="$d['tono']" :icono="$d['icono']">{{ $d['estado'] }}</x-ui.estado></td>
+                                        <td>
+                                            <x-ui.estado :tono="$d['tono']" :icono="$d['icono']">{{ $d['estado'] }}</x-ui.estado>
+                                            @if ($d['registrable'])
+                                                <button type="button" class="btn btn-sm btn-outline-primary ms-1" data-registrar-dosis
+                                                        data-codigo="{{ $d['codigo'] }}" data-numero="{{ $d['numero'] }}" data-rotulo="{{ $d['rotulo'] }}"
+                                                        data-planeada="{{ $d['planeadaIso'] }}" data-nombre="{{ $d['nombre'] }}"
+                                                        aria-label="Registrar {{ $d['rotulo'] }} de {{ $d['nombre'] }}">
+                                                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Registrar
+                                                </button>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             @endforeach
@@ -88,5 +98,15 @@
                 </x-ui.tarjeta>
             @endif
         @endif
+    @endif
+
+    @if ($vm->puedeRegistrar() && ! $vm->sinCatalogo())
+        @include('clinica.vacunas._dialogo-registrar')
+    @endif
+@endsection
+
+@section('scripts')
+    @if ($vm->puedeRegistrar())
+        <script src="{{ asset('js/clinica/vacunas.js') }}"></script>
     @endif
 @endsection

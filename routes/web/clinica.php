@@ -181,6 +181,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
                 // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
                 Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
+                Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
                 Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])

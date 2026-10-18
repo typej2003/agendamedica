@@ -46,7 +46,32 @@ final class CalendarioDeVacunasVista
         private string $filtro,
         private Closure $url,
         private string $urlFicha,
+        // A dónde se postea el registro de una dosis (WEB-7.4.4b); `null` = el calendario es de sólo lectura.
+        private ?string $urlRegistrar = null,
+        private ?string $hoy = null,
     ) {
+    }
+
+    public function puedeRegistrar(): bool
+    {
+        return $this->urlRegistrar !== null;
+    }
+
+    public function urlRegistrar(): ?string
+    {
+        return $this->urlRegistrar;
+    }
+
+    /** La fecha más tardía que acepta el formulario (hoy en el consultorio). */
+    public function maxima(): string
+    {
+        return $this->hoy ?? Carbon::now()->toDateString();
+    }
+
+    /** La fecha de nacimiento (`AAAA-MM-DD`) o vacío: la más temprana que acepta el formulario. */
+    public function minima(): string
+    {
+        return empty($this->paciente->fnacimiento) ? '' : Carbon::parse($this->paciente->fnacimiento)->toDateString();
     }
 
     public static function normalizarFiltro(?string $filtro): string
@@ -136,6 +161,11 @@ final class CalendarioDeVacunasVista
                 }
 
                 $dosis[] = [
+                    'codigo' => $vacuna['codigo'],
+                    'nombre' => $vacuna['vacuna'],
+                    'numero' => $d['numero'],
+                    'planeadaIso' => $d['planeada'],
+                    'registrable' => $this->urlRegistrar !== null && $d['estado'] !== CalendarioDeVacunas::APLICADA && $d['numero'] !== null,
                     'rotulo' => $d['rotulo'],
                     'planeada' => self::fecha($d['planeada']),
                     'aplicada' => self::fecha($d['aplicada']),
