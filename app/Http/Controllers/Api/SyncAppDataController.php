@@ -22,6 +22,10 @@ use App\Models\Consulta;
 use App\Models\Diagnostico;
 use App\Models\DiagnosticoPaciente;
 use App\Models\Doctor;
+use App\Models\EcoObstetrico;
+use App\Models\EcoObstetricoSegundo;
+use App\Models\EcoObstetricoTercer;
+use App\Models\EcoPelvico;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\ExamenFisico;
@@ -311,6 +315,30 @@ class SyncAppDataController extends Controller
             'examen_fisico_nuevo' => ['consulta' => ExamenFisico::whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $historiasDeLaVentana())), 'columna' => 'id'],
+            // **Los cuatro estudios ecográficos** (EC-A2 de PLAN-MOVIL.md, «ecos en el bolsillo»): lo que
+            // el médico mira antes de atender, así que bajan con el mismo filtro doble que `consultas` —por
+            // número de historia y por `reg_medico`, porque el número es por médico— más la ventana del
+            // volcado paginado.
+            //
+            // ⚠️ La trampa del paso son los nombres de las columnas: el eco **pélvico** se llavea por
+            // `numhistoria` (el `key=yes` del DataWindow `d_eco_pelvico`) y los **tres obstétricos** por
+            // `historia`, como `examen_fisico_nuevo`. Por eso la columna se pregunta a `TablasLegado` y no
+            // se escribe acá: escrita a mano, el filtro de las obstétricas pediría `numhistoria` —que no
+            // existe en esas tablas— y no bajaría nada.
+            'eco_pelvico' => ['consulta' => EcoPelvico::whereIn(TablasLegado::columnaHistoria('eco_pelvico'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_pelvico'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'eco_obstetrico' => ['consulta' => EcoObstetrico::whereIn(TablasLegado::columnaHistoria('eco_obstetrico'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_obstetrico'), $historiasDeLaVentana())), 'columna' => 'id'],
+            // 2.º trimestre: en el escritorio compartía tabla con el 3.º (cargar uno pisaba al otro); desde
+            // WEB-11.14 la web los separa en `eco_obstetrico_tercer_2`, con las mismas columnas.
+            'eco_obstetrico_tercer_2' => ['consulta' => EcoObstetricoSegundo::whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer_2'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer_2'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'eco_obstetrico_tercer' => ['consulta' => EcoObstetricoTercer::whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -562,6 +590,19 @@ class SyncAppDataController extends Controller
             // `numhistoria`). Viajan con el mismo filtro por registro y por número que el resto.
             'antece_paciente' => AntecePaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('antece_paciente'), $numHistoria)->get(),
+            // Los cuatro estudios ecográficos (EC-A2 de PLAN-MOVIL.md). Se suman acá por el mismo motivo
+            // que el examen físico: este pedido arma su payload a mano y no pasa por el plan del volcado,
+            // así que sin estas líneas la ficha de un paciente **fuera de la ventana** llegaba con su
+            // consulta pero sin sus ecos. La columna del número de historia se pregunta a `TablasLegado`
+            // (`numhistoria` en el pélvico, `historia` en los obstétricos).
+            'eco_pelvico' => EcoPelvico::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_pelvico'), $numHistoria)->get(),
+            'eco_obstetrico' => EcoObstetrico::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_obstetrico'), $numHistoria)->get(),
+            'eco_obstetrico_tercer_2' => EcoObstetricoSegundo::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_obstetrico_tercer_2'), $numHistoria)->get(),
+            'eco_obstetrico_tercer' => EcoObstetricoTercer::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_obstetrico_tercer'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
         ];
 
@@ -653,6 +694,13 @@ class SyncAppDataController extends Controller
             // pedido puntual de una ficha (`volcado_paciente`) los trae en su payload armado a mano. La
             // clave tiene que existir siempre por el mismo motivo que las de arriba.
             'antece_paciente' => $datos['antece_paciente'] ?? $vacio,
+            // Los cuatro estudios ecográficos (EC-A2 de PLAN-MOVIL.md). El delta y el volcado los arman
+            // desde `$plan`; el pedido puntual de una ficha (`volcado_paciente`) los trae en su payload
+            // armado a mano. La clave tiene que existir siempre: el app recorre una lista fija de tablas.
+            'eco_pelvico' => $datos['eco_pelvico'] ?? $vacio,
+            'eco_obstetrico' => $datos['eco_obstetrico'] ?? $vacio,
+            'eco_obstetrico_tercer_2' => $datos['eco_obstetrico_tercer_2'] ?? $vacio,
+            'eco_obstetrico_tercer' => $datos['eco_obstetrico_tercer'] ?? $vacio,
             // Los dos catálogos del antecedente (A4b de PLAN-MOVIL.md): de dónde sale el nombre que se
             // agrega y de dónde el de su tipo/agrupación.
             'antecedentes' => $datos['antecedentes'] ?? $vacio,
@@ -792,6 +840,13 @@ class SyncAppDataController extends Controller
             // Y el alta de un antecedente del paciente (A4b), con el mismo mapa del dato de la sección
             // —`AntecedentesDelPaciente`— validando el código contra el catálogo `antecedentes` del médico.
             app(\App\Actions\Pacientes\AgregarAntecedenteAlPaciente::class),
+            // Y el alta de los cuatro estudios ecográficos (EC-A3 de PLAN-MOVIL.md), cada uno con la Action de
+            // su pantalla de la web: la clave del legado, la fila que se crea si falta, el "sólo lo que
+            // cambió" con su rastro y el `-1`/`none` = sin dato. El sync no reimplementa esa regla.
+            app(\App\Actions\Consulta\GuardarEcoGinecologico::class),
+            app(\App\Actions\Consulta\GuardarEcoObstetrico::class),
+            app(\App\Actions\Consulta\GuardarEcoObstetricoSegundo::class),
+            app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class),
         );
         $creadosAntes = count($creados);
 
@@ -868,7 +923,7 @@ class SyncAppDataController extends Controller
                 }
 
                 $column = $change['column'] ?? null;
-                if (!in_array($column, SyncAppDataRequest::WRITABLE_COLUMNS[$table] ?? [], true)) {
+                if (!in_array($column, SyncAppDataRequest::columnasEditables($table), true)) {
                     continue;
                 }
 
@@ -926,8 +981,9 @@ class SyncAppDataController extends Controller
     /**
      * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, y lo que cuelga de
      * la consulta: motivos, récipes, la evaluación física y —desde A4a— el alta de un diagnóstico; y
-     * —desde A4b— el alta de un antecedente, que cuelga de la historia); el resto (ediciones, borrados,
-     * reordenamientos, citas nuevas) después, en el orden en que llegó.
+     * —desde A4b— el alta de un antecedente, que cuelga de la historia; y —desde EC-A3— los cuatro estudios
+     * ecográficos); el resto (ediciones, borrados, reordenamientos, citas nuevas) después, en el orden en que
+     * llegó.
      *
      * @param list<array> $changes @return list<array>
      */
@@ -950,6 +1006,11 @@ class SyncAppDataController extends Controller
             // este mismo lote (`historia_temp_id`) ya tiene número cuando se resuelve. No depende de nada
             // más, así que comparte el grupo con los motivos del catálogo.
             'antece_paciente' => 3,
+            // Y los cuatro **estudios ecográficos** (EC-A3): cuelgan de la consulta, así que van con el mismo 4
+            // —después de `consultas`— para que una consulta creada en este mismo lote ya tenga sus números
+            // (`numhistoria`/`nroconsulta`) cuando la Action del estudio busca la fila por la clave del legado.
+            'eco_pelvico' => 4, 'eco_obstetrico' => 4,
+            'eco_obstetrico_tercer_2' => 4, 'eco_obstetrico_tercer' => 4,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
@@ -1352,6 +1413,12 @@ class SyncAppDataController extends Controller
             'examen_fisico_nuevo' => ExamenFisico::class,
             'diagnostico_paciente' => DiagnosticoPaciente::class,
             'antece_paciente' => AntecePaciente::class,
+            // EC-A3: los cuatro estudios ecográficos, que el médico edita desde el teléfono por el camino de
+            // A1 (una columna a la vez, con su last-write-wins y su rastro `source = mobile`).
+            'eco_pelvico' => EcoPelvico::class,
+            'eco_obstetrico' => EcoObstetrico::class,
+            'eco_obstetrico_tercer_2' => EcoObstetricoSegundo::class,
+            'eco_obstetrico_tercer' => EcoObstetricoTercer::class,
         ][$table];
     }
 
