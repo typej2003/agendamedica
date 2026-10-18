@@ -90,6 +90,18 @@ return [
     ],
 
     /*
+    | Valores por defecto de los **formularios** de la web clínica para esta especialidad (O-01,
+    | 2026-10-17). No son columnas ni datos del paciente: los lee el formulario cuando abre **en blanco**
+    | y sólo entonces; lo que no se declare acá sigue abriendo en «— Sin dato —». Se leen con
+    | `App\Especialidades\ConfiguracionDeLaEspecialidad`.
+    */
+    'paciente' => [
+        // El sexo del legado (`values="Masculino M/Femenino F/"`, `d_a_pacientes_prueba_2.srd`): el alta
+        // de una paciente de ginecología arranca en **Femenino**. Al editar manda lo guardado.
+        'sexo_por_defecto' => 'F',
+    ],
+
+    /*
     | Ventanas del PowerBuilder por módulo: semilla de la matriz de paridad (PLAN-WEB.md §7).
     | El listado completo y su estado se llevan aparte; acá van las canónicas de cada módulo.
     */

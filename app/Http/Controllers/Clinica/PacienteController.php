@@ -272,6 +272,9 @@ class PacienteController extends Controller
                 $ficha['paciente'] ?? null,
                 $ficha['numhistoria'] ?? null,
                 $this->seguros->de($contexto['reg_medico']),
+                // La especialidad del contexto decide los valores por defecto del alta (O-01: en
+                // ginecología el sexo arranca en Femenino; una especialidad sin la clave, en «— Sin dato —»).
+                $contexto['specialty'] ?? null,
             ),
             'hermano' => $hermano,
         ]);

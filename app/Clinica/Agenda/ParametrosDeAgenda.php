@@ -46,7 +46,19 @@ final class ParametrosDeAgenda
         }
     }
 
-    /** La sede pedida: por defecto la del contexto; `todas` (o 0) muestra todas. */
+    /**
+     * La sede pedida. Tres casos, y el orden importa:
+     *
+     *  1. **No viene `sede` en la URL** ⇒ la sede **del consultorio del contexto** (la de la barra
+     *     superior). Es lo que hace que «Nueva cita» abra donde el médico está trabajando, venga desde la
+     *     agenda, del buscador de pacientes o de «Hacer cita» en los récipes (O-03, 2026-10-17). Si el
+     *     contexto está en «todos mis consultorios» no hay ninguna que proponer y queda `null`.
+     *  2. **`sede=todas` o `sede=0`** ⇒ `null`: es una elección **explícita** de la agenda (mirar todas las
+     *     sedes juntas) y no se pisa con la del contexto. En el formulario de la cita el `null` se muestra
+     *     como «— Elige una sede —», porque una cita siempre es en una sede.
+     *  3. **`sede=<id>`** ⇒ esa, siempre que sea un id positivo. Un valor que no se entiende vuelve a
+     *     `null` (nunca revienta).
+     */
     public static function sedeDe(Request $request, array $contexto): ?int
     {
         $pedida = $request->query('sede');

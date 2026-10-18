@@ -8,6 +8,7 @@ use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -724,5 +725,76 @@ class PacientesAltaEdicionWebTest extends TestCase
         $paciente = DB::table('pacientes')->where('cedula', '24680135')->first();
         $this->assertNotNull($paciente);
         $respuesta->assertRedirect(route('clinica.pacientes.ver', $paciente->id));
+    }
+
+    // ------------------------------------------- Valores por defecto del alta (O-01 y O-02, 2026-10-17)
+
+    public function test_el_alta_de_ginecologia_propone_femenino_y_el_valor_se_puede_cambiar(): void
+    {
+        // O-01: en ginecología el alta propone **Femenino** (la clave `paciente.sexo_por_defecto` del
+        // manifiesto de la especialidad), «— Sin dato —» sigue disponible y el valor se puede cambiar.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/pacientes/nuevo');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="F" selected>Femenino</option>', false);
+        $respuesta->assertSee('<option value="">— Sin dato —</option>', false);
+
+        // El valor se puede cambiar: lo que se manda es lo que se guarda.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/pacientes', $this->formulario(['sexo' => 'M']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('M', DB::table('pacientes')->where('cedula', '24680135')->value('sexo'));
+    }
+
+    public function test_el_alta_en_una_especialidad_sin_la_clave_propone_sin_dato(): void
+    {
+        // O-01: el default no es del producto sino de la especialidad que lo declara. Pediatría tiene
+        // manifiesto pero no la clave: su alta sigue abriendo en «— Sin dato —».
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->attach($pediatria->id);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get('/clinica/pacientes/nuevo');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="">— Sin dato —</option>', false);
+        $respuesta->assertDontSee('<option value="F" selected>', false);
+        $respuesta->assertDontSee('<option value="M" selected>', false);
+    }
+
+    public function test_la_edicion_no_pisa_el_sexo_ni_la_fecha_de_ingreso_guardados(): void
+    {
+        // Los defaults son **sólo del alta**: al editar manda lo que tiene el paciente.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, ['sexo' => 'M', 'fingreso' => '2020-03-15'], '01001');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes/' . $paciente . '/editar');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="M" selected>Masculino</option>', false);
+        $respuesta->assertSee('value="2020-03-15"', false);
+    }
+
+    public function test_el_alta_propone_la_fecha_de_ingreso_del_consultorio(): void
+    {
+        // O-02: la fecha de ingreso del alta es **hoy**, y el hoy es el del consultorio. Las 20:30 del
+        // sábado 10/10/2026 en Caracas ya son el domingo 11 en UTC (el reloj del servidor, trampa 59).
+        Carbon::setTestNow(Carbon::parse('2026-10-11 00:30:00', 'UTC'));
+
+        try {
+            [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/pacientes/nuevo')
+                ->assertOk()
+                ->assertSee('id="fingreso"', false)
+                ->assertSee('value="2026-10-10"', false)
+                ->assertDontSee('value="2026-10-11"', false);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 }

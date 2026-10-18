@@ -1775,4 +1775,91 @@ class AgendaWebTest extends TestCase
         $conSede->assertSee('Alvarez, Ana');
         $conSede->assertSee('name="paciente_id" id="paciente-id" value="' . $pacienteId . '"', false);
     }
+
+    // -------------------------------------- La sede por defecto de "Nueva cita" es la del contexto (O-03)
+
+    public function test_el_alta_de_cita_sin_sede_en_la_url_toma_la_del_contexto(): void
+    {
+        // O-03 (2026-10-17): si no viene `sede` en la URL, el paso 1 abre con la sede del consultorio que
+        // se eligió en la barra superior. Antes abría en «— Elige una sede —» aunque hubiera una elegida.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString());
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
+        // Y el aviso de «elegí la sede» deja de aparecer en el camino normal.
+        $respuesta->assertDontSee('— Elige una sede —');
+        $respuesta->assertDontSee('Elige la sede para ver su jornada');
+    }
+
+    public function test_el_alta_de_cita_respeta_la_sede_pedida_en_la_url(): void
+    {
+        // Con `sede=<id>` manda la URL, aunque el contexto esté en otra: es la agenda de esa sede la que
+        // está agendando.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $delContexto = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pedida = $this->sede($medico, $this->centro('La Trinidad')->id, Office::MODALIDAD_HORA, 'C2');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $delContexto->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&sede=' . $pedida->id);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $pedida->id . '" selected>', false);
+        $respuesta->assertDontSee('<option value="' . $delContexto->id . '" selected>', false);
+    }
+
+    public function test_el_alta_de_cita_con_sede_todas_no_fuerza_la_del_contexto(): void
+    {
+        // `sede=todas` es una elección explícita de la agenda (mirar todas las sedes juntas): no se pisa
+        // con la del contexto y la cita —que siempre es en una sede— sigue pidiendo que se elija.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&sede=todas');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('— Elige una sede —');
+        $respuesta->assertDontSee('<option value="' . $sede->id . '" selected>', false);
+    }
+
+    public function test_el_buscador_de_pacientes_de_la_agenda_lleva_la_sede_del_contexto(): void
+    {
+        // El "Hacer cita" de cada fila del buscador (y el de los récipes) llega sin `sede`: tiene que
+        // quedar la del contexto igual. Acá se comprueba el camino completo desde la agenda.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $pacienteId = $this->pacienteConHistoria($medico, 5001, 'Ana', 'Alvarez');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString() . '&paciente_id=' . $pacienteId);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
+        $respuesta->assertSee('Alvarez, Ana');
+    }
+
+    public function test_el_alta_rapida_del_paso_2_propone_el_sexo_de_la_especialidad(): void
+    {
+        // O-01: la otra forma de dar de alta un paciente en la web —el alta mínima del paso 2 de «Nueva
+        // cita»— usa la misma regla que la ficha: en ginecología arranca en Femenino.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $url = '/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString();
+
+        $this->conContexto($user, $medico, $gineco, $sede->id)->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertSee('<option value="F" selected>Femenino</option>', false);
+
+        // En una especialidad que no declara la clave queda el «Sin dato» de siempre.
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->attach($pediatria->id);
+
+        $this->conContexto($user, $medico, $pediatria, $sede->id)->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertSee('<option value="F" >Femenino</option>', false);
+    }
 }
