@@ -70,9 +70,27 @@ use InvalidArgumentException;
  * A4b suma el **alta de un antecedente del paciente** (`antece_paciente`): misma forma —alta por creación y
  * baja por A1—, pero la fila **no cuelga de la consulta** sino de la historia (ver
  * [self::crearAntecedente]).
+ *
+ * A4c suma las **columnas clínicas de la consulta al crearla** (ver [self::crearConsulta]): el "Atender" del
+ * teléfono abre la consulta **sin conexión** y el médico escribe enfermedad actual, evolución, tratamiento y
+ * la antropometría **antes** de que la consulta exista en el servidor, así que esas columnas viajan en la
+ * misma creación —todavía no hay `remote_id` con el que mandarlas como `updated`—. Si el servidor las
+ * ignorara, la consulta nacería vacía y el delta siguiente, que empareja por `remote_id`, pisaría la copia
+ * local con `null`: se perdería lo que el médico escribió.
  */
 class CreacionesClinicas
 {
+    /**
+     * Las columnas de `consultas` que son **números** (la antropometría y los signos). Las demás de la
+     * lista blanca son texto. Se guardan como número, no como el string que manda el teléfono: el modelo
+     * las castea a `double` y una columna numérica con `"70"` complica las comparaciones del sync.
+     *
+     * @var list<string>
+     */
+    private const COLUMNAS_NUMERICAS_DE_LA_CONSULTA = [
+        'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
+    ];
+
     /** @var array<int, int> id temporal → id real de las historias creadas en este lote */
     private array $historias = [];
 
@@ -120,6 +138,13 @@ class CreacionesClinicas
 
         $yaCreado = $this->yaCreado($table, $tempId);
         if ($yaCreado !== null) {
+            // A4c: el reintento de una consulta que ya se aceptó **también escribe sus columnas**. Si el
+            // teléfono perdió la respuesta, la cola local ya quedó vacía y esos valores no volverían a
+            // viajar: sin esto, lo que el médico escribió sin conexión no llegaría nunca al servidor.
+            if ($table === 'consultas') {
+                $this->completarConsulta($yaCreado, $change);
+            }
+
             $respuesta = $this->respuestaDe($table, $tempId, $yaCreado);
             if ($respuesta !== null) {
                 $creados[] = $respuesta;
@@ -198,6 +223,19 @@ class CreacionesClinicas
      * `App\Actions\Consulta\CrearConsulta`, que es la misma Action que usa la web al "Atender"
      * (PLAN-WEB.md, R3; el mismo camino que hizo `AsignarHistoria` en WEB-2.11). Lo único propio del
      * sync es el rastro: a qué id temporal corresponde la consulta que se acaba de crear.
+     *
+     * **A4c: la creación trae las columnas clínicas.** El "Atender" del teléfono crea la consulta
+     * **sin conexión**, y el médico escribe la enfermedad actual, la evolución, el tratamiento o la
+     * antropometría **antes** de que esa consulta exista en el servidor. El teléfono no puede mandarlas
+     * como `updated` —todavía no hay `remote_id`—, así que viajan en la creación. Acá se aplican **después**
+     * de que la Action asigne `reg_medico`, `numhistoria`, `nroconsulta` y `fecha`: esas cuatro columnas las
+     * resuelve el servidor y **no** se aceptan del cliente (el número de consulta es un correlativo y el
+     * tenant sale del médico autenticado), por eso la lista blanca es `WRITABLE_COLUMNS['consultas']` y no
+     * todo lo que venga en `columns`.
+     *
+     * Si el servidor las ignorara, la consulta nacería vacía y el delta siguiente —que empareja por
+     * `remote_id`— pisaría la copia local con `null`: se perdería el texto que escribió el médico. El
+     * reintento de una creación ya aceptada también las aplica ([self::completarConsulta]).
      */
     private function crearConsulta(array $change, int $tempId, callable $rechazar): ?array
     {
@@ -211,10 +249,109 @@ class CreacionesClinicas
 
         $consulta = $this->crearConsulta->ejecutar($historia, Carbon::parse($fecha));
 
+        // Las columnas del cliente, al crear la fila. Va después de la Action para no pisar el número ni
+        // el tenant, y no deja rastro por columna: la fila es nueva y su `created` (el de `anotar`, más
+        // abajo) ya hace que el delta la devuelva completa.
+        $columnas = $this->columnasDelCliente($change, 'consultas');
+        if ($columnas !== []) {
+            foreach ($columnas as $columna => $valor) {
+                $consulta->{$columna} = $this->valorDeLaConsulta($columna, $valor);
+            }
+            $consulta->save();
+        }
+
         $this->anotar('consultas', $consulta->id, $tempId, $consulta->reg_medico);
         $this->consultas[$tempId] = $consulta->id;
 
         return $this->respuestaConsulta($tempId, $consulta);
+    }
+
+    /**
+     * **A4c: aplicar las columnas de una consulta ya creada** (el reintento de una creación aceptada).
+     *
+     * El caso que resuelve: el teléfono mandó la creación con lo que el médico escribió, el servidor la
+     * aceptó, pero la respuesta se perdió. El reintento vuelve con el mismo `temp_id` y las columnas; sin
+     * esto, la creación temprana las descartaría (el rastro ya existe y se contesta lo mismo) y el texto
+     * clínico no llegaría nunca, porque la cola local ya está vacía.
+     *
+     * Se escribe **sólo lo que cambió**, con el rastro `updated` por columna y el **last-write-wins** del
+     * sync (`RegistroDeCambios::permite`), igual que cualquier edición de A1: si otro equipo escribió esa
+     * columna después, el reintento no la pisa. El rastro va con `source = mobile`, que es quien escribe.
+     */
+    private function completarConsulta(int $id, array $change): void
+    {
+        $columnas = $this->columnasDelCliente($change, 'consultas');
+        if ($columnas === []) {
+            return;
+        }
+
+        // La fila es de este médico: `yaCreado` ya la acotó a sus registros, pero se vuelve a comprobar
+        // para no escribir por un id que no corresponde al tenant.
+        $consulta = Consulta::whereIn('reg_medico', $this->registrosMedicos)->find($id);
+        if ($consulta === null) {
+            return;
+        }
+
+        $cuando = Carbon::now();
+        $cambios = [];
+
+        foreach ($columnas as $columna => $valor) {
+            $nuevo = $this->valorDeLaConsulta($columna, $valor);
+
+            if ($consulta->{$columna} === $nuevo) {
+                continue;
+            }
+
+            if (! RegistroDeCambios::permite('consultas', (int) $consulta->id, $columna, $cuando)) {
+                // Una edición igual o más nueva ya tocó esa columna: no se pisa (y las demás siguen).
+                continue;
+            }
+
+            $cambios[$columna] = $nuevo;
+        }
+
+        if ($cambios === []) {
+            return;
+        }
+
+        foreach ($cambios as $columna => $valor) {
+            $consulta->{$columna} = $valor;
+        }
+        $consulta->save();
+
+        foreach ($cambios as $columna => $_) {
+            // El rastro guarda lo que quedó en la columna, no lo que llegó del cliente.
+            RegistroDeCambios::registrar(
+                'consultas',
+                (int) $consulta->id,
+                $consulta->reg_medico,
+                $columna,
+                $consulta->{$columna},
+                $cuando,
+                'mobile',
+            );
+        }
+    }
+
+    /**
+     * El valor de una columna de `consultas` ya listo para la columna: número para las medidas, texto
+     * limpio para lo demás. Mismo criterio que `GuardarEvaluacionFisica`: un valor no numérico en una
+     * medida se guarda como `null` y no como 0 —un 0 silencioso parece un dato—, y el `""` o los espacios
+     * son el mismo estado que `null`.
+     */
+    private function valorDeLaConsulta(string $columna, $valor)
+    {
+        if (! is_scalar($valor)) {
+            return null;
+        }
+
+        if (in_array($columna, self::COLUMNAS_NUMERICAS_DE_LA_CONSULTA, true)) {
+            return is_numeric($valor) ? (float) $valor : null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     /**
@@ -477,19 +614,31 @@ class CreacionesClinicas
     /**
      * Las columnas de la evaluación física que mandó el cliente, ya filtradas por la lista blanca.
      *
-     * Se leen de `columns` —la forma que tienen todas las creaciones con datos— y también sueltas en la
-     * misma creación, porque lo que dice de qué cuelga (`consulta_id`/`consulta_temp_id`) viaja al mismo
-     * nivel: así el teléfono no necesita dos formas de cuerpo para lo mismo. En los dos casos la lista
-     * blanca es la que decide: `WRITABLE_COLUMNS['examen_fisico_nuevo']` abre la tabla, no sus campos.
-     *
      * @return array<string,mixed>
      */
     private function valoresDelCliente(array $change): array
     {
+        return $this->columnasDelCliente($change, 'examen_fisico_nuevo');
+    }
+
+    /**
+     * Las columnas de **una tabla** que mandó el cliente en una creación, filtradas por la lista blanca de
+     * `SyncAppDataRequest::WRITABLE_COLUMNS`.
+     *
+     * Se leen de `columns` —la forma que tienen todas las creaciones con datos— y también sueltas en la
+     * misma creación, porque lo que dice de qué cuelga (`consulta_id`/`consulta_temp_id`) viaja al mismo
+     * nivel: así el teléfono no necesita dos formas de cuerpo para lo mismo. En los dos casos la lista
+     * blanca es la que decide: abre la tabla, no sus campos. Lo que no está se descarta en silencio, igual
+     * que en las ediciones (y así `numhistoria`, `nroconsulta`, `reg_medico` y `fecha` no pueden colarse).
+     *
+     * @return array<string,mixed>
+     */
+    private function columnasDelCliente(array $change, string $tabla): array
+    {
         $columnas = (array) ($change['columns'] ?? []);
 
         $valores = [];
-        foreach (SyncAppDataRequest::WRITABLE_COLUMNS['examen_fisico_nuevo'] as $columna) {
+        foreach (SyncAppDataRequest::WRITABLE_COLUMNS[$tabla] as $columna) {
             if (array_key_exists($columna, $columnas)) {
                 $valores[$columna] = $columnas[$columna];
             } elseif (array_key_exists($columna, $change)) {
