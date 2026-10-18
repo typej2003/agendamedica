@@ -14,6 +14,8 @@
         </x-slot>
     </x-ui.page-head>
 
+    @include('clinica.catalogos._novedades-iniciales')
+
     {{-- Los motivos que sugiere la especialidad (WEB-7.4.4f; pediatría: «Control de niño sano»). Se ofrecen, no se agregan solos. --}}
     @if ($sugeridos !== [])
         <x-ui.tarjeta id="motivos-sugeridos" class="mb-3">

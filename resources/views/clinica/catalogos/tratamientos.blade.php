@@ -13,6 +13,8 @@
         </x-slot>
     </x-ui.page-head>
 
+    @include('clinica.catalogos._novedades-iniciales')
+
     <x-ui.barra-herramientas>
         <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
     </x-ui.barra-herramientas>

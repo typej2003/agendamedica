@@ -33,6 +33,30 @@ final class CatalogosDisponibles
         'dietas' => ['texto' => 'Dietas', 'icono' => 'bi-egg-fried', 'ruta' => 'clinica.catalogos.dietas', 'especialidad' => 'pediatr'],
     ];
 
+    /** El nombre de la ruta del listado de un catálogo (`null` si no existe o todavía no tiene pantalla). */
+    public static function rutaDe(string $slug): ?string
+    {
+        $ruta = self::CATALOGOS[$slug]['ruta'] ?? null;
+
+        return $ruta !== null && Route::has($ruta) ? $ruta : null;
+    }
+
+    /** El slug del catálogo al que pertenece una ruta (su listado o cualquiera de sus pantallas hijas), o `null`. */
+    public static function slugDeLaRuta(?string $ruta): ?string
+    {
+        if ($ruta === null) {
+            return null;
+        }
+
+        foreach (self::CATALOGOS as $slug => $catalogo) {
+            if ($ruta === $catalogo['ruta'] || str_starts_with($ruta, $catalogo['ruta'] . '.')) {
+                return $slug;
+            }
+        }
+
+        return null;
+    }
+
     /** La URL de `/clinica/catalogos` (la entrada histórica de la zona): el primer catálogo que tiene pantalla. */
     public static function urlDeEntrada(): ?string
     {
