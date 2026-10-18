@@ -70,6 +70,9 @@ use Illuminate\Support\Facades\DB;
  */
 final class AntecedentesDelPaciente
 {
+    /** @var Collection<int,object>|null */
+    private ?Collection $tiposEnMemoria = null;
+
     /**
      * El código de `antece_paciente.tipo2` que el legado lee como la marca de **alerta** del antecedente
      * (`w_consulta_principal.srw:3072-3081`, en negrita y magenta sobre el `st_203` de `:6317-6331`).
@@ -116,7 +119,7 @@ final class AntecedentesDelPaciente
         }
 
         $catalogo = $this->catalogoDeAntecedentes();
-        $tipos = $this->tiposDeAntecedente();
+        $tipos = $this->tiposDeAntecedente($regMedico);
 
         return DB::table('antece_paciente')
             ->where('reg_medico', $regMedico)
@@ -198,12 +201,15 @@ final class AntecedentesDelPaciente
      * pantalla. El catálogo es de la instalación, no del médico: el escritorio lo sube una vez y ningún
      * médico lo edita.
      *
+     * Con `$regMedico`, los nombres son **los de ese médico** (sus filas de `tipo_antecedente`) y los de la instalación sólo completan lo que le falte:
+     * pediatría llama a los siete tipos de otra forma que ginecología (WEB-12.3).
+     *
      * @return array<int,array{codigo:string, nombre:string}>
      */
-    public function tipos(): array
+    public function tipos(?string $regMedico = null): array
     {
         $tipos = [];
-        foreach ($this->tiposDeAntecedente() as $codigo => $nombre) {
+        foreach ($this->tiposDeAntecedente($regMedico) as $codigo => $nombre) {
             $tipos[] = ['codigo' => $codigo, 'nombre' => $nombre];
         }
 
@@ -222,7 +228,7 @@ final class AntecedentesDelPaciente
     {
         $clave = BusquedaDePacientes::normalizar(trim($buscar));
         $tipo = $this->limpiar($tipo);
-        $tipos = $this->tiposDeAntecedente();
+        $tipos = $this->tiposDeAntecedente($regMedico);
 
         return $this->filasDelCatalogo($regMedico)
             ->filter(function ($fila) use ($clave, $tipo) {
@@ -293,7 +299,7 @@ final class AntecedentesDelPaciente
         }
 
         $tipoCodigo = $this->limpiar($fila->codtipo);
-        $tipos = $this->tiposDeAntecedente();
+        $tipos = $this->tiposDeAntecedente($regMedico);
 
         return (object) [
             'codigo' => (string) $this->limpiar($fila->codantecedente),
@@ -374,9 +380,8 @@ final class AntecedentesDelPaciente
     /** @return Collection<int,object> las filas crudas de `tipo_antecedente` */
     private function tiposDeLaBase(): Collection
     {
-        static $filas = null;
-
-        return $filas ??= DB::table('tipo_antecedente')
+        // Por instancia y no `static`: una escritura de los tipos (`SembrarTiposDeAntecedente`) no se quedaría viendo la lectura vieja.
+        return $this->tiposEnMemoria ??= DB::table('tipo_antecedente')
             ->orderBy('reg_medico')
             ->orderBy('id')
             ->get(['reg_medico', 'codetipo', 'descripcion', 'tipoantecedente']);
@@ -388,9 +393,21 @@ final class AntecedentesDelPaciente
      *
      * @return array<string,string>
      */
-    private function tiposDeAntecedente(): array
+    private function tiposDeAntecedente(?string $regMedico = null): array
     {
         $tipos = [];
+
+        // Los del propio médico mandan (WEB-12.3): el catálogo de tipos no dice lo mismo en todas las especialidades.
+        if ($regMedico !== null) {
+            foreach ($this->tiposDeLaBase() as $fila) {
+                $codigo = $this->limpiar($fila->codetipo);
+                $nombre = $this->limpiar($fila->descripcion);
+
+                if ($codigo !== null && $nombre !== null && (string) $fila->reg_medico === $regMedico) {
+                    $tipos[$codigo] ??= $nombre;
+                }
+            }
+        }
 
         foreach ($this->tiposDeLaBase() as $fila) {
             $codigo = $this->limpiar($fila->codetipo);

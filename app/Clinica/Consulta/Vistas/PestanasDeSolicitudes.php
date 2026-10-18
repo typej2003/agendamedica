@@ -60,7 +60,7 @@ final class PestanasDeSolicitudes
     /**
      * @param  Closure  $url  `fn(string $clave): string` — la URL de esa pestaña (la resuelve el controlador)
      */
-    public function __construct(private Closure $url)
+    public function __construct(private Closure $url, private ?string $rotuloDeLaDieta = null)
     {
     }
 
@@ -86,7 +86,7 @@ final class PestanasDeSolicitudes
         $opciones = [];
 
         foreach (self::TODAS as $clave => $pestana) {
-            $opciones[] = ['texto' => $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
+            $opciones[] = ['texto' => $clave === self::DIETA && $this->rotuloDeLaDieta !== null ? $this->rotuloDeLaDieta : $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 
         return $opciones;

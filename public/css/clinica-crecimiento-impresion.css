@@ -1,0 +1,49 @@
+/* "Curvas de crecimiento" para imprimir (`/clinica/pacientes/{id}/crecimiento/imprimir`, WEB-7.4.3c). Pantalla aparte, sin el armazón de la
+   web: es el documento que va a la impresora del consultorio, como el resumen de la historia (`clinica-resumen-historia.css`). */
+
+@page { size: portrait; margin: 1.5cm; }
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #201048;
+    font-size: 12px;
+    margin: 0 auto;
+    max-width: 19cm;
+    padding: 1.5rem 1rem;
+}
+
+header { border-bottom: 2px solid #783080; padding-bottom: .5rem; margin-bottom: .75rem; }
+.membrete { color: #55555f; font-size: 11px; }
+h1 { font-size: 16px; margin: 0; }
+h2 { font-size: 13px; margin: 0 0 .25rem; border-bottom: 1px solid #d8d8e0; padding-bottom: 2px; }
+
+.datos { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin: .5rem 0 0; }
+.datos div { display: flex; gap: .35rem; }
+.datos dt { font-weight: bold; margin: 0; }
+.datos dd { margin: 0; }
+
+.aviso { margin: .5rem 0; padding: .4rem .6rem; background: #fff6d6; border: 1px solid #f2dcb3; }
+.sin-datos { color: #55555f; }
+
+/* Cada gráfica con su título en un bloque que no se parte entre dos hojas; dos por hoja entran con el ancho de la página. */
+.grafica-bloque { margin: 0 0 .9rem; break-inside: avoid; }
+.grafica-bloque .grafica-crecimiento { max-width: 15cm; }
+.tabla-bloque { break-inside: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th, td { border: 1px solid #d8d8e0; padding: 2px 4px; text-align: left; vertical-align: top; }
+thead th { background: #f3e8f5; }
+.small { font-size: 10px; }
+.text-danger { color: #b3261e; }
+.texto-tenue { color: #55555f; }
+.d-block { display: block; }
+.fw-normal { font-weight: normal; }
+
+.acciones { text-align: right; margin-bottom: .5rem; }
+
+@media print {
+    .acciones { display: none; }
+    body { padding: 0; }
+}

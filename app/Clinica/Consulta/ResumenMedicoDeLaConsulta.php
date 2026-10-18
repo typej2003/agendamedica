@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta;
 
+use App\Actions\Consulta\ArmarResumenDelExamen;
 use App\Models\Consulta;
 use Illuminate\Support\Facades\DB;
 
@@ -63,11 +64,18 @@ final class ResumenMedicoDeLaConsulta
             ->orderBy('id')
             ->first(['total_f', 'total_g']);
 
+        // Pediatría (WEB-12.5): el examen físico es el resumen de `examen_fisico` (su tabla: no hay `examen_fisico_nuevo`), y suma las mediciones y el cuestionario.
+        // Es por dato y no por especialidad: en ginecología esas tablas no tienen filas y los tres bloques no salen.
+        $pediatrico = DB::table('examen_fisico')->where('reg_medico', $regMedico)->where('nrohistoria', $historia)->where('nroconsulta', $nroconsulta)
+            ->orderBy('id')->first(['fisico_resumen']);
+
         return new ResumenMedico(
             [
                 ResumenMedico::MOTIVO_DE_CONSULTA => $this->motivos($regMedico, $historia, $nroconsulta),
                 ResumenMedico::ENFERMEDAD_ACTUAL => $deLaConsulta->enfermedadactual ?? null,
-                ResumenMedico::EXAMEN_FISICO => $examen->total_f ?? null,
+                ResumenMedico::MEDICIONES => $this->mediciones($regMedico, $historia, $nroconsulta),
+                ResumenMedico::EXAMEN_FISICO => TextoDeLaConsulta::limpio($examen->total_f ?? null) ?? ($pediatrico->fisico_resumen ?? null),
+                ResumenMedico::CUESTIONARIO => $this->cuestionario($regMedico, $historia, $nroconsulta),
                 ResumenMedico::EXAMEN_GINECOLOGICO => $examen->total_g ?? null,
                 ResumenMedico::RESULTADO_DE_EXAMENES => $deLaConsulta->oido ?? null,
                 ResumenMedico::DIAGNOSTICO => $this->diagnosticos($regMedico, $historia, $nroconsulta),
@@ -134,6 +142,28 @@ final class ResumenMedicoDeLaConsulta
             ->distinct()
             ->pluck('nroconsulta'));
 
+        // Pediatría (WEB-12.5): el resumen del examen, el cuestionario y las mediciones también hacen que la consulta tenga resumen.
+        $this->sumar($numeros, DB::table('examen_fisico')
+            ->where('reg_medico', $regMedico)
+            ->where('nrohistoria', $numero)
+            ->where(fn ($q) => $this->conTexto($q, ['fisico_resumen']))
+            ->distinct()
+            ->pluck('nroconsulta'));
+
+        $this->sumar($numeros, DB::table('cuestionario')
+            ->where('reg_medico', $regMedico)
+            ->where('nrohistoria', $numero)
+            ->where(fn ($q) => $this->conTexto($q, array_keys(ExamenPediatrico::CUESTIONARIO)))
+            ->distinct()
+            ->pluck('nroconsulta'));
+
+        $this->sumar($numeros, DB::table('percentiles_paciente')
+            ->where('reg_medico', $regMedico)
+            ->where('hhistoria', $numero)
+            ->where(fn ($q) => $q->whereNotNull('peso')->orWhereNotNull('talla')->orWhereNotNull('c_cefalica'))
+            ->distinct()
+            ->pluck('hconsulta'));
+
         $numeros = array_map('intval', array_keys($numeros));
         sort($numeros);
 
@@ -141,6 +171,41 @@ final class ResumenMedicoDeLaConsulta
     }
 
     // ------------------------------------------------------------------------------------------ Adentro
+
+    /** Las mediciones del niño en la consulta como texto (`null` si no hay fila). */
+    private function mediciones(string $regMedico, int $historia, int $nroconsulta): ?string
+    {
+        $fila = DB::table('percentiles_paciente')->where('reg_medico', $regMedico)->where('hhistoria', $historia)->where('hconsulta', $nroconsulta)
+            ->orderBy('id')->first();
+
+        return $fila === null ? null : ArmarResumenDelExamen::mediciones((array) $fila);
+    }
+
+    /**
+     * El cuestionario por aparatos: un renglón «Digestivo: …» por cada aparato con dato.
+     *
+     * @return array<int,string>
+     */
+    private function cuestionario(string $regMedico, int $historia, int $nroconsulta): array
+    {
+        $fila = DB::table('cuestionario')->where('reg_medico', $regMedico)->where('nrohistoria', $historia)->where('nroconsulta', $nroconsulta)
+            ->orderBy('id')->first();
+
+        if ($fila === null) {
+            return [];
+        }
+
+        $renglones = [];
+        foreach (ExamenPediatrico::CUESTIONARIO as $columna => $rotulo) {
+            $texto = TextoDeLaConsulta::limpio($fila->{$columna});
+
+            if ($texto !== null) {
+                $renglones[] = $rotulo . ': ' . $texto;
+            }
+        }
+
+        return $renglones;
+    }
 
     /**
      * Los motivos de la consulta: la descripción del **catálogo** (`motivos_consulta.descripcion`, que es

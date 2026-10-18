@@ -38,6 +38,11 @@ use App\Http\Controllers\Clinica\ConsultaDiagnosticosController;
 use App\Http\Controllers\Clinica\ConsultaEmbarazoController;
 use App\Http\Controllers\Clinica\ConsultaEnfermedadController;
 use App\Http\Controllers\Clinica\ConsultaEvaluacionController;
+use App\Http\Controllers\Clinica\CrecimientoController;
+use App\Http\Controllers\Clinica\VacunaCatalogoController;
+use App\Http\Controllers\Clinica\VacunasDelPacienteController;
+use App\Http\Controllers\Clinica\ConsultaExamenPediatricoController;
+use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
@@ -50,6 +55,7 @@ use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
 use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
+use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\ListadosController;
@@ -60,6 +66,7 @@ use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
+use App\Http\Controllers\Clinica\FamiliaController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
@@ -149,6 +156,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // por `numhistoria`), así que cargar y editar son el mismo POST; el formulario vive en el
             // bloque de la ficha, que es la única pantalla que lo muestra.
             Route::post('/pacientes/{paciente}/representante', [RepresentanteController::class, 'guardar'])->name('pacientes.representante');
+            // La familia del niño (WEB-7.4.2b): los padres, los teléfonos y el representante del escritorio de pediatría.
+            Route::post('/pacientes/{paciente}/familia', [FamiliaController::class, 'guardar'])->name('pacientes.familia');
             Route::put('/pacientes/{paciente}', [PacienteController::class, 'actualizar'])->name('pacientes.actualizar');
             // Las citas de un paciente con su modificar/eliminar y el cambio de cédula: el "Cita x
             // Paciente" del escritorio (WEB-2.15). Va **antes** de `/pacientes/{paciente}` por la misma
@@ -174,6 +183,21 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // consulta es de otro consultorio.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+
+                // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la
+                // hoja para imprimir. Es clínico —sólo del médico— y de un paciente: `/crecimiento` (la entrada del módulo en el menú) manda
+                // a elegirlo.
+                Route::get('/crecimiento', [CrecimientoController::class, 'entrada'])->name('crecimiento');
+                // La entrada del módulo Vacunas en el menú (WEB-7.4.4e): como el crecimiento, es de un paciente; manda a elegirlo.
+                Route::get('/vacunas', [VacunasDelPacienteController::class, 'entrada'])->name('vacunas');
+                Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
+                Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
+                // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
+                Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
+                // **La historia pediátrica imprimible** (WEB-12.5): familia, antecedentes, mediciones y vacunas del niño. Es clínica: sólo del médico.
+                Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->name('pacientes.historia-pediatrica');
+                Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->name('pacientes.vacunas.carnet');
+                Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
                 Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])
@@ -212,6 +236,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
                 Route::delete('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'quitar'])->name('consulta.colposcopia.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
+                // Las mediciones de pediatría (WEB-7.4.3a): talla, peso, perímetros, pulso y presión en `percentiles_paciente`.
+                Route::post('/consulta/{consulta}/mediciones', [ConsultaMedicionesController::class, 'guardar'])->name('consulta.mediciones.guardar');
+                // El examen físico y el cuestionario de pediatría (WEB-12.2): `examen_fisico` y `cuestionario`; «Actualizar» arma el resumen sin guardar.
+                Route::post('/consulta/{consulta}/examen-pediatrico', [ConsultaExamenPediatricoController::class, 'guardarExamen'])->name('consulta.examen-pediatrico.guardar');
+                Route::post('/consulta/{consulta}/examen-pediatrico/resumen', [ConsultaExamenPediatricoController::class, 'resumen'])->name('consulta.examen-pediatrico.resumen');
+                Route::post('/consulta/{consulta}/cuestionario', [ConsultaExamenPediatricoController::class, 'guardarCuestionario'])->name('consulta.cuestionario.guardar');
                 // «Actualizar» (WEB-11.8): arma los resúmenes del examen con lo del formulario, sin guardar.
                 Route::post('/consulta/{consulta}/evaluacion/resumen', [ConsultaEvaluacionController::class, 'resumen'])->name('consulta.evaluacion.resumen');
 
@@ -419,6 +449,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // (`alternar`) y el alta/edición pasan por la misma Action. El motivo de otro médico, 404; la secretaría, 403.
                 Route::get('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'index'])->name('catalogos.motivos-cita');
                 Route::post('/catalogos/motivos-cita', [MotivoCitaCatalogoController::class, 'guardar'])->name('catalogos.motivos-cita.guardar');
+                Route::post('/catalogos/motivos-cita/sugeridos', [MotivoCitaCatalogoController::class, 'agregarSugeridos'])->name('catalogos.motivos-cita.sugeridos');
                 Route::patch('/catalogos/motivos-cita/{id}/alternar', [MotivoCitaCatalogoController::class, 'alternar'])->whereNumber('id')->name('catalogos.motivos-cita.alternar');
                 Route::delete('/catalogos/motivos-cita/{id}', [MotivoCitaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-cita.quitar');
                 // La dirección vieja de WEB-2.17 (con su mismo nombre de ruta) lleva a la nueva. Va antes de `/agenda/{cola}`.
@@ -436,6 +467,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Plantillas de texto** (WEB-8.4): `formato_print` del médico —las plantillas de la evolución, del informe médico, de las dietas…—,
                 // con la misma forma que los otros catálogos clínicos (listado con buscador y filtro por tipo, alta y edición en un diálogo y
                 // «quitar»). Una plantilla se copia a la consulta al elegirla, así que siempre se puede quitar.
+                // **Vacunas del catálogo del médico** (WEB-7.4.4e): la vacuna, sus dosis y el botón «Cargar el catálogo inicial».
+                Route::get('/catalogos/vacunas', [VacunaCatalogoController::class, 'index'])->name('catalogos.vacunas');
+                Route::post('/catalogos/vacunas', [VacunaCatalogoController::class, 'guardar'])->name('catalogos.vacunas.guardar');
+                Route::post('/catalogos/vacunas/cargar-inicial', [VacunaCatalogoController::class, 'cargarInicial'])->name('catalogos.vacunas.cargar-inicial');
+                Route::delete('/catalogos/vacunas/{id}', [VacunaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.vacunas.quitar');
+                Route::post('/catalogos/vacunas/{id}/dosis', [VacunaCatalogoController::class, 'guardarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.guardar');
+                Route::delete('/catalogos/vacunas/dosis/{id}', [VacunaCatalogoController::class, 'quitarDosis'])->whereNumber('id')->name('catalogos.vacunas.dosis.quitar');
                 Route::get('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'index'])->name('catalogos.plantillas-texto');
                 Route::post('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'guardar'])->name('catalogos.plantillas-texto.guardar');
                 Route::delete('/catalogos/plantillas-texto/{id}', [PlantillaDeTextoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.plantillas-texto.quitar');

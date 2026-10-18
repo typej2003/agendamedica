@@ -17,9 +17,7 @@
 |    de dos;
 |  - ventanas: `Docs/MICONSULTAGI-legado/fuentes-pediatria/` (309 ventanas extraídas del .pbl de pediatría).
 |
-| ⚠️ **El `codeespecial` todavía no está**: el de ginecología salió del catálogo `especial` del dump
-| (`020`), y de la instalación de pediatría solo tenemos el esquema, no sus datos. Se agrega cuando
-| llegue el DSN o un dump de la base real (WEB-0.2c). Mientras tanto el reconocimiento es por nombre.
+| El `codeespecial` de pediatría es `029` (catálogo `especial` de la base real, WEB-0.2c/WEB-12.0).
 |
 */
 
@@ -33,8 +31,9 @@ return [
     // Fila del catálogo `specialties` (ya existe con este slug: la siembra el `SpecialtySeeder`).
     'specialty_slug' => 'pediatria',
 
-    // Cómo llama el legado a esta especialidad. `codigos_legado` queda vacío a propósito (ver arriba).
-    'codigos_legado' => [],
+    // Cómo llama el legado a esta especialidad. `029` sale del catálogo `especial` de la base real (2026-10-17; también existen
+    // `019` cirugía pediátrica y `024` neurología pediátrica, que son otras versiones).
+    'codigos_legado' => ['029'],
     'nombres_legado' => ['PEDIATRIA', 'PEDIATRA', 'PEDIA', 'PEDIATRIA Y PUERICULTURA'],
 
     /*

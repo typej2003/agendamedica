@@ -32,7 +32,9 @@
 @if ($editor === null)
     {{-- ------------------------------------------------------------------------------------ La lista --}}
     {{-- Las dos pestañas de la sección (WEB-5.1b): los récipes del paciente y el de la pareja. --}}
-    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+    @if (count($seccion->pestanas()) > 1)
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Récipes de la consulta" />
+    @endif
 
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">

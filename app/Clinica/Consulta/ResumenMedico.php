@@ -61,6 +61,12 @@ final class ResumenMedico
 
     public const EXAMEN_FISICO = 'examen-fisico';
 
+    /** Las mediciones del niño (WEB-12.5, pediatría): peso, talla, perímetros, pulso, presión e IMC de `percentiles_paciente`. */
+    public const MEDICIONES = 'mediciones';
+
+    /** El cuestionario por aparatos (WEB-12.5, pediatría): un renglón por aparato con dato, de `cuestionario`. */
+    public const CUESTIONARIO = 'cuestionario';
+
     public const EXAMEN_GINECOLOGICO = 'examen-ginecologico';
 
     public const RESULTADO_DE_EXAMENES = 'resultado-de-examenes';
@@ -81,7 +87,10 @@ final class ResumenMedico
     private const BLOQUES = [
         self::MOTIVO_DE_CONSULTA => ['rotulo' => 'MOTIVO DE CONSULTA:', 'lista' => true],
         self::ENFERMEDAD_ACTUAL => ['rotulo' => 'ENFERMEDAD ACTUAL:', 'lista' => false],
+        // Los dos bloques pediátricos (WEB-12.5) no son del DataWindow de ginecología: salen sólo si el niño tiene el dato y, sin dato, no se imprimen.
+        self::MEDICIONES => ['rotulo' => 'MEDICIONES:', 'lista' => false],
         self::EXAMEN_FISICO => ['rotulo' => 'EXAMEN FÍSICO:', 'lista' => false],
+        self::CUESTIONARIO => ['rotulo' => 'CUESTIONARIO:', 'lista' => true],
         self::EXAMEN_GINECOLOGICO => ['rotulo' => 'EXAMEN GINECOLÓGICO:', 'lista' => false],
         self::RESULTADO_DE_EXAMENES => ['rotulo' => 'RESULTADO DE EXÁMENES:', 'lista' => false],
         // El único rótulo sin dos puntos: así está en el `text` del DataWindow (`d_lista_diagnostic01.srd`).

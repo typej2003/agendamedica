@@ -94,6 +94,8 @@ final class ConsultaShellVista
         // Las alertas de antecedentes del paciente (WEB-11.6): `[nombre, detalle]` de cada una, y si toca avisarlas con el diálogo.
         private array $alertas = [],
         private bool $avisarAlertas = false,
+        // El `slug` de la especialidad del contexto: decide qué ítems del panel se ofrecen (WEB-12.1). Sin él, el panel completo.
+        private ?string $especialidad = null,
     ) {
     }
 
@@ -263,7 +265,7 @@ final class ConsultaShellVista
      */
     public function seccion(): ?string
     {
-        return SeccionesDeLaConsulta::normalizar($this->seccion);
+        return SeccionesDeLaConsulta::normalizar($this->seccion, $this->especialidad);
     }
 
     /**
@@ -292,7 +294,7 @@ final class ConsultaShellVista
     {
         $grupos = [];
 
-        foreach (SeccionesDeLaConsulta::todas() as $item) {
+        foreach (SeccionesDeLaConsulta::todas($this->especialidad) as $item) {
             $grupos[$item['grupo']][] = $this->item($item);
         }
 
@@ -306,13 +308,13 @@ final class ConsultaShellVista
 
     public function totalItems(): int
     {
-        return SeccionesDeLaConsulta::total();
+        return SeccionesDeLaConsulta::total($this->especialidad);
     }
 
     /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, exámenes, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
     public function totalListos(): int
     {
-        return SeccionesDeLaConsulta::disponibles();
+        return SeccionesDeLaConsulta::disponibles($this->especialidad);
     }
 
     /**

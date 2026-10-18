@@ -2,7 +2,7 @@
      (DietaVista). Una por consulta; se guarda con el botón. Elegir una plantilla **escribe en el editor y no guarda**. --}}
 @php $estado = $vm->estado(); @endphp
 
-<x-ui.tarjeta titulo="Dieta / Recomendaciones" icono="bi-egg-fried">
+<x-ui.tarjeta :titulo="$vm->rotulo()" icono="bi-egg-fried">
     <x-slot name="acciones">
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())

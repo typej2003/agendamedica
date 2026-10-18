@@ -6,8 +6,11 @@
      plantillas de texto vive en `consulta.js`. Las solapas que todavía no existen no se muestran —el panel
      de la consulta ya dijo qué llegaba con cada tarea—. --}}
 <div class="consulta-seccion" id="consulta-evaluacion">
-    <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()"
-                     etiqueta="Examen" />
+    {{-- Con una sola solapa (pediatría, WEB-12.1) no hay nada que elegir. --}}
+    @if (count($seccion->pestanas()) > 1)
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()"
+                         etiqueta="Examen" />
+    @endif
 
     @include($seccion->parcial(), ['seccion' => $seccion->vista()])
 </div>

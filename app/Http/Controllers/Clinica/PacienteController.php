@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Actions\Pacientes\GuardarFamilia;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
+use App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
@@ -51,6 +54,7 @@ class PacienteController extends Controller
     public function __construct(
         private PacientesDelConsultorio $pacientes,
         private CatalogoDeSeguros $seguros,
+        private FamiliaDelPaciente $familias,
     ) {
     }
 
@@ -120,6 +124,29 @@ class PacienteController extends Controller
         return view('clinica.pacientes.ver', [
             'vm'            => $vm,
             'representante' => $representante->bloque($request, $paciente),
+            // Las gráficas de crecimiento del niño (WEB-7.4.3c): sólo en pediatría y sólo para quien trabaja la consulta (la secretaría no ve lo clínico).
+            'urlCrecimiento' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.crecimiento', $ficha->id)
+                : null,
+            'urlHistoriaPediatrica' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.historia-pediatrica', $ficha->id)
+                : null,
+            'urlVacunas' => $request->user()?->trabajaLaConsulta()
+                && str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+                ? route('clinica.pacientes.vacunas', $ficha->id)
+                : null,
+            // La familia del niño del escritorio de pediatría (WEB-7.4.2a): en cualquier otro paciente el bloque no existe.
+            'familia'       => new FamiliaDePacienteVista(
+                $this->familias->de($regMedico, $ficha->numhistoria),
+                fn (int $id) => route('clinica.pacientes.ver', $id),
+                // Sin historia no hay clave con la que guardar: no se ofrece el formulario (misma decisión que el representante).
+                $ficha->numhistoria === null ? null : route('clinica.pacientes.familia', $ficha->id),
+                str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr'),
+                // «Agregar un hermano» (WEB-7.4.2d): el alta de otro niño que nace ya dentro de esta familia.
+                route('clinica.pacientes.nuevo', ['hermano_de' => $ficha->id]),
+            ),
         ]);
     }
 
@@ -191,7 +218,15 @@ class PacienteController extends Controller
      */
     public function nuevo(Request $request)
     {
-        return $this->formulario($request, null);
+        // «Agregar un hermano» (WEB-7.4.2d): `?hermano_de=` precarga los apellidos y deja el rastro para unir las familias al guardar.
+        // Un valor que no sea un niño del consultorio se ignora: el alta sigue siendo la de siempre.
+        $hermano = $this->hermanoDe($request, (int) $request->query('hermano_de', 0));
+
+        if ($hermano !== null) {
+            $request->session()->now('_old_input', ['apellidos' => $hermano->apellidos, 'hermano_de' => $hermano->id]);
+        }
+
+        return $this->formulario($request, null, $hermano);
     }
 
     /**
@@ -228,7 +263,7 @@ class PacienteController extends Controller
     // ------------------------------------------------------------------------------------------ Adentro
 
     /** @param  array{paciente:\App\Models\Paciente, numhistoria:?string}|null  $ficha */
-    private function formulario(Request $request, ?array $ficha)
+    private function formulario(Request $request, ?array $ficha, ?object $hermano = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -238,7 +273,28 @@ class PacienteController extends Controller
                 $ficha['numhistoria'] ?? null,
                 $this->seguros->de($contexto['reg_medico']),
             ),
+            'hermano' => $hermano,
         ]);
+    }
+
+    /**
+     * El niño al que se le agrega un hermano: un paciente del consultorio con historia que ya es un `paciente_chamo` (si no, no hay
+     * familia a la que unirse). `null` si no cumple: no se confirma nada sobre pacientes ajenos.
+     */
+    private function hermanoDe(Request $request, int $pacienteId): ?object
+    {
+        if ($pacienteId <= 0) {
+            return null;
+        }
+
+        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
+        $ficha = $this->pacientes->ficha($regMedico, $pacienteId);
+
+        if ($ficha === null || $ficha->numhistoria === null || $this->familias->de($regMedico, $ficha->numhistoria) === null) {
+            return null;
+        }
+
+        return $ficha;
     }
 
     /** @param  array{paciente:\App\Models\Paciente, numhistoria:?string}|null  $ficha */
@@ -246,6 +302,8 @@ class PacienteController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $datos = $this->validar($request, $ficha['paciente'] ?? null);
+        // Sólo el alta puede traer un hermano; en una edición el campo se ignora.
+        $hermano = $ficha === null ? $this->hermanoDe($request, (int) ($datos['hermano_de'] ?? 0)) : null;
         $columnas = $this->columnas($datos);
 
         try {
@@ -259,10 +317,19 @@ class PacienteController extends Controller
             throw ValidationException::withMessages([$campo => $excepcion->getMessage()]);
         }
 
+        $unido = $hermano !== null ? $this->unirComoHermano($contexto, $paciente, $hermano) : null;
+
         $mensaje = $ficha !== null
             ? 'Se guardaron los cambios de la ficha.'
             : 'Paciente registrado. Todavía no tiene número de historia: se lo asigna el servidor cuando '
                 . 'se complete la historia.';
+
+        if ($hermano !== null) {
+            $mensaje = $unido !== null
+                ? 'Se registró a ' . $paciente->nombres . ' como hermano(a) de ' . $hermano->nombres . ': comparten la familia y el teléfono de contacto. '
+                    . 'Le tocó la historia H. ' . $unido . '.'
+                : 'Paciente registrado, pero no se pudo unir a la familia de ' . $hermano->nombres . '. Entra a su ficha y cárgale la familia.';
+        }
 
         // "¿Atenderá a este paciente hoy?": la pregunta del alta del legado. El sí lleva al alta de cita
         // con el paciente ya elegido, donde la agenda pide la razón y arma la cola del día.
@@ -285,6 +352,28 @@ class PacienteController extends Controller
             ->with('estado', $mensaje);
     }
 
+    /**
+     * Le asigna la historia al niño recién creado (la familia se guarda por ese número) y lo une a la familia de su hermano. Devuelve el
+     * número de historia, o `null` si no se pudo unir. Las reglas son las Actions `AsignarHistoria` y `GuardarFamilia::comoHermano`.
+     */
+    private function unirComoHermano(array $contexto, Paciente $paciente, object $hermano): ?string
+    {
+        try {
+            $historia = app(AsignarHistoria::class)->ejecutar(
+                $contexto['medico'],
+                $this->registrosDelMedico($contexto['medico']),
+                (int) $paciente->getKey(),
+            );
+            $numero = (string) $historia->numhistoria;
+
+            $familia = app(GuardarFamilia::class)->comoHermano($contexto['reg_medico'], $hermano->numhistoria, $numero, $paciente);
+
+            return $familia === null ? null : $numero;
+        } catch (InvalidArgumentException) {
+            return null;
+        }
+    }
+
     /** @return array<string,mixed> */
     private function validar(Request $request, ?Paciente $paciente = null): array
     {
@@ -295,7 +384,10 @@ class PacienteController extends Controller
         // El caso que obliga a mirar también **cómo está el paciente hoy**: editar a alguien que ya está
         // sin cédula y guardar cualquier otro dato (sin tocar la cédula, que el navegador ni manda porque
         // el campo está vacío) no puede quedar rechazado por un dato que el paciente no tiene.
+        // En pediatría no hay cédula del paciente (WEB-7.4.2d): el niño se identifica por nombre, nacimiento y sexo, y la cédula que
+        // importa es la del representante. Un niño con cédula (los más grandes) la puede escribir igual.
         $sinCedula = $request->boolean('sin_cedula')
+            || str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
             || ($paciente !== null && IdentidadDePaciente::esSinCedula($paciente->cedula));
 
         return $request->validate([
@@ -320,6 +412,7 @@ class PacienteController extends Controller
             'fingreso'     => ['nullable', 'date_format:Y-m-d'],
             'atender_hoy'  => ['nullable', 'boolean'],
             'volver_a_consulta' => ['nullable', 'integer'],
+            'hermano_de'   => ['nullable', 'integer'],
         ], $this->avisos());
     }
 
@@ -390,7 +483,7 @@ class PacienteController extends Controller
      */
     private function columnas(array $datos): array
     {
-        unset($datos['sin_cedula'], $datos['atender_hoy'], $datos['volver_a_consulta']);
+        unset($datos['sin_cedula'], $datos['atender_hoy'], $datos['volver_a_consulta'], $datos['hermano_de']);
 
         if (trim((string) ($datos['cedula'] ?? '')) === '') {
             $datos['cedula'] = null;

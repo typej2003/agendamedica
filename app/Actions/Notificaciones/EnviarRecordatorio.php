@@ -82,7 +82,7 @@ final class EnviarRecordatorio
         $centro = $this->centroDeLaCita($cita);
 
         $texto = $this->texto($mensaje, $plantilla, $cita, $paciente, $medico, $centro);
-        $destino = $this->destino($canal, $paciente);
+        $destino = $this->destino($canal, $paciente, $cita);
 
         $envio = $this->canales->enviar(
             $canal,
@@ -221,7 +221,7 @@ final class EnviarRecordatorio
     }
 
     /** A dónde va el mensaje: el teléfono o el correo del paciente, según el canal. */
-    private function destino(string $canal, Paciente $paciente): string
+    private function destino(string $canal, Paciente $paciente, Cola $cita): string
     {
         if (Canal::usaCorreo($canal)) {
             $correo = Correo::valido($paciente->email);
@@ -234,6 +234,11 @@ final class EnviarRecordatorio
         }
 
         $telefono = Telefono::internacional($paciente->telefono);
+
+        // Un niño casi nunca tiene celular propio: sin uno válido se escribe al de su representante o su familia (WEB-7.4.2c).
+        if ($telefono === null && $cita->reg_medico !== null) {
+            $telefono = Telefono::internacional(app(\App\Clinica\Pacientes\TelefonoDeContacto::class)->de((string) $cita->reg_medico, $cita->numhistoria === null ? null : (string) $cita->numhistoria));
+        }
 
         if ($telefono === null) {
             throw new ExcepcionDeEnvio('El paciente no tiene un teléfono válido registrado.');

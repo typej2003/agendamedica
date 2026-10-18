@@ -134,20 +134,36 @@ final class SeccionesDeLaConsulta
      *
      * @return array<int,array{numero:int, grupo:string, titulo:string, icono:string, detalle:string, tarea:string, estado:string, seccion:?string, disponible:bool}>
      */
-    public static function todas(): array
+    public static function todas(?string $especialidad = null): array
     {
-        return array_map(fn (array $item) => $item + ['disponible' => $item['estado'] === 'listo'], self::ITEMS);
+        return array_map(fn (array $item) => $item + ['disponible' => $item['estado'] === 'listo'], self::delaEspecialidad($especialidad));
     }
 
-    public static function total(): int
+    /**
+     * Los ítems que aplican a la especialidad (WEB-12.1): el catálogo es el de ginecología y, en pediatría, se quita el control de embarazo.
+     * Sin especialidad (o en cualquier otra) sale el catálogo completo. La numeración no se toca.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function delaEspecialidad(?string $especialidad): array
     {
-        return count(self::ITEMS);
+        $alcance = AlcanceDeLaEspecialidad::de($especialidad);
+
+        return array_values(array_filter(
+            self::ITEMS,
+            fn (array $item) => $item['seccion'] !== self::SECCION_EMBARAZO || $alcance->muestraElEmbarazo(),
+        ));
+    }
+
+    public static function total(?string $especialidad = null): int
+    {
+        return count(self::delaEspecialidad($especialidad));
     }
 
     /** Cuántos ítems ya tienen pantalla: hoy 13 de 14 (sólo falta la pre-factura → F9). */
-    public static function disponibles(): int
+    public static function disponibles(?string $especialidad = null): int
     {
-        return count(array_filter(self::ITEMS, fn (array $item) => $item['estado'] === 'listo'));
+        return count(array_filter(self::delaEspecialidad($especialidad), fn (array $item) => $item['estado'] === 'listo'));
     }
 
     /**
@@ -157,13 +173,13 @@ final class SeccionesDeLaConsulta
      *
      * @return array{numero:int, grupo:string, titulo:string, icono:string, detalle:string, tarea:string, estado:string, seccion:?string, disponible:bool}|null
      */
-    public static function porSeccion(?string $seccion): ?array
+    public static function porSeccion(?string $seccion, ?string $especialidad = null): ?array
     {
         if ($seccion === null || $seccion === '') {
             return null;
         }
 
-        foreach (self::todas() as $item) {
+        foreach (self::todas($especialidad) as $item) {
             if ($item['seccion'] === $seccion) {
                 return $item;
             }
@@ -173,15 +189,15 @@ final class SeccionesDeLaConsulta
     }
 
     /** ¿La clave corresponde a una sección con pantalla dentro de la consulta? */
-    public static function existeSeccion(?string $seccion): bool
+    public static function existeSeccion(?string $seccion, ?string $especialidad = null): bool
     {
-        return self::porSeccion($seccion) !== null;
+        return self::porSeccion($seccion, $especialidad) !== null;
     }
 
     /** La clave normalizada: la pedida si es una sección con pantalla, `null` en cualquier otro caso. */
-    public static function normalizar(?string $seccion): ?string
+    public static function normalizar(?string $seccion, ?string $especialidad = null): ?string
     {
-        return self::porSeccion($seccion)['seccion'] ?? null;
+        return self::porSeccion($seccion, $especialidad)['seccion'] ?? null;
     }
 
     /**
@@ -198,9 +214,9 @@ final class SeccionesDeLaConsulta
      * @param  string|null  $seccionActual  el `?seccion=` de la petición (se normaliza)
      * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, deshabilitado:bool}>
      */
-    public static function submenu(int $consultaId, ?string $seccionActual): array
+    public static function submenu(int $consultaId, ?string $seccionActual, ?string $especialidad = null): array
     {
-        $actual = self::normalizar($seccionActual);
+        $actual = self::normalizar($seccionActual, $especialidad);
 
         return array_map(fn (array $item) => [
             'texto' => $item['titulo'],
@@ -210,6 +226,6 @@ final class SeccionesDeLaConsulta
                 : null,
             'activo' => $actual !== null && $item['seccion'] === $actual,
             'deshabilitado' => $item['estado'] !== 'listo',
-        ], self::todas());
+        ], self::todas($especialidad));
     }
 }

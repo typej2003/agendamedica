@@ -29,6 +29,7 @@ use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\PlantillasDelEstudio;
@@ -64,7 +65,10 @@ use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
+use App\Clinica\Consulta\Vistas\MedicionesVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
+use App\Clinica\Crecimiento\MedicionesDeLaConsulta;
+use App\Clinica\Crecimiento\ReferenciaDeCrecimiento;
 use App\Clinica\Consulta\Vistas\ReferenciasVista;
 use App\Clinica\Consulta\Vistas\ReposoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
@@ -197,6 +201,11 @@ class ConsultaController extends Controller
 
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
         // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
+        // Pediatría (WEB-12.3): sus siete tipos de antecedente (Patológicos, C.A., Madre…) se siembran en el catálogo del médico la primera vez.
+        if ($this->alcance()->esPediatria()) {
+            app(\App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos::class)->ejecutar($contexto['reg_medico']);
+        }
+
         $alertas = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria)
             ->where('alerta', true)
             ->map(fn ($fila) => ['nombre' => $fila->nombre, 'detalle' => $fila->detalle])
@@ -208,6 +217,13 @@ class ConsultaController extends Controller
             $request->session()->push('alertas_vistas', (int) $consulta->id);
         }
 
+        // El aviso de vacunas pendientes (WEB-7.4.4d): sólo en pediatría y sólo en la consulta (la agenda de la secretaría no lo ve).
+        $avisoVacunas = $this->alcance()->esPediatria()
+            ? app(\App\Clinica\Vacunas\AvisoDeVacunas::class)->de(
+                $contexto['reg_medico'], (int) $paciente->id, \App\Clinica\Pacientes\CamposDePaciente::historiaNumerica($paciente->numhistoria),
+                FechaDelConsultorio::hoy()->toDateString(),
+            )
+            : null;
         // El grupo «Consulta» del menú lateral (revisión de Alexander): el armazón necesita saber qué consulta se está
         // atendiendo y qué sección está abierta para armar sus ítems y marcar el activo. Se comparte acá —y no se lee
         // de la ruta en el compositor— porque el `id` del paciente y la sección ya están resueltos en este método.
@@ -217,6 +233,7 @@ class ConsultaController extends Controller
         ]);
 
         return view('clinica.consulta.ver', [
+            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
             'vm' => new ConsultaShellVista(
                 $paciente,
                 (int) $consulta->nroconsulta,
@@ -249,6 +266,7 @@ class ConsultaController extends Controller
                 (int) $consulta->id,
                 $alertas,
                 $avisar,
+                $contexto['specialty']?->slug,
             ),
             // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
             // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
@@ -265,6 +283,33 @@ class ConsultaController extends Controller
             // La tarjeta que agrega la colposcopía (A-13): sus dos lienzos del cuello uterino, con su base y su trazo.
             'dibujos' => $this->dibujosDeLaColposcopia($seccion, (string) request()->query('pestana', ''), $consulta),
         ]);
+    }
+
+    /**
+     * La solapa *Mediciones* (WEB-7.4.3a): la fila de la consulta, el niño (sexo y nacimiento) y la referencia de crecimiento del consultorio.
+     * Sin referencia cargada, el ViewModel lo dice en vez de fallar.
+     */
+    private function vistaDeMediciones(Consulta $consulta, string $regMedico, int $pacienteId, string $urlVolver): MedicionesVista
+    {
+        $paciente = \App\Models\Paciente::find($pacienteId);
+
+        return new MedicionesVista(
+            (new MedicionesDeLaConsulta())->de($consulta),
+            $paciente?->fnacimiento ? (string) \Illuminate\Support\Carbon::parse($paciente->fnacimiento)->toDateString() : null,
+            $paciente?->sexo,
+            $consulta->fecha?->toDateString(),
+            (new ReferenciaDeCrecimiento())->cargar($regMedico),
+            route('clinica.consulta.mediciones.guardar', $consulta->id),
+            $urlVolver,
+            (array) old(),
+            route('clinica.pacientes.crecimiento', $pacienteId),
+        );
+    }
+
+    /** Qué partes de la consulta aplican a la especialidad del contexto (WEB-12.1). */
+    private function alcance(): AlcanceDeLaEspecialidad
+    {
+        return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
     }
 
     /**
@@ -396,13 +441,47 @@ class ConsultaController extends Controller
             // Las **solapas del examen** (WEB-6.5): el `&pestana=` elige cuál, como el `&tipo=` del estudio.
             // Están la evaluación física (WEB-4.3, el examen general y el ginecológico juntos) y las cuatro
             // solapas de texto (colposcopía, citología, histeroscopía y resultado de exámenes).
-            $pestana = PestanasDelExamen::normalizar((string) request()->query('pestana', ''));
+            $pestana = $this->alcance()->pestanaDelExamen((string) request()->query('pestana', ''));
 
             $url = fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
                 'seccion' => ConsultaShellVista::SECCION_EVALUACION,
                 'pestana' => $clave,
             ]);
+
+            // Las mediciones de pediatría (WEB-7.4.3a): su propia tabla (`percentiles_paciente`) y su propio ViewModel.
+            if ($pestana === PestanasDelExamen::MEDICIONES) {
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    $this->vistaDeMediciones($consulta, $regMedico, $pacienteId, $url($pestana)),
+                );
+            }
+
+            // El examen físico y el cuestionario de pediatría (WEB-12.2): sus propias tablas (`examen_fisico` y `cuestionario`) y sus ViewModels.
+            if ($pestana === PestanasDelExamen::EXAMEN || $pestana === PestanasDelExamen::CUESTIONARIO) {
+                $pediatrico = new \App\Clinica\Consulta\ExamenPediatrico();
+
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    $pestana === PestanasDelExamen::EXAMEN
+                        ? new \App\Clinica\Consulta\Vistas\ExamenPediatricoVista(
+                            $pediatrico->examen($consulta),
+                            route('clinica.consulta.examen-pediatrico.guardar', $consulta->id),
+                            route('clinica.consulta.examen-pediatrico.resumen', $consulta->id),
+                            $url($pestana),
+                            PlantillasDelTexto::de($regMedico, 'RF')->all(),
+                            (array) old(),
+                        )
+                        : new \App\Clinica\Consulta\Vistas\CuestionarioVista(
+                            $pediatrico->cuestionario($consulta),
+                            route('clinica.consulta.cuestionario.guardar', $consulta->id),
+                            $url($pestana),
+                            (array) old(),
+                        ),
+                );
+            }
 
             // La lectura de las solapas de texto comparte la lectura del examen (`examen_fisico_nuevo`) con la
             // evaluación física: la copia de la colposcopía es esa misma fila.
@@ -414,7 +493,7 @@ class ConsultaController extends Controller
 
             return new SeccionDeEvaluacionVista(
                 $pestana,
-                new PestanasDelExamen($url),
+                new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
                 $pestana === PestanasDelExamen::MAMAS
                     ? new DibujosDeMamasVista(
                         fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),
@@ -458,15 +537,15 @@ class ConsultaController extends Controller
             // El tipo del estudio viaja en la URL (`&tipo=`): el contenedor muestra los que existen hoy
             // (el ginecológico de WEB-6.1, los dos obstétricos de WEB-6.2, el Doppler y el ecocardiograma
             // fetal de WEB-6.3) y los demás llegan con las tareas siguientes de F6.
-            $tipo = TiposDeEstudio::normalizar((string) request()->query('tipo', ''));
+            $tipo = $this->alcance()->tipoDeEstudio((string) request()->query('tipo', ''));
 
-            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander).
-            $especialidad = request()->attributes->get('contexto_clinico')['specialty']?->slug;
+            // El eco abdominal no se ofrece en ginecología: el botón está oculto en el escritorio (WEB-11.14, Alexander). En pediatría es
+            // el único (WEB-12.1).
             $tipos = new TiposDeEstudio(fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
                 'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                 'tipo' => $clave,
-            ]), $especialidad === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : []);
+            ]), $this->alcance()->tiposDeEstudioOcultos());
 
             // Las plantillas de texto del estudio (revisión de Alexander, 2026-10-17): el tipo de `formato_print`
             // que el escritorio usa en esa ventana y la columna del informe a la que se copian. El
@@ -729,7 +808,8 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
-            $tipos = $antecedentes->tipos();
+            // Con el nombre que cada médico les da (WEB-12.3: las siete categorías de pediatría; ginecología no cambia).
+            $tipos = $antecedentes->tipos($regMedico);
 
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
@@ -855,6 +935,8 @@ class ConsultaController extends Controller
 
         $pestanas = new PestanasDeSolicitudes(
             fn (string $clave) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $clave]),
+            // En pediatría la pestaña de la dieta es *Alimentación* (WEB-12.4): la misma fila de `dieta_paciente`, con el catálogo de `dietas` además de las plantillas.
+            $this->alcance()->esPediatria() ? 'Alimentación' : null,
         );
 
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
@@ -930,9 +1012,14 @@ class ConsultaController extends Controller
                 $fila?->dieta,
                 $fila?->descripcion,
                 $dietas->esReal($fila),
-                $dietas->plantillas((string) $consulta->reg_medico),
+                $this->alcance()->esPediatria()
+                    ? $dietas->plantillas((string) $consulta->reg_medico)->concat(
+                        (new \App\Clinica\Consulta\DietasDelCatalogo())->de((string) $consulta->reg_medico),
+                    )->unique('titulo')->sortBy('titulo')->values()
+                    : $dietas->plantillas((string) $consulta->reg_medico),
                 ['guardar' => route('clinica.consulta.dieta.guardar', $id), 'eliminar' => route('clinica.consulta.dieta.eliminar', $id), 'imprimir' => $imprimir('dieta')],
                 $old,
+                $this->alcance()->esPediatria() ? 'Alimentación' : 'Dieta / Recomendaciones',
             );
         } else {
             $fila = $constancias->fila($consulta);
@@ -986,7 +1073,9 @@ class ConsultaController extends Controller
                 'rutina' => route('clinica.consulta.laboratorio.rutina', [$id, '__TIPO__']),
                 'administrar' => route('clinica.catalogos.examenes'),
                 // El botón «Pareja» (WEB-11.21): su orden aparte.
-                'pareja' => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA]),
+                'pareja' => $this->alcance()->muestraLaPareja()
+                    ? route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::PAREJA])
+                    : '',
             ],
         );
     }
@@ -1122,10 +1211,12 @@ class ConsultaController extends Controller
         $urlLista = route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
         $pestanas = new PestanasDeRecipes(
             $urlLista,
-            route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA]),
+            $this->alcance()->muestraLaPareja()
+                ? route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_RECIPES, 'recipe' => ConsultaShellVista::RECIPE_PAREJA])
+                : '',
         );
 
-        if ($editando === ConsultaShellVista::RECIPE_PAREJA) {
+        if ($editando === ConsultaShellVista::RECIPE_PAREJA && $this->alcance()->muestraLaPareja()) {
             return (new SeccionDeRecipeDeLaParejaVista(
                 // El récipe de la pareja de **esta** consulta (`recipes_pareja`: una por consulta, sin cabecera),
                 // o `null` si todavía no tiene. No se mezcla con los récipes del paciente.
@@ -1325,7 +1416,7 @@ class ConsultaController extends Controller
 
         $buscar = trim((string) request()->query('buscar', ''));
         $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
-        $tipos = $antecedentes->tipos();
+        $tipos = $antecedentes->tipos($regMedico);
         $tipo = TipoDeAntecedentes::elegido((string) request()->query('tipo', ''), $delPaciente, $tipos);
 
         return new SeccionDeAntecedentesCatalogoVista(

@@ -54,6 +54,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.catalogo-inicial.vacunas') }}" class="nav-link {{ request()->routeIs('admin.catalogo-inicial.*') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.catalogo-inicial.*')) aria-current="page" @endif title="Catálogo inicial · Vacunas">
+                    <i class="bi bi-capsule" aria-hidden="true"></i>
+                    <span class="link-text">Catálogo inicial</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
                     <i class="bi bi-key-fill" aria-hidden="true"></i>

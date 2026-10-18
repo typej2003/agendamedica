@@ -27,7 +27,14 @@ final class DietaVista
         private Collection $plantillas,
         private array $urls,
         private array $old = [],
+        // En pediatría la pestaña se llama *Alimentación* (WEB-12.4): es la misma fila de `dieta_paciente`.
+        private string $rotulo = 'Dieta / Recomendaciones',
     ) {
+    }
+
+    public function rotulo(): string
+    {
+        return $this->rotulo;
     }
 
     public function titulo(): string

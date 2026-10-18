@@ -12,6 +12,21 @@
             <a class="btn btn-outline-secondary" href="{{ route('clinica.pacientes.historia', $vm->id()) }}">
                 <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver resumen
             </a>
+            @if ($urlHistoriaPediatrica)
+                <a class="btn btn-outline-secondary" href="{{ $urlHistoriaPediatrica }}" target="_blank" rel="noopener">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Historia pediátrica
+                </a>
+            @endif
+            @if ($urlVacunas)
+                <a class="btn btn-outline-secondary" href="{{ $urlVacunas }}">
+                    <i class="bi bi-capsule" aria-hidden="true"></i> Vacunas
+                </a>
+            @endif
+            @if ($urlCrecimiento)
+                <a class="btn btn-outline-secondary" href="{{ $urlCrecimiento }}">
+                    <i class="bi bi-graph-up" aria-hidden="true"></i> Crecimiento
+                </a>
+            @endif
             {{-- Cuando falta la historia, **esa** es la acción primaria de la pantalla: es lo que hay que
                  hacer para poder atender al paciente (wiki `04-historia-clinica.md`: "No se atiende sin
                  historia"). Editar la ficha queda al lado, en secundario. Con la historia puesta, la
@@ -132,6 +147,8 @@
     </x-ui.tarjeta>
     @endif
 
+    @include('clinica.pacientes._familia', ['familia' => $familia])
+
     <div class="row g-3">
         <div class="col-12 col-lg-6">
             <x-ui.tarjeta titulo="Datos del paciente" icono="bi-person-vcard" class="h-100">
@@ -179,8 +196,14 @@
          de contacto. El botón del bloque lo abre (`public/js/clinica/representante.js`) y, si la validación
          falló, la página lo abre sola para que el error se lea (guía de UI §3). --}}
     @include('clinica.pacientes._dialogo-representante', ['rep' => $representante])
+    @if ($familia->cargada() && $familia->puedeEditar())
+        @include('clinica.pacientes._dialogo-familia', ['familia' => $familia])
+    @endif
 @endsection
 
 @section('scripts')
     <script src="{{ asset('js/clinica/representante.js') }}"></script>
+    @if ($familia->cargada() && $familia->puedeEditar())
+        <script src="{{ asset('js/clinica/familia.js') }}"></script>
+    @endif
 @endsection

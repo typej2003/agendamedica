@@ -7,8 +7,10 @@
      de la consulta ya dijo qué llegaba con cada tarea— y el JS del aviso de cambios sin guardar vive en
      `consulta.js`: la vista no lleva JS ni estilos. --}}
 <div class="consulta-seccion" id="consulta-estudio">
-    <x-ui.chips class="mb-3" :opciones="$seccion->tipos()"
-                     etiqueta="Estudios ecográficos" />
+    @if (count($seccion->tipos()) > 1)
+        <x-ui.chips class="mb-3" :opciones="$seccion->tipos()"
+                         etiqueta="Estudios ecográficos" />
+    @endif
 
     @include($seccion->parcial(), ['vm' => $seccion->estudio(), 'plantillas' => $seccion->plantillas()])
 

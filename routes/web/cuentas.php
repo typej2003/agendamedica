@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Admin\ApiKeys;
+use App\Http\Livewire\Admin\CatalogoInicialVacunas;
 use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
 use App\Http\Livewire\Admin\Especialidades;
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
     // Con qué especialidades trabaja cada médico (lo que enciende los módulos de la web clínica).
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
+    // **Catálogo inicial · Vacunas** (WEB-12.8): lo que cada médico de pediatría recibe como punto de partida.
+    Route::get('/catalogo-inicial/vacunas', CatalogoInicialVacunas::class)->name('catalogo-inicial.vacunas');
     Route::get('/api-keys', ApiKeys::class)->name('api-keys');
     // Planes de servicio y vencimiento por médico (Paso 27).
     // **Ayúdanos a mejorar** (ROADMAP §9): la bandeja donde recibimos los comentarios del consultorio.

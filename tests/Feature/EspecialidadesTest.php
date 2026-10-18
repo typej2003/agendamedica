@@ -118,8 +118,9 @@ class EspecialidadesTest extends TestCase
         $this->assertGreaterThan(1, $catalogo->count());
 
         foreach ($catalogo as $especialidad) {
+            // Pediatría suma *Crecimiento* (WEB-7.4.3c) y *Vacunas* (WEB-7.4.4e), que es clínico y sólo lo ve el médico.
             $this->assertSame(
-                ['agenda', 'pacientes'],
+                $especialidad->slug === 'pediatria' ? ['agenda', 'pacientes', 'crecimiento', 'vacunas'] : ['agenda', 'pacientes'],
                 $especialidad->modulosVisibles(['Medico'])->pluck('slug')->all(),
                 "La especialidad '{$especialidad->name}' no ofrece el núcleo compartido."
             );
