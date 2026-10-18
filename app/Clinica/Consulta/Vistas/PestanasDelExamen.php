@@ -33,6 +33,15 @@ final class PestanasDelExamen
     /** Las mediciones (WEB-7.4.3a): talla, peso, perímetros, pulso y presión de pediatría (`percentiles_paciente`). */
     public const MEDICIONES = 'mediciones';
 
+    /** El examen físico de pediatría (WEB-12.2): nueve cuadros por aparatos y el resumen (`examen_fisico`). */
+    public const EXAMEN = 'examen';
+
+    /** El cuestionario por aparatos de pediatría (WEB-12.2): once cuadros de texto (`cuestionario`). */
+    public const CUESTIONARIO = 'cuestionario';
+
+    /** Las solapas propias de pediatría: se ofrecen sólo allí (`AlcanceDeLaEspecialidad`). */
+    public const PEDIATRICAS = [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO];
+
     /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
     public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
 
@@ -41,6 +50,8 @@ final class PestanasDelExamen
     private const ROTULOS = [
         self::FISICO => 'Examen físico',
         self::MEDICIONES => 'Mediciones',
+        self::EXAMEN => 'Examen físico',
+        self::CUESTIONARIO => 'Cuestionario',
         self::MAMAS => 'Imágenes de mamas',
         self::GINECOLOGICO => 'Examen ginecológico',
     ];
@@ -48,6 +59,8 @@ final class PestanasDelExamen
     private const ICONOS = [
         self::FISICO => 'bi-clipboard2-pulse',
         self::MEDICIONES => 'bi-rulers',
+        self::EXAMEN => 'bi-clipboard2-pulse',
+        self::CUESTIONARIO => 'bi-chat-left-dots',
         self::MAMAS => 'bi-brush',
         self::GINECOLOGICO => 'bi-gender-female',
     ];
@@ -79,7 +92,7 @@ final class PestanasDelExamen
     /** Las claves, en el orden del escritorio. */
     public static function claves(): array
     {
-        return array_merge([self::MEDICIONES, self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
+        return array_merge([self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::FISICO, self::MAMAS, self::GINECOLOGICO], TextosDelExamen::claves());
     }
 
     /**

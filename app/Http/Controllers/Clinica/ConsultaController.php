@@ -440,6 +440,31 @@ class ConsultaController extends Controller
                 );
             }
 
+            // El examen físico y el cuestionario de pediatría (WEB-12.2): sus propias tablas (`examen_fisico` y `cuestionario`) y sus ViewModels.
+            if ($pestana === PestanasDelExamen::EXAMEN || $pestana === PestanasDelExamen::CUESTIONARIO) {
+                $pediatrico = new \App\Clinica\Consulta\ExamenPediatrico();
+
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    $pestana === PestanasDelExamen::EXAMEN
+                        ? new \App\Clinica\Consulta\Vistas\ExamenPediatricoVista(
+                            $pediatrico->examen($consulta),
+                            route('clinica.consulta.examen-pediatrico.guardar', $consulta->id),
+                            route('clinica.consulta.examen-pediatrico.resumen', $consulta->id),
+                            $url($pestana),
+                            PlantillasDelTexto::de($regMedico, 'RF')->all(),
+                            (array) old(),
+                        )
+                        : new \App\Clinica\Consulta\Vistas\CuestionarioVista(
+                            $pediatrico->cuestionario($consulta),
+                            route('clinica.consulta.cuestionario.guardar', $consulta->id),
+                            $url($pestana),
+                            (array) old(),
+                        ),
+                );
+            }
+
             // La lectura de las solapas de texto comparte la lectura del examen (`examen_fisico_nuevo`) con la
             // evaluación física: la copia de la colposcopía es esa misma fila.
             $texto = new TextoDelExamen($examen);

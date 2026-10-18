@@ -81,16 +81,16 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertSame([], AlcanceDeLaEspecialidad::de('cirugia')->tiposDeEstudioOcultos());
     }
 
-    public function test_las_solapas_del_examen_en_pediatria_son_las_mediciones_y_el_examen_fisico(): void
+    public function test_las_solapas_del_examen_en_pediatria_son_las_propias(): void
     {
         $pediatria = AlcanceDeLaEspecialidad::de('pediatria');
         $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $pediatria->pestanasDelExamenOcultas());
 
         $this->assertSame(
-            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::FISICO],
+            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO],
             array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
         );
-        // Arranca en las mediciones, como el escritorio; la URL directa sigue abriendo el examen físico.
+        // Arranca en las mediciones, como el escritorio; la URL directa sigue abriendo el examen de ginecología.
         $this->assertSame(PestanasDelExamen::MEDICIONES, $pediatria->pestanaDelExamen(''));
         $this->assertSame(PestanasDelExamen::FISICO, $pediatria->pestanaDelExamen(PestanasDelExamen::FISICO));
     }
@@ -100,9 +100,9 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $gineco = AlcanceDeLaEspecialidad::de(self::GINECO);
         $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $gineco->pestanasDelExamenOcultas());
 
-        // Las mismas solapas de siempre: *Mediciones* es pediátrica y no se ofrece.
+        // Las mismas solapas de siempre: las tres propias de pediatría (mediciones, examen y cuestionario) no se ofrecen.
         $this->assertSame(
-            array_values(array_diff(PestanasDelExamen::claves(), [PestanasDelExamen::MEDICIONES])),
+            array_values(array_diff(PestanasDelExamen::claves(), PestanasDelExamen::PEDIATRICAS)),
             array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
         );
         $this->assertSame(PestanasDelExamen::FISICO, $gineco->pestanaDelExamen(''));

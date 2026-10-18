@@ -44,6 +44,31 @@ final class ArmarResumenDelExamen
     }
 
     /**
+     * El resumen del **examen físico de pediatría** (WEB-12.2): `ue_fisico` del escritorio (`w_consulta_principal.srw:11424`) —peso, talla y
+     * circunferencia cefálica de las mediciones, y los cuadros del examen con **los rótulos de la pantalla** (no los de sus columnas)—.
+     * La temperatura no se guarda en ninguna tabla (`em_tem` sólo la usa este resumen) y por eso no entra.
+     *
+     * @param  array<string,mixed>  $datos  `peso`, `talla`, `c_cefalica` (de las mediciones) y las columnas del examen (`cabeza`…`otros`, `neurologico`)
+     */
+    public static function pediatrico(array $datos): string
+    {
+        return self::armar($datos, [
+            ['peso', 'PESO', ' Kg'],
+            ['talla', 'TALLA', ' Cm'],
+            ['c_cefalica', 'CIRCUNFERENCIA CEFÁLICA', ' Cm'],
+            ['cabeza', 'CONDICIONES GENERALES', ''],
+            ['torax', 'PIEL', ''],
+            ['abdomen', 'CABEZA', ''],
+            ['pelvis', 'ORL', ''],
+            ['genitales', 'TÓRAX', ''],
+            ['brazos', 'ABDOMEN', ''],
+            ['piernas', 'GENITALES', ''],
+            ['otros', 'EXTREMIDADES', ''],
+            ['neurologico', 'NEUROLÓGICO', ''],
+        ]);
+    }
+
+    /**
      * El resumen del **examen ginecológico**: genitales externos, espéculos, tactos, colposcopía y citología.
      *
      * @param  array<string,mixed>  $datos  `genitales_externos`, `especulos`, `tacto_vaginal`, `tacto_rectal`, `colposcopia`, `citologia`
