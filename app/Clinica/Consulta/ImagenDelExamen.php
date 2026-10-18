@@ -29,12 +29,21 @@ final class ImagenDelExamen
     /** La colposcopía: la `tabpage_31` del escritorio y la primera solapa que tuvo la tarjeta (A-13). */
     public const COLPOSCOPIA = 'colposcopia';
 
+    /**
+     * La **histeroscopía** (O-10): la `tabpage_49` del escritorio, que era sólo un texto. Tiene la misma tarjeta de dos
+     * modos y su esquema es la cavidad uterina con los dos ostium y el canal cervical (`public/img/clinica/histeroscopia.svg`).
+     */
+    public const HISTEROSCOPIA = 'histeroscopia';
+
     /** Los exámenes que tienen la tarjeta de dos modos. */
-    public const EXAMS = [self::COLPOSCOPIA];
+    public const EXAMS = [self::COLPOSCOPIA, self::HISTEROSCOPIA];
 
     /** Las variantes del esquema de la colposcopía: las dos que traía la imagen del escritorio. */
     public const NULIPARA = 'nulipara';
     public const MULTIPARA = 'multipara';
+
+    /** La variante del esquema de la histeroscopía: la cavidad uterina, que es una sola. */
+    public const UTERO = 'utero';
 
     public const VECTOR = 'vector';
     public const ESCRITORIO = 'escritorio';
@@ -54,6 +63,7 @@ final class ImagenDelExamen
      */
     private const VARIANTES = [
         self::COLPOSCOPIA => [self::NULIPARA, self::MULTIPARA],
+        self::HISTEROSCOPIA => [self::UTERO],
     ];
 
     /**
@@ -64,6 +74,8 @@ final class ImagenDelExamen
     private const VARIANTES_TEXTO = [
         self::NULIPARA => ['titulo' => 'Cuello nulípara', 'descripcion' => 'Orificio transverso'],
         self::MULTIPARA => ['titulo' => 'Cuello multípara', 'descripcion' => 'Orificio redondo'],
+        // El esquema que dejó el cliente para la histeroscopía: la cavidad uterina con los dos ostium y el canal cervical.
+        self::UTERO => ['titulo' => 'Cavidad uterina', 'descripcion' => 'Con los dos ostium y el canal cervical'],
     ];
 
     /** La etiqueta de cada base, en el orden en que se ofrecen (la vectorial primero: es la que se ve por defecto). */
@@ -75,6 +87,7 @@ final class ImagenDelExamen
     /** Cómo se llama la tarjeta de cada examen. */
     private const TARJETAS = [
         self::COLPOSCOPIA => ['titulo' => 'Imagen de la colposcopía', 'icono' => 'bi-brush', 'articulo' => 'la'],
+        self::HISTEROSCOPIA => ['titulo' => 'Imagen de la histeroscopía', 'icono' => 'bi-camera', 'articulo' => 'la'],
     ];
 
     /** ¿El valor es uno de los exámenes con tarjeta? */
@@ -176,6 +189,11 @@ final class ImagenDelExamen
         if ($examen === self::COLPOSCOPIA) {
             return 'img/clinica/colposcopia-' . $variante . '.'
                 . (self::base($examen, $base) === self::ESCRITORIO ? 'png' : 'svg');
+        }
+
+        // La histeroscopía tiene **un solo** esquema y no elige base: el SVG que dejó el cliente (O-10).
+        if ($examen === self::HISTEROSCOPIA && $variante === self::UTERO) {
+            return 'img/clinica/histeroscopia.svg';
         }
 
         return null;

@@ -480,11 +480,13 @@ final class SolicitudesParaImprimir
 
             $documento = $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
 
-            // La colposcopía lleva, además de su texto, la **imagen que el médico eligió** (O-09: el esquema con sus
-            // marcas o el videocolposcopio), en una hoja aparte cuando se imprime «con imágenes», por el mismo camino que
-            // las fotos de un eco.
-            if ($clave === DocumentoImpreso::COLPOSCOPIA) {
-                $documento = $documento->conImagenes($this->imagenesDelExamen->de($consulta, ImagenDelExamen::COLPOSCOPIA));
+            // La colposcopía y la histeroscopía llevan, además de su texto, la **imagen que el médico eligió** (O-09 y
+            // O-10: el esquema con sus marcas o el videocolposcopio / videohisteroscopio), en una hoja aparte cuando se
+            // imprime «con imágenes», por el mismo camino que las fotos de un eco.
+            $conImagen = ImagenDelExamen::deLaSolapa($solapa);
+
+            if ($conImagen !== null) {
+                $documento = $documento->conImagenes($this->imagenesDelExamen->de($consulta, $conImagen));
             }
 
             return $documento;
