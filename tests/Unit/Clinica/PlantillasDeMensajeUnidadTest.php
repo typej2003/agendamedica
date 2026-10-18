@@ -225,7 +225,10 @@ class PlantillasDeMensajeUnidadTest extends TestCase
         $this->assertSame('Tipo ZZ', TiposDePlantillaDeTexto::nombre('ZZ'));
         $this->assertSame('Sin tipo', TiposDePlantillaDeTexto::nombre(null));
         $this->assertTrue(TiposDePlantillaDeTexto::seUsaEnLaWeb('EV'));
-        $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb('UG'));
+        // Los nueve tipos de eco ya no son «huérfanos»: A-14 (2026-10-17) los ofreció en su estudio, a pedido de una
+        // médica. `EM` (eco de cuello) y `ER` (eco renal) siguen sin pantalla en la web.
+        $this->assertTrue(TiposDePlantillaDeTexto::seUsaEnLaWeb('UG'));
+        $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb('EM'));
         $this->assertCount(20, TiposDePlantillaDeTexto::nombres());
     }
 }
