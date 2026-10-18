@@ -25,8 +25,10 @@ use Illuminate\Support\Facades\DB;
  *  3. **El estado civil se compara con `pacientes.codeestado`**, no con `codesegemp` como lo hacen dos de los
  *     ocho DataWindows del legado (ver `FiltroDePacientesPorRango`).
  *
- * **Un paciente sin fecha de nacimiento no entra** mientras se filtre por edad, que es lo que hacía el `NULL`
- * del legado (un `between` con `NULL` no es verdadero) y lo mismo que hace el listado de embarazos.
+ * **La edad sólo filtra cuando el médico la pone** (O-14, 2026-10-17): con el rango **abierto** —el de la
+ * pantalla, 1 a 110— no se agrega la condición de `fnacimiento`, así que un paciente **sin fecha de
+ * nacimiento** aparece igual (el alta rápida de «Nueva cita» no pide ese dato). El `NULL` del legado y el
+ * listado de embarazos siguen filtrando cuando la edad sí se pidió.
  *
  * Sólo lectura: no crea ni modifica ninguna fila.
  */
@@ -41,13 +43,17 @@ final class PacientesPorRango
     public function filas(string $regMedico, FiltroDePacientesPorRango $filtro): Collection
     {
         $ingreso = $filtro->rangoDeIngreso();
-        $nacimiento = $filtro->rangoDeNacimiento();
 
         $consulta = DB::table('medico_pacientes')
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('medico_pacientes.reg_medico', $regMedico)
-            ->whereBetween('pacientes.fingreso', [$ingreso->desde(), $ingreso->hasta()])
-            ->whereBetween('pacientes.fnacimiento', [$nacimiento->desde(), $nacimiento->hasta()]);
+            ->whereBetween('pacientes.fingreso', [$ingreso->desde(), $ingreso->hasta()]);
+
+        // La edad abierta no filtra (O-14): si se pidió un rango, se traduce a fechas de nacimiento.
+        if ($filtro->filtraPorEdad()) {
+            $nacimiento = $filtro->rangoDeNacimiento();
+            $consulta->whereBetween('pacientes.fnacimiento', [$nacimiento->desde(), $nacimiento->hasta()]);
+        }
 
         if ($filtro->sexo() !== null) {
             $consulta->where('pacientes.sexo', $filtro->sexo());
