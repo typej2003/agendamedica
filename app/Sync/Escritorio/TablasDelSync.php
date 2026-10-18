@@ -134,4 +134,100 @@ final class TablasDelSync
 
         return array_values(array_unique($tablas));
     }
+
+    /**
+     * Las tablas del escritorio de donde salen los **pacientes** de este médico, con el mapeo de columnas
+     * de cada una (tabla => [escritorio => API]).
+     *
+     * `pacientes` está siempre: es la tabla del legado compartido y la que usan ginecología y las demás
+     * especialidades. Una especialidad puede declarar **otra** en su manifiesto (`sync.pacientes`), como
+     * pediatría con `paciente_chamo` —su ABM real de pacientes, mientras su `pacientes` está vacía—. Un
+     * médico con dos especialidades tiene las dos tablas y las dos traen pacientes: por eso es un mapa y
+     * no una sola tabla.
+     *
+     * El camino de pacientes (crear el paciente, la relación con el médico y la historia) es el mismo
+     * para todas; el mapeo sólo traduce los nombres de columna antes de armarlo.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function pacientesDe(?Medico $medico): array
+    {
+        $tablas = ['pacientes' => []];
+
+        foreach ($this->especialidadesDe($medico) as $especialidad) {
+            $declarado = (array) config("sync_legado.pacientes_por_especialidad.{$especialidad}", []);
+            $tabla = (string) ($declarado['tabla'] ?? '');
+
+            if ($tabla !== '' && $tabla !== 'pacientes') {
+                $tablas[$tabla] = (array) ($declarado['columnas'] ?? []);
+            }
+        }
+
+        return $tablas;
+    }
+
+    /** ¿Esta tabla del escritorio trae pacientes para este médico? */
+    public function esTablaDePacientes(string $tabla, ?Medico $medico): bool
+    {
+        return array_key_exists($tabla, $this->pacientesDe($medico));
+    }
+
+    /**
+     * **Todas** las tablas de pacientes que algún manifiesto declara (tabla => [escritorio => API]), sin
+     * `pacientes` (esa es la de siempre y no se declara).
+     *
+     * Sirve para reparar una carga cuando el médico **no tiene la especialidad asignada** en el pivote
+     * `medico_specialty`: el dato está en su tabla, aunque el API no sepa de qué especialidad es.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function fuentesDePacientesDeclaradas(): array
+    {
+        $tablas = [];
+
+        foreach ((array) config('sync_legado.pacientes_por_especialidad', []) as $declarado) {
+            $tabla = (string) ($declarado['tabla'] ?? '');
+            if ($tabla !== '' && $tabla !== 'pacientes' && ! array_key_exists($tabla, $tablas)) {
+                $tablas[$tabla] = (array) ($declarado['columnas'] ?? []);
+            }
+        }
+
+        return $tablas;
+    }
+
+    /**
+     * Qué especialidades **se deducen** de las tablas que anunció un escritorio: las que declaran en su
+     * manifiesto alguna de esas tablas (las distintivas de cada especialidad, que son justo las que el
+     * manifiesto agrega a la lista histórica).
+     *
+     * Es lo que permite vincularle la especialidad al médico **en su primera sincronización**, sin que
+     * nadie tenga que hacerlo a mano: la instalación anuncia todas sus tablas antes de subir nada.
+     *
+     * Sin **evidencia positiva** no se deduce nada: ginecología no declara ninguna tabla (las suyas son la
+     * lista histórica) y una especialidad todavía sin manifiesto tampoco, así que no se les asigna nada por
+     * descarte — adivinar mal es peor que no adivinar, porque la especialidad decide los módulos de la web.
+     *
+     * @param  array<int, string>  $tablas  nombres de tabla tal como los anunció el escritorio
+     * @return array<int, string> slugs, de la que más tablas aporta a la que menos
+     */
+    public function especialidadesSegunTablas(array $tablas): array
+    {
+        $anunciadas = array_map(fn ($tabla) => strtolower(trim((string) $tabla)), $tablas);
+        $puntajes = [];
+
+        foreach (array_keys((array) config('sync_legado.tablas_por_especialidad', [])) as $especialidad) {
+            $declaradas = $this->deLaEspecialidad((string) $especialidad);
+            if ($declaradas === []) {
+                continue;
+            }
+            $coinciden = count(array_intersect($anunciadas, array_map('strtolower', $declaradas)));
+            if ($coinciden > 0) {
+                $puntajes[(string) $especialidad] = $coinciden;
+            }
+        }
+
+        arsort($puntajes);
+
+        return array_keys($puntajes);
+    }
 }

@@ -24,6 +24,12 @@ class ArmazonClinicaComposer
             (bool) $peticion->user()?->esAdministrador(),
             $peticion->route()?->getName(),
             (bool) $peticion->user()?->trabajaLaConsulta(),
+            // El listado clínico elegido (WEB-6.8): «Listados» es un grupo y sus tres hijos comparten ruta, así que
+            // el activo sale de la query. En cualquier otra pantalla el valor no se usa.
+            $peticion->query('listado') !== null ? (string) $peticion->query('listado') : null,
+            // La consulta abierta (revisión de Alexander): el controlador del shell la comparte con `id` y `seccion`;
+            // el armazon la usa para el grupo «Consulta» del menú lateral y nada más.
+            is_array($compartidos['consulta_en_curso'] ?? null) ? $compartidos['consulta_en_curso'] : null,
         ));
     }
 }

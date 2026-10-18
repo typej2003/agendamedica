@@ -30,8 +30,9 @@ use Illuminate\Support\Facades\DB;
  *  3. **Copiar un informe anterior**: no es una función del escritorio sino una de las pedidas para la web; lleva al
  *     editor el *Para* y el texto de otro informe del mismo paciente, también sin guardar.
  *
- * El *Resumen médico* (`d_resumen_medico_gra`, el otro botón de la pestaña) se arma solo con datos de toda la
- * consulta y es otra tarea (WEB-5.3c, después de F6): no entra acá.
+ * El *Resumen médico* (`d_resumen_medico_gra`, el otro botón de la pestaña) es **otra hoja** (WEB-5.3c): se arma sola
+ * con datos de toda la consulta —no es una fila de `informe` y no se edita acá— y vive en `ResumenMedicoDeLaConsulta` y
+ * `ResumenMedico`.
  *
  * Es de **sólo lectura**: la escritura son `GuardarInformeDeLaConsulta` y `EliminarInformeDeLaConsulta`.
  */

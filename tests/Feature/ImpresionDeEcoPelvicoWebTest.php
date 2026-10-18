@@ -122,15 +122,16 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
             ->assertSee('Gesta:')->assertSee('II')
             ->assertSee('PARA:')->assertSee('1 cesárea')
             ->assertSee('Estudio del')->assertSee('01/06/2026')
-            ->assertSee('Convex 3.5 MHz')
-            ->assertSee('Vejiga:')->assertSee('Llena')
-            ->assertSee('Posición:')->assertSee('AVF')
-            ->assertSee('Forma:')->assertSee('Globosa')
-            ->assertSee('Cuerpo (longitud) 62.5 mm')
-            ->assertSee('Transverso 45 mm')
+            // Es el formulario lleno (WEB-11.13): todas las opciones, con un círculo marcado en la elegida.
+            ->assertSeeInOrder(['Convex:', '○', '2.7', '●', '3.5'], false)
+            ->assertSeeInOrder(['Vejiga:', '●', 'Llena', '○', 'Vacia'], false)
+            ->assertSeeInOrder(['Posición:', '●', 'AVF'], false)
+            ->assertSeeInOrder(['Forma:', '●', 'Globosa'], false)
+            ->assertSee('Cuerpo (longitud):')->assertSee('62.5 mm')
+            ->assertSee('Transverso:')->assertSee('45 mm')
             ->assertSee('Ovario derecho')
-            ->assertSee('Volumen 4.5 cc')
-            ->assertSee('Anexos:')->assertSee('Anexos libres.')
+            ->assertSee('Volumen:')->assertSee('4.5 cc')
+            ->assertSee('Anexos')->assertSee('Anexos libres.')
             ->assertSee('Observaciones:')->assertSee('Útero en anteversión.')
             ->assertSee('Conclusiones:')->assertSee('Control en 6 meses.')
             ->assertSee('Ginecología y Obstetricia');
@@ -139,10 +140,10 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
         $this->assertSame(1, substr_count($hoja->getContent(), 'class="firmas"'));
     }
 
-    public function test_los_bloques_sin_datos_no_se_imprimen(): void
+    public function test_un_estudio_casi_vacio_imprime_el_formulario_con_los_casilleros_en_blanco(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        // Un estudio con la FUR y la gesta, y nada más: los bloques sin dato no se imprimen.
+        // Un estudio con la FUR y la gesta, y nada más: el informe es el formulario (WEB-11.13), con los casilleros sin marcar.
         $this->eco($medico, [
             'trans_convex' => null, 'vagina' => null, 'vagina_llena' => null,
             'posicionavf' => null, 'fondosacolibre' => null, 'bordeutero' => null,
@@ -159,13 +160,8 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
             ->assertSee('FUR:')->assertSee('20/05/2026')
             ->assertSee('Gesta:')->assertSee('II')
             ->assertSee('Estudio del')->assertSee('01/06/2026')
-            ->assertDontSee('Convex')
-            ->assertDontSee('Vejiga:')
-            ->assertDontSee('Posición:')
-            ->assertDontSee('Medidas')
-            ->assertDontSee('Ovario derecho')
-            ->assertDontSee('Anexos:')
-            ->assertDontSee('Conclusiones:');
+            ->assertSeeInOrder(['Vejiga:', '○', 'Llena', '○', 'Vacia'], false)
+            ->assertDontSee('●', false);
     }
 
     public function test_el_informe_en_texto_libre_del_escritorio_se_imprime_tal_cual(): void
@@ -203,7 +199,11 @@ class ImpresionDeEcoPelvicoWebTest extends TestCase
         ]);
 
         $this->assertNotContains(DocumentoImpreso::ECO_PELVICO, $this->ofrecidos($medico, $consulta));
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->assertNotFound();
+
+        // O-16: en vez de la página 404, el aviso de que falta guardar los datos para poder imprimir.
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta))
+            ->assertOk()
+            ->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     // ================================================================== La secretaría desde la cita

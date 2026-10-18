@@ -24,7 +24,7 @@ use Tests\TestCase;
  *  - un paciente **sin historia** no tiene historia que mostrar: estado vacío y el camino (WEB-3.3);
  *  - un paciente de **otro médico** da **404**, en la pantalla y en la impresión, y la historia no mezcla
  *    datos de dos médicos que usen el mismo `numhistoria` (el número es único **por médico**);
- *  - la **impresión** trae el encabezado "Resumen de historia clínica" con paciente, cédula, historia y
+ *  - la **impresión** trae el encabezado "Historia clínica" con paciente, cédula, historia y
  *    fecha, y las consultas con sus secciones.
  *
  * Es una pantalla de **sólo lectura**: estos tests no escriben nada que sobreviva al test
@@ -313,7 +313,7 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertSee('Ir a la ficha a asignarla');
         $respuesta->assertSee(route('clinica.pacientes.ver', $paciente), false);
         // No hay resumen que imprimir: el botón está, pero apagado y diciendo por qué.
-        $respuesta->assertSee('Todavía no hay consultas que resumir');
+        $respuesta->assertSee('Todavía no hay consultas en la historia');
         $respuesta->assertDontSee(route('clinica.pacientes.historia.imprimir', $paciente), false);
     }
 
@@ -329,6 +329,50 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertSee('Sin consultas todavía');
         $respuesta->assertSee('Sin antecedentes cargados');
         $respuesta->assertSee('Sin documentos');
+    }
+
+    // --------------------------------------------------------------------- El cajón de la consulta (O-30)
+
+    public function test_el_panel_de_la_consulta_es_el_mismo_resumen_sin_el_armazon(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Fina');
+        $this->consulta($medico, '1001', 1, ['enfermedadactual' => 'Dolor pélvico de tres días.']);
+        $this->catalogoDeAntecedentes($medico);
+        $this->antecedente($medico, '1001', ['detalles' => 'Penicilina']);
+
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $pantalla = $contexto->get(route('clinica.pacientes.historia', $paciente))->assertOk();
+        $panel = $contexto->get(route('clinica.pacientes.historia', [$paciente, 'panel' => 1]))->assertOk();
+
+        // Es el mismo resumen: el nombre, la historia, la consulta y sus antecedentes están en los dos.
+        foreach (['De Prueba, Fina', 'Historia N.º 1001', 'Dolor pélvico de tres días.', 'Penicilina'] as $dato) {
+            $pantalla->assertSee($dato);
+            $panel->assertSee($dato);
+        }
+
+        // Y el del cajón **no** trae el armazón de la web, para inyectarlo en el panel lateral.
+        $panel->assertDontSee('clinica-sidebar', false);
+        $panel->assertDontSee('<html', false);
+        $panel->assertDontSee('Ficha del paciente');
+
+        // El paciente sin historia también: el cajón muestra el camino para asignarla.
+        $sinHistoria = $this->paciente($medico, 'Gloria', null);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', [$sinHistoria, 'panel' => 1]))
+            ->assertOk()
+            ->assertSee('Este paciente todavía no tiene historia');
+    }
+
+    public function test_el_panel_de_la_consulta_respeta_el_404_del_paciente_ajeno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $otro] = $this->medicoConAcceso();
+        $ajeno = $this->paciente($otro, 'Hayde');
+
+        // La única puerta es la de la historia: no hay un endpoint nuevo con su propia regla de dueño.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', [$ajeno, 'panel' => 1]))->assertNotFound();
     }
 
     // ---------------------------------------------------------------------------------- Aislamiento
@@ -388,7 +432,7 @@ class HistoriaDelPacienteWebTest extends TestCase
 
         $respuesta->assertOk();
         // El encabezado del documento, con el membrete del médico del contexto.
-        $respuesta->assertSee('Resumen de historia clínica');
+        $respuesta->assertSee('Historia clínica');
         $respuesta->assertSee('Dr. Carlos Mendoza'); // el `nombreMostrar` del médico de prueba
         $respuesta->assertSee('De Prueba, Juan');
         $respuesta->assertSee('12345678');
@@ -417,7 +461,7 @@ class HistoriaDelPacienteWebTest extends TestCase
             ->get(route('clinica.pacientes.historia.imprimir', $paciente));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Resumen de historia clínica');
+        $respuesta->assertSee('Historia clínica');
         $respuesta->assertSee('no tiene consultas registradas');
     }
 

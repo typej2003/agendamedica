@@ -183,7 +183,7 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             ->assertSee('31/12/2026')->assertSee('01/01/2027');
 
         DB::table('reposo_paciente')->where('reg_medico', $medico->reg_medico)->update(['obser_reposo' => null]);
-        $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'reposo'))->assertNotFound();
+        $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'reposo'))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     public function test_la_referencia_sale_con_el_medico_del_catalogo_y_el_motivo_y_omite_lo_que_no_tiene(): void
@@ -311,15 +311,21 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $respuesta->assertSee('data-abrir-opciones', false);
     }
 
-    public function test_un_documento_que_la_consulta_no_tiene_o_sin_elegir_da_404(): void
+    public function test_un_documento_que_la_consulta_no_tiene_o_sin_elegir_avisa_que_no_hay_nada_que_imprimir(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->reposo($medico, 1, '2026-10-07', null); // la plantilla vacía del escritorio
 
+        // O-16: no es un 404 —la consulta y el documento son válidos—; la página dice qué falta para poder imprimir.
         foreach (['reposo', 'informe', 'referencia-7', 'recipe-1', 'abc', 'todos', ''] as $clave) {
-            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))->assertNotFound();
+            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))
+                ->assertOk()
+                ->assertSee('Guarda los datos del estudio para poder imprimir.');
         }
-        $this->como($user, $medico, $gineco)->get(route('clinica.consulta.documentos.imprimir', $consulta->id))->assertNotFound();
+
+        $this->como($user, $medico, $gineco)->get(route('clinica.consulta.documentos.imprimir', $consulta->id))
+            ->assertOk()
+            ->assertSee('Guarda los datos del estudio para poder imprimir.');
     }
 
     // ====================================================================== La secretaría desde la cita
@@ -495,6 +501,10 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         [, $medico, , $consulta] = $this->escenario();
 
         $casos = [
+            // El resumen médico (WEB-5.3c) es una hoja auto-generada: es documento si algún bloque de la
+            // consulta tiene datos, y deja de serlo cuando no queda ninguno.
+            'resumen con enfermedad actual' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => 'Dolor de dos días.']), true],
+            'resumen vuelto a vaciar' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => null]), false],
             'constancia vacía' => [fn () => DB::table('constancia_obs')->insert(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'numconsulta' => 1, 'created_at' => now(), 'updated_at' => now()]), false],
             'constancia con observación' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => 'Algo']), true],
             'constancia con diagnósticos editados' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => null, 'observacion' => 'GASTRITIS.']), true],

@@ -5,7 +5,9 @@ namespace App\Clinica\Pacientes\Vistas;
 use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Vistas\ConValoresDeFormulario;
+use App\Especialidades\ConfiguracionDeLaEspecialidad;
 use App\Models\Paciente;
+use App\Models\Specialty;
 use App\Support\FechaClinica;
 use Illuminate\Support\Collection;
 
@@ -52,11 +54,14 @@ final class FormularioDePacienteVista
      *                                   usuario todavía no tocó).
      * @param  ?string  $numhistoria  el del vínculo (solo para mostrarlo; acá no se asigna)
      * @param  Collection<int,object>  $seguros  el catálogo de `seg_emp` del médico del contexto
+     * @param  ?Specialty  $especialidad  la del contexto: de su manifiesto salen los valores por defecto
+     *                                    del **alta** (O-01)
      */
     public function __construct(
         private ?Paciente $editando,
         private ?string $numhistoria,
         private Collection $seguros,
+        private ?Specialty $especialidad = null,
     ) {
     }
 
@@ -140,10 +145,25 @@ final class FormularioDePacienteVista
      * Una fecha (`fnacimiento`, `fingreso`) lista para un `<input type="date">`, o `''` si el legado no
      * trae una fecha usable. La decisión —incluido el año imposible que Carbon convierte en el año -1— la
      * toma `FechaClinica`, que es donde vive el conocimiento de las fechas del legado.
+     *
+     * La **fecha de ingreso** del alta propone **hoy** (O-02, 2026-10-17): es la fecha con la que el
+     * paciente entra al consultorio y la que usan los listados entre fechas; sin ella, el que se registra
+     * hoy no aparece en «pacientes por rango». Es el hoy **del consultorio** (`FechaDelConsultorio`), no el
+     * del servidor: pasadas las 20:00 de Caracas en UTC ya es mañana. Al editar manda la guardada.
      */
     public function fecha(string $campo): string
     {
-        return FechaClinica::paraInput($this->valor($campo));
+        return FechaClinica::paraInput($this->valor($campo, $this->fechaPorDefecto($campo)));
+    }
+
+    /** La fecha con la que arranca un campo **en el alta**: hoy para `fingreso`, nada para el resto. */
+    private function fechaPorDefecto(string $campo): ?string
+    {
+        if ($this->editando() || $campo !== 'fingreso') {
+            return null;
+        }
+
+        return FechaDelConsultorio::hoy()->toDateString();
     }
 
     /** @return array<int,array{valor:string,texto:string}> */
@@ -152,10 +172,37 @@ final class FormularioDePacienteVista
         return $this->opcionesCon(self::NACIONALIDADES, (string) $this->valor('nac', 'V'));
     }
 
-    /** @return array<int,array{valor:string,texto:string}> */
+    /**
+     * El sexo del paciente. En el **alta** de ginecología arranca en **Femenino** (O-01, 2026-10-17): la
+     * especialidad lo declara en su manifiesto (`paciente.sexo_por_defecto`), así que una especialidad que
+     * no lo declare —o un consultorio sin especialidad— sigue abriendo en «— Sin dato —». El valor se puede
+     * cambiar y «— Sin dato —» sigue disponible. Al **editar** manda lo guardado: el default es del alta.
+     *
+     * @return array<int,array{valor:string,texto:string}>
+     */
     public function sexos(): array
     {
-        return $this->opcionesCon(self::SEXOS, (string) $this->valor('sexo'));
+        return $this->opcionesCon(self::SEXOS, (string) $this->valor('sexo', $this->sexoPorDefecto()));
+    }
+
+    /** El sexo del manifiesto de la especialidad, si lo declara y es un código del legado. */
+    private function sexoPorDefecto(): ?string
+    {
+        return $this->editando() ? null : self::sexoPorDefectoDe($this->especialidad);
+    }
+
+    /**
+     * El sexo con el que arranca un alta **en esa especialidad** (O-01), o `null` si no lo declara.
+     *
+     * Es la regla compartida por las dos formas de dar de alta un paciente en la web: el formulario de
+     * la ficha (esta clase) y el alta mínima del paso 2 de «Nueva cita» (`FormularioDeCitaVista`), que la
+     * recibe armada. Un código que no es del catálogo no se inventa.
+     */
+    public static function sexoPorDefectoDe(?Specialty $especialidad): ?string
+    {
+        $sexo = ConfiguracionDeLaEspecialidad::valor($especialidad, 'paciente.sexo_por_defecto');
+
+        return is_string($sexo) && array_key_exists($sexo, self::SEXOS) ? $sexo : null;
     }
 
     /** @return array<int,array{valor:string,texto:string}> */
@@ -222,23 +269,7 @@ final class FormularioDePacienteVista
         return $this->seguros->isEmpty();
     }
 
-    // --------------------------------------------------------------------------------------- Atender
-
-    /**
-     * A dónde ir si el usuario contesta que sí a "¿Atenderá a este paciente hoy?".
-     *
-     * El escritorio, cuando la respuesta es sí, **pasa al paciente a la cola del día** y pregunta la razón
-     * de consulta (`04-historia-clinica.md`). La web no duplica ese flujo —la cola del día y la razón son
-     * de la agenda—: el atajo abre el alta de cita con el paciente ya elegido, que es donde la razón se
-     * pide (WEB-2.2). La respuesta por defecto es **no**: agendar es una decisión, no un efecto del alta.
-     */
-    public function urlAtenderHoy(): string
-    {
-        return route('clinica.agenda.nueva', [
-            'fecha'       => FechaDelConsultorio::hoy()->toDateString(),
-            'paciente_id' => $this->editando?->getKey(),
-        ]);
-    }
+    // --------------------------------------------------------------------------------------- Acciones
 
     public function urlCancelar(): string
     {

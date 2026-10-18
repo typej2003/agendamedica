@@ -6,6 +6,7 @@ use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Doctor;
 use App\Models\Especialidad;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -40,6 +41,9 @@ final class DoctoresDelMedico
     /** El tope de resultados del buscador: es para elegir, no para listar el catálogo. */
     public const MAX_RESULTADOS = 20;
 
+    /** Cuántos médicos muestra cada página del catálogo a la vista (la columna derecha de O-29). */
+    public const POR_PAGINA = 20;
+
     /**
      * Los médicos del catálogo que coinciden con lo escrito (nombre, apellido, clínica o especialidad), por
      * especialidad y nombre.
@@ -59,18 +63,70 @@ final class DoctoresDelMedico
             ->get()
             ->unique(fn (Doctor $doctor) => (int) $doctor->cedula)
             ->map(fn (Doctor $doctor) => $this->resolver($doctor, $especialidades))
-            ->filter(function (object $doctor) use ($clave) {
-                if ($clave === '') {
-                    return true;
-                }
-
-                return str_contains(
-                    BusquedaDePacientes::normalizar($doctor->nombre . ' ' . $doctor->clinica . ' ' . $doctor->especialidad),
-                    $clave,
-                );
-            })
+            ->filter(fn (object $doctor) => $this->coincide($doctor, $clave))
             ->values()
             ->take(self::MAX_RESULTADOS);
+    }
+
+    /**
+     * **Toda la libreta de colegas a la vista, por páginas** (O-29): la lista de la derecha de la pestaña *Referencias*, como el
+     * catálogo de motivos —sin el tope del buscador, que es *para elegir*, y con el mismo filtro sin tildes.
+     *
+     * @param  array<int,string>  $registros
+     * @param  array<string,mixed>  $conservar  lo que los enlaces de página deben mantener (`seccion`, `solicitud`, `buscar`)
+     * @return LengthAwarePaginator<int,object>
+     */
+    public function pagina(array $registros, string $texto, int $pagina, string $ruta, array $conservar = [], int $porPagina = self::POR_PAGINA): LengthAwarePaginator
+    {
+        $clave = BusquedaDePacientes::normalizar(trim($texto));
+
+        $todos = $this->delCatalogo($registros)
+            ->filter(fn (object $doctor) => $this->coincide($doctor, $clave))
+            ->values();
+
+        $pagina = max(1, $pagina);
+
+        return (new LengthAwarePaginator(
+            $todos->forPage($pagina, $porPagina)->values(),
+            $todos->count(),
+            $porPagina,
+            $pagina,
+            ['path' => $ruta, 'pageName' => 'pagina_catalogo'],
+        ))->appends($conservar);
+    }
+
+    /** ¿El médico coincide con la clave ya normalizada? (vacía = todos) */
+    private function coincide(object $doctor, string $clave): bool
+    {
+        return $clave === '' || str_contains(
+            BusquedaDePacientes::normalizar($doctor->nombre . ' ' . $doctor->clinica . ' ' . $doctor->especialidad),
+            $clave,
+        );
+    }
+
+    /**
+     * **Toda la libreta de colegas del médico** (`doctores`), para un desplegable que no busca: su cédula y su
+     * nombre, por apellido y nombre.
+     *
+     * Es la misma lectura que `buscar` —el buscador de la pestaña *Referencias*—, con la misma resolución del
+     * nombre y la especialidad, pero **sin su tope de resultados**: `MAX_RESULTADOS` es *para elegir*, no para
+     * listar la libreta, y el `referido` del eco mamario (WEB-6.4) elige de la libreta completa.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
+     * @return Collection<int,object{cedula:int, nombre:string, especialidad:?string, clinica:?string, telefono:?string, direccion:?string, ciudad:?string, codeespecial:?string}>
+     */
+    public function delCatalogo(array $registros): Collection
+    {
+        $especialidades = $this->nombresDeEspecialidad($registros);
+
+        return Doctor::whereIn('reg_medico', $registros)
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->orderBy('id')
+            ->get()
+            ->unique(fn (Doctor $doctor) => (int) $doctor->cedula)
+            ->map(fn (Doctor $doctor) => $this->resolver($doctor, $especialidades))
+            ->values();
     }
 
     /**

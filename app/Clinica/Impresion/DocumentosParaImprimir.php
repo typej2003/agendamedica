@@ -28,14 +28,36 @@ final class DocumentosParaImprimir
     /** El valor de `?documento=` que pide todo lo imprimible de la consulta. */
     public const TODOS = 'todos';
 
+    /**
+     * La clave del documento que imprime una URL de hoja (`…/documentos/imprimir?documento=eco-obstetrico&gesta=2` →
+     * `eco-obstetrico`), o `''` si la URL no la lleva.
+     *
+     * La usan los ViewModels de las secciones para decirle al botón «Imprimir» **qué** documento guarda e imprime (O-16)
+     * sin repetir la clave al lado de la URL: la URL ya la tiene.
+     */
+    public static function claveDeLaUrl(string $url): string
+    {
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $parametros);
+
+        return (string) ($parametros['documento'] ?? '');
+    }
+
     private const ICONOS = [
         DocumentoImpreso::LABORATORIO => 'bi-droplet',
+        DocumentoImpreso::LABORATORIO_PAREJA => 'bi-people',
         DocumentoImpreso::ESTUDIOS => 'bi-image',
         DocumentoImpreso::ECO_PELVICO => 'bi-activity',
+        DocumentoImpreso::ECO_DOPPLER => 'bi-soundwave',
+        DocumentoImpreso::ECO_CARDIOGRAMA_FETAL => 'bi-heart',
+        DocumentoImpreso::ECO_MAMARIO => 'bi-clipboard2-pulse',
+        DocumentoImpreso::ECO_ABDOMINAL => 'bi-clipboard2-data',
+        DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
+        DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
         DocumentoImpreso::CONSTANCIA => 'bi-file-earmark-medical',
         DocumentoImpreso::REPOSO => 'bi-bandaid',
         DocumentoImpreso::REFERENCIA => 'bi-person-up',
         DocumentoImpreso::INFORME => 'bi-file-earmark-text',
+        DocumentoImpreso::RESUMEN_MEDICO => 'bi-journal-medical',
         DocumentoImpreso::HOSPITALIZACION => 'bi-hospital',
         DocumentoImpreso::DIETA => 'bi-egg-fried',
     ];

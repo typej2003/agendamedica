@@ -202,8 +202,8 @@
                                 <label class="form-label" for="nuevo_sexo">Sexo</label>
                                 <select name="nuevo_sexo" id="nuevo_sexo" class="form-select">
                                     <option value="">Sin dato</option>
-                                    <option value="F" {{ $vm->valor('nuevo_sexo') === 'F' ? 'selected' : '' }}>Femenino</option>
-                                    <option value="M" {{ $vm->valor('nuevo_sexo') === 'M' ? 'selected' : '' }}>Masculino</option>
+                                    <option value="F" {{ $vm->valor('nuevo_sexo', $vm->sexoPorDefectoDelNuevoPaciente()) === 'F' ? 'selected' : '' }}>Femenino</option>
+                                    <option value="M" {{ $vm->valor('nuevo_sexo', $vm->sexoPorDefectoDelNuevoPaciente()) === 'M' ? 'selected' : '' }}>Masculino</option>
                                 </select>
                             </div>
                         </div>

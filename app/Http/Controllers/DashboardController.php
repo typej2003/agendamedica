@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+
 /**
  * Panel de administración (`/dashboard`).
  *
@@ -27,11 +29,15 @@ class DashboardController extends Controller
             return redirect()->route($user->rutaDeInicio());
         }
 
-        // Evaluamos los roles utilizando el helper de Spatie
-        if ($user->hasRole('Root')) {
+        // Evaluamos los roles utilizando el helper de Spatie.
+        //
+        // Los **dos** roles de administración ven el mismo Escritorio: el menú y las rutas de administración
+        // ya son los mismos para los dos (`routes/web/cuentas.php`), y `dashboard.admin-dashboard` era el
+        // andamio que Livewire deja al crear un componente (`<div>{{-- Do your work, then step back. --}}</div>`),
+        // nunca implementado: la cuenta que crea `php artisan cuentas:admin` —el arranque documentado del
+        // panel— entraba a una pantalla en blanco. Ver `PanelAdministracionTest`.
+        if ($user->hasAnyRole(User::ROLES_ADMIN)) {
             $dashboardComponent = 'dashboard.root-dashboard';
-        } elseif ($user->hasRole('Administrador')) {
-            $dashboardComponent = 'dashboard.admin-dashboard';
         } elseif ($user->hasRole('Medico')) {
             $dashboardComponent = 'dashboard.medico-dashboard';
         } elseif ($user->hasRole('Secretaria')) {

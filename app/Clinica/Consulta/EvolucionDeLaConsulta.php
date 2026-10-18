@@ -4,7 +4,6 @@ namespace App\Clinica\Consulta;
 
 use App\Models\Consulta;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * **La evolución de una consulta** (WEB-4.6, ítem 9 del panel del legado): el dato y las **plantillas** que
@@ -87,28 +86,8 @@ final class EvolucionDeLaConsulta
      */
     public function plantillas(string $regMedico): Collection
     {
-        return DB::table('formato_print')
-            ->where('reg_medico', $regMedico)
-            ->where('tipo', self::TIPO_PLANTILLA)
-            ->orderBy('titulo')
-            ->orderBy('codigo')
-            ->get(['codigo', 'titulo', 'descripcion'])
-            ->map(function ($fila) {
-                $texto = TextoDeLaConsulta::limpio($fila->descripcion);
-
-                if ($texto === null) {
-                    return null;
-                }
-
-                return (object) [
-                    'codigo' => trim((string) $fila->codigo),
-                    // Una plantilla sin título no es ubicable en la lista (la fuente muestra ese campo):
-                    // se cae al código, que es lo único que la identifica.
-                    'titulo' => TextoDeLaConsulta::limpio($fila->titulo) ?? trim((string) $fila->codigo),
-                    'texto' => $texto,
-                ];
-            })
-            ->filter()
-            ->values();
+        // La lista (y la regla de los "vacíos") es la misma en todas las secciones de la consulta y vive en
+        // `PlantillasDelTexto`: acá sólo se dice de qué tipo son las de la evolución.
+        return PlantillasDelTexto::de($regMedico, self::TIPO_PLANTILLA);
     }
 }

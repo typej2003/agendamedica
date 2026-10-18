@@ -28,7 +28,34 @@ final class CatalogosDisponibles
         'tipos-examen' => ['texto' => 'Tipos de examen', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.tipos-examen'],
         'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],
         'plantillas-texto' => ['texto' => 'Plantillas de texto', 'icono' => 'bi-file-earmark-text', 'ruta' => 'clinica.catalogos.plantillas-texto'],
+        // Propio de pediatría (WEB-7.4.4e): el submenú sólo se ofrece a esa especialidad (`especialidad` es un fragmento del slug).
+        'vacunas' => ['texto' => 'Vacunas', 'icono' => 'bi-shield-plus', 'ruta' => 'clinica.catalogos.vacunas', 'especialidad' => 'pediatr'],
+        'dietas' => ['texto' => 'Dietas', 'icono' => 'bi-egg-fried', 'ruta' => 'clinica.catalogos.dietas', 'especialidad' => 'pediatr'],
     ];
+
+    /** El nombre de la ruta del listado de un catálogo (`null` si no existe o todavía no tiene pantalla). */
+    public static function rutaDe(string $slug): ?string
+    {
+        $ruta = self::CATALOGOS[$slug]['ruta'] ?? null;
+
+        return $ruta !== null && Route::has($ruta) ? $ruta : null;
+    }
+
+    /** El slug del catálogo al que pertenece una ruta (su listado o cualquiera de sus pantallas hijas), o `null`. */
+    public static function slugDeLaRuta(?string $ruta): ?string
+    {
+        if ($ruta === null) {
+            return null;
+        }
+
+        foreach (self::CATALOGOS as $slug => $catalogo) {
+            if ($ruta === $catalogo['ruta'] || str_starts_with($ruta, $catalogo['ruta'] . '.')) {
+                return $slug;
+            }
+        }
+
+        return null;
+    }
 
     /** La URL de `/clinica/catalogos` (la entrada histórica de la zona): el primer catálogo que tiene pantalla. */
     public static function urlDeEntrada(): ?string
@@ -43,15 +70,21 @@ final class CatalogosDisponibles
     /**
      * Los submenús de "Catálogos" en el menú lateral: un ítem por catálogo con pantalla, con el activo marcado.
      *
+     * @param  string|null  $especialidad  el `slug` de la especialidad del contexto (para los catálogos propios de una)
      * @param  string|null  $rutaActual  el nombre de la ruta de la petición (`clinica.catalogos.tratamientos.editar`…):
      *                                   un catálogo está activo en su listado y en todas sus pantallas hijas
      * @return array<int,array{texto:string, icono:string, url:string, activo:bool}>
      */
-    public static function submenu(?string $rutaActual): array
+    public static function submenu(?string $rutaActual, ?string $especialidad = null): array
     {
         $items = [];
 
         foreach (self::existentes() as $catalogo) {
+            // Un catálogo propio de una especialidad sólo se ofrece a ella.
+            if (isset($catalogo['especialidad']) && ! str_contains((string) $especialidad, $catalogo['especialidad'])) {
+                continue;
+            }
+
             $items[] = [
                 'texto' => $catalogo['texto'],
                 'icono' => $catalogo['icono'],

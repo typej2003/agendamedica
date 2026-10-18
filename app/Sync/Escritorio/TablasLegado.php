@@ -15,6 +15,56 @@ class TablasLegado
     /** Columnas que guardan un número de historia, según la tabla del legado. */
     public const COLUMNAS_HISTORIA = ['numhistoria', 'nrohistoria', 'historia', 'histroria'];
 
+    /**
+     * **Qué columna lleva el número de historia en cada tabla del legado.** Es la fuente única de esa
+     * diferencia de nombres, y sale de los dumps del legado (`Docs/MICONSULTAGI-legado/esquemas-asa/*.sql`),
+     * no de lo que parece.
+     *
+     * Existe por una razón concreta: la tabla `cola` del API tiene **además** una columna `nrohistoria`,
+     * vieja de la primera migración, que **no** lleva el número. Un filtro que la usó dejó pasar 49.955
+     * récipes de pacientes que no se atendían (trampa 122 de `TRAMPAS.md`). Cualquier código nuevo que
+     * necesite el número de historia de una tabla clínica debe preguntar acá.
+     */
+    private const COLUMNA_HISTORIA = [
+        'cola' => 'numhistoria',
+        'consultas' => 'numhistoria',
+        'constancia_obs' => 'numhistoria',
+        'recipes' => 'nrohistoria',
+        'informe' => 'nrohistoria',
+        'referencia' => 'nrohistoria',
+        'reposo_paciente' => 'nrohistoria',
+        'diagnostico_paciente' => 'nrohistoria',
+        'motivo_consulta_paciente' => 'nrohistoria',
+        // Ojo con esta: el legado la llama `nrohistoria` y el API la tiene como `historia`, porque el
+        // manifiesto de la especialidad traduce el nombre al subir (`sync.columnas_equivalentes`). El mapa
+        // habla de las columnas **del API**.
+        'examen_fisico_nuevo' => 'historia',
+        // Los cuatro estudios ecográficos que baja el app (EC-A2 de PLAN-MOVIL.md). El eco pélvico es el
+        // único que conserva los nombres del DataWindow `d_eco_pelvico` (`numhistoria`/`nroconsulta`); los
+        // tres obstétricos usan `historia`/`consulta` como `examen_fisico_nuevo`. Sin esta entrada, el
+        // filtro por historia de las obstétricas preguntaría por `numhistoria` —que no existe— y no
+        // bajaría nada.
+        'eco_pelvico' => 'numhistoria',
+        'eco_obstetrico' => 'historia',
+        'eco_obstetrico_tercer_2' => 'historia',
+        'eco_obstetrico_tercer' => 'historia',
+    ];
+
+    /**
+     * La columna del número de historia en esa tabla del legado. Sin dato, `numhistoria` (el nombre más
+     * común y el que usa la tabla de citas).
+     */
+    public static function columnaHistoria(string $tabla): string
+    {
+        return self::COLUMNA_HISTORIA[$tabla] ?? 'numhistoria';
+    }
+
+    /** El mapa completo (tabla => columna), para los tests que comprueban que siga siendo cierto. */
+    public static function columnasDeHistoria(): array
+    {
+        return self::COLUMNA_HISTORIA;
+    }
+
     /** Columnas que guardan un número de consulta (siempre junto a una de historia). */
     public const COLUMNAS_CONSULTA = ['nroconsulta', 'numconsulta', 'consulta', 'num_consulta'];
 
@@ -63,6 +113,43 @@ class TablasLegado
         $deAlias = [];
         foreach ($fila as $columna => $valor) {
             $destino = $equivalencias[$columna] ?? $columna;
+            $esAlias = $destino !== $columna;
+
+            if (array_key_exists($destino, $salida) && ! ($deAlias[$destino] && ! $esAlias)) {
+                continue;
+            }
+
+            $salida[$destino] = $valor;
+            $deAlias[$destino] = $esAlias;
+        }
+
+        return $salida;
+    }
+
+    /**
+     * Renombra las columnas de una fila de **pacientes** del escritorio a los nombres del API, según el
+     * mapeo del manifiesto de la especialidad (`sync.pacientes.columnas`).
+     *
+     * Hace falta porque la tabla de pacientes no es la misma en todas las especialidades: ginecología los
+     * tiene en `pacientes` (los nombres coinciden y el mapeo es vacío) y pediatría en `paciente_chamo`,
+     * donde la historia es `historia`, el nombre es `nombre` y el teléfono es `celular`. Después de esto la
+     * fila se trata como una de `pacientes` y el resto del camino no cambia.
+     *
+     * Se aplica **también a la clave** de un cambio: la que manda el escritorio es la primaria de SU tabla
+     * (`paciente_chamo` → `{historia}`, `pacientes` → `{numhistoria}`) y el camino de pacientes busca por
+     * `numhistoria`.
+     */
+    public function traducirPaciente(array $fila, array $mapa): array
+    {
+        if ($mapa === []) {
+            return $this->normalizarClaves($fila);
+        }
+
+        // Se recorre en el orden que vino y, si aparecen las dos formas del mismo dato, gana la del API.
+        $salida = [];
+        $deAlias = [];
+        foreach ($this->normalizarClaves($fila) as $columna => $valor) {
+            $destino = $mapa[$columna] ?? $columna;
             $esAlias = $destino !== $columna;
 
             if (array_key_exists($destino, $salida) && ! ($deAlias[$destino] && ! $esAlias)) {

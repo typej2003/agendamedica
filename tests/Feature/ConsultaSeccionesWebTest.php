@@ -199,6 +199,56 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee('necesita conexión', false);
     }
 
+    public function test_el_catalogo_de_motivos_se_ve_completo_y_por_paginas(): void
+    {
+        // WEB-11.3: la lista de la derecha no se corta en 30; se pagina y la página 2 trae el resto.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        foreach (range(1, 15) as $n) {
+            $this->motivo($medico, sprintf('%04d', $n), sprintf('MOTIVO %02d', $n));
+        }
+        $url = $this->urlSeccion($consulta, ConsultaShellVista::SECCION_MOTIVOS);
+
+        $uno = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+        $uno->assertOk()->assertSee('MOTIVO 01', false)->assertSee('MOTIVO 12', false)->assertDontSee('MOTIVO 13', false);
+        $uno->assertSee('pagina_catalogo=2', false)->assertSee('data-pasar', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url . '&pagina_catalogo=2')
+            ->assertOk()->assertSee('MOTIVO 13', false)->assertSee('MOTIVO 15', false)->assertDontSee('MOTIVO 01', false);
+    }
+
+    public function test_la_barra_ofrece_el_navegador_entre_las_consultas_del_paciente(): void
+    {
+        // A-11: con dos consultas en la historia aparecen los chips 1 y 2 (la actual marcada) en la **fila única** del
+        // encabezado, junto a Guardar y «Terminar la consulta». «Guardar y salir» y «Salir» ya no existen como botones.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $this->hoy->toDateString(),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($segunda, ConsultaShellVista::SECCION_MOTIVOS));
+
+        $respuesta->assertOk()
+            ->assertSee('data-consulta-barra', false)
+            ->assertSee('Guardar')
+            ->assertDontSee('Guardar y salir')
+            ->assertDontSee('data-barra-guardar-salir', false)
+            ->assertSee('Consultas de este paciente')
+            ->assertSee(route('clinica.consulta', $primera->id) . '?seccion=motivos', false);
+        $this->assertSame(1, substr_count($respuesta->getContent(), 'chip-opcion activo" href="' . route('clinica.consulta', $segunda->id) . '?seccion=motivos"'));
+    }
+
+    public function test_con_una_sola_consulta_no_se_pinta_el_navegador(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, ConsultaShellVista::SECCION_MOTIVOS))
+            ->assertOk()->assertSee('data-consulta-barra', false)->assertDontSee('Consultas de este paciente');
+    }
+
     public function test_agregar_un_motivo_del_catalogo_lo_guarda_en_la_consulta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -587,7 +637,7 @@ class ConsultaSeccionesWebTest extends TestCase
 
     // -------------------------------------------------------------------------------- El shell
 
-    public function test_el_panel_marca_los_items_disponibles_y_abre_sus_secciones(): void
+    public function test_el_menu_muestra_el_grupo_consulta_con_sus_items_y_abre_sus_secciones(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->paciente($medico, 1001);
@@ -602,63 +652,200 @@ class ConsultaSeccionesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+
+        // El grupo «Consulta» del menú lateral (revisión de Alexander) reemplazó al panel de la pantalla.
+        $respuesta->assertSee('data-menu="consulta"', false);
+        $respuesta->assertDontSee('Secciones de la consulta', false);
+        $respuesta->assertDontSee('13 de 14 disponibles', false);
+        $respuesta->assertDontSee('12 de 13 disponibles', false);
+
+        // Trae los 13 ítems (O-22 retiró *Exámenes*): 12 enlazan a su sección dentro de esta consulta y la
+        // pre-factura va deshabilitada.
+        $respuesta->assertSee('Pre-factura');
+        $respuesta->assertSee('aria-disabled="true"', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
-        // Los exámenes (WEB-4.7) también: desde esta tarea el ítem 7 abre su sección dentro del shell.
-        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']), false);
+        // *Exámenes* ya no es una sección (O-22): no queda su enlace en el menú.
+        $respuesta->assertDontSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']), false);
         // Y los récipes (WEB-5.1): el ítem 10 abre su sección dentro del shell.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']), false);
         // Y las solicitudes (WEB-5.3a): el ítem 11 abre su sección dentro del shell.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']), false);
-        // El resto sigue diciendo que llega después, con la tarea que lo trae (F9 en la pre-factura).
-        $respuesta->assertSee('Próximamente');
-        $respuesta->assertSee('Llega con F9', false);
-        // Y ya **no** queda ningún ítem esperando a WEB-4.7, WEB-5.1, las solicitudes, el estudio ecográfico
-        // (WEB-6.1) ni el control de embarazo (WEB-6.6): sus paneles están disponibles.
-        $respuesta->assertDontSee('Llega con WEB-4.7', false);
-        $respuesta->assertDontSee('Llega con WEB-5.1', false);
-        $respuesta->assertDontSee('Llega con F5', false);
-        $respuesta->assertDontSee('Llega con WEB-5.3a', false);
-        $respuesta->assertDontSee('Llega con WEB-6.1', false);
-        $respuesta->assertDontSee('Llega con WEB-6.6', false);
+        // Y los datos personales (WEB-11.25): el ítem 13 es una sección más, dentro de la misma consulta.
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']), false);
+        // Y el estudio ecográfico y el control de embarazo, que ya tienen pantalla.
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio']), false);
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'embarazo']), false);
     }
 
-    public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void
+    public function test_el_item_activo_del_menu_se_marca_por_la_seccion_abierta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $this->paciente($medico, 1001);
-        $consulta = Consulta::create([
-            'reg_medico'  => $medico->reg_medico,
-            'numhistoria' => 1001,
-            'nroconsulta' => 1,
-            'fecha'       => $this->hoy->toDateString(),
-        ]);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, ConsultaShellVista::SECCION_RECIPES))
+            ->assertOk()
+            ->getContent();
+
+        // El grupo se abre solo y el hijo activo es Récipes (una sola marca de página actual en el menú).
+        preg_match('/data-menu="consulta".*?<\/details>/s', $html, $bloque);
+        $this->assertNotSame('', $bloque[0] ?? '', 'falta el grupo «Consulta» del menú');
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Récipes"/', $bloque[0]);
+        $this->assertSame(1, substr_count($bloque[0], 'aria-current="page"'));
+    }
+
+    public function test_fuera_de_una_consulta_el_grupo_no_aparece(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        // La agenda (y cualquier pantalla que no sea la consulta) no ofrece el grupo.
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.agenda'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('data-menu="consulta"', $html);
+        $this->assertStringNotContainsString('Pre-factura', $html);
+    }
+
+    // ------------------------- La consulta abre en Motivos de consulta (O-06, 2026-10-17)
+
+    public function test_sin_seccion_la_consulta_abre_en_motivos_y_el_menu_lo_marca(): void
+    {
+        // O-06: sin `?seccion=` la consulta abre en **Motivos de consulta** (el ítem 1), sin redirect —la URL
+        // queda limpia— y con el ítem marcado en el grupo «Consulta» del menú. Antes pintaba el estado vacío
+        // «Elige una sección en el menú».
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', $consulta->id))->assertOk()->getContent();
+
+        // Llegó a Motivos, y no al vacío.
+        $this->assertStringContainsString('id="consulta-motivos"', $html);
+        $this->assertStringContainsString('Motivos de esta consulta', $html);
+        $this->assertStringNotContainsString('Elige una sección en el menú', $html);
+
+        // El menú marca Motivos de consulta (y sólo ese ítem lleva la marca de página actual del grupo).
+        preg_match('/data-menu="consulta".*?<\/details>/s', $html, $bloque);
+        $this->assertNotSame('', $bloque[0] ?? '', 'falta el grupo «Consulta» del menú');
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Motivos de consulta"/', $bloque[0]);
+        $this->assertSame(1, substr_count($bloque[0], 'aria-current="page"'));
+    }
+
+    public function test_una_seccion_valida_sigue_cargando_la_suya(): void
+    {
+        // El default de O-06 es sólo del punto de entrada: `?seccion=enfermedad` sigue abriendo lo suyo.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', $consulta->id));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Elige una sección en el panel', false);
+        $respuesta->assertSee('id="consulta-enfermedad"', false);
+        $respuesta->assertDontSee('id="consulta-motivos"', false);
+        $respuesta->assertDontSee('Elige una sección en el menú', false);
     }
 
     public function test_una_seccion_inventada_en_la_url_no_rompe_la_pantalla(): void
     {
+        // El estado vacío no se borra (O-06): sigue siendo el destino de una sección que no existe.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $this->paciente($medico, 1001);
-        $consulta = Consulta::create([
-            'reg_medico'  => $medico->reg_medico,
-            'numhistoria' => 1001,
-            'nroconsulta' => 1,
-            'fecha'       => $this->hoy->toDateString(),
-        ]);
+        [, $consulta] = $this->pacienteYConsulta($medico);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Elige una sección en el panel', false);
+        $respuesta->assertSee('Elige una sección en el menú', false);
+        $respuesta->assertDontSee('id="consulta-motivos"', false);
+    }
+
+    /**
+     * O-22 (2026-10-17): `?seccion=examenes` dejó de ser una sección. Los enlaces viejos y el historial del
+     * navegador no quedan muertos: se redirige (302) a la galería, que ahora es la solapa *Imágenes* de
+     * *Evaluación física*.
+     */
+    public function test_la_seccion_de_examenes_redirige_a_la_galeria_de_evaluacion_fisica(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']));
+
+        $respuesta->assertStatus(302);
+        $respuesta->assertRedirect(route('clinica.consulta', [
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+            'pestana' => 'imagenes',
+        ]));
+    }
+
+    /**
+     * **El cajón con la historia y el resumen** (O-30): el botón del encabezado se ofrece **sólo donde se
+     * redacta un documento** —los récipes y las cinco pestañas de solicitudes que son un documento—, que es
+     * donde salir de la consulta cuesta el trabajo sin guardar. En el resto de la consulta no está: ahí el
+     * resumen se ve desde la ficha del paciente.
+     */
+    public function test_el_cajon_del_resumen_se_ofrece_solo_donde_se_redacta_un_documento(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $url = route('clinica.consulta', $consulta->id);
+
+        $conCajon = [
+            ['seccion' => 'recipes'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'constancia'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'reposo'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'referencias'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'informe'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'dieta'],
+            // La sección de solicitudes abre en la constancia: sin `solicitud` también se ofrece.
+            ['seccion' => 'solicitudes'],
+        ];
+
+        foreach ($conCajon as $parametros) {
+            $respuesta = $contexto->get($url . '?' . http_build_query($parametros));
+            $respuesta->assertOk();
+            $respuesta->assertSee('data-abrir-resumen', false);
+            $respuesta->assertSee('aria-label="Historia y resumen del paciente"', false);
+            $respuesta->assertSee('id="dialogo-resumen"', false);
+            // El cajón lleva a la historia del paciente que se está atendiendo, y a la pantalla completa.
+            $respuesta->assertSee(route('clinica.pacientes.historia', $pacienteId), false);
+            $respuesta->assertSee('Abrir en otra pestaña', false);
+        }
+
+        $sinCajon = [
+            ['seccion' => 'motivos'],
+            ['seccion' => 'enfermedad'],
+            ['seccion' => 'evaluacion'],
+            ['seccion' => 'antecedentes'],
+            ['seccion' => 'diagnostico'],
+            ['seccion' => 'evolucion'],
+            ['seccion' => 'estudio'],
+            ['seccion' => 'embarazo'],
+            ['seccion' => 'tratamiento'],
+            // Las pestañas de solicitudes que no redactan un documento no están en la lista cerrada de O-30.
+            ['seccion' => 'solicitudes', 'solicitud' => 'laboratorio'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'estudios'],
+            ['seccion' => 'solicitudes', 'solicitud' => 'hospitalizacion'],
+        ];
+
+        foreach ($sinCajon as $parametros) {
+            $respuesta = $contexto->get($url . '?' . http_build_query($parametros));
+            $respuesta->assertOk();
+            $respuesta->assertDontSee('data-abrir-resumen', false);
+            $respuesta->assertDontSee('id="dialogo-resumen"', false);
+        }
+
+        // Y no se abre solo: el `<dialog>` se sirve cerrado (sin el atributo `open`) y no hay nada guardado
+        // que lo recuerde entre consultas.
+        $respuesta = $contexto->get($url . '?seccion=recipes');
+        $respuesta->assertDontSee('id="dialogo-resumen" open', false);
+        $respuesta->assertDontSee('localStorage', false);
     }
 }

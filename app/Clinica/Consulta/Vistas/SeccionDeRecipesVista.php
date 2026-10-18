@@ -18,8 +18,11 @@ use Illuminate\Support\Collection;
  *
  * Tres decisiones que toma acá y no la vista:
  *
- *  - **Dos modos en la misma sección**: la *lista* de los récipes de la consulta (con «Editar» y
- *    «Eliminar» y el botón de «Nuevo récipe») y el *editor* de **uno** (`?recipe=nuevo` o `?recipe=2`).
+ *  - **La puerta de entrada es el editor** (O-28, como la pestaña *Récipes* del escritorio): entrar a la
+ *    sección abre el editor del récipe que corresponde —el 1 si todavía no hay ninguno, que es el de un
+ *    récipe **nuevo** y no crea fila— y arriba van **las pestañas** de los récipes que la consulta tiene
+ *    más «+ Nuevo». La *lista* (con «Imprimir», «Editar» y «Eliminar») sigue existiendo donde sirve:
+ *    `?seccion=recipes&lista=1`, con su enlace desde el editor.
  *    Editar siempre es posible, en el lugar y sin límite de tiempo (decisión del usuario, 2026-10-11).
  *  - **El editor es de guardado explícito y trabaja sobre el récipe entero**: los medicamentos que se
  *    agregan o se quitan, las cantidades y las indicaciones viajan en un solo `POST`, igual que el
@@ -46,7 +49,8 @@ final class SeccionDeRecipesVista
      * @param  Collection<int,object>  $recipes  lo que devolvió `RecipesDeLaConsulta::deLaConsulta()`
      * @param  string|null  $editando  `null` = la lista; `'nuevo'` = el editor de un récipe nuevo; un número
      *                                 = el editor de ese récipe. El controlador ya comprobó que existe.
-     * @param  string  $fechaDeLaConsulta  `AAAA-MM-DD`: la fecha de emisión por defecto de un récipe nuevo
+     * @param  string  $fechaDeLaConsulta  `AAAA-MM-DD`: la fecha de emisión por defecto de un récipe **nuevo**
+     *                                     —hoy del consultorio (O-13)—; el editor de uno existente usa la suya
      * @param  array<string,string>  $urls  `lista`, `nuevo`, `guardarNuevo`, `medicamentos`, `tratamientos`,
      *                                      `crearMedicamento`: las URLs de la sección (sin parámetros)
      * @param  Closure  $urlEditar  `fn(int $numero): string` — el editor de ese récipe
@@ -76,14 +80,39 @@ final class SeccionDeRecipesVista
 
     /**
      * Las pestañas «Récipes del paciente» / «Récipe de la pareja» (WEB-5.1b), o `[]` si la sección no las
-     * ofrece. Sólo se muestran con la lista: mientras se edita un récipe no se cambia de pestaña (se perdería
-     * lo escrito).
+     * ofrece. Se muestran en los dos modos: también en el editor, que ahora es la puerta de entrada (O-28).
      *
      * @return array<int,array{texto:string, url:string, activa:bool}>
      */
     public function pestanas(): array
     {
-        return $this->pestanas === null || $this->esEditor() ? [] : $this->pestanas->opciones(PestanasDeRecipes::PACIENTE);
+        return $this->pestanas === null ? [] : $this->pestanas->opciones(PestanasDeRecipes::PACIENTE);
+    }
+
+    /**
+     * **Las pestañas de los récipes de la consulta** (O-28): «Récipe 1 · Récipe 2 · + Nuevo».
+     *
+     * Es el mismo patrón de las pestañas «Récipes del paciente / Récipe de la pareja»: enlaces, sin
+     * JavaScript, con la activa marcada. «+ Nuevo» abre el editor vacío **sin crear la fila**: el récipe
+     * nuevo no existe hasta que se guarda (la regla «no se crean filas vacías» de `GuardarRecipe`).
+     *
+     * @return array<int,array{texto:string, url:string, activa:bool}>
+     */
+    public function pestanasDeLosRecipes(): array
+    {
+        $opciones = $this->recipes
+            ->sortBy(fn (object $recipe) => (int) $recipe->numero)
+            ->map(fn (object $recipe) => [
+                'texto' => 'Récipe ' . (int) $recipe->numero,
+                'url' => ($this->urlEditar)((int) $recipe->numero),
+                'activa' => $this->numero() === (int) $recipe->numero,
+            ])
+            ->values()
+            ->all();
+
+        $opciones[] = ['texto' => '+ Nuevo', 'url' => $this->urls['nuevo'], 'activa' => $this->esNuevo()];
+
+        return $opciones;
     }
 
     // ------------------------------------------------------------------------------------------ Modos
@@ -141,6 +170,14 @@ final class SeccionDeRecipesVista
     public function urlNuevo(): string
     {
         return $this->urls['nuevo'];
+    }
+
+    /** La entrada de la sección: el editor del récipe que corresponde (O-28), sin parámetros de modo. */
+    public function urlEntrada(): string
+    {
+        $opciones = $this->pestanas?->opciones(PestanasDeRecipes::PACIENTE) ?? [];
+
+        return $opciones[0]['url'] ?? $this->urls['nuevo'];
     }
 
     // ------------------------------------------------------------------------------------------ Lista

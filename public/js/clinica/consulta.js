@@ -22,15 +22,14 @@
  *    escritorio hace en `gffimc.srf`— recalculado al escribir el peso o la talla. El IMC no se guarda: es
  *    de pantalla.
  *
- * 4. **Los antecedentes** (WEB-4.4): el mismo aviso de cambios sin guardar —el detalle, la casilla de
- *    Alerta y lo que el buscador dejó tildado— y el **"Quitar"** de cada fila, que no borra nada al
- *    instante: marca la fila y agrega su código al `POST` del botón guardar, que es donde la baja se
- *    aplica. El `hidden` que se inserta es la única forma de decirle al servidor "esto ya no está" sin
- *    duplicar el estado en la vista.
+ * 4. **Los antecedentes** (WEB-4.4): el aviso de cambios sin guardar —el detalle y la casilla de Alerta, que
+ *    son lo único que se guarda con el botón—. **Agregar y Quitar no pasan por acá** desde O-07: son `POST`
+ *    inmediatos del formulario de cada fila y la pantalla se recarga con la lista ya cambiada, así que no hay
+ *    estado intermedio que marcar ni `hidden` que insertar.
  *
- * 5. **Los diagnósticos** (WEB-4.5): el mismo aviso y el mismo "Quitar" que los antecedentes, para la
- *    sección del ítem 8. Acá la fila se identifica por su **id** (el detalle editado y la baja viajan en el
- *    mismo `POST`) y el `quitar[]` que inserta el script es el que la Action usa para borrar.
+ * 5. **Los diagnósticos** (WEB-4.5): el aviso de cambios sin guardar del **detalle**, que es lo único que se
+ *    guarda con el botón. «Pasar» y «Quitar» son `POST` inmediatos desde O-27: la pantalla se recarga con la
+ *    lista ya cambiada y no hay estado intermedio que marcar.
  *
  * 6. **La evolución** (WEB-4.6): el mismo aviso de cambios sin guardar que la enfermedad actual, para la
  *    sección del ítem 9, y las **plantillas**: cada botón de la lista copia su texto en el campo (que es lo
@@ -45,118 +44,17 @@
 (function () {
     'use strict';
 
-    // ------------------------------------------------------------------- Buscador de motivos
+    // ------------------------------------------------------------------- Motivos: alta del que falta
 
+    // La lista y el buscador del catálogo son del servidor (WEB-11.3: dos listas, formularios y enlaces).
+    // Acá sólo se abre el diálogo de «Crear»: desde el botón «Agregar un motivo nuevo» (campo vacío) o desde
+    // «Crear "x"» (que trae lo buscado en `data-motivo-crear`).
     const motivos = document.getElementById('consulta-motivos');
 
     if (motivos) {
-        const caja = document.getElementById('motivos-busqueda');
-        const texto = document.getElementById('motivo-texto');
-        const lista = document.getElementById('motivo-resultados');
-        const ayuda = document.getElementById('motivo-ayuda');
-        const plantilla = document.getElementById('motivo-plantilla');
-        const plantillaCrear = document.getElementById('motivo-crear-plantilla');
-        const botonNuevo = document.getElementById('motivo-nuevo-boton');
         const dialogo = document.getElementById('dialogo-motivo');
         const campoDescripcion = document.getElementById('motivo-descripcion');
-        const urlBuscar = motivos.dataset.urlBuscar;
-        const ayudaInicial = ayuda.textContent;
-        let temporizador = null;
-        let ultimaBusqueda = '';
 
-        function limpiar() {
-            lista.innerHTML = '';
-            lista.hidden = true;
-        }
-
-        function filaDelMotivo(motivo) {
-            const fila = plantilla.content.firstElementChild.cloneNode(true);
-            const datos = fila.querySelector('.resultado-paciente-datos');
-            datos.textContent = motivo.descripcion;
-
-            if (motivo.yaEsta) {
-                datos.insertAdjacentHTML('beforeend', ' <span class="texto-tenue small">· ya está en la consulta</span>');
-                fila.querySelector('form').remove();
-                return fila;
-            }
-
-            fila.querySelector('input[name=codemotivo]').value = motivo.codemotivo;
-            return fila;
-        }
-
-        function filaParaCrear() {
-            const fila = plantillaCrear.content.firstElementChild.cloneNode(true);
-            fila.querySelector('.resultado-paciente-datos').textContent =
-                motivos.dataset.textoCrear.replace('{texto}', ultimaBusqueda);
-            return fila;
-        }
-
-        function pintar(datos) {
-            lista.innerHTML = '';
-
-            // Crear sólo si lo escrito **no es** un motivo del catálogo: si ya existe uno igual, lo que
-            // corresponde es agregarlo, y el servidor tampoco lo duplicaría (el móvil hace lo mismo).
-            if (ultimaBusqueda !== '' && !datos.existe) {
-                lista.appendChild(filaParaCrear());
-            }
-
-            datos.motivos.forEach(function (motivo) {
-                lista.appendChild(filaDelMotivo(motivo));
-            });
-
-            if (lista.children.length === 0) {
-                limpiar();
-                ayuda.textContent = ultimaBusqueda === ''
-                    ? ayudaInicial
-                    : 'Tu catálogo no tiene motivos que coincidan con «' + ultimaBusqueda + '».';
-                return;
-            }
-
-            lista.hidden = false;
-
-            const cuantos = datos.motivos.length;
-            ayuda.textContent = cuantos === 0
-                ? 'Ningún motivo de tu catálogo coincide con «' + ultimaBusqueda + '»: puedes crearlo.'
-                : cuantos + (cuantos === 1 ? ' motivo' : ' motivos')
-                    + (ultimaBusqueda === '' ? ' en tu catálogo.' : ' que coinciden con «' + ultimaBusqueda + '».');
-        }
-
-        function buscar() {
-            const consulta = texto.value.trim();
-            ultimaBusqueda = consulta;
-
-            if (consulta === '') {
-                limpiar();
-                ayuda.textContent = ayudaInicial;
-                return;
-            }
-
-            fetch(urlBuscar + '?q=' + encodeURIComponent(consulta), { headers: { 'Accept': 'application/json' } })
-                .then(function (respuesta) { return respuesta.json(); })
-                .then(function (datos) {
-                    // Una respuesta vieja no pisa lo que se escribió después.
-                    if (datos.buscar !== texto.value.trim()) return;
-                    pintar(datos);
-                })
-                .catch(function () {
-                    limpiar();
-                    ayuda.textContent = 'No se pudo buscar en el catálogo: revisa la conexión con el servidor.';
-                });
-        }
-
-        texto.addEventListener('input', function () {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(buscar, 250);
-        });
-
-        document.addEventListener('click', function (evento) {
-            if (evento.target !== texto && !caja.contains(evento.target)) {
-                limpiar();
-            }
-        });
-
-        // El botón "Crear un motivo nuevo" y la fila "Crear «…»" del buscador abren el mismo diálogo: la
-        // fila le pasa lo escrito, el botón deja el campo vacío.
         function abrirCrear(textoInicial) {
             if (!dialogo) return;
 
@@ -164,21 +62,18 @@
                 campoDescripcion.value = textoInicial;
             }
 
-            limpiar();
             dialogo.showModal();
             if (campoDescripcion) campoDescripcion.focus();
         }
 
-        lista.addEventListener('click', function (evento) {
-            if (evento.target.closest('#motivo-crear-boton')) {
-                evento.preventDefault();
-                abrirCrear(ultimaBusqueda);
-            }
-        });
-
+        const botonNuevo = document.getElementById('motivo-nuevo-boton');
         if (botonNuevo) {
             botonNuevo.addEventListener('click', function () { abrirCrear(''); });
         }
+
+        motivos.querySelectorAll('[data-motivo-crear]').forEach(function (boton) {
+            boton.addEventListener('click', function () { abrirCrear(boton.dataset.motivoCrear); });
+        });
 
         // El diálogo se abre solo después de un error de validación: el servidor dejó `crear_motivo` en la
         // sesión y el campo conserva lo escrito (`old()`).
@@ -199,7 +94,7 @@
 
         if (!campo) return;
 
-        const guardado = campo.value;
+        let guardado = campo.value;
 
         function sucio() {
             return campo.value !== guardado;
@@ -210,6 +105,12 @@
         }
 
         campo.addEventListener('input', pintarAviso);
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que el texto ya quedó guardado: ese es el nuevo punto de partida.
+        formulario.addEventListener('consulta:guardado', function () {
+            guardado = campo.value;
+            pintarAviso();
+        });
 
         // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder el texto.
         const cancelar = formulario.querySelector('a[href]');
@@ -243,12 +144,19 @@
 
     if (evaluacion) {
         const aviso = document.getElementById('evaluacion-sin-guardar');
-        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input, textarea'));
+        // Sólo los controles que se guardan (con `name`): el buscador y el título del panel de plantillas no cuentan.
+        const campos = Array.prototype.slice.call(evaluacion.querySelectorAll('input[name], textarea[name]'));
 
         // El valor de partida de cada control, para saber si algo cambió. Se toma del `value`/`textContent`
         // con el que el servidor pintó el formulario (que ya trae el `old()` si el POST falló).
-        const guardados = campos.map(function (campo) {
+        let guardados = campos.map(function (campo) {
             return campo.value;
+        });
+
+        // El autoguardado de la barra (`consulta-barra.js`) avisa que todo quedó guardado: nuevo punto de partida.
+        evaluacion.addEventListener('consulta:guardado', function () {
+            guardados = campos.map(function (campo) { return campo.value; });
+            pintarAviso();
         });
 
         function sucio() {
@@ -311,10 +219,8 @@
 
     if (antecedentes) {
         const aviso = document.getElementById('antecedentes-sin-guardar');
-        /** Los controles de una fila que sigue en la lista: lo que la baja saca del POST y del aviso. */
-        const controlesDe = (fila) => Array.prototype.slice.call(
-            fila.querySelectorAll('input[type=text], input[type=checkbox], input[type=hidden][name^="filas["]'),
-        );
+        // Sólo el detalle y la casilla de Alerta: son lo que se guarda con el botón (O-07). Agregar y Quitar
+        // son `POST` inmediatos y ya no dejan estado pendiente en el formulario.
         const campos = Array.prototype.slice.call(
             antecedentes.querySelectorAll(
                 'input[type=text][name^="filas["], input[type=checkbox][name^="filas["], input[type=hidden][name^="filas["]',
@@ -326,18 +232,9 @@
         const guardados = campos.map(function (campo) {
             return campo.type === 'checkbox' ? campo.checked : campo.value;
         });
-        // Las filas que el médico sacó con el botón: su código viaja en `quitar[]` y sus controles **no**
-        // viajan (si no, el POST hablaría de una fila que ya no está).
-        const quitados = [];
-        const controlesQuitados = [];
 
         function sucio() {
-            if (quitados.length > 0) return true;
-
             return campos.some(function (campo, indice) {
-                // Un control de una fila quitada ya no cuenta: su baja ya está en `quitados`.
-                if (controlesQuitados.indexOf(campo) >= 0) return false;
-
                 return campo.type === 'checkbox'
                     ? campo.checked !== guardados[indice]
                     : campo.value !== guardados[indice];
@@ -351,65 +248,6 @@
         campos.forEach(function (campo) {
             campo.addEventListener('input', pintarAviso);
             campo.addEventListener('change', pintarAviso);
-        });
-
-        // "Quitar" no borra: marca la fila, saca sus controles del formulario y deja su código en
-        // `quitar[]`. El segundo botón la restaura tal como estaba.
-        antecedentes.querySelectorAll('[data-antecedente-quitar]').forEach(function (boton) {
-            const fila = boton.closest('[data-antecedente-fila]');
-            const codigo = boton.dataset.antecedenteQuitar;
-            const oculto = document.createElement('input');
-            oculto.type = 'hidden';
-            oculto.name = 'quitar[]';
-            oculto.value = codigo;
-            const avisoQuitar = fila ? fila.querySelector('.antecedentes-aviso-quitar') : null;
-            const restaurar = fila ? fila.querySelector('[data-antecedente-restaurar]') : null;
-            const controles = fila ? controlesDe(fila) : [];
-            const estabaTildada = fila
-                ? Boolean(fila.querySelector('input[type=checkbox][name$="[alerta]"]')?.checked)
-                : false;
-
-            boton.addEventListener('click', function () {
-                if (quitados.indexOf(codigo) >= 0) return;
-
-                quitados.push(codigo);
-                antecedentes.appendChild(oculto);
-                // Los controles de la fila se van del formulario: el POST no manda `filas[id]` de una fila
-                // que se está quitando (el servidor ya la borra por `quitar[]`).
-                controles.forEach(function (control) {
-                    control.disabled = true;
-                    controlesQuitados.push(control);
-                });
-                if (fila) fila.classList.add('antecedentes-item-quitado');
-                if (avisoQuitar) avisoQuitar.hidden = false;
-                boton.hidden = true;
-                if (restaurar) restaurar.hidden = false;
-                pintarAviso();
-            });
-
-            if (restaurar) {
-                restaurar.addEventListener('click', function () {
-                    const posicion = quitados.indexOf(codigo);
-                    if (posicion < 0) return;
-
-                    quitados.splice(posicion, 1);
-                    if (oculto.parentNode) oculto.parentNode.removeChild(oculto);
-                    controles.forEach(function (control) {
-                        control.disabled = false;
-                        const enLista = controlesQuitados.indexOf(control);
-                        if (enLista >= 0) controlesQuitados.splice(enLista, 1);
-                    });
-                    if (fila) fila.classList.remove('antecedentes-item-quitado');
-                    if (avisoQuitar) avisoQuitar.hidden = true;
-                    if (fila) {
-                        const casilla = fila.querySelector('input[type=checkbox][name$="[alerta]"]');
-                        if (casilla) casilla.checked = estabaTildada;
-                    }
-                    boton.hidden = false;
-                    restaurar.hidden = true;
-                    pintarAviso();
-                });
-            }
         });
 
         // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder los cambios.
@@ -442,9 +280,8 @@
 
     if (diagnosticos) {
         const aviso = document.getElementById('diagnosticos-sin-guardar');
-        const controlesDe = (fila) => Array.prototype.slice.call(
-            fila.querySelectorAll('input[type=text][name^="filas["], input[type=hidden][name^="filas["]'),
-        );
+        // Sólo el detalle: es lo que se guarda con el botón (O-27). «Pasar» y «Quitar» son `POST`
+        // inmediatos y ya no dejan estado pendiente en el formulario.
         const campos = Array.prototype.slice.call(
             diagnosticos.querySelectorAll('input[type=text][name^="filas["], input[type=hidden][name^="filas["]'),
         );
@@ -454,17 +291,9 @@
         const guardados = campos.map(function (campo) {
             return campo.value;
         });
-        // Las filas que el médico sacó con el botón: su id viaja en `quitar[]` y sus controles **no** viajan
-        // (si no, el POST hablaría de una fila que ya no está).
-        const quitados = [];
-        const controlesQuitados = [];
 
         function sucio() {
-            if (quitados.length > 0) return true;
-
             return campos.some(function (campo, indice) {
-                if (controlesQuitados.indexOf(campo) >= 0) return false;
-
                 return campo.value !== guardados[indice];
             });
         }
@@ -475,56 +304,6 @@
 
         campos.forEach(function (campo) {
             campo.addEventListener('input', pintarAviso);
-        });
-
-        diagnosticos.querySelectorAll('[data-diagnostico-quitar]').forEach(function (boton) {
-            const fila = boton.closest('[data-diagnostico-fila]');
-            const id = boton.dataset.diagnosticoQuitar;
-            const oculto = document.createElement('input');
-            oculto.type = 'hidden';
-            oculto.name = 'quitar[]';
-            oculto.value = id;
-            const avisoQuitar = fila ? fila.querySelector('.diagnosticos-aviso-quitar') : null;
-            const restaurar = fila ? fila.querySelector('[data-diagnostico-restaurar]') : null;
-            const controles = fila ? controlesDe(fila) : [];
-
-            boton.addEventListener('click', function () {
-                if (quitados.indexOf(id) >= 0) return;
-
-                quitados.push(id);
-                diagnosticos.appendChild(oculto);
-                // Los controles de la fila se van del formulario: el POST no manda `filas[id]` de una fila
-                // que se está quitando (el servidor ya la borra por `quitar[]`).
-                controles.forEach(function (control) {
-                    control.disabled = true;
-                    controlesQuitados.push(control);
-                });
-                if (fila) fila.classList.add('diagnosticos-item-quitado');
-                if (avisoQuitar) avisoQuitar.hidden = false;
-                boton.hidden = true;
-                if (restaurar) restaurar.hidden = false;
-                pintarAviso();
-            });
-
-            if (restaurar) {
-                restaurar.addEventListener('click', function () {
-                    const posicion = quitados.indexOf(id);
-                    if (posicion < 0) return;
-
-                    quitados.splice(posicion, 1);
-                    if (oculto.parentNode) oculto.parentNode.removeChild(oculto);
-                    controles.forEach(function (control) {
-                        control.disabled = false;
-                        const enLista = controlesQuitados.indexOf(control);
-                        if (enLista >= 0) controlesQuitados.splice(enLista, 1);
-                    });
-                    if (fila) fila.classList.remove('diagnosticos-item-quitado');
-                    if (avisoQuitar) avisoQuitar.hidden = true;
-                    boton.hidden = false;
-                    restaurar.hidden = true;
-                    pintarAviso();
-                });
-            }
         });
 
         // Cancelar vuelve a la sección sin guardar: el navegador pregunta antes de perder los cambios.
@@ -549,42 +328,33 @@
 
     // ------------------------------------------------------------------- Evolución (WEB-4.6)
 
-    // El mismo aviso de texto clínico que la enfermedad actual y, además, las plantillas del escritorio:
-    // cada botón copia su texto en el campo. `avisoDeTexto` engancha el aviso **antes** de que el script
-    // toque el campo, así que el valor de partida es el que pintó el servidor y copiar una plantilla deja el
-    // formulario sucio sin ningún estado extra.
+    // El mismo aviso de texto clínico que la enfermedad actual. Las plantillas las maneja el panel
+    // (`plantillas-panel.js`, WEB-11.2), que dispara `input` al copiar y así deja el formulario sucio.
     const evolucion = document.querySelector('[data-consulta-evolucion]');
 
     if (evolucion) {
         avisoDeTexto(evolucion, 'evolucion-sin-guardar');
-
-        // El `<textarea>`, no el primero que aparezca: la sección tiene un solo campo de texto.
-        const campo = document.getElementById('evolucion');
-
-        evolucion.querySelectorAll('[data-evolucion-plantilla]').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                if (!campo) return;
-
-                // Lo que el doble clic del `dw_84` hace: `mle_evolucion.text = desch`. Se dispara `input`
-                // para que el aviso de cambios sin guardar se entere por el mismo camino que si el médico
-                // hubiera escrito (el listener de `avisoDeTexto`).
-                campo.value = boton.dataset.evolucionPlantilla;
-                campo.dispatchEvent(new Event('input', { bubbles: true }));
-                campo.focus();
-            });
-        });
     }
+
+    // ------------------------------------------- Plantillas de texto de las solapas del examen (WEB-6.5)
+
+    // Las solapas del examen: un formulario `[data-consulta-plantillas]` con su aviso de cambios sin guardar
+    // (el id del formulario más `-sin-guardar`). Sus plantillas las copia el panel (`plantillas-panel.js`).
+    document.querySelectorAll('[data-consulta-plantillas]').forEach(function (formulario) {
+        avisoDeTexto(formulario, formulario.id + '-sin-guardar');
+    });
 
     // ------------------------------------------------------------------- Exámenes e imágenes (WEB-4.7)
 
-    // La única subida de archivo de la consulta: el formulario de la sección del ítem 7. Lo que hace el
-    // script es **avisar** —el archivo elegido y todavía sin subir se pierde si se sale—, nada más: el
-    // `POST` lo manda el navegador con el `multipart/form-data` del formulario y el archivo lo valida y lo
-    // guarda el servidor. El nombre del archivo no se toca acá ni allá: lo pone el servidor.
-    const subidaDeImagen = document.querySelector('[data-consulta-archivo]');
-
-    if (subidaDeImagen) {
-        const aviso = document.getElementById('examenes-sin-subir');
+    // La única subida de archivo de la consulta: los formularios de imagen (la sección del ítem 7 y las
+    // solapas del examen, WEB-6.5). Lo que hace el script es **avisar** —el archivo elegido y todavía sin
+    // subir se pierde si se sale—, nada más: el `POST` lo manda el navegador con el `multipart/form-data`
+    // del formulario y el archivo lo valida y lo guarda el servidor. El nombre del archivo no se toca acá ni
+    // allá: lo pone el servidor. El cartel de cada formulario se declara con `data-aviso-id` (el id del
+    // párrafo de aviso), porque el id del formulario y el del cartel no siguen la misma regla: el de la
+    // sección de exámenes es `examenes-sin-subir` y su formulario `examenes-subida`.
+    document.querySelectorAll('[data-consulta-archivo]').forEach(function (subidaDeImagen) {
+        const aviso = document.getElementById(subidaDeImagen.dataset.avisoId || (subidaDeImagen.id + '-sin-subir'));
         const archivo = subidaDeImagen.querySelector('input[type=file]');
 
         function sucio() {
@@ -611,7 +381,7 @@
         });
 
         pintarAviso();
-    }
+    });
 
     // ------------------------------------------------- Estudio ecográfico (WEB-6.1)
 
@@ -669,14 +439,18 @@
     // gesta es un formulario más (campos y su cartel), sin nada propio como el IMC de la evaluación.
     function avisoDeFormulario(formulario, idAviso) {
         const campos = Array.prototype.slice.call(formulario.querySelectorAll('input, select, textarea'));
-        const guardados = campos.map(function (campo) {
-            return campo.value;
-        });
+        // El estado de cada control: el valor y, en las casillas, si está marcada. Una casilla tiene siempre
+        // el mismo `value` —`S`, el del formulario—, así que sin el `checked` marcar «Final de embarazo» no
+        // contaba como un cambio y el aviso no aparecía (O-21: las dos casillas del estado del embarazo).
+        const estadoDe = function (campo) {
+            return campo.value + (campo.type === 'checkbox' || campo.type === 'radio' ? '|' + campo.checked : '');
+        };
+        const guardados = campos.map(estadoDe);
         const aviso = document.getElementById(idAviso);
 
         function sucio() {
             return campos.some(function (campo, indice) {
-                return campo.value !== guardados[indice];
+                return estadoDe(campo) !== guardados[indice];
             });
         }
 

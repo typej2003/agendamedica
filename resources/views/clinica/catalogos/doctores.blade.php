@@ -7,7 +7,7 @@
          (Nuevo médico); el buscador es lo que se usa todo el tiempo y están en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Médicos referidos" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}" data-tour="catalogos-nuevo">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo médico
             </a>
         </x-slot>
@@ -20,7 +20,7 @@
 
     <x-ui.errores />
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">
@@ -36,7 +36,7 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-catalogo-doctores">
                 <thead>
                 <tr>
                     <th>Médico</th>
@@ -48,26 +48,29 @@
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['nombre'] }}</strong>
-                            <span class="texto-tenue small d-block">Código {{ $fila['codigo'] }}</span>
-                            @if ($fila['repetido'])
-                                <x-ui.estado tono="aviso" icono="bi-files" class="mt-1">{{ $fila['repetido'] }}</x-ui.estado>
-                            @endif
+                        {{-- Una línea por fila (pauta de Alexander): la cédula (el código) y el detalle del contacto salen del
+                             listado y quedan en el `title` de la celda y en el diálogo de edición; el aviso de repetidos se
+                             queda como pastilla. --}}
+                        <td class="celda-principal" title="{{ $fila['title'] }}">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="texto-una-linea"><strong>{{ $fila['nombre'] }}</strong></span>
+                                @if ($fila['repetido'])
+                                    <x-ui.estado tono="aviso" icono="bi-files">{{ $fila['repetido'] }}</x-ui.estado>
+                                @endif
+                            </span>
                         </td>
-                        <td data-etiqueta="Especialidad">{{ $fila['especialidad'] ?? '—' }}</td>
+                        <td data-etiqueta="Especialidad"><span class="texto-una-linea">{{ $fila['especialidad'] ?? '—' }}</span></td>
                         <td data-etiqueta="Contacto">
-                            @if ($fila['clinica'] || $fila['ciudad'] || $fila['telefono'] || $fila['direccion'])
-                                @if ($fila['clinica'])<span class="d-block">{{ $fila['clinica'] }}</span>@endif
-                                @if ($fila['ciudad'])<span class="d-block texto-tenue small">{{ $fila['ciudad'] }}</span>@endif
-                                @if ($fila['telefono'])<span class="d-block texto-tenue small">{{ $fila['telefono'] }}</span>@endif
-                                @if ($fila['direccion'])<span class="d-block texto-tenue small catalogo-texto-corto">{{ $fila['direccion'] }}</span>@endif
+                            @if ($fila['contacto'])
+                                <span class="texto-una-linea" title="{{ $fila['title'] }}">{{ $fila['contacto'] }}</span>
                             @else
                                 <span class="texto-tenue">—</span>
                             @endif
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones directas, en la misma línea; el menú «…» de una sola opción está prohibido
+                                 (pauta de Alexander). --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
@@ -77,13 +80,12 @@
                                     @foreach ($vm->parametrosDeVuelta() as $nombre => $valor)
                                         <input type="hidden" name="{{ $nombre }}" value="{{ $valor }}">
                                     @endforeach
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-trash" aria-hidden="true"></i> Quitar del catálogo
-                                        </button>
-                                    </x-ui.menu>
+                                    <button class="btn btn-sm btn-outline-danger" title="Quitar del catálogo"
+                                            aria-label="Quitar a {{ $fila['nombre'] }} del catálogo">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

@@ -9,7 +9,10 @@ namespace App\Clinica\Impresion;
  * Es la regla del móvil (`DoctorisimoMobile/lib/features/reportes/pdf/reporte_pdf.dart`, decisión del usuario del
  * 2026-09-27) llevada a la web, con las medidas de la hoja del récipe (`MedidasDeLaMitad`, `MedidorDeTexto`):
  *
- *  1. Un documento es **media hoja**: la mitad izquierda del A4 horizontal. La derecha queda en blanco.
+ *  1. Un documento es **media hoja**: la mitad izquierda del A4 horizontal. La derecha queda en blanco. (Desde O-26 un documento
+ *     también puede ser de **hoja completa vertical**: `ModoDeLaHoja` decide cuál y le pasa a esta clase las medidas,
+ *     `MedidasDeLaMitad::deLaHojaCompleta()`. La cuenta es la misma —cambian los milímetros— y las «mitades» del reparto son, en
+ *     ese modo, **páginas enteras**.)
  *  2. **Si el texto no entra, sigue en la otra mitad.** La primera se llena con todo lo que entra y lleva al pie la línea
  *     «Continúa →»; la segunda es la **continuación**: sin membrete, con un encabezado corto (`PACIENTE` y `FECHA`), el título
  *     «… (continuación)», el resto del texto y **la firma**. La firma va sólo en la última mitad.
@@ -36,9 +39,6 @@ final class DistribuidorDeDocumento
 {
     /** Los tamaños de letra del cuerpo, del más grande al más chico, en puntos (los de `DistribuidorDeRecipe`). */
     public const ESCALONES = [10, 9, 8];
-
-    /** El ancho del cuerpo: el útil menos la sangría (`.recipe-cuerpo`). */
-    private const ANCHO_DEL_CUERPO_MM = MedidasDeLaMitad::ANCHO_UTIL_MM - MedidasDeLaMitad::SANGRIA_DEL_CUERPO_MM;
 
     /** El aire debajo de cada párrafo (`.documento-parrafo`). */
     private const AIRE_DE_UN_PARRAFO_MM = 2.6;
@@ -96,16 +96,19 @@ final class DistribuidorDeDocumento
 
         while (count($mitades) < self::MAXIMO_DE_MITADES) {
             $fijos = $primera ? $documento->fijos : [];
+            // La caja del destinatario (el resumen médico, WEB-5.3c) ocupa su franja en la cabecera de la primera
+            // mitad: el cuerpo de esa mitad tiene que medirse sin ella.
+            $para = $primera ? $documento->para : null;
 
             // ¿Lo que queda entra en esta mitad **con la firma**? Entonces es la última.
-            if ($this->alto($fijos, $restantes, $puntos) <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true)) {
+            if ($this->alto($fijos, $restantes, $puntos) <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para)) {
                 $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes];
 
                 return $mitades;
             }
 
             // Si no, se llena esta mitad (sin firma, con el «Continúa →») con todo lo que entra.
-            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false);
+            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para);
             $total = $this->palabras($restantes);
             $cuantas = $this->mayorCorteQueEntra($fijos, $restantes, $total, $puntos, $capacidad);
 
@@ -194,7 +197,7 @@ final class DistribuidorDeDocumento
         $alto = 0.0;
 
         foreach ($fijos as $fijo) {
-            $alto += max($this->medidor->lineas($fijo['etiqueta'] . ' ' . $fijo['valor'], self::ANCHO_DEL_CUERPO_MM, $puntos, true), 1) * $linea
+            $alto += max($this->medidor->lineas($fijo['etiqueta'] . ' ' . $fijo['valor'], $this->medidas->anchoDelCuerpo(), $puntos, true), 1) * $linea
                 + self::AIRE_DE_UN_FIJO_MM;
         }
 
@@ -213,17 +216,17 @@ final class DistribuidorDeDocumento
     private function altoDeUnParrafo(array $parrafo, int $puntos, float $linea): float
     {
         if ($parrafo['etiqueta'] === null) {
-            return max($this->medidor->lineas($parrafo['texto'], self::ANCHO_DEL_CUERPO_MM, $puntos), 1) * $linea;
+            return max($this->medidor->lineas($parrafo['texto'], $this->medidas->anchoDelCuerpo(), $puntos), 1) * $linea;
         }
 
         if ($parrafo['aparte']) {
             return $linea + self::AIRE_DEL_ROTULO_MM
-                + max($this->medidor->lineas($parrafo['texto'], self::ANCHO_DEL_CUERPO_MM, $puntos), 1) * $linea;
+                + max($this->medidor->lineas($parrafo['texto'], $this->medidas->anchoDelCuerpo(), $puntos), 1) * $linea;
         }
 
         // El rótulo va en negrita al lado del texto: se mide todo junto, que con el rótulo en la cuenta es más largo
         // (conservador, como el resto del medidor).
-        return max($this->medidor->lineas($parrafo['etiqueta'] . '  ' . $parrafo['texto'], self::ANCHO_DEL_CUERPO_MM, $puntos), 1) * $linea;
+        return max($this->medidor->lineas($parrafo['etiqueta'] . '  ' . $parrafo['texto'], $this->medidas->anchoDelCuerpo(), $puntos), 1) * $linea;
     }
 
     // ----------------------------------------------------------------------------------------------- Palabras

@@ -19,7 +19,7 @@
 
         <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
-        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form"
+        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form" novalidate
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
@@ -27,6 +27,8 @@
                 <h3 class="h6 mt-4 mb-2">
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
                 </h3>
+
+                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
 
                 <div class="row g-3">
                     @foreach ($grupo['campos'] as $campo)
@@ -48,10 +50,13 @@
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">
                     <i class="bi bi-x-lg" aria-hidden="true"></i> Cancelar
                 </a>
-                @if ($vm->esUnDocumento() && $vm->urlImprimir() !== '')
-                    <a class="btn btn-outline-primary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+                {{-- O-16/O-20: el botón se ofrece siempre que la sección tenga hoja: «Imprimir» **guarda lo escrito y
+                     después imprime**, así un estudio recién cargado se imprime sin apretar «Guardar» primero. Si no hay
+                     nada que imprimir, la hoja lo dice («Guarda los datos del estudio para poder imprimir»). --}}
+                @if ($vm->urlImprimir() !== '')
+                    <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="estudio-obstetrico-form" documento="{{ $vm->documento() }}" class="btn btn-outline-primary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </a>
+                    </x-ui.imprimir-guardando>
                 @endif
                 <button class="btn btn-primary">
                     <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el estudio

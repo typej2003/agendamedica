@@ -7,8 +7,11 @@ y entorno) y la wiki indicada al final: este repo no lleva la especificación fu
 
 El working tree está en la rama **`desarrollo`** y el código está presente. Dos advertencias:
 
-- **La rama `main` de este repo contiene únicamente el archivo `leeme`.** No es una base limpia ni una
-  versión anterior útil: no cambies a `main` esperando encontrar el backend.
+- **Las dos ramas llevan el mismo código.** `main` y `desarrollo` tienen el **árbol idéntico** desde el
+  merge `7429df8` (2026-10-13): `desarrollo` es donde se trabaja y `main` es la punta publicada, que se
+  actualiza mergeando. (`main` **no** es "sólo el `leeme`": eso decía esta guía y era falso — antes del
+  merge tenía 354 archivos y su historial propio, con el fix de `sync_credentials.expires_at` del 07/10, que
+  el merge conservó.) Pushear `main` o `desarrollo` da lo mismo, pero **la rama de trabajo es `desarrollo`**.
 - Remoto: `github.com/typej2003/agendamedica` — es el repo compartido con el sistema legado, de ahí el
   nombre.
 
@@ -26,13 +29,53 @@ php artisan storage:link   # necesario para servir el logo (Paso 17) y la firma/
 php artisan route:list
 ```
 
+⚠️ **Agilizar el desarrollo (decisión del usuario, 2026-10-14): la suite completa NO se corre por rutina.** Se corre
+el filtro de la tarea (`php -d memory_limit=2G artisan test --filter=…`) y **el usuario avisa cuándo correrla entera**,
+antes de subir. Motivo: tarda unos seis minutos y frena el desarrollo. Los números de más abajo son mediciones
+puntuales, no un paso obligatorio de cada cambio.
+📝 **Tratamiento** (WEB-5.7, `?seccion=tratamiento`): el ítem TRATAMIENTO del legado, un texto libre con plantillas `TR` en
+`consultas.laringe`, entre Récipes y Solicitudes. **Es `TextosDelExamen::TRATAMIENTO`** (marcado `panel`, así que `claves()` no lo
+cuenta entre las solapas del examen; la ruta de guardado, que es la misma, usa `claves(true)`), con el mismo ViewModel
+(`TextoDelExamenVista`) y el mismo parcial (`_evaluacion-texto`, vía `_tratamiento`), y `ConsultaTextoDelExamenController` vuelve a
+su propia sección. Es el «PLAN DE TRATAMIENTO» del resumen médico. Tests: `ConsultaTratamientoWebTest`.
+
+📋 **Listados clínicos entre fechas** (WEB-6.8, `/clinica/listados`, sólo `role:Root|Medico`): una pantalla parametrizada por
+`?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con los tres del alcance hechos
+(2026-10-14): **embarazos y partos**, **pacientes por rango** y **consultas por rango**. Cada listado suma su filtro, su lectura
+(`EmbarazosEntreFechas`, `PacientesPorRango`, `ConsultasPorRango`), su ViewModel en `Listados/Vistas/` y su parcial en
+`resources/views/clinica/listados/`; la cuenta de edad (`RangoDeEdades`) y la de fechas (`RangoDeFechas`) se comparten. El
+estado civil se filtra por `codeestado` (no por `codesegemp`, como dos DataWindows del legado). *Consultas por rango*: la fecha es
+la de la consulta, una fila por consulta (sus listas se leen por lote y se pegan) y motivo, diagnóstico, medicamento y
+antecedente son **texto escrito** que se busca por nombre (`BusquedaDePacientes`: sin acentos, todas las palabras, comodines
+de `LIKE` como texto; sin `||` porque en MySQL es un `OR`). Tests:
+`ListadosWebTest`, `ListadosPacientesWebTest`, `ListadosConsultasWebTest`,
+`Unit/Clinica/{ListadoDeEmbarazosTest,ListadoDePacientesTest,ListadoDeConsultasTest}`; verificador
+en Chrome `.agent-tools/verificar-listados-web.js`.
+
+🏷️ **Separación por especialidad (2026-10-18).** Lo que las pantallas compartidas ofrecen depende de la especialidad del
+contexto, y la decisión vive en un solo lugar por tema:
+- **Listados**: `ListadosDisponibles::ESPECIALIDAD` declara de qué especialidad es cada reporte. *Embarazos y partos* es de
+  ginecología/obstetricia: pediatría no lo ve en el menú y un `?listado=embarazos` **vuelve al listado por defecto** de la
+  especialidad (a diferencia de las secciones de la consulta, que siguen abriendo por URL directa: acá la pantalla es de sólo
+  lectura y no hay gestas que listar). Sin especialidad en el contexto no se filtra nada.
+- **Plantillas de texto**: `App\Clinica\Catalogos\PlantillasDeLaEspecialidad` traduce `AlcanceDeLaEspecialidad::tiposDePlantillaOcultos()`
+  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `EM` ni `ER`; quedan
+  `EV`, `IM`, `DI`, `EA`, `TR`, `RF` (su solapa *Examen físico* lo usa) y `UA`. Se filtra el listado, el filtro por tipo, el
+  `<select>` del diálogo y el subtotal. **Un tipo del legado que el catálogo no conoce no se oculta nunca** (esconderlo borraría
+  datos del médico), y editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo. Ginecología no cambia.
+- **Formatos en blanco**: los informes de los ecos que la especialidad no tiene no se ofrecen (`FormatosEnBlanco::porEstudio()` +
+  `AlcanceDeLaEspecialidad::formatosEnBlancoOcultos()`): en pediatría son los dos obstétricos y el Doppler. El resto del catálogo
+  (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) se ofrece siempre.
+Tests: `Unit/Clinica/{PlantillasDeLaEspecialidadTest,AlcanceDeLaEspecialidadTest,ListadoDeEmbarazosTest}`, `MenuDelArmazonWebTest`,
+`PlantillasDeTextoWebTest` y `FormatosEnBlancoWebTest`.
+
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
 sola —migrada y con los seeders— antes del primer test, así que no hay ningún paso previo que recordar.
 Si alguien cambia ese `DB_DATABASE` por otra base, el bootstrap avisa por stderr y no migra nada.
 Los tests que tocan base de datos usan `DatabaseTransactions` (rollback automático) — ver
 `tests/Feature/ConfiguracionMedicoTest.php` como referencia. La suite completa (`php artisan test`)
-corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición, **tras WEB-6.1 (2026-10-13, el estudio ecográfico), es 1788 en verde y 3 que fallan** (1758 + 30 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), fue 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
+corre sin filtro desde que se eliminó el `Medico/ListMedicos.php` duplicado (commit `dfc6ce6`). La última medición **completa**, tras «Ayúdanos a mejorar» (2026-10-14), fue **1977 en verde y 3 que fallan**; después, los cuatro estudios (WEB-6.3 y WEB-6.4, 2026-10-14: Doppler perinatal, ecocardiograma fetal, mamario y abdominal) se verificaron con los **filtros de la tarea** (275, 352, 501, 409 y 63 en verde según la tarea, el último del listado de embarazos y partos) y **no se volvió a correr la suite completa**, por la decisión de arriba (las 3 son las de WhatsApp; incluye «Ayúdanos a mejorar»: `Feature/AyudaWebTest`, 5 tests, y `Feature/ComentariosAdminTest`, 7); la anterior, **tras WEB-6.5 (2026-10-13, el examen con sus cuatro solapas de texto), fue 1897 en verde y 3 que fallan** (las 3 son de `WhatsAppWebhookTest`, que espera 500 y recibe 200/403 porque faltan las credenciales de WhatsApp: es de entorno, no del código); la anterior, **tras el primer paso del mismo WEB-6.5 (la colposcopía y sus imágenes), fue 1891 en verde y 3 que fallan**; la anterior, **tras el mismo WEB-6.5 sin las imágenes, fue 1885 en verde y 3 que fallan**; y la anterior, **tras WEB-6.2 (2026-10-13, el eco obstétrico y su formato en blanco), fue 1869 en verde y 3 que fallan**; la anterior, **tras WEB-6.1 (2026-10-13, el estudio ecográfico), fue 1788 en verde y 3 que fallan** (1758 + 30 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-T.1 (2026-10-12, la subida de las imágenes de la PC), fue 1639 en verde y 3 que fallan** (1597 + 42 nuevos; las 3 son las de WhatsApp; medida pasadas las 20:00 de Caracas, así que fallan además los 3 tests de la hora, trampa 59: 1636 + 6 fallas); la anterior, **tras WEB-5.5b (los formatos en blanco), fue 1597 en verde y 3 que fallan** (1564 + 33 nuevos; las 3 son las de WhatsApp); la anterior, **tras WEB-5.6 (el QR de verificación del récipe), fue 1564 en verde y 3 que fallan** (1514 + 37 de integración + 13 unitarias; las 3 son las de WhatsApp); la anterior, de
 medición (2026-10-11, tras **WEB-8.1a**, los catálogos de medicamentos y tratamientos) es **1365 en
 verde y 3 que fallan**; **la última (2026-10-12, tras WEB-5.4, laboratorio y estudios) es 1514 en verde y 3 que fallan** (1453 + 61 nuevos; las 3 son las de WhatsApp; antes, tras WEB-5.3b, 1449; tras WEB-8.1c, 1400) (1365 + 41 nuevos − 6 del ViewModel anterior que se reemplazó; las 3 son las de WhatsApp) (2026-10-12, tras **WEB-8.2**: 1321 + 35 + 9; antes 1319 tras **WEB-8.1b**; los 3 tests de la hora pasan de mañana y fallan pasadas las 20:00 de Caracas, trampa 59) por las credenciales de WhatsApp (es de entorno, no del código; medido varias veces,
 una con la base de tests borrada) **más 3 tests que dependen de la hora real y fallan pasadas las 20:00 de
@@ -106,8 +149,8 @@ así que la cita se busca por `numhistoria` + fecha, y el segundo intento es el 
 `paciente_sinhistoria_id`— y el value object que dice si la cita es terminable). La misma tarea puso la
 regla **"cita atendida ⇒ tiene historia"** en `Actions/Agenda/{AtenderCita,CitaNoAtendible}`: al marcar
 sin número la resuelve del vínculo del paciente y, si no hay ninguno, **rechaza** —la web avisa y el sync
-la **descarta**—; `Vistas/ConsultaShellVista` ganó `urlTerminar()`/`avisoTerminar()` y el panel sigue en
-**8 de 13** (los 5 que faltan son de F5, F6 y F9).
+la **descarta**—; `Vistas/ConsultaShellVista` ganó `urlTerminar()`/`avisoTerminar()` y el panel quedó entonces en
+**8 de 13** (hoy, tras F5, F6 y WEB-5.7, está en **13 de 14**: sólo falta la pre-factura → F9).
 
 Lo que **WEB-5.1 (2026-10-11)**, los récipes de la consulta, agregó a esas tres filas es: `ConsultaRecipes`
 (**WEB-5.1: los récipes de una consulta** en `?seccion=recipes`, con `&recipe=nuevo` o `&recipe=2` para el
@@ -194,7 +237,7 @@ Lo que **WEB-5.4 (2026-10-12)**, laboratorio y estudios, agregó: controladores 
 
 Lo que **WEB-5.6 (2026-10-12)**, el QR de verificación del récipe, agregó: `VerificacionPublicaController` (**la página pública** `GET /verificar/{token}` y `GET /verificar?codigo=`, en `routes/verificar.php` con el grupo de middleware `verificacion` —**fuera de `web`**: sin sesión ni cookies—, `throttle` propio por ruta, y el middleware `VerificacionPublica` con `X-Robots-Tag`, `Referrer-Policy`, `no-store` y CSP), `ConsultaRecipeVerificacionController` (`POST /clinica/consulta/{consulta}/recipes/{n}/verificacion/{anular|reactivar}` y los de `recipe-pareja`, en el grupo `role:Root|Medico`; 404 si el récipe nunca se imprimió), **Actions** `Recipes\{ObtenerVerificacionDeRecipe,AnularVerificacionDeRecipe,ReactivarVerificacionDeRecipe}` (la primera es idempotente y segura ante dos impresiones a la vez), el modelo `RecipeVerificacion` (tabla **nueva** `recipe_verificaciones`, fuera de `config/sync_legado.php`) y `App\Clinica\Verificacion\` (`CredencialesDeVerificacion` —token y código—, `UrlDeVerificacion` —`VERIFICACION_URL`/`APP_URL`—, `GeneradorDeQr` —el SVG—, `LectorDeVerificacion` —**la única que decide qué es público**: nada del paciente ni las indicaciones—, `VerificacionesDeLaConsulta`, `RecetaVerificada`, `EstadoDeLaVerificacion` y `Vistas/VerificacionPublicaVista`) más, en `App\Clinica\Impresion\`, `QrDelRecipe` y `QrParaLosRecipes` (le pone el QR a los récipes que imprimen el médico y la secretaría; `DocumentoDeRecipe::conQr`). Vistas `resources/views/verificacion/*` (+ `public/css/verificacion.css`), `clinica/imprimir/_recipe-qr` y `clinica/consulta/_recipes-verificacion`. Dependencia nueva de Composer: `bacon/bacon-qr-code ^2.0` (con `dasprid/enum`). **El API del móvil no cambió.** Ver las trampas 78 a 80.
 
-Lo que **WEB-5.5b (2026-10-12)**, los formatos en blanco, agregó: `FormatosEnBlancoController` (`GET /clinica/formato/en-blanco/{formato}`, `clinica.formato.en-blanco`, dentro del grupo `role:Root|Medico` de «Formato de impresión»), `App\Clinica\Impresion\FormatosEnBlanco` (catálogo de nueve formatos), `Vistas\HojaEnBlancoVista` (arma las mitades con `enBlanco`), la constante `DocumentoImpreso::TITULOS` (los títulos que comparten la hoja real y la en blanco), los parciales `_datos-en-blanco` y `_seccion-en-blanco`, la vista `clinica/imprimir/en-blanco`, la tarjeta `clinica/formato/_en-blanco` y `public/css/clinica-en-blanco.css`. Sólo lee: ni filas, ni `sync_changes`, ni token, ni QR; el modo del récipe sale de `?modo=` sin guardarse. Tests: `FormatosEnBlancoWebTest` y `Unit/Clinica/FormatosEnBlancoVistaTest`. Trampas 81 y 82.
+Lo que **WEB-5.5b (2026-10-12)**, los formatos en blanco, agregó: `FormatosEnBlancoController` (`GET /clinica/formato/en-blanco/{formato}`, `clinica.formato.en-blanco`, dentro del grupo `role:Root|Medico` de «Formato de impresión»), `App\Clinica\Impresion\FormatosEnBlanco` (el catálogo: **nueve** formatos entonces, **once** desde que WEB-6.2 sumó los dos del eco obstétrico —la clave del formato **lleva guion**, `[a-z][a-z-]*` en la ruta: trampa 111—), `Vistas\HojaEnBlancoVista` (arma las mitades con `enBlanco`), la constante `DocumentoImpreso::TITULOS` (los títulos que comparten la hoja real y la en blanco, más `SUFIJOS`/`tituloConSufijo()` para el trimestre de los ecos), los parciales `_datos-en-blanco` y `_seccion-en-blanco`, la vista `clinica/imprimir/en-blanco`, la tarjeta `clinica/formato/_en-blanco` y `public/css/clinica-en-blanco.css`. Sólo lee: ni filas, ni `sync_changes`, ni token, ni QR; el modo del récipe sale de `?modo=` sin guardarse. Tests: `FormatosEnBlancoWebTest` y `Unit/Clinica/FormatosEnBlancoVistaTest`. Trampas 81, 82 y 111.
 
 Lo que **WEB-8.1a (2026-10-11)**, los catálogos de medicamentos y tratamientos, agregó: controladores `CatalogoController` (la entrada: redirige al primer catálogo),
 `MedicamentoCatalogoController` (`/clinica/catalogos/medicamentos`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición, `DELETE`
@@ -278,25 +321,101 @@ mapa y su lectura), `App\Clinica\Consulta\{EcoObstetrico,EcoObstetricoTercero,Ma
 lecturas —clave `historia` + `consulta`, una fila por consulta— y sus **mapas del dato**: 38 columnas en seis
 bloques el del 1.er trimestre y 55 el del 2.º/3.er, sacados del DataWindow **vivo** de cada uno —trampa 102—, con
 los códigos de sus desplegables), `Vistas/{EcoObstetricoVista,EcoObstetricoTerceroVista}` (el segundo **hereda**
-del primero: mismo formulario por bloques, otro mapa y otro título), los **parciales** `_estudio-obstetrico` y
+del primero: mismo formulario por bloques, otro mapa y otro título) más `Vistas/OpcionesDelDesplegable` (la
+opción **vacía** adelante y el código desconocido del escritorio al final: la regla que el eco pélvico ya tenía y
+a los dos obstétricos les faltaba —trampa 112—), los **parciales** `_estudio-obstetrico` y
 `_estudio-tercero` (el contenedor arma el nombre del parcial con la clave del tipo: **un tipo nuevo necesita el
 suyo**, trampa 103) y el **motor de las dos hojas** (`DocumentoImpreso::{ECO_OBSTETRICO,ECO_OBSTETRICO_TERCERO}` +
-`SolicitudesParaImprimir::hojaDelEcoObstetrico`, parametrizada por mapa/clave/sufijo: «ECOSONOGRAFÍA OBSTÉTRICA» +
-PRIMER o SEGUNDO/TERCER TRIMESTRE). ⚠️ **El 2.º y el 3.er trimestre son la misma tabla y la misma pantalla** en el
+`SolicitudesParaImprimir::hojaDelEcoObstetrico`, parametrizada por mapa y clave: el título con su trimestre sale de
+`DocumentoImpreso::SUFIJOS`/`tituloConSufijo()`, que también usa la hoja en blanco). El **formato en blanco** de los
+dos ecos entra al catálogo de WEB-5.5b (`FormatosEnBlanco`, entradas **décima y undécima**: la ficha del embarazo
+—Gesta/FUR/EG, y FPP en el del 3.º— como datos cortos y **los bloques de su informe** como secciones de renglones);
+el **eco pélvico** sigue sin el suyo. ⚠️ **El 2.º y el 3.er trimestre son la misma tabla y la misma pantalla** en el
 escritorio (cargar el 3.º pisa el 2.º) y **no hay fetos múltiples**: el selector de gemelos no tiene respaldo (el
-`retrieve` de la ventana pasa tres argumentos a un DataWindow de dos, y el dump lo confirma). **Falta** el formato
-en blanco del obstétrico (el escritorio lo tiene: `d_eco_obstetrico_print_vacio_2` y
-`d_eco_obstetrico_trimestral_print_vacio`) y el verificador en Chrome.
+`retrieve` de la ventana pasa tres argumentos a un DataWindow de dos, y el dump lo confirma). Verificación en Chrome:
+`../.agent-tools/verificar-consulta-estudio-web.js` con `../.agent-tools/consulta-estudio-preparar.php` (los tres
+tipos de la sección). Trampas 103, 111 y 112.
+
+Lo que **WEB-6.5 (2026-10-13)**, las **solapas del examen** —el ítem 4 del panel—, agregó: el examen pasó a ser
+un **contenedor de solapas** (`?seccion=evaluacion&pestana=`: `Vistas/PestanasDelExamen` —el catálogo, donde se agrega una
+solapa— y `Vistas/SeccionDeEvaluacionVista`, con un parcial `_evaluacion-<clave>` por solapa; **la evaluación física de
+WEB-4.3 pasó a ser la solapa `fisico`**, con su contenido en `_evaluacion-fisico`, sin cambiar su comportamiento) y su
+primera solapa nueva: la **colposcopía** (la `tabpage_31` del escritorio). Lo que trae: `App\Clinica\Consulta\ColposcopiaDeLaConsulta`
+(la lectura: el texto canónico vive en **`consultas.observaciones`** —es lo que imprime el informe— con la copia
+`examen_fisico_nuevo.colposcopia` como respaldo, más sus plantillas `formato_print` tipo `CO`), `Vistas/ColposcopiaVista` (la
+solapa: el campo, las plantillas, el aviso de cambios sin guardar, la pastilla y el botón de imprimir),
+`Actions/Consulta/GuardarColposcopiaDeLaConsulta` (escribe **las dos** columnas del texto, **sólo lo que cambió**, con una fila
+de rastro por columna **en su tabla** —`consultas` y `examen_fisico_nuevo`—, `source = web` y el last-write-wins del sync: la
+misma convención de `GuardarEvaluacionFisica`), el parcial `_evaluacion-colposcopia` y el JS genérico de plantillas de texto
+(`[data-consulta-plantillas]` + `[data-plantilla-texto]` + `[data-plantilla-destino]` en `consulta.js`, con el aviso derivado
+del id del formulario). Y `App\Clinica\Consulta\PlantillasDelTexto`: la lista de plantillas de una sección por `tipo`, extraída
+de `EvolucionDeLaConsulta` (WEB-4.6) para que la comparta la colposcopía. La **hoja** entra al motor de documentos
+(`DocumentoImpreso::COLPOSCOPIA`, «INFORME DE COLPOSCOPÍA»; `QueEsUnDocumento::colposcopia` = tiene texto),
+`SolicitudesParaImprimir` la ofrece y la arma (su cuerpo son los párrafos del texto), `DocumentosParaImprimir` le pone el icono
+y `HistoriaDelPaciente`/`DocumentosPorCita` la listan. Y las **imágenes del examen** (el segundo paso de la tarea):
+`App\Clinica\Consulta\TagDeImagen` (el vocabulario del legado de `imagen_consulta.observacion`: `'@'` colposcopía —con el
+alias `'colpo'` que escribe su botón—, `'H'`, `'p'`, `'m'`, `'a'`, `'o1'`, `'o3'`), `ImagenesDeLaConsulta::deUnExamen()`
+(las filas etiquetadas para una solapa) y `GuardarImagenDeLaConsulta` con su tercer parámetro renombrado a `$observacion`
+(la columna es la etiqueta en las solapas y la descripción en la sección genérica: el controlador decide y **rechaza una
+descripción que sea una etiqueta**), más `ImagenesDeLaConsultaVista` (su `$examen` opcional dice la etiqueta y si se pide
+descripción), el parcial compartido `_imagenes` (lo usan la sección de exámenes y la solapa; el `examen` viaja en un campo
+oculto) y el JS de la subida, que ahora recorre `[data-consulta-archivo]` y lee el cartel de `data-aviso-id`. ⚠️ La columna
+`observacion` tiene **dos dueños** (trampa 116) y su significado viejo no se reescribe: las filas del escritorio quedan como
+están. Y las **cuatro solapas de texto** están: la regla se escribe **una vez** en `App\Clinica\Consulta\TextosDelExamen`
+(el mapa del dato: la columna de `consultas` de cada una, su `tipo` de plantillas, su hoja y su etiqueta de imágenes —la
+**colposcopía** `observaciones` + la copia `examen_fisico_nuevo.colposcopia`, **citología** `faringe` `CI`, **histeroscopía**
+`cuello` sin plantillas y **resultado de exámenes** `oido` `RE`—), `TextoDelExamen` (la lectura, con la copia donde existe),
+`Actions\Consulta\GuardarTextoDelExamen` (la escritura: sólo lo que cambió, rastro por columna en su tabla, `source = web` y
+last-write-wins), `Vistas\TextoDelExamenVista` (el ViewModel de las cuatro, con la clave como `name` del campo) y **un solo**
+parcial `_evaluacion-texto`, más **una** ruta `POST /consulta/{consulta}/examen/{solapa}` acotada al catálogo
+(`ConsultaTextoDelExamenController`); `SeccionDeEvaluacionVista::parcial()` manda las cuatro solapas de texto a ese parcial.
+El **«INFORME DE HISTEROSCOPÍA»** también entra al motor de documentos (`DocumentoImpreso::HISTEROSCOPIA`, el título de
+`d_histeroscopia.srd:27`, cuyo cuerpo es el texto de `cuello`; `SolicitudesParaImprimir` arma las dos hojas de texto con el
+mismo método). Tests: `ConsultaColposcopiaWebTest` (28). Verificación en Chrome:
+`../.agent-tools/verificar-consulta-colposcopia-web.js` con `../.agent-tools/consulta-colposcopia-preparar.php` (recorre las
+cuatro solapas: cada una con sus plantillas, su guardado y su columna, la hoja de histeroscopía y las tres anchuras) y el de
+WEB-4.7, `verificar-consulta-examenes-web.js`, que comparte el parcial `_imagenes` y se actualizó en sus tres aserciones del
+panel, que seguían esperando «8 de 13». Trampas 114 a 120. **WEB-6.5 queda cerrado.**
 
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
 tests que las necesitan fallan sin ellas, y `php artisan route:list` también): las de **WhatsApp**
-(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` — están en `.env.example` con valor
-vacío, pero no en el `.env`) y, desde WEB-2.6, las del **SMS por Twilio** (`TWILIO_ACCOUNT_SID`,
-`TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor** (`MAIL_*`). Y **`SYNC_API_KEY`**
-(clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php` la lee con un default de
-transición (ver trampas conocidas).
+(`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` y, desde el 2026-10-18,
+**`WHATSAPP_APP_SECRET`** —sin él el POST del webhook responde **503** y no acepta nada: es la firma de
+Meta—, están en `.env.example` con valor vacío, pero no en el `.env`) y, desde WEB-2.6, las del **SMS por
+Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor**
+(`MAIL_*`). Y **`SYNC_API_KEY`** (clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php`
+la lee con un default de transición (ver trampas conocidas).
+
+**El chatbot de WhatsApp (2026-10-18).** El agente virtual es el proyecto de otro desarrollador; lo que
+se hizo acá, con él ya informado, fue el **mínimo antes de producción** de la auditoría
+([Docs/tecnico/auditoria-chatbot-whatsapp.md](../Docs/tecnico/auditoria-chatbot-whatsapp.md), §6): la
+firma `X-Hub-Signature-256` (middleware `whatsapp.firma`, alias en `Kernel.php`), `throttle:120,1`, la
+deduplicación por `messageId` con 500 ante fallo (`WhatsAppWebhookController`), TLS verificado en
+`GeminiService`, las credenciales de `WhatsAppService` casteadas a `string` y **la reserva por
+`CrearCita`** con el lugar resuelto por `ArmadorDeAgenda` (`PacienteAtencionContextService::
+primerLugarDisponible`). `WhatsAppAIService` y el job `ProcessWhatsappMessage` eran código muerto y se
+borraron. Tests: `WhatsAppWebhookTest` (17) y `ChatbotReservaTest` (5). **No se le cambió el producto**
+(los atajos, el prompt, el registro y los mensajes siguen igual), y **sigue sin verificarse la identidad**
+de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 130 a 132.
+**Puesta en el servidor:** `php artisan whatsapp:diagnostico` (lee la config y dice qué falta),
+`--firmar` (POST firmado al `APP_URL` con un evento de status: valida firma/throttle sin contestarle a
+nadie; `--url=` apunta a un `serve` local) y `--enviar-a=<número>` (texto real por la Graph API). Sin
+`WHATSAPP_APP_SECRET` el POST responde **503** y, si el deploy usa `config:cache`, la variable nueva no se
+ve hasta `config:clear`/`config:cache`. Procedimiento completo en
+`../Docs/tecnico/auditoria-chatbot-whatsapp.md` §11-§12. **Lo que ofrece a la paciente:** hasta **tres
+días con lugar** (comprobados con `primerLugarDisponible`, los mismos que acepta la reserva) y **sin decir
+cupos**; el texto lo arma `App\Support\DisponibilidadEnTexto` y la elección por número/día la interpreta
+`PacienteAtencionContextService::interpretarDiaElegido`. Tests: `ChatbotDisponibilidadTest`.
+
+**El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
+**urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:
+`App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`).
+Corpus **sintético** de 28 mensajes en `database/datos/triaje-whatsapp.json`; la clave va en el `.env` como
+**`JEV_API_KEY`** (nunca en el código) y hay `JEV_BASE_URL`/`JEV_MODEL` para el Jev oficial o DigitalOcean.
+Tests: `TriajeJevTest` (6, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`. **Casos de uso
+con ejemplos verificados** (choice, score y noul, con request/respuesta y costos): `../Docs/tecnico/jev-casos-de-uso.md`.
 
 ## Qué es
 

@@ -159,6 +159,7 @@ class ConsultaCierreWebTest extends TestCase
             'cedula'      => (string) random_int(10000000, 30000000),
             'sexo'        => 'F',
             'fnacimiento' => '1990-05-04',
+            'telefono'    => '04141234567',
             'created_at'  => now(),
             'updated_at'  => now(),
         ]);
@@ -302,7 +303,7 @@ class ConsultaCierreWebTest extends TestCase
         $pacienteId = DB::table('pacientes')->insertGetId([
             'nombres' => 'Beto', 'apellidos' => 'Blanco',
             'cedula' => (string) random_int(10000000, 30000000), 'sexo' => 'M',
-            'fnacimiento' => '1985-01-01', 'created_at' => now(), 'updated_at' => now(),
+            'fnacimiento' => '1985-01-01', 'telefono' => '04141234567', 'created_at' => now(), 'updated_at' => now(),
         ]);
         MedicoPaciente::create([
             'medico_id' => $medico->id, 'paciente_id' => $pacienteId,
@@ -349,7 +350,7 @@ class ConsultaCierreWebTest extends TestCase
         $pacienteId = DB::table('pacientes')->insertGetId([
             'nombres' => 'Beto', 'apellidos' => 'Blanco',
             'cedula' => (string) random_int(10000000, 30000000), 'sexo' => 'M',
-            'fnacimiento' => '1985-01-01', 'created_at' => now(), 'updated_at' => now(),
+            'fnacimiento' => '1985-01-01', 'telefono' => '04141234567', 'created_at' => now(), 'updated_at' => now(),
         ]);
         MedicoPaciente::create([
             'medico_id' => $medico->id, 'paciente_id' => $pacienteId,
@@ -419,7 +420,10 @@ class ConsultaCierreWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertDontSee('Terminar la consulta');
+        // No se busca el texto «Terminar la consulta»: el tour de la pantalla (A-15) lo nombra en su paso del
+        // encabezado, así que la frase está en el HTML aunque la acción no se ofrezca. Lo que no puede estar
+        // es el formulario de la acción.
+        $respuesta->assertDontSee('data-barra-terminar', false);
         $respuesta->assertDontSee($this->urlCerrar($consulta), false);
         // Y la vuelta sigue estando: la pantalla no se queda sin salida.
         $respuesta->assertSee('Volver a la agenda');
@@ -466,5 +470,41 @@ class ConsultaCierreWebTest extends TestCase
         $consulta = $this->pacienteConConsulta($medico, 4001, 1, null, $sede->medical_center_id);
 
         $this->post($this->urlCerrar($consulta))->assertRedirect(route('login'));
+    }
+
+    public function test_no_se_termina_la_consulta_si_faltan_datos_obligatorios_del_paciente(): void
+    {
+        // WEB-11.25: sin teléfono la consulta no se cierra y se lleva al médico a «Datos personales».
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consulta = $this->pacienteConConsulta($medico, 1001, 1);
+        DB::table('pacientes')->whereIn('id', MedicoPaciente::where('reg_medico', $medico->reg_medico)->pluck('paciente_id'))->update(['telefono' => null]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.consulta.cerrar', $consulta->id));
+
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']));
+        $respuesta->assertSessionHas('error', fn ($e) => str_contains($e, 'teléfono'));
+    }
+
+    public function test_la_seccion_de_datos_personales_se_edita_dentro_de_la_consulta_y_vuelve_a_ella(): void
+    {
+        // WEB-11.25: los campos de la ficha, lo de sólo lectura, el aviso de lo que falta y el guardado que vuelve a la consulta.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consulta = $this->pacienteConConsulta($medico, 1001, 1);
+        $pacienteId = MedicoPaciente::where('reg_medico', $medico->reg_medico)->value('paciente_id');
+        DB::table('pacientes')->where('id', $pacienteId)->update(['telefono' => null]);
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url)
+            ->assertOk()->assertSee('Datos personales')->assertSee('H. 1001')
+            ->assertSee('Para terminar la consulta falta completar: teléfono.')
+            ->assertSee('name="volver_a_consulta"', false)->assertSee('data-imprimir-ficha', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->put(route('clinica.pacientes.actualizar', $pacienteId), [
+            'nac' => 'V', 'cedula' => '12345678', 'apellidos' => 'Alvarez', 'nombres' => 'Ana', 'telefono' => '04141112222',
+            'volver_a_consulta' => $consulta->id,
+        ])->assertRedirect($url);
+
+        $this->assertSame('04141112222', DB::table('pacientes')->where('id', $pacienteId)->value('telefono'));
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url)->assertOk()->assertDontSee('Para terminar la consulta falta completar');
     }
 }

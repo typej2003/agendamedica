@@ -15,6 +15,7 @@ use App\Clinica\Impresion\QrParaLosRecipes;
 use App\Clinica\Impresion\Vistas\DocumentosDeLaCitaVista;
 use App\Clinica\Impresion\Vistas\HojasImpresasVista;
 use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
+use App\Clinica\Impresion\Vistas\SinDocumentoVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -83,7 +84,22 @@ class ImpresionDeDocumentosController extends Controller
         $claves = array_column($ofrecidos, 'clave');
 
         $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
-        abort_if($elegidos === [], 404);
+
+        // O-16: el documento todavía no existe (el estudio no se guardó, la solicitud está vacía). No es un 404: se dice qué
+        // falta para poder imprimir y se ofrece la vuelta a la sección, en vez de la página «No encontramos esa página».
+        if ($elegidos === []) {
+            return view('clinica.imprimir.sin-documento', [
+                'vm' => new SinDocumentoVista(
+                    $this->nombreDelDocumento($pedido, $ofrecidos),
+                    [
+                        // La vuelta es a la sección donde se carga ese documento, no a una pestaña cualquiera: el médico
+                        // acaba de apretar «Imprimir» ahí.
+                        'volver' => $this->urlDeLaSeccion($consulta, $this->seccionDeLaClave($pedido)),
+                        'volverTexto' => 'Volver a la consulta',
+                    ],
+                ),
+            ]);
+        }
 
         return $this->vistaPrevia(
             $request,
@@ -189,9 +205,15 @@ class ImpresionDeDocumentosController extends Controller
 
         foreach ($claves as $clave) {
             $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta);
-            abort_if($documento === null, 404);
-            $documentos[] = $documento;
+
+            // Un documento que no se pudo armar (dos pestañas abiertas y el estudio se borró en el medio) **no rompe el
+            // lote**: se saltea. Si no queda ninguno, sí es un 404 (O-16: el lote de la cita no se cae por uno).
+            if ($documento !== null) {
+                $documentos[] = $documento;
+            }
         }
+
+        abort_if($documentos === [], 404);
 
         // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima.
         $documentos = $this->qr->agregar($documentos, $consulta, $contexto['medico']);
@@ -223,8 +245,38 @@ class ImpresionDeDocumentosController extends Controller
             return route('clinica.consulta', $consulta->id);
         }
 
-        $tipo = collect($ofrecidos)->firstWhere('clave', $elegidos[0])['tipo'] ?? null;
+        return $this->urlDeLaSeccion($consulta, collect($ofrecidos)->firstWhere('clave', $elegidos[0])['tipo'] ?? null);
+    }
 
+    /** Cómo se llama el documento cuya hoja se pidió, para el aviso de «no hay nada que imprimir» (O-16). */
+    private function nombreDelDocumento(string $pedido, array $ofrecidos): ?string
+    {
+        if (isset(DocumentoImpreso::TITULOS[$pedido])) {
+            return DocumentoImpreso::TITULOS[$pedido][1];
+        }
+
+        return collect($ofrecidos)->firstWhere('clave', $pedido)['titulo'] ?? null;
+    }
+
+    /**
+     * La clave de un documento pedido, llevada a la clave de su **tipo** (`referencia-3` → `referencia`, `recipe-2` →
+     * `recipe`): es lo que `urlDeLaSeccion()` compara.
+     */
+    private function seccionDeLaClave(string $pedido): string
+    {
+        if (preg_match('/^' . DocumentoImpreso::REFERENCIA . '-\d+$/', $pedido) === 1) {
+            return DocumentoImpreso::REFERENCIA;
+        }
+
+        return preg_match('/^recipe-\d+$/', $pedido) === 1 ? 'recipe' : $pedido;
+    }
+
+    /**
+     * La sección de la consulta adonde vuelve una hoja (y adonde manda el aviso de «no hay nada que imprimir», O-16): cada
+     * documento vuelve a la pestaña —o al tipo del estudio ecográfico— donde se carga.
+     */
+    private function urlDeLaSeccion(Consulta $consulta, ?string $tipo): string
+    {
         if ($tipo === 'recipe') {
             return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
         }
@@ -237,6 +289,68 @@ class ImpresionDeDocumentosController extends Controller
                 'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
                 'tipo' => TiposDeEstudio::GINECOLOGICO,
             ]);
+        }
+
+        // El eco Doppler perinatal (WEB-6.3) es otro tipo de esa misma sección: vuelve a él.
+        if ($tipo === DocumentoImpreso::ECO_DOPPLER) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::DOPPLER,
+            ]);
+        }
+        // Los otros tres estudios (WEB-6.3/6.4) son tipos de la misma seccion: cada uno vuelve al suyo.
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::OBSTETRICO,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::SEGUNDO,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_OBSTETRICO_TERCERO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::TERCERO,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_CARDIOGRAMA_FETAL) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::FETAL,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_MAMARIO) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::MAMARIO,
+            ]);
+        }
+
+        if ($tipo === DocumentoImpreso::ECO_ABDOMINAL) {
+            return route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ESTUDIO,
+                'tipo' => TiposDeEstudio::ABDOMINAL,
+            ]);
+        }
+        // El resumen médico (WEB-5.3c) no tiene pestaña propia: su botón vive en la pestaña *Informe
+        // médico* del escritorio (`tabpage_14`), que es a donde vuelve.
+        if ($tipo === DocumentoImpreso::RESUMEN_MEDICO) {
+            return route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::INFORME]);
         }
 
         $pestana = $tipo === DocumentoImpreso::REFERENCIA ? PestanasDeSolicitudes::REFERENCIAS : ($tipo ?? PestanasDeSolicitudes::POR_DEFECTO);

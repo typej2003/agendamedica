@@ -111,8 +111,8 @@ class GestasDeLaHistoriaTest extends TestCase
         $this->assertSame(146, $gesta->edadGestacional()->diasTotales());
         $this->assertSame('20 semanas y 6 días', $gesta->edadGestacional()->texto());
         // La FPP de esta pantalla suma **281** (el DataWindow **vivo** del control prenatal): 2026-05-20 +
-        // 281 = 2027-02-25. No son los 270 del DataWindow huérfano ni los 283 del eco obstétrico.
-        $this->assertSame('2027-02-25', $gesta->fpp());
+        // 281 = 2027-02-24. No son los 270 del DataWindow huérfano ni los 283 del eco obstétrico.
+        $this->assertSame('2027-02-24', $gesta->fpp());
     }
 
     public function test_una_gesta_sin_fur_no_tiene_edad_gestacional_ni_fpp(): void

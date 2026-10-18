@@ -187,6 +187,7 @@ class LaboratorioEstudiosUnidadTest extends TestCase
         $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => '2 exámenes', 'titulo' => 'Esta consulta tiene una orden de laboratorio'], $vm->estado());
         $this->assertSame('/r/__TIPO__', $vm->urlRutina());
         $this->assertStringContainsString('Eliminar la orden', $vm->textoDeEliminar());
+        $this->assertSame('Agregar exámenes', $vm->tituloDelCatalogo(), 'el título de la columna derecha (A-04)');
 
         $vacia = OrdenVista::laboratorio([], null, false, true, [], $urls);
         $this->assertSame('Sin orden', $vacia->estado()['texto']);
@@ -194,6 +195,7 @@ class LaboratorioEstudiosUnidadTest extends TestCase
         $this->assertSame('La orden no tiene exámenes.', $vacia->cuenta());
         $this->assertFalse($vacia->puedeEliminar());
         $this->assertFalse($vacia->ofreceRutinas(), 'sin tipos con exámenes no hay rutinas');
+        $this->assertStringNotContainsString('de abajo', $vacia->vacio()['texto'], 'el catálogo ya no está debajo de la orden');
     }
 
     public function test_la_vista_de_estudios_va_numerada_sin_rutinas_y_un_resumen_solo_cuenta_como_con_solicitud(): void
@@ -206,6 +208,7 @@ class LaboratorioEstudiosUnidadTest extends TestCase
         $this->assertFalse($vm->ofreceRutinas());
         $this->assertSame('1 estudio en la solicitud.', $vm->cuenta());
         $this->assertSame('1 estudio', $vm->estado()['texto']);
+        $this->assertSame('Agregar estudios', $vm->tituloDelCatalogo());
 
         $soloResumen = OrdenVista::estudios([], 'Mastalgia', true, true, $urls);
         $this->assertSame('Con resumen', $soloResumen->estado()['texto']);

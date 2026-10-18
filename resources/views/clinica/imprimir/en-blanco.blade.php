@@ -35,7 +35,10 @@
 @section('contenido')
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
-            <article class="recipe-hoja tamano-{{ $hoja['tamano'] }}">
+            {{-- La hoja en blanco sale en el **mismo modo** que la hoja real de ese documento (O-26): media hoja horizontal
+                 para el récipe y las solicitudes, A4 vertical entera para los ecos y el control de embarazo. --}}
+            @php $completa = ($hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD) === \App\Clinica\Impresion\ModoDeLaHoja::COMPLETA; @endphp
+            <article class="recipe-hoja{{ $completa ? ' recipe-hoja-completa' : '' }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)
                     @if ($hoja['tipo'] === 'documento')
                         @include('clinica.imprimir._documento-mitad', ['mitad' => $mitad, 'membrete' => $vm->membrete()])
@@ -44,7 +47,7 @@
                     @endif
                 @endforeach
 
-                @if (count($hoja['mitades']) === 1)
+                @if (! $completa && count($hoja['mitades']) === 1)
                     <div class="recipe-mitad recipe-mitad-vacia" aria-hidden="true"></div>
                 @endif
             </article>

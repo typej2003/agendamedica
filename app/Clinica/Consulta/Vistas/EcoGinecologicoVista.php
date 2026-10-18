@@ -5,6 +5,7 @@ namespace App\Clinica\Consulta\Vistas;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
+use App\Clinica\Impresion\DocumentosParaImprimir;
 
 /**
  * **El eco pélvico de una consulta** (WEB-6.1, ítem 5 del panel del legado): el formulario con sus nueve
@@ -44,6 +45,9 @@ final class EcoGinecologicoVista
         private string $urlImprimir = '',
         private ?string $furSugerida = null,
         private array $old = [],
+        // La fecha con la que abre el estudio si todavía no tiene una guardada (O-13): la pasa el controlador
+        // —hoy del consultorio— para que el ViewModel no consulte el reloj ni la configuración.
+        private ?string $fechaPorDefecto = null,
     ) {
     }
 
@@ -94,10 +98,19 @@ final class EcoGinecologicoVista
         return $this->urlImprimir;
     }
 
+    /** La clave del documento que imprime el botón (la de su hoja): la manda el botón para guardar e imprimir (O-16). */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urlImprimir);
+    }
+
     /** La fecha del estudio (`AAAA-MM-DD`) que se está mostrando: la del formulario o la guardada. */
     public function fecha(): string
     {
-        return $this->valor(EcoGinecologico::COLUMNA_FECHA);
+        $fecha = $this->valor(EcoGinecologico::COLUMNA_FECHA);
+
+        // O-13: sin fecha guardada ni escrita, la del estudio es **hoy** (la misma que abre el campo).
+        return $fecha !== '' ? $fecha : (string) $this->fechaPorDefecto;
     }
 
     /**
@@ -178,6 +191,16 @@ final class EcoGinecologicoVista
     {
         $valor = $this->valor($campo['columna']);
 
+        // O-13: **la fecha del estudio abre con hoy** (la del consultorio, no la del servidor) cuando el
+        // estudio todavía no tiene fecha guardada. Es lo que hace el escritorio al crear la fila
+        // (`w_cargar_visualizar_ecografia.srw:223`, `fecha = today()`), y lo que la ayuda del campo prometía
+        // mientras el formulario abría el campo vacío. Una fecha ya guardada —o la que volvió en un POST que
+        // falló— manda: el default es sólo para el campo vacío.
+        if (($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
+            && ! array_key_exists($campo['columna'], $this->old)) {
+            $valor = (string) $this->fechaPorDefecto;
+        }
+
         return [
             'columna' => $campo['columna'],
             'etiqueta' => $campo['etiqueta'],
@@ -193,24 +216,14 @@ final class EcoGinecologicoVista
      * Las opciones del desplegable: una vacía para poder dejarlo en blanco, las del DataWindow, y **el
      * valor guardado si no está entre ellas** (los datos del escritorio pueden traer cualquier código).
      *
+     * La regla es la misma en los tres estudios del ítem 5 y vive en `OpcionesDelDesplegable`.
+     *
      * @param  array<string,mixed>  $campo
      * @return array<int,array{valor:string,texto:string}>
      */
     private function opciones(array $campo, string $valor): array
     {
-        $opciones = [['valor' => '', 'texto' => '—']];
-        $conocido = false;
-
-        foreach ($campo['opciones'] as $opcion) {
-            $opciones[] = $opcion;
-            $conocido = $conocido || $opcion['valor'] === $valor;
-        }
-
-        if ($valor !== '' && ! $conocido) {
-            $opciones[] = ['valor' => $valor, 'texto' => $valor . ' (del escritorio)'];
-        }
-
-        return $opciones;
+        return OpcionesDelDesplegable::de($campo, $valor);
     }
 
     /** La ayuda del campo, con el agregado de la FUR cuando el valor lo puso el control prenatal. */

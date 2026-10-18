@@ -52,6 +52,12 @@ class PrenaExamenB extends Model
      * prolactina**: la web las rotula por lo que la columna guarda y no por el rótulo heredado —quien mire
      * los datos del escritorio verá PT/PTT, y esa diferencia está anotada como duda en la wiki—.
      *
+     * **El orden y el agrupamiento son los de la grilla del escritorio** (O-21, captura
+     * `21-control-de-embarazo-laboratorio.png`): un primer renglón con el panel del embarazo
+     * (*Hb.* … *Toxo IgG*) y, aparte, los cinco que el DataWindow pone en su segundo renglón
+     * (*Urea · Crea. · Orina · Heces · Otros*), que es el `bloque` `otros` con su rótulo. La web los muestra
+     * como el formulario de **una fecha** (las fechas son los chips de la pestaña) y no inventa una grilla.
+     *
      * El tipo `opciones` es para los cuatro que el escritorio pinta como casillas con el resultado
      * (`hiv`, `vdrl`, `toxo_igm`, `toxo_igg`): la fuente no declara sus valores posibles, así que se
      * ofrecen *Positivo*, *Negativo* y *No reactivo* tal cual se escriben en un laboratorio.
@@ -67,28 +73,37 @@ class PrenaExamenB extends Model
                 ['valor' => 'No reactivo', 'texto' => 'No reactivo'],
             ]];
 
+        // Los dos renglones del DataWindow: su panel de exámenes y «Otros estudios».
+        $panel = ['bloque' => 'panel', 'ancho' => 'col-6 col-md-2'];
+        $otros = ['bloque' => 'otros', 'rotulo' => 'Otros estudios'];
+
         return [
-            ['columna' => 'hemoglobina', 'etiqueta' => 'Hb.', 'tipo' => 'numero', 'ayuda' => 'Hemoglobina.'],
-            ['columna' => 'hematoc', 'etiqueta' => 'Hto', 'tipo' => 'numero', 'ayuda' => 'Hematocrito.'],
-            ['columna' => 'glob_blanco', 'etiqueta' => 'Glob. Blancos', 'tipo' => 'numero', 'ayuda' => 'Glóbulos blancos.'],
-            ['columna' => 'neut_linf', 'etiqueta' => 'Linf.', 'tipo' => 'numero', 'ayuda' => 'Neutrófilos y linfocitos (el escritorio lo muestra con «%»).'],
-            ['columna' => 'triglicer', 'etiqueta' => 'Trig.', 'tipo' => 'numero', 'ayuda' => 'Triglicéridos.'],
-            ['columna' => 'colesterol', 'etiqueta' => 'Coles', 'tipo' => 'numero', 'ayuda' => 'Colesterol.'],
-            ['columna' => 'glicemia_basal', 'etiqueta' => 'Glice.', 'tipo' => 'numero', 'ayuda' => 'Glicemia basal.'],
-            ['columna' => 'ac_urico', 'etiqueta' => 'Ac.U.', 'tipo' => 'numero', 'ayuda' => 'Ácido úrico.'],
+            ['columna' => 'hemoglobina', 'etiqueta' => 'Hb.', 'tipo' => 'numero', 'ayuda' => 'Hemoglobina.'] + $panel,
+            ['columna' => 'hematoc', 'etiqueta' => 'Hto', 'tipo' => 'numero', 'ayuda' => 'Hematocrito.'] + $panel,
+            ['columna' => 'glob_blanco', 'etiqueta' => 'Glob. Blancos', 'tipo' => 'numero', 'ayuda' => 'Glóbulos blancos.'] + $panel,
+            ['columna' => 'neut_linf', 'etiqueta' => 'Linf.', 'tipo' => 'numero', 'ayuda' => 'Neutrófilos y linfocitos (%).'] + $panel,
+            ['columna' => 'triglicer', 'etiqueta' => 'Trig.', 'tipo' => 'numero', 'ayuda' => 'Triglicéridos.'] + $panel,
+            ['columna' => 'colesterol', 'etiqueta' => 'Coles', 'tipo' => 'numero', 'ayuda' => 'Colesterol.'] + $panel,
+            ['columna' => 'glicemia_basal', 'etiqueta' => 'Glice.', 'tipo' => 'numero', 'ayuda' => 'Glicemia basal.'] + $panel,
+            ['columna' => 'ac_urico', 'etiqueta' => 'Ac.U.', 'tipo' => 'numero', 'ayuda' => 'Ácido úrico.'] + $panel,
             ['columna' => 'progester', 'etiqueta' => 'Progesterona', 'tipo' => 'numero',
-                'ayuda' => 'El escritorio le pone el rótulo «PT», que no es lo que la columna guarda.'],
+                'ayuda' => 'El escritorio la rotula «PT».'] + $panel,
             ['columna' => 'prolactina', 'etiqueta' => 'Prolactina', 'tipo' => 'numero',
-                'ayuda' => 'El escritorio le pone el rótulo «PTT», que no es lo que la columna guarda.'],
-            ['columna' => 'urea', 'etiqueta' => 'Urea', 'tipo' => 'numero', 'ayuda' => 'Urea.'],
-            ['columna' => 'creatinina', 'etiqueta' => 'Crea.', 'tipo' => 'numero', 'ayuda' => 'Creatinina.'],
-            ['columna' => 'orina', 'etiqueta' => 'Orina', 'tipo' => 'texto', 'ayuda' => 'El resultado del examen de orina.'],
-            ['columna' => 'heces', 'etiqueta' => 'Heces', 'tipo' => 'texto', 'ayuda' => 'El resultado del examen de heces.'],
-            ['columna' => 'hiv', 'etiqueta' => 'HIV', 'ayuda' => 'VIH.'] + $reactivo,
-            ['columna' => 'vdrl', 'etiqueta' => 'VDRL', 'ayuda' => 'VDRL.'] + $reactivo,
-            ['columna' => 'toxo_igm', 'etiqueta' => 'Toxo IgM', 'ayuda' => 'Toxoplasmosis IgM.'] + $reactivo,
-            ['columna' => 'toxo_igg', 'etiqueta' => 'Toxo IgG', 'ayuda' => 'Toxoplasmosis IgG.'] + $reactivo,
-            ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'area', 'ayuda' => 'Lo que no entra en las otras casillas.'],
+                'ayuda' => 'El escritorio la rotula «PTT».'] + $panel,
+            ['columna' => 'hiv', 'etiqueta' => 'HIV', 'ayuda' => 'VIH.'] + $reactivo + $panel,
+            ['columna' => 'vdrl', 'etiqueta' => 'VDRL', 'ayuda' => 'VDRL.'] + $reactivo + $panel,
+            ['columna' => 'toxo_igm', 'etiqueta' => 'Toxo IgM', 'ayuda' => 'Toxoplasmosis IgM.'] + $reactivo + $panel,
+            ['columna' => 'toxo_igg', 'etiqueta' => 'Toxo IgG', 'ayuda' => 'Toxoplasmosis IgG.'] + $reactivo + $panel,
+            ['columna' => 'urea', 'etiqueta' => 'Urea', 'tipo' => 'numero', 'ayuda' => 'Urea.',
+                'ancho' => 'col-6 col-md-2'] + $otros,
+            ['columna' => 'creatinina', 'etiqueta' => 'Crea.', 'tipo' => 'numero', 'ayuda' => 'Creatinina.',
+                'ancho' => 'col-6 col-md-2'] + $otros,
+            ['columna' => 'orina', 'etiqueta' => 'Orina', 'tipo' => 'texto',
+                'ayuda' => 'El resultado del examen de orina.', 'ancho' => 'col-6 col-md-2'] + $otros,
+            ['columna' => 'heces', 'etiqueta' => 'Heces', 'tipo' => 'texto',
+                'ayuda' => 'El resultado del examen de heces.', 'ancho' => 'col-6 col-md-3'] + $otros,
+            ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'area',
+                'ayuda' => 'Lo que no entra en las otras casillas.', 'ancho' => 'col-12 col-md-3'] + $otros,
         ];
     }
 

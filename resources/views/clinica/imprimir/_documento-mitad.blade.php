@@ -26,6 +26,12 @@
             </div>
         @endif
 
+        @if (($mitad['para'] ?? null) !== null)
+            {{-- El destinatario del resumen médico (WEB-5.3c, `informe.para`): en la cabecera y en una caja con borde,
+                 como el `border="4"` del DataWindow. Su franja la mide `MedidasDeLaMitad::PARA_MM`. --}}
+            <p class="documento-para">{{ $mitad['para'] }}</p>
+        @endif
+
         <div class="recipe-titulo-fila documento-titulo-fila">
             <h2 class="recipe-titulo documento-titulo">{{ $mitad['titulo'] }}</h2>
         </div>

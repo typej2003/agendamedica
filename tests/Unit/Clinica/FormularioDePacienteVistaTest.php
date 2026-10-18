@@ -2,9 +2,12 @@
 
 namespace Tests\Unit\Clinica;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Models\Paciente;
+use App\Models\Specialty;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -48,9 +51,30 @@ class FormularioDePacienteVistaTest extends TestCase
         return collect($seguros)->map(fn ($seguro) => (object) $seguro);
     }
 
-    private function vista(?Paciente $paciente = null, ?string $numhistoria = null, array $seguros = []): FormularioDePacienteVista
+    private function vista(?Paciente $paciente = null, ?string $numhistoria = null, array $seguros = [], ?Specialty $especialidad = null): FormularioDePacienteVista
     {
-        return new FormularioDePacienteVista($paciente, $numhistoria, $this->catalogo($seguros));
+        return new FormularioDePacienteVista($paciente, $numhistoria, $this->catalogo($seguros), $especialidad);
+    }
+
+    /**
+     * La especialidad del contexto, sin base de datos: `ConfiguracionDeLaEspecialidad` la busca por su
+     * `slug` entre los manifiestos de `config/especialidades/*.php`.
+     */
+    private function especialidad(string $slug): Specialty
+    {
+        return new Specialty(['slug' => $slug]);
+    }
+
+    /** El valor que el `<select>` deja elegido (o `null` si ninguno lo está). */
+    private function elegido(array $opciones): ?string
+    {
+        foreach ($opciones as $opcion) {
+            if ($opcion['elegido']) {
+                return $opcion['valor'];
+            }
+        }
+
+        return null;
     }
 
     // ------------------------------------------------------------------------------------------ Alta
@@ -186,15 +210,72 @@ class FormularioDePacienteVistaTest extends TestCase
         }
     }
 
-    // ------------------------------------------------------------------------------------------- Atender
+    // ------------------------------------------------- Valores por defecto del alta (O-01 y O-02, 2026-10-17)
 
-    public function test_el_si_de_atender_hoy_lleva_al_alta_de_la_cita_con_el_paciente_elegido(): void
+    public function test_el_alta_de_ginecologia_propone_femenino(): void
     {
-        $url = $this->vista($this->paciente(), '01001')->urlAtenderHoy();
+        // La especialidad lo declara en su manifiesto (`paciente.sexo_por_defecto = 'F'`, O-01): el alta
+        // de una paciente de ginecología arranca en Femenino, con el código del legado.
+        $vista = $this->vista(null, null, [], $this->especialidad('ginecologia-y-obstetricia'));
 
-        $this->assertStringContainsString('/clinica/agenda/nueva', $url);
-        $this->assertStringContainsString('paciente_id=7', $url);
-        $this->assertStringContainsString('fecha=' . now()->toDateString(), $url);
+        $this->assertSame('F', $this->elegido($vista->sexos()));
+        // «— Sin dato —» sigue disponible (la opción vacía la pone la vista) y los dos sexos se ofrecen.
+        $this->assertSame(['M', 'F'], array_column($vista->sexos(), 'valor'));
+    }
+
+    public function test_una_especialidad_que_no_declara_el_sexo_sigue_abriendo_en_sin_dato(): void
+    {
+        // Pediatría tiene manifiesto pero no declara la clave; una especialidad sin manifiesto tampoco la
+        // tiene. En las dos el alta queda en «— Sin dato —»: el default no es del producto, es de la
+        // especialidad que lo pide.
+        foreach (['pediatria', 'medicina-general'] as $slug) {
+            $this->assertNull($this->elegido($this->vista(null, null, [], $this->especialidad($slug))->sexos()), $slug);
+        }
+
+        // Y sin especialidad en el contexto, tampoco.
+        $this->assertNull($this->elegido($this->vista()->sexos()));
+    }
+
+    public function test_la_edicion_no_se_pisa_con_el_sexo_por_defecto(): void
+    {
+        // Al editar manda lo guardado, sea cual sea.
+        $this->assertSame(
+            'M',
+            $this->elegido($this->vista($this->paciente(['sexo' => 'M']), null, [], $this->especialidad('ginecologia-y-obstetricia'))->sexos()),
+        );
+
+        // Un paciente de ginecología **sin** sexo guardado no se completa solo en la edición: el default
+        // es del alta.
+        $this->assertNull(
+            $this->elegido($this->vista($this->paciente(['sexo' => null]), null, [], $this->especialidad('ginecologia-y-obstetricia'))->sexos()),
+        );
+    }
+
+    public function test_la_fecha_de_ingreso_del_alta_propone_hoy(): void
+    {
+        $vista = $this->vista();
+
+        $this->assertSame(FechaDelConsultorio::hoy()->toDateString(), $vista->fecha('fingreso'));
+        // La de nacimiento no tiene default: la pantalla no inventa una edad.
+        $this->assertSame('', $vista->fecha('fnacimiento'));
+    }
+
+    public function test_la_fecha_de_ingreso_es_la_del_consultorio_y_no_la_del_servidor(): void
+    {
+        // Las 20:30 del sábado 10/10/2026 en Caracas son las 00:30 del domingo 11 en UTC, que es el reloj
+        // del servidor (trampa 59). El alta tiene que proponer el **10**, el día que se está viviendo acá.
+        Carbon::setTestNow(Carbon::parse('2026-10-11 00:30:00', 'UTC'));
+
+        try {
+            $this->assertSame('2026-10-10', $this->vista()->fecha('fingreso'));
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_la_edicion_manda_la_fecha_de_ingreso_guardada(): void
+    {
+        $this->assertSame('2020-03-15', $this->vista($this->paciente(['fingreso' => '2020-03-15']))->fecha('fingreso'));
     }
 
     // ------------------------------------------------------------------- La ficha muestra el seguro

@@ -4,6 +4,7 @@ namespace App\Clinica\Impresion\Vistas;
 
 use App\Clinica\Impresion\FormatosEnBlanco;
 use App\Clinica\Impresion\Membrete;
+use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\OpcionesDeRecipe;
 use App\Models\RecipeFormato;
 
@@ -103,14 +104,16 @@ final class HojaEnBlancoVista
     }
 
     /**
-     * La hoja (siempre una). Trae `tipo` (`recipe` o `documento`, que decide el parcial de cada mitad), el `tamano` de la letra del
-     * cuerpo y sus `mitades`: una o dos.
+     * La hoja (siempre una). Trae el `modo` de la hoja —media o completa vertical, el mismo de la hoja real de ese documento
+     * (O-26: `ModoDeLaHoja`, que es la única regla)—, el `tipo` (`recipe` o `documento`, que decide el parcial de cada mitad), el
+     * `tamano` de la letra del cuerpo y sus `mitades`: una o dos.
      *
-     * @return array<int,array{tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
+     * @return array<int,array{modo:string, tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
      */
     public function hojas(): array
     {
         return [[
+            'modo' => ModoDeLaHoja::de($this->clave),
             'tipo' => $this->esRecipe() ? 'recipe' : 'documento',
             'etiqueta' => null,
             'tamano' => 10,

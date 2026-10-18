@@ -71,6 +71,23 @@ return [
             'visibility' => 'private',
         ],
 
+        /*
+         * **Las imágenes adjuntas a un comentario** de "Ayúdanos a mejorar" (O-25): la captura que el usuario
+         * pega o elige.
+         *
+         * Mismo criterio que `clinica` y por el mismo motivo: una captura puede traer datos de un paciente, así
+         * que vive **fuera de `public/`** (`storage/app/comentarios`), sin `url` y sin enlace simbólico. El único
+         * camino al archivo es la ruta autorizada: el **autor** del comentario en «Mis comentarios» o quien
+         * atiende la bandeja en `/admin`. Es un disco aparte del clínico porque estos archivos no son parte de
+         * la historia clínica y se borran cuando el reporte se descarta; la decisión está en
+         * `App\Clinica\Ayuda\ArchivosDeLosComentarios`.
+         */
+        'comentarios' => [
+            'driver' => 'local',
+            'root' => storage_path('app/comentarios'),
+            'visibility' => 'private',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

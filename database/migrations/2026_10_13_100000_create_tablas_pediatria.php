@@ -150,15 +150,15 @@ return new class extends Migration
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('hhistoria');
                 $table->integer('hconsulta');
-                $table->float('peso')->nullable();
-                $table->float('talla')->nullable();
-                $table->float('c_cefalica')->nullable();
-                $table->float('c_brazo')->nullable();
-                $table->float('pulso')->nullable();
-                $table->float('p_a_sistolica')->nullable();
-                $table->float('p_a_diastolica')->nullable();
+                $table->double('peso')->nullable();
+                $table->double('talla')->nullable();
+                $table->double('c_cefalica')->nullable();
+                $table->double('c_brazo')->nullable();
+                $table->double('pulso')->nullable();
+                $table->double('p_a_sistolica')->nullable();
+                $table->double('p_a_diastolica')->nullable();
                 $table->date('fecha')->nullable();
-                $table->float('imc')->nullable();
+                $table->double('imc')->nullable();
                 $table->timestamps();
             });
         }
@@ -234,26 +234,26 @@ return new class extends Migration
             Schema::create('percentil_nina', function (Blueprint $table) {
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
-                $table->float('peso_b')->nullable();
-                $table->float('peso_m')->nullable();
-                $table->float('peso_a')->nullable();
-                $table->float('talla_b')->nullable();
-                $table->float('talla_m')->nullable();
-                $table->float('talla_a')->nullable();
-                $table->float('cefalica_b')->nullable();
-                $table->float('cefalica_m')->nullable();
-                $table->float('cefalica_a')->nullable();
-                $table->float('brazo_b')->nullable();
-                $table->float('brazo_m')->nullable();
-                $table->float('brazo_a')->nullable();
+                $table->double('peso_b')->nullable();
+                $table->double('peso_m')->nullable();
+                $table->double('peso_a')->nullable();
+                $table->double('talla_b')->nullable();
+                $table->double('talla_m')->nullable();
+                $table->double('talla_a')->nullable();
+                $table->double('cefalica_b')->nullable();
+                $table->double('cefalica_m')->nullable();
+                $table->double('cefalica_a')->nullable();
+                $table->double('brazo_b')->nullable();
+                $table->double('brazo_m')->nullable();
+                $table->double('brazo_a')->nullable();
                 $table->integer('edad_ini_dia');
                 $table->integer('edad_fin_dia');
                 $table->string('edad_texto', 100)->nullable();
                 $table->integer('edad_meses')->nullable();
-                $table->float('anos')->nullable();
-                $table->float('imc_b')->nullable();
-                $table->float('imc_m')->nullable();
-                $table->float('imc_a')->nullable();
+                $table->double('anos')->nullable();
+                $table->double('imc_b')->nullable();
+                $table->double('imc_m')->nullable();
+                $table->double('imc_a')->nullable();
                 $table->timestamps();
             });
         }
@@ -263,26 +263,26 @@ return new class extends Migration
             Schema::create('percentil_nino', function (Blueprint $table) {
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
-                $table->float('peso_b')->nullable();
-                $table->float('peso_m')->nullable();
-                $table->float('peso_a')->nullable();
-                $table->float('talla_b')->nullable();
-                $table->float('talla_m')->nullable();
-                $table->float('talla_a')->nullable();
-                $table->float('cefalica_b')->nullable();
-                $table->float('cefalica_m')->nullable();
-                $table->float('cefalica_a')->nullable();
-                $table->float('brazo_b')->nullable();
-                $table->float('brazo_m')->nullable();
-                $table->float('brazo_a')->nullable();
+                $table->double('peso_b')->nullable();
+                $table->double('peso_m')->nullable();
+                $table->double('peso_a')->nullable();
+                $table->double('talla_b')->nullable();
+                $table->double('talla_m')->nullable();
+                $table->double('talla_a')->nullable();
+                $table->double('cefalica_b')->nullable();
+                $table->double('cefalica_m')->nullable();
+                $table->double('cefalica_a')->nullable();
+                $table->double('brazo_b')->nullable();
+                $table->double('brazo_m')->nullable();
+                $table->double('brazo_a')->nullable();
                 $table->integer('edad_ini_dia');
                 $table->integer('edad_fin_dia');
                 $table->string('edad_texto', 100)->nullable();
                 $table->integer('edad_meses')->nullable();
-                $table->float('anos')->nullable();
-                $table->float('imc_b')->nullable();
-                $table->float('imc_m')->nullable();
-                $table->float('imc_a')->nullable();
+                $table->double('anos')->nullable();
+                $table->double('imc_b')->nullable();
+                $table->double('imc_m')->nullable();
+                $table->double('imc_a')->nullable();
                 $table->timestamps();
             });
         }
@@ -302,7 +302,7 @@ return new class extends Migration
                 $table->string('descripcion', 100)->nullable();
                 $table->date('fecha_proxima_dosis')->nullable();
                 $table->integer('dosis_numero')->nullable();
-                $table->float('edad_aplicada')->nullable();
+                $table->double('edad_aplicada')->nullable();
                 $table->text('comentario')->nullable();
                 $table->string('prioridad', 1)->nullable();
                 $table->date('fecha_vence')->nullable();
@@ -332,7 +332,7 @@ return new class extends Migration
                 $table->integer('edad_final_meses')->nullable();
                 $table->string('sexo', 1)->nullable();
                 $table->integer('cantidad')->nullable();
-                $table->float('preciov')->nullable();
+                $table->double('preciov')->nullable();
                 $table->string('tipo_vacu', 10)->nullable();
                 $table->string('adulto_ni', 1)->nullable();
                 $table->string('prioridad', 1)->nullable();
@@ -347,8 +347,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('peso');
+                $table->double('edad');
+                $table->double('peso');
                 $table->string('medida', 20);
                 $table->date('fecha');
                 $table->string('sexo', 1);
@@ -362,8 +362,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('talla');
+                $table->double('edad');
+                $table->double('talla');
                 $table->string('medida', 20);
                 $table->date('fecha');
                 $table->string('sexo', 1);
@@ -376,19 +376,19 @@ return new class extends Migration
             Schema::create('percentil_pulso_a_m', function (Blueprint $table) {
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
-                $table->float('tres')->nullable();
-                $table->float('diez')->nullable();
-                $table->float('veinte_5')->nullable();
-                $table->float('cincuenta')->nullable();
-                $table->float('setenta_5')->nullable();
-                $table->float('noventa')->nullable();
-                $table->float('noventa_7')->nullable();
+                $table->double('tres')->nullable();
+                $table->double('diez')->nullable();
+                $table->double('veinte_5')->nullable();
+                $table->double('cincuenta')->nullable();
+                $table->double('setenta_5')->nullable();
+                $table->double('noventa')->nullable();
+                $table->double('noventa_7')->nullable();
                 $table->string('sexo', 1)->nullable();
                 $table->integer('edad_ini_dia');
                 $table->integer('edad_fin_dia');
                 $table->string('edad_texto', 100)->nullable();
                 $table->integer('edad_meses')->nullable();
-                $table->float('anos')->nullable();
+                $table->double('anos')->nullable();
                 $table->timestamps();
             });
         }
@@ -398,21 +398,21 @@ return new class extends Migration
             Schema::create('percentil_pa_sisto_m', function (Blueprint $table) {
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
-                $table->float('tres')->nullable();
-                $table->float('diez')->nullable();
-                $table->float('veinte_5')->nullable();
-                $table->float('cincuenta')->nullable();
-                $table->float('setenta_5')->nullable();
-                $table->float('noventa')->nullable();
-                $table->float('noventa_7')->nullable();
-                $table->float('cefalica_m')->nullable();
-                $table->float('cefalica_a')->nullable();
+                $table->double('tres')->nullable();
+                $table->double('diez')->nullable();
+                $table->double('veinte_5')->nullable();
+                $table->double('cincuenta')->nullable();
+                $table->double('setenta_5')->nullable();
+                $table->double('noventa')->nullable();
+                $table->double('noventa_7')->nullable();
+                $table->double('cefalica_m')->nullable();
+                $table->double('cefalica_a')->nullable();
                 $table->string('sexo', 1)->nullable();
                 $table->integer('edad_ini_dia');
                 $table->integer('edad_fin_dia');
                 $table->string('edad_texto', 100)->nullable();
                 $table->integer('edad_meses')->nullable();
-                $table->float('anos')->nullable();
+                $table->double('anos')->nullable();
                 $table->timestamps();
             });
         }
@@ -422,21 +422,21 @@ return new class extends Migration
             Schema::create('percentil_pa_diast_m', function (Blueprint $table) {
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
-                $table->float('tres')->nullable();
-                $table->float('diez')->nullable();
-                $table->float('veinte_5')->nullable();
-                $table->float('cincuenta')->nullable();
-                $table->float('setenta_5')->nullable();
-                $table->float('noventa')->nullable();
-                $table->float('noventa_7')->nullable();
-                $table->float('cefalica_m')->nullable();
-                $table->float('cefalica_a')->nullable();
+                $table->double('tres')->nullable();
+                $table->double('diez')->nullable();
+                $table->double('veinte_5')->nullable();
+                $table->double('cincuenta')->nullable();
+                $table->double('setenta_5')->nullable();
+                $table->double('noventa')->nullable();
+                $table->double('noventa_7')->nullable();
+                $table->double('cefalica_m')->nullable();
+                $table->double('cefalica_a')->nullable();
                 $table->string('sexo', 1)->nullable();
                 $table->integer('edad_ini_dia');
                 $table->integer('edad_fin_dia');
                 $table->string('edad_texto', 100)->nullable();
                 $table->integer('edad_meses')->nullable();
-                $table->float('anos')->nullable();
+                $table->double('anos')->nullable();
                 $table->timestamps();
             });
         }
@@ -447,8 +447,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('talla');
-                $table->float('peso');
+                $table->double('talla');
+                $table->double('peso');
                 $table->string('medida', 20);
                 $table->date('fecha');
                 $table->string('sexo', 1);
@@ -462,8 +462,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('imc');
+                $table->double('edad');
+                $table->double('imc');
                 $table->string('medida', 20);
                 $table->date('fecha');
                 $table->string('sexo', 1);
@@ -478,7 +478,7 @@ return new class extends Migration
                 $table->string('reg_medico', 20)->nullable();
                 $table->string('cod_dieta', 2);
                 $table->text('descripcion')->nullable();
-                $table->float('calorias')->nullable();
+                $table->double('calorias')->nullable();
                 $table->string('dietas', 200)->nullable();
                 $table->timestamps();
             });
@@ -493,40 +493,40 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha')->nullable();
                 $table->text('tex_basico')->nullable();
-                $table->float('rd_longitud')->nullable();
-                $table->float('rd_transverso')->nullable();
-                $table->float('rd_anteroporteior')->nullable();
+                $table->double('rd_longitud')->nullable();
+                $table->double('rd_transverso')->nullable();
+                $table->double('rd_anteroporteior')->nullable();
                 $table->text('rd_c_caracteristicas')->nullable();
-                $table->float('rd_c_medidas')->nullable();
+                $table->double('rd_c_medidas')->nullable();
                 $table->string('rd_ha_loe_ubicacion', 100)->nullable();
-                $table->float('rd_ha_loe_medida')->nullable();
-                $table->float('rd_ha_litiasis_numero')->nullable();
+                $table->double('rd_ha_loe_medida')->nullable();
+                $table->double('rd_ha_litiasis_numero')->nullable();
                 $table->string('rd_ha_litiasis_ubicacion', 100)->nullable();
-                $table->float('rd_ha_litiasis_medida')->nullable();
-                $table->float('rd_ha_litiasis_medida_o')->nullable();
+                $table->double('rd_ha_litiasis_medida')->nullable();
+                $table->double('rd_ha_litiasis_medida_o')->nullable();
                 $table->string('rd_ha_dilatacion_sc', 10)->nullable();
-                $table->float('ri_longitud')->nullable();
-                $table->float('ri_transverso')->nullable();
-                $table->float('ri_anteroporteior')->nullable();
+                $table->double('ri_longitud')->nullable();
+                $table->double('ri_transverso')->nullable();
+                $table->double('ri_anteroporteior')->nullable();
                 $table->text('ri_c_caracteristicas')->nullable();
-                $table->float('ri_c_medidas')->nullable();
+                $table->double('ri_c_medidas')->nullable();
                 $table->string('ri_ha_loe_ubicacion', 100)->nullable();
-                $table->float('ri_ha_loe_medida')->nullable();
-                $table->float('ri_ha_litiasis_numero')->nullable();
+                $table->double('ri_ha_loe_medida')->nullable();
+                $table->double('ri_ha_litiasis_numero')->nullable();
                 $table->string('ri_ha_litiasis_ubicacion', 100)->nullable();
-                $table->float('ri_ha_litiasis_medida')->nullable();
-                $table->float('ri_ha_litiasis_medida_o')->nullable();
+                $table->double('ri_ha_litiasis_medida')->nullable();
+                $table->double('ri_ha_litiasis_medida_o')->nullable();
                 $table->string('ri_ha_dilatacion_sc', 10)->nullable();
                 $table->text('conlusion')->nullable();
                 $table->text('sugerencia')->nullable();
                 $table->integer('medico_1')->nullable();
                 $table->integer('medico_2')->nullable();
                 $table->string('motivo_estudio', 100)->nullable();
-                $table->float('rd_ha_loe_medida_o')->nullable();
-                $table->float('ri_ha_loe_medida_o')->nullable();
+                $table->double('rd_ha_loe_medida_o')->nullable();
+                $table->double('ri_ha_loe_medida_o')->nullable();
                 $table->string('equipo', 20)->nullable();
                 $table->string('transductor', 20)->nullable();
-                $table->float('frecuencia')->nullable();
+                $table->double('frecuencia')->nullable();
                 $table->timestamps();
             });
         }
@@ -577,7 +577,7 @@ return new class extends Migration
                 $table->string('cod_proveedor', 4);
                 $table->date('fecha');
                 $table->string('factura', 20);
-                $table->float('preciot')->nullable();
+                $table->double('preciot')->nullable();
                 $table->timestamps();
             });
         }
@@ -595,8 +595,8 @@ return new class extends Migration
                 $table->string('paciente', 100)->nullable();
                 $table->string('des_vacuna', 100)->nullable();
                 $table->integer('cantidad')->nullable();
-                $table->float('preciovu')->nullable();
-                $table->float('preciovt')->nullable();
+                $table->double('preciovu')->nullable();
+                $table->double('preciovt')->nullable();
                 $table->string('cod_segu', 3)->nullable();
                 $table->integer('medico')->nullable();
                 $table->timestamps();
@@ -614,7 +614,7 @@ return new class extends Migration
                 $table->string('des_vacuna', 100)->nullable();
                 $table->integer('cantidad')->nullable();
                 $table->string('factura', 20);
-                $table->float('precioc')->nullable();
+                $table->double('precioc')->nullable();
                 $table->timestamps();
             });
         }
@@ -626,8 +626,8 @@ return new class extends Migration
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
                 $table->integer('consulta');
-                $table->float('pef')->nullable();
-                $table->float('pve')->nullable();
+                $table->double('pef')->nullable();
+                $table->double('pve')->nullable();
                 $table->text('texto')->nullable();
                 $table->timestamps();
             });
@@ -695,58 +695,58 @@ return new class extends Migration
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('hhistoria');
                 $table->integer('hconsulta');
-                $table->float('peso')->nullable();
-                $table->float('talla')->nullable();
-                $table->float('urea')->nullable();
-                $table->float('cr')->nullable();
-                $table->float('sodio')->nullable();
-                $table->float('potasio')->nullable();
-                $table->float('cloro')->nullable();
+                $table->double('peso')->nullable();
+                $table->double('talla')->nullable();
+                $table->double('urea')->nullable();
+                $table->double('cr')->nullable();
+                $table->double('sodio')->nullable();
+                $table->double('potasio')->nullable();
+                $table->double('cloro')->nullable();
                 $table->date('fecha')->nullable();
-                $table->float('calcio')->nullable();
-                $table->float('fosforo')->nullable();
-                $table->float('magnesio')->nullable();
-                $table->float('paratohormona')->nullable();
-                $table->float('ferritina')->nullable();
-                $table->float('trasferrina')->nullable();
-                $table->float('proteinuria')->nullable();
-                $table->float('depuracion_creatinina')->nullable();
-                $table->float('ac_urico_u')->nullable();
-                $table->float('amonio')->nullable();
-                $table->float('hierro_serico')->nullable();
-                $table->float('folato')->nullable();
-                $table->float('creatinina_u')->nullable();
-                $table->float('sodio_u')->nullable();
-                $table->float('potasio_u')->nullable();
-                $table->float('cloro_u')->nullable();
-                $table->float('fosforo_u')->nullable();
-                $table->float('magnesio_u')->nullable();
-                $table->float('citrato_u')->nullable();
-                $table->float('oxelato_u')->nullable();
-                $table->float('albumina_u')->nullable();
-                $table->float('calcio_u')->nullable();
-                $table->float('g_v_ph')->nullable();
-                $table->float('g_v_pco2')->nullable();
-                $table->float('g_v_hco3')->nullable();
-                $table->float('g_v_eb')->nullable();
-                $table->float('ac_urico_serico')->nullable();
-                $table->float('hb')->nullable();
-                $table->float('hto')->nullable();
-                $table->float('hb_glicosilada')->nullable();
-                $table->float('triglicerido')->nullable();
-                $table->float('colesterol')->nullable();
-                $table->float('creatinina_s')->nullable();
-                $table->float('v_urina')->nullable();
-                $table->float('creatinina_u_24')->nullable();
-                $table->float('sodio_u_24')->nullable();
-                $table->float('fosforo_u_24')->nullable();
-                $table->float('cloro_u_24')->nullable();
-                $table->float('calcio_u_24')->nullable();
-                $table->float('aci_urico_u_24')->nullable();
-                $table->float('potasio_u_24')->nullable();
-                $table->float('oxato_u_24')->nullable();
-                $table->float('citrato_u_24')->nullable();
-                $table->float('ac_urico')->nullable();
+                $table->double('calcio')->nullable();
+                $table->double('fosforo')->nullable();
+                $table->double('magnesio')->nullable();
+                $table->double('paratohormona')->nullable();
+                $table->double('ferritina')->nullable();
+                $table->double('trasferrina')->nullable();
+                $table->double('proteinuria')->nullable();
+                $table->double('depuracion_creatinina')->nullable();
+                $table->double('ac_urico_u')->nullable();
+                $table->double('amonio')->nullable();
+                $table->double('hierro_serico')->nullable();
+                $table->double('folato')->nullable();
+                $table->double('creatinina_u')->nullable();
+                $table->double('sodio_u')->nullable();
+                $table->double('potasio_u')->nullable();
+                $table->double('cloro_u')->nullable();
+                $table->double('fosforo_u')->nullable();
+                $table->double('magnesio_u')->nullable();
+                $table->double('citrato_u')->nullable();
+                $table->double('oxelato_u')->nullable();
+                $table->double('albumina_u')->nullable();
+                $table->double('calcio_u')->nullable();
+                $table->double('g_v_ph')->nullable();
+                $table->double('g_v_pco2')->nullable();
+                $table->double('g_v_hco3')->nullable();
+                $table->double('g_v_eb')->nullable();
+                $table->double('ac_urico_serico')->nullable();
+                $table->double('hb')->nullable();
+                $table->double('hto')->nullable();
+                $table->double('hb_glicosilada')->nullable();
+                $table->double('triglicerido')->nullable();
+                $table->double('colesterol')->nullable();
+                $table->double('creatinina_s')->nullable();
+                $table->double('v_urina')->nullable();
+                $table->double('creatinina_u_24')->nullable();
+                $table->double('sodio_u_24')->nullable();
+                $table->double('fosforo_u_24')->nullable();
+                $table->double('cloro_u_24')->nullable();
+                $table->double('calcio_u_24')->nullable();
+                $table->double('aci_urico_u_24')->nullable();
+                $table->double('potasio_u_24')->nullable();
+                $table->double('oxato_u_24')->nullable();
+                $table->double('citrato_u_24')->nullable();
+                $table->double('ac_urico')->nullable();
                 $table->timestamps();
             });
         }
@@ -760,7 +760,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -774,7 +774,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -788,7 +788,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -802,7 +802,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -816,7 +816,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -830,7 +830,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -844,7 +844,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -858,7 +858,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -872,7 +872,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -886,7 +886,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -900,7 +900,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -914,7 +914,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -928,7 +928,7 @@ return new class extends Migration
                 $table->integer('consulta');
                 $table->date('fecha');
                 $table->string('medida', 20);
-                $table->float('valor');
+                $table->double('valor');
                 $table->timestamps();
             });
         }
@@ -995,8 +995,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('circunferencia');
+                $table->double('edad');
+                $table->double('circunferencia');
                 $table->string('medida', 20);
                 $table->date('fecha')->nullable();
                 $table->string('sexo', 1)->nullable();
@@ -1010,8 +1010,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('brazo');
+                $table->double('edad');
+                $table->double('brazo');
                 $table->string('medida', 20);
                 $table->date('fecha')->nullable();
                 $table->string('sexo', 1)->nullable();
@@ -1025,8 +1025,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('presion_d');
+                $table->double('edad');
+                $table->double('presion_d');
                 $table->string('medida', 20);
                 $table->date('fecha')->nullable();
                 $table->string('sexo', 1)->nullable();
@@ -1040,8 +1040,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('reg_medico', 20)->nullable();
                 $table->integer('historia');
-                $table->float('edad');
-                $table->float('presion_s');
+                $table->double('edad');
+                $table->double('presion_s');
                 $table->string('medida', 20);
                 $table->date('fecha')->nullable();
                 $table->string('sexo', 1)->nullable();
@@ -1057,7 +1057,7 @@ return new class extends Migration
                 $table->string('codi_vacuna', 4);
                 $table->integer('dosis');
                 $table->string('dosis_descri', 50)->nullable();
-                $table->float('meses')->nullable();
+                $table->double('meses')->nullable();
                 $table->string('obligatoria', 1)->nullable();
                 $table->string('sexo', 1)->nullable();
                 $table->string('frecuencia', 1)->nullable();

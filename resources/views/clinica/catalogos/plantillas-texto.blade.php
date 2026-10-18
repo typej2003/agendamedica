@@ -7,11 +7,13 @@
          plantilla); el buscador y el filtro por tipo están en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Plantillas de texto" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}" data-tour="catalogos-nuevo">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva plantilla
             </a>
         </x-slot>
     </x-ui.page-head>
+
+    @include('clinica.catalogos._novedades-iniciales')
 
     <x-ui.barra-herramientas>
         <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
@@ -26,7 +28,7 @@
 
     <x-ui.errores />
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">
@@ -42,32 +44,41 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-catalogo-plantillas">
                 <thead>
                 <tr>
                     <th>Plantilla</th>
                     <th>Tipo</th>
-                    <th>Código</th>
                     <th class="text-end"><span class="visually-hidden">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['titulo'] }}</strong>
-                            @if ($fila['sinTexto'])
-                                <x-ui.estado tono="aviso" icono="bi-exclamation-triangle" class="mt-1">Sin texto: la consulta no la ofrece</x-ui.estado>
-                            @else
-                                <span class="plantilla-resumen texto-tenue">{{ $fila['resumen'] }}</span>
-                            @endif
+                        {{-- Una línea por fila (pauta de Alexander): el código sale del listado y queda en el `title` de la
+                             celda y en el diálogo de edición; el resumen del texto y el aviso de «sin texto» se quedan en la
+                             misma línea, recortados y con el texto completo en el `title`. --}}
+                        <td class="celda-principal" title="Código {{ $fila['codigo'] }}{{ $fila['resumen'] ? ' · ' . $fila['resumen'] : '' }}">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="texto-una-linea"><strong>{{ $fila['titulo'] }}</strong></span>
+                                @if ($fila['sinTexto'])
+                                    <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Sin texto: la consulta no la ofrece</x-ui.estado>
+                                @endif
+                            </span>
                         </td>
                         <td data-etiqueta="Tipo">
-                            <x-ui.estado :tono="$fila['tipoEnLaWeb'] ? 'info' : 'neutro'" :icono="$fila['tipoEnLaWeb'] ? 'bi-check2-circle' : 'bi-file-earmark-text'">{{ $fila['tipo'] }}</x-ui.estado>
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <x-ui.estado :tono="$fila['tipoEnLaWeb'] ? 'info' : 'neutro'" :icono="$fila['tipoEnLaWeb'] ? 'bi-check2-circle' : 'bi-file-earmark-text'">{{ $fila['tipo'] }}</x-ui.estado>
+                                {{-- Dónde se ofrece el tipo: la pantalla de la consulta. Sin esto, las de ecografía se creaban y no
+                                     se sabía que estaban a la vista en el estudio ecográfico (revisión de Alexander, 2026-10-17).
+                                     Va en la misma línea que la pastilla, recortado, con el texto completo en el `title`. --}}
+                                <span class="texto-una-linea texto-tenue small" title="{{ $fila['dondeSeUsa'] ?? 'Todavía no se ofrece en la consulta de la web.' }}">{{ $fila['dondeSeUsa'] ?? 'Todavía no se ofrece en la consulta de la web.' }}</span>
+                            </span>
                         </td>
-                        <td data-etiqueta="Código" class="texto-tenue">{{ $fila['codigo'] }}</td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones directas, en la misma línea; el menú «…» de una sola opción está prohibido
+                                 (pauta de Alexander). --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['titulo'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
@@ -77,13 +88,12 @@
                                     @foreach ($vm->parametrosDeVuelta() as $nombre => $valor)
                                         <input type="hidden" name="{{ $nombre }}" value="{{ $valor }}">
                                     @endforeach
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['titulo']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-trash" aria-hidden="true"></i> Quitar la plantilla
-                                        </button>
-                                    </x-ui.menu>
+                                    <button class="btn btn-sm btn-outline-danger" title="Quitar la plantilla"
+                                            aria-label="Quitar la plantilla {{ $fila['titulo'] }}">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach
@@ -118,7 +128,7 @@
 
                 <div class="row g-3">
                     <x-ui.campo etiqueta="Tipo" for="plantilla-tipo" error="tipo" class="col-12" :requerido="true"
-                                ayuda="Dice dónde se ofrece: la evolución, el informe médico o las dietas y recomendaciones de la consulta.">
+                                ayuda="Dice dónde se ofrece: la evolución, el informe médico, las dietas, el tratamiento, las solapas del examen o el estudio ecográfico.">
                         <select name="tipo" id="plantilla-tipo" class="form-select" data-foco-inicial>
                             <option value="">Elige el tipo</option>
                             @foreach ($vm->gruposDeTipo() as $grupo)

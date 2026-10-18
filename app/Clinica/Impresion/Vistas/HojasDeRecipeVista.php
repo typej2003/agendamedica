@@ -69,6 +69,18 @@ final class HojasDeRecipeVista
         return true;
     }
 
+    /** Los récipes no llevan imágenes aparte (WEB-11.13): la barra no ofrece «Incluir imágenes». */
+    public function conImagenes(): bool
+    {
+        return false;
+    }
+
+    /** El nombre histórico del método: los récipes no llevan imágenes de una eco ni dibujos. */
+    public function conImagenesDeEco(): bool
+    {
+        return false;
+    }
+
     public function urlVolver(): string
     {
         return $this->urls['volver'];

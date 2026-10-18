@@ -32,6 +32,19 @@ namespace App\Clinica\Impresion;
  * Para el médico típico (logo mediano a la izquierda, tres líneas de pie) el cuerpo queda en ~102 mm: seis o siete
  * medicamentos con dos líneas de indicación.
  *
+ * ## Las dos hojas (O-26)
+ *
+ * La misma clase mide **las dos hojas** del motor, porque la cuenta de las franjas (membrete, datos, título, firma, pie) es la
+ * misma y lo único que cambia son los milímetros útiles:
+ *
+ *  - **Media hoja** (el caso de siempre): la mitad izquierda de un A4 horizontal, 128,5 × 193 mm útiles. Es la que construye
+ *    el constructor sin argumentos.
+ *  - **Hoja completa vertical** (`deLaHojaCompleta()`): un A4 vertical entero, 182 × 279,5 mm útiles (14 mm de margen a los
+ *    lados). La usan el informe del control de embarazo y los informes de los ecos (O-26).
+ *
+ * **Quién decide el modo de cada documento es `ModoDeLaHoja`**, que también devuelve estas medidas: no hay una regla suelta
+ * por documento. Y `DistribuidorDeDocumento` mide con las que le pasen, sin saber de qué modo se trata.
+ *
  * Es una clase **sin estado y sin base de datos**.
  */
 final class MedidasDeLaMitad
@@ -41,6 +54,12 @@ final class MedidasDeLaMitad
 
     /** Alto útil de la mitad: 210 − 9 − 8 de márgenes (`.recipe-mitad` en el CSS). */
     public const ALTO_UTIL_MM = 193.0;
+
+    /** Ancho útil de la hoja completa: 210 − 14 − 14 de márgenes laterales (`.recipe-hoja-completa` en el CSS). */
+    public const ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM = 182.0;
+
+    /** Alto útil de la hoja completa: 296,5 − 9 − 8 de márgenes (`.recipe-hoja-completa` en el CSS). */
+    public const ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM = 279.5;
 
     /** La sangría del cuerpo respecto de los márgenes (`.recipe-cuerpo` en el CSS). */
     public const SANGRIA_DEL_CUERPO_MM = 3.0;
@@ -75,6 +94,13 @@ final class MedidasDeLaMitad
     private const TITULO_CONTINUACION_MM = 7.4;
 
     /**
+     * La **caja del destinatario** del resumen médico (WEB-5.3c, `informe.para`): el valor en negrita a 11 pt dentro de
+     * una caja con borde (`.documento-para`). El `para` es `char(50)`, así que a 11 pt entra en una línea de los 128,5 mm
+     * útiles y la franja es fija: borde (0,5 + 0,5) + relleno (1 + 1) + la línea (4,85) + el aire de abajo (2) = 9,9 mm.
+     */
+    private const PARA_MM = 9.9;
+
+    /**
      * Lo que ocupan la fecha y el «PACIENTE:» en el encabezado corto de una mitad de continuación
      * (`.documento-continuacion-datos`): «PACIENTE:» ~17 mm y «FECHA: dd/mm/aaaa» ~30 mm.
      */
@@ -105,8 +131,33 @@ final class MedidasDeLaMitad
     /** Tamaño de cada texto del membrete, en puntos (`.membrete-medico`, `-especialidad`, `-rif`, `-pie`). */
     private const PUNTOS = ['medico' => 16.0, 'especialidad' => 9.0, 'rif' => 9.0, 'pie' => 7.0];
 
-    public function __construct(private MedidorDeTexto $medidor = new MedidorDeTexto())
+    /**
+     * @param  float|null  $anchoUtil  el ancho útil de la hoja, en milímetros; `null` = la media hoja (el caso de siempre)
+     * @param  float|null  $altoUtil  el alto útil de la hoja, en milímetros; `null` = la media hoja (el caso de siempre)
+     */
+    public function __construct(
+        private MedidorDeTexto $medidor = new MedidorDeTexto(),
+        private ?float $anchoUtil = null,
+        private ?float $altoUtil = null,
+    ) {
+        $this->anchoUtil ??= self::ANCHO_UTIL_MM;
+        $this->altoUtil ??= self::ALTO_UTIL_MM;
+    }
+
+    /** Las medidas de una **hoja completa vertical** (O-26): un A4 vertical entero, una hoja por documento. */
+    public static function deLaHojaCompleta(): self
     {
+        return new self(
+            new MedidorDeTexto(),
+            self::ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM,
+            self::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM,
+        );
+    }
+
+    /** El ancho del cuerpo: el útil menos la sangría (`.recipe-cuerpo`). */
+    public function anchoDelCuerpo(): float
+    {
+        return $this->anchoUtil - self::SANGRIA_DEL_CUERPO_MM;
     }
 
     /**
@@ -127,7 +178,7 @@ final class MedidasDeLaMitad
 
         // Un membrete absurdo (un logo enorme y textos larguísimos) no puede dejar el cuerpo sin lugar: queda
         // una lista mínima y es el verificador el que avisa del desborde.
-        return max(self::ALTO_UTIL_MM - $ocupado, 30.0);
+        return max($this->altoUtil - $ocupado, 30.0);
     }
 
     /**
@@ -147,14 +198,17 @@ final class MedidasDeLaMitad
      * @param  string  $paciente  el nombre que se imprime en `PACIENTE`
      * @param  bool  $primera  `true` para la primera mitad, `false` para una de continuación
      * @param  bool  $conFirma  `true` si es la última mitad del documento (lleva la firma), `false` si sigue en otra
+     * @param  ?string  $para  el destinatario que va **en la cabecera, en una caja con borde** (el resumen médico, WEB-5.3c);
+     *                         ocupa su franja sólo en la primera mitad
      */
-    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma): float
+    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null): float
     {
         $arriba = $primera
             ? $this->altoDelMembrete($membrete)
                 + self::LINEA_MM
                 + $this->altoDeLosDatos($paciente, null) + self::AIRE_DE_LOS_DATOS_MM
                 + self::TITULO_MM
+                + ($para === null ? 0.0 : self::PARA_MM)
             : $this->altoDelEncabezadoDeContinuacion($paciente)
                 + self::LINEA_MM
                 + self::TITULO_CONTINUACION_MM;
@@ -164,7 +218,7 @@ final class MedidasDeLaMitad
             + $this->altoDelPie($membrete)
             + self::RESERVA_MM;
 
-        return max(self::ALTO_UTIL_MM - $ocupado, 30.0);
+        return max($this->altoUtil - $ocupado, 30.0);
     }
 
     /**
@@ -174,7 +228,7 @@ final class MedidasDeLaMitad
     public function altoDelEncabezadoDeContinuacion(string $paciente): float
     {
         $linea = 9.0 * self::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
-        $ancho = self::ANCHO_UTIL_MM - self::ETIQUETA_DEL_PACIENTE_MM - self::FECHA_DE_CONTINUACION_MM;
+        $ancho = $this->anchoUtil - self::ETIQUETA_DEL_PACIENTE_MM - self::FECHA_DE_CONTINUACION_MM;
 
         return max($this->medidor->lineas($paciente, $ancho, 9.0), 1) * $linea;
     }
@@ -191,8 +245,8 @@ final class MedidasDeLaMitad
 
         // Con el logo al lado, los textos disponen de lo que el logo deja; si no, de todo el ancho.
         $anchoDeLosTextos = $logo && ! $centrado
-            ? self::ANCHO_UTIL_MM - self::ANCHO_DEL_LOGO_MM - self::SEPARACION_DEL_LOGO_MM
-            : self::ANCHO_UTIL_MM;
+            ? $this->anchoUtil - self::ANCHO_DEL_LOGO_MM - self::SEPARACION_DEL_LOGO_MM
+            : $this->anchoUtil;
 
         $textos = 0.0;
         foreach ([
@@ -221,12 +275,12 @@ final class MedidasDeLaMitad
         $linea = 9.0 * self::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
 
         // "PACIENTE:" en negrita ocupa ~17 mm antes del nombre.
-        $lineasDelNombre = max($this->medidor->lineas($paciente, self::ANCHO_UTIL_MM - 17.0, 9.0), 1);
+        $lineasDelNombre = max($this->medidor->lineas($paciente, $this->anchoUtil - 17.0, 9.0), 1);
         $alto = $lineasDelNombre * $linea + 1.0 + $linea;
 
         if ($direccion !== null && trim($direccion) !== '') {
             // "DIRECCIÓN:" ocupa ~21 mm.
-            $alto += 1.0 + $this->medidor->lineas($direccion, self::ANCHO_UTIL_MM - 21.0, 9.0) * $linea;
+            $alto += 1.0 + $this->medidor->lineas($direccion, $this->anchoUtil - 21.0, 9.0) * $linea;
         }
 
         return $alto;
@@ -241,7 +295,7 @@ final class MedidasDeLaMitad
 
         $lineas = 0;
         foreach ($membrete->pie as $linea) {
-            $lineas += max($this->lineasDe($membrete, 'pie', $linea, self::ANCHO_UTIL_MM), 1);
+            $lineas += max($this->lineasDe($membrete, 'pie', $linea, $this->anchoUtil), 1);
         }
 
         $borde = ($membrete->estiloDe('pie')['borde'] ?? false) ? self::BORDE_MM * count($membrete->pie) : 0.0;

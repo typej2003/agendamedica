@@ -248,7 +248,7 @@ class ConsultaRecipeParejaWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $panel = $this->medico($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id));
-        $panel->assertOk()->assertSee('12 de 13 disponibles', false);
+        $panel->assertOk()->assertSee('Pre-factura', false);
 
         $respuesta = $this->medico($user, $medico, $gineco)->get($this->urlSeccion($consulta));
         $respuesta->assertOk();
@@ -281,16 +281,21 @@ class ConsultaRecipeParejaWebTest extends TestCase
         $respuesta->assertSee('recipe=pareja', false);
     }
 
-    public function test_el_editor_de_un_recipe_del_paciente_no_ofrece_las_pestanas(): void
+    public function test_el_editor_de_un_recipe_del_paciente_tambien_ofrece_las_pestanas(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->vademecum($medico);
         [, $consulta] = $this->pacienteYConsulta($medico);
 
+        // O-28: el editor es la puerta de entrada de la sección, así que las pestañas de la sección —y el
+        // camino al récipe de la pareja— tienen que estar también acá.
         $respuesta = $this->medico($user, $medico, $gineco)->get($this->urlSeccion($consulta, 'nuevo'));
         $respuesta->assertOk();
-        $respuesta->assertDontSee('recipe-pestanas', false);
-        $respuesta->assertDontSee('Récipe de la pareja');
+        $respuesta->assertSee('Récipes del paciente');
+        $respuesta->assertSee('Récipe de la pareja');
+        $respuesta->assertSee('recipe=pareja', false);
+        // Y las pestañas de los récipes de la consulta, con «+ Nuevo».
+        $respuesta->assertSee('+ Nuevo', false);
         $respuesta->assertSee('Guardar el récipe');
     }
 
@@ -639,8 +644,9 @@ class ConsultaRecipeParejaWebTest extends TestCase
         $this->assertSame(1, DB::table('recipe_detalle')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame(1, $this->filasDe($medico)->count());
 
-        // La lista del paciente sigue con un solo récipe y sin nada de la pareja.
-        $lista = $this->medico($user, $medico, $gineco)->get($this->urlSeccion($consulta, null));
+        // La lista del paciente sigue con un solo récipe y sin nada de la pareja (la lista, porque el editor
+        // es la puerta de entrada desde O-28).
+        $lista = $this->medico($user, $medico, $gineco)->get($this->urlSeccion($consulta, null) . '&lista=1');
         $lista->assertOk()->assertSee('1 récipe')->assertSee('Del paciente')
             ->assertDontSee('PAREJA INCONFUNDIBLE')->assertDontSee('De la pareja')->assertDontSee('31415926');
 

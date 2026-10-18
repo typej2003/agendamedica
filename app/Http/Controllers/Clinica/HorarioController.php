@@ -18,9 +18,12 @@ use Illuminate\Http\Request;
  * por orden de llegada, la hora con la que nace la cita es la apertura del bloque.
  *
  * La pantalla cuelga del consultorio —no es un módulo del menú— porque los bloques son **de un consultorio
- * concreto**. Como el resto de lo del médico, todo sale del contexto de trabajo y un consultorio ajeno da
- * 404. Las reglas del solape (rechazar dentro del consultorio, avisar entre consultorios del mismo médico)
- * viven en `GuardarBloqueHorario`; acá solo se valida el formato y se arma la respuesta.
+ * concreto**. Desde A-10 (revisión de Alexander) el listado de consultorios los muestra y los edita **en
+ * línea** por estas mismas rutas —es lo que hace que la duración de la cita y el horario se encuentren—, y su
+ * pantalla propia se conserva para cargar muchos. Como el resto de lo del médico, todo sale del contexto de
+ * trabajo y un consultorio ajeno da 404. Las reglas del solape (rechazar dentro del consultorio, avisar entre
+ * consultorios del mismo médico) viven en `GuardarBloqueHorario`; acá solo se valida el formato y se arma la
+ * respuesta.
  */
 class HorarioController extends Controller
 {
@@ -76,8 +79,7 @@ class HorarioController extends Controller
 
         $aviso = $accion->ejecutar($datos, $consultorio, $contexto['reg_medico'], $bloque);
 
-        return redirect()
-            ->route('clinica.consultorios.horarios', $consultorio)
+        return $this->volver($request, $consultorio)
             ->with('estado', $bloque !== null ? 'Bloque actualizado.' : 'Bloque agregado al consultorio.')
             // El solape con otro consultorio del médico **no** impide guardar: se avisa y se sigue
             // (decisión del 2026-10-09). Va por `avisos` para no pisar el resultado de la operación.
@@ -102,8 +104,25 @@ class HorarioController extends Controller
 
         $bloque->delete();
 
-        return redirect()
-            ->route('clinica.consultorios.horarios', $consultorio)
+        return $this->volver($request, $consultorio)
             ->with('estado', 'Bloque quitado: esas horas dejan de contarse como jornada.');
+    }
+
+    /**
+     * A dónde se vuelve después de escribir el bloque.
+     *
+     * Los bloques se cargan **en dos pantallas**: la de horarios del consultorio (`clinica.consultorios.horarios`,
+     * la de siempre, para cargar muchos) y la fila del listado de consultorios, que desde A-10 los muestra y los
+     * edita en línea. El formulario dice de dónde viene con un `volver` oculto, para no devolver al médico a una
+     * pantalla que no estaba mirando; sin él, la vuelta es la de siempre (así la pantalla aparte y sus enlaces
+     * siguen funcionando igual).
+     */
+    private function volver(Request $request, Office $consultorio)
+    {
+        if ($request->input('volver') === 'consultorios') {
+            return redirect()->route('clinica.consultorios', $request->boolean('ver_inactivos') ? ['inactivos' => 1] : []);
+        }
+
+        return redirect()->route('clinica.consultorios.horarios', $consultorio);
     }
 }

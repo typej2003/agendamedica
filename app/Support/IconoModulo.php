@@ -28,6 +28,9 @@ class IconoModulo
             str_contains($slug, 'ecografia'), str_contains($slug, 'examen') => 'bi-clipboard2-pulse',
             str_contains($slug, 'factura'), str_contains($slug, 'cobro') => 'bi-receipt',
             str_contains($slug, 'embarazo'), str_contains($slug, 'gestacion') => 'bi-gender-female',
+            // Los módulos propios de pediatría (WEB-7.4.3c y WEB-7.4.4e).
+            str_contains($slug, 'crecimiento') => 'bi-graph-up',
+            str_contains($slug, 'vacuna') => 'bi-shield-plus',
             default => 'bi-grid',
         };
     }

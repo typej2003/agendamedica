@@ -131,7 +131,8 @@ class PlantillasDeMensajeWebTest extends TestCase
         $this->como($secretaria, $medico, $gineco)->postJson(route('clinica.mensajes.vista-previa', 'cita'), ['texto' => 'X'])->assertForbidden();
         $this->assertNull($this->evolucionDe($medico));
 
-        $this->como($secretaria, $medico, $gineco)->get(route('clinica.inicio'))->assertOk()->assertDontSee('Mensajes a pacientes');
+        // A-12: la secretaría entra a la agenda, no al inicio del médico.
+        $this->como($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->assertDontSee('Mensajes a pacientes');
     }
 
     public function test_el_medico_ve_la_entrada_en_el_grupo_configuracion_del_menu(): void

@@ -40,7 +40,10 @@ class MotivoCitaCatalogoController extends Controller
             ? $this->motivos->encontrar($regMedico, (int) $request->query('editar'))
             : null;
 
-        return view('clinica.catalogos.motivos-cita', ['vm' => new MotivosDeCitaVista(
+        return view('clinica.catalogos.motivos-cita', [
+            // Los motivos que la especialidad sugiere y el médico todavía no tiene (WEB-7.4.4f): se ofrecen, no se siembran solos.
+            'sugeridos' => app(\App\Clinica\Catalogos\MotivosDeCitaSugeridos::class)->faltantes($regMedico, $contexto['specialty']?->slug),
+            'vm' => new MotivosDeCitaVista(
             $this->motivos->pagina($regMedico, $buscar, (int) $request->query('page', 1), $base, $buscar === '' ? [] : ['buscar' => $buscar]),
             $buscar,
             $this->motivos->total($regMedico),
@@ -54,6 +57,17 @@ class MotivoCitaCatalogoController extends Controller
             ],
             $request->boolean('nuevo'),
         )]);
+    }
+
+    /** **Agregar los motivos que sugiere la especialidad** (WEB-7.4.4f): «Control de niño sano» en pediatría. Idempotente. */
+    public function agregarSugeridos(Request $request, \App\Actions\Catalogos\AgregarMotivosSugeridos $agregar)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $agregados = $agregar->ejecutar($contexto['medico'], (string) $contexto['reg_medico'], $contexto['specialty']?->slug);
+
+        return redirect()->route('clinica.catalogos.motivos-cita')->with('estado', $agregados === []
+            ? 'Ya tienes los motivos que sugiere tu especialidad: no se agregó nada.'
+            : 'Agregaste ' . implode(', ', array_map(fn ($r) => '«' . $r . '»', $agregados)) . ' a tus motivos de cita. Ponle el precio y la sede si quieres.');
     }
 
     /** Alta o edición (según venga o no el `id`), con las Actions como único lugar donde vive la regla. */

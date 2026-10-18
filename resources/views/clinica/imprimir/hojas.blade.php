@@ -8,6 +8,8 @@
          de la consulta (constancia, reposo, referencia, informe: WEB-5.3a). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}">
     <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}">
+    {{-- El informe de una eco a hoja completa, A4 vertical (WEB-11.13). --}}
+    <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}">
 @endsection
 
 @section('barra')
@@ -23,6 +25,13 @@
         @if ($vm->conOpciones())
             <button type="button" class="boton-impresion boton-impresion-secundario" data-abrir-opciones>Opciones</button>
         @endif
+        {{-- Las hojas con imágenes aparte: un solo «Imprimir» y esta casilla decide si salen. Son las fotos de un eco
+             (WEB-11.13) y los dibujos del cuello uterino de la colposcopía (A-13), por el mismo camino. --}}
+        @if ($vm->conImagenes())
+            <label class="barra-impresion-casilla">
+                <input type="checkbox" checked data-incluir-imagenes> Incluir imágenes
+            </label>
+        @endif
         <button type="button" class="boton-impresion" data-imprimir>Imprimir</button>
     </div>
 @endsection
@@ -30,9 +39,25 @@
 @section('contenido')
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
-            {{-- Una hoja = una página A4 horizontal con dos mitades. En "solo indicaciones" de un récipe, y en cualquier
-                 documento de una sola mitad, la mitad derecha queda en blanco (media hoja), como en el móvil. --}}
-            <article class="recipe-hoja tamano-{{ $hoja['tamano'] }}">
+            @if (($hoja['tipo'] ?? '') === 'informe')
+                @include('clinica.imprimir._informe-eco', ['hoja' => $hoja, 'membrete' => $vm->membrete()])
+                @continue
+            @endif
+
+            {{-- La hoja aparte de las imágenes de un documento en mitades (A-13, los dibujos del cuello uterino). --}}
+            @if (($hoja['tipo'] ?? '') === 'imagenes')
+                @include('clinica.imprimir._hoja-imagenes', [
+                    'documento' => $hoja['documento'],
+                    'imagenes' => $hoja['documento']->imagenes,
+                ])
+                @continue
+            @endif
+
+            {{-- Una hoja = una página A4 con dos mitades (horizontal) **o una página A4 vertical entera** cuando el documento
+                 declara hoja completa (O-26: el control de embarazo; `ModoDeLaHoja`). En "solo indicaciones" de un récipe, y
+                 en cualquier documento de una sola mitad, la mitad derecha queda en blanco (media hoja), como en el móvil. --}}
+            @php $completa = ($hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD) === \App\Clinica\Impresion\ModoDeLaHoja::COMPLETA; @endphp
+            <article class="recipe-hoja{{ $completa ? ' recipe-hoja-completa' : '' }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)
                     @if (($hoja['tipo'] ?? 'recipe') === 'documento')
                         @include('clinica.imprimir._documento-mitad', ['mitad' => $mitad, 'membrete' => $vm->membrete()])
@@ -41,7 +66,7 @@
                     @endif
                 @endforeach
 
-                @if (count($hoja['mitades']) === 1)
+                @if (! $completa && count($hoja['mitades']) === 1)
                     <div class="recipe-mitad recipe-mitad-vacia" aria-hidden="true"></div>
                 @endif
             </article>

@@ -612,7 +612,8 @@ class RecipeVerificacionQrWebTest extends TestCase
     public function test_la_seccion_de_recipes_muestra_el_estado_del_qr_y_sus_acciones(): void
     {
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
-        $seccion = fn () => $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']))->assertOk();
+        // El estado del QR se ve en la lista (O-28: el editor es la puerta de entrada de la sección).
+        $seccion = fn () => $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'lista' => 1]))->assertOk();
 
         $seccion()->assertSee('Aún sin QR')->assertDontSee('Anular QR');
 

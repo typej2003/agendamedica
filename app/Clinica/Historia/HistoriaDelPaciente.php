@@ -2,11 +2,20 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoAbdominal;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
+use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
+use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Pacientes\CamposDePaciente;
 use Illuminate\Support\Collection;
@@ -43,6 +52,10 @@ final class HistoriaDelPaciente
      * `codeparentesco` de WEB-3.4).
      */
     public const TIPO2_ALERTA = 'A';
+
+    public function __construct(private ResumenMedicoDeLaConsulta $resumenes)
+    {
+    }
 
     /**
      * Las consultas de la historia, **la más reciente primero**, cada una con sus motivos y sus
@@ -165,6 +178,11 @@ final class HistoriaDelPaciente
      *  - **Laboratorio y estudios** (WEB-5.4): sólo si la consulta tiene al menos un examen/estudio o un resumen clínico con texto
      *    (`QueEsUnDocumento::laboratorio` / `estudios`); la fila de observación vacía que el escritorio crea al agregar no cuenta.
      *  - **Referencia** y **récipes**: se listan todos (puede haber varias por consulta).
+     *  - **Colposcopía** (WEB-6.5): sólo si la consulta tiene el texto del informe (`consultas.observaciones`,
+     *    que es lo que imprime la hoja); el literal `none` del legado no cuenta.
+     *  - **Resumen médico** (WEB-5.3c): no es una fila, es una hoja auto-generada (motivo, enfermedad actual,
+     *    examen físico, examen ginecológico, resultado de exámenes, diagnóstico, tratamiento y plan). Se lista
+     *    si **algún** bloque de esa consulta tiene datos; si no, no hay nada que imprimir.
      *
      * La fecha de cada documento es la suya cuando la tiene (el `fdesde` del reposo, el `fe_cha` del
      * informe) y, si no, la de su consulta. El texto viene **sin recortar**: el recorte para el listado lo
@@ -364,6 +382,168 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // Los dos informes del eco obstétrico (WEB-6.2). Se suman acá para cerrar el hueco que dejó esa tarea:
+        // su hoja se imprimía desde la consulta, pero la historia del paciente no la listaba (WEB-6.3).
+        foreach ($this->ecosObstetricos($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco obstétrico (1.er trimestre)',
+                'bi-heart-pulse',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco obstétrico (1.er trimestre)',
+                null,
+                null,
+                DocumentoImpreso::ECO_OBSTETRICO,
+            ));
+        }
+
+        // El 2.º trimestre (WEB-11.14, tabla hermana) y el 3.º: dos documentos separados.
+        foreach ([
+            [DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO, $this->ecosObstetricosDeLaTabla(EcoObstetricoSegundo::TABLA_DEL_SEGUNDO, $regMedico, $numero), '2.º'],
+            [DocumentoImpreso::ECO_OBSTETRICO_TERCERO, $this->ecosObstetricosTerceros($regMedico, $numero), '3.er'],
+        ] as [$claveDelTrimestre, $delTrimestre, $nombreDelTrimestre]) {
+            foreach ($delTrimestre as $nroconsulta => $estudio) {
+                if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                    continue;
+                }
+
+                $documentos->push($this->documento(
+                    'Eco obstétrico (' . $nombreDelTrimestre . ' trimestre)',
+                    'bi-person-arms-up',
+                    (int) $nroconsulta,
+                    $fechaDeLaConsulta,
+                    'Informe del eco obstétrico (' . $nombreDelTrimestre . ' trimestre)',
+                    null,
+                    null,
+                    $claveDelTrimestre,
+                ));
+            }
+        }
+
+        // El informe del eco Doppler perinatal (WEB-6.3), con la misma vara: algún dato del estudio —la
+        // ficha no cuenta— o el informe en texto libre del escritorio.
+        foreach ($this->dopplers($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'], $estudio['textoLibre'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco Doppler perinatal',
+                'bi-soundwave',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco Doppler perinatal',
+                null,
+                null,
+                DocumentoImpreso::ECO_DOPPLER,
+            ));
+        }
+
+        // El informe del ecocardiograma fetal (WEB-6.3), con la misma vara que los otros ecos: algún campo
+        // del estudio —su ficha, más ancha, tampoco cuenta— o, en su caso, los dos memos que el escritorio
+        // precarga.
+        foreach ($this->cardiogramasFetales($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Ecocardiograma fetal',
+                'bi-heart',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del ecocardiograma fetal',
+                null,
+                null,
+                DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+            ));
+        }
+
+        // El informe del eco mamario (WEB-6.4), con la misma vara que los otros ecos del ítem 5: algún campo
+        // del estudio —su ficha es sólo la fecha—. Su `puro_texto` **no** cuenta: la hoja del mamario no tiene
+        // párrafos de texto libre (su modo «Plantillas» es otro DataWindow que la web no imprime).
+        foreach ($this->mamarios($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco mamario',
+                'bi-clipboard2-pulse',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco mamario',
+                null,
+                null,
+                DocumentoImpreso::ECO_MAMARIO,
+            ));
+        }
+
+        // El informe del eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5, con la misma vara:
+        // algún campo del estudio —su ficha es sólo la fecha—. Su `puro_texto` **no** cuenta (su modo
+        // «Plantillas» es otro DataWindow que la web no imprime) y `prostata`/`vejiga_urina` tampoco (son de
+        // urología y en ginecología van ocultas: no están en el mapa del dato).
+        foreach ($this->abdominales($regMedico, $numero) as $nroconsulta => $estudio) {
+            if (! QueEsUnDocumento::ecografia($estudio['conDato'])) {
+                continue;
+            }
+
+            $documentos->push($this->documento(
+                'Eco abdominal',
+                'bi-clipboard2-data',
+                (int) $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe del eco abdominal',
+                null,
+                null,
+                DocumentoImpreso::ECO_ABDOMINAL,
+            ));
+        }
+
+        // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. El
+        // texto vive en la **consulta** (su columna de `consultas`, que es la que imprime la hoja), así que se
+        // recorre por consulta; las otras dos solapas de texto no tienen hoja.
+        foreach (TextosDelExamen::claves() as $solapa) {
+            $documento = TextosDelExamen::documento($solapa);
+
+            if ($documento === null) {
+                continue;
+            }
+
+            foreach ($this->textosDelExamen($regMedico, $numero, (string) TextosDelExamen::columna($solapa)) as $fila) {
+                $documentos->push($this->documento(
+                    TextosDelExamen::titulo($solapa),
+                    TextosDelExamen::icono($solapa),
+                    (int) $fila->nroconsulta,
+                    $fechaDeLaConsulta,
+                    'Informe de ' . mb_strtolower(TextosDelExamen::titulo($solapa)),
+                    null,
+                    null,
+                    $documento,
+                ));
+            }
+        }
+
+        // El **resumen médico** (WEB-5.3c): la hoja que se arma sola con los datos de toda la consulta. No
+        // es la fila de ninguna tabla, así que su «¿es un documento?» lo contesta su lectura
+        // (`ResumenMedicoDeLaConsulta::conResumen`, la misma regla de su bloque con datos).
+        foreach ($this->resumenes->conResumen($regMedico, $numero) as $nroconsulta) {
+            $documentos->push($this->documento(
+                'Resumen médico',
+                'bi-journal-medical',
+                $nroconsulta,
+                $fechaDeLaConsulta,
+                'Resumen médico de la consulta',
+                null,
+                null,
+                DocumentoImpreso::RESUMEN_MEDICO,
+            ));
+        }
+
         foreach ($this->recipes($regMedico, $numero) as $recipe) {
             $nombres = $this->nombresDeMedicamentos($recipe->codemedicinas);
 
@@ -492,6 +672,24 @@ final class HistoriaDelPaciente
             ->get(['nroconsulta', 'descripcion', 'fe_cha']);
     }
 
+    /**
+     * Los informes de las solapas de texto del examen de la historia (WEB-6.5), por número de consulta.
+     *
+     * El texto vive en una columna de `consultas` **de la consulta** —la que imprime la hoja—, así que se lee
+     * de ahí y se descartan los "vacíos" del legado (`none`, el `""`), la misma vara que
+     * `QueEsUnDocumento::texto`. La columna sale del catálogo `TextosDelExamen`, no de la entrada del usuario.
+     */
+    private function textosDelExamen(string $regMedico, int $numero, string $columna): Collection
+    {
+        return DB::table('consultas')
+            ->where('reg_medico', $regMedico)
+            ->where('numhistoria', $numero)
+            ->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+            ->whereRaw("LOWER(TRIM({$columna})) <> 'none'")
+            ->orderBy('nroconsulta')
+            ->get(['nroconsulta', $columna]);
+    }
+
     /** Las órdenes de hospitalización de la historia (WEB-5.3b); las filas vacías del escritorio las descarta `documentos()`. */
     private function hospitalizaciones(string $regMedico, int $numero): Collection
     {
@@ -554,6 +752,190 @@ final class HistoriaDelPaciente
             $estudios[(int) $fila->nroconsulta] = [
                 'conDato' => $conDato,
                 'textoLibre' => EstudioEcografico::limpiar($atributos[EcoGinecologico::COLUMNA_PURO_TEXTO] ?? null) !== null,
+            ];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
+    }
+
+    /**
+     * Los informes de los **dos ecos obstétricos** de la historia (WEB-6.2), por número de consulta: cuántos
+     * campos del estudio traen dato, sin contar su ficha (la fecha, la FUR y la gesta), que es la misma vara de
+     * `QueEsUnDocumento::ecografia`.
+     *
+     * ⚠️ La clave de las dos tablas es **`historia` + `consulta`**, no `numhistoria`/`nroconsulta` como la del
+     * eco pélvico. Se sumó en WEB-6.3 para cerrar el hueco que dejó WEB-6.2: la historia no listaba ninguna de
+     * las dos hojas.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function ecosObstetricos(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla('eco_obstetrico', EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /** El del 2.º/3.er trimestre: otra tabla, el mismo mapa del dato por bloques y la misma forma (`_o`/`_2`). */
+    private function ecosObstetricosTerceros(string $regMedico, int $numero): array
+    {
+        return $this->ecosObstetricosDeLaTabla('eco_obstetrico_tercer', $regMedico, $numero);
+    }
+
+    /** Los ecos de una de las dos tablas del 2.º/3.er trimestre (WEB-11.14): el mismo mapa del dato. */
+    private function ecosObstetricosDeLaTabla(string $tabla, string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla($tabla, EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /**
+     * Los informes de **ecocardiograma fetal** de la historia (WEB-6.3), por número de consulta: cuántos campos
+     * del estudio traen dato, sin contar la ficha (la fecha, la FUR, la gesta y la paridad).
+     *
+     * ⚠️ Su tabla trae el **error de tipeo del legado** —`ecocadiograma_fetal`, sin la «r»— y su clave es
+     * `historia` + `consulta`, como la de los obstétricos. No confundir con la ecocardiografía adulta, que es
+     * de cardiología (trampa 124).
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function cardiogramasFetales(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla('ecocadiograma_fetal', EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, $regMedico, $numero);
+    }
+
+    /**
+     * Los informes de **eco mamario** de la historia (WEB-6.4), por número de consulta: cuántos campos del
+     * estudio traen dato, sin contar la fecha (que es su única ficha). La lista de columnas sale del mapa del
+     * dato, así que una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `ultra_mama` es **`historia` + `consulta`**, como la de los otros ecos del ítem 5, y su
+     * DataWindow vivo (`d_ultasonido_mamas`) no se llama como la tabla (trampas 102, 123 y 124). Su
+     * `puro_texto` **no** cuenta: la hoja del mamario no tiene párrafos de texto libre (su modo «Plantillas» es
+     * otro DataWindow de impresión que la web no imprime), así que no hace de una fila un documento.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function mamarios(string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table(EcoMamario::TABLA)
+            ->where('reg_medico', $regMedico)
+            ->where(EcoMamario::COLUMNA_HISTORIA, $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff(EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            $estudios[(int) $fila->consulta] = ['conDato' => $conDato, 'textoLibre' => false];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
+    }
+
+    /**
+     * Los informes de **eco abdominal** de la historia (WEB-6.4), por número de consulta: cuántos campos del
+     * estudio traen dato, sin contar la fecha (que es su única ficha). La lista de columnas sale del mapa del
+     * dato, así que una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `ultra_abdominal` es **`historia` + `consulta`**, como la de los otros ecos del ítem 5, y
+     * su DataWindow vivo (`d_ultasonido_abdominal`) no se llama como la tabla (trampas 102, 123 y 124). Es una
+     * ecografía abdominal general (la misma tabla la usan cirugía y pediatría). Su `puro_texto` **no** cuenta y
+     * `prostata`/`vejiga_urina` tampoco: no están en el mapa (son de urología y en ginecología van ocultas).
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function abdominales(string $regMedico, int $numero): array
+    {
+        return $this->ecosDeUnaTabla(
+            EcoAbdominal::TABLA,
+            EcoAbdominal::columnas(),
+            EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN,
+            $regMedico,
+            $numero,
+        );
+    }
+
+    /**
+     * Cuántos campos del estudio traen dato en cada fila de una tabla de eco llaveada por `historia` +
+     * `consulta`, indexado por el número de consulta. Es la lectura de conjunto que comparten los cuatro ecos
+     * del ítem 5 que no son el pélvico (los dos obstétricos, el ecocardiograma fetal y el abdominal).
+     *
+     * @param  array<int,string>  $columnas
+     * @param  array<int,string>  $noCuentan
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function ecosDeUnaTabla(string $tabla, array $columnas, array $noCuentan, string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table($tabla)
+            ->where('reg_medico', $regMedico)
+            ->where('historia', $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff($columnas, $noCuentan) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            // Ninguno de los tres tiene informe en texto libre en la web (el `puro_texto` del DataWindow no se
+            // edita): la bandera existe para compartir la forma con el pélvico y el Doppler.
+            $estudios[(int) $fila->consulta] = ['conDato' => $conDato, 'textoLibre' => false];
+        }
+
+        ksort($estudios);
+
+        return $estudios;
+    }
+
+    /**
+     * Los informes de eco Doppler perinatal de la historia (WEB-6.3), por número de consulta: cuántos campos
+     * del estudio traen dato (sin contar la ficha: la fecha, la FUR, la gesta y el `para`) y si el escritorio
+     * le dejó su informe en texto libre (`puro_texto`). La lista de columnas sale del mapa del dato, así que
+     * una columna nueva entra sola.
+     *
+     * ⚠️ La clave de `eco_doppler` es **`historia` + `consulta`**, no `numhistoria`/`nroconsulta` como la del
+     * eco pélvico.
+     *
+     * @return array<int,array{conDato:int, textoLibre:bool}>
+     */
+    private function dopplers(string $regMedico, int $numero): array
+    {
+        $estudios = [];
+
+        $filas = DB::table('eco_doppler')
+            ->where('reg_medico', $regMedico)
+            ->where(EcoDoppler::COLUMNA_HISTORIA, $numero)
+            ->get();
+
+        foreach ($filas as $fila) {
+            $atributos = (array) $fila;
+            $conDato = 0;
+
+            foreach (array_diff(EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN) as $columna) {
+                if (EstudioEcografico::limpiar($atributos[$columna] ?? null) !== null) {
+                    $conDato++;
+                }
+            }
+
+            $estudios[(int) $fila->consulta] = [
+                'conDato' => $conDato,
+                'textoLibre' => EstudioEcografico::limpiar($atributos[EcoDoppler::COLUMNA_PURO_TEXTO] ?? null) !== null,
             ];
         }
 

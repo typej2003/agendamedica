@@ -19,9 +19,9 @@ use Closure;
  * `TODOS` es la lista de tipos **que existen hoy**, y es el único lugar donde se agregan: un tipo nuevo
  * suma su fila, su mapa del dato, su ViewModel y su parcial `_estudio-<clave>`, sin tocar el contenedor
  * ni el controlador. **Un tipo que todavía no existe no se muestra**, ni apagado: el panel de la consulta
- * ya dijo qué llegaba con cada tarea. Hoy están el **eco pélvico** (WEB-6.1) y el **eco obstétrico del primer
- * trimestre** (WEB-6.2); el obstétrico del tercero, el doppler y el ecocardiograma son WEB-6.2/WEB-6.3 y los
- * ultrasonidos, WEB-6.4.
+ * ya dijo qué llegaba con cada tarea. Están **los siete** del ítem 5: el **eco pélvico** (WEB-6.1), el
+ * **eco obstétrico del primer trimestre** y el del **2.º/3.er** (WEB-6.2), el **eco Doppler perinatal** y
+ * el **ecocardiograma fetal** (WEB-6.3), el **eco mamario** y el **eco abdominal** (WEB-6.4).
  *
  * Sin base de datos.
  */
@@ -42,6 +42,56 @@ final class TiposDeEstudio
      */
     public const TERCERO = 'tercero';
 
+    /**
+     * El **eco obstétrico del 2.º trimestre** (WEB-11.14): Alexander lo quiere **separado** del 3.º (2026-10-15). Vive en la tabla
+     * hermana `eco_obstetrico_tercer_2` y `TERCERO` queda como el 3.er trimestre.
+     */
+    public const SEGUNDO = 'segundo';
+
+    /**
+     * El **eco Doppler perinatal** (WEB-6.3): la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:22650`, con el DataWindow `d_eco_doppler`, que vive en
+     * `fuentes/ventana_consulta/` y no en `datawin_procesos/`: trampas 123 y 124).
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const DOPPLER = 'doppler';
+
+    /**
+     * El **ecocardiograma fetal** (WEB-6.3): la ventana
+     * `w_cargar_visualizar_ecocardiograma_fetal` (`w_consulta_principal.srw:20477`), con el DataWindow
+     * `d_ecocardiograma_fetal`, que vive en `fuentes/ventana_consulta/` y no en `datawin_procesos/` (trampas
+     * 123 y 124).
+     *
+     * ⚠️ Su tabla (`ecocadiograma_fetal`) trae el **error de tipeo del legado**, sin la «r», y **no se
+     * renombra** (regla 2 de `AGENTS.md`). No confundir con la ecocardiografía adulta, que es de cardiología.
+     * La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const FETAL = 'fetal';
+
+    /**
+     * El **eco mamario** (WEB-6.4): la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:23018`, con el DataWindow **`d_ultasonido_mamas`** —con la «n» de menos—, que
+     * vive en `fuentes/ventana_consulta/` y no en `datawin_procesos/`, y escribe en `ultra_mama`: trampas 102,
+     * 123 y 124) y el estudio propio `w_cargar_visualizar_eco_mamario` (`:20814`).
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const MAMARIO = 'mamario';
+
+    /**
+     * El **eco abdominal** (WEB-6.4), el séptimo y último del ítem 5: la pestaña viva de la consulta
+     * (`w_consulta_principal.srw:23110`, `dw_67`, con el DataWindow **`d_ultasonido_abdominal`**, que vive en
+     * `fuentes/ventana_consulta/` y no en `datawin_procesos/`, y escribe en `ultra_abdominal`: trampas 102,
+     * 123 y 124) y el estudio propio `w_cargar_visualizar_eco_abdominal`.
+     *
+     * ⚠️ Es una **ecografía abdominal general**: la misma tabla y el mismo DataWindow los usan cirugía y
+     * pediatría.
+     *
+     * ⚠️ La clave va **sin guion** para no tocar el `where('tipo', '[a-z]+')` de la ruta (trampa 111).
+     */
+    public const ABDOMINAL = 'abdominal';
+
     /** El tipo con el que se abre la sección. */
     public const POR_DEFECTO = self::GINECOLOGICO;
 
@@ -49,13 +99,19 @@ final class TiposDeEstudio
     private const TODOS = [
         self::GINECOLOGICO => ['texto' => 'Eco ginecológico', 'icono' => 'bi-activity'],
         self::OBSTETRICO => ['texto' => 'Eco obstétrico (1.er trimestre)', 'icono' => 'bi-heart-pulse'],
-        self::TERCERO => ['texto' => 'Eco obstétrico (2.º y 3.er trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::SEGUNDO => ['texto' => 'Eco obstétrico (2.º trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::TERCERO => ['texto' => 'Eco obstétrico (3.er trimestre)', 'icono' => 'bi-person-arms-up'],
+        self::DOPPLER => ['texto' => 'Eco Doppler perinatal', 'icono' => 'bi-soundwave'],
+        self::MAMARIO => ['texto' => 'Eco mamario', 'icono' => 'bi-clipboard2-pulse'],
+        self::FETAL => ['texto' => 'Ecocardiograma fetal', 'icono' => 'bi-heart'],
+        self::ABDOMINAL => ['texto' => 'Eco abdominal', 'icono' => 'bi-clipboard2-data'],
     ];
 
     /**
      * @param  Closure  $url  `fn(string $clave): string` — la URL de ese tipo (la resuelve el controlador)
      */
-    public function __construct(private Closure $url)
+    /** @param  array<int,string>  $ocultos  los tipos que no se ofrecen como chip (el abdominal en ginecología, WEB-11.14) */
+    public function __construct(private Closure $url, private array $ocultos = [])
     {
     }
 
@@ -91,6 +147,10 @@ final class TiposDeEstudio
         $opciones = [];
 
         foreach (self::TODOS as $clave => $tipo) {
+            if (in_array($clave, $this->ocultos, true) && $clave !== $activa) {
+                continue;
+            }
+
             $opciones[] = ['texto' => $tipo['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 

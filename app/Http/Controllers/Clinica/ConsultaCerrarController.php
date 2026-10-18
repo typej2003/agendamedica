@@ -51,6 +51,18 @@ class ConsultaCerrarController extends Controller
 
         abort_unless($paciente !== null, 404);
 
+        // Los datos obligatorios de la filiación (WEB-11.25): no se termina la consulta sin ellos. El médico los completa en la sección
+        // «Datos personales», a la que se lo lleva. La lista depende de la especialidad (pediatría: sin cédula y con el teléfono del representante).
+        $ficha = \App\Models\Paciente::find($paciente->id);
+        $faltan = $ficha === null ? [] : \App\Clinica\Pacientes\FiliacionPendiente::de(
+            $ficha, $contexto['reg_medico'], $paciente->numhistoria ?? null, $contexto['specialty_id'] ?? null,
+        );
+        if ($faltan !== []) {
+            return redirect()
+                ->route('clinica.consulta', [$consulta->id, 'seccion' => \App\Clinica\Consulta\Vistas\ConsultaShellVista::SECCION_DATOS])
+                ->with('error', 'Antes de terminar la consulta completa los datos del paciente: ' . implode(', ', $faltan) . '.');
+        }
+
         // El día de la consulta y su sede: el día elige la agenda a la que se vuelve y la cita que se
         // marca (dos citas del mismo paciente el mismo día en dos consultorios son dos filas distintas).
         $dia = $consulta->fecha ? Carbon::parse($consulta->fecha) : FechaDelConsultorio::hoy();

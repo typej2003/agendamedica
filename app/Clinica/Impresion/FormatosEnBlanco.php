@@ -2,16 +2,26 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+
 /**
  * **Los formatos en blanco** (WEB-5.5b): el "Imprimir Formatos" de `w_configurar_recipes` del escritorio. Cada documento de la consulta
- * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) impreso **sin datos de paciente**,
- * con el membrete, la firma, el sello y el pie del médico, para rellenarlo a mano cuando la impresora normal está fuera de servicio.
+ * (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio, estudios, —desde WEB-6.2— los dos informes del
+ * eco obstétrico y —desde WEB-6.3— el del eco Doppler perinatal; el del **ecocardiograma fetal**, también de WEB-6.3, **no** está:
+ * el escritorio no lo tiene) impreso **sin datos de paciente**, con el membrete, la firma, el sello y el pie
+ * del médico, para rellenarlo a mano cuando la impresora normal está fuera de servicio.
  *
  * Esta clase es **el catálogo**: qué formatos hay, cómo se llaman y qué lleva cada uno en blanco (los datos cortos con su línea y las
- * secciones de renglones). Los **títulos** no se repiten: salen de `DocumentoImpreso::TITULOS`, los mismos que imprime la hoja real.
- * Sin estado y sin base de datos: no escribe ni lee nada.
+ * secciones de renglones). Los **títulos** no se repiten: salen de `DocumentoImpreso` (los mismos que imprime la hoja real, con el sufijo
+ * del trimestre de los ecos). Sin estado y sin base de datos: no escribe ni lee nada.
  *
- * Quedan **fuera**, a propósito: las ecografías (F6, pertenecen a ginecología) y el récipe de la pareja.
+ * Quedan **fuera**, a propósito: el **eco pélvico** (WEB-6.1, que el escritorio sí tiene en
+ * `d_eco_pelvico_print_vacio.srd`: es la única ecografía con formato en blanco en el legado que todavía no lo
+ * tiene en la web), el **ecocardiograma fetal** (WEB-6.3, que el escritorio **no** tiene: su panel
+ * `miconsultat/w_panel_impresion_formatos.srw` lista seis formatos y el fetal no está entre ellos, así que no
+ * es un olvido de la web), el **eco mamario** (WEB-6.4, por lo mismo: ese panel tampoco lo lista), el **eco
+ * abdominal** (WEB-6.4, por lo mismo: el panel lista seis formatos y el abdominal no está —ver
+ * `DocumentoImpreso::ECO_ABDOMINAL`—) y el récipe de la pareja.
  */
 final class FormatosEnBlanco
 {
@@ -64,14 +74,110 @@ final class FormatosEnBlanco
             'fijos' => [],
             'secciones' => [['etiqueta' => 'ESTUDIOS SOLICITADOS:', 'peso' => 2], ['etiqueta' => 'RESUMEN CLÍNICO:', 'peso' => 1]],
         ],
+        // Los dos informes del eco obstétrico (WEB-6.2). Los **datos cortos** son la ficha del embarazo del
+        // encabezado de su DataWindow en blanco (`d_eco_obstetrico_print_vacio_2` / `…_trimestral_print_vacio`),
+        // y las **secciones**, los bloques del informe —de su mapa del dato— sin el bloque «El embarazo», que
+        // es esa ficha: así el médico escribe cada hallazgo donde lo lee la hoja impresa. Un unit test
+        // (`FormatosEnBlancoVistaTest`) fija que las secciones sean esos bloques.
+        //
+        // Todos los bloques pesan lo mismo **a propósito**: el reparto del alto lo hace el navegador (`flex`) sobre la
+        // hoja que le toca al documento, y repartirlo por la cantidad de campos dejaba a los bloques chicos sin ningún
+        // renglón. Desde O-26 estos tres formatos salen en **hoja completa vertical** (como su hoja real, `ModoDeLaHoja`):
+        // el mismo bloque de renglones se estira al A4 entero.
+        DocumentoImpreso::ECO_OBSTETRICO => [
+            'descripcion' => 'El embarazo temprano: la ficha, el útero, el saco y las medidas.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:'],
+            'secciones' => [
+                ['etiqueta' => 'El útero y los ovarios:', 'peso' => 2],
+                ['etiqueta' => 'El saco y la vitalidad:', 'peso' => 2],
+                ['etiqueta' => 'Las medidas y los marcadores:', 'peso' => 2],
+                ['etiqueta' => 'El riesgo del embarazo temprano:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
+        DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO => [
+            'descripcion' => 'La biometría, la anatomía, la placenta y la función fetal.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:', 'FPP:'],
+            'secciones' => [
+                ['etiqueta' => 'Datos biométricos:', 'peso' => 2],
+                ['etiqueta' => 'Datos anatómicos:', 'peso' => 2],
+                ['etiqueta' => 'Placenta y líquido:', 'peso' => 2],
+                ['etiqueta' => 'El feto:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
+        DocumentoImpreso::ECO_OBSTETRICO_TERCERO => [
+            'descripcion' => 'La biometría, la anatomía, la placenta y la función fetal.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:', 'FPP:'],
+            'secciones' => [
+                ['etiqueta' => 'Datos biométricos:', 'peso' => 2],
+                ['etiqueta' => 'Datos anatómicos:', 'peso' => 2],
+                ['etiqueta' => 'Placenta y líquido:', 'peso' => 2],
+                ['etiqueta' => 'El feto:', 'peso' => 2],
+                ['etiqueta' => 'La conclusión:', 'peso' => 2],
+            ],
+        ],
+        // El eco Doppler perinatal (WEB-6.3). Sus **datos cortos** son su ficha (la gesta, la FUR, la EG y el
+        // destinatario) y sus **secciones**, el cuerpo de su hoja en el mismo orden: el memo grande —que no
+        // lleva rótulo, como en el DataWindow—, la grilla de cuatro vasos con su título, los tres
+        // desplegables y las dos áreas del final.
+        //
+        // ⚠️ **El diseño del legado era OTRO y a propósito no se copia.** El escritorio **sí** tiene este
+        // formato en blanco (`d_eco_doppler_print_vacio`, administrado por
+        // `miconsultat/w_panel_impresion_formatos.srw:153`), pero es un diseño distinto del de su hoja real:
+        // encabezado condensado (Paciente/Cédula/Edad en una franja), la grilla de 8 columnas repartida en 2,
+        // sin `relacion_*` ni `pico_*`, «Indice S/D» en lugar de «Relación S / D» y «Vena Umbilical:» en
+        // lugar de «Señal Venoso Umbilical:». Como la web hace sus propios documentos (decisión 17 del plan:
+        // de la fuente se leen los **datos**, no se copia el layout), su formato en blanco usa **los mismos
+        // bloques que su hoja real**, vacíos, como los dos del eco obstétrico. Que falte un rótulo del legado
+        // acá no es un olvido: es la decisión de que la hoja en blanco y la hoja real se lean igual.
+        DocumentoImpreso::ECO_DOPPLER => [
+            'descripcion' => 'Las cuatro arterias, el ductus venoso y la conclusión.',
+            'fijos' => ['Gesta:', 'FUR:', 'EG:', 'PARA:'],
+            'secciones' => [
+                ['etiqueta' => null, 'peso' => 2],
+                ['etiqueta' => 'Eco Doppler Obstétrico en 4 Vasos:', 'peso' => 2],
+                // El rótulo de la hoja real, corregido de la errata del escritorio («Ductos Venosos»).
+                ['etiqueta' => 'Ductus venoso:', 'peso' => 1],
+                ['etiqueta' => 'Señal Venoso Umbilical:', 'peso' => 1],
+                ['etiqueta' => 'Relación Aorta-Cava:', 'peso' => 1],
+                ['etiqueta' => 'Sugerencias:', 'peso' => 2],
+                ['etiqueta' => 'Conclusión:', 'peso' => 2],
+            ],
+        ],
     ];
+
+    /**
+     * **El estudio del que es la hoja**, para los formatos que son un informe de ecografía (todos menos el informe, la
+     * constancia, el reposo, la referencia, la hospitalización, la dieta, el laboratorio y los estudios).
+     *
+     * Lo usa `AlcanceDeLaEspecialidad` para no ofrecer en pediatría los informes de los ecos que esa especialidad no tiene: la
+     * regla sale de acá y no de una lista de formatos repetida allá, así que un formato nuevo de un estudio escondido queda
+     * escondido solo.
+     *
+     * @return array<string,string> clave del formato => tipo de estudio (`TiposDeEstudio`)
+     */
+    public static function porEstudio(): array
+    {
+        return [
+            DocumentoImpreso::ECO_OBSTETRICO => TiposDeEstudio::OBSTETRICO,
+            DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO => TiposDeEstudio::SEGUNDO,
+            DocumentoImpreso::ECO_OBSTETRICO_TERCERO => TiposDeEstudio::TERCERO,
+            DocumentoImpreso::ECO_DOPPLER => TiposDeEstudio::DOPPLER,
+        ];
+    }
 
     /**
      * Los formatos que se ofrecen, en orden: el récipe primero.
      *
+     * `$ocultos` son las claves que **no** se ofrecen en la especialidad del contexto —los informes de los ecos que esa
+     * especialidad no tiene—; las calcula `AlcanceDeLaEspecialidad::formatosEnBlancoOcultos()` a partir de `porEstudio()`, así
+     * que acá no se decide ninguna especialidad. Sin la lista salen todos.
+     *
+     * @param  array<int,string>  $ocultos  claves de formato que no se ofrecen
      * @return array<int,array{clave:string, nombre:string, descripcion:string}>
      */
-    public static function catalogo(): array
+    public static function catalogo(array $ocultos = []): array
     {
         $catalogo = [[
             'clave' => self::RECIPE,
@@ -80,6 +186,10 @@ final class FormatosEnBlanco
         ]];
 
         foreach (self::DOCUMENTOS as $clave => $documento) {
+            if (in_array($clave, $ocultos, true)) {
+                continue;
+            }
+
             $catalogo[] = ['clave' => $clave, 'nombre' => self::nombre($clave), 'descripcion' => $documento['descripcion']];
         }
 
@@ -108,10 +218,10 @@ final class FormatosEnBlanco
         return $clave === self::RECIPE;
     }
 
-    /** El título que se imprime arriba del cuerpo de un documento (el mismo de la hoja real). */
+    /** El título que se imprime arriba del cuerpo de un documento (el mismo de la hoja real, con su trimestre si lo lleva). */
     public static function titulo(string $clave): string
     {
-        return DocumentoImpreso::TITULOS[$clave][0];
+        return DocumentoImpreso::tituloConSufijo($clave);
     }
 
     /**

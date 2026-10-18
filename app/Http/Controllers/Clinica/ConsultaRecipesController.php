@@ -13,6 +13,7 @@ use App\Http\Controllers\Clinica\Concerns\ItemsDeUnRecipeEnElFormulario;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -188,6 +189,10 @@ class ConsultaRecipesController extends Controller
         RecipesDeLaConsulta $lectura,
         GuardarRecipe $guardar,
     ): RedirectResponse {
+        // La fecha de emisión se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita (acepta
+        // también lo que llegue tecleado `dd/mm/aaaa`): las columnas `fe_emision` y `recipes.fecha` son `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
+
         $datos = $request->validate($this->reglas(), $this->mensajes());
 
         $resolucion = $lectura->resolverItems($consulta, $numero, (array) $datos['items']);
@@ -211,7 +216,7 @@ class ConsultaRecipesController extends Controller
             'web',
         );
 
-        $destino = redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_RECIPES]);
+        $destino = $this->alEditor($consulta, $numero ?? $resultado->numero);
 
         if ($resultado->huboConflicto()) {
             return $destino->with('error', 'Otro equipo editó ' . $this->listar($resultado->bloqueados)
@@ -253,6 +258,19 @@ class ConsultaRecipesController extends Controller
                 'recipe' => $numero ?? 'nuevo',
             ])
             ->withInput($request->all());
+    }
+
+    /**
+     * La vuelta después de guardar: **al editor de ese récipe** (O-28), no a la entrada de la sección —que
+     * abre el primero—, para que el médico vea lo que acaba de guardar.
+     */
+    private function alEditor(Consulta $consulta, int $numero): RedirectResponse
+    {
+        return redirect()->route('clinica.consulta', [
+            $consulta->id,
+            'seccion' => ConsultaShellVista::SECCION_RECIPES,
+            'recipe' => $numero,
+        ]);
     }
 
     /** "Récipe 2 creado: …", "Récipe 2 actualizado: agregado …, quitado …, guardado …": lo que pasó, con sus nombres. */

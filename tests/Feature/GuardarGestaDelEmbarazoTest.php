@@ -86,7 +86,7 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         // Una gesta que ya estaba (la primera, sin número: es la 1).
         DB::table('pre_natal_observaciones')->insert([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => null,
-            'fur' => '2024-01-10', 'created_at' => now(), 'updated_at' => now(),
+            'fur' => '2024-01-10', 'final' => 'S', 'created_at' => now(), 'updated_at' => now(),
         ]);
 
         $resultado = app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1001, $this->formulario([
@@ -201,7 +201,7 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         $medico = $this->medico();
 
         app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1006, $this->formulario([
-            'fur' => '2026-05-20',
+            'fur' => '2026-05-20', 'final' => 'S',
         ]));
         app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1006, $this->formulario([
             'fur' => '2026-06-20',
@@ -235,5 +235,52 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         $this->assertNull($fresca->gestas);
         $this->assertNull($fresca->partos);
         $this->assertNull($fresca->cantidad);
+    }
+
+    public function test_no_se_crea_una_gesta_nueva_si_la_anterior_no_esta_cerrada(): void
+    {
+        // WEB-11.15: una mujer no puede solapar embarazos.
+        $medico = $this->medico();
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1010, $this->formulario(['fur' => '2026-05-20']));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Final de embarazo');
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1010, $this->formulario(['fur' => '2026-09-20']));
+    }
+
+    public function test_una_gesta_cerrada_no_se_reabre(): void
+    {
+        $medico = $this->medico();
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1011, $this->formulario(['fur' => '2026-05-20', 'final' => 'S']));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('no se reabre');
+        app(GuardarGestaDelEmbarazo::class)->ejecutar($medico->reg_medico, 1011, $this->formulario(['fur' => '2026-05-20', 'final' => 'N']), 1);
+    }
+
+    public function test_nueva_gesta_solo_pregunta_cuantos_bebes_son(): void
+    {
+        $medico = $this->medico();
+        $crear = app(\App\Actions\Embarazo\CrearGestaDelEmbarazo::class);
+
+        // La primera gesta siempre se puede, con un bebé: no es múltiple.
+        $this->assertSame(1, $crear->ejecutar($medico->reg_medico, 1012, 1));
+        $primera = PreNatalObservacion::where('historia', 1012)->where('gesta_clave', 1)->first();
+        $this->assertSame('N', $primera->multiple);
+        $this->assertNull($primera->fur);
+
+        // Con la 1 abierta no se crea la 2; cerrada, sí, y con gemelos queda como múltiple de 2.
+        try {
+            $crear->ejecutar($medico->reg_medico, 1012, 1);
+            $this->fail('Debió rechazar la gesta solapada.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('Final de embarazo', $e->getMessage());
+        }
+        $primera->forceFill(['final' => 'S'])->save();
+        $this->assertSame(2, $crear->ejecutar($medico->reg_medico, 1012, 2));
+        $segunda = PreNatalObservacion::where('historia', 1012)->where('gesta_clave', 2)->first();
+        $this->assertSame('S', $segunda->multiple);
+        $this->assertSame(2, (int) $segunda->cantidad);
+        $this->assertSame(2, (int) $segunda->gestas);
     }
 }

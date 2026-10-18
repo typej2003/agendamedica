@@ -17,9 +17,7 @@
 |    de dos;
 |  - ventanas: `Docs/MICONSULTAGI-legado/fuentes-pediatria/` (309 ventanas extraídas del .pbl de pediatría).
 |
-| ⚠️ **El `codeespecial` todavía no está**: el de ginecología salió del catálogo `especial` del dump
-| (`020`), y de la instalación de pediatría solo tenemos el esquema, no sus datos. Se agrega cuando
-| llegue el DSN o un dump de la base real (WEB-0.2c). Mientras tanto el reconocimiento es por nombre.
+| El `codeespecial` de pediatría es `029` (catálogo `especial` de la base real, WEB-0.2c/WEB-12.0).
 |
 */
 
@@ -33,8 +31,9 @@ return [
     // Fila del catálogo `specialties` (ya existe con este slug: la siembra el `SpecialtySeeder`).
     'specialty_slug' => 'pediatria',
 
-    // Cómo llama el legado a esta especialidad. `codigos_legado` queda vacío a propósito (ver arriba).
-    'codigos_legado' => [],
+    // Cómo llama el legado a esta especialidad. `029` sale del catálogo `especial` de la base real (2026-10-17; también existen
+    // `019` cirugía pediátrica y `024` neurología pediátrica, que son otras versiones).
+    'codigos_legado' => ['029'],
     'nombres_legado' => ['PEDIATRIA', 'PEDIATRA', 'PEDIA', 'PEDIATRIA Y PUERICULTURA'],
 
     /*
@@ -48,6 +47,25 @@ return [
         'catalogos', 'configuracion', 'reportes',
         // Propios de pediatría
         'crecimiento', 'vacunas',
+    ],
+
+    /*
+    | Módulos que **no van en el menú lateral** (O-32, 2026-10-17), con el motivo escrito al lado. No se
+    | sacan de `modulos`: el módulo sigue existiendo para la historia, la consulta, los permisos y sus rutas
+    | (`clinica.crecimiento`, `clinica.vacunas`); lo único que no se hace es ofrecerlo como entrada del menú.
+    |
+    | Los dos son **entradas de un paciente**, no pantallas: su acción `entrada()` redirige a Pacientes
+    | («Elige al niño y abre su ficha»), así que desde el menú parecían botones que no hacían nada. Las dos
+    | funciones ya se alcanzan desde donde se usan: Crecimiento con «Ver el crecimiento» de la solapa
+    | *Mediciones* (`_evaluacion-mediciones`) y Vacunas con el aviso de vacunas pendientes de la consulta y
+    | el bloque «Vacunas aplicadas» de la historia pediátrica. El día que tengan pantalla propia (con su
+    | selector de paciente) se borran de acá y vuelven al menú.
+    */
+    'menu' => [
+        'ocultos' => [
+            'crecimiento' => 'Es de un paciente: la entrada del menú sólo redirige a Pacientes. Se llega desde «Ver el crecimiento» en las mediciones de la consulta.',
+            'vacunas'     => 'Es de un paciente: la entrada del menú sólo redirige a Pacientes. Se llega desde el aviso de vacunas de la consulta y desde la historia pediátrica.',
+        ],
     ],
 
     /*
@@ -137,6 +155,42 @@ return [
             'examen_fisico_nuevo' => [
                 'nrohistoria' => 'historia',
                 'nroconsulta' => 'consulta',
+            ],
+        ],
+
+        /*
+        | **De dónde salen los pacientes de esta especialidad** (2026-10-14).
+        |
+        | Ginecología y las demás especialidades los tienen en `pacientes` (la tabla del legado
+        | compartido, que ya está en la lista histórica). Pediatría **no la usa**: PediaReport es otro
+        | producto y su ABM de pacientes es `paciente_chamo` — el chamo con su familia y su
+        | representante (`d_a_pacientes_chamo.srd`; `d_a_pacientes.srd` existe y **ninguna ventana de
+        | pediatría lo usa**)—, mientras su `pacientes` está vacía. Medido el 2026-10-14 sobre las bases
+        | reales: `pacientes` = **0** filas contra **6.892** en `paciente_chamo` (y las otras seis
+        | especialidades sí tienen miles en `pacientes`).
+        |
+        | Sin esto, la carga sube los chamos a la tabla `paciente_chamo` del API —donde nadie los lee— y
+        | el médico queda **sin pacientes y sin historias**: sin historia no hay ficha, no se puede abrir
+        | una consulta y el app móvil abre en blanco. Pasó de verdad: la carga de pediatría terminó
+        | "Completa" con 1,19 M de filas y 0 pacientes.
+        |
+        | `columnas` traduce los nombres (escritorio => API) para armar la fila de `pacientes`; lo que no
+        | esté mapeado se queda en la tabla `paciente_chamo` del API, que se sigue subiendo entera.
+        */
+        'pacientes' => [
+            'tabla' => 'paciente_chamo',
+            'columnas' => [
+                'historia'     => 'numhistoria',
+                'nombre'       => 'nombres',
+                'f_nacimiento' => 'fnacimiento',
+                'l_nacimiento' => 'lnacimiento',
+                'f_ingreso'    => 'fingreso',
+                'celular'      => 'telefono',
+                'segu_empre'   => 'codesegemp',
+                // `cedula`, `sexo`, `escolaridad` y `email` se llaman igual en las dos tablas.
+                // Quedan sin mapear (y por lo tanto viven en `paciente_chamo`): `familia`, `representante`,
+                // `foto_paciente`, `nota_general`, `alergia`, `notas`, `sitio`, `medio*`, `pediatrico`,
+                // `vacunas` y `medico`. El representante, la alergia y la foto son la Fase 2 del mapeo.
             ],
         ],
     ],

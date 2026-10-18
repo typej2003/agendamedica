@@ -6,6 +6,7 @@ use App\Actions\Catalogos\CrearPlantillaDeTexto;
 use App\Actions\Catalogos\EditarPlantillaDeTexto;
 use App\Actions\Catalogos\QuitarPlantillaDeTexto;
 use App\Actions\Catalogos\ReglasDeLaPlantillaDeTexto;
+use App\Clinica\Catalogos\PlantillasDeLaEspecialidad;
 use App\Clinica\Catalogos\PlantillasDeTextoDelCatalogo;
 use App\Clinica\Catalogos\Vistas\PlantillasDeTextoVista;
 use App\Http\Controllers\Controller;
@@ -32,12 +33,16 @@ class PlantillaDeTextoCatalogoController extends Controller
 
     public function index(Request $request)
     {
-        $regMedico = (string) $request->attributes->get('contexto_clinico')['reg_medico'];
+        $contexto = $request->attributes->get('contexto_clinico');
+        $regMedico = (string) $contexto['reg_medico'];
+        // La especialidad del contexto decide qué tipos se ofrecen: en pediatría no están los ginecológicos (revisión del usuario,
+        // 2026-10-18). Se resuelve en `PlantillasDeLaEspecialidad`, que delega la decisión en `AlcanceDeLaEspecialidad`.
+        $especialidad = $contexto['specialty']->slug ?? null;
 
         $buscar = mb_substr(trim((string) $request->query('buscar', '')), 0, 100);
         $filtro = mb_substr(trim((string) $request->query('filtro', '')), 0, 10);
         $base = route('clinica.catalogos.plantillas-texto');
-        $tipos = $this->plantillas->tipos($regMedico);
+        $tipos = $this->plantillas->tipos($regMedico, $especialidad);
 
         // Un filtro de un tipo que el médico no tiene no acota nada y se deja como «todos» (un enlace viejo no da una lista vacía).
         if ($filtro !== '' && ! isset($tipos[$filtro])) {
@@ -49,11 +54,11 @@ class PlantillaDeTextoCatalogoController extends Controller
             : null;
 
         return view('clinica.catalogos.plantillas-texto', ['vm' => new PlantillasDeTextoVista(
-            $this->plantillas->pagina($regMedico, $buscar, $filtro, (int) $request->query('page', 1), $base, array_filter(['buscar' => $buscar, 'filtro' => $filtro], fn ($valor) => $valor !== '')),
+            $this->plantillas->pagina($regMedico, $buscar, $filtro, (int) $request->query('page', 1), $base, array_filter(['buscar' => $buscar, 'filtro' => $filtro], fn ($valor) => $valor !== ''), $especialidad),
             $buscar,
             $filtro,
             $tipos,
-            $this->plantillas->total($regMedico),
+            $this->plantillas->total($regMedico, $especialidad),
             $editando,
             $base,
             [
@@ -61,6 +66,7 @@ class PlantillaDeTextoCatalogoController extends Controller
                 'quitar' => fn (int $id) => route('clinica.catalogos.plantillas-texto.quitar', $id),
             ],
             $request->boolean('nuevo'),
+            PlantillasDeLaEspecialidad::nombres($especialidad),
         )]);
     }
 

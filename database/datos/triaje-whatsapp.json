@@ -1,0 +1,41 @@
+{
+    "descripcion": "Corpus de la prueba de concepto de triaje con Jev AI (2026-10-18). Mensajes SINTÉTICOS, escritos para el experimento: no hay datos de pacientes reales (regla del workspace). Cada mensaje trae la intención que la secretaría le asignaría y si es una urgencia.",
+    "categorias": {
+        "agendar": "Pide una cita nueva, para ella o para un familiar.",
+        "reprogramar": "Quiere mover, adelantar o cambiar una cita que ya tiene.",
+        "cancelar": "Anula una cita que ya tiene.",
+        "consulta_clinica": "Duda sobre síntomas, tratamiento, medicación o resultados; no pide ni mueve una cita.",
+        "urgencia": "Cuadro que no puede esperar a una cita normal y hay que escalar ya.",
+        "administrativo": "Precios, horarios, sedes, seguros, documentos, direcciones."
+    },
+    "mensajes": [
+        { "id": 1, "mensaje": "Hola buenos días, necesito una cita con la doctora para la semana que viene", "intencion": "agendar", "urgencia": false },
+        { "id": 2, "mensaje": "Buenas, quisiera reagendar mi cita del jueves para el viernes si se puede", "intencion": "reprogramar", "urgencia": false },
+        { "id": 3, "mensaje": "Necesito cancelar la cita de mañana, me surgió algo en el trabajo", "intencion": "cancelar", "urgencia": false },
+        { "id": 4, "mensaje": "Buenas tardes, ¿a qué hora abre el consultorio?", "intencion": "administrativo", "urgencia": false },
+        { "id": 5, "mensaje": "Cuánto cuesta la consulta?", "intencion": "administrativo", "urgencia": false },
+        { "id": 6, "mensaje": "Me duele mucho la barriga desde ayer y tengo fiebre, ¿puedo ir hoy?", "intencion": "urgencia", "urgencia": true },
+        { "id": 7, "mensaje": "Estoy sangrando y me siento mareada, no sé qué hacer", "intencion": "urgencia", "urgencia": true },
+        { "id": 8, "mensaje": "Doctora, tengo una duda sobre la pastilla que me mandó, ¿la tomo con comida?", "intencion": "consulta_clinica", "urgencia": false },
+        { "id": 9, "mensaje": "Buenas, quería saber si ya están los resultados de mi examen", "intencion": "consulta_clinica", "urgencia": false },
+        { "id": 10, "mensaje": "Buenos días, es para pedir mi récipe de la tensión", "intencion": "consulta_clinica", "urgencia": false },
+        { "id": 11, "mensaje": "necesito cita", "intencion": "agendar", "urgencia": false, "nota": "Mensaje mínimo: no dice cuándo ni con quién." },
+        { "id": 12, "mensaje": "Disculpe, ¿el doctor atiende los sábados?", "intencion": "administrativo", "urgencia": false },
+        { "id": 13, "mensaje": "Me pueden dar cita para mi niña de 3 años?", "intencion": "agendar", "urgencia": false, "nota": "Es para un familiar, no para quien escribe." },
+        { "id": 14, "mensaje": "Quiero cambiar la hora de mi cita, no puedo a esa hora", "intencion": "reprogramar", "urgencia": false },
+        { "id": 15, "mensaje": "No voy a poder ir, por favor anulen mi cita del lunes", "intencion": "cancelar", "urgencia": false },
+        { "id": 16, "mensaje": "Tengo contracciones cada 5 minutos, estoy de 38 semanas", "intencion": "urgencia", "urgencia": true },
+        { "id": 17, "mensaje": "¿La consulta incluye el eco?", "intencion": "administrativo", "urgencia": false },
+        { "id": 18, "mensaje": "Me salió una mancha en el seno, ¿debo preocuparme?", "intencion": "consulta_clinica", "urgencia": false, "nota": "Ambiguo a propósito: es clínico, pero la secretaría no lo trataría como urgencia inmediata." },
+        { "id": 19, "mensaje": "Quiero pedir cita para mi control prenatal", "intencion": "agendar", "urgencia": false },
+        { "id": 20, "mensaje": "Buenas, ¿me pueden enviar el récipe por aquí?", "intencion": "administrativo", "urgencia": false },
+        { "id": 21, "mensaje": "Mi bebé tiene 39 de fiebre y no quiere comer", "intencion": "urgencia", "urgencia": true },
+        { "id": 22, "mensaje": "Necesito una cita urgente para hoy", "intencion": "agendar", "urgencia": false, "nota": "La intención es agendar. Ojo: «urgente» acá es apuro administrativo, NO urgencia clínica — la primera corrida (2026-10-18) lo tenía marcado como urgencia y Jev, con razón, no lo escaló; ver Docs/tecnico/jev-triaje.md §8." },
+        { "id": 23, "mensaje": "ola, kiero una cita pal martes porfa", "intencion": "agendar", "urgencia": false, "nota": "Faltas de ortografía y jerga venezolana." },
+        { "id": 24, "mensaje": "Buenas tardes, ¿atienden con seguro? Soy de Mercantil Seguros", "intencion": "administrativo", "urgencia": false },
+        { "id": 25, "mensaje": "Cancelé el vuelo, ¿puedo adelantar la cita?", "intencion": "reprogramar", "urgencia": false },
+        { "id": 26, "mensaje": "Doctora, se me olvidó tomar la pastilla dos días, ¿qué hago?", "intencion": "consulta_clinica", "urgencia": false },
+        { "id": 27, "mensaje": "Buenas, quería saber si mañana hay cupo, si no para el miércoles", "intencion": "agendar", "urgencia": false },
+        { "id": 28, "mensaje": "Ya pagué la consulta, ¿me confirman la cita del jueves?", "intencion": "administrativo", "urgencia": false, "nota": "Administrativo con una cita mencionada: no la mueve ni la cancela." }
+    ]
+}

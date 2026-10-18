@@ -28,7 +28,14 @@
             </p>
         @else
         @if (count($vm->gestas()) > 1)
-            <x-ui.segmentado class="recipe-pestanas mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
+            <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
+        @endif
+
+        @if ($vm->faltaLaFur())
+            <p class="alert alert-warning py-2 d-flex align-items-center gap-2" role="status" id="reporte-sin-fur">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <span>Esta gesta no tiene FUR: el informe saldrá sin edad gestacional ni FPP. Completa la FUR en la pestaña <em>Prenatal</em>.</span>
+            </p>
         @endif
 
         {{-- La ficha de la gesta, como sale en la hoja. --}}
@@ -70,12 +77,9 @@
             @endif
         @endforeach
 
-        {{-- La FPP del informe no es la de la pantalla: el escritorio imprime una y muestra otra, y se dice. --}}
-        <p class="texto-tenue small mt-4 mb-0">
-            La hoja imprime la FPP del informe ({{ $vm->fpp() ? \App\Support\FechaClinica::formato($vm->fpp()) : '—' }});
-            la pestaña *Prenatal* muestra la suya ({{ $vm->fppDeLaPantalla() ? \App\Support\FechaClinica::formato($vm->fppDeLaPantalla()) : '—' }}),
-            como el escritorio.
-        </p>
+        {{-- La FPP que sale en la hoja. Desde WEB-11.16 es la misma de la pantalla, así que la nota sólo
+             explica la diferencia si alguna vez no lo fueran (un dato viejo). --}}
+        <p class="texto-tenue small mt-4 mb-0">{{ $vm->notaDeLaFpp() }}</p>
         @endif
     </x-ui.tarjeta>
 </div>

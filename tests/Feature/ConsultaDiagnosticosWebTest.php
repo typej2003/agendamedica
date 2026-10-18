@@ -208,6 +208,18 @@ class ConsultaDiagnosticosWebTest extends TestCase
         return route('clinica.consulta.diagnosticos.guardar', $consulta->id);
     }
 
+    /** El «Pasar» inmediato (O-27): un POST con el código del catálogo. */
+    private function urlAgregar(Consulta $consulta): string
+    {
+        return route('clinica.consulta.diagnosticos.agregar', $consulta->id);
+    }
+
+    /** El «Quitar» inmediato (O-27): un POST con el id de la fila. */
+    private function urlQuitar(Consulta $consulta): string
+    {
+        return route('clinica.consulta.diagnosticos.quitar', $consulta->id);
+    }
+
     private function urlCrear(Consulta $consulta): string
     {
         return route('clinica.consulta.diagnosticos.crear', $consulta->id);
@@ -228,10 +240,10 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta->assertSee('Diagnósticos de esta consulta', false);
         $respuesta->assertSee('Guardar los diagnósticos', false);
 
-        // El nombre sale del catálogo por el código y el detalle es el texto editable de la fila.
+        // El nombre sale del catálogo por el código; sin detalle editable (WEB-11.18: como el escritorio).
         $respuesta->assertSee('LIE BAJO GRADO');
         $respuesta->assertSee('0518', false);
-        $respuesta->assertSee('value="LIE BAJO GRADO"', false);
+        $respuesta->assertDontSee('name="filas[', false);
     }
 
     public function test_dos_consultas_del_mismo_paciente_no_mezclan_sus_diagnosticos(): void
@@ -253,10 +265,8 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($segunda));
 
         $respuesta->assertOk();
-        // El detalle editable de la fila es el de la consulta 2; el del catálogo se ve en la tarjeta del
-        // buscador (que por eso no se mira acá).
-        $respuesta->assertSee('value="AMENAZA DE ABORTO"', false);
-        $respuesta->assertDontSee('value="LIE BAJO GRADO"', false);
+        // Cada consulta muestra sus propios diagnósticos (el nombre de la fila de la consulta 2).
+        $respuesta->assertSee('AMENAZA DE ABORTO', false);
     }
 
     public function test_una_consulta_sin_diagnosticos_muestra_el_estado_vacio(): void
@@ -293,16 +303,18 @@ class ConsultaDiagnosticosWebTest extends TestCase
 
     // ------------------------------------------------------------------------- Agregar, editar, quitar
 
-    public function test_agregar_del_catalogo_copia_la_descripcion_como_el_escritorio(): void
+    public function test_pasar_del_catalogo_es_inmediato_y_copia_la_descripcion_como_el_escritorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'agregar' => ['0518' => '0518'],
+        // O-27: un solo POST —el de «Pasar»— escribe la fila. No hay paso de guardado.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlAgregar($consulta), [
+            'codigo' => '0518',
         ]);
 
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']));
         $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'LIE BAJO GRADO'));
 
         $fila = DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->first();
@@ -323,17 +335,25 @@ class ConsultaDiagnosticosWebTest extends TestCase
 
         // El catálogo no se tocó.
         $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)->count());
+
+        // Y la sección, al volver, ya lo muestra en la lista de la izquierda sin apretar ningún botón.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))
+            ->assertOk()
+            ->assertSee('data-diagnostico-fila="' . $fila->id . '"', false);
     }
 
-    public function test_agregar_dos_veces_el_mismo_diagnostico_no_duplica_la_fila(): void
+    public function test_pasar_dos_veces_el_mismo_diagnostico_no_duplica_la_fila(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0518' => '0518']]);
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0518' => '0518']]);
+        $contexto->post($this->urlAgregar($consulta), ['codigo' => '0518']);
+        // El segundo clic no duplica: la Action no agrega lo que la consulta ya tiene y lo dice.
+        $contexto->post($this->urlAgregar($consulta), ['codigo' => '0518'])
+            ->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'ya estaba'));
 
         $this->assertSame(1, DB::table('diagnostico_paciente')
             ->where('reg_medico', $medico->reg_medico)->where('codediagnostico', '0518')->count());
@@ -383,18 +403,20 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $this->assertSame(0, SyncChange::where('table_name', 'diagnostico_paciente')->count());
     }
 
-    public function test_quitar_lo_saca_de_la_consulta_y_no_del_catalogo(): void
+    public function test_quitar_es_inmediato_y_lo_saca_de_la_consulta_y_no_del_catalogo(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
         $fila = $this->diagnostico($medico, 1001, 1, '0518', 'LIE BAJO GRADO');
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'quitar' => [$fila],
+        // O-27: un solo POST —el del «Quitar» de la fila— la borra en el acto.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlQuitar($consulta), [
+            'id' => $fila,
         ]);
 
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'quitado'));
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Quitado'));
 
         $this->assertSame(0, DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertDatabaseHas('sync_changes', [
@@ -405,22 +427,37 @@ class ConsultaDiagnosticosWebTest extends TestCase
         ]);
         // El catálogo sigue igual: quitar de la consulta sólo desasocia.
         $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)->count());
+
+        // La sección al volver ya no la tiene.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))
+            ->assertOk()
+            ->assertDontSee('data-diagnostico-fila="' . $fila . '"', false);
     }
 
-    public function test_una_fila_que_se_quita_no_se_edita_en_el_mismo_post(): void
+    /**
+     * Un `filas[id]` de una fila que ya no está (se quitó en el acto, O-27) no se escribe ni deja rastro: el
+     * formulario no puede escribir sobre algo que la pantalla ya no muestra.
+     */
+    public function test_un_filas_de_una_fila_que_ya_no_esta_no_se_escribe(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
         $fila = $this->diagnostico($medico, 1001, 1, '0518', 'LIE BAJO GRADO');
 
-        // El formulario manda las dos cosas de la misma fila (pasa si el JS no corre): gana la baja.
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Se quita en el acto…
+        $contexto->post($this->urlQuitar($consulta), ['id' => $fila]);
+        // …y un POST de guardado con el `filas[id]` viejo no la resucita ni escribe nada.
+        $contexto->post($this->urlGuardar($consulta), [
             'filas' => [$fila => ['detalle' => 'otra cosa']],
-            'quitar' => [$fila],
         ]);
 
         $this->assertSame(0, DB::table('diagnostico_paciente')->where('id', $fila)->count());
+        $this->assertSame(0, SyncChange::where('table_name', 'diagnostico_paciente')
+            ->where('operation', 'updated')->count());
     }
 
     /**
@@ -432,11 +469,11 @@ class ConsultaDiagnosticosWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'agregar' => ['7777' => '7777'],
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlAgregar($consulta), [
+            'codigo' => '7777',
         ]);
 
-        $respuesta->assertSessionHas('error');
+        $respuesta->assertSessionHas('error', fn ($error) => str_contains($error, 'no está en tu catálogo'));
         $this->assertSame(0, DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->count());
     }
 
@@ -471,7 +508,7 @@ class ConsultaDiagnosticosWebTest extends TestCase
 
     // ------------------------------------------------------------------ El alta del catálogo
 
-    public function test_crear_un_diagnostico_lo_da_de_alta_con_el_correlativo_y_lo_deja_tildado(): void
+    public function test_crear_un_diagnostico_lo_da_de_alta_con_el_correlativo_y_lo_agrega_a_la_consulta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0104', 'FIBROMIOMATOSIS UTERINA');
@@ -481,28 +518,17 @@ class ConsultaDiagnosticosWebTest extends TestCase
             'descripcion' => '  amenaza   de aborto ',
         ]);
 
-        // El correlativo de cuatro dígitos, en mayúsculas, y la vuelta a la sección con el código tildado.
+        // El correlativo de cuatro dígitos, en mayúsculas, y la vuelta a la sección.
         $nuevo = DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)
             ->where('descripcion', 'AMENAZA DE ABORTO')->first();
         $this->assertNotNull($nuevo);
         $this->assertSame('0105', trim((string) $nuevo->codediagnostico));
 
-        $respuesta->assertRedirect();
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']));
         $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'AMENAZA DE ABORTO'));
 
-        // Vuelve a la sección con el código tildado para el botón de guardar.
-        parse_str((string) parse_url($respuesta->getTargetUrl(), PHP_URL_QUERY), $query);
-        $this->assertSame('diagnostico', $query['seccion'] ?? null);
-        $this->assertSame(['0105'], $query['agregar'] ?? []);
-
-        // Todavía **no** está en la consulta: la sección es de guardado explícito y el alta deja el
-        // diagnóstico tildado para el mismo botón.
-        $this->assertSame(0, DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->count());
-
-        // Y el guardado con el pendiente en la query lo agrega.
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlGuardar($consulta) . '?agregar[]=0105', []);
-
+        // O-27: desde que «Pasar» es inmediato, el alta también deja el diagnóstico **en la consulta**; no hay
+        // nada tildado que esperar.
         // La clave de la tabla es `nrohistoria`, no `numhistoria` (como en `consultas`).
         $this->assertDatabaseHas('diagnostico_paciente', [
             'reg_medico' => $medico->reg_medico,
@@ -513,33 +539,21 @@ class ConsultaDiagnosticosWebTest extends TestCase
         ]);
     }
 
-    public function test_crear_un_diagnostico_no_pierde_lo_que_ya_estaba_tildado(): void
+    public function test_crear_un_diagnostico_que_la_consulta_ya_tiene_no_duplica_la_fila(): void
     {
-        // Los pendientes del buscador viven en la pantalla (no en la base): el alta de uno nuevo navega a la
-        // sección y tiene que llevarse lo que ya estaba tildado, o el médico lo pierde sin enterarse.
+        // El alta no pierde ni repite nada: si el diagnóstico ya estaba en la consulta, el aviso lo dice y la
+        // fila no se duplica.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0104', 'FIBROMIOMATOSIS UTERINA');
-        $this->catalogo($medico, '0003', 'LESION ESCAMOSA');
         [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->diagnostico($medico, 1001, 1, '0104', 'FIBROMIOMATOSIS UTERINA');
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlCrear($consulta), [
-            'descripcion' => 'amenaza de aborto',
-            'agregar' => ['0003' => '0003'],
-        ]);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlCrear($consulta), [
+            'descripcion' => 'fibromiomatosis uterina',
+        ])->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'la consulta ya lo tenía'));
 
-        parse_str((string) parse_url($respuesta->getTargetUrl(), PHP_URL_QUERY), $query);
-        // El tildado antes y el recién creado (el correlativo siguiente del catálogo).
-        $this->assertSame(['0003', '0105'], $query['agregar'] ?? []);
-
-        // Y el guardado con los dos en la query agrega los dos.
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlGuardar($consulta) . '?agregar[]=0003&agregar[]=0105', []);
-
-        $this->assertSame(
-            ['0003', '0105'],
-            DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)
-                ->orderBy('codediagnostico')->pluck('codediagnostico')->map(fn ($c) => trim((string) $c))->all()
-        );
+        $this->assertSame(1, DB::table('diagnostico_paciente')
+            ->where('reg_medico', $medico->reg_medico)->where('codediagnostico', '0104')->count());
     }
 
     public function test_crear_uno_que_ya_existe_usa_el_del_catalogo_y_no_lo_duplica(): void
@@ -556,9 +570,11 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)
             ->where('descripcion', 'LIE BAJO GRADO')->count());
 
-        // Y vuelve con el código del existente tildado.
-        parse_str((string) parse_url($respuesta->getTargetUrl(), PHP_URL_QUERY), $query);
-        $this->assertSame(['0518'], $query['agregar'] ?? []);
+        // Y el existente quedó agregado a la consulta (O-27: el alta escribe en el acto).
+        $this->assertDatabaseHas('diagnostico_paciente', [
+            'reg_medico' => $medico->reg_medico,
+            'codediagnostico' => '0518',
+        ]);
     }
 
     public function test_crear_sin_nombre_o_demasiado_largo_no_escribe_nada(): void
@@ -589,7 +605,9 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $contexto = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria);
 
         $contexto->get($this->urlSeccion($consulta))->assertForbidden();
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0518' => '0518']])->assertForbidden();
+        $contexto->post($this->urlAgregar($consulta), ['codigo' => '0518'])->assertForbidden();
+        $contexto->post($this->urlQuitar($consulta), ['id' => 1])->assertForbidden();
+        $contexto->post($this->urlGuardar($consulta), ['filas' => []])->assertForbidden();
         $contexto->post($this->urlCrear($consulta), ['descripcion' => 'ALGO'])->assertForbidden();
     }
 
@@ -599,6 +617,8 @@ class ConsultaDiagnosticosWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->get($this->urlSeccion($consulta))->assertRedirect(route('login'));
+        $this->post($this->urlAgregar($consulta), ['codigo' => '0518'])->assertRedirect(route('login'));
+        $this->post($this->urlQuitar($consulta), ['id' => 1])->assertRedirect(route('login'));
         $this->post($this->urlGuardar($consulta), [])->assertRedirect(route('login'));
         $this->post($this->urlCrear($consulta), ['descripcion' => 'ALGO'])->assertRedirect(route('login'));
     }
@@ -617,7 +637,9 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
         $contexto->get(route('clinica.consulta', [$consultaAjena->id, 'seccion' => 'diagnostico']))->assertNotFound();
-        $contexto->post(route('clinica.consulta.diagnosticos.guardar', $consultaAjena->id), ['agregar' => ['0518' => '0518']])->assertNotFound();
+        $contexto->post(route('clinica.consulta.diagnosticos.agregar', $consultaAjena->id), ['codigo' => '0518'])->assertNotFound();
+        $contexto->post(route('clinica.consulta.diagnosticos.quitar', $consultaAjena->id), ['id' => 1])->assertNotFound();
+        $contexto->post(route('clinica.consulta.diagnosticos.guardar', $consultaAjena->id), ['filas' => []])->assertNotFound();
         $contexto->post(route('clinica.consulta.diagnosticos.crear', $consultaAjena->id), ['descripcion' => 'ALGO'])->assertNotFound();
 
         // Nada se escribió en los datos del otro médico.
@@ -638,10 +660,11 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $contexto->post($this->urlGuardar($consulta), [
             'filas' => [$ajena => ['detalle' => 'lo de la web']],
-            'quitar' => [$ajena],
         ]);
+        $contexto->post($this->urlQuitar($consulta), ['id' => $ajena]);
 
         $this->assertSame('lo del otro', DB::table('diagnostico_paciente')->where('id', $ajena)->value('detalle_diagnostco'));
         $this->assertSame(0, SyncChange::where('record_id', $ajena)->count());
@@ -681,29 +704,28 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $completa->assertSee('Ya está en la consulta', false);
     }
 
-    public function test_un_pendiente_del_buscador_se_guarda_aunque_la_pagina_se_recargue(): void
+    /**
+     * La sección **no** deja códigos pendientes en la URL: «Pasar» escribe en el acto. Un `?agregar[]=` viejo
+     * (un enlace guardado de antes de O-27) no agrega nada.
+     */
+    public function test_un_pendiente_viejo_en_la_url_ya_no_agrega_nada(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->catalogo($medico, '0518', 'LIE BAJO GRADO');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        // La recarga (el `GET` del buscador) deja el código en la query: la sección lo muestra tildado.
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlSeccion($consulta) . '&agregar[]=0518');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Se agrega al guardar', false);
-        $respuesta->assertSee('name="agregar[0518]"', false);
+        $respuesta->assertDontSee('Se agrega al guardar', false);
+        $respuesta->assertDontSee('name="agregar[0518]"', false);
 
-        // El POST del guardado lo lleva en su `action` (la query sobrevive a la recarga aunque los
-        // `hidden` no), así que la fila termina agregada.
+        // El POST del guardado ya no los lleva en la query: la fila **no** se agrega.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post($this->urlGuardar($consulta) . '?agregar[]=0518', []);
 
-        $this->assertDatabaseHas('diagnostico_paciente', [
-            'reg_medico' => $medico->reg_medico,
-            'codediagnostico' => '0518',
-        ]);
+        $this->assertSame(0, DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->count());
     }
 
     // -------------------------------------------------------------------------------------- El panel
@@ -716,9 +738,44 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('Pre-factura', false);
         $respuesta->assertSee('bi-clipboard2-check', false);
         // El enlace del panel abre esta misma sección.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);
+    }
+
+    // ------------------------------------------------------------------------------ «Anterior» (WEB-11.4)
+
+    public function test_anterior_copia_los_diagnosticos_de_la_consulta_previa_sin_duplicar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+        $segunda = Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $this->hoy->toDateString()]);
+        $this->catalogo($medico, '0001', 'HIPERTENSION');
+        $this->catalogo($medico, '0002', 'MIOMA');
+        $this->diagnostico($medico, 1001, 1, '0001', 'detalle viejo');
+        $this->diagnostico($medico, 1001, 1, '0002');
+        $this->diagnostico($medico, 1001, 2, '0002'); // ya está en la 2.ª
+
+        $url = route('clinica.consulta.anterior', [$segunda->id, 'diagnosticos']);
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url)->assertRedirect()
+            ->assertSessionHas('estado', 'Copiados 1 diagnóstico de la consulta N.º 1.');
+
+        $codigos = DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->where('nroconsulta', 2)->orderBy('codediagnostico')->pluck('codediagnostico')->map(fn ($c) => trim($c))->all();
+        $this->assertSame(['0001', '0002'], $codigos);
+        // El detalle es de aquella atención: no se copia.
+        $this->assertNotSame('detalle viejo', DB::table('diagnostico_paciente')->where('nroconsulta', 2)->where('codediagnostico', '0001')->value('detalle_diagnostco'));
+    }
+
+    public function test_anterior_no_se_ofrece_en_la_primera_consulta_y_su_ruta_avisa(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($primera))
+            ->assertOk()->assertDontSee('Copiar los diagnósticos', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.consulta.anterior', [$primera->id, 'diagnosticos']))
+            ->assertRedirect()->assertSessionHas('error');
     }
 }

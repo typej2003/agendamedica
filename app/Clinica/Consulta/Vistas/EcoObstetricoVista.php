@@ -4,6 +4,8 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Impresion\DocumentosParaImprimir;
+use App\Support\FechaDeFormulario;
 
 /**
  * **El eco obstétrico del primer trimestre en la sección de estudio** (WEB-6.2): el formulario de sus seis
@@ -24,13 +26,19 @@ use App\Clinica\Consulta\EstudioEcografico;
 class EcoObstetricoVista
 {
     public function __construct(
-        private EstudioEcografico $estudio,
+        // `protected` para que el eco Doppler (WEB-6.3), que hereda de esta clase, pueda mostrar su informe
+        // en texto libre (`puro_texto`), que los obstétricos todavía no muestran.
+        protected EstudioEcografico $estudio,
         private string $urlGuardar = '',
         private string $urlVolver = '',
         private string $urlImprimir = '',
         private ?string $furSugerida = null,
         private ?int $gestaSugerida = null,
         private array $old = [],
+        // La fecha con la que abre el estudio si todavía no tiene una guardada (O-13). La pasa el
+        // controlador —hoy del consultorio, `FechaDelConsultorio::hoy()`— para que el ViewModel no consulte
+        // el reloj ni la configuración: así se puede probar sin arrancar la app.
+        private ?string $fechaPorDefecto = null,
     ) {
     }
 
@@ -44,6 +52,18 @@ class EcoObstetricoVista
     protected function columnasDelEstudio(): array
     {
         return EcoObstetrico::columnas();
+    }
+
+    /**
+     * Las columnas de la **ficha** de ese estudio: no cuentan como "campos cargados" porque las completa el
+     * servidor o son del embarazo, no hallazgos. Los dos obstétricos excluyen la fecha, la FUR y la gesta; el
+     * **eco Doppler** (WEB-6.3) reemplaza esta lista por la suya, que suma el `para`.
+     *
+     * @return array<int,string>
+     */
+    protected function columnasQueNoCuentan(): array
+    {
+        return ['fecha', 'fur', 'gesta'];
     }
 
     public function titulo(): string
@@ -70,7 +90,13 @@ class EcoObstetricoVista
         foreach ($this->mapa() as $grupo) {
             $campos = [];
             foreach ($grupo['campos'] as $campo) {
-                $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
+                $campo['valor'] = $this->valorDelCampo($campo);
+                // Un desplegable necesita sus opciones con la vacía adelante —y el código desconocido del
+                // escritorio al final—: sin eso el navegador manda su primera opción y un eco recién abierto
+                // guardaba «Sí» en todas sus casillas (la misma regla del eco pélvico).
+                $campo['opciones'] = ($campo['tipo'] ?? 'texto') === 'opciones'
+                    ? OpcionesDelDesplegable::de($campo, $campo['valor'])
+                    : [];
                 $campos[] = $campo;
             }
 
@@ -95,6 +121,16 @@ class EcoObstetricoVista
         return $this->urlImprimir;
     }
 
+    /**
+     * La **clave del documento** que imprime el botón de la sección (`eco-obstetrico`, `eco-doppler`…): la que el botón
+     * manda para guardar y después imprimir (O-16). Sale de la URL de la hoja, que ya la lleva, así que un tipo nuevo no
+     * tiene que declararla dos veces.
+     */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urlImprimir);
+    }
+
     /** La ayuda de la pantalla: qué es el estudio y de dónde salen la FUR y la gesta. */
     public function ayuda(): string
     {
@@ -116,12 +152,12 @@ class EcoObstetricoVista
         return 'Hay cambios sin guardar en el eco obstétrico. Si sales ahora, se pierden.';
     }
 
-    /** Cuántos campos del estudio tienen algo cargado (sin contar la fecha, la FUR ni la gesta). */
+    /** Cuántos campos del estudio tienen algo cargado (sin contar la ficha del embarazo). */
     public function cargados(): int
     {
         $cuenta = 0;
 
-        foreach (array_diff($this->columnasDelEstudio(), ['fecha', 'fur', 'gesta']) as $columna) {
+        foreach (array_diff($this->columnasDelEstudio(), $this->columnasQueNoCuentan()) as $columna) {
             $valor = $this->valorDe($columna);
 
             if ($valor !== null && $valor !== '') {
@@ -135,7 +171,7 @@ class EcoObstetricoVista
     /** Cuántos campos del estudio se pueden cargar. */
     public function totalCampos(): int
     {
-        return count($this->columnasDelEstudio()) - 3;
+        return count($this->columnasDelEstudio()) - count($this->columnasQueNoCuentan());
     }
 
     /** ¿El estudio dice algo? Es la regla de la Action, dicha en pantalla. */
@@ -171,5 +207,44 @@ class EcoObstetricoVista
         }
 
         return $this->estudio->valor($columna);
+    }
+
+    /**
+     * El valor que se pinta en un campo del mapa.
+     *
+     * Una **fecha tecleada** (la FUR de los obstétricos, el Doppler y el cardiograma fetal) se muestra
+     * `dd/mm/aaaa`, que es como se escribe en la pantalla, aunque en la columna esté en `AAAA-MM-DD`
+     * (O-18 y O-19). Lo que hay en la columna y **no** es una fecha —un dato viejo escrito a mano, el
+     * literal `none` del legado— se muestra **vacío**: no se inventa una fecha.
+     *
+     * Los demás campos salen tal cual, como siempre.
+     */
+    private function valorDelCampo(array $campo): string
+    {
+        $columna = $campo['columna'];
+        $tipo = $campo['tipo'] ?? 'texto';
+
+        // O-13: **la fecha del estudio abre con hoy** (la del consultorio) cuando todavía no hay una guardada;
+        // es lo que hace el escritorio al abrir la consulta sin fila (`fecha = today()`). La guardada manda y
+        // lo que volvió en un POST que falló también: el default es sólo para el campo que estaba vacío.
+        if ($tipo === 'fecha') {
+            if (array_key_exists($columna, $this->old)) {
+                return (string) ($this->old[$columna] ?? '');
+            }
+
+            return $this->estudio->valor($columna) ?? (string) $this->fechaPorDefecto;
+        }
+
+        if ($tipo !== 'fecha-tecleada') {
+            return (string) ($this->valorDe($columna) ?? '');
+        }
+
+        // Lo que se acaba de teclear se muestra como se escribió (aunque no sea una fecha: el error está
+        // abajo y así el médico lo corrige); lo guardado, sólo si es una fecha.
+        if (array_key_exists($columna, $this->old) && $this->old[$columna] !== null) {
+            return FechaDeFormulario::comoSeTecleo($this->old[$columna]);
+        }
+
+        return FechaDeFormulario::paraTeclear($this->estudio->valor($columna));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Embarazo\GuardarControlDelEmbarazo;
+use App\Actions\Embarazo\CrearGestaDelEmbarazo;
 use App\Actions\Embarazo\GuardarGestaDelEmbarazo;
 use App\Actions\Embarazo\GuardarLaboratorioDelEmbarazo;
 use App\Clinica\Consulta\ConsultasDelContexto;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -52,7 +54,11 @@ class ConsultaEmbarazoController extends Controller
         );
 
         $destino = $this->destino($consulta);
-        $datos = $request->validate($this->reglas());
+        // La FUR se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita (acepta también lo que
+        // llegue tecleado `dd/mm/aaaa`): la columna `pre_natal_observaciones.fur` es `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fur']));
+
+        $datos = $request->validate($this->reglas(), $this->mensajes());
 
         // Sin `gesta` en el formulario, la Action crea la **siguiente** (*Nueva Gesta*).
         $clave = $request->filled('gesta') ? (int) $request->input('gesta') : null;
@@ -71,6 +77,34 @@ class ConsultaEmbarazoController extends Controller
         }
 
         return $destino->with('estado', $resultado->sinCambios() ? 'La gesta no tenía cambios.' : 'Gesta guardada.');
+    }
+
+    /**
+     * **«Nueva gesta»** (WEB-11.15): sólo pregunta cuántos bebés son. La regla —la anterior tiene que estar cerrada— es de la Action.
+     */
+    public function crearGesta(Request $request, Consulta $consulta, CrearGestaDelEmbarazo $crear)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        $consulta = $this->consultas->consulta(
+            $this->registrosDelMedico($contexto['medico']),
+            (int) $consulta->id,
+            $contexto['reg_medico'],
+        );
+
+        $datos = $request->validate(['bebes' => 'required|integer|min:1|max:' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES], [
+            'bebes.*' => 'Elige cuántos bebés son (de 1 a ' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES . ').',
+        ]);
+
+        try {
+            $clave = $crear->ejecutar((string) $consulta->reg_medico, (int) $consulta->numhistoria, (int) $datos['bebes'], null, 'web');
+        } catch (InvalidArgumentException $excepcion) {
+            return $this->destino($consulta)->with('error', $excepcion->getMessage());
+        }
+
+        return redirect()
+            ->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EMBARAZO, 'pestana' => PestanasDelEmbarazo::PRENATAL, 'gesta' => $clave])
+            ->with('estado', 'Gesta ' . $clave . ' creada. Ahora completa su FUR y guárdala.');
     }
 
     /** La vuelta a la sección, en la pestaña *Prenatal* (la única que existe hoy). */
@@ -114,7 +148,12 @@ class ConsultaEmbarazoController extends Controller
         );
 
         $destino = $this->destino($consulta, $pestana);
-        $datos = $request->validate($this->reglasDeLaFecha());
+        // La fecha se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
+        $datos = $request->validate($this->reglasDeLaFecha(), [
+            'fecha.required' => 'Indica la fecha: es parte de la clave de la fila.',
+            'fecha.date_format' => FechaDeFormulario::mensaje('Fecha'),
+        ]);
 
         // La gesta viene oculta en el formulario: es parte de la clave (`historia` + `gesta_clave` + `fecha`).
         $gesta = (int) $request->input('gesta', 0);
@@ -140,18 +179,45 @@ class ConsultaEmbarazoController extends Controller
     /**
      * Las reglas de los campos de la gesta. El tope de cada texto es el del DataWindow (`char(10)` en cuatro
      * de ellos) y `fur` es obligatoria —la Action también la exige, pero así el error llega al campo—.
+     *
+     * ⚠️ **Tienen que estar las trece columnas** que el formulario manda (`GuardarGestaDelEmbarazo::COLUMNAS`):
+     * `validate()` devuelve **sólo** lo declarado, así que una columna que falte acá no se guarda y, peor,
+     * la Action la recibe vacía y **borra lo que tenía** (los partos de una gesta del escritorio, por
+     * ejemplo). Las casillas `final` y `multiple` guardan `S`/`N`, como las escribe el escritorio, y
+     * `cantidad` es el número de fetos cuando el embarazo es múltiple.
      */
     private function reglas(): array
     {
         return [
-            'fur' => 'required|date',
+            'fur' => 'required|' . FechaDeFormulario::FORMATO,
             'menarquia' => 'nullable|string|max:10',
             'gestas' => 'nullable|numeric|min:0|max:99',
+            'partos' => 'nullable|numeric|min:0|max:99',
+            'cesarea' => 'nullable|numeric|min:0|max:99',
+            'abortos' => 'nullable|numeric|min:0|max:99',
+            // `otros` es un número en la tabla (`integer`) y en el DataWindow (`long`).
+            'otros' => 'nullable|numeric|min:0|max:99',
             'parto' => 'nullable|string|max:10',
             'tipiaje' => 'nullable|string|max:10',
             'tipiaje_cony' => 'nullable|string|max:10',
+            'final' => 'nullable|in:S,N',
+            'multiple' => 'nullable|in:S,N',
+            'cantidad' => 'nullable|numeric|min:0|max:' . CrearGestaDelEmbarazo::MAXIMO_DE_BEBES,
             'observaciones' => 'nullable|string|max:32000',
             'gesta' => 'nullable|numeric|min:1',
+        ];
+    }
+
+    /**
+     * Los mensajes de la gesta, en español (O-15): el de Laravel diría «The fur field is required».
+     *
+     * @return array<string,string>
+     */
+    private function mensajes(): array
+    {
+        return [
+            'fur.required' => 'La FUR es obligatoria: de ella salen la edad gestacional y la FPP.',
+            'fur.date_format' => FechaDeFormulario::mensaje('FUR'),
         ];
     }
 
@@ -164,7 +230,7 @@ class ConsultaEmbarazoController extends Controller
      */
     private function reglasDeLaFecha(): array
     {
-        $reglas = ['fecha' => 'required|date', 'gesta' => 'required|numeric|min:1'];
+        $reglas = ['fecha' => 'required|' . FechaDeFormulario::FORMATO, 'gesta' => 'required|numeric|min:1'];
 
         foreach (array_merge(PrenaExamenB::campos(), PreNatalDesarrolloFino::campos()) as $campo) {
             $reglas[$campo['columna']] = 'nullable|string|max:'

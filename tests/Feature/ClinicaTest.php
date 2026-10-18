@@ -143,7 +143,11 @@ class ClinicaTest extends TestCase
             ->post('/clinica/contexto', ['reg_medico' => $medico->reg_medico, 'specialty_id' => $gineco->id])
             ->assertRedirect(route('clinica.inicio'));
 
-        $this->actingAs($secretaria)->get('/clinica')->assertOk()->assertSee('Pacientes');
+        // A-12: el inicio es del médico. La secretaría no atiende pacientes, así que `/clinica` la manda a la
+        // agenda, que es su pantalla de trabajo (y donde el menú lateral le ofrece lo suyo).
+        $this->actingAs($secretaria)->get('/clinica')->assertRedirect(route('clinica.agenda'));
+
+        $this->actingAs($secretaria)->get('/clinica/agenda')->assertOk()->assertSee('Pacientes');
     }
 
     public function test_el_listado_de_pacientes_solo_trae_los_del_registro_del_contexto(): void

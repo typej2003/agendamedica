@@ -104,7 +104,10 @@ return [
     |
     */
 
-    'locale' => 'en',
+    // **En español** (O-15): la app es de un consultorio venezolano y los mensajes de validación son para el
+    // médico. Los textos viven en `lang/es/validation.php`; el fallback es el mismo idioma para que un mensaje
+    // que falte no se escape en inglés.
+    'locale' => 'es',
 
     /*
     |--------------------------------------------------------------------------
@@ -117,7 +120,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'es',
 
     /*
     |--------------------------------------------------------------------------

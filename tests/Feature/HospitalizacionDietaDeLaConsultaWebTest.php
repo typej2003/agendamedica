@@ -86,14 +86,16 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
     // ===================================================================================== La sección
 
-    public function test_el_panel_sigue_en_10_de_13_y_la_seccion_ofrece_hospitalizacion_e_informe_y_dieta_en_el_orden_del_escritorio(): void
+    public function test_el_menu_ofrece_solicitudes_y_la_seccion_ordena_hospitalizacion_informe_y_dieta_como_el_escritorio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('12 de 13 disponibles', false)
-            ->assertSee('hospitalización, informe médico y dieta / recomendaciones');
+            ->assertSee('Pre-factura', false)
+            // El ítem de Solicitudes del grupo «Consulta»; su detalle —que nombra hospitalización, informe y
+            // dieta— vive en el catálogo y lo fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
+            ->assertSee('Solicitudes');
 
         $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'constancia'))->assertOk()->getContent();
         $this->assertLessThan(strpos($html, 'Informe médico'), strpos($html, 'Hospitalización'));
@@ -360,9 +362,9 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
         $pantalla->assertOk()
             ->assertSee('DIETA BLANDA')
-            ->assertSee('data-texto="Caldos y purés."', false)
-            ->assertSee('data-copiar-para="#dieta-titulo"', false)
-            ->assertSee('data-para="DIETA BLANDA"', false)
+            ->assertSee('data-plantilla-texto="Caldos y purés."', false)
+            ->assertSee('data-titulo-destino="#dieta-titulo"', false)
+            ->assertSee('data-plantilla-titulo="DIETA BLANDA"', false)
             ->assertDontSee('ES DE INFORME')
             ->assertDontSee('VACIA')
             ->assertDontSee('DE OTRO MEDICO');

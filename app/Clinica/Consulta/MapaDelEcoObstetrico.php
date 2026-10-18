@@ -23,6 +23,28 @@ trait MapaDelEcoObstetrico
         return ['columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'texto', 'ayuda' => $ayuda ?? $etiqueta];
     }
 
+    /**
+     * **Una fecha con calendario** (`<input type="date">`): la columna es `date` y el navegador manda
+     * `AAAA-MM-DD`, que es lo que se guarda.
+     */
+    private static function fecha(string $columna, string $etiqueta, ?string $ayuda = null): array
+    {
+        return ['columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'fecha', 'ayuda' => $ayuda ?? $etiqueta];
+    }
+
+    /**
+     * **Una fecha que se teclea** `dd/mm/aaaa` (O-18): la FUR, que en el escritorio es un campo de texto y
+     * el médico escribe a mano. La columna sigue siendo `date` en la base, así que la pantalla la muestra y
+     * la manda en `dd/mm/aaaa` y el servidor la pasa a `AAAA-MM-DD` antes de escribir
+     * (`App\Support\FechaDeFormulario`, el único lugar donde eso se decide). La máscara que pone las barras
+     * es `public/js/clinica/mascara-fecha.js`.
+     */
+    private static function fechaTecleada(string $columna, string $etiqueta, ?string $ayuda = null): array
+    {
+        return ['columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'fecha-tecleada',
+            'ayuda' => $ayuda ?? $etiqueta];
+    }
+
     /** Un campo de número (los que el escritorio mide en mm o gramos). */
     private static function numero(string $columna, string $etiqueta, ?string $ayuda = null): array
     {

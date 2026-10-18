@@ -32,7 +32,18 @@ final class EnfermedadActualVista
         private ?string $texto,
         private string $urlGuardar,
         private string $urlVolver = '',
+        private array $plantillas = [],
     ) {
+    }
+
+    /**
+     * Las plantillas de enfermedad actual (`formato_print`, tipo `EA`, WEB-11.7), listas para el panel.
+     *
+     * @return array<int,array{titulo:string, texto:string}>
+     */
+    public function plantillas(): array
+    {
+        return array_map(fn ($p) => ['titulo' => (string) $p->titulo, 'texto' => (string) $p->texto], $this->plantillas);
     }
 
     /** El texto tal como está guardado, o `null` si la consulta todavía no tiene nada escrito. */

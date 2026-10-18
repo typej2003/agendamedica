@@ -15,9 +15,23 @@
 (function () {
     'use strict';
 
+    // ---- Incrustada en el diálogo «Visualizar» de la consulta (WEB-11.24): `?incrustado=1` oculta la barra que sobra.
+    if (/[?&]incrustado=1/.test(window.location.search)) {
+        document.body.classList.add('es-incrustado');
+    }
+
     // ---- Imprimir: la barra de la vista previa.
     document.querySelectorAll('[data-imprimir]').forEach(function (boton) {
         boton.addEventListener('click', function () { window.print(); });
+    });
+
+    // ---- «Incluir imágenes» (WEB-11.13): muestra u oculta la hoja de las imágenes de una eco; la impresión respeta lo que se ve.
+    document.querySelectorAll('[data-incluir-imagenes]').forEach(function (casilla) {
+        function aplicar() {
+            document.querySelectorAll('[data-hoja-imagenes]').forEach(function (hoja) { hoja.hidden = !casilla.checked; });
+        }
+        casilla.addEventListener('change', aplicar);
+        aplicar();
     });
 
     // ---- Los diálogos de las opciones.
@@ -59,7 +73,7 @@
 
         hojas.style.setProperty('--escala', '1');
 
-        var hoja = hojas.querySelector('.recipe-hoja');
+        var hoja = hojas.querySelector('.recipe-hoja, .informe-hoja');
         if (!hoja) return;
 
         var natural = hoja.offsetWidth;

@@ -1,0 +1,155 @@
+{{-- **El resumen del paciente** (WEB-3.5): sus consultas, sus antecedentes y sus documentos. Es el cuerpo de la
+     pantalla de la historia, extraído a un parcial para que lo use **también** el cajón de la consulta (O-30),
+     que muestra lo mismo mientras el médico escribe: lo impreso es «la historia», lo que se ve es «el resumen»
+     (decisión de producto ya tomada). No hay un segundo resumen: es esta misma vista.
+
+     Variables: `$vm` (`App\Clinica\Historia\Vistas\HistoriaDePacienteVista`), ya armado por el controlador. --}}
+@if (! $vm->tieneHistoria())
+    {{-- Sin historia no hay nada que mostrar: no es un error ni una lista vacía, es un paciente al que
+         todavía hay que numerarle la historia (WEB-3.3). El bloque dice por qué y lleva a la ficha,
+         que es donde vive la acción. --}}
+    @php $sinHistoria = $vm->sinHistoria(); @endphp
+    <x-ui.tarjeta id="historia-sin-historia">
+        <x-ui.vacio :icono="$sinHistoria['icono']" :titulo="$sinHistoria['titulo']">
+            {{ $sinHistoria['texto'] }}
+            <x-slot name="acciones">
+                <a class="btn btn-primary" href="{{ $vm->urlFicha() }}">
+                    <i class="bi bi-journal-medical" aria-hidden="true"></i> Ir a la ficha a asignarla
+                </a>
+            </x-slot>
+        </x-ui.vacio>
+    </x-ui.tarjeta>
+@else
+    <x-ui.tarjeta id="historia-consultas" titulo="Consultas" icono="bi-journal-text" class="mb-3">
+        @if ($vm->totalConsultas() === 0)
+            @php $sinConsultas = $vm->sinConsultas(); @endphp
+            <x-ui.vacio :icono="$sinConsultas['icono']" :titulo="$sinConsultas['titulo']">{{ $sinConsultas['texto'] }}</x-ui.vacio>
+        @else
+            {{-- La línea de tiempo de la ficha, con las secciones de cada consulta: es el mismo bloque
+                 que el paciente ya conoce, ahora con lo que la consulta dice. --}}
+            <ol class="linea-tiempo">
+                @foreach ($vm->consultas() as $consulta)
+                    <li>
+                        <div class="linea-tiempo-cabeza">
+                            @if ($consulta['url'])
+                                <span>
+                                    <a href="{{ $consulta['url'] }}" class="fw-bold text-decoration-none" title="Abrir la consulta">{{ $consulta['fecha'] }}</a>
+                                    <span class="texto-tenue small ms-1">{{ $consulta['numero'] }}</span>
+                                </span>
+                                <a href="{{ $consulta['url'] }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Ver consulta
+                                </a>
+                            @else
+                                <strong>{{ $consulta['fecha'] }}</strong>
+                                <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                            @endif
+                        </div>
+
+                        @if ($consulta['motivos'] !== [])
+                            <p class="mb-1">
+                                @foreach ($consulta['motivos'] as $motivo)
+                                    <span class="chip">{{ $motivo }}</span>
+                                @endforeach
+                            </p>
+                        @endif
+
+                        @if ($consulta['enfermedad'])
+                            <p class="linea-tiempo-texto mb-1">
+                                <span class="etiqueta">Enfermedad actual</span> {{ $consulta['enfermedad'] }}
+                            </p>
+                        @endif
+
+                        @if ($consulta['diagnostico'])
+                            <p class="linea-tiempo-texto mb-1">
+                                <span class="etiqueta">Diagnóstico</span> {{ $consulta['diagnostico'] }}
+                            </p>
+                        @endif
+
+                        @if ($consulta['evolucion'])
+                            <p class="linea-tiempo-texto mb-0">
+                                <span class="etiqueta">Evolución</span> {{ $consulta['evolucion'] }}
+                            </p>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
+        @endif
+    </x-ui.tarjeta>
+
+    <x-ui.tarjeta id="historia-antecedentes" titulo="Antecedentes" icono="bi-clipboard2-pulse" class="mb-3">
+        @if ($vm->totalAntecedentes() === 0)
+            @php $sinAntecedentes = $vm->sinAntecedentes(); @endphp
+            <x-ui.vacio :icono="$sinAntecedentes['icono']" :titulo="$sinAntecedentes['titulo']">{{ $sinAntecedentes['texto'] }}</x-ui.vacio>
+        @else
+            @foreach ($vm->antecedentes() as $grupo)
+                <div class="antecedentes-grupo">
+                    <h3 class="antecedentes-titulo">{{ $grupo['titulo'] }}</h3>
+                    <ul class="lista-antecedentes">
+                        @foreach ($grupo['filas'] as $fila)
+                            <li>
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <span>{{ $fila['nombre'] }}</span>
+                                    {{-- La alerta del antecedente: el `tipo2 = 'A'` que la fuente del
+                                         legado muestra en negrita y magenta arriba de la consulta. Va
+                                         con color, icono y texto, nunca sólo color. --}}
+                                    @if ($fila['alerta'])
+                                        <x-ui.estado tono="peligro" icono="bi-exclamation-triangle" :title="$fila['alertaTitulo']">
+                                            Alerta
+                                        </x-ui.estado>
+                                    @endif
+                                </div>
+                                @if ($fila['detalle'])
+                                    <p class="texto-tenue small mb-0">{{ $fila['detalle'] }}</p>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        @endif
+    </x-ui.tarjeta>
+
+    <x-ui.tarjeta id="historia-documentos" titulo="Documentos" icono="bi-folder2-open" sin-relleno>
+        @if ($vm->totalDocumentos() === 0)
+            @php $sinDocumentos = $vm->sinDocumentos(); @endphp
+            <x-ui.vacio :icono="$sinDocumentos['icono']" :titulo="$sinDocumentos['titulo']">{{ $sinDocumentos['texto'] }}</x-ui.vacio>
+        @else
+            <x-ui.tabla>
+                <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                    <th>Resumen</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach ($vm->documentos() as $documento)
+                    <tr>
+                        <td class="celda-principal" data-etiqueta="Documento">
+                            <i class="bi {{ $documento['icono'] }} texto-tenue" aria-hidden="true"></i>
+                            <strong>{{ $documento['tipo'] }}</strong>
+                            @if ($documento['consulta'])
+                                <span class="texto-tenue small d-block">{{ $documento['consulta'] }}</span>
+                            @endif
+                        </td>
+                        <td data-etiqueta="Fecha">{{ $documento['fecha'] }}</td>
+                        <td data-etiqueta="Resumen">{{ $documento['resumen'] ?? '—' }}</td>
+                        <td class="text-end" data-etiqueta="Acciones">
+                            {{-- La hoja impresa del récipe (WEB-5.2): la misma página de impresión que la sección de
+                                 récipes de la consulta. Sólo la ve quien puede abrir la consulta. --}}
+                            @if ($documento['urlImprimir'])
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ $documento['urlImprimir'] }}">
+                                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                                </a>
+                            @else
+                                <span class="texto-tenue">—</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </x-ui.tabla>
+        @endif
+    </x-ui.tarjeta>
+@endif

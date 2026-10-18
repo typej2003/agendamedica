@@ -260,7 +260,7 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
         $this->resumen($medico, 'radiologia_obs', '  ');
 
         foreach (['laboratorio', 'estudios', 'todos'] as $clave) {
-            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))->assertNotFound();
+            $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $clave))->assertOk()->assertSee('Guarda los datos del estudio para poder imprimir.');
         }
 
         $this->examenes($medico, ['001']);

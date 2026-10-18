@@ -146,6 +146,28 @@ class ConsultaPrenatalWebTest extends TestCase
         return array_merge($campos, $valores);
     }
 
+    /** El HTML del control con ese `id` (`<select … id="tipiaje" …>…</select>` o un `<input>`). */
+    private function control(string $html, string $id): string
+    {
+        if (preg_match('/<select\b[^>]*id="' . preg_quote($id, '/') . '".*?<\/select>/s', $html, $m)) {
+            return $m[0];
+        }
+
+        if (preg_match('/<(input|textarea|output)\b[^>]*id="' . preg_quote($id, '/') . '"[^>]*>/s', $html, $m)) {
+            return $m[0];
+        }
+
+        return '';
+    }
+
+    /** La posición del control en el HTML: es lo que fija el orden de la pantalla. */
+    private function posicion(string $html, string $id): int
+    {
+        $posicion = strpos($html, 'id="' . $id . '"');
+
+        return $posicion === false ? -1 : $posicion;
+    }
+
     /** La FUR de estos casos: 146 días antes de hoy, o sea 20 semanas y 6 días. */
     private function fur(): string
     {
@@ -163,7 +185,7 @@ class ConsultaPrenatalWebTest extends TestCase
 
         $respuesta->assertOk();
         // El panel ya no dice "Próximamente" de este ítem: pasó a 12 de 13.
-        $respuesta->assertSee('12 de 13 disponibles');
+        $respuesta->assertSee('Pre-factura');
         $respuesta->assertSee('Control de embarazo');
 
         // La pestaña y sus campos, con los rótulos del escritorio.
@@ -235,7 +257,7 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Gesta 1')
             // La ayuda de la FPP deja claro cuál de los números usa esta pantalla (281, el del DataWindow
             // vivo del control prenatal; el eco obstétrico usa 283).
-            ->assertSee('281 días');
+            ->assertSee('280 días');
     }
 
     public function test_nueva_gesta_crea_la_siguiente_con_el_numero_que_asigna_el_servidor(): void
@@ -243,7 +265,7 @@ class ConsultaPrenatalWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
         PreNatalObservacion::create([
-            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10',
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10', 'final' => 'S',
         ]);
 
         // El formulario sin `gesta` (el que abre "Nueva gesta") crea la 2.
@@ -315,6 +337,188 @@ class ConsultaPrenatalWebTest extends TestCase
         // Y `&nueva=1` abre el formulario en blanco, sin gesta que guardar todavía.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, '&nueva=1'))
             ->assertOk()->assertDontSee('value="' . $this->fur() . '"', false);
+    }
+
+    // ------------------------------------------------------------------------ O-21: orden y jerarquía
+
+    /**
+     * **El orden y el agrupamiento de la ficha son los del escritorio** (O-21, captura
+     * `24-control-de-embarazo-prenatal-con-gesta.png`): primer renglón `FUR · FPP · EG · Menarquia · Gestas`,
+     * segundo `Partos · Césareas · Abortos · Otros · Tipiaje (madre) · Tipiaje (padre)`, el **memo** de
+     * observaciones y, al final, los tres del estado del embarazo.
+     */
+    public function test_el_orden_de_los_campos_es_el_del_escritorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => $this->fur(), 'multiple' => 'S', 'cantidad' => 2, 'final' => 'N',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        $orden = [
+            'fur', 'prenatal-fpp', 'prenatal-eg', 'menarquia', 'gestas',      // renglón 1
+            'partos', 'cesarea', 'abortos', 'otros', 'tipiaje', 'tipiaje_cony', // renglón 2
+            'observaciones',                                                 // el memo
+            'multiple', 'cantidad', 'final',                                 // el estado, al final
+        ];
+
+        $anterior = -1;
+        foreach ($orden as $id) {
+            $posicion = $this->posicion($html, $id);
+            $this->assertGreaterThan($anterior, $posicion, 'El campo «' . $id . '» no está en el orden del escritorio.');
+            $anterior = $posicion;
+        }
+
+        // Los tres del estado del embarazo están **juntos y discretos**: dos casillas y un número corto, no
+        // tres campos de la jerarquía de los datos clínicos (que en la web eran una fila entera).
+        $this->assertStringContainsString('estado-embarazo', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*type="checkbox"[^>]*id="multiple"[^>]*>/s', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*type="checkbox"[^>]*id="final"[^>]*>/s', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*type="number"[^>]*id="cantidad"[^>]*>/s', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*type="checkbox"[^>]*id="multiple"[^>]*checked/s', $html);
+
+        // El memo de observaciones es el campo grande: un `<textarea>` de seis renglones a todo el ancho.
+        $this->assertMatchesRegularExpression('/<textarea[^>]*rows="6"[^>]*id="observaciones"/s', $html);
+    }
+
+    // ------------------------------------------------------------------------ O-23: una línea de ayuda
+
+    /**
+     * **Una línea de ayuda como máximo** (O-23): el párrafo de apertura y los tres pasos de antes están
+     * detrás del «¿Cómo funciona?» del encabezado, que abre un diálogo (el mismo patrón del tour).
+     */
+    public function test_la_ayuda_es_una_linea_y_los_pasos_estan_en_el_dialogo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        // El botón, al lado del título, y su diálogo.
+        $this->assertStringContainsString('data-abrir-dialogo="dialogo-prenatal"', $html);
+        $this->assertStringContainsString('¿Cómo funciona?', $html);
+        $this->assertMatchesRegularExpression('/<dialog[^>]*id="dialogo-prenatal"/s', $html);
+
+        // La ayuda del cuerpo es **una línea**: un solo párrafo corto antes del formulario.
+        $this->assertSame(1, preg_match('/<p class="texto-tenue small mb-3">(.*?)<\/p>/s', $html, $ayuda));
+        $texto = trim(strip_tags($ayuda[1]));
+        $this->assertLessThanOrEqual(110, mb_strlen($texto), 'La ayuda del cuerpo ocupa más de una línea: «' . $texto . '»');
+
+        // Los tres pasos, dentro del diálogo, que va después del formulario (o sea: ya no abre la pestaña).
+        $dialogo = strpos($html, 'id="dialogo-prenatal"');
+        foreach (['Crea la gesta', 'Registra sus laboratorios y controles', 'Al terminar el embarazo, marca «Final de embarazo»'] as $paso) {
+            $this->assertGreaterThan($dialogo, strpos($html, $paso), 'El paso «' . $paso . '» no está en el diálogo.');
+        }
+        $this->assertLessThan($dialogo, strpos($html, '<form'));
+    }
+
+    // --------------------------------------------------------------------------- O-24: el tipiaje
+
+    /** **El tipiaje es un desplegable con los ocho valores del escritorio**, en su orden (O-24). */
+    public function test_el_tipiaje_es_un_desplegable_con_los_ocho_valores_del_escritorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => $this->fur(), 'tipiaje' => 'O+', 'tipiaje_cony' => 'Incógnito',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        foreach (['tipiaje', 'tipiaje_cony'] as $id) {
+            $select = $this->control($html, $id);
+            $this->assertStringContainsString('<select', $select, 'El campo «' . $id . '» no es un desplegable.');
+
+            preg_match_all('/<option value="([^"]*)"/', $select, $valores);
+            // La opción vacía adelante y, después, los nueve del DataWindow **vivo** (`_2`) **en ese orden**.
+            $this->assertSame(
+                ['', 'A+', 'A-', 'B-', 'B+', 'AB+', 'O+', 'O-', 'Incógnito', 'AB-'],
+                $valores[1],
+            );
+
+            // Se muestra elegido lo guardado.
+            $esperado = $id === 'tipiaje' ? 'O+' : 'Incógnito';
+            $this->assertMatchesRegularExpression('/<option value="' . preg_quote($esperado, '/') . '"\s+selected/s', $select);
+        }
+    }
+
+    /**
+     * **Un tipiaje viejo que no está en la lista no se pierde** (O-24): se muestra como la opción elegida y
+     * sólo se reemplaza si el médico elige otra.
+     */
+    public function test_un_tipiaje_viejo_fuera_de_la_lista_se_conserva(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        // Lo que el escritorio pudo haber escrito como texto libre antes de tener la lista.
+        $gesta = PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => $this->fur(), 'tipiaje' => 'A positivo', 'tipiaje_cony' => 'AB+',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        // El valor viejo viaja como una opción más —la última— y es la elegida.
+        $select = $this->control($html, 'tipiaje');
+        $this->assertMatchesRegularExpression('/<option value="A positivo"\s+selected/s', $select);
+        $this->assertStringContainsString('(del escritorio)', $select);
+        // Y `AB+`, que tampoco está entre los ocho, igual.
+        $this->assertMatchesRegularExpression('/<option value="AB\+"\s+selected/s', $this->control($html, 'tipiaje_cony'));
+
+        // Si el médico guarda sin tocarlo, no se pierde.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
+            'gesta' => '1', 'fur' => $this->fur(), 'tipiaje' => 'A positivo', 'tipiaje_cony' => 'AB+',
+        ]))->assertSessionHas('estado');
+
+        $this->assertSame('A positivo', $gesta->fresh()->tipiaje);
+        $this->assertSame('AB+', $gesta->fresh()->tipiaje_cony);
+
+        // Y si elige otro de la lista, se reemplaza.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
+            'gesta' => '1', 'fur' => $this->fur(), 'tipiaje' => 'O-',
+        ]))->assertSessionHas('estado');
+
+        $this->assertSame('O-', $gesta->fresh()->tipiaje);
+    }
+
+    /**
+     * **La ficha guarda lo que muestra** (O-21): los conteos del segundo renglón y los tres controles del
+     * estado del embarazo. Antes el formulario los mandaba y la validación del controlador los descartaba, así
+     * que una gesta del escritorio perdía sus partos al guardarse desde la web.
+     */
+    public function test_guardar_la_gesta_guarda_los_conteos_y_el_estado_del_embarazo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $gesta = PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => $this->fur(), 'partos' => 2, 'cesarea' => 1,
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
+            'gesta' => '1', 'fur' => $this->fur(), 'gestas' => '3',
+            'partos' => '2', 'cesarea' => '1', 'abortos' => '1', 'otros' => '0',
+            // Lo que manda el formulario: las dos casillas con la casilla oculta que las precede.
+            'multiple' => 'S', 'cantidad' => '2', 'final' => 'S',
+        ]))->assertSessionHas('estado');
+
+        $fresca = $gesta->fresh();
+        $this->assertSame(3, $fresca->gestas);
+        $this->assertSame(2, $fresca->partos);
+        $this->assertSame(1, $fresca->cesarea);
+        $this->assertSame(1, $fresca->abortos);
+        $this->assertSame(0, $fresca->otros);
+        $this->assertSame('S', $fresca->multiple);
+        $this->assertSame(2, $fresca->cantidad);
+        $this->assertSame('S', $fresca->final);
     }
 
     // -------------------------------------------------------------------------------------- Permisos
@@ -389,6 +593,25 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Cefálica - Cefálica');
     }
 
+    /**
+     * **La fecha de un laboratorio nuevo abre con hoy** (O-13): es la fecha del estudio, no la de la consulta.
+     * Una fila que ya existe manda con su fecha (lo cubre la pestaña con `&fecha=`).
+     */
+    public function test_el_laboratorio_nuevo_abre_con_la_fecha_de_hoy(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&nueva=1'));
+
+        $respuesta->assertOk();
+        $this->assertMatchesRegularExpression(
+            '/id="fecha"[^>]*value="' . $this->hoy->toDateString() . '"/s',
+            $respuesta->getContent(),
+        );
+    }
+
     public function test_la_pestana_reporte_abre_con_la_ficha_de_la_gesta_y_el_boton_de_imprimir(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -408,8 +631,9 @@ class ConsultaPrenatalWebTest extends TestCase
         $reporte->assertOk()
             ->assertSee('Informe del control de embarazo')
             ->assertSee('Imprimir el informe')
-            // La ficha de la gesta, con las dos FPP: la del informe (283) y la de la pantalla (281).
+            // La ficha de la gesta, con su FPP (una sola desde WEB-11.16: la hoja y la pantalla).
             ->assertSee('FUR')->assertSee('FPP')
+            ->assertSee('La hoja imprime la FPP de la gesta')
             ->assertSee('Tipiaje (madre)')
             // Y lo cargado en los controles, que es lo que sale en la hoja.
             ->assertSee('Peso: 68')->assertSee('Placenta: Fúndica');
@@ -470,5 +694,28 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSessionHasErrors('gesta');
 
         $this->assertSame(0, PrenaExamenB::where('historia', 1001)->count());
+    }
+
+    public function test_el_dialogo_de_nueva_gesta_crea_la_siguiente_y_respeta_la_regla(): void
+    {
+        // WEB-11.15: «Nueva gesta» sólo pregunta los bebés; con la anterior abierta avisa y no crea nada.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $primera = PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => '2024-01-10',
+        ]);
+        $url = route('clinica.consulta.embarazo.gesta.crear', $consulta->id);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
+            ->assertOk()->assertSee('¿Cuántos bebés son?')->assertSee('Crea la gesta');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url, ['bebes' => 1])
+            ->assertRedirect()->assertSessionHas('error', fn ($e) => str_contains($e, 'Final de embarazo'));
+        $this->assertSame(1, PreNatalObservacion::where('reg_medico', $medico->reg_medico)->count());
+
+        $primera->forceFill(['final' => 'S'])->save();
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url, ['bebes' => 2])
+            ->assertRedirect()->assertSessionHas('estado', fn ($e) => str_contains($e, 'Gesta 2 creada'));
+        $this->assertSame('S', PreNatalObservacion::where('reg_medico', $medico->reg_medico)->where('gesta_clave', 2)->value('multiple'));
     }
 }

@@ -11,8 +11,9 @@
  *    de cambios sin guardar aparece. `[data-restaurar]` es lo mismo para «usar los diagnósticos de la consulta».
  * 3. **Las fechas del reposo**: al escribir los días o la fecha de inicio recalcula el último día de reposo (inicio + días − 1)
  *    y el reintegro (inicio + días), la misma cuenta que el servidor (`ReposoDeLaConsulta`). No se guarda: es de pantalla.
- * 4. **El buscador de médicos** de las referencias (`#solicitudes-referencias`): pide el catálogo (250 ms de espera) y pinta
- *    un formulario «Referir» por resultado; y abre el diálogo del alta del médico que falta.
+ * 4. **El alta del médico que falta** en las referencias (`#solicitudes-referencias`): abre su diálogo. El catálogo de
+ *    médicos ya no se busca en vivo: desde O-29 se pinta a la vista con su buscador y un «Referir» por fila que escribe al
+ *    instante, como el de motivos.
  */
 (function () {
     'use strict';
@@ -120,87 +121,15 @@
         desde.addEventListener('change', recalcular);
     }
 
-    // ------------------------------------------------------------- Buscador de médicos (referencias)
+    // ------------------------------------------------------------- Alta del médico que falta (referencias)
 
+    // El **catálogo de médicos** ya no se busca en vivo: desde O-29 se pinta a la vista con su buscador (un `GET`) y un
+    // «Referir» por fila que escribe al instante. Acá queda sólo el diálogo del alta del colega que no está.
     var raiz = document.getElementById('solicitudes-referencias');
 
     if (raiz) {
-        var caja = document.getElementById('referencia-texto');
-        var lista = document.getElementById('referencia-resultados');
-        var ayuda = document.getElementById('referencia-ayuda');
-        var plantilla = document.getElementById('referencia-plantilla');
         var dialogo = document.getElementById('dialogo-medico');
         var botonNuevo = document.getElementById('referencia-nuevo-boton');
-        var ayudaInicial = ayuda.textContent;
-        var temporizador = null;
-
-        var limpiar = function () {
-            lista.innerHTML = '';
-            lista.hidden = true;
-        };
-
-        var detalle = function (medico) {
-            return [medico.especialidad, medico.clinica, medico.telefono].filter(Boolean).join(' · ');
-        };
-
-        var pintarResultados = function (datos) {
-            lista.innerHTML = '';
-
-            datos.medicos.forEach(function (medico) {
-                var fila = plantilla.content.firstElementChild.cloneNode(true);
-                var texto = fila.querySelector('.resultado-paciente-datos');
-                texto.textContent = medico.nombre + (detalle(medico) ? ' · ' + detalle(medico) : '');
-
-                if (medico.yaEsta) {
-                    texto.insertAdjacentText('beforeend', ' · ya está referido');
-                    fila.querySelector('form').remove();
-                } else {
-                    fila.querySelector('input[name=cedula]').value = medico.cedula;
-                }
-
-                lista.appendChild(fila);
-            });
-
-            if (datos.medicos.length === 0) {
-                limpiar();
-                ayuda.textContent = 'Tu catálogo no tiene médicos que coincidan con «' + datos.buscar + '». Puedes agregarlo abajo.';
-                return;
-            }
-
-            lista.hidden = false;
-            ayuda.textContent = datos.medicos.length + (datos.medicos.length === 1 ? ' médico' : ' médicos')
-                + ' que coinciden con «' + datos.buscar + '».';
-        };
-
-        var buscar = function () {
-            var consulta = caja.value.trim();
-
-            if (consulta === '') {
-                limpiar();
-                ayuda.textContent = ayudaInicial;
-                return;
-            }
-
-            fetch(raiz.dataset.urlBuscar + '?q=' + encodeURIComponent(consulta), { headers: { 'Accept': 'application/json' } })
-                .then(function (respuesta) { return respuesta.json(); })
-                .then(function (datos) {
-                    // Una respuesta vieja no pisa lo que se escribió después.
-                    if (datos.buscar !== caja.value.trim()) return;
-                    pintarResultados(datos);
-                })
-                .catch(function () {
-                    ayuda.textContent = 'No se pudo buscar ahora: revisa tu conexión.';
-                });
-        };
-
-        caja.addEventListener('input', function () {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(buscar, 250);
-        });
-
-        document.addEventListener('click', function (evento) {
-            if (!evento.target.closest('#referencias-busqueda')) limpiar();
-        });
 
         if (dialogo && typeof dialogo.showModal === 'function') {
             if (botonNuevo) botonNuevo.addEventListener('click', function () { dialogo.showModal(); });

@@ -23,13 +23,15 @@
 
         <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
-        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-form"
+        <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-form" novalidate
               data-consulta-estudio data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
             @foreach ($vm->grupos() as $grupo)
                 <h3 class="paso-titulo mb-1">{{ $grupo['titulo'] }}</h3>
                 <p class="texto-tenue small mb-2">{{ $grupo['ayuda'] }}</p>
+
+                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
 
                 <div class="row g-3 mb-3">
                     @foreach ($grupo['campos'] as $campo)
@@ -50,10 +52,13 @@
 
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}">Cancelar</a>
-                @if ($vm->urlImprimir())
-                    <a class="btn btn-outline-secondary" href="{{ $vm->urlImprimir() }}" target="_blank" rel="noopener">
+                {{-- O-16/O-20: el botón se ofrece siempre que la sección tenga hoja: «Imprimir» **guarda lo escrito y
+                     después imprime**, así un estudio recién cargado se imprime sin apretar «Guardar» primero. Si no hay
+                     nada que imprimir, la hoja lo dice («Guarda los datos del estudio para poder imprimir»). --}}
+                @if ($vm->urlImprimir() !== '')
+                    <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="estudio-form" documento="{{ $vm->documento() }}" class="btn btn-outline-secondary">
                         <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el informe
-                    </a>
+                    </x-ui.imprimir-guardando>
                 @endif
                 {{-- La única acción primaria de la sección: guardar lo cargado. --}}
                 <button class="btn btn-primary">

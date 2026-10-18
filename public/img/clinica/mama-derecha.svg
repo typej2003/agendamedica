@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 400" width="520" height="400">
+  <rect width="520" height="400" fill="#fff"/>
+  <g>
+    <!-- tórax, hombro y brazo -->
+    <path d="M20 40 Q70 20 130 50 L130 20 L500 20 L500 380 L150 380 Q120 330 110 270 Q90 200 60 150 Q30 100 20 40 Z" fill="#fbf3ee" stroke="#8a6d5a" stroke-width="3"/>
+    <!-- axila (pliegue y cola axilar) -->
+    <path d="M50 130 Q90 175 135 215" fill="none" stroke="#8a6d5a" stroke-width="2" stroke-dasharray="7 5"/>
+    <ellipse cx="85" cy="165" rx="52" ry="42" fill="#f1dccf" stroke="#8a6d5a" stroke-width="2" stroke-dasharray="5 4"/>
+    <!-- mama -->
+    <path d="M150 80 Q320 40 470 90 Q500 210 450 310 Q310 390 160 310 Q120 200 150 80 Z" fill="#fbeee6" stroke="#8a6d5a" stroke-width="3"/>
+    <circle cx="310" cy="205" r="42" fill="#e8c4b0" stroke="#8a6d5a" stroke-width="2"/>
+    <circle cx="310" cy="205" r="11" fill="#c99a82" stroke="#8a6d5a" stroke-width="2"/>
+    <!-- cuadrantes -->
+    <line x1="310" y1="30" x2="310" y2="375" stroke="#b9a89c" stroke-width="1.5" stroke-dasharray="6 6"/>
+    <line x1="140" y1="205" x2="490" y2="205" stroke="#b9a89c" stroke-width="1.5" stroke-dasharray="6 6"/>
+  </g>
+  <text x="60" y="232" font-family="Arial, sans-serif" font-size="14" fill="#7a5e4c" text-anchor="middle">Axila</text>
+</svg>

@@ -4,16 +4,15 @@
      formal" —la acción del `pb_3` (`:801-805`) → `w_pasar_pacientes_n_reg_consulta_cita`, que es la
      Action compartida: el número lo asigna el servidor y la cita queda enlazada.
 
-     El panel no bloquea nada y se ve siempre: vacío es la buena noticia del día. --}}
-<x-ui.tarjeta id="panel-sin-historia" :titulo="$sinHistoria->titulo()" icono="bi-journal-medical" class="mb-3">
-    <x-slot name="acciones">
-        <span class="texto-tenue small">{{ $sinHistoria->conteo() }}</span>
-    </x-slot>
+     **Si no hay pacientes sin historia el panel no se pinta** (revisión de Alexander, 2026-10-17): sin
+     tarjeta, sin «Ninguno» y sin estado vacío. Que no haya nada que numerar no es una noticia que ocupe
+     un bloque del mostrador; cuando aparece uno, el panel sí está y se ve con sus filas. --}}
+@if (! $sinHistoria->estaVacio())
+    <x-ui.tarjeta id="panel-sin-historia" :titulo="$sinHistoria->titulo()" icono="bi-journal-medical" class="mb-3">
+        <x-slot name="acciones">
+            <span class="texto-tenue small">{{ $sinHistoria->conteo() }}</span>
+        </x-slot>
 
-    @if ($sinHistoria->estaVacio())
-        @php $vacio = $sinHistoria->vacio(); @endphp
-        <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
-    @else
         <p class="form-text">{{ $sinHistoria->subtitulo() }}</p>
 
         <x-ui.tabla>
@@ -51,5 +50,5 @@
             @endforeach
             </tbody>
         </x-ui.tabla>
-    @endif
-</x-ui.tarjeta>
+    </x-ui.tarjeta>
+@endif

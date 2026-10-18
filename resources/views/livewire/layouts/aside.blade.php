@@ -54,6 +54,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.catalogo-inicial.vacunas') }}" class="nav-link {{ request()->routeIs('admin.catalogo-inicial.*') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.catalogo-inicial.*')) aria-current="page" @endif title="Catálogo inicial · Vacunas">
+                    <i class="bi bi-capsule" aria-hidden="true"></i>
+                    <span class="link-text">Catálogo inicial</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
                     <i class="bi bi-key-fill" aria-hidden="true"></i>
@@ -65,6 +72,13 @@
                    @if (request()->routeIs('admin.servicios')) aria-current="page" @endif title="Planes y servicios">
                     <i class="bi bi-card-checklist" aria-hidden="true"></i>
                     <span class="link-text">Planes y servicios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif title="Ayúdanos a mejorar">
+                    <i class="bi bi-chat-heart" aria-hidden="true"></i>
+                    <span class="link-text">Ayúdanos a mejorar</span>
                 </a>
             </li>
         @endif

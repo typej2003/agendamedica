@@ -3,6 +3,7 @@
 namespace App\Actions\Consulta;
 
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Consulta;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
@@ -68,8 +69,9 @@ final class GuardarRecipe
      *                              `reg_medico`, `numhistoria` y `nroconsulta`
      * @param  array<int,array{codemedicina:string, cantidad?:?int, indicaciones?:?string, descripcion?:?string, nombre?:?string}>  $items
      *         los medicamentos del récipe, en orden. `nombre` es sólo para contar lo que pasó, no se escribe
-     * @param  string|null  $fecha  `AAAA-MM-DD`: la fecha de emisión. Al crear, por defecto la de la consulta;
-     *                              al editar, `null` la deja como está
+     * @param  string|null  $fecha  `AAAA-MM-DD`: la fecha de emisión. Al crear, por defecto **hoy del
+     *                              consultorio** (O-13: es la fecha del documento, no la de la consulta); al
+     *                              editar, `null` la deja como está
      * @param  int|null  $numero  `null` crea un récipe nuevo; un número edita ese récipe
      * @param  string|null  $origen  `web` / `mobile`: quién escribe, para el rastro. `null` no anota rastro
      *
@@ -101,7 +103,10 @@ final class GuardarRecipe
 
     private function crear(Consulta $consulta, array $items, ?string $fecha, Carbon $cuando, ?string $origen): ResultadoDeRecipe
     {
-        $fecha ??= $consulta->fecha ? Carbon::parse($consulta->fecha)->toDateString() : $cuando->toDateString();
+        // O-13: la fecha de emisión es la **del documento** (hoy del consultorio), no la de la consulta que
+        // se está editando. `FechaDelConsultorio` y no `$cuando`: a las 20:30 de Caracas el día del servidor
+        // ya es otro (trampa 59).
+        $fecha ??= FechaDelConsultorio::hoyComoFecha()->toDateString();
 
         $numero = $this->lectura->siguienteNumero($consulta);
 
@@ -162,7 +167,7 @@ final class GuardarRecipe
         $actual = $this->soloFecha($cabecera?->fe_emision)
             ?? $existentes->map(fn (Recipe $fila) => $this->soloFecha($fila->getRawOriginal('fecha')))->first(fn ($f) => $f !== null);
 
-        $vigente = $fecha ?? $actual ?? ($consulta->fecha ? Carbon::parse($consulta->fecha)->toDateString() : $cuando->toDateString());
+        $vigente = $fecha ?? $actual ?? FechaDelConsultorio::hoyComoFecha()->toDateString();
 
         // 1. La fecha de emisión: la cabecera y la fecha de cada fila (el escritorio la escribe en las dos).
         if ($fecha !== null && $fecha !== $actual) {

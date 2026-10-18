@@ -142,4 +142,36 @@ final class QueEsUnDocumento
     {
         return $camposConDato > 0 || $textoLibre;
     }
+
+    /**
+     * **Colposcopía** (WEB-6.5): es un documento si tiene **texto** (`consultas.observaciones`, que es lo que
+     * imprime la hoja «INFORME DE COLPOSCOPÍA»).
+     *
+     * El escritorio **no** crea la fila al abrir la consulta (a diferencia de la constancia, el reposo o el
+     * informe): el texto vive en la columna de una consulta que siempre existe, así que la única pregunta es
+     * si tiene algo escrito. Con el literal `none` del legado, `TextoDeLaConsulta::limpio` ya dice que no.
+     */
+    public static function colposcopia($texto): bool
+    {
+        return self::texto($texto);
+    }
+
+    /**
+     * **Histeroscopía** (WEB-6.5): es un documento si tiene **texto** (`consultas.cuello`, que es lo que imprime
+     * la hoja «INFORME DE HISTEROSCOPÍA», `d_histeroscopia.srd:29`, con las fotos de su subreporte).
+     */
+    public static function histeroscopia($texto): bool
+    {
+        return self::texto($texto);
+    }
+
+    /**
+     * **Cualquier solapa de texto del examen** (WEB-6.5): colposcopía e histeroscopía son la misma pregunta —el
+     * texto vive en la columna de una consulta que siempre existe—, así que la regla se escribe una vez; la
+     * citología y el resultado de exámenes **no** tienen hoja y no pasan por acá.
+     */
+    public static function texto($texto): bool
+    {
+        return TextoDeLaConsulta::limpio($texto) !== null;
+    }
 }

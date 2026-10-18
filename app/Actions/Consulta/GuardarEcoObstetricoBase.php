@@ -11,19 +11,21 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * **La regla de guardado de un eco obstétrico** (WEB-6.2), compartida por sus dos estudios: el del **primer**
- * trimestre (`eco_obstetrico`) y el del **segundo/tercero** (`eco_obstetrico_tercer`).
+ * **La regla de guardado de un eco obstétrico** (WEB-6.2), compartida por sus dos estudios —el del **primer**
+ * trimestre (`eco_obstetrico`) y el del **segundo/tercero** (`eco_obstetrico_tercer`)— y, desde WEB-6.3, por
+ * el **eco Doppler perinatal** (`eco_doppler`), que tiene la misma forma aunque su clave sea `historia` +
+ * `consulta`.
  *
- * Los dos tienen la misma forma —**una fila por consulta**, con la clave del DataWindow `numhistoria` +
- * `nroconsulta`, sólo lo que cambió, rastro por columna en `sync_changes` (`source = web`) y el
- * last-write-wins del sync— así que la regla vive **una sola vez** y cada estudio dice sólo lo que lo
- * distingue (su tabla, su modelo, su mapa y su lectura). Es el mismo criterio que el ViewModel compartido de
- * las pestañas *Laboratorio* y *Controles*: dos pantallas de la misma forma no se escriben dos veces.
+ * Los tres tienen la misma forma —**una fila por consulta**, con la clave del DataWindow, sólo lo que cambió,
+ * rastro por columna en `sync_changes` (`source = web`) y el last-write-wins del sync— así que la regla vive
+ * **una sola vez** y cada estudio dice sólo lo que lo distingue (su tabla, su modelo, su mapa y su lectura).
+ * Es el mismo criterio que el ViewModel compartido de las pestañas *Laboratorio* y *Controles*: dos pantallas
+ * de la misma forma no se escriben dos veces.
  *
- * **Un eco sin datos no es un documento**: un estudio que sólo trae su fecha, su FUR y su gesta no se crea
- * (la hoja no se ofrece y la pantalla lo dice). La única columna que el servidor completa sola es la
- * **fecha** (con hoy, como el `open` del escritorio): la FUR y la gesta las pone el médico —el relevamiento
- * de WEB-6.2 mostró que las ventanas vivas **no** las copian del control prenatal—.
+ * **Un eco sin datos no es un documento**: un estudio que sólo trae su fecha, su FUR y su gesta —y, en el
+ * Doppler, su `para`— no se crea (la hoja no se ofrece y la pantalla lo dice). La única columna que el
+ * servidor completa sola es la **fecha** (con hoy, como el `open` del escritorio): la FUR y la gesta las pone
+ * el médico —el relevamiento de WEB-6.2 mostró que las ventanas vivas **no** las copian del control prenatal—.
  */
 abstract class GuardarEcoObstetricoBase
 {
@@ -31,11 +33,12 @@ abstract class GuardarEcoObstetricoBase
 
     /**
      * Las columnas que el servidor completa o que identifican al embarazo: **no cuentan** para decidir si el
-     * estudio "tiene datos".
+     * estudio "tiene datos". Son la fecha, la FUR y la gesta en los dos obstétricos; el **eco Doppler**
+     * (WEB-6.3), cuya ficha también lleva el `para`, las amplía por su cuenta.
      *
      * @var array<int,string>
      */
-    private const NO_CUENTAN = ['fecha', 'fur', 'gesta'];
+    protected const NO_CUENTAN = ['fecha', 'fur', 'gesta'];
 
     /** La tabla de ese estudio (la constante de su lectura: una sola fuente para los dos). */
     abstract protected function tabla(): string;
@@ -68,8 +71,10 @@ abstract class GuardarEcoObstetricoBase
 
         $nuevos['fecha'] ??= FechaDelConsultorio::hoyComoFecha()->toDateString();
 
-        // ¿El estudio dice algo? La fecha, la FUR y la gesta no cuentan.
-        $delEstudio = array_diff_key($nuevos, array_flip(self::NO_CUENTAN));
+        // ¿El estudio dice algo? La fecha, la FUR, la gesta y —en el Doppler— el `para` no cuentan. Se lee con
+        // `static::` (y no `self::`) porque la lista la redefine la subclase del Doppler: con `self::` PHP
+        // resolvería la constante del padre.
+        $delEstudio = array_diff_key($nuevos, array_flip(static::NO_CUENTAN));
         $conDatos = count(array_filter($delEstudio, fn ($valor) => $valor !== null && $valor !== ''));
 
         if (! QueEsUnDocumento::ecografia($conDatos)) {

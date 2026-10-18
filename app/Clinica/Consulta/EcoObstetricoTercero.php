@@ -6,7 +6,7 @@ use App\Models\Consulta;
 use App\Models\EcoObstetricoTercer;
 
 /**
- * **El eco obstétrico del 2.º y 3.er trimestre de una consulta** (WEB-6.2): el hermano mayor del de primer
+ * **El eco obstétrico del 3.er trimestre de una consulta** (WEB-6.2; el 2.º, WEB-11.14, es `EcoObstetricoSegundo`): el hermano mayor del de primer
  * trimestre, con la misma forma y otra tabla.
  *
  * La clave es la misma —**`reg_medico` + `historia` + `consulta`**— y el objeto de valores también
@@ -30,11 +30,11 @@ use App\Models\EcoObstetricoTercer;
  * **fuera** las columnas que el DataWindow no edita: sin control (`eg`, `bio_abdomen`, `ana_relacion`,
  * `ana_corte_tracameral`) y ocultas (`puro_texto`, `gemelo`, `ana_ex_muslo_ppd`, `ana_ex_muslo_ppi`).
  */
-final class EcoObstetricoTercero
+class EcoObstetricoTercero
 {
     use MapaDelEcoObstetrico;
 
-    /** La tabla del eco obstétrico del 2.º y 3.er trimestre. */
+    /** La tabla del eco obstétrico del 3.er trimestre (en el escritorio, también del 2.º). */
     public const TABLA = 'eco_obstetrico_tercer';
 
     /** La columna de la historia (parte de la clave). */
@@ -42,6 +42,16 @@ final class EcoObstetricoTercero
 
     /** La columna de la consulta: **es parte de la clave** (`consulta`, `NOT NULL`). */
     public const COLUMNA_CONSULTA = 'consulta';
+
+    /**
+     * Las columnas de la **ficha** del estudio: la fecha, la FUR y la gesta son del embarazo que se está
+     * siguiendo (no hallazgos), así que no cuentan para decidir si el eco dice algo. Es la misma lista del
+     * hermano del primer trimestre, y la que usan la historia del paciente y el lote de documentos de la cita
+     * al mirar la tabla en conjunto (WEB-6.3).
+     *
+     * @var array<int,string>
+     */
+    public const COLUMNAS_QUE_NO_CUENTAN = ['fecha', 'fur', 'gesta'];
 
     /**
      * **El mapa del dato**, en los bloques del escritorio (que tiene rotulados *DATOS BIOMÉTRICOS*,
@@ -60,8 +70,8 @@ final class EcoObstetricoTercero
 
         return [
             ['titulo' => 'El embarazo', 'icono' => 'bi-calendar-heart', 'campos' => [
-                ['columna' => 'fecha', 'etiqueta' => 'Fecha', 'tipo' => 'fecha', 'ayuda' => 'La fecha del estudio.'],
-                self::texto('fur', 'FUR', 'La fecha de la última regla: se teclea.'),
+                self::fecha('fecha', 'Fecha', 'La fecha del estudio.'),
+                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa.'),
                 self::lista('gesta', 'Gesta', ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5',
                     'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11']),
                 self::lista('gestacion', 'Gestación', ['Única' => 'U', 'Múltiple' => 'M']),
@@ -159,6 +169,18 @@ final class EcoObstetricoTercero
         return $columnas;
     }
 
+    /** La tabla de este estudio: la del 3.er trimestre; la del 2.º la redefine (`EcoObstetricoSegundo`, WEB-11.14). */
+    protected function tabla(): string
+    {
+        return self::TABLA;
+    }
+
+    /** El modelo de este estudio. */
+    protected function modelo(): string
+    {
+        return EcoObstetricoTercer::class;
+    }
+
     /** El estudio de una consulta, o el objeto vacío si esa consulta no lo tiene. */
     public function de(Consulta $consulta): EstudioEcografico
     {
@@ -170,7 +192,7 @@ final class EcoObstetricoTercero
     /** La fila de `eco_obstetrico_tercer` de una consulta, o `null`. */
     public function filaDe(Consulta $consulta): ?EcoObstetricoTercer
     {
-        return EcoObstetricoTercer::query()
+        return ($this->modelo())::query()
             ->where('reg_medico', $consulta->reg_medico)
             ->where(self::COLUMNA_HISTORIA, (int) $consulta->numhistoria)
             ->where(self::COLUMNA_CONSULTA, (int) $consulta->nroconsulta)
@@ -186,7 +208,9 @@ final class EcoObstetricoTercero
             return $fila;
         }
 
-        return new EcoObstetricoTercer([
+        $modelo = $this->modelo();
+
+        return new $modelo([
             'reg_medico' => $consulta->reg_medico,
             self::COLUMNA_HISTORIA => (int) $consulta->numhistoria,
             self::COLUMNA_CONSULTA => (int) $consulta->nroconsulta,

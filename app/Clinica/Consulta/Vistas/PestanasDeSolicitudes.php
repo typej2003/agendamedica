@@ -39,8 +39,27 @@ final class PestanasDeSolicitudes
 
     public const DIETA = 'dieta';
 
+    /** La orden de laboratorio de la pareja (WEB-11.21): se abre con el botón «Pareja» del laboratorio y no es una pestaña de la fila. */
+    public const PAREJA = 'pareja';
+
     /** La pestaña con la que se abre la sección. */
     public const POR_DEFECTO = self::CONSTANCIA;
+
+    /**
+     * Las pestañas en las que se **redacta un documento** (O-30): la constancia, el reposo, la referencia, el
+     * informe y la dieta. Son las que ofrecen en el encabezado de la consulta el panel con la historia y el
+     * resumen del paciente, porque salir de la consulta a buscarlo cuesta el trabajo sin guardar.
+     *
+     * El laboratorio, los estudios y la hospitalización **no** están: no son de la lista cerrada de la
+     * observación (y el laboratorio y los estudios se cargan con el catálogo, no redactando un texto).
+     */
+    public const DE_DOCUMENTO = [self::CONSTANCIA, self::REPOSO, self::REFERENCIAS, self::INFORME, self::DIETA];
+
+    /** ¿Esta pestaña redacta un documento? (La que no existe se normaliza antes, como en el resto de la sección.) */
+    public static function esDeDocumento(?string $clave): bool
+    {
+        return in_array(self::normalizar($clave), self::DE_DOCUMENTO, true);
+    }
 
     /** @var array<string,array{texto:string, icono:string}> */
     private const TODAS = [
@@ -57,14 +76,14 @@ final class PestanasDeSolicitudes
     /**
      * @param  Closure  $url  `fn(string $clave): string` — la URL de esa pestaña (la resuelve el controlador)
      */
-    public function __construct(private Closure $url)
+    public function __construct(private Closure $url, private ?string $rotuloDeLaDieta = null)
     {
     }
 
     /** La clave de una pestaña que existe; cualquier otro valor de la URL es la pestaña por defecto. */
     public static function normalizar(?string $clave): string
     {
-        return $clave !== null && isset(self::TODAS[$clave]) ? $clave : self::POR_DEFECTO;
+        return $clave !== null && (isset(self::TODAS[$clave]) || $clave === self::PAREJA) ? $clave : self::POR_DEFECTO;
     }
 
     /** @return array<int,string> las claves de las pestañas que existen */
@@ -83,7 +102,7 @@ final class PestanasDeSolicitudes
         $opciones = [];
 
         foreach (self::TODAS as $clave => $pestana) {
-            $opciones[] = ['texto' => $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
+            $opciones[] = ['texto' => $clave === self::DIETA && $this->rotuloDeLaDieta !== null ? $this->rotuloDeLaDieta : $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 
         return $opciones;

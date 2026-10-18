@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
+use App\Clinica\Impresion\DocumentosParaImprimir;
 
 /**
  * **Las pestañas Laboratorio y Estudios** (WEB-5.4): una orden de varias filas —exámenes de laboratorio o estudios de imágenes— con su
@@ -21,6 +22,9 @@ final class OrdenVista
 
     public const ESTUDIOS = 'estudios';
 
+    /** La orden de laboratorio de la pareja (WEB-11.21): la misma pantalla del laboratorio con la C.I. y el nombre de la pareja. */
+    public const PAREJA = 'pareja';
+
     /**
      * @param  array<int,array{codigo:string, nombre:string, tipo:?string, aviso:?string}>  $items  lo que tiene la orden (o lo que quedó en el formulario si falló)
      * @param  array<int,array{codigo:string, nombre:string, cantidad:int}>  $tipos  los tipos de examen con exámenes (laboratorio)
@@ -34,6 +38,7 @@ final class OrdenVista
         private bool $hayCatalogo,
         private array $tipos,
         private array $urls,
+        private array $pareja = [],
     ) {
     }
 
@@ -51,6 +56,18 @@ final class OrdenVista
      * @param  array<int,array{codigo:string, nombre:string, tipo:?string, aviso:?string}>  $items
      * @param  array<string,string>  $urls
      */
+    /**
+     * La orden de laboratorio de la pareja: como el laboratorio, con la C.I. y el nombre de la pareja arriba.
+     *
+     * @param  array<int,array{codigo:string, nombre:string, tipo:?string, aviso:?string}>  $items
+     * @param  array{cedula:?string, nombre:?string}  $pareja  lo que quedó guardado (o lo que quedó en el formulario si falló)
+     * @param  array<string,string>  $urls  además de las del laboratorio, `volver`
+     */
+    public static function pareja(array $items, array $pareja, ?string $observacion, bool $esReal, bool $hayCatalogo, array $tipos, array $urls): self
+    {
+        return new self(self::PAREJA, $items, $observacion, $esReal, $hayCatalogo, $tipos, $urls, $pareja);
+    }
+
     public static function estudios(array $items, ?string $observacion, bool $esReal, bool $hayCatalogo, array $urls): self
     {
         return new self(self::ESTUDIOS, $items, $observacion, $esReal, $hayCatalogo, [], $urls);
@@ -61,14 +78,51 @@ final class OrdenVista
         return $this->clave;
     }
 
+    /** ¿Pide exámenes de laboratorio (agrupa por tipo y ofrece rutinas)? La orden de la pareja también. */
     public function esLaboratorio(): bool
     {
-        return $this->clave === self::LABORATORIO;
+        return $this->clave === self::LABORATORIO || $this->clave === self::PAREJA;
+    }
+
+    /** ¿Es la orden de la pareja (WEB-11.21)? */
+    public function esPareja(): bool
+    {
+        return $this->clave === self::PAREJA;
+    }
+
+    /** La C.I. de la pareja. */
+    public function cedulaDeLaPareja(): string
+    {
+        return (string) ($this->pareja['cedula'] ?? '');
+    }
+
+    /** El nombre de la pareja. */
+    public function nombreDeLaPareja(): string
+    {
+        return (string) ($this->pareja['nombre'] ?? '');
+    }
+
+    /** La orden de la pareja, a la que lleva el botón «Pareja» del laboratorio (WEB-11.21); vacío en las demás. */
+    public function urlPareja(): string
+    {
+        return $this->urls['pareja'] ?? '';
+    }
+
+    /** A dónde vuelve «Volver al laboratorio» (sólo la orden de la pareja). */
+    public function urlVolver(): string
+    {
+        return $this->urls['volver'] ?? '';
     }
 
     public function titulo(): string
     {
-        return $this->esLaboratorio() ? 'Orden de exámenes de laboratorio' : 'Solicitud de estudios';
+        return $this->esPareja() ? 'Exámenes de laboratorio de la pareja' : ($this->esLaboratorio() ? 'Orden de exámenes de laboratorio' : 'Solicitud de estudios');
+    }
+
+    /** El título de la columna derecha del editor: el catálogo con el que se llena la orden. */
+    public function tituloDelCatalogo(): string
+    {
+        return 'Agregar ' . $this->cosas();
     }
 
     public function icono(): string
@@ -166,6 +220,15 @@ final class OrdenVista
         return $this->urls['imprimir'];
     }
 
+    /**
+     * La clave del documento que imprime el botón (`laboratorio`, `estudios`, `laboratorio-pareja`): la manda el botón
+     * para guardar y después imprimir (O-16). Sale de la URL de la hoja, que ya la lleva.
+     */
+    public function documento(): string
+    {
+        return DocumentosParaImprimir::claveDeLaUrl($this->urls['imprimir']);
+    }
+
     public function urlCatalogo(): string
     {
         return $this->urls['catalogo'];
@@ -200,20 +263,29 @@ final class OrdenVista
 
     public function avisoSinGuardar(): string
     {
-        return $this->esLaboratorio()
+        return $this->esPareja()
+            ? 'Hay cambios sin guardar en la orden de la pareja. Si sales ahora, se pierden.'
+            : ($this->esLaboratorio()
             ? 'Hay cambios sin guardar en la orden de laboratorio. Si sales ahora, se pierden.'
-            : 'Hay cambios sin guardar en la solicitud de estudios. Si sales ahora, se pierden.';
+            : 'Hay cambios sin guardar en la solicitud de estudios. Si sales ahora, se pierden.');
     }
 
     public function avisoEliminar(): string
     {
-        return $this->esLaboratorio()
+        return $this->esPareja()
+            ? '¿Eliminar la orden de la pareja de esta consulta? Se quitan sus datos, todos sus exámenes y el resumen clínico.'
+            : ($this->esLaboratorio()
             ? '¿Eliminar la orden de laboratorio de esta consulta? Se quitan todos sus exámenes y el resumen clínico.'
-            : '¿Eliminar la solicitud de estudios de esta consulta? Se quitan todos sus estudios y el resumen clínico.';
+            : '¿Eliminar la solicitud de estudios de esta consulta? Se quitan todos sus estudios y el resumen clínico.');
     }
 
     public function ayuda(): string
     {
+        if ($this->esPareja()) {
+            return 'Para pedirle exámenes a la pareja del paciente (por ejemplo, cuando la enfermedad es contagiosa). La orden sale a nombre de la pareja y '
+                . 'se guarda: al volver la encuentras como la dejaste. Necesita su cédula y su nombre.';
+        }
+
         return $this->esLaboratorio()
             ? 'Busca en tu catálogo los exámenes que le pides al paciente, o agrega una rutina completa. La orden se guarda entera con el botón '
                 . 'y se imprime en media hoja, con los exámenes agrupados por tipo.'
@@ -254,8 +326,8 @@ final class OrdenVista
     public function vacio(): array
     {
         return $this->esLaboratorio()
-            ? ['icono' => 'bi-droplet', 'titulo' => 'Todavía no hay exámenes en la orden', 'texto' => 'Búscalos en el catálogo de abajo o agrega una rutina completa.']
-            : ['icono' => 'bi-image', 'titulo' => 'Todavía no hay estudios en la solicitud', 'texto' => 'Búscalos en el catálogo de abajo.'];
+            ? ['icono' => 'bi-droplet', 'titulo' => 'Todavía no hay exámenes en la orden', 'texto' => 'Búscalos en tu catálogo o agrega una rutina completa.']
+            : ['icono' => 'bi-image', 'titulo' => 'Todavía no hay estudios en la solicitud', 'texto' => 'Búscalos en tu catálogo.'];
     }
 
     /** El estado vacío cuando el médico no tiene catálogo (no hay nada que buscar). */
@@ -275,12 +347,12 @@ final class OrdenVista
 
     public function textoDeGuardar(): string
     {
-        return $this->esLaboratorio() ? 'Guardar la orden' : 'Guardar la solicitud';
+        return $this->esPareja() ? 'Guardar la orden de la pareja' : ($this->esLaboratorio() ? 'Guardar la orden' : 'Guardar la solicitud');
     }
 
     public function textoDeEliminar(): string
     {
-        return $this->esLaboratorio() ? 'Eliminar la orden' : 'Eliminar la solicitud';
+        return $this->esPareja() ? 'Eliminar la orden de la pareja' : ($this->esLaboratorio() ? 'Eliminar la orden' : 'Eliminar la solicitud');
     }
 
     /** La confirmación de una rutina grande (laboratorio): se pregunta antes de pasar muchos exámenes de golpe. */

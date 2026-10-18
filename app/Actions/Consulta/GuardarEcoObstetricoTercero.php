@@ -11,9 +11,9 @@ use App\Clinica\Consulta\EcoObstetricoTercero;
  * ⚠️ Recordá que el 2.º y el 3.er trimestre comparten tabla y DataWindow de pantalla: guardar este estudio
  * sobre una consulta que ya lo tenía **lo corrige**, no crea otro (una fila por consulta).
  */
-final class GuardarEcoObstetricoTercero extends GuardarEcoObstetricoBase
+class GuardarEcoObstetricoTercero extends GuardarEcoObstetricoBase
 {
-    public function __construct(private EcoObstetricoTercero $estudio)
+    public function __construct(protected EcoObstetricoTercero $estudio)
     {
     }
 

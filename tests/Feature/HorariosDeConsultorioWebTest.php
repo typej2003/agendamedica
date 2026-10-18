@@ -379,4 +379,49 @@ class HorariosDeConsultorioWebTest extends TestCase
         $respuesta->assertSee('08:00 a 12:00');
         $respuesta->assertSee('Cupo completo');
     }
+
+    /**
+     * **Las dos pantallas son la misma tabla** (A-10): un bloque cargado desde la fila del listado de
+     * consultorios aparece en la pantalla de horarios del consultorio, y al revés. La pantalla aparte se
+     * conserva —para cargar muchos— y no puede quedar contando otra cosa.
+     */
+    public function test_un_bloque_cargado_desde_el_listado_se_ve_en_la_pantalla_de_horarios(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->sede($medico, 'San José', '701');
+
+        // Alta desde el listado (con su `volver`, que es lo único que cambia la vuelta).
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', $this->datosDeBloque([
+                'volver'      => 'consultorios',
+                'consultorio' => $consultorio->id,
+                'cupo'        => 8,
+            ]))
+            ->assertRedirect(route('clinica.consultorios'));
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlHorarios($consultorio));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('08:00 a 12:00');
+        $respuesta->assertSee('8 pacientes');
+    }
+
+    /** Sin `volver` la vuelta sigue siendo la de siempre: la pantalla aparte y sus enlaces no cambiaron. */
+    public function test_desde_su_pantalla_la_vuelta_sigue_siendo_la_pantalla_de_horarios(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->sede($medico);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlHorarios($consultorio), $this->datosDeBloque())
+            ->assertRedirect(route('clinica.consultorios.horarios', $consultorio));
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', $this->datosDeBloque([
+                'volver'      => 'consultorios',
+                'consultorio' => $consultorio->id,
+                'dia_semana'  => 2,
+            ]))
+            ->assertRedirect(route('clinica.consultorios'));
+    }
 }

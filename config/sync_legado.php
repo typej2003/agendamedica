@@ -37,6 +37,7 @@
 */
 $tablasPorEspecialidad = [];
 $columnasEquivalentes = [];
+$pacientesPorEspecialidad = [];
 
 foreach (glob(__DIR__ . '/especialidades/*.php') ?: [] as $archivoManifiesto) {
     $slug = basename($archivoManifiesto, '.php');
@@ -46,6 +47,15 @@ foreach (glob(__DIR__ . '/especialidades/*.php') ?: [] as $archivoManifiesto) {
 
     foreach ((array) ($manifiesto['sync']['columnas_equivalentes'] ?? []) as $tabla => $equivalencias) {
         $columnasEquivalentes[$tabla] = (array) $equivalencias;
+    }
+
+    // De dónde salen los pacientes de esa especialidad (ver `sync.pacientes` en su manifiesto). Sólo
+    // declaran las que NO los tienen en `pacientes`; las demás siguen con la tabla histórica.
+    if (($declarado = $manifiesto['sync']['pacientes'] ?? null) && ! empty($declarado['tabla'])) {
+        $pacientesPorEspecialidad[$slug] = [
+            'tabla'    => (string) $declarado['tabla'],
+            'columnas' => (array) ($declarado['columnas'] ?? []),
+        ];
     }
 }
 
@@ -90,6 +100,13 @@ return [
     // Se aplican al filtrar una fila y al resolver la clave de un cambio, así la fila no queda con la
     // clave en un lado y las pantallas leyendo el otro (el caso de `examen_fisico_nuevo` en pediatría).
     'columnas_equivalentes' => $columnasEquivalentes,
+
+    // De qué tabla del escritorio salen los PACIENTES, por especialidad (slug => ['tabla', 'columnas']).
+    // Se deriva de `sync.pacientes` de cada manifiesto. Lo normal —y lo que hace `TablasDelSync` cuando
+    // una especialidad no lo declara— es `pacientes`; pediatría declara `paciente_chamo`, que es su ABM
+    // real de pacientes (ver el comentario largo en su manifiesto). `pacientes` siempre se acepta: un
+    // médico con dos especialidades tiene las dos tablas y las dos son fuente de pacientes.
+    'pacientes_por_especialidad' => $pacientesPorEspecialidad,
 
     // Columnas que NO se suben aunque vengan en el lote.
     //  - evolucion: credenciales de SMS y la contraseña del sistema viejo; y `logo`, que en el

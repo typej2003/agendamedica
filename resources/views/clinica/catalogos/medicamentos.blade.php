@@ -7,11 +7,13 @@
          el buscador es lo que se usa todo el tiempo y está en su barra de herramientas; los demás catálogos son submenús del menú lateral. --}}
     <x-ui.page-head titulo="Medicamentos" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNuevo() }}" data-tour="catalogos-nuevo">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo medicamento
             </a>
         </x-slot>
     </x-ui.page-head>
+
+    @include('clinica.catalogos._novedades-iniciales')
 
     <x-ui.barra-herramientas>
         <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
@@ -20,7 +22,7 @@
 
     <x-ui.errores />
 
-    <x-ui.tarjeta sin-relleno>
+    <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">
@@ -36,7 +38,7 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-medicamentos">
                 <thead>
                 <tr>
                     <th>Medicamento</th>
@@ -48,46 +50,47 @@
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['nombre'] }}</strong>@if ($fila['presentacion']) <span class="texto-tenue">/ {{ $fila['presentacion'] }}</span>@endif
-                            <span class="texto-tenue small d-block">
-                                Código {{ $fila['codigo'] }}
-                                @if ($fila['marcas'] !== [])
-                                    · también: {{ implode(', ', $fila['marcas']) }}
+                        {{-- Una línea por medicamento (pauta de Alexander): lo secundario —el código y las otras marcas— sale del
+                             listado y queda en el `title` de la fila y en el diálogo de edición. Lo que es información clínica
+                             (Psicotrópico) se queda, como pastilla en la misma línea. --}}
+                        <td class="celda-principal" title="Código {{ $fila['codigo'] }}@if ($fila['marcas'] !== []) · también: {{ implode(', ', $fila['marcas']) }}@endif">
+                            <span class="d-flex align-items-center gap-2">
+                                <span class="texto-una-linea"><strong>{{ $fila['nombre'] }}</strong>@if ($fila['presentacion']) <span class="texto-tenue">/ {{ $fila['presentacion'] }}</span>@endif</span>
+                                @if ($fila['psicotropico'])
+                                    <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Psicotrópico</x-ui.estado>
                                 @endif
                             </span>
-                            @if ($fila['psicotropico'])
-                                <x-ui.estado tono="aviso" icono="bi-exclamation-triangle" class="mt-1">Psicotrópico</x-ui.estado>
-                            @endif
                         </td>
-                        <td data-etiqueta="Principio activo">{{ $fila['generico'] ?? '—' }}</td>
+                        <td data-etiqueta="Principio activo">
+                            <span class="texto-una-linea" title="{{ $fila['generico'] ?? '' }}">{{ $fila['generico'] ?? '—' }}</span>
+                        </td>
                         <td data-etiqueta="Indicaciones">
                             @if ($fila['uso'])
-                                <span class="catalogo-texto-corto">{{ $fila['uso'] }}</span>
+                                <span class="texto-una-linea" title="{{ $fila['uso'] }}">{{ $fila['uso'] }}</span>
                             @else
                                 <span class="texto-tenue">—</span>
                             @endif
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones: los botones directos, uno al lado del otro y alineados por `.acciones-fila`. Antes «Quitar»
+                                 vivía en un menú «…» de una sola opción, que rompía la alineación de la fila (pauta de Alexander). --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
-                                {{-- Quitar es lo destructivo y va aparte, en el menú, con confirmación que nombra lo que se
-                                     quita. Si el medicamento está en un récipe o en un tratamiento el servidor no lo borra
-                                     y dice dónde está. --}}
+                                {{-- Quitar es lo destructivo: mismo tamaño y altura, tono de peligro y confirmación que nombra lo que se
+                                     quita. Si el medicamento está en un récipe o en un tratamiento el servidor no lo borra y dice dónde está. --}}
                                 <form method="POST" action="{{ $fila['urlQuitar'] }}" data-confirmar="{{ $fila['avisoQuitar'] }}">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" name="buscar" value="{{ $vm->buscar() }}">
                                     <input type="hidden" name="page" value="{{ $vm->paginador()->currentPage() }}">
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-trash" aria-hidden="true"></i> Quitar del vademécum
-                                        </button>
-                                    </x-ui.menu>
+                                    <button class="btn btn-sm btn-outline-danger" title="Quitar del vademécum"
+                                            aria-label="Quitar {{ $fila['nombre'] }} del vademécum">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

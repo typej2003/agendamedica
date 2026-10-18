@@ -27,10 +27,14 @@
     <td class="celda-hora">{{ $fila->hora() }}</td>
 
     <td class="celda-principal">
-        <x-ui.identidad :nombre="$fila->paciente()" :detalle="$fila->detalle()" :href="$fila->urlPaciente()" tamano="sm" />
-        @unless ($fila->historia())
-            <x-ui.estado tono="aviso" icono="bi-exclamation-triangle" class="mt-1">Sin historia</x-ui.estado>
-        @endunless
+        {{-- Una línea: la identidad y el aviso de «sin historia» —que es estado y se queda— en la misma fila
+             (pauta de Alexander). --}}
+        <span class="d-flex align-items-center gap-2 min-w-0">
+            <x-ui.identidad :nombre="$fila->paciente()" :detalle="$fila->detalle()" :href="$fila->urlPaciente()" tamano="sm" />
+            @unless ($fila->historia())
+                <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Sin historia</x-ui.estado>
+            @endunless
+        </span>
     </td>
 
     <td class="celda-estado">
@@ -51,6 +55,19 @@
                 $recordatorio = $fila->recordatorio();
                 $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
+
+                // El menú «…» es para **dos o más** acciones secundarias (pauta de Alexander: un menú de una sola
+                // opción está prohibido). Si queda una sola —hoy pasa con «Citas del paciente» en una cita atendida
+                // que ya no tiene nada más que hacer— va como botón directo, al lado de las demás.
+                $secundarias = array_filter([
+                    'recordatorio' => (bool) $recordatorio,
+                    'atender' => (bool) ($confirmar && $atender),
+                    'quitar' => (bool) $quitar,
+                    'citas' => (bool) $fila->pacienteId(),
+                    'editar' => (bool) $fila->urlEditar(),
+                    'eliminar' => (bool) $fila->urlEliminar(),
+                ]);
+                $soloCitasDelPaciente = count($secundarias) === 1 && isset($secundarias['citas']);
             @endphp
 
             <div class="acciones-fila">
@@ -66,8 +83,9 @@
                         @csrf
                         <input type="hidden" name="estado" value="{{ $confirmar['estado'] }}">
                         <button class="btn btn-sm btn-outline-success" title="{{ $confirmar['titulo'] }}"
+                                aria-label="Confirmar la cita de {{ $fila->paciente() }}"
                                 @if (! $confirmar['habilitada']) disabled @endif>
-                            <i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar
+                            <i class="bi bi-check2-circle" aria-hidden="true"></i> <span class="accion-texto">Confirmar</span>
                         </button>
                     </form>
                 @elseif ($atender)
@@ -77,9 +95,11 @@
                           data-editar="{{ $atender['editar'] ? '1' : '0' }}">
                         @csrf
                         <button class="btn btn-sm {{ $atender['editar'] ? 'btn-outline-primary' : 'btn-primary' }}"
-                                title="{{ $atender['titulo'] }}" @if (! $atender['habilitada']) disabled @endif>
+                                title="{{ $atender['titulo'] }}"
+                                aria-label="{{ $atender['editar'] ? 'Editar la consulta de' : 'Atender a' }} {{ $fila->paciente() }}"
+                                @if (! $atender['habilitada']) disabled @endif>
                             <i class="bi {{ $atender['editar'] ? 'bi-pencil' : 'bi-play-circle' }}" aria-hidden="true"></i>
-                            {{ $atender['editar'] ? 'Editar consulta' : 'Atender' }}
+                            <span class="accion-texto">{{ $atender['editar'] ? 'Editar consulta' : 'Atender' }}</span>
                         </button>
                     </form>
                 @endif
@@ -88,27 +108,39 @@
                      los papeles sin entrar a la consulta, que es sólo del médico. Sólo aparece si la consulta tiene
                      algo que imprimir (récipes, constancia, reposo, referencias o informe). --}}
                 @if ($imprimirDocumentos)
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirDocumentos['url'] }}">
-                        <i class="bi bi-printer" aria-hidden="true"></i> Imprimir documentos
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirDocumentos['url'] }}"
+                       title="Imprimir los documentos de la cita" aria-label="Imprimir los documentos de la cita de {{ $fila->paciente() }}">
+                        <i class="bi bi-printer" aria-hidden="true"></i> <span class="accion-texto">Imprimir documentos</span>
                     </a>
                 @endif
 
                 @if ($cobro)
                     <button type="button" class="btn btn-sm btn-outline-dark" data-dialogo="cobro"
+                            title="Cobrar la cita" aria-label="Cobrar la cita de {{ $fila->paciente() }}"
                             data-url="{{ $cobro['url'] }}"
                             data-paciente="{{ $cobro['paciente'] }}"
                             data-pendiente="{{ $cobro['pendiente'] }}"
                             data-requiere-monto="{{ $cobro['requiereMonto'] ? '1' : '0' }}"
                             data-detalle="{{ $cobro['detalle'] }}">
-                        <i class="bi bi-cash-coin" aria-hidden="true"></i> Cobrar
+                        <i class="bi bi-cash-coin" aria-hidden="true"></i> <span class="accion-texto">Cobrar</span>
                     </button>
+                @endif
+
+                {{-- Si lo único que queda es «Citas del paciente», va como botón directo (un menú de una sola opción
+                     está prohibido): es el otro eje del listado, las citas de **este** paciente ("Cita x Paciente",
+                     `pb_2` de `w_hacer_cita.srw:1039` → `w_listado_pacientes_a_citas`, WEB-2.15). --}}
+                @if ($soloCitasDelPaciente)
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('clinica.pacientes.citas', $fila->pacienteId()) }}"
+                       title="Citas del paciente" aria-label="Citas del paciente {{ $fila->paciente() }}">
+                        <i class="bi bi-calendar3" aria-hidden="true"></i> <span class="accion-texto">Citas del paciente</span>
+                    </a>
                 @endif
 
                 {{-- El resto de las acciones, en el menú. Una cita atendida ya ocurrió (y tiene la consulta
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
                      acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
                      cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
-                @if ($recordatorio || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId())
+                @if (! $soloCitasDelPaciente && ($recordatorio || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
                     <x-ui.menu>
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
@@ -157,6 +189,7 @@
                             </a>
                         @endif
 
+                        {{-- **Lo destructivo, al final y en rojo** (pauta de Alexander). --}}
                         @if ($fila->urlEliminar())
                             <form method="POST" action="{{ $fila->urlEliminar() }}"
                                   data-confirmar="¿Eliminar esta cita? No se puede deshacer.">

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\View\Composers\ArmazonClinicaComposer;
+use App\Http\View\Composers\TourDeLaPantallaComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -34,5 +35,14 @@ class AppServiceProvider extends ServiceProvider
 
         // El armazón de la web clínica (barra, accesos y menú) lo arma un ViewModel, no el layout.
         View::composer('clinica.layout', ArmazonClinicaComposer::class);
+
+        // El tour guiado de la pantalla (A-15) también: el layout lo pinta si la ruta tiene uno y el usuario
+        // todavía no lo vio. Los controladores de las pantallas no se tocan. Desde O-31 la **consulta** recibe
+        // `$tour` además en su propia vista: su botón de reabrir va dentro de la fila del encabezado, junto a
+        // Guardar y Terminar, y no en la fila de arriba (que ahí no se pinta).
+        View::composer(['clinica.layout', 'clinica.consulta.ver'], TourDeLaPantallaComposer::class);
+
+        // La tarjeta «Cargar el catálogo inicial» de las pantallas de catálogo (WEB-12.8): sale de la ruta y del contexto, sin tocar cada controlador.
+        View::composer('clinica.catalogos.*', \App\Http\View\Composers\NovedadesDeCatalogoComposer::class);
     }
 }

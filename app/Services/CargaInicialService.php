@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Specialty;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
 use App\Sync\Escritorio\AtencionCita;
@@ -12,7 +13,9 @@ use App\Sync\Escritorio\PacientesLegado;
 use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 
 /**
  * Carga inicial completa del escritorio PowerBuilder al API (Fase 1 del sync del legado).
@@ -134,6 +137,13 @@ class CargaInicialService
             }
         }
 
+        // Antes de armarle la lista: si este médico no tiene ninguna especialidad vinculada, se la deduce de
+        // las tablas que acaba de anunciar y se le asigna. Es la primera sincronización de esa instalación y
+        // el técnico no tiene que hacer este paso a mano —sin especialidad el médico no recibe su lista de
+        // tablas (recibe la histórica de ginecología) y en la web entra a un consultorio sin módulos—.
+        // Con evidencia insuficiente no se asigna nada (ver `especialidadesSegunTablas`).
+        $asignadas = $this->vincularEspecialidadDeducida($medico, array_keys($aceptadas));
+
         foreach ($aceptadas as $tabla => $filas) {
             $registro = SyncCargaTabla::firstOrNew(['sync_carga_id' => $carga->id, 'tabla' => $tabla]);
             $registro->filas_esperadas = $filas;
@@ -157,7 +167,56 @@ class CargaInicialService
             'orden'     => implode(',', $orden),
             'tablas'    => $tablas,
             'ignoradas' => implode(',', $ignoradas),
+            // Qué especialidad se le vinculó a este médico en esta primera sincronización (vacío si ya
+            // tenía o si no se pudo deducir). Queda en el log del escritorio para poder verlo.
+            'especialidad' => implode(',', $asignadas),
         ]];
+    }
+
+    /**
+     * Le vincula al médico la especialidad que se deduce de las tablas que anunció su escritorio, **si no
+     * tiene ninguna**. Devuelve los slugs asignados (vacío si no había nada que deducir o ya tenía).
+     *
+     * Es lo que hace que el técnico no tenga que asignar la especialidad a mano en la primera
+     * sincronización de una instalación nueva: el escritorio anuncia todas sus tablas antes de subir nada y
+     * las distintivas de cada especialidad están en su manifiesto.
+     *
+     * Sólo se asigna cuando hay **evidencia positiva** (ver `TablasDelSync::especialidadesSegunTablas`) y
+     * sólo si el médico no tenía ninguna: si ya tiene (por el panel, o porque la instalación atiende dos
+     * especialidades) no se le toca nada.
+     *
+     * @param  array<int, string>  $tablasAnunciadas
+     * @return array<int, string>
+     */
+    private function vincularEspecialidadDeducida(?Medico $medico, array $tablasAnunciadas): array
+    {
+        if (! $medico || $this->sync->especialidadesDe($medico) !== []) {
+            return [];
+        }
+
+        $asignadas = [];
+        foreach ($this->sync->especialidadesSegunTablas($tablasAnunciadas) as $slug) {
+            $especialidad = Specialty::where('slug', $slug)->first();
+            if (! $especialidad) {
+                // El catálogo no la tiene: falta `php artisan especialidades:sembrar` en esa base.
+                Log::warning('Carga inicial: la especialidad deducida no está en el catálogo', [
+                    'reg_medico' => $medico->reg_medico, 'especialidad' => $slug,
+                ]);
+                continue;
+            }
+
+            $medico->specialties()->syncWithoutDetaching([$especialidad->id]);
+            $asignadas[] = $slug;
+        }
+
+        if ($asignadas !== []) {
+            $medico->load('specialties');   // el resto del request ya la ve
+            Log::info('Carga inicial: especialidad vinculada desde las tablas del escritorio', [
+                'reg_medico' => $medico->reg_medico, 'especialidades' => $asignadas,
+            ]);
+        }
+
+        return $asignadas;
     }
 
     /* ------------------------------------------------------------------ */
@@ -204,11 +263,28 @@ class CargaInicialService
         $ignoradas = [];
         $omitidas = 0;
 
-        DB::transaction(function () use ($carga, $tabla, $filas, &$ignoradas, &$omitidas) {
+        // Las tablas de las que salen los **pacientes** de este médico: `pacientes` siempre y, si su
+        // especialidad declara otra (pediatría: `paciente_chamo`), también esa. Ver
+        // `TablasDelSync::pacientesDe()`.
+        $pacientes = $this->sync->pacientesDe($this->medicoDe($carga->reg_medico));
+
+        DB::transaction(function () use ($carga, $tabla, $filas, $pacientes, &$ignoradas, &$omitidas) {
+            if (array_key_exists($tabla, $pacientes)) {
+                // El camino de pacientes: crea el paciente, su relación con el médico y su historia. Es lo
+                // que después leen la web y el app.
+                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla]);
+
+                // Cuando la tabla de pacientes es propia de la especialidad, además se guarda tal cual: sus
+                // columnas que no existen en `pacientes` (alergia, notas, foto, representante, familia…)
+                // viven en su propia tabla del API y las usa el app de pediatría.
+                if ($tabla !== 'pacientes') {
+                    $this->insertarGenerico($carga, $tabla, $filas, $ignoradas);
+                }
+
+                return;
+            }
+
             switch ($tabla) {
-                case 'pacientes':
-                    $omitidas = $this->guardarPacientes($carga, $filas, $ignoradas);
-                    break;
                 case 'evolucion':
                     $this->guardarEvolucion($carga, $filas, $ignoradas);
                     break;
@@ -357,19 +433,38 @@ class CargaInicialService
      * Pacientes del legado -> paciente + relación con el médico + historia (ver PacientesLegado).
      * En la carga el número de historia es el mismo en los dos lados.
      *
+     * `$tabla` es de dónde vienen (para el mensaje de error) y `$mapa` el mapeo de columnas del manifiesto
+     * (`sync.pacientes.columnas`), vacío cuando la tabla es `pacientes`.
+     *
      * @return int filas omitidas
      */
-    private function guardarPacientes(SyncCarga $carga, array $filas, array &$ignoradas): int
+    private function guardarPacientes(SyncCarga $carga, string $tabla, array $filas, array &$ignoradas, array $mapa = []): int
     {
         $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
 
         foreach ($filas as $fila) {
-            if (! is_array($fila) || ! isset($fila['numhistoria'])) {
+            if (! is_array($fila)) {
+                $omitidas++;
+                continue;
+            }
+
+            $fila = $this->tablas->traducirPaciente($fila, $mapa);
+            if (! isset($fila['numhistoria'])) {
                 $omitidas++;
                 continue;
             }
             $pacientes->guardar($carga, $fila, $fila['numhistoria'], TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
+        }
+
+        // Un lote del que no se pudo usar NINGUNA fila no puede responder "recibido": así fue como la
+        // carga de pediatría terminó "Completa" con 1,19 M de filas y **0 pacientes**, sin un solo error
+        // visible (el escritorio anunciaba `pacientes` vacía y nadie miraba el resultado). Ver la trampa.
+        if ($filas !== [] && $omitidas === count($filas)) {
+            throw new RuntimeException(
+                "No se pudo usar ninguna de las " . count($filas) . " filas de {$tabla}: "
+                . 'falta la columna del número de historia (' . implode('/', TablasLegado::COLUMNAS_HISTORIA) . ').'
+            );
         }
 
         return $omitidas;
@@ -387,6 +482,119 @@ class CargaInicialService
         }
 
         return null;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Pacientes desde una tabla que ya está en el API                      */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Arma los pacientes (paciente + relación con el médico + historia) a partir de la tabla de pacientes
+     * del escritorio que **ya está en el API**, sin pedirle nada al escritorio.
+     *
+     * Es para reparar una carga que subió esa tabla a su tabla propia pero **no creó las historias**: pasó
+     * con pediatría el 2026-10-14 —su `pacientes` está vacía y sus 6.892 chamos quedaron en la tabla
+     * `paciente_chamo` sin historia, así que ni la web ni el app tenían pacientes—. También sirve para
+     * cualquier especialidad a la que se le agregue la fuente de pacientes **después** de una carga hecha.
+     *
+     * Corre el **mismo cargador** que la carga inicial (`guardarPacientes`), así lo que quede en la base es
+     * idéntico a lo que el sync habría producido; es idempotente (`PacientesLegado` busca por
+     * `clave_escritorio` y por cédula, y crea o actualiza).
+     *
+     * @return array{tablas: array<string, array{filas: int, nuevas: int, existentes: int, omitidas: int}>, creados: int, actualizados: int}
+     */
+    public function pacientesDesdeLaTablaDelEscritorio(string $regMedico, bool $simular = false, ?string $tabla = null): array
+    {
+        $medico = $this->medicoDe($regMedico);
+        if (! $medico) {
+            throw new RuntimeException("El médico {$regMedico} no está registrado en el API.");
+        }
+
+        $carga = SyncCarga::where('reg_medico', $regMedico)->first();
+        if (! $carga) {
+            throw new RuntimeException(
+                "El médico {$regMedico} no tiene ninguna carga inicial en el API: sin ella no hay dónde colgar "
+                . 'la relación con el médico ni la historia.'
+            );
+        }
+
+        $declaradas = $this->sync->fuentesDePacientesDeclaradas();
+
+        // Las de su especialidad (`pacientes` no: esa la hizo la carga, y si estuviera vacía el problema es
+        // otro). Si se pide una tabla en particular, esa manda.
+        $fuentes = array_filter(
+            $this->sync->pacientesDe($medico),
+            fn ($mapa, $nombre) => $nombre !== 'pacientes',
+            ARRAY_FILTER_USE_BOTH
+        );
+        if ($tabla !== null && $tabla !== '') {
+            $fuentes = [$tabla => (array) ($declaradas[$tabla] ?? [])];
+        }
+
+        // Y además cualquier tabla de pacientes declarada **que tenga filas de este médico**: el dato está
+        // ahí aunque el médico no tenga la especialidad asignada en `medico_specialty` (que es justo lo que
+        // pasó en la prueba: la carga subió los 6.892 chamos y el pivote quedó vacío, así que el API no
+        // sabía de qué especialidad era).
+        foreach ($declaradas as $nombre => $mapa) {
+            if (! array_key_exists($nombre, $fuentes)
+                && Schema::hasTable($nombre)
+                && in_array('reg_medico', $this->tablas->columnasDe($nombre), true)
+                && DB::table($nombre)->where('reg_medico', $regMedico)->exists()) {
+                $fuentes[$nombre] = $mapa;
+            }
+        }
+
+        $detalle = [];
+        $creados = 0;
+        $actualizados = 0;
+
+        foreach ($fuentes as $tabla => $mapa) {
+            if (! Schema::hasTable($tabla) || ! in_array('reg_medico', $this->tablas->columnasDe($tabla), true)) {
+                $detalle[$tabla] = ['filas' => 0, 'nuevas' => 0, 'existentes' => 0, 'omitidas' => 0];
+                continue;
+            }
+
+            $filas = 0;
+            $nuevas = 0;
+            $existentes = 0;
+            $omitidas = 0;
+
+            DB::table($tabla)->where('reg_medico', $regMedico)->orderBy('id')->chunk(500, function ($lote) use (
+                $carga, $tabla, $mapa, $simular, &$filas, &$nuevas, &$existentes, &$omitidas
+            ) {
+                $ignoradas = [];
+
+                foreach ($lote as $registro) {
+                    $fila = $this->tablas->traducirPaciente((array) $registro, $mapa);
+                    // Las marcas de tiempo del espejo no se copian: `updated_at` es lo que el app usa para
+                    // el delta y tiene que quedar en "ahora", o el paciente no le bajaría nunca.
+                    unset($fila['created_at'], $fila['updated_at']);
+
+                    if (! isset($fila['numhistoria'])) {
+                        $omitidas++;
+                        continue;
+                    }
+
+                    $filas++;
+                    $clave = TablasLegado::claveHistoria($fila['numhistoria']);
+                    $yaEstaba = \App\Models\Historia::where('reg_medico', $carga->reg_medico)
+                        ->where('clave_escritorio', $clave)->exists();
+                    $yaEstaba ? $existentes++ : $nuevas++;
+
+                    if (! $simular) {
+                        (new PacientesLegado($this->tablas))->guardar(
+                            $carga, $fila, $fila['numhistoria'], $clave, $ignoradas
+                        );
+                    }
+                }
+            });
+
+            $detalle[$tabla] = ['filas' => $filas, 'nuevas' => $nuevas, 'existentes' => $existentes, 'omitidas' => $omitidas];
+            $creados += $nuevas;
+            $actualizados += $existentes;
+        }
+
+        return ['tablas' => $detalle, 'creados' => $creados, 'actualizados' => $actualizados];
     }
 
     /* ------------------------------------------------------------------ */

@@ -514,7 +514,7 @@ class ImpresionDeRecipeWebTest extends TestCase
         $this->cita($medico, 1001, '2026-10-14');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'lista' => 1]));
 
         $respuesta->assertOk();
         // Un botón de imprimir por récipe con medicamentos (el 3, vacío, no lo tiene).
@@ -538,7 +538,7 @@ class ImpresionDeRecipeWebTest extends TestCase
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes']));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'lista' => 1]));
 
         $respuesta->assertSee('no tiene próxima cita agendada');
         $respuesta->assertSee('Hacer cita');

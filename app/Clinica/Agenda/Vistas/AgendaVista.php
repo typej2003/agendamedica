@@ -235,6 +235,15 @@ final class AgendaVista
     }
 
     /**
+     * Si la agenda ofrece "Atender" (abrir la consulta): sólo el médico (WEB-4.9). La secretaría no ve el
+     * botón y tampoco tiene por qué recibir el diálogo que lo llena: es una ventana que nunca podría usar.
+     */
+    public function puedeAtender(): bool
+    {
+        return $this->puedeAbrirLaConsulta;
+    }
+
+    /**
      * Los cumpleaños del día (WEB-2.9). La pantalla no es de la agenda —el paciente que cumple años hoy
      * entra aunque no tenga ninguna cita—, pero se llega desde acá, que es donde la secretaria ya está
      * todos los días. Se le pasa la fecha que se está mirando para que el atajo no obligue a cambiarla

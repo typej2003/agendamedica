@@ -31,6 +31,9 @@ use Tests\TestCase;
  *    `INSERT` del escritorio, quitar **no** toca el catálogo, y el alta del que falta usa el correlativo
  *    de cuatro dígitos.
  *  - El **rastro por columna en `sync_changes`** (`source = web`) y el guard last-write-wins del sync.
+ *  - **Agregar y Quitar son inmediatos** (O-07, 2026-10-17): un `POST` cada uno, una escritura por clic, y la
+ *    fila aparece o desaparece del paciente en el acto; lo que sigue yendo con el botón es el detalle y la
+ *    casilla de Alerta.
  *  - La **casilla de Alerta**: `A` encendida y `null` apagada (la `B` del DataWindow se lee, no se
  *    escribe), y las filas del legado sin marcar no se ensucian por guardar el formulario.
  *  - El **404** de la consulta de otro consultorio, el **403** de la secretaría y el invitado al login.
@@ -237,14 +240,51 @@ class ConsultaAntecedentesWebTest extends TestCase
         return route('clinica.consulta.antecedentes.guardar', $consulta->id);
     }
 
+    /** El «Agregar» inmediato (O-07): un POST con el código del catálogo. */
+    private function urlAgregar(Consulta $consulta): string
+    {
+        return route('clinica.consulta.antecedentes.agregar', $consulta->id);
+    }
+
+    /** El «Quitar» inmediato (O-07): un POST con el código del catálogo. */
+    private function urlQuitar(Consulta $consulta): string
+    {
+        return route('clinica.consulta.antecedentes.quitar', $consulta->id);
+    }
+
     private function urlCrear(Consulta $consulta): string
     {
         return route('clinica.consulta.antecedentes.crear', $consulta->id);
     }
 
+    /**
+     * Los chips de tipo de la sección, leídos del HTML: nombre, si es el elegido, su URL y su `aria-current`.
+     *
+     * @return array<int,array{nombre:string, activo:bool, url:string, aria:bool}>
+     */
+    private function chipsDeLaRespuesta(string $html): array
+    {
+        preg_match_all('/<a class="chip-filtro([^"]*)" href="([^"]*)"([^>]*)>([^<]*)<\/a>/', $html, $filas, PREG_SET_ORDER);
+
+        return array_map(fn ($fila) => [
+            'nombre' => trim(html_entity_decode($fila[4])),
+            'activo' => str_contains($fila[1], 'activo'),
+            'url'    => html_entity_decode($fila[2]),
+            'aria'   => str_contains($fila[3], 'aria-current="true"'),
+        ], $filas);
+    }
+
+    /** El bloque de la columna del catálogo (para mirar qué ofrece), sin el resto de la sección. */
+    private function catalogoDeLaRespuesta(string $html): string
+    {
+        $desde = strpos($html, 'id="antecedente-buscar"');
+
+        return $desde === false ? '' : substr($html, $desde);
+    }
+
     // ------------------------------------------------------------------------------------- La lectura
 
-    public function test_la_seccion_muestra_los_antecedentes_agrupados_con_su_detalle_y_su_alerta(): void
+    public function test_la_seccion_muestra_los_antecedentes_del_tipo_elegido_con_su_detalle_y_su_alerta(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
@@ -253,7 +293,7 @@ class ConsultaAntecedentesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->antecedente($medico, 1001, '0002', 'DIABETES', '02', 'la madre');
-        $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01', null, 'A');
+        $filaHipertension = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01', null, 'A');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
@@ -261,14 +301,29 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta->assertSee('Antecedentes del paciente', false);
         $respuesta->assertSee('Guardar los antecedentes', false);
 
-        // Los grupos son los del catálogo de tipos, con el nombre del tipo.
-        $respuesta->assertSee('PERSONAL', false);
-        $respuesta->assertSee('FAMILIAR', false);
+        // Los chips son los del catálogo de tipos y el elegido es el primero **con antecedentes** (Per.).
+        $chips = $this->chipsDeLaRespuesta($respuesta->getContent());
+        $this->assertSame(['PERSONAL', 'FAMILIAR', 'OBSTETRICOS', 'VARIOS'], array_column($chips, 'nombre'));
+        $this->assertSame(['PERSONAL'], array_column(array_filter($chips, fn ($c) => $c['activo']), 'nombre'));
 
-        // El detalle va en el control de la fila y la alerta tildada.
-        $respuesta->assertSee('value="la madre"', false);
+        // La columna muestra **sólo** los de ese tipo: el detalle de la fila y la alerta tildada.
+        $respuesta->assertSee('data-antecedente-fila="' . $filaHipertension . '"', false);
+        $respuesta->assertDontSee('value="la madre"', false);
         $respuesta->assertSee('Alerta', false);
         $respuesta->assertSee('2 antecedentes', false);
+
+        // Y con el otro chip, el mismo paciente al revés. (No se mira «HIPERTENSION» en toda la página: el
+        // aviso de alertas del encabezado del shell lo repite porque esa fila está marcada; se mira la fila.)
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=02');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('value="la madre"', false);
+        $respuesta->assertDontSee('data-antecedente-fila="' . $filaHipertension . '"', false);
+        $this->assertSame(['FAMILIAR'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($c) => $c['activo'],
+        ), 'nombre'));
 
         // La ayuda dice de quién son los antecedentes: es la decisión de la sección.
         $respuesta->assertSee('son del paciente, no de esta consulta', false);
@@ -295,7 +350,7 @@ class ConsultaAntecedentesWebTest extends TestCase
         $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
         // Se carga desde la primera…
-        $contexto->post($this->urlGuardar($primera), ['agregar' => ['0285' => '0285']]);
+        $contexto->post($this->urlAgregar($primera), ['codigo' => '0285']);
 
         // …y la segunda lo ve, sin que nadie haya escrito nada en ella.
         $respuesta = $contexto->get($this->urlSeccion($segunda));
@@ -321,6 +376,110 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Sin cargar', false);
         $respuesta->assertSee('Este paciente no tiene antecedentes cargados', false);
+        // Sin antecedentes, el tipo por defecto es el primero del catálogo: el alta arranca en un tipo concreto.
+        $this->assertSame(['PERSONAL'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($chip) => $chip['activo'],
+        ), 'nombre'));
+    }
+
+    // ------------------------------------------------------------------------------ Los chips de tipo (A-06)
+
+    /**
+     * El chip de tipo **filtra las dos columnas**: a la izquierda los antecedentes del paciente de ese tipo y a
+     * la derecha el catálogo de ese tipo. Es la solapa del escritorio, que Alexander pidió de vuelta.
+     */
+    public function test_el_chip_de_tipo_filtra_las_dos_columnas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        $this->catalogo($medico, '0001', 'ASMA', '01');
+        $this->catalogo($medico, '0002', 'DIABETES', '02');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '0001', 'ASMA', '01');
+
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Chip PERSONAL (el primero con antecedentes): la columna del paciente tiene ASMA y el catálogo, ASMA
+        // (marcado como «ya está»); DIABETES no aparece en ninguna de las dos.
+        $personal = $contexto->get($this->urlSeccion($consulta))->assertOk();
+        $personal->assertSee('data-antecedente-fila="' . $fila . '"', false);
+        $catalogoPersonal = $this->catalogoDeLaRespuesta($personal->getContent());
+        $this->assertStringContainsString('ASMA', $catalogoPersonal);
+        $this->assertStringContainsString('Ya está en el paciente', $catalogoPersonal);
+        $this->assertStringNotContainsString('DIABETES', $personal->getContent());
+
+        // Chip FAMILIAR: el paciente no tiene de ese tipo (lo dice) y el catálogo muestra el de ese tipo.
+        $familiar = $contexto->get($this->urlSeccion($consulta) . '&tipo=02')->assertOk();
+        $familiar->assertSee('Sin antecedentes de este tipo', false);
+        $familiar->assertDontSee('Este paciente no tiene antecedentes cargados', false);
+        $catalogoFamiliar = $this->catalogoDeLaRespuesta($familiar->getContent());
+        $this->assertStringContainsString('DIABETES', $catalogoFamiliar);
+        $this->assertStringNotContainsString('ASMA', $catalogoFamiliar);
+        // El contador de la cabecera sigue mostrando el **total** del paciente, no lo filtrado.
+        $familiar->assertSee('1 antecedente', false);
+    }
+
+    /** Un `?tipo=` que no es del catálogo no deja la pantalla vacía: cae en el primero con antecedentes. */
+    public function test_un_tipo_que_no_existe_cae_en_el_tipo_por_defecto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '02');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=99');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('data-antecedente-fila="' . $fila . '"', false);
+        $this->assertSame(['FAMILIAR'], array_column(array_filter(
+            $this->chipsDeLaRespuesta($respuesta->getContent()),
+            fn ($chip) => $chip['activo'],
+        ), 'nombre'));
+    }
+
+    /**
+     * Un antecedente del paciente **sin tipo** (la fila del legado no lo tiene y el catálogo tampoco lo
+     * resuelve) no puede quedar sin puerta de entrada: se agrega el chip «Sin clasificar» al final, y es el
+     * elegido si es lo único que el paciente tiene.
+     */
+    public function test_un_antecedente_sin_tipo_se_ve_en_el_chip_sin_clasificar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $fila = $this->antecedente($medico, 1001, '9999', 'SIN CATALOGO', '');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk();
+        $chips = $this->chipsDeLaRespuesta($respuesta->getContent());
+        $this->assertSame('Sin clasificar', end($chips)['nombre']);
+        $this->assertTrue(end($chips)['activo'], 'Con lo único que hay sin tipo, la pantalla abre en ese chip.');
+        $respuesta->assertSee('data-antecedente-fila="' . $fila . '"', false);
+    }
+
+    /**
+     * Los chips conservan la sección y el tipo (el filtro), y **ya no** arrastran códigos pendientes: desde
+     * O-07 «Agregar» escribe en el acto y no queda nada tildado que conservar.
+     */
+    public function test_los_chips_conservan_el_filtro_sin_pendientes(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->tipos($medico);
+        $this->catalogo($medico, '0013', 'DIABETES MELLITUS', '02');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=01');
+
+        $respuesta->assertOk();
+        foreach ($this->chipsDeLaRespuesta($respuesta->getContent()) as $chip) {
+            $this->assertStringContainsString('seccion=antecedentes', $chip['url']);
+            $this->assertStringContainsString('tipo=', $chip['url']);
+            $this->assertStringNotContainsString('agregar', $chip['url'], 'Ya no hay pendientes que conservar.');
+        }
     }
 
     /**
@@ -424,17 +583,20 @@ class ConsultaAntecedentesWebTest extends TestCase
         ]);
     }
 
-    public function test_agregar_del_catalogo_copia_el_nombre_y_el_tipo_como_el_escritorio(): void
+    public function test_agregar_del_catalogo_es_inmediato_y_copia_el_nombre_y_el_tipo_como_el_escritorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
         $this->catalogo($medico, '0013', 'DIABETES MELLITUS', '02');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'agregar' => ['0013' => '0013'],
+        // O-07: un solo POST —el de «Agregar»— escribe la fila. No hay paso de guardado.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlAgregar($consulta), [
+            'codigo' => '0013',
+            'tipo' => '02',
         ]);
 
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes', 'tipo' => '02']));
         $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'DIABETES MELLITUS'));
 
         $fila = DB::table('antece_paciente')->where('reg_medico', $medico->reg_medico)->first();
@@ -453,6 +615,12 @@ class ConsultaAntecedentesWebTest extends TestCase
 
         // El catálogo no se tocó.
         $this->assertSame(1, DB::table('antecedentes')->where('reg_medico', $medico->reg_medico)->count());
+
+        // Y la sección, al volver, ya muestra la fila nueva sin apretar ningún botón.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=02')
+            ->assertOk()
+            ->assertSee('DIABETES MELLITUS', false);
     }
 
     public function test_agregar_dos_veces_el_mismo_antecedente_no_duplica_la_fila(): void
@@ -463,14 +631,16 @@ class ConsultaAntecedentesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0013' => '0013']]);
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0013' => '0013']]);
+        $contexto->post($this->urlAgregar($consulta), ['codigo' => '0013']);
+        // El segundo clic no duplica: la Action no agrega lo que el paciente ya tiene y lo dice.
+        $segundo = $contexto->post($this->urlAgregar($consulta), ['codigo' => '0013']);
+        $segundo->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'ya estaba'));
 
         $this->assertSame(1, DB::table('antece_paciente')
             ->where('reg_medico', $medico->reg_medico)->where('codeantecedente', '0013')->count());
     }
 
-    public function test_quitar_lo_saca_del_paciente_y_no_del_catalogo(): void
+    public function test_quitar_es_inmediato_y_saca_la_fila_del_paciente_y_no_del_catalogo(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
@@ -478,11 +648,14 @@ class ConsultaAntecedentesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
         $fila = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01');
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'quitar' => ['0285'],
+        // O-07: un solo POST —el del «Quitar» de la fila— la borra en el acto.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlQuitar($consulta), [
+            'codigo' => '0285',
+            'tipo' => '01',
         ]);
 
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'quitado'));
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes', 'tipo' => '01']));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Quitado'));
 
         // La relación del paciente se fue…
         $this->assertSame(0, DB::table('antece_paciente')->where('reg_medico', $medico->reg_medico)->count());
@@ -494,6 +667,12 @@ class ConsultaAntecedentesWebTest extends TestCase
         ]);
         // …y el catálogo sigue igual (el escritorio sólo desasocia).
         $this->assertSame(1, DB::table('antecedentes')->where('reg_medico', $medico->reg_medico)->count());
+
+        // La sección al volver ya no la tiene.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta) . '&tipo=01')
+            ->assertOk()
+            ->assertDontSee('data-antecedente-fila="' . $fila . '"', false);
     }
 
     /**
@@ -506,11 +685,11 @@ class ConsultaAntecedentesWebTest extends TestCase
         $this->tipos($medico);
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
-            'agregar' => ['7777' => '7777'],
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlAgregar($consulta), [
+            'codigo' => '7777',
         ]);
 
-        $respuesta->assertSessionHas('error');
+        $respuesta->assertSessionHas('error', fn ($error) => str_contains($error, 'no está en tu catálogo'));
         $this->assertSame(0, DB::table('antece_paciente')->where('reg_medico', $medico->reg_medico)->count());
     }
 
@@ -629,7 +808,9 @@ class ConsultaAntecedentesWebTest extends TestCase
         $contexto = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria);
 
         $contexto->get($this->urlSeccion($consulta))->assertForbidden();
-        $contexto->post($this->urlGuardar($consulta), ['agregar' => ['0001' => '0001']])->assertForbidden();
+        $contexto->post($this->urlAgregar($consulta), ['codigo' => '0001'])->assertForbidden();
+        $contexto->post($this->urlQuitar($consulta), ['codigo' => '0001'])->assertForbidden();
+        $contexto->post($this->urlGuardar($consulta), ['filas' => []])->assertForbidden();
         $contexto->post($this->urlCrear($consulta), ['descripcion' => 'ALGO', 'tipo' => '01'])->assertForbidden();
     }
 
@@ -639,6 +820,8 @@ class ConsultaAntecedentesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $this->get($this->urlSeccion($consulta))->assertRedirect(route('login'));
+        $this->post($this->urlAgregar($consulta), ['codigo' => '0001'])->assertRedirect(route('login'));
+        $this->post($this->urlQuitar($consulta), ['codigo' => '0001'])->assertRedirect(route('login'));
         $this->post($this->urlGuardar($consulta), [])->assertRedirect(route('login'));
         $this->post($this->urlCrear($consulta), ['descripcion' => 'ALGO', 'tipo' => '01'])->assertRedirect(route('login'));
     }
@@ -658,7 +841,9 @@ class ConsultaAntecedentesWebTest extends TestCase
         $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
         $contexto->get(route('clinica.consulta', [$consultaAjena->id, 'seccion' => 'antecedentes']))->assertNotFound();
-        $contexto->post(route('clinica.consulta.antecedentes.guardar', $consultaAjena->id), ['agregar' => ['0285' => '0285']])->assertNotFound();
+        $contexto->post(route('clinica.consulta.antecedentes.agregar', $consultaAjena->id), ['codigo' => '0285'])->assertNotFound();
+        $contexto->post(route('clinica.consulta.antecedentes.quitar', $consultaAjena->id), ['codigo' => '0285'])->assertNotFound();
+        $contexto->post(route('clinica.consulta.antecedentes.guardar', $consultaAjena->id), ['filas' => []])->assertNotFound();
         $contexto->post(route('clinica.consulta.antecedentes.crear', $consultaAjena->id), ['descripcion' => 'ALGO', 'tipo' => '01'])->assertNotFound();
 
         // Nada se escribió en los datos del otro médico.
@@ -742,62 +927,50 @@ class ConsultaAntecedentesWebTest extends TestCase
             ->assertNotFound();
     }
 
-    // ------------------------------------------------------------------------- Los pendientes del buscador
+    // ------------------------------------------------------------------- El agregado es inmediato (O-07)
 
     /**
-     * El buscador es un `GET`: "Agregar" vuelve a la sección con el código en la query. Si el médico recarga
-     * la página, los `hidden` del formulario se van pero **la query del `action` no**, así que lo tildado
-     * igual se guarda (el controlador junta el `POST` y la query).
+     * La sección **no** deja códigos pendientes en la URL: «Agregar» es un `POST` que escribe y vuelve con la
+     * lista del paciente ya cambiada. Un `?agregar[]=` viejo (un enlace guardado de antes de O-07) no agrega
+     * nada ni esconde el buscador: se ignora.
      */
-    public function test_un_pendiente_del_buscador_se_guarda_aunque_la_pagina_se_recargue(): void
+    public function test_un_pendiente_viejo_en_la_url_ya_no_agrega_nada(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
         $this->catalogo($medico, '0013', 'DIABETES MELLITUS', '02');
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        // La sección con el pendiente en la URL: el aviso lo dice y el `action` del formulario lo lleva.
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlSeccion($consulta) . '&agregar[]=0013');
+
         $respuesta->assertOk();
-        $respuesta->assertSee('Tildaste un antecedente', false);
-        // El formulario de guardado lleva el pendiente: como `hidden` y en la query de su `action`.
-        $respuesta->assertSee('name="agregar[0013]"', false);
-        $this->assertStringContainsString(
-            'agregar[]=0013',
-            html_entity_decode($respuesta->getContent(), ENT_QUOTES),
-        );
-
-        // El POST con el pendiente **sólo** en la query (como después de una recarga).
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post($this->urlGuardar($consulta) . '?agregar[]=0013', [])
-            ->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'DIABETES MELLITUS'));
-
-        $this->assertDatabaseHas('antece_paciente', [
-            'reg_medico' => $medico->reg_medico,
-            'numhistoria' => 1001,
-            'codeantecedente' => '0013',
-        ]);
+        $respuesta->assertDontSee('Tildaste un antecedente', false);
+        $respuesta->assertDontSee('name="agregar[0013]"', false);
+        $this->assertSame(0, DB::table('antece_paciente')->where('reg_medico', $medico->reg_medico)->count());
     }
 
     /**
-     * Un `filas[id]` de una fila que se está quitando en el mismo POST no se escribe: el formulario puede
-     * mandar los controles de una fila que ya no está (el JS los saca, pero la Action no depende del JS).
+     * Un `filas[id]` de una fila que ya no está (se quitó en el acto, O-07) no se escribe ni deja rastro: el
+     * formulario no puede escribir sobre algo que la pantalla ya no muestra.
      */
-    public function test_una_fila_que_se_quita_no_se_edita_en_el_mismo_post(): void
+    public function test_un_filas_de_una_fila_que_ya_no_esta_no_se_escribe(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->tipos($medico);
         [, $consulta] = $this->pacienteYConsulta($medico);
         $fila = $this->antecedente($medico, 1001, '0285', 'HIPERTENSION', '01', 'lo viejo');
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), [
+        $contexto = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Se quita en el acto…
+        $contexto->post($this->urlQuitar($consulta), ['codigo' => '0285']);
+        // …y un POST de guardado con el `filas[id]` viejo no la resucita ni escribe nada.
+        $contexto->post($this->urlGuardar($consulta), [
             'filas' => [$fila => ['detalle' => 'lo de la web', 'alerta' => 'A']],
-            'quitar' => ['0285'],
         ]);
 
         $this->assertSame(0, DB::table('antece_paciente')->where('reg_medico', $medico->reg_medico)->count());
-        // No quedó ningún rastro de `updated` de una fila que se borró.
         $this->assertSame(0, SyncChange::where('table_name', 'antece_paciente')
             ->where('operation', 'updated')->count());
     }
@@ -813,7 +986,39 @@ class ConsultaAntecedentesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('12 de 13 disponibles', false);
+        $respuesta->assertSee('Pre-factura', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
+    }
+
+    // ---------------------------------------------------------------------------------- Alertas (WEB-11.6)
+
+    public function test_las_alertas_se_ven_todas_y_fijas_y_se_avisan_una_sola_vez(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->antecedente($medico, 1001, '0001', 'ALERGIA A PENICILINA', 'P', 'Anafilaxia', 'A');
+        $this->antecedente($medico, 1001, '0002', 'ANTICOAGULADO', 'P', null, 'A');
+        $this->antecedente($medico, 1001, '0003', 'ASMA', 'P', null, 'B');
+
+        $url = route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']);
+        $primera = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($url);
+        $primera->assertOk()->assertSee('Alertas de este paciente')
+            ->assertSee('ALERGIA A PENICILINA', false)->assertSee('Anafilaxia', false)->assertSee('ANTICOAGULADO', false)
+            ->assertDontSee('ASMA', false)
+            ->assertSee('data-abrir-al-cargar="1"', false);
+
+        // Otra sección de la misma atención: el banner sigue, el diálogo no se vuelve a abrir.
+        $segunda = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']));
+        $segunda->assertSee('ALERGIA A PENICILINA', false)->assertDontSee('data-abrir-al-cargar="1"', false);
+    }
+
+    public function test_sin_alertas_no_hay_banner_ni_dialogo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->antecedente($medico, 1001, '0003', 'ASMA', 'P', null, 'B');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id))
+            ->assertOk()->assertDontSee('Alertas de este paciente');
     }
 }

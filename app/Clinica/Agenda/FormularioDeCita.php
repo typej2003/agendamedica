@@ -4,6 +4,7 @@ namespace App\Clinica\Agenda;
 
 use App\Clinica\Agenda\Vistas\FormularioDeCitaVista;
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Models\Cola;
 use Carbon\Carbon;
 
@@ -66,6 +67,8 @@ class FormularioDeCita
             volverA: $datos['volverA'] ?? null,
             // Sólo el médico administra el catálogo de motivos (WEB-8.1c): a la secretaría no se le ofrece un enlace con 403.
             puedeAdministrarMotivos: (bool) ($datos['puedeAdministrarMotivos'] ?? false),
+            // El alta mínima del paso 2 arranca con el sexo de la especialidad, como el alta de la ficha (O-01).
+            sexoPorDefectoDelNuevoPaciente: FormularioDePacienteVista::sexoPorDefectoDe($contexto['specialty'] ?? null),
         );
     }
 }

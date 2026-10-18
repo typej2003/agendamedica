@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Embarazo\Vistas;
 
+use App\Clinica\Consulta\Vistas\OpcionesDelDesplegable;
 use App\Clinica\Embarazo\Gesta;
 use Closure;
 
@@ -26,6 +27,8 @@ final class FechasDelEmbarazoVista
      * @param  array<int,array{fecha:string,valores:array<string,string|null>}>  $filas  las filas guardadas
      * @param  Closure|null  $urlFecha  `fn(string $fecha): string` — la URL de cada fecha
      * @param  array<string,mixed>  $old  el `old()` del formulario
+     * @param  string  $fechaPorDefecto  la fecha que abre un laboratorio o un control **nuevo** (`AAAA-MM-DD`):
+     *                                   hoy del consultorio (O-13). Lo guardado y lo elegido mandan.
      */
     public function __construct(
         private string $titulo = '',
@@ -41,6 +44,7 @@ final class FechasDelEmbarazoVista
         private string $ayuda = '',
         private string $aviso = '',
         private array $old = [],
+        private string $fechaPorDefecto = '',
     ) {
     }
 
@@ -111,6 +115,10 @@ final class FechasDelEmbarazoVista
     /**
      * Los campos del formulario, con su valor ya resuelto.
      *
+     * Un desplegable recibe sus **opciones resueltas** (`OpcionesDelDesplegable`): la opción vacía adelante
+     * —sin ella un `<select>` mandaría siempre la primera, y una serología quedaría escrita sin que nadie la
+     * tocara— y el código desconocido del escritorio al final, sin perderlo.
+     *
      * @return array<int,array<string,mixed>>
      */
     public function campos(): array
@@ -118,8 +126,33 @@ final class FechasDelEmbarazoVista
         return array_map(function (array $campo) {
             $campo['valor'] = (string) ($this->valorDe($campo['columna']) ?? '');
 
+            if (($campo['tipo'] ?? 'texto') === 'opciones') {
+                $campo['opciones'] = OpcionesDelDesplegable::de($campo, $campo['valor']);
+            }
+
             return $campo;
         }, $this->campos);
+    }
+
+    /**
+     * **Los campos agrupados como en la grilla del escritorio** (O-21): el mapa del dato marca con `bloque`
+     * qué campos van juntos y el `rotulo` del bloque, si lleva uno. El laboratorio tiene dos —su panel de
+     * exámenes y «Otros estudios», el segundo renglón del DataWindow—; los controles, uno solo.
+     *
+     * @return array<int,array{rotulo:string|null,campos:array<int,array<string,mixed>>}>
+     */
+    public function bloques(): array
+    {
+        $bloques = [];
+
+        foreach ($this->campos() as $campo) {
+            $clave = $campo['bloque'] ?? 'panel';
+
+            $bloques[$clave]['rotulo'] = $bloques[$clave]['rotulo'] ?? ($campo['rotulo'] ?? null);
+            $bloques[$clave]['campos'][] = $campo;
+        }
+
+        return array_values($bloques);
     }
 
     public function urlGuardar(): string
@@ -156,14 +189,14 @@ final class FechasDelEmbarazoVista
         return array_column($this->filas, null, 'fecha');
     }
 
-    /** La fecha del formulario: lo que se mandó, lo que se eligió o vacío (una fecha nueva). */
+    /** La fecha del formulario: lo que se mandó, lo que se eligió o —si es nueva— la de hoy (O-13). */
     private function valorDeLaFecha(): string
     {
         if (array_key_exists('fecha', $this->old) && $this->old['fecha'] !== null) {
             return (string) $this->old['fecha'];
         }
 
-        return $this->fechaElegida;
+        return $this->fechaElegida !== '' ? $this->fechaElegida : $this->fechaPorDefecto;
     }
 
     /** Lo escrito en el POST que falló, si no lo guardado en esa fecha. */

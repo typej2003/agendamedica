@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Actions\Consulta\AgregarDiagnosticoAlCatalogo;
 use App\Actions\Consulta\GuardarDiagnosticosDeLaConsulta;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -16,16 +17,16 @@ use Illuminate\Support\Collection;
  *
  * Cuatro cosas que decide acá y no la vista:
  *
- *  - **La edición es explícita**: el formulario se lleva todo junto —el detalle de lo que ya está, lo
- *    tildado del catálogo y lo que el médico sacó de la lista— y el botón de guardar es el único que
- *    escribe (`GuardarDiagnosticosDeLaConsulta`). El aviso de "cambios sin guardar" y el `beforeunload` los
+ *  - **«Pasar» y «Quitar» son inmediatos** (O-27, 2026-10-17): cada uno es un `POST` que escribe en el acto y
+ *    la fila aparece o desaparece de la lista. El botón de guardar aplica **sólo el detalle** de lo que ya
+ *    está (`GuardarDiagnosticosDeLaConsulta`). El aviso de "cambios sin guardar" y el `beforeunload` los
  *    pone `consulta.js` desde los `data-*`.
- *  - **"Ya está en la consulta" y "está tildado para agregar" son preguntas distintas**: la primera decide
- *    qué fila no se ofrece para agregar y la segunda qué se agregará al guardar.
+ *  - **"Ya está en la consulta"** decide qué fila no se ofrece para pasar. No hay estado intermedio de
+ *    «pendiente»: agregar escribe.
  *  - **El estado de la sección** (`estado()`): una pastilla que dice si la consulta ya tiene diagnósticos;
  *    no dice "guardado" (de eso se encarga el aviso de cambios sin guardar).
- *  - **Los pendientes del buscador sobreviven a una recarga**: viajan en la query (`?agregar[]=…`), que es
- *    lo único que un `GET` puede llevar; los `hidden` del formulario son el otro camino.
+ *  - **La búsqueda viaja en la URL** (`?buscar=`), que es lo que un `GET` puede llevar; el «Pasar» y el
+ *    «Quitar» la conservan al volver.
  */
 final class SeccionDeDiagnosticosVista
 {
@@ -35,22 +36,24 @@ final class SeccionDeDiagnosticosVista
     /**
      * @param  Collection<int,object>  $diagnosticos  lo que devolvió `DiagnosticosDeLaConsulta::deLaConsulta()`
      * @param  Collection<int,object>  $catalogo  el catálogo del médico ya filtrado por la búsqueda
-     * @param  array<int,string>  $pendientes  los `codediagnostico` que el buscador dejó tildados
      * @param  string  $buscar  lo que se escribió en el buscador (viaja por `?buscar=`)
-     * @param  string  $urlGuardar  a dónde postea "Guardar los diagnósticos" (sin query)
+     * @param  string  $urlGuardar  a dónde postea "Guardar los diagnósticos" (el detalle)
      * @param  string  $urlBase  la URL del shell de esta consulta, **sin query**: la base del `action` del
-     *                           buscador, del "Cancelar" y de los enlaces de "Agregar"
+     *                           buscador, del "Cancelar", del «Pasar» y del «Quitar»
      * @param  string  $urlCrear  a dónde postea el alta del diagnóstico nuevo
      * @param  array<string,mixed>  $old  el `old()` de un POST que falló la validación (`[]` en la primera carga)
      */    public function __construct(
         private Collection $diagnosticos,
         ?Collection $catalogo = null,
-        private array $pendientes = [],
         private string $buscar = '',
         private string $urlGuardar = '',
         private string $urlBase = '',
         private string $urlCrear = '',
         private array $old = [],
+        private ?LengthAwarePaginator $paginador = null,
+        // O-27: las rutas de las dos escrituras inmediatas (el código y el id viajan en el cuerpo).
+        private string $urlAgregar = '',
+        private string $urlQuitar = '',
     ) {
         $this->catalogo = $catalogo ?? new Collection();
     }
@@ -119,6 +122,12 @@ final class SeccionDeDiagnosticosVista
 
     // ------------------------------------------------------------------------------------ El buscador
 
+    /** Los enlaces de página del catálogo (WEB-11.3). */
+    public function paginador(): ?LengthAwarePaginator
+    {
+        return $this->paginador;
+    }
+
     public function buscar(): string
     {
         return $this->buscar;
@@ -131,7 +140,22 @@ final class SeccionDeDiagnosticosVista
 
     public function urlGuardar(): string
     {
-        return $this->conQuery($this->urlGuardar);
+        return $this->urlGuardar;
+    }
+
+    /**
+     * La URL del «Pasar» de una fila del catálogo (O-27): un `POST` inmediato. El código y la búsqueda viajan
+     * en campos ocultos del formulario de la fila, así que la URL no lleva parámetros.
+     */
+    public function urlAgregar(): string
+    {
+        return $this->urlAgregar;
+    }
+
+    /** La URL del «Quitar» de una fila (O-27): un `POST` inmediato, con el id de la fila en el cuerpo. */
+    public function urlQuitar(): string
+    {
+        return $this->urlQuitar;
     }
 
     /** La URL de esta sección (con su `?seccion=`): el "Cancelar" de la guía de UI y la vuelta del buscador. */
@@ -141,71 +165,15 @@ final class SeccionDeDiagnosticosVista
     }
 
     /**
-     * Los códigos que el buscador dejó tildados para agregar: el formulario los manda como `hidden` y la
-     * query del `action` los conserva, así que el guardado no los pierde.
-     *
-     * Un código que la consulta **ya tiene** no es un pendiente: la pantalla no puede decir "se agrega al
-     * guardar" de algo que ya está (y el guardado tampoco lo duplicaría). Se cae acá y no en la vista para
-     * que los `hidden`, la query y la lista digan lo mismo.
-     *
-     * @return array<int,string>
+     * Los resultados del buscador, con la bandera que decide qué ofrece cada fila. Desde O-27 no hay estado
+     * intermedio de «pendiente»: «Pasar» escribe.
      */
-    public function pendientesDelBuscador(): array
-    {
-        $cargados = $this->diagnosticos->pluck('codigo')->all();
-        $codigos = [];
-
-        foreach ($this->pendientes as $codigo) {
-            $codigo = trim((string) $codigo);
-
-            if ($codigo !== '' && ! in_array($codigo, $cargados, true)) {
-                $codigos[$codigo] = true;
-            }
-        }
-
-        return array_keys($codigos);
-    }
-
-    /** El aviso de la tarjeta cuando hay algo tildado: qué va a pasar y dónde se confirma. */
-    public function avisoDePendientes(): string
-    {
-        $pendientes = $this->pendientesDelBuscador();
-
-        return count($pendientes) === 1
-            ? 'Tildaste un diagnóstico: se agrega a la consulta cuando aprietes «Guardar los diagnósticos», arriba.'
-            : 'Tildaste ' . count($pendientes) . ' diagnósticos: se agregan a la consulta cuando aprietes «Guardar los diagnósticos», arriba.';
-    }
-
-    /**
-     * La URL del "Agregar" de una fila del catálogo: vuelve a esta misma sección con **ese** código tildado
-     * además de los que ya estaban. Se arma acá y no en la vista porque es una URL con parámetros (y la
-     * vista no arma URLs en la web clínica).
-     */
-    public function urlAgregar(string $codigo): string
-    {
-        $query = ['seccion=' . ConsultaShellVista::SECCION_DIAGNOSTICO];
-
-        foreach (array_merge($this->pendientesDelBuscador(), [$codigo]) as $pendiente) {
-            $query[] = 'agregar[]=' . urlencode($pendiente);
-        }
-
-        if ($this->buscar !== '') {
-            $query[] = 'buscar=' . urlencode($this->buscar);
-        }
-
-        return $this->urlBase . '?' . implode('&', $query) . '#consulta-diagnostico';
-    }
-
-    /** Los resultados del buscador, con las dos banderas que deciden qué ofrece cada fila. */
     public function resultados(): array
     {
-        $pendientes = $this->pendientesDelBuscador();
-
         return $this->catalogo->map(fn (object $diagnostico) => [
             'codigo' => trim((string) $diagnostico->codediagnostico),
             'descripcion' => (string) $diagnostico->descripcion,
             'yaEsta' => $this->diagnosticos->contains(fn (object $cargado) => $cargado->codigo === trim((string) $diagnostico->codediagnostico)),
-            'pendiente' => in_array(trim((string) $diagnostico->codediagnostico), $pendientes, true),
         ])->all();
     }
 
@@ -228,13 +196,14 @@ final class SeccionDeDiagnosticosVista
     }
 
     /**
-     * La ayuda del formulario, que dice lo más importante de la sección: **son de esta consulta** y se
-     * guardan con el botón (a diferencia de los antecedentes, que son del paciente).
+     * La ayuda del formulario: **son de esta consulta**, «Pasar» y «Quitar» se aplican al instante y el
+     * detalle se guarda con el botón (a diferencia de los antecedentes, que son del paciente).
      */
     public function ayuda(): string
     {
-        return 'Estos diagnósticos son de esta consulta: lo que agregues o quites acá vale para esta atención '
-            . 'y lo verás en la historia del paciente. Se guardan con el botón.';
+        return 'Estos diagnósticos son de esta consulta: lo que pases o quites acá vale para esta atención '
+            . 'y lo verás en la historia del paciente. Pasar y Quitar se aplican al instante; el detalle se '
+            . 'guarda con el botón.';
     }
 
     /** La ayuda del buscador: de dónde sale el catálogo y cómo se busca. */
@@ -261,22 +230,5 @@ final class SeccionDeDiagnosticosVista
                 ? 'Tu catálogo está vacío: crea el primero abajo.'
                 : 'Prueba con otra palabra o créalo abajo: se agrega a tu catálogo y a la consulta.',
         ];
-    }
-
-    /**
-     * La URL base con la sección y los pendientes: es lo que hace que el `POST` del guardado no pierda lo
-     * tildado (el buscador es un `GET` y no puede mandarlo, y una recarga se lleva los `hidden`).
-     */
-    private function conQuery(string $url): string
-    {
-        $query = [];
-
-        foreach ($this->pendientesDelBuscador() as $codigo) {
-            $query[] = 'agregar[]=' . urlencode($codigo);
-        }
-
-        $query[] = 'seccion=' . ConsultaShellVista::SECCION_DIAGNOSTICO;
-
-        return $url . (str_contains($url, '?') ? '&' : '?') . implode('&', $query);
     }
 }

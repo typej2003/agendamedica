@@ -2,20 +2,35 @@
 
 namespace Tests\Unit\Clinica;
 
+use App\Clinica\Consulta\TipoDeAntecedentes;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use Illuminate\Support\Collection;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 /**
- * **Los antecedentes del paciente en la consulta** (WEB-4.4), sin base de datos: el agrupado por tipo, el
- * estado vacío, la marca de alerta, los "vacíos" del legado y el `old()` de un POST que falló.
+ * **Los antecedentes del paciente en la consulta** (WEB-4.4), sin base de datos: los chips de tipo y el filtro
+ * de las dos columnas (A-06), los dos estados vacíos, la marca de alerta, los "vacíos" del legado y el `old()`
+ * de un POST que falló.
  *
- * Todo lo que los ViewModels necesitan llega por el constructor (mismo criterio que los otros ViewModels
- * de la consulta), así que acá no hace falta ni Laravel.
+ * Todo lo que los ViewModels necesitan llega por el constructor (mismo criterio que los otros ViewModels de la
+ * consulta). ⚠️ Extiende `Tests\TestCase` y no `PHPUnit\Framework\TestCase` porque `tipoDelAlta()` y el `old()`
+ * de las filas usan la petición de Laravel (igual que `ConValoresDeFormulario` en las pantallas de
+ * configuración); no hay `DatabaseTransactions` porque no se toca ninguna tabla.
  */
 class AntecedentesVistaTest extends TestCase
 {
+    /** Los siete tipos del escritorio, en el orden de `codetipo` (Per., Fam., H.P., Obst., Gine., A.S., Otros). */
+    private const TIPOS = [
+        ['codigo' => '01', 'nombre' => 'PERSONAL'],
+        ['codigo' => '02', 'nombre' => 'FAMILIAR'],
+        ['codigo' => '03', 'nombre' => 'HABITOS PSICOBIOLOGICOS'],
+        ['codigo' => '04', 'nombre' => 'OBSTETRICOS'],
+        ['codigo' => '05', 'nombre' => 'GINECOLOGICOS'],
+        ['codigo' => '06', 'nombre' => 'ANTECEDENTES QUIRURGICOS'],
+        ['codigo' => '07', 'nombre' => 'VARIOS'],
+    ];
+
     /**
      * Una fila como la devuelve `AntecedentesDelPaciente::delPaciente()`.
      *
@@ -47,60 +62,133 @@ class AntecedentesVistaTest extends TestCase
         ];
     }
 
-    private function vista(array $antecedentes = [], array $old = []): SeccionDeAntecedentesVista
+    private function vista(array $antecedentes = [], array $old = [], string $tipo = '01', string $urlQuitar = '/clinica/consulta/42/antecedentes/quitar'): SeccionDeAntecedentesVista
     {
         return new SeccionDeAntecedentesVista(
             new Collection($antecedentes),
+            self::TIPOS,
+            $tipo,
             '/clinica/consulta/42/antecedentes',
             '/clinica/consulta/42?seccion=antecedentes',
             $old,
+            $urlQuitar,
         );
     }
 
-    // ------------------------------------------------------------------------------ El agrupado
+    // --------------------------------------------------------------------------- Los chips (A-06)
 
-    public function test_los_antecedentes_se_agrupan_por_el_nombre_de_su_tipo(): void
+    public function test_los_chips_son_los_siete_tipos_del_catalogo_en_su_orden_con_uno_elegido(): void
     {
-        $vista = $this->vista([
-            $this->antecedente(1, '0002', 'DIABETES', 'desde 2019', '02', 'FAMILIAR'),
-            $this->antecedente(2, '0285', 'HIPERTENSION', null, '01', 'PERSONAL'),
-            $this->antecedente(3, '0001', 'SARAMPION', null, '01', 'PERSONAL'),
-        ]);
+        $vista = $this->vista([$this->antecedente(1, '0001', 'ASMA')], [], '02');
 
-        $grupos = $vista->grupos();
+        $chips = $vista->chips();
 
-        $this->assertSame(['FAMILIAR', 'PERSONAL'], array_column($grupos, 'titulo'));
-        $this->assertSame(['DIABETES'], array_column($grupos[0]['filas'], 'nombre'));
-        // Dentro del grupo se conserva el orden de la lectura (por código en la base).
-        $this->assertSame(['HIPERTENSION', 'SARAMPION'], array_column($grupos[1]['filas'], 'nombre'));
-        $this->assertSame(3, $vista->total());
+        $this->assertSame(array_column(self::TIPOS, 'nombre'), array_column($chips, 'nombre'));
+        $this->assertSame(['FAMILIAR'], array_column(array_filter($chips, fn ($c) => $c['activa']), 'nombre'));
+        // No hay «todos los tipos»: siempre hay exactamente uno elegido.
+        $this->assertCount(1, array_filter($chips, fn ($c) => $c['activa']));
+        foreach ($chips as $chip) {
+            $this->assertStringContainsString('seccion=antecedentes', $chip['url']);
+            $this->assertStringContainsString('tipo=' . $chip['codigo'], $chip['url']);
+        }
     }
 
-    public function test_lo_que_no_tiene_tipo_va_a_un_grupo_sin_clasificar_al_final(): void
+    public function test_sin_antecedentes_fuera_del_catalogo_no_hay_chip_sin_clasificar(): void
+    {
+        $vista = $this->vista([$this->antecedente(1, '0001', 'ASMA', null, '01')]);
+
+        $this->assertCount(7, $vista->chips());
+    }
+
+    public function test_los_antecedentes_sin_tipo_agregan_el_chip_sin_clasificar_al_final(): void
     {
         $vista = $this->vista([
-            $this->antecedente(1, '0001', 'SIN TIPO', null, null, null),
-            $this->antecedente(2, '0002', 'CON TIPO', null, '02', 'FAMILIAR'),
+            $this->antecedente(1, '0001', 'ASMA', null, '01'),
+            // La fila del legado sin tipo: ni la columna ni el catálogo lo resuelven.
+            $this->antecedente(2, '9999', 'VIEJO', null, null),
         ]);
 
-        $grupos = $vista->grupos();
+        $chips = $vista->chips();
 
-        // "Sin clasificar" es una etiqueta de la pantalla, no un tipo inventado, y va última.
-        $this->assertSame(['FAMILIAR', 'Sin clasificar'], array_column($grupos, 'titulo'));
-        $this->assertSame(['SIN TIPO'], array_column($grupos[1]['filas'], 'nombre'));
+        $this->assertCount(8, $chips);
+        $this->assertSame('Sin clasificar', $chips[7]['nombre']);
+        $this->assertSame(TipoDeAntecedentes::SIN_CLASIFICAR, $chips[7]['codigo']);
+        // El chip se abre con su `?tipo=` propio.
+        $this->assertStringContainsString('tipo=' . TipoDeAntecedentes::SIN_CLASIFICAR, $chips[7]['url']);
+    }
+
+    /** Los chips no arrastran códigos pendientes: desde O-07 «Agregar» escribe en el acto. */
+    public function test_los_chips_no_arrastran_pendientes(): void
+    {
+        $vista = $this->vista();
+
+        foreach ($vista->chips() as $chip) {
+            $this->assertStringNotContainsString('agregar', $chip['url']);
+        }
+
+        // El «Quitar» de una fila es un `POST` inmediato: la URL no lleva parámetros.
+        $this->assertSame('/clinica/consulta/42/antecedentes/quitar', $vista->urlQuitar());
+    }
+
+    // ------------------------------------------------------------------------------ El filtro
+
+    public function test_la_columna_muestra_solo_los_antecedentes_del_tipo_elegido(): void
+    {
+        $vista = $this->vista([
+            $this->antecedente(1, '0001', 'ASMA', null, '01'),
+            $this->antecedente(2, '0002', 'DIABETES', null, '02', 'FAMILIAR'),
+            $this->antecedente(3, '0003', 'TABACO', null, '03', 'HABITOS PSICOBIOLOGICOS'),
+        ], [], '02');
+
+        $this->assertSame(['DIABETES'], array_column($vista->filas(), 'nombre'));
+        // El contador sigue siendo el total del paciente, no lo filtrado.
+        $this->assertSame(3, $vista->total());
+        $this->assertSame('3 antecedentes', $vista->resumen());
+    }
+
+    public function test_el_chip_sin_clasificar_muestra_los_que_no_caen_en_ningun_tipo(): void
+    {
+        $vista = $this->vista([
+            $this->antecedente(1, '0001', 'ASMA', null, '01'),
+            $this->antecedente(2, '9999', 'VIEJO', null, null),
+        ], [], TipoDeAntecedentes::SIN_CLASIFICAR);
+
+        $this->assertSame(['VIEJO'], array_column($vista->filas(), 'nombre'));
+        $this->assertSame('Sin clasificar', $vista->nombreDelTipo());
+    }
+
+    public function test_el_nombre_del_tipo_elegido_sale_del_catalogo(): void
+    {
+        $this->assertSame('FAMILIAR', $this->vista([], [], '02')->nombreDelTipo());
+        $this->assertNull($this->vista([], [], '99')->nombreDelTipo(), 'Un tipo que no es del catálogo no inventa nombre.');
+        $this->assertNull($this->vista([], [], '')->nombreDelTipo());
     }
 
     // ------------------------------------------------------------------------------- El estado
 
     public function test_sin_antecedentes_la_seccion_esta_vacia(): void
     {
-        $vista = $this->vista();
+        $vista = $this->vista([], [], '01');
 
         $this->assertTrue($vista->estaVacio());
+        $this->assertFalse($vista->sinAntecedentesDeEsteTipo(), 'Sin nada no es «sin antecedentes de este tipo».');
         $this->assertSame(0, $vista->total());
-        $this->assertSame([], $vista->grupos());
+        $this->assertSame([], $vista->filas());
         $this->assertSame('Sin cargar', $vista->estado()['texto']);
         $this->assertSame('neutro', $vista->estado()['tono']);
+    }
+
+    /**
+     * Los dos estados vacíos son distintos: el paciente **no tiene nada** o no tiene **de ese tipo**. El
+     * segundo no puede decir el primero —sería falso— y por eso son dos banderas.
+     */
+    public function test_un_paciente_con_antecedentes_de_otro_tipo_no_esta_vacio(): void
+    {
+        $vista = $this->vista([$this->antecedente(1, '0001', 'ASMA', null, '01')], [], '02');
+
+        $this->assertFalse($vista->estaVacio());
+        $this->assertTrue($vista->sinAntecedentesDeEsteTipo());
+        $this->assertSame([], $vista->filas());
     }
 
     public function test_con_antecedentes_el_estado_los_cuenta_y_avisa_si_hay_alerta(): void
@@ -130,7 +218,7 @@ class AntecedentesVistaTest extends TestCase
             $this->antecedente(3, '0003', 'SIN MARCAR', null, '01', 'PERSONAL', false, null),
         ]);
 
-        $filas = $vista->grupos()[0]['filas'];
+        $filas = $vista->filas();
 
         $this->assertTrue($filas[0]['alerta']);
         $this->assertFalse($filas[1]['alerta']);
@@ -148,7 +236,7 @@ class AntecedentesVistaTest extends TestCase
             $this->antecedente(3, '0003', 'LARGO', str_repeat('x', 200)),
         ]);
 
-        $filas = $vista->grupos()[0]['filas'];
+        $filas = $vista->filas();
 
         // Sin detalle: `null` (la vista pinta la raya del dato ausente).
         $this->assertSame('', $filas[0]['detalle']);
@@ -168,7 +256,7 @@ class AntecedentesVistaTest extends TestCase
             $this->antecedente(1, '9999', 'VIEJO', null, '01', 'PERSONAL', false, null, false),
         ]);
 
-        $this->assertSame('ya no está en tu catálogo', $vista->grupos()[0]['filas'][0]['avisoCatalogo']);
+        $this->assertSame('ya no está en tu catálogo', $vista->filas()[0]['avisoCatalogo']);
     }
 
     // ------------------------------------------------------------------------------ El `old()`
@@ -180,7 +268,7 @@ class AntecedentesVistaTest extends TestCase
             ['filas' => [7 => ['detalle' => 'lo que se escribió', 'alerta' => 'A']]],
         );
 
-        $fila = $vista->grupos()[0]['filas'][0];
+        $fila = $vista->filas()[0];
 
         $this->assertSame('lo que se escribió', $fila['detalle']);
         $this->assertTrue($fila['alerta']);
@@ -196,7 +284,7 @@ class AntecedentesVistaTest extends TestCase
             ['filas' => [7 => ['detalle' => 'nuevo', 'alerta' => 'B']]],
         );
 
-        $filas = $vista->grupos()[0]['filas'];
+        $filas = $vista->filas();
 
         $this->assertSame('nuevo', $filas[0]['detalle']);
         $this->assertFalse($filas[0]['alerta']);
@@ -207,48 +295,78 @@ class AntecedentesVistaTest extends TestCase
 
     // --------------------------------------------------------------------------- El buscador
 
-    public function test_el_buscador_marca_lo_que_el_paciente_ya_tiene_y_lo_pendiente(): void
+    private function catalogo(array $resultados = [], array $yaEsta = [], string $buscar = '', string $tipo = ''): SeccionDeAntecedentesCatalogoVista
     {
-        $catalogo = new SeccionDeAntecedentesCatalogoVista(
-            new Collection([
+        return new SeccionDeAntecedentesCatalogoVista(
+            new Collection($resultados),
+            $yaEsta,
+            self::TIPOS,
+            '/clinica/consulta/42/antecedentes/agregar',
+            '/clinica/consulta/42/antecedentes/crear',
+            $buscar,
+            $tipo,
+        );
+    }
+
+    public function test_el_buscador_marca_lo_que_el_paciente_ya_tiene(): void
+    {
+        $catalogo = $this->catalogo(
+            [
                 (object) ['codigo' => '0001', 'nombre' => 'ASMA', 'tipoCodigo' => '01', 'tipoNombre' => 'PERSONAL'],
                 (object) ['codigo' => '0002', 'nombre' => 'DIABETES', 'tipoCodigo' => '02', 'tipoNombre' => 'FAMILIAR'],
-                (object) ['codigo' => '0003', 'nombre' => 'TABACO', 'tipoCodigo' => '03', 'tipoNombre' => 'PSICOBIOLOGICOS'],
-            ]),
+                (object) ['codigo' => '0003', 'nombre' => 'TABACO', 'tipoCodigo' => '03', 'tipoNombre' => 'HABITOS PSICOBIOLOGICOS'],
+            ],
             ['0001'],
-            [['codigo' => '01', 'nombre' => 'PERSONAL']],
-            '/clinica/consulta/42',
-            '/clinica/consulta/42/antecedentes/crear',
             '',
-            '',
-            ['agregar' => '0003'],
+            '01',
         );
 
         $resultados = $catalogo->resultados();
 
         $this->assertTrue($resultados[0]['yaEsta'], 'ASMA ya está en el paciente');
-        $this->assertFalse($resultados[0]['pendiente']);
         $this->assertFalse($resultados[1]['yaEsta']);
-        $this->assertTrue($resultados[2]['pendiente'], 'TABACO quedó tildado en el buscador');
+        $this->assertFalse($resultados[2]['yaEsta']);
         $this->assertSame('FAMILIAR', $resultados[1]['tipo']);
-        $this->assertSame(['0003'], $catalogo->pendientesDelBuscador());
-        $this->assertStringContainsString('Tildaste un antecedente', $catalogo->avisoDePendientes());
-        // El "Agregar" de una fila conserva lo que ya estaba tildado y suma el suyo.
-        $urlAgregar = $catalogo->urlAgregar('0002');
-        $this->assertStringContainsString('/clinica/consulta/42?seccion=antecedentes', $urlAgregar);
-        $this->assertStringContainsString('agregar[]=0003', $urlAgregar);
-        $this->assertStringContainsString('agregar[]=0002', $urlAgregar);
-        // Y la URL del guardado lleva los dos: la sección y los pendientes.
-        $this->assertStringContainsString('seccion=antecedentes', $catalogo->urlGuardar());
-        $this->assertStringContainsString('agregar[]=0003', $catalogo->urlGuardar());
+        // O-07: no hay estado intermedio de «pendiente»; «Agregar» es un POST inmediato.
+        $this->assertArrayNotHasKey('pendiente', $resultados[2]);
+        $this->assertSame('/clinica/consulta/42/antecedentes/agregar', $catalogo->urlAgregar());
     }
 
-    public function test_el_buscador_sin_pendientes_no_avisa_nada(): void
+    /** «Agregar» conserva el chip y la búsqueda en los campos ocultos del formulario, no en la URL. */
+    public function test_agregar_conserva_el_tipo_y_la_busqueda(): void
     {
-        $catalogo = new SeccionDeAntecedentesCatalogoVista(new Collection(), [], [], '/x', '/y');
+        $catalogo = $this->catalogo([], [], 'diab', '02');
 
-        $this->assertSame([], $catalogo->pendientesDelBuscador());
+        $this->assertSame('02', $catalogo->tipo());
+        $this->assertSame('diab', $catalogo->buscar());
+        // «Limpiar» se lleva la búsqueda pero **no** el tipo.
+        $this->assertStringContainsString('tipo=02', $catalogo->urlLimpiar());
+        $this->assertStringNotContainsString('buscar=', $catalogo->urlLimpiar());
+    }
+
+    public function test_el_buscador_sin_resultados_no_avisa_nada(): void
+    {
+        $catalogo = $this->catalogo();
+
         $this->assertSame([], $catalogo->resultados());
         $this->assertSame('Tu catálogo no tiene antecedentes que coincidan', $catalogo->sinResultados()['titulo']);
+    }
+
+    /** Sin «todos los tipos», el catálogo vacío se explica por el tipo: no es lo mismo que el catálogo vacío. */
+    public function test_el_catalogo_vacio_se_explica_por_el_tipo_elegido(): void
+    {
+        $vacio = $this->catalogo([], [], '', '04')->sinResultados();
+        $this->assertStringContainsString('no tiene antecedentes de OBSTETRICOS', $vacio['titulo']);
+
+        // Con una búsqueda escrita, el estado vacío es el de la búsqueda.
+        $buscado = $this->catalogo([], [], 'xyz', '04')->sinResultados();
+        $this->assertSame('Tu catálogo no tiene antecedentes que coincidan', $buscado['titulo']);
+    }
+
+    /** El alta del catálogo viene con el tipo del chip activo, para que lo creado caiga donde se está mirando. */
+    public function test_el_alta_del_catalogo_viene_con_el_tipo_del_chip(): void
+    {
+        $this->assertSame('05', $this->catalogo([], [], '', '05')->tipoDelAlta());
+        $this->assertSame('GINECOLOGICOS', $this->catalogo([], [], '', '05')->nombreDelTipo());
     }
 }

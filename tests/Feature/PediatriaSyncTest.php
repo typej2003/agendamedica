@@ -259,6 +259,198 @@ class PediatriaSyncTest extends TestCase
         $this->assertSame(0, DB::table('users')->where('name', 'colado')->count());
     }
 
+    /* ------------------------------------------------------------------ */
+    /* El paciente pediátrico viene de `paciente_chamo` (2026-10-14)       */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * **Pediatría no usa `pacientes`**: su ABM de pacientes es `paciente_chamo` (el chamo, con su familia
+     * y su representante) y su `pacientes` está vacía en las bases reales. Si la carga no arma el paciente
+     * y su historia desde ahí, el médico queda sin fichas: la web no lista a nadie y el app abre en blanco
+     * (pasó de verdad: 1,19 M de filas cargadas y 0 pacientes).
+     */
+    public function test_la_carga_de_pediatria_arma_el_paciente_y_su_historia_desde_el_chamo(): void
+    {
+        $carga = $this->post_('carga-inicial/iniciar', ['reg_medico' => self::REG_PED, 'tablas' => [
+            'paciente_chamo' => 1,
+        ]])->assertOk();
+
+        // El escritorio manda SU clave primaria: `historia`.
+        $this->post_('carga-inicial/lote', [
+            'carga_id' => $carga->json('carga_id'), 'tabla' => 'paciente_chamo', 'desde' => 0,
+            'filas' => [[
+                'familia' => 7, 'historia' => 1, 'nombre' => 'LUIS CHAMO', 'sexo' => 'M',
+                'f_nacimiento' => '2020-05-04', 'celular' => '0414-1234567', 'segu_empre' => 'SE',
+                'alergia' => 'penicilina',
+            ]],
+        ])->assertOk();
+        $this->post_('carga-inicial/finalizar', ['carga_id' => $carga->json('carga_id')])->assertOk();
+
+        // 1) La historia y su relación con el médico.
+        $historia = DB::table('historias')->where('reg_medico', self::REG_PED)->first();
+        $this->assertNotNull($historia, 'se tiene que crear la historia');
+        $this->assertSame('1', (string) $historia->clave_escritorio, 'la clave es el número del escritorio');
+        $this->assertSame('1', (string) $historia->numhistoria);
+
+        $vinculo = DB::table('medico_pacientes')->where('medico_id', $historia->medico_id)->first();
+        $this->assertNotNull($vinculo, 'y la relación con el médico');
+        $this->assertSame($historia->paciente_id, $vinculo->paciente_id);
+        $this->assertSame('1', (string) $vinculo->numhistoria);
+
+        // 2) El paciente, con las columnas mapeadas del manifiesto (`nombre`→`nombres`,
+        //    `celular`→`telefono`, `f_nacimiento`→`fnacimiento`, `segu_empre`→`codesegemp`).
+        $paciente = DB::table('pacientes')->where('id', $historia->paciente_id)->first();
+        $this->assertSame('LUIS CHAMO', $paciente->nombres);
+        $this->assertSame('M', $paciente->sexo);
+        $this->assertStringStartsWith('2020-05-04', (string) $paciente->fnacimiento);
+        $this->assertSame('0414-1234567', $paciente->telefono);
+        $this->assertSame('SE', $paciente->codesegemp);
+        $this->assertNull($paciente->apellidos, 'el chamo no trae apellidos por separado: no se inventan');
+
+        // 3) Y el espejo: la tabla propia del escritorio se sigue guardando tal cual (sus columnas que no
+        //    existen en `pacientes` son las que usa el app de pediatría).
+        $chamo = DB::table('paciente_chamo')->where('reg_medico', self::REG_PED)->first();
+        $this->assertSame('penicilina', $chamo->alergia);
+        $this->assertSame('7', (string) $chamo->familia);
+    }
+
+    public function test_un_cambio_de_chamo_crea_y_despues_actualiza_el_paciente(): void
+    {
+        $this->cargaMinimaDePediatria();
+
+        // Alta desde el escritorio: la clave es `{historia}` (la primaria de `paciente_chamo`).
+        $respuesta = $this->post_('cambios/subir', ['reg_medico' => self::REG_PED, 'cambios' => [[
+            'id' => 21, 'tabla' => 'paciente_chamo', 'op' => 'I', 'fecha' => '2026-05-05 09:00:00',
+            'clave' => ['historia' => 9],
+            'fila' => ['familia' => 3, 'historia' => 9, 'nombre' => 'NUEVO CHAMO', 'sexo' => 'F',
+                'f_nacimiento' => '2021-01-02', 'alergia' => 'ninguna'],
+        ]]])->assertOk();
+        $this->assertSame(['21'], $this->confirmados($respuesta), (string) $respuesta->json('rechazados'));
+
+        $historia = DB::table('historias')->where('reg_medico', self::REG_PED)->where('clave_escritorio', '9')->first();
+        $this->assertNotNull($historia, 'el paciente nuevo tiene su historia');
+        $this->assertSame('NUEVO CHAMO', DB::table('pacientes')->where('id', $historia->paciente_id)->value('nombres'));
+        $this->assertStringStartsWith('2021-01-02', (string) DB::table('pacientes')->where('id', $historia->paciente_id)->value('fnacimiento'));
+
+        // Edición: cambia el nombre y la alergia.
+        $this->post_('cambios/subir', ['reg_medico' => self::REG_PED, 'cambios' => [[
+            'id' => 22, 'tabla' => 'paciente_chamo', 'op' => 'U', 'fecha' => '2026-05-06 09:00:00',
+            'clave' => ['historia' => 9],
+            'fila' => ['familia' => 3, 'historia' => 9, 'nombre' => 'NUEVO CHAMO DOS', 'sexo' => 'F',
+                'alergia' => 'penicilina'],
+        ]]])->assertOk();
+
+        $this->assertSame('NUEVO CHAMO DOS', DB::table('pacientes')->where('id', $historia->paciente_id)->value('nombres'));
+        $this->assertSame('penicilina', DB::table('paciente_chamo')->where('reg_medico', self::REG_PED)->where('historia', 9)->value('alergia'));
+        // Guardar un cambio no duplica el paciente ni la historia.
+        $this->assertSame(1, DB::table('historias')->where('reg_medico', self::REG_PED)->where('clave_escritorio', '9')->count());
+    }
+
+    public function test_un_lote_de_pacientes_sin_el_numero_de_historia_se_rechaza(): void
+    {
+        $carga = $this->post_('carga-inicial/iniciar', ['reg_medico' => self::REG_PED, 'tablas' => [
+            'paciente_chamo' => 1,
+        ]])->assertOk();
+
+        // Sin la columna de la historia no se puede armar nada. Antes esto respondía "recibido", la carga
+        // terminaba "Completa" y el médico quedaba con 0 pacientes sin un solo error visible.
+        $this->post_('carga-inicial/lote', [
+            'carga_id' => $carga->json('carga_id'), 'tabla' => 'paciente_chamo', 'desde' => 0,
+            'filas' => [['familia' => 1, 'nombre' => 'SIN HISTORIA']],
+        ])->assertStatus(500)->assertJsonPath('error', 'error_guardando');
+
+        $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', self::REG_PED)->count(), 'no quedó nada a medias');
+    }
+
+    /**
+     * El comando de reparación: cuando la tabla de pacientes ya está en el API (una carga hecha antes de
+     * que existiera el mapeo) arma las historias a partir de ella, sin pedirle nada al escritorio.
+     */
+    public function test_el_comando_arma_los_pacientes_desde_la_tabla_que_ya_esta_en_el_api(): void
+    {
+        $carga = $this->post_('carga-inicial/iniciar', ['reg_medico' => self::REG_PED, 'tablas' => [
+            'paciente_chamo' => 0,
+        ]])->assertOk();
+        $this->post_('carga-inicial/finalizar', ['carga_id' => $carga->json('carga_id')])->assertOk();
+
+        // El espejo, como lo dejó aquella carga: filas sin historia en el API.
+        foreach ([['historia' => 3, 'nombre' => 'UNO CHAMO'], ['historia' => 4, 'nombre' => 'DOS CHAMO']] as $fila) {
+            DB::table('paciente_chamo')->insert([
+                'reg_medico' => self::REG_PED, 'familia' => 1, 'historia' => $fila['historia'],
+                'nombre' => $fila['nombre'], 'sexo' => 'M', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+        $this->assertSame(0, DB::table('historias')->where('reg_medico', self::REG_PED)->count());
+
+        $this->artisan('sync:pacientes-del-escritorio', ['reg_medico' => self::REG_PED, '--simular' => true])
+            ->assertSuccessful();
+        $this->assertSame(0, DB::table('historias')->where('reg_medico', self::REG_PED)->count(), 'la simulación no escribe');
+
+        $this->artisan('sync:pacientes-del-escritorio', ['reg_medico' => self::REG_PED])->assertSuccessful();
+
+        $this->assertSame(2, DB::table('historias')->where('reg_medico', self::REG_PED)->count());
+        $this->assertSame('UNO CHAMO',
+            DB::table('pacientes')->join('historias', 'historias.paciente_id', '=', 'pacientes.id')
+                ->where('historias.clave_escritorio', '3')->value('pacientes.nombres'));
+        $this->assertSame('4', (string) DB::table('historias')->where('reg_medico', self::REG_PED)
+            ->where('clave_escritorio', '4')->value('numhistoria'));
+
+        // Idempotente: correrlo de nuevo no duplica nada.
+        $this->artisan('sync:pacientes-del-escritorio', ['reg_medico' => self::REG_PED])->assertSuccessful();
+        $this->assertSame(2, DB::table('historias')->where('reg_medico', self::REG_PED)->count());
+
+        // Y los dos pacientes quedan vinculados al médico: el pivote es lo que el app usa para listarlos.
+        $medico = Medico::where('reg_medico', self::REG_PED)->firstOrFail();
+        $this->assertSame(2, DB::table('medico_pacientes')->where('medico_id', $medico->id)->count());
+    }
+
+    private function confirmados($respuesta): array
+    {
+        return array_values(array_filter(explode(',', (string) $respuesta->json('confirmados'))));
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* La especialidad se vincula sola en la primera sincronización        */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * El técnico no tiene que asignar la especialidad a mano: el escritorio anuncia **todas** sus tablas
+     * antes de subir nada, y las distintivas de cada especialidad están en su manifiesto. Sin esto, un
+     * médico nuevo recibe la lista histórica (la de ginecología) y en la web entra a un consultorio sin
+     * módulos.
+     */
+    public function test_la_primera_sincronizacion_le_vincula_la_especialidad_al_medico(): void
+    {
+        $medico = $this->medicoConEspecialidad('nuevo-t-001', null);
+        $this->assertSame([], app(TablasDelSync::class)->especialidadesDe($medico));
+
+        $respuesta = $this->post_('carga-inicial/iniciar', ['reg_medico' => 'nuevo-t-001', 'tablas' => [
+            'pacientes' => 0, 'paciente_chamo' => 2, 'vacunas' => 1, 'percentil_nino' => 5,
+        ]])->assertOk();
+
+        $this->assertSame('pediatria', (string) $respuesta->json('especialidad'));
+        $this->assertContains('pediatria', app(TablasDelSync::class)->especialidadesDe($medico->fresh()));
+
+        // A partir de ahí el escritorio recibe SU lista (y la web sabe qué módulos mostrar).
+        $tablas = explode(',', (string) $this->post_('cambios/estado', ['reg_medico' => 'nuevo-t-001'])
+            ->assertOk()->json('tablas'));
+        $this->assertContains('paciente_chamo', $tablas);
+    }
+
+    public function test_sin_evidencia_no_se_le_asigna_ninguna_especialidad(): void
+    {
+        $medico = $this->medicoConEspecialidad('core-t-001', null);
+
+        // Sólo tablas del núcleo: no hay de dónde deducir, y adivinar mal es peor que no adivinar (la
+        // especialidad decide los módulos de la web clínica).
+        $respuesta = $this->post_('carga-inicial/iniciar', ['reg_medico' => 'core-t-001', 'tablas' => [
+            'pacientes' => 1, 'consultas' => 1, 'cola' => 1,
+        ]])->assertOk();
+
+        $this->assertSame('', (string) $respuesta->json('especialidad'));
+        $this->assertSame([], app(TablasDelSync::class)->especialidadesDe($medico->fresh()));
+    }
+
     /**
      * Deja a `REG_PED` con la carga inicial completa y un paciente con su consulta (historias y
      * consultas por los endpoints reales: el escritorio manda SUS números).

@@ -196,8 +196,10 @@ class SyncReportesTest extends TestCase
             ['reg_medico' => $reg, 'codeexamen' => '099', 'examen' => 'MAMOGRAFIA', 'codetipo' => '002'],
         ]);
         $consulta = \App\Models\Consulta::where('reg_medico', $reg)->where('numhistoria', 1)->where('nroconsulta', 1)->firstOrFail();
-        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->ejecutar($consulta, ['001'], 'RESUMEN', null, 'web');
-        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->ejecutar($consulta, ['099'], 'RESUMEN', null, 'web');
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->agregar($consulta, ['001'], null, 'web');
+        app(\App\Actions\Consulta\GuardarOrdenDeLaboratorio::class)->guardarResumen($consulta, 'RESUMEN', null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->agregar($consulta, ['099'], null, 'web');
+        app(\App\Actions\Consulta\GuardarSolicitudDeEstudios::class)->guardarResumen($consulta, 'RESUMEN', null, 'web');
 
         foreach ([$this->sync(), $this->sync(['since' => $since])] as $respuesta) {
             foreach (['examen_paciente', 'examen_obs', 'radiologia_paciente', 'radiologia_obs', 'examenes', 'tipos_examenes'] as $tabla) {

@@ -6,38 +6,44 @@ namespace App\Clinica\Catalogos;
  * **Los tipos de plantilla de texto** (`formato_print.tipo`, WEB-8.4): qué código es cada tipo y dónde se ofrece. Es la lista
  * del ABM del escritorio (`d_a_formatos.srd`, la columna `tipo` con sus valores) con el nombre en claro.
  *
- * Tres de los tipos **ya los consume la consulta de la web** —las plantillas de la evolución (`EV`), del informe médico (`IM`) y de
- * las dietas / recomendaciones (`DI`)—: ahí la plantilla se **copia** al campo que se escribe, así que una plantilla nueva o editada
- * se ofrece al instante (es la misma tabla) y editarla no cambia lo que ya está escrito en las consultas. Los demás son los del
- * escritorio (la enfermedad actual `EA`, la citología, la colposcopía, las ecografías…): se pueden mantener acá, pero la consulta de
- * la web todavía no los ofrece. Un código que no está en la lista (el legado puede traer cualquiera) se muestra tal cual y no se
- * pierde al guardar.
+ * Los tipos de `USADOS_EN_LA_WEB` **ya los consume la consulta de la web**: las secciones de texto —evolución (`EV`), informe
+ * (`IM`), dietas (`DI`), enfermedad actual (`EA`), las solapas del examen (`CO`, `CI`, `HI`, `RE`), el tratamiento (`TR`) y los
+ * resúmenes del examen (`RF`, `EG`)— y **los siete estudios ecográficos del ítem 5** (`UG`, `O1`, `O2`, `O3`, `ED`, `UA`, `UM`;
+ * revisión de Alexander, 2026-10-17). Ahí la plantilla se **copia** al campo que se escribe, así que una plantilla nueva o editada
+ * se ofrece al instante (es la misma tabla) y editarla no cambia lo que ya está escrito en las consultas. Los que quedan en `null`
+ * son los que el escritorio tiene y la web todavía **no ofrece** (el eco de cuello `EM` y el eco renal `ER`, que no tienen sección
+ * en ginecología): se pueden mantener acá, con su nombre. Un código que no está en la lista (el legado puede traer cualquiera) se
+ * muestra tal cual y no se pierde al guardar.
+ *
+ * ⚠️ Esta clase dice **qué existe**, no qué ve cada especialidad: qué tipos se ofrecen en el ABM lo decide
+ * `PlantillasDeLaEspecialidad` (en pediatría no se ofrecen los ginecológicos, 2026-10-18).
  */
 final class TiposDePlantillaDeTexto
 {
     /** Los tipos que la consulta de la web ya ofrece. */
-    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI'];
+    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI', 'EA', 'CO', 'CI', 'HI', 'TR', 'RE', 'RF', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UA', 'UM'];
 
     /** `código => [nombre, dónde se usa]`. El orden es el de las listas de la pantalla. */
     private const TIPOS = [
         'EV' => ['Evolución', 'Se ofrece en la evolución de la consulta.'],
         'IM' => ['Informe médico', 'Se ofrece en el informe médico de la consulta.'],
         'DI' => ['Dietas / Recomendaciones', 'Se ofrece en las dietas y recomendaciones de la consulta.'],
-        'EA' => ['Enfermedad actual', null],
-        'EG' => ['Examen ginecológico', null],
-        'RF' => ['Resumen físico', null],
-        'CI' => ['Citología', null],
-        'CO' => ['Colposcopía', null],
-        'HI' => ['Histeroscopía', null],
-        'TR' => ['Tratamiento', null],
-        'RE' => ['Resultado de exámenes', null],
-        'UG' => ['Eco ginecológico', null],
-        'O1' => ['Obstétrico 1', null],
-        'O2' => ['Obstétrico 2', null],
-        'O3' => ['Obstétrico 3', null],
-        'ED' => ['Eco Doppler perinatal', null],
-        'UA' => ['Eco abdominal', null],
-        'UM' => ['Eco mamario', null],
+        'EA' => ['Enfermedad actual', 'Se ofrece en la enfermedad actual de la consulta.'],
+        'EG' => ['Examen ginecológico', 'Se ofrece en el resumen del examen ginecológico.'],
+        'RF' => ['Resumen físico', 'Se ofrece en el resumen del examen físico.'],
+        'CI' => ['Citología', 'Se ofrece en la solapa de citología.'],
+        'CO' => ['Colposcopía', 'Se ofrece en la solapa de colposcopía.'],
+        'HI' => ['Histeroscopía', 'Se ofrece en la solapa de histeroscopía.'],
+        'TR' => ['Tratamiento', 'Se ofrece en el tratamiento de la consulta.'],
+        'RE' => ['Resultado de exámenes', 'Se ofrece en la solapa de resultado de exámenes.'],
+        'UG' => ['Eco ginecológico', 'Se ofrece en el estudio ecográfico, en el eco ginecológico.'],
+        'O1' => ['Obstétrico 1', 'Se ofrece en el estudio ecográfico, en el eco obstétrico del 1.er trimestre.'],
+        'O2' => ['Obstétrico 2', 'Se ofrece en el estudio ecográfico, en el eco obstétrico del 2.º trimestre.'],
+        'O3' => ['Obstétrico 3', 'Se ofrece en el estudio ecográfico, en el eco obstétrico del 3.er trimestre.'],
+        'ED' => ['Eco Doppler perinatal', 'Se ofrece en el estudio ecográfico, en el eco Doppler perinatal.'],
+        'UA' => ['Eco abdominal', 'Se ofrece en el estudio ecográfico, en el eco abdominal.'],
+        'UM' => ['Eco mamario', 'Se ofrece en el estudio ecográfico, en el eco mamario.'],
+        // El escritorio los tiene, pero en la web no hay pantalla que los ofrezca: no están en `USADOS_EN_LA_WEB`.
         'EM' => ['Eco de cuello', null],
         'ER' => ['Eco renal', null],
     ];

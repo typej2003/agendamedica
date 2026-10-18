@@ -19,11 +19,12 @@ use Tests\TestCase;
  *
  * Lo que fijan estos casos:
  *
- *  - **Laboratorio**: la orden se guarda **entera** (lo marcado es lo que queda): crea los que faltan, borra los que sobran y deja en paz
- *    los que ya estaban (su `resultado`/`vinculante` no se tocan); un examen no se repite; sólo se piden exámenes del catálogo de
- *    laboratorio (sin el tipo `002`); la observación («Resumen clínico») es una fila de `examen_obs`; una **rutina** es un tipo de examen
- *    completo y no repite lo que ya está; la sección *Exámenes* de WEB-4.7 ve lo mismo.
- *  - **Estudios**: lo mismo con `radiologia_paciente` (cuyo `coderadio` es un examen de tipo `002`), `nroopcion = 1` y `orden` numerado.
+ *  - **Laboratorio**: el catálogo **a la vista** con su «Pasar» por fila (O-29): cada alta y cada baja es una escritura (rastro
+ *    `source = web`), un examen no se repite, sólo se piden exámenes del catálogo de laboratorio (sin el tipo `002`) y una **rutina**
+ *    es un tipo de examen completo que no repite lo que ya está. El «Resumen clínico» es una fila de `examen_obs` y se guarda **sólo
+ *    él** con su botón; la sección *Exámenes* de WEB-4.7 ve lo mismo.
+ *  - **Estudios**: lo mismo con `radiologia_paciente` (cuyo `coderadio` es un examen de tipo `002`), `nroopcion = 1` y `orden` numerado
+ *    al agregar.
  *  - **Siempre**: no se crean filas vacías, rastro `source = web` por fila y por columna en `sync_changes`, last-write-wins, 404 de otro
  *    médico, 403 de la secretaría y la historia del paciente con los dos tipos nuevos.
  */
@@ -127,16 +128,56 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         return DB::table($tabla)->where('reg_medico', $medico->reg_medico)->orderBy('id')->pluck($columna)->map(fn ($c) => trim((string) $c))->all();
     }
 
+    // ------------------------------------------------------------- Las escrituras inmediatas (O-29)
+
+    private function urlAgregarExamen(Consulta $consulta): string
+    {
+        return route('clinica.consulta.laboratorio.agregar', $consulta->id);
+    }
+
+    private function urlQuitarExamen(Consulta $consulta): string
+    {
+        return route('clinica.consulta.laboratorio.quitar', $consulta->id);
+    }
+
+    private function urlResumenDeExamenes(Consulta $consulta): string
+    {
+        return route('clinica.consulta.laboratorio.guardar', $consulta->id);
+    }
+
+    private function urlRutina(Consulta $consulta, string $tipo): string
+    {
+        return route('clinica.consulta.laboratorio.rutinas.agregar', [$consulta->id, $tipo]);
+    }
+
+    private function urlAgregarEstudio(Consulta $consulta): string
+    {
+        return route('clinica.consulta.estudios.agregar', $consulta->id);
+    }
+
+    private function urlQuitarEstudio(Consulta $consulta): string
+    {
+        return route('clinica.consulta.estudios.quitar', $consulta->id);
+    }
+
+    private function urlResumenDeEstudios(Consulta $consulta): string
+    {
+        return route('clinica.consulta.estudios.guardar', $consulta->id);
+    }
+
     // ===================================================================================== La sección
 
-    public function test_el_panel_sigue_en_10_de_13_con_su_tarjeta_actualizada_y_laboratorio_abre_vacio(): void
+    public function test_el_menu_ofrece_solicitudes_y_laboratorio_abre_vacio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('12 de 13 disponibles', false)
-            ->assertSee('Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.')
+            ->assertSee('Pre-factura', false)
+            // El ítem de Solicitudes está en el grupo «Consulta» del menú; su detalle (que incluye laboratorio,
+            // estudios, constancia, reposo, referencia, hospitalización, informe y dieta) vive en el catálogo y lo
+            // fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
+            ->assertSee('Solicitudes')
             ->assertDontSee('llegan después');
 
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))
@@ -147,10 +188,13 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             ->assertSee('Todavía no hay exámenes en la orden')
             ->assertDontSee('Eliminar la orden')
             ->assertDontSee(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'laboratorio']), false)
-            // Las rutinas: los tipos con exámenes, sin el de estudios de imágenes.
-            ->assertSee('data-orden-rutina="001"', false)->assertSee('data-orden-rutina="004"', false)
-            ->assertDontSee('data-orden-rutina="002"', false)
-            ->assertSee('data-url-catalogo="' . route('clinica.consulta.laboratorio.catalogo', $consulta->id) . '"', false);
+            // O-29: el catálogo a la vista con su «Pasar» por fila, y las rutinas como formularios (un tipo completo).
+            ->assertSee('GLICEMIA')->assertSee('UREA')->assertSee('Pasar')
+            ->assertSee('action="' . $this->urlRutina($consulta, '001') . '"', false)
+            ->assertSee('action="' . $this->urlRutina($consulta, '004') . '"', false)
+            ->assertDontSee('action="' . $this->urlRutina($consulta, '002') . '"', false)
+            // El resumen clínico es lo único que se guarda con su botón.
+            ->assertSee('id="orden-resumen"', false)->assertSee('Guardar el resumen clínico');
     }
 
     public function test_el_catalogo_vacio_se_dice_y_manda_al_catalogo_de_examenes(): void
@@ -164,17 +208,56 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         }
     }
 
-    // ================================================================================== Laboratorio
+    // ============================================================ Las dos columnas (A-04)
 
-    public function test_guardar_la_orden_crea_los_examenes_y_el_resumen_con_su_rastro(): void
+    public function test_la_orden_queda_a_la_izquierda_y_el_catalogo_con_su_buscador_a_la_derecha(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), [
-            'examenes' => ['001', '010'],
-            'observacion' => "Control prenatal.\nDescartar anemia.",
-        ])->assertRedirect($this->seccion($consulta, 'laboratorio'))
-            ->assertSessionHas('estado', 'Orden de laboratorio guardada (2 exámenes agregados).');
+        foreach ([
+            ['laboratorio', 'Orden de exámenes de laboratorio', 'Tu catálogo'],
+            ['estudios', 'Solicitud de estudios', 'Tu catálogo'],
+        ] as [$pestana, $titulo, $tituloDelCatalogo]) {
+            $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, $pestana))->assertOk()->getContent();
+
+            // Una sola grilla, la de `<x-ui.dos-listas>`, con sus dos columnas (ni tres ni una).
+            $this->assertSame(1, substr_count($html, 'class="dos-listas"'), 'una sola grilla de dos columnas');
+            $primera = strpos($html, 'class="dos-listas-columna"');
+            $segunda = strpos($html, 'class="dos-listas-columna"', $primera + 1);
+            $this->assertNotFalse($primera);
+            $this->assertNotFalse($segunda);
+            $this->assertFalse(strpos($html, 'class="dos-listas-columna"', $segunda + 1), 'exactamente dos columnas');
+            $this->assertStringContainsString('aria-label="' . $titulo . '"', $html);
+            $this->assertStringContainsString('aria-label="' . $tituloDelCatalogo . '"', $html);
+
+            // A la izquierda, la orden de esta consulta: la lista (o su estado vacío) y el resumen clínico con su botón.
+            foreach (['Todavía no hay', 'id="orden-observacion"', 'id="orden-resumen"'] as $marca) {
+                $this->assertGreaterThan($primera, strpos($html, $marca), $marca . ' en la columna izquierda');
+                $this->assertLessThan($segunda, strpos($html, $marca), $marca . ' antes de la columna derecha');
+            }
+
+            // A la derecha, el catálogo **a la vista**: el buscador y una fila por examen con su «Pasar».
+            $this->assertStringContainsString('<form method="GET"', $html, 'el buscador del catálogo');
+            $this->assertGreaterThan($segunda, strpos($html, 'id="orden-texto"'), 'el buscador en la columna derecha');
+            $this->assertStringContainsString('dos-listas-fila', $html);
+            $this->assertStringContainsString('data-pasar-boton', $html);
+
+            // La fila del catálogo es un POST (la escritura inmediata), no un botón de la lista.
+            $this->assertStringContainsString('name="codigo" value="', $html);
+        }
+    }
+
+    // ================================================================================== Laboratorio
+
+    public function test_agregar_un_examen_y_guardar_el_resumen_escriben_cada_uno_lo_suyo(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+
+        foreach (['001', '010'] as $codigo) {
+            $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => $codigo])
+                ->assertRedirect($this->seccion($consulta, 'laboratorio'))
+                ->assertSessionHas('estado');
+        }
 
         $filas = DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->orderBy('codeexamen')->get();
         $this->assertSame(['001', '010'], $filas->pluck('codeexamen')->map(fn ($c) => trim($c))->all());
@@ -184,9 +267,17 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             $this->assertNull($fila->resultado, 'resultado no lo escribe esta pestaña');
             $this->assertNull($fila->vinculante, 'vinculante no lo escribe esta pestaña');
         }
-        $this->assertSame("Control prenatal.\nDescartar anemia.", DB::table('examen_obs')->where('reg_medico', $medico->reg_medico)->where('numhistoria', 1001)->where('numconsulta', 1)->value('observacion'));
         $this->assertSame(2, $this->trazas('examen_paciente', 'created'));
+
+        // El resumen: su propio POST, sin lista de exámenes.
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), [
+            'observacion' => "Control prenatal.\nDescartar anemia.",
+        ])->assertRedirect($this->seccion($consulta, 'laboratorio'))
+            ->assertSessionHas('estado', 'Resumen clínico guardado.');
+
+        $this->assertSame("Control prenatal.\nDescartar anemia.", DB::table('examen_obs')->where('reg_medico', $medico->reg_medico)->where('numhistoria', 1001)->where('numconsulta', 1)->value('observacion'));
         $this->assertSame(1, $this->trazas('examen_obs', 'created'));
+        $this->assertSame(2, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count(), 'el resumen no toca los exámenes');
 
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))
             ->assertOk()
@@ -213,79 +304,81 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->assertStringContainsString('No está en tu catálogo: se muestra el código.', $html);
     }
 
-    public function test_una_orden_vacia_sin_resumen_se_rechaza_y_no_crea_filas(): void
+    public function test_una_orden_vacia_sin_resumen_no_crea_filas_y_el_resumen_largo_se_rechaza(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        $url = route('clinica.consulta.laboratorio.guardar', $consulta->id);
+        $url = $this->urlResumenDeExamenes($consulta);
 
-        $this->como($user, $medico, $gineco)->post($url, [])->assertSessionHasErrors(['observacion' => 'La orden necesita al menos un examen o un resumen clínico.']);
-        $this->como($user, $medico, $gineco)->post($url, ['examenes' => [], 'observacion' => " \n "])->assertSessionHasErrors('observacion');
-        $this->como($user, $medico, $gineco)->post($url, ['observacion' => 'none'])->assertSessionHasErrors('observacion');
-        $this->como($user, $medico, $gineco)->post($url, ['examenes' => ['001'], 'observacion' => str_repeat('r', 20001)])->assertSessionHasErrors('observacion');
-        $this->como($user, $medico, $gineco)->post($url, ['examenes' => ['123456789']])->assertSessionHasErrors('examenes.0');
+        // Vacío no es un error: no hay nada que guardar.
+        $this->como($user, $medico, $gineco)->post($url, [])->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'El resumen clínico ya estaba guardado así.');
+        $this->como($user, $medico, $gineco)->post($url, ['observacion' => " \n "])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($url, ['observacion' => 'none'])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($url, ['observacion' => str_repeat('r', 20001)])->assertSessionHasErrors('observacion');
 
         $this->assertSame(0, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame(0, DB::table('examen_obs')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame(0, SyncChange::whereIn('table_name', ['examen_paciente', 'examen_obs'])->count());
+
+        // Y un alta con un código inválido tampoco escribe nada.
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '123456789'])->assertSessionHasErrors('codigo');
+        $this->assertSame(0, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count());
     }
 
-    public function test_solo_el_resumen_clinico_alcanza_para_guardar_una_orden(): void
+    public function test_solo_el_resumen_clinico_alcanza_para_tener_una_orden(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['observacion' => 'HIV, VDRL'])
-            ->assertSessionHasNoErrors()->assertSessionHas('estado', 'Orden de laboratorio guardada.');
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'HIV, VDRL'])
+            ->assertSessionHasNoErrors()->assertSessionHas('estado', 'Resumen clínico guardado.');
 
         $this->assertSame(0, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame('HIV, VDRL', DB::table('examen_obs')->where('reg_medico', $medico->reg_medico)->value('observacion'));
     }
 
-    public function test_un_examen_que_no_es_del_catalogo_de_laboratorio_se_rechaza_y_la_lista_vuelve_con_el_formulario(): void
+    public function test_un_examen_que_no_es_del_catalogo_de_laboratorio_no_se_puede_agregar(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         [, $otroMedico] = $this->medicoConAcceso();
         $this->catalogo($otroMedico);
         DB::table('examenes')->insert(['reg_medico' => $otroMedico->reg_medico, 'codeexamen' => '555', 'examen' => 'SOLO DEL OTRO MEDICO', 'codetipo' => '001', 'created_at' => now(), 'updated_at' => now()]);
 
-        // Un estudio de imágenes (tipo 002), el examen de otro médico y un código inventado.
+        // Un estudio de imágenes (tipo 002), el examen de otro médico y un código inventado: 404, como el «Pasar» de motivos.
         foreach (['099', '555', '404'] as $codigo) {
-            $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001', $codigo], 'observacion' => 'texto'])
-                ->assertSessionHasErrors('observacion');
+            $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => $codigo])->assertNotFound();
         }
 
-        $this->assertSame(0, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count(), 'no se guarda nada a medias');
+        $this->assertSame(0, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count(), 'no se escribe nada');
         $this->assertSame(0, $this->trazas('examen_paciente', 'created'));
-
-        // La lista que había en el formulario vuelve (con el nombre del que sí es del catálogo), no se pierde lo armado.
-        $this->como($user, $medico, $gineco)->from($this->seccion($consulta, 'laboratorio'))
-            ->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['003', '099'], 'observacion' => 'texto largo escrito']);
-        $this->como($user, $medico, $gineco)->withSession(['_old_input' => ['examenes' => ['003'], 'observacion' => 'texto largo escrito']])
-            ->get($this->seccion($consulta, 'laboratorio'))
-            ->assertSee('UREA')->assertSee('texto largo escrito')->assertSee('1 examen en la orden.');
     }
 
-    public function test_editar_la_orden_quita_agrega_y_deja_en_paz_los_que_ya_estaban(): void
+    public function test_quitar_un_examen_borra_esa_fila_y_deja_en_paz_las_demas(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $glicemia = $this->examen($medico, '001', ['resultado' => '90', 'vinculante' => 'S']);
         $urea = $this->examen($medico, '003');
         $obs = $this->observacionDeExamenes($medico, 'Primera vez');
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), [
-            'examenes' => ['001', '010'], 'observacion' => 'Primera vez',
-        ])->assertSessionHas('estado', 'Orden de laboratorio guardada (1 examen agregado, 1 examen quitado).');
+        $this->como($user, $medico, $gineco)->delete($this->urlQuitarExamen($consulta), ['codigo' => '003'])
+            ->assertRedirect($this->seccion($consulta, 'laboratorio'))
+            ->assertSessionHas('estado', 'Examen quitado de la orden.');
 
-        $this->assertSame(['001', '010'], $this->codigosDe($medico));
+        $this->assertSame(['001'], $this->codigosDe($medico));
         $conservada = DB::table('examen_paciente')->find($glicemia);
-        $this->assertSame('90', $conservada->resultado, 'lo que ya estaba no se reescribe: el resultado sigue');
+        $this->assertSame('90', $conservada->resultado, 'lo que no se tocó sigue como estaba');
         $this->assertSame('S', $conservada->vinculante);
         $this->assertSame('2026-01-01 00:00:00', $conservada->updated_at);
         $this->assertNull(DB::table('examen_paciente')->find($urea));
-        $this->assertSame(1, $this->trazas('examen_paciente', 'created'));
         $this->assertSame(1, $this->trazas('examen_paciente', 'deleted'));
+        $this->assertSame(0, $this->trazas('examen_paciente', 'created'));
         $this->assertTrue(SyncChange::where('table_name', 'examen_paciente')->where('record_id', $urea)->where('operation', 'deleted')->where('source', 'web')->exists());
         $this->assertSame(0, $this->trazas('examen_obs', 'updated'), 'el resumen no cambió');
         $this->assertSame('2026-01-01 00:00:00', DB::table('examen_obs')->find($obs)->updated_at);
+
+        // Quitar uno que ya no está lo dice y no escribe nada.
+        $this->como($user, $medico, $gineco)->delete($this->urlQuitarExamen($consulta), ['codigo' => '003'])
+            ->assertSessionHas('estado', 'Ese examen ya no estaba en la orden.');
+        $this->assertSame(1, $this->trazas('examen_paciente', 'deleted'));
     }
 
     public function test_guardar_lo_mismo_no_escribe_ni_deja_rastro(): void
@@ -294,10 +387,15 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->examen($medico, '001');
         $obs = $this->observacionDeExamenes($medico, 'Igual');
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001'], 'observacion' => 'Igual'])
-            ->assertSessionHas('estado', 'La orden ya estaba guardada así.');
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'Igual'])
+            ->assertSessionHas('estado', 'El resumen clínico ya estaba guardado así.');
+
+        // Y agregar uno que ya está tampoco escribe.
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '001'])
+            ->assertSessionHas('estado', '«GLICEMIA» ya estaba en la orden.');
 
         $this->assertSame('2026-01-01 00:00:00', DB::table('examen_obs')->find($obs)->updated_at);
+        $this->assertSame(1, DB::table('examen_paciente')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame(0, SyncChange::whereIn('table_name', ['examen_paciente', 'examen_obs'])->count());
     }
 
@@ -306,8 +404,9 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->examen($medico, '001');
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001', '001', ' 001 ', '003', '003']])
-            ->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '001'])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '003'])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '003'])->assertSessionHasNoErrors();
 
         $this->assertSame(['001', '003'], $this->codigosDe($medico));
     }
@@ -317,16 +416,16 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->examen($medico, '001');
         $obs = $this->observacionDeExamenes($medico, 'Texto viejo');
-        $url = route('clinica.consulta.laboratorio.guardar', $consulta->id);
+        $url = $this->urlResumenDeExamenes($consulta);
 
-        $this->como($user, $medico, $gineco)->post($url, ['examenes' => ['001'], 'observacion' => 'Texto nuevo'])->assertSessionHas('estado', 'Orden de laboratorio guardada.');
+        $this->como($user, $medico, $gineco)->post($url, ['observacion' => 'Texto nuevo'])->assertSessionHas('estado', 'Resumen clínico guardado.');
         $this->assertSame('Texto nuevo', DB::table('examen_obs')->find($obs)->observacion);
         $this->assertNotSame('2026-01-01 00:00:00', DB::table('examen_obs')->find($obs)->updated_at);
         $this->assertSame(1, $this->trazas('examen_obs', 'updated', 'observacion'));
         $this->assertSame(1, DB::table('examen_obs')->where('reg_medico', $medico->reg_medico)->count(), 'se corrige la fila, no se crea otra');
 
         $this->travel(5)->seconds();
-        $this->como($user, $medico, $gineco)->post($url, ['examenes' => ['001'], 'observacion' => ''])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($url, ['observacion' => ''])->assertSessionHasNoErrors();
         $this->assertNull(DB::table('examen_obs')->find($obs)->observacion);
         $this->assertSame(2, $this->trazas('examen_obs', 'updated', 'observacion'));
     }
@@ -340,10 +439,12 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             'column_name' => 'observacion', 'value' => 'DEL ESCRITORIO', 'occurred_at' => '2026-10-08 00:00:00', 'source' => 'escritorio',
         ]);
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001'], 'observacion' => 'DE LA WEB'])
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'DE LA WEB'])
             ->assertSessionHas('error');
 
         $this->assertSame('DEL ESCRITORIO', DB::table('examen_obs')->find($obs)->observacion);
+        // El alta de un examen es otra escritura y sí entra: no la bloquea el resumen del escritorio.
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '001'])->assertSessionHas('estado');
         $this->assertSame(['001'], $this->codigosDe($medico), 'los exámenes sí se escriben');
     }
 
@@ -430,23 +531,28 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->examen($medico, '010');
 
-        // Lo que hace el editor al pasar la rutina PREOPERATORIOS: la lista queda con los dos del tipo.
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['010', '011']])
-            ->assertSessionHas('estado', 'Orden de laboratorio guardada (1 examen agregado).');
+        // Lo que hace el botón de la rutina PREOPERATORIOS: pasa todos los exámenes de su tipo de una vez.
+        $this->como($user, $medico, $gineco)->post($this->urlRutina($consulta, '004'))
+            ->assertRedirect($this->seccion($consulta, 'laboratorio'))
+            ->assertSessionHas('estado', 'Rutina «PREOPERATORIOS» agregada: 1 examen nuevo.');
 
         $this->assertSame(['010', '011'], $this->codigosDe($medico));
         $this->assertSame(1, $this->trazas('examen_paciente', 'created'));
     }
 
-    // ============================================================ La sección Exámenes (WEB-4.7)
+    // ================================================ La solapa Resultado de exámenes (WEB-4.7 y O-22)
 
-    public function test_la_seccion_de_examenes_ve_lo_que_se_arma_en_laboratorio(): void
+    public function test_la_solapa_de_resultados_ve_lo_que_se_arma_en_laboratorio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001', '010'], 'observacion' => 'HIV, VDRL']);
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '001']);
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '010']);
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'HIV, VDRL']);
 
-        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']))
+        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [
+            $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
+        ]))
             ->assertOk()
             ->assertSee('GLICEMIA')->assertSee('ELECTROCARDIOGRAMA')->assertSee('PREOPERATORIOS')
             ->assertSee('HIV, VDRL')
@@ -454,11 +560,13 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             ->assertSee(e($this->seccion($consulta, 'laboratorio')), false);
     }
 
-    public function test_la_seccion_de_examenes_vacia_manda_a_laboratorio(): void
+    public function test_la_solapa_de_resultados_vacia_manda_a_laboratorio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes']))
+        $this->como($user, $medico, $gineco)->get(route('clinica.consulta', [
+            $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
+        ]))
             ->assertOk()
             ->assertSee('Esta consulta no tiene exámenes pedidos')
             ->assertSee('se piden en Solicitudes → Laboratorio');
@@ -466,23 +574,27 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
     // ================================================================================== Estudios
 
-    public function test_guardar_la_solicitud_crea_los_estudios_con_opcion_1_orden_y_su_rastro(): void
+    public function test_agregar_los_estudios_les_da_opcion_1_y_orden_y_el_resumen_va_aparte(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.estudios.guardar', $consulta->id), [
-            'estudios' => ['114', '099'],
-            'observacion' => 'Mastalgia',
-        ])->assertRedirect($this->seccion($consulta, 'estudios'))
-            ->assertSessionHas('estado', 'Solicitud de estudios guardada (2 estudios agregados).');
+        foreach (['114', '099'] as $codigo) {
+            $this->como($user, $medico, $gineco)->post($this->urlAgregarEstudio($consulta), ['codigo' => $codigo])
+                ->assertRedirect($this->seccion($consulta, 'estudios'))
+                ->assertSessionHas('estado');
+        }
 
         $filas = DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->orderBy('orden')->get();
         $this->assertSame(['114', '099'], $filas->pluck('coderadio')->map(fn ($c) => trim($c))->all(), 'el orden de la lista');
         $this->assertSame([1, 2], $filas->pluck('orden')->map(fn ($o) => (int) $o)->all());
         $this->assertSame([1, 1], $filas->pluck('nroopcion')->map(fn ($o) => (int) $o)->all());
-        $this->assertSame('Mastalgia', DB::table('radiologia_obs')->where('reg_medico', $medico->reg_medico)->where('numhistoria', 1001)->where('numconsulta', 1)->value('observacion'));
         $this->assertSame(2, $this->trazas('radiologia_paciente', 'created'));
+
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeEstudios($consulta), ['observacion' => 'Mastalgia'])
+            ->assertSessionHas('estado', 'Resumen clínico guardado.');
+        $this->assertSame('Mastalgia', DB::table('radiologia_obs')->where('reg_medico', $medico->reg_medico)->where('numhistoria', 1001)->where('numconsulta', 1)->value('observacion'));
         $this->assertSame(1, $this->trazas('radiologia_obs', 'created'));
+        $this->assertSame(2, DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->count(), 'el resumen no toca los estudios');
 
         $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'estudios'))
             ->assertOk()->assertSee('Solicitud de estudios')->assertSee('2 estudios')->assertSee('Eliminar la solicitud')->assertSee('Mastalgia')->getContent();
@@ -494,10 +606,9 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
-        // Un examen de laboratorio y un código inventado.
+        // Un examen de laboratorio y un código inventado: no se pueden agregar.
         foreach (['001', '404'] as $codigo) {
-            $this->como($user, $medico, $gineco)->post(route('clinica.consulta.estudios.guardar', $consulta->id), ['estudios' => ['100', $codigo]])
-                ->assertSessionHasErrors('observacion');
+            $this->como($user, $medico, $gineco)->post($this->urlAgregarEstudio($consulta), ['codigo' => $codigo])->assertNotFound();
         }
         $this->assertSame(0, DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->count());
 
@@ -508,24 +619,7 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->assertSame(3, $this->como($user, $medico, $gineco)->getJson($url)->json('total'));
     }
 
-    public function test_reordenar_los_estudios_corrige_el_orden_y_el_mismo_orden_no_escribe(): void
-    {
-        [$user, $medico, $gineco, $consulta] = $this->escenario();
-        $a = $this->estudio($medico, '099', ['orden' => 1]);
-        $b = $this->estudio($medico, '100', ['orden' => 2]);
-        $url = route('clinica.consulta.estudios.guardar', $consulta->id);
-
-        $this->como($user, $medico, $gineco)->post($url, ['estudios' => ['099', '100']])->assertSessionHas('estado', 'La solicitud ya estaba guardada así.');
-        $this->assertSame(0, SyncChange::whereIn('table_name', ['radiologia_paciente', 'radiologia_obs'])->count());
-
-        $this->como($user, $medico, $gineco)->post($url, ['estudios' => ['100', '099']])->assertSessionHas('estado', 'Solicitud de estudios guardada.');
-        $this->assertSame(2, (int) DB::table('radiologia_paciente')->find($a)->orden);
-        $this->assertSame(1, (int) DB::table('radiologia_paciente')->find($b)->orden);
-        $this->assertSame(2, $this->trazas('radiologia_paciente', 'updated', 'orden'));
-        $this->assertSame(0, $this->trazas('radiologia_paciente', 'created'));
-    }
-
-    public function test_las_filas_del_escritorio_sin_orden_se_leen_en_el_orden_de_creacion_y_al_guardar_reciben_su_numero(): void
+    public function test_las_filas_del_escritorio_conservan_su_orden_y_el_estudio_nuevo_va_al_final(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $primero = $this->estudio($medico, '114');          // orden null, como la mayoría del escritorio
@@ -534,11 +628,15 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'estudios'))->getContent();
         $this->assertLessThan(strpos($html, 'ECOGRAFIA MAMARIA'), strpos($html, 'DENSITOMETRIA OSEA'), 'la fila con orden va antes que la que no lo tiene');
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.estudios.guardar', $consulta->id), ['estudios' => ['114', '099', '100']]);
+        // El alta inmediata no renumera lo que el escritorio ya tenía: el nuevo es el 85, después del último.
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarEstudio($consulta), ['codigo' => '100'])->assertSessionHas('estado');
 
-        $this->assertSame([1, 2, 3], DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->orderBy('orden')->pluck('orden')->map(fn ($o) => (int) $o)->all());
-        $this->assertSame(1, (int) DB::table('radiologia_paciente')->find($primero)->orden);
+        $nuevo = DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->where('coderadio', '100')->first();
+        $this->assertSame(85, (int) $nuevo->orden);
+        $this->assertNull(DB::table('radiologia_paciente')->find($primero)->orden, 'la fila del escritorio no se reescribe');
+        $this->assertSame(84, (int) DB::table('radiologia_paciente')->find($segundo)->orden);
         $this->assertSame(1, $this->trazas('radiologia_paciente', 'created'), 'solo el estudio nuevo es una fila nueva');
+        $this->assertSame(0, $this->trazas('radiologia_paciente', 'updated'), 'no se reescribió el orden de las filas del escritorio');
     }
 
     public function test_quitar_estudios_y_eliminar_la_solicitud_dejan_sus_bajas(): void
@@ -549,9 +647,10 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $obs = $this->observacionDeEstudios($medico, 'Resumen');
         $otra = $this->estudio($medico, '099', ['orden' => 1], 1001, 2);
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.estudios.guardar', $consulta->id), ['estudios' => ['099'], 'observacion' => 'Resumen'])
-            ->assertSessionHas('estado', 'Solicitud de estudios guardada (1 estudio quitado).');
+        $this->como($user, $medico, $gineco)->delete($this->urlQuitarEstudio($consulta), ['codigo' => '100'])
+            ->assertSessionHas('estado', 'Estudio quitado de la solicitud.');
         $this->assertNull(DB::table('radiologia_paciente')->find($b));
+        $this->assertNotNull(DB::table('radiologia_paciente')->find($a), 'el otro estudio sigue');
         $this->assertSame(1, $this->trazas('radiologia_paciente', 'deleted'));
 
         $this->como($user, $medico, $gineco)->delete(route('clinica.consulta.estudios.eliminar', $consulta->id))
@@ -564,12 +663,13 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             ->assertSessionHas('estado', 'Esta consulta no tenía solicitud de estudios.');
     }
 
-    public function test_la_solicitud_vacia_sin_resumen_se_rechaza_y_el_resumen_solo_alcanza(): void
+    public function test_la_solicitud_vacia_no_crea_filas_y_el_resumen_solo_alcanza(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
-        $url = route('clinica.consulta.estudios.guardar', $consulta->id);
+        $url = $this->urlResumenDeEstudios($consulta);
 
-        $this->como($user, $medico, $gineco)->post($url, [])->assertSessionHasErrors(['observacion' => 'La solicitud necesita al menos un estudio o un resumen clínico.']);
+        $this->como($user, $medico, $gineco)->post($url, [])->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'El resumen clínico ya estaba guardado así.');
         $this->assertSame(0, DB::table('radiologia_paciente')->where('reg_medico', $medico->reg_medico)->count());
         $this->assertSame(0, DB::table('radiologia_obs')->where('reg_medico', $medico->reg_medico)->count());
 
@@ -611,11 +711,16 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $c()->get($this->seccion($consulta, 'laboratorio'))->assertForbidden();
         $c()->get($this->seccion($consulta, 'estudios'))->assertForbidden();
-        $c()->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001']])->assertForbidden();
+        $c()->post($this->urlAgregarExamen($consulta), ['codigo' => '001'])->assertForbidden();
+        $c()->delete($this->urlQuitarExamen($consulta), ['codigo' => '001'])->assertForbidden();
+        $c()->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'x'])->assertForbidden();
         $c()->delete(route('clinica.consulta.laboratorio.eliminar', $consulta->id))->assertForbidden();
         $c()->getJson(route('clinica.consulta.laboratorio.catalogo', $consulta->id))->assertForbidden();
         $c()->getJson(route('clinica.consulta.laboratorio.rutina', [$consulta->id, '001']))->assertForbidden();
-        $c()->post(route('clinica.consulta.estudios.guardar', $consulta->id), ['estudios' => ['099']])->assertForbidden();
+        $c()->post($this->urlRutina($consulta, '004'))->assertForbidden();
+        $c()->post($this->urlAgregarEstudio($consulta), ['codigo' => '099'])->assertForbidden();
+        $c()->delete($this->urlQuitarEstudio($consulta), ['codigo' => '099'])->assertForbidden();
+        $c()->post($this->urlResumenDeEstudios($consulta), ['observacion' => 'x'])->assertForbidden();
         $c()->delete(route('clinica.consulta.estudios.eliminar', $consulta->id))->assertForbidden();
         $c()->getJson(route('clinica.consulta.estudios.catalogo', $consulta->id))->assertForbidden();
 
@@ -631,11 +736,16 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $c()->get($this->seccion($consulta, 'laboratorio'))->assertNotFound();
         $c()->get($this->seccion($consulta, 'estudios'))->assertNotFound();
-        $c()->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['001']])->assertNotFound();
+        $c()->post($this->urlAgregarExamen($consulta), ['codigo' => '001'])->assertNotFound();
+        $c()->delete($this->urlQuitarExamen($consulta), ['codigo' => '001'])->assertNotFound();
+        $c()->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'x'])->assertNotFound();
         $c()->delete(route('clinica.consulta.laboratorio.eliminar', $consulta->id))->assertNotFound();
         $c()->getJson(route('clinica.consulta.laboratorio.catalogo', $consulta->id))->assertNotFound();
         $c()->getJson(route('clinica.consulta.laboratorio.rutina', [$consulta->id, '001']))->assertNotFound();
-        $c()->post(route('clinica.consulta.estudios.guardar', $consulta->id), ['estudios' => ['099']])->assertNotFound();
+        $c()->post($this->urlRutina($consulta, '004'))->assertNotFound();
+        $c()->post($this->urlAgregarEstudio($consulta), ['codigo' => '099'])->assertNotFound();
+        $c()->delete($this->urlQuitarEstudio($consulta), ['codigo' => '099'])->assertNotFound();
+        $c()->post($this->urlResumenDeEstudios($consulta), ['observacion' => 'x'])->assertNotFound();
         $c()->delete(route('clinica.consulta.estudios.eliminar', $consulta->id))->assertNotFound();
         $c()->getJson(route('clinica.consulta.estudios.catalogo', $consulta->id))->assertNotFound();
 
@@ -649,8 +759,8 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $this->get($this->seccion($consulta, 'laboratorio'))->assertRedirect(route('login'));
         $this->get($this->seccion($consulta, 'estudios'))->assertRedirect(route('login'));
-        $this->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), [])->assertRedirect(route('login'));
-        $this->post(route('clinica.consulta.estudios.guardar', $consulta->id), [])->assertRedirect(route('login'));
+        $this->post($this->urlResumenDeExamenes($consulta), [])->assertRedirect(route('login'));
+        $this->post($this->urlResumenDeEstudios($consulta), [])->assertRedirect(route('login'));
     }
 
     public function test_la_orden_del_mismo_numero_de_historia_de_otro_medico_no_se_ve_ni_se_toca(): void
@@ -666,7 +776,8 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))->assertDontSee('RESUMEN AJENO')->assertSee('Sin orden');
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'estudios'))->assertSee('Sin solicitud');
 
-        $this->como($user, $medico, $gineco)->post(route('clinica.consulta.laboratorio.guardar', $consulta->id), ['examenes' => ['003'], 'observacion' => 'MIO']);
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '003']);
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'MIO']);
         $this->como($user, $medico, $gineco)->delete(route('clinica.consulta.laboratorio.eliminar', $consulta->id));
         $this->como($user, $medico, $gineco)->delete(route('clinica.consulta.estudios.eliminar', $consulta->id));
 

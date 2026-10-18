@@ -57,11 +57,12 @@ class EvaluacionFisicaVistaTest extends TestCase
             'genitales_externos', 'especulos', 'tacto_vaginal', 'tacto_rectal',
         ], array_column(ExamenFisicoDeLaConsulta::ginecologico(), 'columna'));
 
-        // Y el denominador de la pantalla: 8 + 8 + 4, sin la colposcopia ni los resúmenes.
-        $this->assertCount(20, EvaluacionFisica::columnas());
+        // Y el denominador de la pantalla: 8 + 8 + 4, sin la colposcopia; los dos resúmenes (WEB-11.8) se guardan pero no cuentan.
+        $this->assertCount(22, EvaluacionFisica::columnas());
+        $this->assertCount(20, array_diff(array_keys(EvaluacionFisica::columnas()), EvaluacionFisica::COLUMNAS_RESUMEN));
         $this->assertArrayNotHasKey('colposcopia', EvaluacionFisica::columnas());
-        $this->assertArrayNotHasKey('total_f', EvaluacionFisica::columnas());
-        $this->assertArrayNotHasKey('total_g', EvaluacionFisica::columnas());
+        $this->assertArrayHasKey('total_f', EvaluacionFisica::columnas());
+        $this->assertArrayHasKey('total_g', EvaluacionFisica::columnas());
         $this->assertArrayNotHasKey('mamas_izquierda', EvaluacionFisica::columnas());
     }
 
@@ -130,7 +131,7 @@ class EvaluacionFisicaVistaTest extends TestCase
 
         $conDatos = $this->vista(['peso' => 70.0]);
         $this->assertSame(1, $conDatos->cargados());
-        $this->assertSame(20, $conDatos->totalCampos());
+        $this->assertSame(16, $conDatos->totalCampos());
         $this->assertSame('Cargada', $conDatos->estado()['texto']);
         $this->assertSame('exito', $conDatos->estado()['tono']);
     }

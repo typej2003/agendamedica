@@ -9,12 +9,13 @@ use App\Clinica\Impresion\OpcionesDeRecipe;
 
 /**
  * **La vista previa de lo que se imprime** (WEB-5.3a): una o varias hojas, cada una de un récipe (WEB-5.2) o de un documento
- * de la consulta —constancia, reposo, referencia o informe—, una detrás de otra en el orden pedido.
+ * de la consulta —constancia, reposo, referencia, informe, el informe de una eco o el del control de embarazo—, una detrás de
+ * otra en el orden pedido.
  *
- * Es la vista de la **página de impresión** cuando lo que se imprime puede ser de las dos familias (la secretaría imprime
- * «todos» los documentos de una cita). No reparte nada por su cuenta: cada documento lo reparte su propia clase
- * (`HojasDeRecipeVista` para los récipes, `HojasDeDocumentoVista` para el resto) y esta sólo las pone en orden y les agrega
- * la barra: el título, el resumen de la impresión y el enlace de vuelta. Tiene los mismos métodos que `HojasDeRecipeVista`,
+ * Cada documento trae **su modo de hoja** (O-26: `DocumentoImpreso::modo()`, que lo declara `ModoDeLaHoja`): media hoja
+ * horizontal para los récipes y las solicitudes, A4 vertical completa para los informes de los ecos y el del control de
+ * embarazo. Esta vista los pone en orden y les agrega la barra; el reparto de cada uno lo hace su propia clase
+ * (`HojasDeRecipeVista`, `HojasDeDocumentoVista`, y el formulario de una eco). Tiene los mismos métodos que `HojasDeRecipeVista`,
  * que sigue siendo la vista de la página cuando se imprime un solo récipe.
  *
  * El diálogo de las opciones (modo y nombre del medicamento) sólo tiene sentido si hay récipes: `conOpciones()`.
@@ -69,6 +70,31 @@ final class HojasImpresasVista
     public function conOpciones(): bool
     {
         return $this->recipes() !== [];
+    }
+
+    /**
+     * ¿Alguna hoja lleva **imágenes aparte**? Sólo entonces la barra ofrece «Incluir imágenes». Son las fotos de un eco
+     * (WEB-11.13) y, desde A-13, los dibujos del cuello uterino de la colposcopía, que entran por el mismo camino.
+     */
+    public function conImagenes(): bool
+    {
+        foreach ($this->documentos as $documento) {
+            if (! $documento instanceof DocumentoImpreso) {
+                continue;
+            }
+
+            if ($documento->informe?->conImagenes() || $documento->conImagenesDeLaHoja()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** El nombre histórico del método (WEB-11.13): hoy también devuelve `true` con los dibujos de la colposcopía. */
+    public function conImagenesDeEco(): bool
+    {
+        return $this->conImagenes();
     }
 
     public function urlVolver(): string
@@ -140,8 +166,25 @@ final class HojasImpresasVista
                 continue;
             }
 
+            // Una eco se imprime a hoja completa (WEB-11.13): su informe y, si tiene imágenes, una segunda hoja.
+            if ($documento->informe !== null) {
+                $hojas[] = ['tipo' => 'informe', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento, 'imagenes' => false];
+
+                if ($documento->informe->conImagenes()) {
+                    $hojas[] = ['tipo' => 'informe', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento, 'imagenes' => true];
+                }
+
+                continue;
+            }
+
             foreach ((new HojasDeDocumentoVista($this->membrete, [$documento]))->hojas() as $hoja) {
                 $hojas[] = $hoja;
+            }
+
+            // Un documento en mitades con imágenes propias (los dibujos del cuello uterino de la colposcopía, A-13):
+            // su texto sale como siempre y las imágenes en una hoja A4 vertical aparte, como la de un eco.
+            if ($documento->conImagenesDeLaHoja()) {
+                $hojas[] = ['tipo' => 'imagenes', 'documento' => $documento];
             }
         }
 

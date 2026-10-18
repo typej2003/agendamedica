@@ -11,6 +11,7 @@ use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -34,6 +35,10 @@ class ConsultaInformeController extends Controller
     public function guardar(Request $request, Consulta $consulta, GuardarInformeDeLaConsulta $guardar)
     {
         $consulta = $this->delContexto($request, $consulta);
+
+        // La fecha del informe se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita
+        // (acepta también lo que llegue tecleado `dd/mm/aaaa`): la columna `fe_cha` es `date`.
+        $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
 
         $datos = $request->validate([
             'para' => 'nullable|string|max:' . InformeDeLaConsulta::LARGO_PARA,

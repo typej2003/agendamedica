@@ -49,7 +49,16 @@ use Carbon\CarbonInterface;
 final class EdadGestacional
 {
     /**
-     * Los días que suma el control prenatal para la FPP: **281**.
+     * **Los días que suma la FPP en TODA la web: 280** (WEB-11.16; decisión de Alexander, 2026-10-15). Es la única definición:
+     * el control prenatal, el informe, los ecos y el listado de embarazos y partos la usan, así que cambiar este número cambia todo.
+     *
+     * El escritorio tenía tres valores (270, 281 y 283, ver abajo); la web los unificó en el del embarazo a término (40 semanas).
+     */
+    public const DIAS_DE_LA_FPP = 280;
+
+    /**
+     * (Histórico) Los días que sumaba el control prenatal en el escritorio: **281**. Hoy es un alias de {@see self::DIAS_DE_LA_FPP}.
+     *
      *
      * ⚠️ **Cuidado con el DataWindow**: la pestaña viva del control prenatal es `d_pre_natal_observa_2.srd`
      * (lo asigna `w_consulta_principal.srw:24725`) y **suma 281** (`:38`). `d_pre_natal_observa.srd` —el
@@ -59,10 +68,10 @@ final class EdadGestacional
      *
      * Los tres están en `docs`/la wiki con su cita. La web conserva el número de **cada pantalla**.
      */
-    public const DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL = 281;
+    public const DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL = self::DIAS_DE_LA_FPP;
 
-    /** Los días que suma el eco obstétrico para la FPP (`relativedate(fur, 283)`): WEB-6.2. */
-    public const DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO = 283;
+    /** (Histórico) Los 283 del eco obstétrico (`relativedate(fur, 283)`). Hoy es un alias de {@see self::DIAS_DE_LA_FPP}. */
+    public const DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO = self::DIAS_DE_LA_FPP;
 
     private function __construct(
         private CarbonInterface $fur,

@@ -1,0 +1,23 @@
+{
+    "descripcion": "Mensajes NUEVOS (held-out) de la prueba de concepto de triaje con Jev AI: no se usaron para ajustar la definición de urgencia de la corrida v2. Sintéticos, sin datos de pacientes.",
+    "categorias": {
+        "agendar": "Pide una cita nueva, para ella o para un familiar.",
+        "reprogramar": "Quiere mover, adelantar o cambiar una cita que ya tiene.",
+        "cancelar": "Anula una cita que ya tiene.",
+        "consulta_clinica": "Duda sobre síntomas, tratamiento, medicación o resultados; no pide ni mueve una cita.",
+        "urgencia": "Cuadro que no puede esperar a una cita normal y hay que escalar ya.",
+        "administrativo": "Precios, horarios, sedes, seguros, documentos, direcciones."
+    },
+    "mensajes": [
+        { "id": 101, "mensaje": "Buenas, ¿me dan cita para la próxima semana? Es mi primera vez", "intencion": "agendar", "urgencia": false },
+        { "id": 102, "mensaje": "No puedo asistir el viernes, ¿lo pasamos para el lunes?", "intencion": "reprogramar", "urgencia": false },
+        { "id": 103, "mensaje": "Perdón, tengo que anular la cita de mañana, me salió un viaje", "intencion": "cancelar", "urgencia": false },
+        { "id": 104, "mensaje": "¿El estacionamiento del edificio es gratis?", "intencion": "administrativo", "urgencia": false },
+        { "id": 105, "mensaje": "Doctora, desde anoche tengo un dolor fuerte en el pecho y me falta el aire", "intencion": "urgencia", "urgencia": true },
+        { "id": 106, "mensaje": "¿Puedo tomar ibuprofeno con la pastilla que me recetó?", "intencion": "consulta_clinica", "urgencia": false },
+        { "id": 107, "mensaje": "Mi hija de 5 años tiene 40 de fiebre y vomita desde ayer", "intencion": "urgencia", "urgencia": true },
+        { "id": 108, "mensaje": "Necesito cita ya, es para hoy mismo, ¿hay algún cupo?", "intencion": "agendar", "urgencia": false, "nota": "Apuro administrativo, igual que la #22: la etiqueta es a propósito." },
+        { "id": 109, "mensaje": "Buenas, ¿cuánto sale el eco y si necesito orden médica?", "intencion": "administrativo", "urgencia": false },
+        { "id": 110, "mensaje": "Se me manchó la herida de la cesárea y sale líquido con mal olor", "intencion": "urgencia", "urgencia": true }
+    ]
+}

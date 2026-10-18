@@ -575,9 +575,56 @@ class CatalogosRecetasWebTest extends TestCase
         $this->assertSame('AJENO', DB::table('vademecum')->find($ajeno)->nombrecomercial);
     }
 
-    public function test_editar_abre_el_dialogo_con_el_medicamento(): void
+    /**
+     * La fila del catálogo de medicamentos (pauta de Alexander, 2026-10-17): **una línea por medicamento**, con lo
+     * secundario —el código y las otras marcas— fuera del listado (en el `title` de la fila y en el diálogo de edición),
+     * el psicotrópico como pastilla en la misma línea y **dos acciones directas**: Editar y la papelera, alineadas.
+     */
+    public function test_el_listado_deja_una_linea_por_medicamento_con_la_papelera_al_lado_de_editar(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->medicamento($medico, '0007', 'KEFORAL', 'CEFALEXINA', 'Cap. 500 mg', 'Tomar.', [
+            'sico' => 'S', 'nombrecomercial2' => 'CEFA',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.medicamentos'))
+            ->assertOk()->getContent();
+
+        // Sólo la tabla: el diálogo de edición sigue mostrando el código.
+        preg_match('/<tbody>.*?<\/tbody>/s', $html, $cuerpo);
+        $this->assertNotSame('', $cuerpo[0] ?? '', 'la tabla tiene que estar');
+
+        // Lo secundario no ocupa una línea en el listado: va en el `title` de la fila y no como texto.
+        $this->assertStringNotContainsString('>Código 0007', $cuerpo[0]);
+        $this->assertStringNotContainsString('>también:', $cuerpo[0]);
+        $this->assertMatchesRegularExpression(
+            '/<td class="celda-principal" title="Código 0007[^"]*también: CEFA"/',
+            $cuerpo[0],
+            'el código y las otras marcas quedan en el title de la fila',
+        );
+
+        // La información clínica se queda, en la misma línea.
+        $this->assertStringContainsString('Psicotrópico', $cuerpo[0]);
+
+        // Dos acciones: Editar y la papelera, en el mismo bloque alineado y en ese orden. Nada de menú «…».
+        $this->assertMatchesRegularExpression(
+            '/<div class="acciones-fila"[^>]*>.*?<a class="btn btn-sm btn-outline-secondary"[^>]*>.*?Editar.*?btn btn-sm btn-outline-danger.*?bi-trash.*?<\/div>/s',
+            $cuerpo[0],
+            'la papelera va al lado de Editar, en el mismo bloque de acciones',
+        );
+        $this->assertStringNotContainsString('menu-acciones', $cuerpo[0]);
+
+        // La papelera conserva la confirmación que nombra lo que se quita y el DELETE del formulario.
+        $this->assertMatchesRegularExpression('/<form method="POST" action="[^"]+"[^>]*data-confirmar="[^"]+"/', $cuerpo[0]);
+        $this->assertStringContainsString('name="_method" value="DELETE"', $cuerpo[0]);
+        $this->assertMatchesRegularExpression(
+            '/<button class="btn btn-sm btn-outline-danger"[^>]*aria-label="Quitar KEFORAL del vademécum"/',
+            $cuerpo[0],
+        );
+    }
+
+    public function test_editar_abre_el_dialogo_con_el_medicamento(): void
+    {        [$user, $medico, $gineco] = $this->medicoConAcceso();
         $id = $this->medicamento($medico, '0007', 'KEFORAL', 'CEFALEXINA', 'Cap. 500 mg', 'Tomar.', ['sico' => 'S', 'nombrecomercial2' => 'CEFA']);
 
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.medicamentos', ['editar' => $id]))
@@ -1045,7 +1092,7 @@ class CatalogosRecetasWebTest extends TestCase
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.tratamientos'))->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/<a class="nav-link active" href="[^"]*\/catalogos\/tratamientos"[^>]*aria-current="page"/', $html);
         $this->assertMatchesRegularExpression('/<a class="nav-link " href="[^"]*\/catalogos\/medicamentos"/', $html);
-        $this->assertStringContainsString('<details class="nav-grupo" open>', $html);
+        $this->assertStringContainsString('<details class="nav-grupo" data-menu="catalogos" open>', $html);
         $this->assertStringNotContainsString('catalogos-indice', $html);
     }
 

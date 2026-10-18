@@ -114,15 +114,14 @@ class InformePrenatalTest extends TestCase
         $this->assertNull((new InformePrenatal())->de($medico->reg_medico, 1001, null, $this->hoy));
     }
 
-    public function test_la_fpp_del_informe_suma_283_no_los_281_de_la_pantalla(): void
+    public function test_la_fpp_del_informe_es_la_misma_de_toda_la_web(): void
     {
         $informe = new InformePrenatal();
 
-        // 2026-05-20 + 283 = 2027-02-27. Los 281 de la pestaña darían 2027-02-25: el escritorio imprime un
-        // número y muestra otro, y la web conserva los dos.
-        $this->assertSame('2027-02-27', $informe->fpp('2026-05-20'));
-        $this->assertSame(283, InformePrenatal::DIAS_DE_LA_FPP_DEL_INFORME);
-        $this->assertNotSame(\App\Clinica\Embarazo\EdadGestacional::fpp('2026-05-20', \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP_DEL_CONTROL_PRENATAL), $informe->fpp('2026-05-20'));
+        // 2026-05-20 + 280 = 2027-02-24: el informe y la pantalla del control suman lo mismo (WEB-11.16).
+        $this->assertSame('2027-02-24', $informe->fpp('2026-05-20'));
+        $this->assertSame(280, InformePrenatal::DIAS_DE_LA_FPP_DEL_INFORME);
+        $this->assertSame(\App\Clinica\Embarazo\EdadGestacional::fpp('2026-05-20', \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP), $informe->fpp('2026-05-20'));
 
         // Y la edad gestacional es la misma fórmula de todas las pantallas.
         $gesta = new \App\Clinica\Embarazo\Gesta(['fur' => '2026-05-20', 'gesta_clave' => 1], null, $this->hoy);

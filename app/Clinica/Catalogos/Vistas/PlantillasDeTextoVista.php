@@ -25,6 +25,9 @@ final class PlantillasDeTextoVista
      * @param  array<string,int>  $tipos  los tipos del médico con su cantidad (`código => cantidad`)
      * @param  string  $tipo  el filtro activo: un código o vacío
      * @param  array<string,mixed>  $urls  `guardar` y `quitar` (una función de id)
+     * @param  array<string,string>  $tiposDeLaEspecialidad  los tipos que ofrece la especialidad del contexto
+     *                                                       (`código => nombre`, en el orden del catálogo): los del `<select>` del
+     *                                                       diálogo. Vacío = todos los del catálogo
      */
     public function __construct(
         private LengthAwarePaginator $filas,
@@ -36,6 +39,7 @@ final class PlantillasDeTextoVista
         private string $base,
         private array $urls,
         private bool $abrirNuevo = false,
+        private array $tiposDeLaEspecialidad = [],
     ) {
     }
 
@@ -60,7 +64,7 @@ final class PlantillasDeTextoVista
                 . ($this->tipo !== '' ? ' de tipo «' . TiposDePlantillaDeTexto::nombre($this->tipo) . '»' : '') . '.';
         }
 
-        return $this->total . ($this->total === 1 ? ' plantilla' : ' plantillas') . '. Son los textos que se copian al escribir la evolución, el informe o las dietas en la consulta.';
+        return $this->total . ($this->total === 1 ? ' plantilla' : ' plantillas') . '. Son los textos que se copian al escribir la evolución, el informe, las dietas o un estudio ecográfico.';
     }
 
     /** @return array{icono:string, titulo:string, texto:string} */
@@ -77,7 +81,7 @@ final class PlantillasDeTextoVista
         return [
             'icono' => 'bi-file-earmark-text',
             'titulo' => 'Todavía no tienes plantillas de texto',
-            'texto' => 'Crea la primera: es un texto que vas a poder copiar con un clic al escribir la evolución, el informe o las dietas.',
+            'texto' => 'Crea la primera: es un texto que vas a poder copiar con un clic al escribir la evolución, el informe, las dietas o un estudio ecográfico.',
         ];
     }
 
@@ -121,6 +125,9 @@ final class PlantillasDeTextoVista
             'resumen' => $texto === '' ? null : Str::limit($texto, 160),
             'tipo' => TiposDePlantillaDeTexto::nombre($codigoDelTipo),
             'tipoEnLaWeb' => TiposDePlantillaDeTexto::seUsaEnLaWeb($codigoDelTipo),
+            // Dónde se ofrece ese tipo en la consulta (la pantalla), o `null` si la web todavía no la tiene. Es
+            // lo que responde «¿dónde sale esta plantilla?», la pregunta de una médica que probó la web.
+            'dondeSeUsa' => TiposDePlantillaDeTexto::dondeSeUsa($codigoDelTipo),
             'codigo' => trim((string) $fila->codigo),
             'sinTexto' => $texto === '',
             'urlEditar' => $this->url(['editar' => $fila->id]),
@@ -191,8 +198,14 @@ final class PlantillasDeTextoVista
 
     /**
      * Los grupos del `<select>` del tipo. El primero lleva los tipos que la consulta de la web ya ofrece; el segundo, los otros del
-     * escritorio; y —si la plantilla que se edita tiene un código que no está en la lista— un último con ese código, para no
-     * perderlo.
+     * escritorio; y —si la plantilla que se edita tiene un código que no se ofrece en esta pantalla— un último con ese código, para
+     * no perderlo al guardar.
+     *
+     * **Sólo los tipos de la especialidad del contexto** (revisión del usuario, 2026-10-18): en pediatría no se ofrecen la
+     * colposcopía, la citología, la histeroscopía ni los ecos ginecológicos y obstétricos. La lista llega ya resuelta
+     * (`PlantillasDeLaEspecialidad`); vacía significa "todos", que es lo que sigue valiendo en ginecología. El desplegable de un
+     * tipo que **no** está en la lista —uno de otra especialidad o uno del legado que el catálogo no conoce— se agrega aparte
+     * para que editar una plantilla vieja no le cambie el tipo.
      *
      * @return array<int,array{grupo:string, opciones:array<int,array{valor:string, texto:string}>}>
      */
@@ -201,7 +214,10 @@ final class PlantillasDeTextoVista
         $enLaWeb = [];
         $otros = [];
 
-        foreach (TiposDePlantillaDeTexto::nombres() as $codigo => $nombre) {
+        $ofrecidos = $this->tiposDeLaEspecialidad !== [] ? $this->tiposDeLaEspecialidad : TiposDePlantillaDeTexto::nombres();
+
+        foreach ($ofrecidos as $codigo => $nombre) {
+            $codigo = (string) $codigo;
             $opcion = ['valor' => $codigo, 'texto' => $nombre];
 
             if (TiposDePlantillaDeTexto::seUsaEnLaWeb($codigo)) {
@@ -211,15 +227,28 @@ final class PlantillasDeTextoVista
             }
         }
 
-        $grupos = [
-            ['grupo' => 'Se ofrecen en la consulta de la web', 'opciones' => $enLaWeb],
-            ['grupo' => 'Otros formatos del escritorio (la consulta de la web todavía no los ofrece)', 'opciones' => $otros],
-        ];
+        $grupos = [];
+
+        if ($enLaWeb !== []) {
+            $grupos[] = ['grupo' => 'Se ofrecen en la consulta de la web', 'opciones' => $enLaWeb];
+        }
+
+        if ($otros !== []) {
+            $grupos[] = ['grupo' => 'Otros formatos del escritorio (la consulta de la web todavía no los ofrece)', 'opciones' => $otros];
+        }
 
         $actual = $this->tipoSeleccionado();
 
-        if ($actual !== '' && ! TiposDePlantillaDeTexto::conocido($actual)) {
-            $grupos[] = ['grupo' => 'Del legado', 'opciones' => [['valor' => $actual, 'texto' => 'Tipo ' . $actual . ' (no está en la lista)']]];
+        if ($actual !== '' && ! array_key_exists($actual, $ofrecidos)) {
+            $conocido = TiposDePlantillaDeTexto::conocido($actual);
+
+            $grupos[] = [
+                'grupo' => $conocido ? 'No se ofrece en esta especialidad' : 'Del legado',
+                'opciones' => [[
+                    'valor' => $actual,
+                    'texto' => TiposDePlantillaDeTexto::nombre($actual) . ($conocido ? '' : ' (no está en la lista)'),
+                ]],
+            ];
         }
 
         return $grupos;

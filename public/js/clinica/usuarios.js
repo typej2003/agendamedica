@@ -31,6 +31,11 @@
     if (bloqueo) {
         document.querySelectorAll('[data-bloquear]').forEach(function (boton) {
             boton.addEventListener('click', function () {
+                // El botón vive en el menú «…» de la fila: se cierra antes de abrir el diálogo (si no, queda
+                // abierto detrás y sigue así al cerrarlo).
+                const menu = boton.closest('details.menu-acciones');
+                if (menu) menu.removeAttribute('open');
+
                 document.getElementById('bloquear-form').setAttribute('action', boton.dataset.accion);
                 document.getElementById('bloquear-nombre').textContent = boton.dataset.nombre;
                 document.getElementById('bloquear-motivo').value = '';

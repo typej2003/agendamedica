@@ -13,6 +13,11 @@
  *    la indicación del vademécum; elegir un tratamiento agrega **todos sus medicamentos** con su cantidad e
  *    indicaciones. Lo agregado no se guarda: entra al editor y se guarda con el botón.
  *
+ *    En el editor de récipes (A-04) la lista es la **columna derecha**, en línea y siempre a la vista
+ *    (`data-recipe-lista-en-linea`): el vademécum se carga al abrir el editor, sin escribir nada, y la lista no
+ *    se esconde al hacer clic afuera. En el catálogo de tratamientos (WEB-8.1a) sigue siendo el desplegable
+ *    flotante de una sola columna.
+ *
  * 2. **Las filas del récipe** (`#recipe-items`): se agregan clonando la plantilla de la vista (el script no
  *    arma HTML), un medicamento entra **una sola vez** por récipe (la clave del escritorio es historia +
  *    consulta + medicamento) y «Quitar» saca la fila del formulario. Editar las indicaciones de una fila
@@ -59,6 +64,10 @@
 
     // Lo que se edita: «récipe» (la consulta) o «tratamiento» (el catálogo, WEB-8.1a, que usa este mismo editor).
     const cosa = formulario.dataset.cosa || 'récipe';
+
+    // La lista del buscador es una columna a la vista (el editor de récipes, A-04) y no un desplegable: se carga sola
+    // al abrir el editor y no se esconde. El catálogo de tratamientos no lleva el atributo.
+    const listaEnLinea = raiz.dataset.recipeListaEnLinea === '1';
 
     let siguienteClave = parseInt(formulario.dataset.siguienteClave, 10) || 0;
     let modo = 'medicamentos';
@@ -210,8 +219,14 @@
 
     function filaDeResultado(nombre, detalle, textoAccion) {
         const resultado = plantillaResultado.content.firstElementChild.cloneNode(true);
-        resultado.querySelector('[data-resultado-nombre]').textContent = nombre;
-        resultado.querySelector('[data-resultado-detalle]').textContent = detalle || '';
+        const campoNombre = resultado.querySelector('[data-resultado-nombre]');
+        campoNombre.textContent = nombre;
+        // La fila mide una sola línea (el nombre se recorta con puntos suspensivos): el completo va en el `title`,
+        // como en el catálogo de una orden (WEB-5.4).
+        campoNombre.title = nombre;
+        const campoDetalle = resultado.querySelector('[data-resultado-detalle]');
+        campoDetalle.textContent = detalle || '';
+        resultado.title = detalle ? nombre + ' · ' + detalle : nombre;
         resultado.querySelector('[data-resultado-texto]').textContent = textoAccion;
         return resultado;
     }
@@ -241,8 +256,10 @@
 
         if (datos.medicamentos.length === 0) {
             ocultarResultados();
-            ayuda.textContent = 'Tu vademécum no tiene medicamentos que coincidan con «' + datos.buscar + '». '
-                + 'Puedes crearlo con el botón de abajo.';
+            ayuda.textContent = datos.buscar === ''
+                ? 'Tu vademécum todavía no tiene medicamentos. Créalos con el botón de abajo.'
+                : 'Tu vademécum no tiene medicamentos que coincidan con «' + datos.buscar + '». '
+                    + 'Puedes crearlo con el botón de abajo.';
             return;
         }
 
@@ -250,8 +267,10 @@
         pintarMarcas();
 
         const cuantos = datos.medicamentos.length;
-        ayuda.textContent = cuantos + (cuantos === 1 ? ' medicamento' : ' medicamentos')
-            + ' que coinciden con «' + datos.buscar + '». Elige uno para agregarlo al ' + cosa + '.';
+        ayuda.textContent = datos.buscar === ''
+            ? 'Tu vademécum, a la vista. Elige un medicamento para agregarlo al ' + cosa + '.'
+            : cuantos + (cuantos === 1 ? ' medicamento' : ' medicamentos')
+                + ' que coinciden con «' + datos.buscar + '». Elige uno para agregarlo al ' + cosa + '.';
     }
 
     function pintarTratamientos(datos) {
@@ -259,14 +278,15 @@
 
         datos.tratamientos.forEach(function (tratamiento) {
             const cuantos = tratamiento.items.length;
+            // Una sola línea: el nombre y, como dato secundario, cuántos medicamentos trae; cuáles son va en el `title`.
             const resultado = filaDeResultado(
                 tratamiento.nombre,
-                cuantos === 0
-                    ? 'Sin medicamentos'
-                    : cuantos + (cuantos === 1 ? ' medicamento: ' : ' medicamentos: ')
-                        + tratamiento.items.map(function (item) { return item.nombre; }).join(', '),
+                cuantos === 0 ? 'Sin medicamentos' : cuantos + (cuantos === 1 ? ' medicamento' : ' medicamentos'),
                 'Cargar',
             );
+            resultado.title = tratamiento.nombre + (cuantos === 0
+                ? ''
+                : ': ' + tratamiento.items.map(function (item) { return item.nombre; }).join(', '));
             resultado.disabled = cuantos === 0;
 
             resultado.addEventListener('click', function () {
@@ -287,7 +307,9 @@
                     ? 'Los medicamentos de «' + tratamiento.nombre + '» ya estaban en el récipe.'
                     : 'Se cargaron ' + nuevos + (nuevos === 1 ? ' medicamento' : ' medicamentos')
                         + ' de «' + tratamiento.nombre + '». Revísalos y guarda el récipe.';
-                ocultarResultados();
+
+                // La lista se queda a la vista (es la columna del catálogo): se puede cargar otro tratamiento.
+                if (!listaEnLinea) ocultarResultados();
             });
             resultados.appendChild(resultado);
         });
@@ -309,8 +331,9 @@
     function buscar() {
         const consulta = texto.value.trim();
 
-        // Los medicamentos se buscan por lo que se escribe; los tratamientos son pocos y se listan todos.
-        if (modo === 'medicamentos' && consulta === '') {
+        // Los medicamentos se buscan por lo que se escribe; los tratamientos son pocos y se listan todos. En el
+        // editor de récipes la lista está a la vista, así que sin texto se muestra el vademécum completo.
+        if (modo === 'medicamentos' && consulta === '' && !listaEnLinea) {
             ocultarResultados();
             ayuda.textContent = ayuda.dataset.ayudaMedicamentos;
             return;
@@ -366,18 +389,22 @@
             ocultarResultados();
             texto.focus();
 
-            if (!esMedicamentos) buscar();
+            // Con la lista a la vista se vuelve a cargar: el vademécum sin texto y los tratamientos del médico.
+            if (!esMedicamentos || listaEnLinea) buscar();
         });
     });
 
     document.addEventListener('click', function (evento) {
+        // La lista de la columna derecha no se esconde: es parte de la pantalla.
+        if (listaEnLinea) return;
+
         if (evento.target !== texto && !caja.contains(evento.target)) {
             ocultarResultados();
         }
     });
 
     texto.addEventListener('keydown', function (evento) {
-        if (evento.key === 'Escape') ocultarResultados();
+        if (evento.key === 'Escape' && !listaEnLinea) ocultarResultados();
     });
 
     // --------------------------------------------------------------- El alta del medicamento que falta
@@ -395,7 +422,8 @@
             if (campo && modo === 'medicamentos' && texto.value.trim() !== '' && campo.value === '') {
                 campo.value = texto.value.trim().toUpperCase().slice(0, campo.maxLength);
             }
-            ocultarResultados();
+            // La lista de la columna derecha no se esconde para abrir el diálogo; el que es flotante, sí.
+            if (!listaEnLinea) ocultarResultados();
             dialogo.showModal();
             if (campo) campo.focus();
         });
@@ -486,4 +514,7 @@
     });
 
     actualizar();
+
+    // La columna derecha del editor de récipes arranca con el vademécum a la vista, sin escribir nada (A-04).
+    if (listaEnLinea) buscar();
 })();
