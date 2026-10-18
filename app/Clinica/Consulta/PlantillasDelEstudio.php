@@ -74,6 +74,19 @@ final class PlantillasDelEstudio
     ];
 
     /**
+     * Los tipos de `formato_print` que ofrece un estudio (vacío si no ofrece ninguno, como el ecocardiograma fetal).
+     *
+     * Lo usa `AlcanceDeLaEspecialidad` para no ofrecer en otra especialidad las plantillas de un estudio que no tiene: el mapa
+     * de arriba es el único lugar donde está esa relación, así que un estudio nuevo hereda la regla.
+     *
+     * @return array<int,string>
+     */
+    public static function tiposDe(string $tipoDeEstudio): array
+    {
+        return self::ESTUDIOS[$tipoDeEstudio]['tipos'] ?? [];
+    }
+
+    /**
      * Las plantillas de un estudio, ya listas para el cajón, o `null` si ese estudio no ofrece plantillas.
      *
      * `etiquetas` es `código => nombre` con los nombres del catálogo (`TiposDePlantillaDeTexto`): es lo que

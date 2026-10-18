@@ -83,9 +83,10 @@ class ListadosController extends Controller
      */
     private function vista(Request $request, array $contexto): ListadoDeEmbarazosVista|ListadoDePacientesVista|ListadoDeConsultasVista
     {
-        // La clave del listado viaja en la dirección; una que no exista vuelve al de por defecto en vez de
-        // mostrar una pantalla a medias. Cada listado arma su filtro, su lectura y su ViewModel.
-        $clave = ListadosDisponibles::normalizar($request->query('listado'));
+        // La clave del listado viaja en la dirección; una que no exista —o que sea de otra especialidad— vuelve al listado por
+        // defecto de la especialidad del contexto en vez de mostrar una pantalla a medias (en pediatría, «embarazos y partos» es
+        // de obstetricia). Cada listado arma su filtro, su lectura y su ViewModel.
+        $clave = ListadosDisponibles::normalizar($request->query('listado'), $contexto['specialty']->slug ?? null);
 
         if ($clave === ListadosDisponibles::PACIENTES) {
             return $this->pacientesPorRango($request, $contexto, $clave);

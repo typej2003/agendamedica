@@ -573,4 +573,64 @@ class PlantillasDeTextoWebTest extends TestCase
         // Y el enlace al catálogo, filtrado por el primero (el JS lo sigue si se cambia el tipo).
         $vista->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'O2']), false);
     }
+
+    // ------------------------------------------------- Las plantillas de la especialidad (2026-10-18)
+
+    /**
+     * **El ABM ofrece los tipos de la especialidad del contexto** (revisión del usuario, 2026-10-18): pediatría no necesita —ni ve—
+     * las plantillas de colposcopía ni las de los ecos ginecológicos y obstétricos. Lo que se fija:
+     *
+     *  - la lista, el filtro por tipo y el `<select>` del diálogo sólo traen los tipos de la especialidad;
+     *  - ginecología, con las mismas filas, las sigue viendo todas (no cambia);
+     *  - un tipo del legado que el catálogo no conoce no se oculta nunca;
+     *  - editar por URL directa una plantilla de otra especialidad **sí** abre su diálogo y conserva su tipo (no se pierde el
+     *    dato), igual que con un tipo del legado.
+     */
+    public function test_en_pediatria_el_catalogo_no_ofrece_las_plantillas_ginecologicas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
+        // El contexto resuelve la especialidad entre las del médico: para mirar la pantalla como pediatra hay que tenerla. El
+        // médico queda con las dos, que es justo el caso que importa: un mismo `formato_print` y dos contextos.
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        $evolucion = $this->plantilla($medico, '0001', 'EV', 'DE EVOLUCION');
+        $colposcopia = $this->plantilla($medico, '0002', 'CO', 'DE COLPOSCOPIA');
+        $this->plantilla($medico, '0003', 'UG', 'DE ECO GINECOLOGICO');
+        $resumen = $this->plantilla($medico, '0004', 'RF', 'DE RESUMEN FISICO');
+        $this->plantilla($medico, '0005', 'UA', 'DE ECO ABDOMINAL');
+        $this->plantilla($medico, '0006', 'ZZ', 'DEL LEGADO');
+
+        // Ginecología no cambia: las ve todas y el filtro las cuenta todas.
+        $ginecologo = $this->como($user, $medico, $gineco)->get(route('clinica.catalogos.plantillas-texto'))->assertOk();
+        $ginecologo->assertSee('DE COLPOSCOPIA')->assertSee('DE ECO GINECOLOGICO')->assertSee('6 plantillas');
+        $ginecologo->assertSee('<option value="CO"', false)->assertSee('<option value="UG"', false);
+
+        // Pediatría: sólo las de sus secciones (y las del legado, que no se esconden).
+        $pediatra = $this->como($user, $medico, $pediatria)->get(route('clinica.catalogos.plantillas-texto'))->assertOk();
+
+        $pediatra->assertSee('DE EVOLUCION')->assertSee('DE RESUMEN FISICO')->assertSee('DE ECO ABDOMINAL')->assertSee('DEL LEGADO');
+        $pediatra->assertDontSee('DE COLPOSCOPIA')->assertDontSee('DE ECO GINECOLOGICO');
+        // Ni el listado ni el filtro ni el diálogo las ofrecen (las dos listas de opciones usan el mismo `<option value…>`).
+        $pediatra->assertDontSee('<option value="CO"', false)->assertDontSee('<option value="UG"', false);
+        $pediatra->assertSee('<option value="RF"', false)->assertSee('<option value="UA"', false);
+        // El subtítulo cuenta sólo las que la pantalla muestra: EV, RF, UA y la del legado.
+        $pediatra->assertSee('4 plantillas');
+
+        // Editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo, para no perder el dato.
+        $edicion = $this->como($user, $medico, $pediatria)
+            ->get(route('clinica.catalogos.plantillas-texto', ['editar' => $colposcopia->id]))
+            ->assertOk();
+
+        $edicion->assertSee('DE COLPOSCOPIA');
+        $edicion->assertSee('No se ofrece en esta especialidad');
+        $edicion->assertSee('<option value="CO" selected', false);
+
+        // Y una de las suyas se edita como siempre (el caso de control: la pantalla no escondió lo propio).
+        $this->como($user, $medico, $pediatria)
+            ->get(route('clinica.catalogos.plantillas-texto', ['editar' => $evolucion->id]))
+            ->assertOk()
+            ->assertSee('DE EVOLUCION')
+            ->assertSee('<option value="EV" selected', false);
+    }
 }
