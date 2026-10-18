@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use Tests\TestCase;
 
@@ -11,7 +12,7 @@ use Tests\TestCase;
  * `ecos:mapas`: **el contrato del JSON que consume el app móvil** (primer paso de la salida a los ecos).
  *
  * Lo que fijan estos tests es lo que se rompería sin que se note en la web: el archivo **parsea**, lleva
- * los **tres** estudios con sus claves, el pélvico conserva sus **35 columnas y 9 bloques**, ningún campo
+ * los **cuatro** estudios con sus claves, el pélvico conserva sus **35 columnas y 9 bloques**, ningún campo
  * pierde `columna`/`etiqueta`/`tipo`, las opciones son **siempre pares** `{valor, texto}` (con un caso
  * concreto: `vagina = H` es «Llena») y el archivo sale **UTF-8 sin BOM** —un BOM hace que el `json_decode`
  * del app falle—.
@@ -79,12 +80,15 @@ class EcosMapasCommandTest extends TestCase
         return $estudios;
     }
 
-    public function test_el_json_parsea_y_trae_los_tres_estudios(): void
+    public function test_el_json_parsea_y_trae_los_cuatro_estudios(): void
     {
         $datos = $this->exportar();
 
         $this->assertSame(1, $datos['version']);
-        $this->assertSame(['pelvico', 'obstetrico', 'tercero'], array_column($datos['estudios'], 'clave'));
+        $this->assertSame(
+            ['pelvico', 'obstetrico', 'segundo', 'tercero'],
+            array_column($datos['estudios'], 'clave')
+        );
 
         foreach ($datos['estudios'] as $estudio) {
             // La forma del contrato: las claves de la clave y la lista de columnas editables.
@@ -119,6 +123,7 @@ class EcosMapasCommandTest extends TestCase
         $esperados = [
             'pelvico' => EcoGinecologico::columnas(),
             'obstetrico' => EcoObstetrico::columnas(),
+            'segundo' => EcoObstetricoSegundo::columnas(),
             'tercero' => EcoObstetricoTercero::columnas(),
         ];
 
@@ -140,6 +145,29 @@ class EcosMapasCommandTest extends TestCase
         $this->assertSame('eco_obstetrico_tercer', $estudios['tercero']['tabla']);
         $this->assertSame('historia', $estudios['tercero']['columna_historia']);
         $this->assertSame('consulta', $estudios['tercero']['columna_consulta']);
+    }
+
+    public function test_el_segundo_trimestre_es_su_propia_tabla_con_el_mapa_del_tercero(): void
+    {
+        $segundo = $this->porClave($this->exportar())['segundo'];
+
+        // WEB-11.14: el 2.º comparte el mapa con el 3.º (55 campos en 6 bloques) pero vive en su tabla.
+        $this->assertCount(55, $segundo['columnas']);
+        $this->assertCount(6, $segundo['grupos']);
+        $this->assertSame('eco_obstetrico_tercer_2', $segundo['tabla']);
+        $this->assertSame('historia', $segundo['columna_historia']);
+        $this->assertSame('consulta', $segundo['columna_consulta']);
+        $this->assertSame('fecha', $segundo['columna_fecha']);
+        $this->assertSame('Eco obstétrico (2.º trimestre)', $segundo['titulo']);
+        $this->assertSame('ECOSONOGRAFÍA OBSTÉTRICA · SEGUNDO TRIMESTRE', $segundo['titulo_del_informe']);
+
+        // La tabla NO puede ser la del 3.º: `EcoObstetricoSegundo` hereda `TABLA` y sería el error fácil.
+        $this->assertNotSame('eco_obstetrico_tercer', $segundo['tabla']);
+
+        // El mapa del 2.º es el mismo del 3.º, completo (columnas y grupos en el mismo orden).
+        $estudios = $this->porClave($this->exportar());
+        $this->assertSame($estudios['tercero']['columnas'], $segundo['columnas']);
+        $this->assertSame($estudios['tercero']['grupos'], $segundo['grupos']);
     }
 
     public function test_cada_campo_trae_su_columna_su_etiqueta_y_su_tipo(): void
@@ -219,10 +247,12 @@ class EcosMapasCommandTest extends TestCase
 
     public function test_el_estudio_elegido_exporta_solo_ese(): void
     {
-        $datos = $this->exportar(['--estudio' => 'tercero']);
+        // `segundo` es la clave nueva de WEB-11.14: la tiene que aceptar `--estudio`.
+        $datos = $this->exportar(['--estudio' => 'segundo']);
 
         $this->assertCount(1, $datos['estudios']);
-        $this->assertSame('tercero', $datos['estudios'][0]['clave']);
+        $this->assertSame('segundo', $datos['estudios'][0]['clave']);
+        $this->assertSame('eco_obstetrico_tercer_2', $datos['estudios'][0]['tabla']);
     }
 
     public function test_un_estudio_que_no_existe_termina_con_codigo_2(): void

@@ -4,14 +4,16 @@ namespace App\Console\Commands;
 
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use Illuminate\Console\Command;
+use ReflectionClass;
 
 /**
- * **Exporta los mapas de los tres estudios ecográficos a JSON** para que el app móvil los consuma como
- * asset: un solo formulario genérico en Flutter pinta los ~130 campos sin reescribirlos a mano.
+ * **Exporta los mapas de los cuatro estudios ecográficos a JSON** para que el app móvil los consuma como
+ * asset: un solo formulario genérico en Flutter pinta los ~180 campos sin reescribirlos a mano.
  *
  *   php artisan ecos:mapas
  *   php artisan ecos:mapas --salida=- --estudio=pelvico
@@ -22,11 +24,15 @@ use Illuminate\Console\Command;
  * del app sale distinto la próxima vez que se genere; por eso el comando **no guarda copia propia** de
  * los campos.
  *
- * La metadata (tabla y las dos columnas de la clave) sale de las **constantes** del mapa cuando existen
- * —las declaran las tres clases y son la fuente que usan la Action de guardado y la lectura—, y el
- * respaldo de abajo queda por si alguna clase nueva no las declara todavía. Los títulos de los dos
- * obstétricos no están en su mapa: se toman de donde la web ya los tiene (`TiposDeEstudio` para el nombre
- * de la pestaña y `DocumentoImpreso` para el título de la hoja impresa, con su trimestre).
+ * La metadata (tabla y las dos columnas de la clave) sale de las **constantes que declara el mapa**
+ * —son la fuente que usan la Action de guardado y la lectura—, y el respaldo de abajo queda por si alguna
+ * clase nueva no las declara todavía. Los títulos de los tres obstétricos no están en su mapa: se toman de
+ * donde la web ya los tiene (`TiposDeEstudio` para el nombre de la pestaña y `DocumentoImpreso` para el
+ * título de la hoja impresa, con su trimestre).
+ *
+ * ⚠️ El **2.º trimestre** (`EcoObstetricoSegundo`) hereda el mapa del 3.º y **también su constante
+ * `TABLA`**: la suya es `TABLA_DEL_SEGUNDO`. Por eso una constante cuenta sólo si la declara la clase del
+ * estudio (ver `constante()`); si no, manda la tabla del respaldo.
  *
  * El archivo se escribe en **UTF-8 sin BOM** (`json_encode` no agrega BOM y se guarda tal cual), con las
  * tildes sin escapar (`JSON_UNESCAPED_UNICODE`) para que el asset se lea a ojo.
@@ -41,9 +47,9 @@ class EcosMapasCommand extends Command
 
     protected $signature = 'ecos:mapas
         {--salida= : ruta del JSON (por defecto storage/app/ecos-mapas.json; - para la salida estándar)}
-        {--estudio= : sólo un estudio: pelvico, obstetrico o tercero}';
+        {--estudio= : sólo un estudio: pelvico, obstetrico, segundo o tercero}';
 
-    protected $description = 'Exporta a JSON los mapas de los tres estudios ecográficos para el app móvil';
+    protected $description = 'Exporta a JSON los mapas de los cuatro estudios ecográficos para el app móvil';
 
     public function handle(): int
     {
@@ -107,8 +113,8 @@ class EcosMapasCommand extends Command
      * (`pelvico`, `obstetrico`, `tercero`) y no la de `TiposDeEstudio` porque es la que el app ya espera.
      *
      * `tabla`/`historia`/`consulta` son el respaldo documentado —salen del encabezado de cada clase y de
-     * la migración `2026_08_25_055351_create_medical_tables_schema`—: si la clase declara sus constantes,
-     * manda la constante.
+     * la migración `2026_08_25_055351_create_medical_tables_schema`—: si la clase **declara** su
+     * constante, manda la constante.
      *
      * @return array<string,array{clase:class-string, tipo:string, documento:string, tabla:string,
      *     historia:string, consulta:string, fecha:string, titulo:string, titulo_del_informe:?string}>
@@ -142,10 +148,24 @@ class EcosMapasCommand extends Command
                 'titulo' => 'Eco obstétrico (1.er trimestre)',
                 'titulo_del_informe' => null,
             ],
+            'segundo' => [
+                // WEB-11.14: Alexander lo quiere separado del 3.º, con **su** tabla
+                // (`eco_obstetrico_tercer_2`) y el mismo mapa (la clase hereda de `EcoObstetricoTercero`:
+                // 6 grupos y 55 campos, los del 3.º). Su tabla no sale de `TABLA` —heredada y del 3.º—
+                // sino de su propia constante y de este respaldo.
+                'clase' => EcoObstetricoSegundo::class,
+                'tipo' => TiposDeEstudio::SEGUNDO,
+                'documento' => DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO,
+                'tabla' => 'eco_obstetrico_tercer_2',
+                'historia' => 'historia',
+                'consulta' => 'consulta',
+                'fecha' => 'fecha',
+                'titulo' => 'Eco obstétrico (2.º trimestre)',
+                'titulo_del_informe' => null,
+            ],
             'tercero' => [
                 'clase' => EcoObstetricoTercero::class,
-                // El 3.er trimestre declara `TABLA = eco_obstetrico_tercer` (el 2.º, WEB-11.14, vive en la
-                // tabla hermana `eco_obstetrico_tercer_2`, que NO se exporta acá).
+                // El 3.er trimestre declara `TABLA = eco_obstetrico_tercer`.
                 'tipo' => TiposDeEstudio::TERCERO,
                 'documento' => DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
                 'tabla' => 'eco_obstetrico_tercer',
@@ -251,14 +271,20 @@ class EcosMapasCommand extends Command
     }
 
     /**
-     * El valor de una constante de la clase del mapa, o el respaldo si esa clase no la declara. Se lee
-     * con `defined()` para no atar el comando a que las tres clases tengan exactamente las mismas.
+     * El valor de una constante **declarada por la clase del mapa**, o el respaldo. Una constante
+     * heredada no cuenta: `EcoObstetricoSegundo` hereda `TABLA = eco_obstetrico_tercer` del 3.º y su tabla
+     * es la hermana `eco_obstetrico_tercer_2`, así que usarla exportaría el estudio con la tabla del otro.
+     * Se lee con reflexión para no atar el comando a que las cuatro clases tengan las mismas constantes.
      */
     private function constante(string $clase, string $nombre, string $porDefecto): string
     {
-        $completo = $clase . '::' . $nombre;
+        $constante = (new ReflectionClass($clase))->getReflectionConstant($nombre);
 
-        return defined($completo) ? (string) constant($completo) : $porDefecto;
+        if ($constante !== false && $constante->getDeclaringClass()->getName() === $clase) {
+            return (string) $constante->getValue();
+        }
+
+        return $porDefecto;
     }
 
     /**
