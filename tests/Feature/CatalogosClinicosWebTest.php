@@ -537,7 +537,10 @@ class CatalogosClinicosWebTest extends TestCase
         MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
 
         $html = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
-        $this->assertStringNotContainsString('nav-grupo', $html);
+        // `nav-grupo` ya **no** sirve para medir esto: desde A-10 la secretaría tiene su propio grupo legítimo en el
+        // menú (Configuración, con «Consultorios y horarios» y «Días no laborables»). Lo que no puede ver es el grupo
+        // de Catálogos, que se reconoce por su asa estable (`data-menu`) y por sus enlaces.
+        $this->assertStringNotContainsString('data-menu="catalogos"', $html);
         $this->assertStringNotContainsString('/catalogos/', $html);
     }
 
