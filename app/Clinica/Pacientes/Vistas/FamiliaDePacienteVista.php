@@ -30,6 +30,8 @@ final class FamiliaDePacienteVista
         private ?string $urlGuardar = null,
         // En pediatría el bloque se ofrece aunque el niño todavía no sea un `paciente_chamo` (se dio de alta en la web): guardar lo crea.
         private bool $esPediatria = false,
+        // El alta de un hermano que ya nace en esta familia (WEB-7.4.2d); sólo se ofrece si el niño ya es un `paciente_chamo`.
+        private ?string $urlAgregarHermano = null,
     ) {
     }
 
@@ -43,6 +45,12 @@ final class FamiliaDePacienteVista
     public function puedeEditar(): bool
     {
         return $this->urlGuardar !== null;
+    }
+
+    /** La URL del alta de un hermano, o `null` si no se ofrece (el niño todavía no tiene familia o no se puede editar). */
+    public function urlAgregarHermano(): ?string
+    {
+        return $this->datos !== null && $this->puedeEditar() ? $this->urlAgregarHermano : null;
     }
 
     public function urlGuardar(): ?string

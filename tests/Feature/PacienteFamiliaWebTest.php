@@ -322,4 +322,101 @@ class PacienteFamiliaWebTest extends TestCase
         $this->assertNull(\App\Support\FechaClinica::edadDetallada(null));
         $this->assertNull(\App\Support\FechaClinica::edadDetallada('2999-01-01'));
     }
+
+    // --------------------------------------------------------------------------------------- Agregar un hermano (WEB-7.4.2d)
+
+    public function test_la_ficha_ofrece_agregar_un_hermano_solo_si_el_nino_es_un_chamo(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $conFamilia = $this->nino($medico, 'Mateo', 611);
+        $this->chamo($reg, 611, 71, 'PEREZ MATEO');
+        $sinChamo = $this->nino($medico, 'Sofía', 612);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $conFamilia))
+            ->assertOk()->assertSee('Agregar un hermano')->assertSee('hermano_de=' . $conFamilia, false);
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $sinChamo))
+            ->assertOk()->assertDontSee('Agregar un hermano');
+    }
+
+    public function test_el_formulario_precarga_los_apellidos_y_lleva_el_hermano(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico, 'Mateo', 621);
+        $this->chamo($medico->reg_medico, 621, 72, 'PEREZ MATEO');
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.nuevo', ['hermano_de' => $id]))
+            ->assertOk()->assertSee('name="hermano_de" value="' . $id . '"', false)->assertSee('value="Pérez"', false)
+            ->assertSee('hermano(a) de Mateo');
+    }
+
+    public function test_el_hermano_comparte_la_familia_y_el_telefono_de_contacto(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $id = $this->nino($medico, 'Mateo', 631);
+        $this->chamo($reg, 631, 73, 'PEREZ MATEO');
+        $this->familia($reg, 73);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post('/clinica/pacientes', [
+            'nac' => 'V', 'apellidos' => 'Pérez', 'nombres' => 'Lucía', 'sexo' => 'F',
+            'fnacimiento' => now()->subMonths(5)->toDateString(), 'hermano_de' => $id,
+        ])->assertSessionHasNoErrors()->assertSessionHas('estado');
+
+        $nueva = DB::table('pacientes')->where('nombres', 'Lucía')->where('apellidos', 'Pérez')->value('id');
+        $historia = DB::table('medico_pacientes')->where('reg_medico', $reg)->where('paciente_id', $nueva)->value('numhistoria');
+        $this->assertNotNull($historia);
+
+        $chamo = DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', (int) $historia)->first();
+        $this->assertNotNull($chamo);
+        $this->assertSame(73, (int) $chamo->familia);
+        $this->assertSame(1, DB::table('familia_bebe')->where('reg_medico', $reg)->where('familia', 73)->count());
+        $this->assertSame('04141234567', (new \App\Clinica\Pacientes\TelefonoDeContacto())->de($reg, (string) $historia));
+
+        // Y la ficha del hermano mayor la lista entre los hermanos.
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.ver', $id))->assertOk()->assertSee('Lucía');
+    }
+
+    public function test_un_hermano_invalido_no_une_nada_y_el_alta_sigue_normal(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [, $otro] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $ajeno = $this->nino($otro, 'Ajeno', 641);
+        $this->chamo($otro->reg_medico, 641, 74, 'AJENO');
+        $sinChamo = $this->nino($medico, 'Solo', 642);
+
+        foreach ([$ajeno, $sinChamo, 999999] as $n => $hermano) {
+            $this->conContexto($medico, $pediatria)->actingAs($user)->post('/clinica/pacientes', [
+                'nac' => 'V', 'apellidos' => 'Prueba', 'nombres' => 'Nene' . $n, 'hermano_de' => $hermano,
+            ])->assertSessionHasNoErrors();
+            $id = DB::table('pacientes')->where('nombres', 'Nene' . $n)->value('id');
+            $this->assertNotNull($id);
+            $this->assertNull(DB::table('medico_pacientes')->where('paciente_id', $id)->value('numhistoria'));
+        }
+
+        $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', $reg)->count());
+    }
+
+    public function test_comoHermano_es_idempotente_y_no_toca_la_familia_bebe(): void
+    {
+        [, $medico] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $this->chamo($reg, 651, 75, 'PEREZ MATEO');
+        $this->familia($reg, 75);
+        $accion = new \App\Actions\Pacientes\GuardarFamilia();
+        $nino = (object) ['nombres' => 'Luz', 'apellidos' => 'Pérez', 'sexo' => 'F', 'fnacimiento' => '2024-01-02'];
+
+        $a = $accion->comoHermano($reg, '651', '652', $nino);
+        $b = $accion->comoHermano($reg, '651', '652', $nino);
+
+        $this->assertSame(75, $a->familia);
+        $this->assertSame(75, $b->familia);
+        $this->assertSame(1, DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', 652)->count());
+        $this->assertSame(1, DB::table('familia_bebe')->where('reg_medico', $reg)->count());
+        $this->assertNull($accion->comoHermano($reg, '9999', '653', $nino));
+        $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', 653)->count());
+        $this->expectException(\InvalidArgumentException::class);
+        $accion->comoHermano($reg, '651', null, $nino);
+    }
 }

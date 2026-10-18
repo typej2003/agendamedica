@@ -3,6 +3,11 @@
 @if ($familia->cargada())
     <x-ui.tarjeta id="ficha-familia" titulo="Familia" icono="bi-people" class="mb-3">
         <x-slot name="acciones">
+            @if ($familia->urlAgregarHermano())
+                <a class="btn btn-outline-primary" href="{{ $familia->urlAgregarHermano() }}">
+                    <i class="bi bi-person-plus" aria-hidden="true"></i> Agregar un hermano
+                </a>
+            @endif
             @if ($familia->puedeEditar())
                 <button type="button" class="btn btn-outline-primary" data-dialogo="dialogo-familia">
                     <i class="bi bi-pencil" aria-hidden="true"></i> {{ $familia->botonEditar() }}

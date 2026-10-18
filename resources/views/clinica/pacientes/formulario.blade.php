@@ -14,6 +14,13 @@
             @method('PUT')
         @endif
 
+        @if (! $vm->editando() && ($hermano ?? null) !== null)
+            <input type="hidden" name="hermano_de" value="{{ $hermano->id }}">
+            <x-ui.estado tono="info" icono="bi-people" class="mb-3">
+                Vas a registrar a un hermano(a) de {{ $hermano->nombres }}: al guardar comparte su familia y el teléfono de contacto.
+            </x-ui.estado>
+        @endif
+
         @include('clinica.pacientes._campos')
 
         @unless ($vm->editando())

@@ -92,6 +92,44 @@ final class GuardarFamilia
         });
     }
 
+    /**
+     * **Agregar un hermano** (WEB-7.4.2d): enlaza al niño nuevo a la **misma familia** que su hermano, creando su fila de
+     * `paciente_chamo` con el mismo número de `familia`. No toca `familia_bebe` (los padres y los teléfonos ya son los de la familia).
+     * Idempotente: si el niño ya es un `paciente_chamo` no se cambia nada (ni su familia).
+     *
+     * @return object|null  `familia` y `historia`, o `null` si el hermano no es un `paciente_chamo` del consultorio
+     *
+     * @throws InvalidArgumentException si falta alguno de los dos números de historia
+     */
+    public function comoHermano(string $regMedico, ?string $historiaDelHermano, ?string $historiaDelNino, ?object $nino = null): ?object
+    {
+        $hermano = CamposDePaciente::historiaNumerica($historiaDelHermano);
+        $historia = CamposDePaciente::historiaNumerica($historiaDelNino);
+
+        if ($hermano === null || $historia === null) {
+            throw new InvalidArgumentException('Hacen falta los números de historia del niño y de su hermano para unirlos en una familia.');
+        }
+
+        return DB::transaction(function () use ($regMedico, $hermano, $historia, $nino) {
+            $familia = DB::table('paciente_chamo')
+                ->where('reg_medico', $regMedico)->where('historia', $hermano)->orderBy('id')->value('familia');
+
+            if ($familia === null) {
+                return null;
+            }
+
+            $yaEs = DB::table('paciente_chamo')->where('reg_medico', $regMedico)->where('historia', $historia)->orderBy('id')->first(['familia']);
+
+            if ($yaEs !== null) {
+                return (object) ['familia' => (int) $yaEs->familia, 'historia' => $historia];
+            }
+
+            $this->insertarChamo($regMedico, (int) $familia, $historia, $nino);
+
+            return (object) ['familia' => (int) $familia, 'historia' => $historia];
+        });
+    }
+
     /** Crea la fila de `paciente_chamo` del niño con una familia nueva y devuelve el número de esa familia. */
     private function crearAlNino(string $regMedico, int $historia, ?object $nino): int
     {
@@ -100,6 +138,13 @@ final class GuardarFamilia
             (int) DB::table('familia_bebe')->where('reg_medico', $regMedico)->max('familia'),
         ) + 1;
 
+        $this->insertarChamo($regMedico, $familia, $historia, $nino);
+
+        return $familia;
+    }
+
+    private function insertarChamo(string $regMedico, int $familia, int $historia, ?object $nino): void
+    {
         $nombre = CamposDePaciente::nombre($nino->apellidos ?? null, $nino->nombres ?? null);
 
         DB::table('paciente_chamo')->insert([
@@ -114,7 +159,5 @@ final class GuardarFamilia
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        return $familia;
     }
 }
