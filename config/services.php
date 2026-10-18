@@ -39,6 +39,10 @@ return [
         // todo (ver `App\Http\Middleware\VerificaLaFirmaDeWhatsApp`).
         'app_secret' => env('WHATSAPP_APP_SECRET'),
         'version' => env('WHATSAPP_API_VERSION', 'v19.0'),
+        // Plantilla aprobada en Meta para el código de la reserva pública. El mensaje lo inicia el
+        // negocio (el paciente no escribió primero), así que **no** se puede mandar texto libre:
+        // sin esta plantilla el portal usa SMS (Twilio) o, en local, simula el envío.
+        'template_codigo' => env('WHATSAPP_TEMPLATE_CODIGO'),
     ],
 
     /*

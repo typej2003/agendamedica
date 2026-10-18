@@ -1,0 +1,153 @@
+<?php
+
+namespace App\Reservas;
+
+use App\Clinica\Agenda\ArmadorDeAgenda;
+use App\Clinica\FechaDelConsultorio;
+use App\Models\Medico;
+use App\Models\Office;
+use App\Services\PacienteAtencionContextService;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+
+/**
+ * **La disponibilidad que ve el paciente**, sin autenticarse.
+ *
+ * No inventa una agenda paralela: usa `PacienteAtencionContextService::primerLugarDisponible`, que es el
+ * mismo camino con el que el chatbot reserva y que a su vez se apoya en `ArmadorDeAgenda`/`Jornada`
+ * (bloques, cupo, modalidad, sede y número). Lo único que agrega acá es el recorte a **un horario por
+ * día** —lo que el portal ofrece para que reservar sea rápido— y el objeto `OpcionDeReserva` que la
+ * vista puede pintar y el formulario puede volver a comprobar.
+ */
+final class DisponibilidadPublica
+{
+    /** Las sedes de cada médico, para no repetir la consulta en el catálogo y en su ficha. */
+    private array $sedesPorMedico = [];
+
+    public function __construct(
+        private PacienteAtencionContextService $atencion,
+        private ArmadorDeAgenda $armador,
+    ) {
+    }
+
+    /**
+     * Los próximos `$cantidad` días con lugar, uno por día. Si no hay agenda configurada devuelve vacío.
+     *
+     * @return array<int,OpcionDeReserva>
+     */
+    public function opciones(Medico $medico, int $cantidad = 5, int $diasMaximos = 30): array
+    {
+        $regMedico = $medico->regMedicoPrincipal();
+
+        if ($regMedico === null) {
+            return [];
+        }
+
+        $opciones = [];
+        $hoy = FechaDelConsultorio::hoyComoFecha();
+        $ahora = FechaDelConsultorio::ahora()->format('H:i');
+
+        for ($i = 0; $i < $diasMaximos && count($opciones) < $cantidad; $i++) {
+            $fecha = $hoy->copy()->addDays($i);
+
+            // La agenda del legado no atiende domingos; `primerLugarDisponible` lo repite, pero acá se
+            // evita la consulta para no gastar una vuelta por día.
+            if ($fecha->isSunday()) {
+                continue;
+            }
+
+            $lugar = $this->atencion->primerLugarDisponible($regMedico, $medico, $fecha, 1);
+
+            if (empty($lugar['disponible']) || empty($lugar['sede'])) {
+                continue;
+            }
+
+            $opcion = $this->opcion($fecha, $lugar);
+
+            // El portal no ofrece una hora que ya pasó. La agenda del chatbot no mira el reloj porque el
+            // paciente suele reservar para otro día; acá el paciente está eligiendo en el momento.
+            if ($opcion->fecha === $hoy->toDateString() && $opcion->hora <= $ahora) {
+                continue;
+            }
+
+            $opciones[] = $opcion;
+        }
+
+        return $opciones;
+    }
+
+    /**
+     * **La comprobación del horario elegido**: cuál es el primer lugar disponible de ese día, con la
+     * agenda de este momento. Si no coincide con lo que el paciente eligió (el día se llenó, se movió un
+     * bloque, se cerró el consultorio), la reserva no se crea.
+     */
+    public function opcionEn(Medico $medico, string $fecha): ?OpcionDeReserva
+    {
+        $regMedico = $medico->regMedicoPrincipal();
+
+        if ($regMedico === null) {
+            return null;
+        }
+
+        $dia = Carbon::createFromFormat('!Y-m-d', $fecha);
+
+        if ($dia->isPast() && ! $dia->isToday()) {
+            return null;
+        }
+
+        $lugar = $this->atencion->primerLugarDisponible($regMedico, $medico, $dia, 1);
+
+        if (empty($lugar['disponible']) || empty($lugar['sede'])) {
+            return null;
+        }
+
+        $opcion = $this->opcion($dia, $lugar);
+
+        if ($opcion->fecha === FechaDelConsultorio::hoyComoFecha()->toDateString()
+            && $opcion->hora <= FechaDelConsultorio::ahora()->format('H:i')) {
+            return null;
+        }
+
+        return $opcion;
+    }
+
+    /** Las sedes donde el médico atiende y tiene bloques cargados (lo que el catálogo ofrece). */
+    public function sedes(Medico $medico): Collection
+    {
+        if (array_key_exists((int) $medico->id, $this->sedesPorMedico)) {
+            return $this->sedesPorMedico[(int) $medico->id];
+        }
+
+        $regMedico = $medico->regMedicoPrincipal();
+
+        if ($regMedico === null) {
+            return $this->sedesPorMedico[(int) $medico->id] = collect();
+        }
+
+        return $this->sedesPorMedico[(int) $medico->id] = $this->armador->sedes($regMedico, $medico->id)
+            ->filter(fn (Office $office) => $office->schedules->isNotEmpty())
+            ->values();
+    }
+
+    public function tieneAgenda(Medico $medico): bool
+    {
+        return $this->sedes($medico)->isNotEmpty();
+    }
+
+    /** @param array{disponible: bool, fecha: string, hora: string, numorden: int, centro_id: ?int, sede: Office} $lugar */
+    private function opcion(Carbon $fecha, array $lugar): OpcionDeReserva
+    {
+        /** @var Office $sede */
+        $sede = $lugar['sede'];
+
+        return new OpcionDeReserva(
+            fecha: $fecha->toDateString(),
+            hora: substr((string) $lugar['hora'], 0, 5),
+            officeId: (int) $sede->id,
+            centroId: $lugar['centro_id'] !== null ? (int) $lugar['centro_id'] : null,
+            sede: $sede->medicalCenter->name ?? 'Consultorio',
+            direccion: $sede->medicalCenter->address ?? '',
+            numorden: (int) ($lugar['numorden'] ?? 1),
+        );
+    }
+}

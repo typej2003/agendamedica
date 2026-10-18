@@ -6,6 +6,9 @@
                 <span class="badge badge-gineco mb-3"><i class="bi bi-shield-check me-1"></i> Atención Especializada 24/7</span>
                 <h1 class="display-4 hero-title mb-3">Encuentra a tu <span>Especialista</span> y Agenda en Minutos</h1>
                 <p class="lead text-muted">Conectamos a pacientes con los mejores profesionales en ginecología, obstetricia y salud integral.</p>
+                <a href="{{ route('reservas.catalogo') }}" class="btn btn-primary btn-lg rounded-pill px-4 mt-2">
+                    <i class="bi bi-calendar2-check me-2" aria-hidden="true"></i>Reservar mi cita
+                </a>
             </div>
 
             <!-- Invocación del Componente Livewire de Búsqueda -->
@@ -93,8 +96,8 @@
                                                 </p>
                                             @endif
 
-                                            <a href="{{ route('login') }}" class="btn btn-primary btn-sm rounded-pill w-100 fw-bold py-2" style="background-color: var(--purple-wifiexpres); border-color: var(--purple-wifiexpres);">
-                                                <i class="bi bi-calendar-event me-1"></i> Agendar Cita
+                                            <a href="{{ route('reservas.catalogo', ['especialidad' => $especialidadSeleccionada->slug]) }}" class="btn btn-primary btn-sm rounded-pill w-100 fw-bold py-2" style="background-color: var(--purple-wifiexpres); border-color: var(--purple-wifiexpres);">
+                                                <i class="bi bi-calendar-event me-1"></i> Ver horarios
                                             </a>
                                         </div>
                                     </div>

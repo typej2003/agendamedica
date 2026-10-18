@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
 
+    {{-- Estilos propios de una pantalla pública (por ejemplo el portal de reservas). --}}
+    @stack('estilos')
+
     @livewireStyles
     <style>
         :root {

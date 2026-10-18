@@ -34,6 +34,11 @@
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#inicio">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#especialidades">Especialidades</a></li>
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#servicios">Servicios</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 py-2 py-lg-1 fw-semibold" href="{{ route('reservas.catalogo') }}">
+                            <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>Reservar cita
+                        </a>
+                    </li>
                 @endguest
 
                 <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
