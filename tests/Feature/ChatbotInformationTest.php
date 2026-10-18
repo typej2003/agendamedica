@@ -625,8 +625,10 @@ class ChatbotInformationTest extends TestCase
 
         // PASO 6: Paciente selecciona al médico (opción 1)
         $r6 = $gemini->generarRespuesta('1', $tel);
-        $this->assertStringContainsString('Hemos consultado la agenda del *Dr(a). Marcos Pérez*', $r6);
-        $this->assertStringContainsString('¿Deseas que reservemos tu cita para esta fecha?', $r6);
+        $this->assertStringContainsString('La agenda del *Dr(a). Marcos Pérez*', $r6);
+        // Desde el 2026-10-18 se ofrecen varios días y **no** se dicen los cupos.
+        $this->assertStringContainsString('disponibilidad', $r6);
+        $this->assertStringNotContainsString('Cupos disponibles', $r6);
 
         // PASO 7: Paciente confirma ("Sí") -> Debe crear la cita en Cola
         $r7 = $gemini->generarRespuesta('Sí, confirmo', $tel);
@@ -674,8 +676,8 @@ class ChatbotInformationTest extends TestCase
         $respuesta = $gemini->generarRespuesta('Quiero cita con el doctor Luis Herrera por favor', $tel);
 
         $this->assertStringContainsString('Dr. Luis Herrera', $respuesta);
-        $this->assertStringContainsString('Día más próximo disponible', $respuesta);
-        $this->assertStringContainsString('¿Deseas que reservemos tu cita para esta fecha?', $respuesta);
+        $this->assertStringContainsString('disponibilidad', $respuesta);
+        $this->assertStringNotContainsString('Cupos disponibles', $respuesta);
 
         // Confirmar cita
         $confirmacion = $gemini->generarRespuesta('Sí', $tel);

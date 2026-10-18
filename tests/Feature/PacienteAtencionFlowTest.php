@@ -167,6 +167,7 @@ class PacienteAtencionFlowTest extends TestCase
 
         $this->assertStringContainsString('Carlos Mendoza', $respuesta);
         $this->assertStringContainsString('Jueves 8 de octubre de 2026', $respuesta);
-        $this->assertStringContainsString('5', $respuesta);
+        // La paciente NO ve cuántos cupos quedan (decisión del 2026-10-18): el número es interno.
+        $this->assertStringNotContainsString('Cupos disponibles', $respuesta);
     }
 }

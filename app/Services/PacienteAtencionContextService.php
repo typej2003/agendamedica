@@ -14,6 +14,7 @@ use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Specialty;
+use App\Support\DisponibilidadEnTexto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -852,7 +853,7 @@ class PacienteAtencionContextService
      * @param int $diasMaximos
      * @return array
      */
-    public function consultarProximoDiaDisponible(string $regMedico, int $diasMaximos = 30): array
+    public function consultarProximoDiaDisponible(string $regMedico, int $diasMaximos = 30, int $opciones = 3): array
     {
         try {
             $medico = $this->resolverMedico($regMedico);
@@ -860,7 +861,17 @@ class PacienteAtencionContextService
             $nombreMedico = $medico ? $medico->nombre_mostrar : "Médico (Registro: {$regMedico})";
             $especialidad = $medico ? ($medico->specialties->pluck('name')->first() ?? 'Medicina General') : 'Consulta';
 
-            // Consultar límite configurado en evolucion si existe
+            if (! $medico) {
+                return [
+                    'disponible' => false,
+                    'reg_medico' => $regFinal,
+                    'medico' => $nombreMedico,
+                    'mensaje' => "No se encontró al médico para consultar su agenda.",
+                ];
+            }
+
+            // Consultar límite configurado en evolucion si existe (sólo para el `cupos_disponibles` de
+            // compatibilidad: al paciente no se le muestran cupos).
             $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
             try {
                 $ev = Evolucion::where('reg_medico', $regFinal)->first();
@@ -872,40 +883,58 @@ class PacienteAtencionContextService
             }
 
             $hoy = Carbon::today();
+            $disponibles = [];
+            $ocupadasPrimerDia = null;
 
-            for ($i = 0; $i < $diasMaximos; $i++) {
+            // Se ofrecen varios días, y **los mismos** que aceptaría la reserva: la comprobación es
+            // `primerLugarDisponible`, la que usa el agendamiento, no una cuenta de cupos por día aparte.
+            for ($i = 0; $i < $diasMaximos && count($disponibles) < max(1, $opciones); $i++) {
                 $fechaEvaluar = $hoy->copy()->addDays($i);
 
-                // Omitir domingos
                 if ($fechaEvaluar->isSunday()) {
                     continue;
                 }
 
-                $citasOcupadas = Cola::where('reg_medico', $regFinal)
-                    ->whereDate('fecha', $fechaEvaluar->toDateString())
-                    ->count();
+                $lugar = $this->primerLugarDisponible($regFinal, $medico, $fechaEvaluar, 1);
 
-                if ($citasOcupadas < $limiteDiario) {
-                    $cuposRestantes = $limiteDiario - $citasOcupadas;
-                    $diaTexto = $fechaEvaluar->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY');
-
-                    return [
-                        'disponible' => true,
-                        'reg_medico' => $regFinal,
-                        'medico' => $nombreMedico,
-                        'especialidad' => $especialidad,
-                        'fecha' => $fechaEvaluar->toDateString(),
-                        'fecha_formateada' => ucfirst($diaTexto),
-                        'cupos_disponibles' => $cuposRestantes,
-                    ];
+                if (empty($lugar['disponible'])) {
+                    continue;
                 }
+
+                if ($ocupadasPrimerDia === null) {
+                    $ocupadasPrimerDia = Cola::where('reg_medico', $regFinal)
+                        ->whereDate('fecha', $fechaEvaluar->toDateString())
+                        ->count();
+                }
+
+                $disponibles[] = [
+                    'fecha' => $fechaEvaluar->toDateString(),
+                    'fecha_formateada' => ucfirst($fechaEvaluar->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY')),
+                    'hora' => $lugar['hora'] ?? null,
+                ];
+            }
+
+            if ($disponibles === []) {
+                return [
+                    'disponible' => false,
+                    'reg_medico' => $regFinal,
+                    'medico' => $nombreMedico,
+                    'mensaje' => "El {$nombreMedico} no cuenta con cupos disponibles en los próximos {$diasMaximos} días.",
+                ];
             }
 
             return [
-                'disponible' => false,
+                'disponible' => true,
                 'reg_medico' => $regFinal,
                 'medico' => $nombreMedico,
-                'mensaje' => "El {$nombreMedico} no cuenta con cupos disponibles en los próximos {$diasMaximos} días.",
+                'especialidad' => $especialidad,
+                // El primero, para quien todavía lea las claves sueltas; `opciones` es la lista completa.
+                'fecha' => $disponibles[0]['fecha'],
+                'fecha_formateada' => $disponibles[0]['fecha_formateada'],
+                // Interno: **no se muestra** en el mensaje (decisión del usuario, 2026-10-18). Se mantiene
+                // porque hay tests y consumidores que lo leen.
+                'cupos_disponibles' => max(0, $limiteDiario - (int) $ocupadasPrimerDia),
+                'opciones' => $disponibles,
             ];
 
         } catch (\Throwable $e) {
@@ -915,6 +944,85 @@ class PacienteAtencionContextService
                 'error' => 'No se pudo consultar la agenda en este momento.',
             ];
         }
+    }
+
+    /**
+     * El texto con los días que se le ofrecen a la paciente. **Sin cupos**: cuántos lugares quedan es
+     * información interna del consultorio (decisión del usuario, 2026-10-18). El formato vive en
+     * `App\Support\DisponibilidadEnTexto`; esto queda como atajo por si se llama desde el servicio.
+     *
+     * @param  array<string,mixed>  $disponibilidad  lo que devuelve `consultarProximoDiaDisponible`
+     */
+    public function textoDeOpcionesDeDisponibilidad(array $disponibilidad): string
+    {
+        return DisponibilidadEnTexto::de($disponibilidad);
+    }
+
+    /**
+     * Interpreta la respuesta de la paciente a esa lista: un número (1…n), un día («el martes») o una
+     * referencia al primero («el primero», «el más pronto»). Devuelve la fecha `Y-m-d` o `null` si el
+     * mensaje no elige ninguno (ahí decide el resto del flujo, con la primera opción).
+     *
+     * @param  array<string,mixed>  $pendiente  lo guardado en `Cache` al ofrecer los días
+     */
+    public function interpretarDiaElegido(string $mensaje, array $pendiente): ?string
+    {
+        $fechas = array_values(array_filter((array) ($pendiente['fechas'] ?? [])));
+
+        if ($fechas === []) {
+            return null;
+        }
+
+        $limpio = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $mensaje)));
+        // Sin tildes, como la lista de días: «miércoles» tiene que encontrar «miercoles».
+        $limpio = str_replace(['á', 'é', 'í', 'ó', 'ú', 'ü'], ['a', 'e', 'i', 'o', 'u', 'u'], $limpio);
+
+        if ($limpio === '') {
+            return null;
+        }
+
+        // "2" o "la 2" → la segunda opción.
+        if (preg_match('/(?:^|\s)(\d)(?:\s|$)/', $limpio, $coincidencia)) {
+            $indice = (int) $coincidencia[1] - 1;
+
+            return $fechas[$indice] ?? null;
+        }
+
+        // "el primero", "el más pronto", "la primera".
+        if (preg_match('/\b(primer|primera|primero|mas pronto|más pronto)\b/u', $limpio)) {
+            return $fechas[0];
+        }
+
+        // "el martes" → la opción que cae ese día de la semana.
+        $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+
+        foreach ($dias as $dia) {
+            if (! str_contains($limpio, $dia)) {
+                continue;
+            }
+
+            foreach ($fechas as $fecha) {
+                $nombreDia = $this->diaDeLaSemana($fecha);
+
+                if ($nombreDia !== null && str_contains($nombreDia, $dia)) {
+                    return $fecha;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** El día de la semana de una fecha `Y-m-d`, sin tildes y en minúsculas ("miercoles"). */
+    private function diaDeLaSemana(string $fecha): ?string
+    {
+        try {
+            $texto = mb_strtolower(Carbon::parse($fecha)->locale('es')->isoFormat('dddd'));
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $texto);
     }
 
     /**
@@ -1314,6 +1422,10 @@ class PacienteAtencionContextService
         $sedes = $armador->sedes($regMedico, $medico->id);
         $hoy = Carbon::today();
 
+        // Se empieza en la fecha pedida (o hoy si ya pasó): así `--dias` cuenta desde ahí y una consulta
+        // por un día concreto mira ese día, no treinta desde hoy.
+        $inicio = $desde->copy()->startOfDay()->lt($hoy) ? $hoy->copy() : $desde->copy()->startOfDay();
+
         $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
         try {
             $evolucion = Evolucion::where('reg_medico', $regMedico)->first();
@@ -1323,11 +1435,7 @@ class PacienteAtencionContextService
         } catch (\Throwable $e) {}
 
         for ($i = 0; $i < $diasMaximos; $i++) {
-            $fecha = $hoy->copy()->addDays($i);
-
-            if ($fecha->lt($desde->copy()->startOfDay())) {
-                continue;
-            }
+            $fecha = $inicio->copy()->addDays($i);
 
             // La agenda no atiende domingos: una regla del legado que el bot ya aplicaba.
             if ($fecha->isSunday()) {

@@ -387,7 +387,10 @@ de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 1
 nadie; `--url=` apunta a un `serve` local) y `--enviar-a=<número>` (texto real por la Graph API). Sin
 `WHATSAPP_APP_SECRET` el POST responde **503** y, si el deploy usa `config:cache`, la variable nueva no se
 ve hasta `config:clear`/`config:cache`. Procedimiento completo en
-`../Docs/tecnico/auditoria-chatbot-whatsapp.md` §11-§12.
+`../Docs/tecnico/auditoria-chatbot-whatsapp.md` §11-§12. **Lo que ofrece a la paciente:** hasta **tres
+días con lugar** (comprobados con `primerLugarDisponible`, los mismos que acepta la reserva) y **sin decir
+cupos**; el texto lo arma `App\Support\DisponibilidadEnTexto` y la elección por número/día la interpreta
+`PacienteAtencionContextService::interpretarDiaElegido`. Tests: `ChatbotDisponibilidadTest`.
 
 **El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
 **urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:

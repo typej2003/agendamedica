@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\DisponibilidadEnTexto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -50,27 +51,38 @@ class GeminiService
                 'especialidades' => $this->contextService->obtenerEspecialidadesDisponibles(),
             ];
 
-        // 2. Si el usuario confirma directamente una cita ofrecida previamente ("sí", "confirmo", "resérvala", "1")
-        if (!empty($contexto['telefono']) && $this->esConfirmacionDeReserva($mensajeUsuario, $contexto['telefono'])) {
-            $pendiente = Cache::get("wa_pendiente_{$contexto['telefono']}") ?? ($cleanTel ? Cache::get("wa_pendiente_{$cleanTel}") : null);
+        // 2. Si el usuario elige uno de los días ofrecidos o confirma directamente ("sí", "el martes", "2")
+        if (!empty($contexto['telefono'])) {
+            $pendiente = Cache::get("wa_pendiente_{$contexto['telefono']}")
+                ?? ($cleanTel ? Cache::get("wa_pendiente_{$cleanTel}") : null);
+
             if ($pendiente) {
-                $resultado = $this->contextService->reservarCitaEnCola(
-                    $contexto['telefono'],
-                    $pendiente['reg_medico'],
-                    $pendiente['fecha'] ?? null
-                );
-                Cache::forget("wa_pendiente_{$contexto['telefono']}");
-                if ($cleanTel) {
-                    Cache::forget("wa_pendiente_{$cleanTel}");
+                // El día elegido manda; si el mensaje no elige ninguno y es una confirmación, va el primero.
+                $fechaElegida = $this->contextService->interpretarDiaElegido($mensajeUsuario, $pendiente);
+
+                if ($fechaElegida === null && $this->esConfirmacionDeReserva($mensajeUsuario, $contexto['telefono'])) {
+                    $fechaElegida = $pendiente['fecha'] ?? null;
                 }
-                if (!empty($resultado['exito']) && !empty($resultado['mensaje_confirmacion'])) {
-                    return $resultado['mensaje_confirmacion'];
-                }
-                if (!empty($resultado['mensaje'])) {
-                    return $resultado['mensaje'];
-                }
-                if (!empty($resultado['error'])) {
-                    return $resultado['error'];
+
+                if ($fechaElegida !== null) {
+                    $resultado = $this->contextService->reservarCitaEnCola(
+                        $contexto['telefono'],
+                        $pendiente['reg_medico'],
+                        $fechaElegida
+                    );
+                    Cache::forget("wa_pendiente_{$contexto['telefono']}");
+                    if ($cleanTel) {
+                        Cache::forget("wa_pendiente_{$cleanTel}");
+                    }
+                    if (!empty($resultado['exito']) && !empty($resultado['mensaje_confirmacion'])) {
+                        return $resultado['mensaje_confirmacion'];
+                    }
+                    if (!empty($resultado['mensaje'])) {
+                        return $resultado['mensaje'];
+                    }
+                    if (!empty($resultado['error'])) {
+                        return $resultado['error'];
+                    }
                 }
             }
         }
@@ -167,18 +179,13 @@ class GeminiService
                 if (!empty($disponibilidad['disponible'])) {
                     if (!empty($contexto['telefono'])) {
                         $cleanTel = preg_replace('/\D/', '', $contexto['telefono']);
-                        $datosPendientes = [
-                            'reg_medico' => $medicoElegido['reg_medico'],
-                            'fecha' => $disponibilidad['fecha'],
-                        ];
+                        $datosPendientes = $this->datosPendientesDeDisponibilidad($medicoElegido['reg_medico'], $disponibilidad);
                         Cache::put("wa_pendiente_{$contexto['telefono']}", $datosPendientes, now()->addMinutes(30));
                         Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
                     }
 
-                    return "¡Perfecto! Hemos consultado la agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}):\n\n"
-                        . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
-                        . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
-                        . "¿Deseas que reservemos tu cita para esta fecha?";
+                    return "¡Perfecto! La agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}) tiene lugar estos días:\n\n"
+                        . DisponibilidadEnTexto::de($disponibilidad);
                 } else {
                     return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
                         . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
@@ -240,17 +247,12 @@ class GeminiService
         $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
 
         if (!empty($disponibilidad['disponible'])) {
-            $datosPendientes = [
-                'reg_medico' => $medicoElegido['reg_medico'],
-                'fecha' => $disponibilidad['fecha'],
-            ];
+            $datosPendientes = $this->datosPendientesDeDisponibilidad($medicoElegido['reg_medico'], $disponibilidad);
             Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
             Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
 
-            return "¡Perfecto! Hemos consultado la agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}):\n\n"
-                . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
-                . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
-                . "¿Deseas que reservemos tu cita para esta fecha?";
+            return "¡Perfecto! La agenda del *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}) tiene lugar estos días:\n\n"
+                . DisponibilidadEnTexto::de($disponibilidad);
         } else {
             return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
                 . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
@@ -331,22 +333,38 @@ class GeminiService
         if (!empty($disponibilidad['disponible'])) {
             if ($telefono) {
                 $cleanTel = preg_replace('/\D/', '', $telefono);
-                $datosPendientes = [
-                    'reg_medico' => $regMedico,
-                    'fecha' => $disponibilidad['fecha'],
-                ];
+                $datosPendientes = $this->datosPendientesDeDisponibilidad($regMedico, $disponibilidad);
                 Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
                 Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
             }
 
-            return "¡Perfecto! Hemos consultado la agenda del *{$medico->nombre_mostrar}* ({$especialidad}):\n\n"
-                . "📅 *Día más próximo disponible:* {$disponibilidad['fecha_formateada']}\n"
-                . "🎫 *Cupos disponibles:* {$disponibilidad['cupos_disponibles']}\n\n"
-                . "¿Deseas que reservemos tu cita para esta fecha?";
+            return "¡Perfecto! La agenda del *{$medico->nombre_mostrar}* ({$especialidad}) tiene lugar estos días:\n\n"
+                . DisponibilidadEnTexto::de($disponibilidad);
         } else {
             return "Hemos verificado la agenda del *{$medico->nombre_mostrar}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
                 . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
         }
+    }
+
+    /**
+     * Lo que se guarda 30 minutos mientras la paciente elige: el médico y **todas** las fechas ofrecidas.
+     * `fecha` sigue siendo la primera, para quien confirme sin elegir un día.
+     *
+     * @param  array<string,mixed>  $disponibilidad
+     * @return array{reg_medico:string, fecha:?string, fechas:list<string>}
+     */
+    private function datosPendientesDeDisponibilidad(string $regMedico, array $disponibilidad): array
+    {
+        $fechas = array_map(
+            fn ($opcion) => is_array($opcion) ? ($opcion['fecha'] ?? null) : $opcion,
+            (array) ($disponibilidad['opciones'] ?? [])
+        );
+
+        return [
+            'reg_medico' => $regMedico,
+            'fecha' => $disponibilidad['fecha'] ?? null,
+            'fechas' => array_values(array_filter($fechas)),
+        ];
     }
 
     /**
@@ -389,7 +407,7 @@ class GeminiService
                 'function_declarations' => [
                     [
                         'name' => 'consultar_proximo_cupo_disponible',
-                        'description' => 'Consulta en la tabla Cola el día más próximo a partir de hoy en que le queda cupo disponible a un médico dado su reg_medico o nombre.',
+                        'description' => 'Consulta la agenda real del médico (sus bloques de horario y el cupo de cada bloque) y devuelve hasta tres próximos días con lugar, con la sede y la hora. Devuelve `opciones` con las fechas; el número de cupos es interno y NO se le dice a la paciente.',
                         'parameters' => [
                             'type' => 'OBJECT',
                             'properties' => [
@@ -701,7 +719,7 @@ class GeminiService
                 $prompt .= "1. Saluda cordialmente al paciente por su nombre y apellido ('¡Hola, {$nombre}! 👋').\n";
                 $prompt .= "2. Pregúntale a qué médico desea referenciar o agendar su cita (muestra la lista numerada).\n";
                 $prompt .= "3. Cuando el paciente elija o mencione a un médico, DEBES invocar 'consultar_proximo_cupo_disponible' con el 'reg_medico' de ese médico.\n";
-                $prompt .= "4. Informa el día más próximo donde le queda cupo en Cola y los cupos restantes.\n";
+                $prompt .= "4. Informa los próximos días disponibles que devuelve la herramienta (hasta tres) y pregúntale cuál le queda mejor. NUNCA menciones cuántos cupos quedan: es información interna del consultorio.\n";
             } elseif ($totalMedicos === 1) {
                 $m = $medicos[0];
                 $prompt .= "- El paciente tiene un médico habitual en MedicoPaciente:\n";
@@ -710,7 +728,7 @@ class GeminiService
                 $prompt .= "1. Saluda al paciente cordialmente por su nombre ('¡Hola, {$nombre}! 👋').\n";
                 $prompt .= "2. Pregúntale si desea cita con su médico habitual ({$m['nombre']}) o si desea consultar otra especialidad médica.\n";
                 $prompt .= "3. Si confirma que desea cita con ese doctor, DEBES invocar 'consultar_proximo_cupo_disponible' con reg_medico '{$m['reg_medico']}'.\n";
-                $prompt .= "4. Informa el día más próximo disponible en Cola y los cupos libres.\n";
+                $prompt .= "4. Informa los próximos días disponibles que devuelve la herramienta (hasta tres) y pregúntale cuál prefiere. NUNCA menciones cuántos cupos quedan.\n";
             } else {
                 $prompt .= "- El paciente está registrado pero NO tiene médicos previos en MedicoPaciente.\n";
                 $prompt .= "\nREGLAS DE ATENCIÓN:\n";
