@@ -15,8 +15,9 @@ use App\Support\FechaClinica;
  * de un vistazo quién viene y qué falta.
  *
  * Lo que **no** tiene, a propósito: navegación entre días, vista de semana o mes, buscador de pacientes ni
- * filtros. No es otra agenda: es la lista del día. Lo que sí tiene son **las mismas acciones de la fila de la
- * agenda** («Confirmar», «Atender»/«Editar consulta» y el menú con el recordatorio, el cobro y las citas del
+ * filtros. No es otra agenda: es la lista del día. Lo que sí tiene son **la acción primaria del encabezado** —
+ * «Agregar paciente»: el alta del que llega sin cita para atenderlo hoy (O-34)— y **las mismas acciones de la fila
+ * de la agenda** («Confirmar», «Atender»/«Editar consulta» y el menú con el recordatorio, el cobro y las citas del
  * paciente), porque la fila es el parcial `clinica.agenda._fila` y el armador es el mismo `LectorDeAgenda`.
  *
  * **Orden de atención**: las citas ya atendidas van primero (marcadas como en la agenda) y después las demás, y
@@ -114,8 +115,8 @@ final class InicioVista
         return [
             'icono' => 'bi-calendar-x',
             'titulo' => 'Hoy no hay pacientes',
-            'texto' => 'No hay citas para hoy en este consultorio. Puedes ir a la agenda a agendar una, o registrar '
-                . 'un paciente nuevo.',
+            'texto' => 'No hay citas para hoy en este consultorio. Puedes ir a la agenda a agendar una, o agregar al '
+                . 'paciente que llegó sin cita para atenderlo hoy.',
         ];
     }
 
@@ -127,9 +128,26 @@ final class InicioVista
         ]);
     }
 
+    /**
+     * **«Agregar paciente»**, la acción primaria del inicio (O-34, 2026-10-18): el alta de un paciente que llega
+     * **sin cita** a atenderse hoy. No es un acceso al módulo Pacientes —para eso está el menú lateral— ni otra
+     * pantalla: es el botón que lleva al alta de siempre.
+     *
+     * El camino completo ya existe y no se reimplementa: la web **numera la historia en el mismo paso** (O-04,
+     * `PacienteController::persistir`) y después la ficha **ofrece atenderlo** (O-05, `AtencionInmediata`), que le
+     * crea la cita del día con la sede del contexto y abre la consulta. O sea que «agregar paciente» acá siempre
+     * significa «para atenderlo hoy», que es lo que el médico viene a hacer a esta pantalla.
+     */
     public function urlPacienteNuevo(): string
     {
         return route('clinica.pacientes.nuevo');
+    }
+
+    /** La ayuda del botón (viaja en su `title`): dice qué hace el alta y qué pasa después, sin prometer la cita. */
+    public function ayudaAgregarPaciente(): string
+    {
+        return 'Registra al paciente que llegó sin cita: queda con su historia y te ofrece atenderlo ahora, '
+            . 'con la cita de hoy.';
     }
 
     /**

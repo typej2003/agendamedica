@@ -122,5 +122,23 @@ class InicioVistaTest extends TestCase
         $this->assertSame('Hoy no hay pacientes', $vista->vacio()['titulo']);
         $this->assertStringContainsString('agenda', $vista->urlAgenda());
         $this->assertStringContainsString('nuevo', $vista->urlPacienteNuevo());
+        // El vacío dice que el que llega sin cita se atiende hoy (O-34): no es "registrar para después".
+        $this->assertStringContainsString('atenderlo hoy', $vista->vacio()['texto']);
+    }
+
+    /**
+     * **«Agregar paciente»** (O-34): es el alta de siempre y no depende del día, así que se ofrece igual con la
+     * lista llena o vacía; lo que cambia es sólo dónde vive el botón (el encabezado, siempre visible).
+     */
+    public function test_la_accion_de_agregar_paciente_es_el_alta_y_no_depende_del_dia(): void
+    {
+        $conPacientes = $this->vista([$this->cita()]);
+        $sinPacientes = $this->vista([]);
+
+        foreach ([$conPacientes, $sinPacientes] as $vista) {
+            $this->assertStringContainsString('pacientes/nuevo', $vista->urlPacienteNuevo());
+            $this->assertStringContainsString('historia', $vista->ayudaAgregarPaciente());
+            $this->assertStringContainsString('atenderlo', $vista->ayudaAgregarPaciente());
+        }
     }
 }
