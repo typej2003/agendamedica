@@ -75,17 +75,19 @@ final class EcoObstetrico
 
             ['titulo' => 'El útero y los ovarios', 'icono' => 'bi-circle', 'campos' => [
                 self::lista('cuerpo_utero', 'Útero', ['Visible' => '1', 'No visible' => '2']),
-                self::texto('cuerpo', 'Útero: Long'),
-                self::texto('transverso', 'Útero: Trans'),
-                self::texto('antero', 'Útero: ANT.POST'),
-                self::texto('ovarioderlong', 'Ovario derecho: Long'),
-                self::texto('ovarioderap', 'Ovario derecho: AP'),
-                self::texto('ovariodertras', 'Ovario derecho: Trans'),
-                self::texto('ovarioizqlong', 'Ovario izquierdo: Long'),
-                self::texto('ovarioizqap', 'Ovario izquierdo: AP'),
-                self::texto('ovarioizqtras', 'Ovario izquierdo: Trans'),
-                self::texto('der', 'Cuerpo lúteo: derecho'),
-                self::texto('izqu', 'Cuerpo lúteo: izquierdo'),
+                // Las medidas: el escritorio las pinta con máscara `###.00` (decimales de dos cifras) y el
+                // servidor valida numérico; la columna es `decimal(5,2)`.
+                self::decimal('cuerpo', 'Útero: Long'),
+                self::decimal('transverso', 'Útero: Trans'),
+                self::decimal('antero', 'Útero: ANT.POST'),
+                self::decimal('ovarioderlong', 'Ovario derecho: Long'),
+                self::decimal('ovarioderap', 'Ovario derecho: AP'),
+                self::decimal('ovariodertras', 'Ovario derecho: Trans'),
+                self::decimal('ovarioizqlong', 'Ovario izquierdo: Long'),
+                self::decimal('ovarioizqap', 'Ovario izquierdo: AP'),
+                self::decimal('ovarioizqtras', 'Ovario izquierdo: Trans'),
+                self::decimal('der', 'Cuerpo lúteo: derecho'),
+                self::decimal('izqu', 'Cuerpo lúteo: izquierdo'),
                 self::lista('posicionutreo', 'Utero', ['AVF' => '1', 'RVF' => '2', 'Indiferente' => '3']),
                 self::lista('posicionavf_d', 'Posición AVF', ['Derecho' => 'D', 'Izquierdo' => 'I', 'Línea media' => 'L']),
                 self::lista('posicionrvf_d', 'Posición RVF', ['Derecha' => 'D', 'Izquierda' => 'I']),
@@ -103,10 +105,12 @@ final class EcoObstetrico
             ]],
 
             ['titulo' => 'Las medidas y los marcadores', 'icono' => 'bi-rulers', 'campos' => [
-                self::texto('lcc', 'LCC', 'La longitud cefalocaudal.'),
-                self::texto('dbp', 'DBP', 'El diámetro biparietal.'),
-                self::texto('tn', 'TN', 'La translucencia nucal.'),
-                self::texto('sa_vit', 'Saco vitelino'),
+                // Enteros, como las máscaras `###`/`##` del DataWindow (con su spin: LCC y DBP 5-100, TN 1-10).
+                self::entero('lcc', 'LCC', 'La longitud cefalocaudal.'),
+                self::entero('dbp', 'DBP', 'El diámetro biparietal.'),
+                self::entero('tn', 'TN', 'La translucencia nucal.'),
+                // El escritorio la pinta con máscara `##` (entera) aunque la columna sea `decimal(5,2)`.
+                self::entero('sa_vit', 'Saco vitelino'),
                 self::lista('dc_venoso', 'Ductus venoso', ['Normal' => 'N', 'Patológico' => 'P']),
             ]],
 

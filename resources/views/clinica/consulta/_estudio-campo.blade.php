@@ -18,9 +18,13 @@
     @elseif ($campo['tipo'] === 'numero')
         {{-- O-15: el campo arranca **vacío** cuando el legado dejó su marcador `-1` (el mapa ya lo lee como
              «sin dato») y el incremento **empieza en 0**: `min="0"` es el mismo piso que valida el servidor, así
-             que las flechas del control no pueden llevar a un negativo que después se rechace. --}}
+             que las flechas del control no pueden llevar a un negativo que después se rechace.
+
+             El paso lo decide el mapa: `1` en los enteros del escritorio (máscara `###`: el navegador no deja
+             escribir decimales) y `0.01`/`any` en los decimales (máscara `###.00`). --}}
         <div class="examen-unidad">
-            <input type="number" step="any" min="0" inputmode="decimal" class="form-control"
+            <input type="number" step="{{ ($campo['entero'] ?? false) ? '1' : ($campo['paso'] ?? 'any') }}"
+                   min="0" inputmode="{{ ($campo['entero'] ?? false) ? 'numeric' : 'decimal' }}" class="form-control"
                    id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                    value="{{ $campo['valor'] }}">
             @if (($campo['unidad'] ?? null))

@@ -567,7 +567,7 @@ class ConsultaEcoWebTest extends TestCase
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post($this->urlGuardar($consulta, 'obstetrico'), [
-                'fur' => '2026-06-01', 'gesta' => '2', 'lcc' => '45', 'tn' => '1.8',
+                'fur' => '2026-06-01', 'gesta' => '2', 'lcc' => '45', 'tn' => '2',
                 'actividad_cardiaca' => 'S', 'saco_gestacional' => '1',
                 'dc_venoso' => 'N', 'observacion' => 'Embarazo temprano normal.',
             ]);
@@ -624,6 +624,39 @@ class ConsultaEcoWebTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame(0, \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    /**
+     * **El formato del escritorio** (las `editmask` del DataWindow): `lcc`, `dbp`, `tn` y `sa_vit` son
+     * enteros (máscaras `###`/`##`) y las medidas del útero y los ovarios son decimales (`###.00`). La web
+     * lo impone en el `<input>` y el servidor lo vuelve a validar: antes eran texto libre y `25 mm` llegaba
+     * al `INSERT` de una columna `INT`.
+     */
+    public function test_las_medidas_del_eco_obstetrico_tienen_el_formato_del_escritorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Texto y decimal en un campo entero: el escritorio no lo dejaba escribir.
+        $web->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '2026-06-01', 'gesta' => '1', 'lcc' => '25 mm'])
+            ->assertSessionHasErrors('lcc');
+        $web->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '2026-06-01', 'gesta' => '1', 'lcc' => '12.5'])
+            ->assertSessionHasErrors('lcc');
+
+        $this->assertSame(0, \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->count());
+
+        // Con el formato correcto se guarda, y las medidas decimales conservan su decimal.
+        $web->post($this->urlGuardar($consulta, 'obstetrico'), [
+            'fur' => '2026-06-01', 'gesta' => '1', 'lcc' => '25', 'dbp' => '30', 'tn' => '2', 'sa_vit' => '5',
+            'cuerpo' => '62.5', 'transverso' => '45', 'ovarioderlong' => '41.5', 'observacion' => 'Con medidas.',
+        ])->assertSessionHasNoErrors();
+
+        $fila = \App\Models\EcoObstetrico::where('reg_medico', $medico->reg_medico)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('25', (string) $fila->lcc);
+        $this->assertSame(62.5, (float) $fila->cuerpo);
+        $this->assertSame(41.5, (float) $fila->ovarioderlong);
     }
 
     public function test_el_segundo_trimestre_es_un_estudio_aparte_del_tercero(): void
