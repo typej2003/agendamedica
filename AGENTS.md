@@ -388,7 +388,8 @@ de la paciente: no exponer el webhook en producción sin resolver eso. Trampas 1
 `App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`).
 Corpus **sintético** de 28 mensajes en `database/datos/triaje-whatsapp.json`; la clave va en el `.env` como
 **`JEV_API_KEY`** (nunca en el código) y hay `JEV_BASE_URL`/`JEV_MODEL` para el Jev oficial o DigitalOcean.
-Tests: `TriajeJevTest` (6, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`.
+Tests: `TriajeJevTest` (6, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`. **Casos de uso
+con ejemplos verificados** (choice, score y noul, con request/respuesta y costos): `../Docs/tecnico/jev-casos-de-uso.md`.
 
 ## Qué es
 
