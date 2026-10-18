@@ -80,6 +80,11 @@ final class ToursDisponibles
     private const PASOS = [
         self::INICIO => [
             [
+                'selector' => '[data-tour=inicio-agregar]',
+                'titulo'   => 'Agregar paciente',
+                'texto'    => 'Para el paciente que llega sin cita: lo registras y, si aceptas, la web le crea la cita de hoy y abre su consulta.',
+            ],
+            [
                 'selector' => '[data-tour=inicio-cumpleanos]',
                 'titulo'   => 'Cumpleaños de hoy',
                 'texto'    => 'Cuando un paciente cumple años, este aviso aparece arriba. Entra para ver los saludos y enviarlos.',
