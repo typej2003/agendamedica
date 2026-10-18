@@ -1263,6 +1263,19 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
     .barra-herramientas-filtros { width: 100%; }
 }
 
+/* --- La tabla que no entra se desplaza **dentro de su tarjeta** (A-16, 2026-10-17) ---
+   La página nunca scrollea en horizontal: es el contenedor de la tabla el que lo hace, así el encabezado, la barra
+   lateral y la paginación siguen quietos. En el celular la tabla se apila en tarjetas y no desborda, así que esto no
+   le cambia nada al modo tarjeta. El foco con el teclado y el `role="region"` los pone `shell.js` **sólo cuando hay
+   desborde** (un `tabindex` de más en una tabla que entra es una parada de tabulación inútil). */
+.tabla-envoltura {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabla-envoltura:focus-visible { outline: 2px solid var(--ds-violeta-700); outline-offset: -2px; }
+
 /* --- Tabla que se apila en tarjetas en el celular --- */
 @media (max-width: 767.98px) {
     .tabla-tarjetas thead { display: none; }
@@ -1513,6 +1526,10 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .menu-lista form { margin: 0; }
 
+/* El menú de una fila que vive en una tabla con desplazamiento horizontal: el contenedor recorta, así que el menú se
+   posiciona contra la ventana (`shell.js` le pone el `left` y el `top` del botón que lo abre) y no queda cortado. */
+.menu-lista-flotante { position: fixed; right: auto; }
+
 .menu-item {
     display: flex;
     align-items: center;
@@ -1726,6 +1743,9 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 
 .acciones-fila form { margin: 0; }
 
+/* Un botón de acción nunca parte su rótulo en dos líneas: la fila crecería y la pauta es una línea por fila. */
+.acciones-fila .btn { white-space: nowrap; }
+
 /* En una celda de tabla las acciones van en **una línea**: sin `flex-wrap` el ancho mínimo de la celda es la suma de
    sus botones y la fila no se parte (pauta de Alexander, 2026-10-17: hasta dos acciones directas, alineadas). El
    `<form>` no dibuja caja (`display: contents`), así el botón queda como un ítem más del flex y se alinea con su
@@ -1746,6 +1766,52 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 .tabla-medicamentos th:nth-child(2) { width: 22%; }
 .tabla-medicamentos th:nth-child(3) { width: 28%; }
 .tabla-medicamentos th:nth-child(4) { width: 140px; white-space: nowrap; }
+
+/* --- Tablas barridas con la pauta de una línea por fila (A-16, 2026-10-17) ---
+   Las mismas reglas que la tabla de medicamentos, para los catálogos, sedes, consultorios y usuarios: el ancho de las
+   columnas no depende del contenido, así que la fila mide una línea y el texto que no entra se recorta con puntos
+   suspensivos (el completo queda en el `title`). La última columna —las acciones— mide lo que miden sus botones, que
+   es lo único que no se puede recortar. */
+.tabla-catalogo-simple,
+.tabla-catalogo-tratamientos,
+.tabla-catalogo-examenes,
+.tabla-catalogo-doctores,
+.tabla-catalogo-plantillas,
+.tabla-catalogo-motivos,
+.tabla-sedes { table-layout: fixed; }
+
+.tabla-catalogo-simple th:last-child,
+.tabla-catalogo-tratamientos th:last-child,
+.tabla-catalogo-examenes th:last-child,
+.tabla-catalogo-doctores th:last-child,
+.tabla-catalogo-plantillas th:last-child { width: 150px; white-space: nowrap; }
+
+.tabla-catalogo-motivos th:last-child { width: 160px; white-space: nowrap; }
+.tabla-sedes th:last-child { width: 22%; white-space: nowrap; }
+
+.tabla-catalogo-tratamientos th:nth-child(1) { width: 38%; }
+.tabla-catalogo-examenes th:nth-child(1) { width: 55%; }
+.tabla-catalogo-doctores th:nth-child(1) { width: 30%; }
+.tabla-catalogo-doctores th:nth-child(3) { width: 24%; }
+.tabla-catalogo-plantillas th:nth-child(1) { width: 50%; }
+.tabla-catalogo-motivos th:nth-child(1) { width: 26%; }
+.tabla-sedes th:nth-child(1) { width: 20%; }
+.tabla-sedes th:nth-child(2) { width: 19%; }
+.tabla-sedes th:nth-child(3) { width: 12%; }
+.tabla-sedes th:nth-child(4) { width: 14%; }
+.tabla-sedes th:nth-child(5) { width: 13%; }
+
+/* Con seis columnas y una barra lateral de 264 px el relleno de 12 px por celda se come el ancho útil: en pantallas
+   angostas las tablas barridas lo achican (no se toca el de todas). */
+@media (max-width: 1199.98px) {
+    .tabla-catalogo-simple > :not(caption) > * > *,
+    .tabla-catalogo-tratamientos > :not(caption) > * > *,
+    .tabla-catalogo-examenes > :not(caption) > * > *,
+    .tabla-catalogo-doctores > :not(caption) > * > *,
+    .tabla-catalogo-plantillas > :not(caption) > * > *,
+    .tabla-catalogo-motivos > :not(caption) > * > *,
+    .tabla-sedes > :not(caption) > * > * { padding-left: .45rem; padding-right: .45rem; }
+}
 
 /* En el celular cada cita es una tarjeta compacta: turno y hora arriba, el paciente, los estados y las
    acciones debajo (sin etiquetas por celda). */
@@ -1785,6 +1851,23 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 @media (min-width: 768px) {
     .tabla-agenda td.celda-acciones { width: 1%; white-space: nowrap; }
     .tabla-agenda .acciones-fila { flex-wrap: nowrap; }
+    /* Los dos estados de la cita (atendida/confirmada y pagada/pendiente) van **en la misma línea**: envueltos, la
+       fila medía dos renglones y la pauta es una línea por fila. La columna toma el ancho que necesita y es la del
+       paciente la que cede (su nombre se recorta con puntos suspensivos). */
+    .tabla-agenda .estados-fila { flex-wrap: nowrap; }
+    .tabla-agenda .celda-principal .identidad-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* Entre 768 y 1199 px la tabla de la agenda no entra con los rótulos de las acciones: «Confirmar», «Imprimir
+   documentos» y «Cobrar» con su texto son ~250 px que, sumados al paciente y a los estados, la empujaban fuera
+   de la pantalla (medido: 205 px a 992 y 97 px a 1100). Ahí el rótulo pasa a `title` + `aria-label` y el botón
+   queda con su icono; sigue siendo una sola línea, que es la pauta. En el celular (modo tarjeta) los rótulos
+   vuelven, porque ahí la acción va debajo del paciente y hay lugar. */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    .tabla-agenda .accion-texto { display: none; }
+    /* Ídem con el relleno de las celdas: con la barra lateral desplegada a 1024-1100 px son ~70 px de tabla que
+       hacen que no entre. Se ajusta el de esta tabla, no el de todas. */
+    .tabla-agenda > :not(caption) > * > * { padding-left: .45rem; padding-right: .45rem; }
 }
 
 /* --- Semana --- */
@@ -2123,13 +2206,9 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .bloques-alta input[type="number"] { flex: 1 1 5rem; }
 }
 
-/* Las acciones de la fila, en sólo icono cuando la ventana es angosta: con la barra lateral desplegada a
-   1024 px los dos botones con su rótulo son lo que hacía desbordar la tabla (medido). Siguen en una línea,
-   que es la pauta de la tabla, y el nombre lo llevan en el `title` y el `aria-label` del enlace. */
+/* Con seis columnas y una barra lateral de 264 px, 12 px de relleno por celda son ~70 px de tabla que a 1024 no
+   entran: se ajusta el relleno de esta tabla, no el de todas. Las acciones de la fila van en el menú «…» (A-16). */
 @media (max-width: 1199.98px) {
-    .consultorios-tabla .accion-texto { display: none; }
-    /* Con seis columnas y una barra lateral de 264 px, 12 px de relleno por celda son ~70 px de tabla que a
-       1024 no entran: se ajusta el relleno de esta tabla, no el de todas. */
     .consultorios-tabla > :not(caption) > * > * { padding-left: .45rem; padding-right: .45rem; }
 }
 
@@ -2822,16 +2901,6 @@ body.auth-pagina {
 /* Subir y bajar un medicamento del tratamiento (el editor de récipes lo apaga: allí el orden no importa). */
 .recipe-orden { display: flex; flex-direction: column; gap: .25rem; flex: 0 0 auto; }
 
-/* La indicación por defecto de un medicamento en la lista: una o dos líneas, el resto en el diálogo. */
-.catalogo-texto-corto {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    max-width: 38rem;
-}
-
 /* Las otras marcas del medicamento, en el diálogo: tres campos de una línea cada uno. */
 .catalogo-marcas { display: grid; gap: .5rem; }
 
@@ -3030,17 +3099,6 @@ body.auth-pagina {
 
 @media (max-width: 575.98px) {
     .plantilla-etiquetas .btn { min-height: 40px; }
-}
-
-/* El resumen del texto de una plantilla de texto en la lista (WEB-8.4): dos renglones como mucho. */
-.plantilla-resumen {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    max-width: 38rem;
-    font-size: .875rem;
 }
 
 /* Los filtros de la bitácora (WEB-8.5): fechas, quién, tipo de dato y paciente en una rejilla que baja a una columna en el celular. */

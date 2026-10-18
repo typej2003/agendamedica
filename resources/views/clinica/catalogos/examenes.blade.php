@@ -42,23 +42,26 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-catalogo-examenes">
                 <thead>
                 <tr>
                     <th>Examen</th>
                     <th>Tipo</th>
-                    <th>Código</th>
                     <th class="text-end"><span class="visually-hidden">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['nombre'] }}</strong>
-                            @if ($fila['repetido'])
-                                <x-ui.estado tono="aviso" icono="bi-files" class="mt-1">{{ $fila['repetido'] }}</x-ui.estado>
-                            @endif
+                        {{-- Una línea por fila (pauta de Alexander): el código sale del listado y queda en el `title` de la
+                             celda y en el diálogo de edición; el aviso de nombres repetidos se queda como pastilla. --}}
+                        <td class="celda-principal" title="Código {{ $fila['codigo'] }}">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="texto-una-linea"><strong>{{ $fila['nombre'] }}</strong></span>
+                                @if ($fila['repetido'])
+                                    <x-ui.estado tono="aviso" icono="bi-files">{{ $fila['repetido'] }}</x-ui.estado>
+                                @endif
+                            </span>
                         </td>
                         <td data-etiqueta="Tipo">
                             @if ($fila['tipo'])
@@ -67,9 +70,10 @@
                                 <span class="texto-tenue">Sin tipo</span>
                             @endif
                         </td>
-                        <td data-etiqueta="Código" class="texto-tenue">{{ $fila['codigo'] }}</td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones directas, en la misma línea; el menú «…» de una sola opción está prohibido
+                                 (pauta de Alexander). --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
@@ -79,13 +83,12 @@
                                     @foreach ($vm->parametrosDeVuelta() as $nombre => $valor)
                                         <input type="hidden" name="{{ $nombre }}" value="{{ $valor }}">
                                     @endforeach
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-trash" aria-hidden="true"></i> Quitar del catálogo
-                                        </button>
-                                    </x-ui.menu>
+                                    <button class="btn btn-sm btn-outline-danger" title="Quitar del catálogo"
+                                            aria-label="Quitar {{ $fila['nombre'] }} del catálogo">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

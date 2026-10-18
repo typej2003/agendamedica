@@ -37,7 +37,7 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-catalogo-motivos">
                 <thead>
                 <tr>
                     <th>Motivo</th>
@@ -50,29 +50,34 @@
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['razon'] }}</strong>
-                            <span class="texto-tenue small d-block">Código {{ $fila['codigo'] }}</span>
-                            @if ($fila['repetido'])
-                                <x-ui.estado tono="aviso" icono="bi-files" class="mt-1">{{ $fila['repetido'] }}</x-ui.estado>
-                            @endif
-                            @if ($fila['mismoCodigo'])
-                                <x-ui.estado tono="info" icono="bi-geo-alt" class="mt-1">{{ $fila['mismoCodigo'] }}</x-ui.estado>
-                            @endif
+                        {{-- Una línea por fila (pauta de Alexander): el código sale del listado y queda en el `title` de la
+                             celda y en el diálogo. Los avisos de repetido y de código compartido son estado: se quedan, como
+                             pastillas en la misma línea. --}}
+                        <td class="celda-principal" title="Código {{ $fila['codigo'] }}">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="texto-una-linea"><strong>{{ $fila['razon'] }}</strong></span>
+                                @if ($fila['repetido'])
+                                    <x-ui.estado tono="aviso" icono="bi-files">{{ $fila['repetido'] }}</x-ui.estado>
+                                @endif
+                                @if ($fila['mismoCodigo'])
+                                    <x-ui.estado tono="info" icono="bi-geo-alt">{{ $fila['mismoCodigo'] }}</x-ui.estado>
+                                @endif
+                            </span>
                         </td>
-                        <td data-etiqueta="Sede">{{ $fila['sede'] }}</td>
+                        <td data-etiqueta="Sede"><span class="texto-una-linea">{{ $fila['sede'] }}</span></td>
                         <td data-etiqueta="Precio" class="text-md-end">{{ $fila['precio'] ?? '—' }}</td>
                         <td data-etiqueta="Citas pendientes">
                             <x-ui.estado :tono="$fila['marca']['tono']" :icono="$fila['marca']['icono']">{{ $fila['marca']['texto'] }}</x-ui.estado>
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Tres acciones: Editar queda a la vista y las dos secundarias van en el menú, con la marca
+                                 (se cambia y se vuelve a cambiar, no borra nada) primero y **quitar al final, en rojo**. Quitar
+                                 pide confirmación que nombra el motivo; si hay citas con él, el servidor no lo borra y dice
+                                 cuántas. --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['razon'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
-                                {{-- Lo que no es editar va en el menú: la marca de varias citas (se cambia y se vuelve a cambiar,
-                                     no borra nada) y, aparte y en rojo, quitar. Quitar pide confirmación que nombra el motivo; si
-                                     hay citas con él, el servidor no lo borra y dice cuántas. --}}
                                 <x-ui.menu :etiqueta="'Más acciones de ' . $fila['razon']">
                                     <form method="POST" action="{{ $fila['urlAlternar'] }}">
                                         @csrf
@@ -95,7 +100,7 @@
                                         </button>
                                     </form>
                                 </x-ui.menu>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

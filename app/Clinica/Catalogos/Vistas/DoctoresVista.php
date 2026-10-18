@@ -88,16 +88,32 @@ final class DoctoresVista
         $especialidad = $fila->getAttribute('especialidad_nombre')
             ?? ($codigoDeEspecialidad === null ? null : 'Especialidad ' . $codigoDeEspecialidad);
         $direccion = CamposDePaciente::texto($fila->direccion);
+        $direccion = $direccion === null ? null : Str::limit(preg_replace('/\s+/u', ' ', $direccion), 120);
+        $clinica = CamposDePaciente::texto($fila->clinica);
+        $ciudad = CamposDePaciente::texto($fila->ciudad);
+        $telefono = CamposDePaciente::texto($fila->telefono);
+
+        // La fila del listado es de **una línea** (pauta de Alexander): se ve la clínica y el teléfono —lo que se usa
+        // para llamar al colega— y el resto del contacto (la ciudad, la dirección) queda en el `title` y en el diálogo.
+        $contacto = implode(' · ', array_filter([$clinica, $telefono], fn ($valor) => $valor !== null && $valor !== ''));
+        $title = 'Código ' . (int) $fila->cedula;
+        foreach ([$clinica, $ciudad, $telefono, $direccion] as $dato) {
+            if ($dato !== null && $dato !== '') {
+                $title .= ' · ' . $dato;
+            }
+        }
 
         return [
             'id' => (int) $fila->id,
             'nombre' => $nombre,
             'codigo' => (string) (int) $fila->cedula,
             'especialidad' => $especialidad,
-            'clinica' => CamposDePaciente::texto($fila->clinica),
-            'ciudad' => CamposDePaciente::texto($fila->ciudad),
-            'telefono' => CamposDePaciente::texto($fila->telefono),
-            'direccion' => $direccion === null ? null : Str::limit(preg_replace('/\s+/u', ' ', $direccion), 120),
+            'clinica' => $clinica,
+            'ciudad' => $ciudad,
+            'telefono' => $telefono,
+            'direccion' => $direccion,
+            'contacto' => $contacto !== '' ? $contacto : null,
+            'title' => $title,
             'repetido' => $repetidos > 1 ? 'Hay ' . $repetidos . ' con este nombre y especialidad' : null,
             'urlEditar' => $this->url(['editar' => $fila->id]),
             'urlQuitar' => ($this->urls['quitar'])((int) $fila->id),

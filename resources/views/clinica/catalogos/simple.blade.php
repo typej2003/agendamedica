@@ -36,44 +36,47 @@
                 </x-slot>
             </x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-catalogo-simple">
                 <thead>
                 <tr>
                     <th>{{ $vm->etiquetaDelTexto() }}</th>
-                    <th>Código</th>
                     <th class="text-end"><span class="visually-hidden">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['nombre'] }}</strong>
-                            @if ($fila['repetido'])
-                                <x-ui.estado tono="aviso" icono="bi-files" class="mt-1">{{ $fila['repetido'] }}</x-ui.estado>
-                            @endif
+                        {{-- Una línea por fila (pauta de Alexander): el código sale del listado y queda en el `title` de la
+                             celda y en el diálogo de edición; el aviso de nombres repetidos es estado y se queda, como pastilla
+                             en la misma línea. --}}
+                        <td class="celda-principal" title="Código {{ $fila['codigo'] }}">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="texto-una-linea"><strong>{{ $fila['nombre'] }}</strong></span>
+                                @if ($fila['repetido'])
+                                    <x-ui.estado tono="aviso" icono="bi-files">{{ $fila['repetido'] }}</x-ui.estado>
+                                @endif
+                            </span>
                         </td>
-                        <td data-etiqueta="Código" class="texto-tenue">{{ $fila['codigo'] }}</td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones: «Editar» y la papelera, directas y en la misma línea. El menú «…» de una sola
+                                 opción está prohibido (pauta de Alexander); Quitar conserva su confirmación, que nombra lo que
+                                 se quita, y si está en uso el servidor no lo borra y dice dónde. --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
-                                {{-- Quitar es lo destructivo y va aparte, en el menú, con confirmación que nombra lo que se
-                                     quita. Si está en uso el servidor no lo borra y dice dónde. --}}
                                 <form method="POST" action="{{ $fila['urlQuitar'] }}" data-confirmar="{{ $fila['avisoQuitar'] }}">
                                     @csrf
                                     @method('DELETE')
                                     @foreach ($vm->parametrosDeVuelta() as $nombre => $valor)
                                         <input type="hidden" name="{{ $nombre }}" value="{{ $valor }}">
                                     @endforeach
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-trash" aria-hidden="true"></i> Quitar del catálogo
-                                        </button>
-                                    </x-ui.menu>
+                                    <button class="btn btn-sm btn-outline-danger" title="Quitar del catálogo"
+                                            aria-label="Quitar {{ $fila['nombre'] }} del catálogo">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

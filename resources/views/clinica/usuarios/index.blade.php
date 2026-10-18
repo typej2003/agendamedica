@@ -77,38 +77,53 @@
                             @endif
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
-                                @if ($fila['puedeAdministrar'])
-                                    @if ($fila['activa'])
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                data-bloquear data-nombre="{{ $fila['nombre'] }}" data-accion="{{ $fila['urlBloquear'] }}">
-                                            <i class="bi bi-slash-circle" aria-hidden="true"></i> Bloquear
-                                        </button>
-                                    @else
-                                        <form method="POST" action="{{ $fila['urlDesbloquear'] }}">
+                            {{-- Pauta de Alexander: hasta dos acciones van como botones directos y **desde tres en el menú
+                                 «…»**; un menú de una sola opción está prohibido. La cuenta compartida con otro consultorio
+                                 sólo se puede quitar (menos acciones por regla de `CuentaService`): esa fila lleva el botón
+                                 directo. En el menú, lo de todos los días primero y **quitar el acceso al final, en rojo**. --}}
+                            @if ($fila['puedeAdministrar'])
+                                <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
+                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
+                                        <form method="POST" action="{{ $fila['urlRestablecer'] }}" data-confirmar="{{ $fila['avisoRestablecer'] }}">
                                             @csrf
-                                            <button class="btn btn-sm btn-outline-secondary">
-                                                <i class="bi bi-unlock" aria-hidden="true"></i> Desbloquear
+                                            <button class="menu-item">
+                                                <i class="bi bi-key" aria-hidden="true"></i> Restablecer clave
                                             </button>
                                         </form>
-                                    @endif
-                                    <form method="POST" action="{{ $fila['urlRestablecer'] }}" data-confirmar="{{ $fila['avisoRestablecer'] }}">
+                                        @if ($fila['activa'])
+                                            <button type="button" class="menu-item"
+                                                    data-bloquear data-nombre="{{ $fila['nombre'] }}" data-accion="{{ $fila['urlBloquear'] }}">
+                                                <i class="bi bi-slash-circle" aria-hidden="true"></i> Bloquear
+                                            </button>
+                                        @else
+                                            <form method="POST" action="{{ $fila['urlDesbloquear'] }}">
+                                                @csrf
+                                                <button class="menu-item">
+                                                    <i class="bi bi-unlock" aria-hidden="true"></i> Desbloquear
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <form method="POST" action="{{ $fila['urlQuitar'] }}" data-confirmar="{{ $fila['avisoQuitar'] }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="menu-item menu-item-peligro">
+                                                <i class="bi bi-person-x" aria-hidden="true"></i> Quitar acceso
+                                            </button>
+                                        </form>
+                                    </x-ui.menu>
+                                </x-ui.acciones-fila>
+                            @else
+                                <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
+                                    <form method="POST" action="{{ $fila['urlQuitar'] }}" data-confirmar="{{ $fila['avisoQuitar'] }}">
                                         @csrf
-                                        <button class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-key" aria-hidden="true"></i> Restablecer clave
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" title="Quitar acceso"
+                                                aria-label="Quitarle el acceso a {{ $fila['nombre'] }}">
+                                            <i class="bi bi-person-x" aria-hidden="true"></i>
                                         </button>
                                     </form>
-                                @endif
-                                <form method="POST" action="{{ $fila['urlQuitar'] }}" data-confirmar="{{ $fila['avisoQuitar'] }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-ui.menu :etiqueta="'Más acciones de ' . $fila['nombre']">
-                                        <button class="menu-item menu-item-peligro">
-                                            <i class="bi bi-person-x" aria-hidden="true"></i> Quitar acceso
-                                        </button>
-                                    </x-ui.menu>
-                                </form>
-                            </div>
+                                </x-ui.acciones-fila>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

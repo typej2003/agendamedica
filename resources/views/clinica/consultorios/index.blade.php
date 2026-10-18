@@ -192,19 +192,17 @@
                             <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
-                                {{-- El rótulo de los botones vive en `.accion-texto`: en pantallas angostas
-                                     (`doctorisimo-ui.css`) queda sólo el icono, con su `title` y su
-                                     `aria-label`, para que la tabla no pida scroll horizontal. --}}
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlHorarios'] }}"
-                                   title="Horarios del consultorio" aria-label="Horarios del consultorio">
-                                    <i class="bi bi-clock" aria-hidden="true"></i> <span class="accion-texto">Horarios</span>
-                                </a>
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}"
-                                   title="Editar el consultorio" aria-label="Editar el consultorio">
-                                    <i class="bi bi-pencil" aria-hidden="true"></i> <span class="accion-texto">Editar</span>
-                                </a>
-                                <x-ui.menu>
+                            {{-- Tres acciones: van en el menú «…» (pauta de Alexander), ordenadas por uso —los horarios y la
+                                 edición primero— y con **desactivar al final, en rojo**. El `<form>` del interruptor envía el
+                                 `PATCH` de siempre. --}}
+                            <x-ui.acciones-fila etiqueta="Acciones del consultorio {{ $fila['consultorio'] }}">
+                                <x-ui.menu etiqueta="Acciones del consultorio {{ $fila['consultorio'] }}">
+                                    <a class="menu-item" href="{{ $fila['urlHorarios'] }}">
+                                        <i class="bi bi-clock" aria-hidden="true"></i> Horarios del consultorio
+                                    </a>
+                                    <a class="menu-item" href="{{ $fila['urlEditar'] }}">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i> Editar el consultorio
+                                    </a>
                                     <form method="POST" action="{{ $fila['urlActivar'] }}">
                                         @csrf
                                         @method('PATCH')
@@ -214,7 +212,7 @@
                                         </button>
                                     </form>
                                 </x-ui.menu>
-                            </div>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

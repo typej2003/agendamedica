@@ -28,7 +28,10 @@ Ejemplo (dos acciones, la segunda destructiva):
 
 El contenedor NO decide el ancho de la fila: se apoya en `.acciones-fila`, que ya alinea al extremo y unifica el
 espaciado; la celda que lo contiene va con `text-end` (y `celda-acciones` en las tablas).
+
+Con `etiqueta`, el grupo se anuncia (`role="group"` + `aria-label`): un `aria-label` suelto en un `<div>` no lo lee
+ningún lector de pantalla.
 --}}
-<div {{ $attributes->merge(['class' => 'acciones-fila']) }} @if ($etiqueta) aria-label="{{ $etiqueta }}" @endif>
+<div {{ $attributes->merge(['class' => 'acciones-fila']) }} @if ($etiqueta) role="group" aria-label="{{ $etiqueta }}" @endif>
     {{ $slot }}
 </div>
