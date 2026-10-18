@@ -298,6 +298,17 @@ class SyncAppDataController extends Controller
             'consultas' => ['consulta' => Consulta::whereIn('numhistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
+            // **La evaluación física de la consulta** (A2 de PLAN-MOVIL.md). Es lo que el médico necesita
+            // para atender sin la computadora, así que baja con el mismo filtro doble que `consultas`.
+            // ⚠️ Dos nombres de columna que no son los que parecen, y por eso se preguntan:
+            //  - el número de historia es **`historia`**, no `numhistoria` (el manifiesto de la especialidad
+            //    traduce el `nrohistoria` del escritorio; ver `TablasLegado::columnaHistoria`). Escribirlo a
+            //    mano deja pasar todo o nada según la especialidad.
+            //  - `consulta` es **el número de la consulta dentro de la historia** (`consultas.nroconsulta`),
+            //    no el id de `consultas`: por eso el filtro es por historia (y por médico), como el resto.
+            'examen_fisico_nuevo' => ['consulta' => ExamenFisico::whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -609,6 +620,9 @@ class SyncAppDataController extends Controller
             'referencia' => $datos['referencia'] ?? $vacio,
             'informe' => $datos['informe'] ?? $vacio,
             'diagnostico_paciente' => $datos['diagnostico_paciente'] ?? $vacio,
+            // La evaluación física de la consulta (A2 de PLAN-MOVIL.md). El delta la arma solo desde
+            // `$plan`, pero la clave tiene que estar siempre: el app recorre una lista fija de tablas.
+            'examen_fisico_nuevo' => $datos['examen_fisico_nuevo'] ?? $vacio,
             'diagnosticos' => $datos['diagnosticos'] ?? $vacio,
             'doctores' => $datos['doctores'] ?? $vacio,
             'especial' => $datos['especial'] ?? $vacio,

@@ -72,6 +72,9 @@ class SyncVolcadoPaginadoTest extends TestCase
                 ['fecha' => $cita, 'hora_ini' => '09:00', 'numhistoria' => 2, 'atendido' => 0],
             ],
             'constancia_obs' => [['numhistoria' => 1, 'numconsulta' => 1, 'observacion01' => 'Asistió']],
+            // La evaluación física de la consulta (A2 de PLAN-MOVIL.md): la clave del legado es
+            // `historia` + `consulta` (el número de la consulta, no su id).
+            'examen_fisico_nuevo' => [['historia' => 1, 'consulta' => 1, 'tension' => '110/70', 'general' => 'BUEN ESTADO']],
             'diagnostico_paciente' => [['nrohistoria' => 1, 'nroconsulta' => 1, 'codediagnostico' => 'D01', 'orden' => 1]],
             'diagnosticos' => [['codediagnostico' => 'D01', 'descripcion' => 'CONTROL']],
             'motivo_cita' => [['codigo' => '01', 'razon' => 'CONSULTA', 'precio' => 100]],
@@ -97,6 +100,7 @@ class SyncVolcadoPaginadoTest extends TestCase
         'pacientes', 'historias', 'colas', 'consultas', 'motivos', 'motivos_consulta',
         'motivo_consulta_paciente', 'recipes', 'vademecum', 'tratamientos', 'tratamientos_detalle',
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'diagnostico_paciente',
+        'examen_fisico_nuevo',
         'diagnosticos', 'doctores', 'especial', 'centros_medicos', 'offices', 'office_schedules',
     ];
 
@@ -154,6 +158,8 @@ class SyncVolcadoPaginadoTest extends TestCase
         $this->assertCount(2, $vistas['consultas']);
         $this->assertCount(2, $vistas['colas']);
         $this->assertCount(1, $vistas['constancia_obs']);
+        // La evaluación física de la consulta también entra al volcado (A2 de PLAN-MOVIL.md).
+        $this->assertCount(1, $vistas['examen_fisico_nuevo']);
     }
 
     /**
