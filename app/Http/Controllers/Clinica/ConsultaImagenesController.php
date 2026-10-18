@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\ElegirLaImagenDelExamen;
 use App\Actions\Consulta\GuardarImagenDeLaConsulta;
+use App\Actions\Consulta\OlvidarElTrazoDeLaFoto;
 use App\Actions\Consulta\QuitarImagenDeLaConsulta;
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\ConsultasDelContexto;
+use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -50,8 +53,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ConsultaImagenesController extends Controller
 {
-    /** Los exámenes que llevan **una sola** imagen: la nueva reemplaza a la anterior (WEB-11.11). */
-    private const DE_UNA_SOLA_IMAGEN = ['colposcopia', 'histeroscopia'];
+    /**
+     * Los exámenes que llevan **una sola** imagen: la nueva reemplaza a la anterior (WEB-11.11). Son los mismos que
+     * tienen la tarjeta de la imagen con dos modos (O-09): la foto del estudio es una y es la que se marca.
+     */
+    private const DE_UNA_SOLA_IMAGEN = ImagenDelExamen::EXAMS;
 
     use ResuelveLosRegistrosDelMedico;
 
@@ -109,16 +115,21 @@ class ConsultaImagenesController extends Controller
         }
 
         // Colposcopía e histeroscopía llevan **una sola imagen** (Alexander, WEB-11.11): la nueva reemplaza a la anterior.
+        // La que se va se lleva su **trazo** (O-09): la marca sobre una foto no puede quedar huérfana.
         if (in_array($examen, self::DE_UNA_SOLA_IMAGEN, true)) {
             $contexto = $request->attributes->get('contexto_clinico');
             $anteriores = $this->imagenes->deUnExamen($contexto['reg_medico'], (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $examen);
 
             foreach ($anteriores as $anterior) {
                 if ((int) $anterior->id !== (int) $imagen->id) {
-                    $quitarAnterior = app(QuitarImagenDeLaConsulta::class);
-                    $quitarAnterior->ejecutar($anterior->modelo);
+                    app(OlvidarElTrazoDeLaFoto::class)->ejecutar((int) $anterior->id);
+                    app(QuitarImagenDeLaConsulta::class)->ejecutar($anterior->modelo);
                 }
             }
+
+            // La foto que se acaba de subir pasa a ser **la del examen**, y el modo, el de la foto: es lo que el médico
+            // está mirando cuando sube desde la tarjeta (O-09).
+            app(ElegirLaImagenDelExamen::class)->ejecutar($consulta, $examen, ImagenDelExamen::MODO_FOTO, (int) $imagen->id);
         }
 
         $texto = trim((string) $imagen->observacion);
@@ -152,6 +163,9 @@ class ConsultaImagenesController extends Controller
         );
 
         abort_unless($fila !== null, 404);
+
+        // Si la foto tenía marcas, se van con ella (O-09, regla 5): la pantalla ya lo avisó antes de borrar.
+        app(OlvidarElTrazoDeLaFoto::class)->ejecutar((int) $fila->id);
 
         $quitar->ejecutar($fila->modelo);
 

@@ -57,12 +57,13 @@
         </div>
     </form>
 
-    {{-- La colposcopía con imagen editable (A-13): la tarjeta con los dos lienzos del cuello uterino. Es **una tarjeta
-         más** de la solapa —el texto, sus plantillas y sus fotos no cambian—; la vista la recibe ya armada
-         (`DibujosDeColposcopiaVista`) y sólo la incluye la solapa que la tiene. --}}
-    @if (($dibujos ?? null) !== null)
+    {{-- **La imagen del examen con sus dos modos** (O-09: la colposcopía y la histeroscopía): una sola tarjeta con el
+         radiobutón entre la imagen predeterminada y el videocolposcopio, sus lienzos para marcar y —en el modo de la
+         foto— las fotos del estudio con su subida. Es una tarjeta más de la solapa; el texto, sus plantillas y su
+         impresión no cambian. La vista la recibe ya armada (`ImagenDelExamenVista`). --}}
+    @if (($imagen ?? null) !== null)
         <div class="mt-3">
-            @include('clinica.consulta._colposcopia-lienzos', ['seccion' => $dibujos])
+            @include('clinica.consulta._imagen-del-examen', ['seccion' => $imagen])
         </div>
     @endif
 
@@ -70,18 +71,5 @@
          retirada, dentro de su solapa *Resultado de exámenes*, junto a la nota del médico. --}}
     @if ($seccion->informados() !== null)
         @include('clinica.consulta._examenes-informados', ['seccion' => $seccion->informados()])
-    @endif
-
-    {{-- Las imágenes del examen (WEB-6.5), si la solapa las tiene (la colposcopía y la histeroscopía): son las
-         suyas, etiquetadas para ella. Es el parcial que comparte con la sección genérica de exámenes, con la
-         solapa adentro del formulario. --}}
-    @if ($imagenes !== null)
-        <div class="mt-3">
-            @include('clinica.consulta._imagenes', [
-                'imagenes' => $imagenes,
-                'titulo' => 'Imágenes de ' . mb_strtolower($seccion->titulo()),
-                'prefijo' => $clave,
-            ])
-        </div>
     @endif
 </x-ui.tarjeta>

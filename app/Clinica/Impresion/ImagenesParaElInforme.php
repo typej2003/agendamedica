@@ -52,6 +52,15 @@ final class ImagenesParaElInforme
     }
 
     /**
+     * **Una imagen suelta**, incrustada (data URI). La usa la imagen del examen (O-09): la foto real del estudio se
+     * imprime tal cual, sin pasar por la etiqueta de un eco.
+     */
+    public function deUnaImagen(string $disco, string $ruta): ?string
+    {
+        return $this->incrustar($disco, $ruta);
+    }
+
+    /**
      * Un PNG **con transparencia**, incrustado sin aplanarlo (data URI). Es lo que necesita el trazo del cuello uterino
      * (A-13): la reducción de `incrustar()` lo recodifica como JPEG sobre fondo blanco —bien para una foto, pero taparía
      * la imagen base sobre la que se compone el dibujo—.

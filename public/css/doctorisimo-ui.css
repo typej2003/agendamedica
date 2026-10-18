@@ -3462,6 +3462,11 @@ body.auth-pagina {
 .lienzo-muestra, .mamas-muestra { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #6c757d; background: var(--muestra, #000); padding: 0; }
 .lienzo-muestra:hover, .lienzo-muestra:focus-visible, .mamas-muestra:hover, .mamas-muestra:focus-visible { box-shadow: 0 0 0 2px #0d6efd; }
 .lienzos-herramientas .form-control-color { width: 2.5rem; }
+/* La **foto real** del estudio (O-09): el marco lo pone la foto —no el 520×400 del esquema— y el lienzo la cubre exacto,
+   así la marca cae donde el médico la hizo y la foto se ve a su tamaño. */
+.lienzo-marco-foto { position: relative; display: inline-block; width: auto; max-width: min(100%, 620px); aspect-ratio: auto; }
+.lienzo-marco-foto .lienzo-base { position: static; display: block; width: auto; max-width: 100%; max-height: 460px; height: auto; }
+.lienzo-marco-foto .lienzo { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 /* «Visualizar» (WEB-11.24): la vista previa de un documento en un diálogo grande, con «Modificar» e «Imprimir». */
 .dialogo-visualizar { width: min(1100px, 96vw); height: 92vh; max-width: none; padding: 0; border: 0; border-radius: .75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35); }

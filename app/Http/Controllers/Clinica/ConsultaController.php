@@ -11,7 +11,6 @@ use App\Clinica\Consulta\TipoDeAntecedentes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
-use App\Clinica\Consulta\DibujosDeColposcopiaDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -28,6 +27,8 @@ use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
+use App\Clinica\Consulta\ImagenDelExamen;
+use App\Clinica\Consulta\ImagenDelExamenDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
@@ -60,7 +61,7 @@ use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\ResumenesAnteriores;
 use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
-use App\Clinica\Consulta\Vistas\DibujosDeColposcopiaVista;
+use App\Clinica\Consulta\Vistas\ImagenDelExamenVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -299,8 +300,9 @@ class ConsultaController extends Controller
             // cuerpo, y por eso viajan aparte.
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
-            // La tarjeta que agrega la colposcopía (A-13): sus dos lienzos del cuello uterino, con su base y su trazo.
-            'dibujos' => $this->dibujosDeLaColposcopia($seccion, (string) request()->query('pestana', ''), $consulta),
+            // La tarjeta de **la imagen del examen** (O-09: el radiobutón entre la imagen predeterminada y el
+            // videocolposcopio, con sus lienzos y sus fotos). `null` en las solapas que no la tienen.
+            'imagen' => $this->imagenDelExamen($seccion, (string) request()->query('pestana', ''), $consulta, $contexto['reg_medico'], $imagenes),
         ]);
     }
 
@@ -1435,41 +1437,58 @@ class ConsultaController extends Controller
             );
         }
 
-        // …y la solapa de un examen (WEB-6.5) sólo las **suyas**: las que están etiquetadas para ese examen
-        // (`TagDeImagen`). Las rutas son las mismas tres —subir, servir y quitar—, con el examen de vuelta.
-        $pestana = $seccion === ConsultaShellVista::SECCION_EVALUACION
-            ? PestanasDelExamen::normalizar((string) request()->query('pestana', ''))
-            : null;
-
-        if ($pestana === null || TagDeImagen::deLaSolapa($pestana) === null) {
-            return null;
-        }
-
-        return new ImagenesDeLaConsultaVista(
-            $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $pestana),
-            route('clinica.consulta.examenes.subir', $consulta->id),
-            fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
-            fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
-            $pestana,
-        );
+        // …y la solapa de un examen (WEB-6.5) ya no arma esta tarjeta: desde O-09 sus fotos viven adentro de la tarjeta
+        // de la imagen del examen (`imagenDelExamen()`), que es la que pide el radiobutón y los lienzos.
+        return null;
     }
 
     /**
-     * La tarjeta de los **lienzos del cuello uterino** de la colposcopía (A-13), o `null` si la solapa que se está
-     * mirando no es la colposcopía. Las dos variantes se leen de una vez y el ViewModel recibe el estado ya resuelto
-     * (la base elegida y si hay trazo), sin consultar la base.
+     * **La tarjeta de la imagen del examen** (O-09), o `null` si la solapa que se está mirando no la tiene. La lectura la
+     * hace `ImagenDelExamenDeLaConsulta` —el modo elegido, la foto que se marca, los trazos— y acá sólo se arman las URLs
+     * y se le pasan a la vista, que no consulta nada.
+     *
+     * Las fotos del examen son las de siempre (`ImagenesDeLaConsultaVista`, con la etiqueta de `TagDeImagen`): la tarjeta
+     * las muestra en el modo del videocolposcopio, con la lista y la subida adentro.
      */
-    private function dibujosDeLaColposcopia(string $seccion, string $pestana, Consulta $consulta): ?DibujosDeColposcopiaVista
-    {
-        if ($seccion !== ConsultaShellVista::SECCION_EVALUACION
-            || PestanasDelExamen::normalizar($pestana) !== PestanasDelExamen::COLPOSCOPIA) {
+    private function imagenDelExamen(
+        string $seccion,
+        string $pestana,
+        Consulta $consulta,
+        string $regMedico,
+        ImagenesDeLaConsulta $imagenes,
+    ): ?ImagenDelExamenVista {
+        if ($seccion !== ConsultaShellVista::SECCION_EVALUACION) {
             return null;
         }
 
-        return new DibujosDeColposcopiaVista(
-            fn (string $variante) => route('clinica.consulta.colposcopia.ver', [$consulta->id, $variante]),
-            fn (string $variante) => route('clinica.consulta.colposcopia.guardar', [$consulta->id, $variante]),
-            app(DibujosDeColposcopiaDeLaConsulta::class)->estado($consulta),
+        $examen = ImagenDelExamen::deLaSolapa(PestanasDelExamen::normalizar($pestana));
+
+        if ($examen === null) {
+            return null;
+        }
+
+        $estado = app(ImagenDelExamenDeLaConsulta::class)->de($consulta, $examen);
+
+        return new ImagenDelExamenVista(
+            $examen,
+            $estado,
+            fn (string $variante, string $verbo) => route('clinica.consulta.examen.imagen.' . $verbo, [$consulta->id, $examen, $variante]),
+            fn (int $foto, string $verbo) => route('clinica.consulta.examen.imagen.' . $verbo, [$consulta->id, $examen, 'foto-' . $foto]),
+            fn (int $foto) => route('clinica.consulta.examenes.descargar', [$consulta->id, $foto]),
+            route('clinica.consulta.examen.imagen.elegir', [$consulta->id, $examen]),
+            new ImagenesDeLaConsultaVista(
+                $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, $examen),
+                route('clinica.consulta.examenes.subir', $consulta->id),
+                fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+                fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+                $examen,
+                [],
+                null,
+                // El aviso de la baja (O-09, regla 5): si la foto tiene marcas, se van con ella.
+                fn (int $fila) => isset($estado->trazos[$fila])
+                    ? '¿Quitar esta foto? Tiene marcas del médico: se borran con ella y no se pueden deshacer.'
+                    : '¿Quitar esta foto del estudio? Se borra el archivo del servidor y no se puede deshacer.',
+            ),
         );
     }
 

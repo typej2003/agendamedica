@@ -124,7 +124,7 @@
              nombre del parcial lo resuelve el ViewModel a partir del catálogo de secciones. --}}
         <div class="col-12">
             @if ($contenido && $vm->parcial())
-                @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null, 'imagenes' => $imagenes ?? null, 'dibujos' => $dibujos ?? null])
+                @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null, 'imagenes' => $imagenes ?? null, 'imagen' => $imagen ?? null])
             @else
                 <x-ui.tarjeta id="consulta-contenido" titulo="Contenido de la consulta" icono="bi-journal-medical">
                     @php $vacio = $vm->sinContenido(); @endphp
@@ -161,11 +161,12 @@
     <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
     <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
-    {{-- El motor de los lienzos (A-13): la misma herramienta de dibujo para las mamas (WEB-11.10) y el cuello uterino
-         de la colposcopía. Las dos pantallas lo inicializan con sus selectores; acá va antes que sus dos envoltorios. --}}
+    {{-- El motor de los lienzos (A-13): la misma herramienta de dibujo para las mamas (WEB-11.10) y la imagen del examen
+         (colposcopía e histeroscopía, O-09). Las pantallas lo inicializan con sus selectores; acá va antes que sus
+         envoltorios. --}}
     <script src="{{ asset('js/clinica/lienzo.js') }}"></script>
     <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
-    <script src="{{ asset('js/clinica/colposcopia-lienzo.js') }}"></script>
+    <script src="{{ asset('js/clinica/imagen-del-examen.js') }}"></script>
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
     {{-- La fila del encabezado (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>

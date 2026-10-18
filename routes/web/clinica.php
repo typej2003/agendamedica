@@ -1,5 +1,6 @@
 <?php
 
+use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Http\Controllers\Clinica\AgendaController;
 use App\Http\Controllers\Clinica\BitacoraController;
@@ -47,7 +48,7 @@ use App\Http\Controllers\Clinica\VacunasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaExamenPediatricoController;
 use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
-use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
+use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -241,12 +242,23 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'ver'])->name('consulta.mamas.ver');
                 Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
                 Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
-                // La colposcopía con imagen editable (A-13): el trazo y la imagen base de cada variante del cuello
-                // uterino (`nulipara` / `multipara`), por consulta; PNG en el disco privado. La `{variante}` fuera del
-                // catálogo la rechaza el controlador con 404.
-                Route::get('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'ver'])->name('consulta.colposcopia.ver');
-                Route::post('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
-                Route::delete('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'quitar'])->name('consulta.colposcopia.quitar');
+                // **La imagen del examen con sus dos modos** (O-09, antes A-13): el trazo de cada lienzo —una variante del
+                // esquema (`nulipara`, `multipara`, `utero`) o una foto del estudio (`foto-12`)—, su imagen base y la
+                // elección entre la imagen predeterminada y el videocolposcopio. PNG en el disco privado; el lienzo fuera
+                // del catálogo lo rechaza el controlador con 404.
+                Route::get('/consulta/{consulta}/examen/{examen}/lienzo/{lienzo}', [ConsultaImagenDelExamenController::class, 'ver'])
+                    ->where('examen', implode('|', ImagenDelExamen::EXAMS))->where('lienzo', '[a-z]+|foto-[0-9]+')
+                    ->name('consulta.examen.imagen.ver');
+                Route::post('/consulta/{consulta}/examen/{examen}/lienzo/{lienzo}', [ConsultaImagenDelExamenController::class, 'guardar'])
+                    ->where('examen', implode('|', ImagenDelExamen::EXAMS))->where('lienzo', '[a-z]+|foto-[0-9]+')
+                    ->name('consulta.examen.imagen.guardar');
+                Route::delete('/consulta/{consulta}/examen/{examen}/lienzo/{lienzo}', [ConsultaImagenDelExamenController::class, 'quitar'])
+                    ->where('examen', implode('|', ImagenDelExamen::EXAMS))->where('lienzo', '[a-z]+|foto-[0-9]+')
+                    ->name('consulta.examen.imagen.quitar');
+                // La elección del radiobutón (O-09): qué imagen del examen se ve y se imprime.
+                Route::post('/consulta/{consulta}/examen/{examen}/imagen', [ConsultaImagenDelExamenController::class, 'elegir'])
+                    ->where('examen', implode('|', ImagenDelExamen::EXAMS))
+                    ->name('consulta.examen.imagen.elegir');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
                 // Las mediciones de pediatría (WEB-7.4.3a): talla, peso, perímetros, pulso y presión en `percentiles_paciente`.
                 Route::post('/consulta/{consulta}/mediciones', [ConsultaMedicionesController::class, 'guardar'])->name('consulta.mediciones.guardar');

@@ -193,7 +193,9 @@
                 programarGuardado();
             });
             bloque.querySelector(opciones.borrar).addEventListener('click', function () {
-                if ((trazos.length > 0 || capaGuardada) && !window.confirm(avisoBorrar)) { return; }
+                // El aviso puede ser de cada lienzo (`data-aviso` en el botón): el de una foto no es el del esquema.
+                var aviso = bloque.querySelector(opciones.borrar).dataset.aviso || avisoBorrar;
+                if ((trazos.length > 0 || capaGuardada) && !window.confirm(aviso)) { return; }
                 trazos = [];
                 capaGuardada = null;
                 redibujar();

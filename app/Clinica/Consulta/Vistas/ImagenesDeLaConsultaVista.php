@@ -51,6 +51,9 @@ final class ImagenesDeLaConsultaVista
         // «Esta consulta | Todas» (WEB-11.22): las opciones del chip, `[texto, url, activa]`, y la consulta que se está mirando.
         private array $alcances = [],
         private ?int $consultaActual = null,
+        // El aviso de la baja de una fila (O-09): la tarjeta de la imagen del examen lo cambia cuando la foto tiene un
+        // trazo guardado, porque el trazo se va con ella. `null` deja el aviso de siempre.
+        private $avisoQuitar = null,
     ) {
     }
 
@@ -126,6 +129,11 @@ final class ImagenesDeLaConsultaVista
                     'esDescarga' => (bool) ($imagen->descarga ?? false),
                     'url' => $imagen->enElServidor ? ($this->urlDescargar)($id) : null,
                     'urlQuitar' => ($this->urlQuitar)($id),
+                    // El texto de la confirmación de la baja: la tarjeta de la imagen del examen avisa que el trazo se va
+                    // con la foto (O-09).
+                    'confirmar' => $this->avisoQuitar === null
+                        ? '¿Quitar esta imagen de la consulta? Se borra el archivo del servidor y no se puede deshacer.'
+                        : ($this->avisoQuitar)($id),
                     'origen' => $imagen->enElServidor
                         ? 'En el servidor'
                         : 'En el disco del consultorio',

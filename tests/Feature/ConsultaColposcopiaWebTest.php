@@ -6,7 +6,8 @@ use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Models\Consulta;
-use App\Models\DibujoDeColposcopia;
+use App\Models\DibujoDelExamen;
+use App\Models\EleccionDeImagenDelExamen;
 use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\ImagenConsulta;
@@ -834,7 +835,7 @@ class ConsultaColposcopiaWebTest extends TestCase
 
     private function urlLienzo(Consulta $consulta, string $variante, string $verbo = 'ver'): string
     {
-        return route('clinica.consulta.colposcopia.' . $verbo, [$consulta->id, $variante]);
+        return route('clinica.consulta.examen.imagen.' . $verbo, [$consulta->id, 'colposcopia', $variante]);
     }
 
     /** La tarjeta de los dos lienzos, en la solapa de la colposcopía. */
@@ -877,7 +878,7 @@ class ConsultaColposcopiaWebTest extends TestCase
             'dibujo' => $this->png(),
         ])->assertOk()->assertJson(['guardado' => true, 'base' => 'vector', 'dibujo' => true]);
 
-        $fila = DibujoDeColposcopia::where('variante', 'nulipara')->firstOrFail();
+        $fila = DibujoDelExamen::where('variante', 'nulipara')->firstOrFail();
         $this->assertSame((int) $consulta->nroconsulta, (int) $fila->nroconsulta);
         $this->assertSame('vector', $fila->base);
         Storage::disk(ArchivosClinicos::DISCO)->assertExists($fila->archivo);
@@ -892,14 +893,14 @@ class ConsultaColposcopiaWebTest extends TestCase
             'base' => 'vector',
             'dibujo' => $this->png(),
         ])->assertOk();
-        $this->assertSame(1, DibujoDeColposcopia::where('variante', 'nulipara')->count());
+        $this->assertSame(1, DibujoDelExamen::where('variante', 'nulipara')->count());
         Storage::disk(ArchivosClinicos::DISCO)->assertMissing($viejo);
 
         // Quitar borra el trazo (el archivo y el `archivo` de la fila) pero **conserva la fila y la base**.
         $web->delete($this->urlLienzo($consulta, 'nulipara', 'quitar') . '?base=vector')->assertOk()->assertJson(['quitado' => true]);
-        $this->assertSame(0, DibujoDeColposcopia::whereNotNull('archivo')->count());
-        $this->assertSame(1, DibujoDeColposcopia::where('variante', 'nulipara')->count());
-        $this->assertSame('vector', DibujoDeColposcopia::where('variante', 'nulipara')->value('base'));
+        $this->assertSame(0, DibujoDelExamen::whereNotNull('archivo')->count());
+        $this->assertSame(1, DibujoDelExamen::where('variante', 'nulipara')->count());
+        $this->assertSame('vector', DibujoDelExamen::where('variante', 'nulipara')->value('base'));
         $web->get($this->urlLienzo($consulta, 'nulipara'))->assertNotFound();
     }
 
@@ -914,14 +915,14 @@ class ConsultaColposcopiaWebTest extends TestCase
             'dibujo' => $this->png(),
         ])->assertOk();
 
-        $archivo = DibujoDeColposcopia::where('variante', 'multipara')->value('archivo');
+        $archivo = DibujoDelExamen::where('variante', 'multipara')->value('archivo');
         $this->assertNotNull($archivo);
 
         // Cambiar la base manda **sólo la base**: el trazo no se toca ni se pierde.
         $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), ['base' => 'escritorio'])
             ->assertOk()->assertJson(['guardado' => true, 'base' => 'escritorio', 'dibujo' => true]);
 
-        $fila = DibujoDeColposcopia::where('variante', 'multipara')->firstOrFail();
+        $fila = DibujoDelExamen::where('variante', 'multipara')->firstOrFail();
         $this->assertSame('escritorio', $fila->base);
         $this->assertSame($archivo, $fila->archivo);
         Storage::disk(ArchivosClinicos::DISCO)->assertExists($archivo);
@@ -942,7 +943,7 @@ class ConsultaColposcopiaWebTest extends TestCase
         $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'escritorio'])
             ->assertOk()->assertJson(['guardado' => true, 'base' => 'escritorio', 'dibujo' => false]);
 
-        $fila = DibujoDeColposcopia::where('variante', 'nulipara')->firstOrFail();
+        $fila = DibujoDelExamen::where('variante', 'nulipara')->firstOrFail();
         $this->assertNull($fila->archivo);
         $this->assertSame('escritorio', $fila->base);
 
@@ -956,11 +957,11 @@ class ConsultaColposcopiaWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
         $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
-        $web->post(route('clinica.consulta.colposcopia.guardar', [$consulta->id, 'arriba']), [
+        $web->post(route('clinica.consulta.examen.imagen.guardar', [$consulta->id, 'colposcopia', 'arriba']), [
             'base' => 'vector', 'dibujo' => $this->png(),
         ])->assertNotFound();
-        $web->get(route('clinica.consulta.colposcopia.ver', [$consulta->id, 'arriba']))->assertNotFound();
-        $web->delete(route('clinica.consulta.colposcopia.quitar', [$consulta->id, 'arriba']))->assertNotFound();
+        $web->get(route('clinica.consulta.examen.imagen.ver', [$consulta->id, 'colposcopia', 'arriba']))->assertNotFound();
+        $web->delete(route('clinica.consulta.examen.imagen.quitar', [$consulta->id, 'colposcopia', 'arriba']))->assertNotFound();
 
         // El lienzo siempre habla JSON (`Accept: application/json`), como el `fetch` del navegador.
         $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'otra', 'dibujo' => $this->png()],
@@ -973,7 +974,7 @@ class ConsultaColposcopiaWebTest extends TestCase
             'dibujo' => UploadedFile::fake()->image('foto.jpg'),
         ], ['Accept' => 'application/json'])->assertStatus(422);
 
-        $this->assertSame(0, DibujoDeColposcopia::count());
+        $this->assertSame(0, DibujoDelExamen::count());
     }
 
     public function test_la_secretaria_no_dibuja_y_el_medico_ajeno_recibe_404(): void
@@ -996,7 +997,7 @@ class ConsultaColposcopiaWebTest extends TestCase
         $ajeno->get($this->urlLienzo($consulta, 'nulipara'))->assertNotFound();
         $ajeno->delete($this->urlLienzo($consulta, 'nulipara', 'quitar'))->assertNotFound();
 
-        $this->assertSame(0, DibujoDeColposcopia::count());
+        $this->assertSame(0, DibujoDelExamen::count());
     }
 
     /** El dibujo es una tarjeta más: el texto de la colposcopía se sigue guardando como antes (las dos columnas). */
@@ -1052,5 +1053,219 @@ class ConsultaColposcopiaWebTest extends TestCase
         // El texto del informe no cambió: sigue en su media hoja, con su título y su firma.
         $this->assertStringContainsString('Un texto de colposcopía.', $html);
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
+    }
+
+    // ------------------------------------------- La tarjeta de dos modos (O-09, 2026-10-17)
+
+    private function urlElegir(Consulta $consulta): string
+    {
+        return route('clinica.consulta.examen.imagen.elegir', [$consulta->id, 'colposcopia']);
+    }
+
+    private function urlLienzoDeLaFoto(Consulta $consulta, int $imagen, string $verbo = 'ver'): string
+    {
+        return route('clinica.consulta.examen.imagen.' . $verbo, [$consulta->id, 'colposcopia', 'foto-' . $imagen]);
+    }
+
+    /** Los paneles de los dos modos que el servidor pinta **visibles** (sin el atributo `hidden`). */
+    private function panelesVisibles(string $html): array
+    {
+        preg_match_all('/<div data-imagen-panel="[a-z]+"[^>]*>/', $html, $coincidencias);
+
+        return array_values(array_filter($coincidencias[0], fn (string $etiqueta) => ! str_contains($etiqueta, 'hidden')));
+    }
+
+    public function test_la_solapa_tiene_una_sola_tarjeta_con_el_radiobuton_de_los_dos_modos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+
+        // Un radiobutón con los dos modos, con el vocabulario que pidió Alexander.
+        $this->assertSame(2, substr_count($html, 'data-imagen-modo-opcion'));
+        $this->assertStringContainsString('Imagen predeterminada', $html);
+        $this->assertStringContainsString('Videocolposcopio', $html);
+
+        // Una sola tarjeta: la de la imagen. La de las imágenes de la colposcopía ya no existe aparte.
+        $this->assertStringContainsString('Imagen de la colposcopía', $html);
+        $this->assertStringNotContainsString('Imágenes de colposcopía', $html);
+
+        // Y se ve **sólo** el modo elegido: sin datos, la imagen predeterminada.
+        $visibles = $this->panelesVisibles($html);
+        $this->assertCount(1, $visibles);
+        $this->assertStringContainsString('"esquema"', $visibles[0]);
+        $this->assertMatchesRegularExpression('/id="imagen-modo-esquema"[^>]*checked/', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="imagen-modo-foto"[^>]*checked/', $html);
+    }
+
+    public function test_abre_en_el_modo_que_ya_tiene_datos_la_foto_si_hay_foto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+
+        // Con una foto, el estudio abre en el videocolposcopio y con **esa** foto para marcar.
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlColposcopia($consulta))->assertOk()->getContent();
+
+        $visibles = $this->panelesVisibles($html);
+        $this->assertCount(1, $visibles);
+        $this->assertStringContainsString('"foto"', $visibles[0]);
+        $this->assertStringContainsString('data-foto="' . $imagen->id . '"', $html);
+        $this->assertStringContainsString('data-url-guardar="' . $this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'guardar') . '"', $html);
+    }
+
+    public function test_la_eleccion_se_guarda_y_decide_el_modo_que_se_ve(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // Con foto abre en el videocolposcopio; el médico elige el esquema y **se recuerda**.
+        $web->post($this->urlElegir($consulta), ['modo' => 'esquema'])
+            ->assertOk()->assertJson(['guardado' => true, 'modo' => 'esquema']);
+
+        $eleccion = EleccionDeImagenDelExamen::firstOrFail();
+        $this->assertSame('esquema', $eleccion->modo);
+        $this->assertSame((int) $consulta->nroconsulta, (int) $eleccion->nroconsulta);
+
+        $html = $web->get($this->urlColposcopia($consulta))->getContent();
+        $this->assertStringContainsString('"esquema"', $this->panelesVisibles($html)[0]);
+
+        // Y vuelve al videocolposcopio con su foto: la elección manda sobre "lo que ya tiene datos".
+        $web->post($this->urlElegir($consulta), ['modo' => 'foto', 'imagen_id' => $imagen->id])
+            ->assertOk()->assertJson(['guardado' => true, 'modo' => 'foto', 'imagen_id' => (int) $imagen->id]);
+
+        $html = $web->get($this->urlColposcopia($consulta))->getContent();
+        $this->assertStringContainsString('"foto"', $this->panelesVisibles($html)[0]);
+    }
+
+    public function test_una_foto_que_no_es_del_examen_no_se_puede_elegir(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $otra = $this->imagen($medico, $consulta, 'H', true); // la etiqueta de la histeroscopía, no la de la colposcopía
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlElegir($consulta), ['modo' => 'foto', 'imagen_id' => $otra->id])
+            ->assertStatus(422);
+
+        $this->assertSame(0, EleccionDeImagenDelExamen::count());
+    }
+
+    public function test_se_marca_sobre_la_foto_real_y_el_trazo_queda_atado_a_ella(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'guardar'), ['dibujo' => $this->png()])
+            ->assertOk()->assertJson(['guardado' => true, 'dibujo' => true]);
+
+        $fila = DibujoDelExamen::firstOrFail();
+        // El trazo se llavea por la **foto** (`foto:<id>`) y la referencia: la foto no se copia.
+        $this->assertSame('colposcopia', $fila->examen);
+        $this->assertSame('foto:' . $imagen->id, $fila->clave);
+        $this->assertSame((int) $imagen->id, (int) $fila->imagen_id);
+        $this->assertNull($fila->variante);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($fila->archivo);
+
+        // Se sirve por la ruta autorizada, y la imagen de la foto sigue siendo una sola fila (no se duplica el archivo).
+        $web->get($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id))->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertSame(1, ImagenConsulta::where('reg_medico', $medico->reg_medico)->count());
+
+        // Borrar todo el trazo lo quita pero **no** la foto.
+        $web->delete($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'quitar'))->assertOk()->assertJson(['quitado' => true]);
+        $this->assertSame(0, DibujoDelExamen::count());
+        $this->assertSame(1, ImagenConsulta::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_quitar_la_foto_se_lleva_su_trazo_y_lo_avisa_antes(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlElegir($consulta), ['modo' => 'foto', 'imagen_id' => $imagen->id])->assertOk();
+        $web->post($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'guardar'), ['dibujo' => $this->png()])->assertOk();
+        $archivo = DibujoDelExamen::firstOrFail()->archivo;
+
+        // La pantalla avisa que las marcas se van con la foto.
+        $html = $web->get($this->urlColposcopia($consulta))->getContent();
+        $this->assertStringContainsString('Tiene marcas del médico', $html);
+
+        $web->delete(route('clinica.consulta.examenes.quitar', [$consulta->id, $imagen->id]), ['examen' => 'colposcopia'])
+            ->assertRedirect($this->urlColposcopia($consulta));
+
+        // No queda ningún trazo huérfano, ni la elección apuntando a una foto que ya no está.
+        $this->assertSame(0, DibujoDelExamen::count());
+        Storage::disk(ArchivosClinicos::DISCO)->assertMissing($archivo);
+        $this->assertNull(EleccionDeImagenDelExamen::firstOrFail()->imagen_id);
+    }
+
+    public function test_el_informe_imprime_solo_el_videocolposcopio_cuando_esa_es_la_eleccion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->observaciones = 'Un texto de colposcopía.';
+        $consulta->save();
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        // La foto marcada **y** un dibujo del esquema: sólo sale la foto, que es lo elegido.
+        $web->post($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'guardar'), ['dibujo' => $this->png()])->assertOk();
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'escritorio', 'dibujo' => $this->png()])->assertOk();
+
+        $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-incluir-imagenes', $html);
+        $this->assertSame(1, substr_count($html, '<figure class="informe-imagen informe-imagen-foto">'));
+        $this->assertStringNotContainsString('informe-imagen-dibujo', $html);
+        // La foto con su marca encima, las dos incrustadas (data URI): la foto no se estira al marco del esquema.
+        $this->assertStringContainsString('informe-foto-base', $html);
+        $this->assertStringContainsString('informe-foto-trazo', $html);
+        $this->assertStringContainsString('Videocolposcopio', $html);
+        $this->assertSame(2, substr_count($html, 'src="data:image/'));
+        $this->assertStringNotContainsString('Cuello nulípara', $html);
+    }
+
+    public function test_el_informe_imprime_solo_el_esquema_cuando_esa_es_la_eleccion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->observaciones = 'Un texto de colposcopía.';
+        $consulta->save();
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])->assertOk();
+        $web->post($this->urlElegir($consulta), ['modo' => 'esquema', 'imagen_id' => $imagen->id])->assertOk();
+
+        $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
+
+        // Sale el esquema marcado y **no** la foto, aunque la foto exista.
+        $this->assertSame(1, substr_count($html, '<figure class="informe-imagen informe-imagen-dibujo">'));
+        $this->assertStringNotContainsString('informe-imagen-foto', $html);
+        $this->assertStringContainsString('Cuello multípara (orificio redondo)', $html);
+        $this->assertStringNotContainsString('Videocolposcopio', $html);
+    }
+
+    public function test_la_secretaria_no_elige_el_modo_ni_marca_la_foto(): void
+    {
+        [, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $imagen = $this->imagen($medico, $consulta, '@', true);
+        $secretaria = $this->secretariaConAcceso($medico);
+        $web = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria);
+
+        $web->post($this->urlElegir($consulta), ['modo' => 'foto'])->assertForbidden();
+        $web->post($this->urlLienzoDeLaFoto($consulta, (int) $imagen->id, 'guardar'), ['dibujo' => $this->png()])->assertForbidden();
+        $this->assertSame(0, EleccionDeImagenDelExamen::count());
+        $this->assertSame(0, DibujoDelExamen::count());
     }
 }

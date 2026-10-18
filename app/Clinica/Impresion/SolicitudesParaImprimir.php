@@ -16,6 +16,7 @@ use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EstudioEcografico;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
+use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
@@ -111,7 +112,7 @@ final class SolicitudesParaImprimir
         private ResumenMedicoDeLaConsulta $resumenes,
         private ImagenesParaElInforme $imagenesDelInforme,
         private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
-        private DibujosParaElInforme $dibujosDeLaColposcopia,
+        private ImagenesDelExamenParaElInforme $imagenesDelExamen,
     ) {
     }
 
@@ -479,10 +480,11 @@ final class SolicitudesParaImprimir
 
             $documento = $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
 
-            // La colposcopía lleva, además de su texto, los dibujos del cuello uterino (A-13): salen en una hoja
-            // aparte cuando se imprime «con imágenes», por el mismo camino que las fotos de un eco.
+            // La colposcopía lleva, además de su texto, la **imagen que el médico eligió** (O-09: el esquema con sus
+            // marcas o el videocolposcopio), en una hoja aparte cuando se imprime «con imágenes», por el mismo camino que
+            // las fotos de un eco.
             if ($clave === DocumentoImpreso::COLPOSCOPIA) {
-                $documento = $documento->conImagenes($this->dibujosDeLaColposcopia->de($consulta));
+                $documento = $documento->conImagenes($this->imagenesDelExamen->de($consulta, ImagenDelExamen::COLPOSCOPIA));
             }
 
             return $documento;
