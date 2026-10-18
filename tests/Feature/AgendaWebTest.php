@@ -1120,19 +1120,52 @@ class AgendaWebTest extends TestCase
     }
 
     /**
-     * El panel "Pacientes sin historia a atender" decía "Hoy no hay pacientes sin historia" viendo cualquier
-     * día (revisión 2026-10-11). Dice "Hoy" solo cuando el día que se mira es hoy **del consultorio**.
+     * El panel "Pacientes sin historia a atender" **no se pinta si está vacío** (revisión de Alexander,
+     * 2026-10-17): viendo hoy o cualquier otro día, sin pacientes sin historia no queda ni la tarjeta, ni
+     * el conteo, ni el estado vacío. Con uno, el panel está y muestra su fila.
      */
-    public function test_el_panel_sin_historia_vacio_dice_hoy_solo_si_es_hoy(): void
+    public function test_el_panel_sin_historia_solo_aparece_cuando_hay_pacientes(): void
     {
-        $this->a_las_ocho_y_media_de_la_noche_en_caracas();
         [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-10')
-            ->assertOk()->assertSee('Hoy no hay pacientes sin historia')->assertDontSee('Ese día no hay pacientes sin historia');
+        foreach (['2026-10-10', '2026-10-08'] as $fecha) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=' . $fecha)
+                ->assertOk()
+                ->assertDontSee('id="panel-sin-historia"', false)
+                ->assertDontSee('Pacientes sin historia a atender')
+                ->assertDontSee('no hay pacientes sin historia');
+        }
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-08')
-            ->assertOk()->assertSee('Ese día no hay pacientes sin historia')->assertDontSee('Hoy no hay pacientes sin historia');
+        // Un paciente dado de alta sin número, con su cita anclada por `paciente_sinhistoria_id`.
+        $pacienteId = DB::table('pacientes')->insertGetId([
+            'nombres'    => 'Prueba',
+            'apellidos'  => 'SinHistoria',
+            'cedula'     => '12345678',
+            'sexo'       => 'F',
+            'fnacimiento'=> '1990-05-04',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('medico_pacientes')->insert([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $pacienteId,
+            'numhistoria' => null,
+            'reg_medico'  => $medico->reg_medico,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+        $this->cita($medico, $sede, '2026-10-10', '08:00:00', 1, ['paciente_sinhistoria_id' => $pacienteId]);
+
+        $conUno = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda?fecha=2026-10-10');
+
+        $conUno->assertOk()
+            ->assertSee('id="panel-sin-historia"', false)
+            ->assertSee('Pacientes sin historia a atender')
+            ->assertSee('SinHistoria, Prueba')
+            ->assertSee('1 paciente')
+            ->assertSee('Pasar a cita formal');
     }
 
     public function test_con_hora_de_cita_la_hora_es_obligatoria(): void

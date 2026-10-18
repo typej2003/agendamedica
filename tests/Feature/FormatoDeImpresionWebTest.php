@@ -151,8 +151,8 @@ class FormatoDeImpresionWebTest extends TestCase
         $this->como($secretaria, $medico, $gineco)->post(route('clinica.formato.restablecer'), ['seccion' => 'logo'])->assertForbidden();
         $this->assertNull($this->evolucionDe($medico));
 
-        // Ni en el menú de otra pantalla.
-        $this->como($secretaria, $medico, $gineco)->get(route('clinica.inicio'))->assertOk()->assertDontSee('Formato de impresión');
+        // Ni en el menú de otra pantalla (A-12: la secretaría entra a la agenda, no al inicio del médico).
+        $this->como($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->assertDontSee('Formato de impresión');
     }
 
     public function test_el_medico_ve_la_entrada_en_el_grupo_configuracion_del_menu(): void

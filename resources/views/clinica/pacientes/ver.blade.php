@@ -6,11 +6,11 @@
     <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()"
                     :volver="route('clinica.pacientes')" volver-texto="Pacientes">
         <x-slot name="acciones">
-            {{-- La historia del paciente (WEB-3.5): sus consultas, antecedentes y documentos. Es la otra
+            {{-- El resumen del paciente (WEB-3.5): sus consultas, antecedentes y documentos. Es la otra
                  mitad de la ficha —lo que pasó en las consultas— y se ofrece siempre, también al paciente
                  sin número, que ahí ve el estado vacío y el camino para asignárselo. --}}
             <a class="btn btn-outline-secondary" href="{{ route('clinica.pacientes.historia', $vm->id()) }}">
-                <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia
+                <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver resumen
             </a>
             @if ($urlHistoriaPediatrica)
                 <a class="btn btn-outline-secondary" href="{{ $urlHistoriaPediatrica }}" target="_blank" rel="noopener">

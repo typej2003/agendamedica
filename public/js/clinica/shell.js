@@ -7,10 +7,16 @@
  *   data-autoenviar           en un <select>/<input>: al cambiar, envía su formulario.
  *   data-confirmar="texto"    en un <form>: pide confirmación antes de enviarlo.
  *   data-atender              en el <form> de "Atender": abre el diálogo de la consulta (WEB-4.1) en vez
- *                             de enviarlo, para elegir entre la consulta de hoy y una nueva.
+ *                             de enviarlo. Con la cita ya atendida (`data-editar="1"`) el diálogo ofrece
+ *                             además numerar la consulta siguiente.
  *   data-cerrar-dialogo       en un botón: cierra el <dialog> que lo contiene.
  *   data-abrir-dialogo="id"   en un botón: abre ese <dialog> (showModal).
  *   <details class="menu-acciones">   el menú "⋯" cierra al hacer clic afuera o con Escape.
+ *   .tabla-envoltura / .table-responsive   la tabla que no entra se desplaza dentro de su tarjeta (el
+ *                             `overflow-x` está en el CSS) y acá se le pone `tabindex`, `role="region"` y
+ *                             `aria-label` **sólo cuando desborda**, para que se pueda recorrer con el teclado.
+ *                             El menú "⋯" de esas tablas se posiciona contra la ventana para que el recorte no
+ *                             lo corte.
  */
 (function () {
     'use strict';
@@ -104,11 +110,13 @@
             $('atender-paciente').textContent = formulario.dataset.paciente || '';
 
             // Con la cita ya atendida no hay nada que marcar (y el servidor tampoco lo hace): el diálogo
-            // lo dice y no ofrece "consulta nueva" sin avisar qué implica.
+            // lo dice y ofrece la consulta siguiente. Con la cita sin atender, el caso normal, sólo quedan
+            // Cancelar y Atender: "Consulta nueva" no se muestra (revisión de Alexander, 2026-10-17).
             aviso.hidden = !editar;
             aviso.textContent = editar
-                ? 'Esta cita ya está atendida. Se abre la consulta de ese día para seguir cargándola.'
+                ? 'Esta cita ya está atendida. Se abre la consulta de ese día para seguir cargándola; «Consulta nueva» numera la consulta siguiente de la historia.'
                 : '';
+            $('atender-nueva').hidden = !editar;
             $('atender-abrir').textContent = editar ? 'Abrir la consulta' : 'Atender y abrir la consulta';
             if (textoAyuda) {
                 textoAyuda.hidden = editar;
@@ -147,4 +155,85 @@
     document.addEventListener('keydown', function (evento) {
         if (evento.key === 'Escape') cerrarMenus(null);
     });
+
+    // ---- Tablas con desplazamiento horizontal (`<x-ui.tabla>`, A-16).
+    // La tabla que no entra se desliza dentro de su tarjeta en vez de arrastrar la página (el `overflow-x` vive en
+    // `.tabla-envoltura`, en doctorisimo-ui.css). Un contenedor que scrollea tiene que poder recorrerse con el
+    // teclado y anunciarse: el `tabindex`, el `role` y el `aria-label` se ponen **sólo cuando hay desborde**, para
+    // no dejar una parada de tabulación de más en las tablas que entran.
+    const envolturas = Array.prototype.slice.call(document.querySelectorAll('.tabla-envoltura, .table-responsive'));
+
+    const marcarEnvoltura = function (envoltura) {
+        const desborda = envoltura.scrollWidth > envoltura.clientWidth + 1;
+
+        envoltura.classList.toggle('tabla-desborda', desborda);
+
+        if (desborda) {
+            if (!envoltura.hasAttribute('tabindex')) envoltura.setAttribute('tabindex', '0');
+            if (!envoltura.hasAttribute('role')) envoltura.setAttribute('role', 'region');
+            if (!envoltura.hasAttribute('aria-label')) {
+                const encabezado = envoltura.querySelector('table thead th');
+                envoltura.setAttribute('aria-label',
+                    'Tabla de ' + (encabezado ? encabezado.textContent.trim().toLowerCase() : 'datos')
+                    + ': se recorre en horizontal.');
+            }
+        } else {
+            envoltura.removeAttribute('tabindex');
+            envoltura.removeAttribute('role');
+            envoltura.removeAttribute('aria-label');
+        }
+    };
+
+    envolturas.forEach(marcarEnvoltura);
+
+    if (typeof window.ResizeObserver === 'function') {
+        const observador = new window.ResizeObserver(function (entradas) {
+            entradas.forEach(function (entrada) { marcarEnvoltura(entrada.target); });
+        });
+        // Se observa el contenedor **y la tabla**: el contenedor mide lo que mide su columna, pero la tabla cambia de
+        // ancho cuando termina de cargar la tipografía o cuando el contenido se acomoda, y es eso lo que decide si
+        // desborda.
+        envolturas.forEach(function (envoltura) {
+            observador.observe(envoltura);
+            if (envoltura.firstElementChild) observador.observe(envoltura.firstElementChild);
+        });
+    }
+
+    window.addEventListener('resize', function () { envolturas.forEach(marcarEnvoltura); });
+    window.addEventListener('load', function () { envolturas.forEach(marcarEnvoltura); });
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { envolturas.forEach(marcarEnvoltura); });
+    }
+
+    // ---- El menú «…» de una fila de esas tablas: se posiciona contra la ventana para que el contenedor que
+    // recorta no lo corte (si no, el menú de la última fila aparecía recortado o había que scrollear para verlo).
+    const flotarMenu = function (detalles) {
+        const lista = detalles.querySelector('.menu-lista');
+        const disparador = detalles.querySelector('summary');
+        if (!lista || !disparador) return;
+
+        const recortado = detalles.closest('.tabla-desborda');
+
+        if (!detalles.open || !recortado) {
+            lista.classList.remove('menu-lista-flotante');
+            lista.style.removeProperty('left');
+            lista.style.removeProperty('top');
+            return;
+        }
+
+        const caja = disparador.getBoundingClientRect();
+        lista.classList.add('menu-lista-flotante');
+        lista.style.left = Math.max(8, Math.round(caja.right - lista.offsetWidth)) + 'px';
+        lista.style.top = Math.round(caja.bottom + 4) + 'px';
+    };
+
+    // El evento `toggle` de `<details>` no burbujea: se escucha en la fase de captura.
+    document.addEventListener('toggle', function (evento) {
+        if (evento.target.matches && evento.target.matches('details.menu-acciones')) flotarMenu(evento.target);
+    }, true);
+
+    // Un menú flotante queda pegado a un botón que se mueve: al desplazarse (la página o la tabla) se cierra.
+    document.addEventListener('scroll', function () {
+        if (document.querySelector('.menu-lista-flotante')) cerrarMenus(null);
+    }, true);
 })();

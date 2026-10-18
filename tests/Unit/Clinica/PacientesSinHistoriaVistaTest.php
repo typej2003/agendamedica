@@ -55,30 +55,21 @@ class PacientesSinHistoriaVistaTest extends TestCase
 
     public function test_cuenta_los_pacientes_del_dia(): void
     {
-        $this->assertSame('Ninguno', $this->vista([])->conteo());
         $this->assertSame('1 paciente', $this->vista([$this->cita()])->conteo());
         $this->assertSame('2 pacientes', $this->vista([$this->cita(), $this->cita(['id' => 11])])->conteo());
     }
 
-    public function test_vacio_lo_dice_sin_parecer_un_error(): void
+    /**
+     * El panel no se pinta vacío (revisión de Alexander, 2026-10-17): la vista pregunta `estaVacio()` y,
+     * si es así, no hay tarjeta, ni conteo, ni estado vacío. Por eso ya no hay textos de "Hoy no hay…".
+     */
+    public function test_sin_citas_esta_vacio_y_no_hay_filas(): void
     {
-        // El panel se ve siempre: vacío es la buena noticia del día, no un fallo.
         $vacia = $this->vista([]);
 
         $this->assertTrue($vacia->estaVacio());
         $this->assertSame([], $vacia->filas());
-        $this->assertSame('bi-journal-medical', $vacia->vacio()['icono']);
-        $this->assertStringContainsString('Hoy no hay pacientes sin historia', $vacia->vacio()['titulo']);
-        $this->assertStringContainsString('número de historia', $vacia->vacio()['texto']);
-    }
-
-    /** Viendo otro día, el vacío no puede decir "Hoy": el jueves pasado decía "Hoy no hay…" (revisión 2026-10-11). */
-    public function test_el_vacio_de_otro_dia_no_dice_hoy(): void
-    {
-        $otroDia = new PacientesSinHistoriaVista(collect([]), $this->lunes->copy(), false);
-
-        $this->assertSame('Ese día no hay pacientes sin historia', $otroDia->vacio()['titulo']);
-        $this->assertSame('Hoy no hay pacientes sin historia', $this->vista([])->vacio()['titulo'], 'Por defecto es hoy.');
+        $this->assertFalse($this->vista([$this->cita()])->estaVacio());
     }
 
     public function test_cada_fila_dice_el_paciente_la_hora_y_su_accion(): void

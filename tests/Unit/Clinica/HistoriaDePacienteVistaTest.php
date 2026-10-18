@@ -270,7 +270,9 @@ class HistoriaDePacienteVistaTest extends TestCase
     {
         $vista = $this->resumen([$this->consulta(['evolucion' => str_repeat('evoluciona bien ', 40)])]);
 
-        $this->assertSame('Resumen de historia clínica', $vista->titulo());
+        // Lo que se imprime es «la historia» y lo que se ve en pantalla es «el resumen» (revisión de Alexander,
+        // 2026-10-17): el título de la hoja cambió con el vocabulario y el assert lo sigue.
+        $this->assertSame('Historia clínica', $vista->titulo());
         $this->assertSame('Dr. Carlos Mendoza', $vista->medico());
         $this->assertSame('Pérez, Ana', $vista->paciente());
         $this->assertSame('12345678', $vista->cedula());

@@ -14,6 +14,8 @@ use App\Http\Requests\SyncAppDataRequest;
 use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
+use App\Models\Antecedente;
+use App\Models\AntecePaciente;
 use App\Models\Cola;
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
@@ -22,6 +24,7 @@ use App\Models\DiagnosticoPaciente;
 use App\Models\Doctor;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
+use App\Models\ExamenFisico;
 use App\Models\Historia;
 use App\Models\Informe;
 use App\Models\Medico;
@@ -41,6 +44,7 @@ use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
+use App\Models\TipoAntecedente;
 use App\Models\Vademecum;
 use App\Services\ServicioService;
 use App\Actions\Pacientes\AsignarHistoria;
@@ -296,6 +300,17 @@ class SyncAppDataController extends Controller
             'consultas' => ['consulta' => Consulta::whereIn('numhistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
+            // **La evaluación física de la consulta** (A2 de PLAN-MOVIL.md). Es lo que el médico necesita
+            // para atender sin la computadora, así que baja con el mismo filtro doble que `consultas`.
+            // ⚠️ Dos nombres de columna que no son los que parecen, y por eso se preguntan:
+            //  - el número de historia es **`historia`**, no `numhistoria` (el manifiesto de la especialidad
+            //    traduce el `nrohistoria` del escritorio; ver `TablasLegado::columnaHistoria`). Escribirlo a
+            //    mano deja pasar todo o nada según la especialidad.
+            //  - `consulta` es **el número de la consulta dentro de la historia** (`consultas.nroconsulta`),
+            //    no el id de `consultas`: por eso el filtro es por historia (y por médico), como el resto.
+            'examen_fisico_nuevo' => ['consulta' => ExamenFisico::whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('examen_fisico_nuevo'), $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -326,11 +341,25 @@ class SyncAppDataController extends Controller
             'informe' => ['consulta' => $porConsulta(Informe::class, 'informe', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
             'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'diagnostico_paciente'), 'columna' => 'id'],
+            // **Los antecedentes del paciente** (A4b de PLAN-MOVIL.md). Son del paciente y no de la
+            // consulta: se llavean por `numhistoria` + `codeantecedente` y no tienen columna de consulta,
+            // así que bajan con el mismo filtro doble que `consultas` (por número de historia y por
+            // `reg_medico`, porque el número es por médico) más la ventana del volcado. La columna del
+            // número es `numhistoria` (la tabla del legado lo llama así; no hace falta preguntarla).
+            'antece_paciente' => ['consulta' => AntecePaciente::whereIn('numhistoria', $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
             // Catálogos que esos documentos necesitan para imprimirse: la descripción del diagnóstico
             // (constancia), el médico al que se refiere y su especialidad (referencia).
             'diagnosticos' => ['consulta' => Diagnostico::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'doctores' => ['consulta' => Doctor::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'especial' => ['consulta' => Especialidad::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // **El catálogo de antecedentes y el de sus tipos** (A4b): el teléfono los necesita para
+            // ofrecer el antecedente que se agrega y para agrupar los del paciente igual que la web. Los
+            // dos son por médico —el catálogo es de su consultorio— y bajan enteros (los repetidos del
+            // legado no importan acá: `AntecedentesDelPaciente` es quien deduplica al mostrarlos).
+            'antecedentes' => ['consulta' => Antecedente::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            'tipo_antecedente' => ['consulta' => TipoAntecedente::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Dónde atiende el médico: los consultorios con sus bloques de trabajo. Es lo que le
             // permite al app saber en qué jornada cae una cita, con qué modalidad se trabaja en esa
             // sede y cuándo se llegó al cupo — todo se calcula con la hora, sin guardar la office en
@@ -523,6 +552,16 @@ class SyncAppDataController extends Controller
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")->get(),
             'diagnostico_paciente' => DiagnosticoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('diagnostico_paciente'), $numHistoria)->get(),
+            // La evaluación física de la consulta (A4a de PLAN-MOVIL.md). Se sumó acá porque este pedido
+            // arma su payload a mano y no pasa por el plan del volcado: sin ella, la ficha de un paciente
+            // fuera de la ventana llegaba con la consulta y sus récipes pero **sin el examen**, y el médico
+            // no podía ver lo que ya estaba cargado.
+            'examen_fisico_nuevo' => ExamenFisico::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('examen_fisico_nuevo'), $numHistoria)->get(),
+            // Y los antecedentes del paciente (son del paciente, no de la consulta: se llavean sólo por
+            // `numhistoria`). Viajan con el mismo filtro por registro y por número que el resto.
+            'antece_paciente' => AntecePaciente::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('antece_paciente'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
         ];
 
@@ -607,6 +646,17 @@ class SyncAppDataController extends Controller
             'referencia' => $datos['referencia'] ?? $vacio,
             'informe' => $datos['informe'] ?? $vacio,
             'diagnostico_paciente' => $datos['diagnostico_paciente'] ?? $vacio,
+            // La evaluación física de la consulta (A2 de PLAN-MOVIL.md). El delta la arma solo desde
+            // `$plan`, pero la clave tiene que estar siempre: el app recorre una lista fija de tablas.
+            'examen_fisico_nuevo' => $datos['examen_fisico_nuevo'] ?? $vacio,
+            // Los antecedentes del paciente (A4a/A4b). El delta y el volcado los arman desde `$plan`; el
+            // pedido puntual de una ficha (`volcado_paciente`) los trae en su payload armado a mano. La
+            // clave tiene que existir siempre por el mismo motivo que las de arriba.
+            'antece_paciente' => $datos['antece_paciente'] ?? $vacio,
+            // Los dos catálogos del antecedente (A4b de PLAN-MOVIL.md): de dónde sale el nombre que se
+            // agrega y de dónde el de su tipo/agrupación.
+            'antecedentes' => $datos['antecedentes'] ?? $vacio,
+            'tipo_antecedente' => $datos['tipo_antecedente'] ?? $vacio,
             'diagnosticos' => $datos['diagnosticos'] ?? $vacio,
             'doctores' => $datos['doctores'] ?? $vacio,
             'especial' => $datos['especial'] ?? $vacio,
@@ -731,6 +781,17 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\QuitarMotivoDeLaConsulta::class),
             // Y la regla del récipe (el número, la cabecera y las filas), desde WEB-5.1.
             app(\App\Actions\Consulta\GuardarRecipe::class),
+            // Y la de la evaluación física (la clave del legado `(historia, consulta)`, la fila que se
+            // crea si falta y el "sólo lo que cambió"), desde A3 de PLAN-MOVIL.md.
+            app(\App\Actions\Consulta\GuardarEvaluacionFisica::class),
+            // El mapa del dato de esa evaluación, para devolverle al teléfono el id real de la fila.
+            app(\App\Clinica\Consulta\ExamenFisicoDeLaConsulta::class),
+            // Y el alta de un diagnóstico de la consulta (A4a), con el mapa del dato que valida el código
+            // contra el catálogo `diagnosticos` del médico.
+            app(\App\Actions\Consulta\AgregarDiagnosticoALaConsulta::class),
+            // Y el alta de un antecedente del paciente (A4b), con el mismo mapa del dato de la sección
+            // —`AntecedentesDelPaciente`— validando el código contra el catálogo `antecedentes` del médico.
+            app(\App\Actions\Pacientes\AgregarAntecedenteAlPaciente::class),
         );
         $creadosAntes = count($creados);
 
@@ -746,8 +807,9 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `DELETABLE_TABLES`: esa lista
-            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`).
+            // Quitar un motivo de la consulta (Paso 18.B2). Va aparte de `TABLAS_BORRABLES`: esa lista
+            // es de las tablas con id local propio en el teléfono (`cola`, `pacientes`) y de las
+            // clínicas que se dan de baja por su id (`diagnostico_paciente`, `antece_paciente`).
             if ($operation === 'deleted' && $table === 'motivo_consulta_paciente') {
                 if ($recordId) {
                     $clinicas->quitarMotivoDeConsulta((int) $recordId);
@@ -772,17 +834,21 @@ class SyncAppDataController extends Controller
                 continue;
             }
 
-            if (!in_array($table, SyncAppDataRequest::DELETABLE_TABLES, true) || !$recordId || !$operation) {
+            // Qué se puede editar y qué se puede borrar son **dos listas distintas** desde A1
+            // (PLAN-MOVIL.md): una consulta y un examen físico se editan pero no se borran.
+            $tablasPermitidas = $operation === 'deleted'
+                ? SyncAppDataRequest::TABLAS_BORRABLES
+                : SyncAppDataRequest::TABLAS_EDITABLES;
+
+            if (!in_array($table, $tablasPermitidas, true) || !$recordId || !$operation) {
                 continue;
             }
 
-            // Autorización: el registro tiene que pertenecer al tenant de este médico.
-            if ($table === 'cola') {
-                $pertenece = Cola::where('id', $recordId)->whereIn('reg_medico', $registrosMedicos)->exists();
-            } else {
-                $pertenece = in_array($recordId, $pacienteIdsDelMedico, true);
-            }
-            if (!$pertenece) {
+            // Autorización: la fila tiene que ser de este médico. Para las clínicas la resuelve **el
+            // `reg_medico` de la propia fila**, no el paciente: un diagnóstico de otro médico no se
+            // toca ni aunque el `nrohistoria` coincida (el número es por médico).
+            $fila = $this->filaDelMedico($table, (int) $recordId, $registrosMedicos, $pacienteIdsDelMedico);
+            if (!$fila) {
                 continue;
             }
 
@@ -790,7 +856,7 @@ class SyncAppDataController extends Controller
 
             if ($operation === 'deleted') {
                 if (!$yaEliminado) {
-                    $this->modelFor($table)::find($recordId)?->delete();
+                    $fila->delete();
                 }
                 continue;
             }
@@ -827,16 +893,16 @@ class SyncAppDataController extends Controller
                     continue;
                 }
 
-                $model = $this->modelFor($table)::find($recordId);
-                if (!$model) {
-                    continue;
-                }
+                $fila->{$column} = $valor;
+                $fila->save();
 
-                $model->{$column} = $valor;
-                $model->save();
-
+                // El rastro se escribe con el `reg_medico` **de la fila**: es el tenant de lo que se
+                // acaba de editar y el que después acota el delta del teléfono. En `pacientes` la fila
+                // no lo tiene (el paciente es uno solo para todos los médicos), así que sale del pivote.
                 SyncChange::create([
-                    'reg_medico' => $table === 'cola' ? $model->reg_medico : $this->regMedicoDePaciente($relaciones, $recordId),
+                    'reg_medico' => $table === 'pacientes'
+                        ? $this->regMedicoDePaciente($relaciones, (int) $recordId)
+                        : $fila->reg_medico,
                     'table_name' => $table,
                     'record_id' => $recordId,
                     'operation' => 'updated',
@@ -858,9 +924,10 @@ class SyncAppDataController extends Controller
     }
 
     /**
-     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, motivos de
-     * la consulta y récipes); el resto (ediciones, borrados, reordenamientos, citas nuevas)
-     * después, en el orden en que llegó.
+     * Creaciones primero y en orden de dependencia (pacientes, historias, consultas, y lo que cuelga de
+     * la consulta: motivos, récipes, la evaluación física y —desde A4a— el alta de un diagnóstico; y
+     * —desde A4b— el alta de un antecedente, que cuelga de la historia); el resto (ediciones, borrados,
+     * reordenamientos, citas nuevas) después, en el orden en que llegó.
      *
      * @param list<array> $changes @return list<array>
      */
@@ -868,7 +935,21 @@ class SyncAppDataController extends Controller
     {
         $prioridad = [
             'pacientes' => 0, 'historias' => 1, 'consultas' => 2, 'motivos_consulta' => 3,
-            'motivo_consulta_paciente' => 4, 'recipes' => 4,
+            // Todo lo que **cuelga de la consulta** va después de ella: un motivo, un récipe y —desde A3
+            // de PLAN-MOVIL.md— la evaluación física. La evaluación física comparte prioridad con las
+            // otras dos porque no depende de ellas (las tres dependen sólo de la consulta), y ponerla en 4
+            // es lo que hace que una consulta creada en el mismo lote ya tenga número cuando se busca su
+            // fila; con la prioridad del "resto" el examen se rechazaría por no encontrar la consulta.
+            'motivo_consulta_paciente' => 4, 'recipes' => 4, 'examen_fisico_nuevo' => 4,
+            // Y el alta de un diagnóstico de la consulta (A4a): cuelga de `consultas` igual que las otras
+            // tres y no depende de ellas, así que comparte el 4 — lo que importa es que vaya **después** de
+            // la consulta, porque si la consulta se creó en este mismo lote necesita su número primero.
+            'diagnostico_paciente' => 4,
+            // El alta de un **antecedente del paciente** (A4b) no cuelga de la consulta sino de la
+            // **historia**: con 3 queda después de `historias` y de `consultas`, así una historia llenada en
+            // este mismo lote (`historia_temp_id`) ya tiene número cuando se resuelve. No depende de nada
+            // más, así que comparte el grupo con los motivos del catálogo.
+            'antece_paciente' => 3,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
@@ -1229,9 +1310,49 @@ class SyncAppDataController extends Controller
         return $relaciones->firstWhere('paciente_id', $pacienteId)?->reg_medico;
     }
 
+    /**
+     * La fila que el teléfono quiere tocar, si es de este médico; `null` si no existe o es ajena.
+     *
+     * Devuelve el modelo y no un booleano porque el que llama necesita lo mismo para escribir que para
+     * el rastro (`sync_changes.reg_medico`): así la comprobación de tenant y el `find` son una sola
+     * consulta, y no hay forma de autorizar una fila y terminar escribiendo otra.
+     *
+     * La regla es la misma para todas las tablas clínicas: **el `reg_medico` de la fila** tiene que ser
+     * uno de los registros del médico autenticado. `pacientes` es la excepción, porque la ficha es una
+     * sola para todos los médicos y el tenant está en el pivote `medico_pacientes`.
+     *
+     * @param  list<string>  $registrosMedicos
+     * @param  list<int>  $pacienteIdsDelMedico
+     */
+    private function filaDelMedico(string $table, int $recordId, array $registrosMedicos, array $pacienteIdsDelMedico)
+    {
+        $fila = $this->modelFor($table)::find($recordId);
+
+        if (!$fila) {
+            return null;
+        }
+
+        if ($table === 'pacientes') {
+            return in_array($recordId, $pacienteIdsDelMedico, true) ? $fila : null;
+        }
+
+        return in_array((string) $fila->reg_medico, $registrosMedicos, true) ? $fila : null;
+    }
+
+    /**
+     * El modelo de cada tabla que el sync escribe por fila. Es la tabla de `TABLAS_EDITABLES` y
+     * `TABLAS_BORRABLES` mapeada a su modelo: una tabla nueva en esas listas necesita su línea acá.
+     */
     private function modelFor(string $table): string
     {
-        return $table === 'cola' ? Cola::class : Paciente::class;
+        return [
+            'cola' => Cola::class,
+            'pacientes' => Paciente::class,
+            'consultas' => Consulta::class,
+            'examen_fisico_nuevo' => ExamenFisico::class,
+            'diagnostico_paciente' => DiagnosticoPaciente::class,
+            'antece_paciente' => AntecePaciente::class,
+        ][$table];
     }
 
     private function deltaQuery($query, ?Carbon $since)

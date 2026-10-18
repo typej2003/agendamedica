@@ -63,7 +63,7 @@ class HistoriaPediatricaController extends Controller
         return view('clinica.historia.pediatrica', ['vm' => new HistoriaPediatricaVista(
             new CarnetDeVacunacionVista($membretes->de($contexto['medico']), $ficha, $datos['aplicadas'], $armado, null, $hoy, $volver),
             new FamiliaDePacienteVista($datosDeLaFamilia, fn (int $id) => route('clinica.pacientes.ver', $id), null, true),
-            new SeccionDeAntecedentesVista($historia === null ? collect() : $antecedentes->delPaciente($regMedico, $ficha->numhistoria)),
+            $historia === null ? collect() : $antecedentes->delPaciente($regMedico, $ficha->numhistoria),
             new CrecimientoVista(
                 $ficha,
                 $historia === null ? collect() : $crecimiento->de($regMedico, $historia),

@@ -25,8 +25,9 @@
         @if ($vm->conOpciones())
             <button type="button" class="boton-impresion boton-impresion-secundario" data-abrir-opciones>Opciones</button>
         @endif
-        {{-- Las ecos con imágenes: un solo «Imprimir» y esta casilla decide si sale la hoja de las imágenes (WEB-11.13). --}}
-        @if ($vm->conImagenesDeEco())
+        {{-- Las hojas con imágenes aparte: un solo «Imprimir» y esta casilla decide si salen. Son las fotos de un eco
+             (WEB-11.13) y los dibujos del cuello uterino de la colposcopía (A-13), por el mismo camino. --}}
+        @if ($vm->conImagenes())
             <label class="barra-impresion-casilla">
                 <input type="checkbox" checked data-incluir-imagenes> Incluir imágenes
             </label>
@@ -40,6 +41,15 @@
         @foreach ($vm->hojas() as $hoja)
             @if (($hoja['tipo'] ?? '') === 'informe')
                 @include('clinica.imprimir._informe-eco', ['hoja' => $hoja, 'membrete' => $vm->membrete()])
+                @continue
+            @endif
+
+            {{-- La hoja aparte de las imágenes de un documento en mitades (A-13, los dibujos del cuello uterino). --}}
+            @if (($hoja['tipo'] ?? '') === 'imagenes')
+                @include('clinica.imprimir._hoja-imagenes', [
+                    'documento' => $hoja['documento'],
+                    'imagenes' => $hoja['documento']->imagenes,
+                ])
                 @continue
             @endif
 

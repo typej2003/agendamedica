@@ -3,6 +3,8 @@
 namespace App\Clinica\Vistas;
 
 use App\Clinica\Catalogos\CatalogosDisponibles;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
+use App\Clinica\Listados\ListadosDisponibles;
 use App\Support\IconoModulo;
 use App\Support\LogotipoEspecialidad;
 use Illuminate\Support\Collection;
@@ -27,6 +29,12 @@ final class ArmazonVista
         private bool $esAdministrador,
         private ?string $rutaActual,
         private bool $trabajaLaConsulta = false,
+        // El `?listado=` de la petición (WEB-6.8): «Listados» es un grupo y sus hijos se marcan por ruta **y** por la
+        // clave del reporte, porque las tres pantallas comparten la misma ruta. Fuera de los listados no se usa.
+        private ?string $listadoActual = null,
+        // La consulta que se está atendiendo (revisión de Alexander): `['id' => int, 'seccion' => ?string]`. Sólo se
+        // usa en la ruta de la consulta, donde el shell le pasa el ítem abierto al grupo «Consulta» del menú.
+        private ?array $consultaEnCurso = null,
     ) {
     }
 
@@ -103,8 +111,9 @@ final class ArmazonVista
     /**
      * El menú lateral: Inicio y un ítem por módulo. Un módulo declarado sin pantalla se muestra apagado.
      *
-     * Un ítem con `hijos` es un **grupo plegable** (hoy sólo "Catálogos"): no navega por sí mismo, se abre solo cuando
-     * uno de sus hijos es el activo y marca `activo` al padre.
+     * Un ítem con `hijos` es un **grupo plegable** (hoy "Catálogos", "Listados", "Configuración" y —dentro de una
+     * consulta— "Consulta"): no navega por sí mismo, se abre solo cuando uno de sus hijos es el activo y marca
+     * `activo` al padre.
      *
      * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, hijos?:array<int,array{texto:string, icono:string, url:string, activo:bool}>}>
      */
@@ -116,6 +125,27 @@ final class ArmazonVista
             'url'    => route('clinica.inicio'),
             'activo' => $this->rutaActual === 'clinica.inicio',
         ]];
+
+        // **Los ítems de la consulta** (revisión de Alexander): la tarjeta «Secciones de la consulta» se fue de la
+        // pantalla y sus 14 ítems viven en este grupo plegable, con los mismos nombres y su icono, **sólo dentro de
+        // una consulta** y sólo para quien la trabaja (la consulta es del médico: `role:Root|Medico`). Afuera de la
+        // consulta el menú queda como siempre. El catálogo y los enlaces salen de `SeccionesDeLaConsulta`, la misma
+        // fuente que usa el shell: agregar una sección es una línea, y el ítem sin pantalla (la pre-factura) se
+        // dibuja deshabilitado en vez de ofrecer un enlace muerto.
+        if ($this->tieneContexto() && $this->trabajaLaConsulta && $this->enLaConsulta()) {
+            $consultaId = (int) ($this->consultaEnCurso['id'] ?? 0);
+            $seccion = $this->consultaEnCurso['seccion'] ?? null;
+
+            if ($consultaId > 0) {
+                $menu[] = [
+                    'texto'  => 'Consulta',
+                    'icono'  => 'bi-journal-medical',
+                    'url'    => null,
+                    'activo' => true,
+                    'hijos'  => SeccionesDeLaConsulta::submenu($consultaId, is_string($seccion) ? $seccion : null, $this->contexto['specialty']->slug ?? null),
+                ];
+            }
+        }
 
         foreach ($this->modulos as $modulo) {
             $ruta = 'clinica.' . $modulo->slug;
@@ -129,17 +159,22 @@ final class ArmazonVista
             ];
         }
 
-        // Los **listados clínicos entre fechas** (WEB-6.8: embarazos / partos, y después los otros dos de la
-        // tarea) son reportes del médico: la secretaría recibe 403 en la ruta, así que la entrada sólo se
-        // ofrece a quien puede abrirlos —la misma regla que «Catálogos» y «Configuración»—.
-        // Va como ítem propio y no como grupo plegable porque hoy hay un solo listado; el submenú de
-        // «Catálogos» sigue siendo el único `<details class="nav-grupo">` del menú.
-        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+        // Los **listados clínicos entre fechas** (WEB-6.8: embarazos / partos, pacientes y consultas por rango) son
+        // reportes del médico: la secretaría recibe 403 en la ruta, así que la entrada sólo se ofrece a quien puede
+        // abrirlos —la misma regla que «Catálogos» y «Configuración»—.
+        // Desde la revisión de Alexander es un **grupo plegable** con un hijo por reporte, como «Catálogos»: los tres
+        // comparten la misma ruta y se eligen con `?listado=`, así que el activo lo decide `ListadosDisponibles`.
+        $listados = $this->tieneContexto() && $this->trabajaLaConsulta
+            ? ListadosDisponibles::submenu($this->rutaActual, $this->listadoActual)
+            : [];
+
+        if ($listados !== []) {
             $menu[] = [
                 'texto'  => 'Listados',
                 'icono'  => 'bi-clipboard2-data',
-                'url'    => Route::has('clinica.listados') ? route('clinica.listados') : null,
-                'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.listados'),
+                'url'    => null,
+                'activo' => in_array(true, array_column($listados, 'activo'), true),
+                'hijos'  => $listados,
             ];
         }
 
@@ -160,17 +195,22 @@ final class ArmazonVista
             ];
         }
 
-        // «Configuración» (WEB-8.2) es un grupo para lo que el médico ajusta de su propio consultorio: el formato de impresión (membrete, logo,
-        // firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios (WEB-8.5: su
-        // secretaria) y la bitácora de cambios (WEB-8.5). Como los catálogos, es del médico y no de la secretaría.
-        if ($this->tieneContexto() && $this->trabajaLaConsulta) {
+        // «Configuración» (WEB-8.2) es un grupo para lo que se ajusta del propio consultorio: el formato de impresión (membrete,
+        // logo, firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios
+        // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5).
+        //
+        // **No es un grupo sólo del médico** (revisión de Alexander, A-10): la duración de la cita y los bloques de horario viven
+        // en `clinica.consultorios` y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
+        // secretaría (es ella la que carga los horarios y marca las ausencias en la vida real). Por eso el grupo se arma con lo
+        // que cada rol **puede abrir** —las dos primeras entradas, las del consultorio y la agenda, para los dos; el resto, que
+        // responde 403 a la secretaría, sólo para el médico—, en vez de esconderlo entero. La barra superior conserva
+        // «Consultorios» como atajo.
+        if ($this->tieneContexto()) {
             $hijos = [];
 
             foreach ([
-                ['clinica.formato', 'Formato de impresión', 'bi-printer'],
-                ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
-                ['clinica.usuarios', 'Usuarios', 'bi-people'],
-                ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
+                ['clinica.consultorios', 'Consultorios y horarios', 'bi-clock-history'],
+                ['clinica.agenda.no-laborables', 'Días no laborables', 'bi-calendar-x'],
             ] as [$ruta, $texto, $icono]) {
                 $hijos[] = [
                     'texto'  => $texto,
@@ -180,6 +220,21 @@ final class ArmazonVista
                 ];
             }
 
+            if ($this->trabajaLaConsulta) {
+                foreach ([
+                    ['clinica.formato', 'Formato de impresión', 'bi-printer'],
+                    ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
+                    ['clinica.usuarios', 'Usuarios', 'bi-people'],
+                    ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
+                ] as [$ruta, $texto, $icono]) {
+                    $hijos[] = [
+                        'texto'  => $texto,
+                        'icono'  => $icono,
+                        'url'    => route($ruta),
+                        'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, $ruta),
+                    ];
+                }
+            }
 
             $menu[] = [
                 'texto'  => 'Configuración',
@@ -201,5 +256,31 @@ final class ArmazonVista
         }
 
         return $menu;
+    }
+
+    /**
+     * **La barra de contexto no se pinta dentro de la consulta** (A-11, decisión del usuario). La consulta es una
+     * pantalla de trabajo: el médico ya sabe con quién, en qué sede y con qué registro está, y la fila de arriba sólo
+     * le robaba alto. Lo que **no** se pinta es la barra superior completa (las fichas del médico, «Sedes»,
+     * «Consultorios», «Cambiar consultorio» y el menú de la cuenta): dentro de la consulta no se cambia de consultorio
+     * ni se cierra sesión, y no queda ningún enlace ni atajo a esa pantalla. Al salir a la agenda la barra vuelve. El
+     * botón del menú lateral en el celular sigue existiendo, porque sin él no habría cómo navegar en una pantalla
+     * táctil (lo pinta `clinica/layout`).
+     */
+    public function muestraLaBarraDeContexto(): bool
+    {
+        return ! $this->enLaConsulta();
+    }
+
+    /**
+     * ¿La petición es la pantalla de una consulta (o una de sus secciones)? Las secciones **no son rutas**: comparten
+     * la del shell y viajan en `?seccion=`, así que la ruta `clinica.consulta` alcanza; el `clinica.consulta.` cubre las
+     * acciones que vuelven a ella. El prefijo se compara con el punto a propósito: `clinica.consultorios` empieza con
+     * las mismas letras y **no** es una consulta.
+     */
+    private function enLaConsulta(): bool
+    {
+        return $this->rutaActual !== null
+            && ($this->rutaActual === 'clinica.consulta' || str_starts_with($this->rutaActual, 'clinica.consulta.'));
     }
 }

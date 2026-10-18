@@ -34,14 +34,14 @@
                 </x-ui.menu>
             @endif
 
-            <a class="btn btn-primary" href="{{ $vm->urlNueva() }}">
+            <a class="btn btn-primary" href="{{ $vm->urlNueva() }}" data-tour="agenda-nueva">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva cita
             </a>
         </x-slot>
     </x-ui.page-head>
 
     {{-- Barra de la agenda: dónde estoy (anterior / hoy / siguiente + título), la vista y los filtros. --}}
-    <div class="agenda-barra">
+    <div class="agenda-barra" data-tour="agenda-barra">
         <div class="agenda-navegacion">
             <div class="btn-group" role="group" aria-label="Navegación">
                 <a class="btn btn-outline-secondary" href="{{ $vm->urlAnterior() }}"
@@ -115,11 +115,14 @@
 
     {{-- Un solo diálogo de cobro y uno de recordatorio para toda la página: el botón de cada cita los
          llena con sus datos (`public/js/clinica/agenda.js`). El de "Atender" (WEB-4.1) abre la consulta
-         del día y es el único que no pide confirmación con `window.confirm`: ofrece las dos formas de
-         abrirla (la de hoy o una nueva) y avisa que la cita queda atendida. --}}
+         del día y es el único que no pide confirmación con `window.confirm`: con la cita sin atender ofrece
+         abrirla y marcarla atendida; con la cita ya atendida, abrirla (y numerar la siguiente). **Es sólo del
+         médico** (WEB-4.9): a la secretaría ni el botón ni el diálogo se le pintan. --}}
     @include('clinica.agenda._dialogo-cobro')
     @include('clinica.agenda._dialogo-recordatorio', ['canales' => $vm->canales()])
-    @include('clinica.agenda._dialogo-atender')
+    @if ($vm->puedeAtender())
+        @include('clinica.agenda._dialogo-atender')
+    @endif
 @endsection
 
 @section('scripts')

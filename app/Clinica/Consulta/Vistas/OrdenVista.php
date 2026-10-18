@@ -118,6 +118,12 @@ final class OrdenVista
         return $this->esPareja() ? 'Exámenes de laboratorio de la pareja' : ($this->esLaboratorio() ? 'Orden de exámenes de laboratorio' : 'Solicitud de estudios');
     }
 
+    /** El título de la columna derecha del editor: el catálogo con el que se llena la orden. */
+    public function tituloDelCatalogo(): string
+    {
+        return 'Agregar ' . $this->cosas();
+    }
+
     public function icono(): string
     {
         return $this->esLaboratorio() ? 'bi-droplet' : 'bi-image';
@@ -310,8 +316,8 @@ final class OrdenVista
     public function vacio(): array
     {
         return $this->esLaboratorio()
-            ? ['icono' => 'bi-droplet', 'titulo' => 'Todavía no hay exámenes en la orden', 'texto' => 'Búscalos en el catálogo de abajo o agrega una rutina completa.']
-            : ['icono' => 'bi-image', 'titulo' => 'Todavía no hay estudios en la solicitud', 'texto' => 'Búscalos en el catálogo de abajo.'];
+            ? ['icono' => 'bi-droplet', 'titulo' => 'Todavía no hay exámenes en la orden', 'texto' => 'Búscalos en tu catálogo o agrega una rutina completa.']
+            : ['icono' => 'bi-image', 'titulo' => 'Todavía no hay estudios en la solicitud', 'texto' => 'Búscalos en tu catálogo.'];
     }
 
     /** El estado vacío cuando el médico no tiene catálogo (no hay nada que buscar). */

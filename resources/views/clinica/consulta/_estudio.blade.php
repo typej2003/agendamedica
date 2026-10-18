@@ -12,7 +12,7 @@
                          etiqueta="Estudios ecográficos" />
     @endif
 
-    @include($seccion->parcial(), ['vm' => $seccion->estudio()])
+    @include($seccion->parcial(), ['vm' => $seccion->estudio(), 'plantillas' => $seccion->plantillas()])
 
     {{-- Las imágenes del estudio (WEB-11.12): se suben **una a una y sin límite**, etiquetadas para este tipo de estudio (la etiqueta que el
          escritorio usa para sus grillas). --}}

@@ -17,19 +17,9 @@
         </x-slot>
     </x-ui.page-head>
 
-    {{-- El selector de listados: la entrada del menú es una sola, así que los listados se cambian acá. --}}
-    @php
-        $claveActual = $vm->claveDelListado();
-        $listados = collect(\App\Clinica\Listados\ListadosDisponibles::claves())->map(fn ($clave) => [
-            'texto'  => \App\Clinica\Listados\ListadosDisponibles::titulo($clave),
-            'url'    => route('clinica.listados', ['listado' => $clave]),
-            'activa' => $clave === $claveActual,
-        ])->all();
-    @endphp
-    <x-ui.segmentado class="mb-3" :opciones="$listados" etiqueta="Listados" />
-
-    {{-- Cada listado trae sus filtros y su tabla: el de pacientes por rango vive en su parcial; el de
-         embarazos / partos, que es el de por defecto, sigue acá abajo. --}}
+    {{-- Los listados se eligen en el **menú lateral** (revisión de Alexander): «Listados» es un grupo plegable con un
+         hijo por reporte, así que la pantalla no repite el selector arriba. Cada listado trae sus filtros y su tabla:
+         el de pacientes por rango vive en su parcial; el de embarazos / partos, que es el de por defecto, sigue acá abajo. --}}
     @if ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::PACIENTES)
         @include('clinica.listados._pacientes')
     @elseif ($vm->claveDelListado() === \App\Clinica\Listados\ListadosDisponibles::CONSULTAS)

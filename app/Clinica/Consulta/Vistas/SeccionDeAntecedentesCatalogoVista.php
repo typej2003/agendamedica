@@ -30,6 +30,10 @@ use Illuminate\Support\Collection;
  * se recarga con el filtro y "Agregar" es un enlace que vuelve con ese antecedente **tildado como
  * pendiente**. Así la sección entera funciona sin JavaScript y el agregado no se guarda hasta que el médico
  * aprieta el botón de la tarjeta de arriba, que es la única acción que escribe.
+ *
+ * Desde A-06 (revisión de Alexander) el catálogo es la **columna derecha** de la sección, su buscador está
+ * **siempre a la vista** (no detrás de un botón) y el filtro por tipo es el **chip elegido**, que comparten las
+ * dos columnas: acá no hay `<select>` ni «Todos los tipos», y el catálogo que se lista es el de ese tipo.
  */
 final class SeccionDeAntecedentesCatalogoVista
 {
@@ -64,6 +68,14 @@ final class SeccionDeAntecedentesCatalogoVista
     public function urlAgregar(string $codigo): string
     {
         $query = ['seccion=' . ConsultaShellVista::SECCION_ANTECEDENTES];
+
+        // El filtro no se pierde al agregar (A-06): el tipo elegido y lo buscado vuelven con la sección.
+        if ($this->tipo !== '') {
+            $query[] = 'tipo=' . urlencode($this->tipo);
+        }
+        if ($this->buscar !== '') {
+            $query[] = 'buscar=' . urlencode($this->buscar);
+        }
 
         foreach (array_merge($this->pendientesDelBuscador(), [$codigo]) as $pendiente) {
             $query[] = 'agregar[]=' . urlencode($pendiente);
@@ -102,6 +114,21 @@ final class SeccionDeAntecedentesCatalogoVista
     public function buscar(): string
     {
         return $this->buscar;
+    }
+
+    /**
+     * La URL del "Limpiar" del buscador: esta misma sección **con el tipo elegido** (A-06). Sin el `tipo` la
+     * pantalla volvería al tipo por defecto, que no es lo que el médico estaba mirando.
+     */
+    public function urlLimpiar(): string
+    {
+        $query = ['seccion=' . ConsultaShellVista::SECCION_ANTECEDENTES];
+
+        if ($this->tipo !== '') {
+            $query[] = 'tipo=' . urlencode($this->tipo);
+        }
+
+        return $this->urlAgregar . '?' . implode('&', $query);
     }
 
     public function tipo(): string
@@ -169,6 +196,35 @@ final class SeccionDeAntecedentesCatalogoVista
         return $this->tipos;
     }
 
+    /** El nombre del tipo elegido, para los textos vacíos y la ayuda del alta. `null` si no hay catálogo. */
+    public function nombreDelTipo(): ?string
+    {
+        $tipo = $this->tipoElegido();
+
+        return $tipo['nombre'] ?? null;
+    }
+
+    /**
+     * El tipo que viene elegido en el alta del catálogo: el chip activo (A-06), para que lo que se cree caiga
+     * en el tipo que se está mirando. Con un `old()` manda lo que el médico eligió en el POST que falló.
+     */
+    public function tipoDelAlta(): string
+    {
+        return (string) old('tipo', $this->tipo);
+    }
+
+    /** @return array{codigo:string, nombre:string}|null */
+    private function tipoElegido(): ?array
+    {
+        foreach ($this->tipos as $tipo) {
+            if ((string) $tipo['codigo'] === $this->tipo) {
+                return $tipo;
+            }
+        }
+
+        return null;
+    }
+
     /** El tope del detalle de una fila, para el `maxlength` del control (la columna es un `text`). */
     public function limiteDetalle(): int
     {
@@ -195,15 +251,34 @@ final class SeccionDeAntecedentesCatalogoVista
             . 'correlativo de cuatro dígitos del escritorio) y se guarda en mayúsculas. Necesita conexión.';
     }
 
-    /** El estado vacío del buscador, con el nombre que falta en el catálogo. */
+    /**
+     * El estado vacío del buscador. Distingue lo que **no tiene el catálogo de ese tipo** (A-06: sin «todos»,
+     * el catálogo de la columna es el del chip elegido) de lo que no coincide con la búsqueda.
+     */
     public function sinResultados(): array
     {
+        if ($this->buscar !== '') {
+            return [
+                'icono' => 'bi-search',
+                'titulo' => 'Tu catálogo no tiene antecedentes que coincidan',
+                'texto' => 'Prueba con otra palabra o créalo abajo: se agrega a tu catálogo y al paciente.',
+            ];
+        }
+
+        $delTipo = $this->nombreDelTipo();
+
+        if ($delTipo === null) {
+            return [
+                'icono' => 'bi-search',
+                'titulo' => 'Tu catálogo no tiene antecedentes que coincidan',
+                'texto' => 'Tu catálogo está vacío: crea el primero abajo.',
+            ];
+        }
+
         return [
             'icono' => 'bi-search',
-            'titulo' => 'Tu catálogo no tiene antecedentes que coincidan',
-            'texto' => $this->buscar === ''
-                ? 'Tu catálogo está vacío: crea el primero abajo.'
-                : 'Prueba con otra palabra o créalo abajo: se agrega a tu catálogo y al paciente.',
+            'titulo' => 'Tu catálogo no tiene antecedentes de ' . $delTipo,
+            'texto' => 'Crea el primero abajo —queda en este tipo— o elige otro de los tipos de arriba.',
         ];
     }
 }

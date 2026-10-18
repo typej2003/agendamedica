@@ -7,9 +7,11 @@ use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\TextoDelExamen;
+use App\Clinica\Consulta\TipoDeAntecedentes;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DiagnosticosDeLaConsulta;
+use App\Clinica\Consulta\DibujosDeColposcopiaDeLaConsulta;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -30,6 +32,7 @@ use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
+use App\Clinica\Consulta\PlantillasDelEstudio;
 use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
@@ -54,6 +57,7 @@ use App\Clinica\Consulta\Vistas\EcoObstetricoTerceroVista;
 use App\Clinica\Consulta\Vistas\EnfermedadActualVista;
 use App\Clinica\Consulta\ResumenesAnteriores;
 use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
+use App\Clinica\Consulta\Vistas\DibujosDeColposcopiaVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -220,6 +224,13 @@ class ConsultaController extends Controller
                 FechaDelConsultorio::hoy()->toDateString(),
             )
             : null;
+        // El grupo «Consulta» del menú lateral (revisión de Alexander): el armazón necesita saber qué consulta se está
+        // atendiendo y qué sección está abierta para armar sus ítems y marcar el activo. Se comparte acá —y no se lee
+        // de la ruta en el compositor— porque el `id` del paciente y la sección ya están resueltos en este método.
+        view()->share('consulta_en_curso', [
+            'id' => (int) $consulta->id,
+            'seccion' => $seccion,
+        ]);
 
         return view('clinica.consulta.ver', [
             'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
@@ -269,6 +280,8 @@ class ConsultaController extends Controller
             // cuerpo, y por eso viajan aparte.
             'catalogo' => $this->catalogoDeAntecedentes($seccion, $consulta, $contexto['reg_medico'], $antecedentes),
             'imagenes' => $this->imagenesDeLaConsulta($seccion, $consulta, $contexto['reg_medico'], $imagenes),
+            // La tarjeta que agrega la colposcopía (A-13): sus dos lienzos del cuello uterino, con su base y su trazo.
+            'dibujos' => $this->dibujosDeLaColposcopia($seccion, (string) request()->query('pestana', ''), $consulta),
         ]);
     }
 
@@ -534,6 +547,12 @@ class ConsultaController extends Controller
                 'tipo' => $clave,
             ]), $this->alcance()->tiposDeEstudioOcultos());
 
+            // Las plantillas de texto del estudio (revisión de Alexander, 2026-10-17): el tipo de `formato_print`
+            // que el escritorio usa en esa ventana y la columna del informe a la que se copian. El
+            // ecocardiograma fetal no tiene plantillas en el escritorio, así que `de()` devuelve `null` y ese
+            // estudio no ofrece el botón (ver `PlantillasDelEstudio`).
+            $plantillas = PlantillasDelEstudio::de($regMedico, $tipo);
+
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
             if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
@@ -554,6 +573,7 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -573,6 +593,7 @@ class ConsultaController extends Controller
                         null,
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -597,6 +618,7 @@ class ConsultaController extends Controller
                         (array) old(),
                         $guardado,
                     ),
+                    $plantillas,
                 );
             }
 
@@ -618,6 +640,7 @@ class ConsultaController extends Controller
                             ->all(),
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -641,6 +664,7 @@ class ConsultaController extends Controller
                             ->all(),
                         (array) old(),
                     ),
+                    $plantillas,
                 );
             }
 
@@ -672,6 +696,7 @@ class ConsultaController extends Controller
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
                 ),
+                $plantillas,
             );
         }
 
@@ -783,19 +808,21 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_ANTECEDENTES) {
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
-
-            // Pediatría (WEB-12.3): las siete categorías del escritorio como chips, con el nombre que cada médico les da. Ginecología no cambia.
-            $esPediatria = $this->alcance()->esPediatria();
+            // Con el nombre que cada médico les da (WEB-12.3: las siete categorías de pediatría; ginecología no cambia).
+            $tipos = $antecedentes->tipos($regMedico);
 
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
+                $tipos,
+                // El chip elegido (A-06): el `?tipo=` de la pantalla, resuelto con el mismo criterio que la
+                // columna del catálogo, para que las dos columnas no puedan mostrar tipos distintos.
+                TipoDeAntecedentes::elegido((string) request()->query('tipo', ''), $delPaciente, $tipos),
                 route('clinica.consulta.antecedentes.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
-                $esPediatria ? $antecedentes->tipos($regMedico) : [],
-                $esPediatria ? trim((string) request()->query('tipo', '')) : '',
-                fn (string $tipo) => route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES] + ($tipo === '' ? [] : ['tipo' => $tipo])),
+                // Lo que el buscador dejó tildado: los chips lo conservan en su URL.
+                array_values(array_filter((array) request()->query('agregar', []), 'is_string')),
             );
         }
 
@@ -1353,6 +1380,25 @@ class ConsultaController extends Controller
     }
 
     /**
+     * La tarjeta de los **lienzos del cuello uterino** de la colposcopía (A-13), o `null` si la solapa que se está
+     * mirando no es la colposcopía. Las dos variantes se leen de una vez y el ViewModel recibe el estado ya resuelto
+     * (la base elegida y si hay trazo), sin consultar la base.
+     */
+    private function dibujosDeLaColposcopia(string $seccion, string $pestana, Consulta $consulta): ?DibujosDeColposcopiaVista
+    {
+        if ($seccion !== ConsultaShellVista::SECCION_EVALUACION
+            || PestanasDelExamen::normalizar($pestana) !== PestanasDelExamen::COLPOSCOPIA) {
+            return null;
+        }
+
+        return new DibujosDeColposcopiaVista(
+            fn (string $variante) => route('clinica.consulta.colposcopia.ver', [$consulta->id, $variante]),
+            fn (string $variante) => route('clinica.consulta.colposcopia.guardar', [$consulta->id, $variante]),
+            app(DibujosDeColposcopiaDeLaConsulta::class)->estado($consulta),
+        );
+    }
+
+    /**
      * El ViewModel del **buscador del catálogo de antecedentes**, o `null` si la sección activa no es la de
      * antecedentes. Es una lectura propia —el catálogo del médico y los tipos, que no dependen de la
      * consulta— y por eso no viaja adentro del ViewModel de la sección: la vista grande son los
@@ -1369,13 +1415,16 @@ class ConsultaController extends Controller
         }
 
         $buscar = trim((string) request()->query('buscar', ''));
-        $tipo = trim((string) request()->query('tipo', ''));
         $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
+        $tipos = $antecedentes->tipos($regMedico);
+        $tipo = TipoDeAntecedentes::elegido((string) request()->query('tipo', ''), $delPaciente, $tipos);
 
         return new SeccionDeAntecedentesCatalogoVista(
+            // El catálogo del **tipo elegido** (A-06): el chip filtra las dos columnas, así que acá no hay
+            // «todos los tipos» ni un `?tipo=` distinto del de los antecedentes del paciente.
             $antecedentes->catalogo($regMedico, $buscar, $tipo),
             $delPaciente->pluck('codigo')->all(),
-            $antecedentes->tipos($regMedico),
+            $tipos,
             // La base del enlace "Agregar" de cada fila: vuelve a **esta misma sección** (el `?seccion=`
             // lo agrega el ViewModel) con el código tildado.
             route('clinica.consulta', [$consulta->id]),
@@ -1387,5 +1436,6 @@ class ConsultaController extends Controller
             // La base del `action` del guardado: el ViewModel le agrega la sección (para que la vuelta del
             // POST caiga acá) y los pendientes del buscador como query.
             route('clinica.consulta.antecedentes.guardar', $consulta->id),
-        );    }
+        );
+    }
 }

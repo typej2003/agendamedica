@@ -218,6 +218,9 @@ final class DocumentoImpreso
      * @param  ?string  $para  el destinatario que sale **en la cabecera, en una caja con borde** (`informe.para`
      *                         del resumen médico, WEB-5.3c); en los demás documentos va en la cabecera del
      *                         paciente y no se imprime: `null`
+     * @param  array<int,array{src:string, base?:?string, descripcion:?string}>  $imagenes  las imágenes que se
+     *                         imprimen **en una hoja aparte** si se marca «Incluir imágenes» (los dibujos de la
+     *                         colposcopía, A-13). Un documento con `informe` las lleva adentro del informe.
      */
     public function __construct(
         public readonly string $tipo,
@@ -230,13 +233,31 @@ final class DocumentoImpreso
         public readonly array $parrafos,
         public readonly ?string $para = null,
         public readonly ?InformeDeEco $informe = null,
+        public readonly array $imagenes = [],
     ) {
     }
 
     /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
     public function conInforme(InformeDeEco $informe): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe, $this->imagenes);
+    }
+
+    /**
+     * El mismo documento con sus **imágenes para la hoja aparte** (A-13, los dibujos de la colposcopía). La hoja del
+     * texto sigue siendo la de siempre (media hoja); las imágenes salen en una hoja A4 vertical, como las de un eco.
+     *
+     * @param  array<int,array{src:string, base?:?string, descripcion:?string}>  $imagenes
+     */
+    public function conImagenes(array $imagenes): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes);
+    }
+
+    /** ¿Tiene imágenes propias para la hoja aparte (los dibujos de la colposcopía)? */
+    public function conImagenesDeLaHoja(): bool
+    {
+        return $this->imagenes !== [];
     }
 
     /**

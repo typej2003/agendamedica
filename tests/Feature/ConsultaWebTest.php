@@ -374,6 +374,37 @@ class ConsultaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('Editar consulta');
+        // Y el formulario de la fila le avisa al diálogo que es el caso "ya atendida": `shell.js` muestra
+        // entonces «Consulta nueva» (revisión de Alexander, 2026-10-17).
+        $respuesta->assertSee('data-editar="1"', false);
+    }
+
+    /**
+     * Revisión de Alexander (2026-10-17): con la cita **sin atender** el diálogo de "Atender" ofrece
+     * **sólo** Cancelar y Atender. «Consulta nueva» —numerar la siguiente consulta de la historia— sólo
+     * aparece con la cita ya atendida ("Editar consulta"), cuando el médico ya no tiene nada que marcar.
+     *
+     * El botón viaja siempre en el HTML porque lo muestra `shell.js` según `data-editar`; sin JavaScript
+     * queda oculto, que es el comportamiento correcto por defecto.
+     */
+    public function test_el_dialogo_de_atender_no_ofrece_consulta_nueva_si_la_cita_no_esta_atendida(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $this->cita($medico, $sede, ['numhistoria' => 1001]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(
+            route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas'])
+        );
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('id="dialogo-atender"', false);
+        $respuesta->assertSee('Atender y abrir la consulta');
+        // El caso normal: el formulario de la fila no es "editar".
+        $respuesta->assertSee('data-editar="0"', false);
+        // «Consulta nueva» está en el HTML pero **oculta**: sin JS no se manda `nueva=1`.
+        $respuesta->assertSee('name="nueva" value="1" id="atender-nueva" hidden', false);
     }
 
     public function test_una_cita_ya_atendida_sin_consulta_del_dia_abre_una_al_editar(): void
@@ -426,25 +457,72 @@ class ConsultaWebTest extends TestCase
             $respuesta->assertSee($item, false);
         }
 
-        // Los que todavía no existen dicen que llegan después, con la tarea en el `title` del estado; y
-        // los ítems de WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física), WEB-4.4
-        // (antecedentes), WEB-4.5 (diagnóstico) y WEB-4.6 (evolución) ya están disponibles y se abren con
-        // `?seccion=` dentro de esta misma pantalla.
-        $respuesta->assertSee('Próximamente');
-        // Los disponibles no llevan pastilla "Disponible": el contador "N de 13 disponibles" sí queda.
+        // El único ítem que todavía no existe (la pre-factura) va **deshabilitado** en el grupo «Consulta» del menú
+        // lateral: sin enlace y con `aria-disabled`, para que la lista no se rompa cuando F9 lo habilite. Los ítems de
+        // WEB-4.2 (motivos y enfermedad actual), WEB-4.3 (evaluación física), WEB-4.4 (antecedentes), WEB-4.5
+        // (diagnóstico) y WEB-4.6 (evolución) ya están disponibles y se abren con `?seccion=` dentro de esta misma pantalla.
+        $respuesta->assertSee('aria-disabled="true"', false);
+        // Los disponibles no llevan pastilla "Disponible" ni el contador "N de 14 disponibles", que se fue con el panel.
         $respuesta->assertDontSee('>Disponible<', false);
+        $respuesta->assertDontSee('de 14 disponibles', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'diagnostico']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evolucion']), false);
-        $respuesta->assertSee(route('clinica.pacientes.ver', $pacienteId), false);
+        // A-11: el paciente se alcanza por la sección «Datos personales»; el encabezado ya no enlaza su ficha (el
+        // «Ver resumen» que llevaba a la historia se fue de la consulta).
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']), false);
 
         // Y la vuelta a la agenda del día de la consulta (con el `&` de la query ya escapado por Blade).
         $respuesta->assertSee(route('clinica.agenda', [
             'vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas',
         ]));
+
+        // A-11: «Ver resumen» se fue de la consulta (el resumen del paciente se ve desde su ficha).
+        $respuesta->assertDontSee('Ver resumen');
+    }
+
+    /**
+     * **La barra de contexto no se pinta dentro de la consulta** (A-11, decisión del usuario). La consulta es una
+     * pantalla de trabajo: ni las fichas del médico/sede, ni «Sedes», ni «Consultorios», ni «Cambiar consultorio», ni el
+     * menú de la cuenta (cerrar sesión). Es una **regla**: dentro de la consulta no queda ningún enlace ni atajo a esa
+     * pantalla. En la agenda la barra sigue igual.
+     */
+    public function test_la_consulta_no_pinta_la_barra_de_contexto_y_la_agenda_si(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $consulta = Consulta::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => 1001,
+            'nroconsulta' => 1,
+            'fecha'       => $this->hoy->toDateString(),
+        ]);
+
+        $enLaConsulta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlConsulta($consulta));
+
+        $enLaConsulta->assertOk();
+        $enLaConsulta->assertDontSee('Cambiar consultorio');
+        $enLaConsulta->assertDontSee(route('clinica.contexto'), false);
+        $enLaConsulta->assertDontSee('Cerrar sesión');
+        $enLaConsulta->assertDontSee('aria-label="Mi cuenta"', false);
+        $enLaConsulta->assertDontSee(route('clinica.sedes'), false);
+
+        // La salida sigue estando: la flecha del principio, que guarda lo escrito antes de volver.
+        $enLaConsulta->assertSee('Volver a la agenda');
+        $enLaConsulta->assertSee('data-barra-salir', false);
+
+        // En la agenda, la barra de contexto no cambió.
+        $enLaAgenda = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.agenda'));
+
+        $enLaAgenda->assertOk();
+        $enLaAgenda->assertSee('Cambiar consultorio');
+        $enLaAgenda->assertSee(route('clinica.contexto'), false);
+        $enLaAgenda->assertSee('Cerrar sesión');
+        $enLaAgenda->assertSee('aria-label="Mi cuenta"', false);
     }
 
     public function test_una_consulta_de_otro_medico_da_404(): void

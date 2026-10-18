@@ -2,7 +2,7 @@
 
 namespace App\Clinica\Historia\Vistas;
 
-use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
+use Illuminate\Support\Collection;
 use App\Clinica\Crecimiento\Vistas\CrecimientoVista;
 use App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista;
 use App\Clinica\Vacunas\Vistas\CarnetDeVacunacionVista;
@@ -20,7 +20,8 @@ final class HistoriaPediatricaVista
     public function __construct(
         private CarnetDeVacunacionVista $carnet,
         private FamiliaDePacienteVista $familia,
-        private SeccionDeAntecedentesVista $antecedentes,
+        /** @var Collection<int,object> las filas de `AntecedentesDelPaciente::delPaciente` (con `tipoNombre`, `nombre`, `detalle`, `alerta`) */
+        private Collection $antecedentes,
         private CrecimientoVista $crecimiento,
         private string $urlVolver,
         private bool $incrustado = false,
@@ -117,7 +118,22 @@ final class HistoriaPediatricaVista
     /** @return array<int,array{titulo:string, filas:array<int,array<string,mixed>>}> los antecedentes por categoría */
     public function antecedentes(): array
     {
-        return $this->antecedentes->grupos();
+        $grupos = [];
+
+        foreach ($this->antecedentes as $antecedente) {
+            $titulo = $antecedente->tipoNombre ?? 'Sin clasificar';
+            $grupos[$titulo] ??= ['titulo' => $titulo, 'filas' => []];
+            $grupos[$titulo]['filas'][] = [
+                'nombre' => (string) $antecedente->nombre,
+                'detalle' => trim((string) ($antecedente->detalle ?? '')),
+                'alerta' => (bool) $antecedente->alerta,
+            ];
+        }
+
+        // «Sin clasificar» al final; los demás grupos, en el orden en que los trae la lectura (el de las categorías del catálogo).
+        uksort($grupos, fn ($a, $b) => ($a === 'Sin clasificar' ? 1 : 0) <=> ($b === 'Sin clasificar' ? 1 : 0));
+
+        return array_values($grupos);
     }
 
     /** @return array<int,string> */

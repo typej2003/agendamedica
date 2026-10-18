@@ -3,37 +3,63 @@
 @section('titulo', 'Consulta')
 
 @section('contenido')
-    {{-- El encabezado con lo que identifica la atención: el paciente, su historia, la consulta y el día
-         (wiki 04-historia-clinica.md). El título es el paciente y no el módulo porque lo que el médico
-         necesita al entrar es confirmar **a quién** está atendiendo. --}}
-    <x-ui.page-head :titulo="$vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlVolver()" volver-texto="Volver a la agenda">
-        <x-slot name="acciones">
-            {{-- La **acción primaria** de la pantalla (guía de UI §1: un solo botón sólido): terminar la
-                 atención. Es lo que el escritorio hace al cerrar `w_consulta_principal` —la cita ya había
-                 quedado `atendido` en su `open`—, así que no hay ningún estado nuevo que inventar: la
-                 consulta se cierra, la cita de hoy queda atendida y se vuelve a la agenda del día. Pide
-                 confirmación con el mecanismo de `shell.js` (`data-confirmar`), sin diálogo propio ni JS
-                 nuevo: la acción es irreversible y la pantalla lo dice con el texto del ViewModel. --}}
+    {{-- **La fila del encabezado de la consulta** (A-11, decisión de Alexander): una sola línea con lo que identifica la
+         atención —el nombre del paciente, su historia, la consulta y la fecha (wiki 04-historia-clinica.md)—, el
+         navegador 1…N entre las consultas de la historia y las dos acciones de la pantalla. Antes había tres bloques
+         (la barra de contexto del armazón, el encabezado del paciente y la barra de la consulta) que ocupaban ~185 px
+         en una pantalla de 768; ahora es una fila de ~48 px.
+
+         - **«Volver a la agenda» es la flecha** del principio: el enlace guarda lo escrito antes de salir
+           (`consulta-barra.js`, `data-barra-salir`).
+         - **El nombre ya no es un título grande**: tipografía normal y una línea; si no entra se recorta con puntos
+           suspensivos y el `title` lleva el texto completo.
+         - **Las acciones son Guardar y Terminar la consulta.** «Guardar y salir» y «Salir» se fueron: el autoguardado
+           (`consulta-barra.js`) guarda al pausar la escritura y al cambiar de sección o de consulta, y «Terminar la
+           consulta» cierra la atención y vuelve a la agenda. «Ver resumen» también se fue: el resumen del paciente se ve
+           desde su ficha (Pacientes).
+         - **El indicador de cambios sin guardar** vive en esta misma fila (`data-barra-estado`). --}}
+    <div class="consulta-encabezado" data-consulta-barra data-tour="consulta-encabezado">
+        @if ($vm->urlVolver())
+            <a class="consulta-volver" href="{{ $vm->urlVolver() }}" data-barra-salir
+               title="Volver a la agenda" aria-label="Volver a la agenda">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            </a>
+        @endif
+
+        <p class="consulta-identidad" title="{{ $vm->lineaDeCabecera() }}">
+            <span class="consulta-paciente">{{ $vm->nombre() }}</span>
+            <span class="consulta-datos"><span aria-hidden="true">·</span> {{ $vm->subtitulo() }}</span>
+        </p>
+
+        {{-- El navegador 1…N (WEB-11.5), compacto: menos ancho, sin el rótulo «CONSULTA» y con los números solos. Cambiar
+             de consulta guarda antes lo escrito (`consulta-barra.js`, `[data-chips]`). --}}
+        @if ($vm->hayNavegador())
+            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente" data-tour="consulta-navegador">
+                <x-ui.chips :opciones="$vm->navegador()" etiqueta="Consultas de este paciente" />
+            </nav>
+        @endif
+
+        <div class="consulta-barra-acciones">
+            <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-outline-secondary" data-barra-guardar data-tour="consulta-guardar">
+                <i class="bi bi-save" aria-hidden="true"></i> Guardar
+            </button>
+            {{-- La **acción primaria** de la pantalla (guía de UI §1: un solo botón sólido): terminar la atención. Es lo
+                 que el escritorio hace al cerrar `w_consulta_principal` —la cita ya había quedado `atendido` en su
+                 `open`—, así que no hay ningún estado nuevo que inventar: la consulta se cierra, la cita de hoy queda
+                 atendida y se vuelve a la agenda del día. Pide confirmación con `data-confirmar` de `shell.js` (la
+                 acción es irreversible) y `consulta-barra.js` guarda lo escrito antes de enviarlo. --}}
             @if ($vm->urlTerminar())
-                <form method="POST" action="{{ $vm->urlTerminar() }}" data-confirmar="{{ $vm->avisoTerminar() }}">
+                <form method="POST" action="{{ $vm->urlTerminar() }}" data-confirmar="{{ $vm->avisoTerminar() }}"
+                      data-barra-terminar>
                     @csrf
                     <button class="btn btn-primary">
                         <i class="bi bi-check2-circle" aria-hidden="true"></i> Terminar la consulta
                     </button>
                 </form>
             @endif
-            @if ($vm->urlHistoria())
-                <a class="btn btn-outline-secondary" href="{{ $vm->urlHistoria() }}">
-                    <i class="bi bi-journal-medical" aria-hidden="true"></i> Ver la historia del paciente
-                </a>
-            @endif
-            @if ($vm->urlPaciente())
-                <a class="btn btn-outline-secondary" href="{{ $vm->urlPaciente() }}">
-                    <i class="bi bi-person-vcard" aria-hidden="true"></i> Ver la ficha
-                </a>
-            @endif
-        </x-slot>
-    </x-ui.page-head>
+        </div>
+    </div>
 
     {{-- Los errores de validación de la sección (el nombre del motivo nuevo) van arriba y no dentro del
          diálogo: el diálogo se vuelve a abrir solo, pero el aviso tiene que verse aunque no se abra. --}}
@@ -82,83 +108,15 @@
     {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
     @include('clinica.consulta._visualizar')
 
-    {{-- La barra de la consulta (WEB-11.5): el navegador 1…N entre las consultas del paciente y, en un lugar fijo, Guardar / Guardar y salir /
-         Salir con el indicador de guardado. Las secciones de texto se guardan solas al pausar la escritura y al cambiar de sección o de
-         consulta (`consulta-barra.js`); las que cargan listas guardan al instante y no necesitan el botón. --}}
-    <div class="consulta-barra" data-consulta-barra data-url-salir="{{ $vm->urlVolver() }}">
-        @if ($vm->hayNavegador())
-            <nav class="consulta-barra-navegador" aria-label="Consultas del paciente">
-                <span class="etiqueta">Consulta</span>
-                <x-ui.chips :opciones="$vm->navegador()" etiqueta="Consultas de este paciente" />
-            </nav>
-        @endif
-        <div class="consulta-barra-acciones">
-            <span class="consulta-barra-estado texto-tenue small" data-barra-estado role="status" aria-live="polite"></span>
-            <button type="button" class="btn btn-outline-secondary" data-barra-guardar>
-                <i class="bi bi-save" aria-hidden="true"></i> Guardar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" data-barra-guardar-salir>
-                <i class="bi bi-box-arrow-left" aria-hidden="true"></i> Guardar y salir
-            </button>
-            <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() }}" data-barra-salir>
-                <i class="bi bi-x-lg" aria-hidden="true"></i> Salir
-            </a>
-        </div>
-    </div>
-
     <div class="row g-3">
-        {{-- El panel de navegación del legado (`w_consulta_principal`): los 13 ítems con su estado. Los que
-             todavía no tienen pantalla dicen "Próximamente" y con qué tarea llegan, en vez de ofrecer un
-             enlace muerto; los de WEB-4.2 (motivos y enfermedad actual) abren su sección dentro de esta
-             misma pantalla con `?seccion=`.
-
-             Ocupa más que un tercio a propósito (5 de 12 en pantalla grande): son trece renglones con
-             nombre, detalle y estado, y en una columna más angosta el estado se come el texto. --}}
-        <div class="col-12 col-lg-5 col-xl-4">
-            <x-ui.tarjeta id="consulta-panel" titulo="Secciones de la consulta" icono="bi-list-ul">
-                <p class="texto-tenue small mb-2">{{ $vm->totalListos() }} de {{ $vm->totalItems() }} disponibles</p>
-                @foreach ($vm->panel() as $bloque)
-                    <div class="consulta-panel-grupo">
-                        <h3 class="consulta-panel-titulo">{{ $bloque['titulo'] }}</h3>
-                        <ul class="consulta-panel">
-                            @foreach ($bloque['items'] as $item)
-                                <li class="consulta-panel-item {{ $item['listo'] ? '' : 'consulta-panel-item-pendiente' }} {{ $item['activo'] ? 'consulta-panel-item-activo' : '' }}">
-                                    <span class="consulta-panel-icono"><i class="bi {{ $item['icono'] }}" aria-hidden="true"></i></span>
-                                    <div class="consulta-panel-texto">
-                                        {{-- El estado va en la fila del título, a la derecha, para que la descripción de abajo
-                                             use todo el ancho del ítem. Sólo los que todavía no están lo llevan
-                                             ("Próximamente", color + icono + texto, como pide la guía de UI); los
-                                             disponibles se reconocen por su enlace. --}}
-                                        <div class="consulta-panel-cabecera">
-                                            @if ($item['url'])
-                                                <a class="consulta-panel-nombre" href="{{ $item['url'] }}"
-                                                   @if ($item['activo']) aria-current="true" @endif>{{ $item['titulo'] }}</a>
-                                            @else
-                                                <span class="consulta-panel-nombre">{{ $item['titulo'] }}</span>
-                                            @endif
-                                            @if ($item['estado'])
-                                                <x-ui.estado :tono="$item['estado']['tono']" :icono="$item['estado']['icono']"
-                                                             :title="$item['titulo_estado']">{{ $item['estado']['texto'] }}</x-ui.estado>
-                                            @endif
-                                        </div>
-                                        <span class="consulta-panel-detalle">{{ $item['detalle'] }}</span>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
-            </x-ui.tarjeta>
-        </div>
-
-        {{-- El área de trabajo: la sección que el panel abrió, o el estado vacío del shell si no se eligió
-             ninguna. Las secciones llegan por los parciales —`_motivos` y `_enfermedad` (WEB-4.2),
-             `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4), `_diagnostico` (WEB-4.5), `_evolucion`
-             (WEB-4.6), `_examenes` (WEB-4.7) y `_recipes` (WEB-5.1)— y las siguientes tareas agregan las suyas: el nombre del
-             parcial lo resuelve el ViewModel a partir del mapa del panel. --}}
-        <div class="col-12 col-lg-7 col-xl-8">
+        {{-- El área de trabajo ocupa **todo el ancho** (revisión de Alexander): los ítems de la consulta se eligen en el
+             grupo «Consulta» del menú lateral y la tarjeta «Secciones de la consulta» ya no existe. El contenido llega
+             por los parciales —`_motivos` y `_enfermedad` (WEB-4.2), `_evaluacion` (WEB-4.3), `_antecedentes` (WEB-4.4),
+             `_diagnostico` (WEB-4.5), `_evolucion` (WEB-4.6), `_examenes` (WEB-4.7), `_recipes` (WEB-5.1), etc.— y el
+             nombre del parcial lo resuelve el ViewModel a partir del catálogo de secciones. --}}
+        <div class="col-12">
             @if ($contenido && $vm->parcial())
-                @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null, 'imagenes' => $imagenes ?? null])
+                @include($vm->parcial(), ['seccion' => $contenido, 'catalogo' => $catalogo ?? null, 'imagenes' => $imagenes ?? null, 'dibujos' => $dibujos ?? null])
             @else
                 <x-ui.tarjeta id="consulta-contenido" titulo="Contenido de la consulta" icono="bi-journal-medical">
                     @php $vacio = $vm->sinContenido(); @endphp
@@ -192,8 +150,12 @@
     <script src="{{ asset('js/clinica/consulta-alertas.js') }}"></script>
     {{-- «Actualizar» del examen (WEB-11.8): arma los resúmenes físico y ginecológico. --}}
     <script src="{{ asset('js/clinica/consulta-resumen.js') }}"></script>
+    {{-- El motor de los lienzos (A-13): la misma herramienta de dibujo para las mamas (WEB-11.10) y el cuello uterino
+         de la colposcopía. Las dos pantallas lo inicializan con sus selectores; acá va antes que sus dos envoltorios. --}}
+    <script src="{{ asset('js/clinica/lienzo.js') }}"></script>
     <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
+    <script src="{{ asset('js/clinica/colposcopia-lienzo.js') }}"></script>
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
-    {{-- La barra (WEB-11.5): Guardar, Guardar y salir, autoguardado y el aviso al cambiar de sección o de consulta. --}}
+    {{-- La fila del encabezado (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
 @endsection

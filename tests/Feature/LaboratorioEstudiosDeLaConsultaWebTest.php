@@ -129,14 +129,17 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
     // ===================================================================================== La sección
 
-    public function test_el_panel_sigue_en_10_de_13_con_su_tarjeta_actualizada_y_laboratorio_abre_vacio(): void
+    public function test_el_menu_ofrece_solicitudes_y_laboratorio_abre_vacio(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('13 de 14 disponibles', false)
-            ->assertSee('Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.')
+            ->assertSee('Pre-factura', false)
+            // El ítem de Solicitudes está en el grupo «Consulta» del menú; su detalle (que incluye laboratorio,
+            // estudios, constancia, reposo, referencia, hospitalización, informe y dieta) vive en el catálogo y lo
+            // fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
+            ->assertSee('Solicitudes')
             ->assertDontSee('llegan después');
 
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))
@@ -161,6 +164,51 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             $this->como($user, $medico, $gineco)->get($this->seccion($consulta, $pestana))
                 ->assertOk()->assertSee($titulo)->assertSee(route('clinica.catalogos.examenes'), false)
                 ->assertDontSee('id="orden-texto"', false);
+        }
+    }
+
+    // ============================================================ Las dos columnas (A-04)
+
+    public function test_la_orden_queda_a_la_izquierda_y_el_catalogo_con_su_buscador_a_la_derecha(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+
+        foreach ([
+            ['laboratorio', 'Orden de exámenes de laboratorio', 'Agregar exámenes'],
+            ['estudios', 'Solicitud de estudios', 'Agregar estudios'],
+        ] as [$pestana, $titulo, $tituloDelCatalogo]) {
+            $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, $pestana))->assertOk()->getContent();
+
+            // Una sola grilla, la de `<x-ui.dos-listas>`, con sus dos columnas (ni tres ni una).
+            $this->assertSame(1, substr_count($html, 'class="dos-listas"'), 'una sola grilla de dos columnas');
+            $primera = strpos($html, 'class="dos-listas-columna"');
+            $segunda = strpos($html, 'class="dos-listas-columna"', $primera + 1);
+            $this->assertNotFalse($primera);
+            $this->assertNotFalse($segunda);
+            $this->assertFalse(strpos($html, 'class="dos-listas-columna"', $segunda + 1), 'exactamente dos columnas');
+            $this->assertStringContainsString('aria-label="' . $titulo . '"', $html);
+            $this->assertStringContainsString('aria-label="' . $tituloDelCatalogo . '"', $html);
+
+            // A la izquierda, la orden de esta consulta: la lista, el resumen clínico y el botón de guardar.
+            foreach (['id="orden-form"', 'id="orden-items"', 'id="orden-observacion"'] as $marca) {
+                $this->assertGreaterThan($primera, strpos($html, $marca), $marca . ' en la columna izquierda');
+                $this->assertLessThan($segunda, strpos($html, $marca), $marca . ' antes de la columna derecha');
+            }
+
+            // A la derecha, el catálogo **con su buscador siempre a la vista**: el campo, los resultados y la ayuda, sin ocultar.
+            foreach (['id="orden-texto"', 'id="orden-resultados"', 'id="orden-ayuda"'] as $marca) {
+                $this->assertGreaterThan($segunda, strpos($html, $marca), $marca . ' en la columna derecha');
+            }
+            $this->assertStringContainsString('<div id="orden-modo-sueltos">', $html);
+            $this->assertStringNotContainsString('id="orden-busqueda" hidden', $html);
+            $this->assertStringNotContainsString('resultados-flotantes', $html, 'los resultados van en línea, en la columna del catálogo');
+
+            // La fila del catálogo usa el mismo renglón de las dos listas: nombre, tipo y la acción a la derecha.
+            $this->assertStringContainsString('dos-listas-fila orden-resultado', $html);
+            $this->assertStringContainsString('data-resultado-accion', $html);
+
+            // Los chips «Exámenes / Rutinas» siguen en la columna derecha, y sólo el laboratorio tiene rutinas.
+            $this->assertSame($pestana === 'laboratorio' ? 1 : 0, substr_count($html, 'data-orden-modo="rutinas"'), 'los chips en la columna derecha');
         }
     }
 

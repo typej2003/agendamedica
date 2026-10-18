@@ -67,7 +67,7 @@
             @php $vacio = $vm->vacio(); @endphp
             <x-ui.vacio icono="bi-hospital" :titulo="$vacio['texto']">{{ $vacio['ayuda'] }}</x-ui.vacio>
         @else
-            <x-ui.tabla>
+            <x-ui.tabla class="tabla-sedes">
                 <thead>
                 <tr>
                     <th>Sede</th>
@@ -81,12 +81,13 @@
                 <tbody>
                 @foreach ($vm->filas() as $fila)
                     <tr>
-                        <td class="celda-principal">
-                            <strong>{{ $fila['nombre'] }}</strong>
-                            <span class="texto-tenue small d-block">{{ $fila['ciudad'] ?? '—' }}</span>
+                        {{-- Una línea por fila (pauta de Alexander): la ciudad sale del listado y queda en el `title` de la
+                             celda (y en el formulario de arriba). --}}
+                        <td class="celda-principal" title="{{ $fila['ciudad'] ? 'Ciudad: ' . $fila['ciudad'] : '' }}">
+                            <span class="texto-una-linea"><strong>{{ $fila['nombre'] }}</strong></span>
                         </td>
-                        <td data-etiqueta="Dirección">{{ $fila['direccion'] }}</td>
-                        <td data-etiqueta="Teléfono">{{ $fila['telefono'] ?? '—' }}</td>
+                        <td data-etiqueta="Dirección"><span class="texto-una-linea" title="{{ $fila['direccion'] }}">{{ $fila['direccion'] }}</span></td>
+                        <td data-etiqueta="Teléfono"><span class="texto-una-linea">{{ $fila['telefono'] ?? '—' }}</span></td>
                         <td data-etiqueta="Consultorios" class="text-md-center">
                             @if ($fila['consultorios'] > 0)
                                 <x-ui.estado tono="neutro" icono="bi-door-closed">{{ $fila['consultorios'] }}</x-ui.estado>
@@ -98,21 +99,26 @@
                             <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
                         </td>
                         <td class="celda-acciones text-end">
-                            <div class="acciones-fila">
+                            {{-- Dos acciones: «Editar» y el interruptor de «se sigue usando», directos y en la misma línea.
+                                 El menú «…» de una sola opción está prohibido (pauta de Alexander); desactivar una sede no
+                                 borra nada y no pide confirmación, y el interruptor va en icono —con su `title` y su
+                                 `aria-label`— porque con el rótulo la fila no entra a 1024 px. El estado se ve igual, en su
+                                 pastilla. --}}
+                            <x-ui.acciones-fila etiqueta="Acciones de {{ $fila['nombre'] }}">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ $fila['urlEditar'] }}">
                                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                                 </a>
-                                <x-ui.menu>
-                                    <form method="POST" action="{{ $fila['urlActivar'] }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
-                                        <button class="menu-item {{ $fila['activar']['peligro'] ? 'menu-item-peligro' : '' }}">
-                                            <i class="bi {{ $fila['activar']['icono'] }}" aria-hidden="true"></i> {{ $fila['activar']['texto'] }}
-                                        </button>
-                                    </form>
-                                </x-ui.menu>
-                            </div>
+                                <form method="POST" action="{{ $fila['urlActivar'] }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
+                                    <button class="btn btn-sm {{ $fila['activar']['peligro'] ? 'btn-outline-danger' : 'btn-outline-secondary' }}"
+                                            title="{{ $fila['activar']['texto'] }} la sede"
+                                            aria-label="{{ $fila['activar']['texto'] }} la sede {{ $fila['nombre'] }}">
+                                        <i class="bi {{ $fila['activar']['icono'] }}" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </x-ui.acciones-fila>
                         </td>
                     </tr>
                 @endforeach

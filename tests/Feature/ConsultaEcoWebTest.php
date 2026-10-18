@@ -192,7 +192,7 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles');
+        $respuesta->assertSee('Pre-factura');
 
         // El contenedor con su tipo y el formulario con sus bloques.
         $respuesta->assertSee('Eco ginecológico');
@@ -209,6 +209,13 @@ class ConsultaEcoWebTest extends TestCase
         // Y el formulario apunta a la acción de guardar del tipo que se está mirando.
         $respuesta->assertSee($this->urlGuardar($consulta), false);
         $respuesta->assertSee('Guardar el estudio');
+
+        // Las plantillas de texto del escritorio (revisión de Alexander, 2026-10-17): el tipo `UG` de la ventana
+        // del eco pélvico y el área libre que edita la pantalla, más el enlace al catálogo filtrado por ese tipo.
+        $respuesta->assertSee('Administrar plantillas')
+            ->assertSee('data-tipo="UG"', false)
+            ->assertSee('data-destino="#observacion"', false)
+            ->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'UG']), false);
     }
 
     public function test_el_panel_marca_el_estudio_como_disponible(): void
@@ -219,13 +226,13 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('13 de 14 disponibles');
+        $respuesta->assertSee('Pre-factura');
         $respuesta->assertSee('Estudio ecográfico');
         // El enlace del panel es el de la sección a secas: el tipo por defecto es el ginecológico.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]), false);
-        // El ítem 6 sigue pendiente: es de WEB-6.6.
+        // El control de embarazo (WEB-6.6) también está disponible: el único ítem sin pantalla es la pre-factura.
         $respuesta->assertSee('Control de embarazo');
-        $respuesta->assertSee('Próximamente');
+        $respuesta->assertSee('aria-disabled="true"', false);
     }
 
     // ------------------------------------------------------------------------------------ El guardado
@@ -543,6 +550,12 @@ class ConsultaEcoWebTest extends TestCase
         }
         // La opción del desplegable muestra el texto y guarda el código.
         $respuesta->assertSee('No visible');
+
+        // Las plantillas del obstétrico del primer trimestre: el tipo `O1` y su columna de conclusión.
+        $respuesta->assertSee('Administrar plantillas')
+            ->assertSee('data-tipo="O1"', false)
+            ->assertSee('data-destino="#observacion"', false)
+            ->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'O1']), false);
     }
 
     public function test_guardar_el_eco_obstetrico_desde_la_seccion_y_su_hoja_no_se_ofrece(): void

@@ -130,12 +130,13 @@ final class FormatosEnBlanco
         // bloques que su hoja real**, vacíos, como los dos del eco obstétrico. Que falte un rótulo del legado
         // acá no es un olvido: es la decisión de que la hoja en blanco y la hoja real se lean igual.
         DocumentoImpreso::ECO_DOPPLER => [
-            'descripcion' => 'Las cuatro arterias, los ductos y la conclusión.',
+            'descripcion' => 'Las cuatro arterias, el ductus venoso y la conclusión.',
             'fijos' => ['Gesta:', 'FUR:', 'EG:', 'PARA:'],
             'secciones' => [
                 ['etiqueta' => null, 'peso' => 2],
                 ['etiqueta' => 'Eco Doppler Obstétrico en 4 Vasos:', 'peso' => 2],
-                ['etiqueta' => 'Ductos Venosos:', 'peso' => 1],
+                // El rótulo de la hoja real, corregido de la errata del escritorio («Ductos Venosos»).
+                ['etiqueta' => 'Ductus venoso:', 'peso' => 1],
                 ['etiqueta' => 'Señal Venoso Umbilical:', 'peso' => 1],
                 ['etiqueta' => 'Relación Aorta-Cava:', 'peso' => 1],
                 ['etiqueta' => 'Sugerencias:', 'peso' => 2],

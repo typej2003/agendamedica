@@ -31,6 +31,8 @@
                 <h3 class="paso-titulo mb-1">{{ $grupo['titulo'] }}</h3>
                 <p class="texto-tenue small mb-2">{{ $grupo['ayuda'] }}</p>
 
+                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
+
                 <div class="row g-3 mb-3">
                     @foreach ($grupo['campos'] as $campo)
                         @include('clinica.consulta._estudio-campo', [

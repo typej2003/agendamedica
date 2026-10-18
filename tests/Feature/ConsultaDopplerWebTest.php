@@ -120,14 +120,23 @@ class ConsultaDopplerWebTest extends TestCase
         }
 
         // Los tres desplegables y sus rótulos (la señal venoso umbilical lleva la «Pulsatilidad» del
-        // DataWindow), y las dos áreas del final con los rótulos de la pantalla.
-        $respuesta->assertSee('Ductos Venosos')->assertSee('Señal Venoso Umbilical (Pulsatilidad)')
+        // DataWindow), y las dos áreas del final con los rótulos de la pantalla. El rótulo del ductus se
+        // corrigió de la errata del escritorio («Ductos Venosos», 2026-10-17).
+        $respuesta->assertSee('Ductus venoso')->assertSee('Señal Venoso Umbilical (Pulsatilidad)')
             ->assertSee('Relación Aorta-Cava')->assertSee('Observaciones')->assertSee('Conclusiones');
+        $respuesta->assertDontSee('Ductos Venosos');
         $respuesta->assertSee('Trifásico con Reversa')->assertSee('Anormal');
 
         // Y el formulario apunta a la acción de guardar del tipo que se está mirando.
         $respuesta->assertSee($this->urlGuardar($consulta), false);
         $respuesta->assertSee('Guardar el estudio');
+
+        // Las plantillas de texto del escritorio (revisión de Alexander, 2026-10-17): el tipo `ED` de la ventana
+        // del Doppler y su memo grande (`texto`), más el enlace al catálogo filtrado por ese tipo.
+        $respuesta->assertSee('Administrar plantillas')
+            ->assertSee('data-tipo="ED"', false)
+            ->assertSee('data-destino="#texto"', false)
+            ->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'ED']), false);
     }
 
     /**
@@ -175,7 +184,7 @@ class ConsultaDopplerWebTest extends TestCase
 
         $respuesta->assertOk();
         // El ítem 5 ya estaba disponible desde WEB-6.1: el tipo nuevo no cambia el conteo del panel.
-        $respuesta->assertSee('13 de 14 disponibles');
+        $respuesta->assertSee('Pre-factura');
         $respuesta->assertSee('Estudio ecográfico');
         $respuesta->assertSee(
             route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]),

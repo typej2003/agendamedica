@@ -23,6 +23,9 @@ namespace App\Clinica\Listados;
  */
 final class ListadosDisponibles
 {
+    /** La ruta de la pantalla de los listados: el `listado` viaja en la query, no en la ruta. */
+    public const RUTA = 'clinica.listados';
+
     /** El listado de embarazos / partos: el *Listado de Partos* del escritorio. */
     public const EMBARAZOS = 'embarazos';
 
@@ -48,6 +51,16 @@ final class ListadosDisponibles
         self::EMBARAZOS => 'Embarazos y partos',
         self::PACIENTES  => 'Pacientes por rango',
         self::CONSULTAS  => 'Consultas por rango',
+    ];
+
+    /**
+     * El icono de cada listado en el menú lateral: el de su reporte en el escritorio. Se mantiene acá, junto a las
+     * claves, para que el submenú y cualquier otro consumidor no tengan un mapa paralelo.
+     */
+    private const ICONOS = [
+        self::EMBARAZOS => 'bi-heart-pulse',
+        self::PACIENTES => 'bi-people',
+        self::CONSULTAS => 'bi-clipboard2-data',
     ];
 
     /** El listado que se muestra cuando no se pidió ninguno. */
@@ -76,5 +89,35 @@ final class ListadosDisponibles
     public static function titulo(string $clave): string
     {
         return self::LISTADOS[self::normalizar($clave)];
+    }
+
+    /**
+     * El **submenú del menú lateral** para «Listados» (el grupo plegable): un hijo por reporte, con el activo marcado.
+     *
+     * El listado no está en la URL de la ruta sino en la query (`?listado=…`), así que el activo se decide por la
+     * ruta **y** por la clave pedida: en `/clinica/listados` sin `listado` está activo el de por defecto, que es el
+     * que la pantalla muestra. `$rutaActual` se recibe por el mismo criterio que `CatalogosDisponibles::submenu()`.
+     *
+     * @param  string|null  $rutaActual  el nombre de la ruta de la petición (`clinica.listados`…)
+     * @param  string|null  $listadoActual  el `?listado=` de la petición (se normaliza como la pantalla)
+     * @return array<int,array{texto:string, icono:string, url:string, activo:bool}>
+     */
+    public static function submenu(?string $rutaActual, ?string $listadoActual): array
+    {
+        $enLosListados = $rutaActual !== null
+            && ($rutaActual === self::RUTA || str_starts_with($rutaActual, self::RUTA . '.'));
+        $actual = self::normalizar($listadoActual);
+        $items = [];
+
+        foreach (self::LISTADOS as $clave => $titulo) {
+            $items[] = [
+                'texto' => $titulo,
+                'icono' => self::ICONOS[$clave] ?? 'bi-clipboard2-data',
+                'url' => route(self::RUTA, ['listado' => $clave]),
+                'activo' => $enLosListados && $clave === $actual,
+            ];
+        }
+
+        return $items;
     }
 }

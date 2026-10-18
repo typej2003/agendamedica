@@ -366,4 +366,44 @@ class ListadosWebTest extends TestCase
         $deLaSecretaria = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
         $this->assertStringNotContainsString(route('clinica.listados'), $deLaSecretaria);
     }
+
+    /**
+     * «Listados» es un **grupo plegable** con un hijo por reporte (revisión de Alexander): la pantalla ya no tiene el
+     * segmentado de arriba y el hijo activo se decide por la ruta **y** por el `?listado=` (los tres comparten ruta).
+     */
+    public function test_el_menu_es_un_grupo_con_un_hijo_por_listado_y_marca_el_activo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $hijos = [
+            'embarazos' => 'Embarazos y partos',
+            'pacientes-por-rango' => 'Pacientes por rango',
+            'consultas-por-rango' => 'Consultas por rango',
+        ];
+
+        foreach ($hijos as $clave => $titulo) {
+            $html = $this->conContexto($user, $medico, $gineco)
+                ->get(route('clinica.listados', ['listado' => $clave]))->assertOk()->getContent();
+
+            // El segmentado ya no está: los tres reportes se eligen desde el menú lateral.
+            $this->assertStringNotContainsString('role="group" aria-label="Listados"', $html);
+
+            $this->assertSame(1, preg_match('/data-menu="listados".*?<\/details>/s', $html, $bloque), 'falta el grupo «Listados» en el menú');
+
+            // Están los tres hijos y el activo es el de la clave pedida.
+            foreach ($hijos as $url => $texto) {
+                $this->assertStringContainsString(route('clinica.listados', ['listado' => $url]), $bloque[0]);
+            }
+            $this->assertMatchesRegularExpression(
+                '/nav-link active[^>]*title="' . preg_quote($titulo, '/') . '"/',
+                $bloque[0],
+                'el hijo activo tiene que ser «' . $titulo . '»',
+            );
+        }
+
+        // Sin `?listado=` manda el de por defecto, que es el que la pantalla muestra.
+        $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.listados'))->assertOk()->getContent();
+        preg_match('/data-menu="listados".*?<\/details>/s', $html, $bloque);
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Embarazos y partos"/', $bloque[0] ?? '');
+    }
 }

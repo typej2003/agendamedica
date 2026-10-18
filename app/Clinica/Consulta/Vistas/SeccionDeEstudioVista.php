@@ -10,6 +10,10 @@ namespace App\Clinica\Consulta\Vistas;
  * `EcoGinecologicoVista`) y su parcial `_estudio-<clave>`. Agregar un tipo es sumar su fila a
  * `TiposDeEstudio`, su ViewModel y su parcial, **sin tocar** ni este contenedor ni el controlador de la
  * consulta más que para armarle el ViewModel. Sin base de datos.
+ *
+ * También lleva las **plantillas de texto** del estudio activo (revisión de Alexander, 2026-10-17): el
+ * controlador las lee con `PlantillasDelEstudio` y el parcial del tipo pinta su botón arriba del campo al que
+ * escriben. `null` = el estudio no ofrece plantillas (el ecocardiograma fetal).
  */
 final class SeccionDeEstudioVista
 {
@@ -17,6 +21,7 @@ final class SeccionDeEstudioVista
         private string $activa,
         private TiposDeEstudio $tipos,
         private object $estudio,
+        private ?array $plantillas = null,
     ) {
     }
 
@@ -42,6 +47,20 @@ final class SeccionDeEstudioVista
     public function estudio(): object
     {
         return $this->estudio;
+    }
+
+    /**
+     * Las plantillas de texto del estudio activo (revisión de Alexander, 2026-10-17): el tipo de `formato_print`
+     * que el escritorio usa en esa ventana, la columna del formulario a la que se copian y la lista ya leída; o
+     * `null` si el estudio no ofrece plantillas (el ecocardiograma fetal, que tampoco las tiene en el escritorio).
+     *
+     * Lo arma `PlantillasDelEstudio::de()` en el controlador (es la única lectura de esta sección).
+     *
+     * @return array{tipos:array<int,string>, etiquetas:array<string,string>, columna:string, nombre:string, lista:array<int,array{titulo:string, texto:string}>}|null
+     */
+    public function plantillas(): ?array
+    {
+        return $this->plantillas;
     }
 
     public function ayuda(): string

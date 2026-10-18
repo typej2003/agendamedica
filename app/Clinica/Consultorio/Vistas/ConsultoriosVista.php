@@ -5,9 +5,17 @@ namespace App\Clinica\Consultorio\Vistas;
 use App\Clinica\Vistas\ConValoresDeFormulario;
 use App\Models\Medico;
 use App\Models\Office;
+use App\Models\OfficeSchedule;
 use Illuminate\Support\Collection;
 
-/** La pantalla de **consultorios del médico** (`/clinica/consultorios`): el listado y el formulario. */
+/**
+ * La pantalla de **consultorios del médico** (`/clinica/consultorios`): el listado y el formulario.
+ *
+ * Desde A-10 (revisión de Alexander) la fila del listado **también** lista los bloques de horario del
+ * consultorio y deja agregar uno y quitar otro sin cambiar de pantalla: es lo que hace que la duración de la
+ * cita y el horario se encuentren. La pantalla de horarios del consultorio sigue existiendo para cargar muchos,
+ * y las reglas del solape no se repiten acá: las pone `GuardarBloqueHorario` detrás de las mismas rutas.
+ */
 final class ConsultoriosVista
 {
     use ConValoresDeFormulario;
@@ -110,6 +118,20 @@ final class ConsultoriosVista
         return Office::DURACION_CITA_POR_DEFECTO;
     }
 
+    /**
+     * Para qué sirve la duración de la cita, que es el otro dato que Alexander no encontraba (A-10).
+     *
+     * Dice lo que **de verdad** hace, sin prometer lo que no: la jornada y su tope salen de los bloques de
+     * horario (`ArmadorDeAgenda` mide el cupo contra el bloque), no de este campo, que es el dato del
+     * consultorio con el que se lee cuánto se le da a cada paciente.
+     */
+    public function ayudaDuracion(): string
+    {
+        return 'Lo que dura una cita en este consultorio. Se muestra acá y en la pantalla de horarios, y es el '
+            . 'dato con el que se lee cada cuánto entra un paciente. El tope de pacientes de cada jornada lo '
+            . 'pone el cupo de sus bloques de horario. Vacío = sin duración configurada.';
+    }
+
     public function seSigueUsando(): bool
     {
         return (bool) $this->valor('activo', $this->editando?->activo ?? true);
@@ -125,24 +147,92 @@ final class ConsultoriosVista
         return 'No hay consultorios' . ($this->verInactivos ? '' : ' activos') . '.';
     }
 
+    /**
+     * Los días de la semana para el alta de un bloque, con el que quedó elegido si el POST de **este**
+     * consultorio falló la validación (los otros formularios de la tabla nacen vacíos).
+     *
+     * @return array<int,array{valor:int, texto:string, elegido:bool}>
+     */
+    public function opcionesDeDia(int $consultorio): array
+    {
+        $elegido = $this->valoresDelBloque($consultorio)['dia_semana'];
+
+        return collect(OfficeSchedule::DIAS)
+            ->map(fn ($nombre, $numero) => [
+                'valor'   => (int) $numero,
+                'texto'   => $nombre,
+                'elegido' => (string) $elegido === (string) $numero,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Lo que quedó escrito en el alta de un bloque cuando el POST falló la validación.
+     *
+     * El alta de bloques es **un formulario por consultorio** y todos mandan los mismos nombres
+     * (`dia_semana`, `hora_inicio`…), así que el `consultorio` oculto es lo que dice de cuál vino: sin esto,
+     * un día mal elegido en el primero de la tabla aparecería escrito en todos. (La guía de UI pide no
+     * borrar lo escrito ante un error.)
+     *
+     * @return array{dia_semana:string, hora_inicio:string, hora_fin:string, cupo:string}
+     */
+    public function valoresDelBloque(int $consultorio): array
+    {
+        $esDeEste = (string) old('consultorio') === (string) $consultorio;
+
+        return [
+            'dia_semana'  => $esDeEste ? (string) old('dia_semana', '') : '',
+            'hora_inicio' => $esDeEste ? (string) old('hora_inicio', '') : '',
+            'hora_fin'    => $esDeEste ? (string) old('hora_fin', '') : '',
+            'cupo'        => $esDeEste ? (string) old('cupo', '') : '',
+        ];
+    }
+
+    /**
+     * El borrado de un bloque no borra nada clínico —las citas que ya caían ahí siguen existiendo—, pero
+     * cambia la jornada con la que se mide el cupo: se pide confirmación explícita y se nombra el bloque.
+     */
+    public function confirmarQuitarBloque(OfficeSchedule $bloque): string
+    {
+        return '¿Quitar el bloque del ' . $bloque->nombreDelDia() . ' de ' . $bloque->rango()
+            . '? Esas horas dejan de contarse como jornada; las citas que ya tenía no se borran.';
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function filas(): array
     {
         $modalidades = Office::modalidades();
 
         return $this->consultorios->map(function (Office $consultorio) use ($modalidades) {
-            $bloques = $consultorio->schedules->count();
+            // Los bloques de horario se ven y se editan **acá** (A-10): antes el listado sólo tenía el
+            // enlace a su pantalla y el médico no los encontraba. La pantalla aparte sigue existiendo
+            // —para cargar muchos— y el enlace queda como atajo.
+            $bloques = $consultorio->schedules
+                ->sortBy(fn (OfficeSchedule $bloque) => [(int) $bloque->dia_semana, (string) $bloque->hora_inicio])
+                ->map(fn (OfficeSchedule $bloque) => [
+                    'id'          => (int) $bloque->id,
+                    'dia'         => $bloque->nombreDelDia(),
+                    'horario'     => $bloque->rango(),
+                    'cupo'        => $bloque->cupo ? $bloque->cupo . ' pacientes' : null,
+                    'urlEliminar' => route('clinica.consultorios.horarios.eliminar', [$consultorio, $bloque]),
+                    'confirmar'   => $this->confirmarQuitarBloque($bloque),
+                ])
+                ->values()
+                ->all();
 
             return [
+                'id'          => (int) $consultorio->id,
                 'sede'        => $consultorio->medicalCenter->name ?? 'Sede',
                 'consultorio' => $consultorio->office_number,
                 'modalidad'   => $consultorio->modalidad === Office::MODALIDAD_ORDEN
                     ? ['tono' => 'info', 'icono' => 'bi-people', 'texto' => $modalidades[$consultorio->modalidad] ?? $consultorio->modalidad]
                     : ['tono' => 'neutro', 'icono' => 'bi-clock', 'texto' => $modalidades[$consultorio->modalidad] ?? $consultorio->modalidad],
                 'duracion'    => $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : null,
-                // Los bloques se cargan en su propia pantalla (WEB-2.8b.3): el número es el atajo, y sin
-                // bloques el atajo invita a cargarlos.
-                'bloques'     => $bloques === 0 ? null : $bloques . ($bloques === 1 ? ' bloque' : ' bloques'),
+                'bloques'     => $bloques,
+                'opcionesDeDia' => $this->opcionesDeDia((int) $consultorio->id),
+                'alta'        => $this->valoresDelBloque((int) $consultorio->id),
+                'urlGuardarBloque' => route('clinica.consultorios.horarios.guardar', $consultorio),
                 'estado'      => $consultorio->activo
                     ? ['tono' => 'exito', 'icono' => 'bi-check-circle', 'texto' => 'Activo']
                     : ['tono' => 'neutro', 'icono' => 'bi-slash-circle', 'texto' => 'Inactivo'],

@@ -72,7 +72,7 @@ final class EcoDopplerVista extends EcoObstetricoVista
     public function ayuda(): string
     {
         return 'El eco Doppler perinatal: el flujo de las dos arterias uterinas, la umbilical y la cerebral '
-            . 'media, más los ductos venosos y la relación aorta-cava. Se guarda con el botón: si sales sin '
+            . 'media, más el ductus venoso y la relación aorta-cava. Se guarda con el botón: si sales sin '
             . 'guardar, el navegador te avisa antes de perder lo escrito.';
     }
 

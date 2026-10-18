@@ -113,15 +113,14 @@ class AntecedentesPediatricosWebTest extends TestCase
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta))
             ->assertOk()
-            ->assertSeeInOrder(['Todos (3)', 'PATOLÓGICOS (1)', 'C.A. (0)', 'MADRE (1)', 'PADRE (0)', 'PERINATALES (1)', 'ALIMENTACIÓN (0)', 'D.P. (0)'])
-            ->assertSee('ASMA')->assertSee('DIABETES MATERNA')->assertSee('PARTO A TÉRMINO')
+            ->assertSeeInOrder(['PATOLÓGICOS', 'C.A.', 'MADRE', 'PADRE', 'PERINATALES', 'ALIMENTACIÓN', 'D.P.'])
             ->assertDontSee('PSICOBIOLOGICOS');
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta, ['tipo' => '03']))
             ->assertOk()->assertSee('DIABETES MATERNA')->assertDontSee('PARTO A TÉRMINO')->assertDontSee('>ASMA<', false);
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta, ['tipo' => '06']))
-            ->assertOk()->assertSee('Sin antecedentes de ALIMENTACIÓN');
+            ->assertOk()->assertDontSee('ASMA')->assertDontSee('PARTO A TÉRMINO');
     }
 
     public function test_la_alerta_sigue_funcionando_en_pediatria(): void
@@ -149,7 +148,7 @@ class AntecedentesPediatricosWebTest extends TestCase
         $this->assertDatabaseHas('antece_paciente', ['reg_medico' => $medico->reg_medico, 'numhistoria' => 9601, 'descripcion' => 'APGAR BAJO', 'tipo' => '05']);
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta, ['tipo' => '05']))
-            ->assertOk()->assertSee('APGAR BAJO')->assertSee('PERINATALES (1)');
+            ->assertOk()->assertSee('APGAR BAJO');
     }
 
     public function test_ginecologia_no_cambia_ni_siembra_ni_muestra_chips(): void
@@ -161,7 +160,7 @@ class AntecedentesPediatricosWebTest extends TestCase
 
         $this->conContexto($medico, $gineco)->actingAs($user)->get($this->url($consulta))
             ->assertOk()->assertSee('PERSONAL')->assertSee('MIOMATOSIS')
-            ->assertDontSee('Todos (')->assertDontSee('PATOLÓGICOS');
+            ->assertDontSee('PATOLÓGICOS');
 
         $this->assertSame(1, DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->count());
     }

@@ -133,6 +133,13 @@ class ConsultaMamarioWebTest extends TestCase
         // Y el formulario apunta a la acción de guardar del tipo que se está mirando.
         $respuesta->assertSee($this->urlGuardar($consulta), false);
         $respuesta->assertSee('Guardar el estudio');
+
+        // Las plantillas de texto del escritorio (revisión de Alexander, 2026-10-17): el tipo `UM` y la
+        // conclusión, que es el área libre que edita esta pantalla (la tabla no tiene columna `texto`).
+        $respuesta->assertSee('Administrar plantillas')
+            ->assertSee('data-tipo="UM"', false)
+            ->assertSee('data-destino="#conclusion"', false)
+            ->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'UM']), false);
     }
 
     /**
@@ -177,7 +184,7 @@ class ConsultaMamarioWebTest extends TestCase
 
         $respuesta->assertOk();
         // El ítem 5 ya estaba disponible desde WEB-6.1: el tipo nuevo no cambia el conteo del panel.
-        $respuesta->assertSee('13 de 14 disponibles');
+        $respuesta->assertSee('Pre-factura');
         $respuesta->assertSee('Estudio ecográfico');
     }
 

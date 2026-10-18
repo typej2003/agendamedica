@@ -104,7 +104,7 @@ class EcoDopplerTest extends TestCase
 
     public function test_los_codigos_de_los_desplegables_son_los_del_datawindow(): void
     {
-        // Ductos venosos: Trifásico con Reversa → N y sin Reversa → S (el `values` del DataWindow).
+        // Ductus venoso: Trifásico con Reversa → N y sin Reversa → S (el `values` del DataWindow).
         $this->assertSame(
             [['valor' => 'N', 'texto' => 'Trifásico con Reversa'], ['valor' => 'S', 'texto' => 'Trifásico sin Reversa']],
             EcoDoppler::opcionesDe('ductos_venosos'),

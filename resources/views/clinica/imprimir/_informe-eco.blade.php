@@ -9,20 +9,8 @@
 @endphp
 
 @if ($hoja['imagenes'])
-    <article class="informe-hoja informe-hoja-imagenes" data-hoja-imagenes aria-label="Imágenes de {{ $documento->nombre }}">
-        <h2 class="informe-titulo informe-titulo-imagenes">{{ $documento->titulo }} · IMÁGENES</h2>
-        <p class="informe-imagenes-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $persona['nombre'] }}</p>
-        <div class="informe-imagenes">
-            @foreach ($informe->imagenes as $imagen)
-                <figure class="informe-imagen">
-                    <img src="{{ $imagen['src'] }}" alt="{{ $imagen['descripcion'] ?? 'Imagen del estudio' }}">
-                    @if ($imagen['descripcion'])
-                        <figcaption>{{ $imagen['descripcion'] }}</figcaption>
-                    @endif
-                </figure>
-            @endforeach
-        </div>
-    </article>
+    {{-- La hoja de las imágenes del estudio: el mismo parcial que usa la colposcopía (A-13). --}}
+    @include('clinica.imprimir._hoja-imagenes', ['documento' => $documento, 'imagenes' => $informe->imagenes])
 @else
     <article class="informe-hoja" aria-label="{{ $documento->titulo }}">
         <x-impresion.membrete :membrete="$membrete" />

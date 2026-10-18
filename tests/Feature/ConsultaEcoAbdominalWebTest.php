@@ -236,6 +236,13 @@ class ConsultaEcoAbdominalWebTest extends TestCase
         // Y el formulario apunta a la acción de guardar del tipo que se está mirando.
         $respuesta->assertSee($this->urlGuardar($consulta), false);
         $respuesta->assertSee('Guardar el estudio');
+
+        // Las plantillas de texto del escritorio (revisión de Alexander, 2026-10-17): el tipo `UA` y las
+        // conclusiones, que es el área libre que edita esta pantalla (la tabla no tiene columna `texto`).
+        $respuesta->assertSee('Administrar plantillas')
+            ->assertSee('data-tipo="UA"', false)
+            ->assertSee('data-destino="#conclusiones"', false)
+            ->assertSee(route('clinica.catalogos.plantillas-texto', ['filtro' => 'UA']), false);
     }
 
     // ------------------------------------------------------------------------------------ El guardado

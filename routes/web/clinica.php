@@ -44,6 +44,7 @@ use App\Http\Controllers\Clinica\VacunasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaExamenPediatricoController;
 use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
+use App\Http\Controllers\Clinica\ConsultaColposcopiaController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -69,6 +70,7 @@ use App\Http\Controllers\Clinica\FamiliaController;
 use App\Http\Controllers\Clinica\RepresentanteController;
 use App\Http\Controllers\Clinica\SedeController;
 use App\Http\Controllers\Clinica\ShellController;
+use App\Http\Controllers\Clinica\TourController;
 use App\Http\Controllers\Clinica\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -106,6 +108,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
+
+            // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
+            // —una petición de lectura no escribe— y vive acá, fuera del grupo de la consulta, porque también
+            // lo usan la agenda y los consultorios, que son de la secretaría.
+            Route::post('/tour/{pantalla}', [TourController::class, 'marcar'])
+                ->where('pantalla', '[a-z]+')->name('tour.visto');
 
             // Consultorios del médico (WEB-2.8b.2): dónde atiende, con qué modalidad y con qué
             // duración. Es lo que la agenda necesita para calcular la jornada —y lo que un médico
@@ -221,6 +229,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'ver'])->name('consulta.mamas.ver');
                 Route::post('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'guardar'])->name('consulta.mamas.guardar');
                 Route::delete('/consulta/{consulta}/mamas/{lado}', [ConsultaMamasController::class, 'quitar'])->name('consulta.mamas.quitar');
+                // La colposcopía con imagen editable (A-13): el trazo y la imagen base de cada variante del cuello
+                // uterino (`nulipara` / `multipara`), por consulta; PNG en el disco privado. La `{variante}` fuera del
+                // catálogo la rechaza el controlador con 404.
+                Route::get('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'ver'])->name('consulta.colposcopia.ver');
+                Route::post('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'guardar'])->name('consulta.colposcopia.guardar');
+                Route::delete('/consulta/{consulta}/colposcopia/{variante}', [ConsultaColposcopiaController::class, 'quitar'])->name('consulta.colposcopia.quitar');
                 Route::post('/consulta/{consulta}/evaluacion', [ConsultaEvaluacionController::class, 'guardar'])->name('consulta.evaluacion.guardar');
                 // Las mediciones de pediatría (WEB-7.4.3a): talla, peso, perímetros, pulso y presión en `percentiles_paciente`.
                 Route::post('/consulta/{consulta}/mediciones', [ConsultaMedicionesController::class, 'guardar'])->name('consulta.mediciones.guardar');
