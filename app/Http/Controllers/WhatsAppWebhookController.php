@@ -102,6 +102,13 @@ class WhatsAppWebhookController extends Controller
 
                             // Enviar la respuesta vía WhatsApp asegurando el phone_number_id del destinatario original
                             $this->whatsAppService->sendMessage($from, $aiReply, $incomingPhoneNumberId);
+                        } elseif (in_array($messageType, ['audio', 'voice', 'image', 'document', 'video', 'location'])) {
+                            Log::info("Mensaje no textual de {$from} (Tipo: {$messageType}): notificando al usuario.");
+                            $this->whatsAppService->sendMessage(
+                                $from,
+                                "Hola 👋 Por el momento solo podemos procesar mensajes de texto. Por favor escríbenos tu respuesta en texto para atenderte con gusto. 😊",
+                                $incomingPhoneNumberId
+                            );
                         }
                     }
                 }

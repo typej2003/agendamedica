@@ -10,7 +10,9 @@ use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use App\Models\Specialty;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PacienteAtencionContextService
 {
@@ -60,14 +62,29 @@ class PacienteAtencionContextService
             // 1. Búsqueda exacta por cualquiera de las variantes formateadas
             $paciente = Paciente::whereIn('telefono', $posiblesValores)->first();
             if ($paciente) {
+                if (trim((string) $paciente->apellidos) === 'WhatsApp') {
+                    return null;
+                }
                 return $paciente;
             }
 
-            // 2. Búsqueda por los últimos 7 dígitos locales (número de abonado en VE)
-            $ultimos7 = substr($clean, -7);
-            if (strlen($ultimos7) === 7) {
-                $paciente = Paciente::where('telefono', 'like', "%{$ultimos7}%")->first();
+            // 2. Búsqueda por los últimos 10 dígitos (código de operador + abonado en VE, ej: 4141234567)
+            if (strlen($clean) >= 10) {
+                $ultimos10 = substr($clean, -10);
+                $paciente = Paciente::where('telefono', 'like', "%{$ultimos10}%")->first();
                 if ($paciente) {
+                    if (trim((string) $paciente->apellidos) === 'WhatsApp') {
+                        return null;
+                    }
+                    return $paciente;
+                }
+            } elseif (strlen($clean) === 7) {
+                // Entrada exacta de 7 dígitos locales
+                $paciente = Paciente::where('telefono', 'like', "%{$clean}%")->first();
+                if ($paciente) {
+                    if (trim((string) $paciente->apellidos) === 'WhatsApp') {
+                        return null;
+                    }
                     return $paciente;
                 }
             }
@@ -76,6 +93,213 @@ class PacienteAtencionContextService
         }
 
         return null;
+    }
+
+    /**
+     * Evalúa si un mensaje es un saludo o comando de inicio.
+     */
+    public function esSaludo(string $mensaje): bool
+    {
+        $limpio = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $mensaje)));
+        $saludos = [
+            'hola', 'ola', 'buenas', 'buenos dias', 'buenos días', 'buenas tardes',
+            'buenas noches', 'buen dia', 'buen día', 'saludos', 'hola buen dia',
+            'hola buenas', 'hola buenas tardes', 'hola buenos dias', 'menu', 'inicio',
+            'empezar', 'start', 'ayuda', 'hi', 'hello'
+        ];
+        return in_array($limpio, $saludos, true);
+    }
+
+    /**
+     * Gestiona el flujo secuencial de registro para un paciente nuevo cuando su
+     * número de teléfono no se encuentra en el modelo Paciente:
+     * 1. Preguntar apellidos.
+     * 2. Preguntar nombres.
+     * 3. Preguntar cédula.
+     * 4. Almacenar datos elementales en Paciente y ofrecer el servicio de especialidades o médico directo.
+     */
+    public function gestionarRegistroPaciente(string $telefono, string $mensaje): ?string
+    {
+        $paciente = $this->buscarPacientePorTelefono($telefono);
+        if ($paciente !== null) {
+            return null;
+        }
+
+        $cleanTel = preg_replace('/\D/', '', $telefono);
+        $cacheKey = "wa_registro_{$cleanTel}";
+        $estado = Cache::get($cacheKey) ?? Cache::get("wa_registro_{$telefono}");
+
+        $mensajeBienvenidaInicial = "¡Hola! Te damos la bienvenida a *Doctorisimo*. 👋\n\n"
+            . "Notamos que tu número de teléfono no se encuentra registrado en nuestro sistema. Para poder brindarte atención médica y agendar tus citas, te ofrecemos registrarte.\n\n"
+            . "Para completar tu registro, te solicitaremos los siguientes datos:\n"
+            . "1️⃣ Tu número de cédula de identidad\n"
+            . "2️⃣ Tus apellidos\n"
+            . "3️⃣ Tus nombres\n\n"
+            . "Para comenzar, por favor indícanos tu número de *cédula de identidad* (ejemplo: V-12345678):";
+
+        // Si el usuario envía un saludo o solicita reiniciar durante el registro en curso
+        if ($estado !== null && ($this->esSaludo(trim($mensaje)) || in_array(mb_strtolower(trim($mensaje)), ['reiniciar', 'cancelar', 'empezar de nuevo', 'volver a empezar', 'menu', 'inicio'], true))) {
+            $nuevoEstado = ['paso' => 'esperando_cedula'];
+            Cache::put($cacheKey, $nuevoEstado, now()->addHours(24));
+            Cache::put("wa_registro_{$telefono}", $nuevoEstado, now()->addHours(24));
+
+            return $mensajeBienvenidaInicial;
+        }
+
+        // Estado 0: Primer mensaje del paciente no registrado -> Bienvenida y solicitud de cédula
+        if ($estado === null) {
+            $nuevoEstado = ['paso' => 'esperando_cedula'];
+            Cache::put($cacheKey, $nuevoEstado, now()->addHours(24));
+            Cache::put("wa_registro_{$telefono}", $nuevoEstado, now()->addHours(24));
+
+            return $mensajeBienvenidaInicial;
+        }
+
+        // Estado 1: Esperando cédula -> Validar cédula, verificar si ya existe en Paciente o pedir apellidos
+        if (($estado['paso'] ?? '') === 'esperando_cedula') {
+            $cedulaInput = preg_replace('/^(mi\s+c[eé]dula\s+es|c[eé]dula:?|ci:?|c\.i\.?:?)\s*/iu', '', trim($mensaje));
+            [$nac, $cedulaLimpia] = $this->normalizarCedulaYNac($cedulaInput);
+
+            if (empty($cedulaLimpia) || mb_strlen($cedulaLimpia) < 4) {
+                return "El número de cédula ingresado no parece válido. Por favor, indícanos tu número de *cédula de identidad* (ejemplo: V-12345678):";
+            }
+
+            // Si la cédula ya existe en Paciente, actualizar teléfono y ofrecer servicio directamente
+            $pacienteExistente = Paciente::where('cedula', $cedulaLimpia)->first();
+            if ($pacienteExistente) {
+                $pacienteExistente->telefono = $telefono;
+                if (empty($pacienteExistente->nac) && $nac) {
+                    $pacienteExistente->nac = $nac;
+                }
+                $pacienteExistente->save();
+
+                Cache::forget($cacheKey);
+                Cache::forget("wa_registro_{$telefono}");
+
+                $especialidades = $this->obtenerEspecialidadesDisponibles();
+                Cache::put("wa_menu_especialidades_{$cleanTel}", $especialidades, now()->addHours(2));
+                Cache::put("wa_menu_especialidades_{$telefono}", $especialidades, now()->addHours(2));
+
+                $nombreCompleto = trim("{$pacienteExistente->nombres} {$pacienteExistente->apellidos}");
+                $msg = "¡Hola, *{$nombreCompleto}*! 👋 Hemos vinculado tu número de WhatsApp a tu ficha médica registrada con cédula *{$nac}-{$cedulaLimpia}*.\n\n";
+                $msg .= "A continuación, te ofrecemos nuestras especialidades médicas disponibles:\n\n";
+                foreach ($especialidades as $idx => $esp) {
+                    $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
+                    $msg .= "{$numEmoji} {$esp}\n";
+                }
+                $msg .= "\nPor favor, responde con el número o nombre de la especialidad que buscas, o indícanos el nombre de tu doctor para verificar disponibilidad. 😊";
+                return $msg;
+            }
+
+            // Cédula nueva: guardar en caché y pedir apellidos
+            $nuevoEstado = [
+                'paso' => 'esperando_apellidos',
+                'cedula' => $cedulaLimpia,
+                'nac' => $nac,
+            ];
+            Cache::put($cacheKey, $nuevoEstado, now()->addHours(24));
+            Cache::put("wa_registro_{$telefono}", $nuevoEstado, now()->addHours(24));
+
+            return "Muchas gracias. Ahora, por favor indícanos tus *apellidos*:";
+        }
+
+        // Estado 2: Esperando apellidos -> Guardar y preguntar nombres
+        if (($estado['paso'] ?? '') === 'esperando_apellidos') {
+            $apellidos = preg_replace('/^(mis\s+apellidos\s+son|mi\s+apellido\s+es|apellidos?:)\s*/iu', '', trim($mensaje));
+            $apellidos = trim($apellidos);
+
+            if (empty($apellidos) || mb_strlen($apellidos) < 2) {
+                return "Por favor, indícanos tus *apellidos* para poder continuar con tu registro:";
+            }
+
+            $apellidosFormateado = mb_convert_case($apellidos, MB_CASE_TITLE, 'UTF-8');
+            $nuevoEstado = [
+                'paso' => 'esperando_nombres',
+                'cedula' => $estado['cedula'] ?? '',
+                'nac' => $estado['nac'] ?? 'V',
+                'apellidos' => $apellidosFormateado,
+            ];
+            Cache::put($cacheKey, $nuevoEstado, now()->addHours(24));
+            Cache::put("wa_registro_{$telefono}", $nuevoEstado, now()->addHours(24));
+
+            return "Perfecto. Por último, por favor indícanos tus *nombres*:";
+        }
+
+        // Estado 3: Esperando nombres -> Guardar en Paciente y ofrecer el servicio
+        if (($estado['paso'] ?? '') === 'esperando_nombres') {
+            $nombres = preg_replace('/^(mis\s+nombres\s+son|mi\s+nombre\s+es|me\s+llamo|nombres?:)\s*/iu', '', trim($mensaje));
+            $nombres = trim($nombres);
+
+            if (empty($nombres) || mb_strlen($nombres) < 2) {
+                return "Por favor, indícanos tus *nombres* para continuar con tu registro:";
+            }
+
+            $nombresFormateado = mb_convert_case($nombres, MB_CASE_TITLE, 'UTF-8');
+            $apellidos = $estado['apellidos'] ?? '';
+            $cedulaLimpia = $estado['cedula'] ?? '';
+            $nac = $estado['nac'] ?? 'V';
+
+            // Guardar datos elementales en el modelo Paciente
+            $paciente = Paciente::create([
+                'apellidos' => $apellidos,
+                'nombres' => $nombresFormateado,
+                'nac' => $nac,
+                'cedula' => $cedulaLimpia,
+                'telefono' => $telefono,
+                'fingreso' => now()->toDateString(),
+            ]);
+
+            // Limpiar estado de registro de caché
+            Cache::forget($cacheKey);
+            Cache::forget("wa_registro_{$telefono}");
+
+            // Ofrecer el servicio (especialidades, médicos según la especialidad, o médico directo)
+            $especialidades = $this->obtenerEspecialidadesDisponibles();
+            Cache::put("wa_menu_especialidades_{$cleanTel}", $especialidades, now()->addHours(2));
+            Cache::put("wa_menu_especialidades_{$telefono}", $especialidades, now()->addHours(2));
+
+            $nombreCompleto = trim("{$paciente->nombres} {$paciente->apellidos}");
+
+            $msg = "✅ *¡DATOS REGISTRADOS CON ÉXITO!*\n\n";
+            $msg .= "👤 *Paciente:* {$nombreCompleto}\n";
+            $msg .= "🆔 *Cédula:* {$nac}-{$cedulaLimpia}\n";
+            $msg .= "📱 *Teléfono:* {$telefono}\n\n";
+            $msg .= "Te damos una cordial bienvenida a *Doctorisimo*. A continuación, te ofrecemos nuestras especialidades médicas disponibles:\n\n";
+
+            foreach ($especialidades as $idx => $esp) {
+                $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
+                $msg .= "{$numEmoji} {$esp}\n";
+            }
+
+            $msg .= "\nPor favor, responde con el número o nombre de la especialidad que buscas, o indícanos el nombre de tu doctor para agendar directamente tu cita. 😊";
+
+            return $msg;
+        }
+
+        return null;
+    }
+
+    /**
+     * Normaliza y separa la nacionalidad (V, E, P) y el número de cédula.
+     */
+    public function normalizarCedulaYNac(string $input): array
+    {
+        $limpio = trim($input);
+        $nac = 'V';
+        $cedula = '';
+
+        if (preg_match('/^\s*([VEPvep])\s*[-–.]?\s*([\d.]+)/iu', $limpio, $matches)) {
+            $nac = mb_strtoupper($matches[1]);
+            $cedula = preg_replace('/\D/', '', $matches[2]);
+        } else {
+            $cedula = preg_replace('/\D/', '', $limpio);
+        }
+
+        if (empty($cedula)) {
+            $cedula = trim(preg_replace('/[^a-zA-Z0-9]/', '', $limpio));
+        }
+
+        return [$nac, $cedula];
     }
 
     /**
@@ -177,15 +401,13 @@ class PacienteAtencionContextService
 
         // CASO 1: El teléfono NO existe en la tabla pacientes (Paciente Nuevo)
         if (!$contexto['existe']) {
-            $msg = "¡Hola! 👋 Te damos la bienvenida a *Doctorisimo*, tu plataforma de atención médica y gestión de citas.\n\n";
-            $msg .= "¿A cuál especialidad médica deseas buscar un médico para agendar tu cita?\n\n";
-
-            foreach ($especialidades as $idx => $esp) {
-                $numEmoji = $this->obtenerNumeroEmoji($idx + 1);
-                $msg .= "{$numEmoji} {$esp}\n";
-            }
-
-            $msg .= "\nPor favor, responde con el número o nombre de la especialidad que necesitas. 😊";
+            $msg = "¡Hola! Te damos la bienvenida a *Doctorisimo*. 👋\n\n";
+            $msg .= "Notamos que tu número de teléfono no se encuentra registrado en nuestro sistema. Para poder brindarte atención médica y agendar tus citas, te ofrecemos registrarte.\n\n";
+            $msg .= "Para completar tu registro, te solicitaremos los siguientes datos:\n";
+            $msg .= "1️⃣ Tu número de cédula de identidad\n";
+            $msg .= "2️⃣ Tus apellidos\n";
+            $msg .= "3️⃣ Tus nombres\n\n";
+            $msg .= "Para comenzar, por favor indícanos tu número de *cédula de identidad* (ejemplo: V-12345678):";
             return $msg;
         }
 
@@ -515,23 +737,26 @@ class PacienteAtencionContextService
         try {
             $specialty = Specialty::where('name', 'like', "%{$nombreEspecialidad}%")->first();
 
+            $medicos = collect();
             if ($specialty) {
                 $medicos = $specialty->medicos()->get();
-            } else {
+            }
+            if ($medicos->isEmpty()) {
                 $medicos = Medico::where('biography', 'like', "%{$nombreEspecialidad}%")->get();
             }
 
             $resultado = [];
             foreach ($medicos as $m) {
                 $resultado[] = [
+                    'id' => $m->id,
                     'reg_medico' => $m->reg_medico ?? (string)$m->id,
                     'nombre' => trim("Dr(a). {$m->name} {$m->lastname}"),
-                    'especialidad' => $specialty->name ?? $nombreEspecialidad,
+                    'especialidad' => $specialty->name ?? $m->biography ?? $nombreEspecialidad,
                 ];
             }
 
             return [
-                'especialidad' => $nombreEspecialidad,
+                'especialidad' => $specialty->name ?? $nombreEspecialidad,
                 'medicos' => $resultado,
             ];
         } catch (\Throwable $e) {
@@ -541,6 +766,115 @@ class PacienteAtencionContextService
                 'medicos' => [],
             ];
         }
+    }
+
+    /**
+     * Resuelve si el mensaje del usuario corresponde a la selección de una especialidad
+     * ya sea por número de opción o por el nombre de la especialidad.
+     */
+    public function resolverSeleccionEspecialidad(string $mensaje, ?string $telefono = null): ?array
+    {
+        $limpio = trim($mensaje);
+        if ($limpio === '') {
+            return null;
+        }
+
+        $cleanTel = $telefono ? preg_replace('/\D/', '', $telefono) : '';
+
+        // 1. Si es numérico, buscar en el menú presentado en caché o en las especialidades disponibles
+        if (is_numeric($limpio)) {
+            $indice = (int)$limpio - 1;
+            $especialidadesMenu = ($cleanTel ? Cache::get("wa_menu_especialidades_{$cleanTel}") : null)
+                ?: ($telefono ? Cache::get("wa_menu_especialidades_{$telefono}") : null)
+                ?: $this->obtenerEspecialidadesDisponibles();
+
+            if (isset($especialidadesMenu[$indice])) {
+                $espElegida = $especialidadesMenu[$indice];
+                return $this->buscarMedicosPorEspecialidad($espElegida);
+            }
+        }
+
+        // 2. Si el texto coincide total o parcialmente con una especialidad
+        $todasEspecialidades = Specialty::pluck('name')->all();
+        if (empty($todasEspecialidades)) {
+            $todasEspecialidades = $this->obtenerEspecialidadesDisponibles();
+        }
+
+        $limpioAscii = Str::ascii(mb_strtolower($limpio));
+
+        foreach ($todasEspecialidades as $esp) {
+            $espAscii = Str::ascii(mb_strtolower($esp));
+            if (mb_stripos($limpioAscii, $espAscii) !== false || mb_stripos($espAscii, $limpioAscii) !== false) {
+                return $this->buscarMedicosPorEspecialidad($esp);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Identifica si el usuario solicita directamente a un médico específico en su mensaje.
+     */
+    public function identificarSolicitudDirectaMedico(string $mensaje): ?array
+    {
+        $limpio = trim($mensaje);
+
+        if (is_numeric($limpio) || mb_strlen($limpio) < 3) {
+            return null;
+        }
+
+        // Descartar si el mensaje es una consulta sobre dirección, ubicación, horarios o teléfono
+        $patronesInformativos = [
+            'donde queda', 'dónde queda', 'direccion', 'dirección', 'ubicacion', 'ubicación',
+            'horario', 'horarios', 'dias atencion', 'días de atención', 'como llegar', 'cómo llegar',
+            'telefono', 'teléfono', 'contacto', 'informacion', 'información'
+        ];
+        $limpioAscii = Str::ascii(mb_strtolower($limpio));
+        foreach ($patronesInformativos as $patron) {
+            if (str_contains($limpioAscii, Str::ascii($patron))) {
+                return null;
+            }
+        }
+
+        // Descartar palabras de confirmación, negación o saludos genéricos
+        $palabrasComunes = ['si', 'sí', 'no', 'hola', 'menu', 'inicio', 'ok', 'gracias', 'ayuda', 'buenas'];
+        if (in_array(mb_strtolower($limpio), $palabrasComunes, true)) {
+            return null;
+        }
+
+        // 1. Extraer nombre tras patrones de cortesía o frases de cita
+        if (preg_match('/(?:cita\s+(?:con\s+)?(?:el\s+|la\s+)?(?:dr\.|dra\.|doctor|doctora)?|dr\.|dra\.|doctor|doctora)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/iu', $limpio, $m)) {
+            $candidato = trim($m[1]);
+            // Limpiar cortesías al final (ej: "por favor", "porfa", "gracias")
+            $candidato = preg_replace('/\s+(por\s+favor|porfa|gracias|muchas\s+gracias)\s*$/iu', '', $candidato);
+            $candidato = trim($candidato);
+
+            if (mb_strlen($candidato) >= 3) {
+                $medico = $this->resolverMedico($candidato);
+                return [
+                    'solicitado' => true,
+                    'registrado' => $medico !== null,
+                    'medico' => $medico,
+                    'nombre_solicitado' => $medico ? $medico->nombre_mostrar : $candidato,
+                ];
+            }
+        }
+
+        // 2. Intentar resolver directamente con resolverMedico limpiando cortesías al final
+        $sinCortesias = preg_replace('/\s+(por\s+favor|porfa|gracias|muchas\s+gracias)\s*$/iu', '', $limpio);
+        $sinCortesias = trim($sinCortesias);
+        $medicoDirecto = $this->resolverMedico($sinCortesias);
+
+        if ($medicoDirecto) {
+            return [
+                'solicitado' => true,
+                'registrado' => true,
+                'medico' => $medicoDirecto,
+                'nombre_solicitado' => $medicoDirecto->nombre_mostrar,
+            ];
+        }
+
+        return null;
     }
 
     /**
@@ -571,7 +905,7 @@ class PacienteAtencionContextService
     /**
      * Ayudante para emojis numéricos
      */
-    protected function obtenerNumeroEmoji(int $numero): string
+    public function obtenerNumeroEmoji(int $numero): string
     {
         $emojis = [
             1 => '1️⃣',
@@ -716,6 +1050,19 @@ class PacienteAtencionContextService
                 'tipo' => 'CONSULTA',
                 'medico' => $claveMedico,
             ]);
+
+            // Vincular al paciente con el médico en medico_pacientes si aún no existe
+            try {
+                MedicoPaciente::firstOrCreate([
+                    'medico_id' => $medico->id,
+                    'paciente_id' => $paciente->id,
+                ], [
+                    'reg_medico' => $regMedico,
+                    'numhistoria' => $numhistoria,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo vincular MedicoPaciente en reservarCitaEnCola: ' . $e->getMessage());
+            }
 
             // Registrar rastro en sync_changes si la clase está disponible
             if (class_exists(\App\Sync\RegistroDeCambios::class)) {

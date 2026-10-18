@@ -275,6 +275,12 @@ class ChatbotInformationTest extends TestCase
             'telefono' => '0261-7000000',
         ]);
 
+        Paciente::create([
+            'nombres' => 'Arturo',
+            'apellidos' => 'Pérez',
+            'telefono' => '584140001122',
+        ]);
+
         // Simular primer turno con Function Calling y segundo turno con respuesta final
         \Illuminate\Support\Facades\Http::fake([
             'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent*' => \Illuminate\Support\Facades\Http::sequence()
@@ -552,5 +558,176 @@ class ChatbotInformationTest extends TestCase
         $this->assertStringContainsString('Dr. Carlos Mendoza', $respuesta);
         $this->assertStringContainsString('Turno asignado:* #1', $respuesta);
         $this->assertStringContainsString('Clínica Sanatrix', $respuesta);
+    }
+
+    public function test_flujo_registro_paciente_nuevo_cuando_telefono_no_esta_en_paciente()
+    {
+        $tel = '584129990099';
+
+        // Asegurar que el teléfono no existe previamente en la tabla pacientes
+        $this->assertNull(Paciente::where('telefono', $tel)->first());
+
+        $gemini = app(GeminiService::class);
+
+        // Crear especialidad y médico para el flujo posterior
+        $specialty = Specialty::firstOrCreate(['name' => 'Ginecología Láser Avanzada']);
+        $medico = Medico::create([
+            'name' => 'Marcos',
+            'lastname' => 'Pérez',
+            'prefix' => 'Dr.',
+            'reg_medico' => 'MED-GIN-01',
+            'is_active' => true,
+        ]);
+        $medico->specialties()->sync([$specialty->id]);
+
+        Evolucion::create([
+            'reg_medico' => 'MED-GIN-01',
+            'clave' => 1,
+            'especialidad' => 'Ginecología Láser Avanzada',
+            'consultorio' => 'Consultorio 101',
+            'linea_1' => 'Torre Médica Sur',
+        ]);
+
+        // PASO 1: Primer mensaje -> Debe preguntar la cédula
+        $r1 = $gemini->generarRespuesta('Hola, buenas tardes', $tel);
+        $this->assertStringContainsString('cédula de identidad', $r1);
+        $this->assertNull(Paciente::where('telefono', $tel)->first());
+
+        // PASO 2: Paciente responde su cédula -> Debe preguntar los apellidos
+        $r2 = $gemini->generarRespuesta('V-24555666', $tel);
+        $this->assertStringContainsString('indícanos tus *apellidos*', $r2);
+        $this->assertNull(Paciente::where('telefono', $tel)->first());
+
+        // PASO 3: Paciente responde sus apellidos -> Debe preguntar los nombres
+        $r3 = $gemini->generarRespuesta('González Martínez', $tel);
+        $this->assertStringContainsString('indícanos tus *nombres*', $r3);
+        $this->assertNull(Paciente::where('telefono', $tel)->first());
+
+        // PASO 4: Paciente responde sus nombres -> Debe almacenar los datos en Paciente y ofrecer especialidades
+        $r4 = $gemini->generarRespuesta('Carlos Eduardo', $tel);
+
+        $pacienteCreado = Paciente::where('cedula', '24555666')->first();
+        $this->assertNotNull($pacienteCreado);
+        $this->assertEquals('Carlos Eduardo', $pacienteCreado->nombres);
+        $this->assertEquals('González Martínez', $pacienteCreado->apellidos);
+        $this->assertEquals('V', $pacienteCreado->nac);
+        $this->assertEquals($tel, $pacienteCreado->telefono);
+
+        $this->assertStringContainsString('REGISTRADOS CON ÉXITO', $r4);
+        $this->assertStringContainsString('Carlos Eduardo González Martínez', $r4);
+        $this->assertStringContainsString('V-24555666', $r4);
+        $this->assertStringContainsString('Ginecología Láser Avanzada', $r4);
+
+        // PASO 5: Paciente selecciona la especialidad (por nombre o número)
+        $r5 = $gemini->generarRespuesta('Ginecología Láser Avanzada', $tel);
+        $this->assertStringContainsString('Médicos disponibles en Ginecología Láser Avanzada', $r5);
+        $this->assertStringContainsString('Dr(a). Marcos Pérez', $r5);
+
+        // PASO 6: Paciente selecciona al médico (opción 1)
+        $r6 = $gemini->generarRespuesta('1', $tel);
+        $this->assertStringContainsString('Hemos consultado la agenda del *Dr(a). Marcos Pérez*', $r6);
+        $this->assertStringContainsString('¿Deseas que reservemos tu cita para esta fecha?', $r6);
+
+        // PASO 7: Paciente confirma ("Sí") -> Debe crear la cita en Cola
+        $r7 = $gemini->generarRespuesta('Sí, confirmo', $tel);
+        $this->assertStringContainsString('CITA REGISTRADA CON ÉXITO', $r7);
+        $this->assertStringContainsString('Carlos Eduardo González Martínez', $r7);
+        $this->assertStringContainsString('Dr. Marcos Pérez', $r7);
+
+        $citaEnCola = Cola::where('reg_medico', 'MED-GIN-01')
+            ->where('paciente_sinhistoria_id', $pacienteCreado->id)
+            ->first();
+        $this->assertNotNull($citaEnCola);
+        $this->assertEquals(0, $citaEnCola->atendido);
+    }
+
+    public function test_paciente_registrado_solicita_medico_directamente()
+    {
+        $tel = '584145554433';
+
+        $paciente = Paciente::create([
+            'nombres' => 'Valeria',
+            'apellidos' => 'Ríos',
+            'cedula' => '23111222',
+            'telefono' => $tel,
+        ]);
+
+        $medico = Medico::create([
+            'name' => 'Luis',
+            'lastname' => 'Herrera',
+            'prefix' => 'Dr.',
+            'reg_medico' => 'MED-DIR-01',
+            'is_active' => true,
+        ]);
+
+        Evolucion::create([
+            'reg_medico' => 'MED-DIR-01',
+            'clave' => 1,
+            'especialidad' => 'Traumatología',
+            'consultorio' => 'Consultorio 204',
+            'linea_1' => 'Centro Traumatológico',
+        ]);
+
+        $gemini = app(GeminiService::class);
+
+        // Solicitar directamente al médico
+        $respuesta = $gemini->generarRespuesta('Quiero cita con el doctor Luis Herrera por favor', $tel);
+
+        $this->assertStringContainsString('Dr. Luis Herrera', $respuesta);
+        $this->assertStringContainsString('Día más próximo disponible', $respuesta);
+        $this->assertStringContainsString('¿Deseas que reservemos tu cita para esta fecha?', $respuesta);
+
+        // Confirmar cita
+        $confirmacion = $gemini->generarRespuesta('Sí', $tel);
+        $this->assertStringContainsString('CITA REGISTRADA CON ÉXITO', $confirmacion);
+        $this->assertStringContainsString('Valeria Ríos', $confirmacion);
+    }
+
+    public function test_paciente_con_cedula_preexistente_actualiza_telefono_en_registro()
+    {
+        $tel = '584247778899';
+
+        $pacienteExistente = Paciente::create([
+            'nombres' => 'Manuel',
+            'apellidos' => 'Blanco',
+            'cedula' => '19555444',
+            'nac' => 'V',
+            'telefono' => null,
+        ]);
+
+        $gemini = app(GeminiService::class);
+
+        // Flujo de registro: primer mensaje Hola -> pide cédula -> responde cédula preexistente -> vincula y saluda
+        $r1 = $gemini->generarRespuesta('Hola', $tel);
+        $this->assertStringContainsString('cédula de identidad', $r1);
+
+        $r2 = $gemini->generarRespuesta('V-19555444', $tel);
+        $this->assertStringContainsString('Manuel Blanco', $r2);
+        $this->assertStringContainsString('Hemos vinculado tu número de WhatsApp', $r2);
+
+        // Comprobar que no se creó duplicado y que se actualizó el teléfono
+        $this->assertEquals(1, Paciente::where('cedula', '19555444')->count());
+        $pacienteActualizado = Paciente::where('cedula', '19555444')->first();
+        $this->assertEquals($tel, $pacienteActualizado->telefono);
+    }
+
+    public function test_paciente_solicita_medico_no_registrado_informa_adecuadamente()
+    {
+        $tel = '584161112233';
+
+        Paciente::create([
+            'nombres' => 'Patricia',
+            'apellidos' => 'Silva',
+            'cedula' => '21000999',
+            'telefono' => $tel,
+        ]);
+
+        $gemini = app(GeminiService::class);
+
+        // Solicitar a un médico que NO existe en la base de datos
+        $respuesta = $gemini->generarRespuesta('Quiero una cita con el doctor Gregory House por favor', $tel);
+
+        $this->assertStringContainsString('No encontramos registrado(a) en nuestra clínica al *Dr(a). Gregory House*', $respuesta);
+        $this->assertStringContainsString('especialidades disponibles', $respuesta);
     }
 }
