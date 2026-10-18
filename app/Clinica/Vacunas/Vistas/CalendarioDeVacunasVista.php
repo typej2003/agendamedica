@@ -49,7 +49,14 @@ final class CalendarioDeVacunasVista
         // A dónde se postea el registro de una dosis (WEB-7.4.4b); `null` = el calendario es de sólo lectura.
         private ?string $urlRegistrar = null,
         private ?string $hoy = null,
+        // La hoja del carnet de vacunación (WEB-7.4.4c).
+        private ?string $urlCarnet = null,
     ) {
+    }
+
+    public function urlCarnet(): ?string
+    {
+        return $this->urlCarnet;
     }
 
     public function puedeRegistrar(): bool

@@ -7,7 +7,10 @@ use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Vacunas\CalendarioDeVacunas;
+use App\Clinica\Impresion\MembreteDelMedico;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Vacunas\Vistas\CalendarioDeVacunasVista;
+use App\Clinica\Vacunas\Vistas\CarnetDeVacunacionVista;
 use App\Clinica\Vacunas\VacunasDelPaciente;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -54,6 +57,38 @@ class VacunasDelPacienteController extends Controller
                 // Registrar una dosis (WEB-7.4.4b) exige la clave de la historia (`vacuna_paciente.historia`): sin número no se ofrece.
                 $ficha->numhistoria === null ? null : route('clinica.pacientes.vacunas.registrar', $paciente),
                 FechaDelConsultorio::hoy()->toDateString(),
+                route('clinica.pacientes.vacunas.carnet', $paciente),
+            ),
+        ]);
+    }
+
+    /**
+     * **El carnet de vacunación** (WEB-7.4.4c): la hoja A4 con el membrete del médico, las dosis aplicadas y las que faltan. La imprime el
+     * navegador; con `?incrustado=1` va sin barra, para la vista previa («Visualizar»).
+     */
+    public function carnet(Request $request, int $paciente, MembreteDelMedico $membretes, FamiliaDelPaciente $familias)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $regMedico = $contexto['reg_medico'];
+
+        $ficha = $this->pacientes->ficha($regMedico, $paciente);
+        abort_unless($ficha !== null, 404);
+
+        $datos = $this->lectura->de($regMedico, CamposDePaciente::historiaNumerica($ficha->numhistoria));
+        $hoy = FechaDelConsultorio::hoy()->toDateString();
+        $familia = $familias->de($regMedico, $ficha->numhistoria)['familia'] ?? null;
+
+        return view('clinica.vacunas.carnet', [
+            'vm' => new CarnetDeVacunacionVista(
+                $membretes->de($contexto['medico']),
+                $ficha,
+                $datos['aplicadas'],
+                $this->calendario->armar($ficha->fnacimiento ? (string) $ficha->fnacimiento : null, $ficha->sexo, $hoy, $datos['vacunas'], $datos['dosis'], $datos['aplicadas']),
+                $familia === null ? null : (collect([$familia->nom_madre ?? null, $familia->nom_padre ?? null])
+                    ->map(fn ($n) => CamposDePaciente::texto($n))->filter()->implode(' y ') ?: null),
+                $hoy,
+                route('clinica.pacientes.vacunas', $paciente),
+                $request->boolean('incrustado'),
             ),
         ]);
     }

@@ -3,7 +3,16 @@
 @section('titulo', 'Vacunas')
 
 @section('contenido')
-    <x-ui.page-head :titulo="'Vacunas · ' . $vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlFicha()" volver-texto="Ficha del paciente" />
+    <x-ui.page-head :titulo="'Vacunas · ' . $vm->nombre()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlFicha()" volver-texto="Ficha del paciente">
+        <x-slot name="acciones">
+            @if ($vm->urlCarnet() && ! $vm->sinCatalogo())
+                {{-- El carnet (WEB-7.4.4c): «Imprimir» abre la hoja en otra pestaña y «Visualizar» la muestra en un diálogo. --}}
+                <x-ui.imprimir-con-vista :url="$vm->urlCarnet()" titulo="Carnet de vacunación">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Imprimir el carnet
+                </x-ui.imprimir-con-vista>
+            @endif
+        </x-slot>
+    </x-ui.page-head>
 
     @if ($vm->sinCatalogo())
         @php $vacio = $vm->vacioSinCatalogo(); @endphp
@@ -103,9 +112,11 @@
     @if ($vm->puedeRegistrar() && ! $vm->sinCatalogo())
         @include('clinica.vacunas._dialogo-registrar')
     @endif
+    @include('clinica.consulta._visualizar')
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
     @if ($vm->puedeRegistrar())
         <script src="{{ asset('js/clinica/vacunas.js') }}"></script>
     @endif
