@@ -318,7 +318,11 @@ final class ConsultaShellVista
     }
 
     /**
-     * El estado vacío del contenido: el shell sin ninguna sección elegida.
+     * El estado vacío del contenido: el shell con una sección que **no existe** (un `?seccion=` desconocido).
+     *
+     * Desde O-06 la consulta sin `?seccion=` abre en Motivos de consulta, así que este estado dejó de ser el
+     * camino normal; no se borra porque sigue siendo el destino de una sección pedida que no está en el
+     * catálogo (y de la pre-factura, que todavía no tiene pantalla).
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
      * las secciones se abren desde el **menú lateral** (el grupo «Consulta», que reemplazó al panel). Con

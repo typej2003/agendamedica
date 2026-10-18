@@ -76,6 +76,42 @@ final class ParametrosDeAgenda
         return $id > 0 ? $id : null;
     }
 
+    /**
+     * La sede con la que abre el **formulario de la cita** («Nueva cita», O-03b del 2026-10-17).
+     *
+     * Es `sedeDe()` más un solo caso: cuando **no hay sede del contexto** (la barra en «Todos mis
+     * consultorios») y **la URL no pidió `sede`**, si el médico tiene **exactamente una** sede vigente se
+     * propone esa. Con varias —o con ninguna— se sigue pidiendo elegir, porque la sede decide la jornada y
+     * el lugar.
+     *
+     * `sede=todas` es una elección **explícita** (la agenda mirando todas las sedes juntas) y **no se
+     * pisa**: eso ya lo resuelve `sedeDe()` devolviendo `null` con la query presente, y por eso el default
+     * sólo entra cuando la URL no trae `sede`. Tampoco se toca la agenda: su filtro por sede sigue siendo
+     * el de `sedeDe()`, que en «todos mis consultorios» no filtra (una lista de citas con y sin sede).
+     *
+     * Las sedes salen de `$contexto['sedes']` —las **vigentes** del médico, la misma lectura con la que
+     * `ContextoTrabajo` arma la barra y con la que `ArmadorDeAgenda::sedes()` arma el formulario—: el
+     * criterio vive acá y en un solo lugar, no en el Blade ni en el controlador.
+     */
+    public static function sedeDelFormulario(Request $request, array $contexto): ?int
+    {
+        $sede = self::sedeDe($request, $contexto);
+
+        if ($sede !== null || $request->query('sede') !== null) {
+            return $sede;
+        }
+
+        return self::laUnicaSedeDe($contexto);
+    }
+
+    /** La sede del médico si tiene **exactamente una** vigente; `null` con varias o con ninguna. */
+    private static function laUnicaSedeDe(array $contexto): ?int
+    {
+        $sedes = collect($contexto['sedes'] ?? []);
+
+        return $sedes->count() === 1 ? (int) $sedes->first()->id : null;
+    }
+
     /** @return array{0: Carbon, 1: Carbon} El primer y el último día que cubre la vista. */
     public function rango(): array
     {

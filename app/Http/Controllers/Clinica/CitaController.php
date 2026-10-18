@@ -61,7 +61,9 @@ class CitaController extends Controller
             'cita'            => null,
             'accion'          => route('clinica.agenda.crear'),
             'fecha'           => ParametrosDeAgenda::fechaDe($request->query('fecha')),
-            'sedeId'          => ParametrosDeAgenda::sedeDe($request, $contexto),
+            // La sede con la que abre: la pedida, la del contexto o —sin contexto y con una sola sede— esa
+            // (O-03 y O-03b). El criterio vive en `ParametrosDeAgenda`, no acá.
+            'sedeId'          => ParametrosDeAgenda::sedeDelFormulario($request, $contexto),
             'valores'         => ['paciente_id' => $paciente?->id],
             'pacienteElegido' => $paciente ? $this->pacientes->ficha($paciente, $this->pacientes->numHistoriaDe($contexto, $paciente)) : null,
             'pendiente'       => null,

@@ -194,6 +194,20 @@ final class SeccionesDeLaConsulta
         return self::porSeccion($seccion, $especialidad) !== null;
     }
 
+    /**
+     * **La sección con la que abre la consulta** cuando la URL no pide ninguna (O-06, 2026-10-17): sin
+     * `?seccion=` la consulta abre en **Motivos de consulta**, que es el ítem 1 del catálogo.
+     *
+     * Se resuelve en el controlador —que es el que arma la sección— y **sin redirect**: la URL queda limpia.
+     * Una sección **pedida** se devuelve tal cual, exista o no, para que un `?seccion=` desconocido siga
+     * cayendo en el estado vacío del shell como siempre: acá sólo se decide el punto de entrada, no se
+     * valida la sección.
+     */
+    public static function deEntrada(?string $seccion): string
+    {
+        return $seccion === null || $seccion === '' ? self::SECCION_MOTIVOS : $seccion;
+    }
+
     /** La clave normalizada: la pedida si es una sección con pantalla, `null` en cualquier otro caso. */
     public static function normalizar(?string $seccion, ?string $especialidad = null): ?string
     {

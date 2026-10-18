@@ -22,6 +22,7 @@ use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\TextoDelExamenVista;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
@@ -196,7 +197,11 @@ class ConsultaController extends Controller
         // elige la agenda a la que se vuelve.
         $dia = $consulta->fecha ? Carbon::parse($consulta->fecha) : FechaDelConsultorio::hoy();
 
-        $seccion = (string) $request->query('seccion', '');
+        // **La consulta abre en Motivos de consulta** (O-06, 2026-10-17): sin `?seccion=` se trata como
+        // `motivos` —el ítem 1 del catálogo—, sin redirect (la URL queda limpia) y con el mismo valor para el
+        // contenido, el shell y el grupo «Consulta» del menú. Un `?seccion=` que no existe **no** se pisa: cae
+        // en el estado vacío del shell, como siempre.
+        $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
@@ -268,9 +273,10 @@ class ConsultaController extends Controller
                 $avisar,
                 $contexto['specialty']?->slug,
             ),
-            // La sección activa: una sola, la que el panel abrió. El shell sin sección muestra su estado
-            // vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el nombre del **ViewModel**
-            // para los parciales de cada sección (el shell y la sección no pueden llamarse igual).
+            // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
+            // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el
+            // nombre del **ViewModel** para los parciales de cada sección (el shell y la sección no pueden
+            // llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
                 ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
                 : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $ecoAbdominal, $doctores),

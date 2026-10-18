@@ -83,6 +83,28 @@ class SeccionesDeLaConsultaTest extends TestCase
     }
 
     /**
+     * O-06 (2026-10-17): sin `?seccion=` la consulta abre en **Motivos de consulta** (el ítem 1) y el menú lo
+     * marca. Una sección pedida se respeta tal cual —aunque no exista—: el estado vacío sigue siendo su
+     * destino.
+     */
+    public function test_sin_seccion_la_consulta_abre_en_motivos(): void
+    {
+        $this->assertSame('motivos', SeccionesDeLaConsulta::deEntrada(null));
+        $this->assertSame('motivos', SeccionesDeLaConsulta::deEntrada(''));
+
+        // Con el mismo valor por defecto, el grupo «Consulta» marca el ítem 1 y no otro.
+        $items = SeccionesDeLaConsulta::submenu(42, SeccionesDeLaConsulta::deEntrada(null));
+        $activos = array_values(array_filter($items, fn (array $item) => $item['activo']));
+        $this->assertCount(1, $activos);
+        $this->assertSame('Motivos de consulta', $activos[0]['texto']);
+
+        // Una sección válida sigue siendo la suya; una inventada no se normaliza y cae en el vacío.
+        $this->assertSame('evolucion', SeccionesDeLaConsulta::deEntrada('evolucion'));
+        $this->assertSame('prefactura', SeccionesDeLaConsulta::deEntrada('prefactura'));
+        $this->assertNull(SeccionesDeLaConsulta::normalizar(SeccionesDeLaConsulta::deEntrada('prefactura')));
+    }
+
+    /**
      * El `detalle` de cada ítem ya no se pinta (el menú lleva sólo el nombre), pero sigue siendo el mapa de qué
      * contiene cada sección: el de Solicitudes nombra todo lo que cuelga de ella (WEB-5.3a, WEB-5.3b y WEB-5.4).
      */

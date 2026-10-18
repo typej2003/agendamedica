@@ -176,16 +176,17 @@ final class FormularioDeCitaVista
 
     /**
      * La sede con la que abre el paso 1: la de la URL o, si no viene `sede`, la **del consultorio del
-     * contexto** (la de la barra superior). Eso lo resuelve `ParametrosDeAgenda::sedeDe`, que es el único
-     * lugar donde se decide, así vale igual desde la agenda, desde el buscador de pacientes y desde «Hacer
-     * cita» en los récipes (O-03, 2026-10-17). Esa decisión reemplaza a la anterior —«sin sede elegida no
-     * se preselecciona ninguna»—: agendar donde el médico está trabajando es lo esperado, y la sede se
-     * puede cambiar.
+     * contexto** (la de la barra superior). Eso lo resuelve `ParametrosDeAgenda::sedeDelFormulario`, que es
+     * el único lugar donde se decide, así vale igual desde la agenda, desde el buscador de pacientes y desde
+     * «Hacer cita» en los récipes (O-03, 2026-10-17) y —cuando el contexto está en «todos mis
+     * consultorios»— propone la única sede del médico si tiene una sola (O-03b). Esa decisión reemplaza a
+     * la anterior —«sin sede elegida no se preselecciona ninguna»—: agendar donde el médico está trabajando
+     * es lo esperado, y la sede se puede cambiar.
      *
      * «— Elige una sede —» queda sólo para cuando **no hay** una sede que proponer: el contexto está en
-     * «todos mis consultorios», la URL pide `sede=todas` (una elección explícita de la agenda, que no se
-     * pisa) o la sede pedida no es del médico. Ahí la sede sigue siendo una decisión del usuario, porque
-     * define la jornada y el lugar.
+     * «todos mis consultorios» y el médico tiene varias sedes (o ninguna), la URL pide `sede=todas` (una
+     * elección explícita de la agenda, que no se pisa) o la sede pedida no es del médico. Ahí la sede sigue
+     * siendo una decisión del usuario, porque define la jornada y el lugar.
      *
      * @return array<int,array{valor:string, texto:string, elegida:bool}>
      */

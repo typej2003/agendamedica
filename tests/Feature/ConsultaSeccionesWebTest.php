@@ -707,39 +707,57 @@ class ConsultaSeccionesWebTest extends TestCase
         $this->assertStringNotContainsString('Pre-factura', $html);
     }
 
-    public function test_el_shell_sin_seccion_sigue_mostrando_su_estado_vacio(): void
+    // ------------------------- La consulta abre en Motivos de consulta (O-06, 2026-10-17)
+
+    public function test_sin_seccion_la_consulta_abre_en_motivos_y_el_menu_lo_marca(): void
     {
+        // O-06: sin `?seccion=` la consulta abre en **Motivos de consulta** (el ítem 1), sin redirect —la URL
+        // queda limpia— y con el ítem marcado en el grupo «Consulta» del menú. Antes pintaba el estado vacío
+        // «Elige una sección en el menú».
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $this->paciente($medico, 1001);
-        $consulta = Consulta::create([
-            'reg_medico'  => $medico->reg_medico,
-            'numhistoria' => 1001,
-            'nroconsulta' => 1,
-            'fecha'       => $this->hoy->toDateString(),
-        ]);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', $consulta->id))->assertOk()->getContent();
+
+        // Llegó a Motivos, y no al vacío.
+        $this->assertStringContainsString('id="consulta-motivos"', $html);
+        $this->assertStringContainsString('Motivos de esta consulta', $html);
+        $this->assertStringNotContainsString('Elige una sección en el menú', $html);
+
+        // El menú marca Motivos de consulta (y sólo ese ítem lleva la marca de página actual del grupo).
+        preg_match('/data-menu="consulta".*?<\/details>/s', $html, $bloque);
+        $this->assertNotSame('', $bloque[0] ?? '', 'falta el grupo «Consulta» del menú');
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Motivos de consulta"/', $bloque[0]);
+        $this->assertSame(1, substr_count($bloque[0], 'aria-current="page"'));
+    }
+
+    public function test_una_seccion_valida_sigue_cargando_la_suya(): void
+    {
+        // El default de O-06 es sólo del punto de entrada: `?seccion=enfermedad` sigue abriendo lo suyo.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', $consulta->id));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Elige una sección en el menú', false);
+        $respuesta->assertSee('id="consulta-enfermedad"', false);
+        $respuesta->assertDontSee('id="consulta-motivos"', false);
+        $respuesta->assertDontSee('Elige una sección en el menú', false);
     }
 
     public function test_una_seccion_inventada_en_la_url_no_rompe_la_pantalla(): void
     {
+        // El estado vacío no se borra (O-06): sigue siendo el destino de una sección que no existe.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $this->paciente($medico, 1001);
-        $consulta = Consulta::create([
-            'reg_medico'  => $medico->reg_medico,
-            'numhistoria' => 1001,
-            'nroconsulta' => 1,
-            'fecha'       => $this->hoy->toDateString(),
-        ]);
+        [, $consulta] = $this->pacienteYConsulta($medico);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']));
 
         $respuesta->assertOk();
         $respuesta->assertSee('Elige una sección en el menú', false);
+        $respuesta->assertDontSee('id="consulta-motivos"', false);
     }
 }

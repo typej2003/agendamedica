@@ -2,6 +2,7 @@
 
 namespace App\Actions\Pacientes;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\Paciente;
@@ -29,6 +30,9 @@ use InvalidArgumentException;
  *  - **"Sin cédula" no enlaza** (`IdentidadDePaciente::esSinCedula`): el vacío y el marcador `S.C.`
  *    del alta no identifican a nadie, así que un paciente sin documento siempre es una ficha nueva.
  *    Antes, dos altas sin cédula compartían la misma ficha (las dos buscaban `cedula = ''`).
+ *  - **Un paciente nuevo nace con la fecha de ingreso de hoy** si quien da el alta no la indicó
+ *    (O-02b): el alta mínima de la cita no tiene ese campo y sin él el paciente no aparece en el
+ *    listado «pacientes por rango». Es sólo del alta: una ficha enlazada por cédula no se toca.
  */
 final class CrearPaciente
 {
@@ -70,6 +74,19 @@ final class CrearPaciente
                     $paciente->fill($completar)->save();
                 }
             } else {
+                // **La fecha de ingreso de un paciente nuevo** (O-02b, 2026-10-17): si quien da el alta no
+                // la indicó —es el caso del alta mínima del paso 2 de «Nueva cita», que no tiene el
+                // campo—, nace con **hoy**, que es el día del consultorio y no el del servidor
+                // (`FechaDelConsultorio`). Sin ella el paciente no aparece en «pacientes por rango».
+                //
+                // Sólo en el alta: al **enlazar por cédula** una ficha que ya existía no se la toca, aunque
+                // estuviera vacía —estampar hoy una ficha vieja sería un dato falso—; esa rama es la de
+                // arriba y sigue con la regla de «sólo completa vacíos». Y `array_key_exists` (no `??=`)
+                // respeta el alta que manda la fecha en blanco a propósito: manda el formulario.
+                if (! array_key_exists('fingreso', $columnas)) {
+                    $columnas['fingreso'] = FechaDelConsultorio::hoy();
+                }
+
                 $paciente = Paciente::create($columnas);
             }
 

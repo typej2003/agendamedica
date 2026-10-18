@@ -191,4 +191,36 @@ class AgendaVistasTest extends TestCase
 
         $this->assertSame('ECO', $pedida(['razon' => ' ECO '])->razonPedida);
     }
+
+    // ------------------------- La sede del formulario de la cita (O-03 y O-03b, 2026-10-17)
+
+    /**
+     * O-03b: en «Todos mis consultorios» (sin `office` en el contexto) el formulario de la cita propone la
+     * sede del médico **si tiene exactamente una vigente**; con varias sigue pidiendo elegir. `sede=todas` es
+     * una elección explícita y no se pisa, aunque haya una sola.
+     */
+    public function test_la_sede_del_formulario_propone_la_unica_del_medico_sin_contexto(): void
+    {
+        $una = ['office' => null, 'sedes' => collect([(object) ['id' => 7]])];
+        $dos = ['office' => null, 'sedes' => collect([(object) ['id' => 7], (object) ['id' => 8]])];
+        $ninguna = ['office' => null, 'sedes' => collect()];
+
+        $pedida = fn (array $query, array $contexto) => ParametrosDeAgenda::sedeDelFormulario(
+            Request::create('/clinica/agenda/nueva', 'GET', $query),
+            $contexto,
+        );
+
+        // Una sola sede y sin contexto: se propone esa.
+        $this->assertSame(7, $pedida([], $una));
+        // Varias (o ninguna): la sede sigue siendo una decisión del usuario.
+        $this->assertNull($pedida([], $dos));
+        $this->assertNull($pedida([], $ninguna));
+        // Con contexto manda la del contexto, tenga las sedes que tenga.
+        $this->assertSame(5, $pedida([], ['office' => (object) ['id' => 5]] + $una));
+        // `sede=todas` (o `sede=0`) no se pisa con la única: es la agenda mirando todas las sedes juntas.
+        $this->assertNull($pedida(['sede' => 'todas'], $una));
+        $this->assertNull($pedida(['sede' => '0'], $una));
+        // Y una sede pedida sigue mandando sobre la única del médico.
+        $this->assertSame(9, $pedida(['sede' => '9'], $una));
+    }
 }
