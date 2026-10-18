@@ -107,14 +107,28 @@ class ConsultaEmbarazoController extends Controller
             ->with('estado', 'Gesta ' . $clave . ' creada. Ahora completa su FUR y guárdala.');
     }
 
-    /** La vuelta a la sección, en la pestaña *Prenatal* (la única que existe hoy). */
-    private function destino(Consulta $consulta, string $pestana = PestanasDelEmbarazo::PRENATAL)
+    /**
+     * La vuelta a la sección, en la pestaña que corresponda. En las pestañas **por fecha** (*Laboratorio* y
+     * *Controles*) la vuelta lleva la `gesta` y la `fecha` de la fila que se acaba de guardar —su clave— para
+     * caer en lo guardado y no en un formulario en blanco de «fecha nueva».
+     */
+    private function destino(Consulta $consulta, string $pestana = PestanasDelEmbarazo::PRENATAL, ?int $gesta = null, ?string $fecha = null)
     {
-        return redirect()->route('clinica.consulta', [
+        $parametros = [
             $consulta->id,
             'seccion' => ConsultaShellVista::SECCION_EMBARAZO,
             'pestana' => $pestana,
-        ]);
+        ];
+
+        if ($gesta !== null) {
+            $parametros['gesta'] = $gesta;
+        }
+
+        if ($fecha !== null && $fecha !== '') {
+            $parametros['fecha'] = $fecha;
+        }
+
+        return redirect()->route('clinica.consulta', $parametros);
     }
 
     /**
@@ -147,16 +161,21 @@ class ConsultaEmbarazoController extends Controller
             $contexto['reg_medico'],
         );
 
-        $destino = $this->destino($consulta, $pestana);
         // La fecha se pasa a `AAAA-MM-DD` en el único lugar donde esa regla está escrita.
         $request->merge(FechaDeFormulario::normalizar($request->all(), ['fecha']));
+
+        // La gesta viene oculta en el formulario: es parte de la clave (`historia` + `gesta_clave` + `fecha`).
+        $gesta = (int) $request->input('gesta', 0);
+
+        // La vuelta de un error va a **esta** gesta y a **esta** fecha: si volviera a la pestaña pelada, la
+        // pantalla quedaría en la gesta en curso —otra— y el siguiente «Guardar» escribiría la fila en otro
+        // embarazo, con los valores del que se estaba mirando.
+        $destino = $this->destino($consulta, $pestana, $gesta > 0 ? $gesta : null, (string) $request->input('fecha', ''));
+
         $datos = $request->validate($this->reglasDeLaFecha(), [
             'fecha.required' => 'Indica la fecha: es parte de la clave de la fila.',
             'fecha.date_format' => FechaDeFormulario::mensaje('Fecha'),
         ]);
-
-        // La gesta viene oculta en el formulario: es parte de la clave (`historia` + `gesta_clave` + `fecha`).
-        $gesta = (int) $request->input('gesta', 0);
 
         if ($gesta < 1) {
             return $destino->with('error', 'Elegí la gesta antes de guardar: el laboratorio y los controles son de una gesta.');
@@ -173,6 +192,8 @@ class ConsultaEmbarazoController extends Controller
                 . ' más recientemente y no se pisó: vuelve a cargar la fila y guárdala de nuevo.');
         }
 
+        // La vuelta es a la fila guardada (`$destino` ya lleva su `gesta` y su `fecha`): sus dos datos son la
+        // clave de lo que se acaba de escribir.
         return $destino->with('estado', $resultado->sinCambios() ? 'No había cambios.' : 'Guardado.');
     }
 
