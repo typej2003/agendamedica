@@ -217,6 +217,15 @@ consulta.
   `.tabla-envoltura`/`.table-responsive` (antes sólo si la tabla desbordaba en horizontal), lo alinea sin salirse y **lo
   abre hacia arriba** si no entra abajo; el `<details>` abierto sube su `z-index` y el menú flotante tiene `max-height`.
   Verificador: `../.agent-tools/verificar-agenda-menu-fila-web.js` (falla con el código anterior).
+- **La sesión que se vencía con la consulta abierta (2026-10-19, todo `/clinica`)**: «Terminar la consulta»
+  contestaba **419** («Tu sesión venció») y la cita no quedaba atendida. La sesión de Laravel vence a los
+  `SESSION_LIFETIME` minutos **sin peticiones** (120) y la consulta se queda abierta horas sin que el navegador manda
+  nada. Ahora el armazón **late**: `GET /clinica/sesion` (`LatidoDeSesionController`, 204 sin cuerpo) cada 5 min
+  **con la pestaña a la vista** (`public/js/clinica/latido-sesion.js`, URL en `meta[name=latido-sesion]`), y un `POST`
+  de `/clinica` sin sesión ya no cae en la página del 419: `VerifyCsrfToken` manda al **login con el aviso** (o
+  contesta **419 en JSON** si la petición es de `fetch`, para que el autoguardado no crea que guardó) y
+  `consulta-barra.js` lo dice en la barra. Fuera de `/clinica` el 419 sigue igual. Tests: `Feature/SesionWebTest`
+  (8); verificador `../.agent-tools/verificar-sesion-consulta-web.js` (falla con el código anterior). Trampa 146.
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
   postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,

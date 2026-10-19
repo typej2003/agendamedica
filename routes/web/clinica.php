@@ -70,6 +70,7 @@ use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
+use App\Http\Controllers\Clinica\LatidoDeSesionController;
 use App\Http\Controllers\Clinica\ListadosController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
@@ -108,6 +109,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         Route::get('/contexto', [ContextoController::class, 'editar'])->name('contexto');
         Route::post('/contexto', [ContextoController::class, 'guardar'])->name('contexto.guardar');
         Route::delete('/contexto', [ContextoController::class, 'salir'])->name('contexto.salir');
+
+        // **El latido de la sesión** (2026-10-19): un GET vacío que el JS de la web clínica llama cada pocos
+        // minutos mientras la pantalla está a la vista, para que la sesión no se venza con la consulta
+        // abierta. Sin él, el POST de «Terminar la consulta» contestaba 419 («tu sesión venció») y el médico
+        // no podía cerrar la atención sin volver a entrar. Va fuera del grupo que exige contexto: su único
+        // trabajo es tocar la sesión, así que también sirve en la pantalla de elegir consultorio.
+        Route::get('/sesion', LatidoDeSesionController::class)->name('sesion');
 
         // Sedes (WEB-2.8b.1): el lugar donde atiende un médico. Es el **lugar de la clínica**, no de un
         // médico, así que va fuera del grupo que exige contexto: se da de alta antes de asignarle un

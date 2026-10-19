@@ -41,6 +41,12 @@
                 <div class="alert alert-success py-2 small" role="status">{{ session('status') }}</div>
             @endif
 
+            {{-- El aviso del armazón clínico cuando un envío se quedó sin sesión (`VerifyCsrfToken`): la
+                 pantalla a la que se volvía ya no existía, así que se llega acá con el motivo. --}}
+            @if (session('aviso'))
+                <div class="alert alert-warning py-2 small" role="status">{{ session('aviso') }}</div>
+            @endif
+
             <form action="{{ route('login') }}" method="post" id="loginForm">
                 @csrf
 

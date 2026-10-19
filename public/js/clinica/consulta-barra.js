@@ -69,8 +69,17 @@
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         }).then(function (respuesta) {
-            return respuesta.text().then(function (html) { return { ok: respuesta.ok, html: html }; });
+            return respuesta.text().then(function (html) {
+                return { ok: respuesta.ok, status: respuesta.status, html: html };
+            });
         }).then(function (r) {
+            // La sesión se venció (el servidor contesta 419 en JSON): lo escrito **no** se guardó y no hay
+            // forma de guardarlo hasta volver a entrar. Se dice tal cual, porque lo único que se puede hacer
+            // es copiar el texto antes de salir; el «no se pudo guardar» a secas haría pensar en la conexión.
+            if (r.status === 419) {
+                decir('Tu sesión venció: lo escrito no se guardó. Cópialo y vuelve a entrar.', true);
+                return false;
+            }
             var documento = new DOMParser().parseFromString(r.html, 'text/html');
             var problema = documento.querySelector('.alert[role="alert"], .alert-danger');
             if (!r.ok || problema) {

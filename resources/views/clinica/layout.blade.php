@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- El latido de la sesión (2026-10-19): el JS lo llama cada pocos minutos mientras la pantalla está a la
+         vista, para que la sesión no se venza con la consulta abierta. Sin él, «Terminar la consulta» contestaba
+         419 («tu sesión venció»). --}}
+    <meta name="latido-sesion" content="{{ route('clinica.sesion') }}">
     <title>@yield('titulo', 'Consultorio') · Doctorísimo</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -206,6 +210,9 @@
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
 <script src="{{ asset('js/clinica/chips.js') }}"></script>
+{{-- El latido de la sesión (2026-10-19): en **todas** las pantallas del consultorio, no sólo en la consulta.
+     Un GET vacío cada pocos minutos con la pestaña a la vista; la URL sale del `meta` de arriba. --}}
+<script src="{{ asset('js/clinica/latido-sesion.js') }}"></script>
 @if (! empty($tour))
     {{-- El tour guiado (A-15) sólo se carga en las cinco pantallas que tienen uno. --}}
     <script src="{{ asset('js/clinica/tour.js') }}"></script>
