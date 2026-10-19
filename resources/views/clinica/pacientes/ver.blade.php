@@ -88,8 +88,10 @@
         </div>
     </x-ui.tarjeta>
 
-    {{-- Llenar la historia (WEB-3.3): sólo aparece si el paciente **no** tiene número; cuando ya lo
-         tiene, la ficha no ofrece nada de esto, sólo lo muestra en sus datos y en el estado de arriba.
+    {{-- Llenar la historia (WEB-3.3): aparece si el paciente **no** tiene número y también cuando el vínculo
+         ya lo dice pero su fila de `historias` falta (trampa 143) —ahí la acción la registra con ese mismo
+         número, que es el único que deja coherentes la ficha, la agenda y la cita—. Con la historia
+         registrada la ficha no ofrece nada de esto, sólo la muestra en sus datos y en el estado de arriba.
          El bloque explica el efecto porque el número no se puede elegir ni adelantar: lo calcula el
          servidor con el correlativo del consultorio, y la acción no se puede deshacer. --}}
     @if ($vm->puedeAsignarHistoria())

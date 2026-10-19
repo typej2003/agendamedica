@@ -23,6 +23,8 @@ use Tests\TestCase;
  * Lo que se prueba es el criterio:
  *
  *  - la ficha del paciente **sin** historia ofrece la acción y la del que **ya tiene** no la ofrece;
+ *  - la ficha del paciente con el **número en el vínculo pero sin la fila de `historias`** (trampa 143)
+ *    también la ofrece, y la acción **registra ese mismo número** en vez de numerar otro;
  *  - asignarla le da el **correlativo siguiente** del médico y deja **la misma ficha** mostrando el
  *    número;
  *  - es **idempotente**: llamarla dos veces no numera dos veces (y lo dice);
@@ -84,8 +86,11 @@ class PacientesHistoriaWebTest extends TestCase
     /**
      * Un paciente con su vínculo. `$numhistoria` nulo = el alta rápida, todavía sin número; cuando no es
      * nulo también se crea la fila de `historias`, que es como la leen el sync y la Action.
+     *
+     * `$conHistoria = false` deja el caso de la trampa 143: el número escrito **sólo** en el vínculo, sin su
+     * fila en `historias` (lo que dejaba una pantalla o un script viejo).
      */
-    private function paciente(Medico $medico, string $nombres, string $apellidos = 'De Prueba', ?string $numhistoria = null): int
+    private function paciente(Medico $medico, string $nombres, string $apellidos = 'De Prueba', ?string $numhistoria = null, bool $conHistoria = true): int
     {
         $id = DB::table('pacientes')->insertGetId([
             'nombres'     => $nombres,
@@ -106,7 +111,7 @@ class PacientesHistoriaWebTest extends TestCase
             'updated_at'  => now(),
         ]);
 
-        if ($numhistoria !== null) {
+        if ($numhistoria !== null && $conHistoria) {
             Historia::create([
                 'numhistoria' => $numhistoria,
                 'reg_medico'  => $medico->reg_medico,
@@ -153,6 +158,88 @@ class PacientesHistoriaWebTest extends TestCase
         // `/pacientes/{id}/historia` es también la pantalla de la historia (GET), así que el texto de la
         // URL aparece en el enlace "Ver resumen" de la ficha. Lo que no puede aparecer es un POST a la
         // acción de asignar.
+        $respuesta->assertDontSee('action="' . route('clinica.pacientes.asignar-historia', $paciente) . '"', false);
+    }
+
+    /**
+     * **Trampa 143**: el vínculo dice «H. 7001» pero la fila de `historias` no existe. Antes la ficha
+     * mostraba el número y no ofrecía nada, y «Atender» contestaba «todavía no tiene número de historia»:
+     * el paciente quedaba sin salida. Ahora la ficha lo dice y ofrece registrarla **con ese mismo número**.
+     */
+    public function test_la_ficha_de_un_numero_sin_historia_ofrece_registrarla_y_la_registra_con_ese_numero(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Mateo', 'Prueba Nino', '7001', false);
+
+        // La cita del día ya apunta a la 7001, como en el caso real: su número no puede cambiar.
+        $cita = Cola::create([
+            'reg_medico'   => $medico->reg_medico,
+            'fecha'        => '2026-10-19',
+            'hora_ini'     => '09:00:00',
+            'numhistoria'  => 7001,
+            'paciente_sinhistoria_id' => $paciente,
+        ]);
+
+        $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            // El flash de «quedó atendible» (O-05): aun así la ficha **no** puede ofrecer atender, porque
+            // sin la fila de `historias` la consulta no se abre.
+            ->withSession(['ofrecer_atender' => $paciente]);
+
+        $ficha = $peticion->get(route('clinica.pacientes.ver', $paciente));
+
+        $ficha->assertOk();
+        // El número se sigue mostrando (es un dato del paciente) y el estado avisa que no está registrado.
+        $ficha->assertSee('Historia N.º 7001');
+        $ficha->assertSee('Historia 7001 sin registrar');
+        $ficha->assertSee('Falta registrar la historia del consultorio');
+        $ficha->assertSee('Registrar la historia 7001');
+        $ficha->assertSee('action="' . route('clinica.pacientes.asignar-historia', $paciente) . '"', false);
+        // Y no ofrece atender: sin la fila de `historias` la consulta no se puede abrir.
+        $ficha->assertDontSee('Atender ahora');
+
+        $respuesta = $peticion->post(route('clinica.pacientes.asignar-historia', $paciente));
+
+        $respuesta->assertRedirect(route('clinica.pacientes.ver', $paciente));
+        // El mensaje distingue «registré la que ya decía» de «ya tenía» y de «asigné una nueva».
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'H. 7001')
+            && str_contains($estado, 'número que el paciente ya tenía'));
+
+        $historia = Historia::where('paciente_id', $paciente)->firstOrFail();
+        $this->assertSame('7001', $historia->numhistoria);
+        $this->assertSame($medico->reg_medico, $historia->reg_medico);
+        // No se numeró otro: la única historia del médico es la 7001 (con el correlativo habría sido la 1).
+        $this->assertSame(1, Historia::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame('7001', MedicoPaciente::where('paciente_id', $paciente)->value('numhistoria'));
+        $this->assertSame(7001, (int) $cita->fresh()->numhistoria);
+
+        // La misma ficha ya lo muestra atendible y no vuelve a ofrecer la acción.
+        $despues = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $despues->assertOk();
+        $despues->assertSee('Historia N.º 7001');
+        $despues->assertDontSee('Historia 7001 sin registrar');
+        $despues->assertDontSee('Falta registrar la historia del consultorio');
+        $despues->assertDontSee('action="' . route('clinica.pacientes.asignar-historia', $paciente) . '"', false);
+    }
+
+    /**
+     * El legado escribe el mismo número con y sin ceros a la izquierda (`01001` en el pivote, `1001` en
+     * `historias` o al revés): son la misma historia. Sin esto, la ficha diría «sin registrar» y ofrecería
+     * una acción que no hace falta.
+     */
+    public function test_la_historia_con_ceros_a_la_izquierda_cuenta_como_registrada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Ana', 'Ceros', '1001');
+        MedicoPaciente::where('paciente_id', $paciente)->update(['numhistoria' => '01001']);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Historia N.º 01001');
+        $respuesta->assertDontSee('Historia 01001 sin registrar');
         $respuesta->assertDontSee('action="' . route('clinica.pacientes.asignar-historia', $paciente) . '"', false);
     }
 

@@ -224,6 +224,45 @@ class PacientesVistasTest extends TestCase
         $this->assertNull($vista->urlAsignarHistoria());
     }
 
+    public function test_la_ficha_con_el_numero_sin_la_historia_del_consultorio_ofrece_registrarla(): void
+    {
+        // Trampa 143: el vínculo dice «7001» pero la fila de `historias` no existe. La ficha muestra el
+        // número —es el que el paciente ya tiene— y ofrece **registrar esa historia**, no asignar otra.
+        $vista = (new FichaDePacienteVista($this->paciente(['numhistoria' => '7001']), collect()))
+            ->conHistoriaRegistrada(false)
+            ->conUrlAsignarHistoria('/clinica/pacientes/51/historia');
+
+        $this->assertTrue($vista->puedeAsignarHistoria());
+        $this->assertFalse($vista->historiaRegistrada());
+        $this->assertSame('7001', $vista->numeroDeHistoria());
+        $this->assertSame('Historia N.º 7001', $vista->subtitulo());
+        // El estado de arriba no deja creer que ya se lo puede atender.
+        $this->assertSame('aviso', $vista->estados()[0]['tono']);
+        $this->assertSame('Historia 7001 sin registrar', $vista->estados()[0]['texto']);
+
+        $this->assertSame('Falta registrar la historia del consultorio', $vista->sinHistoria()['titulo']);
+        $this->assertStringContainsString('7001', $vista->sinHistoria()['texto']);
+        $this->assertStringContainsString('mismo número', $vista->sinHistoria()['texto']);
+        $this->assertSame('Registrar la historia 7001', $vista->botonAsignarHistoria());
+        $this->assertStringContainsString('no se le asigna otro', $vista->confirmarAsignarHistoria());
+
+        // Con la historia registrada (o con el paciente sin número) los textos son los de siempre.
+        $registrada = (new FichaDePacienteVista($this->paciente(), collect()))->conUrlAsignarHistoria('/x');
+        $this->assertFalse($registrada->puedeAsignarHistoria());
+        $this->assertSame('Asignar el número de historia', (new FichaDePacienteVista($this->paciente(['numhistoria' => null]), collect()))->botonAsignarHistoria());
+
+        // La basura que el legado guarda como número (`S/H`) **no es** una historia: la ficha ofrece asignar
+        // una nueva, no «registrar» un número que no existe.
+        $basura = (new FichaDePacienteVista($this->paciente(['numhistoria' => 'S/H']), collect()))
+            ->conHistoriaRegistrada(false)
+            ->conUrlAsignarHistoria('/x');
+
+        $this->assertTrue($basura->puedeAsignarHistoria());
+        $this->assertSame('Sin historia', $basura->estados()[0]['texto']);
+        $this->assertSame('Asignar el número de historia', $basura->botonAsignarHistoria());
+        $this->assertSame('Falta el número de historia', $basura->sinHistoria()['titulo']);
+    }
+
     public function test_el_filtro_sin_historia_arma_sus_opciones_con_el_conteo(): void
     {
         $vista = $this->listado(

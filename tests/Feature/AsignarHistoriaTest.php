@@ -144,8 +144,65 @@ class AsignarHistoriaTest extends TestCase
         $this->assertNull(MedicoPaciente::where('paciente_id', $otro->id)->value('numhistoria'));
     }
 
-    public function test_un_paciente_de_otro_medico_no_se_numera(): void
+    /**
+     * **Trampa 143**: el número quedó escrito sólo en el vínculo (una pantalla vieja o un script que
+     * escribió el pivote sin su fila en `historias`). Ese número es el que la ficha, la agenda y la cita
+     * ya muestran, así que la Action **registra la historia con él** en vez de numerar otro.
+     */
+    public function test_registra_la_historia_con_el_numero_que_el_vinculo_ya_tiene(): void
     {
+        $medico = $this->medico();
+        $paciente = $this->paciente($medico);
+        MedicoPaciente::where('paciente_id', $paciente->id)->update(['numhistoria' => '7001']);
+
+        // La cita del día ya apunta a la 7001, y hay otra anclada al paciente sin número.
+        $formal = Cola::create([
+            'reg_medico' => $medico->reg_medico, 'fecha' => '2026-10-19', 'hora_ini' => '09:00:00',
+            'numhistoria' => 7001,
+        ]);
+        $anclada = Cola::create([
+            'reg_medico' => $medico->reg_medico, 'fecha' => '2026-10-19', 'hora_ini' => '09:30:00',
+            'paciente_sinhistoria_id' => $paciente->id,
+        ]);
+
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $paciente->id);
+
+        // La historia es la 7001, del paciente y del médico: no se inventó un correlativo (habría sido 1).
+        $this->assertSame('7001', $historia->numhistoria);
+        $this->assertSame($medico->reg_medico, $historia->reg_medico);
+        $this->assertSame($medico->id, $historia->medico_id);
+        $this->assertSame($paciente->id, $historia->paciente_id);
+        $this->assertSame(1, Historia::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame('7001', MedicoPaciente::where('paciente_id', $paciente->id)->value('numhistoria'));
+
+        // La cita que ya lo decía no se toca y la anclada pasa a llevarlo.
+        $this->assertSame(7001, (int) $formal->fresh()->numhistoria);
+        $this->assertSame(7001, (int) $anclada->fresh()->numhistoria);
+
+        // Y la segunda vez devuelve esa misma fila: no numera de nuevo.
+        $repetida = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $paciente->id);
+        $this->assertSame($historia->id, $repetida->id);
+        $this->assertSame(1, Historia::where('paciente_id', $paciente->id)->count());
+    }
+
+    public function test_si_el_numero_del_vinculo_es_de_otro_paciente_numera_uno_nuevo(): void
+    {
+        $medico = $this->medico();
+        $dueno = $this->paciente($medico, 7001);
+        $otro = $this->paciente($medico);
+        // Dos vínculos con el mismo número (dato roto): la historia 7001 ya es de otro paciente.
+        MedicoPaciente::where('paciente_id', $otro->id)->update(['numhistoria' => '7001']);
+
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $otro->id);
+
+        // Al otro no se le quita la historia: se numera el siguiente del consultorio.
+        $this->assertSame('7002', $historia->numhistoria);
+        $this->assertSame($otro->id, $historia->paciente_id);
+        $this->assertSame(7001, (int) Historia::where('paciente_id', $dueno->id)->value('numhistoria'));
+        $this->assertSame('7002', MedicoPaciente::where('paciente_id', $otro->id)->value('numhistoria'));
+    }
+
+    public function test_un_paciente_de_otro_medico_no_se_numera(): void    {
         $medico = $this->medico();
         $ajeno = $this->paciente($this->medico(), 1);
 

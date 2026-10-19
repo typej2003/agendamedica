@@ -22,6 +22,13 @@ final class FichaDePacienteVista
         private ?string $seguro = null,
         private ?string $urlAsignarHistoria = null,
         private ?string $urlAtender = null,
+        /**
+         * ¿La historia del consultorio existe en `historias`? El número del vínculo puede estar sin ella
+         * (lo dejó una pantalla o un script que escribió sólo el pivote: trampa 143). La ficha muestra el
+         * número —es el que el paciente ya tiene—, pero **no se lo puede atender** hasta registrarla, y la
+         * acción de la ficha es lo que la registra con ese mismo número.
+         */
+        private bool $historiaRegistrada = true,
     ) {
     }
 
@@ -34,7 +41,7 @@ final class FichaDePacienteVista
      */
     public function conUrlAsignarHistoria(string $url): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $url, $this->urlAtender);
+        return new self($this->paciente, $this->consultas, $this->seguro, $url, $this->urlAtender, $this->historiaRegistrada);
     }
 
     /**
@@ -44,7 +51,28 @@ final class FichaDePacienteVista
      */
     public function conUrlAtender(string $url): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $url);
+        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $url, $this->historiaRegistrada);
+    }
+
+    /**
+     * El mismo ViewModel sabiendo si la historia **del consultorio** existe (`historias`), que es lo que
+     * decide si el paciente se puede atender.
+     *
+     * El número del vínculo (`medico_pacientes.numhistoria`) y su fila en `historias` los escriben juntos
+     * todos los caminos de la app, así que normalmente alcanza con el número. Cuando no (trampa 143: una
+     * pantalla vieja o un script que escribió sólo el pivote) la ficha lo muestra igual —el número es un
+     * dato del paciente— pero ofrece **registrar la historia con ese número** en vez de dar por hecho que
+     * se lo puede atender.
+     */
+    public function conHistoriaRegistrada(bool $registrada): self
+    {
+        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $this->urlAtender, $registrada);
+    }
+
+    /** ¿La historia del consultorio está registrada? Si no, al paciente no se lo puede atender todavía. */
+    public function historiaRegistrada(): bool
+    {
+        return $this->historiaRegistrada;
     }
 
     /**
@@ -56,7 +84,7 @@ final class FichaDePacienteVista
      */
     public function conSeguro(?string $seguro): self
     {
-        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria, $this->urlAtender);
+        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria, $this->urlAtender, $this->historiaRegistrada);
     }
 
     /**
@@ -90,6 +118,21 @@ final class FichaDePacienteVista
         return $this->numeroDeHistoria() !== null;
     }
 
+    /**
+     * El número del vínculo **cuando sirve**, o `null`.
+     *
+     * `medico_pacientes.numhistoria` es texto y el legado escribe basura (`S/H`, el marcador de "sin
+     * historia"): eso no es un número, no hay `historias` que le corresponda y `PacienteDeLaCita` no puede
+     * cruzar consultas con él. La ficha lo sigue mostrando —es lo que dice la base—, pero no lo trata como
+     * una historia: para la acción y los estados, ese paciente **no tiene** número.
+     */
+    private function numeroUtilizable(): ?int
+    {
+        $numero = $this->numeroDeHistoria();
+
+        return $numero !== null && is_numeric($numero) ? (int) $numero : null;
+    }
+
     public function subtitulo(): string
     {
         return $this->tieneHistoria() ? 'Historia N.º ' . $this->numeroDeHistoria() : 'Todavía sin número de historia';
@@ -102,9 +145,16 @@ final class FichaDePacienteVista
      */
     public function estados(): array
     {
-        $estados = [$this->tieneHistoria()
-            ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $this->numeroDeHistoria()]
-            : ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Sin historia']];
+        $numero = $this->numeroUtilizable();
+
+        $estados = [$numero === null
+            // Sin número utilizable (`null`, `''` o la basura del legado como `S/H`) no hay historia.
+            ? ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Sin historia']
+            : ($this->historiaRegistrada
+                ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $this->numeroDeHistoria()]
+                // El número está pero la historia no: el estado lo dice con el mismo tono que «Sin historia»
+                // para que no se lea como que el paciente ya se puede atender (trampa 143).
+                : ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Historia ' . $this->numeroDeHistoria() . ' sin registrar'])];
 
         if ($this->edad() !== null) {
             $estados[] = ['tono' => 'neutro', 'icono' => 'bi-cake2', 'texto' => $this->edad()];
@@ -226,15 +276,22 @@ final class FichaDePacienteVista
     // --------------------------------------------------- Llenar la historia desde la ficha (WEB-3.3)
 
     /**
-     * Si la ficha **ofrece** asignarle el número de historia. Cuando el paciente ya la tiene, la ficha
-     * no ofrece nada de esto: sólo la muestra (la Action es idempotente, pero un botón que no hace nada
-     * no se pone).
+     * Si la ficha **ofrece** la acción del número de historia. Dos casos:
+     *
+     *  - el paciente **no tiene** número en el vínculo: se le asigna el correlativo del consultorio;
+     *  - el vínculo **ya tiene** el número pero la historia no está registrada en `historias` (trampa 143):
+     *    la acción la registra **con ese mismo número**, que es el único que deja coherentes la ficha, la
+     *    agenda y la cita que ya lo dice.
+     *
+     * Cuando el paciente ya tiene la historia registrada, la ficha no ofrece nada de esto: sólo la muestra
+     * (la Action es idempotente, pero un botón que no hace nada no se pone).
      *
      * La URL la resolvió el controlador (`conUrlAsignarHistoria`); sin ella no hay acción que ofrecer.
      */
     public function puedeAsignarHistoria(): bool
     {
-        return ! $this->tieneHistoria() && $this->urlAsignarHistoria !== null;
+        return $this->urlAsignarHistoria !== null
+            && (! $this->tieneHistoria() || ! $this->historiaRegistrada);
     }
 
     public function urlAsignarHistoria(): ?string
@@ -251,6 +308,16 @@ final class FichaDePacienteVista
      */
     public function sinHistoria(): array
     {
+        if ($this->numeroUtilizable() !== null) {
+            // El número existe pero su historia no: la acción no numera, registra lo que ya está dicho.
+            return [
+                'titulo' => 'Falta registrar la historia del consultorio',
+                'texto'  => 'El vínculo del paciente tiene el número ' . $this->numeroDeHistoria()
+                    . ', pero su historia no está registrada en este consultorio: hasta registrarla no se lo puede atender. '
+                    . 'Se registra con ese mismo número, no se le asigna otro.',
+            ];
+        }
+
         return [
             'titulo' => 'Falta el número de historia',
             'texto'  => 'Sin número de historia el paciente no se puede atender ni tener consultas. '
@@ -261,7 +328,9 @@ final class FichaDePacienteVista
     /** El rótulo del botón que dispara la acción. */
     public function botonAsignarHistoria(): string
     {
-        return 'Asignar el número de historia';
+        return $this->numeroUtilizable() !== null
+            ? 'Registrar la historia ' . $this->numeroDeHistoria()
+            : 'Asignar el número de historia';
     }
 
     /**
@@ -271,6 +340,11 @@ final class FichaDePacienteVista
      */
     public function confirmarAsignarHistoria(): string
     {
+        if ($this->numeroUtilizable() !== null) {
+            return '¿Registrar la historia ' . $this->numeroDeHistoria() . ' de ' . $this->nombre()
+                . ' en este consultorio? Se usa el número que ya tiene el vínculo, no se le asigna otro.';
+        }
+
         return '¿Asignarle el número de historia a ' . $this->nombre() . '? Es un número correlativo de '
             . 'este consultorio, no se puede elegir y no se puede deshacer.';
     }

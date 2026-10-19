@@ -72,7 +72,15 @@ final class PacienteDeLaCita
         // El registro de la fila manda: es el que la cita y el escritorio esperan encontrar.
         $regMedico = CamposDePaciente::texto($vinculo->reg_medico ?? null);
 
-        return Historia::where('numhistoria', (string) $numero)
+        // El legado escribe el mismo número con y sin ceros a la izquierda: el pivote puede decir
+        // `01001` y la historia estar en `1001` (o al revés), y son la misma. Se buscan las dos formas o
+        // la ficha diría «sin registrar» para un paciente que sí la tiene (trampa 143).
+        $formas = array_values(array_unique([
+            (string) CamposDePaciente::numeroDeHistoria($vinculo->numhistoria ?? null),
+            (string) $numero,
+        ]));
+
+        return Historia::whereIn('numhistoria', $formas)
             ->when($regMedico !== null, fn ($consulta) => $consulta->where('reg_medico', $regMedico))
             ->whereIn('reg_medico', $registrosMedicos)
             ->first();

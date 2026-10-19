@@ -8,6 +8,7 @@ use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\Consulta\AtencionInmediata;
 use App\Clinica\Consulta\PacienteDeLaCita;
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
@@ -101,7 +102,7 @@ class PacienteController extends Controller
         return response()->json($this->pacientes->sugerencias($regMedico, trim((string) $request->query('q', ''))));
     }
 
-    public function ver(Request $request, int $paciente, RepresentanteController $representante)
+    public function ver(Request $request, int $paciente, RepresentanteController $representante, PacienteDeLaCita $pacienteDeLaCita)
     {
         $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
 
@@ -117,13 +118,23 @@ class PacienteController extends Controller
         $vm = $vm->conSeguro($this->seguros->nombreDe($this->seguros->de($regMedico), $vm->codigoDelSeguro()));
 
         // La URL de la acción que llena la historia la arma el controlador (el ViewModel se prueba sin
-        // contenedor): la ficha la usa sólo si el paciente todavía no tiene número.
+        // contenedor): la ficha la usa si el paciente todavía no tiene número.
         $vm = $vm->conUrlAsignarHistoria(route('clinica.pacientes.asignar-historia', $ficha->id));
 
+        // ¿La historia **del consultorio** existe? El número del vínculo puede estar sin su fila en
+        // `historias` (trampa 143): en ese caso la ficha muestra el número pero ofrece **registrarla**,
+        // porque atender es justamente lo que no se puede. Se resuelve con el mismo lector que «Atender»
+        // (`PacienteDeLaCita`), para que la ficha y el botón no puedan dar respuestas distintas.
+        $historia = $pacienteDeLaCita->historia(
+            (int) $ficha->id,
+            $this->registrosDelMedico($request->attributes->get('contexto_clinico')['medico']),
+        );
+        $vm = $vm->conHistoriaRegistrada($historia !== null);
+
         // «¿Atender ahora?» (O-05): la ficha lo ofrece **sólo en el momento en que el paciente quedó
-        // atendible** —lo deja dicho el flash de la acción que le puso el número— y sólo a quien trabaja la
-        // consulta: atender es del médico (WEB-4.9).
-        if ($this->ofreceAtender($request, $ficha->numhistoria, (int) $ficha->id)) {
+        // atendible** —lo deja dicho el flash de la acción que le puso el número—, sólo si la historia está
+        // registrada y sólo a quien trabaja la consulta: atender es del médico (WEB-4.9).
+        if ($this->ofreceAtender($request, $historia !== null, (int) $ficha->id)) {
             $vm = $vm->conUrlAtender(route('clinica.pacientes.atender', $ficha->id));
         }
 
@@ -178,35 +189,42 @@ class PacienteController extends Controller
      *    tenant, y una superficie no lo elige"), así que un `reg_medico` mandado a mano se ignora.
      *  - **Idempotente y visible**: si ya la tenía, la Action devuelve la suya y el mensaje lo dice con
      *    el número; si no, se informa **qué número** le tocó. Nunca se numera dos veces.
+     *  - **Un número sin historia se registra, no se reemplaza** (trampa 143): cuando el vínculo ya dice
+     *    «H. 7001» pero la fila de `historias` falta, la Action crea esa fila con el 7001 y el mensaje lo
+     *    dice así. Es la salida del paciente que la ficha mostraba con número y no se podía atender.
      *  - **Los `reg_medico` del médico se resuelven con el mismo trait que "Pasar a cita formal"**, que a
      *    su vez copia al sync: el correlativo tiene que dar igual en las dos superficies.
      */
-    public function asignarHistoria(Request $request, int $paciente, AsignarHistoria $accion)
+    public function asignarHistoria(Request $request, int $paciente, AsignarHistoria $accion, PacienteDeLaCita $pacienteDeLaCita)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $vinculo = $this->pacientes->vinculo($contexto['reg_medico'], $paciente);
 
         abort_unless($vinculo !== null, 404);
 
-        $yaTenia = $vinculo->numhistoria !== null;
+        // "Ya la tenía" es que la **historia del consultorio** exista, no que el vínculo muestre un número:
+        // si el número está sin su fila en `historias` (trampa 143), la Action se la registra con ese mismo
+        // número y el mensaje tiene que decir eso, no "ya tenía".
+        $registros = $this->registrosDelMedico($contexto['medico']);
+        $yaTenia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, $registros) !== null;
 
         try {
-            $historia = $accion->ejecutar(
-                $contexto['medico'],
-                $this->registrosDelMedico($contexto['medico']),
-                (int) $vinculo->paciente_id,
-            );
+            $historia = $accion->ejecutar($contexto['medico'], $registros, (int) $vinculo->paciente_id);
         } catch (InvalidArgumentException $excepcion) {
             return redirect()
                 ->route('clinica.pacientes.ver', $paciente)
                 ->with('error', $excepcion->getMessage());
         }
 
+        $mensaje = $yaTenia
+            ? 'Este paciente ya tenía historia: H. ' . $historia->numhistoria . '. No se le asignó otra.'
+            : (CamposDePaciente::historiaNumerica($vinculo->numhistoria) !== null
+                ? 'Se registró la historia H. ' . $historia->numhistoria . ', que es el número que el paciente ya tenía, y ya se lo puede atender.'
+                : 'Se le asignó la historia H. ' . $historia->numhistoria . ' y ya se lo puede atender.');
+
         return redirect()
             ->route('clinica.pacientes.ver', $paciente)
-            ->with('estado', $yaTenia
-                ? 'Este paciente ya tenía historia: H. ' . $historia->numhistoria . '. No se le asignó otra.'
-                : 'Se le asignó la historia H. ' . $historia->numhistoria . ' y ya se lo puede atender.')
+            ->with('estado', $mensaje)
             // O-05: el paciente acaba de quedar atendible, así que la ficha ofrece atenderlo.
             ->with('ofrecer_atender', $paciente);
     }
@@ -265,14 +283,15 @@ class PacienteController extends Controller
      *
      * Tres condiciones, y las tres importan: el paciente **acaba** de quedar atendible (lo dice el flash que
      * deja la acción que le puso el número, con su id, para que no se ofrezca en la ficha de otro), **tiene
-     * historia** (sin ella no hay consulta) y quien mira **trabaja la consulta** (atender es del médico,
+     * la historia registrada** (no alcanza con el número del vínculo: sin la fila de `historias` la consulta
+     * no se puede abrir, trampa 143) y quien mira **trabaja la consulta** (atender es del médico,
      * WEB-4.9). Fuera de ese momento la ficha no ofrece atender: no es una acción de la ficha, es el paso
      * que sigue al alta.
      */
-    private function ofreceAtender(Request $request, ?string $numhistoria, int $pacienteId): bool
+    private function ofreceAtender(Request $request, bool $historiaRegistrada, int $pacienteId): bool
     {
         return (int) session('ofrecer_atender') === $pacienteId
-            && $numhistoria !== null
+            && $historiaRegistrada
             && (bool) $request->user()?->trabajaLaConsulta();
     }
 

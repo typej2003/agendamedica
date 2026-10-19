@@ -2,6 +2,7 @@
 
 namespace App\Actions\Pacientes;
 
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Cola;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -26,7 +27,7 @@ use InvalidArgumentException;
  *    (`:161-176`, la última del `DataWindow` + 1) y recién después enlaza la cita — eso es lo que se
  *    porta, sobre el modelo de AppDDR en vez de `paciente_no_regi` (decisión del 2026-10-10).
  *
- * Cuatro cosas que no son obvias y **son** la regla:
+ * Cinco cosas que no son obvias y **son** la regla:
  *
  *  - **El número es el correlativo del médico**: la última de `historias` **más** las del pivote
  *    `medico_pacientes`, comparando como entero (la columna guarda texto), y + 1. La unicidad del
@@ -40,6 +41,12 @@ use InvalidArgumentException;
  *    duplicarla ni reinsertarla.
  *  - **El `reg_medico` sale del vínculo del paciente**, nunca de un formulario: es el tenant, y una
  *    superficie no lo elige. Si el vínculo no lo tiene, cae al principal del médico.
+ *  - **El número puede estar ya en el vínculo sin la fila de `historias`** (una pantalla o un script que
+ *    escribió sólo el pivote: trampa 143). Ese número es el que la ficha, la agenda y las citas muestran,
+ *    así que se **registra con él** en `historias` en vez de numerar otro: numerar otro dejaría las citas
+ *    de ese número apuntando a una historia que no existe y al paciente mostrando un número que no se
+ *    puede atender. Sólo se respeta si el número está libre o ya es de ese mismo paciente; si es de otro,
+ *    no se le quita la historia a nadie y se numera como siempre.
  */
 final class AsignarHistoria
 {
@@ -79,16 +86,26 @@ final class AsignarHistoria
         for ($intento = 0; ; $intento++) {
             try {
                 return DB::transaction(function () use ($relacion, $regMedico, $medico, $registrosMedicos) {
-                    $numero = $this->siguienteNumero($medico, $registrosMedicos);
+                    $historia = $this->laQueElVinculoYaTiene($relacion, $regMedico);
 
-                    $historia = Historia::create([
-                        'numhistoria' => (string) $numero,
-                        'reg_medico'  => $regMedico,
-                        'paciente_id' => $relacion->paciente_id,
-                        'medico_id'   => $medico->id,
-                    ]);
+                    if ($historia === null) {
+                        // Número nuevo: el correlativo del consultorio.
+                        $historia = new Historia([
+                            'numhistoria' => (string) $this->siguienteNumero($medico, $registrosMedicos),
+                            'reg_medico'  => $regMedico,
+                            'paciente_id' => $relacion->paciente_id,
+                        ]);
+                    }
 
-                    $relacion->numhistoria = (string) $numero;
+                    // La fila —nueva o adoptada— queda del médico del vínculo.
+                    $historia->medico_id = $medico->id;
+                    $historia->save();
+
+                    $numero = (int) $historia->numhistoria;
+
+                    // El vínculo lleva el número **de la historia**, no uno calculado aparte: los dos
+                    // textos quedan iguales aunque el legado los haya escrito con ceros a la izquierda.
+                    $relacion->numhistoria = (string) $historia->numhistoria;
                     $relacion->save();
 
                     // La cita "sin historia" se enlaza a la historia nueva sin cambiar de fila: es la
@@ -106,6 +123,46 @@ final class AsignarHistoria
                 }
             }
         }
+    }
+
+    /**
+     * La historia que el vínculo **ya dice tener**, o `null` si hay que numerar una nueva.
+     *
+     * Es el caso de la trampa 143: el número quedó escrito en `medico_pacientes` sin su fila (una pantalla
+     * o un script que escribió sólo el pivote). Respetarlo es lo único que deja coherentes la ficha, la
+     * agenda y las citas, que ya muestran ese número.
+     *
+     * Devuelve **sin guardar** la fila a crear cuando el número está libre; la fila existente cuando ya es
+     * **del mismo paciente** (una vieja a la que le falta el `medico_id`); y `null` cuando el número es de
+     * **otro** paciente —ahí no se le quita la historia a nadie y se numera como siempre—.
+     *
+     * Se busca por el texto del vínculo **y** por su forma numérica, porque el legado escribe el mismo
+     * número de las dos maneras (`01001` en el pivote, `1001` en la historia).
+     */
+    private function laQueElVinculoYaTiene(MedicoPaciente $relacion, string $regMedico): ?Historia
+    {
+        $numero = CamposDePaciente::historiaNumerica($relacion->numhistoria);
+
+        if ($numero === null) {
+            return null;
+        }
+
+        $duena = Historia::where('reg_medico', $regMedico)
+            ->whereIn('numhistoria', array_values(array_unique([
+                (string) CamposDePaciente::numeroDeHistoria($relacion->numhistoria),
+                (string) $numero,
+            ])))
+            ->first();
+
+        if ($duena === null) {
+            return new Historia([
+                'numhistoria' => (string) $numero,
+                'reg_medico'  => $regMedico,
+                'paciente_id' => $relacion->paciente_id,
+            ]);
+        }
+
+        return (int) $duena->paciente_id === (int) $relacion->paciente_id ? $duena : null;
     }
 
     /**
