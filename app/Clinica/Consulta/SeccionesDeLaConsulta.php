@@ -248,7 +248,7 @@ final class SeccionesDeLaConsulta
     private const EXTRA = [
         self::SECCION_INDICADORES => ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Indicadores incidentes',
             'icono' => 'bi-droplet-half', 'detalle' => 'Función renal y electrolitos urinarios (nefrología pediátrica).',
-            'tarea' => 'F7', 'estado' => 'proximamente', 'seccion' => self::SECCION_INDICADORES, 'despues_de' => self::SECCION_EVALUACION],
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_INDICADORES, 'despues_de' => self::SECCION_EVALUACION],
     ];
 
     /** ¿La especialidad es pediatría? Su catálogo es el suyo, no el de ginecología. */

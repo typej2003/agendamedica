@@ -61,8 +61,8 @@ class SeccionesPediatricasTest extends TestCase
         $this->assertSame('Evaluación física', $titulos[3]);
         $this->assertSame('Exámenes/Estudios', $titulos[5]);
 
-        // Sigue sin pantalla: se ofrece en el menú como «Próximamente», no como un enlace muerto.
-        $this->assertSame('proximamente', $items[4]['estado']);
+        // Ya tiene pantalla (2026-10-19): el panel de laboratorio compone el resumen y lo guarda en la consulta.
+        $this->assertSame('listo', $items[4]['estado']);
         $this->assertSame(SeccionesDeLaConsulta::SECCION_INDICADORES, SeccionesDeLaConsulta::normalizar(SeccionesDeLaConsulta::SECCION_INDICADORES, 'pediatria', ['indicadores']));
     }
 

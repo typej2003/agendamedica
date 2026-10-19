@@ -51,6 +51,7 @@ use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
+use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -352,6 +353,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `consultas.observaciones`: en la fuente esa columna es la **colposcopia** del examen
                 // ginecológico (`:2757`, `:2836`), no un campo de la evolución (ver `EvolucionDeLaConsulta`).
                 Route::post('/consulta/{consulta}/evolucion', [ConsultaEvolucionController::class, 'guardar'])->name('consulta.evolucion.guardar');
+
+                // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del
+                // ítem 5 de pediatría. Compone un texto y lo deja en `consultas.resultadoexamencomp`.
+                Route::post('/consulta/{consulta}/indicadores', [ConsultaIndicadoresController::class, 'guardar'])->name('consulta.indicadores.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

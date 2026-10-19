@@ -30,6 +30,7 @@ use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\ImagenDelExamenDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
+use App\Clinica\Consulta\IndicadoresIncidentes;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
@@ -64,6 +65,7 @@ use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
 use App\Clinica\Consulta\Vistas\ImagenDelExamenVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
+use App\Clinica\Consulta\Vistas\IndicadoresIncidentesVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
@@ -996,8 +998,19 @@ class ConsultaController extends Controller
             );
         }
 
-        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {
-            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
+        if ($seccion === ConsultaShellVista::SECCION_INDICADORES) {
+            // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del ítem 5
+            // pediátrico. Compone un texto y lo deja en `consultas.resultadoexamencomp`, como el escritorio.
+            return new IndicadoresIncidentesVista(
+                IndicadoresIncidentes::grupos(),
+                IndicadoresIncidentes::guardado($consulta),
+                route('clinica.consulta.indicadores.guardar', $consulta->id),
+                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]),
+                (array) old(),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
             // `TR`. Es la misma pantalla que las solapas de texto del examen —`TextoDelExamenVista` y su
             // parcial—, con su propio ítem del panel; guarda por la misma ruta y vuelve a esta sección.
             $texto = new TextoDelExamen($examen);

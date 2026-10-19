@@ -72,6 +72,9 @@ final class ConsultaShellVista
     /** La clave de la sección del **control de embarazo** (ítem 6 del panel) en `?seccion=` (WEB-6.6). */
     public const SECCION_EMBARAZO = SeccionesDeLaConsulta::SECCION_EMBARAZO;
 
+    /** La clave de la sección de **Indicadores incidentes** (nefrología pediátrica, ítem 5 de pediatría) en `?seccion=`. */
+    public const SECCION_INDICADORES = SeccionesDeLaConsulta::SECCION_INDICADORES;
+
     /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
     public const RECIPE_PAREJA = SeccionesDeLaConsulta::RECIPE_PAREJA;
 
