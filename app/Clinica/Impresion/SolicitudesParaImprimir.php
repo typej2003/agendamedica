@@ -3,6 +3,7 @@
 namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
+use App\Clinica\Consulta\EndoscopiaDigestiva;
 use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
@@ -267,6 +268,24 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // Los **informes de las endoscopías digestivas** (gastroenterología pediátrica, 2026-10-19): cada uno se
+        // ofrece si tiene texto —el `full_texto` que imprime el escritorio o, en su defecto, los hallazgos—, igual
+        // que las solapas de texto del examen.
+        foreach ([DocumentoImpreso::ENDOSCOPIA_SUPERIOR => EndoscopiaDigestiva::SUPERIOR,
+            DocumentoImpreso::ENDOSCOPIA_INFERIOR => EndoscopiaDigestiva::INFERIOR] as $documento => $tipo) {
+            if ($this->textoDeLaEndoscopia($consulta, $tipo) === null) {
+                continue;
+            }
+
+            $disponibles[] = [
+                'clave' => $documento,
+                'tipo' => $documento,
+                'titulo' => DocumentoImpreso::TITULOS[$documento][1],
+                'resumen' => 'Informe de ' . mb_strtolower(DocumentoImpreso::TITULOS[$documento][1]),
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         $examenes = $this->laboratorios->filas($consulta);
         if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
             $disponibles[] = [
@@ -469,6 +488,18 @@ final class SolicitudesParaImprimir
             return $this->elEcoAbdominalEsDocumento($estudio)
                 ? $this->conInformeDeEco($this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros), $consulta, $estudio, EcoAbdominal::grupos(), TiposDeEstudio::ABDOMINAL)
                 : null;
+        }
+
+        if ($clave === DocumentoImpreso::ENDOSCOPIA_SUPERIOR || $clave === DocumentoImpreso::ENDOSCOPIA_INFERIOR) {
+            // El informe de la endoscopía (gastroenterología pediátrica, 2026-10-19): su cuerpo es el texto que el
+            // escritorio imprime (`full_texto`) o, si está vacío, los hallazgos y la conclusión.
+            $tipo = $clave === DocumentoImpreso::ENDOSCOPIA_INFERIOR
+                ? EndoscopiaDigestiva::INFERIOR
+                : EndoscopiaDigestiva::SUPERIOR;
+
+            $texto = $this->textoDeLaEndoscopia($consulta, $tipo);
+
+            return $texto === null ? null : $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
         }
 
         if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
@@ -1167,6 +1198,40 @@ final class SolicitudesParaImprimir
      * campo de texto con el informe, sin rótulos armados. Las **fotos** que el escritorio le anexa (su
      * subreporte, `d_imagenes_consul_pac_*`) llegan con la parte de imágenes por examen de WEB-6.5.
      */
+    /**
+     * **El texto de una endoscopía digestiva**, o `null` si todavía no tiene nada que imprimir.
+     *
+     * El escritorio imprime `full_texto` (lo arma con su plantilla y después se corrige). Si está vacío, el informe
+     * se arma con los hallazgos y la conclusión, que es lo que el médico ve en la pantalla.
+     */
+    private function textoDeLaEndoscopia(Consulta $consulta, string $tipo): ?string
+    {
+        $lectura = new EndoscopiaDigestiva();
+        $valores = $lectura->de($consulta, $tipo);
+
+        if (! $lectura->tieneDatos($consulta, $tipo)) {
+            return null;
+        }
+
+        $completo = trim((string) ($valores['full_texto'] ?? ''));
+
+        if ($completo !== '') {
+            return $completo;
+        }
+
+        $partes = [];
+
+        foreach (['descripcion', 'conclusiones', 'esofago_descripcion', 'estomago_descripcion', 'duodeno_descripcion'] as $clave) {
+            $texto = trim((string) ($valores[$clave] ?? ''));
+
+            if ($texto !== '') {
+                $partes[] = $texto;
+            }
+        }
+
+        return $partes === [] ? null : implode("\n\n", $partes);
+    }
+
     private function textoDelExamen(Paciente $paciente, string $documento, string $texto, string $fecha): DocumentoImpreso
     {
         return new DocumentoImpreso(

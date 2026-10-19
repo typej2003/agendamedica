@@ -1,9 +1,6 @@
 {{-- **Eco renal** (nefrología pediátrica, 2026-10-19): el formulario del eco que el escritorio abre desde el panel de
-     Indicadores incidentes (`w_cargar_visualizar_renal`). Los grupos salen del mapa `EcoRenal`. --}}
-@php
-    $vm = $seccion->ecoRenal();
-@endphp
-
+     Indicadores incidentes (`w_cargar_visualizar_renal`). Los grupos salen del mapa `EcoRenal`, y el ViewModel
+     (`$vm`) lo pasa el parcial de los indicadores. --}}
 @if ($vm === null)
     <p class="text-muted mb-0">El eco renal no está disponible.</p>
 @else

@@ -25,7 +25,7 @@
         </nav>
 
         @if ($seccion->esEcoRenal())
-            @include('clinica.consulta._eco-renal', ['seccion' => $seccion])
+            @include('clinica.consulta._eco-renal', ['vm' => $seccion->ecoRenal()])
         @else
         <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
 
@@ -88,6 +88,6 @@
                 arma solo.
             </p>
         @endif
-        @endif
     </x-ui.tarjeta>
+@endif
 </div>
