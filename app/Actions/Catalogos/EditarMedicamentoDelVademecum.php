@@ -68,6 +68,18 @@ final class EditarMedicamentoDelVademecum
                     && str_replace("\r\n", "\n", (string) $valor) === str_replace("\r\n", "\n", trim((string) $fila->{$columna}))) {
                     continue;
                 }
+                // Los números de la dosis son `double`: `2` y `2.0` son el mismo valor, no un cambio.
+                if (in_array($columna, CamposDelMedicamento::NUMEROS, true)) {
+                    $actual = $fila->{$columna};
+                    $iguales = $valor === null || $actual === null
+                        ? $valor === null && $actual === null
+                        : (float) $valor === (float) $actual;
+
+                    if ($iguales) {
+                        continue;
+                    }
+                }
+
                 $nuevos[$columna] = $valor;
             }
 

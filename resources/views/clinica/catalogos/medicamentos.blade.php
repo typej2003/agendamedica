@@ -153,10 +153,56 @@
                     </x-ui.campo>
 
                     <x-ui.campo etiqueta="Dosificación" for="medicamento-dosificacion" error="dosificacion" class="col-12"
-                                ayuda="Opcional. Notas de dosis para ti; no sale en el récipe.">
+                                ayuda="Escribí SI cuando la dosis sea por kilo: el récipe la calcula con el peso del niño. Cualquier otro texto es una nota tuya y no sale en el récipe.">
                         <textarea name="dosificacion" id="medicamento-dosificacion" class="form-control" rows="2"
                                   maxlength="{{ $vm->largoTexto() }}">{{ $vm->texto('dosificacion') }}</textarea>
                     </x-ui.campo>
+
+                    <div class="col-12">
+                        <details @if ($vm->hayDosis()) open @endif>
+                            <summary class="mb-2">Dosis por kilo (para el récipe de pediatría)</summary>
+
+                            <p class="text-muted small">
+                                Con la dosificación en <strong>SI</strong>, el récipe calcula la posología con el peso del
+                                examen físico de la consulta y la presenta en gotas o en ml si cargás el envase.
+                            </p>
+
+                            <div class="row g-3">
+                                <x-ui.campo etiqueta="Dosis (mg/kg por toma)" for="medicamento-dosis" error="dosis" class="col-6 col-md-4">
+                                    <input type="number" step="0.01" min="0" name="dosis" id="medicamento-dosis"
+                                           class="form-control" value="{{ $vm->texto('dosis') }}">
+                                </x-ui.campo>
+
+                                <x-ui.campo etiqueta="Cada (veces al día)" for="medicamento-cada" error="cada" class="col-6 col-md-4">
+                                    <input type="number" step="0.01" min="0" name="cada" id="medicamento-cada"
+                                           class="form-control" value="{{ $vm->texto('cada') }}">
+                                </x-ui.campo>
+
+                                <x-ui.campo etiqueta="Durante (días)" for="medicamento-durante" error="durante" class="col-6 col-md-4">
+                                    <input type="number" step="1" min="0" name="durante" id="medicamento-durante"
+                                           class="form-control" value="{{ $vm->texto('durante') }}">
+                                </x-ui.campo>
+
+                                <x-ui.campo etiqueta="Envase: mg" for="medicamento-pvc" error="pvc" class="col-6 col-md-4"
+                                            ayuda="Los mg que trae la presentación (250 en «250 mg / 5 ml»).">
+                                    <input type="number" step="0.01" min="0" name="pvc" id="medicamento-pvc"
+                                           class="form-control" value="{{ $vm->texto('pvc') }}">
+                                </x-ui.campo>
+
+                                <x-ui.campo etiqueta="Envase: ml" for="medicamento-pvs" error="pvs" class="col-6 col-md-4"
+                                            ayuda="Los ml de esa presentación (5 en «250 mg / 5 ml»).">
+                                    <input type="number" step="0.01" min="0" name="pvs" id="medicamento-pvs"
+                                           class="form-control" value="{{ $vm->texto('pvs') }}">
+                                </x-ui.campo>
+
+                                <x-ui.campo etiqueta="Gotas por ml" for="medicamento-concentracion" error="concentracion" class="col-6 col-md-4"
+                                            ayuda="Sólo si el récipe tiene que decir gotas.">
+                                    <input type="number" step="0.01" min="0" name="concentracion" id="medicamento-concentracion"
+                                           class="form-control" value="{{ $vm->texto('concentracion') }}">
+                                </x-ui.campo>
+                            </div>
+                        </details>
+                    </div>
 
                     <div class="col-12">
                         <details @if ($vm->hayMarcas()) open @endif>

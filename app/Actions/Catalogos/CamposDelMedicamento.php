@@ -17,9 +17,19 @@ use InvalidArgumentException;
  * (`nombrecomercial1` a `3`, 40, mayúsculas), la presentación (50, como se escriba), la casilla *Psicotrópico*
  * (`sico`, `S` o `N`) y las indicaciones (`uso`). El código lo da el correlativo, no se escribe.
  * La web suma `dosificacion` (texto libre): el DataWindow la trae pero **no** la deja editar, y el usuario la
- * pidió como parte del mínimo del ABM (2026-10-11). Los números (concentración, dosis, precios) siguen siendo del
- * escritorio y quedan como están.
+ * pidió como parte del mínimo del ABM (2026-10-11).
  *
+ * ## La dosis pediátrica (2026-10-19)
+ *
+ * `dosificacion` **no** es sólo una nota: es la marca que usa la fórmula del récipe
+ * (`App\Clinica\Consulta\DosisPediatrica`). El escritorio compara `dosificacion = 'SI'` (la columna es el texto
+ * largo de `vademecum.dosificacion`, `d_a_escoger_medicamentos.srd`), y con eso el récipe calcula la posología por
+ * peso. Por eso la ayuda del formulario dice que hay que escribir **SI**.
+ *
+ * Los seis números de la fórmula se editan acá desde esta tarea, con los nombres y las unidades del DataWindow:
+ * `dosis` (mg/kg), `cada` (**veces al día**), `durante` (días), `pvc` (mg del envase), `pvs` (ml del envase) y
+ * `concentracion` (gotas por ml). Todos son opcionales: sin ellos, el récipe compone el rótulo en miligramos.
+
  * Las cuatro primeras reglas (nombre, genérico, presentación, indicaciones) son **las del alta rápida de la
  * consulta** (`AgregarMedicamentoAlVademecum`): se usan sus constantes y su normalización, no se copian.
  */
@@ -35,7 +45,12 @@ final class CamposDelMedicamento
     public const COLUMNAS = [
         'nombrecomercial', 'nombregenerico', 'nombrecomercial1', 'nombrecomercial2', 'nombrecomercial3',
         'presentacion', 'sico', 'uso', 'dosificacion',
+        // La dosis por peso del récipe pediátrico (2026-10-19).
+        'dosis', 'cada', 'durante', 'pvc', 'pvs', 'concentracion',
     ];
+
+    /** Los campos que son números (la dosis por peso): el `double` de la columna no se compara como texto. */
+    public const NUMEROS = ['dosis', 'cada', 'durante', 'pvc', 'pvs', 'concentracion'];
 
     /** Cómo se llama cada columna en los avisos ("cambió el nombre comercial y la presentación"). */
     public const ETIQUETAS = [
@@ -48,6 +63,12 @@ final class CamposDelMedicamento
         'sico' => 'la marca de psicotrópico',
         'uso' => 'las indicaciones',
         'dosificacion' => 'la dosificación',
+        'dosis' => 'la dosis por kilo',
+        'cada' => 'las veces al día',
+        'durante' => 'los días de tratamiento',
+        'pvc' => 'los mg del envase',
+        'pvs' => 'los ml del envase',
+        'concentracion' => 'las gotas por mililitro',
     ];
 
     /**
@@ -89,7 +110,37 @@ final class CamposDelMedicamento
             'dosificacion' => AgregarMedicamentoAlVademecum::opcional(
                 $datos['dosificacion'] ?? null, self::LARGO_DOSIFICACION, 'La dosificación', false, false
             ),
+            // La dosis por peso del récipe pediátrico (2026-10-19): números opcionales.
+            'dosis' => self::numero($datos['dosis'] ?? null, 'La dosis por kilo'),
+            'cada' => self::numero($datos['cada'] ?? null, 'Las veces al día'),
+            'durante' => self::numero($datos['durante'] ?? null, 'Los días de tratamiento'),
+            'pvc' => self::numero($datos['pvc'] ?? null, 'Los mg del envase'),
+            'pvs' => self::numero($datos['pvs'] ?? null, 'Los ml del envase'),
+            'concentracion' => self::numero($datos['concentracion'] ?? null, 'Las gotas por mililitro'),
         ];
+    }
+
+    /**
+     * Uno de los números de la dosis: vacío es `null` y lo que no es un número (o es negativo) se rechaza con el
+     * nombre del campo, para que el aviso del formulario diga cuál es.
+     */
+    private static function numero($valor, string $cual): ?float
+    {
+        if ($valor === null || trim((string) $valor) === '') {
+            return null;
+        }
+
+        if (! is_numeric(str_replace(',', '.', (string) $valor))) {
+            throw new InvalidArgumentException($cual . ' tiene que ser un número.');
+        }
+
+        $numero = round((float) str_replace(',', '.', (string) $valor), 3);
+
+        if ($numero < 0) {
+            throw new InvalidArgumentException($cual . ' no puede ser negativo.');
+        }
+
+        return $numero;
     }
 
     /** El nombre comercial o el genérico: mayúsculas, hasta 35 y opcional. */
