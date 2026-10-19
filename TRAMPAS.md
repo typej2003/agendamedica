@@ -529,6 +529,10 @@ encontró. El estado del código, los comandos y el mapa del repo están en
 59. **Tres tests dependen de la hora real y fallan desde las 20:00 de Caracas, y `php artisan test` completo se queda sin memoria con el límite de 128 MB.**
     `AgendaVistasTest::…url_mal_formada`, `FormularioDePacienteVistaTest::…si_de_atender_hoy…` y `PacientesAltaEdicionWebTest::…si_de_atender_hoy…` comparan contra
     «hoy» con el reloj real: pasadas las 20:00 locales el día UTC ya es el siguiente (fallan también sin los cambios de WEB-8.1a, medido con `git stash`).
+    **Dos más se sumaron con los ecos (medido el 2026-10-19 a las 00:38 UTC):** `SyncEcoCreacionTest::test_crear_un_eco_obstetrico_con_solo_la_fur_o_la_gesta_se_acepta`
+    —los dos conjuntos del `dataProvider`— compara `now()->toDateString()` (la zona de la máquina, UTC) con la fecha que escribió la Action, que sale de
+    `FechaDelConsultorio::hoy()` (Caracas): en esa franja la fila queda con el día anterior y el test falla **sin que el código tenga nada que ver**. Cuando se toque
+    ese test, lo correcto es comparar contra `FechaDelConsultorio::hoy()` y no contra `now()`.
     Y la suite entera aborta con «Allowed memory size of 134217728 bytes exhausted» si algún test falla con una página enorme (Ignition renderiza el error):
     `php -d memory_limit=2G artisan test` o por carpeta (`tests/Unit`, `tests/Feature`).
 60. **Las cinco tablas de WEB-8.1b se suben por fila: no hay nada que proteger, y el riesgo real es otro.** Medido al hacer WEB-8.1b (2026-10-11) mirando
