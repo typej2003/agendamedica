@@ -260,6 +260,10 @@ final class SeccionesDeLaConsulta
         self::SECCION_PROCEDIMIENTOS => ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Procedimientos',
             'icono' => 'bi-camera-reels', 'detalle' => 'Endoscopías digestivas y eco abdominal (gastroenterología pediátrica).',
             'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_PROCEDIMIENTOS, 'despues_de' => self::SECCION_INMUNIZACIONES],
+        // Cirugía pediátrica: el ítem «I.Q.» del árbol, el último (`w_consulta_principal.srw:2717`).
+        self::SECCION_QUIRURGICO => ['numero' => 16, 'grupo' => 'Documentos', 'titulo' => 'I.Q.',
+            'icono' => 'bi-scissors', 'detalle' => 'Intervenciones, evaluación pre-operatoria y riesgo quirúrgico (cirugía pediátrica).',
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_QUIRURGICO, 'despues_de' => self::SECCION_PREFACTURA],
     ];
 
     /** ¿La especialidad es pediatría? Su catálogo es el suyo, no el de ginecología. */
@@ -317,8 +321,11 @@ final class SeccionesDeLaConsulta
             $extras = [];
         }
 
-        // Las secciones del postgrado se insertan detrás de su ítem ancla, en el orden en que las declara.
-        $salida = [];
+        // Las secciones del postgrado se insertan detrás de su ítem ancla, en el orden en que las declara. Un
+        // postgrado cuya ancla es un ítem **sin sección** (la pre-factura, que todavía no tiene pantalla) se agrega
+        // **al final**, que es donde el escritorio lo pone: «I.Q.» va después de la pre-factura.
+        $alFinal = [];
+
         foreach ($base as $item) {
             $salida[] = $item;
 
@@ -326,11 +333,28 @@ final class SeccionesDeLaConsulta
                 if ($extra['despues_de'] === $item['seccion']) {
                     $salida[] = $extra;
                     unset($extras[$indice]);
+                } elseif (self::anclaSinSeccion($extra['despues_de'])) {
+                    $alFinal[] = $extra;
+                    unset($extras[$indice]);
                 }
             }
         }
 
-        return $salida;
+        return array_merge($salida, $alFinal);
+    }
+
+    /**
+     * Los ítems del catálogo que **todavía no tienen sección** (la pre-factura, F9): un postgrado que se ancla en uno
+     * de ellos se agrega **al final** de la lista, en lugar de desaparecer.
+     *
+     * @var array<string,true>
+     */
+    private const ANCLAS_SIN_SECCION = [self::SECCION_PREFACTURA => true];
+
+    /** ¿La clave ancla es un ítem del catálogo sin sección? */
+    private static function anclaSinSeccion(?string $despuesDe): bool
+    {
+        return $despuesDe !== null && isset(self::ANCLAS_SIN_SECCION[$despuesDe]);
     }
 
     public static function total(?string $especialidad = null, array $seccionesPostgrados = []): int

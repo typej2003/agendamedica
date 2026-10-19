@@ -78,6 +78,9 @@ final class ConsultaShellVista
     /** La clave de la sección de **Procedimientos** (gastroenterología pediátrica, ítem 8 de pediatría) en `?seccion=`. */
     public const SECCION_PROCEDIMIENTOS = SeccionesDeLaConsulta::SECCION_PROCEDIMIENTOS;
 
+    /** La clave de la sección de **I.Q.** (cirugía pediátrica, último ítem de pediatría) en `?seccion=`. */
+    public const SECCION_QUIRURGICO = SeccionesDeLaConsulta::SECCION_QUIRURGICO;
+
     /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
     public const RECIPE_PAREJA = SeccionesDeLaConsulta::RECIPE_PAREJA;
 

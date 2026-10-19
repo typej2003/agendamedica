@@ -54,6 +54,7 @@ use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
 use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
 use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
+use App\Http\Controllers\Clinica\ConsultaQuirurgicoController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -366,6 +367,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): las endoscopías digestivas.
                 Route::post('/consulta/{consulta}/procedimientos/{tipo}', [ConsultaProcedimientosController::class, 'guardar'])
                     ->where('tipo', '[a-z]+')->name('consulta.procedimientos.guardar');
+
+                // **I.Q.** (cirugía pediátrica, 2026-10-19): la evaluación pre-operatoria.
+                Route::post('/consulta/{consulta}/preoperatorio', [ConsultaQuirurgicoController::class, 'guardar'])
+                    ->name('consulta.preoperatorio.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el
