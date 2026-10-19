@@ -36,10 +36,10 @@ class MenuDelArmazonWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $especialidad = Specialty::firstOrCreate(['slug' => $slug], ['name' => ucfirst($slug)]);
-        $regMedico = 'menu-test-' . uniqid();
+        $regMedico = 'menu-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Doctora de prueba', 'email' => 'menu-' . uniqid() . '@example.com',
+            'name' => 'Doctora de prueba', 'email' => 'menu-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');

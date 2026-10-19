@@ -43,7 +43,7 @@ class PediatriaSyncTest extends TestCase
 
     private function medicoConEspecialidad(string $reg, ?string $slug): Medico
     {
-        $email = $reg . '-' . uniqid() . '@example.com';
+        $email = $reg . '-' . substr(uniqid(), -6) . '@example.com';
         $user = User::create(['name' => 'Médico ' . $reg, 'email' => $email, 'password' => Hash::make('x')]);
         $medico = Medico::create([
             'user_id' => $user->id, 'name' => 'Médico', 'lastname' => $reg,

@@ -237,7 +237,7 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
         $codigos = [];
         foreach (range(1, 70) as $n) {
             $codigo = 'E' . str_pad((string) $n, 3, '0', STR_PAD_LEFT);
-            DB::table('examenes')->insert(['reg_medico' => $medico->reg_medico, 'codeexamen' => $codigo, 'examen' => 'ESTUDIO NUMERO ' . $n . ' CON UN NOMBRE LARGO DE IMAGEN', 'codetipo' => '002', 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('examenes')->insert(['reg_medico' => $medico->reg_medico, 'codeexamen' => $codigo, 'examen' => 'ESTUDIO NUMERO ' . $n . ' LARGO DE IMAGEN', 'codetipo' => '002', 'created_at' => now(), 'updated_at' => now()]);
             $codigos[] = $codigo;
         }
         $this->estudios($medico, $codigos);
@@ -246,7 +246,7 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
 
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         foreach (range(1, 70) as $n) {
-            $this->assertSame(1, substr_count($html, $n . '. ESTUDIO NUMERO ' . $n . ' CON UN NOMBRE LARGO DE IMAGEN'), 'el estudio ' . $n);
+            $this->assertSame(1, substr_count($html, $n . '. ESTUDIO NUMERO ' . $n . ' LARGO DE IMAGEN'), 'el estudio ' . $n);
         }
     }
 

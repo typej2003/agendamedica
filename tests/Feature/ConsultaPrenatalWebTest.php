@@ -63,10 +63,10 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'prenatal-test-' . uniqid();
+        $regMedico = 'prenatal-test' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'prenatal-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'prenatal-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);
@@ -84,7 +84,7 @@ class ConsultaPrenatalWebTest extends TestCase
     private function secretariaConAcceso(Medico $medico): User
     {
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'prenatal-s-' . uniqid() . '@example.com',
+            'name' => 'Secretaria', 'email' => 'prenatal-s-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');
@@ -593,23 +593,212 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Cefálica - Cefálica');
     }
 
+    /** El `href` del enlace que lleva ese texto (se busca hacia atrás desde el texto). */
+    private function urlDelEnlace(string $html, string $texto): string
+    {
+        $posicion = strpos($html, $texto);
+
+        if ($posicion === false) {
+            return '';
+        }
+
+        $href = strrpos(substr($html, 0, $posicion), 'href="');
+
+        if ($href === false) {
+            return '';
+        }
+
+        $inicio = $href + strlen('href="');
+
+        return html_entity_decode(substr($html, $inicio, strpos($html, '"', $inicio) - $inicio));
+    }
+
     /**
      * **La fecha de un laboratorio nuevo abre con hoy** (O-13): es la fecha del estudio, no la de la consulta.
      * Una fila que ya existe manda con su fecha (lo cubre la pestaña con `&fecha=`).
+     *
+     * Una fecha nueva es **la pestaña sin `&fecha=`**, no una marca: la gesta es la de la pestaña (acá la 1,
+     * la que tiene la fila). Antes se llegaba con `&nueva=1`, que era la marca de la **gesta** nueva, y eso
+     * abría una gesta que todavía no existía.
      */
     public function test_el_laboratorio_nuevo_abre_con_la_fecha_de_hoy(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&nueva=1'));
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1'));
 
         $respuesta->assertOk();
         $this->assertMatchesRegularExpression(
             '/id="fecha"[^>]*value="' . $this->hoy->toDateString() . '"/s',
             $respuesta->getContent(),
         );
+        // Y el formulario es el de la gesta en curso, no el de una gesta nueva.
+        $this->assertMatchesRegularExpression(
+            '/<input[^>]*name="gesta"[^>]*value="1"/s',
+            $respuesta->getContent(),
+        );
+    }
+
+    // ------------------------------------------- Varios laboratorios en la misma gesta (Alexander, 2026-10-19)
+
+    /**
+     * **Se pueden cargar varios laboratorios en la misma gesta, uno por fecha**: la tabla se llavea por
+     * `historia` + `gesta_clave` + `fecha`, así que el tope son las fechas, no las filas.
+     *
+     * Antes, «Agregar una fecha» enlazaba con `&nueva=1` —la marca de la **gesta** nueva de *Prenatal*—, el
+     * controlador anulaba la gesta elegida y caía en `siguienteClave()`: el formulario viajaba con `gesta=2`,
+     * la fila se guardaba en una gesta inexistente y desaparecía de la pestaña. El segundo guardado, además,
+     * volvía a la pestaña sin `fecha`, o sea a un formulario en blanco.
+     */
+    public function test_se_cargan_dos_laboratorios_con_fechas_distintas_en_la_misma_gesta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+        $url = route('clinica.consulta.embarazo.laboratorio.guardar', $consulta->id);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($url, ['gesta' => '1', 'fecha' => '2026-08-14', 'hemoglobina' => '11,5'])
+            ->assertSessionHas('estado');
+
+        $segundo = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($url, ['gesta' => '1', 'fecha' => '2026-09-20', 'hemoglobina' => '12']);
+
+        $segundo->assertSessionHas('estado');
+
+        // La vuelta es a la fila guardada: su gesta y su fecha.
+        $destino = (string) $segundo->headers->get('Location');
+        $this->assertStringContainsString('pestana=laboratorio', $destino);
+        $this->assertStringContainsString('gesta=1', $destino);
+        $this->assertStringContainsString('fecha=2026-09-20', $destino);
+
+        // Las dos filas son de la **misma** gesta, y no apareció ninguna gesta nueva.
+        $filas = PrenaExamenB::where('historia', 1001)->orderBy('fecha')->get();
+        $this->assertCount(2, $filas);
+        $this->assertSame([1, 1], $filas->pluck('gesta_clave')->map(fn ($clave) => (int) $clave)->all());
+        $this->assertSame(1, PreNatalObservacion::where('historia', 1001)->count());
+
+        // La pestaña lista las dos fechas y el estado dice cuántas son.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1'))
+            ->assertOk()
+            ->assertSee('14/08/2026')
+            ->assertSee('20/09/2026')
+            ->assertSee('2 fechas');
+    }
+
+    /**
+     * **«Agregar una fecha» abre una fecha nueva de la gesta en curso**: la misma pestaña con `gesta` y sin
+     * `fecha` ni `nueva`; la fecha de hoy y los campos vacíos —no los de la fila que se estaba mirando— y el
+     * aviso de que se está sumando una fila.
+     */
+    public function test_agregar_una_fecha_abre_el_formulario_en_blanco_de_la_gesta_en_curso(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+        PrenaExamenB::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fecha' => '2026-08-14', 'hemoglobina' => '11.5', 'orina' => 'Amarilla',
+        ]);
+
+        // Se está mirando la fila guardada: su formulario la muestra.
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1&fecha=2026-08-14'))
+            ->assertOk()->assertSee('Amarilla')->getContent();
+
+        // El botón es un enlace a la pestaña con la gesta y sin fecha (y sin la marca de la gesta nueva).
+        $href = $this->urlDelEnlace($html, 'Agregar una fecha');
+        $this->assertNotSame('', $href);
+        $this->assertStringContainsString('pestana=laboratorio', $href);
+        $this->assertStringContainsString('gesta=1', $href);
+        $this->assertStringNotContainsString('fecha=', $href);
+        $this->assertStringNotContainsString('nueva=1', $href);
+
+        // Esa URL abre la fecha nueva: la gesta en curso, la fecha de hoy y lo que se estaba mirando en blanco.
+        $nuevo = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($href);
+        $nuevo->assertOk();
+        $otraVez = $nuevo->getContent();
+
+        $this->assertMatchesRegularExpression('/<input[^>]*name="gesta"[^>]*value="1"/s', $otraVez);
+        $this->assertMatchesRegularExpression('/id="fecha"[^>]*value="' . $this->hoy->toDateString() . '"/s', $otraVez);
+        $this->assertStringNotContainsString('Amarilla', $otraVez);
+        $this->assertMatchesRegularExpression('/id="hemoglobina"[^>]*value=""/s', $otraVez);
+
+        // Y dice que se está **agregando** una fecha a la gesta, no que la gesta esté vacía.
+        $nuevo->assertSee('Fecha nueva: completá y guardá para agregarla a la gesta.');
+    }
+
+    /**
+     * **`?nueva=1` en *Laboratorio* ya no cambia la gesta** (la regresión): la marca es de la gesta nueva de
+     * *Prenatal*, y en una pestaña por fecha abría la gesta siguiente —que no existe—, así que las filas de la
+     * gesta en curso desaparecían de la pestaña.
+     */
+    public function test_el_parametro_nueva_no_cambia_la_gesta_en_laboratorio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+        PrenaExamenB::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fecha' => '2026-08-14', 'orina' => 'Amarilla',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&nueva=1'))
+            ->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<input[^>]*name="gesta"[^>]*value="1"/s', $html);
+        // Las filas de la gesta siguen a la vista.
+        $this->assertStringContainsString('14/08/2026', $html);
+        $this->assertStringContainsString('1 fecha', $html);
+    }
+
+    /**
+     * Lo mismo en *Controles* —el ViewModel y el parcial son los mismos—, y el guardado vuelve a la fecha de
+     * la fila, no a un formulario en blanco.
+     */
+    public function test_el_parametro_nueva_no_cambia_la_gesta_en_controles_y_el_guardado_vuelve_a_la_fecha(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+        PreNatalDesarrolloFino::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fecha' => '2026-06-01', 'peso' => '68',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlFecha($consulta, PestanasDelEmbarazo::CONTROLES, '&nueva=1'))
+            ->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<input[^>]*name="gesta"[^>]*value="1"/s', $html);
+        $this->assertStringContainsString('1 fecha', $html);
+
+        // Y el guardado de otra fecha vuelve a esa fecha, con su gesta.
+        $guardado = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.consulta.embarazo.controles.guardar', $consulta->id), [
+                'gesta' => '1', 'fecha' => '2026-07-01', 'peso' => '70',
+            ]);
+
+        $destino = (string) $guardado->headers->get('Location');
+        $this->assertStringContainsString('pestana=controles', $destino);
+        $this->assertStringContainsString('gesta=1', $destino);
+        $this->assertStringContainsString('fecha=2026-07-01', $destino);
+        $this->assertSame(2, PreNatalDesarrolloFino::where('historia', 1001)->where('gesta_clave', 1)->count());
     }
 
     public function test_la_pestana_reporte_abre_con_la_ficha_de_la_gesta_y_el_boton_de_imprimir(): void
@@ -661,7 +850,10 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->assertNotNull($lab);
         $this->assertSame(1, $lab->gesta_clave);
         $this->assertSame(11.5, (float) $lab->hemoglobina);
-        $this->assertSame('No reactivo', $lab->vdrl);
+        // El reactivo se guarda con el código de una letra del escritorio (la columna es `char(1)` en
+        // MySQL, trampa 140), aunque el formulario haya mandado el rótulo.
+        $this->assertSame('N', $lab->vdrl);
+        $this->assertSame(1, mb_strlen($lab->vdrl));
 
         // Los controles: la presentación guarda el código y la placenta el texto del desplegable.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -679,6 +871,30 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO, '&gesta=1'))
             ->assertOk()->assertSee('14/08/2026');
+    }
+
+    /**
+     * **La otra cara de la trampa 140**: los números del laboratorio también tienen su ancho. Las columnas
+     * son `char(5)` en el escritorio (`hemoglobina`, `glob_blanco`, `urea`…) y el `max` genérico de la
+     * validación era 20, así que un valor de seis caracteres habría llegado al `INSERT` y en MySQL —modo
+     * estricto— habría muerto igual que el «Negativo» del `hiv`. Se frena en el campo.
+     */
+    public function test_un_numero_mas_largo_que_su_columna_se_frena_en_el_campo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1, 'fur' => $this->fur(),
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from($this->urlFecha($consulta, PestanasDelEmbarazo::LABORATORIO))
+            ->post(route('clinica.consulta.embarazo.laboratorio.guardar', $consulta->id), [
+                'gesta' => '1', 'fecha' => '2026-08-14', 'glob_blanco' => '123456',
+            ])
+            ->assertSessionHasErrors('glob_blanco');
+
+        $this->assertSame(0, PrenaExamenB::where('historia', 1001)->count());
     }
 
     public function test_una_fecha_sin_gesta_no_se_guarda_y_lo_dice(): void

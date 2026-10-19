@@ -160,9 +160,13 @@ class ConsultaEstudioController extends Controller
             $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
                 // La columna es `date`: el formato se fija, no se acepta «lo que parezca una fecha».
                 'fecha', 'fecha-tecleada' => FechaDeFormulario::REGLA,
-                'numero' => $pelvico
-                    ? 'nullable|numeric|min:0|' . $this->topeNumerico($campo['columna'])
-                    : 'nullable|numeric|min:0|max:99999',
+                // `entero` es el campo con máscara `###` del escritorio: el navegador ya no deja escribir
+                // decimales y el servidor lo vuelve a comprobar (`integer`, no `numeric`).
+                'numero' => ($campo['entero'] ?? false)
+                    ? 'nullable|integer|min:0|max:99999'
+                    : ($pelvico
+                        ? 'nullable|numeric|min:0|' . $this->topeNumerico($campo['columna'])
+                        : 'nullable|numeric|min:0|max:99999'),
                 'area' => 'nullable|string|max:32000',
                 'opciones' => 'nullable|string|max:20',
                 'texto' => $pelvico

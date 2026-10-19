@@ -3,18 +3,24 @@
 namespace App\Clinica\Impresion;
 
 /**
- * **El modo de la hoja de cada documento** (O-26): la **única** regla que dice si un documento se imprime en **media hoja
- * horizontal** (dos por A4) o en **hoja completa vertical** (una por A4).
+ * **El modo de la hoja de cada documento** (O-26): la **única** regla que dice cómo se imprime un documento —en **media hoja
+ * horizontal** (dos por A4), en **hoja completa vertical** (una por A4) o en la **mitad superior de un A4 vertical** (una por
+ * página, con la mitad de abajo en blanco)—.
  *
  * Vive acá, al lado de las medidas (`MedidasDeLaMitad`), porque el motor de documentos no repite la decisión por documento: un
- * documento **declara** su modo —en el mapa de abajo, con su clave— y `HojasDeDocumentoVista` le pide a esta clase las medidas
- * y cuántos documentos entran por página. El reparto del texto sigue siendo el de `DistribuidorDeDocumento`, que sólo cambia
- * los milímetros con los que mide.
+ * documento **declara** su modo —en los mapas de abajo, con su clave— y `HojasDeDocumentoVista` le pide a esta clase las
+ * medidas y cuántos documentos entran por página. El reparto del texto sigue siendo el de `DistribuidorDeDocumento`, que sólo
+ * cambia los milímetros con los que mide.
  *
- * ## Qué va en cada modo (decisión del usuario, 2026-10-17)
+ * ## Qué va en cada modo
  *
- *  - **Hoja completa vertical**: el informe del **control de embarazo** y los informes de **los siete ecos** (pélvico,
- *    obstétrico del 1.º, del 2.º y del 3.er trimestre, Doppler, mamario, abdominal y cardiograma fetal).
+ *  - **Hoja completa vertical** (decisión del usuario, 2026-10-17): el informe del **control de embarazo** y los informes de
+ *    **los siete ecos** (pélvico, obstétrico del 1.º, del 2.º y del 3.er trimestre, Doppler, mamario, abdominal y cardiograma
+ *    fetal).
+ *  - **Mitad superior de un A4 vertical** (2026-10-18, Alexander): los informes de **colposcopía y histeroscopía**. Usan media
+ *    hoja —el contenido en la mitad de arriba de una página vertical, como el escritorio— y llevan la imagen del examen **en la
+ *    misma página**, debajo del texto (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad
+ *    de abajo de la hoja queda en blanco a propósito.
  *  - **Media hoja**: todo lo demás — récipes, constancia, reposo, referencia, informe médico, hospitalización, dieta,
  *    laboratorio y estudios.
  *
@@ -35,9 +41,11 @@ final class ModoDeLaHoja
     /** Hoja completa: un A4 vertical entero (un documento por página). */
     public const COMPLETA = 'completa';
 
+    /** La mitad superior de un A4 vertical: el documento usa 148,25 mm de una página vertical y el resto queda en blanco. */
+    public const MITAD_SUPERIOR = 'mitad-superior';
+
     /**
-     * Los documentos que declaran **hoja completa vertical**. Los que no están acá son de media hoja: así un documento nuevo
-     * no tiene que decir nada (el caso de siempre) y sólo suma su línea si va entero.
+     * Los documentos que declaran **hoja completa vertical**.
      *
      * @var array<int,string>
      */
@@ -53,10 +61,25 @@ final class ModoDeLaHoja
         DocumentoImpreso::CONTROL_DE_EMBARAZO,
     ];
 
+    /**
+     * Los documentos que declaran la **mitad superior de un A4 vertical** (su informe lleva la imagen del examen en la misma
+     * página, y el escritorio imprime esos dos informes en media hoja).
+     *
+     * @var array<int,string>
+     */
+    private const MITAD_SUPERIOR_DE_UN_A4 = [
+        DocumentoImpreso::COLPOSCOPIA,
+        DocumentoImpreso::HISTEROSCOPIA,
+    ];
+
     /** El modo de un documento, por su clave (`eco-pelvico`, `constancia`, `control-de-embarazo`…). */
     public static function de(string $clave): string
     {
-        return in_array($clave, self::HOJA_COMPLETA, true) ? self::COMPLETA : self::MITAD;
+        if (in_array($clave, self::HOJA_COMPLETA, true)) {
+            return self::COMPLETA;
+        }
+
+        return in_array($clave, self::MITAD_SUPERIOR_DE_UN_A4, true) ? self::MITAD_SUPERIOR : self::MITAD;
     }
 
     /** ¿Ese documento va en hoja completa vertical? */
@@ -65,22 +88,46 @@ final class ModoDeLaHoja
         return self::de($clave) === self::COMPLETA;
     }
 
+    /** ¿Ese documento usa la mitad superior de una página vertical (y no la media hoja horizontal)? */
+    public static function esMitadSuperior(string $clave): bool
+    {
+        return self::de($clave) === self::MITAD_SUPERIOR;
+    }
+
     /**
-     * Las medidas con las que se mide y se reparte ese modo: la media hoja de siempre o el A4 vertical completo.
+     * Las medidas con las que se mide y se reparte ese modo: la media hoja de siempre, el A4 vertical completo o su mitad
+     * superior.
      *
      * Es lo único que el distribuidor necesita saber del modo; el resto de la cuenta es la misma.
      */
     public static function medidas(string $modo): MedidasDeLaMitad
     {
-        return $modo === self::COMPLETA ? MedidasDeLaMitad::deLaHojaCompleta() : new MedidasDeLaMitad();
+        if ($modo === self::COMPLETA) {
+            return MedidasDeLaMitad::deLaHojaCompleta();
+        }
+
+        return $modo === self::MITAD_SUPERIOR ? MedidasDeLaMitad::deLaMitadSuperior() : new MedidasDeLaMitad();
     }
 
     /**
-     * Cuántos documentos entran en **una página** de ese modo: dos en la hoja horizontal (una en cada mitad) y uno solo en la
-     * hoja completa (que es entera para él).
+     * Cuántos documentos entran en **una página** de ese modo: dos en la hoja horizontal (una en cada mitad) y uno solo en las
+     * dos hojas verticales (la completa y la mitad superior, que deja el resto de la página en blanco).
      */
     public static function porPagina(string $modo): int
     {
-        return $modo === self::COMPLETA ? 1 : 2;
+        return $modo === self::MITAD ? 2 : 1;
+    }
+
+    /**
+     * Las clases CSS del `<article>` de una hoja de ese modo: la hoja completa y la mitad superior comparten la **página
+     * vertical con nombre** (`recipe-hoja-completa`), y la mitad superior suma la clase que recorta el alto de la mitad.
+     */
+    public static function clasesDeLaHoja(string $modo): string
+    {
+        if ($modo === self::COMPLETA) {
+            return ' recipe-hoja-completa';
+        }
+
+        return $modo === self::MITAD_SUPERIOR ? ' recipe-hoja-completa recipe-hoja-mitad-superior' : '';
     }
 }

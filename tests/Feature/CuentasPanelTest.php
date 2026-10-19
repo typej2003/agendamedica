@@ -37,7 +37,7 @@ class CuentasPanelTest extends TestCase
     /** Administrador que ya cambió su clave (si no, el middleware lo manda a /cambiar-password). */
     private function admin(): User
     {
-        $user = $this->cuentas->crearAdministrador('Admin Panel', 'admin-panel-' . uniqid() . '@example.com')['user'];
+        $user = $this->cuentas->crearAdministrador('Admin Panel', 'admin-panel-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -46,8 +46,8 @@ class CuentasPanelTest extends TestCase
     private function medicoSinPermisos(): User
     {
         $r = $this->cuentas->crearMedico([
-            'name' => 'Medico', 'lastname' => 'Comun', 'email' => 'comun-' . uniqid() . '@example.com',
-            'reg_medico' => 'test-comun-' . uniqid(),
+            'name' => 'Medico', 'lastname' => 'Comun', 'email' => 'comun-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-comun-' . substr(uniqid(), -6),
         ]);
         $r['user']->forceFill(['must_change_password' => false])->save();
 
@@ -96,7 +96,7 @@ class CuentasPanelTest extends TestCase
     {
         $admin = $this->admin();
         $this->actingAs($admin);
-        $correo = 'colado-' . uniqid() . '@example.com';
+        $correo = 'colado-' . substr(uniqid(), -6) . '@example.com';
 
         $panel = Livewire::test(Cuentas::class)
             ->call('abrirAlta', 'administrador')
@@ -123,10 +123,10 @@ class CuentasPanelTest extends TestCase
     {
         $admin = $this->admin();
         $conCuenta = $this->cuentas->crearMedico([
-            'name' => 'Con', 'lastname' => 'Cuenta', 'email' => 'con-' . uniqid() . '@example.com', 'reg_medico' => 'test-con-' . uniqid(),
+            'name' => 'Con', 'lastname' => 'Cuenta', 'email' => 'con-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-con-' . substr(uniqid(), -6),
         ]);
         $sinCuenta = Medico::create([
-            'name' => 'Sin', 'lastname' => 'Cuenta', 'email' => 'sin-' . uniqid() . '@example.com', 'reg_medico' => 'test-sin-' . uniqid(),
+            'name' => 'Sin', 'lastname' => 'Cuenta', 'email' => 'sin-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-sin-' . substr(uniqid(), -6),
         ]);
 
         $this->actingAs($admin);
@@ -179,7 +179,7 @@ class CuentasPanelTest extends TestCase
     public function test_crear_administrador_con_clave_propia(): void
     {
         $this->actingAs($this->admin());
-        $correo = 'otro-admin-' . uniqid() . '@example.com';
+        $correo = 'otro-admin-' . substr(uniqid(), -6) . '@example.com';
 
         $panel = Livewire::test(Cuentas::class)
             ->call('abrirAlta', 'administrador')
@@ -204,12 +204,12 @@ class CuentasPanelTest extends TestCase
             ->call('abrirAlta', 'medico')
             ->call('guardarAlta')
             ->assertHasErrors(['name', 'lastname', 'email', 'reg_medico'])
-            ->set('name', 'X')->set('lastname', 'Y')->set('reg_medico', 'test-' . uniqid())
+            ->set('name', 'X')->set('lastname', 'Y')->set('reg_medico', 'test-' . substr(uniqid(), -6))
             ->set('email', $existente->email)
             ->call('guardarAlta')
             ->assertHasErrors(['email'])
             ->assertSet('modal', 'alta')
-            ->set('email', 'x-' . uniqid() . '@example.com')->set('clave', 'corta')
+            ->set('email', 'x-' . substr(uniqid(), -6) . '@example.com')->set('clave', 'corta')
             ->call('guardarAlta')
             ->assertHasErrors(['password']);
 
@@ -219,7 +219,7 @@ class CuentasPanelTest extends TestCase
     public function test_crear_acceso_a_un_medico_que_no_podia_entrar(): void
     {
         $medico = Medico::create([
-            'name' => 'Sin', 'lastname' => 'Acceso', 'email' => 'sin-acceso-' . uniqid() . '@example.com', 'reg_medico' => 'test-sa-' . uniqid(),
+            'name' => 'Sin', 'lastname' => 'Acceso', 'email' => 'sin-acceso-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-sa-' . substr(uniqid(), -6),
         ]);
         $this->actingAs($this->admin());
 
@@ -303,7 +303,7 @@ class CuentasPanelTest extends TestCase
     public function test_cada_fila_trae_editar_y_un_menu_con_el_resto_de_acciones(): void
     {
         $r = $this->cuentas->crearMedico([
-            'name' => 'Menu', 'lastname' => 'Fila', 'email' => 'menu-' . uniqid() . '@example.com', 'reg_medico' => 'test-menu-' . uniqid(),
+            'name' => 'Menu', 'lastname' => 'Fila', 'email' => 'menu-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-menu-' . substr(uniqid(), -6),
         ]);
         $this->actingAs($this->admin());
 
@@ -323,7 +323,7 @@ class CuentasPanelTest extends TestCase
     public function test_un_medico_sin_cuenta_tiene_crear_acceso_y_el_menu_solo_con_api_key(): void
     {
         $medico = Medico::create([
-            'name' => 'Sin', 'lastname' => 'Menu', 'email' => 'sinmenu-' . uniqid() . '@example.com', 'reg_medico' => 'test-sm-' . uniqid(),
+            'name' => 'Sin', 'lastname' => 'Menu', 'email' => 'sinmenu-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-sm-' . substr(uniqid(), -6),
         ]);
         $this->actingAs($this->admin());
 
@@ -341,12 +341,12 @@ class CuentasPanelTest extends TestCase
     public function test_editar_medico_abre_el_formulario_con_sus_datos_y_los_guarda(): void
     {
         $r = $this->cuentas->crearMedico([
-            'name' => 'Ana', 'lastname' => 'Vieja', 'email' => 'ana-' . uniqid() . '@example.com',
-            'reg_medico' => 'test-ed-' . uniqid(), 'phone' => '0212-1111111', 'license_number' => 'LIC-1',
+            'name' => 'Ana', 'lastname' => 'Vieja', 'email' => 'ana-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-ed-' . substr(uniqid(), -6), 'phone' => '0212-1111111', 'license_number' => 'LIC-1',
         ]);
         $r['medico']->forceFill(['phone' => '0212-1111111', 'license_number' => 'LIC-1'])->save();
         $this->actingAs($this->admin());
-        $nuevoCorreo = 'ana-nueva-' . uniqid() . '@example.com';
+        $nuevoCorreo = 'ana-nueva-' . substr(uniqid(), -6) . '@example.com';
 
         $panel = Livewire::test(Cuentas::class)
             ->call('abrirEditar', 'medico', $r['medico']->id)
@@ -378,8 +378,8 @@ class CuentasPanelTest extends TestCase
 
     public function test_editar_no_deja_repetir_correo_ni_dejar_campos_obligatorios_vacios(): void
     {
-        $a = $this->cuentas->crearMedico(['name' => 'A', 'lastname' => 'A', 'email' => 'a-' . uniqid() . '@example.com', 'reg_medico' => 'test-a-' . uniqid()]);
-        $b = $this->cuentas->crearMedico(['name' => 'B', 'lastname' => 'B', 'email' => 'b-' . uniqid() . '@example.com', 'reg_medico' => 'test-b-' . uniqid()]);
+        $a = $this->cuentas->crearMedico(['name' => 'A', 'lastname' => 'A', 'email' => 'a-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-a-' . substr(uniqid(), -6)]);
+        $b = $this->cuentas->crearMedico(['name' => 'B', 'lastname' => 'B', 'email' => 'b-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-b-' . substr(uniqid(), -6)]);
         $this->actingAs($this->admin());
 
         Livewire::test(Cuentas::class)
@@ -404,7 +404,7 @@ class CuentasPanelTest extends TestCase
     public function test_editar_un_medico_sin_cuenta_solo_toca_la_ficha(): void
     {
         $medico = Medico::create([
-            'name' => 'Sin', 'lastname' => 'Cuenta', 'email' => 'sc-' . uniqid() . '@example.com', 'reg_medico' => 'test-sc-' . uniqid(),
+            'name' => 'Sin', 'lastname' => 'Cuenta', 'email' => 'sc-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-sc-' . substr(uniqid(), -6),
         ]);
         $this->actingAs($this->admin());
 
@@ -420,10 +420,10 @@ class CuentasPanelTest extends TestCase
 
     public function test_editar_administrador_cambia_nombre_y_correo_tambien_en_su_ficha_de_medico(): void
     {
-        $r = $this->cuentas->crearMedico(['name' => 'Doble', 'lastname' => 'Rol', 'email' => 'doble-' . uniqid() . '@example.com', 'reg_medico' => 'test-d-' . uniqid()]);
+        $r = $this->cuentas->crearMedico(['name' => 'Doble', 'lastname' => 'Rol', 'email' => 'doble-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-d-' . substr(uniqid(), -6)]);
         $this->cuentas->hacerAdministrador($r['user']);
         $this->actingAs($this->admin());
-        $nuevo = 'doble-nuevo-' . uniqid() . '@example.com';
+        $nuevo = 'doble-nuevo-' . substr(uniqid(), -6) . '@example.com';
 
         Livewire::test(Cuentas::class)
             ->set('pestana', 'administradores')
@@ -547,7 +547,7 @@ class CuentasPanelTest extends TestCase
 
     public function test_generar_api_key_desde_la_fila_del_medico(): void
     {
-        $r = $this->cuentas->crearMedico(['name' => 'Key', 'lastname' => 'Menu', 'email' => 'km-' . uniqid() . '@example.com', 'reg_medico' => 'test-km-' . uniqid()]);
+        $r = $this->cuentas->crearMedico(['name' => 'Key', 'lastname' => 'Menu', 'email' => 'km-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-km-' . substr(uniqid(), -6)]);
         $this->actingAs($this->admin());
 
         $panel = Livewire::test(Cuentas::class)
@@ -570,7 +570,7 @@ class CuentasPanelTest extends TestCase
 
     public function test_generar_api_key_desde_la_fila_de_un_administrador_que_tambien_es_medico(): void
     {
-        $r = $this->cuentas->crearMedico(['name' => 'Adm', 'lastname' => 'Med', 'email' => 'am-' . uniqid() . '@example.com', 'reg_medico' => 'test-am-' . uniqid()]);
+        $r = $this->cuentas->crearMedico(['name' => 'Adm', 'lastname' => 'Med', 'email' => 'am-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-am-' . substr(uniqid(), -6)]);
         $this->cuentas->hacerAdministrador($r['user']);
         $this->actingAs($this->admin());
 
@@ -656,8 +656,8 @@ class CuentasPanelTest extends TestCase
     public function test_actualizar_un_medico_sin_mandar_prefijo_no_se_lo_borra(): void
     {
         $r = $this->cuentas->crearMedico([
-            'name' => 'Sin', 'lastname' => 'Tocar', 'email' => 'sin-' . uniqid() . '@example.com',
-            'reg_medico' => 'test-sintocar-' . uniqid(), 'prefix' => 'Lic',
+            'name' => 'Sin', 'lastname' => 'Tocar', 'email' => 'sin-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-sintocar' . substr(uniqid(), -6), 'prefix' => 'Lic',
         ]);
         $this->assertSame('Lic.', $r['medico']->fresh()->prefix);
 

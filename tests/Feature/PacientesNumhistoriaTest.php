@@ -43,7 +43,7 @@ class PacientesNumhistoriaTest extends TestCase
 
     public function test_un_paciente_se_crea_sin_numero_de_historia(): void
     {
-        $paciente = Paciente::create(['cedula' => 'nh-' . uniqid(), 'nombres' => 'SIN', 'apellidos' => 'HISTORIA']);
+        $paciente = Paciente::create(['cedula' => 'nh-' . substr(uniqid(), -6), 'nombres' => 'SIN', 'apellidos' => 'HISTORIA']);
 
         $this->assertNotNull($paciente->id);
         $this->assertSame(1, DB::table('pacientes')->where('id', $paciente->id)->count());

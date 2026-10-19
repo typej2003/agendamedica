@@ -32,10 +32,10 @@ class EcoObstetricoLecturaTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'eco-obs-' . uniqid();
+        $regMedico = 'eco-obs-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'eco-obs-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'eco-obs-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -63,17 +63,19 @@ class EcoObstetricoLecturaTest extends TestCase
         $medico = $this->medico();
         $consulta = $this->consulta($medico);
 
+        // Los valores respetan el tipo real de cada columna del escritorio: `saco_gestacional`, `lcc` y `tn`
+        // son enteros y `sa_vit` es decimal (en SQLite entraba cualquier texto; en MySQL/MariaDB no).
         EcoObstetricoModelo::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
             'gesta' => 2, 'fur' => '2026-05-20', 'eg' => '20s + 6d',
-            'saco_gestacional' => 'Presente', 'lcc' => '45', 'sa_vit' => 'Sí', 't_nucal' => '1.8',
-            'embarazo_ectopico' => 'No', 'fecha' => '2026-08-14',
+            'saco_gestacional' => '1', 'lcc' => '45', 'sa_vit' => '1.5', 't_nucal' => '1.8',
+            'embarazo_ectopico' => 'N', 'fecha' => '2026-08-14',
         ]);
 
         $estudio = (new EcoObstetrico())->de($consulta);
 
         // El objeto de valores es el mismo del eco pélvico: lee por columna y normaliza.
-        $this->assertSame('Presente', $estudio->valor('saco_gestacional'));
+        $this->assertSame('1', $estudio->valor('saco_gestacional'));
         $this->assertSame('45', $estudio->valor('lcc'));
         $this->assertSame('2026-05-20', $estudio->fur());
         $this->assertTrue($estudio->tieneAlgoDe(['lcc', 'sa_vit', 't_nucal']));
@@ -128,8 +130,8 @@ class EcoObstetricoLecturaTest extends TestCase
 
         EcoObstetricoTercer::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1002, 'consulta' => 1,
-            'gesta' => 1, 'fur' => '2026-01-10', 'eg' => '39s + 2d', 'gemelo' => 'S',
-            'bio_peso_fetal' => '3200', 'bio_femur' => '72', 'ana_corazon' => 'Normal',
+            'gesta' => 1, 'fur' => '2026-01-10', 'eg' => '39s + 2d', 'gemelo' => 1,
+            'bio_peso_fetal' => '3200', 'bio_femur' => '72', 'ana_corazon' => 'N',
             'fun_dp_grado' => 'II', 'fun_indice_la' => '12', 'conclusion' => 'Embarazo a término.',
         ]);
 
@@ -137,10 +139,10 @@ class EcoObstetricoLecturaTest extends TestCase
 
         // Los tres bloques del escritorio, por su prefijo.
         $this->assertSame('3200', $estudio->valor('bio_peso_fetal'));
-        $this->assertSame('Normal', $estudio->valor('ana_corazon'));
+        $this->assertSame('N', $estudio->valor('ana_corazon'));
         $this->assertSame('II', $estudio->valor('fun_dp_grado'));
-        // Y lo que este estudio tiene de propio: el gemelo y el informe en texto libre.
-        $this->assertSame('S', $estudio->valor('gemelo'));
+        // Y lo que este estudio tiene de propio: el gemelo (`gemelo` es un entero, `1` = sí) y el informe.
+        $this->assertSame('1', $estudio->valor('gemelo'));
         $this->assertTrue($estudio->tieneAlgoDe(['bio_peso_fetal', 'fun_indice_la']));
         $this->assertFalse($estudio->tieneAlgoDe(['puro_texto']));
 

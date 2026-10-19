@@ -44,10 +44,10 @@ class SyncDiagnosticoCreacionTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-diagnostico-creacion-' . uniqid();
+        $regMedico = 'test-diagnost' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-dx-' . uniqid() . '@example.com',
+            'email' => 'doctora-dx-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([

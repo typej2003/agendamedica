@@ -44,10 +44,10 @@ class AvisoDeVacunasWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'aviso-vac-' . uniqid();
+        $reg = 'aviso-vac-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'aviso-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'aviso-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');

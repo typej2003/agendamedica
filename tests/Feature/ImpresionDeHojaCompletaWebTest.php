@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Clinica\Impresion\DocumentoImpreso;
+use App\Clinica\Impresion\MedidasDeLaMitad;
 use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Models\Consulta;
 use App\Models\Medico;
@@ -102,6 +103,14 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             $this->assertSame(1, ModoDeLaHoja::porPagina(ModoDeLaHoja::COMPLETA));
         }
 
+        // La mitad superior de un A4 vertical: los dos informes del examen, que llevan la imagen en la misma página y dejan
+        // el resto de la hoja en blanco como el escritorio (2026-10-18, Alexander).
+        foreach ([DocumentoImpreso::COLPOSCOPIA, DocumentoImpreso::HISTEROSCOPIA] as $documento) {
+            $this->assertSame(ModoDeLaHoja::MITAD_SUPERIOR, ModoDeLaHoja::de($documento), $documento);
+            $this->assertTrue(ModoDeLaHoja::esMitadSuperior($documento), $documento);
+            $this->assertSame(1, ModoDeLaHoja::porPagina(ModoDeLaHoja::MITAD_SUPERIOR));
+        }
+
         // Media hoja: los récipes y todas las solicitudes.
         foreach ([
             DocumentoImpreso::CONSTANCIA,
@@ -113,8 +122,6 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             DocumentoImpreso::LABORATORIO,
             DocumentoImpreso::LABORATORIO_PAREJA,
             DocumentoImpreso::ESTUDIOS,
-            DocumentoImpreso::COLPOSCOPIA,
-            DocumentoImpreso::HISTEROSCOPIA,
             DocumentoImpreso::RESUMEN_MEDICO,
         ] as $documento) {
             $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de($documento), $documento);
@@ -127,6 +134,17 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
         $mitad = ModoDeLaHoja::medidas(ModoDeLaHoja::MITAD);
 
         $this->assertGreaterThan($mitad->anchoDelCuerpo() * 1.3, $completa->anchoDelCuerpo());
+
+        // La mitad superior mide lo mismo de ancho que la hoja completa y la mitad de alto (menos el margen y el aire de la
+        // media página), que es lo que hace que el informe entre en la mitad de arriba del A4.
+        $superior = ModoDeLaHoja::medidas(ModoDeLaHoja::MITAD_SUPERIOR);
+
+        $this->assertSame($completa->anchoDelCuerpo(), $superior->anchoDelCuerpo());
+        $this->assertSame(
+            MedidasDeLaMitad::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM / 2 - 5.5,
+            MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM,
+            'la mitad superior es media página menos 9 de margen arriba y 5 de aire abajo',
+        );
     }
 
     // =========================================================== El informe del control de embarazo

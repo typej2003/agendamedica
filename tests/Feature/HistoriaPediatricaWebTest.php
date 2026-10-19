@@ -47,10 +47,10 @@ class HistoriaPediatricaWebTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'hist-ped-' . uniqid();
+        $reg = 'hist-ped-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'hist-ped-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'hist-ped-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -138,7 +138,7 @@ class HistoriaPediatricaWebTest extends TestCase
         $this->conContexto($medicoG, $gineco)->actingAs($userG)->get(route('clinica.pacientes.ver', $idG))->assertOk()->assertDontSee('Historia pediátrica');
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'hist-ped-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'hist-ped-secr' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

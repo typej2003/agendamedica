@@ -171,10 +171,13 @@ final class ReporteVista
         foreach ($this->partes[$cual] as $fila) {
             $claves = [];
             foreach ($campos as $campo) {
-                $valor = $fila->{$campo['columna']} ?? null;
+                // Los reactivos están guardados con el código de una letra: en pantalla se lee su rótulo
+                // (`N` → «Negativo», trampa 140).
+                $crudo = $fila->{$campo['columna']} ?? null;
+                $valor = PrenaExamenB::textoDe($campo['columna'], $crudo === null ? null : (string) $crudo);
 
-                if ($valor !== null && (string) $valor !== '') {
-                    $claves[] = ['etiqueta' => (string) $campo['etiqueta'], 'valor' => (string) $valor];
+                if ($valor !== null && $valor !== '') {
+                    $claves[] = ['etiqueta' => (string) $campo['etiqueta'], 'valor' => $valor];
                 }
             }
 

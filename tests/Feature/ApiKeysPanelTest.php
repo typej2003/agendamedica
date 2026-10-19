@@ -32,7 +32,7 @@ class ApiKeysPanelTest extends TestCase
 
     private function admin(): User
     {
-        $user = app(CuentaService::class)->crearAdministrador('Admin Keys', 'admin-keys-' . uniqid() . '@example.com')['user'];
+        $user = app(CuentaService::class)->crearAdministrador('Admin Keys', 'admin-keys-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -40,7 +40,7 @@ class ApiKeysPanelTest extends TestCase
 
     private function medico(): Medico
     {
-        $sufijo = uniqid();
+        $sufijo = substr(uniqid(), -6);
 
         return app(CuentaService::class)->crearMedico([
             'name' => 'Doctor', 'lastname' => 'Keys', 'email' => "keys-{$sufijo}@example.com", 'reg_medico' => "test-keys-{$sufijo}",
@@ -62,7 +62,7 @@ class ApiKeysPanelTest extends TestCase
         $this->get('/admin/api-keys')->assertRedirect('/login');
 
         $comun = app(CuentaService::class)->crearMedico([
-            'name' => 'Comun', 'lastname' => 'Doc', 'email' => 'comun-' . uniqid() . '@example.com', 'reg_medico' => 'test-c-' . uniqid(),
+            'name' => 'Comun', 'lastname' => 'Doc', 'email' => 'comun-' . substr(uniqid(), -6) . '@example.com', 'reg_medico' => 'test-c-' . substr(uniqid(), -6),
         ])['user'];
         $comun->forceFill(['must_change_password' => false])->save();
         $this->actingAs($comun)->get('/admin/api-keys')->assertForbidden();

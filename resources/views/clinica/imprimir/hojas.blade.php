@@ -44,20 +44,16 @@
                 @continue
             @endif
 
-            {{-- La hoja aparte de las imágenes de un documento en mitades (A-13, los dibujos del cuello uterino). --}}
-            @if (($hoja['tipo'] ?? '') === 'imagenes')
-                @include('clinica.imprimir._hoja-imagenes', [
-                    'documento' => $hoja['documento'],
-                    'imagenes' => $hoja['documento']->imagenes,
-                ])
-                @continue
-            @endif
-
-            {{-- Una hoja = una página A4 con dos mitades (horizontal) **o una página A4 vertical entera** cuando el documento
-                 declara hoja completa (O-26: el control de embarazo; `ModoDeLaHoja`). En "solo indicaciones" de un récipe, y
-                 en cualquier documento de una sola mitad, la mitad derecha queda en blanco (media hoja), como en el móvil. --}}
-            @php $completa = ($hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD) === \App\Clinica\Impresion\ModoDeLaHoja::COMPLETA; @endphp
-            <article class="recipe-hoja{{ $completa ? ' recipe-hoja-completa' : '' }} tamano-{{ $hoja['tamano'] }}">
+            {{-- Una hoja = una página A4 con dos mitades (horizontal) **o una página A4 vertical** cuando el documento declara
+                 hoja vertical (O-26: el control de embarazo y los ecos, con la página entera; 2026-10-18: la colposcopía y la
+                 histeroscopía, que usan sólo la mitad de arriba y dejan el resto en blanco —`ModoDeLaHoja::clasesDeLaHoja()`).
+                 En "solo indicaciones" de un récipe, y en cualquier documento de una sola mitad, la mitad derecha queda en
+                 blanco (media hoja), como en el móvil. --}}
+            @php
+                $modo = $hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
+                $vertical = $modo !== \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
+            @endphp
+            <article class="recipe-hoja{{ \App\Clinica\Impresion\ModoDeLaHoja::clasesDeLaHoja($modo) }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)
                     @if (($hoja['tipo'] ?? 'recipe') === 'documento')
                         @include('clinica.imprimir._documento-mitad', ['mitad' => $mitad, 'membrete' => $vm->membrete()])
@@ -66,7 +62,7 @@
                     @endif
                 @endforeach
 
-                @if (! $completa && count($hoja['mitades']) === 1)
+                @if (! $vertical && count($hoja['mitades']) === 1)
                     <div class="recipe-mitad recipe-mitad-vacia" aria-hidden="true"></div>
                 @endif
             </article>

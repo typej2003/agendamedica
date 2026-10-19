@@ -46,11 +46,11 @@ class PacienteRepresentanteWebTest extends TestCase
         $this->seed(ParentescoSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'rep-web-' . uniqid();
+        $regMedico = 'rep-web-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'rep-web-' . uniqid() . '@example.com',
+            'email'                => 'rep-web-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

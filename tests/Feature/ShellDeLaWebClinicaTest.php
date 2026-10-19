@@ -34,11 +34,11 @@ class ShellDeLaWebClinicaTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', $slugEspecialidad)->firstOrFail();
-        $regMedico = 'shell-web-' . uniqid();
+        $regMedico = 'shell-web-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Carlos Mendoza',
-            'email'                => 'shell-web-' . uniqid() . '@example.com',
+            'email'                => 'shell-web-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

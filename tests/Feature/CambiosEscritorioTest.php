@@ -35,7 +35,7 @@ class CambiosEscritorioTest extends TestCase
     {
         parent::setUp();
 
-        $user = User::create(['name' => 'Médico cambios', 'email' => 'cambios-' . uniqid() . '@example.com', 'password' => Hash::make('x')]);
+        $user = User::create(['name' => 'Médico cambios', 'email' => 'cambios-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('x')]);
         $this->medico = Medico::create([
             'user_id' => $user->id, 'name' => 'Médico', 'lastname' => 'Cambios', 'email' => $user->email,
             'password' => $user->password, 'reg_medico' => self::REG,
@@ -84,7 +84,7 @@ class CambiosEscritorioTest extends TestCase
 
     public function test_estado_dice_si_la_carga_esta_completa_y_que_tablas_vigilar(): void
     {
-        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()->assertJson(['carga' => 'ninguna']);
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . substr(uniqid(), -6)])->assertOk()->assertJson(['carga' => 'ninguna']);
 
         $r = $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['carga' => 'completa']);
         $this->assertContains('pacientes', explode(',', $r->json('tablas')));
@@ -94,7 +94,7 @@ class CambiosEscritorioTest extends TestCase
     {
         $token = SyncCredential::generarToken();
         SyncCredential::create([
-            'reg_medico' => self::REG, 'machine_label' => 'EQUIPO-' . uniqid(), 'machine_host' => 'PC-TEST',
+            'reg_medico' => self::REG, 'machine_label' => 'EQUIPO-' . substr(uniqid(), -6), 'machine_host' => 'PC-TEST',
             'bound_to_machine' => false, 'token_hash' => SyncCredential::hashToken($token), 'expires_at' => now()->addYear(),
         ]);
 
@@ -108,12 +108,12 @@ class CambiosEscritorioTest extends TestCase
         $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()->assertJson(['medico_nombre' => 'Médico Cambios']);
 
         // Un reg_medico sin médico registrado: el campo viene vacío, no falla.
-        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()->assertJson(['medico_nombre' => '']);
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . substr(uniqid(), -6)])->assertOk()->assertJson(['medico_nombre' => '']);
     }
 
     public function test_sin_carga_inicial_completa_no_se_suben_cambios(): void
     {
-        $this->post_('cambios/subir', ['reg_medico' => 'nadie-' . uniqid(), 'cambios' => []])
+        $this->post_('cambios/subir', ['reg_medico' => 'nadie-' . substr(uniqid(), -6), 'cambios' => []])
             ->assertStatus(409)->assertJson(['error' => 'sin_carga_inicial']);
     }
 
@@ -175,7 +175,7 @@ class CambiosEscritorioTest extends TestCase
     public function test_si_el_app_ya_uso_el_numero_el_api_da_otro_y_traduce_las_tablas_hijas(): void
     {
         // El app creó la historia 3 para ANA (el servidor le dio el número).
-        $ana = Paciente::create(['cedula' => 'APP-' . uniqid(), 'nombres' => 'ANA', 'apellidos' => 'APP']);
+        $ana = Paciente::create(['cedula' => 'APP-' . substr(uniqid(), -6), 'nombres' => 'ANA', 'apellidos' => 'APP']);
         MedicoPaciente::create(['medico_id' => $this->medico->id, 'paciente_id' => $ana->id, 'numhistoria' => '3', 'reg_medico' => self::REG]);
         Historia::create(['paciente_id' => $ana->id, 'medico_id' => $this->medico->id, 'numhistoria' => '3', 'reg_medico' => self::REG]);
 
@@ -833,7 +833,7 @@ class CambiosEscritorioTest extends TestCase
         $this->post_('cambios/estado', ['reg_medico' => self::REG])->assertOk()
             ->assertJson(['medico_nombre' => 'Médico Cambios', 'medico_prefix' => 'Dra.']);
 
-        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . uniqid()])->assertOk()
+        $this->post_('cambios/estado', ['reg_medico' => 'nadie-' . substr(uniqid(), -6)])->assertOk()
             ->assertJson(['medico_nombre' => '', 'medico_prefix' => null]);
     }
 

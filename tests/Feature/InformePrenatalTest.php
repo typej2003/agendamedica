@@ -42,10 +42,10 @@ class InformePrenatalTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'informe-pre-' . uniqid();
+        $regMedico = 'informe-pre-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'informe-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'informe-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');

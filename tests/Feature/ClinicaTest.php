@@ -26,7 +26,7 @@ class ClinicaTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = $regMedico ?: 'clinica-test-' . uniqid();
+        $regMedico = $regMedico ?: 'clinica-test-' . substr(uniqid(), -6);
 
         $user = $this->usuarioConRol($rol);
 
@@ -48,7 +48,7 @@ class ClinicaTest extends TestCase
     {
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'clinica-' . uniqid() . '@example.com',
+            'email'                => 'clinica-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -132,7 +132,7 @@ class ClinicaTest extends TestCase
 
         // La secretaría no tiene ficha en `medicos`: el acceso va derecho a su cuenta.
         $medico = Medico::create([
-            'name' => 'Dr. Dueño', 'lastname' => 'De los datos', 'reg_medico' => 'clinica-secre-' . uniqid(),
+            'name' => 'Dr. Dueño', 'lastname' => 'De los datos', 'reg_medico' => 'clinica-secre' . substr(uniqid(), -6),
         ]);
         $medico->specialties()->attach($gineco->id);
 
@@ -155,7 +155,7 @@ class ClinicaTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $propio = $this->paciente('Propio', 'Delcontexto', '11111111', $medico->reg_medico, $medico->id, 1001);
-        $ajeno = $this->paciente('Ajeno', 'Deotromedico', '22222222', 'clinica-otro-' . uniqid(), $medico->id, 2002);
+        $ajeno = $this->paciente('Ajeno', 'Deotromedico', '22222222', 'clinica-otro-' . substr(uniqid(), -6), $medico->id, 2002);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/pacientes');
 
@@ -183,7 +183,7 @@ class ClinicaTest extends TestCase
     public function test_la_ficha_de_un_paciente_de_otro_registro_da_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $ajeno = $this->paciente('Ajeno', 'Deotromedico', '33333333', 'clinica-otro-' . uniqid(), $medico->id, 3003);
+        $ajeno = $this->paciente('Ajeno', 'Deotromedico', '33333333', 'clinica-otro-' . substr(uniqid(), -6), $medico->id, 3003);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/pacientes/' . $ajeno)

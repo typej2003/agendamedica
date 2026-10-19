@@ -31,11 +31,11 @@ class PacienteFamiliaWebTest extends TestCase
         $this->seed(ParentescoSeeder::class);
 
         $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
-        $regMedico = 'fam-web-' . uniqid();
+        $regMedico = 'fam-web-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'fam-web-' . uniqid() . '@example.com',
+            'email'                => 'fam-web-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

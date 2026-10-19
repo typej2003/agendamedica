@@ -27,10 +27,10 @@ class HistoriasAisladasTest extends TestCase
 
     private function medico(bool $autenticar = true, array $registrosExtra = []): Medico
     {
-        $regMedico = 'test-ha-' . uniqid();
+        $regMedico = 'test-ha-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-ha-' . uniqid() . '@example.com',
+            'email' => 'doctora-ha-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([
@@ -127,7 +127,7 @@ class HistoriasAisladasTest extends TestCase
 
     public function test_un_medico_con_dos_registros_recibe_las_historias_de_los_dos(): void
     {
-        $segundo = 'test-ha-extra-' . uniqid();
+        $segundo = 'test-ha-extra' . substr(uniqid(), -6);
         $medico = $this->medico(registrosExtra: [$segundo]);
         $deLaPrimera = $this->historia($medico, $this->paciente(), 1);
         $deLaSegunda = $this->historia($medico, $this->paciente(), 1, $segundo);

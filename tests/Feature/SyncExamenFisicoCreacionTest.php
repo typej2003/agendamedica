@@ -39,10 +39,10 @@ class SyncExamenFisicoCreacionTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-examen-creacion-' . uniqid();
+        $regMedico = 'test-examen-c' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-' . uniqid() . '@example.com',
+            'email' => 'doctora-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([

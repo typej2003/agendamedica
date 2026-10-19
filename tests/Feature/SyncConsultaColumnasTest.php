@@ -41,10 +41,10 @@ class SyncConsultaColumnasTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-consulta-columnas-' . uniqid();
+        $regMedico = 'test-consulta' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-consulta-' . uniqid() . '@example.com',
+            'email' => 'doctora-consu' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([

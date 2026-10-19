@@ -50,10 +50,10 @@ class CrecimientoWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
-        $reg = 'crec-test-' . uniqid();
+        $reg = 'crec-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'crec-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Usuario de prueba', 'email' => 'crec-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole($rol);
@@ -222,7 +222,7 @@ class CrecimientoWebTest extends TestCase
         $id = $this->nino($medico);
 
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'crec-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'),
+            'name' => 'Secretaria', 'email' => 'crec-secre-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'),
             'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

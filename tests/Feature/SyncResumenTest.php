@@ -26,7 +26,7 @@ class SyncResumenTest extends TestCase
 
     private function nuevoMedico(): array
     {
-        $sufijo = uniqid();
+        $sufijo = substr(uniqid(), -6);
 
         return app(CuentaService::class)->crearMedico([
             'name' => 'Resumen', 'lastname' => 'Prueba',

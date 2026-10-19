@@ -110,6 +110,52 @@ class User extends Authenticatable
     }
 
     /**
+     * Las áreas a las que esta cuenta puede entrar, tal como las ofrece el login.
+     *
+     * Una cuenta con **un solo** área entra directo, como siempre. Con **más de una** (el caso real: un
+     * médico que además administra) el login no puede adivinar cuál quiere, así que se le pregunta en
+     * `/elegir-panel` (ver `rutaDeEntrada()`). La clave es estable porque el test y la vista la usan; el
+     * rótulo y la descripción son los que ve la persona.
+     *
+     * @return array<int, array{clave: string, titulo: string, descripcion: string, icono: string, ruta: string}>
+     */
+    public function panelesDisponibles(): array
+    {
+        $paneles = [];
+
+        if ($this->esAdministrador()) {
+            $paneles[] = [
+                'clave'       => 'administracion',
+                'titulo'      => 'Administración',
+                'descripcion' => 'Cuentas, especialidades, catálogos y servicios.',
+                'icono'       => 'bi-shield-lock',
+                'ruta'        => 'dashboard',
+            ];
+        }
+
+        if ($this->hasAnyRole(['Medico', 'Secretaria'])) {
+            $paneles[] = [
+                'clave'       => 'consultorio',
+                'titulo'      => 'Consultorio',
+                'descripcion' => 'Agenda, pacientes, consulta y documentos.',
+                'icono'       => 'bi-clipboard2-pulse',
+                'ruta'        => 'clinica.inicio',
+            ];
+        }
+
+        return $paneles;
+    }
+
+    /**
+     * Ruta a la que se manda a esta cuenta al iniciar sesión: directo a su área si tiene una sola, o a
+     * elegirla si tiene varias.
+     */
+    public function rutaDeEntrada(): string
+    {
+        return count($this->panelesDisponibles()) > 1 ? 'elegir-panel' : $this->rutaDeInicio();
+    }
+
+    /**
      * Comprueba si el usuario tiene una sesión activa en los últimos 5 minutos.
      */
     public function isOnline(): bool

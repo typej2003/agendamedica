@@ -64,11 +64,11 @@ class AgendaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'agenda-test-' . uniqid();
+        $regMedico = 'agenda-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'agenda-' . uniqid() . '@example.com',
+            'email'                => 'agenda-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -106,7 +106,7 @@ class AgendaWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'agenda-secre-' . uniqid() . '@example.com',
+            'email'                => 'agenda-secre-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -322,7 +322,7 @@ class AgendaWebTest extends TestCase
         $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 3001]);
 
         // Cita de otro médico, el mismo día.
-        $ajeno = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-ajeno-' . uniqid()]);
+        $ajeno = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-ajeno-' . substr(uniqid(), -6)]);
         Cola::create([
             'reg_medico' => $ajeno->reg_medico,
             'fecha' => $this->lunes->toDateString(),
@@ -527,7 +527,7 @@ class AgendaWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
-        $ajeno = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $ajeno = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . substr(uniqid(), -6)]);
         $cita = Cola::create([
             'reg_medico' => $ajeno->reg_medico,
             'fecha'      => $this->lunes->toDateString(),
@@ -1298,7 +1298,7 @@ class AgendaWebTest extends TestCase
         $this->pacienteConHistoria($medico, 3001, 'Buscada', 'Persona');
 
         // Otro médico con un paciente que se llama igual: no tiene que aparecer.
-        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . substr(uniqid(), -6)]);
         $this->pacienteConHistoria($otro, 3002, 'Buscada', 'Ajena');
 
         $peticion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
@@ -1343,7 +1343,7 @@ class AgendaWebTest extends TestCase
 
         // Una sede propia (con sedes configuradas hay que elegir una de ellas) y una ajena.
         $this->sede($medico, $this->centro('Propia')->id, Office::MODALIDAD_HORA, 'C1');
-        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . substr(uniqid(), -6)]);
         $ajena = $this->sede($otro, $this->centro('Ajena')->id, Office::MODALIDAD_HORA, 'C9');
         $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
 
@@ -1548,7 +1548,7 @@ class AgendaWebTest extends TestCase
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
         $this->bloque($sede, '08:00', '12:00');
 
-        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . uniqid()]);
+        $otro = Medico::create(['name' => 'Otro', 'lastname' => 'Médico', 'reg_medico' => 'agenda-otro-' . substr(uniqid(), -6)]);
         $this->pacienteConHistoria($otro, 4009, 'Ajena', 'Persona', ['telefono' => '0414-5555555']);
         $ajena = $this->cita($otro, null, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4009]);
 

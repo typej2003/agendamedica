@@ -50,7 +50,9 @@ use InvalidArgumentException;
  * `recipes_pareja` no tiene clave primaria en el PowerBuilder, así que su registro de cambios sube la tabla
  * **entera** (`op = T`) y `CambiosEscritorio::reemplazarTabla` borra todo lo del médico antes de insertar lo
  * que llegó; `config/sync_legado.php → sin_clave_con_altas_del_app` le enseña a respetar los `created` de
- * esta tabla (trampa 43 de `TRAMPAS.md`). El móvil no escribe ni lee `recipes_pareja`.
+ * esta tabla (trampa 43 de `TRAMPAS.md`). **El móvil la lee y la crea desde la ola §9 de `PLAN-MOVIL.md`**
+ * (esquema local v14): baja por el sync y sube como una creación clínica con sus `items` y la cédula y el
+ * nombre de la pareja —`CreacionesClinicas::crearRecipeDeLaPareja` llama a esta misma Action—.
  */
 final class GuardarRecipeDeLaPareja
 {

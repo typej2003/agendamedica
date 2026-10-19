@@ -336,7 +336,7 @@ class FormatoDeImpresionWebTest extends TestCase
         $compartido = $this->evolucionDe($medico)->logo;
 
         // Otra fila (de otro médico) apunta al mismo archivo.
-        Evolucion::create(['reg_medico' => 'otro-' . uniqid(), 'clave' => 0, 'logo' => $compartido]);
+        Evolucion::create(['reg_medico' => 'otro-' . substr(uniqid(), -6), 'clave' => 0, 'logo' => $compartido]);
 
         $this->avanzar();
         $this->como($user, $medico, $gineco)->post(route('clinica.formato.logo'), ['logo' => $this->png('nuevo.png'), 'elementos' => $opciones]);
@@ -620,7 +620,7 @@ class FormatoDeImpresionWebTest extends TestCase
         // El principal es el primer registro que se le asignó (`medico_registros`); el consultorio que se elige es el de
         // `medicos.reg_medico`. Acá son distintos: el formato no se guarda bajo el del consultorio.
         $segundo = $medico->reg_medico;
-        $principal = 'principal-reg-' . uniqid();
+        $principal = 'principal-reg' . substr(uniqid(), -6);
         MedicoRegistro::where('medico_id', $medico->id)->delete();
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $principal]);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $segundo]);

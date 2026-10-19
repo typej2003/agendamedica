@@ -2,7 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Clinica\Consulta\EcoAbdominal;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -12,12 +16,16 @@ use Illuminate\Console\Command;
 use ReflectionClass;
 
 /**
- * **Exporta los mapas de los cuatro estudios ecográficos a JSON** para que el app móvil los consuma como
- * asset: un solo formulario genérico en Flutter pinta los ~180 campos sin reescribirlos a mano.
+ * **Exporta los mapas de los ocho estudios ecográficos a JSON** para que el app móvil los consuma como
+ * asset: un solo formulario genérico en Flutter pinta los ~300 campos sin reescribirlos a mano.
  *
  *   php artisan ecos:mapas
  *   php artisan ecos:mapas --salida=- --estudio=pelvico
  *   php artisan ecos:mapas --salida=D:\tmp\ecos.json
+ *
+ * Son los cuatro gineco-obstétricos (ola EC del PLAN-MOVIL) y los cuatro que se sumaron después
+ * —Doppler perinatal, mamario, abdominal y ecocardiograma fetal (ola §10)—: el formulario del teléfono es
+ * el mismo y agregar un estudio es una entrada en [self::estudios()].
  *
  * **La fuente es el mapa del dato de la web**, no una lista nueva: `grupos()`, `campos()` y `columnas()`
  * de cada clase (WEB-6.1 y WEB-6.2). Si mañana el médico cambia un rótulo o una opción en la web, el JSON
@@ -47,9 +55,9 @@ class EcosMapasCommand extends Command
 
     protected $signature = 'ecos:mapas
         {--salida= : ruta del JSON (por defecto storage/app/ecos-mapas.json; - para la salida estándar)}
-        {--estudio= : sólo un estudio: pelvico, obstetrico, segundo o tercero}';
+        {--estudio= : sólo un estudio: pelvico, obstetrico, segundo, tercero, doppler, mamario, abdominal o fetal}';
 
-    protected $description = 'Exporta a JSON los mapas de los cuatro estudios ecográficos para el app móvil';
+    protected $description = 'Exporta a JSON los mapas de los ocho estudios ecográficos para el app móvil';
 
     public function handle(): int
     {
@@ -175,6 +183,56 @@ class EcosMapasCommand extends Command
                 'titulo' => 'Eco obstétrico (3.er trimestre)',
                 'titulo_del_informe' => null,
             ],
+            // Los cuatro de la ola §10 (2026-10-19): el Doppler perinatal, el mamario, el abdominal y el
+            // ecocardiograma fetal. Las cuatro tablas se llavean por `historia` + `consulta` y tienen
+            // `fecha`; sus claves son las de `TiposDeEstudio` (las mismas de la URL de la web).
+            //
+            // ⚠️ `ecocadiograma_fetal` se llama **así** en el legado (con el typo, sin `r`): es la tabla que
+            // usa la web y la que se sube desde el escritorio. Escribirla «bien» deja el estudio sin bajar.
+            'doppler' => [
+                'clase' => EcoDoppler::class,
+                'tipo' => TiposDeEstudio::DOPPLER,
+                'documento' => DocumentoImpreso::ECO_DOPPLER,
+                'tabla' => 'eco_doppler',
+                'historia' => 'historia',
+                'consulta' => 'consulta',
+                'fecha' => 'fecha',
+                'titulo' => 'Eco Doppler perinatal',
+                'titulo_del_informe' => null,
+            ],
+            'mamario' => [
+                'clase' => EcoMamario::class,
+                'tipo' => TiposDeEstudio::MAMARIO,
+                'documento' => DocumentoImpreso::ECO_MAMARIO,
+                'tabla' => 'ultra_mama',
+                'historia' => 'historia',
+                'consulta' => 'consulta',
+                'fecha' => 'fecha',
+                'titulo' => 'Eco mamario',
+                'titulo_del_informe' => null,
+            ],
+            'abdominal' => [
+                'clase' => EcoAbdominal::class,
+                'tipo' => TiposDeEstudio::ABDOMINAL,
+                'documento' => DocumentoImpreso::ECO_ABDOMINAL,
+                'tabla' => 'ultra_abdominal',
+                'historia' => 'historia',
+                'consulta' => 'consulta',
+                'fecha' => 'fecha',
+                'titulo' => 'Eco abdominal',
+                'titulo_del_informe' => null,
+            ],
+            'fetal' => [
+                'clase' => EcoCardiogramaFetal::class,
+                'tipo' => TiposDeEstudio::FETAL,
+                'documento' => DocumentoImpreso::ECO_CARDIOGRAMA_FETAL,
+                'tabla' => 'ecocadiograma_fetal',
+                'historia' => 'historia',
+                'consulta' => 'consulta',
+                'fecha' => 'fecha',
+                'titulo' => 'Ecocardiograma fetal',
+                'titulo_del_informe' => null,
+            ],
         ];
     }
 
@@ -244,10 +302,22 @@ class EcosMapasCommand extends Command
             ];
         }
 
+        $tipo = (string) $campo['tipo'];
+
+        // **Un `opciones` sin opciones no es un desplegable**: es el `referido` del mamario y del abdominal,
+        // que guarda la **cédula de un médico** del catálogo `doctores` y que la web llena en su ViewModel
+        // (`EcoMamarioVista`, `EcoAbdominalVista`) con la libreta del médico, no con una lista del DataWindow.
+        // El formulario genérico del app no tiene esa libreta, así que se exporta como **texto**: el campo se
+        // ve y se puede escribir, en vez de salir como un desplegable vacío que no se puede usar. (Elegir al
+        // médico de la libreta desde el teléfono queda anotado en `PLAN-MOVIL.md` §10.)
+        if ($tipo === 'opciones' && $opciones === []) {
+            $tipo = 'texto';
+        }
+
         return [
             'columna' => $campo['columna'],
             'etiqueta' => $campo['etiqueta'],
-            'tipo' => $campo['tipo'],
+            'tipo' => $tipo,
             'unidad' => $campo['unidad'] ?? null,
             'ayuda' => $campo['ayuda'] ?? null,
             'opciones' => $opciones,

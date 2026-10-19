@@ -25,7 +25,7 @@ class AyudaWebTest extends TestCase
     private function medicoDePrueba(): array
     {
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $reg = 'ayuda-' . uniqid();
+        $reg = 'ayuda-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name' => 'Dr. de prueba', 'email' => "{$reg}@example.com",
@@ -47,7 +47,7 @@ class AyudaWebTest extends TestCase
     private function secretariaDePrueba(Medico $medico): User
     {
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'ayuda-secre-' . uniqid() . '@example.com',
+            'name' => 'Secretaria', 'email' => 'ayuda-secre-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

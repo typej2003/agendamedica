@@ -63,16 +63,61 @@
 
 .documento-parrafo { margin: 0 0 2.6mm; text-align: justify; }
 
+/* ------------------------------------------------------------------------------- Las imágenes del informe
+   El informe de la **colposcopía** y el de la **histeroscopía** llevan la imagen del examen en su misma página, debajo del
+   texto (2026-10-18, Alexander): el escritorio las imprime así, en el subreporte de la banda *detail*. La casilla «Incluir
+   imágenes» de la vista previa las oculta (el `hidden` que pone `imprimir-recipe.js`).
+
+   El servidor **reserva** el alto de este bloque al repartir el texto —`MedidasDeLaMitad::altoDeLasImagenes()`—, así que
+   estas medidas tienen que cambiar juntas con esas constantes: con una imagen, 2 de aire + la descripción + 86 de imagen; con
+   dos, los dos esquemas de A-13 a 82 mm de ancho, uno al lado del otro (la regla de `.informe-dibujo` está en
+   `clinica-informe-eco.css`, la de la hoja de imágenes del eco). */
+
+.documento-imagenes {
+    display: flex;
+    flex: none;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4mm;
+    margin: 2mm 0 0;
+    break-inside: avoid;
+}
+
+/* `display: flex` ganaría al `hidden` del navegador: la casilla «Incluir imágenes» lo apaga con esta regla. */
+.documento-imagenes[hidden] { display: none; }
+
+.documento-imagenes .informe-imagen { max-width: 120mm; }
+.documento-imagenes .informe-imagen img { max-height: 86mm; }
+.documento-imagenes .informe-imagen-foto .informe-foto-base { max-height: 86mm; }
+
+.documento-imagenes-dos .informe-imagen { max-width: 86mm; }
+.documento-imagenes-dos .informe-imagen img { max-height: 66mm; }
+.documento-imagenes-dos .informe-imagen-foto .informe-foto-base { max-height: 66mm; }
+
+/* En la **mitad superior de un A4 vertical** (la colposcopía y la histeroscopía, 2026-10-18) el bloque es chico: la página
+   tiene 134,25 mm útiles y ahí tienen que entrar el membrete, el texto, la imagen, la firma y el pie
+   (`MedidasDeLaMitad::IMAGENES_DE_LA_MITAD_SUPERIOR_MM`: 32 mm con una imagen, 28 con dos). Para que el trazo del esquema
+   caiga sobre el dibujo, el ancho del marco baja con el alto (520 × 400). */
+
+.recipe-hoja-mitad-superior .documento-imagenes .informe-imagen img { max-height: 26mm; }
+.recipe-hoja-mitad-superior .documento-imagenes .informe-imagen-foto .informe-foto-base { max-height: 26mm; }
+.recipe-hoja-mitad-superior .documento-imagenes .informe-dibujo { width: 34mm; }
+
+.recipe-hoja-mitad-superior .documento-imagenes-dos .informe-imagen img { max-height: 23mm; }
+.recipe-hoja-mitad-superior .documento-imagenes-dos .informe-imagen-foto .informe-foto-base { max-height: 23mm; }
+.recipe-hoja-mitad-superior .documento-imagenes-dos .informe-dibujo { width: 30mm; }
+
+
 /* «Continúa →» al pie del cuerpo de una mitad que sigue en la otra: 8 pt en itálica y 1,5 mm de aire (5,2 mm:
    `MedidasDeLaMitad::CONTINUA_MM`). Reemplaza a la franja de firma, que sólo lleva la última mitad. */
 
 .documento-continua { flex: none; margin: 1.5mm 0 0; text-align: right; font-size: 8pt; font-style: italic; line-height: 1.25; }
 
 /* --------------------------------------------------------------------------------- Hoja completa vertical (O-26)
-   El informe del control de embarazo y los formatos en blanco de los ecos salen en un **A4 vertical entero**, una hoja por
-   documento, y no en la mitad izquierda de un A4 horizontal. La regla de qué documento va en cada modo vive en
-   `App\Clinica\Impresion\ModoDeLaHoja`; las medidas de esta hoja, en `MedidasDeLaMitad::deLaHojaCompleta()` (210 × 296,5 mm con
-   9 arriba, 8 abajo y 14 a los lados = 182 × 279,5 mm útiles) y tienen que cambiar juntas con esto.
+   El informe del control de embarazo y los de los ecos salen en un **A4 vertical entero**, una hoja por documento, y no en la
+   mitad izquierda de un A4 horizontal. La regla de qué documento va en cada modo vive en `App\Clinica\Impresion\ModoDeLaHoja`;
+   las medidas de esta hoja, en `MedidasDeLaMitad::deLaHojaCompleta()` (210 × 296,5 mm con 9 arriba, 8 abajo y 14 a los lados =
+   182 × 279,5 mm útiles) y tienen que cambiar juntas con esto.
 
    Se usa la **página con nombre** (`page: documento-completo`), la misma técnica que el informe de una eco
    (`clinica-informe-eco.css`): el resto de las hojas de la corrida sigue en A4 horizontal, así un lote mixto —un récipe, un
@@ -92,3 +137,11 @@
 
 /* El mismo cuerpo de las dos hojas: el aire de arriba y abajo es el de la mitad y sólo cambia el ancho (que es el de la hoja). */
 .recipe-hoja-completa .recipe-mitad { width: 210mm; padding: 9mm 14mm 8mm; }
+
+/* ---------------------------------------------- Mitad superior de un A4 vertical (2026-10-18)
+   La colposcopía y la histeroscopía: la página es la misma vertical —así la hoja entera sale en A4 retrato— pero el informe usa
+   sólo la **mitad de arriba** (148,25 mm) y el resto de la página queda en blanco a propósito, como en el escritorio. El cuerpo
+   útil de esa mitad, con 9 de margen arriba y 5 de aire abajo, son 134,25 mm
+   (`MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM`) y tienen que cambiar juntos con esto. */
+
+.recipe-hoja-mitad-superior .recipe-mitad { height: 148.25mm; padding: 9mm 14mm 5mm; }

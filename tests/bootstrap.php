@@ -1,15 +1,22 @@
 <?php
 
 /**
- * Arranque de la suite (ver `phpunit.xml`).
+ * Arranque de la suite (ver `phpunit.xml` y `phpunit.mariadb.xml`).
  *
- * Antes de que corra el primer test se arma la base de tests (`database/database.testing.sqlite`) desde
- * cero y con los seeders. Va aca -y no en `tests/TestCase.php`- porque los tests abren su transaccion
- * dentro de `setUp()`: una migracion hecha ahi adentro la revierte el rollback del teardown y la clase
- * siguiente se queda sin tablas.
+ * Antes de que corra el primer test se arma la base de tests desde cero y con los seeders. Va aca -y no en
+ * `tests/TestCase.php`- porque los tests abren su transaccion dentro de `setUp()`: una migracion hecha ahi
+ * adentro la revierte el rollback del teardown y la clase siguiente se queda sin tablas.
  *
- * PHPUnit ya aplico el bloque `<php>` de `phpunit.xml` cuando carga este archivo, asi que DB_DATABASE
- * apunta a la base de tests. Igual se comprueba antes de migrar: si no apunta ahi, no se toca nada.
+ * Dos motores, un solo arranque:
+ *
+ *  - **SQLite** (`phpunit.xml`, el de todos los dias): `database/database.testing.sqlite`, rapido y sin
+ *    servidor. Ojo: SQLite **no mira el largo de las columnas**, asi que no ve los `1406 Data too long` del
+ *    MySQL/MariaDB real (trampa 140).
+ *  - **MariaDB/MySQL** (`phpunit.mariadb.xml`): una base cuyo nombre termina en `_testing`
+ *    (`medicapi_testing`). El host, el puerto, el usuario y la clave salen del bloque `mysql` del `.env`.
+ *
+ * PHPUnit ya aplico el bloque `<php>` de su XML cuando carga este archivo. Igual se comprueba antes de
+ * migrar: si la base no es la de tests, no se toca nada.
  */
 
 use Illuminate\Contracts\Console\Kernel;
@@ -22,45 +29,67 @@ $app = require __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$conexion = $app['config']->get('database.default');
-$ruta = (string) $app['config']->get('database.connections.'.$conexion.'.database');
+$conexion = (string) $app['config']->get('database.default');
+$base = (string) $app['config']->get('database.connections.'.$conexion.'.database');
+$motivo = null;
 
-if (! str_ends_with($ruta, 'database.testing.sqlite')) {
-    // Configuracion inesperada (¿editaron el bloque <php> de phpunit.xml?): se avisa fuerte y se evita
-    // que `RefreshDatabase` haga `migrate:fresh` sobre una base ajena, que es como se pierden los datos
-    // de desarrollo.
-    fwrite(STDERR, "ATENCION: los tests no estan apuntando a la base de tests sino a {$ruta}.".PHP_EOL
-        .'Revisa el bloque <php> de phpunit.xml: no se migra nada, pero es una base ajena.'.PHP_EOL);
+if ($conexion === 'sqlite') {
+    // La unica base sqlite que esta suite puede vaciar es la de tests, por nombre terminante.
+    if (! str_ends_with($base, 'database.testing.sqlite')) {
+        $motivo = 'la base sqlite no es database.testing.sqlite sino '.$base;
+    }
+} elseif ($conexion === 'mysql') {
+    // Vale para MySQL y MariaDB (mismo driver). El nombre tiene que terminar en `_testing`: la suite hace
+    // `migrate:fresh` y vacia la base entera, asi que nunca se apunta a una base de desarrollo o produccion.
+    if (! str_ends_with($base, '_testing')) {
+        $motivo = 'la base mysql no termina en _testing sino en '.$base;
+    }
+} else {
+    $motivo = 'la conexion '.$conexion.' no esta soportada por la suite';
+}
+
+if ($motivo !== null) {
+    // Configuracion inesperada (¿editaron el bloque <php> del XML?): se avisa fuerte y se evita que
+    // `RefreshDatabase` haga `migrate:fresh` sobre una base ajena, que es como se pierden los datos.
+    fwrite(STDERR, "ATENCION: los tests no estan apuntando a la base de tests: {$motivo}.".PHP_EOL
+        .'Revisa el bloque <php> de phpunit.xml / phpunit.mariadb.xml: no se migra nada.'.PHP_EOL);
 
     RefreshDatabaseState::$migrated = true;
 
     return;
 }
 
-// Absoluta: asi la suite no depende del directorio desde donde se la invoque.
-if (preg_match('#^([A-Za-z]:[\\\\/]|/)#', $ruta) !== 1) {
-    $ruta = dirname(__DIR__).DIRECTORY_SEPARATOR.$ruta;
+if ($conexion === 'sqlite') {
+    // Absoluta: asi la suite no depende del directorio desde donde se la invoque.
+    if (preg_match('#^([A-Za-z]:[\\\\/]|/)#', $base) !== 1) {
+        $base = dirname(__DIR__).DIRECTORY_SEPARATOR.$base;
+    }
+
+    $base = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $base);
+
+    if (! is_file($base)) {
+        // Laravel se niega a conectarse a un sqlite que no existe (`SQLiteConnector::connect`).
+        touch($base);
+    }
+
+    $_SERVER['DB_DATABASE'] = $base;
+    putenv('DB_DATABASE='.$base);
 }
 
-$ruta = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $ruta);
-
-if (! is_file($ruta)) {
-    // Laravel se niega a conectarse a un sqlite que no existe (`SQLiteConnector::connect`).
-    touch($ruta);
-}
-
-$_SERVER['DB_DATABASE'] = $ruta;
-putenv('DB_DATABASE='.$ruta);
+$donde = $conexion === 'sqlite'
+    ? $base
+    : $conexion.'://'.$app['config']->get('database.connections.'.$conexion.'.host')
+        .':'.$app['config']->get('database.connections.'.$conexion.'.port').'/'.$base;
 
 ob_start();
 $codigo = $kernel->call('migrate:fresh', ['--seed' => true, '--force' => true]);
 $salida = (string) ob_get_clean();
 
 if ($codigo !== 0) {
-    throw new RuntimeException("No se pudo armar la base de tests ({$ruta}):\n{$salida}");
+    throw new RuntimeException("No se pudo armar la base de tests ({$donde}):\n{$salida}");
 }
 
-fwrite(STDOUT, "Base de tests lista: {$ruta}".PHP_EOL);
+fwrite(STDOUT, "Base de tests lista: {$donde}".PHP_EOL);
 
 // Ya quedo migrada y sembrada: que `RefreshDatabase` no la vuelva a tirar a mitad de la corrida, asi
 // todos los tests -los de `DatabaseTransactions` y los de `RefreshDatabase`- corren contra lo mismo y

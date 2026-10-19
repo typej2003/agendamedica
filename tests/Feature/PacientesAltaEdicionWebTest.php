@@ -39,11 +39,11 @@ class PacientesAltaEdicionWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'pac-alta-' . uniqid();
+        $regMedico = 'pac-alta-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'pac-alta-' . uniqid() . '@example.com',
+            'email'                => 'pac-alta-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -79,9 +79,9 @@ class PacientesAltaEdicionWebTest extends TestCase
         return Medico::create([
             'name'       => 'Dr. ajeno',
             'lastname'   => 'Otro',
-            'email'      => 'ajeno-' . uniqid() . '@example.com',
+            'email'      => 'ajeno-' . substr(uniqid(), -6) . '@example.com',
             'password'   => Hash::make('secreto123'),
-            'reg_medico' => 'pac-alta-ajeno-' . uniqid(),
+            'reg_medico' => 'pac-alta-ajen' . substr(uniqid(), -6),
         ]);
     }
 

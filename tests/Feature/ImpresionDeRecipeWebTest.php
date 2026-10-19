@@ -256,7 +256,7 @@ class ImpresionDeRecipeWebTest extends TestCase
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
 
         // Otro médico del mismo consultorio con una cita del mismo número de historia, y una cita movida.
-        $this->cita($medico, 1001, '2026-10-10', ['reg_medico' => 'otro-medico-' . uniqid()]);
+        $this->cita($medico, 1001, '2026-10-10', ['reg_medico' => 'otro-medico-' . substr(uniqid(), -6)]);
         $this->cita($medico, 1001, '2026-10-11', ['movida_escritorio' => 1]);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlRecipe($consulta));

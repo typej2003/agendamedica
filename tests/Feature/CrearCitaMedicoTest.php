@@ -30,7 +30,7 @@ class CrearCitaMedicoTest extends TestCase
 
     private function medico(string $regMedico, bool $autenticar = false): Medico
     {
-        $email = 'medico-ccm-' . uniqid() . '@example.com';
+        $email = 'medico-ccm-' . substr(uniqid(), -6) . '@example.com';
         $user = User::create([
             'name' => 'Doctora',
             'email' => $email,
@@ -91,7 +91,7 @@ class CrearCitaMedicoTest extends TestCase
 
     public function test_sin_elegir_medico_usa_la_clave_del_medico_autenticado(): void
     {
-        $regMedico = 'test-ccm-' . uniqid();
+        $regMedico = 'test-ccm-' . substr(uniqid(), -6);
         $medico = $this->medico($regMedico, autenticar: true);
         Evolucion::create(['reg_medico' => $regMedico, 'clave' => 5, 'correo_med' => $medico->email]);
         $this->pacienteConHistoria($regMedico, $medico, 1);
@@ -108,9 +108,9 @@ class CrearCitaMedicoTest extends TestCase
     {
         // La secretaria de un consultorio compartido agenda para cualquiera de los dos médicos,
         // no solo el que tiene la sesión iniciada.
-        $regMedico = 'test-ccm-' . uniqid();
+        $regMedico = 'test-ccm-' . substr(uniqid(), -6);
         $medicoA = $this->medico($regMedico, autenticar: true);
-        $medicoB = $this->medico('test-ccm-b-' . uniqid());
+        $medicoB = $this->medico('test-ccm-b-' . substr(uniqid(), -6));
         MedicoRegistro::create(['medico_id' => $medicoB->id, 'reg_medico' => $regMedico]);
         Evolucion::create(['reg_medico' => $regMedico, 'clave' => 1, 'correo_med' => $medicoA->email]);
         Evolucion::create(['reg_medico' => $regMedico, 'clave' => 2, 'correo_med' => $medicoB->email]);
@@ -127,7 +127,7 @@ class CrearCitaMedicoTest extends TestCase
     public function test_sin_evolucion_configurada_queda_sin_medico_en_vez_de_reventar(): void
     {
         // El caso real, según el ROADMAP: la configuración del médico casi nunca está llena.
-        $regMedico = 'test-ccm-' . uniqid();
+        $regMedico = 'test-ccm-' . substr(uniqid(), -6);
         $medico = $this->medico($regMedico, autenticar: true);
         $this->pacienteConHistoria($regMedico, $medico, 1);
 
@@ -141,9 +141,9 @@ class CrearCitaMedicoTest extends TestCase
 
     public function test_offices_trae_las_sedes_de_todos_los_medicos_del_tenant(): void
     {
-        $regMedico = 'test-ccm-' . uniqid();
+        $regMedico = 'test-ccm-' . substr(uniqid(), -6);
         $medicoA = $this->medico($regMedico, autenticar: true);
-        $medicoB = $this->medico('test-ccm-b-' . uniqid());
+        $medicoB = $this->medico('test-ccm-b-' . substr(uniqid(), -6));
         MedicoRegistro::create(['medico_id' => $medicoB->id, 'reg_medico' => $regMedico]);
         // Reusa un centro ya sembrado: `medical_centers` exige country/state/city, y lo que
         // importa acá no es el centro en sí sino que dos sedes de médicos distintos aparezcan
@@ -171,7 +171,7 @@ class CrearCitaMedicoTest extends TestCase
         // Los bloques se administran en la web (WEB-2.8b.3) y el teléfono los necesita para armar la
         // jornada. El delta manda la tabla por `updated_at`, así que un bloque **borrado** sólo puede
         // llegar por `eliminados`: eso lo escribe `OfficeSchedule::booted()`.
-        $regMedico = 'test-ccm-' . uniqid();
+        $regMedico = 'test-ccm-' . substr(uniqid(), -6);
         $medico = $this->medico($regMedico, autenticar: true);
         $centro = MedicalCenter::firstOrFail();
 

@@ -47,11 +47,14 @@ class SearchSpecialties extends Component
 
     public function search()
     {
-        return redirect()->route('medicos.search', [
-            'country' => $this->selectedCountry,
-            'state' => $this->selectedState,
-            'specialty' => $this->selectedSpecialty,
-        ]);
+        // El buscador de la portada lleva al **portal público de reservas** (2026-10-19), no al listado
+        // viejo: ese terminaba en «Agendar Cita» → login. La especialidad viaja por su slug; el país y el
+        // estado quedan fuera de esta primera versión, que muestra todas las sedes con agenda publicada.
+        $slug = $this->selectedSpecialty
+            ? Specialty::whereKey($this->selectedSpecialty)->value('slug')
+            : null;
+
+        return redirect()->route('reservas.catalogo', $slug ? ['especialidad' => $slug] : []);
     }
 
     public function render()

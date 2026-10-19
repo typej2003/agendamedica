@@ -150,7 +150,7 @@ class PlantillasDeTextoWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         // Los códigos no numéricos del legado no cuentan; el correlativo sigue al mayor numérico.
-        $this->plantilla($medico, 'W5301', 'IM', 'RARA');
+        $this->plantilla($medico, 'W530', 'IM', 'RARA');
         $this->plantilla($medico, '0006', 'IM', 'SEIS');
         $web = $this->como($user, $medico, $gineco);
 

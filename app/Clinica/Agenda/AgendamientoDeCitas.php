@@ -57,10 +57,18 @@ class AgendamientoDeCitas
      * @param  array<int,string>  $registrosMedicos  los `reg_medico` del médico: los necesita el número de
      *                                               historia que se le asigna al paciente del alta rápida
      *                                               (O-04), para que el correlativo sea el mismo de siempre
+     * @param  array{numerar_historia?: bool, estado?: int}  $opciones
+     *                                               El portal público de reservas (2026-10-19) agenda sin
+     *                                               numerar la historia —el número lo asigna el consultorio
+     *                                               cuando el paciente llega— y con la cita ya confirmada por
+     *                                               el paciente. La web clínica no manda opciones: conserva
+     *                                               el alta con historia y la cita sin confirmar.
      */
-    public function agendar(array $contexto, array $valores, array $registrosMedicos): ResultadoDeAgendamiento
+    public function agendar(array $contexto, array $valores, array $registrosMedicos, array $opciones = []): ResultadoDeAgendamiento
     {
         $regMedico = $contexto['reg_medico'];
+        $numerarHistoria = $opciones['numerar_historia'] ?? true;
+        $estado = (int) ($opciones['estado'] ?? Cola::ESTADO_NO_CONFIRMADA);
 
         $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
         $sede = $this->sedeElegida($sedes, $valores['sede'] ?? null);
@@ -106,10 +114,14 @@ class AgendamientoDeCitas
             // alta **desde la web** (hay consultorio de contexto), así que el paciente queda atendible de
             // inmediato y la cita nace enlazada por `numhistoria`. El número lo sigue dando
             // `AsignarHistoria`, la única regla del correlativo; el chatbot y el móvil, que crean por
-            // `CrearPaciente` sin contexto, siguen sin número.
-            $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $registrosMedicos, (int) $paciente->getKey());
-
-            $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
+            // `CrearPaciente` sin contexto, siguen sin número. El portal público tampoco numera: la cita
+            // queda anclada por `paciente_sinhistoria_id` y el consultorio numera cuando el paciente llega.
+            if ($numerarHistoria) {
+                $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $registrosMedicos, (int) $paciente->getKey());
+                $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
+            } else {
+                $objetivo = ['paciente' => $paciente, 'numhistoria' => null];
+            }
         }
 
         $jornada = $this->armador->jornadaPara($regMedico, $sedes, $fecha, $centroId, $hora);
@@ -128,14 +140,14 @@ class AgendamientoDeCitas
             return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::MOVIDA, $fecha, $sede);
         }
 
-        $this->crear->ejecutar(
+        $cita = $this->crear->ejecutar(
             $regMedico,
-            $this->filaDeCita($objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $contexto, $monto),
+            $this->filaDeCita($objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $contexto, $monto, $estado),
             Carbon::now(),
             'web',
         );
 
-        return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::CREADA, $fecha, $sede);
+        return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::CREADA, $fecha, $sede, objetivo: $objetivo, cita: $cita);
     }
 
     /**
@@ -282,7 +294,8 @@ class AgendamientoDeCitas
         ?int $centroId,
         array $valores,
         array $contexto,
-        ?float $monto
+        ?float $monto,
+        int $estado = Cola::ESTADO_NO_CONFIRMADA
     ): array {
         $fila = [
             'fecha'             => $fecha->toDateString(),
@@ -296,7 +309,7 @@ class AgendamientoDeCitas
             'monto'             => $monto,
             'medico'            => $contexto['medico']->claveDeEvolucion($contexto['reg_medico']),
             'atendido'          => 0,
-            'estado'            => Cola::ESTADO_NO_CONFIRMADA,
+            'estado'            => $estado,
         ];
 
         if ($objetivo['numhistoria'] !== null) {

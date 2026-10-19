@@ -76,6 +76,19 @@
         @foreach ($mitad['secciones'] ?? [] as $seccion)
             @include('clinica.imprimir._seccion-en-blanco', ['seccion' => $seccion])
         @endforeach
+
+        {{-- **Las imágenes del informe, en la misma página y debajo del texto** (la colposcopía y la histeroscopía,
+             2026-10-18): el escritorio las imprime así —el subreporte va en la banda *detail*, debajo de la columna del
+             texto— y Alexander lo reportó: la imagen no va en una hoja aparte. Van en la última mitad, antes de la firma,
+             y su alto lo descuenta el reparto del texto (`MedidasDeLaMitad::altoDeLasImagenes()`); la casilla
+             «Incluir imágenes» de la vista previa las oculta por `data-hoja-imagenes`. --}}
+        @if (($mitad['imagenes'] ?? []) !== [])
+            <div class="documento-imagenes{{ count($mitad['imagenes']) > 1 ? ' documento-imagenes-dos' : '' }}" data-hoja-imagenes>
+                @foreach ($mitad['imagenes'] as $imagen)
+                    @include('clinica.imprimir._informe-imagen', ['imagen' => $imagen])
+                @endforeach
+            </div>
+        @endif
     </div>
 
     @if ($mitad['sigue'])

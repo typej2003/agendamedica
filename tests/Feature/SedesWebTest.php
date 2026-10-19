@@ -36,11 +36,11 @@ class SedesWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'sedes-test-' . uniqid();
+        $regMedico = 'sedes-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'sedes-' . uniqid() . '@example.com',
+            'email'                => 'sedes-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -79,7 +79,7 @@ class SedesWebTest extends TestCase
     private function datosDeSede(array $extra = []): array
     {
         return array_merge([
-            'name'    => 'Sede de prueba ' . uniqid(),
+            'name'    => 'Sede de prueb' . substr(uniqid(), -6),
             'address' => 'Calle 1 con carrera 2',
             'phone'   => '0212-1234567',
             'city_id' => $this->ciudad()->id,
@@ -101,7 +101,7 @@ class SedesWebTest extends TestCase
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
-            'name'       => 'Clínica de prueba ' . uniqid(),
+            'name'       => 'Clínica de pr' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => true,
         ]);
@@ -122,7 +122,7 @@ class SedesWebTest extends TestCase
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
-            'name'       => 'Sede cerrada ' . uniqid(),
+            'name'       => 'Sede cerrada ' . substr(uniqid(), -6),
             'address'    => 'Calle vieja',
             'activo'     => false,
         ]);
@@ -139,7 +139,7 @@ class SedesWebTest extends TestCase
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
-            'name'       => 'Sede sin usar ' . uniqid(),
+            'name'       => 'Sede sin usar' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => true,
         ]);
@@ -165,7 +165,7 @@ class SedesWebTest extends TestCase
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
-            'name'       => $nombre . ' ' . uniqid(),
+            'name'       => $nombre . ' ' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => true,
         ]);
@@ -187,7 +187,7 @@ class SedesWebTest extends TestCase
     {
         [$user] = $this->usuarioClinico();
         $ciudad = $this->ciudad();
-        $datos = $this->datosDeSede(['name' => 'Hospital Central ' . uniqid()]);
+        $datos = $this->datosDeSede(['name' => 'Hospital Cent' . substr(uniqid(), -6)]);
 
         $this->actingAs($user)
             ->post('/clinica/sedes', $datos)
@@ -223,7 +223,7 @@ class SedesWebTest extends TestCase
     public function test_no_se_repiten_los_nombres_de_sede(): void
     {
         [$user] = $this->usuarioClinico();
-        $datos = $this->datosDeSede(['name' => 'Clínica Única ' . uniqid()]);
+        $datos = $this->datosDeSede(['name' => 'Clínica Única' . substr(uniqid(), -6)]);
 
         $this->actingAs($user)->post('/clinica/sedes', $datos)->assertRedirect();
         $this->actingAs($user)->post('/clinica/sedes', $datos)->assertSessionHasErrors('name');
@@ -234,7 +234,7 @@ class SedesWebTest extends TestCase
     public function test_editar_la_sede_cambia_sus_datos_sin_crear_otra(): void
     {
         [$user] = $this->usuarioClinico();
-        $datos = $this->datosDeSede(['name' => 'Sede editable ' . uniqid()]);
+        $datos = $this->datosDeSede(['name' => 'Sede editable' . substr(uniqid(), -6)]);
 
         $this->actingAs($user)->post('/clinica/sedes', $datos)->assertRedirect();
         $sede = MedicalCenter::where('name', $datos['name'])->firstOrFail();
@@ -243,7 +243,7 @@ class SedesWebTest extends TestCase
         $this->actingAs($user)
             ->post('/clinica/sedes', array_merge($datos, [
                 'id'      => $sede->id,
-                'name'    => 'Sede editada ' . uniqid(),
+                'name'    => 'Sede editada ' . substr(uniqid(), -6),
                 'address' => 'Dirección nueva',
                 'phone'   => '',
             ]))
@@ -259,7 +259,7 @@ class SedesWebTest extends TestCase
     public function test_el_formulario_de_edicion_llega_con_la_sede_cargada(): void
     {
         [$user] = $this->usuarioClinico();
-        $datos = $this->datosDeSede(['name' => 'Sede a editar ' . uniqid()]);
+        $datos = $this->datosDeSede(['name' => 'Sede a editar' . substr(uniqid(), -6)]);
 
         $this->actingAs($user)->post('/clinica/sedes', $datos)->assertRedirect();
         $sede = MedicalCenter::where('name', $datos['name'])->firstOrFail();

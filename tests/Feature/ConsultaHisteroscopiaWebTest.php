@@ -73,11 +73,11 @@ class ConsultaHisteroscopiaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'histero-test-' . uniqid();
+        $regMedico = 'histero-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'histero-' . uniqid() . '@example.com',
+            'email'                => 'histero-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -306,7 +306,9 @@ class ConsultaHisteroscopiaWebTest extends TestCase
         $web->post($this->urlLienzo($consulta, 'foto-' . $imagen->id, 'guardar'), ['dibujo' => $this->png()])->assertOk();
 
         $html = $hoja();
-        $this->assertStringContainsString('INFORME DE HISTEROSCOPÍA · IMÁGENES', $html);
+        // La imagen va **en la misma página** del informe (2026-10-18, Alexander), no en una hoja aparte.
+        $this->assertStringContainsString('documento-imagenes', $html);
+        $this->assertStringNotContainsString('INFORME DE HISTEROSCOPÍA · IMÁGENES', $html);
         $this->assertSame(1, substr_count($html, '<figure class="informe-imagen informe-imagen-foto">'));
         $this->assertStringNotContainsString('informe-imagen-dibujo', $html);
         $this->assertStringContainsString('Videohisteroscopio', $html);

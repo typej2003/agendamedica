@@ -24,7 +24,7 @@ class MedicosDelTenantTest extends TestCase
 
     private function medico(string $regMedico, bool $autenticar = false, string $name = 'Doctora'): Medico
     {
-        $email = 'medico-mdt-' . uniqid() . '@example.com';
+        $email = 'medico-mdt-' . substr(uniqid(), -6) . '@example.com';
         $user = User::create([
             'name' => $name,
             'email' => $email,
@@ -49,7 +49,7 @@ class MedicosDelTenantTest extends TestCase
 
     public function test_un_solo_medico_resuelve_su_nombre_por_correo(): void
     {
-        $regMedico = 'test-mdt-' . uniqid();
+        $regMedico = 'test-mdt-' . substr(uniqid(), -6);
         $medico = $this->medico($regMedico, autenticar: true, name: 'Carlos');
         Evolucion::create([
             'reg_medico' => $regMedico,
@@ -75,7 +75,7 @@ class MedicosDelTenantTest extends TestCase
 
     public function test_el_catalogo_trae_el_prefijo_y_la_cuenta_para_el_titulo_de_la_agenda(): void
     {
-        $regMedico = 'test-mdt-' . uniqid();
+        $regMedico = 'test-mdt-' . substr(uniqid(), -6);
         $medico = $this->medico($regMedico, autenticar: true, name: 'Sonia');
         $medico->update(['prefix' => 'Dra']);
         Evolucion::create(['reg_medico' => $regMedico, 'clave' => 1, 'correo_med' => $medico->email]);
@@ -93,10 +93,10 @@ class MedicosDelTenantTest extends TestCase
         // además atiende en el consultorio de otro se enlaza con una fila de `MedicoRegistro`
         // aparte, no reusando esa columna. `$regMedicoCompartido` es el tenant real (el de la
         // instancia de PowerBuilder), no el de ningún médico en particular.
-        $regMedicoCompartido = 'test-mdt-' . uniqid();
+        $regMedicoCompartido = 'test-mdt-' . substr(uniqid(), -6);
         $medicoA = $this->medico($regMedicoCompartido, autenticar: true, name: 'Carlos');
 
-        $medicoB = $this->medico('test-mdt-b-' . uniqid(), name: 'Nersa');
+        $medicoB = $this->medico('test-mdt-b-' . substr(uniqid(), -6), name: 'Nersa');
         MedicoRegistro::create(['medico_id' => $medicoB->id, 'reg_medico' => $regMedicoCompartido]);
 
         Evolucion::create(['reg_medico' => $regMedicoCompartido, 'clave' => 1, 'correo_med' => $medicoA->email]);
@@ -110,7 +110,7 @@ class MedicosDelTenantTest extends TestCase
 
     public function test_correo_sin_match_deja_id_y_nombre_en_null_pero_conserva_la_clave(): void
     {
-        $regMedico = 'test-mdt-' . uniqid();
+        $regMedico = 'test-mdt-' . substr(uniqid(), -6);
         $this->medico($regMedico, autenticar: true);
         Evolucion::create([
             'reg_medico' => $regMedico,
@@ -132,9 +132,9 @@ class MedicosDelTenantTest extends TestCase
         // Paso 23: la plantilla viaja en el catálogo completo (no solo en `ConfiguracionMedicoResource`
         // del médico logueado) porque al enviar un recordatorio se usa la del médico de la cita, no la
         // de quien tiene la sesión abierta.
-        $regMedicoCompartido = 'test-mdt-' . uniqid();
+        $regMedicoCompartido = 'test-mdt-' . substr(uniqid(), -6);
         $medicoA = $this->medico($regMedicoCompartido, autenticar: true, name: 'Carlos');
-        $medicoB = $this->medico('test-mdt-b-' . uniqid(), name: 'Nersa');
+        $medicoB = $this->medico('test-mdt-b-' . substr(uniqid(), -6), name: 'Nersa');
         MedicoRegistro::create(['medico_id' => $medicoB->id, 'reg_medico' => $regMedicoCompartido]);
 
         Evolucion::create([
@@ -161,10 +161,10 @@ class MedicosDelTenantTest extends TestCase
 
     public function test_otro_tenant_no_aparece_en_el_catalogo(): void
     {
-        $regMedico = 'test-mdt-' . uniqid();
+        $regMedico = 'test-mdt-' . substr(uniqid(), -6);
         $this->medico($regMedico, autenticar: true);
 
-        $otroTenant = 'test-mdt-otro-' . uniqid();
+        $otroTenant = 'test-mdt-otro' . substr(uniqid(), -6);
         Evolucion::create(['reg_medico' => $otroTenant, 'clave' => 1, 'correo_med' => 'quien-sea@example.com']);
 
         $response = $this->postJson('/api/app/sync-app-data', [])->assertOk();

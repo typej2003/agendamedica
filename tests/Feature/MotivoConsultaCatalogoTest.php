@@ -23,10 +23,10 @@ class MotivoConsultaCatalogoTest extends TestCase
 
     private function medico(bool $autenticar = true, bool $claveTemporal = false): Medico
     {
-        $regMedico = 'test-cat-' . uniqid();
+        $regMedico = 'test-cat-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-cat-' . uniqid() . '@example.com',
+            'email' => 'doctora-cat-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         if ($claveTemporal) {

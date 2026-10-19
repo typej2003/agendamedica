@@ -35,11 +35,11 @@ class PacientesWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'pac-web-' . uniqid();
+        $regMedico = 'pac-web-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'pac-web-' . uniqid() . '@example.com',
+            'email'                => 'pac-web-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -75,7 +75,7 @@ class PacientesWebTest extends TestCase
         return Medico::create([
             'name'       => 'Dr. ajeno',
             'lastname'   => 'Otro',
-            'email'      => 'ajeno-' . uniqid() . '@example.com',
+            'email'      => 'ajeno-' . substr(uniqid(), -6) . '@example.com',
             'password'   => Hash::make('secreto123'),
             'reg_medico' => $regMedico,
         ]);
@@ -228,7 +228,7 @@ class PacientesWebTest extends TestCase
         // El `or` de la búsqueda va agrupado: un paciente de otro `reg_medico` no puede colarse por
         // coincidir con el texto buscado.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $ajeno = $this->otroMedico('pac-web-ajeno-' . uniqid());
+        $ajeno = $this->otroMedico('pac-web-ajeno' . substr(uniqid(), -6));
         $this->paciente($medico, 'Ana', 'Reynoso', '11111111', '2041');
         $this->paciente($ajeno, 'Ana', 'Reynoso Ajeno', '99999999', '2042');
 
@@ -246,7 +246,7 @@ class PacientesWebTest extends TestCase
     public function test_no_lista_pacientes_de_otro_medico(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $ajeno = $this->otroMedico('pac-web-ajeno-' . uniqid());
+        $ajeno = $this->otroMedico('pac-web-ajeno' . substr(uniqid(), -6));
         $this->paciente($medico, 'Propia', 'Paciente', '11111111', '2051');
         $this->paciente($ajeno, 'Ajena', 'Persona', '22222222', '2052');
 
@@ -263,7 +263,7 @@ class PacientesWebTest extends TestCase
         // Un paciente es uno solo para todos los médicos (`pacientes`) y lo que cambia es el vínculo:
         // cada consultorio lo ve con su propio número de historia.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $ajeno = $this->otroMedico('pac-web-ajeno-' . uniqid());
+        $ajeno = $this->otroMedico('pac-web-ajeno' . substr(uniqid(), -6));
 
         $paciente = $this->paciente($medico, 'Ana', 'Reynoso', '11111111', '2061');
         DB::table('medico_pacientes')->insert([
@@ -434,10 +434,12 @@ class PacientesWebTest extends TestCase
     public function test_la_ficha_tolera_los_datos_sucios_del_legado(): void
     {
         // Cédula `S.C.`, fecha nula y sexo vacío: la ficha tiene que abrir igual y mostrar `—` donde no
-        // hay dato (guía de UI), y decir que el paciente no tiene historia todavía.
+        // hay dato (guía de UI), y decir que el paciente no tiene historia todavía. La fecha va **nula** y
+        // no `0000-00-00`: el MySQL/MariaDB en modo estricto rechaza esa fecha en un `INSERT` (el legado
+        // la tiene como dato viejo, y la web la tolera al leerla, no al escribirla).
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $paciente = $this->paciente($medico, 'Sin', 'Documento', 'S.C.', null, [
-            'fnacimiento' => '0000-00-00', 'sexo' => '', 'telefono' => '   ', 'email' => null,
+            'fnacimiento' => null, 'sexo' => '', 'telefono' => '   ', 'email' => null,
         ]);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -471,7 +473,7 @@ class PacientesWebTest extends TestCase
     public function test_la_ficha_de_un_paciente_de_otro_medico_o_inexistente_da_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $ajeno = $this->otroMedico('pac-web-ajeno-' . uniqid());
+        $ajeno = $this->otroMedico('pac-web-ajeno' . substr(uniqid(), -6));
         $deOtro = $this->paciente($ajeno, 'Ajena', 'Persona', '22222222', '2091');
 
         $este = $this->conContexto($user, $medico, $gineco)->actingAs($user);

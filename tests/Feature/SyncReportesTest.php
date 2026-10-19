@@ -39,7 +39,7 @@ class SyncReportesTest extends TestCase
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $reg]);
 
         $filas = [
-            'pacientes' => [['numhistoria' => 1, 'cedula' => "C-{$reg}", 'apellidos' => 'PRUEBA', 'nombres' => 'ANA', 'nac' => 'V', 'sexo' => 'F']],
+            'pacientes' => [['numhistoria' => 1, 'cedula' => "C-" . substr($reg, -6), 'apellidos' => 'PRUEBA', 'nombres' => 'ANA', 'nac' => 'V', 'sexo' => 'F']],
             'consultas' => [['numhistoria' => 1, 'nroconsulta' => 1, 'fecha' => '2026-03-10']],
             'constancia_obs' => [['numhistoria' => 1, 'numconsulta' => 1, 'observacion01' => 'Asistió a consulta']],
             'reposo_paciente' => [['nrohistoria' => 1, 'nroconsulta' => 1, 'fdesde' => '2026-03-10', 'numdias' => 3, 'obser_reposo' => 'Reposo absoluto']],
@@ -69,7 +69,7 @@ class SyncReportesTest extends TestCase
 
     public function test_los_documentos_de_la_consulta_y_sus_catalogos_bajan_al_telefono(): void
     {
-        Sanctum::actingAs($this->medicoConDocumentos('rep-a-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDocumentos('rep-a-' . substr(uniqid(), -6)), ['*'], 'api');
 
         $r = $this->sync();
 
@@ -88,7 +88,7 @@ class SyncReportesTest extends TestCase
 
     public function test_la_descarga_completa_no_manda_las_plantillas_vacias_que_crea_el_legado(): void
     {
-        $reg = 'rep-e-' . uniqid();
+        $reg = 'rep-e-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
         // Consulta 2: lo que deja el legado con solo abrirla (constancia sin observación, informe ".").
         $this->escritorio('cambios/subir', ['reg_medico' => $reg, 'cambios' => [
@@ -116,8 +116,8 @@ class SyncReportesTest extends TestCase
 
     public function test_un_medico_no_recibe_los_documentos_de_otro_con_el_mismo_numero_de_historia(): void
     {
-        $this->medicoConDocumentos('rep-b-' . uniqid(), 'DEL OTRO MEDICO');
-        Sanctum::actingAs($this->medicoConDocumentos('rep-c-' . uniqid()), ['*'], 'api');
+        $this->medicoConDocumentos('rep-b-' . substr(uniqid(), -6), 'DEL OTRO MEDICO');
+        Sanctum::actingAs($this->medicoConDocumentos('rep-c-' . substr(uniqid(), -6)), ['*'], 'api');
 
         $r = $this->sync();
 
@@ -129,7 +129,7 @@ class SyncReportesTest extends TestCase
 
     public function test_por_delta_solo_baja_lo_que_cambio_y_se_avisa_lo_que_borro_el_escritorio(): void
     {
-        $reg = 'rep-d-' . uniqid();
+        $reg = 'rep-d-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
         $since = $this->sync()->json('synced_at');
         $this->travel(5)->seconds();
@@ -160,7 +160,7 @@ class SyncReportesTest extends TestCase
      */
     public function test_lo_que_la_web_edita_y_borra_llega_al_telefono_por_delta_y_por_eliminados(): void
     {
-        $reg = 'rep-w-' . uniqid();
+        $reg = 'rep-w-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
         $since = $this->sync()->json('synced_at');
         $this->travel(5)->seconds();
@@ -186,7 +186,7 @@ class SyncReportesTest extends TestCase
     {
         // WEB-5.4: el móvil no tiene ninguna de las cuatro tablas (no pide exámenes ni estudios): `sync-app-data` no las manda, ni por la
         // descarga completa ni por delta, aunque la web las haya escrito. Si algún día el móvil las usa, este test es el que avisa.
-        $reg = 'rep-l-' . uniqid();
+        $reg = 'rep-l-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
         $since = $this->sync()->json('synced_at');
         $this->travel(5)->seconds();
@@ -212,7 +212,7 @@ class SyncReportesTest extends TestCase
     {
         // WEB-5.3b: el móvil no tiene ninguna de las dos tablas (no las imprime ni las guarda): `sync-app-data` no las manda, ni por la
         // descarga completa ni por delta, aunque la web las haya escrito. Si algún día el móvil las usa, este test es el que avisa.
-        $reg = 'rep-h-' . uniqid();
+        $reg = 'rep-h-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDocumentos($reg), ['*'], 'api');
         $since = $this->sync()->json('synced_at');
         $this->travel(5)->seconds();

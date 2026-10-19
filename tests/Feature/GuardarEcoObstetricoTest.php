@@ -53,10 +53,10 @@ class GuardarEcoObstetricoTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'eco-obs-w-' . uniqid();
+        $regMedico = 'eco-obs-w-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Usuario de prueba', 'email' => 'eco-obs-w-' . uniqid() . '@example.com',
+            'name' => 'Usuario de prueba', 'email' => 'eco-obs-w-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -104,7 +104,8 @@ class GuardarEcoObstetricoTest extends TestCase
 
         $resultado = app(GuardarEcoObstetrico::class)->ejecutar($consulta, $this->formulario([
             'fur' => '2026-06-01', 'gesta' => '2',
-            'lcc' => '45', 'sa_vit' => 'Sí', 'tn' => '1.8', 'actividad_cardiaca' => 'S',
+            // `sa_vit` es decimal y `tn` entero en la tabla del escritorio: los valores van con ese tipo.
+            'lcc' => '45', 'sa_vit' => '1.5', 'tn' => '2', 'actividad_cardiaca' => 'S',
             'saco_gestacional' => '1', 'observacion' => 'Embarazo temprano normal.',
         ]));
 

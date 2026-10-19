@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Consulta\EcoAbdominal;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -30,7 +34,7 @@ class EcosMapasCommandTest extends TestCase
     {
         parent::setUp();
 
-        $this->ruta = storage_path('app/testing/ecos-mapas-' . uniqid() . '.json');
+        $this->ruta = storage_path('app/testing/e' . substr(uniqid(), -6) . '.json');
         if (! is_dir(dirname($this->ruta))) {
             mkdir(dirname($this->ruta), 0775, true);
         }
@@ -80,13 +84,13 @@ class EcosMapasCommandTest extends TestCase
         return $estudios;
     }
 
-    public function test_el_json_parsea_y_trae_los_cuatro_estudios(): void
+    public function test_el_json_parsea_y_trae_los_ocho_estudios(): void
     {
         $datos = $this->exportar();
 
         $this->assertSame(1, $datos['version']);
         $this->assertSame(
-            ['pelvico', 'obstetrico', 'segundo', 'tercero'],
+            ['pelvico', 'obstetrico', 'segundo', 'tercero', 'doppler', 'mamario', 'abdominal', 'fetal'],
             array_column($datos['estudios'], 'clave')
         );
 
@@ -125,6 +129,11 @@ class EcosMapasCommandTest extends TestCase
             'obstetrico' => EcoObstetrico::columnas(),
             'segundo' => EcoObstetricoSegundo::columnas(),
             'tercero' => EcoObstetricoTercero::columnas(),
+            // Los cuatro de la ola §10 (Doppler, mamario, abdominal y ecocardiograma fetal).
+            'doppler' => EcoDoppler::columnas(),
+            'mamario' => EcoMamario::columnas(),
+            'abdominal' => EcoAbdominal::columnas(),
+            'fetal' => EcoCardiogramaFetal::columnas(),
         ];
 
         foreach ($esperados as $clave => $columnas) {
@@ -145,6 +154,75 @@ class EcosMapasCommandTest extends TestCase
         $this->assertSame('eco_obstetrico_tercer', $estudios['tercero']['tabla']);
         $this->assertSame('historia', $estudios['tercero']['columna_historia']);
         $this->assertSame('consulta', $estudios['tercero']['columna_consulta']);
+    }
+
+    /**
+     * **Los cuatro de la ola §10**: su tabla legada (una de ellas con el typo del legado), su clave por
+     * `historia` + `consulta` y su título. Es lo que el sync y el esquema local del teléfono necesitan para
+     * bajarlos y escribirlos.
+     */
+    public function test_los_cuatro_ecos_nuevos_traen_su_tabla_y_su_clave(): void
+    {
+        $estudios = $this->porClave($this->exportar());
+
+        $esperados = [
+            'doppler' => ['eco_doppler', 'Eco Doppler perinatal', 'ECO DOPPLER PERINATAL'],
+            'mamario' => ['ultra_mama', 'Eco mamario', 'ULTRASONIDO DE MAMAS'],
+            'abdominal' => ['ultra_abdominal', 'Eco abdominal', 'ULTRASONIDO ABDOMINAL'],
+            // ⚠️ `ecocadiograma_fetal` está así en el legado (con el typo): es la tabla que usa la web y la
+            // que sube el escritorio. Escribirla «bien» dejaría el estudio sin bajar.
+            'fetal' => ['ecocadiograma_fetal', 'Ecocardiograma fetal', 'ECOCARDIOGRAMA FETAL'],
+        ];
+
+        foreach ($esperados as $clave => [$tabla, $titulo, $tituloDelInforme]) {
+            $estudio = $estudios[$clave];
+            $this->assertSame($tabla, $estudio['tabla'], $clave);
+            $this->assertSame('historia', $estudio['columna_historia'], $clave);
+            $this->assertSame('consulta', $estudio['columna_consulta'], $clave);
+            $this->assertSame('fecha', $estudio['columna_fecha'], $clave);
+            $this->assertSame($titulo, $estudio['titulo'], $clave);
+            $this->assertSame($tituloDelInforme, $estudio['titulo_del_informe'], $clave);
+            // Todos tienen campos y bloques: un mapa vacío pintaría un estudio en blanco.
+            $this->assertNotEmpty($estudio['columnas'], $clave);
+            $this->assertNotEmpty($estudio['grupos'], $clave);
+        }
+    }
+
+    /**
+     * **El `referido` del mamario y del abdominal sale como texto, no como un desplegable vacío.**
+     *
+     * En la web es un `opciones` que su ViewModel llena con la libreta del médico (guarda la cédula de un
+     * doctor del catálogo `doctores`); el formulario genérico del app no tiene esa libreta, así que un
+     * `opciones` sin opciones le dejaría un control inutilizable. El exportador lo pasa a `texto` y el campo
+     * se puede escribir a mano.
+     */
+    public function test_el_referido_sale_como_texto_y_no_como_un_desplegable_vacio(): void
+    {
+        $estudios = $this->porClave($this->exportar());
+
+        foreach (['mamario', 'abdominal'] as $clave) {
+            $campos = [];
+            foreach ($estudios[$clave]['grupos'] as $grupo) {
+                foreach ($grupo['campos'] as $campo) {
+                    $campos[$campo['columna']] = $campo;
+                }
+            }
+
+            $this->assertArrayHasKey('referido', $campos, $clave);
+            $this->assertSame('texto', $campos['referido']['tipo'], $clave);
+            $this->assertSame([], $campos['referido']['opciones'], $clave);
+        }
+
+        // Y ningún otro campo del JSON queda como `opciones` sin opciones (sería un desplegable roto).
+        foreach ($estudios as $clave => $estudio) {
+            foreach ($estudio['grupos'] as $grupo) {
+                foreach ($grupo['campos'] as $campo) {
+                    if ($campo['tipo'] === 'opciones') {
+                        $this->assertNotEmpty($campo['opciones'], $clave . '/' . $campo['columna']);
+                    }
+                }
+            }
+        }
     }
 
     public function test_el_segundo_trimestre_es_su_propia_tabla_con_el_mapa_del_tercero(): void
@@ -185,7 +263,14 @@ class EcosMapasCommandTest extends TestCase
                     }
 
                     $this->assertNotSame('', (string) $campo['columna']);
-                    $this->assertNotSame('', (string) $campo['etiqueta']);
+                    // **La etiqueta puede estar vacía**, pero sólo en los memorandos de texto libre: el
+                    // DataWindow de tres de los ecos nuevos (el `texto` del Doppler, y el `texto_inicio` y
+                    // `anatomi_datos` del ecocardiograma) no les pone rótulo, y la web los pinta bajo el
+                    // título del bloque con un nombre accesible. El resto sí la necesita: el informe
+                    // imprime «Etiqueta: valor».
+                    if ($campo['tipo'] !== 'area') {
+                        $this->assertNotSame('', (string) $campo['etiqueta']);
+                    }
                     // Los tipos que el formulario genérico del app sabe pintar.
                     $this->assertContains($campo['tipo'], ['opciones', 'numero', 'texto', 'area', 'fecha', 'fecha-tecleada']);
                     // `opciones` es siempre lista, nunca null: el app no distingue dos formas.

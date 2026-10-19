@@ -30,6 +30,10 @@ class TablasLegado
         'consultas' => 'numhistoria',
         'constancia_obs' => 'numhistoria',
         'recipes' => 'nrohistoria',
+        // El récipe de la pareja (ola §9 de PLAN-MOVIL.md) se llavea igual que `recipes` —`nrohistoria` +
+        // `nroconsulta` + `codemedicina`—, no como la consulta. Sin esta entrada el filtro pregunta por
+        // `numhistoria` (el default) y no baja ninguna fila.
+        'recipes_pareja' => 'nrohistoria',
         'informe' => 'nrohistoria',
         'referencia' => 'nrohistoria',
         'reposo_paciente' => 'nrohistoria',
@@ -48,6 +52,13 @@ class TablasLegado
         'eco_obstetrico' => 'historia',
         'eco_obstetrico_tercer_2' => 'historia',
         'eco_obstetrico_tercer' => 'historia',
+        // Los cuatro de la ola §10 (Doppler perinatal, mamario, abdominal y ecocardiograma fetal): igual
+        // que los obstétricos, `historia`. Sin la entrada, el filtro pregunta por `numhistoria` —que no
+        // existe en esas tablas— y el estudio no baja nunca.
+        'eco_doppler' => 'historia',
+        'ultra_mama' => 'historia',
+        'ultra_abdominal' => 'historia',
+        'ecocadiograma_fetal' => 'historia',
     ];
 
     /**

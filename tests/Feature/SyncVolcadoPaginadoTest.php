@@ -59,9 +59,9 @@ class SyncVolcadoPaginadoTest extends TestCase
 
         $filas = [
             'pacientes' => [
-                ['numhistoria' => 1, 'cedula' => "P1-{$reg}", 'apellidos' => 'UNO', 'nombres' => 'ANA', 'nac' => 'V', 'sexo' => 'F'],
-                ['numhistoria' => 2, 'cedula' => "P2-{$reg}", 'apellidos' => 'DOS', 'nombres' => 'BEA', 'nac' => 'V', 'sexo' => 'F'],
-                ['numhistoria' => 3, 'cedula' => "P3-{$reg}", 'apellidos' => 'TRES', 'nombres' => 'CAR', 'nac' => 'V', 'sexo' => 'M'],
+                ['numhistoria' => 1, 'cedula' => "P1-" . substr($reg, -6), 'apellidos' => 'UNO', 'nombres' => 'ANA', 'nac' => 'V', 'sexo' => 'F'],
+                ['numhistoria' => 2, 'cedula' => "P2-" . substr($reg, -6), 'apellidos' => 'DOS', 'nombres' => 'BEA', 'nac' => 'V', 'sexo' => 'F'],
+                ['numhistoria' => 3, 'cedula' => "P3-" . substr($reg, -6), 'apellidos' => 'TRES', 'nombres' => 'CAR', 'nac' => 'V', 'sexo' => 'M'],
             ],
             'consultas' => [
                 ['numhistoria' => 1, 'nroconsulta' => 1, 'fecha' => $cita],
@@ -111,7 +111,7 @@ class SyncVolcadoPaginadoTest extends TestCase
 
     public function test_el_volcado_paginado_recorre_todas_las_tablas_y_termina(): void
     {
-        Sanctum::actingAs($this->medicoConDatos('pag-a-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDatos('pag-a-' . substr(uniqid(), -6)), ['*'], 'api');
 
         $cursor = 'inicio';
         $paginas = 0;
@@ -169,7 +169,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_la_union_de_los_tramos_es_igual_al_volcado_de_una_sola_vez(): void
     {
-        Sanctum::actingAs($this->medicoConDatos('pag-b-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDatos('pag-b-' . substr(uniqid(), -6)), ['*'], 'api');
 
         // 1) De una sola vez (el camino de siempre, sin `volcado`).
         $completo = $this->sync([])->json();
@@ -199,7 +199,7 @@ class SyncVolcadoPaginadoTest extends TestCase
 
     public function test_sin_volcado_la_respuesta_es_la_de_siempre(): void
     {
-        Sanctum::actingAs($this->medicoConDatos('pag-c-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDatos('pag-c-' . substr(uniqid(), -6)), ['*'], 'api');
 
         $cuerpo = $this->sync([])->json();
 
@@ -215,7 +215,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_un_pedido_lleva_varias_tablas_y_las_vacias_no_cuestan(): void
     {
-        Sanctum::actingAs($this->medicoConDatos('pag-e-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDatos('pag-e-' . substr(uniqid(), -6)), ['*'], 'api');
 
         // Con un cupo grande, un médico chico entra entero en un solo pedido.
         $cuerpo = $this->sync(['volcado' => 'inicio', 'volcado_limite' => 500])->json();
@@ -229,7 +229,7 @@ class SyncVolcadoPaginadoTest extends TestCase
 
     public function test_un_cursor_invalido_se_rechaza(): void
     {
-        Sanctum::actingAs($this->medicoConDatos('pag-d-' . uniqid()), ['*'], 'api');
+        Sanctum::actingAs($this->medicoConDatos('pag-d-' . substr(uniqid(), -6)), ['*'], 'api');
 
         foreach (['cualquier-cosa', '0', '99:0', 'a:b'] as $malo) {
             $this->postJson('/api/app/sync-app-data', ['volcado' => $malo])->assertStatus(400);
@@ -244,7 +244,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_el_volcado_trae_todos_los_pacientes_pero_solo_la_clinica_de_la_ventana(): void
     {
-        $reg = 'pag-ventana-' . uniqid();
+        $reg = 'pag-ventana-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
 
         // Un paciente que no se atiende desde hace medio año: su cita y su consulta son viejas.
@@ -261,7 +261,7 @@ class SyncVolcadoPaginadoTest extends TestCase
         // Su ficha viaja igual: sin ella no se lo podría encontrar en el buscador sin conexión.
         $paginas = $this->recorrerVolcado();
         $cedulas = array_column($paginas['pacientes'], 'cedula');
-        $this->assertContains("P3-{$reg}", $cedulas, 'la ficha del paciente viejo baja aunque no se atienda');
+        $this->assertContains("P3-" . substr($reg, -6), $cedulas, 'la ficha del paciente viejo baja aunque no se atienda');
 
         // Y lo clínico del paciente viejo no viaja: su cita vieja queda afuera (y más abajo se ve que su
         // consulta tampoco).
@@ -306,7 +306,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_sin_volcado_paginado_no_se_aplica_la_ventana(): void
     {
-        $reg = 'pag-legado-' . uniqid();
+        $reg = 'pag-legado-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDatos($reg, now()->subDays(200)->toDateString()), ['*'], 'api');
 
         $cuerpo = $this->sync([])->json();
@@ -359,7 +359,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_el_pedido_de_un_paciente_trae_su_historia_completa_y_solo_la_suya(): void
     {
-        $reg = 'pag-pac-' . uniqid();
+        $reg = 'pag-pac-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
 
         // El paciente 3 no se atiende desde hace medio año: nada de él entró en el volcado.
@@ -395,7 +395,7 @@ class SyncVolcadoPaginadoTest extends TestCase
 
     public function test_el_historial_de_un_paciente_ajeno_no_se_manda(): void
     {
-        $reg = 'pag-ajeno-' . uniqid();
+        $reg = 'pag-ajeno-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
 
         // El número de historia es **por médico**: el 999 no es de este.
@@ -408,7 +408,7 @@ class SyncVolcadoPaginadoTest extends TestCase
      */
     public function test_el_pedido_de_la_agenda_trae_las_citas_de_esos_dias(): void
     {
-        $reg = 'pag-agenda-' . uniqid();
+        $reg = 'pag-agenda-' . substr(uniqid(), -6);
         Sanctum::actingAs($this->medicoConDatos($reg), ['*'], 'api');
 
         $viejo = now()->subDays(200)->toDateString();

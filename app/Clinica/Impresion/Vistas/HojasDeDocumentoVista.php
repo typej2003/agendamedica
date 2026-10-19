@@ -19,8 +19,9 @@ use App\Support\FechaClinica;
  * **Los dos modos de hoja (O-26):** el documento declara el suyo (`DocumentoImpreso::modo()`, que lo lee de `ModoDeLaHoja`) y
  * esta vista lo respeta: en **hoja completa vertical** el documento ocupa una página entera, el reparto se mide con las medidas
  * de la hoja completa y cada trozo va en su propia página (`ModoDeLaHoja::porPagina()`). La cuenta del reparto es la misma
- * clase; lo único que cambia son las medidas con las que mide. Es el caso del **informe del control de embarazo** y de los
- * **formatos en blanco** de los ecos.
+ * clase; lo único que cambia son las medidas con las que mide. Es el caso del **informe del control de embarazo**, de los
+ * **formatos en blanco** de los ecos y, desde el 2026-10-18, de la **colposcopía y la histeroscopía**, cuyo informe lleva la
+ * imagen del examen **en la misma página** (debajo del texto: el reparto reserva su alto, ver `DistribuidorDeDocumento`).
  *
  * Como todo ViewModel de la web clínica **no consulta la base**: recibe los documentos y el membrete ya leídos. Se prueba sin
  * base de datos.
@@ -45,7 +46,8 @@ final class HojasDeDocumentoVista
      *
      * Cada hoja trae su `modo` (`mitad` o `completa`, que decide el tamaño y la orientación de la página), el `tamano` de la
      * letra del cuerpo en puntos y sus `mitades`: una o dos, cada una con su título, los datos del paciente (en la primera) o
-     * el encabezado corto (en la continuación), los datos fijos, los párrafos y si lleva la firma o el «Continúa →».
+     * el encabezado corto (en la continuación), los datos fijos, los párrafos y si lleva la firma o el «Continúa →». La
+     * última mitad lleva además sus `imagenes` (la colposcopía y la histeroscopía), que salen **en la misma página**.
      *
      * @return array<int,array{modo:string, tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
      */
@@ -55,9 +57,11 @@ final class HojasDeDocumentoVista
 
         foreach ($this->documentos as $documento) {
             $modo = $documento->modo();
-            $distribuidor = $modo === ModoDeLaHoja::COMPLETA
-                ? new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo))
-                : $this->distribuidor;
+            // La media hoja horizontal usa el distribuidor de siempre; las dos hojas verticales (la completa y su mitad
+            // superior) miden con las medidas de su modo.
+            $distribuidor = $modo === ModoDeLaHoja::MITAD
+                ? $this->distribuidor
+                : new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo));
 
             $reparto = $distribuidor->distribuir($this->membrete, $documento);
 
@@ -82,7 +86,7 @@ final class HojasDeDocumentoVista
     }
 
     /**
-     * @param  array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array}  $mitad
+     * @param  array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array, imagenes:array}  $mitad
      * @return array<string,mixed>
      */
     private function mitad(DocumentoImpreso $documento, array $mitad): array
@@ -102,6 +106,9 @@ final class HojasDeDocumentoVista
             'para' => $mitad['primera'] ? $documento->para : null,
             'fijos' => $mitad['fijos'],
             'parrafos' => $mitad['parrafos'],
+            // Las imágenes del informe, en la misma página y debajo del texto (la colposcopía y la histeroscopía): el
+            // reparto se las da a la última mitad y le descuenta su alto (`DistribuidorDeDocumento`).
+            'imagenes' => $mitad['imagenes'] ?? [],
             'sigue' => $mitad['sigue'],
             'firma' => $mitad['firma'],
         ];

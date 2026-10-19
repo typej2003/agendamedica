@@ -57,10 +57,10 @@ class SyncEcosTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-ecos-' . uniqid();
+        $regMedico = 'test-ecos-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'ecos-' . uniqid() . '@example.com',
+            'email' => 'ecos-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([
@@ -205,13 +205,13 @@ class SyncEcosTest extends TestCase
 
         // El número de historia es **por médico**: estas filas tienen el mismo número y el mismo número de
         // consulta, y aun así no pueden bajar a este teléfono.
-        $ajeno = 'otro-registro-' . uniqid();
+        $ajeno = 'otro-registro' . substr(uniqid(), -6);
         EcoPelvico::create([
             'reg_medico' => $ajeno,
             'numhistoria' => $consulta->numhistoria,
             'nroconsulta' => $consulta->nroconsulta,
             'fecha' => now()->toDateString(),
-            'vagina' => 'DEL OTRO MEDICO',
+            'vagina' => 'AJENO',
         ]);
         foreach ([EcoObstetrico::class, EcoObstetricoSegundo::class, EcoObstetricoTercer::class] as $modelo) {
             $modelo::create([

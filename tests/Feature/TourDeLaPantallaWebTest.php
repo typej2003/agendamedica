@@ -39,10 +39,10 @@ class TourDeLaPantallaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'tour-test-' . uniqid();
+        $regMedico = 'tour-test-' . substr(uniqid(), -6);
 
         $user = User::create([
-            'name' => 'Doctora de prueba', 'email' => 'tour-' . uniqid() . '@example.com',
+            'name' => 'Doctora de prueba', 'email' => 'tour-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $user->assignRole('Medico');
@@ -60,7 +60,7 @@ class TourDeLaPantallaWebTest extends TestCase
     private function secretariaConAcceso(Medico $medico): User
     {
         $secretaria = User::create([
-            'name' => 'Secretaria', 'email' => 'tour-secre-' . uniqid() . '@example.com',
+            'name' => 'Secretaria', 'email' => 'tour-secre-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
         ]);
         $secretaria->assignRole('Secretaria');

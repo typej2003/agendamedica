@@ -66,11 +66,11 @@ class CumpleanosWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = $regMedico ?: 'cumple-test-' . uniqid();
+        $regMedico = $regMedico ?: 'cumple-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Médico de prueba',
-            'email'                => 'cumple-' . uniqid() . '@example.com',
+            'email'                => 'cumple-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

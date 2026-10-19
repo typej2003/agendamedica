@@ -41,7 +41,7 @@ class AccionesDeAgendaTest extends TestCase
 
         $user = User::create([
             'name'     => 'Doctora de prueba',
-            'email'    => 'agenda-sync-' . uniqid() . '@example.com',
+            'email'    => 'agenda-sync-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
 
@@ -51,7 +51,7 @@ class AccionesDeAgendaTest extends TestCase
             'lastname'   => 'De Prueba',
             'email'      => $user->email,
             'password'   => $user->password,
-            'reg_medico' => 'agenda-sync-' . uniqid(),
+            'reg_medico' => 'agenda-sync-' . substr(uniqid(), -6),
         ]);
 
         MedicoRegistro::create(['medico_id' => $this->medico->id, 'reg_medico' => $this->medico->reg_medico]);

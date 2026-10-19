@@ -33,43 +33,16 @@
         <div class="card login-card">
             <div class="mb-4">
                 <h1 class="auth-titulo">Iniciar sesión</h1>
-                <p class="text-muted small mb-0">Ingresa con tu correo y tu contraseña para acceder al sistema.</p>
+                <p class="text-muted small mb-0">Ingresa con tu correo y tu contraseña. No tienes que elegir un tipo de usuario.</p>
             </div>
+
+            {{-- El aviso que deja el restablecimiento de contraseña. --}}
+            @if (session('status'))
+                <div class="alert alert-success py-2 small" role="status">{{ session('status') }}</div>
+            @endif
 
             <form action="{{ route('login') }}" method="post" id="loginForm">
                 @csrf
-
-                <!-- Campo oculto: envía el tipo de usuario cuando el selector está deshabilitado -->
-                <input type="hidden" name="user_type" id="hidden_user_type" value="{{ old('user_type', 'Paciente') }}">
-
-                <!-- Acceso del sistema (administración y secretaría): usa la tabla `users`. -->
-                <div class="acceso-sistema mb-3">
-                    <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 ps-0">
-                        <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" id="systemAccessCheck" {{ old('user_type') == 'Root' ? 'checked' : '' }}>
-                        <label class="form-check-label small fw-semibold mb-0" for="systemAccessCheck">
-                            Acceso de administración / sistema
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Selector del tipo de usuario -->
-                <div class="mb-4" id="userTypeContainer">
-                    <span class="form-label small fw-bold d-block text-center mb-2">Acceder como:</span>
-                    <div class="btn-group w-100 user-type-selector" role="group" id="btnGroupUserType" aria-label="Tipo de usuario">
-                        <input type="radio" class="btn-check user-type-radio" name="user_type_option" id="type_paciente" value="Paciente" {{ old('user_type', 'Paciente') == 'Paciente' ? 'checked' : '' }}>
-                        <label class="btn btn-outline-primary fw-semibold" for="type_paciente">
-                            <i class="bi bi-person me-1"></i> Paciente
-                        </label>
-
-                        <input type="radio" class="btn-check user-type-radio" name="user_type_option" id="type_medico" value="Medico" {{ old('user_type') == 'Medico' ? 'checked' : '' }}>
-                        <label class="btn btn-outline-primary fw-semibold" for="type_medico">
-                            <i class="bi bi-person-badge me-1"></i> Médico
-                        </label>
-                    </div>
-                    @error('user_type')
-                        <small class="text-danger d-block text-center mt-1" role="alert">{{ $message }}</small>
-                    @enderror
-                </div>
 
                 <!-- Correo -->
                 <div class="mb-3">
@@ -115,60 +88,25 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center auth-links">
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}">Crear una cuenta</a>
-                    @else
-                        <a href="#">Crear una cuenta</a>
-                    @endif
-
                     @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
                     @else
                         <a href="#">¿Olvidaste tu contraseña?</a>
                     @endif
                 </div>
+
+                {{-- El alta de cuentas todavía no está abierta: primero va el registro de médicos con
+                     aprobación y después el de pacientes (ver ROADMAP §10.4). --}}
+                <p class="text-muted small mt-4 mb-0 text-center">
+                    El registro de médicos y pacientes estará disponible próximamente.
+                </p>
             </form>
         </div>
     </main>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
     <!-- Lógica JavaScript para el control de la interfaz -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const systemCheck = document.getElementById('systemAccessCheck');
-            const btnGroupUserType = document.getElementById('btnGroupUserType');
-            const radios = document.querySelectorAll('.user-type-radio');
-            const hiddenUserType = document.getElementById('hidden_user_type');
-
-            function toggleUserTypeSelector() {
-                if (systemCheck.checked) {
-                    btnGroupUserType.classList.add('disabled-group');
-                    radios.forEach(radio => radio.disabled = true);
-                    hiddenUserType.value = 'Root';
-                } else {
-                    btnGroupUserType.classList.remove('disabled-group');
-                    radios.forEach(radio => radio.disabled = false);
-
-                    const checkedRadio = document.querySelector('.user-type-radio:checked');
-                    hiddenUserType.value = checkedRadio ? checkedRadio.value : 'Paciente';
-                }
-            }
-
-            radios.forEach(radio => {
-                radio.addEventListener('change', function () {
-                    if (!systemCheck.checked) {
-                        hiddenUserType.value = this.value;
-                    }
-                });
-            });
-
-            systemCheck.addEventListener('change', toggleUserTypeSelector);
-
-            // Inicialización según el estado precargado
-            toggleUserTypeSelector();
-
             // Mostrar/ocultar contraseña
             document.getElementById('togglePassword').addEventListener('click', function () {
                 const passwordInput = document.getElementById('password');

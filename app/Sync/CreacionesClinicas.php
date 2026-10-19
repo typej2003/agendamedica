@@ -6,15 +6,24 @@ use App\Actions\Consulta\AgregarDiagnosticoALaConsulta;
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
 use App\Actions\Consulta\GuardarEcoGinecologico;
+use App\Actions\Consulta\GuardarEcoAbdominal;
+use App\Actions\Consulta\GuardarEcoCardiogramaFetal;
+use App\Actions\Consulta\GuardarEcoDoppler;
+use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Actions\Consulta\GuardarRecipe;
+use App\Actions\Consulta\GuardarRecipeDeLaPareja;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Clinica\Consulta\EcoAbdominal;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -29,6 +38,7 @@ use App\Models\Medico;
 use App\Models\MotivoConsulta;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
+use App\Models\RecipePareja;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
@@ -159,6 +169,16 @@ class CreacionesClinicas
         private GuardarEcoObstetrico $guardarEcoObstetrico,
         private GuardarEcoObstetricoSegundo $guardarEcoObstetricoSegundo,
         private GuardarEcoObstetricoTercero $guardarEcoObstetricoTercero,
+        // Los **otros cuatro estudios** (ola §10 de PLAN-MOVIL.md): el Doppler perinatal, el mamario, el
+        // abdominal y el ecocardiograma fetal. Cada uno con la Action de su pantalla de la web.
+        private GuardarEcoDoppler $guardarEcoDoppler,
+        private GuardarEcoMamario $guardarEcoMamario,
+        private GuardarEcoAbdominal $guardarEcoAbdominal,
+        private GuardarEcoCardiogramaFetal $guardarEcoCardiogramaFetal,
+        // La regla del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md), compartida con la web desde
+        // WEB-5.1b: una por consulta, sin cabecera, y crea o corrige en el lugar comparando por
+        // `codemedicina`. Es la misma Action que usa la pestaña de la consulta de la web.
+        private GuardarRecipeDeLaPareja $guardarRecipeDeLaPareja,
     ) {
     }
 
@@ -194,6 +214,9 @@ class CreacionesClinicas
             'historias' => $this->crearHistoria($change, $tempId, $pacientesCreados, $rechazar),
             'consultas' => $this->crearConsulta($change, $tempId, $rechazar),
             'recipes' => $this->crearRecipe($change, $tempId, $rechazar),
+            // Ola §9: el récipe de la pareja, que cuelga de la consulta como el del paciente pero no tiene
+            // número ni cabecera (una por consulta).
+            'recipes_pareja' => $this->crearRecipeDeLaPareja($change, $tempId, $rechazar),
             'motivo_consulta_paciente' => $this->crearMotivoDeConsulta($change, $tempId, $rechazar),
             'examen_fisico_nuevo' => $this->crearExamenFisico($change, $tempId, $rechazar),
             'diagnostico_paciente' => $this->crearDiagnostico($change, $tempId, $rechazar),
@@ -204,6 +227,11 @@ class CreacionesClinicas
             'eco_obstetrico' => $this->crearEco($change, $tempId, $rechazar),
             'eco_obstetrico_tercer_2' => $this->crearEco($change, $tempId, $rechazar),
             'eco_obstetrico_tercer' => $this->crearEco($change, $tempId, $rechazar),
+            // Ola §10: los otros cuatro estudios, con el mismo camino (la Action de su pantalla de la web).
+            'eco_doppler' => $this->crearEco($change, $tempId, $rechazar),
+            'ultra_mama' => $this->crearEco($change, $tempId, $rechazar),
+            'ultra_abdominal' => $this->crearEco($change, $tempId, $rechazar),
+            'ecocadiograma_fetal' => $this->crearEco($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -433,6 +461,76 @@ class CreacionesClinicas
         $this->anotar('recipes', $resultado->cabecera->id, $tempId, $resultado->cabecera->reg_medico);
 
         return $this->respuestaRecipe($tempId, $resultado->cabecera, $resultado->filas);
+    }
+
+    /**
+     * El **récipe de la pareja** de una consulta, cargado sin conexión (ola §9 de PLAN-MOVIL.md).
+     *
+     * La pareja es **una por consulta** y no tiene cabecera ni número: cada medicamento es una fila de
+     * `recipes_pareja` con la cédula y el nombre de la pareja **repetidos en todas**. Viaja como **una**
+     * creación con sus `items` —la mitad de un récipe no sirve para imprimir— y con `cedula` y `nombre` al
+     * mismo nivel que `fecha` e `items`: son la cabecera del récipe, no columnas de una tabla con `columns`
+     * (si se mandaran ahí, el controlador las descartaría en silencio).
+     *
+     * La regla de escritura **no vive acá**: es `App\Actions\Consulta\GuardarRecipeDeLaPareja` (WEB-5.1b),
+     * la misma que usa la pestaña de la consulta de la web. Esa Action crea cuando la consulta no tiene y
+     * **corrige en el lugar** cuando ya tiene (compara por `codemedicina`, escribe sólo lo que cambió y quita
+     * las filas que ya no vienen), así que un reintento de la misma creación no duplica nada. Se llama sin
+     * `$origen` —igual que `crearRecipe`—: el rastro que interesa es el `created` del id temporal del lote
+     * (`anotar`), que es lo que le permite al teléfono soltar su fila provisional y al reemplazo de la tabla
+     * del escritorio conservar estas filas.
+     *
+     * ⚠️ El rastro se anota con el id de la **primera** fila: la tabla no tiene una fila cabecera que
+     * represente al récipe, y lo único que el teléfono necesita es un id con el que reconocerlo al reintentar.
+     * Una corrección de una pareja que ya existía no devuelve filas creadas (`filas` viene vacía), así que el
+     * id se resuelve leyendo la primera fila que hay.
+     */
+    private function crearRecipeDeLaPareja(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if (!$consulta) {
+            $rechazar('El récipe de la pareja no corresponde a una consulta de este médico.');
+            return null;
+        }
+
+        $items = $this->itemsValidos($change['items'] ?? null);
+        if ($items === null) {
+            $rechazar('El récipe de la pareja no tiene medicamentos válidos.');
+            return null;
+        }
+
+        try {
+            $resultado = $this->guardarRecipeDeLaPareja->ejecutar(
+                $consulta,
+                (string) ($change['cedula'] ?? ''),
+                (string) ($change['nombre'] ?? ''),
+                $items,
+                null,
+                null,
+            );
+        } catch (InvalidArgumentException $e) {
+            // Los topes del esquema (cédula de 10, nombre de 200) y la pareja sin datos: es el rechazo de la
+            // Action —para esa creación—, no un error del lote.
+            $rechazar($e->getMessage());
+            return null;
+        }
+
+        $fila = $resultado->filas->first()
+            ?? RecipePareja::where('reg_medico', $consulta->reg_medico)
+                ->where('nrohistoria', (int) $consulta->numhistoria)
+                ->where('nroconsulta', (int) $consulta->nroconsulta)
+                ->orderBy('orden')
+                ->orderBy('id')
+                ->first();
+
+        if ($fila === null) {
+            $rechazar('El récipe de la pareja quedó sin medicamentos.');
+            return null;
+        }
+
+        $this->anotar('recipes_pareja', (int) $fila->id, $tempId, (string) $fila->reg_medico);
+
+        return $this->respuestaRecipeDeLaPareja($tempId, (int) $fila->id);
     }
 
     /**
@@ -676,6 +774,11 @@ class CreacionesClinicas
             'eco_obstetrico' => [$this->guardarEcoObstetrico, app(EcoObstetrico::class)],
             'eco_obstetrico_tercer_2' => [$this->guardarEcoObstetricoSegundo, app(EcoObstetricoSegundo::class)],
             'eco_obstetrico_tercer' => [$this->guardarEcoObstetricoTercero, app(EcoObstetricoTercero::class)],
+            // Los cuatro de la ola §10 (2026-10-19).
+            'eco_doppler' => [$this->guardarEcoDoppler, app(EcoDoppler::class)],
+            'ultra_mama' => [$this->guardarEcoMamario, app(EcoMamario::class)],
+            'ultra_abdominal' => [$this->guardarEcoAbdominal, app(EcoAbdominal::class)],
+            'ecocadiograma_fetal' => [$this->guardarEcoCardiogramaFetal, app(EcoCardiogramaFetal::class)],
         };
 
         $valores = $this->columnasDelCliente($change, $tabla);
@@ -961,6 +1064,11 @@ class CreacionesClinicas
             // Igual que las anteriores: el reintento de un alta de antecedente devuelve el mismo id.
             return $this->respuestaAntecedente($tempId, $recordId);
         }
+        if ($table === 'recipes_pareja') {
+            // Ola §9: el reintento de una pareja ya aplicada devuelve el mismo id de la primera fila, sin
+            // volver a escribir (la Action corregiría en el lugar, pero la creación ya está del otro lado).
+            return $this->respuestaRecipeDeLaPareja($tempId, $recordId);
+        }
         if (isset(SyncAppDataRequest::MAPAS_DE_LOS_ECOS[$table])) {
             // EC-A3: el reintento de un estudio ya creado devuelve el **mismo id** de la fila, sin volver a
             // escribir ni duplicar. Se busca por el id que anotó el rastro (es el que el teléfono guardó) y
@@ -1014,6 +1122,16 @@ class CreacionesClinicas
     private function respuestaExamen(int $tempId, int $id): array
     {
         return ['table' => 'examen_fisico_nuevo', 'temp_id' => $tempId, 'id' => $id];
+    }
+
+    /**
+     * La respuesta del récipe de la pareja es **sólo su id** (el de la primera fila): la tabla no tiene una
+     * fila cabecera y el teléfono solo necesita soltar su fila pendiente —las filas reales llegan en el delta
+     * de la misma respuesta—.
+     */
+    private function respuestaRecipeDeLaPareja(int $tempId, int $id): array
+    {
+        return ['table' => 'recipes_pareja', 'temp_id' => $tempId, 'id' => $id];
     }
 
     /**

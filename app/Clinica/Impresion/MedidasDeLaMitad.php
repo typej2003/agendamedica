@@ -41,6 +41,9 @@ namespace App\Clinica\Impresion;
  *    el constructor sin argumentos.
  *  - **Hoja completa vertical** (`deLaHojaCompleta()`): un A4 vertical entero, 182 × 279,5 mm útiles (14 mm de margen a los
  *    lados). La usan el informe del control de embarazo y los informes de los ecos (O-26).
+ *  - **Mitad superior de un A4 vertical** (`deLaMitadSuperior()`, 2026-10-18): la página vertical entera para la orientación,
+ *    pero el informe usa sólo la mitad de arriba, 182 × 134,25 mm útiles. La usan la colposcopía y la histeroscopía, que
+ *    llevan la imagen del examen en la misma página y dejan la mitad de abajo en blanco.
  *
  * **Quién decide el modo de cada documento es `ModoDeLaHoja`**, que también devuelve estas medidas: no hay una regla suelta
  * por documento. Y `DistribuidorDeDocumento` mide con las que le pasen, sin saber de qué modo se trata.
@@ -60,6 +63,13 @@ final class MedidasDeLaMitad
 
     /** Alto útil de la hoja completa: 296,5 − 9 − 8 de márgenes (`.recipe-hoja-completa` en el CSS). */
     public const ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM = 279.5;
+
+    /**
+     * Alto útil de la **mitad superior de un A4 vertical** (2026-10-18: los informes de colposcopía e histeroscopía, que el
+     * escritorio imprime en media hoja). La página es la misma vertical de 296,5 mm, la mitad de arriba mide 148,25 y el cuerpo
+     * descuenta 9 de margen arriba y 5 de aire abajo: 134,25 mm (`.recipe-hoja-mitad-superior` en el CSS).
+     */
+    public const ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM = 134.25;
 
     /** La sangría del cuerpo respecto de los márgenes (`.recipe-cuerpo` en el CSS). */
     public const SANGRIA_DEL_CUERPO_MM = 3.0;
@@ -99,6 +109,23 @@ final class MedidasDeLaMitad
      * útiles y la franja es fija: borde (0,5 + 0,5) + relleno (1 + 1) + la línea (4,85) + el aire de abajo (2) = 9,9 mm.
      */
     private const PARA_MM = 9.9;
+
+    /**
+     * Lo que reserva el bloque de imágenes de un documento en la **hoja completa vertical**, con una imagen o con dos (A-13,
+     * los dos esquemas del cuello): la imagen hasta 86 mm de alto, su descripción y el aire. Su gemela es
+     * `.documento-imagenes` de `public/css/clinica-documento.css`.
+     */
+    private const IMAGENES_DE_HOJA_COMPLETA_MM = 96.0;
+
+    private const DOS_IMAGENES_DE_HOJA_COMPLETA_MM = 76.0;
+
+    /**
+     * Lo mismo en la **mitad superior de un A4 vertical**: el bloque es mucho más chico porque tiene que entrar junto al texto,
+     * la firma y el pie en media página (86 mm de imagen no dejarían lugar para nada).
+     */
+    private const IMAGENES_DE_LA_MITAD_SUPERIOR_MM = 32.0;
+
+    private const DOS_IMAGENES_DE_LA_MITAD_SUPERIOR_MM = 28.0;
 
     /**
      * Lo que ocupan la fecha y el «PACIENTE:» en el encabezado corto de una mitad de continuación
@@ -151,6 +178,19 @@ final class MedidasDeLaMitad
             new MedidorDeTexto(),
             self::ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM,
             self::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM,
+        );
+    }
+
+    /**
+     * Las medidas de la **mitad superior de un A4 vertical** (2026-10-18): el informe de colposcopía y el de histeroscopía.
+     * Mismo ancho que la hoja completa (182 mm) y el alto de media página.
+     */
+    public static function deLaMitadSuperior(): self
+    {
+        return new self(
+            new MedidorDeTexto(),
+            self::ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM,
+            self::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM,
         );
     }
 
@@ -219,6 +259,30 @@ final class MedidasDeLaMitad
             + self::RESERVA_MM;
 
         return max($this->altoUtil - $ocupado, 30.0);
+    }
+
+    /**
+     * El alto que **reserva** el bloque de imágenes de un documento en la última mitad, en milímetros (`0` si no tiene): la
+     * colposcopía y la histeroscopía los imprimen debajo del texto y en la misma página (2026-10-18).
+     *
+     * Depende de la hoja, porque de eso depende lo que queda: en la hoja completa vertical hay lugar para una imagen grande; en
+     * la mitad superior del A4 —que deja el resto de la página en blanco— el bloque tiene que ser chico para que el texto, la
+     * firma y el pie entren en la misma media página. Las medidas tienen su gemela en `.documento-imagenes` de
+     * `public/css/clinica-documento.css` y en sus variantes.
+     */
+    public function altoDeLasImagenes(int $cuantas): float
+    {
+        if ($cuantas <= 0) {
+            return 0.0;
+        }
+
+        $completa = $this->altoUtil >= self::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM;
+
+        if ($completa) {
+            return $cuantas > 1 ? self::DOS_IMAGENES_DE_HOJA_COMPLETA_MM : self::IMAGENES_DE_HOJA_COMPLETA_MM;
+        }
+
+        return $cuantas > 1 ? self::DOS_IMAGENES_DE_LA_MITAD_SUPERIOR_MM : self::IMAGENES_DE_LA_MITAD_SUPERIOR_MM;
     }
 
     /**

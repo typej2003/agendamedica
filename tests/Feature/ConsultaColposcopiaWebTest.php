@@ -85,11 +85,11 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'colposcopia-test-' . uniqid();
+        $regMedico = 'colposcopia-t' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'colposcopia-' . uniqid() . '@example.com',
+            'email'                => 'colposcopia-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -114,7 +114,7 @@ class ConsultaColposcopiaWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'colposcopia-secre-' . uniqid() . '@example.com',
+            'email'                => 'colposcopia-s' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -431,7 +431,7 @@ class ConsultaColposcopiaWebTest extends TestCase
     public function test_una_consulta_de_otro_consultorio_es_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $otro = 'colposcopia-otro-' . uniqid();
+        $otro = 'colposcopia-o' . substr(uniqid(), -6);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $otro]);
 
         [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
@@ -1035,12 +1035,19 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
 
-        // La casilla de la barra (la misma de las ecos) y la hoja aparte con los dos dibujos compuestos.
+        // La casilla de la barra (la misma de las ecos) y, **en la misma página del informe**, los dos dibujos compuestos.
         $this->assertStringContainsString('data-incluir-imagenes', $html);
         $this->assertStringContainsString('Incluir imágenes', $html);
         $this->assertSame(1, substr_count($html, 'data-hoja-imagenes'));
-        $this->assertStringContainsString('INFORME DE COLPOSCOPÍA · IMÁGENES', $html);
         $this->assertSame(2, substr_count($html, '<figure class="informe-imagen informe-imagen-dibujo">'));
+
+        // Una sola página: el informe usa la **mitad superior** de un A4 vertical (2026-10-18, Alexander) y **no** hay hoja
+        // de imágenes aparte —antes había dos: el texto en media hoja y una segunda A4 con «· IMÁGENES»—.
+        $this->assertSame(1, substr_count($html, 'class="recipe-hoja '), 'una sola hoja para el informe y su imagen');
+        $this->assertStringContainsString('recipe-hoja-completa', $html);
+        $this->assertStringContainsString('recipe-hoja-mitad-superior', $html);
+        $this->assertStringNotContainsString('INFORME DE COLPOSCOPÍA · IMÁGENES', $html);
+        $this->assertStringNotContainsString('informe-hoja-imagenes', $html);
 
         // La base elegida en cada variante viaja a la hoja, y el trazo va incrustado (data URI).
         $this->assertStringContainsString('img/clinica/colposcopia-nulipara.png', $html);
@@ -1050,9 +1057,36 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->assertStringContainsString('Cuello nulípara (orificio transverso)', $html);
         $this->assertStringContainsString('Cuello multípara (orificio redondo)', $html);
 
-        // El texto del informe no cambió: sigue en su media hoja, con su título y su firma.
+        // El texto y las imágenes van en la misma hoja y la firma sigue siendo una sola.
         $this->assertStringContainsString('Un texto de colposcopía.', $html);
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
+    }
+
+    /**
+     * Con un texto largo el informe sigue en otra media página y las imágenes viajan con la última mitad: nunca quedan en una
+     * página aparte ni se pierde texto (la cuenta es la de `DistribuidorDeDocumento`).
+     */
+    public function test_un_informe_largo_sigue_en_otra_media_pagina_y_las_imagenes_van_con_el_final(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $consulta->observaciones = str_repeat('Relleno del informe para ocupar la media página. ', 90) . 'ULTIMA LINEA DEL INFORME.';
+        $consulta->save();
+
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+        $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])->assertOk();
+
+        $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
+
+        $this->assertGreaterThan(1, substr_count($html, 'class="recipe-hoja '), 'el texto largo sigue en otra media página');
+        $this->assertStringContainsString('ULTIMA LINEA DEL INFORME.', $html);
+        $this->assertLessThan(
+            strpos($html, 'data-hoja-imagenes'),
+            strpos($html, 'ULTIMA LINEA DEL INFORME.'),
+            'las imágenes van después del texto, en la última mitad',
+        );
+        $this->assertSame(1, substr_count($html, 'data-hoja-imagenes'), 'el bloque de imágenes es uno solo');
+        $this->assertSame(1, substr_count($html, 'class="firmas"'), 'la firma va sólo en la última mitad');
     }
 
     // ------------------------------------------- La tarjeta de dos modos (O-09, 2026-10-17)

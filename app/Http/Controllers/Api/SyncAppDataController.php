@@ -22,10 +22,14 @@ use App\Models\Consulta;
 use App\Models\Diagnostico;
 use App\Models\DiagnosticoPaciente;
 use App\Models\Doctor;
+use App\Models\EcoCardiogramaFetal;
+use App\Models\EcoDoppler;
 use App\Models\EcoObstetrico;
 use App\Models\EcoObstetricoSegundo;
 use App\Models\EcoObstetricoTercer;
 use App\Models\EcoPelvico;
+use App\Models\UltraAbdominal;
+use App\Models\UltraMama;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\ExamenFisico;
@@ -43,6 +47,7 @@ use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Recipe;
 use App\Models\RecipeFormato;
+use App\Models\RecipePareja;
 use App\Models\Referencia;
 use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
@@ -339,6 +344,23 @@ class SyncAppDataController extends Controller
             'eco_obstetrico_tercer' => ['consulta' => EcoObstetricoTercer::whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $historiasDeLaVentana())), 'columna' => 'id'],
+            // **Los otros cuatro estudios** (ola §10 de PLAN-MOVIL.md, 2026-10-19): Doppler perinatal,
+            // mamario, abdominal y ecocardiograma fetal. Como los obstétricos, se llavean por `historia` +
+            // `consulta` y bajan con el mismo filtro doble más la ventana. ⚠️ La tabla del ecocardiograma se
+            // llama `ecocadiograma_fetal` en el legado (con el typo): así la usa la web y así la sube el
+            // escritorio; escribirla «bien» dejaría el estudio sin bajar.
+            'eco_doppler' => ['consulta' => EcoDoppler::whereIn(TablasLegado::columnaHistoria('eco_doppler'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_doppler'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ultra_mama' => ['consulta' => UltraMama::whereIn(TablasLegado::columnaHistoria('ultra_mama'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ultra_mama'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ultra_abdominal' => ['consulta' => UltraAbdominal::whereIn(TablasLegado::columnaHistoria('ultra_abdominal'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ultra_abdominal'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ecocadiograma_fetal' => ['consulta' => EcoCardiogramaFetal::whereIn(TablasLegado::columnaHistoria('ecocadiograma_fetal'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ecocadiograma_fetal'), $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -352,6 +374,14 @@ class SyncAppDataController extends Controller
             'recipes' => ['consulta' => Recipe::whereIn('nrohistoria', $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn('nrohistoria', $historiasDeLaVentana())), 'columna' => 'id'],
+            // **El récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera y sin
+            // columna `recipe`; cada fila es un medicamento y repite la cédula y el nombre de la pareja. Se
+            // llavea por `nrohistoria` + `nroconsulta`, así que baja con el mismo filtro doble que `recipes`.
+            // La columna del número de historia se pregunta a `TablasLegado` porque esta tabla la llama
+            // `nrohistoria` y no `numhistoria`.
+            'recipes_pareja' => ['consulta' => RecipePareja::whereIn(TablasLegado::columnaHistoria('recipes_pareja'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('recipes_pareja'), $historiasDeLaVentana())), 'columna' => 'id'],
             // El nombre del medicamento de un récipe sale de acá (`recipes.descripcion` viene NULL en
             // los datos reales del legado). Solo lectura por ahora, igual que `recipes`.
             'vademecum' => ['consulta' => Vademecum::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
@@ -570,6 +600,11 @@ class SyncAppDataController extends Controller
             'motivo_consulta_paciente' => MotivoConsultaPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('motivo_consulta_paciente'), $numHistoria)->get(),
             'recipes' => Recipe::whereIn('reg_medico', $registrosMedicos)->where($de('recipes'), $numHistoria)->get(),
+            // El récipe de la pareja de la consulta (ola §9): se suma acá por el mismo motivo que el examen
+            // físico y los ecos —este pedido arma su payload a mano—; sin esta línea, la ficha de un paciente
+            // fuera de la ventana llegaba con sus récipes pero sin la pareja.
+            'recipes_pareja' => RecipePareja::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('recipes_pareja'), $numHistoria)->get(),
             // Los documentos, con la misma regla que el volcado: las plantillas vacías del legado no viajan.
             'constancia_obs' => ConstanciaObs::whereIn('reg_medico', $registrosMedicos)->where($de('constancia_obs'), $numHistoria)
                 ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")->get(),
@@ -603,6 +638,16 @@ class SyncAppDataController extends Controller
                 ->where($de('eco_obstetrico_tercer_2'), $numHistoria)->get(),
             'eco_obstetrico_tercer' => EcoObstetricoTercer::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('eco_obstetrico_tercer'), $numHistoria)->get(),
+            // Los cuatro de la ola §10: se suman acá por el mismo motivo que los anteriores —este pedido
+            // arma el payload a mano—, para que la ficha de un paciente fuera de la ventana llegue completa.
+            'eco_doppler' => EcoDoppler::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_doppler'), $numHistoria)->get(),
+            'ultra_mama' => UltraMama::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ultra_mama'), $numHistoria)->get(),
+            'ultra_abdominal' => UltraAbdominal::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ultra_abdominal'), $numHistoria)->get(),
+            'ecocadiograma_fetal' => EcoCardiogramaFetal::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ecocadiograma_fetal'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
         ];
 
@@ -679,6 +724,10 @@ class SyncAppDataController extends Controller
             'motivos_consulta' => $datos['motivos_consulta'] ?? $vacio,
             'motivo_consulta_paciente' => $datos['motivo_consulta_paciente'] ?? $vacio,
             'recipes' => $datos['recipes'] ?? $vacio,
+            // El récipe de la pareja (ola §9 de PLAN-MOVIL.md). El delta y el volcado lo arman desde `$plan`;
+            // el pedido puntual de una ficha lo trae en su payload armado a mano. La clave tiene que existir
+            // siempre: el app recorre una lista fija de tablas.
+            'recipes_pareja' => $datos['recipes_pareja'] ?? $vacio,
             'vademecum' => $datos['vademecum'] ?? $vacio,
             'tratamientos' => $datos['tratamientos'] ?? $vacio,
             'tratamientos_detalle' => $datos['tratamientos_detalle'] ?? $vacio,
@@ -701,6 +750,12 @@ class SyncAppDataController extends Controller
             'eco_obstetrico' => $datos['eco_obstetrico'] ?? $vacio,
             'eco_obstetrico_tercer_2' => $datos['eco_obstetrico_tercer_2'] ?? $vacio,
             'eco_obstetrico_tercer' => $datos['eco_obstetrico_tercer'] ?? $vacio,
+            // Los otros cuatro estudios (ola §10): Doppler perinatal, mamario, abdominal y ecocardiograma
+            // fetal. La clave tiene que existir siempre por el mismo motivo que las de arriba.
+            'eco_doppler' => $datos['eco_doppler'] ?? $vacio,
+            'ultra_mama' => $datos['ultra_mama'] ?? $vacio,
+            'ultra_abdominal' => $datos['ultra_abdominal'] ?? $vacio,
+            'ecocadiograma_fetal' => $datos['ecocadiograma_fetal'] ?? $vacio,
             // Los dos catálogos del antecedente (A4b de PLAN-MOVIL.md): de dónde sale el nombre que se
             // agrega y de dónde el de su tipo/agrupación.
             'antecedentes' => $datos['antecedentes'] ?? $vacio,
@@ -847,6 +902,15 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\GuardarEcoObstetrico::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoSegundo::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class),
+            // Y las de los **otros cuatro estudios** (ola §10 de PLAN-MOVIL.md): Doppler perinatal, mamario,
+            // abdominal y ecocardiograma fetal.
+            app(\App\Actions\Consulta\GuardarEcoDoppler::class),
+            app(\App\Actions\Consulta\GuardarEcoMamario::class),
+            app(\App\Actions\Consulta\GuardarEcoAbdominal::class),
+            app(\App\Actions\Consulta\GuardarEcoCardiogramaFetal::class),
+            // Y la del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera,
+            // crea o corrige en el lugar. Es la misma Action de la pestaña de la web (WEB-5.1b).
+            app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class),
         );
         $creadosAntes = count($creados);
 
@@ -1011,6 +1075,13 @@ class SyncAppDataController extends Controller
             // (`numhistoria`/`nroconsulta`) cuando la Action del estudio busca la fila por la clave del legado.
             'eco_pelvico' => 4, 'eco_obstetrico' => 4,
             'eco_obstetrico_tercer_2' => 4, 'eco_obstetrico_tercer' => 4,
+            // Los cuatro de la ola §10: también cuelgan de la consulta y van después de `consultas`.
+            'eco_doppler' => 4, 'ultra_mama' => 4,
+            'ultra_abdominal' => 4, 'ecocadiograma_fetal' => 4,
+            // El récipe de la pareja (ola §9) cuelga de la consulta como el del paciente: con 4 va después de
+            // `consultas`, así una consulta creada en este mismo lote ya tiene sus números cuando la Action
+            // busca la pareja por `nrohistoria` + `nroconsulta`.
+            'recipes_pareja' => 4,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
@@ -1419,6 +1490,11 @@ class SyncAppDataController extends Controller
             'eco_obstetrico' => EcoObstetrico::class,
             'eco_obstetrico_tercer_2' => EcoObstetricoSegundo::class,
             'eco_obstetrico_tercer' => EcoObstetricoTercer::class,
+            // Ola §10: los otros cuatro estudios, por el mismo camino.
+            'eco_doppler' => EcoDoppler::class,
+            'ultra_mama' => UltraMama::class,
+            'ultra_abdominal' => UltraAbdominal::class,
+            'ecocadiograma_fetal' => EcoCardiogramaFetal::class,
         ][$table];
     }
 

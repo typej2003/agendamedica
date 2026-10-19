@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
+use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
@@ -26,6 +27,10 @@ use Tests\TestCase;
  * pacientes de hoy del médico del contexto, en la sede del contexto y en orden de atención (las atendidas
  * primero). No cambia de día, no tiene navegación, buscador ni filtros, y ofrece las mismas acciones de la fila
  * de la agenda. La secretaría (y Root, que es administración) entran directo a la agenda.
+ *
+ * Desde O-34 (2026-10-18) el encabezado tiene la acción primaria **«Agregar paciente»**: el alta del que llega
+ * sin cita, que termina en la consulta del día (alta → historia → «¿Atender ahora?»). Está siempre, no sólo en
+ * el día vacío.
  *
  * `DatabaseTransactions`, como el resto de los tests de la web clínica.
  */
@@ -59,11 +64,11 @@ class InicioWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'inicio-test-' . uniqid();
+        $regMedico = 'inicio-test-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'inicio-' . uniqid() . '@example.com',
+            'email'                => 'inicio-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -89,7 +94,7 @@ class InicioWebTest extends TestCase
     {
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'inicio-secre-' . uniqid() . '@example.com',
+            'email'                => 'inicio-secre-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -105,7 +110,7 @@ class InicioWebTest extends TestCase
     {
         $root = User::create([
             'name'                 => 'Root',
-            'email'                => 'inicio-root-' . uniqid() . '@example.com',
+            'email'                => 'inicio-root-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -310,7 +315,79 @@ class InicioWebTest extends TestCase
             ->assertOk()
             ->assertSee('Hoy no hay pacientes')
             ->assertSee(route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString()]))
+            // «Agregar paciente» es del encabezado y se ve también en el día vacío; la tarjeta del vacío
+            // ofrece la otra salida —la agenda— y no repite el botón.
+            ->assertSee(route('clinica.pacientes.nuevo'), false)
+            ->assertSee('Agregar paciente');
+    }
+
+    // --------------------------------------------------------- «Agregar paciente» en el inicio (O-34)
+
+    /** El botón está **siempre**, no sólo en el día vacío: es el camino del paciente que llega sin cita. */
+    public function test_el_encabezado_ofrece_agregar_paciente_aunque_el_dia_tenga_pacientes(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->paciente($medico, 'Ana', 'Alvarez', 1001);
+        $this->cita($medico, $sede, 1001, '09:00:00');
+
+        $this->conContexto($user, $medico, $gineco, $sede)->get('/clinica')
+            ->assertOk()
+            ->assertSee('Agregar paciente')
+            ->assertSee(route('clinica.pacientes.nuevo'), false)
+            ->assertSee('data-tour="inicio-agregar"', false);
+    }
+
+    /**
+     * **El camino completo de «se sobreentiende para atender el mismo día»**: el botón del inicio lleva al alta,
+     * el alta numera la historia (O-04), la ficha ofrece «¿Atender ahora?» (O-05) y ese «sí» le crea la cita de hoy
+     * y abre la consulta. La prueba es de punta a punta a propósito: el botón no tiene reglas propias y lo que hay
+     * que cuidar es que el camino siga cerrado.
+     */
+    public function test_agregar_paciente_desde_el_inicio_termina_en_la_consulta_del_dia(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+
+        // 1) El inicio ofrece el alta y el alta abre.
+        $this->conContexto($user, $medico, $gineco, $sede)->get('/clinica')
+            ->assertOk()
             ->assertSee(route('clinica.pacientes.nuevo'), false);
+        $this->conContexto($user, $medico, $gineco, $sede)->get(route('clinica.pacientes.nuevo'))->assertOk();
+
+        // 2) El alta del recién llegado: queda con historia y con el ofrecimiento de atenderlo.
+        $alta = $this->conContexto($user, $medico, $gineco, $sede)->post('/clinica/pacientes', [
+            'nac'       => 'V',
+            'cedula'    => '24680135',
+            'apellidos' => 'Mendoza',
+            'nombres'   => 'Luisa',
+            'sexo'      => 'F',
+        ]);
+
+        $paciente = DB::table('pacientes')->where('cedula', '24680135')->first();
+        $this->assertNotNull($paciente);
+        $alta->assertRedirect(route('clinica.pacientes.ver', $paciente->id));
+        $alta->assertSessionHas('ofrecer_atender', $paciente->id);
+
+        // 3) La ficha ofrece «¿Atender ahora?».
+        $this->conContexto($user, $medico, $gineco, $sede)
+            ->get(route('clinica.pacientes.ver', $paciente->id))
+            ->assertOk()
+            ->assertSee('¿Atender ahora?', false);
+
+        // 4) El «sí»: la cita del día y la consulta abierta.
+        $atender = $this->conContexto($user, $medico, $gineco, $sede)
+            ->post(route('clinica.pacientes.atender', $paciente->id));
+
+        $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $consulta = Consulta::where('numhistoria', (int) $cita->numhistoria)->firstOrFail();
+
+        $atender->assertRedirect(route('clinica.consulta', $consulta->id));
+        $this->assertSame($this->hoy->toDateString(), Carbon::parse($cita->fecha)->toDateString());
+        $this->assertSame($sede->medical_center_id, (int) $cita->medical_center_id);
+        $this->assertSame(1, (int) $cita->atendido);
+        // El alta web numeró la historia en el mismo paso (O-04): sin número, «Atender ahora» no existiría.
+        $this->assertNotNull(DB::table('medico_pacientes')->where('paciente_id', $paciente->id)->value('numhistoria'));
     }
 
     public function test_el_inicio_ya_no_son_las_tarjetas_de_modulos(): void

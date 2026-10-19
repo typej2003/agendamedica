@@ -52,6 +52,24 @@ trait MapaDelEcoObstetrico
     }
 
     /**
+     * **Un entero**, como los del escritorio con máscara `###` y spin (`lcc`, `dbp`, `tn`): el navegador no
+     * deja escribir decimales ni texto y el servidor valida `integer` (el `tipo` del mapa es lo que arma las
+     * reglas, en `ConsultaEstudioController::reglasDe()`).
+     */
+    private static function entero(string $columna, string $etiqueta, ?string $ayuda = null): array
+    {
+        return ['columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'numero', 'entero' => true,
+            'ayuda' => $ayuda ?? $etiqueta];
+    }
+
+    /** **Un decimal** de dos cifras, como los del escritorio con máscara `###.00` (las medidas en mm). */
+    private static function decimal(string $columna, string $etiqueta, ?string $ayuda = null): array
+    {
+        return ['columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'numero', 'paso' => '0.01',
+            'ayuda' => $ayuda ?? $etiqueta];
+    }
+
+    /**
      * Un campo con lista, con sus pares **texto => código** tal como los guarda el escritorio.
      *
      * @param  array<string,string>  $pares

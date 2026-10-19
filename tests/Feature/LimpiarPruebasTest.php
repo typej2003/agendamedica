@@ -47,13 +47,13 @@ class LimpiarPruebasTest extends TestCase
 
     private function administradorReal(): User
     {
-        return $this->cuentas->crearAdministrador('Admin Real', 'admin-real-' . uniqid() . '@ddr.com')['user'];
+        return $this->cuentas->crearAdministrador('Admin Real', 'admin-real-' . substr(uniqid(), -6) . '@ddr.com')['user'];
     }
 
     public function test_sin_confirmar_solo_simula_y_no_borra_nada(): void
     {
         $this->administradorReal();
-        $prueba = $this->medicoConDatos('carga-prueba-98-' . uniqid() . '@example.com', 'gineco-prueba-98');
+        $prueba = $this->medicoConDatos('carga-prueba-' . substr(uniqid(), -6) . '@example.com', 'gineco-prueba-98');
 
         $this->artisan('produccion:limpiar-pruebas')->assertExitCode(0);
 
@@ -67,7 +67,7 @@ class LimpiarPruebasTest extends TestCase
         // En el entorno de pruebas los administradores sembrados (root@admin.com, admin@gmail.com) son de prueba.
         User::administradores()->whereNotIn('email', ['root@admin.com', 'admin@gmail.com'])->get()
             ->each(fn (User $u) => $u->syncRoles([]));
-        $prueba = $this->medicoConDatos('carga-prueba-97-' . uniqid() . '@example.com', 'gineco-prueba-97');
+        $prueba = $this->medicoConDatos('carga-prueba-' . substr(uniqid(), -6) . '@example.com', 'gineco-prueba-97');
 
         $this->artisan('produccion:limpiar-pruebas', ['--confirmar' => true])
             ->assertExitCode(1);
@@ -78,8 +78,8 @@ class LimpiarPruebasTest extends TestCase
     public function test_confirmado_borra_lo_de_prueba_y_deja_lo_real(): void
     {
         $admin = $this->administradorReal();
-        $real = $this->medicoConDatos('doctora-real-' . uniqid() . '@clinica.com', 'real-' . uniqid());
-        $prueba = $this->medicoConDatos('carga-prueba-96-' . uniqid() . '@example.com', 'gineco-prueba-96');
+        $real = $this->medicoConDatos('doctora-real-' . substr(uniqid(), -6) . '@clinica.com', 'real-' . substr(uniqid(), -6));
+        $prueba = $this->medicoConDatos('carga-prueba-' . substr(uniqid(), -6) . '@example.com', 'gineco-prueba-96');
 
         $this->artisan('produccion:limpiar-pruebas', ['--confirmar' => true])
             ->expectsConfirmation('Esto borra esas cuentas y sus datos de forma definitiva. ¿Continuar?', 'yes')
@@ -106,8 +106,8 @@ class LimpiarPruebasTest extends TestCase
     public function test_un_paciente_compartido_con_un_medico_real_no_se_borra(): void
     {
         $this->administradorReal();
-        $real = $this->medicoConDatos('doctora-real-' . uniqid() . '@clinica.com', 'real-' . uniqid());
-        $prueba = $this->medicoConDatos('carga-prueba-95-' . uniqid() . '@example.com', 'gineco-prueba-95');
+        $real = $this->medicoConDatos('doctora-real-' . substr(uniqid(), -6) . '@clinica.com', 'real-' . substr(uniqid(), -6));
+        $prueba = $this->medicoConDatos('carga-prueba-' . substr(uniqid(), -6) . '@example.com', 'gineco-prueba-95');
         MedicoPaciente::create(['medico_id' => $real['medico']->id, 'paciente_id' => $prueba['paciente']->id, 'reg_medico' => $real['medico']->reg_medico]);
 
         $this->artisan('produccion:limpiar-pruebas', ['--confirmar' => true])
@@ -120,7 +120,7 @@ class LimpiarPruebasTest extends TestCase
     public function test_conservar_deja_la_cuenta_pedida(): void
     {
         $this->administradorReal();
-        $prueba = $this->medicoConDatos('carga-prueba-94-' . uniqid() . '@example.com', 'gineco-prueba-94');
+        $prueba = $this->medicoConDatos('carga-prueba-' . substr(uniqid(), -6) . '@example.com', 'gineco-prueba-94');
 
         $this->artisan('produccion:limpiar-pruebas', ['--confirmar' => true, '--conservar' => [$prueba['user']->email]])
             ->expectsConfirmation('Esto borra esas cuentas y sus datos de forma definitiva. ¿Continuar?', 'yes')

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Clinica\Embarazo\Gesta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -43,6 +44,28 @@ class PrenaExamenB extends Model
     ];
 
     /**
+     * **Los cuatro reactivos del laboratorio y el código de una letra que guarda el escritorio**
+     * (columna => [código => rótulo]).
+     *
+     * Las cuatro columnas son `VARCHAR(1)` en MySQL (`prena_exames_b.hiv`, `vdrl`, `toxo_igm` y `toxo_igg`,
+     * ver el dump en `Docs/MICONSULTAGI-legado/archivos sql/export_parte_11.sql`) y el DataWindow guarda
+     * **un código**, no la palabra: sus `values` son `"+  P/-  N/"` en `hiv`, `"R  R/N  N/"` en `vdrl` y
+     * `"S  S/N  N/"` en las dos toxo (`d_pacientes_exa_b.srd:26`, `:27`, `:39` y `:40`); lo que va a la
+     * columna es la **segunda** mitad de cada par y lo de la izquierda es lo que se ve en el escritorio.
+     *
+     * ⚠️ **Guardar el rótulo entero revienta en MySQL, no en SQLite.** La web escribía «Negativo» en estas
+     * columnas y en producción —que es MySQL en modo estricto— el `INSERT` moría con
+     * `SQLSTATE[22001] … 1406 Data too long for column 'hiv'`; en SQLite, que no mira el largo, el mismo
+     * guardado pasaba sin ruido y los tests no lo veían. Es la trampa 140 de `TRAMPAS.md`.
+     */
+    public const REACTIVOS = [
+        'hiv' => ['P' => 'Positivo', 'N' => 'Negativo'],
+        'vdrl' => ['R' => 'Reactivo', 'N' => 'No reactivo'],
+        'toxo_igm' => ['S' => 'Positivo', 'N' => 'Negativo'],
+        'toxo_igg' => ['S' => 'Positivo', 'N' => 'Negativo'],
+    ];
+
+    /**
      * **El mapa de los campos del laboratorio**: qué columna, con qué rótulo y con qué control.
      *
      * Los rótulos son los del DataWindow de la pestaña (`d_pacientes_exa_b.srd:43-61`), abreviados como los
@@ -59,45 +82,45 @@ class PrenaExamenB extends Model
      * como el formulario de **una fecha** (las fechas son los chips de la pestaña) y no inventa una grilla.
      *
      * El tipo `opciones` es para los cuatro que el escritorio pinta como casillas con el resultado
-     * (`hiv`, `vdrl`, `toxo_igm`, `toxo_igg`): la fuente no declara sus valores posibles, así que se
-     * ofrecen *Positivo*, *Negativo* y *No reactivo* tal cual se escriben en un laboratorio.
+     * (`hiv`, `vdrl`, `toxo_igm`, `toxo_igg`): **el valor de cada opción es el código de una letra** que va a
+     * la columna (`N`, `P`, `R`, `S`; ver `REACTIVOS`) y el texto es lo que se lee. La fuente declara esos
+     * códigos en el `values` de cada campo, así que no se inventan.
      *
      * @return array<int,array<string,mixed>>
      */
     public static function campos(): array
     {
-        $reactivo = ['tipo' => 'opciones', 'ayuda' => 'El resultado del laboratorio.',
-            'opciones' => [
-                ['valor' => 'Negativo', 'texto' => 'Negativo'],
-                ['valor' => 'Positivo', 'texto' => 'Positivo'],
-                ['valor' => 'No reactivo', 'texto' => 'No reactivo'],
-            ]];
+        // Un reactivo: el desplegable con los códigos del escritorio (no el rótulo, que no entra en un
+        // `char(1)`).
+        $reactivo = fn (string $columna) => ['tipo' => 'opciones', 'ayuda' => 'El resultado del laboratorio.',
+            'opciones' => self::opcionesDelReactivo($columna)];
 
         // Los dos renglones del DataWindow: su panel de exámenes y «Otros estudios».
         $panel = ['bloque' => 'panel', 'ancho' => 'col-6 col-md-2'];
         $otros = ['bloque' => 'otros', 'rotulo' => 'Otros estudios'];
 
+        // Un número del laboratorio: **la columna del escritorio es `char(5)`**, así que su tope de
+        // validación es 5 y no el genérico de 20 (un valor más largo también desborda el `INSERT` en MySQL,
+        // trampa 140). `numero()` de la Action deja en blanco lo que no es número.
+        $numero = ['tipo' => 'numero', 'max' => 5];
+
         return [
-            ['columna' => 'hemoglobina', 'etiqueta' => 'Hb.', 'tipo' => 'numero', 'ayuda' => 'Hemoglobina.'] + $panel,
-            ['columna' => 'hematoc', 'etiqueta' => 'Hto', 'tipo' => 'numero', 'ayuda' => 'Hematocrito.'] + $panel,
-            ['columna' => 'glob_blanco', 'etiqueta' => 'Glob. Blancos', 'tipo' => 'numero', 'ayuda' => 'Glóbulos blancos.'] + $panel,
-            ['columna' => 'neut_linf', 'etiqueta' => 'Linf.', 'tipo' => 'numero', 'ayuda' => 'Neutrófilos y linfocitos (%).'] + $panel,
-            ['columna' => 'triglicer', 'etiqueta' => 'Trig.', 'tipo' => 'numero', 'ayuda' => 'Triglicéridos.'] + $panel,
-            ['columna' => 'colesterol', 'etiqueta' => 'Coles', 'tipo' => 'numero', 'ayuda' => 'Colesterol.'] + $panel,
-            ['columna' => 'glicemia_basal', 'etiqueta' => 'Glice.', 'tipo' => 'numero', 'ayuda' => 'Glicemia basal.'] + $panel,
-            ['columna' => 'ac_urico', 'etiqueta' => 'Ac.U.', 'tipo' => 'numero', 'ayuda' => 'Ácido úrico.'] + $panel,
-            ['columna' => 'progester', 'etiqueta' => 'Progesterona', 'tipo' => 'numero',
-                'ayuda' => 'El escritorio la rotula «PT».'] + $panel,
-            ['columna' => 'prolactina', 'etiqueta' => 'Prolactina', 'tipo' => 'numero',
-                'ayuda' => 'El escritorio la rotula «PTT».'] + $panel,
-            ['columna' => 'hiv', 'etiqueta' => 'HIV', 'ayuda' => 'VIH.'] + $reactivo + $panel,
-            ['columna' => 'vdrl', 'etiqueta' => 'VDRL', 'ayuda' => 'VDRL.'] + $reactivo + $panel,
-            ['columna' => 'toxo_igm', 'etiqueta' => 'Toxo IgM', 'ayuda' => 'Toxoplasmosis IgM.'] + $reactivo + $panel,
-            ['columna' => 'toxo_igg', 'etiqueta' => 'Toxo IgG', 'ayuda' => 'Toxoplasmosis IgG.'] + $reactivo + $panel,
-            ['columna' => 'urea', 'etiqueta' => 'Urea', 'tipo' => 'numero', 'ayuda' => 'Urea.',
-                'ancho' => 'col-6 col-md-2'] + $otros,
-            ['columna' => 'creatinina', 'etiqueta' => 'Crea.', 'tipo' => 'numero', 'ayuda' => 'Creatinina.',
-                'ancho' => 'col-6 col-md-2'] + $otros,
+            ['columna' => 'hemoglobina', 'etiqueta' => 'Hb.', 'ayuda' => 'Hemoglobina.'] + $numero + $panel,
+            ['columna' => 'hematoc', 'etiqueta' => 'Hto', 'ayuda' => 'Hematocrito.'] + $numero + $panel,
+            ['columna' => 'glob_blanco', 'etiqueta' => 'Glob. Blancos', 'ayuda' => 'Glóbulos blancos.'] + $numero + $panel,
+            ['columna' => 'neut_linf', 'etiqueta' => 'Linf.', 'ayuda' => 'Neutrófilos y linfocitos (%).'] + $numero + $panel,
+            ['columna' => 'triglicer', 'etiqueta' => 'Trig.', 'ayuda' => 'Triglicéridos.'] + $numero + $panel,
+            ['columna' => 'colesterol', 'etiqueta' => 'Coles', 'ayuda' => 'Colesterol.'] + $numero + $panel,
+            ['columna' => 'glicemia_basal', 'etiqueta' => 'Glice.', 'ayuda' => 'Glicemia basal.'] + $numero + $panel,
+            ['columna' => 'ac_urico', 'etiqueta' => 'Ac.U.', 'ayuda' => 'Ácido úrico.'] + $numero + $panel,
+            ['columna' => 'progester', 'etiqueta' => 'Progesterona', 'ayuda' => 'El escritorio la rotula «PT».'] + $numero + $panel,
+            ['columna' => 'prolactina', 'etiqueta' => 'Prolactina', 'ayuda' => 'El escritorio la rotula «PTT».'] + $numero + $panel,
+            ['columna' => 'hiv', 'etiqueta' => 'HIV', 'ayuda' => 'VIH.'] + $reactivo('hiv') + $panel,
+            ['columna' => 'vdrl', 'etiqueta' => 'VDRL', 'ayuda' => 'VDRL.'] + $reactivo('vdrl') + $panel,
+            ['columna' => 'toxo_igm', 'etiqueta' => 'Toxo IgM', 'ayuda' => 'Toxoplasmosis IgM.'] + $reactivo('toxo_igm') + $panel,
+            ['columna' => 'toxo_igg', 'etiqueta' => 'Toxo IgG', 'ayuda' => 'Toxoplasmosis IgG.'] + $reactivo('toxo_igg') + $panel,
+            ['columna' => 'urea', 'etiqueta' => 'Urea', 'ayuda' => 'Urea.', 'ancho' => 'col-6 col-md-2'] + $numero + $otros,
+            ['columna' => 'creatinina', 'etiqueta' => 'Crea.', 'ayuda' => 'Creatinina.', 'ancho' => 'col-6 col-md-2'] + $numero + $otros,
             ['columna' => 'orina', 'etiqueta' => 'Orina', 'tipo' => 'texto',
                 'ayuda' => 'El resultado del examen de orina.', 'ancho' => 'col-6 col-md-2'] + $otros,
             ['columna' => 'heces', 'etiqueta' => 'Heces', 'tipo' => 'texto',
@@ -105,6 +128,91 @@ class PrenaExamenB extends Model
             ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'area',
                 'ayuda' => 'Lo que no entra en las otras casillas.', 'ancho' => 'col-12 col-md-3'] + $otros,
         ];
+    }
+
+    /**
+     * ¿Es uno de los cuatro reactivos (los que se guardan con un código de una letra)?
+     */
+    public static function esReactivo(string $columna): bool
+    {
+        return array_key_exists($columna, self::REACTIVOS);
+    }
+
+    /**
+     * **El valor que va a la columna de un reactivo**: su código de una letra.
+     *
+     * Acepta el código (`N`, `P`, `R`, `S`) y también el rótulo (`Negativo`, `No reactivo`…), porque la web
+     * guardó los rótulos hasta la trampa 140 y un formulario abierto antes del arreglo los sigue mandando.
+     * Un código de una letra que no esté en la lista del escritorio **se conserva** (puede venir de una fila
+     * del escritorio y no se inventa una traducción); cualquier otra cosa se guarda en blanco: no entra en
+     * la columna y guardarla revienta el `INSERT` en MySQL.
+     *
+     * @param  mixed  $crudo  lo que llegó del formulario
+     */
+    public static function codigoDe(string $columna, $crudo): ?string
+    {
+        $texto = Gesta::texto($crudo);
+
+        if ($texto === null) {
+            return null;
+        }
+
+        $reactivos = self::REACTIVOS[$columna] ?? [];
+
+        if (isset($reactivos[$texto])) {
+            return $texto;
+        }
+
+        foreach ($reactivos as $codigo => $rotulo) {
+            if (strcasecmp($rotulo, $texto) === 0) {
+                return $codigo;
+            }
+        }
+
+        return mb_strlen($texto) === 1 ? $texto : null;
+    }
+
+    /**
+     * **Lo que se muestra** de un reactivo: el rótulo de su código. Lo que ya está escrito como rótulo se
+     * devuelve tal cual (las filas que la web guardó antes de la trampa 140) y un código desconocido del
+     * escritorio se muestra como está. En las demás columnas no cambia nada.
+     */
+    public static function textoDe(string $columna, ?string $valor): ?string
+    {
+        if ($valor === null || $valor === '') {
+            return $valor;
+        }
+
+        $reactivos = self::REACTIVOS[$columna] ?? [];
+
+        if (isset($reactivos[$valor])) {
+            return $reactivos[$valor];
+        }
+
+        foreach ($reactivos as $rotulo) {
+            if (strcasecmp($rotulo, $valor) === 0) {
+                return $rotulo;
+            }
+        }
+
+        return $valor;
+    }
+
+    /**
+     * Las opciones del desplegable de un reactivo: **la clave es el código** que va a la columna y el texto
+     * es el rótulo (como `PreNatalDesarrolloFino::presentacion`).
+     *
+     * @return array<int,array{valor:string,texto:string}>
+     */
+    private static function opcionesDelReactivo(string $columna): array
+    {
+        $opciones = [];
+
+        foreach (self::REACTIVOS[$columna] as $codigo => $rotulo) {
+            $opciones[] = ['valor' => $codigo, 'texto' => $rotulo];
+        }
+
+        return $opciones;
     }
 
     /**

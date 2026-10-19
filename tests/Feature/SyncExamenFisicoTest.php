@@ -40,10 +40,10 @@ class SyncExamenFisicoTest extends TestCase
 
     private function medico(bool $autenticar = true): Medico
     {
-        $regMedico = 'test-examen-' . uniqid();
+        $regMedico = 'test-examen-' . substr(uniqid(), -6);
         $user = User::create([
             'name' => 'Doctora de prueba',
-            'email' => 'doctora-' . uniqid() . '@example.com',
+            'email' => 'doctora-' . substr(uniqid(), -6) . '@example.com',
             'password' => Hash::make('secreto123'),
         ]);
         $medico = Medico::create([
@@ -149,7 +149,7 @@ class SyncExamenFisicoTest extends TestCase
         // El número de historia es **por médico**: la fila del otro tiene el mismo `historia` y el mismo
         // `consulta`, y aun así no puede bajar a este teléfono.
         $ajeno = ExamenFisico::create([
-            'reg_medico' => 'otro-registro-' . uniqid(),
+            'reg_medico' => 'otro-registro' . substr(uniqid(), -6),
             'historia' => $consulta->numhistoria,
             'consulta' => $consulta->nroconsulta,
             'tension' => '180/110',

@@ -62,11 +62,11 @@ class AtenderAlPacienteWebTest extends TestCase
         $this->seed(EspecialidadesYModulosSeeder::class);
 
         $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
-        $regMedico = 'atender-' . uniqid();
+        $regMedico = 'atender-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name'                 => 'Usuario de prueba',
-            'email'                => 'atender-' . uniqid() . '@example.com',
+            'email'                => 'atender-' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,
@@ -364,7 +364,7 @@ class AtenderAlPacienteWebTest extends TestCase
         // La secretaría no trabaja la consulta (WEB-4.9): el «sí» del diálogo le responde 403 y no escribe.
         $secretaria = User::create([
             'name'                 => 'Secretaria',
-            'email'                => 'atender-secre-' . uniqid() . '@example.com',
+            'email'                => 'atender-secre' . substr(uniqid(), -6) . '@example.com',
             'password'             => Hash::make('secreto123'),
             'is_active'            => true,
             'must_change_password' => false,

@@ -32,9 +32,12 @@ class Welcome extends Component
 
     public function buscarPorEspecialidad($specialtyId)
     {
-        return redirect()->route('medicos.search', [
-            'specialty' => $specialtyId,
-        ]);
+        // La tarjeta de la especialidad lleva al **portal público de reservas**, que muestra solo a los
+        // médicos con agenda publicada. El listado viejo (`medicos.search`) sigue existiendo pero ya no es
+        // la puerta: su «Agendar» mandaba al login.
+        $slug = Specialty::whereKey($specialtyId)->value('slug');
+
+        return redirect()->route('reservas.catalogo', $slug ? ['especialidad' => $slug] : []);
     }
 
     public function limpiarFiltro()

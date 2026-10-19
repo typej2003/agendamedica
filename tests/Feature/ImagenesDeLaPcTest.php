@@ -64,7 +64,7 @@ class ImagenesDeLaPcTest extends TestCase
 
     private function medico(?string $reg = null): Medico
     {
-        $reg ??= 'imgpc-' . uniqid();
+        $reg ??= 'imgpc-' . substr(uniqid(), -6);
 
         $user = User::create([
             'name' => 'Médico ' . $reg,
@@ -92,7 +92,7 @@ class ImagenesDeLaPcTest extends TestCase
         $token = SyncCredential::generarToken();
         SyncCredential::create([
             'reg_medico' => $reg,
-            'machine_label' => 'EQUIPO-' . uniqid(),
+            'machine_label' => 'EQUIPO-' . substr(uniqid(), -6),
             'machine_host' => 'PC-TEST',
             'bound_to_machine' => false,
             'token_hash' => SyncCredential::hashToken($token),

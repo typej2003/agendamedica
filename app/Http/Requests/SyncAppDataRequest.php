@@ -86,6 +86,13 @@ class SyncAppDataRequest extends FormRequest
         'eco_obstetrico' => \App\Clinica\Consulta\EcoObstetrico::class,
         'eco_obstetrico_tercer_2' => \App\Clinica\Consulta\EcoObstetricoSegundo::class,
         'eco_obstetrico_tercer' => \App\Clinica\Consulta\EcoObstetricoTercero::class,
+        // Ola §10: el Doppler perinatal, el mamario, el abdominal y el ecocardiograma fetal. Sus tablas
+        // legadas se llaman `eco_doppler`, `ultra_mama`, `ultra_abdominal` y `ecocadiograma_fetal` (con el
+        // typo del legado en la última).
+        'eco_doppler' => \App\Clinica\Consulta\EcoDoppler::class,
+        'ultra_mama' => \App\Clinica\Consulta\EcoMamario::class,
+        'ultra_abdominal' => \App\Clinica\Consulta\EcoAbdominal::class,
+        'ecocadiograma_fetal' => \App\Clinica\Consulta\EcoCardiogramaFetal::class,
     ];
 
     /**
@@ -186,6 +193,9 @@ class SyncAppDataRequest extends FormRequest
         // —lo que el escritorio le mostró, más lo que cargó él— y cada columna va por el camino de A1, con
         // su last-write-wins y su rastro. Cuáles columnas de cada estudio, lo dice `columnasEditables`.
         'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
+        // Ola §10: los otros cuatro estudios (Doppler perinatal, mamario, abdominal y ecocardiograma fetal).
+        // Las columnas de cada uno salen de su mapa, igual que las de los gineco-obstétricos.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
     ];
 
     /**
@@ -244,6 +254,14 @@ class SyncAppDataRequest extends FormRequest
         // columnas que el médico cargó y el servidor resuelve a qué fila van con la Action de la web de cada
         // estudio. Las columnas aceptadas son las de su mapa del dato (`columnasEditables`).
         'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
+        // Los cuatro de la ola §10: mismas reglas que los anteriores —el teléfono carga y corrige el estudio
+        // con la Action de su pantalla de la web, que resuelve la clave del legado `historia` + `consulta`—.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
+        // La ola §9 de PLAN-MOVIL.md: el **récipe de la pareja**. Es una creación clínica porque la fila
+        // cuelga de la consulta con la clave del legado —`nrohistoria` + `nroconsulta`— y no tiene número ni
+        // cabecera: el teléfono manda la pareja (cédula y nombre) y sus medicamentos, y el servidor los
+        // escribe con la Action de la web (`GuardarRecipeDeLaPareja`), que crea o corrige en el lugar.
+        'recipes_pareja',
     ];
 
     /**
@@ -263,6 +281,13 @@ class SyncAppDataRequest extends FormRequest
         // ediciones de A1: sin ellas, `changes.*.table` responde **422 y rechaza el lote entero** —también
         // el pull—, que es justo lo que el comentario de la clase evita.
         'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
+        // El récipe de la pareja (ola §9 de PLAN-MOVIL.md): viaja como creación clínica; tiene que estar acá
+        // por el mismo motivo que los ecos —sin esta entrada, `changes.*.table` responde 422 y rechaza el
+        // lote entero, incluido el pull—.
+        'recipes_pareja',
+        // Los cuatro de la ola §10, por el mismo motivo que los ecos: sin esta entrada, `changes.*.table`
+        // responde 422 y rechaza el lote entero, incluido el pull.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
     ];
 
     /**
@@ -320,6 +345,13 @@ class SyncAppDataRequest extends FormRequest
             'changes.*.codemotivo' => ['sometimes', 'nullable', 'string', 'max:20'],
             'changes.*.fecha' => ['sometimes', 'nullable', 'string'],
             'changes.*.items' => ['sometimes', 'array'],
+            // El récipe de la pareja (ola §9 de PLAN-MOVIL.md): la cédula y el nombre de la pareja son la
+            // **cabecera** del récipe —viajan con la creación, como `fecha` e `items`, y no en `columns`—,
+            // porque se repiten en todas sus filas y no son columnas de la consulta. Los topes del esquema
+            // (`varchar(10)` y `varchar(200)`) los valida la Action, que rechaza **esa** creación; acá sólo
+            // se comprueba la forma, para no responder 422 y trabar el lote entero.
+            'changes.*.cedula' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'changes.*.nombre' => ['sometimes', 'nullable', 'string', 'max:200'],
 
             // `reorder`: mover una fila dentro de su grupo. En vez de mandar un `updated` por
             // cada fila desplazada, se manda el movimiento y el servidor corre el resto con un

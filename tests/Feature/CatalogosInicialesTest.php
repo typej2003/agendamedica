@@ -59,9 +59,9 @@ class CatalogosInicialesTest extends TestCase
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
         $esp = Specialty::firstOrCreate(['slug' => $especialidad], ['name' => ucfirst($especialidad)]);
-        $reg = 'cat-ini-' . uniqid();
+        $reg = 'cat-ini-' . substr(uniqid(), -6);
 
-        $user = User::create(['name' => 'Usuario', 'email' => 'cat-ini-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
+        $user = User::create(['name' => 'Usuario', 'email' => 'cat-ini-' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
         $user->assignRole('Medico');
         $medico = Medico::create(['user_id' => $user->id, 'name' => 'Dra', 'lastname' => 'Inicial', 'email' => $user->email, 'password' => $user->password, 'reg_medico' => $reg]);
         $medico->specialties()->attach($esp->id);
@@ -77,7 +77,7 @@ class CatalogosInicialesTest extends TestCase
 
     private function admin(): User
     {
-        $user = app(CuentaService::class)->crearAdministrador('Admin Cat', 'admin-cat-' . uniqid() . '@example.com')['user'];
+        $user = app(CuentaService::class)->crearAdministrador('Admin Cat', 'admin-cat-' . substr(uniqid(), -6) . '@example.com')['user'];
         $user->forceFill(['must_change_password' => false])->save();
 
         return $user;
@@ -143,7 +143,7 @@ class CatalogosInicialesTest extends TestCase
     {
         [, $medico] = $this->medicoConAcceso();
         $this->ini('motivos_consulta', ['codemotivo' => '0001', 'descripcion' => 'CONTROL']);
-        $segundo = 'cat-ini-segundo-' . uniqid();
+        $segundo = 'cat-ini-segun' . substr(uniqid(), -6);
         MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $segundo]);
         $this->propia('motivos_consulta', $segundo, ['codemotivo' => '0040', 'descripcion' => 'FIEBRE']);
 
@@ -302,7 +302,7 @@ class CatalogosInicialesTest extends TestCase
     public function test_la_secretaria_no_carga_el_catalogo_inicial(): void
     {
         [, $medico, $pediatria] = $this->medicoConAcceso();
-        $secretaria = User::create(['name' => 'Secre', 'email' => 'cat-ini-secre-' . uniqid() . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
+        $secretaria = User::create(['name' => 'Secre', 'email' => 'cat-ini-secre' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
         $secretaria->assignRole('Secretaria');
         MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
 

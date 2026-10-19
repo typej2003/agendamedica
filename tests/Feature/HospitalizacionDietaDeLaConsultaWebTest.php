@@ -352,10 +352,10 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         [, $ajeno] = $this->medicoConAcceso();
         DB::table('formato_print')->insert([
-            ['reg_medico' => $medico->reg_medico, 'codigo' => 'DI001', 'titulo' => 'DIETA BLANDA', 'descripcion' => 'Caldos y purés.', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
-            ['reg_medico' => $medico->reg_medico, 'codigo' => 'IM001', 'titulo' => 'ES DE INFORME', 'descripcion' => 'No debe salir.', 'tipo' => 'IM', 'created_at' => now(), 'updated_at' => now()],
-            ['reg_medico' => $medico->reg_medico, 'codigo' => 'DI002', 'titulo' => 'VACIA', 'descripcion' => 'none', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
-            ['reg_medico' => $ajeno->reg_medico, 'codigo' => 'DI003', 'titulo' => 'DE OTRO MEDICO', 'descripcion' => 'Tampoco.', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
+            ['reg_medico' => $medico->reg_medico, 'codigo' => 'D001', 'titulo' => 'DIETA BLANDA', 'descripcion' => 'Caldos y purés.', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
+            ['reg_medico' => $medico->reg_medico, 'codigo' => 'I001', 'titulo' => 'ES DE INFORME', 'descripcion' => 'No debe salir.', 'tipo' => 'IM', 'created_at' => now(), 'updated_at' => now()],
+            ['reg_medico' => $medico->reg_medico, 'codigo' => 'D002', 'titulo' => 'VACIA', 'descripcion' => 'none', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
+            ['reg_medico' => $ajeno->reg_medico, 'codigo' => 'D003', 'titulo' => 'DE OTRO MEDICO', 'descripcion' => 'Tampoco.', 'tipo' => 'DI', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $pantalla = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'dieta'));
