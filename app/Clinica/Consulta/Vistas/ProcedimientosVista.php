@@ -19,6 +19,8 @@ final class ProcedimientosVista
      * @param  string  $urlGuardar  a dónde postea el formulario (lleva el tipo en la ruta)
      * @param  string  $urlVolver  la vuelta a la sección (el "Cancelar" de la guía de UI)
      * @param  bool  $cargada  si la endoscopía activa ya tiene datos
+     * @param  EcoAbdominalVista|null  $eco  el eco abdominal, cuando la pestaña activa es la suya: el ítem
+     *                                       «Procedimientos» del escritorio también abre `w_cargar_visualizar_eco_abdominal`
      */
     public function __construct(
         private string $titulo,
@@ -27,7 +29,19 @@ final class ProcedimientosVista
         private string $urlGuardar,
         private string $urlVolver = '',
         private bool $cargada = false,
+        private ?EcoAbdominalVista $eco = null,
     ) {
+    }
+
+    /** ¿La pestaña activa es la del eco abdominal? (entonces el parcial que se pinta es el del estudio) */
+    public function esEcoAbdominal(): bool
+    {
+        return $this->eco !== null;
+    }
+
+    public function eco(): ?EcoAbdominalVista
+    {
+        return $this->eco;
     }
 
     public function titulo(): string

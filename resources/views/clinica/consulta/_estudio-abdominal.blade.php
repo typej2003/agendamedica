@@ -26,6 +26,12 @@
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
+            {{-- Cuando el eco se abre desde **Procedimientos** (gastroenterología pediátrica, 2026-10-19), el
+                 guardado vuelve a esa sección y no a la del estudio. --}}
+            @if (! empty($volverA))
+                <input type="hidden" name="volver" value="{{ $volverA }}">
+            @endif
+
             @foreach ($vm->grupos() as $grupo)
                 <h3 class="h6 mt-4 mb-2">
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}

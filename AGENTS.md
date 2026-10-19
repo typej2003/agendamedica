@@ -123,11 +123,12 @@ consulta.
   `ProcedimientosVista` + `_procedimientos.blade.php` la pantalla, `ConsultaProcedimientosController` la ruta
   `POST /clinica/consulta/{consulta}/procedimientos/{tipo}` y la sección `procedimientos` del catálogo (postgrado
   `gastroenterologia-pediatrica`, cuya `secciones` pasó de `endoscopias` a `procedimientos`). Modelos
-  `EndoscopiaSuperior` y `EndoscopiaInferior`. Tests: `Unit/Clinica/EndoscopiaDigestivaTest` (5) y
-  `Feature/ConsultaProcedimientosWebTest` (6). **Falta** la pestaña de la eco abdominal (abre desde este mismo ítem en
-  el escritorio).
-- **Falta**: las pantallas de los otros postgrados (quirúrgico y ecografía pediátrica), la eco abdominal de
-  Procedimientos y el formato en blanco de esos paneles. Detalle y evidencia del fuente en
+  `EndoscopiaSuperior` y `EndoscopiaInferior`. La **tercera pestaña es la eco abdominal** (el ítem también abre
+  `w_cargar_visualizar_eco_abdominal`): reusa `EcoAbdominalVista` y su parcial del estudio, y el guardado lleva
+  `volver = procedimientos` para volver a esta sección (`ConsultaEstudioController::destino`). Tests:
+  `Unit/Clinica/EndoscopiaDigestivaTest` (5) y `Feature/ConsultaProcedimientosWebTest` (7).
+- **Falta**: las pantallas de los otros postgrados (quirúrgico y ecografía pediátrica), el formato en blanco de esos
+  paneles y el informe impreso de las endoscopías. Detalle y evidencia del fuente en
   `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.

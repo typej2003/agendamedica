@@ -1049,10 +1049,14 @@ class ConsultaController extends Controller
             // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): el ítem 8 del árbol, con una pestaña por
             // endoscopía digestiva. El `&pestana=` elige el tipo, como el `&tipo=` del estudio.
             $tipo = (string) request()->query('pestana', EndoscopiaDigestiva::SUPERIOR);
-            $tipo = EndoscopiaDigestiva::existe($tipo) ? $tipo : EndoscopiaDigestiva::SUPERIOR;
+            // La pestaña del eco abdominal viaja con la misma clave que las endoscopías; cualquier otra vuelve a la
+            // primera.
+            if ($tipo !== 'ecoabdominal' && ! EndoscopiaDigestiva::existe($tipo)) {
+                $tipo = EndoscopiaDigestiva::SUPERIOR;
+            }
 
             $lectura = new EndoscopiaDigestiva();
-            $valores = $lectura->de($consulta, $tipo);
+            $valores = EndoscopiaDigestiva::existe($tipo) ? $lectura->de($consulta, $tipo) : [];
 
             $url = fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
@@ -1082,13 +1086,44 @@ class ConsultaController extends Controller
                 ];
             }
 
+            // La tercera pestaña es la **eco abdominal**: el ítem «Procedimientos» del escritorio también abre
+            // `w_cargar_visualizar_eco_abdominal`. Se reusa la pantalla del estudio (`_estudio-abdominal`), con el
+            // guardado que vuelve a esta sección.
+            $ecoValores = $ecoAbdominal->de($consulta);
+            $ecoActivo = $tipo === 'ecoabdominal';
+            // La fecha con la que abre un estudio sin fecha guardada: **hoy del consultorio** (O-13, trampa 59).
+            $hoyDelEco = FechaDelConsultorio::hoy()->toDateString();
+
+            $pestanas[] = [
+                'clave'   => 'ecoabdominal',
+                'texto'   => 'Eco abdominal',
+                'url'     => $url('ecoabdominal'),
+                'activa'  => $ecoActivo,
+                'cargada' => array_filter($ecoValores->valores(), fn ($valor) => $valor !== null && $valor !== '') !== [],
+            ];
+
+            $vistaEco = $ecoActivo
+                ? new \App\Clinica\Consulta\Vistas\EcoAbdominalVista(
+                    $ecoValores,
+                    route('clinica.consulta.estudio.guardar', [$consulta->id, 'abdominal']),
+                    $url('ecoabdominal'),
+                    route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_ABDOMINAL]),
+                    $doctores->delCatalogo($this->registrosDelMedico($medico))
+                        ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
+                        ->all(),
+                    (array) old(),
+                    $hoyDelEco,
+                )
+                : null;
+
             return new ProcedimientosVista(
-                EndoscopiaDigestiva::titulo($tipo),
-                $campos,
+                $ecoActivo ? 'Eco abdominal' : EndoscopiaDigestiva::titulo($tipo),
+                $ecoActivo ? [] : $campos,
                 $pestanas,
-                route('clinica.consulta.procedimientos.guardar', [$consulta->id, $tipo]),
+                $ecoActivo ? '' : route('clinica.consulta.procedimientos.guardar', [$consulta->id, $tipo]),
                 $url($tipo),
-                $lectura->tieneDatos($consulta, $tipo),
+                $ecoActivo ? false : $lectura->tieneDatos($consulta, $tipo),
+                $vistaEco,
             );
         }
 

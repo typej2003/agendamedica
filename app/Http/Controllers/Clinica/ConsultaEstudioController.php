@@ -263,9 +263,22 @@ class ConsultaEstudioController extends Controller
         return $mensajes;
     }
 
-    /** La vuelta a la sección, en el tipo que se estaba mirando. */
+    /**
+     * La vuelta a la sección, en el tipo que se estaba mirando.
+     *
+     * La excepción es el **eco abdominal que se abre desde Procedimientos** (gastroenterología pediátrica,
+     * 2026-10-19): el formulario manda `volver = procedimientos` y la vuelta es a esa sección, en su pestaña.
+     */
     private function destino(Consulta $consulta, string $tipo)
     {
+        if (request()->input('volver') === 'procedimientos') {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_PROCEDIMIENTOS,
+                'pestana' => 'ecoabdominal',
+            ]);
+        }
+
         return redirect()->route('clinica.consulta', [
             $consulta->id,
             'seccion' => ConsultaShellVista::SECCION_ESTUDIO,

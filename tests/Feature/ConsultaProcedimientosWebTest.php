@@ -192,6 +192,21 @@ class ConsultaProcedimientosWebTest extends TestCase
         $this->assertSame(0, EndoscopiaSuperior::count());
     }
 
+    public function test_la_pestana_de_la_eco_abdominal_reusa_la_pantalla_del_estudio(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conGastro($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // El ítem «Procedimientos» del escritorio también abre `w_cargar_visualizar_eco_abdominal`: la tercera
+        // pestaña pinta **la misma** pantalla del estudio, y el guardado vuelve a esta sección.
+        $this->conContexto($user, $medico, $pediatria)->get($this->url($consulta, 'ecoabdominal'))
+            ->assertOk()
+            ->assertSee('Eco abdominal')
+            ->assertSee('estudio-abdominal-form', false)
+            ->assertSee('name="volver" value="procedimientos"', false);
+    }
+
     public function test_la_secretaria_no_puede_guardar(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();

@@ -24,6 +24,12 @@
 
         <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
 
+        @if ($seccion->esEcoAbdominal())
+            {{-- La tercera pestaña del escritorio: el ítem «Procedimientos» también abre el eco abdominal. Se reusa
+                 la pantalla del estudio con su `volver` a esta sección. --}}
+            @include('clinica.consulta._estudio-abdominal', ['vm' => $seccion->eco(), 'volverA' => 'procedimientos'])
+        @else
+
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="procedimientos-form"
               data-consulta-procedimientos data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
@@ -67,5 +73,6 @@
                 </button>
             </div>
         </form>
+        @endif
     </x-ui.tarjeta>
 </div>
