@@ -145,6 +145,50 @@ final class FormatosEnBlanco
                 ['etiqueta' => 'Conclusión:', 'peso' => 2],
             ],
         ],
+        // Los paneles de **pediatría** que se sumaron el 2026-10-19: las endoscopías, la evaluación pre-operatoria,
+        // los indicadores y el eco renal. La hoja en blanco usa los mismos bloques que su pantalla.
+        DocumentoImpreso::ENDOSCOPIA_SUPERIOR => [
+            'descripcion' => 'Fecha, equipo, hallazgos, conclusión y el texto del informe.',
+            'fijos' => ['Fecha:', 'Equipo:', 'Indicación:', 'Sedación:'],
+            'secciones' => [
+                ['etiqueta' => 'Hallazgos:', 'peso' => 3],
+                ['etiqueta' => 'Conclusiones:', 'peso' => 2],
+            ],
+        ],
+        DocumentoImpreso::ENDOSCOPIA_INFERIOR => [
+            'descripcion' => 'Los tres órganos con su estado, la conclusión y el texto del informe.',
+            'fijos' => ['Fecha:', 'Equipo:', 'Indicación:', 'Sedación:'],
+            'secciones' => [
+                ['etiqueta' => 'Esófago:', 'peso' => 1],
+                ['etiqueta' => 'Estómago:', 'peso' => 1],
+                ['etiqueta' => 'Duodeno:', 'peso' => 1],
+                ['etiqueta' => 'Conclusiones:', 'peso' => 2],
+            ],
+        ],
+        DocumentoImpreso::EVALUACION_PREOPERATORIA => [
+            'descripcion' => 'El tipo, el resultado y la emergencia.',
+            'fijos' => ['Tipo de evaluación:', '¿Emergencia?'],
+            'secciones' => [['etiqueta' => 'Resultado:', 'peso' => 3]],
+        ],
+        DocumentoImpreso::INDICADORES_INCIDENTES => [
+            'descripcion' => 'El laboratorio por grupos (sangre, orina y gases).',
+            'fijos' => ['Fecha de la toma:'],
+            'secciones' => [
+                ['etiqueta' => 'Sangre:', 'peso' => 3],
+                ['etiqueta' => 'Orina:', 'peso' => 2],
+                ['etiqueta' => 'Gases:', 'peso' => 1],
+            ],
+        ],
+        DocumentoImpreso::ECO_RENAL => [
+            'descripcion' => 'Las medidas de los dos riñones, la conclusión y la sugerencia.',
+            'fijos' => ['Fecha:', 'Motivo del estudio:', 'Equipo:', 'Transductor:', 'Frecuencia:'],
+            'secciones' => [
+                ['etiqueta' => 'Riñón derecho:', 'peso' => 2],
+                ['etiqueta' => 'Riñón izquierdo:', 'peso' => 2],
+                ['etiqueta' => 'Conclusión:', 'peso' => 2],
+                ['etiqueta' => 'Sugerencia:', 'peso' => 1],
+            ],
+        ],
     ];
 
     /**

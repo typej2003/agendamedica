@@ -28,11 +28,13 @@ class FormatosEnBlancoVistaTest extends TestCase
         );
     }
 
-    public function test_el_catalogo_son_trece_formatos_con_el_recipe_primero_y_sin_el_eco_pelvico(): void
+    public function test_el_catalogo_son_dieciocho_formatos_con_el_recipe_primero_y_sin_el_eco_pelvico(): void
     {
         $this->assertSame(
             ['recipe', 'informe', 'constancia', 'reposo', 'referencia', 'hospitalizacion', 'dieta', 'laboratorio', 'estudios',
-                'eco-obstetrico', 'eco-obstetrico-segundo', 'eco-obstetrico-tercero', 'eco-doppler'],
+                'eco-obstetrico', 'eco-obstetrico-segundo', 'eco-obstetrico-tercero', 'eco-doppler',
+                // Los paneles de pediatría que se sumaron el 2026-10-19.
+                'endoscopia-superior', 'endoscopia-inferior', 'evaluacion-preoperatoria', 'indicadores-incidentes', 'eco-renal'],
             FormatosEnBlanco::claves(),
         );
         $this->assertSame(FormatosEnBlanco::claves(), array_column(FormatosEnBlanco::catalogo(), 'clave'));
