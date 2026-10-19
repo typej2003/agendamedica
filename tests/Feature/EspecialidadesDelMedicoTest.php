@@ -190,11 +190,11 @@ class EspecialidadesDelMedicoTest extends TestCase
 
         // Repetida en el formulario: una sola fila en el pivote.
         $cambios = $cuentas->asignarEspecialidades($r['medico'], [(string) $esp->id, (string) $esp->id, $esp->id]);
-        $this->assertSame(['asignadas' => 1, 'quitadas' => 0], $cambios);
+        $this->assertSame(['asignadas' => 1, 'quitadas' => 0, 'postgradosQuitados' => 0], $cambios);
         $this->assertSame(1, $r['medico']->specialties()->count());
 
         // Volver a guardar lo mismo no cambia nada (y la pantalla lo dice).
-        $this->assertSame(['asignadas' => 0, 'quitadas' => 0], $cuentas->asignarEspecialidades($r['medico'], [$esp->id]));
+        $this->assertSame(['asignadas' => 0, 'quitadas' => 0, 'postgradosQuitados' => 0], $cuentas->asignarEspecialidades($r['medico'], [$esp->id]));
 
         $this->actingAs($this->admin());
         Livewire::test(Especialidades::class)
@@ -238,11 +238,92 @@ class EspecialidadesDelMedicoTest extends TestCase
         $panel->call('abrirAsignar', $r['medico']->id)->assertForbidden();
     }
 
+    /* --------------------------- postgrados (2026-10-19) ----------------- */
+
+    /** Un catálogo mínimo con su postgrado, como lo siembra el manifiesto de pediatría. */
+    private function postgrado(Specialty $especialidad, string $nombre): \App\Models\Subspecialty
+    {
+        return \App\Models\Subspecialty::create([
+            'specialty_id' => $especialidad->id,
+            'slug'         => 'prueba-' . substr(uniqid(), -8),
+            'nombre'       => $nombre,
+            'orden'        => 10,
+            'activo'       => true,
+        ]);
+    }
+
+    public function test_el_panel_asigna_y_quita_los_postgrados_de_las_especialidades_del_medico(): void
+    {
+        $r = $this->medico('Postgrados');
+        $pediatria = $this->especialidad('Pediatría');
+        $nefro = $this->postgrado($pediatria, 'Nefrología pediátrica');
+        $neumo = $this->postgrado($pediatria, 'Neumología pediátrica');
+
+        app(CuentaService::class)->asignarEspecialidades($r['medico'], [$pediatria->id]);
+        $this->actingAs($this->admin());
+
+        Livewire::test(Especialidades::class)
+            ->call('abrirAsignar', $r['medico']->id)
+            ->assertSee('Nefrología pediátrica')
+            ->set('postgrados', [(string) $nefro->id, (string) $neumo->id])
+            ->call('guardarAsignacion')
+            ->assertHasNoErrors();
+
+        $this->assertEqualsCanonicalizing([$nefro->id, $neumo->id], $this->idsDePostgrados($r['medico']));
+
+        // Al reabrir vienen tildados y se puede dejar uno solo.
+        $abierto = Livewire::test(Especialidades::class)->call('abrirAsignar', $r['medico']->id);
+        $this->assertEqualsCanonicalizing([(string) $nefro->id, (string) $neumo->id], $abierto->get('postgrados'));
+
+        $abierto->set('postgrados', [(string) $nefro->id])->call('guardarAsignacion')->assertHasNoErrors();
+        $this->assertSame([$nefro->id], $this->idsDePostgrados($r['medico']));
+    }
+
+    public function test_un_postgrado_de_una_especialidad_que_el_medico_no_tiene_no_se_guarda(): void
+    {
+        $r = $this->medico('Ajeno');
+        $pediatria = $this->especialidad('Pediatría');
+        $cardiologia = $this->especialidad('Cardiología');
+        $nefro = $this->postgrado($pediatria, 'Nefrología pediátrica');
+        $ecoCardio = $this->postgrado($cardiologia, 'Ecocardiografía');
+
+        app(CuentaService::class)->asignarEspecialidades($r['medico'], [$pediatria->id]);
+
+        // El servicio ignora el que no cuelga de una especialidad del médico (el formulario manda todo junto).
+        app(CuentaService::class)->asignarSubespecialidades($r['medico'], [$nefro->id, $ecoCardio->id]);
+
+        $this->assertSame([$nefro->id], $this->idsDePostgrados($r['medico']));
+    }
+
+    public function test_quitar_la_especialidad_quita_sus_postgrados_y_lo_dice(): void
+    {
+        $r = $this->medico('Huerfano');
+        $pediatria = $this->especialidad('Pediatría');
+        $otra = $this->especialidad('Dermatología');
+        $nefro = $this->postgrado($pediatria, 'Nefrología pediátrica');
+        $cuentas = app(CuentaService::class);
+
+        $cuentas->asignarEspecialidades($r['medico'], [$pediatria->id]);
+        $cuentas->asignarSubespecialidades($r['medico'], [$nefro->id]);
+        $this->assertSame([$nefro->id], $this->idsDePostgrados($r['medico']));
+
+        $cambios = $cuentas->asignarEspecialidades($r['medico'], [$otra->id]);
+
+        $this->assertSame(1, $cambios['postgradosQuitados']);
+        $this->assertSame([], $this->idsDePostgrados($r['medico']));
+    }
+
     /* ------------------------------------------------------------------ */
 
     /** Los ids del pivote del médico, como enteros y ordenados. */
     private function idsDelPivote(Medico $medico): array
     {
         return $medico->specialties()->pluck('specialties.id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+    }
+
+    /** Los ids de los postgrados del médico, como enteros y ordenados. */
+    private function idsDePostgrados(Medico $medico): array
+    {
+        return $medico->subespecialidades()->pluck('subespecialidades.id')->map(fn ($id) => (int) $id)->sort()->values()->all();
     }
 }

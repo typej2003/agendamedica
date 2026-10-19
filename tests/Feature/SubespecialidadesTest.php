@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Clinica\ContextoTrabajo;
+use App\Models\Consulta;
+use App\Models\Historia;
 use App\Models\Medico;
+use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\ModuloClinico;
 use App\Models\Specialty;
@@ -11,6 +14,7 @@ use App\Models\Subspecialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -57,6 +61,43 @@ class SubespecialidadesTest extends TestCase
         return $this->withSession(['clinica.contexto' => [
             'reg_medico' => $medico->reg_medico, 'specialty_id' => $specialty->id, 'office_id' => null,
         ]])->actingAs($user);
+    }
+
+    /** @return array{0:int, 1:Consulta} */
+    private function pacienteYConsulta(Medico $medico, int $numhistoria = 1001, int $nroconsulta = 1): array
+    {
+        $pacienteId = DB::table('pacientes')->insertGetId([
+            'nombres'     => 'Ana',
+            'apellidos'   => 'Alvarez',
+            'cedula'      => (string) random_int(10000000, 30000000),
+            'sexo'        => 'F',
+            'fnacimiento' => '2018-05-04',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        MedicoPaciente::create([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $pacienteId,
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => (string) $numhistoria,
+        ]);
+
+        Historia::create([
+            'numhistoria' => (string) $numhistoria,
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $pacienteId,
+            'medico_id'   => $medico->id,
+        ]);
+
+        $consulta = Consulta::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => $numhistoria,
+            'nroconsulta' => $nroconsulta,
+            'fecha'       => now()->toDateString(),
+        ]);
+
+        return [$pacienteId, $consulta];
     }
 
     public function test_el_manifiesto_siembra_las_subespecialidades_de_pediatria(): void
@@ -172,5 +213,78 @@ class SubespecialidadesTest extends TestCase
             unlink($archivo);
         }
         rmdir($directorio);
+    }
+
+    /* ------------------------ la consulta pediátrica -------------------- */
+
+    public function test_la_consulta_pediatrica_muestra_los_items_de_su_arbol(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta', $consulta->id))->assertOk()->getContent();
+
+        foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
+            'Exámenes/Estudios', 'Inmunizaciones', 'Diagnóstico', 'Alimentación', 'Evolución', 'Récipes',
+            'Solicitudes', 'Datos del paciente', 'Representante', 'Pre-factura'] as $item) {
+            $this->assertStringContainsString($item, $html, "Falta «{$item}» en el menú de pediatría.");
+        }
+
+        // Sin el estudio ecográfico ni el control de embarazo, y sin el panel de nefrología (no tiene el postgrado).
+        $this->assertStringNotContainsString('Estudio ecográfico', $html);
+        $this->assertStringNotContainsString('Control de embarazo', $html);
+        $this->assertStringNotContainsString('Indicadores incidentes', $html);
+    }
+
+    public function test_con_nefrologia_pediatrica_aparece_su_panel_en_la_consulta(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $nefro = Subspecialty::where('slug', 'nefrologia-pediatrica')->firstOrFail();
+        $medico->subespecialidades()->attach($nefro->id);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta', $consulta->id))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Indicadores incidentes', $html);
+    }
+
+    public function test_los_items_pediatricos_que_tienen_su_pantalla_en_otro_lado_redirigen(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $pediatra = $this->conContexto($user, $medico, $pediatria);
+        [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Exámenes/Estudios → la solapa Resultado de exámenes de la evaluación física.
+        $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes-estudios']))
+            ->assertRedirect(route('clinica.consulta', [
+                $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
+            ]));
+
+        // Inmunizaciones → el carnet de vacunas del paciente.
+        $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
+            ->assertRedirect(route('clinica.pacientes.vacunas', $pacienteId));
+
+        // Alimentación → la pestaña Dieta de las solicitudes.
+        $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'alimentacion']))
+            ->assertRedirect(route('clinica.consulta', [
+                $consulta->id, 'seccion' => 'solicitudes', 'solicitud' => 'dieta',
+            ]));
+
+        // Representante → la ficha del paciente, donde se edita.
+        $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'representante']))
+            ->assertRedirect(route('clinica.pacientes.ver', $pacienteId));
+    }
+
+    public function test_ginecologia_no_redirige_esas_secciones_porque_no_las_tiene(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Una sección pediátrica pedida en ginecología no existe: cae en el estado vacío del shell, no redirige.
+        $this->conContexto($user, $medico, $gineco)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
+            ->assertOk()->assertSee('Elige una sección en el menú');
     }
 }

@@ -219,6 +219,14 @@ class ConsultaController extends Controller
         $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
+        // **Los ítems de la consulta pediátrica que abren otra pantalla** (2026-10-19). En el árbol de PediaReport
+        // son ítems propios, pero el dato ya vive en otra pantalla de la web y no se duplica: se redirige (302),
+        // como con `?seccion=examenes` (O-22). El menú sigue mostrando el ítem pediátrico.
+        $destino = $this->destinoDeLaSeccionPediatrica($seccion, $consulta, $paciente, $contexto);
+        if ($destino !== null) {
+            return $destino;
+        }
+
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
         // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
         // Pediatría (WEB-12.3): sus siete tipos de antecedente (Patológicos, C.A., Madre…) se siembran en el catálogo del médico la primera vez.
@@ -290,6 +298,8 @@ class ConsultaController extends Controller
                 // La pestaña de solicitudes (O-30): el shell decide con ella si el encabezado ofrece el panel
                 // con el resumen del paciente (sólo en las pantallas donde se redacta un documento).
                 (string) $request->query('solicitud', ''),
+                // Las secciones que encienden los postgrados de la especialidad del contexto (2026-10-19).
+                $contexto['secciones_postgrados'] ?? [],
             ),
             // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
             // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el
@@ -335,6 +345,44 @@ class ConsultaController extends Controller
     private function alcance(): AlcanceDeLaEspecialidad
     {
         return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
+    }
+
+    /**
+     * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
+     *
+     * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
+     * duplica: *Exámenes/Estudios* es la solapa *Resultado de exámenes*, *Inmunizaciones* el carnet de vacunas
+     * del paciente, *Alimentación* la dieta / recomendaciones de la consulta y *Representante* la ficha del
+     * paciente. Devuelve `null` para cualquier otra sección (incluida la pre-factura, que todavía no tiene
+     * pantalla: cae en el estado vacío del shell como cualquier ítem sin pantalla).
+     */
+    private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
+    {
+        // Sólo si la sección **existe en el catálogo de esta especialidad**: en ginecología esas claves no están
+        // y tienen que caer en el estado vacío del shell, no redirigir a una pantalla que no es de su consulta.
+        if (! SeccionesDeLaConsulta::existeSeccion(
+            $seccion,
+            $contexto['specialty']?->slug,
+            $contexto['secciones_postgrados'] ?? [],
+        )) {
+            return null;
+        }
+
+        return match ($seccion) {
+            SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS => redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+                'pestana' => TextosDelExamen::RESULTADOS,
+            ]),
+            SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
+            SeccionesDeLaConsulta::SECCION_ALIMENTACION => redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
+                'solicitud' => PestanasDeSolicitudes::DIETA,
+            ]),
+            SeccionesDeLaConsulta::SECCION_REPRESENTANTE => redirect()->route('clinica.pacientes.ver', $paciente->id),
+            default => null,
+        };
     }
 
     /**

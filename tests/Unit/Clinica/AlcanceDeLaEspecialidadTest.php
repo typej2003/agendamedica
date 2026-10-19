@@ -48,12 +48,12 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $vm = $this->shell('pediatria');
 
-        // Sin el ítem 5 (el estudio ecográfico) ni el 6 (el control de embarazo): los del legado de ginecología y el de
-        // pediatría no son la misma lista (Alexander, 2026-10-19).
-        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(11, $vm->totalItems());
-        // Once ítems menos la pre-factura, que todavía no tiene pantalla = diez.
-        $this->assertSame(10, $vm->totalListos());
+        // Pediatría tiene **su** catálogo (2026-10-19): sin el ítem 5 del estudio —que en su árbol es el de
+        // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-15.
+        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], $this->numeros($vm));
+        $this->assertSame(14, $vm->totalItems());
+        // Catorce ítems menos la pre-factura, que todavía no tiene pantalla = trece.
+        $this->assertSame(13, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void
@@ -79,7 +79,8 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
         $this->assertFalse($alcance->muestraElEstudio());
         $this->assertEqualsCanonicalizing(TiposDeEstudio::claves(), $alcance->tiposDeEstudioOcultos());
-        // Aunque la URL pida un tipo, la sección no está en el catálogo de la especialidad.
+        // No hay ítem de estudio en el catálogo pediátrico (el 5 de pediatría es «Indicadores incidentes», que agrega
+        // el postgrado de nefrología).
         $this->assertSame([], array_values(array_filter(
             SeccionesDeLaConsulta::todas('pediatria'),
             fn (array $item) => $item['seccion'] === ConsultaShellVista::SECCION_ESTUDIO,

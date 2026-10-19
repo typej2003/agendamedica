@@ -102,6 +102,9 @@ final class ConsultaShellVista
         // La pestaña abierta de la sección de solicitudes (`?solicitud=`), normalizada. Es lo que decide si el
         // encabezado ofrece el panel con el resumen del paciente (O-30: sólo donde se redacta un documento).
         private ?string $pestanaDeSolicitudes = null,
+        // Las secciones de la consulta que encienden los **postgrados** del médico (2026-10-19), resueltas por el
+        // contexto: el catálogo las inserta en el lugar del legado.
+        private array $seccionesPostgrados = [],
     ) {
     }
 
@@ -289,7 +292,7 @@ final class ConsultaShellVista
      */
     public function seccion(): ?string
     {
-        return SeccionesDeLaConsulta::normalizar($this->seccion, $this->especialidad);
+        return SeccionesDeLaConsulta::normalizar($this->seccion, $this->especialidad, $this->seccionesPostgrados);
     }
 
     /**
@@ -318,7 +321,7 @@ final class ConsultaShellVista
     {
         $grupos = [];
 
-        foreach (SeccionesDeLaConsulta::todas($this->especialidad) as $item) {
+        foreach (SeccionesDeLaConsulta::todas($this->especialidad, $this->seccionesPostgrados) as $item) {
             $grupos[$item['grupo']][] = $this->item($item);
         }
 
@@ -332,13 +335,13 @@ final class ConsultaShellVista
 
     public function totalItems(): int
     {
-        return SeccionesDeLaConsulta::total($this->especialidad);
+        return SeccionesDeLaConsulta::total($this->especialidad, $this->seccionesPostgrados);
     }
 
-    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología y 10 de 11 en pediatría (no tiene el estudio ecográfico ni el control de embarazo). */
+    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología y 13 de 14 en pediatría (no tiene el estudio ecográfico ni el control de embarazo). */
     public function totalListos(): int
     {
-        return SeccionesDeLaConsulta::disponibles($this->especialidad);
+        return SeccionesDeLaConsulta::disponibles($this->especialidad, $this->seccionesPostgrados);
     }
 
     /**
