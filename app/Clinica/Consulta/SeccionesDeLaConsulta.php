@@ -220,7 +220,7 @@ final class SeccionesDeLaConsulta
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],
         ['numero' => 9, 'grupo' => 'Consulta', 'titulo' => 'Alimentación', 'icono' => 'bi-egg-fried',
-            'detalle' => 'La dieta y las recomendaciones del paciente.', 'tarea' => 'WEB-5.3b', 'estado' => 'listo',
+            'detalle' => 'La dieta y las recomendaciones, con el catálogo de dietas del consultorio.', 'tarea' => 'WEB-12.7', 'estado' => 'listo',
             'seccion' => self::SECCION_ALIMENTACION],
         ['numero' => 10, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
             'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',

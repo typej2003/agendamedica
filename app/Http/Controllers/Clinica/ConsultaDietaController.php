@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consulta\EliminarDietaDeLaConsulta;
 use App\Actions\Consulta\GuardarDietaDeLaConsulta;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DietaDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -50,13 +51,17 @@ class ConsultaDietaController extends Controller
             throw ValidationException::withMessages(['descripcion' => $excepcion->getMessage()]);
         }
 
-        $destino = $this->destino($consulta);
+        $destino = $this->destino($request, $consulta);
+        // En pediatría la pantalla se llama *Alimentación*, y el aviso la sigue.
+        $palabra = $this->esPediatria($request) ? 'alimentación' : 'dieta';
 
         if ($resultado->huboConflicto()) {
-            return $destino->with('error', 'Hay un cambio más reciente de la dieta (de otro equipo) y no se pisó por completo: vuelve a cargarla y guárdala de nuevo.');
+            return $destino->with('error', 'Hay un cambio más reciente de la ' . $palabra . ' (de otro equipo) y no se pisó por completo: vuelve a cargarla y guárdala de nuevo.');
         }
 
-        return $destino->with('estado', $resultado->sinCambios() ? 'La dieta ya estaba guardada así.' : 'Dieta guardada.');
+        return $destino->with('estado', $resultado->sinCambios()
+            ? 'La ' . $palabra . ' ya estaba guardada así.'
+            : mb_convert_case($palabra, MB_CASE_TITLE, 'UTF-8') . ' guardada.');
     }
 
     public function eliminar(Request $request, Consulta $consulta, EliminarDietaDeLaConsulta $eliminar)
@@ -64,8 +69,11 @@ class ConsultaDietaController extends Controller
         $consulta = $this->delContexto($request, $consulta);
 
         $quitadas = $eliminar->ejecutar($consulta);
+        $palabra = $this->esPediatria($request) ? 'alimentación' : 'dieta';
 
-        return $this->destino($consulta)->with('estado', $quitadas > 0 ? 'Dieta eliminada.' : 'Esta consulta no tenía dieta.');
+        return $this->destino($request, $consulta)->with('estado', $quitadas > 0
+            ? mb_convert_case($palabra, MB_CASE_TITLE, 'UTF-8') . ' eliminada.'
+            : 'Esta consulta no tenía ' . $palabra . '.');
     }
 
     private function delContexto(Request $request, Consulta $consulta): Consulta
@@ -79,12 +87,33 @@ class ConsultaDietaController extends Controller
         );
     }
 
-    private function destino(Consulta $consulta)
+    /**
+     * A dónde se vuelve después de guardar o eliminar: **a la pantalla donde estaba**, que depende de la especialidad. En
+     * pediatría la dieta es su **ítem propio** *Alimentación* (`?seccion=alimentacion`, 2026-10-19) y en ginecología y las
+     * demás sigue siendo la pestaña de *Solicitudes* (`?seccion=solicitudes&solicitud=dieta`). Volver siempre a
+     * *Solicitudes* era lo que Alexander veía como «se está yendo a solicitudes» (O-40).
+     */
+    private function destino(Request $request, Consulta $consulta)
     {
+        if ($this->esPediatria($request)) {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_ALIMENTACION,
+            ]);
+        }
+
         return redirect()->route('clinica.consulta', [
             $consulta->id,
             'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
             'solicitud' => PestanasDeSolicitudes::DIETA,
         ]);
+    }
+
+    /** ¿La especialidad del contexto es pediatría? (Ahí la dieta es el ítem *Alimentación*, con sección propia.) */
+    private function esPediatria(Request $request): bool
+    {
+        $contexto = (array) $request->attributes->get('contexto_clinico');
+
+        return AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
     }
 }

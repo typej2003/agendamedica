@@ -45,6 +45,12 @@ final class ConsultaShellVista
      */
     public const SECCION_EXAMENES_ESTUDIOS = SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS;
 
+    /**
+     * La clave de la sección **Alimentación** en `?seccion=` (ítem 9 de la consulta pediátrica, 2026-10-19): la dieta y
+     * las recomendaciones, que en ginecología y las demás especialidades vive como pestaña de *Solicitudes*.
+     */
+    public const SECCION_ALIMENTACION = SeccionesDeLaConsulta::SECCION_ALIMENTACION;
+
     /** La clave de la sección de antecedentes en `?seccion=` (WEB-4.4). */
     public const SECCION_ANTECEDENTES = SeccionesDeLaConsulta::SECCION_ANTECEDENTES;
 
@@ -135,6 +141,12 @@ final class ConsultaShellVista
         $seccion = $this->seccion();
 
         if ($seccion === self::SECCION_RECIPES) {
+            return true;
+        }
+
+        // La dieta de pediatría tiene sección propia (ítem 9, *Alimentación*): es un documento que se redacta, así que
+        // lleva el mismo panel con la historia y el resumen del paciente que la pestaña de *Solicitudes*.
+        if ($seccion === self::SECCION_ALIMENTACION) {
             return true;
         }
 

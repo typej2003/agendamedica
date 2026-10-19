@@ -266,11 +266,10 @@ class SubespecialidadesTest extends TestCase
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
             ->assertRedirect(route('clinica.pacientes.vacunas', $pacienteId));
 
-        // Alimentación → la pestaña Dieta de las solicitudes.
+        // Alimentación ya **no** redirige a Solicitudes (2026-10-19): es su sección, con la dieta adentro.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'alimentacion']))
-            ->assertRedirect(route('clinica.consulta', [
-                $consulta->id, 'seccion' => 'solicitudes', 'solicitud' => 'dieta',
-            ]));
+            ->assertOk()
+            ->assertSee('id="consulta-alimentacion"', false);
 
         // Representante → la ficha del paciente, donde se edita.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'representante']))

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta;
 
+use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\FormatosEnBlanco;
@@ -144,6 +145,21 @@ final class AlcanceDeLaEspecialidad
         }
 
         return PestanasDelExamen::normalizar($pedida);
+    }
+
+    /**
+     * **Las pestañas de *Solicitudes* que no se ofrecen.** Hoy es una sola, y es de pediatría: **Dieta / Recomendaciones**.
+     * En pediatría la dieta tiene su **ítem propio**, *Alimentación* (ítem 9 de su árbol), con sección propia desde el
+     * 2026-10-19; mientras fue además una pestaña de *Solicitudes* el médico la veía **dos veces** (Alexander, O-41), y el
+     * ítem 9 caía dentro de otra sección (O-40).
+     *
+     * La pestaña no desaparece del catálogo (`PestanasDeSolicitudes::TODAS`): ginecología la sigue teniendo donde siempre.
+     *
+     * @return array<int,string>
+     */
+    public function pestanasDeSolicitudesOcultas(): array
+    {
+        return $this->esPediatria() ? [PestanasDeSolicitudes::DIETA] : [];
     }
 
     /**

@@ -62,7 +62,14 @@ class AlimentacionPediatricaWebTest extends TestCase
         return Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 9501, 'nroconsulta' => 2, 'fecha' => '2026-10-17']);
     }
 
+    /** La sección propia de pediatría (ítem 9, 2026-10-19): antes era un redirect a la pestaña de *Solicitudes*. */
     private function url(Consulta $consulta): string
+    {
+        return route('clinica.consulta', [$consulta->id, 'seccion' => 'alimentacion']);
+    }
+
+    /** La pestaña de *Solicitudes*, que es donde la dieta vive fuera de pediatría. */
+    private function urlDeLaPestana(Consulta $consulta): string
     {
         return route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes', 'solicitud' => 'dieta']);
     }
@@ -73,7 +80,7 @@ class AlimentacionPediatricaWebTest extends TestCase
             'created_at' => now(), 'updated_at' => now()]);
     }
 
-    public function test_en_pediatria_la_pestana_se_llama_alimentacion_y_ofrece_el_catalogo_de_dietas(): void
+    public function test_en_pediatria_es_su_seccion_alimentacion_y_ofrece_el_catalogo_de_dietas(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $consulta = $this->consulta($medico);
@@ -87,9 +94,30 @@ class AlimentacionPediatricaWebTest extends TestCase
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta))
             ->assertOk()
             ->assertSee('Alimentación')
+            // Es su sección: el contenido es la dieta, sin las solapas de *Solicitudes*.
+            ->assertSee('id="consulta-alimentacion"', false)
             ->assertSee('LACTANTE 6 MESES')->assertSee('Leche materna a libre demanda')
             ->assertSee('DIETA BLANDA')
             ->assertDontSee('SIN TEXTO')->assertDontSee('DE OTRO MEDICO');
+    }
+
+    /** O-41: la dieta **no** se ofrece además como pestaña de *Solicitudes* en pediatría (se veía dos veces). */
+    public function test_en_pediatria_la_dieta_no_es_una_pestana_de_solicitudes(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $consulta = $this->consulta($medico);
+        $pediatra = $this->conContexto($medico, $pediatria)->actingAs($user);
+
+        // Las pestañas de Solicitudes no incluyen la dieta.
+        $html = $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'solicitudes']))->assertOk()->getContent();
+        $this->assertStringNotContainsString('solicitud=dieta', $html);
+        $this->assertStringNotContainsString('Dieta / Recomendaciones', $html);
+
+        // Y una URL directa a esa pestaña **no** abre la dieta: cae en la pestaña de siempre (la constancia).
+        // («Alimentación» sí aparece en el HTML: es el ítem 9 del menú, que es otra cosa y sigue estando.)
+        $pediatra->get($this->urlDeLaPestana($consulta))->assertOk()
+            ->assertDontSee('id="dieta-form"', false)
+            ->assertSee('id="constancia-form"', false);
     }
 
     public function test_lo_que_se_guarda_es_la_misma_fila_de_dieta_paciente(): void
@@ -116,7 +144,12 @@ class AlimentacionPediatricaWebTest extends TestCase
         $consulta = $this->consulta($medico);
         $this->dieta($medico, '01', 'LACTANTE 6 MESES', 'Leche materna.');
 
-        $this->conContexto($medico, $gineco)->actingAs($user)->get($this->url($consulta))
+        // Fuera de pediatría la dieta sigue siendo la **pestaña** de Solicitudes, con su nombre y sin el catálogo de dietas.
+        $this->conContexto($medico, $gineco)->actingAs($user)->get($this->urlDeLaPestana($consulta))
             ->assertOk()->assertSee('Dieta / Recomendaciones')->assertDontSee('LACTANTE 6 MESES')->assertDontSee('Alimentación');
+
+        // Y la sección propia de pediatría **no existe**: la URL cae en el estado vacío del shell, no abre la dieta.
+        $this->conContexto($medico, $gineco)->actingAs($user)->get($this->url($consulta))
+            ->assertOk()->assertDontSee('id="dieta-form"', false)->assertDontSee('Dieta / Recomendaciones');
     }
 }

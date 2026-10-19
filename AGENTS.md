@@ -88,7 +88,8 @@ consulta.
   árbol de PediaReport: 14 ítems sin nefrología y 15 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
   tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (inmunizaciones →
   carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la sección existe en el catálogo de esa
-  especialidad. **Exámenes/Estudios salió de esa lista el 2026-10-19**: tiene sección propia, como el escritorio.
+  especialidad. **Exámenes/Estudios y Alimentación salieron de esa lista el 2026-10-19**: cada una tiene sección
+  propia, como el escritorio.
 - **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene
   (`CuentaService::asignarSubespecialidades()`); quitar una especialidad quita sus postgrados (`postgradosQuitados` en el
   resultado de `asignarEspecialidades()`).
@@ -185,6 +186,15 @@ consulta.
   pediatría). ⚠️ Las columnas se comparten con ginecología con **otro significado** (`oido` = *Resultado de
   exámenes*, `laringe` = plan de tratamiento): cada especialidad ofrece sólo las suyas y **no se renombran**.
   Tests: `Feature/ExamenesEstudiosPediatriaWebTest` (5) y `Unit/Clinica/ExamenesEstudiosDeLaConsultaTest` (6).
+- **Alimentación con sección propia (2026-10-19)**: en pediatría la dieta es el **ítem 9** de su árbol y era
+  **además** una pestaña de *Solicitudes* renombrada *Alimentación*, así que se veía dos veces y al guardar el médico
+  aterrizaba en *Solicitudes* (Alexander, O-40 y O-41). Ahora `?seccion=alimentacion` es su pantalla —el parcial
+  `_alimentacion` reusa `_solicitudes-dieta`, con `DietaVista`, el catálogo `dietas` y las plantillas `DI`—, la pestaña
+  **no se ofrece** en pediatría (`AlcanceDeLaEspecialidad::pestanasDeSolicitudesOcultas()` +
+  `PestanasDeSolicitudes::ocultas`, y una URL directa a `&solicitud=dieta` cae en la constancia),
+  `ConsultaDietaController::destino()` vuelve a la sección y los rótulos dicen «alimentación» (`DietaVista`). Ginecología
+  no cambia. Tests: `AlimentacionPediatricaWebTest` (4) y `SubespecialidadesTest`; verificador
+  `../.agent-tools/verificar-consulta-alimentacion-web.js`.
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
   postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,

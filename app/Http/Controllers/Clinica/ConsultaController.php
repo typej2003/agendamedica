@@ -24,6 +24,7 @@ use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\TextoDelExamenVista;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\DietasDelCatalogo;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\ExamenesDeLaConsulta;
 use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
@@ -366,11 +367,10 @@ class ConsultaController extends Controller
      * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
      *
      * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
-     * duplica: *Inmunizaciones* es el carnet de vacunas del paciente, *Alimentación* la dieta / recomendaciones
-     * de la consulta y *Representante* la ficha del paciente. Devuelve `null` para cualquier otra sección
-     * (incluidas la pre-factura, que todavía no tiene pantalla y cae en el estado vacío del shell, y
-     * *Exámenes/Estudios*, que **dejó de redirigir** el 2026-10-19: tiene su propia sección, como en el
-     * escritorio).
+     * duplica: *Inmunizaciones* es el carnet de vacunas del paciente y *Representante* la ficha del paciente.
+     * Devuelve `null` para cualquier otra sección (incluidas la pre-factura, que todavía no tiene pantalla y cae
+     * en el estado vacío del shell, y *Exámenes/Estudios* y *Alimentación*, que **dejaron de redirigir** el
+     * 2026-10-19: cada una tiene su propia sección, como en el escritorio).
      */
     private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
     {
@@ -385,14 +385,9 @@ class ConsultaController extends Controller
         }
 
         return match ($seccion) {
-            // *Exámenes/Estudios* **ya no redirige** (2026-10-19): tiene su sección, como en el escritorio, donde es
-            // un ítem propio y no una solapa de la evaluación física. Ver `seccion()`.
+            // *Exámenes/Estudios* y *Alimentación* **ya no redirigen** (2026-10-19): cada una tiene su sección, como en el
+            // escritorio, donde son ítems propios. Ver `seccion()`.
             SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
-            SeccionesDeLaConsulta::SECCION_ALIMENTACION => redirect()->route('clinica.consulta', [
-                $consulta->id,
-                'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
-                'solicitud' => PestanasDeSolicitudes::DIETA,
-            ]),
             SeccionesDeLaConsulta::SECCION_REPRESENTANTE => redirect()->route('clinica.pacientes.ver', $paciente->id),
             default => null,
         };
@@ -1293,6 +1288,18 @@ class ConsultaController extends Controller
             );
         }
 
+        if ($seccion === ConsultaShellVista::SECCION_ALIMENTACION) {
+            // **La dieta de pediatría, con sección propia** (ítem 9 *Alimentación*, 2026-10-19): es la misma pantalla y la
+            // misma fila de `dieta_paciente` que la pestaña de *Solicitudes*, pero acá el ítem del menú es el 9 y no el 12.
+            // Antes el ítem 9 redirigía a *Solicitudes* y la dieta se veía dos veces (O-40 y O-41).
+            return $this->dietaVista(
+                $consulta,
+                app(DietaDeLaConsulta::class),
+                (array) old(),
+                route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::DIETA]),
+            );
+        }
+
         if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {
             // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
             // `TR`. Es la misma pantalla que las solapas de texto del examen —`TextoDelExamenVista` y su
@@ -1331,6 +1338,39 @@ class ConsultaController extends Controller
     }
 
     /**
+     * **La dieta / recomendaciones de la consulta** (WEB-5.3b), que en pediatría es su **ítem *Alimentación*** (2026-10-19):
+     * una fila de `dieta_paciente` por consulta, con las plantillas `DI` del médico y —sólo en pediatría— el catálogo de
+     * `dietas` del consultorio (WEB-12.4b), que se ofrece junto a las plantillas y sin repetir títulos.
+     *
+     * La misma pantalla sirve a la **pestaña** de *Solicitudes* (ginecología y las demás) y a la **sección propia** de
+     * pediatría, que es a donde vuelve el guardado: antes el ítem 9 caía dentro de *Solicitudes* y la dieta se veía dos
+     * veces (O-40 y O-41).
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function dietaVista(Consulta $consulta, DietaDeLaConsulta $dietas, array $old, string $urlImprimir): DietaVista
+    {
+        $id = $consulta->id;
+        $pediatria = $this->alcance()->esPediatria();
+        $fila = $dietas->fila($consulta);
+
+        return new DietaVista(
+            $fila?->dieta,
+            $fila?->descripcion,
+            $dietas->esReal($fila),
+            $pediatria
+                ? $dietas->plantillas((string) $consulta->reg_medico)->concat(
+                    (new DietasDelCatalogo())->de((string) $consulta->reg_medico),
+                )->unique('titulo')->sortBy('titulo')->values()
+                : $dietas->plantillas((string) $consulta->reg_medico),
+            ['guardar' => route('clinica.consulta.dieta.guardar', $id), 'eliminar' => route('clinica.consulta.dieta.eliminar', $id), 'imprimir' => $urlImprimir],
+            $old,
+            $pediatria ? 'Alimentación' : 'Dieta / Recomendaciones',
+            $pediatria,
+        );
+    }
+
+    /**
      * El ViewModel de la sección **Solicitudes** (WEB-5.3a, ítem 11): la pestaña elegida con `?solicitud=` (laboratorio, estudios, constancia, reposo,
      * referencias, hospitalización, informe o dieta; cualquier otro valor abre la constancia) y los datos de esa pestaña ya leídos.
      *
@@ -1354,13 +1394,14 @@ class ConsultaController extends Controller
         ResumenMedicoDeLaConsulta $resumenes,
     ): SeccionDeSolicitudesVista {
         $id = $consulta->id;
-        $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'));
+        // Las pestañas que esta especialidad no ofrece (en pediatría, *Dieta*: es su ítem *Alimentación*, con sección propia).
+        $ocultas = $this->alcance()->pestanasDeSolicitudesOcultas();
+        $activa = PestanasDeSolicitudes::normalizar(request()->query('solicitud'), $ocultas);
         $old = (array) old();
 
         $pestanas = new PestanasDeSolicitudes(
             fn (string $clave) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $clave]),
-            // En pediatría la pestaña de la dieta es *Alimentación* (WEB-12.4): la misma fila de `dieta_paciente`, con el catálogo de `dietas` además de las plantillas.
-            $this->alcance()->esPediatria() ? 'Alimentación' : null,
+            $ocultas,
         );
 
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
@@ -1447,20 +1488,7 @@ class ConsultaController extends Controller
                 $old,
             );
         } elseif ($activa === PestanasDeSolicitudes::DIETA) {
-            $fila = $dietas->fila($consulta);
-            $vista = new DietaVista(
-                $fila?->dieta,
-                $fila?->descripcion,
-                $dietas->esReal($fila),
-                $this->alcance()->esPediatria()
-                    ? $dietas->plantillas((string) $consulta->reg_medico)->concat(
-                        (new \App\Clinica\Consulta\DietasDelCatalogo())->de((string) $consulta->reg_medico),
-                    )->unique('titulo')->sortBy('titulo')->values()
-                    : $dietas->plantillas((string) $consulta->reg_medico),
-                ['guardar' => route('clinica.consulta.dieta.guardar', $id), 'eliminar' => route('clinica.consulta.dieta.eliminar', $id), 'imprimir' => $imprimir('dieta')],
-                $old,
-                $this->alcance()->esPediatria() ? 'Alimentación' : 'Dieta / Recomendaciones',
-            );
+            $vista = $this->dietaVista($consulta, $dietas, $old, $imprimir('dieta'));
         } else {
             $fila = $constancias->fila($consulta);
             $vista = new ConstanciaVista(

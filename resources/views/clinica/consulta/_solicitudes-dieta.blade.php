@@ -26,7 +26,7 @@
             <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Texto de la dieta o de las recomendaciones" for="dieta-descripcion" error="descripcion" requerido>
+        <x-ui.campo :etiqueta="$vm->etiquetaDelTexto()" for="dieta-descripcion" error="descripcion" requerido>
             <textarea name="descripcion" id="dieta-descripcion" class="form-control" rows="14">{{ $vm->texto() }}</textarea>
         </x-ui.campo>
 
@@ -37,7 +37,7 @@
 
         <div class="d-flex justify-content-end gap-2 mt-3">
             <button class="btn btn-primary">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar la dieta
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> {{ $vm->rotuloBoton() }}
             </button>
         </div>
     </form>
@@ -47,7 +47,7 @@
             @csrf
             @method('DELETE')
             <button class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash" aria-hidden="true"></i> Eliminar la dieta
+                <i class="bi bi-trash" aria-hidden="true"></i> {{ $vm->rotuloEliminar() }}
             </button>
         </form>
     @endif

@@ -29,12 +29,28 @@ final class DietaVista
         private array $old = [],
         // En pediatría la pestaña se llama *Alimentación* (WEB-12.4): es la misma fila de `dieta_paciente`.
         private string $rotulo = 'Dieta / Recomendaciones',
+        // En pediatría, además, es el **ítem 9** de la consulta y los textos dicen «alimentación» (2026-10-19).
+        private bool $alimentacion = false,
     ) {
     }
 
     public function rotulo(): string
     {
         return $this->rotulo;
+    }
+
+    /** El botón de guardar: «Guardar la dieta» o, en pediatría, «Guardar la alimentación». */
+    public function rotuloBoton(): string
+    {
+        return $this->alimentacion ? 'Guardar la alimentación' : 'Guardar la dieta';
+    }
+
+    /** El rótulo del campo de texto, con la misma palabra que el resto de la pantalla. */
+    public function etiquetaDelTexto(): string
+    {
+        return $this->alimentacion
+            ? 'Texto de la alimentación o de las recomendaciones'
+            : 'Texto de la dieta o de las recomendaciones';
     }
 
     public function titulo(): string
@@ -94,24 +110,43 @@ final class DietaVista
     /** @return array{tono:string, icono:string, texto:string, titulo:string} */
     public function estado(): array
     {
+        // En pediatría la pastilla no dice «dieta» (la pantalla es *Alimentación*): dice si está cargada, como las
+        // solapas de texto del examen. Fuera de pediatría se queda el texto de siempre.
+        if ($this->alimentacion) {
+            return $this->esReal
+                ? ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Cargada', 'titulo' => 'Esta consulta ya tiene la alimentación o las recomendaciones']
+                : ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin cargar', 'titulo' => 'Todavía no hay alimentación ni recomendaciones en esta consulta'];
+        }
+
         return $this->esReal
             ? ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Con dieta', 'titulo' => 'Esta consulta tiene dieta o recomendaciones']
             : ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin dieta', 'titulo' => 'Esta consulta no tiene dieta ni recomendaciones'];
     }
 
+    /** El botón de eliminar: «Eliminar la dieta» o, en pediatría, «Eliminar la alimentación». */
+    public function rotuloEliminar(): string
+    {
+        return $this->alimentacion ? 'Eliminar la alimentación' : 'Eliminar la dieta';
+    }
+
     public function avisoSinGuardar(): string
     {
-        return 'Hay cambios sin guardar en la dieta. Si sales ahora, se pierden.';
+        return 'Hay cambios sin guardar en ' . ($this->alimentacion ? 'la alimentación' : 'la dieta') . '. Si sales ahora, se pierden.';
     }
 
     public function avisoEliminar(): string
     {
-        return '¿Eliminar la dieta / recomendaciones de esta consulta? Se borran el título y el texto.';
+        return $this->alimentacion
+            ? '¿Eliminar la alimentación / recomendaciones de esta consulta? Se borran el título y el texto.'
+            : '¿Eliminar la dieta / recomendaciones de esta consulta? Se borran el título y el texto.';
     }
 
     public function ayuda(): string
     {
-        return 'Una dieta o conjunto de recomendaciones por consulta. Escríbela o parte de una de tus plantillas: '
-            . 'el título y el texto se llevan al campo para que los termines, y se guarda con el botón.';
+        return $this->alimentacion
+            ? 'La alimentación o el conjunto de recomendaciones del paciente, una por consulta. Escríbela o parte de una '
+                . 'de tus plantillas: el título y el texto se llevan al campo para que los termines, y se guarda con el botón.'
+            : 'Una dieta o conjunto de recomendaciones por consulta. Escríbela o parte de una de tus plantillas: '
+                . 'el título y el texto se llevan al campo para que los termines, y se guarda con el botón.';
     }
 }

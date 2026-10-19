@@ -20,6 +20,13 @@ use Closure;
  * `TODAS` es la lista de pestañas **que existen hoy**, y es el único lugar donde se agregan: una pestaña nueva suma su fila y su
  * parcial `_solicitudes-<clave>`. **Una pestaña que todavía no existe no se muestra**, ni vacía ni apagada: el panel de la
  * consulta ya dice qué llega con cada tarea. Sin base de datos.
+ *
+ * ## Qué pestañas se ofrecen
+ *
+ * `$ocultas` son las que la **especialidad** del contexto no ofrece, y las decide `AlcanceDeLaEspecialidad::pestanasDeSolicitudesOcultas()`
+ * (una sola regla, como las solapas del examen). Hoy es una: en pediatría, **Dieta** —la dieta es el **ítem 9 del menú**,
+ * *Alimentación*, con sección propia desde el 2026-10-19; tenerla además acá la mostraba dos veces (Alexander, O-41)—.
+ * Una pestaña oculta tampoco se abre por URL: `normalizar()` la manda a la pestaña de siempre.
  */
 final class PestanasDeSolicitudes
 {
@@ -76,20 +83,37 @@ final class PestanasDeSolicitudes
     /**
      * @param  Closure  $url  `fn(string $clave): string` — la URL de esa pestaña (la resuelve el controlador)
      */
-    public function __construct(private Closure $url, private ?string $rotuloDeLaDieta = null)
+    /**
+     * @param  Closure(string):string  $url  arma la dirección de una pestaña
+     * @param  array<int,string>  $ocultas  las pestañas que la especialidad no ofrece (ver `AlcanceDeLaEspecialidad::pestanasDeSolicitudesOcultas`)
+     */
+    public function __construct(private Closure $url, private array $ocultas = [])
     {
     }
 
-    /** La clave de una pestaña que existe; cualquier otro valor de la URL es la pestaña por defecto. */
-    public static function normalizar(?string $clave): string
+    /**
+     * La clave de una pestaña que existe y se ofrece; cualquier otro valor de la URL es la pestaña por defecto. Una
+     * pestaña **oculta** en esa especialidad también cae en la de siempre: su dirección no se puede usar para abrir
+     * algo que el menú no ofrece (la dieta de pediatría es su ítem *Alimentación*, no una pestaña de Solicitudes).
+     *
+     * @param  array<int,string>  $ocultas
+     */
+    public static function normalizar(?string $clave, array $ocultas = []): string
     {
-        return $clave !== null && (isset(self::TODAS[$clave]) || $clave === self::PAREJA) ? $clave : self::POR_DEFECTO;
+        if ($clave === null || ! (isset(self::TODAS[$clave]) || $clave === self::PAREJA)) {
+            return self::POR_DEFECTO;
+        }
+
+        return in_array($clave, $ocultas, true) ? self::POR_DEFECTO : $clave;
     }
 
-    /** @return array<int,string> las claves de las pestañas que existen */
-    public static function claves(): array
+    /**
+     * @param  array<int,string>  $ocultas
+     * @return array<int,string> las claves de las pestañas que existen, sin las que la especialidad no ofrece
+     */
+    public static function claves(array $ocultas = []): array
     {
-        return array_keys(self::TODAS);
+        return array_values(array_diff(array_keys(self::TODAS), $ocultas));
     }
 
     /**
@@ -102,7 +126,12 @@ final class PestanasDeSolicitudes
         $opciones = [];
 
         foreach (self::TODAS as $clave => $pestana) {
-            $opciones[] = ['texto' => $clave === self::DIETA && $this->rotuloDeLaDieta !== null ? $this->rotuloDeLaDieta : $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
+            // Las pestañas que la especialidad no ofrece no se pintan (en pediatría, *Dieta*: es su ítem *Alimentación*).
+            if (in_array($clave, $this->ocultas, true)) {
+                continue;
+            }
+
+            $opciones[] = ['texto' => $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 
         return $opciones;
