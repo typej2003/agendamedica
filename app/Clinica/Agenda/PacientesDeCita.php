@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Cola;
 use App\Models\MedicoPaciente;
 use App\Models\Paciente;
@@ -35,7 +36,13 @@ class PacientesDeCita
         return $numhistoria !== null ? (int) $numhistoria : null;
     }
 
-    /** La ficha del paciente de una cita: por `paciente_sinhistoria_id` o por el número de historia. */
+    /**
+     * La ficha del paciente de una cita: por `paciente_sinhistoria_id` o por el número de historia,
+     * resuelto **con la regla única** (`DuenoDeLaHistoria`) y dentro del registro de la cita.
+     *
+     * Es la misma regla que la agenda y la consulta: con dos pacientes en el mismo número, el formulario
+     * de la cita no puede abrir la ficha de uno y la consulta la del otro.
+     */
     public function deLaCita(Cola $cita): ?Paciente
     {
         if ($cita->paciente_sinhistoria_id !== null) {
@@ -46,9 +53,7 @@ class PacientesDeCita
             return null;
         }
 
-        $pacienteId = MedicoPaciente::where('reg_medico', $cita->reg_medico)
-            ->where('numhistoria', $cita->numhistoria)
-            ->value('paciente_id');
+        $pacienteId = (new DuenoDeLaHistoria())->de($cita->reg_medico, $cita->numhistoria);
 
         return $pacienteId !== null ? Paciente::find($pacienteId) : null;
     }

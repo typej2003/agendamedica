@@ -3,6 +3,7 @@
 namespace App\Clinica\Agenda;
 
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Cola;
 use App\Models\Office;
@@ -471,42 +472,63 @@ final class ArmadorDeAgenda
             ->all();
     }
 
-    /** @return array<int,array{id:int,nombre:string,telefono:?string,email:?string,cedula:?string}> numhistoria => ficha. */
+    /**
+     * La ficha de cada historia de la jornada, **de quién es el número**.
+     *
+     * El número se resuelve con la regla única de `DuenoDeLaHistoria` (el dueño en `historias`) y no con
+     * el vínculo a secas: `medico_pacientes` no es único por `(reg_medico, numhistoria)` y, con dos
+     * pacientes en el mismo número, el `mapWithKeys` de abajo se quedaba con el **último** vínculo
+     * mientras la consulta se quedaba con el **primero**. Así la agenda decía «DIAZ, ALEXANDER · H. 21» y
+     * «Atender» abría a «KARLA RONDON · H. 21» (informe del usuario, 2026-10-19).
+     *
+     * @return array<int,array{id:int,nombre:string,telefono:?string,email:?string,cedula:?string}> numhistoria => ficha.
+     */
     private function fichaPorHistoria(string $regMedico, Collection $numHistorias): array
     {
         if ($numHistorias->isEmpty()) {
             return [];
         }
 
-        $filas = DB::table('medico_pacientes')
-            ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
-            ->where('medico_pacientes.reg_medico', $regMedico)
-            ->whereIn('medico_pacientes.numhistoria', $numHistorias->all())
-            ->get([
-                'medico_pacientes.numhistoria',
-                'pacientes.id',
-                'pacientes.nombres',
-                'pacientes.apellidos',
-                'pacientes.cedula',
-                'pacientes.telefono',
-                'pacientes.email',
-            ]);
+        $duenios = (new DuenoDeLaHistoria())->paraNumeros($regMedico, $numHistorias->all());
 
-        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c).
-        $contactos = (new TelefonoDeContacto())->deLasHistorias(
-            $regMedico,
-            $filas->filter(fn ($p) => Telefono::internacional($p->telefono) === null)->pluck('numhistoria'),
-        );
+        if ($duenios === []) {
+            return [];
+        }
 
-        return $filas
-            ->mapWithKeys(fn ($p) => [(int) $p->numhistoria => [
-                'id' => (int) $p->id,
-                'nombre' => $this->nombreDe($p),
-                'telefono' => Telefono::internacional($p->telefono) === null ? ($contactos[(int) $p->numhistoria] ?? $p->telefono) : $p->telefono,
-                'email' => $p->email,
-                'cedula' => $p->cedula,
-            ]])
-            ->all();
+        $filas = DB::table('pacientes')
+            ->whereIn('id', array_values($duenios))
+            ->get(['id', 'nombres', 'apellidos', 'cedula', 'telefono', 'email'])
+            ->keyBy('id');
+
+        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c). Se pide
+        // sólo por las historias cuyo paciente elegido no tiene uno.
+        $sinTelefono = collect($duenios)
+            ->filter(fn (int $pacienteId) => ($filas[$pacienteId] ?? null) !== null
+                && Telefono::internacional($filas[$pacienteId]->telefono) === null)
+            ->keys();
+
+        $contactos = (new TelefonoDeContacto())->deLasHistorias($regMedico, $sinTelefono);
+
+        $salida = [];
+        foreach ($duenios as $numhistoria => $pacienteId) {
+            $paciente = $filas[$pacienteId] ?? null;
+
+            if ($paciente === null) {
+                continue;
+            }
+
+            $salida[(int) $numhistoria] = [
+                'id' => (int) $paciente->id,
+                'nombre' => $this->nombreDe($paciente),
+                'telefono' => Telefono::internacional($paciente->telefono) === null
+                    ? ($contactos[(int) $numhistoria] ?? $paciente->telefono)
+                    : $paciente->telefono,
+                'email' => $paciente->email,
+                'cedula' => $paciente->cedula,
+            ];
+        }
+
+        return $salida;
     }
 
     private function nombreDe($paciente): string

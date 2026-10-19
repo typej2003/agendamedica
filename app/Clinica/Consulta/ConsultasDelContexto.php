@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta;
 
+use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Consulta;
 use App\Models\MedicoPaciente;
 use App\Models\MotivoConsultaPaciente;
@@ -46,22 +47,39 @@ final class ConsultasDelContexto
     }
 
     /**
-     * El paciente de la historia de una consulta, con el `numhistoria` **del pivote**: `null` si la
-     * consulta es de otro consultorio o quedó huérfana (sin vínculo con un paciente).
+     * El paciente de la historia de una consulta, con el `numhistoria` **de la consulta**: `null` si la
+     * consulta quedó huérfana (sin un paciente dueño del número).
+     *
+     * **La regla es la de `DuenoDeLaHistoria`, y primero dentro del registro de la consulta** (2026-10-19):
+     * el número es único por registro, y buscar el vínculo en todos los registros del médico con un
+     * `whereIn(...)->first()` devolvía el primero que coincidiera. Con dos pacientes que comparten número
+     * (el importador de SQL del `/admin`, un script) la agenda nombraba a uno —el último vínculo— y el
+     * encabezado de la consulta al otro —el primero—: el médico veía «DIAZ, ALEXANDER · H. 21» en la
+     * agenda y «KARLA RONDON · H. 21» al atenderlo. Ahora los dos nombran al mismo, que es el dueño del
+     * número en `historias`.
      *
      * @param  array<int,string>  $registrosMedicos
      */
     public function paciente(Consulta $consulta, array $registrosMedicos): ?object
     {
-        $vinculo = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
-            ->where('numhistoria', (string) (int) $consulta->numhistoria)
-            ->first(['paciente_id', 'numhistoria']);
+        $paciente = null;
 
-        if ($vinculo === null) {
-            return null;
+        $duenio = (new DuenoDeLaHistoria())->de($consulta->reg_medico, $consulta->numhistoria);
+
+        if ($duenio !== null) {
+            $paciente = Paciente::find($duenio);
         }
 
-        $paciente = Paciente::find($vinculo->paciente_id);
+        // Tolerancia con las consultas viejas cuyo número sólo está en el vínculo de otro registro del
+        // médico: se sigue mirando el resto, pero **sólo** si el registro de la consulta no tiene a nadie.
+        if ($paciente === null) {
+            $pacienteId = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
+                ->where('numhistoria', (string) (int) $consulta->numhistoria)
+                ->orderBy('id')
+                ->value('paciente_id');
+
+            $paciente = $pacienteId !== null ? Paciente::find((int) $pacienteId) : null;
+        }
 
         if ($paciente === null) {
             return null;
@@ -71,7 +89,7 @@ final class ConsultasDelContexto
             'id' => (int) $paciente->id,
             'nombres' => $paciente->nombres,
             'apellidos' => $paciente->apellidos,
-            'numhistoria' => $vinculo->numhistoria,
+            'numhistoria' => (string) (int) $consulta->numhistoria,
         ];
     }
 

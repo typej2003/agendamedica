@@ -2,12 +2,11 @@
 
 namespace App\Http\Livewire\Admin;
 
-use App\Models\Historia;
 use App\Models\Medico;
-use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -104,8 +103,9 @@ class CargarSql extends Component
             }
 
             // Poblado post-importación desde la tabla pacientes usando reg_medico
+            $poblado = null;
             if ($archivosProcesados > 0 && !empty($this->medico_id)) {
-                $this->sincronizarDesdePacientes();
+                $poblado = $this->sincronizarDesdePacientes();
             }
 
             // Reactivar llaves foráneas
@@ -117,6 +117,28 @@ class CargarSql extends Component
             }
 
             $this->reset(['archivosSql', 'nuevosArchivos', 'medico_id', 'regMedicoSeleccionado']);
+
+            // Los pacientes omitidos no se pierden en silencio: su número ya es de otro paciente del mismo
+            // consultorio y hay que asignarles uno (la ficha lo ofrece). Callarlo era lo que dejaba dos
+            // pacientes con la misma historia sin que nadie lo supiera.
+            $omitidos = $poblado['omitidos'] ?? [];
+
+            if ($omitidos !== []) {
+                $detalle = collect($omitidos)->take(10)
+                    ->map(fn ($fila) => "paciente {$fila['paciente_id']}: {$fila['motivo']}")
+                    ->implode(' · ');
+
+                session()->flash(
+                    'error',
+                    "Se procesaron {$archivosProcesados} archivos SQL, pero " . count($omitidos)
+                    . ' paciente(s) quedaron sin historia porque su número ya es de otro paciente del consultorio. '
+                    . $detalle . (count($omitidos) > 10 ? ' …' : '')
+                    . ' Asígnasela desde la ficha de cada uno.'
+                );
+
+                return;
+            }
+
             session()->flash('message', "¡Proceso completado con éxito! Se importaron {$archivosProcesados} archivos SQL y se poblaron medico_pacientes e historias correctamente.");
 
         } catch (\Throwable $e) {
@@ -131,51 +153,30 @@ class CargarSql extends Component
     }
 
     /**
-     * Poblado directo de MedicoPaciente e Historia utilizando el modelo Paciente y reg_medico
+     * Poblado directo de MedicoPaciente e Historia utilizando el modelo Paciente y reg_medico.
+     *
+     * La regla vive en `PoblarPacientesDelImportador` (Action probada aparte): escribe las **dos** filas
+     * —vínculo e historia—, en transacción, y **omite** el paciente cuyo número ya es de otro en el mismo
+     * registro. Antes escribía el vínculo primero y la historia después: si el número estaba tomado, la
+     * clave única de `historias` cortaba el proceso y dejaba el vínculo suelto, con dos pacientes
+     * compartiendo número (el bug de «atender abre a otro paciente», 2026-10-19).
      */
-    private function sincronizarDesdePacientes()
+    private function sincronizarDesdePacientes(): array
     {
-        $medicoId = $this->medico_id;
+        $medicoId = (int) $this->medico_id;
         $regMedico = $this->regMedicoSeleccionado;
 
         // Buscar los pacientes que tengan asignado este reg_medico (o consultar todos si no traen la columna filtrada)
-        $pacientes = Paciente::where('reg_medico', $regMedico)
-            ->orWhere('reg_medico', $regMedico)
-            ->get();
+        $pacientes = Schema::hasColumn('pacientes', 'reg_medico')
+            ? Paciente::where('reg_medico', $regMedico)->get()
+            : Paciente::all();
 
-        // En caso de que en la tabla 'pacientes' los registros importados no traigan aún el reg_medico
         if ($pacientes->isEmpty()) {
             $pacientes = Paciente::all();
         }
 
-        foreach ($pacientes as $paciente) {
-            $numHistoria = $paciente->numhistoria ?? $paciente->num_historia ?? $paciente->id;
-
-            // 1. Poblar MedicoPaciente
-            MedicoPaciente::firstOrCreate(
-                [
-                    'medico_id'  => $medicoId,
-                    'paciente_id' => $paciente->id,
-                ],
-                [
-                    'numhistoria' => $numHistoria,
-                    'reg_medico'  => $regMedico,
-                ]
-            );
-
-            // 2. Poblar Historia con los datos del paciente y médico
-            Historia::firstOrCreate(
-                [
-                    'numhistoria' => $numHistoria,
-                    'medico_id'   => $medicoId,
-                    'paciente_id' => $paciente->id,
-                ],
-                [
-                    'reg_medico'        => $regMedico,
-                    'medical_center_id' => 1,
-                ]
-            );
-        }
+        return app(\App\Actions\Pacientes\PoblarPacientesDelImportador::class)
+            ->ejecutar($medicoId, $regMedico, $pacientes);
     }
 
     public function render()

@@ -3,6 +3,7 @@
 namespace App\Clinica\Consulta;
 
 use App\Clinica\Pacientes\CamposDePaciente;
+use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Cola;
 use App\Models\Historia;
 use App\Models\MedicoPaciente;
@@ -26,15 +27,33 @@ use App\Models\MedicoPaciente;
  */
 final class PacienteDeLaCita
 {
+    public function __construct(private DuenoDeLaHistoria $duenios = new DuenoDeLaHistoria())
+    {
+    }
+
     /**
      * `pacientes.id` del paciente de la cita, o `null` si la cita no dice a quién atender: las filas de
      * `cola` del legado con `numhistoria` nulo y sin ancla no tienen a quién numerarle la historia.
+     *
+     * **El número se resuelve primero en el registro de la propia cita** y con la regla única de
+     * `DuenoDeLaHistoria` (el dueño en `historias`): el número es único por registro, y salir a los demás
+     * registros del médico con un `whereIn` devolvía el primer vínculo que coincidiera —el paciente de
+     * otro registro— y «Atender» abría la historia de otra persona. Los demás registros siguen mirándose
+     * **sólo si el de la cita no tiene a nadie** con ese número (una cita vieja enlazada al vínculo de
+     * otro registro).
      */
     public function opcional(Cola $cita, array $registrosMedicos): ?int
     {
         if ($cita->numhistoria !== null) {
+            $duenio = $this->duenios->de($cita->reg_medico, $cita->numhistoria);
+
+            if ($duenio !== null) {
+                return $duenio;
+            }
+
             $pacienteId = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where('numhistoria', (string) (int) $cita->numhistoria)
+                ->orderBy('id')
                 ->value('paciente_id');
 
             if ($pacienteId !== null) {
@@ -54,6 +73,13 @@ final class PacienteDeLaCita
      * y, si no es numérico, no hay historia que buscar — castear a ciegas traería la historia `0`, que es
      * de otro paciente (wiki `04-historia-clinica.md`).
      *
+     * **El número tiene que ser del paciente** (2026-10-19): si el vínculo dice un número que en
+     * `historias` es de **otro** paciente (el importador de SQL del `/admin` dejó el vínculo antes de
+     * fallar, el panel viejo escribía el número a mano), este paciente no tiene historia. Devolver la del
+     * otro es lo que hacía que la ficha mostrara «H. 21» para alguien que no la tenía y que «Atender»
+     * abriera la consulta de una persona distinta. Sin historia, la ficha ofrece asignarla y
+     * `AsignarHistoria` ya sabe qué hacer en este caso: si el número es de otro, numera uno nuevo.
+     *
      * @param  array<int,string>  $registrosMedicos  todos los `reg_medico` del médico, porque el pivote
      *                                               puede tener la historia en otro de sus registros
      */
@@ -61,6 +87,7 @@ final class PacienteDeLaCita
     {
         $vinculo = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
             ->where('paciente_id', $pacienteId)
+            ->orderBy('id')
             ->first(['numhistoria', 'reg_medico']);
 
         $numero = CamposDePaciente::historiaNumerica($vinculo->numhistoria ?? null);
@@ -80,9 +107,19 @@ final class PacienteDeLaCita
             (string) $numero,
         ]));
 
-        return Historia::whereIn('numhistoria', $formas)
+        $historia = Historia::whereIn('numhistoria', $formas)
             ->when($regMedico !== null, fn ($consulta) => $consulta->where('reg_medico', $regMedico))
             ->whereIn('reg_medico', $registrosMedicos)
             ->first();
+
+        // El número es de otro paciente: no es la historia de éste (ver el comentario de arriba). Las
+        // filas viejas de `historias` sin `paciente_id` no dicen de quién son, así que se aceptan.
+        if ($historia !== null
+            && $historia->paciente_id !== null
+            && (int) $historia->paciente_id !== (int) $pacienteId) {
+            return null;
+        }
+
+        return $historia;
     }
 }
