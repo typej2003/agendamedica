@@ -42,6 +42,13 @@ final class PestanasDeSolicitudes
 
     public const INFORME = 'informe';
 
+    /**
+     * **La historia clínica del paciente** (2026-10-19): la hoja que el escritorio muestra en vista previa dentro de
+     * *Solicitudes* y que se imprime con su botón (`tabpage_15` de `tab_4`, `d_historia_clinica_dos`; en pediatría la
+     * solapa se llama *Historia Pediátrica*, como en su build). Es de **sólo lectura**: no escribe nada.
+     */
+    public const HISTORIA = 'historia';
+
     public const HOSPITALIZACION = 'hospitalizacion';
 
     public const DIETA = 'dieta';
@@ -77,6 +84,8 @@ final class PestanasDeSolicitudes
         self::REFERENCIAS => ['texto' => 'Referencia', 'icono' => 'bi-person-up'],
         self::HOSPITALIZACION => ['texto' => 'Hospitalización', 'icono' => 'bi-hospital'],
         self::INFORME => ['texto' => 'Informe médico', 'icono' => 'bi-file-earmark-text'],
+        // La historia va después del informe, como en el escritorio (y antes de *Imágenes*, que la web no tiene acá).
+        self::HISTORIA => ['texto' => 'Historia clínica', 'icono' => 'bi-journal-medical'],
         self::DIETA => ['texto' => 'Dieta / Recomendaciones', 'icono' => 'bi-egg-fried'],
     ];
 
@@ -86,8 +95,10 @@ final class PestanasDeSolicitudes
     /**
      * @param  Closure(string):string  $url  arma la dirección de una pestaña
      * @param  array<int,string>  $ocultas  las pestañas que la especialidad no ofrece (ver `AlcanceDeLaEspecialidad::pestanasDeSolicitudesOcultas`)
+     * @param  array<string,string>  $rotulos  el rótulo de una pestaña cuando la especialidad lo cambia (en pediatría,
+     *                          la historia es la *Historia pediátrica*)
      */
-    public function __construct(private Closure $url, private array $ocultas = [])
+    public function __construct(private Closure $url, private array $ocultas = [], private array $rotulos = [])
     {
     }
 
@@ -131,7 +142,7 @@ final class PestanasDeSolicitudes
                 continue;
             }
 
-            $opciones[] = ['texto' => $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
+            $opciones[] = ['texto' => $this->rotulos[$clave] ?? $pestana['texto'], 'url' => ($this->url)($clave), 'activa' => $clave === $activa];
         }
 
         return $opciones;

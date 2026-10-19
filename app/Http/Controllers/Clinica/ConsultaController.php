@@ -79,6 +79,7 @@ use App\Clinica\Consulta\Vistas\RiesgoQuirurgicoVista;
 use App\Clinica\Consulta\Vistas\QuirurgicoVista;
 use App\Clinica\Consulta\Vistas\ProcedimientosVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
+use App\Clinica\Consulta\Vistas\HistoriaDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenDeCatalogoVista;
@@ -1402,6 +1403,8 @@ class ConsultaController extends Controller
         $pestanas = new PestanasDeSolicitudes(
             fn (string $clave) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => $clave]),
             $ocultas,
+            // En pediatría la solapa de la historia se llama como en su escritorio: *Historia Pediátrica*.
+            $this->alcance()->esPediatria() ? [PestanasDeSolicitudes::HISTORIA => 'Historia pediátrica'] : [],
         );
 
         // La hoja impresa de cada documento: la misma página que imprime la secretaría desde la cita.
@@ -1409,6 +1412,15 @@ class ConsultaController extends Controller
 
         if ($activa === PestanasDeSolicitudes::PAREJA) {
             $vista = $this->laboratorioDeLaPareja($consulta, app(LaboratorioDeLaPareja::class), $catalogoDeExamenes, $old, $imprimir(DocumentoImpreso::LABORATORIO_PAREJA));
+        } elseif ($activa === PestanasDeSolicitudes::HISTORIA) {
+            // La historia clínica dentro de la consulta (2026-10-19): la hoja que el escritorio pone en vista previa al
+            // abrir la solapa. La web no la duplica: ofrece la que ya existe, con «Imprimir» y «Visualizar».
+            $vista = new HistoriaDeLaConsultaVista(
+                trim(trim((string) $paciente->nombres) . ' ' . trim((string) $paciente->apellidos)),
+                $paciente->numhistoria === null ? null : route('clinica.pacientes.historia.imprimir', $paciente->id),
+                route('clinica.pacientes.historia', $paciente->id),
+                $this->alcance()->esPediatria() ? 'Historia pediátrica' : 'Historia clínica',
+            );
         } elseif ($activa === PestanasDeSolicitudes::LABORATORIO) {
             $vista = $this->laboratorio($consulta, $laboratorio, $catalogoDeExamenes, $old, $imprimir('laboratorio'));
         } elseif ($activa === PestanasDeSolicitudes::ESTUDIOS) {

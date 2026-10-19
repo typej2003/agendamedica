@@ -27,12 +27,16 @@ use Illuminate\Support\Collection;
  */
 final class ResumenDeHistoriaVista
 {
-    /** @param  Collection<int, object>  $consultas  lo que devolvió `HistoriaDelPaciente::consultas()` */
+    /**
+     * @param  Collection<int, object>  $consultas  lo que devolvió `HistoriaDelPaciente::consultas()`
+     * @param  bool  $pediatria  en pediatría tres columnas del examen físico significan otra cosa (ver `examenFisico()`)
+     */
     public function __construct(
         private object $ficha,
         private string $medico,
         private Collection $consultas,
         private CarbonInterface $fecha,
+        private bool $pediatria = false,
     ) {
     }
 
@@ -106,20 +110,36 @@ final class ResumenDeHistoriaVista
      * El examen físico de la consulta: el resultado comparativo si lo hay y, después, las seis secciones
      * que imprime el resumen del legado (`d_historia_clinica_resumen.srd`, band=detail: faringe, nariz,
      * oído, laringe, cuello, otros).
+     *
+     * ⚠️ **En pediatría tres de esas columnas son otra cosa** (2026-10-19): el escritorio de pediatría guarda en
+     * `nariz`, `laringe` y `oido` los textos de su ítem *Exámenes/Estudios* —*Exámenes*, *Imagenología* y *Estudios
+     * exploratorios*—, así que la hoja los rotula así. Son las mismas columnas: lo que cambia es el nombre.
      */
     private function examenFisico(object $consulta): ?string
     {
         $partes = [];
 
-        foreach ([
-            'resultadoexamencomp' => 'Resultado del examen',
-            'faringe'             => 'Faringe',
-            'nariz'               => 'Nariz',
-            'oido'                => 'Oído',
-            'laringe'             => 'Laringe',
-            'cuello'              => 'Cuello',
-            'otros'               => 'Otros',
-        ] as $columna => $etiqueta) {
+        $etiquetas = $this->pediatria
+            ? [
+                'resultadoexamencomp' => 'Resultado del examen',
+                'faringe'             => 'Faringe',
+                'nariz'               => 'Exámenes',
+                'oido'                => 'Estudios exploratorios',
+                'laringe'             => 'Imagenología',
+                'cuello'              => 'Cuello',
+                'otros'               => 'Otros',
+            ]
+            : [
+                'resultadoexamencomp' => 'Resultado del examen',
+                'faringe'             => 'Faringe',
+                'nariz'               => 'Nariz',
+                'oido'                => 'Oído',
+                'laringe'             => 'Laringe',
+                'cuello'              => 'Cuello',
+                'otros'               => 'Otros',
+            ];
+
+        foreach ($etiquetas as $columna => $etiqueta) {
             $texto = CamposDePaciente::texto($consulta->{$columna} ?? null);
 
             if ($texto !== null) {

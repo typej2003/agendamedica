@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Historia\HistoriaDelPaciente;
 use App\Clinica\Historia\Vistas\HistoriaDePacienteVista;
@@ -89,6 +90,8 @@ class HistoriaDelPacienteController extends Controller
                 $this->historia->consultas($contexto['reg_medico'], $ficha->numhistoria),
                 // "Hoy" en la zona del consultorio, no en UTC (`FechaDelConsultorio`, WEB-2.9).
                 FechaDelConsultorio::hoy(),
+                // En pediatría tres columnas del examen físico son los textos de *Exámenes/Estudios* (2026-10-19).
+                AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria(),
             ),
         ]);
     }

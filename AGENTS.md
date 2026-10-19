@@ -195,6 +195,16 @@ consulta.
   `ConsultaDietaController::destino()` vuelve a la sección y los rótulos dicen «alimentación» (`DietaVista`). Ginecología
   no cambia. Tests: `AlimentacionPediatricaWebTest` (4) y `SubespecialidadesTest`; verificador
   `../.agent-tools/verificar-consulta-alimentacion-web.js`.
+- **La historia clínica en la consulta (2026-10-19, todas las especialidades)**: la pestaña de *Solicitudes*
+  (`PestanasDeSolicitudes::HISTORIA`, después de *Informe médico*) muestra la hoja de la historia como la solapa
+  *Historia Pediátrica* —*Historia clínica* en ginecología— del escritorio (`tabpage_15` de `tab_4`,
+  `d_historia_clinica_dos`). **No duplica la hoja**: `HistoriaDeLaConsultaVista` + `_solicitudes-historia.blade.php`
+  ofrecen «Imprimir la historia» y «Visualizar» (vista previa de la consulta, WEB-11.24) sobre
+  `/clinica/pacientes/{id}/historia/imprimir`, más «Abrir la historia». Es **de sólo lectura** (ni filas ni rastro).
+  El rótulo cambia por especialidad (`$rotulos` del contenedor). De paso, `ResumenDeHistoriaVista` recibe
+  `$pediatria` y en pediatría rotula `nariz`/`laringe`/`oido` como *Exámenes*/*Imagenología*/*Estudios exploratorios*
+  (son las columnas de su ítem 6). Tests: `Feature/HistoriaEnLaConsultaWebTest` (5) y
+  `Unit/Clinica/SolicitudesUnidadTest`; verificador `../.agent-tools/verificar-consulta-historia-web.js`.
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
   postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
