@@ -302,10 +302,22 @@ class EcosMapasCommand extends Command
             ];
         }
 
+        $tipo = (string) $campo['tipo'];
+
+        // **Un `opciones` sin opciones no es un desplegable**: es el `referido` del mamario y del abdominal,
+        // que guarda la **cédula de un médico** del catálogo `doctores` y que la web llena en su ViewModel
+        // (`EcoMamarioVista`, `EcoAbdominalVista`) con la libreta del médico, no con una lista del DataWindow.
+        // El formulario genérico del app no tiene esa libreta, así que se exporta como **texto**: el campo se
+        // ve y se puede escribir, en vez de salir como un desplegable vacío que no se puede usar. (Elegir al
+        // médico de la libreta desde el teléfono queda anotado en `PLAN-MOVIL.md` §10.)
+        if ($tipo === 'opciones' && $opciones === []) {
+            $tipo = 'texto';
+        }
+
         return [
             'columna' => $campo['columna'],
             'etiqueta' => $campo['etiqueta'],
-            'tipo' => $campo['tipo'],
+            'tipo' => $tipo,
             'unidad' => $campo['unidad'] ?? null,
             'ayuda' => $campo['ayuda'] ?? null,
             'opciones' => $opciones,

@@ -188,6 +188,43 @@ class EcosMapasCommandTest extends TestCase
         }
     }
 
+    /**
+     * **El `referido` del mamario y del abdominal sale como texto, no como un desplegable vacío.**
+     *
+     * En la web es un `opciones` que su ViewModel llena con la libreta del médico (guarda la cédula de un
+     * doctor del catálogo `doctores`); el formulario genérico del app no tiene esa libreta, así que un
+     * `opciones` sin opciones le dejaría un control inutilizable. El exportador lo pasa a `texto` y el campo
+     * se puede escribir a mano.
+     */
+    public function test_el_referido_sale_como_texto_y_no_como_un_desplegable_vacio(): void
+    {
+        $estudios = $this->porClave($this->exportar());
+
+        foreach (['mamario', 'abdominal'] as $clave) {
+            $campos = [];
+            foreach ($estudios[$clave]['grupos'] as $grupo) {
+                foreach ($grupo['campos'] as $campo) {
+                    $campos[$campo['columna']] = $campo;
+                }
+            }
+
+            $this->assertArrayHasKey('referido', $campos, $clave);
+            $this->assertSame('texto', $campos['referido']['tipo'], $clave);
+            $this->assertSame([], $campos['referido']['opciones'], $clave);
+        }
+
+        // Y ningún otro campo del JSON queda como `opciones` sin opciones (sería un desplegable roto).
+        foreach ($estudios as $clave => $estudio) {
+            foreach ($estudio['grupos'] as $grupo) {
+                foreach ($grupo['campos'] as $campo) {
+                    if ($campo['tipo'] === 'opciones') {
+                        $this->assertNotEmpty($campo['opciones'], $clave . '/' . $campo['columna']);
+                    }
+                }
+            }
+        }
+    }
+
     public function test_el_segundo_trimestre_es_su_propia_tabla_con_el_mapa_del_tercero(): void
     {
         $segundo = $this->porClave($this->exportar())['segundo'];
