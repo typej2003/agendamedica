@@ -33,6 +33,7 @@ use App\Models\UltraMama;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\ExamenFisico;
+use App\Models\FormatoPrint;
 use App\Models\Historia;
 use App\Models\Informe;
 use App\Models\Medico;
@@ -388,6 +389,12 @@ class SyncAppDataController extends Controller
             // Tratamientos (plantillas de récipe): cabecera y medicamentos, solo lectura como el vademécum.
             'tratamientos' => ['consulta' => RecipeGrupo::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'tratamientos_detalle' => ['consulta' => RecipeGrupoDetalle::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
+            // **Las plantillas de texto del médico** (`formato_print`, ola §11 de PLAN-MOVIL.md): la
+            // enfermedad actual (`EA`), la evolución (`EV`) y el tratamiento (`TR`) se escriben en el
+            // teléfono y el médico quiere partir de su plantilla, como hace la web (WEB-8.4). Bajan enteras
+            // —son pocas filas— y son **espejo de solo lectura**: crearlas o editarlas desde el app queda
+            // para otra salida; acá sólo se usan.
+            'formato_print' => ['consulta' => FormatoPrint::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             'constancia_obs' => ['consulta' => $porConsulta(ConstanciaObs::class, 'constancia_obs', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(observacion01, '')) <> ''")), 'columna' => 'id'],
             // Un reposo real de 1 día sin observación no se distingue de la plantilla: queda afuera
@@ -649,6 +656,11 @@ class SyncAppDataController extends Controller
             'ecocadiograma_fetal' => EcoCardiogramaFetal::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('ecocadiograma_fetal'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
+            // Las plantillas de texto del médico (ola §11 de PLAN-MOVIL.md): son del médico y no del
+            // paciente, pero el app recorre una lista fija de tablas en cada respuesta y sin esta clave el
+            // pedido de una ficha las dejaría como estaban (no las borra) — y el comentario de arriba pide
+            // que toda clave exista siempre.
+            'formato_print' => FormatoPrint::whereIn('reg_medico', $registrosMedicos)->get(),
         ];
 
         return response()->json($this->cuerpoDeLaRespuesta(
@@ -731,6 +743,10 @@ class SyncAppDataController extends Controller
             'vademecum' => $datos['vademecum'] ?? $vacio,
             'tratamientos' => $datos['tratamientos'] ?? $vacio,
             'tratamientos_detalle' => $datos['tratamientos_detalle'] ?? $vacio,
+            // Las plantillas de texto del médico (ola §11 de PLAN-MOVIL.md). El delta y el volcado las arman
+            // desde `$plan`; el pedido puntual de una ficha no las necesita por paciente, pero la clave tiene
+            // que existir siempre: el app recorre una lista fija de tablas.
+            'formato_print' => $datos['formato_print'] ?? $vacio,
             'constancia_obs' => $datos['constancia_obs'] ?? $vacio,
             'reposo_paciente' => $datos['reposo_paciente'] ?? $vacio,
             'referencia' => $datos['referencia'] ?? $vacio,
