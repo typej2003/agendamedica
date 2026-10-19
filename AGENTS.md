@@ -127,8 +127,16 @@ consulta.
   `w_cargar_visualizar_eco_abdominal`): reusa `EcoAbdominalVista` y su parcial del estudio, y el guardado lleva
   `volver = procedimientos` para volver a esta sección (`ConsultaEstudioController::destino`). Tests:
   `Unit/Clinica/EndoscopiaDigestivaTest` (5) y `Feature/ConsultaProcedimientosWebTest` (7).
-- **Falta**: las pantallas de los otros postgrados (quirúrgico y ecografía pediátrica), el formato en blanco de esos
-  paneles y el informe impreso de las endoscopías. Detalle y evidencia del fuente en
+- **I.Q. (cirugía pediátrica, 2026-10-19)**: el último ítem del árbol (`w_consulta_principal.srw:2717`, después de la
+  pre-factura; el catálogo lo ancla al final porque la pre-factura no tiene sección — `ANCLAS_SIN_SECCION`). Primer
+  paso: la **evaluación pre-operatoria** (`tabpage_32` / `d_pre_aneste`) en `pre_aneste` (una fila por consulta:
+  `tipo`, `resultado`, `emergencia` `S`/`N`). `EvaluacionPreoperatoria` (mapa), `GuardarEvaluacionPreoperatoria`
+  (sólo lo cambiado, rastro por columna), `QuirurgicoVista` + `_quirurgico.blade.php`, `ConsultaQuirurgicoController`
+  (`POST /clinica/consulta/{consulta}/preoperatorio`) y modelo `PreAnestesico`. La pantalla anuncia como pendientes
+  **intervenciones** (`interven_consulta`) y **riesgo quirúrgico** (`riesgo` + `riesgo_paciente`). Tests:
+  `Unit/Clinica/EvaluacionPreoperatoriaTest` (2) y `Feature/ConsultaQuirurgicoWebTest` (5).
+- **Falta**: las dos pestañas de I.Q. (intervenciones y riesgo), la ecografía pediátrica, el formato en blanco de esos
+  paneles y el informe impreso de endoscopías y cirugía. Detalle y evidencia del fuente en
   `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
