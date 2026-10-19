@@ -151,10 +151,14 @@ consulta.
   `endoscopia-inferior`, `evaluacion-preoperatoria`, `indicadores-incidentes` y `eco-renal`—, con sus constantes y
   títulos en `DocumentoImpreso`. El catálogo pasa de **13 a 18** formatos. Tests: `FormatosEnBlancoWebTest` y
   `Unit/Clinica/FormatosEnBlancoVistaTest` (actualizados al número nuevo).
-- **Falta**: el **informe impreso** de endoscopías y cirugía y la pre-factura pediátrica (F9). Todo lo demás del árbol
-  de PediaReport y de sus cinco postgrados está implementado; el detalle y la evidencia del fuente están en
-  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36), `../Docs/Web/relevamiento-pediatria.md` §8.5 y la sección
-  F7 de `../Docs/Web/matriz-paridad-powerbuilder.md`.
+- **Informe impreso de las endoscopías (2026-10-19)**: `SolicitudesParaImprimir` ofrece `endoscopia-superior` e
+  `endoscopia-inferior` **sólo si tienen texto** y arma la hoja con el mismo `textoDelExamen` que las solapas de texto
+  del examen; el cuerpo es el `full_texto` del escritorio o, si está vacío, los hallazgos y la conclusión. Iconos en
+  `DocumentosParaImprimir`. Tests: `Feature/ConsultaEndoscopiaImpresionWebTest` (3).
+- **Falta**: el informe impreso de la **evaluación pre-operatoria / riesgo** (`d_pre_pre_operatoria`) y la
+  **pre-factura** (F9, administración: se deja para después). El resto del árbol de PediaReport y de sus cinco
+  postgrados está implementado; el detalle está en `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36),
+  `../Docs/Web/relevamiento-pediatria.md` §8.5 y la sección F7 de `../Docs/Web/matriz-paridad-powerbuilder.md`.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
