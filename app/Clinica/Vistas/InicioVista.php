@@ -16,9 +16,10 @@ use App\Support\FechaClinica;
  *
  * Lo que **no** tiene, a propósito: navegación entre días, vista de semana o mes, buscador de pacientes ni
  * filtros. No es otra agenda: es la lista del día. Lo que sí tiene son **la acción primaria del encabezado** —
- * «Agregar paciente»: el alta del que llega sin cita para atenderlo hoy (O-34)— y **las mismas acciones de la fila
- * de la agenda** («Confirmar», «Atender»/«Editar consulta» y el menú con el recordatorio, el cobro y las citas del
- * paciente), porque la fila es el parcial `clinica.agenda._fila` y el armador es el mismo `LectorDeAgenda`.
+ * «Nueva cita»: el formulario de siempre, con el día y la sede del contexto ya puestos (decisión del usuario,
+ * 2026-10-19)— y **las mismas acciones de la fila de la agenda** («Confirmar», «Atender»/«Editar consulta» y el
+ * menú con el recordatorio, el cobro y las citas del paciente), porque la fila es el parcial
+ * `clinica.agenda._fila` y el armador es el mismo `LectorDeAgenda`.
  *
  * **Orden de atención**: las citas ya atendidas van primero (marcadas como en la agenda) y después las demás, y
  * dentro de cada grupo se mantiene el orden por hora. Es la lectura del día del médico, no la cola de una sede:
@@ -115,8 +116,8 @@ final class InicioVista
         return [
             'icono' => 'bi-calendar-x',
             'titulo' => 'Hoy no hay pacientes',
-            'texto' => 'No hay citas para hoy en este consultorio. Puedes ir a la agenda a agendar una, o agregar al '
-                . 'paciente que llegó sin cita para atenderlo hoy.',
+            'texto' => 'No hay citas para hoy en este consultorio. Crea una cita nueva para agendar a un paciente, '
+                . 'o ve a la agenda a revisar los próximos días.',
         ];
     }
 
@@ -129,25 +130,25 @@ final class InicioVista
     }
 
     /**
-     * **«Agregar paciente»**, la acción primaria del inicio (O-34, 2026-10-18): el alta de un paciente que llega
-     * **sin cita** a atenderse hoy. No es un acceso al módulo Pacientes —para eso está el menú lateral— ni otra
-     * pantalla: es el botón que lleva al alta de siempre.
+     * **«Nueva cita»**, la acción primaria del inicio (decisión del usuario, 2026-10-19): abre el formulario de
+     * siempre con **el día y la sede del contexto** ya elegidos, para agendar sin salir a la agenda y buscarla.
      *
-     * El camino completo ya existe y no se reimplementa: la web **numera la historia en el mismo paso** (O-04,
-     * `PacienteController::persistir`) y después la ficha **ofrece atenderlo** (O-05, `AtencionInmediata`), que le
-     * crea la cita del día con la sede del contexto y abre la consulta. O sea que «agregar paciente» acá siempre
-     * significa «para atenderlo hoy», que es lo que el médico viene a hacer a esta pantalla.
+     * No reimplementa nada: es el mismo `clinica.agenda.nueva` de la agenda (el que arma `FormularioDeCita`), así
+     * que la cita sigue pasando por las reglas de la jornada, el cupo y el número de turno. El alta de un paciente
+     * que llega **sin cita** sigue estando en el módulo Pacientes («Nuevo paciente») y en la ficha del paciente.
      */
-    public function urlPacienteNuevo(): string
+    public function urlNuevaCita(): string
     {
-        return route('clinica.pacientes.nuevo');
+        return route('clinica.agenda.nueva', [
+            'fecha' => $this->lectura->parametros->fecha->toDateString(),
+            'sede'  => $this->lectura->parametros->sedeId,
+        ]);
     }
 
-    /** La ayuda del botón (viaja en su `title`): dice qué hace el alta y qué pasa después, sin prometer la cita. */
-    public function ayudaAgregarPaciente(): string
+    /** La ayuda del botón (viaja en su `title`): dice que abre el formulario con el día y la sede ya puestos. */
+    public function ayudaNuevaCita(): string
     {
-        return 'Registra al paciente que llegó sin cita: queda con su historia y te ofrece atenderlo ahora, '
-            . 'con la cita de hoy.';
+        return 'Agenda una cita para hoy en esta sede: abre el formulario con el día y la sede ya elegidos.';
     }
 
     /**

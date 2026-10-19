@@ -121,24 +121,24 @@ class InicioVistaTest extends TestCase
         $this->assertNull($vista->resumen());
         $this->assertSame('Hoy no hay pacientes', $vista->vacio()['titulo']);
         $this->assertStringContainsString('agenda', $vista->urlAgenda());
-        $this->assertStringContainsString('nuevo', $vista->urlPacienteNuevo());
-        // El vacío dice que el que llega sin cita se atiende hoy (O-34): no es "registrar para después".
-        $this->assertStringContainsString('atenderlo hoy', $vista->vacio()['texto']);
+        $this->assertStringContainsString('agenda/nueva', $vista->urlNuevaCita());
+        // El vacío ya no promete el alta del que llega sin cita: la acción primaria es agendar una cita.
+        $this->assertStringContainsString('Crea una cita nueva', $vista->vacio()['texto']);
     }
 
     /**
-     * **«Agregar paciente»** (O-34): es el alta de siempre y no depende del día, así que se ofrece igual con la
-     * lista llena o vacía; lo que cambia es sólo dónde vive el botón (el encabezado, siempre visible).
+     * **«Nueva cita»**: es el formulario de la agenda con el día del inicio ya puesto, así que no depende de la
+     * lista; lo que cambia es sólo dónde vive el botón (el encabezado, siempre visible).
      */
-    public function test_la_accion_de_agregar_paciente_es_el_alta_y_no_depende_del_dia(): void
+    public function test_la_accion_primaria_es_nueva_cita_con_el_dia_del_inicio(): void
     {
         $conPacientes = $this->vista([$this->cita()]);
         $sinPacientes = $this->vista([]);
 
         foreach ([$conPacientes, $sinPacientes] as $vista) {
-            $this->assertStringContainsString('pacientes/nuevo', $vista->urlPacienteNuevo());
-            $this->assertStringContainsString('historia', $vista->ayudaAgregarPaciente());
-            $this->assertStringContainsString('atenderlo', $vista->ayudaAgregarPaciente());
+            $this->assertStringContainsString('agenda/nueva', $vista->urlNuevaCita());
+            $this->assertStringContainsString('fecha=2026-10-17', $vista->urlNuevaCita());
+            $this->assertStringContainsString('hoy', $vista->ayudaNuevaCita());
         }
     }
 }

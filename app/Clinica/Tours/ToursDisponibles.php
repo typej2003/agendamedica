@@ -80,9 +80,9 @@ final class ToursDisponibles
     private const PASOS = [
         self::INICIO => [
             [
-                'selector' => '[data-tour=inicio-agregar]',
-                'titulo'   => 'Agregar paciente',
-                'texto'    => 'Para el paciente que llega sin cita: lo registras y, si aceptas, la web le crea la cita de hoy y abre su consulta.',
+                'selector' => '[data-tour=inicio-nueva-cita]',
+                'titulo'   => 'Nueva cita',
+                'texto'    => 'Con este botón agendas una cita: abre el formulario con el día y la sede de hoy ya elegidos.',
             ],
             [
                 'selector' => '[data-tour=inicio-cumpleanos]',

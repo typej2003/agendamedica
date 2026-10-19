@@ -7,14 +7,14 @@
          «Pacientes» se fueron porque el menú lateral ya lleva a las dos— ni otra agenda: es la lista de los pacientes
          del día, en la sede del contexto, sin navegación entre días, sin buscador y sin filtros. La lista y sus
          acciones salen de `InicioVista`, que reusa el armador de la agenda y el parcial de la fila. --}}
-    {{-- La acción primaria del encabezado (O-34): **agregar al paciente que llegó sin cita**. Lleva al alta de
-         siempre, que numera la historia en el mismo paso (O-04) y después ofrece atenderlo creándole la cita de hoy
-         (O-05); el botón no tiene reglas propias, sólo es el camino desde donde el médico ya está mirando el día. --}}
+    {{-- La acción primaria del encabezado: **nueva cita** (decisión del usuario, 2026-10-19). Lleva al formulario de
+         siempre, con el día y la sede del contexto ya elegidos, así el médico agenda sin salir a la agenda; el alta
+         de un paciente que llega sin cita vive en el módulo Pacientes. --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <a class="btn btn-primary" href="{{ $vm->urlPacienteNuevo() }}" data-tour="inicio-agregar"
-               title="{{ $vm->ayudaAgregarPaciente() }}">
-                <i class="bi bi-person-plus" aria-hidden="true"></i> Agregar paciente
+            <a class="btn btn-primary" href="{{ $vm->urlNuevaCita() }}" data-tour="inicio-nueva-cita"
+               title="{{ $vm->ayudaNuevaCita() }}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva cita
             </a>
         </x-slot>
     </x-ui.page-head>
@@ -34,9 +34,8 @@
         @php $vacio = $vm->vacio(); @endphp
         <x-ui.tarjeta data-tour="inicio-lista">
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}
-                {{-- «Agregar paciente» no se repite acá: es la acción primaria del encabezado y está a la vista
-                     también en el día vacío. La salida propia del vacío es la agenda, que es la otra forma de que
-                     aparezca un paciente hoy. --}}
+                {{-- «Nueva cita» no se repite acá: es la acción primaria del encabezado y está a la vista también
+                     en el día vacío. La salida propia del vacío es la agenda, para revisar los próximos días. --}}
                 <x-slot name="acciones">
                     <a class="btn btn-outline-secondary" href="{{ $vm->urlAgenda() }}">
                         <i class="bi bi-calendar3" aria-hidden="true"></i> Ir a la agenda
