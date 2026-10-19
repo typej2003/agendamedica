@@ -111,6 +111,33 @@ class ConsultaEndoscopiaImpresionWebTest extends TestCase
             ->assertSee('ESTUDIO NORMAL');
     }
 
+    public function test_el_informe_pre_operatorio_imprime_la_evaluacion_y_el_riesgo(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conGastro($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // La evaluación pre-operatoria y su riesgo (los puntos salen de lo marcado al paciente).
+        \App\Models\PreAnestesico::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'tipo' => 'A', 'resultado' => 'Apto para cirugía.', 'emergencia' => 'N',
+        ]);
+        \App\Models\Riesgo::create(['reg_medico' => $medico->reg_medico, 'clave' => 1, 'puntos' => 2,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio']);
+        \App\Models\RiesgoPaciente::create(['reg_medico' => $medico->reg_medico, 'historia' => 1001,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio', 'punto' => 2]);
+        \App\Models\RiesgoPacienteOpera::create(['reg_medico' => $medico->reg_medico, 'historia' => 1001,
+            'consulta' => 1, 'puntos' => 2, 'clase' => 'II', 'conclusion' => 'Riesgo moderado.']);
+
+        $this->conContexto($user, $medico->fresh(), $pediatria)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            ->assertSee('EVALUACIÓN PRE-OPERATORIA')
+            ->assertSee('Apto para cirugía.')
+            ->assertSee('2 puntos')
+            ->assertSee('Riesgo moderado.');
+    }
+
     public function test_sin_texto_no_se_ofrece_la_hoja(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
