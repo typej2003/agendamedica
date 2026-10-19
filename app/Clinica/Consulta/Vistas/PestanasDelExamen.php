@@ -41,8 +41,15 @@ final class PestanasDelExamen
     /** El cuestionario por aparatos de pediatría (WEB-12.2): once cuadros de texto (`cuestionario`). */
     public const CUESTIONARIO = 'cuestionario';
 
+    /**
+     * **Neumología pediátrica** (postgrado, 2026-10-19): la solapa de los tres informes del escritorio (R.X. de
+     * tórax, espirometría y broncoscopía). Se ofrece **sólo si el médico tiene el postgrado**; `AlcanceDeLaEspecialidad`
+     * la oculta en el resto de las especialidades y `ConsultaController` la suma a las ocultas cuando no lo tiene.
+     */
+    public const NEUMOLOGIA = 'neumologia';
+
     /** Las solapas propias de pediatría: se ofrecen sólo allí (`AlcanceDeLaEspecialidad`). */
-    public const PEDIATRICAS = [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO];
+    public const PEDIATRICAS = [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::NEUMOLOGIA];
 
     /** La colposcopía, que es la primera solapa de texto (y por eso tiene constante propia). */
     public const COLPOSCOPIA = TextosDelExamen::COLPOSCOPIA;
@@ -64,6 +71,7 @@ final class PestanasDelExamen
         self::MEDICIONES => 'Mediciones',
         self::EXAMEN => 'Examen físico',
         self::CUESTIONARIO => 'Cuestionario',
+        self::NEUMOLOGIA => 'Neumología',
         self::MAMAS => 'Imágenes de mamas',
         self::GINECOLOGICO => 'Examen ginecológico',
         self::IMAGENES => 'Imágenes',
@@ -74,6 +82,7 @@ final class PestanasDelExamen
         self::MEDICIONES => 'bi-rulers',
         self::EXAMEN => 'bi-clipboard2-pulse',
         self::CUESTIONARIO => 'bi-chat-left-dots',
+        self::NEUMOLOGIA => 'bi-lungs',
         self::MAMAS => 'bi-brush',
         self::GINECOLOGICO => 'bi-gender-female',
         self::IMAGENES => 'bi-images',
@@ -107,7 +116,7 @@ final class PestanasDelExamen
     public static function claves(): array
     {
         return array_merge(
-            [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::FISICO, self::MAMAS, self::GINECOLOGICO],
+            [self::MEDICIONES, self::EXAMEN, self::CUESTIONARIO, self::NEUMOLOGIA, self::FISICO, self::MAMAS, self::GINECOLOGICO],
             TextosDelExamen::claves(),
             self::COMUNES,
         );

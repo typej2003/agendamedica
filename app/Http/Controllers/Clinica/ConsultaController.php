@@ -66,6 +66,8 @@ use App\Clinica\Consulta\Vistas\ImagenDelExamenVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\IndicadoresIncidentesVista;
+use App\Clinica\Consulta\Vistas\NeumologiaVista;
+use App\Clinica\Consulta\NeumologiaDeLaConsulta;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
@@ -525,13 +527,42 @@ class ConsultaController extends Controller
                 'pestana' => $clave,
             ]);
 
+            // Las solapas que no se ofrecen en esta especialidad, más la de neumología cuando el médico **no** tiene
+            // el postgrado (2026-10-19): es una solapa de su pestaña, no de la especialidad.
+            $ocultas = $this->alcance()->pestanasDelExamenOcultas();
+            $postgrados = (array) (request()->attributes->get('contexto_clinico')['secciones_postgrados'] ?? []);
+
+            if (! in_array(PestanasDelExamen::NEUMOLOGIA, $postgrados, true)) {
+                $ocultas[] = PestanasDelExamen::NEUMOLOGIA;
+
+                // Una URL directa a la solapa de un postgrado que el médico no tiene no puede caer en el formulario
+                // de otro tipo: abre la solapa de entrada de su especialidad.
+                if ($pestana === PestanasDelExamen::NEUMOLOGIA) {
+                    $pestana = $this->alcance()->pestanaDelExamen('');
+                }
+            }
+
+            // La solapa de **neumología pediátrica** (2026-10-19): los tres informes del escritorio.
+            if ($pestana === PestanasDelExamen::NEUMOLOGIA && in_array(PestanasDelExamen::NEUMOLOGIA, $postgrados, true)) {
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $ocultas),
+                    new NeumologiaVista(
+                        (new NeumologiaDeLaConsulta())->de($consulta),
+                        route('clinica.consulta.neumologia.guardar', $consulta->id),
+                        $url($pestana),
+                        (array) old(),
+                    ),
+                );
+            }
+
             // La **galería de imágenes de los estudios** (O-22): una solapa más, al final, que no es de texto.
             // Es la que vivía en la sección *Exámenes* retirada: «Esta consulta / Todas» y la subida, con el
             // parcial `_imagenes` de siempre (la columna `observacion` sigue teniendo dos dueños, trampa 116).
             if ($pestana === PestanasDelExamen::IMAGENES) {
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $this->galeria($consulta, $regMedico, $imagenes),
                 );
             }
@@ -540,7 +571,7 @@ class ConsultaController extends Controller
             if ($pestana === PestanasDelExamen::MEDICIONES) {
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $this->vistaDeMediciones($consulta, $regMedico, $pacienteId, $url($pestana)),
                 );
             }
@@ -551,7 +582,7 @@ class ConsultaController extends Controller
 
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $pestana === PestanasDelExamen::EXAMEN
                         ? new \App\Clinica\Consulta\Vistas\ExamenPediatricoVista(
                             $pediatrico->examen($consulta),
@@ -595,7 +626,7 @@ class ConsultaController extends Controller
 
             return new SeccionDeEvaluacionVista(
                 $pestana,
-                new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                new PestanasDelExamen($url, $ocultas),
                 $pestana === PestanasDelExamen::MAMAS
                     ? new DibujosDeMamasVista(
                         fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),

@@ -52,6 +52,7 @@ use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
+use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -357,6 +358,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del
                 // ítem 5 de pediatría. Compone un texto y lo deja en `consultas.resultadoexamencomp`.
                 Route::post('/consulta/{consulta}/indicadores', [ConsultaIndicadoresController::class, 'guardar'])->name('consulta.indicadores.guardar');
+
+                // **Neumología pediátrica** (postgrado, 2026-10-19): los tres informes de la solapa del examen.
+                Route::post('/consulta/{consulta}/neumologia', [ConsultaNeumologiaController::class, 'guardar'])->name('consulta.neumologia.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

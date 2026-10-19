@@ -498,4 +498,9 @@
     document.querySelectorAll('[data-consulta-indicadores]').forEach(function (formulario) {
         avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
     });
+
+    // Neumología pediátrica (2026-10-19): tres informes de texto con guardado explícito.
+    document.querySelectorAll('[data-consulta-neumologia]').forEach(function (formulario) {
+        avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
+    });
 })();

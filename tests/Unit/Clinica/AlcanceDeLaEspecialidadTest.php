@@ -103,7 +103,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $pediatria->pestanasDelExamenOcultas());
 
         $this->assertSame(
-            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO, PestanasDelExamen::IMAGENES],
+            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO, PestanasDelExamen::NEUMOLOGIA, PestanasDelExamen::IMAGENES],
             array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
         );
         // Arranca en las mediciones, como el escritorio; la URL directa sigue abriendo el examen de ginecología.
