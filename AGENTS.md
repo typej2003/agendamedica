@@ -155,10 +155,13 @@ consulta.
   `endoscopia-inferior` **sólo si tienen texto** y arma la hoja con el mismo `textoDelExamen` que las solapas de texto
   del examen; el cuerpo es el `full_texto` del escritorio o, si está vacío, los hallazgos y la conclusión. Iconos en
   `DocumentosParaImprimir`. Tests: `Feature/ConsultaEndoscopiaImpresionWebTest` (3).
-- **Falta**: el informe impreso de la **evaluación pre-operatoria / riesgo** (`d_pre_pre_operatoria`) y la
-  **pre-factura** (F9, administración: se deja para después). El resto del árbol de PediaReport y de sus cinco
-  postgrados está implementado; el detalle está en `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36),
-  `../Docs/Web/relevamiento-pediatria.md` §8.5 y la sección F7 de `../Docs/Web/matriz-paridad-powerbuilder.md`.
+- **Informe impreso de la evaluación pre-operatoria (2026-10-19)**: `SolicitudesParaImprimir` ofrece
+  `evaluacion-preoperatoria` si la consulta tiene algo cargado (la evaluación, el riesgo o las intervenciones) y arma la
+  hoja con la intervención, la evaluación pre-anestésica (tipo, resultado y emergencia), el riesgo con sus **puntos** y
+  su clase, y la conclusión. Icono en `DocumentosParaImprimir`. Test: uno de
+  `Feature/ConsultaEndoscopiaImpresionWebTest` (4 en total).
+- **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
+  postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
