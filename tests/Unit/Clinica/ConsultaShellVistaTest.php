@@ -17,20 +17,26 @@ use PHPUnit\Framework\TestCase;
  */
 class ConsultaShellVistaTest extends TestCase
 {
-    private function paciente(array $campos = []): object
+    private function paciente(array $campos = [], ?string $fnacimiento = null): object
     {
-        return (object) array_merge([
+        $base = [
             'id'          => 5619,
             'nombres'     => 'Ana',
             'apellidos'   => 'Pérez',
             'numhistoria' => '1001',
-        ], $campos);
+        ];
+
+        if ($fnacimiento !== null) {
+            $base['fnacimiento'] = $fnacimiento;
+        }
+
+        return (object) array_merge($base, $campos);
     }
 
     private function vista(array $extra = []): ConsultaShellVista
     {
         return new ConsultaShellVista(
-            $extra['paciente'] ?? $this->paciente(),
+            $extra['paciente'] ?? $this->paciente([], $extra['fnacimiento'] ?? null),
             $extra['nroconsulta'] ?? 3,
             $extra['fecha'] ?? '2026-10-05',
             $extra['urlPaciente'] ?? '/clinica/pacientes/5619',
@@ -38,6 +44,15 @@ class ConsultaShellVistaTest extends TestCase
             $extra['urlVolver'] ?? '/clinica/agenda?vista=dia&fecha=2026-10-05&sede=todas',
             $extra['urlConsulta'] ?? '/clinica/consulta/42',
             $extra['seccion'] ?? null,
+            // De acá abajo, los que la pantalla no usa en estas pruebas: van con su valor por defecto para llegar a
+            // la especialidad, que es el 15.º argumento y el que decide si el encabezado lleva la edad.
+            $extra['urlTerminar'] ?? null,
+            $extra['terminable'] ?? false,
+            $extra['consultasDelPaciente'] ?? [],
+            $extra['consultaActual'] ?? null,
+            $extra['alertas'] ?? [],
+            $extra['avisarAlertas'] ?? false,
+            $extra['especialidad'] ?? null,
         );
     }
 
@@ -67,6 +82,78 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('—', $vm->fecha());
         $this->assertSame('Consulta N.º 3 · —', $vm->subtitulo());
         $this->assertSame('Paciente sin nombre · Consulta N.º 3 · —', $vm->lineaDeCabecera());
+    }
+
+    public function test_en_pediatria_la_edad_abre_la_linea_del_encabezado(): void
+    {
+        // «Siempre debe aparecer la edad del paciente en pediatría»: la edad es el primer dato de la línea, delante
+        // de la historia, y entra en el subtítulo para que también quede en el `title` de la cabecera.
+        $vm = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02']);
+
+        $this->assertSame('2 años 3 meses 3 días', $vm->edad());
+        $this->assertSame(
+            '2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
+            $vm->subtitulo(),
+        );
+        $this->assertSame(
+            'Pérez, Ana · 2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
+            $vm->lineaDeCabecera(),
+        );
+    }
+
+    public function test_la_edad_se_cuenta_a_la_fecha_de_la_consulta_no_a_hoy(): void
+    {
+        // El mismo paciente en dos consultas: la edad es la que tenía **ese día**, no la de hoy.
+        $rn = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02', 'fecha' => '2024-07-07']);
+        $this->assertSame('5 días', $rn->edad());
+        $this->assertSame('5 días · H. 1001 · Consulta N.º 3 · 07/07/2024', $rn->subtitulo());
+
+        $meses = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02', 'fecha' => '2024-10-14']);
+        $this->assertSame('3 meses 12 días', $meses->edad());
+
+        $anios = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02', 'fecha' => '2026-10-05']);
+        $this->assertSame('2 años 3 meses 3 días', $anios->edad());
+
+        $sinDias = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2018-10-05', 'fecha' => '2026-10-05']);
+        $this->assertSame('8 años', $sinDias->edad());
+    }
+
+    public function test_en_pediatria_sin_fecha_de_nacimiento_el_aviso_aparece_igual(): void
+    {
+        // Nunca desaparece en silencio: sin el dato (o con la basura del legado) se dice que falta, en el mismo
+        // lugar donde iría la edad.
+        $sinDato = $this->vista(['especialidad' => 'pediatria']);
+        $this->assertSame('sin fecha de nacimiento', $sinDato->edad());
+        $this->assertSame(
+            'sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
+            $sinDato->subtitulo(),
+        );
+        $this->assertSame(
+            'Pérez, Ana · sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
+            $sinDato->lineaDeCabecera(),
+        );
+
+        $nula = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '0000-00-00']);
+        $this->assertSame('sin fecha de nacimiento', $nula->edad());
+        $this->assertStringStartsWith('sin fecha de nacimiento · H. 1001 · ', $nula->subtitulo());
+
+        // Una consulta anterior al nacimiento tampoco puede inventar una edad.
+        $anterior = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02', 'fecha' => '2024-07-01']);
+        $this->assertSame('sin fecha de nacimiento', $anterior->edad());
+        $this->assertStringStartsWith('sin fecha de nacimiento · H. 1001 · ', $anterior->subtitulo());
+    }
+
+    public function test_fuera_de_pediatria_el_encabezado_queda_exactamente_como_esta(): void
+    {
+        // La edad es un dato de pediatría: con la fecha de nacimiento cargada, ginecología y la consulta sin
+        // especialidad siguen mostrando la misma línea de siempre.
+        foreach ([null, 'ginecologia-y-obstetricia'] as $slug) {
+            $vm = $this->vista(['especialidad' => $slug, 'fnacimiento' => '2024-07-02']);
+
+            $this->assertNull($vm->edad(), (string) $slug);
+            $this->assertSame('H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo(), (string) $slug);
+            $this->assertSame('Pérez, Ana · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->lineaDeCabecera(), (string) $slug);
+        }
     }
 
     public function test_el_panel_tiene_los_trece_items_en_su_orden_y_con_su_tarea(): void

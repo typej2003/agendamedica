@@ -2,7 +2,9 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\SeccionesDeLaConsulta;
+use App\Clinica\Crecimiento\EdadEnTexto;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
 
@@ -229,21 +231,54 @@ final class ConsultaShellVista
     }
 
     /**
-     * "H. 1001 · Consulta N.º 3 · 10/10/2026" — lo que identifica la atención que se está abriendo.
+     * **La edad del paciente a la fecha de la consulta**, o `null` fuera de pediatría.
+     *
+     * En pediatría la edad es un dato más de la línea del encabezado y **no puede faltar**: si el paciente no
+     * tiene una fecha de nacimiento válida (basura del legado, año imposible o futuro) —o la consulta es
+     * anterior al nacimiento— se devuelve «sin fecha de nacimiento», que es el aviso de que falta el dato, en
+     * el mismo lugar donde iría la edad.
+     *
+     * El texto es el de pediatría del proyecto (`EdadEnTexto`: «5 días», «3 meses 12 días», «2 años 3 meses
+     * 3 días», «8 años») y se cuenta **a la fecha de la consulta**, no a hoy: es la edad que tenía ese día.
+     */
+    public function edad(): ?string
+    {
+        if (! AlcanceDeLaEspecialidad::de($this->especialidad)->esPediatria()) {
+            return null;
+        }
+
+        $nacimiento = FechaClinica::paraInput($this->paciente->fnacimiento ?? null);
+
+        if ($nacimiento === '') {
+            return 'sin fecha de nacimiento';
+        }
+
+        return EdadEnTexto::entre($nacimiento, $this->fecha) ?? 'sin fecha de nacimiento';
+    }
+
+    /**
+     * "2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 10/10/2026" en pediatría, "H. 1001 · Consulta N.º 3 ·
+     * 10/10/2026" en las demás — lo que identifica la atención que se está abriendo.
      *
      * Va detrás del nombre del paciente en la **única fila** del encabezado de la consulta (A-11), en este orden:
-     * `NOMBRE · H. n.º · Consulta n.º · fecha` (el nombre lo pinta la vista y esto es el resto).
+     * `NOMBRE · [edad] · H. n.º · Consulta n.º · fecha` (el nombre lo pinta la vista y esto es el resto). La edad
+     * abre la línea **sólo en pediatría** y siempre aparece: también cuando falta la fecha de nacimiento
+     * («sin fecha de nacimiento»). Fuera de pediatría la línea no cambia.
      */
     public function subtitulo(): string
     {
         return collect([
+            $this->edad(),
             $this->historia(),
             'Consulta N.º ' . $this->nroconsulta,
             FechaClinica::formato($this->fecha),
         ])->filter()->implode(' · ');
     }
 
-    /** La fila completa del encabezado, para el `title` con el texto sin recortar: "Pérez, Ana · H. 1001 · …". */
+    /**
+     * La fila completa del encabezado, para el `title` con el texto sin recortar: "Pérez, Ana · H. 1001 · …", con la
+     * edad del paciente en pediatría detrás del nombre.
+     */
     public function lineaDeCabecera(): string
     {
         return collect([$this->nombre(), $this->subtitulo()])->filter()->implode(' · ');
