@@ -23,6 +23,13 @@
 
         @include('clinica.pacientes._campos')
 
+        {{-- El representante del alta de pediatría (2026-10-19: un representante puede tener varios hijos): va
+             después de los datos del niño porque es el adulto que responde por él, y sólo el alta de pediatría lo
+             pide. En la edición y en las demás especialidades el bloque de la ficha sigue siendo el camino. --}}
+        @if ($representanteAlta->ofrece())
+            @include('clinica.pacientes._representante-alta', ['representanteAlta' => $representanteAlta])
+        @endif
+
         {{-- «¿Atenderá a este paciente hoy?» ya no se pregunta acá: el alta desde la web **numera la historia**
              en el mismo paso (O-04) y, al volver a la ficha, la pregunta es «¿Atender ahora?» (O-05), que es
              donde se abre la consulta o se le crea la cita del día. --}}
@@ -36,4 +43,7 @@
 
 @section('scripts')
     <script src="{{ asset('js/clinica/paciente-formulario.js') }}"></script>
+    @if ($representanteAlta->ofrece())
+        <script src="{{ asset('js/clinica/representante-alta.js') }}"></script>
+    @endif
 @endsection

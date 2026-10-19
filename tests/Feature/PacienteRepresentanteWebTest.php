@@ -123,6 +123,75 @@ class PacienteRepresentanteWebTest extends TestCase
         ], $extra));
     }
 
+    /**
+     * Un consultorio de **pediatría**, que es la única especialidad donde el alta pide el representante (2026-10-19).
+     */
+    private function medicoPediatra(string $rol = 'Medico'): array
+    {
+        $this->seed(EspecialidadesYModulosSeeder::class);
+        $this->seed(ParentescoSeeder::class);
+
+        $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
+        $regMedico = 'rep-ped-' . substr(uniqid(), -6);
+
+        $user = User::create([
+            'name'                 => 'Usuario de prueba',
+            'email'                => 'rep-ped-' . substr(uniqid(), -6) . '@example.com',
+            'password'             => Hash::make('secreto123'),
+            'is_active'            => true,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole($rol);
+
+        $medico = Medico::create([
+            'user_id'    => $user->id,
+            'name'       => 'Dra. de prueba',
+            'lastname'   => 'Representante',
+            'email'      => $user->email,
+            'password'   => $user->password,
+            'reg_medico' => $regMedico,
+        ]);
+        $medico->specialties()->attach($pediatria->id);
+        MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+        return [$user, $medico, $pediatria];
+    }
+
+    /** La fila de `paciente_chamo`, tal como la sube el escritorio de pediatría (con la cédula del representante). */
+    private function chamo(string $reg, int $historia, int $familia, ?string $cedulaDelRepresentante = null): void
+    {
+        DB::table('paciente_chamo')->insert([
+            'reg_medico'    => $reg,
+            'familia'       => $familia,
+            'historia'      => $historia,
+            'representante' => $cedulaDelRepresentante,
+            'nombre'        => 'PEREZ MATEO',
+            'sexo'          => 'M',
+            'f_nacimiento'  => '2022-03-01',
+            'created_at'    => now(),
+            'updated_at'    => now(),
+        ]);
+    }
+
+    /** La familia del escritorio: quién es el representante lo dice `status` (`F` madre, `M` padre). */
+    private function familia(string $reg, int $familia, array $extra = []): void
+    {
+        DB::table('familia_bebe')->insert(array_merge([
+            'reg_medico' => $reg,
+            'familia'    => $familia,
+            'nom_madre'  => 'ROSA GÓMEZ',
+            'nom_padre'  => 'LUIS PÉREZ',
+            'celu_madre' => '04141234567',
+            'cel_padre'  => '04127654321',
+            'telefono'   => '02121112233',
+            'email'      => 'familia@example.com',
+            'direccion'  => 'AV. PRINCIPAL, CASA 4',
+            'status'     => 'F',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $extra));
+    }
+
     // ------------------------------------------------------------------ La ficha (lo que se ve)
 
     public function test_la_ficha_muestra_el_representante_con_su_parentesco(): void
@@ -515,5 +584,305 @@ class PacienteRepresentanteWebTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->assertSame(0, DB::table('representante')->where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    // ------------------------------------------- Un representante puede tener varios hijos (2026-10-19)
+
+    /**
+     * El alta de pediatría pide el representante en su propia tarjeta; **el resto del alta no cambia**: en ginecología la
+     * tarjeta no aparece (y la edición de la ficha tampoco la tiene: ahí el representante se carga con su diálogo).
+     */
+    public function test_el_alta_en_pediatria_muestra_la_tarjeta_representante_y_en_ginecologia_no(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $medico->specialties()->attach($gineco->id);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.nuevo'));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Cédula del representante');
+        $respuesta->assertSee('name="representante_cedula"', false);
+        $respuesta->assertSee('data-representante-buscar', false);
+        $respuesta->assertSee('data-representante-hijos', false);
+        $respuesta->assertSee(route('clinica.pacientes.representante.buscar'), false);
+        $respuesta->assertSee('js/clinica/representante-alta.js', false);
+
+        // En ginecología el alta sigue siendo el de siempre.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.nuevo'))
+            ->assertOk()
+            ->assertDontSee('name="representante_cedula"', false)
+            ->assertDontSee('representante-alta.js', false);
+
+        // Y la edición de la ficha tampoco lo pide, ni siquiera en pediatría.
+        $nino = $this->paciente($medico, 'Mateo', '1005');
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.editar', $nino))
+            ->assertOk()
+            ->assertDontSee('name="representante_cedula"', false);
+    }
+
+    /**
+     * El buscador por cédula devuelve al representante **ya cargado en el consultorio** (la tabla `representante`, una fila por
+     * historia) y los dos niños de los que es representante, con el enlace a cada ficha.
+     */
+    public function test_el_buscador_devuelve_el_representante_y_los_hijos_cargados_en_la_tabla(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $mayor = $this->paciente($medico, 'Mateo', '1101', 6);
+        $menor = $this->paciente($medico, 'Lucía', '1102', 3);
+
+        // El mismo adulto, anotado en las dos historias (lo que la web guarda cuando se carga en cada ficha).
+        foreach (['1101', '1102'] as $historia) {
+            $this->representante($medico, $historia, [
+                'nombre'   => 'ROSA PEREZ',
+                'cedula'   => '11222333',
+                'telefono' => '04141112233',
+                'email'    => 'rosa@example.com',
+            ]);
+        }
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->getJson(route('clinica.pacientes.representante.buscar', ['cedula' => '11222333']));
+
+        $respuesta->assertOk()->assertJson([
+            'encontrado' => true,
+            'nombre'     => 'ROSA PEREZ',
+            'parentesco' => 'M',
+            'telefono'   => '04141112233',
+            'email'      => 'rosa@example.com',
+            'direccion'  => 'CALLE 1',
+        ]);
+
+        $hijos = $respuesta->json('hijos');
+        $this->assertCount(2, $hijos, 'los dos niños del consultorio tienen que estar');
+        $this->assertSame(['De Prueba, Lucía', 'De Prueba, Mateo'], array_column($hijos, 'nombre'), 'ordenados por apellido y nombre');
+        $this->assertSame(['1102', '1101'], array_column($hijos, 'historia'));
+        $this->assertSame([
+            route('clinica.pacientes.ver', $menor),
+            route('clinica.pacientes.ver', $mayor),
+        ], array_column($hijos, 'url'));
+    }
+
+    /**
+     * Y si el representante **sólo está en el escritorio de pediatría**, se arma desde `familia_bebe` + `paciente_chamo`:
+     * `status` dice qué padre es el representante, y de ahí salen el nombre, el parentesco que se propone y el teléfono.
+     */
+    public function test_el_buscador_arma_el_representante_desde_la_familia_del_escritorio(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $reg = $medico->reg_medico;
+
+        // Madre representante (`status = 'F'`).
+        $hijo = $this->paciente($medico, 'Mateo', '1201', 4);
+        $this->chamo($reg, 1201, 77, '44556677');
+        $this->familia($reg, 77, ['ced_representante' => '44556677', 'status' => 'F', 'nom_madre' => 'ANA RUIZ', 'celu_madre' => '04149998877']);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->getJson(route('clinica.pacientes.representante.buscar', ['cedula' => '44556677']));
+
+        $respuesta->assertOk()->assertJson([
+            'encontrado' => true,
+            'nombre'     => 'ANA RUIZ',
+            'parentesco' => 'M',            // Madre: el código del catálogo
+            'telefono'   => '04149998877',  // el celular de la madre, no el de la casa
+            'email'      => 'familia@example.com',
+            'direccion'  => 'AV. PRINCIPAL, CASA 4',
+        ]);
+        $this->assertSame([route('clinica.pacientes.ver', $hijo)], array_column($respuesta->json('hijos'), 'url'));
+
+        // Padre representante (`status = 'M'`): otro nombre, otro parentesco y el otro celular.
+        $this->familia($reg, 78, [
+            'ced_representante' => '88990011', 'status' => 'M', 'nom_padre' => 'LUIS PÉREZ', 'cel_padre' => '04127776655',
+        ]);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->getJson(route('clinica.pacientes.representante.buscar', ['cedula' => '88990011']))
+            ->assertOk()
+            ->assertJson([
+                'encontrado' => true,
+                'nombre'     => 'LUIS PÉREZ',
+                'parentesco' => 'P', // Padre
+                'telefono'   => '04127776655',
+            ]);
+    }
+
+    /** La misma cédula de otro consultorio no se mezcla: ni sus datos ni sus hijos. */
+    public function test_el_buscador_no_mezcla_otro_consultorio(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        [, $otro] = $this->medicoPediatra();
+        $ajeno = $this->paciente($otro, 'Ajeno', '1301', 5);
+        $this->representante($otro, '1301', ['nombre' => 'ADULTO AJENO', 'cedula' => '99887766']);
+
+        // Todavía no está en el mío: el buscador no lo encuentra.
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->getJson(route('clinica.pacientes.representante.buscar', ['cedula' => '99887766']))
+            ->assertOk()
+            ->assertExactJson(['encontrado' => false, 'hijos' => []]);
+
+        // Con el mío cargado, aparece el mío y sólo el mío.
+        $mio = $this->paciente($medico, 'Mío', '1302', 5);
+        $this->representante($medico, '1302', ['cedula' => '99887766']);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->getJson(route('clinica.pacientes.representante.buscar', ['cedula' => '99887766']));
+
+        $respuesta->assertOk()->assertJson(['encontrado' => true]);
+        $hijos = array_column($respuesta->json('hijos'), 'url');
+        $this->assertSame([route('clinica.pacientes.ver', $mio)], $hijos);
+        $this->assertNotContains(route('clinica.pacientes.ver', $ajeno), $hijos);
+    }
+
+    /**
+     * **El alta con representante**: si el formulario trae la cédula, el servidor la vuelve a resolver, completa los datos que
+     * falten con lo cargado en el consultorio, guarda la fila de `representante` para la historia nueva y —si la cédula es de
+     * una familia del escritorio— enlaza al niño a esa familia, que es lo que lo deja como hermano.
+     */
+    public function test_el_alta_con_representante_guarda_la_fila_y_enlaza_al_nino_a_la_familia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $reg = $medico->reg_medico;
+
+        $hermano = $this->paciente($medico, 'Mateo', '1401', 6);
+        $this->chamo($reg, 1401, 88, '11222333');
+        $this->familia($reg, 88, ['ced_representante' => '11222333', 'status' => 'F', 'nom_madre' => 'ANA RUIZ', 'celu_madre' => '04149998877']);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac'                  => 'V',
+                'apellidos'            => 'Ruiz',
+                'nombres'              => 'Lucía',
+                'sexo'                 => 'F',
+                'fnacimiento'          => now()->subMonths(8)->toDateString(),
+                // Sólo la cédula: los demás datos del representante los completa el servidor.
+                'representante_cedula' => '11222333',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado');
+
+        $nueva = DB::table('pacientes')->where('nombres', 'Lucía')->where('apellidos', 'Ruiz')->value('id');
+        $this->assertNotNull($nueva);
+        $historia = (int) DB::table('medico_pacientes')->where('reg_medico', $reg)->where('paciente_id', $nueva)->value('numhistoria');
+
+        // La fila del representante de la historia nueva, con lo que se sabía de la familia.
+        $fila = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', $historia)->first();
+        $this->assertNotNull($fila, 'el representante del alta tiene que quedar guardado');
+        $this->assertSame('11222333', $fila->cedula);
+        $this->assertSame('ANA RUIZ', $fila->nombre);
+        $this->assertSame('M', $fila->codeparentesco);
+        $this->assertSame('04149998877', $fila->telefono);
+
+        // Y el niño quedó en la familia de su hermano.
+        $chamo = DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', $historia)->first();
+        $this->assertNotNull($chamo);
+        $this->assertSame(88, (int) $chamo->familia);
+        $this->assertSame(1, DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', $historia)->count(), 'no se duplica su fila');
+
+        // La ficha del hermano lo lista (es la regla de «hermanos» de siempre).
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $hermano))
+            ->assertOk()
+            ->assertSee('Lucía');
+    }
+
+    /** El alta con un representante **nuevo**: lo escrito manda y no se inventa familia (no se enlaza a ninguna). */
+    public function test_el_alta_con_un_representante_nuevo_lo_guarda_sin_enlazar_familia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $reg = $medico->reg_medico;
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac'                     => 'V',
+                'apellidos'               => 'Rojas',
+                'nombres'                 => 'Valentina',
+                'sexo'                    => 'F',
+                'fnacimiento'             => now()->subMonths(8)->toDateString(),
+                'representante_cedula'    => '24680135',
+                'representante_nombre'    => 'CARLA ROJAS',
+                'representante_parentesco' => 'M',
+                'representante_telefono'  => '04143332211',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $nueva = DB::table('pacientes')->where('nombres', 'Valentina')->value('id');
+        $historia = (int) DB::table('medico_pacientes')->where('reg_medico', $reg)->where('paciente_id', $nueva)->value('numhistoria');
+
+        $fila = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', $historia)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('CARLA ROJAS', $fila->nombre);
+        $this->assertSame('04143332211', $fila->telefono);
+
+        // No hay familia que enlazar: el niño no queda como `paciente_chamo`.
+        $this->assertSame(0, DB::table('paciente_chamo')->where('reg_medico', $reg)->where('historia', $historia)->count());
+    }
+
+    /** Un alta sin representante —lo normal fuera de pediatría— no escribe nada en la tabla. */
+    public function test_el_alta_de_pediatria_sin_representante_no_escribe_nada(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac' => 'V', 'apellidos' => 'Silva', 'nombres' => 'Tomás', 'fnacimiento' => now()->subYears(3)->toDateString(),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(0, DB::table('representante')->where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    /**
+     * La ficha muestra **«También es representante de:»** con los otros pacientes del consultorio que comparten la cédula del
+     * representante, con su enlace y su número de historia. Sirve para cualquier especialidad (el bloque del representante ya
+     * se muestra a los menores de 18) y no mezcla a quien no comparte la cédula.
+     */
+    public function test_la_ficha_muestra_los_otros_hijos_del_representante(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $mayor = $this->paciente($medico, 'Mateo', '1501');
+        $menor = $this->paciente($medico, 'Lucía', '1502');
+        $ajeno = $this->paciente($medico, 'Otra', '1503');
+
+        $this->representante($medico, '1501', ['cedula' => '11222333', 'nombre' => 'ROSA PEREZ']);
+        $this->representante($medico, '1502', ['cedula' => '11222333', 'nombre' => 'ROSA PEREZ']);
+        $this->representante($medico, '1503', ['cedula' => '44556677', 'nombre' => 'OTRA MADRE']);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $mayor));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('También es representante de:');
+        $respuesta->assertSee('De Prueba, Lucía');
+        $respuesta->assertSee(route('clinica.pacientes.ver', $menor), false);
+        $respuesta->assertSee('H. 1502');
+        // La que no comparte la cédula no aparece, y el paciente de la ficha no se lista a sí mismo (su propia historia no
+        // está en la lista; el «N.º de historia» de sus datos va sin la «H.»).
+        $respuesta->assertDontSee('De Prueba, Otra');
+        $respuesta->assertDontSee('H. 1501');
+
+        // El otro niño ve al primero: la lista es del adulto, no del paciente.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $menor))
+            ->assertOk()
+            ->assertSee('También es representante de:')
+            ->assertSee('De Prueba, Mateo')
+            ->assertSee('H. 1501');
+    }
+
+    /** Un representante sin cédula no tiene con qué reconocerse como el mismo adulto: la ficha no lista a nadie. */
+    public function test_la_ficha_no_lista_otros_hijos_si_el_representante_no_tiene_cedula(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Mateo', '1601');
+        $this->representante($medico, '1601', ['nombre' => 'ROSA PEREZ']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente))
+            ->assertOk()
+            ->assertSee('ROSA PEREZ')
+            ->assertDontSee('También es representante de:');
     }
 }

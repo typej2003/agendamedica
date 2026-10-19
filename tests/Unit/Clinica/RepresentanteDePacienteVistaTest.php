@@ -183,4 +183,59 @@ class RepresentanteDePacienteVistaTest extends TestCase
         $this->assertNull($catalogo->nombreDe($leido, ''));
         $this->assertNull($catalogo->nombreDe($leido, null));
     }
+
+    // ------------------------------------------- Un representante con varios hijos (2026-10-19)
+
+    /**
+     * **Un representante puede tener varios hijos**: la ficha lista los otros pacientes del consultorio que comparten su
+     * cédula. Las filas llegan ya resueltas del controlador (`RepresentantePorCedula::otrosPacientes()`), con el nombre, la
+     * historia y la URL armados; el ViewModel sólo las expone y dice si hay alguna.
+     */
+    public function test_los_otros_hijos_del_representante_se_listan_y_la_bandera_lo_dice(): void
+    {
+        $otros = [
+            ['nombre' => 'Pérez, Lucía', 'historia' => '1502', 'url' => '/clinica/pacientes/52'],
+            // Un hijo sin número de historia en el consultorio se lista igual, sin el «H. …».
+            ['nombre' => 'Pérez, Mateo', 'historia' => null, 'url' => '/clinica/pacientes/53'],
+        ];
+
+        $vista = new RepresentanteDePacienteVista(true, $this->representante(), 'Madre', $this->catalogo(), '/x', $otros);
+
+        $this->assertTrue($vista->hayOtrosHijos());
+        $this->assertSame($otros, $vista->otrosHijos());
+        // El resto del bloque sigue funcionando igual.
+        $this->assertTrue($vista->cargado());
+        $this->assertSame('Rosa Pérez', $vista->nombre());
+        $this->assertSame('Madre', $vista->parentesco());
+        $this->assertSame('Editar el representante', $vista->botonEditar());
+    }
+
+    /** Sin la lista —el parámetro nuevo es opcional— el bloque no ofrece nada: es lo que ya hacía. */
+    public function test_sin_otros_hijos_no_hay_lista(): void
+    {
+        $vista = $this->vista($this->representante());
+
+        $this->assertFalse($vista->hayOtrosHijos());
+        $this->assertSame([], $vista->otrosHijos());
+        // Y lo de siempre sigue respondiendo.
+        $this->assertSame('Rosa Pérez', $vista->nombre());
+        $this->assertTrue($vista->puedeEditar());
+
+        $conListaVacia = new RepresentanteDePacienteVista(true, $this->representante(), 'Madre', $this->catalogo(), '/x', []);
+        $this->assertFalse($conListaVacia->hayOtrosHijos());
+        $this->assertSame([], $conListaVacia->otrosHijos());
+    }
+
+    /** `conUrlGuardar()` conserva la lista: en la ficha las dos cosas se arman en el mismo momento. */
+    public function test_conUrlGuardar_conserva_los_otros_hijos(): void
+    {
+        $otros = [['nombre' => 'Pérez, Lucía', 'historia' => '1502', 'url' => '/clinica/pacientes/52']];
+
+        $vista = (new RepresentanteDePacienteVista(true, $this->representante(), 'Madre', $this->catalogo(), null, $otros))
+            ->conUrlGuardar('/clinica/pacientes/51/representante');
+
+        $this->assertSame($otros, $vista->otrosHijos());
+        $this->assertTrue($vista->hayOtrosHijos());
+        $this->assertSame('/clinica/pacientes/51/representante', $vista->urlGuardar());
+    }
 }

@@ -19,7 +19,8 @@ use Illuminate\Support\Collection;
  * tienen **columna real** en `pacientes`: la cédula con su opción "S.C.", los apellidos y nombres, el
  * sexo, la nacionalidad, la fecha y el lugar de nacimiento, el estado civil, la dirección, el celular, el
  * e-mail, la profesión, la ocupación, la escolaridad, el seguro/empresa y el referido. Lo que **no** entra
- * está dicho en el docblock de `PacienteController::formulario()` (foto, representante) y en `ROADMAP.md`.
+ * está dicho en el docblock de `PacienteController::formulario()` (foto) y en `ROADMAP.md`. El representante
+ * del alta de pediatría va en su propia tarjeta y su ViewModel (`RepresentanteDeAltaVista`).
  *
  * Los valores del formulario salen de `ConValoresDeFormulario`: primero lo que el usuario escribió
  * (`old()`, para no perder nada cuando la validación falla) y, si no, lo que tiene el paciente.

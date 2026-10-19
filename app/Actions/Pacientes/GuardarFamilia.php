@@ -130,6 +130,62 @@ final class GuardarFamilia
         });
     }
 
+    /**
+     * **Enlazar al niño a una familia que ya existe** (2026-10-19, un representante con varios hijos): el alta de pediatría
+     * buscó al representante por su cédula y sabe a qué familia pertenece; acá se crea la fila de `paciente_chamo` con ese
+     * número de `familia`, que es lo que lo deja como hermano.
+     *
+     * Es **idempotente**, igual que `comoHermano`: si el niño ya es un `paciente_chamo` **no se cambia su familia** —podría
+     * haberse unido antes por otra vía, o traer la suya del escritorio— y se devuelve la que tiene. No toca `familia_bebe`: los
+     * padres y los teléfonos ya son los de la familia.
+     *
+     * La familia tiene que existir en el consultorio (en `familia_bebe` o en algún `paciente_chamo`): un número inventado no
+     * enlaza a nada y devuelve `null`, como `comoHermano` cuando el hermano no es un niño del consultorio.
+     *
+     * @return object|null  `familia` y `historia`, o `null` si la familia no es de este consultorio
+     *
+     * @throws InvalidArgumentException si el niño no tiene número de historia
+     */
+    public function enlazarAFamilia(string $regMedico, int $familia, ?string $numhistoria, ?object $nino = null): ?object
+    {
+        $historia = CamposDePaciente::historiaNumerica($numhistoria);
+
+        if ($historia === null) {
+            throw new InvalidArgumentException(
+                'Este paciente todavía no tiene número de historia y la familia se guarda con ese número.'
+            );
+        }
+
+        return DB::transaction(function () use ($regMedico, $familia, $historia, $nino) {
+            $yaEs = DB::table('paciente_chamo')
+                ->where('reg_medico', $regMedico)
+                ->where('historia', $historia)
+                ->orderBy('id')
+                ->first(['familia']);
+
+            if ($yaEs !== null) {
+                return (object) ['familia' => (int) $yaEs->familia, 'historia' => $historia];
+            }
+
+            $existe = DB::table('familia_bebe')
+                ->where('reg_medico', $regMedico)
+                ->where('familia', $familia)
+                ->exists()
+                || DB::table('paciente_chamo')
+                    ->where('reg_medico', $regMedico)
+                    ->where('familia', $familia)
+                    ->exists();
+
+            if (! $existe) {
+                return null;
+            }
+
+            $this->insertarChamo($regMedico, $familia, $historia, $nino);
+
+            return (object) ['familia' => $familia, 'historia' => $historia];
+        });
+    }
+
     /** Crea la fila de `paciente_chamo` del niño con una familia nueva y devuelve el número de esa familia. */
     private function crearAlNino(string $regMedico, int $historia, ?object $nino): int
     {

@@ -20,6 +20,10 @@ use Illuminate\Support\Collection;
  * número muestra el bloque con el motivo y **el camino** —"Asignar el número de historia", WEB-3.3—, que
  * es la acción primaria de la pantalla en ese estado.
  *
+ * Lo que sí es una lista es **de quiénes es representante ese adulto**: `otrosHijos()` son los otros
+ * pacientes del consultorio que comparten su cédula (2026-10-19), resueltos por el controlador con
+ * `RepresentantePorCedula::otrosPacientes()`.
+ *
  * El ViewModel no consulta nada (guia-arquitectura-web.md): recibe el representante ya leído y el
  * catálogo de parentescos ya resuelto; las URLs las pone el controlador, porque el ViewModel se prueba sin
  * contenedor de Laravel.
@@ -31,6 +35,8 @@ final class RepresentanteDePacienteVista
 
     /**
      * @param  Collection<int,object>|null  $catalogoParentescos  filas con `codigo` y `nombre`
+     * @param  array<int,array{nombre:string, historia:?string, url:?string}>  $otrosHijos  los otros pacientes de los que
+     *        esta misma cédula es representante; los resuelve el controlador con `RepresentantePorCedula::otrosPacientes()`
      */
     public function __construct(
         private bool $tieneHistoria,
@@ -38,6 +44,7 @@ final class RepresentanteDePacienteVista
         private ?string $parentesco = null,
         ?Collection $catalogoParentescos = null,
         private ?string $urlGuardar = null,
+        private array $otrosHijos = [],
     ) {
         $this->catalogoDeParentescos = $catalogoParentescos ?? new Collection();
     }
@@ -55,7 +62,29 @@ final class RepresentanteDePacienteVista
             $this->parentesco,
             $this->catalogoDeParentescos,
             $url,
+            $this->otrosHijos,
         );
+    }
+
+    /**
+     * **Los otros pacientes de los que este mismo adulto es representante** (2026-10-19): un representante puede tener varios
+     * hijos, aunque el escritorio los tenga anotados en familias distintas. La cédula del representante es el vínculo, y los
+     * resuelve `RepresentantePorCedula::otrosPacientes()` —el ViewModel no consulta nada—.
+     *
+     * Cada fila llega con `nombre`, `historia` y `url` ya armados (la URL la pone el controlador: `route()` no existe en un
+     * test sin contenedor). La lista **no incluye al paciente de la ficha**: eso lo hizo la consulta.
+     *
+     * @return array<int,array{nombre:string, historia:?string, url:?string}>
+     */
+    public function otrosHijos(): array
+    {
+        return $this->otrosHijos;
+    }
+
+    /** ¿Hay otros hijos que listar? Es lo que decide si el bloque pinta «También es representante de:». */
+    public function hayOtrosHijos(): bool
+    {
+        return $this->otrosHijos !== [];
     }
 
     /** ¿Hay un representante cargado? Es lo que decide entre el bloque con datos y el vacío. */

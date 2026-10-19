@@ -155,6 +155,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // El buscador del alta de cita va **antes** de la ruta con parámetro: si no, "buscar"
             // entra por `{paciente}` y no resuelve.
             Route::get('/pacientes/buscar', [PacienteController::class, 'buscar'])->name('pacientes.buscar');
+            // El buscador del **representante por cédula** del alta de pediatría (2026-10-19: un representante puede tener
+            // varios hijos). Va antes de `/pacientes/{paciente}` por la misma razón que `buscar`: si no, «representante»
+            // entraría como id de paciente. Responde JSON y sólo mira el consultorio del contexto.
+            Route::get('/pacientes/representante/buscar', [PacienteController::class, 'buscarRepresentante'])
+                ->name('pacientes.representante.buscar');
             // Alta y edición de la ficha (WEB-3.2). Mismas dos razones que `buscar` para ir **antes** de
             // `/pacientes/{paciente}`: `nuevo` y `{paciente}/editar` no son ids de paciente.
             Route::get('/pacientes/nuevo', [PacienteController::class, 'nuevo'])->name('pacientes.nuevo');

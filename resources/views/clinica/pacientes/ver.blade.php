@@ -139,6 +139,27 @@
                     <x-ui.dato etiqueta="Correo" :valor="$rep->correo()" />
                     <x-ui.dato etiqueta="Dirección" :valor="$rep->direccion()" />
                 </dl>
+
+                {{-- Un representante puede tener varios hijos (2026-10-19): los otros pacientes del consultorio que
+                     comparten su cédula. La lista la resuelve el controlador con `RepresentantePorCedula`; si no hay
+                     ninguno, no se pinta nada. --}}
+                @if ($rep->hayOtrosHijos())
+                    <h3 class="h6 mt-3">También es representante de:</h3>
+                    <ul class="list-unstyled mb-0">
+                        @foreach ($rep->otrosHijos() as $otroHijo)
+                            <li>
+                                @if ($otroHijo['url'])
+                                    <a href="{{ $otroHijo['url'] }}">{{ $otroHijo['nombre'] }}</a>
+                                @else
+                                    {{ $otroHijo['nombre'] }}
+                                @endif
+                                @if ($otroHijo['historia'])
+                                    <span class="texto-tenue small">· H. {{ $otroHijo['historia'] }}</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         @else
             @php $sinRepresentante = $rep->vacio(); @endphp

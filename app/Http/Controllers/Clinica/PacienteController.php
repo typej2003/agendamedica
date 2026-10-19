@@ -5,25 +5,32 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\GuardarFamilia;
 use App\Actions\Pacientes\GuardarPaciente;
+use App\Actions\Pacientes\GuardarRepresentante;
 use App\Actions\Pacientes\IdentidadDePaciente;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\AtencionInmediata;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Pacientes\CamposDePaciente;
+use App\Clinica\Pacientes\CatalogoDeParentescos;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
+use App\Clinica\Pacientes\RepresentantePorCedula;
 use App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
+use App\Clinica\Pacientes\Vistas\RepresentanteDeAltaVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Historia;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Pacientes del `reg_medico` del contexto: listado con búsqueda, ficha y —desde WEB-3.2— **alta y
@@ -54,10 +61,19 @@ class PacienteController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
+    /**
+     * Los campos del **representante del alta de pediatría**, con las claves que usan `GuardarRepresentante` y
+     * `RepresentantePorCedula`. En el formulario viajan con el prefijo `representante_` para no pisar los del niño.
+     *
+     * @var array<int,string>
+     */
+    private const CAMPOS_DEL_REPRESENTANTE = ['nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion'];
+
     public function __construct(
         private PacientesDelConsultorio $pacientes,
         private CatalogoDeSeguros $seguros,
         private FamiliaDelPaciente $familias,
+        private RepresentantePorCedula $representantesPorCedula,
     ) {
     }
 
@@ -100,6 +116,52 @@ class PacienteController extends Controller
         $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
 
         return response()->json($this->pacientes->sugerencias($regMedico, trim((string) $request->query('q', ''))));
+    }
+
+    /**
+     * **El representante por cédula** del alta de pediatría (2026-10-19: un representante puede tener varios hijos).
+     *
+     * Devuelve los datos del adulto —nombre, parentesco, teléfono, correo y dirección— más los pacientes del consultorio de los
+     * que ya es representante, con su enlace a la ficha. La búsqueda es explícita: lo que el formulario rellena se puede
+     * corregir antes de guardar, y **el servidor vuelve a resolver la cédula al guardar** (no se confía en un campo oculto).
+     *
+     * Los datos y los hijos salen de `RepresentantePorCedula`, que sólo mira el `reg_medico` del contexto: la misma cédula de
+     * otro consultorio no se mezcla. Una cédula que no está en ninguna fuente responde `{encontrado:false, hijos:[]}` con
+     * **200**: "no está" es una respuesta válida —el adulto se puede cargar como nuevo—, no un error.
+     */
+    public function buscarRepresentante(Request $request)
+    {
+        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
+
+        $datos = $request->validate([
+            'cedula' => ['nullable', 'regex:/^[0-9]{1,10}$/'],
+        ], [
+            'cedula.regex' => 'La cédula solo lleva números (hasta 10 dígitos).',
+        ]);
+
+        $representante = $this->representantesPorCedula->buscar($regMedico, $datos['cedula'] ?? null);
+
+        if ($representante === null) {
+            return response()->json(['encontrado' => false, 'hijos' => []]);
+        }
+
+        return response()->json([
+            'encontrado'   => true,
+            'nombre'       => $representante['nombre'],
+            // El código del catálogo (`M` Madre, `P` Padre…): es el `value` de las opciones del `<select>`.
+            'parentesco'   => $representante['codeparentesco'],
+            'telefono'     => $representante['telefono'],
+            'email'        => $representante['email'],
+            'direccion'    => $representante['direccion'],
+            'hijos'        => array_map(
+                fn (array $hijo) => [
+                    'nombre'   => $hijo['nombre'],
+                    'historia' => $hijo['historia'],
+                    'url'      => route('clinica.pacientes.ver', $hijo['paciente_id']),
+                ],
+                $representante['hijos'],
+            ),
+        ]);
     }
 
     public function ver(Request $request, int $paciente, RepresentanteController $representante, PacienteDeLaCita $pacienteDeLaCita)
@@ -302,7 +364,10 @@ class PacienteController extends Controller
      *
      *  - **Foto** (`foto_pac`): el proyecto todavía no define dónde se guardan los archivos clínicos
      *    (WEB-T.1/WEB-4.7); una ruta de disco del escritorio no sirve desde la web.
-     *  - **Representante** (`representante`): es **WEB-3.4**, con sus columnas nullable nuevas.
+     *  - **Representante** (`representante`): desde 2026-10-19 el **alta de pediatría** lo pide en su propia
+     *    tarjeta (`_representante-alta`), porque un representante puede tener varios hijos y el niño no debería
+     *    quedar sin su adulto hasta que alguien abra la ficha. La ficha lo sigue cargando con su diálogo
+     *    (WEB-3.4), y el alta de las demás especialidades no lo pide.
      *  - **`numhistoria`**: no es un dato del formulario. Desde O-04 (2026-10-17) el alta web **numera en
      *    el mismo paso**, con `AsignarHistoria` (WEB-3.3): el número lo calcula el servidor y el médico no
      *    lo elige.
@@ -363,16 +428,31 @@ class PacienteController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
 
+        $vm = new FormularioDePacienteVista(
+            $ficha['paciente'] ?? null,
+            $ficha['numhistoria'] ?? null,
+            $this->seguros->de($contexto['reg_medico']),
+            // La especialidad del contexto decide los valores por defecto del alta (O-01: en
+            // ginecología el sexo arranca en Femenino; una especialidad sin la clave, en «— Sin dato —»).
+            $contexto['specialty'] ?? null,
+        );
+
+        // La tarjeta «Representante» del alta (2026-10-19): **sólo pediatría y sólo el alta**. En la edición el
+        // representante se sigue cargando con el diálogo de la ficha (WEB-3.4), y fuera de pediatría el alta no
+        // lo pide. La tarjeta se arma igual —inerte— para que la vista no tenga que mirar si el ViewModel
+        // existe; el catálogo de parentescos y la URL del buscador se leen sólo cuando se ofrece, que es una
+        // consulta que no hace falta en ginecología.
+        $ofreceRepresentante = ! $vm->editando()
+            && AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+
         return view('clinica.pacientes.formulario', [
-            'vm' => new FormularioDePacienteVista(
-                $ficha['paciente'] ?? null,
-                $ficha['numhistoria'] ?? null,
-                $this->seguros->de($contexto['reg_medico']),
-                // La especialidad del contexto decide los valores por defecto del alta (O-01: en
-                // ginecología el sexo arranca en Femenino; una especialidad sin la clave, en «— Sin dato —»).
-                $contexto['specialty'] ?? null,
+            'vm'                 => $vm,
+            'hermano'            => $hermano,
+            'representanteAlta'  => new RepresentanteDeAltaVista(
+                $ofreceRepresentante,
+                $ofreceRepresentante ? route('clinica.pacientes.representante.buscar') : null,
+                $ofreceRepresentante ? app(CatalogoDeParentescos::class)->todos() : null,
             ),
-            'hermano' => $hermano,
         ]);
     }
 
@@ -403,6 +483,9 @@ class PacienteController extends Controller
         $datos = $this->validar($request, $ficha['paciente'] ?? null);
         // Sólo el alta puede traer un hermano; en una edición el campo se ignora.
         $hermano = $ficha === null ? $this->hermanoDe($request, (int) ($datos['hermano_de'] ?? 0)) : null;
+        // El representante del alta de pediatría (2026-10-19): se **valida acá**, antes de crear al paciente, para que un
+        // correo mal escrito no deje una ficha a medio cargar. `null` = no vino nada, o no es pediatría, o es una edición.
+        $representante = $ficha === null ? $this->validarRepresentanteDelAlta($request, $contexto) : null;
         $columnas = $this->columnas($datos);
 
         try {
@@ -433,6 +516,12 @@ class PacienteController extends Controller
 
         $unido = $hermano !== null ? $this->unirComoHermano($contexto, $paciente, $hermano, $historia) : null;
 
+        // El representante queda guardado para la historia nueva (misma regla que la ficha, `GuardarRepresentante`) y, si su
+        // cédula es de una familia del escritorio, el niño nuevo se enlaza a esa familia y queda como hermano.
+        $avisoRepresentante = $representante === null
+            ? null
+            : $this->guardarRepresentanteDelAlta($contexto, $paciente, $historia, $representante);
+
         $mensaje = $ficha !== null
             ? 'Se guardaron los cambios de la ficha.'
             : 'Paciente registrado y con historia H. ' . $historia->numhistoria . '. Ya se lo puede atender.';
@@ -442,6 +531,10 @@ class PacienteController extends Controller
                 ? 'Se registró a ' . $paciente->nombres . ' como hermano(a) de ' . $hermano->nombres . ': comparten la familia y el teléfono de contacto. '
                     . 'Le tocó la historia H. ' . $unido . '.'
                 : 'Paciente registrado, pero no se pudo unir a la familia de ' . $hermano->nombres . '. Entra a su ficha y cárgale la familia.';
+        }
+
+        if ($avisoRepresentante !== null) {
+            $mensaje .= ' ' . $avisoRepresentante;
         }
 
         // Editada desde la consulta (WEB-11.25): se vuelve a ella, a la sección de datos, y no a la ficha.
@@ -481,6 +574,150 @@ class PacienteController extends Controller
         } catch (InvalidArgumentException) {
             return null;
         }
+    }
+
+    /**
+     * La validación del **representante del alta de pediatría** (2026-10-19), o `null` si no hay nada que guardar.
+     *
+     * Las reglas son las del diálogo de la ficha (`RepresentanteController::guardar`), con los anchos de las columnas legadas:
+     * nombre 40, parentesco 1 carácter, cédula hasta 10 dígitos, teléfono 20, correo 100 y dirección 60. El `codeparentesco`
+     * **no** se restringe al catálogo a propósito: un código que subió el escritorio se conserva, no se rechaza (misma regla
+     * que la ficha).
+     *
+     * Devuelve sólo las claves del representante y **sin el prefijo** (`representante_cedula` → `cedula`), que es lo que
+     * esperan `GuardarRepresentante` y `RepresentantePorCedula`. Los campos vacíos vuelven como `null`: "no lo dijo" es un
+     * valor del legado y no un texto en blanco.
+     *
+     * @return array{nombre:?string, codeparentesco:?string, cedula:?string, telefono:?string, email:?string, direccion:?string}|null
+     */
+    private function validarRepresentanteDelAlta(Request $request, array $contexto): ?array
+    {
+        // Fuera de pediatría el alta no pide representante: la tarjeta no se muestra y lo que llegue se ignora.
+        if (! AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria()) {
+            return null;
+        }
+
+        $request->validate([
+            'representante_nombre'     => ['nullable', 'string', 'max:40'],
+            'representante_parentesco' => ['nullable', 'string', 'max:1'],
+            'representante_cedula'     => ['nullable', 'regex:/^[0-9]{1,10}$/'],
+            'representante_telefono'   => ['nullable', 'string', 'max:20'],
+            'representante_email'      => ['nullable', 'email', 'max:100'],
+            'representante_direccion'  => ['nullable', 'string', 'max:60'],
+        ], [
+            'representante_nombre.max'        => 'El nombre del representante no puede pasar de 40 caracteres.',
+            'representante_parentesco.max'    => 'El parentesco del representante es un solo carácter (es el ancho del escritorio).',
+            'representante_cedula.regex'      => 'La cédula del representante solo lleva números (hasta 10 dígitos).',
+            'representante_telefono.max'      => 'El teléfono del representante no puede pasar de 20 caracteres.',
+            'representante_email.email'       => 'Revisa el correo del representante: no tiene forma de correo.',
+            'representante_email.max'         => 'El correo del representante no puede pasar de 100 caracteres.',
+            'representante_direccion.max'     => 'La dirección del representante no puede pasar de 60 caracteres (es el ancho del escritorio).',
+        ]);
+
+        $datos = [];
+
+        foreach (self::CAMPOS_DEL_REPRESENTANTE as $campo) {
+            $datos[$campo] = CamposDePaciente::texto($request->input('representante_' . $campo));
+        }
+
+        // El formulario vacío no es un representante: no crea una fila en blanco (la misma regla de la ficha).
+        if (collect($datos)->every(fn ($valor) => $valor === null)) {
+            return null;
+        }
+
+        return $datos;
+    }
+
+    /**
+     * Guarda el **representante del alta** para la historia nueva y enlaza al niño a la familia del escritorio, si la cédula
+     * pertenece a una.
+     *
+     * Tres decisiones del camino:
+     *
+     *  - **La cédula es el vínculo y el servidor la vuelve a resolver**: la familia no viaja en el formulario. `buscar()` la lee
+     *    del consultorio del contexto, y si el representante es nuevo (o sólo está en el escritorio) completa los datos que el
+     *    formulario no trajo. Si el usuario escribió algo, eso manda: la búsqueda es una ayuda, no una verdad que pise lo escrito.
+     *  - **El enlace a la familia** lo hace `GuardarFamilia::enlazarAFamilia`, idempotente: si el niño ya quedó unido por la vía
+     *    del hermano, no se le cambia la familia ni se duplica su fila de `paciente_chamo`.
+     *  - **Si el representante o la familia fallan, el paciente no se pierde**: el alta ya está hecha, así que se registra el
+     *    problema en el log y se devuelve un aviso para el mensaje. Nunca un 500 —el paciente ya está creado y con historia—.
+     *
+     * @param  array{nombre:?string, codeparentesco:?string, cedula:?string, telefono:?string, email:?string, direccion:?string}  $datos
+     * @return string|null  el aviso para agregar al mensaje del alta, o `null` si no hubo nada que avisar
+     */
+    private function guardarRepresentanteDelAlta(array $contexto, Paciente $paciente, ?Historia $historia, array $datos): ?string
+    {
+        if ($historia === null) {
+            return null;
+        }
+
+        $regMedico = $contexto['reg_medico'];
+        $numero = (string) $historia->numhistoria;
+        $familia = null;
+
+        if ($datos['cedula'] !== null) {
+            $encontrado = $this->representantesPorCedula->buscar($regMedico, $datos['cedula']);
+            $familia = $encontrado['familia'] ?? null;
+            $datos = $this->completarRepresentante($datos, $encontrado);
+        }
+
+        $problemas = [];
+
+        if ($familia !== null) {
+            try {
+                app(GuardarFamilia::class)->enlazarAFamilia($regMedico, $familia, $numero, $paciente);
+            } catch (Throwable $excepcion) {
+                Log::warning('Alta de paciente: no se pudo enlazar a la familia del representante', [
+                    'reg_medico' => $regMedico, 'paciente' => $paciente->getKey(), 'familia' => $familia,
+                    'error' => $excepcion->getMessage(),
+                ]);
+                $problemas[] = 'la familia del representante';
+            }
+        }
+
+        try {
+            app(GuardarRepresentante::class)->ejecutar($regMedico, $numero, $datos);
+        } catch (Throwable $excepcion) {
+            Log::warning('Alta de paciente: no se pudo guardar el representante', [
+                'reg_medico' => $regMedico, 'paciente' => $paciente->getKey(),
+                'error' => $excepcion->getMessage(),
+            ]);
+            $problemas[] = 'el representante';
+        }
+
+        if ($problemas === []) {
+            return 'Se guardó el representante del paciente.';
+        }
+
+        return 'Se registró el paciente, pero no se pudo guardar ' . implode(' ni ', $problemas)
+            . ': entra a su ficha y cárgalo desde ahí.';
+    }
+
+    /**
+     * Si el formulario trajo **sólo la cédula**, el resto de los datos del representante se completan con lo que ya está
+     * cargado en el consultorio (lo de otro hijo del mismo adulto). Si el usuario escribió algo, no se pisa: sus datos mandan.
+     *
+     * @param  array<string,?string>  $datos
+     * @param  array{nombre:?string, codeparentesco:?string, telefono:?string, email:?string, direccion:?string, familia:?int, hijos:array<int,mixed>}|null  $encontrado
+     * @return array<string,?string>
+     */
+    private function completarRepresentante(array $datos, ?array $encontrado): array
+    {
+        $soloLaCedula = collect($datos)
+            ->except('cedula')
+            ->every(fn ($valor) => $valor === null);
+
+        if (! $soloLaCedula || $encontrado === null) {
+            return $datos;
+        }
+
+        foreach (self::CAMPOS_DEL_REPRESENTANTE as $campo) {
+            if ($campo !== 'cedula') {
+                $datos[$campo] = $encontrado[$campo] ?? null;
+            }
+        }
+
+        return $datos;
     }
 
     /** @return array<string,mixed> */

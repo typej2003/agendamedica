@@ -6,6 +6,7 @@ use App\Actions\Pacientes\GuardarRepresentante;
 use App\Clinica\Pacientes\CatalogoDeParentescos;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Pacientes\RepresentanteDelPaciente;
+use App\Clinica\Pacientes\RepresentantePorCedula;
 use App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class RepresentanteController extends Controller
         private PacientesDelConsultorio $pacientes,
         private RepresentanteDelPaciente $representantes,
         private CatalogoDeParentescos $parentescos,
+        private RepresentantePorCedula $representantesPorCedula,
     ) {
     }
 
@@ -62,6 +64,23 @@ class RepresentanteController extends Controller
         $representante = $this->representantes->de($regMedico, $vinculo->numhistoria);
         $catalogo = $this->parentescos->todos();
 
+        // **Un representante puede tener varios hijos** (2026-10-19): si la fila trae su cédula, se listan los otros
+        // pacientes del consultorio que comparten esa cédula —aunque el escritorio los tenga en familias distintas—. Sin
+        // cédula no hay vínculo que seguir: no se consulta nada y el bloque no muestra la lista.
+        $otrosHijos = [];
+
+        if ($representante !== null && ($cedula = trim((string) ($representante->cedula ?? ''))) !== '') {
+            $otrosHijos = array_map(
+                fn (array $hijo) => [
+                    'nombre'   => $hijo['nombre'],
+                    'historia' => $hijo['historia'],
+                    // La URL la arma el controlador: el ViewModel se prueba sin contenedor de Laravel.
+                    'url'      => route('clinica.pacientes.ver', $hijo['paciente_id']),
+                ],
+                $this->representantesPorCedula->otrosPacientes($regMedico, $cedula, $paciente),
+            );
+        }
+
         // El nombre del parentesco se resuelve acá, contra el catálogo ya leído (misma decisión que el
         // nombre del seguro en `PacienteController::ver`): el ViewModel no consulta la base. Un código que
         // no esté en el catálogo llega como `null` y el bloque muestra el código crudo.
@@ -71,6 +90,7 @@ class RepresentanteController extends Controller
             $this->parentescos->nombreDe($catalogo, $representante->codeparentesco ?? null),
             $catalogo,
             route('clinica.pacientes.representante', $paciente),
+            $otrosHijos,
         );
     }
 
