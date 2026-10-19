@@ -52,7 +52,7 @@
                 </x-ui.imprimir-guardando>
             @endif
             <button class="btn btn-primary">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar {{ $clave === 'resultados' ? 'el resultado' : ($clave === 'tratamiento' ? 'el tratamiento' : 'la ' . mb_strtolower($seccion->titulo())) }}
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> {{ $seccion->rotuloGuardar() }}
             </button>
         </div>
     </form>

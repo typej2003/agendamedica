@@ -57,6 +57,24 @@ final class TextosDelExamen
     public const TRATAMIENTO = 'tratamiento';
 
     /**
+     * **Exámenes/Estudios de la consulta pediátrica** (ítem 6 de su árbol, 2026-10-19): sus **tres solapas**
+     * son texto en una columna de `consultas`, como las del examen, pero **no** son solapas del ítem 4: el
+     * escritorio de pediatría las tiene en su propio ítem (`tab_3` de `tabpage_signos`,
+     * `w_consulta_principal.srw:1650-1670`; la escritura, `:2852-2855`). Por eso van con `panel`, como el
+     * tratamiento: `claves()` no las da y la sección las pide por su nombre.
+     *
+     * ⚠️ **Las columnas son las del escritorio y significan otra cosa en ginecología**: `nariz` es
+     * *Exámenes*, `laringe` es *Imagenología* (en ginecología, la histeroscopía y el plan de tratamiento) y
+     * `oido` es *Estudios exploratorios* (en ginecología, el resultado de exámenes). Cada especialidad ofrece
+     * sólo las suyas, así que los dos usos no se cruzan en la misma pantalla; **no** se renombran columnas.
+     */
+    public const EXAMENES = 'examenes';
+
+    public const IMAGENOLOGIA = 'imagenologia';
+
+    public const EXPLORATORIOS = 'exploratorios';
+
+    /**
      * El mapa del dato, por clave de solapa.
      *
      * `columna` es la de `consultas` que se lee y se escribe; `columna_espejo`, la copia en otra tabla (o
@@ -69,6 +87,7 @@ final class TextosDelExamen
         self::COLPOSCOPIA => [
             'titulo' => 'Colposcopía',
             'articulo' => 'la',
+            'guardar' => 'Guardar la colposcopía',
             'icono' => 'bi-search-heart',
             'guardado' => 'Colposcopía guardada.',
             'sin_cambios' => 'La colposcopía no tenía cambios.',
@@ -84,6 +103,7 @@ final class TextosDelExamen
         self::CITOLOGIA => [
             'titulo' => 'Citología',
             'articulo' => 'la',
+            'guardar' => 'Guardar la citología',
             'icono' => 'bi-clipboard2-pulse',
             'guardado' => 'Citología guardada.',
             'sin_cambios' => 'La citología no tenía cambios.',
@@ -99,6 +119,7 @@ final class TextosDelExamen
         self::HISTEROSCOPIA => [
             'titulo' => 'Histeroscopía',
             'articulo' => 'la',
+            'guardar' => 'Guardar la histeroscopía',
             'icono' => 'bi-camera',
             'guardado' => 'Histeroscopía guardada.',
             'sin_cambios' => 'La histeroscopía no tenía cambios.',
@@ -115,6 +136,7 @@ final class TextosDelExamen
             'panel' => true,
             'titulo' => 'Tratamiento',
             'articulo' => 'el',
+            'guardar' => 'Guardar el tratamiento',
             'icono' => 'bi-capsule',
             'guardado' => 'Tratamiento guardado.',
             'sin_cambios' => 'El tratamiento no tenía cambios.',
@@ -130,6 +152,7 @@ final class TextosDelExamen
         self::RESULTADOS => [
             'titulo' => 'Resultado de exámenes',
             'articulo' => 'el',
+            'guardar' => 'Guardar el resultado',
             'icono' => 'bi-clipboard2-check',
             'guardado' => 'Resultado de exámenes guardado.',
             'sin_cambios' => 'El resultado de exámenes no tenía cambios.',
@@ -141,6 +164,59 @@ final class TextosDelExamen
             'marcador' => 'El resultado de los exámenes pedidos: lo que informó el laboratorio o el estudio…',
             'ayuda' => 'La nota del médico sobre los resultados. Los exámenes pedidos y el resultado de cada uno '
                 . '—los `examen_paciente` de la consulta— se cargan en la solapa de laboratorio y estudios.',
+        ],
+        // Las tres solapas de **Exámenes/Estudios** de pediatría (ítem 6). El escritorio las llama así y las
+        // guarda en estas columnas; cada una tiene su tipo de plantilla (`EX`, `IG`, `EE`).
+        self::EXAMENES => [
+            'panel' => true,
+            'titulo' => 'Exámenes',
+            'articulo' => 'los',
+            'guardar' => 'Guardar los exámenes',
+            'icono' => 'bi-clipboard2-pulse',
+            'guardado' => 'Exámenes guardados.',
+            'sin_cambios' => 'Los exámenes no tenían cambios.',
+            'columna' => 'nariz',
+            'columna_espejo' => null,
+            'plantillas' => 'EX',
+            'documento' => null,
+            'imagenes' => null,
+            'marcador' => 'Los exámenes del niño: lo que se pidió, lo que informó el laboratorio…',
+            'ayuda' => 'Los exámenes de esta consulta, en texto libre o a partir de las plantillas del médico. '
+                . 'Los exámenes pedidos, con su resultado, van en Solicitudes → Laboratorio y Estudios.',
+        ],
+        self::IMAGENOLOGIA => [
+            'panel' => true,
+            'titulo' => 'Imagenología',
+            'articulo' => 'la',
+            'guardar' => 'Guardar la imagenología',
+            'icono' => 'bi-radioactive',
+            'guardado' => 'Imagenología guardada.',
+            'sin_cambios' => 'La imagenología no tenía cambios.',
+            'columna' => 'laringe',
+            'columna_espejo' => null,
+            'plantillas' => 'IG',
+            'documento' => null,
+            'imagenes' => null,
+            'marcador' => 'Los estudios de imágenes: la radiografía, la ecografía, la tomografía, el informe del radiólogo…',
+            'ayuda' => 'Los estudios de imágenes de esta consulta, en texto libre o a partir de las plantillas del '
+                . 'médico. Las fotos de los estudios se guardan en Evaluación física → Imágenes.',
+        ],
+        self::EXPLORATORIOS => [
+            'panel' => true,
+            'titulo' => 'Estudios exploratorios',
+            'articulo' => 'los',
+            'guardar' => 'Guardar los estudios',
+            'icono' => 'bi-search',
+            'guardado' => 'Estudios exploratorios guardados.',
+            'sin_cambios' => 'Los estudios exploratorios no tenían cambios.',
+            'columna' => 'oido',
+            'columna_espejo' => null,
+            'plantillas' => 'EE',
+            'documento' => null,
+            'imagenes' => null,
+            'marcador' => 'Los estudios exploratorios: la endoscopía, la prueba funcional, lo que informó el especialista…',
+            'ayuda' => 'Los estudios exploratorios de esta consulta, en texto libre o a partir de las plantillas del '
+                . 'médico. La endoscopía digestiva de gastroenterología tiene su propia pantalla en Procedimientos.',
         ],
     ];
 
@@ -231,6 +307,15 @@ final class TextosDelExamen
     public static function ayuda(string $clave): string
     {
         return (string) (self::TEXTOS[$clave]['ayuda'] ?? '');
+    }
+
+    /**
+     * El rótulo del botón de guardar (`'Guardar la colposcopía'`). Está en el mapa y no se arma con el título
+     * porque el artículo y el género cambian (`los exámenes`, `la imagenología`, `los estudios`).
+     */
+    public static function rotuloGuardar(string $clave): string
+    {
+        return (string) (self::TEXTOS[$clave]['guardar'] ?? ('Guardar ' . mb_strtolower(self::titulo($clave))));
     }
 
     /** El aviso del guardado que salió bien (`'Colposcopía guardada.'`). */

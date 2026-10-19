@@ -86,9 +86,9 @@ consulta.
 - **Catálogo de la consulta**: `SeccionesDeLaConsulta` tiene **dos catálogos** (`ITEMS_GINECOLOGIA` e `ITEMS_PEDIATRIA`) y un
   mapa `EXTRA` de secciones que agrega un postgrado (hoy `indicadores` = ítem 5 de pediatría, nefrología). El pediátrico es el
   árbol de PediaReport: 14 ítems sin nefrología y 15 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
-  tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (exámenes/estudios →
-  *Resultado de exámenes*; inmunizaciones → carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la
-  sección existe en el catálogo de esa especialidad.
+  tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (inmunizaciones →
+  carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la sección existe en el catálogo de esa
+  especialidad. **Exámenes/Estudios salió de esa lista el 2026-10-19**: tiene sección propia, como el escritorio.
 - **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene
   (`CuentaService::asignarSubespecialidades()`); quitar una especialidad quita sus postgrados (`postgradosQuitados` en el
   resultado de `asignarEspecialidades()`).
@@ -173,6 +173,18 @@ consulta.
   en un bloque «Dosis por kilo»; `dosificacion = 'SI'` es la marca que enciende el cálculo (no hay columna aparte).
   Tests: `Unit/Clinica/DosisPediatricaTest` (7), `Feature/ConsultaRecipesDosisWebTest` (3) y
   `Feature/MedicamentoDosisCatalogoWebTest` (4).
+- **Exámenes/Estudios (2026-10-19)**: el **ítem 6** de la consulta pediátrica **dejó de redirigir** a la solapa
+  *Resultado de exámenes* de la evaluación física (Alexander: «está apareciendo lo mismo que en evaluación física»;
+  el escritorio los tiene como dos ventanas distintas). Tiene sección propia (`?seccion=examenes-estudios`) con sus
+  **tres solapas**: *Exámenes* → `consultas.nariz`, *Imagenología* → `consultas.laringe` y *Estudios exploratorios* →
+  `consultas.oido` (`w_consulta_principal.srw:1650-1670`, escritura `:2852-2855`). No hay tablas ni Actions nuevas:
+  las tres son claves de `TextosDelExamen` con `panel` (no son solapas del examen), usan `TextoDelExamenVista`,
+  `GuardarTextoDelExamen` y el parcial `_evaluacion-texto`; lo propio es `PestanasDeExamenesEstudios` +
+  `SeccionDeExamenesEstudiosVista` + `_examenes-estudios.blade.php`. Sus plantillas son de tipo **`EX`**, **`IG`** y
+  **`EE`** (`TiposDePlantillaDeTexto`, y `AlcanceDeLaEspecialidad::PLANTILLAS_SOLO_PEDIATRIA` las oculta fuera de
+  pediatría). ⚠️ Las columnas se comparten con ginecología con **otro significado** (`oido` = *Resultado de
+  exámenes*, `laringe` = plan de tratamiento): cada especialidad ofrece sólo las suyas y **no se renombran**.
+  Tests: `Feature/ExamenesEstudiosPediatriaWebTest` (5) y `Unit/Clinica/ExamenesEstudiosDeLaConsultaTest` (6).
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
   postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,

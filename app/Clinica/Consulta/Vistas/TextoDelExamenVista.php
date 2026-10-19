@@ -145,6 +145,12 @@ final class TextoDelExamenVista
         return TextosDelExamen::ayuda($this->clave);
     }
 
+    /** El rótulo del botón de guardar (`'Guardar la colposcopía'`), que cambia con el artículo de cada solapa. */
+    public function rotuloGuardar(): string
+    {
+        return TextosDelExamen::rotuloGuardar($this->clave);
+    }
+
     /** El aviso que `consulta.js` muestra y usa para el `beforeunload`. */
     public function avisoSinGuardar(): string
     {

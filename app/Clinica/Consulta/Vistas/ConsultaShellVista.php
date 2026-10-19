@@ -39,6 +39,12 @@ final class ConsultaShellVista
     /** La clave de la sección de evaluación física en `?seccion=` (WEB-4.3). */
     public const SECCION_EVALUACION = SeccionesDeLaConsulta::SECCION_EVALUACION;
 
+    /**
+     * La clave de la sección **Exámenes/Estudios** en `?seccion=` (ítem 6 de la consulta pediátrica, 2026-10-19):
+     * un ítem propio, **no** una solapa de la evaluación física.
+     */
+    public const SECCION_EXAMENES_ESTUDIOS = SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS;
+
     /** La clave de la sección de antecedentes en `?seccion=` (WEB-4.4). */
     public const SECCION_ANTECEDENTES = SeccionesDeLaConsulta::SECCION_ANTECEDENTES;
 

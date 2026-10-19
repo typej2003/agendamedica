@@ -18,10 +18,16 @@ class PlantillasDeLaEspecialidadTest extends TestCase
 {
     private const GINECO = 'ginecologia-y-obstetricia';
 
-    public function test_ginecologia_ofrece_todos_los_tipos_conocidos(): void
+    public function test_ginecologia_ofrece_todos_los_tipos_conocidos_menos_los_de_pediatria(): void
     {
-        $this->assertSame(TiposDePlantillaDeTexto::nombres(), PlantillasDeLaEspecialidad::nombres(self::GINECO));
-        $this->assertSame([], PlantillasDeLaEspecialidad::ocultos(self::GINECO));
+        // Las tres de *Exámenes/Estudios* son de la consulta pediátrica (2026-10-19): sólo se ocultan ésas.
+        $this->assertSame(['EX', 'IG', 'EE'], PlantillasDeLaEspecialidad::ocultos(self::GINECO));
+
+        $nombres = PlantillasDeLaEspecialidad::nombres(self::GINECO);
+        $this->assertSame(
+            array_values(array_diff(array_keys(TiposDePlantillaDeTexto::nombres()), ['EX', 'IG', 'EE'])),
+            array_values(array_keys($nombres)),
+        );
     }
 
     public function test_pediatria_no_ofrece_los_tipos_ginecologicos(): void

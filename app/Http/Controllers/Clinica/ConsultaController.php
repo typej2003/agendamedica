@@ -95,6 +95,8 @@ use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEstudioVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEvaluacionVista;
+use App\Clinica\Consulta\Vistas\SeccionDeExamenesEstudiosVista;
+use App\Clinica\Consulta\Vistas\PestanasDeExamenesEstudios;
 use App\Clinica\Consulta\Vistas\SeccionDeExamenesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeMotivosVista;
 use App\Clinica\Consulta\Vistas\PestanasDeRecipes;
@@ -364,10 +366,11 @@ class ConsultaController extends Controller
      * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
      *
      * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
-     * duplica: *Exámenes/Estudios* es la solapa *Resultado de exámenes*, *Inmunizaciones* el carnet de vacunas
-     * del paciente, *Alimentación* la dieta / recomendaciones de la consulta y *Representante* la ficha del
-     * paciente. Devuelve `null` para cualquier otra sección (incluida la pre-factura, que todavía no tiene
-     * pantalla: cae en el estado vacío del shell como cualquier ítem sin pantalla).
+     * duplica: *Inmunizaciones* es el carnet de vacunas del paciente, *Alimentación* la dieta / recomendaciones
+     * de la consulta y *Representante* la ficha del paciente. Devuelve `null` para cualquier otra sección
+     * (incluidas la pre-factura, que todavía no tiene pantalla y cae en el estado vacío del shell, y
+     * *Exámenes/Estudios*, que **dejó de redirigir** el 2026-10-19: tiene su propia sección, como en el
+     * escritorio).
      */
     private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
     {
@@ -382,11 +385,8 @@ class ConsultaController extends Controller
         }
 
         return match ($seccion) {
-            SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS => redirect()->route('clinica.consulta', [
-                $consulta->id,
-                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-                'pestana' => TextosDelExamen::RESULTADOS,
-            ]),
+            // *Exámenes/Estudios* **ya no redirige** (2026-10-19): tiene su sección, como en el escritorio, donde es
+            // un ítem propio y no una solapa de la evaluación física. Ver `seccion()`.
             SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
             SeccionesDeLaConsulta::SECCION_ALIMENTACION => redirect()->route('clinica.consulta', [
                 $consulta->id,
@@ -1262,6 +1262,34 @@ class ConsultaController extends Controller
                 ($valores['emergencia'] ?? null) === EvaluacionPreoperatoria::EMERGENCIA_SI,
                 route('clinica.consulta.intervenciones.guardar', $consulta->id),
                 $riesgo,
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_EXAMENES_ESTUDIOS) {
+            // **Exámenes/Estudios** de la consulta pediátrica (ítem 6, 2026-10-19): sus tres solapas son textos de
+            // `consultas` (`nariz`, `laringe` y `oido`), como las solapas del examen, así que la pantalla es la
+            // misma —`TextoDelExamenVista` y su parcial—. Lo propio de la sección es ser **otra** sección: el ítem 6
+            // no abre el ítem 4 (era lo que Alexander veía igual que la evaluación física).
+            $activa = PestanasDeExamenesEstudios::normalizar((string) request()->query('pestana', ''));
+            $texto = new TextoDelExamen($examen);
+            $url = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EXAMENES_ESTUDIOS,
+                'pestana' => $clave,
+            ]);
+
+            return new SeccionDeExamenesEstudiosVista(
+                $activa,
+                new PestanasDeExamenesEstudios($url),
+                new TextoDelExamenVista(
+                    $activa,
+                    $texto->de($consulta, $activa),
+                    $texto->plantillas($regMedico, $activa),
+                    route('clinica.consulta.examen.texto.guardar', [$consulta->id, $activa]),
+                    $url($activa),
+                    '',
+                    (array) old(),
+                ),
             );
         }
 

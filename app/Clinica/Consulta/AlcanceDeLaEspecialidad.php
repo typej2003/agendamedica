@@ -33,6 +33,13 @@ final class AlcanceDeLaEspecialidad
      */
     private const PLANTILLAS_SOLO_GINECOLOGIA = ['EG', 'EM', 'ER'];
 
+    /**
+     * Los tipos de plantilla que son **sólo de pediatría**: los de las tres solapas de *Exámenes/Estudios*
+     * (ítem 6, 2026-10-19). Fuera de pediatría no se ofrecen, porque no hay pantalla que las consuma; el tipo
+     * sigue existiendo en `TiposDePlantillaDeTexto` y una plantilla con ese tipo **no se pierde** al guardar.
+     */
+    private const PLANTILLAS_SOLO_PEDIATRIA = ['EX', 'IG', 'EE'];
+
     public function __construct(private ?string $slug)
     {
     }
@@ -146,18 +153,20 @@ final class AlcanceDeLaEspecialidad
      * pediatría **los siete**, porque la sección no está—, más los dos que la web no ofrece en ninguna especialidad (`EM`, `ER`).
      *
      * En pediatría quedan, entonces, las de las secciones que sí tiene: evolución (`EV`), informe (`IM`), dietas (`DI`),
-     * enfermedad actual (`EA`), tratamiento (`TR`) y **resumen físico (`RF`)** —que es el de su solapa *Examen físico*—. El `RF`
-     * no se oculta con la solapa `fisico` de ginecología porque la solapa pediátrica `examen` usa el mismo tipo: por eso la
-     * lista se deduce de las solapas que quedan y no de las que se van.
+     * enfermedad actual (`EA`), tratamiento (`TR`), **resumen físico (`RF`)** —que es el de su solapa *Examen físico*— y las
+     * tres de su ítem *Exámenes/Estudios* (`EX`, `IG`, `EE`). El `RF` no se oculta con la solapa `fisico` de ginecología
+     * porque la solapa pediátrica `examen` usa el mismo tipo: por eso la lista se deduce de las solapas que quedan y no de
+     * las que se van.
      *
-     * Ginecología y las demás especialidades **no cambian** (lista vacía): su ABM sigue ofreciendo todo.
+     * Fuera de pediatría, en cambio, se ocultan **esas tres** (`PLANTILLAS_SOLO_PEDIATRIA`): no hay pantalla que las
+     * consuma. La única diferencia con lo que hacía antes es eso — las demás siguen ofreciéndose todas.
      *
      * @return array<int,string>
      */
     public function tiposDePlantillaOcultos(): array
     {
         if (! $this->esPediatria()) {
-            return [];
+            return self::PLANTILLAS_SOLO_PEDIATRIA;
         }
 
         $ocultos = self::PLANTILLAS_SOLO_GINECOLOGIA;

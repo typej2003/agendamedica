@@ -157,10 +157,18 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         }
     }
 
-    public function test_ginecologia_y_las_demas_conservan_todas_las_plantillas(): void
+    /**
+     * Fuera de pediatría no cambia nada de lo que había… salvo las **tres plantillas de *Exámenes/Estudios*** (`EX`, `IG`, `EE`), que
+     * son de la consulta pediátrica y no tienen pantalla en el resto (2026-10-19).
+     */
+    public function test_ginecologia_solo_oculta_las_plantillas_de_examenes_estudios(): void
     {
         foreach ([self::GINECO, 'cirugia', null] as $slug) {
-            $this->assertSame([], AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(), (string) $slug);
+            $this->assertEqualsCanonicalizing(
+                ['EX', 'IG', 'EE'],
+                AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(),
+                (string) $slug,
+            );
         }
     }
 

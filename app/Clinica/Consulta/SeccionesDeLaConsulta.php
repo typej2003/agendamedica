@@ -211,7 +211,7 @@ final class SeccionesDeLaConsulta
             'detalle' => 'Mediciones, examen físico, cuestionario y la galería de imágenes.', 'tarea' => 'WEB-7.4.3', 'estado' => 'listo',
             'seccion' => self::SECCION_EVALUACION],
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Exámenes/Estudios', 'icono' => 'bi-clipboard2-data',
-            'detalle' => 'Los resultados de laboratorio, imágenes y estudios exploratorios.', 'tarea' => 'WEB-6.5', 'estado' => 'listo',
+            'detalle' => 'Exámenes, imagenología y estudios exploratorios, en sus tres solapas.', 'tarea' => 'WEB-12.6', 'estado' => 'listo',
             'seccion' => self::SECCION_EXAMENES_ESTUDIOS],
         ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Inmunizaciones', 'icono' => 'bi-shield-plus',
             'detalle' => 'El carnet de vacunas del paciente y lo que le toca.', 'tarea' => 'WEB-7.4.4', 'estado' => 'listo',

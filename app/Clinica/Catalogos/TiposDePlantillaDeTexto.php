@@ -21,7 +21,7 @@ namespace App\Clinica\Catalogos;
 final class TiposDePlantillaDeTexto
 {
     /** Los tipos que la consulta de la web ya ofrece. */
-    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI', 'EA', 'CO', 'CI', 'HI', 'TR', 'RE', 'RF', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UA', 'UM'];
+    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI', 'EA', 'CO', 'CI', 'HI', 'TR', 'RE', 'RF', 'EG', 'EX', 'IG', 'EE', 'UG', 'O1', 'O2', 'O3', 'ED', 'UA', 'UM'];
 
     /** `código => [nombre, dónde se usa]`. El orden es el de las listas de la pantalla. */
     private const TIPOS = [
@@ -36,6 +36,10 @@ final class TiposDePlantillaDeTexto
         'HI' => ['Histeroscopía', 'Se ofrece en la solapa de histeroscopía.'],
         'TR' => ['Tratamiento', 'Se ofrece en el tratamiento de la consulta.'],
         'RE' => ['Resultado de exámenes', 'Se ofrece en la solapa de resultado de exámenes.'],
+        // Las tres de **Exámenes/Estudios**, el ítem 6 de la consulta pediátrica (2026-10-19).
+        'EX' => ['Exámenes', 'Se ofrece en Exámenes/Estudios de la consulta pediátrica, en la solapa Exámenes.'],
+        'IG' => ['Imagenología', 'Se ofrece en Exámenes/Estudios de la consulta pediátrica, en la solapa Imagenología.'],
+        'EE' => ['Estudios exploratorios', 'Se ofrece en Exámenes/Estudios de la consulta pediátrica, en la solapa Estudios exploratorios.'],
         'UG' => ['Eco ginecológico', 'Se ofrece en el estudio ecográfico, en el eco ginecológico.'],
         'O1' => ['Obstétrico 1', 'Se ofrece en el estudio ecográfico, en el eco obstétrico del 1.er trimestre.'],
         'O2' => ['Obstétrico 2', 'Se ofrece en el estudio ecográfico, en el eco obstétrico del 2.º trimestre.'],

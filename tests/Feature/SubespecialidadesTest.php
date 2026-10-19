@@ -256,11 +256,11 @@ class SubespecialidadesTest extends TestCase
         $pediatra = $this->conContexto($user, $medico, $pediatria);
         [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
 
-        // Exámenes/Estudios → la solapa Resultado de exámenes de la evaluación física.
+        // Exámenes/Estudios ya **no** redirige (2026-10-19): tiene su sección, como en el escritorio, y no la de la
+        // evaluación física. El ítem 6 y el ítem 4 son dos pantallas distintas.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'examenes-estudios']))
-            ->assertRedirect(route('clinica.consulta', [
-                $consulta->id, 'seccion' => 'evaluacion', 'pestana' => 'resultados',
-            ]));
+            ->assertOk()
+            ->assertSee('Estudios exploratorios');
 
         // Inmunizaciones → el carnet de vacunas del paciente.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
