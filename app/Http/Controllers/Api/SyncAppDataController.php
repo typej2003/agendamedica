@@ -902,6 +902,12 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\GuardarEcoObstetrico::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoSegundo::class),
             app(\App\Actions\Consulta\GuardarEcoObstetricoTercero::class),
+            // Y las de los **otros cuatro estudios** (ola §10 de PLAN-MOVIL.md): Doppler perinatal, mamario,
+            // abdominal y ecocardiograma fetal.
+            app(\App\Actions\Consulta\GuardarEcoDoppler::class),
+            app(\App\Actions\Consulta\GuardarEcoMamario::class),
+            app(\App\Actions\Consulta\GuardarEcoAbdominal::class),
+            app(\App\Actions\Consulta\GuardarEcoCardiogramaFetal::class),
             // Y la del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera,
             // crea o corrige en el lugar. Es la misma Action de la pestaña de la web (WEB-5.1b).
             app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class),
@@ -1069,6 +1075,9 @@ class SyncAppDataController extends Controller
             // (`numhistoria`/`nroconsulta`) cuando la Action del estudio busca la fila por la clave del legado.
             'eco_pelvico' => 4, 'eco_obstetrico' => 4,
             'eco_obstetrico_tercer_2' => 4, 'eco_obstetrico_tercer' => 4,
+            // Los cuatro de la ola §10: también cuelgan de la consulta y van después de `consultas`.
+            'eco_doppler' => 4, 'ultra_mama' => 4,
+            'ultra_abdominal' => 4, 'ecocadiograma_fetal' => 4,
             // El récipe de la pareja (ola §9) cuelga de la consulta como el del paciente: con 4 va después de
             // `consultas`, así una consulta creada en este mismo lote ya tiene sus números cuando la Action
             // busca la pareja por `nrohistoria` + `nroconsulta`.
@@ -1481,6 +1490,11 @@ class SyncAppDataController extends Controller
             'eco_obstetrico' => EcoObstetrico::class,
             'eco_obstetrico_tercer_2' => EcoObstetricoSegundo::class,
             'eco_obstetrico_tercer' => EcoObstetricoTercer::class,
+            // Ola §10: los otros cuatro estudios, por el mismo camino.
+            'eco_doppler' => EcoDoppler::class,
+            'ultra_mama' => UltraMama::class,
+            'ultra_abdominal' => UltraAbdominal::class,
+            'ecocadiograma_fetal' => EcoCardiogramaFetal::class,
         ][$table];
     }
 

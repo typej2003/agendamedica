@@ -6,6 +6,10 @@ use App\Actions\Consulta\AgregarDiagnosticoALaConsulta;
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\CrearConsulta;
 use App\Actions\Consulta\GuardarEcoGinecologico;
+use App\Actions\Consulta\GuardarEcoAbdominal;
+use App\Actions\Consulta\GuardarEcoCardiogramaFetal;
+use App\Actions\Consulta\GuardarEcoDoppler;
+use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
@@ -15,7 +19,11 @@ use App\Actions\Consulta\GuardarRecipeDeLaPareja;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Clinica\Consulta\EcoAbdominal;
+use App\Clinica\Consulta\EcoCardiogramaFetal;
+use App\Clinica\Consulta\EcoDoppler;
 use App\Clinica\Consulta\EcoGinecologico;
+use App\Clinica\Consulta\EcoMamario;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
@@ -161,6 +169,12 @@ class CreacionesClinicas
         private GuardarEcoObstetrico $guardarEcoObstetrico,
         private GuardarEcoObstetricoSegundo $guardarEcoObstetricoSegundo,
         private GuardarEcoObstetricoTercero $guardarEcoObstetricoTercero,
+        // Los **otros cuatro estudios** (ola §10 de PLAN-MOVIL.md): el Doppler perinatal, el mamario, el
+        // abdominal y el ecocardiograma fetal. Cada uno con la Action de su pantalla de la web.
+        private GuardarEcoDoppler $guardarEcoDoppler,
+        private GuardarEcoMamario $guardarEcoMamario,
+        private GuardarEcoAbdominal $guardarEcoAbdominal,
+        private GuardarEcoCardiogramaFetal $guardarEcoCardiogramaFetal,
         // La regla del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md), compartida con la web desde
         // WEB-5.1b: una por consulta, sin cabecera, y crea o corrige en el lugar comparando por
         // `codemedicina`. Es la misma Action que usa la pestaña de la consulta de la web.
@@ -213,6 +227,11 @@ class CreacionesClinicas
             'eco_obstetrico' => $this->crearEco($change, $tempId, $rechazar),
             'eco_obstetrico_tercer_2' => $this->crearEco($change, $tempId, $rechazar),
             'eco_obstetrico_tercer' => $this->crearEco($change, $tempId, $rechazar),
+            // Ola §10: los otros cuatro estudios, con el mismo camino (la Action de su pantalla de la web).
+            'eco_doppler' => $this->crearEco($change, $tempId, $rechazar),
+            'ultra_mama' => $this->crearEco($change, $tempId, $rechazar),
+            'ultra_abdominal' => $this->crearEco($change, $tempId, $rechazar),
+            'ecocadiograma_fetal' => $this->crearEco($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -755,6 +774,11 @@ class CreacionesClinicas
             'eco_obstetrico' => [$this->guardarEcoObstetrico, app(EcoObstetrico::class)],
             'eco_obstetrico_tercer_2' => [$this->guardarEcoObstetricoSegundo, app(EcoObstetricoSegundo::class)],
             'eco_obstetrico_tercer' => [$this->guardarEcoObstetricoTercero, app(EcoObstetricoTercero::class)],
+            // Los cuatro de la ola §10 (2026-10-19).
+            'eco_doppler' => [$this->guardarEcoDoppler, app(EcoDoppler::class)],
+            'ultra_mama' => [$this->guardarEcoMamario, app(EcoMamario::class)],
+            'ultra_abdominal' => [$this->guardarEcoAbdominal, app(EcoAbdominal::class)],
+            'ecocadiograma_fetal' => [$this->guardarEcoCardiogramaFetal, app(EcoCardiogramaFetal::class)],
         };
 
         $valores = $this->columnasDelCliente($change, $tabla);

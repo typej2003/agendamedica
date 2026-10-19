@@ -193,6 +193,9 @@ class SyncAppDataRequest extends FormRequest
         // —lo que el escritorio le mostró, más lo que cargó él— y cada columna va por el camino de A1, con
         // su last-write-wins y su rastro. Cuáles columnas de cada estudio, lo dice `columnasEditables`.
         'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
+        // Ola §10: los otros cuatro estudios (Doppler perinatal, mamario, abdominal y ecocardiograma fetal).
+        // Las columnas de cada uno salen de su mapa, igual que las de los gineco-obstétricos.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
     ];
 
     /**
@@ -251,6 +254,9 @@ class SyncAppDataRequest extends FormRequest
         // columnas que el médico cargó y el servidor resuelve a qué fila van con la Action de la web de cada
         // estudio. Las columnas aceptadas son las de su mapa del dato (`columnasEditables`).
         'eco_pelvico', 'eco_obstetrico', 'eco_obstetrico_tercer_2', 'eco_obstetrico_tercer',
+        // Los cuatro de la ola §10: mismas reglas que los anteriores —el teléfono carga y corrige el estudio
+        // con la Action de su pantalla de la web, que resuelve la clave del legado `historia` + `consulta`—.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
         // La ola §9 de PLAN-MOVIL.md: el **récipe de la pareja**. Es una creación clínica porque la fila
         // cuelga de la consulta con la clave del legado —`nrohistoria` + `nroconsulta`— y no tiene número ni
         // cabecera: el teléfono manda la pareja (cédula y nombre) y sus medicamentos, y el servidor los
@@ -279,6 +285,9 @@ class SyncAppDataRequest extends FormRequest
         // por el mismo motivo que los ecos —sin esta entrada, `changes.*.table` responde 422 y rechaza el
         // lote entero, incluido el pull—.
         'recipes_pareja',
+        // Los cuatro de la ola §10, por el mismo motivo que los ecos: sin esta entrada, `changes.*.table`
+        // responde 422 y rechaza el lote entero, incluido el pull.
+        'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
     ];
 
     /**
