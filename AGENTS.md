@@ -147,9 +147,14 @@ consulta.
   escritura (sólo lo cambiado, rastro por columna), `EcoRenalVista` + `_eco-renal.blade.php` la pantalla,
   `ConsultaEcoRenalController` la ruta `POST /clinica/consulta/{consulta}/eco-renal` y `UltraRenal` el modelo. Tests:
   `Unit/Clinica/EcoRenalTest` (2) y dos de `Feature/ConsultaIndicadoresWebTest`.
-- **Falta**: el formato en blanco de los paneles nuevos (endoscopías, cirugía, indicadores y eco renal) y el informe
-  impreso de endoscopías y cirugía. Detalle y evidencia del fuente en
-  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
+- **Formatos en blanco de pediatría (2026-10-19)**: cinco entradas nuevas en `FormatosEnBlanco` —`endoscopia-superior`,
+  `endoscopia-inferior`, `evaluacion-preoperatoria`, `indicadores-incidentes` y `eco-renal`—, con sus constantes y
+  títulos en `DocumentoImpreso`. El catálogo pasa de **13 a 18** formatos. Tests: `FormatosEnBlancoWebTest` y
+  `Unit/Clinica/FormatosEnBlancoVistaTest` (actualizados al número nuevo).
+- **Falta**: el **informe impreso** de endoscopías y cirugía y la pre-factura pediátrica (F9). Todo lo demás del árbol
+  de PediaReport y de sus cinco postgrados está implementado; el detalle y la evidencia del fuente están en
+  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36), `../Docs/Web/relevamiento-pediatria.md` §8.5 y la sección
+  F7 de `../Docs/Web/matriz-paridad-powerbuilder.md`.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
