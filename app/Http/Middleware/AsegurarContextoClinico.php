@@ -29,9 +29,7 @@ class AsegurarContextoClinico
         // menú salía de los módulos del shell y nada más).
         $trabajo = app(ContextoTrabajo::class);
         view()->share('contexto', $contexto);
-        view()->share('modulos', $contexto['specialty']
-            ? $contexto['specialty']->modulosVisibles($trabajo->roles($request->user()))
-            : collect());
+        view()->share('modulos', $trabajo->modulos($contexto, $trabajo->roles($request->user())));
 
         return $next($request);
     }

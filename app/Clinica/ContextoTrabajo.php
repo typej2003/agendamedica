@@ -2,9 +2,11 @@
 
 namespace App\Clinica;
 
+use App\Especialidades\ConfiguracionDeLaEspecialidad;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Office;
+use App\Models\Specialty;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -99,14 +101,78 @@ class ContextoTrabajo
             ? $acceso['sedes']->firstWhere('id', (int) $guardado['office_id'])
             : null;
 
+        $subespecialidades = $specialty === null
+            ? collect()
+            : $acceso['medico']->subespecialidadesDe($specialty);
+
         return [
             'reg_medico'     => $registro,
             'medico'         => $acceso['medico'],
             'especialidades' => $acceso['especialidades'],
             'specialty'      => $specialty,
+            // Los **postgrados del médico de esa especialidad** (2026-10-19): son los que encienden módulos y
+            // secciones de la consulta. Se suman todos (decisión del usuario): si hizo dos, ve los dos.
+            'subespecialidades' => $subespecialidades,
+            // Las **secciones de la consulta** que suman esos postgrados, ya resueltas del manifiesto: es lo que
+            // consume el catálogo (`SeccionesDeLaConsulta`).
+            'secciones_postgrados' => $this->seccionesDeLosPostgrados($specialty, $subespecialidades),
             'sedes'          => $acceso['sedes'],
             'office'         => $office,
         ];
+    }
+
+    /**
+     * Las claves de las secciones de la consulta que encienden los postgrados del médico, en el orden declarado
+     * (el catálogo las inserta en el lugar del legado).
+     *
+     * Las secciones viven en el manifiesto de la especialidad (`subespecialidades.<slug>.secciones`), no en la
+     * base: el pivote sólo dice **qué postgrados tiene** el médico. Se ignoran los postgrados que el manifiesto
+     * no declara (una fila vieja de la base no enciende nada que la especialidad no haya escrito).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Subspecialty>  $subespecialidades
+     * @return array<int,string>
+     */
+    private function seccionesDeLosPostgrados(?Specialty $specialty, $subespecialidades): array
+    {
+        if ($specialty === null || $subespecialidades->isEmpty()) {
+            return [];
+        }
+
+        $declaradas = (array) ConfiguracionDeLaEspecialidad::valor($specialty, 'subespecialidades', []);
+        $salida = [];
+
+        foreach ($subespecialidades as $subespecialidad) {
+            foreach ((array) ($declaradas[$subespecialidad->slug]['secciones'] ?? []) as $seccion) {
+                $salida[] = (string) $seccion;
+            }
+        }
+
+        return array_values(array_unique($salida));
+    }
+
+    /**
+     * **Los módulos del menú del contexto**: los de la especialidad **más** los de sus postgrados.
+     *
+     * El postgrado no reemplaza la especialidad: nefrología pediátrica agrega lo suyo a lo que ya da
+     * pediatría, y los módulos repetidos se cuentan una vez (si la especialidad ya lo mostraba, manda su
+     * orden). Misma regla de visibilidad que `Specialty::modulosVisibles()`.
+     *
+     * @param  array<string,mixed>  $contexto
+     * @param  array<int,string>  $roles
+     * @return \Illuminate\Support\Collection<int, \App\Models\ModuloClinico>
+     */
+    public function modulos(array $contexto, array $roles)
+    {
+        $modulos = $contexto['specialty']?->modulosVisibles($roles) ?? collect();
+
+        foreach ($contexto['subespecialidades'] ?? [] as $subespecialidad) {
+            $modulos = $modulos->merge($subespecialidad->modulosVisibles($roles));
+        }
+
+        return $modulos
+            ->unique('slug')
+            ->sortBy(fn ($modulo) => sprintf('%05d-%05d-%s', $modulo->pivot->orden, $modulo->orden, $modulo->nombre))
+            ->values();
     }
 
     /**

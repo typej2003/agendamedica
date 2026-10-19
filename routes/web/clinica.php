@@ -51,6 +51,13 @@ use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
+use App\Http\Controllers\Clinica\ConsultaEcoRenalController;
+use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
+use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
+use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
+use App\Http\Controllers\Clinica\ConsultaIntervencionesController;
+use App\Http\Controllers\Clinica\ConsultaQuirurgicoController;
+use App\Http\Controllers\Clinica\ConsultaRiesgoQuirurgicoController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -352,6 +359,30 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `consultas.observaciones`: en la fuente esa columna es la **colposcopia** del examen
                 // ginecológico (`:2757`, `:2836`), no un campo de la evolución (ver `EvolucionDeLaConsulta`).
                 Route::post('/consulta/{consulta}/evolucion', [ConsultaEvolucionController::class, 'guardar'])->name('consulta.evolucion.guardar');
+
+                // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del
+                // ítem 5 de pediatría. Compone un texto y lo deja en `consultas.resultadoexamencomp`.
+                Route::post('/consulta/{consulta}/indicadores', [ConsultaIndicadoresController::class, 'guardar'])->name('consulta.indicadores.guardar');
+
+                // **Eco renal** (nefrología pediátrica, 2026-10-19): la segunda solapa de Indicadores incidentes.
+                Route::post('/consulta/{consulta}/eco-renal', [ConsultaEcoRenalController::class, 'guardar'])->name('consulta.eco-renal.guardar');
+
+                // **Neumología pediátrica** (postgrado, 2026-10-19): los tres informes de la solapa del examen.
+                Route::post('/consulta/{consulta}/neumologia', [ConsultaNeumologiaController::class, 'guardar'])->name('consulta.neumologia.guardar');
+
+                // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): las endoscopías digestivas.
+                Route::post('/consulta/{consulta}/procedimientos/{tipo}', [ConsultaProcedimientosController::class, 'guardar'])
+                    ->where('tipo', '[a-z]+')->name('consulta.procedimientos.guardar');
+
+                // **I.Q.** (cirugía pediátrica, 2026-10-19): la evaluación pre-operatoria y las intervenciones.
+                Route::post('/consulta/{consulta}/preoperatorio', [ConsultaQuirurgicoController::class, 'guardar'])
+                    ->name('consulta.preoperatorio.guardar');
+                Route::post('/consulta/{consulta}/intervenciones', [ConsultaIntervencionesController::class, 'guardar'])
+                    ->name('consulta.intervenciones.guardar');
+                Route::delete('/consulta/{consulta}/intervenciones/{codigo}', [ConsultaIntervencionesController::class, 'quitar'])
+                    ->where('codigo', '[A-Za-z0-9]{1,3}')->name('consulta.intervenciones.quitar');
+                Route::post('/consulta/{consulta}/riesgo-quirurgico', [ConsultaRiesgoQuirurgicoController::class, 'guardar'])
+                    ->name('consulta.riesgo.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

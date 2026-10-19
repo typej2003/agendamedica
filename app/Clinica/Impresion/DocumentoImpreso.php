@@ -127,6 +127,14 @@ final class DocumentoImpreso
      */
     public const HISTEROSCOPIA = 'histeroscopia';
 
+    // Los paneles de **pediatría** (2026-10-19): las dos endoscopías digestivas, la evaluación pre-operatoria, los
+    // indicadores incidentes y el eco renal. Se ofrecen como formato en blanco desde `FormatosEnBlanco`.
+    public const ENDOSCOPIA_SUPERIOR = 'endoscopia-superior';
+    public const ENDOSCOPIA_INFERIOR = 'endoscopia-inferior';
+    public const EVALUACION_PREOPERATORIA = 'evaluacion-preoperatoria';
+    public const INDICADORES_INCIDENTES = 'indicadores-incidentes';
+    public const ECO_RENAL = 'eco-renal';
+
     /**
      * El **resumen médico** (WEB-5.3c): la hoja que el escritorio arma sola con los datos de **toda** la
      * consulta (`d_resumen_medico_gra`, el radio «Resumen médico» de la pestaña *Informe médico*,
@@ -179,6 +187,13 @@ final class DocumentoImpreso
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).
         self::HISTEROSCOPIA => ['INFORME DE HISTEROSCOPÍA', 'Histeroscopía'],
+        // Los títulos de los paneles de pediatría (2026-10-19): el de las endoscopías es el de su DataWindow de
+        // impresión (`d_endoscopia_superior_print_puro` / `d_endoscopia_inferiorl_print_puro`).
+        self::ENDOSCOPIA_SUPERIOR => ['INFORME DE ENDOSCOPÍA DIGESTIVA SUPERIOR', 'Endoscopía digestiva superior'],
+        self::ENDOSCOPIA_INFERIOR => ['INFORME DE ENDOSCOPÍA DIGESTIVA INFERIOR', 'Endoscopía digestiva inferior'],
+        self::EVALUACION_PREOPERATORIA => ['EVALUACIÓN PRE-OPERATORIA', 'Evaluación pre-operatoria'],
+        self::INDICADORES_INCIDENTES => ['INDICADORES INCIDENTES', 'Indicadores incidentes (laboratorio)'],
+        self::ECO_RENAL => ['INFORME ECOSONOGRÁFICO RENAL', 'Eco renal'],
         // El del resumen médico: el título del radio del escritorio; el DataWindow no imprime un título
         // propio (su encabezado es el membrete), así que la hoja de la web lleva el nombre del documento.
         self::RESUMEN_MEDICO => ['RESUMEN MÉDICO', 'Resumen médico'],

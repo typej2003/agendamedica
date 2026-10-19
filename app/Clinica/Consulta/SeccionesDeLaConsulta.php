@@ -4,8 +4,13 @@ namespace App\Clinica\Consulta;
 
 /**
  * **Las secciones de la consulta** (la revisión de Alexander, 2026-10-17): la **fuente única** del catálogo de ítems
- * del legado —la lista de `w_consulta_principal` (wiki `04-historia-clinica.md`, "Ítems de la historia
+ * del legado —la lista de `w_consulta_principal` **de ginecología** (wiki `04-historia-clinica.md`, "Ítems de la historia
  * clínica"), **13 desde O-22** porque *Exámenes* se retiró— y de cómo se navega a cada una.
+ *
+ * **El catálogo es el de ginecología**: pediatría no tiene su propia lista todavía (su árbol de la consulta va de
+ * *Indicadores incidentes* a *Pre-factura*, sin estudio ecográfico y con ítems propios: ver
+ * `Docs/Web/observaciones-pendientes.md`, O-35). Mientras tanto se le quitan los dos ítems que no aplican —el
+ * **estudio ecográfico** y el **control de embarazo**— con `AlcanceDeLaEspecialidad`.
  *
  * Antes vivía dentro de `Vistas\ConsultaShellVista`, que la usaba para dibujar el panel lateral de la pantalla. El
  * panel se fue: los ítems ahora son un **grupo plegable del menú lateral** («Consulta», sólo visible dentro de una
@@ -82,6 +87,52 @@ final class SeccionesDeLaConsulta
     /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
     public const RECIPE_PAREJA = 'pareja';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Las secciones propias de la consulta PEDIÁTRICA (2026-10-19)
+    |--------------------------------------------------------------------------
+    |
+    | La consulta de pediatría no es la de ginecología con dos ítems menos: su árbol tiene 15 ítems, con
+    | nombres propios (medido en `w_consulta_principal.srw:2634-2715`). Estas son las claves de los que no
+    | existían. Las que ya tienen pantalla, la abren; las que son de un postgrado, las enciende el postgrado.
+    */
+
+    /** «Exámenes/Estudios»: la solapa *Resultado de exámenes* de la evaluación física (WEB-6.5). */
+    public const SECCION_EXAMENES_ESTUDIOS = 'examenes-estudios';
+
+    /** «Inmunizaciones»: el carnet de vacunas del paciente, que es una pantalla propia (WEB-7.4.4). */
+    public const SECCION_INMUNIZACIONES = 'inmunizaciones';
+
+    /** «Alimentación»: la dieta / recomendaciones de la consulta (la pestaña *Dieta* de Solicitudes). */
+    public const SECCION_ALIMENTACION = 'alimentacion';
+
+    /** «Representante»: el adulto que responde por el paciente, que se edita en su ficha (F3). */
+    public const SECCION_REPRESENTANTE = 'representante';
+
+    /** «Indicadores incidentes»: el panel de **nefrología pediátrica** (`tabpage_35` del escritorio). */
+    public const SECCION_INDICADORES = 'indicadores';
+
+    /** «Pre-factura»: llega con F9. */
+    public const SECCION_PREFACTURA = 'prefactura';
+
+    /** «Neumología»: la pestaña de neumología pediátrica (R.X. de tórax, espirometría, broncoscopía). */
+    public const SECCION_NEUMOLOGIA = 'neumologia';
+
+    /** «Procedimientos»: las endoscopías digestivas de gastroenterología pediátrica. */
+    public const SECCION_ENDOSCOPIAS = 'endoscopias';
+
+    /**
+     * **Procedimientos** (gastroenterología pediátrica, 2026-10-19): el ítem 8 del árbol de PediaReport
+     * (`tabpage_34`), con las dos endoscopías digestivas y la eco abdominal.
+     */
+    public const SECCION_PROCEDIMIENTOS = 'procedimientos';
+
+    /** «I.Q.»: las intervenciones y la evaluación pre-operatoria de cirugía pediátrica. */
+    public const SECCION_QUIRURGICO = 'quirurgico';
+
+    /** «Ecografía»: las ecografías abdominal y renal de pediatría (no son el estudio del ítem 5 de ginecología). */
+    public const SECCION_ECOGRAFIA = 'ecografia';
+
     /**
      * Los **13 ítems** del panel, en el orden del legado (O-22 quitó *Exámenes*, el ítem 7: su galería de
      * imágenes pasó a *Evaluación física* y los exámenes informados a la solapa *Resultado de exámenes*).
@@ -92,7 +143,7 @@ final class SeccionesDeLaConsulta
      * La **numeración no se renumera** al quitar un ítem: `numero` es el del legado y es lo que lo ata a su
      * fuente (quedan el 1 a 6 y el 8 a 14).
      */
-    private const ITEMS = [
+    private const ITEMS_GINECOLOGIA = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
             'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
             'seccion' => self::SECCION_MOTIVOS],
@@ -136,40 +187,185 @@ final class SeccionesDeLaConsulta
     ];
 
     /**
-     * El catálogo completo, con la bandera `disponible` derivada del estado.
+     * **El catálogo de la consulta pediátrica** (2026-10-19): los ítems del árbol de PediaReport, en su orden y
+     * con su numeración (`fuentes-pediatria/ventana_consulta/w_consulta_principal.srw:2634-2715`).
      *
-     * @return array<int,array{numero:int, grupo:string, titulo:string, icono:string, detalle:string, tarea:string, estado:string, seccion:?string, disponible:bool}>
+     * No está el estudio ecográfico ni el control de embarazo (pediatría no los tiene), y el **ítem 5
+     * «Indicadores incidentes» tampoco está acá**: es el panel de nefrología pediátrica y lo agrega ese
+     * postgrado (`EXTRA['indicadores']`). Un pediatra general tiene 14 ítems; uno con nefrología, 15.
+     *
+     * Los ítems que ya tienen pantalla la abren con su clave; los que la tienen en otra pantalla (el carnet
+     * de vacunas, la dieta, la ficha del representante) los redirige el controlador a donde corresponde.
      */
-    public static function todas(?string $especialidad = null): array
+    private const ITEMS_PEDIATRIA = [
+        ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
+            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_MOTIVOS],
+        ['numero' => 2, 'grupo' => 'Consulta', 'titulo' => 'Enfermedad actual', 'icono' => 'bi-file-text',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_ENFERMEDAD],
+        ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
+            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'listo',
+            'seccion' => self::SECCION_ANTECEDENTES],
+        ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
+            'detalle' => 'Mediciones, examen físico, cuestionario y la galería de imágenes.', 'tarea' => 'WEB-7.4.3', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVALUACION],
+        ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Exámenes/Estudios', 'icono' => 'bi-clipboard2-data',
+            'detalle' => 'Los resultados de laboratorio, imágenes y estudios exploratorios.', 'tarea' => 'WEB-6.5', 'estado' => 'listo',
+            'seccion' => self::SECCION_EXAMENES_ESTUDIOS],
+        ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Inmunizaciones', 'icono' => 'bi-shield-plus',
+            'detalle' => 'El carnet de vacunas del paciente y lo que le toca.', 'tarea' => 'WEB-7.4.4', 'estado' => 'listo',
+            'seccion' => self::SECCION_INMUNIZACIONES],
+        ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
+            'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
+            'seccion' => self::SECCION_DIAGNOSTICO],
+        ['numero' => 9, 'grupo' => 'Consulta', 'titulo' => 'Alimentación', 'icono' => 'bi-egg-fried',
+            'detalle' => 'La dieta y las recomendaciones del paciente.', 'tarea' => 'WEB-5.3b', 'estado' => 'listo',
+            'seccion' => self::SECCION_ALIMENTACION],
+        ['numero' => 10, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVOLUCION],
+        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
+            'detalle' => 'Varios por consulta, por medicamento o por tratamiento.', 'tarea' => 'WEB-5.1', 'estado' => 'listo',
+            'seccion' => self::SECCION_RECIPES],
+        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
+            'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
+            'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
+        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos del paciente', 'icono' => 'bi-person-vcard',
+            'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
+            'seccion' => self::SECCION_DATOS],
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Representante', 'icono' => 'bi-person-hearts',
+            'detalle' => 'El adulto que responde por el paciente: quién lo trae y a quién se le avisa.', 'tarea' => 'F3', 'estado' => 'listo',
+            'seccion' => self::SECCION_REPRESENTANTE],
+        ['numero' => 15, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+            'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente',
+            'seccion' => null],
+    ];
+
+    /**
+     * **Las secciones que agrega un postgrado** cuando el médico lo tiene (2026-10-19). No están en el catálogo
+     * base de ninguna especialidad: se insertan después del ítem que dice `despues_de`, con la numeración del
+     * legado.
+     *
+     * Hoy sólo está la de nefrología pediátrica, que es el ítem 5 del árbol de PediaReport. Las otras
+     * (`neumologia`, `endoscopias`, `quirurgico`, `ecografia`) están declaradas en el manifiesto de pediatría
+     * pero todavía no tienen pantalla: en cuanto la tengan, se agrega su fila acá y el postgrado la enciende.
+     */
+    private const EXTRA = [
+        self::SECCION_INDICADORES => ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Indicadores incidentes',
+            'icono' => 'bi-droplet-half', 'detalle' => 'Función renal y electrolitos urinarios (nefrología pediátrica).',
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_INDICADORES, 'despues_de' => self::SECCION_EVALUACION],
+        // Gastroenterología pediátrica: el ítem «PROCEDIMIENTOS» del árbol, después de Inmunizaciones
+        // (`w_consulta_principal.srw:2671`, activo sólo en el build del gastroenterólogo).
+        self::SECCION_PROCEDIMIENTOS => ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Procedimientos',
+            'icono' => 'bi-camera-reels', 'detalle' => 'Endoscopías digestivas y eco abdominal (gastroenterología pediátrica).',
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_PROCEDIMIENTOS, 'despues_de' => self::SECCION_INMUNIZACIONES],
+        // Cirugía pediátrica: el ítem «I.Q.» del árbol, el último (`w_consulta_principal.srw:2717`).
+        self::SECCION_QUIRURGICO => ['numero' => 16, 'grupo' => 'Documentos', 'titulo' => 'I.Q.',
+            'icono' => 'bi-scissors', 'detalle' => 'Intervenciones, evaluación pre-operatoria y riesgo quirúrgico (cirugía pediátrica).',
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_QUIRURGICO, 'despues_de' => self::SECCION_PREFACTURA],
+    ];
+
+    /** ¿La especialidad es pediatría? Su catálogo es el suyo, no el de ginecología. */
+    private static function esPediatria(?string $especialidad): bool
     {
-        return array_map(fn (array $item) => $item + ['disponible' => $item['estado'] === 'listo'], self::delaEspecialidad($especialidad));
+        return $especialidad !== null && str_contains($especialidad, 'pediatr');
     }
 
     /**
-     * Los ítems que aplican a la especialidad (WEB-12.1): el catálogo es el de ginecología y, en pediatría, se quita el control de embarazo.
-     * Sin especialidad (o en cualquier otra) sale el catálogo completo. La numeración no se toca.
+     * El catálogo completo, con la bandera `disponible` derivada del estado.
      *
+     * @param  array<int,string>  $seccionesPostgrados  las secciones que encienden los postgrados del médico
+     * @return array<int,array{numero:int, grupo:string, titulo:string, icono:string, detalle:string, tarea:string, estado:string, seccion:?string, disponible:bool}>
+     */
+    public static function todas(?string $especialidad = null, array $seccionesPostgrados = []): array
+    {
+        return array_map(
+            fn (array $item) => $item + ['disponible' => $item['estado'] === 'listo'],
+            self::delaEspecialidad($especialidad, $seccionesPostgrados),
+        );
+    }
+
+    /**
+     * Los ítems que aplican a la especialidad (WEB-12.1).
+     *
+     * - **Pediatría** tiene su propio catálogo (`ITEMS_PEDIATRIA`), más las secciones de los postgrados que el
+     *   médico tenga (`$seccionesPostgrados`, resueltas del manifiesto por el contexto).
+     * - **Ginecología** (y cualquier especialidad sin manifiesto) sigue con el catálogo de siempre: en pediatría se
+     *   quitan el estudio ecográfico y el control de embarazo; en las demás no se toca nada.
+     *
+     * La numeración no se toca: un ítem que no aplica deja su hueco (el 5 de pediatría es el de nefrología).
+     *
+     * @param  array<int,string>  $seccionesPostgrados
      * @return array<int,array<string,mixed>>
      */
-    private static function delaEspecialidad(?string $especialidad): array
+    private static function delaEspecialidad(?string $especialidad, array $seccionesPostgrados = []): array
     {
         $alcance = AlcanceDeLaEspecialidad::de($especialidad);
 
-        return array_values(array_filter(
-            self::ITEMS,
-            fn (array $item) => $item['seccion'] !== self::SECCION_EMBARAZO || $alcance->muestraElEmbarazo(),
-        ));
+        if (self::esPediatria($especialidad)) {
+            $base = self::ITEMS_PEDIATRIA;
+            $extras = array_values(array_filter(array_map(
+                fn (string $clave) => self::EXTRA[$clave] ?? null,
+                $seccionesPostgrados,
+            )));
+        } else {
+            $base = array_filter(
+                self::ITEMS_GINECOLOGIA,
+                fn (array $item) => match ($item['seccion']) {
+                    self::SECCION_EMBARAZO => $alcance->muestraElEmbarazo(),
+                    self::SECCION_ESTUDIO => $alcance->muestraElEstudio(),
+                    default => true,
+                },
+            );
+            $extras = [];
+        }
+
+        // Las secciones del postgrado se insertan detrás de su ítem ancla, en el orden en que las declara. Un
+        // postgrado cuya ancla es un ítem **sin sección** (la pre-factura, que todavía no tiene pantalla) se agrega
+        // **al final**, que es donde el escritorio lo pone: «I.Q.» va después de la pre-factura.
+        $alFinal = [];
+
+        foreach ($base as $item) {
+            $salida[] = $item;
+
+            foreach ($extras as $indice => $extra) {
+                if ($extra['despues_de'] === $item['seccion']) {
+                    $salida[] = $extra;
+                    unset($extras[$indice]);
+                } elseif (self::anclaSinSeccion($extra['despues_de'])) {
+                    $alFinal[] = $extra;
+                    unset($extras[$indice]);
+                }
+            }
+        }
+
+        return array_merge($salida, $alFinal);
     }
 
-    public static function total(?string $especialidad = null): int
+    /**
+     * Los ítems del catálogo que **todavía no tienen sección** (la pre-factura, F9): un postgrado que se ancla en uno
+     * de ellos se agrega **al final** de la lista, en lugar de desaparecer.
+     *
+     * @var array<string,true>
+     */
+    private const ANCLAS_SIN_SECCION = [self::SECCION_PREFACTURA => true];
+
+    /** ¿La clave ancla es un ítem del catálogo sin sección? */
+    private static function anclaSinSeccion(?string $despuesDe): bool
     {
-        return count(self::delaEspecialidad($especialidad));
+        return $despuesDe !== null && isset(self::ANCLAS_SIN_SECCION[$despuesDe]);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (sólo falta la pre-factura → F9). */
-    public static function disponibles(?string $especialidad = null): int
+    public static function total(?string $especialidad = null, array $seccionesPostgrados = []): int
     {
-        return count(array_filter(self::delaEspecialidad($especialidad), fn (array $item) => $item['estado'] === 'listo'));
+        return count(self::delaEspecialidad($especialidad, $seccionesPostgrados));
+    }
+
+    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología (sólo falta la pre-factura → F9) y 13 de 14 en pediatría. */
+    public static function disponibles(?string $especialidad = null, array $seccionesPostgrados = []): int
+    {
+        return count(array_filter(self::delaEspecialidad($especialidad, $seccionesPostgrados), fn (array $item) => $item['estado'] === 'listo'));
     }
 
     /**
@@ -179,13 +375,13 @@ final class SeccionesDeLaConsulta
      *
      * @return array{numero:int, grupo:string, titulo:string, icono:string, detalle:string, tarea:string, estado:string, seccion:?string, disponible:bool}|null
      */
-    public static function porSeccion(?string $seccion, ?string $especialidad = null): ?array
+    public static function porSeccion(?string $seccion, ?string $especialidad = null, array $seccionesPostgrados = []): ?array
     {
         if ($seccion === null || $seccion === '') {
             return null;
         }
 
-        foreach (self::todas($especialidad) as $item) {
+        foreach (self::todas($especialidad, $seccionesPostgrados) as $item) {
             if ($item['seccion'] === $seccion) {
                 return $item;
             }
@@ -195,9 +391,9 @@ final class SeccionesDeLaConsulta
     }
 
     /** ¿La clave corresponde a una sección con pantalla dentro de la consulta? */
-    public static function existeSeccion(?string $seccion, ?string $especialidad = null): bool
+    public static function existeSeccion(?string $seccion, ?string $especialidad = null, array $seccionesPostgrados = []): bool
     {
-        return self::porSeccion($seccion, $especialidad) !== null;
+        return self::porSeccion($seccion, $especialidad, $seccionesPostgrados) !== null;
     }
 
     /**
@@ -215,9 +411,9 @@ final class SeccionesDeLaConsulta
     }
 
     /** La clave normalizada: la pedida si es una sección con pantalla, `null` en cualquier otro caso. */
-    public static function normalizar(?string $seccion, ?string $especialidad = null): ?string
+    public static function normalizar(?string $seccion, ?string $especialidad = null, array $seccionesPostgrados = []): ?string
     {
-        return self::porSeccion($seccion, $especialidad)['seccion'] ?? null;
+        return self::porSeccion($seccion, $especialidad, $seccionesPostgrados)['seccion'] ?? null;
     }
 
     /**
@@ -234,9 +430,9 @@ final class SeccionesDeLaConsulta
      * @param  string|null  $seccionActual  el `?seccion=` de la petición (se normaliza)
      * @return array<int,array{texto:string, icono:string, url:?string, activo:bool, deshabilitado:bool}>
      */
-    public static function submenu(int $consultaId, ?string $seccionActual, ?string $especialidad = null): array
+    public static function submenu(int $consultaId, ?string $seccionActual, ?string $especialidad = null, array $seccionesPostgrados = []): array
     {
-        $actual = self::normalizar($seccionActual, $especialidad);
+        $actual = self::normalizar($seccionActual, $especialidad, $seccionesPostgrados);
 
         return array_map(fn (array $item) => [
             'texto' => $item['titulo'],
@@ -246,6 +442,6 @@ final class SeccionesDeLaConsulta
                 : null,
             'activo' => $actual !== null && $item['seccion'] === $actual,
             'deshabilitado' => $item['estado'] !== 'listo',
-        ], self::todas($especialidad));
+        ], self::todas($especialidad, $seccionesPostgrados));
     }
 }

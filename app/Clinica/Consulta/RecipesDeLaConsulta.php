@@ -167,7 +167,9 @@ final class RecipesDeLaConsulta
             ->where('reg_medico', $regMedico)
             ->orderBy('codemedicina')
             ->get(['codemedicina', 'nombrecomercial', 'nombregenerico', 'presentacion', 'uso',
-                'nombrecomercial1', 'nombrecomercial2', 'nombrecomercial3'])
+                'nombrecomercial1', 'nombrecomercial2', 'nombrecomercial3',
+                // La dosis por kilo del escritorio (2026-10-19): con estas columnas se calcula la posología del niño.
+                'dosificacion', 'dosis', 'cada', 'durante', 'pvc', 'pvs', 'concentracion'])
             ->filter(fn ($fila) => self::medicamentoCoincide($fila, $palabras))
             // Un medicamento sin ningún nombre no se ofrece: no hay cómo reconocerlo en la lista.
             ->filter(fn ($fila) => CamposDePaciente::texto($fila->nombrecomercial) !== null
@@ -494,6 +496,15 @@ final class RecipesDeLaConsulta
             'generico' => CamposDePaciente::texto($fila->nombregenerico),
             'presentacion' => CamposDePaciente::texto($fila->presentacion),
             'uso' => CamposDePaciente::texto($fila->uso),
+            // Los datos de la dosis por kilo del vademécum (2026-10-19). No se muestran: son para que el récipe
+            // calcule la posología del niño con el peso de la consulta (`DosisPediatrica`).
+            'dosificacion' => CamposDePaciente::texto($fila->dosificacion ?? null),
+            'dosis' => $fila->dosis ?? null,
+            'cada' => $fila->cada ?? null,
+            'durante' => $fila->durante ?? null,
+            'pvc' => $fila->pvc ?? null,
+            'pvs' => $fila->pvs ?? null,
+            'concentracion' => $fila->concentracion ?? null,
         ];
     }
 

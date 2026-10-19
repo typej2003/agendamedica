@@ -7,6 +7,7 @@ use App\Actions\Consulta\EliminarRecipe;
 use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\ResultadoDeRecipe;
 use App\Clinica\Consulta\ConsultasDelContexto;
+use App\Clinica\Consulta\DosisPediatrica;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Http\Controllers\Clinica\Concerns\ItemsDeUnRecipeEnElFormulario;
@@ -85,15 +86,29 @@ class ConsultaRecipesController extends Controller
      * El buscador de medicamentos del vademécum del médico: por nombre comercial o genérico, sin
      * distinguir tildes. Es JSON porque filtra mientras se escribe y no escribe nada.
      */
-    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura): JsonResponse
+    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura, DosisPediatrica $dosis): JsonResponse
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $buscar = trim((string) $request->query('q', ''));
 
+        // **La dosis del niño** (2026-10-19): cuando el medicamento es por kilo, el récipe propone las indicaciones
+        // ya calculadas con el peso del examen físico de la consulta (`DosisPediatrica`, la fórmula del escritorio).
+        // El médico las puede corregir: se cargan en su campo, no se guardan solas.
+        $peso = $consulta->peso;
+
         return response()->json([
             'buscar' => $buscar,
-            'medicamentos' => $lectura->medicamentos((string) $consulta->reg_medico, $buscar)->values()->all(),
+            'medicamentos' => $lectura->medicamentos((string) $consulta->reg_medico, $buscar)
+                ->map(function (object $medicamento) use ($dosis, $peso) {
+                    $calculo = $dosis->calcular($medicamento, $peso);
+
+                    return (array) $medicamento + [
+                        'indicacionSugerida' => $calculo['texto'] ?? null,
+                        'dosisCalculada' => $calculo,
+                    ];
+                })
+                ->values()->all(),
         ]);
     }
 

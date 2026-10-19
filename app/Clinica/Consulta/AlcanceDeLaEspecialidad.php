@@ -12,8 +12,8 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  * El panel y las solapas de «Atender» nacieron para ginecología. Esta clase es **el único lugar** donde se decide qué sobra en
  * otra especialidad, para que ni el shell, ni el controlador, ni las vistas pregunten «¿es pediatría?» por su cuenta.
  *
- * **Ginecología y las demás especialidades no cambian**: sólo la pediatría oculta partes (embarazo, estudios ginecológicos y
- * obstétricos, examen ginecológico, mamas, colposcopía…, el récipe y el laboratorio de la pareja). Lo oculto sólo se deja de
+ * **Ginecología y las demás especialidades no cambian**: sólo la pediatría oculta partes (embarazo, **el estudio ecográfico
+ * entero**, examen ginecológico, mamas, colposcopía…, el récipe y el laboratorio de la pareja). Lo oculto sólo se deja de
  * **ofrecer**: la URL directa sigue abriendo, como el eco abdominal en ginecología (WEB-11.14).
  *
  * **Fuera de la consulta** el alcance también dice qué no se ofrece en las pantallas que mezclan especialidades: los
@@ -60,15 +60,29 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
-     * Los tipos del estudio ecográfico que **no** se ofrecen. En pediatría queda sólo la eco abdominal (respuesta por defecto de la
-     * pregunta 11 de `preguntas-para-alexander.md`: se confirma con Alexander); en ginecología, todos menos la abdominal.
+     * **¿Se ofrece el ítem 5 del panel, el estudio ecográfico?** En pediatría **no** (Alexander, 2026-10-19: «en pediatría no va
+     * el estudio ecográfico»). Hasta entonces la sección se ofrecía con la única eco abdominal, que era la respuesta por defecto
+     * de la pregunta 11 de `preguntas-para-alexander.md` a falta de confirmación; pediatría no tiene la sección.
+     *
+     * El escritorio de pediatría **sí** tiene una eco abdominal, pero no es este ítem: es un botón de su solapa *Procedimientos*
+     * (`w_consulta_principal.srw`, `open(w_cargar_visualizar_eco_abdominal)`, al lado de las endoscopías). Si algún día entra,
+     * entra como lo que es en su pantalla, no reabriendo el ítem 5.
+     */
+    public function muestraElEstudio(): bool
+    {
+        return ! $this->esPediatria();
+    }
+
+    /**
+     * Los tipos del estudio ecográfico que **no** se ofrecen. En pediatría, **todos** (la sección no está); en ginecología,
+     * todos menos la abdominal.
      *
      * @return array<int,string>
      */
     public function tiposDeEstudioOcultos(): array
     {
-        if ($this->esPediatria()) {
-            return array_values(array_diff(TiposDeEstudio::claves(), [TiposDeEstudio::ABDOMINAL]));
+        if (! $this->muestraElEstudio()) {
+            return TiposDeEstudio::claves();
         }
 
         return $this->slug === 'ginecologia-y-obstetricia' ? [TiposDeEstudio::ABDOMINAL] : [];
@@ -128,13 +142,13 @@ final class AlcanceDeLaEspecialidad
     /**
      * Los **tipos de plantilla de texto que no se ofrecen** en esta especialidad: las plantillas de lo que la especialidad no
      * muestra. Son las de las solapas del examen que no están (la colposcopía `CO`, la citología `CI`, la histeroscopía `HI`,
-     * el resultado de exámenes `RE`), las del resumen del examen ginecológico (`EG`) y las de los ecos que no se ofrecen —los
-     * siete del ítem 5 menos el abdominal—, más los dos que la web no ofrece en ninguna especialidad (`EM`, `ER`).
+     * el resultado de exámenes `RE`), las del resumen del examen ginecológico (`EG`) y las de los ecos que no se ofrecen —en
+     * pediatría **los siete**, porque la sección no está—, más los dos que la web no ofrece en ninguna especialidad (`EM`, `ER`).
      *
      * En pediatría quedan, entonces, las de las secciones que sí tiene: evolución (`EV`), informe (`IM`), dietas (`DI`),
-     * enfermedad actual (`EA`), tratamiento (`TR`), **resumen físico (`RF`)** —que es el de su solapa *Examen físico*— y el eco
-     * abdominal (`UA`). El `RF` no se oculta con la solapa `fisico` de ginecología porque la solapa pediátrica `examen` usa el
-     * mismo tipo: por eso la lista se deduce de las solapas que quedan y no de las que se van.
+     * enfermedad actual (`EA`), tratamiento (`TR`) y **resumen físico (`RF`)** —que es el de su solapa *Examen físico*—. El `RF`
+     * no se oculta con la solapa `fisico` de ginecología porque la solapa pediátrica `examen` usa el mismo tipo: por eso la
+     * lista se deduce de las solapas que quedan y no de las que se van.
      *
      * Ginecología y las demás especialidades **no cambian** (lista vacía): su ABM sigue ofreciendo todo.
      *

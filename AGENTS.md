@@ -59,8 +59,8 @@ contexto, y la decisión vive en un solo lugar por tema:
   especialidad (a diferencia de las secciones de la consulta, que siguen abriendo por URL directa: acá la pantalla es de sólo
   lectura y no hay gestas que listar). Sin especialidad en el contexto no se filtra nada.
 - **Plantillas de texto**: `App\Clinica\Catalogos\PlantillasDeLaEspecialidad` traduce `AlcanceDeLaEspecialidad::tiposDePlantillaOcultos()`
-  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `EM` ni `ER`; quedan
-  `EV`, `IM`, `DI`, `EA`, `TR`, `RF` (su solapa *Examen físico* lo usa) y `UA`. Se filtra el listado, el filtro por tipo, el
+  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `UA`, `EM` ni `ER`; quedan
+  `EV`, `IM`, `DI`, `EA`, `TR` y `RF` (su solapa *Examen físico* lo usa). Se filtra el listado, el filtro por tipo, el
   `<select>` del diálogo y el subtotal. **Un tipo del legado que el catálogo no conoce no se oculta nunca** (esconderlo borraría
   datos del médico), y editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo. Ginecología no cambia.
 - **Formatos en blanco**: los informes de los ecos que la especialidad no tiene no se ofrecen (`FormatosEnBlanco::porEstudio()` +
@@ -68,6 +68,115 @@ contexto, y la decisión vive en un solo lugar por tema:
   (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) se ofrece siempre.
 Tests: `Unit/Clinica/{PlantillasDeLaEspecialidadTest,AlcanceDeLaEspecialidadTest,ListadoDeEmbarazosTest}`, `MenuDelArmazonWebTest`,
 `PlantillasDeTextoWebTest` y `FormatosEnBlancoWebTest`.
+
+🧬 **Subespecialidades (postgrados) y catálogo de la consulta por especialidad (2026-10-19).** Una **subespecialidad** cuelga
+de una especialidad (nefrología pediátrica es un postgrado de pediatría) y un médico puede tener varias, en una o en varias
+especialidades. Los postgrados **de la especialidad del contexto se suman**: encienden módulos del menú y secciones de la
+consulta.
+- **Tablas**: `subespecialidades` (catálogo), `medico_subespecialidad` (qué tiene cada médico) y `subespecialidad_modulo`
+  (módulos del menú, con `implementado`/`visible_para`/`orden`, igual que `especialidad_modulo`). Migración
+  `2026_10_19_120000_create_subespecialidades`.
+- **Dónde se declaran**: en el manifiesto (`config/especialidades/<especialidad>.php` → `subespecialidades`), con `modulos`
+  (menú) y `secciones` (consulta). `ManifiestoEspecialidad::normalizarSubespecialidades()` valida slug y nombre;
+  `RegistroEspecialidades` rechaza el slug repetido entre especialidades y `EspecialidadesYModulosSeeder` siembra todo
+  (`SUBESPECIALIDAD_IMPLEMENTADA` dice qué módulo ya tiene pantalla).
+- **Contexto**: `ContextoTrabajo::actual()` resuelve `subespecialidades` (las del médico de la especialidad activa) y
+  `secciones_postgrados` (las claves que declara el manifiesto); `ContextoTrabajo::modulos()` une los módulos de la
+  especialidad con los de sus postgrados, sin duplicar. El middleware comparte esa colección como `$modulos`.
+- **Catálogo de la consulta**: `SeccionesDeLaConsulta` tiene **dos catálogos** (`ITEMS_GINECOLOGIA` e `ITEMS_PEDIATRIA`) y un
+  mapa `EXTRA` de secciones que agrega un postgrado (hoy `indicadores` = ítem 5 de pediatría, nefrología). El pediátrico es el
+  árbol de PediaReport: 14 ítems sin nefrología y 15 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
+  tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (exámenes/estudios →
+  *Resultado de exámenes*; inmunizaciones → carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la
+  sección existe en el catálogo de esa especialidad.
+- **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene
+  (`CuentaService::asignarSubespecialidades()`); quitar una especialidad quita sus postgrados (`postgradosQuitados` en el
+  resultado de `asignarEspecialidades()`).
+- **Indicadores incidentes (nefrología pediátrica, 2026-10-19, `3a05bc7` + corrección el mismo día)**: el ítem 5
+  pediátrico tiene pantalla. El escritorio guarda **dos cosas** y la web escribe las dos: los **números** en
+  **`examenes_paciente_consulta`** —una fila por consulta con clave `hhistoria` + `hconsulta`; `UPDATE`/`INSERT` en
+  `w_consulta_principal.srw:2924-2960` y `:3554`, se releen con `dw_76.retrieve` `:25651`— y el **texto** compuesto
+  `ETIQUETA: valor.` (26 campos de `ue_guard_exam` `:25090-25204`) en `consultas.resultadoexamencomp` (`:2821`,
+  `:2850`), que es lo que imprimen el resumen médico y el pre-operatorio. ⚠️ Antes se creía que los números no se
+  guardaban: **sí se guardan**, en esa tabla. `App\Clinica\Consulta\IndicadoresIncidentes` es el mapa (33 campos:
+  Sangre, Orina y Gases; los gases, el volumen, el Na urinario y la creatinina calculada se guardan pero **no** entran
+  en el texto, `:25191-25200`), `GuardarIndicadoresIncidentes` escribe sólo lo que cambió con rastro por columna en
+  las dos tablas, `IndicadoresIncidentesVista` + `_indicadores.blade.php` son la pantalla, `IndicadoresIncidentes` del
+  shell la monta en la sección `indicadores` y `ConsultaIndicadoresController` la ruta
+  `POST /clinica/consulta/{consulta}/indicadores`. Modelo: `App\Models\ExamenPacienteConsulta`. Tests:
+  `Unit/Clinica/IndicadoresIncidentesTest` (7) y `Feature/ConsultaIndicadoresWebTest` (6).
+- **Neumología pediátrica (2026-10-19, `fe788ff`)**: **como en el escritorio**, una **solapa dentro de Evaluación
+  física** (`PestanasDelExamen::NEUMOLOGIA`) que sólo se ofrece si el médico tiene el postgrado
+  (`subespecialidad.secciones` → `secciones_postgrados`). Los tres informes: R.X. de tórax → `consultas.rayosx`,
+  espirometría → `consultas.faringe` (la columna de la citología de ginecología: el escritorio las comparte) y
+  broncoscopía → `consultas.broncoscopia`. `NeumologiaDeLaConsulta` es el mapa, `GuardarNeumologiaDeLaConsulta` la
+  escritura (sólo lo que cambió, rastro por columna), `NeumologiaVista` + `_evaluacion-neumologia.blade.php` la
+  pantalla y `ConsultaNeumologiaController` la ruta `POST /clinica/consulta/{consulta}/neumologia`. Una URL directa a
+  la solapa sin el postgrado abre la de entrada de la especialidad. Tests: `Unit/Clinica/NeumologiaDeLaConsultaTest` (2)
+  y `Feature/ConsultaNeumologiaWebTest` (4).
+- **Procedimientos (gastroenterología pediátrica, 2026-10-19)**: el ítem 8 del árbol de PediaReport
+  (`w_consulta_principal.srw:2671`, «PROCEDIMIENTOS») con las **dos endoscopías digestivas** como pestañas:
+  `superior` → `endosc_diges_super` y `inferior` → `endosc_diges_infer` (una fila por consulta, clave `historia` +
+  `consulta`; el inferior guarda esófago/estómago/duodeno con un estado `char(1)`). `full_texto` es lo que imprime el
+  informe; las columnas `ima_*`/`obs_ima_*` son rutas de la PC del consultorio y **no se tocan**.
+  `EndoscopiaDigestiva` es el mapa, `GuardarEndoscopiaDigestiva` la escritura (sólo lo cambiado, rastro por columna),
+  `ProcedimientosVista` + `_procedimientos.blade.php` la pantalla, `ConsultaProcedimientosController` la ruta
+  `POST /clinica/consulta/{consulta}/procedimientos/{tipo}` y la sección `procedimientos` del catálogo (postgrado
+  `gastroenterologia-pediatrica`, cuya `secciones` pasó de `endoscopias` a `procedimientos`). Modelos
+  `EndoscopiaSuperior` y `EndoscopiaInferior`. La **tercera pestaña es la eco abdominal** (el ítem también abre
+  `w_cargar_visualizar_eco_abdominal`): reusa `EcoAbdominalVista` y su parcial del estudio, y el guardado lleva
+  `volver = procedimientos` para volver a esta sección (`ConsultaEstudioController::destino`). Tests:
+  `Unit/Clinica/EndoscopiaDigestivaTest` (5) y `Feature/ConsultaProcedimientosWebTest` (7).
+- **I.Q. (cirugía pediátrica, 2026-10-19)**: el último ítem del árbol (`w_consulta_principal.srw:2717`, después de la
+  pre-factura; el catálogo lo ancla al final porque la pre-factura no tiene sección — `ANCLAS_SIN_SECCION`). Tiene sus
+  **tres pestañas**: **intervenciones** (`interven_consulta`, una fila por `codigo_inter` `char(3)`, alta y baja desde
+  la web), **evaluación pre-operatoria** (`pre_aneste`: `tipo`, `resultado`, `emergencia` `S`/`N`) y **riesgo
+  quirúrgico** (`riesgo` de catálogo + `riesgo_paciente` marcado al **paciente** + `riesgo_paciente_opera` con el
+  resumen: `puntos` = suma de lo marcado, `clase`, `conclusion`, `nombre_intervencion`). Clases:
+  `IntervencionesDeLaConsulta`, `EvaluacionPreoperatoria`, `RiesgoQuirurgico`; Actions `Guardar/QuitarIntervencion`,
+  `GuardarEvaluacionPreoperatoria` y `GuardarRiesgoQuirurgico` (todas con rastro por operación/columna); ViewModels
+  `QuirurgicoVista` + `RiesgoQuirurgicoVista` con los parciales `_quirurgico` y `_quirurgico-riesgo`; controladores
+  `ConsultaQuirurgicoController`, `ConsultaIntervencionesController` y `ConsultaRiesgoQuirurgicoController`. Modelos
+  `IntervencionConsulta`, `PreAnestesico`, `Riesgo`, `RiesgoPaciente` y `RiesgoPacienteOpera`. Tests:
+  `Unit/Clinica/EvaluacionPreoperatoriaTest` (2) y `Feature/ConsultaQuirurgicoWebTest` (10).
+- **Eco renal (nefrología pediátrica, 2026-10-19)**: la **segunda solapa de Indicadores incidentes**, que es de donde
+  el escritorio lo abre (`w_cargar_visualizar_renal`, DataWindow `d_ultra_rinom`). Una fila por consulta en
+  **`ultra_renal`** (clave `historia` + `consulta`), con las medidas de los dos riñones por prefijo (`rd_*` derecho,
+  `ri_*` izquierdo: longitud, transverso, anteroposterior, complejo, LOE, litiasis y dilatación), más el texto básico,
+  la conclusión, la sugerencia, los médicos y los datos del equipo. `EcoRenal` es el mapa, `GuardarEcoRenal` la
+  escritura (sólo lo cambiado, rastro por columna), `EcoRenalVista` + `_eco-renal.blade.php` la pantalla,
+  `ConsultaEcoRenalController` la ruta `POST /clinica/consulta/{consulta}/eco-renal` y `UltraRenal` el modelo. Tests:
+  `Unit/Clinica/EcoRenalTest` (2) y dos de `Feature/ConsultaIndicadoresWebTest`.
+- **Formatos en blanco de pediatría (2026-10-19)**: cinco entradas nuevas en `FormatosEnBlanco` —`endoscopia-superior`,
+  `endoscopia-inferior`, `evaluacion-preoperatoria`, `indicadores-incidentes` y `eco-renal`—, con sus constantes y
+  títulos en `DocumentoImpreso`. El catálogo pasa de **13 a 18** formatos. Tests: `FormatosEnBlancoWebTest` y
+  `Unit/Clinica/FormatosEnBlancoVistaTest` (actualizados al número nuevo).
+- **Informe impreso de las endoscopías (2026-10-19)**: `SolicitudesParaImprimir` ofrece `endoscopia-superior` e
+  `endoscopia-inferior` **sólo si tienen texto** y arma la hoja con el mismo `textoDelExamen` que las solapas de texto
+  del examen; el cuerpo es el `full_texto` del escritorio o, si está vacío, los hallazgos y la conclusión. Iconos en
+  `DocumentosParaImprimir`. Tests: `Feature/ConsultaEndoscopiaImpresionWebTest` (3).
+- **Informe impreso de la evaluación pre-operatoria (2026-10-19)**: `SolicitudesParaImprimir` ofrece
+  `evaluacion-preoperatoria` si la consulta tiene algo cargado (la evaluación, el riesgo o las intervenciones) y arma la
+  hoja con la intervención, la evaluación pre-anestésica (tipo, resultado y emergencia), el riesgo con sus **puntos** y
+  su clase, y la conclusión. Icono en `DocumentosParaImprimir`. Test: uno de
+  `Feature/ConsultaEndoscopiaImpresionWebTest` (4 en total).
+- **Dosis pediátrica por peso en los récipes (2026-10-19)**: `App\Clinica\Consulta\DosisPediatrica` es **la fórmula
+  del escritorio** (`pw9_ws/w_agregar_nueva_gesta_medicamento.srw:223-254`): el peso del examen físico de la consulta
+  (`consultas.peso`), **topeado en 30 kg**; `posologia = (dosis × peso) / cada`; con presentación (`pvc` mg / `pvs` ml)
+  pasa a **ml** (`pvs × posologia / pvc`) y con concentración a **gotas**; el intervalo del rótulo es `24 / cada` (el
+  vademécum guarda **veces al día**) **sin truncar**, a diferencia del `integer hot` del fuente (corregido a pedido del
+  usuario el 2026-10-19). Si el vademécum no dice `dosificacion = 'SI'`, queda su `uso`.
+  `RecipesDeLaConsulta::medicamentos()` trae las columnas de la dosis y `ConsultaRecipesController::medicamentos()`
+  devuelve **`indicacionSugerida`** y **`dosisCalculada`** con el peso de la consulta; `consulta-recipes.js` la carga en
+  el campo de indicaciones (editable) y la muestra al pasar por encima. **El ABM del vademécum ya carga los siete
+  campos** (`dosificacion`, `dosis`, `cada`, `durante`, `pvc`, `pvs`, `concentracion`) en `/clinica/catalogos/medicamentos`,
+  en un bloque «Dosis por kilo»; `dosificacion = 'SI'` es la marca que enciende el cálculo (no hay columna aparte).
+  Tests: `Unit/Clinica/DosisPediatricaTest` (7), `Feature/ConsultaRecipesDosisWebTest` (3) y
+  `Feature/MedicamentoDosisCatalogoWebTest` (4).
+- **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
+  postgrados y sus informes impresos están implementados.
+Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
+`Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma

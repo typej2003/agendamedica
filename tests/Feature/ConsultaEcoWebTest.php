@@ -693,11 +693,11 @@ class ConsultaEcoWebTest extends TestCase
         $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'ginecologico'));
 
         $pantalla->assertOk()->assertSee('Eco obstétrico (2.º trimestre)')->assertDontSee('Eco abdominal');
-        // Pero la dirección directa sigue abriendo (lo usa pediatría).
+        // Pero la dirección directa sigue abriendo (es lo que el escritorio hace con su botón oculto).
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'abdominal'))->assertOk()->assertSee('Eco abdominal');
     }
 
-    public function test_en_pediatria_el_panel_no_trae_el_embarazo_y_el_estudio_es_solo_la_eco_abdominal(): void
+    public function test_en_pediatria_el_panel_no_trae_el_embarazo_ni_el_estudio_ecografico(): void
     {
         [$user, $medico] = $this->medicoConAcceso();
         $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
@@ -705,12 +705,14 @@ class ConsultaEcoWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
         $pediatra = $this->conContexto($user, $medico, $pediatria)->actingAs($user);
 
-        // El panel: sin «Control de embarazo» y sin el chip de ningún eco ginecológico.
+        // El panel: sin «Control de embarazo» y sin «Estudio ecográfico» (Alexander, 2026-10-19: en pediatría no
+        // va el estudio; la eco abdominal de su escritorio es un procedimiento, no este ítem).
         $pediatra->get(route('clinica.consulta', $consulta->id))->assertOk()
-            ->assertDontSee('Control de embarazo')->assertSee('Estudio ecográfico');
-        $pediatra->get($this->urlSeccion($consulta, 'ginecologico'))->assertOk()->assertSee('Eco abdominal');
-        $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio']))
-            ->assertOk()->assertSee('Eco abdominal')->assertDontSee('Eco ginecológico')->assertDontSee('Eco obstétrico (2.º trimestre)');
+            ->assertDontSee('Control de embarazo')->assertDontSee('Estudio ecográfico');
+
+        // La dirección directa ya no abre la sección: no está en el catálogo de la especialidad.
+        $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'estudio']))->assertOk()
+            ->assertSee('Elige una sección en el menú')->assertDontSee('Eco abdominal');
     }
 
     public function test_el_tipo_tercero_abre_con_sus_bloques_y_guarda_en_su_tabla(): void

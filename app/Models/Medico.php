@@ -130,6 +130,30 @@ class Medico extends Model
         return $this->belongsToMany(Specialty::class, 'medico_specialty', 'medico_id', 'specialty_id');
     }
 
+    /**
+     * Los **postgrados** del médico (2026-10-19): nefrología pediátrica, neumología pediátrica… Cada uno
+     * cuelga de una especialidad, y un médico puede tener varios de la misma.
+     */
+    public function subespecialidades(): BelongsToMany
+    {
+        return $this->belongsToMany(Subspecialty::class, 'medico_subespecialidad', 'medico_id', 'subespecialidad_id');
+    }
+
+    /**
+     * Los postgrados **de esa especialidad** que el médico tiene y están activos: es lo que enciende los
+     * módulos y las secciones del contexto cuando trabaja con esa especialidad.
+     *
+     * @return \Illuminate\Support\Collection<int, Subspecialty>
+     */
+    public function subespecialidadesDe(Specialty $specialty)
+    {
+        return $this->subespecialidades
+            ->where('specialty_id', $specialty->id)
+            ->where('activo', true)
+            ->sortBy(fn (Subspecialty $subespecialidad) => sprintf('%05d-%s', $subespecialidad->orden, $subespecialidad->nombre))
+            ->values();
+    }
+
     public function medicalCenters(): BelongsToMany
     {
         return $this->belongsToMany(MedicalCenter::class, 'medico_medical_center', 'medico_id', 'medical_center_id')

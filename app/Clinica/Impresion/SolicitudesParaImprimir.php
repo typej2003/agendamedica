@@ -3,6 +3,10 @@
 namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
+use App\Clinica\Consulta\EndoscopiaDigestiva;
+use App\Clinica\Consulta\EvaluacionPreoperatoria;
+use App\Clinica\Consulta\IntervencionesDeLaConsulta;
+use App\Clinica\Consulta\RiesgoQuirurgico;
 use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
@@ -267,6 +271,36 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // Los **informes de las endoscopías digestivas** (gastroenterología pediátrica, 2026-10-19): cada uno se
+        // ofrece si tiene texto —el `full_texto` que imprime el escritorio o, en su defecto, los hallazgos—, igual
+        // que las solapas de texto del examen.
+        foreach ([DocumentoImpreso::ENDOSCOPIA_SUPERIOR => EndoscopiaDigestiva::SUPERIOR,
+            DocumentoImpreso::ENDOSCOPIA_INFERIOR => EndoscopiaDigestiva::INFERIOR] as $documento => $tipo) {
+            if ($this->textoDeLaEndoscopia($consulta, $tipo) === null) {
+                continue;
+            }
+
+            $disponibles[] = [
+                'clave' => $documento,
+                'tipo' => $documento,
+                'titulo' => DocumentoImpreso::TITULOS[$documento][1],
+                'resumen' => 'Informe de ' . mb_strtolower(DocumentoImpreso::TITULOS[$documento][1]),
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        // El **informe de la evaluación pre-operatoria** (cirugía pediátrica, 2026-10-19): se ofrece si hay algo
+        // cargado en la consulta (la evaluación, el riesgo o las intervenciones).
+        if ($this->textoDeLaCirugia($consulta) !== null) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::EVALUACION_PREOPERATORIA,
+                'tipo' => DocumentoImpreso::EVALUACION_PREOPERATORIA,
+                'titulo' => DocumentoImpreso::TITULOS[DocumentoImpreso::EVALUACION_PREOPERATORIA][1],
+                'resumen' => 'Informe de la evaluación pre-operatoria',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         $examenes = $this->laboratorios->filas($consulta);
         if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
             $disponibles[] = [
@@ -469,6 +503,26 @@ final class SolicitudesParaImprimir
             return $this->elEcoAbdominalEsDocumento($estudio)
                 ? $this->conInformeDeEco($this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros), $consulta, $estudio, EcoAbdominal::grupos(), TiposDeEstudio::ABDOMINAL)
                 : null;
+        }
+
+        if ($clave === DocumentoImpreso::EVALUACION_PREOPERATORIA) {
+            // La evaluación pre-operatoria de cirugía pediátrica (2026-10-19): una hoja con la intervención, la
+            // evaluación pre-anestésica, el riesgo (puntos y clase) y su conclusión.
+            $texto = $this->textoDeLaCirugia($consulta);
+
+            return $texto === null ? null : $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
+        }
+
+        if ($clave === DocumentoImpreso::ENDOSCOPIA_SUPERIOR || $clave === DocumentoImpreso::ENDOSCOPIA_INFERIOR) {
+            // El informe de la endoscopía (gastroenterología pediátrica, 2026-10-19): su cuerpo es el texto que el
+            // escritorio imprime (`full_texto`) o, si está vacío, los hallazgos y la conclusión.
+            $tipo = $clave === DocumentoImpreso::ENDOSCOPIA_INFERIOR
+                ? EndoscopiaDigestiva::INFERIOR
+                : EndoscopiaDigestiva::SUPERIOR;
+
+            $texto = $this->textoDeLaEndoscopia($consulta, $tipo);
+
+            return $texto === null ? null : $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
         }
 
         if (($solapa = TextosDelExamen::deLaHoja($clave)) !== null) {
@@ -1167,6 +1221,109 @@ final class SolicitudesParaImprimir
      * campo de texto con el informe, sin rótulos armados. Las **fotos** que el escritorio le anexa (su
      * subreporte, `d_imagenes_consul_pac_*`) llegan con la parte de imágenes por examen de WEB-6.5.
      */
+    /**
+     * **El texto del informe de la evaluación pre-operatoria**, o `null` si la consulta no tiene nada cargado.
+     *
+     * Junta lo que el escritorio imprime en `d_pre_pre_operatoria`: la intervención, la evaluación pre-anestésica
+     * (tipo, resultado y emergencia), el riesgo con sus puntos y su clase, y la conclusión.
+     */
+    private function textoDeLaCirugia(Consulta $consulta): ?string
+    {
+        $preoperatoria = new EvaluacionPreoperatoria();
+        $riesgo = new RiesgoQuirurgico();
+        $intervenciones = new IntervencionesDeLaConsulta();
+
+        $evaluacion = $preoperatoria->de($consulta);
+        $resumen = $riesgo->de($consulta);
+        $lista = $intervenciones->de($consulta);
+        $puntos = $riesgo->puntos($consulta);
+
+        if (! $preoperatoria->tieneDatos($consulta) && $puntos === 0 && $lista->isEmpty()
+            && array_filter(array_map('trim', array_map('strval', $resumen))) === []) {
+            return null;
+        }
+
+        $partes = [];
+
+        if ($lista->isNotEmpty()) {
+            $partes[] = 'Intervenciones: ' . $lista->map(
+                fn ($intervencion) => trim($intervencion->codigo_inter . ' ' . ($intervencion->descripcion ?? '')),
+            )->implode('; ') . '.';
+        }
+
+        if ($preoperatoria->tieneDatos($consulta)) {
+            $linea = 'Evaluación pre-anestésica';
+
+            if (($evaluacion['tipo'] ?? '') !== '') {
+                $linea .= ': ' . $evaluacion['tipo'];
+            }
+
+            if (($evaluacion['resultado'] ?? '') !== '') {
+                $linea .= '. ' . $evaluacion['resultado'];
+            }
+
+            $emergencia = \App\Clinica\Consulta\EvaluacionPreoperatoria::emergenciaLegible($evaluacion['emergencia'] ?? null);
+
+            if ($emergencia !== null) {
+                $linea .= ' Emergencia: ' . mb_strtolower($emergencia) . '.';
+            }
+
+            $partes[] = $linea;
+        }
+
+        $lineaRiesgo = 'Riesgo quirúrgico: ' . $puntos . ' puntos';
+
+        if (($resumen['clase'] ?? '') !== '') {
+            $lineaRiesgo .= ', clase ' . $resumen['clase'];
+        }
+
+        $partes[] = $lineaRiesgo . '.';
+
+        if (($resumen['nombre_intervencion'] ?? '') !== '') {
+            $partes[] = 'Intervención: ' . $resumen['nombre_intervencion'] . '.';
+        }
+
+        if (($resumen['conclusion'] ?? '') !== '') {
+            $partes[] = 'Conclusión: ' . $resumen['conclusion'];
+        }
+
+        return implode("\n\n", $partes);
+    }
+
+    /**
+     * **El texto de una endoscopía digestiva**, o `null` si todavía no tiene nada que imprimir.
+     *
+     * El escritorio imprime `full_texto` (lo arma con su plantilla y después se corrige). Si está vacío, el informe
+     * se arma con los hallazgos y la conclusión, que es lo que el médico ve en la pantalla.
+     */
+    private function textoDeLaEndoscopia(Consulta $consulta, string $tipo): ?string
+    {
+        $lectura = new EndoscopiaDigestiva();
+        $valores = $lectura->de($consulta, $tipo);
+
+        if (! $lectura->tieneDatos($consulta, $tipo)) {
+            return null;
+        }
+
+        $completo = trim((string) ($valores['full_texto'] ?? ''));
+
+        if ($completo !== '') {
+            return $completo;
+        }
+
+        $partes = [];
+
+        foreach (['descripcion', 'conclusiones', 'esofago_descripcion', 'estomago_descripcion', 'duodeno_descripcion'] as $clave) {
+            $texto = trim((string) ($valores[$clave] ?? ''));
+
+            if ($texto !== '') {
+                $partes[] = $texto;
+            }
+        }
+
+        return $partes === [] ? null : implode("\n\n", $partes);
+    }
+
     private function textoDelExamen(Paciente $paciente, string $documento, string $texto, string $fecha): DocumentoImpreso
     {
         return new DocumentoImpreso(

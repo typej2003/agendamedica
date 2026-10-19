@@ -606,16 +606,17 @@ class PlantillasDeTextoWebTest extends TestCase
         $ginecologo->assertSee('DE COLPOSCOPIA')->assertSee('DE ECO GINECOLOGICO')->assertSee('6 plantillas');
         $ginecologo->assertSee('<option value="CO"', false)->assertSee('<option value="UG"', false);
 
-        // Pediatría: sólo las de sus secciones (y las del legado, que no se esconden).
+        // Pediatría: sólo las de sus secciones (y las del legado, que no se esconden). Desde el 2026-10-19 tampoco
+        // ofrece la del eco abdominal: la especialidad no tiene el ítem del estudio ecográfico.
         $pediatra = $this->como($user, $medico, $pediatria)->get(route('clinica.catalogos.plantillas-texto'))->assertOk();
 
-        $pediatra->assertSee('DE EVOLUCION')->assertSee('DE RESUMEN FISICO')->assertSee('DE ECO ABDOMINAL')->assertSee('DEL LEGADO');
-        $pediatra->assertDontSee('DE COLPOSCOPIA')->assertDontSee('DE ECO GINECOLOGICO');
+        $pediatra->assertSee('DE EVOLUCION')->assertSee('DE RESUMEN FISICO')->assertSee('DEL LEGADO');
+        $pediatra->assertDontSee('DE COLPOSCOPIA')->assertDontSee('DE ECO GINECOLOGICO')->assertDontSee('DE ECO ABDOMINAL');
         // Ni el listado ni el filtro ni el diálogo las ofrecen (las dos listas de opciones usan el mismo `<option value…>`).
         $pediatra->assertDontSee('<option value="CO"', false)->assertDontSee('<option value="UG"', false);
-        $pediatra->assertSee('<option value="RF"', false)->assertSee('<option value="UA"', false);
-        // El subtítulo cuenta sólo las que la pantalla muestra: EV, RF, UA y la del legado.
-        $pediatra->assertSee('4 plantillas');
+        $pediatra->assertSee('<option value="RF"', false)->assertDontSee('<option value="UA"', false);
+        // El subtítulo cuenta sólo las que la pantalla muestra: EV, RF y la del legado.
+        $pediatra->assertSee('3 plantillas');
 
         // Editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo, para no perder el dato.
         $edicion = $this->como($user, $medico, $pediatria)

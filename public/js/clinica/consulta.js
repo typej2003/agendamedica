@@ -492,4 +492,20 @@
     document.querySelectorAll('[data-consulta-fechas]').forEach(function (formulario) {
         avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
     });
+
+    // Indicadores incidentes (nefrología pediátrica, 2026-10-19): el panel de números compone un texto y se
+    // guarda con un botón, así que lleva el mismo aviso genérico.
+    document.querySelectorAll('[data-consulta-indicadores]').forEach(function (formulario) {
+        avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
+    });
+
+    // Neumología pediátrica (2026-10-19): tres informes de texto con guardado explícito.
+    document.querySelectorAll('[data-consulta-neumologia]').forEach(function (formulario) {
+        avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
+    });
+
+    // Procedimientos (gastroenterología pediátrica, 2026-10-19): las endoscopías, con guardado explícito.
+    document.querySelectorAll('[data-consulta-procedimientos]').forEach(function (formulario) {
+        avisoDeFormulario(formulario, formulario.id + '-sin-guardar');
+    });
 })();

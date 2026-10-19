@@ -28,12 +28,15 @@ class PlantillasDeLaEspecialidadTest extends TestCase
     {
         $codigos = PlantillasDeLaEspecialidad::codigos('pediatria');
 
-        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'EM', 'ER'] as $tipo) {
+        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'UA', 'EM', 'ER'] as $tipo) {
             $this->assertNotContains($tipo, $codigos, 'Pediatría no ofrece ' . $tipo . '.');
         }
 
-        // Lo suyo sí: las secciones del núcleo, el resumen físico y el único estudio que tiene (el eco abdominal).
-        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF', 'UA'] as $tipo) {
+        // Se fue con el estudio ecográfico (2026-10-19): pediatría ya no tiene la sección, así que tampoco sus plantillas.
+        $this->assertContains('UA', PlantillasDeLaEspecialidad::ocultos('pediatria'));
+
+        // Lo suyo sí: las secciones del núcleo y el resumen físico.
+        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF'] as $tipo) {
             $this->assertContains($tipo, $codigos, 'Pediatría conserva ' . $tipo . '.');
             $this->assertFalse(PlantillasDeLaEspecialidad::estaOculto($tipo, 'pediatria'));
         }

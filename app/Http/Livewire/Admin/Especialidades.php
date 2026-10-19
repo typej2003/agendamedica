@@ -42,6 +42,9 @@ class Especialidades extends Component
     public $medicoId = null;
     public $seleccionadas = [];
 
+    /** Los **postgrados** tildados (2026-10-19): sólo pueden ser de las especialidades tildadas arriba. */
+    public $postgrados = [];
+
     /** Aviso que no es un error (el médico quedó sin especialidad): se muestra como advertencia. */
     public $aviso = null;
 
@@ -100,7 +103,10 @@ class Especialidades extends Component
             ->paginate(15);
 
         // El catálogo completo, activas primero: una inactiva se puede ver asignada, pero no da módulos.
-        $catalogo = Specialty::orderByDesc('activo')->orderBy('name')->get();
+        $catalogo = Specialty::with(['subespecialidades' => fn ($q) => $q->where('activo', true)])
+            ->orderByDesc('activo')
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.admin.especialidades', [
             'filas'       => $filas,
@@ -132,6 +138,7 @@ class Especialidades extends Component
         $this->medicoId = $medico->id;
         // El formulario manda los ids como texto: se comparan con los del pivote tal cual llegan.
         $this->seleccionadas = $medico->specialties()->pluck('specialties.id')->map(fn ($id) => (string) $id)->all();
+        $this->postgrados = $medico->subespecialidades()->pluck('subespecialidades.id')->map(fn ($id) => (string) $id)->all();
         $this->aviso = null;
         $this->resetErrorBag();
         $this->modal = 'asignar';
@@ -142,6 +149,9 @@ class Especialidades extends Component
         try {
             $medico = Medico::findOrFail($this->medicoId);
             $cambios = $cuentas->asignarEspecialidades($medico, (array) $this->seleccionadas);
+            // Los postgrados van **después**: asignar especialidades puede haber quitado los que quedaron sin su
+            // especialidad, y acá se guarda lo que quedó tildado en el formulario.
+            $cuentas->asignarSubespecialidades($medico->fresh('specialties'), (array) $this->postgrados);
 
             session()->flash('message', $this->textoDeGuardado($medico, $cambios));
             $this->aviso = $this->advertenciaSinEspecialidad($medico->fresh('specialties'));
@@ -158,6 +168,7 @@ class Especialidades extends Component
         $this->modal = null;
         $this->medicoId = null;
         $this->seleccionadas = [];
+        $this->postgrados = [];
         $this->resetErrorBag();
     }
 
@@ -176,6 +187,11 @@ class Especialidades extends Component
         }
         if ($cambios['quitadas'] > 0) {
             $partes[] = $cambios['quitadas'] . ' quitada' . ($cambios['quitadas'] > 1 ? 's' : '');
+        }
+
+        if (($cambios['postgradosQuitados'] ?? 0) > 0) {
+            $partes[] = $cambios['postgradosQuitados'] . ' postgrado' . ($cambios['postgradosQuitados'] > 1 ? 's' : '')
+                . ' quitado' . ($cambios['postgradosQuitados'] > 1 ? 's' : '') . ' por quedarse sin su especialidad';
         }
 
         return "Especialidades de {$nombre} actualizadas: " . implode(' y ', $partes) . '.';

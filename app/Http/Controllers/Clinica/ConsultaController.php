@@ -30,6 +30,7 @@ use App\Clinica\Consulta\HospitalizacionDeLaConsulta;
 use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\ImagenDelExamenDeLaConsulta;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
+use App\Clinica\Consulta\IndicadoresIncidentes;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\LaboratorioDeLaPareja;
@@ -64,6 +65,18 @@ use App\Clinica\Consulta\Vistas\DibujosDeMamasVista;
 use App\Clinica\Consulta\Vistas\ImagenDelExamenVista;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
 use App\Clinica\Consulta\Vistas\EvolucionVista;
+use App\Clinica\Consulta\Vistas\IndicadoresIncidentesVista;
+use App\Clinica\Consulta\Vistas\NeumologiaVista;
+use App\Clinica\Consulta\NeumologiaDeLaConsulta;
+use App\Clinica\Consulta\EndoscopiaDigestiva;
+use App\Clinica\Consulta\EvaluacionPreoperatoria;
+use App\Clinica\Consulta\IntervencionesDeLaConsulta;
+use App\Clinica\Consulta\RiesgoQuirurgico;
+use App\Clinica\Consulta\EcoRenal;
+use App\Clinica\Consulta\Vistas\EcoRenalVista;
+use App\Clinica\Consulta\Vistas\RiesgoQuirurgicoVista;
+use App\Clinica\Consulta\Vistas\QuirurgicoVista;
+use App\Clinica\Consulta\Vistas\ProcedimientosVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
@@ -219,6 +232,14 @@ class ConsultaController extends Controller
         $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
+        // **Los ítems de la consulta pediátrica que abren otra pantalla** (2026-10-19). En el árbol de PediaReport
+        // son ítems propios, pero el dato ya vive en otra pantalla de la web y no se duplica: se redirige (302),
+        // como con `?seccion=examenes` (O-22). El menú sigue mostrando el ítem pediátrico.
+        $destino = $this->destinoDeLaSeccionPediatrica($seccion, $consulta, $paciente, $contexto);
+        if ($destino !== null) {
+            return $destino;
+        }
+
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
         // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
         // Pediatría (WEB-12.3): sus siete tipos de antecedente (Patológicos, C.A., Madre…) se siembran en el catálogo del médico la primera vez.
@@ -290,6 +311,8 @@ class ConsultaController extends Controller
                 // La pestaña de solicitudes (O-30): el shell decide con ella si el encabezado ofrece el panel
                 // con el resumen del paciente (sólo en las pantallas donde se redacta un documento).
                 (string) $request->query('solicitud', ''),
+                // Las secciones que encienden los postgrados de la especialidad del contexto (2026-10-19).
+                $contexto['secciones_postgrados'] ?? [],
             ),
             // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
             // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el
@@ -335,6 +358,44 @@ class ConsultaController extends Controller
     private function alcance(): AlcanceDeLaEspecialidad
     {
         return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
+    }
+
+    /**
+     * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
+     *
+     * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
+     * duplica: *Exámenes/Estudios* es la solapa *Resultado de exámenes*, *Inmunizaciones* el carnet de vacunas
+     * del paciente, *Alimentación* la dieta / recomendaciones de la consulta y *Representante* la ficha del
+     * paciente. Devuelve `null` para cualquier otra sección (incluida la pre-factura, que todavía no tiene
+     * pantalla: cae en el estado vacío del shell como cualquier ítem sin pantalla).
+     */
+    private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
+    {
+        // Sólo si la sección **existe en el catálogo de esta especialidad**: en ginecología esas claves no están
+        // y tienen que caer en el estado vacío del shell, no redirigir a una pantalla que no es de su consulta.
+        if (! SeccionesDeLaConsulta::existeSeccion(
+            $seccion,
+            $contexto['specialty']?->slug,
+            $contexto['secciones_postgrados'] ?? [],
+        )) {
+            return null;
+        }
+
+        return match ($seccion) {
+            SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS => redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
+                'pestana' => TextosDelExamen::RESULTADOS,
+            ]),
+            SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
+            SeccionesDeLaConsulta::SECCION_ALIMENTACION => redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
+                'solicitud' => PestanasDeSolicitudes::DIETA,
+            ]),
+            SeccionesDeLaConsulta::SECCION_REPRESENTANTE => redirect()->route('clinica.pacientes.ver', $paciente->id),
+            default => null,
+        };
     }
 
     /**
@@ -475,13 +536,42 @@ class ConsultaController extends Controller
                 'pestana' => $clave,
             ]);
 
+            // Las solapas que no se ofrecen en esta especialidad, más la de neumología cuando el médico **no** tiene
+            // el postgrado (2026-10-19): es una solapa de su pestaña, no de la especialidad.
+            $ocultas = $this->alcance()->pestanasDelExamenOcultas();
+            $postgrados = (array) (request()->attributes->get('contexto_clinico')['secciones_postgrados'] ?? []);
+
+            if (! in_array(PestanasDelExamen::NEUMOLOGIA, $postgrados, true)) {
+                $ocultas[] = PestanasDelExamen::NEUMOLOGIA;
+
+                // Una URL directa a la solapa de un postgrado que el médico no tiene no puede caer en el formulario
+                // de otro tipo: abre la solapa de entrada de su especialidad.
+                if ($pestana === PestanasDelExamen::NEUMOLOGIA) {
+                    $pestana = $this->alcance()->pestanaDelExamen('');
+                }
+            }
+
+            // La solapa de **neumología pediátrica** (2026-10-19): los tres informes del escritorio.
+            if ($pestana === PestanasDelExamen::NEUMOLOGIA && in_array(PestanasDelExamen::NEUMOLOGIA, $postgrados, true)) {
+                return new SeccionDeEvaluacionVista(
+                    $pestana,
+                    new PestanasDelExamen($url, $ocultas),
+                    new NeumologiaVista(
+                        (new NeumologiaDeLaConsulta())->de($consulta),
+                        route('clinica.consulta.neumologia.guardar', $consulta->id),
+                        $url($pestana),
+                        (array) old(),
+                    ),
+                );
+            }
+
             // La **galería de imágenes de los estudios** (O-22): una solapa más, al final, que no es de texto.
             // Es la que vivía en la sección *Exámenes* retirada: «Esta consulta / Todas» y la subida, con el
             // parcial `_imagenes` de siempre (la columna `observacion` sigue teniendo dos dueños, trampa 116).
             if ($pestana === PestanasDelExamen::IMAGENES) {
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $this->galeria($consulta, $regMedico, $imagenes),
                 );
             }
@@ -490,7 +580,7 @@ class ConsultaController extends Controller
             if ($pestana === PestanasDelExamen::MEDICIONES) {
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $this->vistaDeMediciones($consulta, $regMedico, $pacienteId, $url($pestana)),
                 );
             }
@@ -501,7 +591,7 @@ class ConsultaController extends Controller
 
                 return new SeccionDeEvaluacionVista(
                     $pestana,
-                    new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                    new PestanasDelExamen($url, $ocultas),
                     $pestana === PestanasDelExamen::EXAMEN
                         ? new \App\Clinica\Consulta\Vistas\ExamenPediatricoVista(
                             $pediatrico->examen($consulta),
@@ -545,7 +635,7 @@ class ConsultaController extends Controller
 
             return new SeccionDeEvaluacionVista(
                 $pestana,
-                new PestanasDelExamen($url, $this->alcance()->pestanasDelExamenOcultas()),
+                new PestanasDelExamen($url, $ocultas),
                 $pestana === PestanasDelExamen::MAMAS
                     ? new DibujosDeMamasVista(
                         fn (string $lado) => route('clinica.consulta.mamas.ver', [$consulta->id, $lado]),
@@ -945,6 +1035,233 @@ class ConsultaController extends Controller
                 // O-27: las dos escrituras inmediatas.
                 route('clinica.consulta.diagnosticos.agregar', $consulta->id),
                 route('clinica.consulta.diagnosticos.quitar', $consulta->id),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_INDICADORES) {
+            // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del ítem 5
+            // pediátrico. Los números viven en `examenes_paciente_consulta` y el resumen compuesto en
+            // `consultas.resultadoexamencomp`, como en el escritorio. Su segunda solapa es el **eco renal**, que el
+            // escritorio abre desde ese mismo panel (`w_cargar_visualizar_renal`).
+            $pestana = (string) request()->query('pestana', IndicadoresIncidentesVista::INDICADORES);
+            $pestana = $pestana === IndicadoresIncidentesVista::RENAL ? IndicadoresIncidentesVista::RENAL : IndicadoresIncidentesVista::INDICADORES;
+
+            $volver = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]);
+
+            $ecoRenal = null;
+
+            if ($pestana === IndicadoresIncidentesVista::RENAL) {
+                $lecturaRenal = new EcoRenal();
+                $tiposRenal = [];
+
+                foreach (EcoRenal::campos() as $clave => $campo) {
+                    $tiposRenal[$clave] = ['etiqueta' => $campo['etiqueta'], 'clase' => $campo['clase']];
+                }
+
+                $ecoRenal = new EcoRenalVista(
+                    EcoRenal::grupos(),
+                    $tiposRenal,
+                    $lecturaRenal->de($consulta),
+                    route('clinica.consulta.eco-renal.guardar', $consulta->id),
+                    $volver,
+                    (array) old(),
+                    $lecturaRenal->tieneDatos($consulta),
+                );
+            }
+
+            return new IndicadoresIncidentesVista(
+                IndicadoresIncidentes::grupos(),
+                (new IndicadoresIncidentes())->de($consulta),
+                IndicadoresIncidentes::textoGuardado($consulta),
+                route('clinica.consulta.indicadores.guardar', $consulta->id),
+                $volver,
+                (array) old(),
+                $pestana,
+                $ecoRenal,
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_PROCEDIMIENTOS) {
+            // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): el ítem 8 del árbol, con una pestaña por
+            // endoscopía digestiva. El `&pestana=` elige el tipo, como el `&tipo=` del estudio.
+            $tipo = (string) request()->query('pestana', EndoscopiaDigestiva::SUPERIOR);
+            // La pestaña del eco abdominal viaja con la misma clave que las endoscopías; cualquier otra vuelve a la
+            // primera.
+            if ($tipo !== 'ecoabdominal' && ! EndoscopiaDigestiva::existe($tipo)) {
+                $tipo = EndoscopiaDigestiva::SUPERIOR;
+            }
+
+            $lectura = new EndoscopiaDigestiva();
+            $valores = EndoscopiaDigestiva::existe($tipo) ? $lectura->de($consulta, $tipo) : [];
+
+            $url = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_PROCEDIMIENTOS,
+                'pestana' => $clave,
+            ]);
+
+            $campos = [];
+            foreach (EndoscopiaDigestiva::campos($tipo) as $clave => $campo) {
+                $campos[] = [
+                    'clave'    => $clave,
+                    'etiqueta' => $campo['etiqueta'],
+                    'clase'    => $campo['clase'],
+                    'ayuda'    => $campo['ayuda'] ?? null,
+                    'valor'    => (string) old($clave, $valores[$clave] ?? ''),
+                ];
+            }
+
+            $pestanas = [];
+            foreach (EndoscopiaDigestiva::tipos() as $clave) {
+                $pestanas[] = [
+                    'clave'   => $clave,
+                    'texto'   => EndoscopiaDigestiva::titulo($clave),
+                    'url'     => $url($clave),
+                    'activa'  => $clave === $tipo,
+                    'cargada' => $lectura->tieneDatos($consulta, $clave),
+                ];
+            }
+
+            // La tercera pestaña es la **eco abdominal**: el ítem «Procedimientos» del escritorio también abre
+            // `w_cargar_visualizar_eco_abdominal`. Se reusa la pantalla del estudio (`_estudio-abdominal`), con el
+            // guardado que vuelve a esta sección.
+            $ecoValores = $ecoAbdominal->de($consulta);
+            $ecoActivo = $tipo === 'ecoabdominal';
+            // La fecha con la que abre un estudio sin fecha guardada: **hoy del consultorio** (O-13, trampa 59).
+            $hoyDelEco = FechaDelConsultorio::hoy()->toDateString();
+
+            $pestanas[] = [
+                'clave'   => 'ecoabdominal',
+                'texto'   => 'Eco abdominal',
+                'url'     => $url('ecoabdominal'),
+                'activa'  => $ecoActivo,
+                'cargada' => array_filter($ecoValores->valores(), fn ($valor) => $valor !== null && $valor !== '') !== [],
+            ];
+
+            $vistaEco = $ecoActivo
+                ? new \App\Clinica\Consulta\Vistas\EcoAbdominalVista(
+                    $ecoValores,
+                    route('clinica.consulta.estudio.guardar', [$consulta->id, 'abdominal']),
+                    $url('ecoabdominal'),
+                    route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_ABDOMINAL]),
+                    $doctores->delCatalogo($this->registrosDelMedico($medico))
+                        ->map(fn (object $doctor) => ['valor' => (string) $doctor->cedula, 'texto' => $doctor->nombre])
+                        ->all(),
+                    (array) old(),
+                    $hoyDelEco,
+                )
+                : null;
+
+            return new ProcedimientosVista(
+                $ecoActivo ? 'Eco abdominal' : EndoscopiaDigestiva::titulo($tipo),
+                $ecoActivo ? [] : $campos,
+                $pestanas,
+                $ecoActivo ? '' : route('clinica.consulta.procedimientos.guardar', [$consulta->id, $tipo]),
+                $url($tipo),
+                $ecoActivo ? false : $lectura->tieneDatos($consulta, $tipo),
+                $vistaEco,
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_QUIRURGICO) {
+            // **I.Q.** (cirugía pediátrica, 2026-10-19): el último ítem del árbol. Esta entrega es la evaluación
+            // pre-operatoria (`tabpage_32`); las pestañas de intervenciones y riesgo quedan pendientes.
+            $pestana = (string) request()->query('pestana', QuirurgicoVista::PREOPERATORIA);
+            if (! in_array($pestana, [QuirurgicoVista::INTERVENCIONES, QuirurgicoVista::PREOPERATORIA, QuirurgicoVista::RIESGO], true)) {
+                $pestana = QuirurgicoVista::PREOPERATORIA;
+            }
+
+            $preoperatoria = new EvaluacionPreoperatoria();
+            $valores = $preoperatoria->de($consulta);
+            $cargada = $preoperatoria->tieneDatos($consulta);
+
+            $lecturaIntervenciones = new IntervencionesDeLaConsulta();
+            $intervenciones = $lecturaIntervenciones->de($consulta);
+            $riesgoLectura = new RiesgoQuirurgico();
+
+            $url = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_QUIRURGICO,
+                'pestana' => $clave,
+            ]);
+
+            $campos = [];
+            foreach (EvaluacionPreoperatoria::campos() as $clave => $campo) {
+                $campos[] = [
+                    'clave'    => $clave,
+                    'etiqueta' => $campo['etiqueta'],
+                    'clase'    => $campo['clase'],
+                    'ayuda'    => $campo['ayuda'] ?? null,
+                    'valor'    => (string) old($clave, $valores[$clave] ?? ''),
+                ];
+            }
+
+            $lista = $intervenciones->map(fn ($intervencion) => [
+                'codigo'      => (string) $intervencion->codigo_inter,
+                'descripcion' => (string) $intervencion->descripcion,
+                'detalle'     => (string) $intervencion->detalle,
+                'urlQuitar'   => route('clinica.consulta.intervenciones.quitar', [$consulta->id, $intervencion->codigo_inter]),
+            ])->all();
+
+            $pestanas = [
+                ['clave' => QuirurgicoVista::INTERVENCIONES, 'texto' => 'Intervenciones', 'url' => $url(QuirurgicoVista::INTERVENCIONES),
+                    'activa' => $pestana === QuirurgicoVista::INTERVENCIONES, 'cargada' => $intervenciones->isNotEmpty(), 'pendiente' => false],
+                ['clave' => QuirurgicoVista::PREOPERATORIA, 'texto' => 'Evaluación pre-operatoria', 'url' => $url(QuirurgicoVista::PREOPERATORIA),
+                    'activa' => $pestana === QuirurgicoVista::PREOPERATORIA, 'cargada' => $cargada, 'pendiente' => false],
+                ['clave' => QuirurgicoVista::RIESGO, 'texto' => 'Riesgo quirúrgico', 'url' => $url(QuirurgicoVista::RIESGO),
+                    'activa' => $pestana === QuirurgicoVista::RIESGO, 'cargada' => $riesgoLectura->marcados($consulta)->isNotEmpty(), 'pendiente' => false],
+            ];
+
+            // La solapa del riesgo quirúrgico: el catálogo del médico agrupado por `sub_tipo`, lo marcado al paciente
+            // y el resumen de la consulta.
+            $riesgo = null;
+
+            if ($pestana === QuirurgicoVista::RIESGO) {
+                $marcadas = $riesgoLectura->descripcionesMarcadas($consulta);
+                $resumen = $riesgoLectura->de($consulta);
+                $grupos = [];
+
+                foreach ($riesgoLectura->catalogo()->groupBy('sub_tipo') as $subTipo => $factores) {
+                    $grupos[] = [
+                        'titulo'   => $subTipo !== null && $subTipo !== '' ? (string) $subTipo : 'Factores',
+                        'factores' => $factores->map(fn ($factor) => [
+                            'descripcion' => (string) $factor->descripcion,
+                            'puntos'      => (int) $factor->puntos,
+                            'marcado'     => in_array((string) $factor->descripcion, $marcadas, true),
+                        ])->all(),
+                    ];
+                }
+
+                $camposRiesgo = [];
+                foreach (RiesgoQuirurgico::camposDelResumen() as $clave => $campo) {
+                    $camposRiesgo[] = [
+                        'clave'    => $clave,
+                        'etiqueta' => $campo['etiqueta'],
+                        'clase'    => $campo['clase'],
+                        'valor'    => (string) old($clave, $resumen[$clave] ?? ''),
+                    ];
+                }
+
+                $riesgo = new RiesgoQuirurgicoVista(
+                    $grupos,
+                    $camposRiesgo,
+                    $riesgoLectura->puntos($consulta),
+                    route('clinica.consulta.riesgo.guardar', $consulta->id),
+                    $url(QuirurgicoVista::RIESGO),
+                );
+            }
+
+            return new QuirurgicoVista(
+                $pestana,
+                $campos,
+                $pestanas,
+                $lista,
+                route('clinica.consulta.preoperatorio.guardar', $consulta->id),
+                $url($pestana),
+                $pestana === QuirurgicoVista::INTERVENCIONES ? $intervenciones->isNotEmpty() : $cargada,
+                ($valores['emergencia'] ?? null) === EvaluacionPreoperatoria::EMERGENCIA_SI,
+                route('clinica.consulta.intervenciones.guardar', $consulta->id),
+                $riesgo,
             );
         }
 

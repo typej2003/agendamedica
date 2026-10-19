@@ -241,13 +241,22 @@
                 'Agregar',
             );
             resultado.dataset.codigo = medicamento.codigo;
+
+            // La dosis calculada se ve al pasar por encima, antes de agregarlo (2026-10-19).
+            if (medicamento.indicacionSugerida) {
+                resultado.title = medicamento.indicacionSugerida
+                    + (medicamento.dosisCalculada ? ' (para ' + medicamento.dosisCalculada.peso + ' kg)' : '');
+            }
             resultado.addEventListener('click', function () {
                 agregar({
                     codigo: medicamento.codigo,
                     nombre: medicamento.nombre,
                     generico: medicamento.generico,
                     cantidad: 1,
-                    indicaciones: medicamento.uso,
+                    // **La dosis del niño** (2026-10-19): si el medicamento es por kilo y la consulta tiene peso, el
+                    // servidor ya calculó la indicación con la fórmula del escritorio (`DosisPediatrica`). Si no,
+                    // va la del vademécum. En los dos casos es texto editable en el editor.
+                    indicaciones: medicamento.indicacionSugerida || medicamento.uso,
                 });
                 pintarMarcas();
             });

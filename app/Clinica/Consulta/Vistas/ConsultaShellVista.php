@@ -72,6 +72,15 @@ final class ConsultaShellVista
     /** La clave de la sección del **control de embarazo** (ítem 6 del panel) en `?seccion=` (WEB-6.6). */
     public const SECCION_EMBARAZO = SeccionesDeLaConsulta::SECCION_EMBARAZO;
 
+    /** La clave de la sección de **Indicadores incidentes** (nefrología pediátrica, ítem 5 de pediatría) en `?seccion=`. */
+    public const SECCION_INDICADORES = SeccionesDeLaConsulta::SECCION_INDICADORES;
+
+    /** La clave de la sección de **Procedimientos** (gastroenterología pediátrica, ítem 8 de pediatría) en `?seccion=`. */
+    public const SECCION_PROCEDIMIENTOS = SeccionesDeLaConsulta::SECCION_PROCEDIMIENTOS;
+
+    /** La clave de la sección de **I.Q.** (cirugía pediátrica, último ítem de pediatría) en `?seccion=`. */
+    public const SECCION_QUIRURGICO = SeccionesDeLaConsulta::SECCION_QUIRURGICO;
+
     /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
     public const RECIPE_PAREJA = SeccionesDeLaConsulta::RECIPE_PAREJA;
 
@@ -102,6 +111,9 @@ final class ConsultaShellVista
         // La pestaña abierta de la sección de solicitudes (`?solicitud=`), normalizada. Es lo que decide si el
         // encabezado ofrece el panel con el resumen del paciente (O-30: sólo donde se redacta un documento).
         private ?string $pestanaDeSolicitudes = null,
+        // Las secciones de la consulta que encienden los **postgrados** del médico (2026-10-19), resueltas por el
+        // contexto: el catálogo las inserta en el lugar del legado.
+        private array $seccionesPostgrados = [],
     ) {
     }
 
@@ -289,7 +301,7 @@ final class ConsultaShellVista
      */
     public function seccion(): ?string
     {
-        return SeccionesDeLaConsulta::normalizar($this->seccion, $this->especialidad);
+        return SeccionesDeLaConsulta::normalizar($this->seccion, $this->especialidad, $this->seccionesPostgrados);
     }
 
     /**
@@ -318,7 +330,7 @@ final class ConsultaShellVista
     {
         $grupos = [];
 
-        foreach (SeccionesDeLaConsulta::todas($this->especialidad) as $item) {
+        foreach (SeccionesDeLaConsulta::todas($this->especialidad, $this->seccionesPostgrados) as $item) {
             $grupos[$item['grupo']][] = $this->item($item);
         }
 
@@ -332,13 +344,13 @@ final class ConsultaShellVista
 
     public function totalItems(): int
     {
-        return SeccionesDeLaConsulta::total($this->especialidad);
+        return SeccionesDeLaConsulta::total($this->especialidad, $this->seccionesPostgrados);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología y 13 de 14 en pediatría (no tiene el estudio ecográfico ni el control de embarazo). */
     public function totalListos(): int
     {
-        return SeccionesDeLaConsulta::disponibles($this->especialidad);
+        return SeccionesDeLaConsulta::disponibles($this->especialidad, $this->seccionesPostgrados);
     }
 
     /**
@@ -358,8 +370,7 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el menú',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems del grupo «Consulta» del menú lateral '
-                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el que '
+                . '—desde los motivos de consulta hasta los datos personales del paciente— se abren acá; el que '
                 . 'todavía no tiene pantalla (la pre-factura) llega con la tarea siguiente. Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];

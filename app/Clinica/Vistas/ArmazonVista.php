@@ -149,7 +149,12 @@ final class ArmazonVista
                     'icono'  => 'bi-journal-medical',
                     'url'    => null,
                     'activo' => true,
-                    'hijos'  => SeccionesDeLaConsulta::submenu($consultaId, is_string($seccion) ? $seccion : null, $this->contexto['specialty']->slug ?? null),
+                    'hijos'  => SeccionesDeLaConsulta::submenu(
+                        $consultaId,
+                        is_string($seccion) ? $seccion : null,
+                        $this->contexto['specialty']->slug ?? null,
+                        $this->contexto['secciones_postgrados'] ?? [],
+                    ),
                 ];
             }
         }

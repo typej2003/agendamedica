@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
+use App\Models\Subspecialty;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -660,6 +661,55 @@ class CuentaService
         return DB::transaction(function () use ($medico, $ids) {
             // `sync` deja el pivote con exactamente estos ids: agrega los que faltan y quita los que sobran.
             $cambios = $medico->specialties()->sync($ids->all());
+
+            // **Los postgrados siguen a su especialidad** (2026-10-19): si se quita Pediatría, no tiene sentido
+            // que el médico siga con «Nefrología pediátrica». Se quitan —y se informan— los que quedaron huérfanos.
+            $huerfanos = $medico->subespecialidades()
+                ->whereNotIn('specialty_id', $ids->all())
+                ->pluck('subespecialidades.id')
+                ->all();
+
+            if ($huerfanos !== []) {
+                $medico->subespecialidades()->detach($huerfanos);
+            }
+
+            return [
+                'asignadas' => count($cambios['attached']),
+                'quitadas'  => count($cambios['detached']),
+                'postgradosQuitados' => count($huerfanos),
+            ];
+        });
+    }
+
+    /**
+     * Deja al médico con EXACTAMENTE estos **postgrados** (pivote `medico_subespecialidad`, 2026-10-19).
+     *
+     * Un postgrado cuelga de una especialidad: sólo se puede asignar el de una especialidad que el médico
+     * **tenga**. Se ignoran (no se rechazan) los ids que no cumplen, porque el formulario manda todo junto y una
+     * especialidad recién destildada todavía puede venir en la lista; lo que no se hace es guardar un postgrado
+     * sin su especialidad.
+     *
+     * @param  array<int|string>  $subespecialidadIds
+     * @return array{asignadas: int, quitadas: int}
+     */
+    public function asignarSubespecialidades(Medico $medico, array $subespecialidadIds): array
+    {
+        $ids = collect($subespecialidadIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $especialidadesDelMedico = $medico->specialties()->pluck('specialties.id')->all();
+
+        $validas = $ids->isEmpty()
+            ? collect()
+            : Subspecialty::whereIn('id', $ids)
+                ->whereIn('specialty_id', $especialidadesDelMedico)
+                ->pluck('id');
+
+        return DB::transaction(function () use ($medico, $validas) {
+            $cambios = $medico->subespecialidades()->sync($validas->all());
 
             return [
                 'asignadas' => count($cambios['attached']),

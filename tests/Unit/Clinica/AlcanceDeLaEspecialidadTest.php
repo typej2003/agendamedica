@@ -3,6 +3,7 @@
 namespace Tests\Unit\Clinica;
 
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
@@ -43,35 +44,47 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         }
     }
 
-    public function test_pediatria_pierde_el_control_de_embarazo_y_conserva_la_numeracion(): void
+    public function test_pediatria_pierde_el_estudio_ecografico_y_el_control_de_embarazo_y_conserva_la_numeracion(): void
     {
         $vm = $this->shell('pediatria');
 
-        $this->assertSame([1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(12, $vm->totalItems());
-        // Doce disponibles menos el control de embarazo (que en pediatría no aplica) = once.
-        $this->assertSame(11, $vm->totalListos());
+        // Pediatría tiene **su** catálogo (2026-10-19): sin el ítem 5 del estudio —que en su árbol es el de
+        // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-15.
+        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], $this->numeros($vm));
+        $this->assertSame(14, $vm->totalItems());
+        // Catorce ítems menos la pre-factura, que todavía no tiene pantalla = trece.
+        $this->assertSame(13, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void
     {
-        $vm = new ConsultaShellVista(
-            (object) ['id' => 1, 'nombres' => 'Ana', 'apellidos' => 'Pérez', 'numhistoria' => '1001'],
-            1, '2026-10-05', '/p', '/h', '/v', '/clinica/consulta/42', ConsultaShellVista::SECCION_EMBARAZO, null, false, [], null, [], false, 'pediatria',
-        );
+        foreach ([ConsultaShellVista::SECCION_EMBARAZO, ConsultaShellVista::SECCION_ESTUDIO] as $oculta) {
+            $vm = new ConsultaShellVista(
+                (object) ['id' => 1, 'nombres' => 'Ana', 'apellidos' => 'Pérez', 'numhistoria' => '1001'],
+                1, '2026-10-05', '/p', '/h', '/v', '/clinica/consulta/42', $oculta, null, false, [], null, [], false, 'pediatria',
+            );
 
-        $this->assertNull($vm->seccion());
-        $this->assertNull($vm->parcial());
+            $this->assertNull($vm->seccion(), $oculta);
+            $this->assertNull($vm->parcial(), $oculta);
+        }
     }
 
-    public function test_el_estudio_ecografico_en_pediatria_es_solo_la_eco_abdominal(): void
+    /**
+     * **El estudio ecográfico no va en pediatría** (Alexander, 2026-10-19): la sección no se ofrece y no queda ningún tipo de
+     * chip. Antes quedaba la eco abdominal, que era la respuesta por defecto de la pregunta 11 de `preguntas-para-alexander.md`.
+     */
+    public function test_el_estudio_ecografico_no_se_ofrece_en_pediatria(): void
     {
         $alcance = AlcanceDeLaEspecialidad::de('pediatria');
 
-        $this->assertNotContains(TiposDeEstudio::ABDOMINAL, $alcance->tiposDeEstudioOcultos());
-        $this->assertSame(TiposDeEstudio::ABDOMINAL, $alcance->tipoDeEstudio(''));
-        // La URL directa sigue abriendo lo que no se ofrece como chip.
-        $this->assertSame(TiposDeEstudio::OBSTETRICO, $alcance->tipoDeEstudio(TiposDeEstudio::OBSTETRICO));
+        $this->assertFalse($alcance->muestraElEstudio());
+        $this->assertEqualsCanonicalizing(TiposDeEstudio::claves(), $alcance->tiposDeEstudioOcultos());
+        // No hay ítem de estudio en el catálogo pediátrico (el 5 de pediatría es «Indicadores incidentes», que agrega
+        // el postgrado de nefrología).
+        $this->assertSame([], array_values(array_filter(
+            SeccionesDeLaConsulta::todas('pediatria'),
+            fn (array $item) => $item['seccion'] === ConsultaShellVista::SECCION_ESTUDIO,
+        )));
     }
 
     public function test_el_estudio_en_ginecologia_sigue_como_antes(): void
@@ -90,7 +103,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $pediatria->pestanasDelExamenOcultas());
 
         $this->assertSame(
-            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO, PestanasDelExamen::IMAGENES],
+            [PestanasDelExamen::MEDICIONES, PestanasDelExamen::EXAMEN, PestanasDelExamen::CUESTIONARIO, PestanasDelExamen::NEUMOLOGIA, PestanasDelExamen::IMAGENES],
             array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
         );
         // Arranca en las mediciones, como el escritorio; la URL directa sigue abriendo el examen de ginecología.
@@ -128,8 +141,9 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $ocultos = AlcanceDeLaEspecialidad::de('pediatria')->tiposDePlantillaOcultos();
 
-        // Las de las cuatro solapas de texto del examen, el resumen ginecológico y los siete ecos menos el abdominal.
-        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM'] as $tipo) {
+        // Las de las cuatro solapas de texto del examen, el resumen ginecológico y **los siete ecos** (en pediatría
+        // no hay sección de estudio desde el 2026-10-19: Alexander confirmó que el ítem no va).
+        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'UA'] as $tipo) {
             $this->assertContains($tipo, $ocultos, 'Pediatría no ofrece las plantillas de ' . $tipo . '.');
         }
 
@@ -137,9 +151,8 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertContains('EM', $ocultos);
         $this->assertContains('ER', $ocultos);
 
-        // Y se quedan las de las secciones que sí tiene, incluido el resumen físico de su solapa «Examen físico» y el eco
-        // abdominal, que es el único estudio de pediatría.
-        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF', 'UA'] as $tipo) {
+        // Y se quedan las de las secciones que sí tiene, incluido el resumen físico de su solapa «Examen físico».
+        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF'] as $tipo) {
             $this->assertNotContains($tipo, $ocultos, 'Pediatría conserva las plantillas de ' . $tipo . '.');
         }
     }
