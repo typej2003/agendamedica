@@ -3,26 +3,44 @@
 namespace App\Clinica\Consulta\Vistas;
 
 /**
- * **I.Q.** (cirugía pediátrica, 2026-10-19): el ítem del árbol de PediaReport (`tabpage_20`) con sus solapas.
+ * **I.Q.** (cirugía pediátrica, 2026-10-19): el último ítem del árbol de PediaReport (`tabpage_20`) con sus tres
+ * solapas.
  *
- * Esta primera entrega es la **evaluación pre-operatoria** (`tabpage_32` / `d_pre_aneste`); las otras dos
- * —intervenciones (`interven_consulta`) y riesgo quirúrgico (`riesgo_paciente` sobre el catálogo `riesgo`)— quedan
- * como pestañas pendientes, y el ViewModel ya las lleva para que se sumen sin tocar el contenedor.
+ * Están la **evaluación pre-operatoria** (`pre_aneste`, una fila por consulta) y las **intervenciones**
+ * (`interven_consulta`, una fila por intervención). El **riesgo quirúrgico** queda anunciado como pendiente.
  */
 final class QuirurgicoVista
 {
+    public const INTERVENCIONES = 'intervenciones';
+    public const PREOPERATORIA = 'preoperatoria';
+    public const RIESGO = 'riesgo';
+
     /**
      * @param  array<int,array{clave:string, etiqueta:string, clase:string, valor:string, ayuda:?string}>  $campos
      * @param  array<int,array{clave:string, texto:string, url:string, activa:bool, cargada:bool, pendiente:bool}>  $pestanas
+     * @param  array<int,array{codigo:string, descripcion:string, detalle:string, urlQuitar:string}>  $intervenciones
      */
     public function __construct(
+        private string $pestana,
         private array $campos,
         private array $pestanas,
+        private array $intervenciones,
         private string $urlGuardar,
         private string $urlVolver = '',
         private bool $cargada = false,
         private bool $emergencia = false,
+        private string $urlAgregarIntervencion = '',
     ) {
+    }
+
+    public function pestana(): string
+    {
+        return $this->pestana;
+    }
+
+    public function esPestana(string $clave): bool
+    {
+        return $this->pestana === $clave;
     }
 
     /** @return array<int,array{clave:string, etiqueta:string, clase:string, valor:string, ayuda:?string}> */
@@ -35,6 +53,22 @@ final class QuirurgicoVista
     public function pestanas(): array
     {
         return $this->pestanas;
+    }
+
+    /** @return array<int,array{codigo:string, descripcion:string, detalle:string, urlQuitar:string}> */
+    public function intervenciones(): array
+    {
+        return $this->intervenciones;
+    }
+
+    public function tieneIntervenciones(): bool
+    {
+        return $this->intervenciones !== [];
+    }
+
+    public function urlAgregarIntervencion(): string
+    {
+        return $this->urlAgregarIntervencion;
     }
 
     public function urlGuardar(): string
@@ -60,7 +94,7 @@ final class QuirurgicoVista
 
     public function titulo(): string
     {
-        return 'Evaluación pre-operatoria';
+        return $this->esPestana(self::INTERVENCIONES) ? 'Intervenciones' : 'Evaluación pre-operatoria';
     }
 
     public function estado(): array
@@ -75,13 +109,15 @@ final class QuirurgicoVista
 
     public function ayuda(): string
     {
-        return 'Es la evaluación pre-operatoria del escritorio: el tipo, el resultado y si es una emergencia. Se guarda '
-            . 'en la consulta y se vuelve a mostrar cuando la abrís de nuevo. Las intervenciones y el riesgo quirúrgico '
-            . 'llegan en la próxima entrega de esta sección.';
+        return $this->esPestana(self::INTERVENCIONES)
+            ? 'Las intervenciones de la consulta, con su código, su descripción y el detalle. Se guardan de a una y se '
+                . 'pueden quitar; el riesgo quirúrgico llega en la próxima entrega.'
+            : 'Es la evaluación pre-operatoria del escritorio: el tipo, el resultado y si es una emergencia. Se guarda '
+                . 'en la consulta y se vuelve a mostrar cuando la abrís de nuevo.';
     }
 
     public function avisoSinGuardar(): string
     {
-        return 'Hay datos escritos sin guardar en la evaluación pre-operatoria. Si sales ahora, se pierden.';
+        return 'Hay datos escritos sin guardar. Si sales ahora, se pierden.';
     }
 }

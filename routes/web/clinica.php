@@ -54,6 +54,7 @@ use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
 use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
 use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
+use App\Http\Controllers\Clinica\ConsultaIntervencionesController;
 use App\Http\Controllers\Clinica\ConsultaQuirurgicoController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
@@ -368,9 +369,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/procedimientos/{tipo}', [ConsultaProcedimientosController::class, 'guardar'])
                     ->where('tipo', '[a-z]+')->name('consulta.procedimientos.guardar');
 
-                // **I.Q.** (cirugía pediátrica, 2026-10-19): la evaluación pre-operatoria.
+                // **I.Q.** (cirugía pediátrica, 2026-10-19): la evaluación pre-operatoria y las intervenciones.
                 Route::post('/consulta/{consulta}/preoperatorio', [ConsultaQuirurgicoController::class, 'guardar'])
                     ->name('consulta.preoperatorio.guardar');
+                Route::post('/consulta/{consulta}/intervenciones', [ConsultaIntervencionesController::class, 'guardar'])
+                    ->name('consulta.intervenciones.guardar');
+                Route::delete('/consulta/{consulta}/intervenciones/{codigo}', [ConsultaIntervencionesController::class, 'quitar'])
+                    ->where('codigo', '[A-Za-z0-9]{1,3}')->name('consulta.intervenciones.quitar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

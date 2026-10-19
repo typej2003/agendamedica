@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\IntervencionConsulta;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
@@ -174,6 +175,81 @@ class ConsultaQuirurgicoWebTest extends TestCase
             ->assertSessionHas('estado');
 
         $this->assertSame(0, PreAnestesico::count());
+    }
+
+    public function test_la_pestana_de_intervenciones_lista_las_cargadas(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conCirugia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        IntervencionConsulta::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'codigo_inter' => 'A01', 'descripcion' => 'Herniorrafia inguinal', 'detalle' => 'Lado derecho.',
+        ]);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'quirurgico', 'pestana' => 'intervenciones']))
+            ->assertOk()
+            ->assertSee('Intervenciones')
+            ->assertSee('A01')->assertSee('Herniorrafia inguinal')->assertSee('Lado derecho.')
+            ->assertSee('Cargada');
+    }
+
+    public function test_agregar_una_intervencion_la_crea_con_su_rastro(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conCirugia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->post(route('clinica.consulta.intervenciones.guardar', $consulta->id), [
+                'codigo' => 'b02', 'descripcion' => 'Apendicectomía', 'detalle' => '',
+            ])
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'quirurgico', 'pestana' => 'intervenciones']))
+            ->assertSessionHas('estado');
+
+        $fila = IntervencionConsulta::where('historia', 1001)->first();
+        $this->assertNotNull($fila);
+        // El código se normaliza a mayúsculas (la columna es `char(3)`).
+        $this->assertSame('B02', $fila->codigo_inter);
+        $this->assertSame('Apendicectomía', $fila->descripcion);
+
+        $rastro = SyncChange::where('table_name', 'interven_consulta')
+            ->where('record_id', $fila->id)->where('operation', 'created')->first();
+        $this->assertNotNull($rastro);
+        $this->assertSame('web', $rastro->source);
+
+        // El mismo código la corrige en el lugar y no duplica.
+        $this->conContexto($user, $medico, $pediatria)
+            ->post(route('clinica.consulta.intervenciones.guardar', $consulta->id), [
+                'codigo' => 'B02', 'descripcion' => 'Apendicectomía laparoscópica', 'detalle' => 'Sin complicaciones.',
+            ])
+            ->assertSessionHas('estado');
+
+        $this->assertSame(1, IntervencionConsulta::count());
+        $this->assertSame('Apendicectomía laparoscópica', $fila->fresh()->descripcion);
+    }
+
+    public function test_quitar_una_intervencion_deja_su_baja(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conCirugia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        IntervencionConsulta::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'codigo_inter' => 'C03', 'descripcion' => 'Circuncisión',
+        ]);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->delete(route('clinica.consulta.intervenciones.quitar', [$consulta->id, 'C03']))
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'quirurgico', 'pestana' => 'intervenciones']))
+            ->assertSessionHas('estado');
+
+        $this->assertSame(0, IntervencionConsulta::count());
+        $this->assertNotNull(SyncChange::where('table_name', 'interven_consulta')
+            ->where('operation', 'deleted')->first());
     }
 
     public function test_la_secretaria_no_puede_guardar(): void
