@@ -4,8 +4,13 @@ namespace App\Clinica\Consulta;
 
 /**
  * **Las secciones de la consulta** (la revisión de Alexander, 2026-10-17): la **fuente única** del catálogo de ítems
- * del legado —la lista de `w_consulta_principal` (wiki `04-historia-clinica.md`, "Ítems de la historia
+ * del legado —la lista de `w_consulta_principal` **de ginecología** (wiki `04-historia-clinica.md`, "Ítems de la historia
  * clínica"), **13 desde O-22** porque *Exámenes* se retiró— y de cómo se navega a cada una.
+ *
+ * **El catálogo es el de ginecología**: pediatría no tiene su propia lista todavía (su árbol de la consulta va de
+ * *Indicadores incidentes* a *Pre-factura*, sin estudio ecográfico y con ítems propios: ver
+ * `Docs/Web/observaciones-pendientes.md`, O-35). Mientras tanto se le quitan los dos ítems que no aplican —el
+ * **estudio ecográfico** y el **control de embarazo**— con `AlcanceDeLaEspecialidad`.
  *
  * Antes vivía dentro de `Vistas\ConsultaShellVista`, que la usaba para dibujar el panel lateral de la pantalla. El
  * panel se fue: los ítems ahora son un **grupo plegable del menú lateral** («Consulta», sólo visible dentro de una
@@ -146,8 +151,10 @@ final class SeccionesDeLaConsulta
     }
 
     /**
-     * Los ítems que aplican a la especialidad (WEB-12.1): el catálogo es el de ginecología y, en pediatría, se quita el control de embarazo.
-     * Sin especialidad (o en cualquier otra) sale el catálogo completo. La numeración no se toca.
+     * Los ítems que aplican a la especialidad (WEB-12.1): el catálogo es el de ginecología y, en pediatría, se quitan el
+     * **estudio ecográfico** —el ítem 5, que la pediatría no tiene: Alexander, 2026-10-19, y su propio árbol de la consulta
+     * (`w_consulta_principal.srw:2634-2715`) va de «Indicadores incidentes» a «Pre-factura» sin ningún eco— y el **control de
+     * embarazo**. Sin especialidad (o en cualquier otra) sale el catálogo completo. La numeración no se toca.
      *
      * @return array<int,array<string,mixed>>
      */
@@ -157,7 +164,11 @@ final class SeccionesDeLaConsulta
 
         return array_values(array_filter(
             self::ITEMS,
-            fn (array $item) => $item['seccion'] !== self::SECCION_EMBARAZO || $alcance->muestraElEmbarazo(),
+            fn (array $item) => match ($item['seccion']) {
+                self::SECCION_EMBARAZO => $alcance->muestraElEmbarazo(),
+                self::SECCION_ESTUDIO => $alcance->muestraElEstudio(),
+                default => true,
+            },
         ));
     }
 
@@ -166,7 +177,7 @@ final class SeccionesDeLaConsulta
         return count(self::delaEspecialidad($especialidad));
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (sólo falta la pre-factura → F9). */
+    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología (sólo falta la pre-factura → F9) y 10 de 11 en pediatría. */
     public static function disponibles(?string $especialidad = null): int
     {
         return count(array_filter(self::delaEspecialidad($especialidad), fn (array $item) => $item['estado'] === 'listo'));

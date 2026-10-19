@@ -335,7 +335,7 @@ final class ConsultaShellVista
         return SeccionesDeLaConsulta::total($this->especialidad);
     }
 
-    /** Cuántos ítems ya tienen pantalla: hoy 12 de 13 (motivos, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento, solicitudes y Datos personales). */
+    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología y 10 de 11 en pediatría (no tiene el estudio ecográfico ni el control de embarazo). */
     public function totalListos(): int
     {
         return SeccionesDeLaConsulta::disponibles($this->especialidad);
@@ -358,8 +358,7 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el menú',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems del grupo «Consulta» del menú lateral '
-                . '—motivos de consulta, enfermedad actual, antecedentes, evaluación física, estudio ecográfico, control de embarazo, '
-                . 'diagnóstico, evolución, récipes, tratamiento, solicitudes y los datos personales del paciente— se abren acá; el que '
+                . '—desde los motivos de consulta hasta los datos personales del paciente— se abren acá; el que '
                 . 'todavía no tiene pantalla (la pre-factura) llega con la tarea siguiente. Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
