@@ -8,6 +8,7 @@ use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Support\FechaClinica;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -43,7 +44,8 @@ final class ListadoDePacientesVista
     private const DIGITOS_DE_LA_HISTORIA = 5;
 
     /**
-     * @param  Collection<int,object>  $pacientes  las filas de `PacientesPorRango::filas()`
+     * @param  Collection<int,object>|LengthAwarePaginator<int,object>  $pacientes  las filas de
+     *         `PacientesPorRango::filas()` (paginadas) o `::todas()` (la hoja impresa)
      * @param  Collection<int,object>  $seguros  el catálogo del consultorio (`codesegemp`, `nombre`)
      * @param  string  $urlBase  el listado sin filtros (`route('clinica.listados')`)
      * @param  string  $urlImprimir  la hoja impresa con **los mismos filtros** que la pantalla
@@ -51,7 +53,7 @@ final class ListadoDePacientesVista
      * @param  string  $claveDelListado  la clave elegida (`ListadosDisponibles`)
      */
     public function __construct(
-        private Collection $pacientes,
+        private Collection|LengthAwarePaginator $pacientes,
         private FiltroDePacientesPorRango $filtro,
         private Collection $seguros = new Collection(),
         private string $urlBase = '/clinica/listados',
@@ -92,12 +94,25 @@ final class ListadoDePacientesVista
 
     public function total(): int
     {
-        return $this->pacientes->count();
+        return $this->pacientes instanceof LengthAwarePaginator
+            ? $this->pacientes->total()
+            : $this->pacientes->count();
     }
 
     public function estaVacio(): bool
     {
-        return $this->pacientes->isEmpty();
+        return $this->total() === 0;
+    }
+
+    /**
+     * El paginador de la pantalla, o `null` cuando no hay nada que paginar o la hoja es la impresa (que
+     * trae todas las filas, porque el papel no tiene páginas).
+     */
+    public function paginador(): ?LengthAwarePaginator
+    {
+        return $this->pacientes instanceof LengthAwarePaginator && $this->pacientes->hasPages()
+            ? $this->pacientes
+            : null;
     }
 
     /** ¿Hay algo puesto que se pueda limpiar? Lo usa el enlace "Limpiar" del formulario. */
@@ -179,7 +194,11 @@ final class ListadoDePacientesVista
      */
     public function filas(): array
     {
-        return $this->pacientes->map(function ($paciente) {
+        $filas = $this->pacientes instanceof LengthAwarePaginator
+            ? $this->pacientes->getCollection()
+            : $this->pacientes;
+
+        return $filas->map(function ($paciente) {
             $edad = FechaClinica::edad($paciente->fnacimiento);
             $cedula = CamposDePaciente::cedula($paciente->cedula);
             $nacionalidad = CamposDePaciente::texto($paciente->nac) ?? 'V';

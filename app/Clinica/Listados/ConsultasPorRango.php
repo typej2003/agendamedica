@@ -4,6 +4,7 @@ namespace App\Clinica\Listados;
 
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Clinica\Pacientes\CamposDePaciente;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -36,14 +37,53 @@ final class ConsultasPorRango
     /** Cuántas historias se piden de una vez en las lecturas por lote (un `IN` enorme falla en algunos motores). */
     private const LOTE = 500;
 
+    /** Cuántas filas muestra una página de la pantalla. La hoja impresa las trae todas. */
+    public const POR_PAGINA = 25;
+
     /**
-     * Las consultas que cumplen los filtros, del médico del contexto.
+     * Una página de las consultas que cumplen los filtros, del médico del contexto.
      *
-     * @return Collection<int,object> filas con `consulta_id`, `numhistoria`, `nroconsulta`, `fecha`,
+     * El corte lo hace la base: con el rango abierto el listado abarca años de consultas, y traerlas enteras
+     * para mostrar veinticinco era lo que hacía lenta la pantalla.
+     *
+     * @return LengthAwarePaginator<int,object> filas con `consulta_id`, `numhistoria`, `nroconsulta`, `fecha`,
      *         `paciente_id`, `nombres`, `apellidos`, `fnacimiento`, y las listas `motivos`, `diagnosticos`,
      *         `medicamentos` y `antecedentes` (arreglos de texto; los antecedentes sólo si se filtró por uno)
      */
-    public function filas(string $regMedico, FiltroDeConsultas $filtro): Collection
+    public function filas(string $regMedico, FiltroDeConsultas $filtro): LengthAwarePaginator
+    {
+        $pagina = $this->consulta($regMedico, $filtro)
+            ->paginate(self::POR_PAGINA)
+            ->withQueryString();
+
+        // Las listas se leen sólo para las consultas de **esta** página, no para todo el listado.
+        $this->conSusListas($pagina->getCollection(), $regMedico, $filtro);
+
+        return $pagina;
+    }
+
+    /**
+     * Todas las filas, sin cortar: es lo que imprime la hoja del listado (el papel no tiene páginas).
+     *
+     * @return Collection<int,object>
+     */
+    public function todas(string $regMedico, FiltroDeConsultas $filtro): Collection
+    {
+        return $this->conSusListas(
+            $this->consulta($regMedico, $filtro)->get(),
+            $regMedico,
+            $filtro,
+        );
+    }
+
+    /**
+     * La consulta base, con sus filtros y el orden del legado.
+     *
+     * **Sin `distinct()`**: `medicos.reg_medico` es único, el pivote tiene `UNIQUE (medico_id, paciente_id)` y
+     * cada consulta es una fila, así que un ID de consulta aparece una sola vez (los `whereExists` no
+     * duplican). Quitarlo permite paginar en la base.
+     */
+    private function consulta(string $regMedico, FiltroDeConsultas $filtro)
     {
         $fechas = $filtro->rangoDeConsulta();
         $nacimiento = $filtro->rangoDeNacimiento();
@@ -72,12 +112,11 @@ final class ConsultasPorRango
         $this->conMedicamento($consulta, $regMedico, $filtro->medicamento());
         $this->conAntecedente($consulta, $regMedico, $filtro->antecedente());
 
-        $filas = $consulta
-            ->distinct()
+        return $consulta
             ->orderByDesc('consultas.fecha')
             ->orderBy('consultas.numhistoria')
             ->orderBy('consultas.nroconsulta')
-            ->get([
+            ->select([
                 'consultas.id as consulta_id',
                 'consultas.numhistoria',
                 'consultas.nroconsulta',
@@ -87,8 +126,6 @@ final class ConsultasPorRango
                 'pacientes.apellidos',
                 'pacientes.fnacimiento',
             ]);
-
-        return $this->conSusListas($filas, $regMedico, $filtro);
     }
 
     // ------------------------------------------------------------------------------- Los filtros

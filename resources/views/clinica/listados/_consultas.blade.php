@@ -118,3 +118,7 @@
         </div>
     @endif
 </x-ui.tarjeta>
+
+@if ($vm->paginador())
+    <div class="mt-3">{{ $vm->paginador()->links() }}</div>
+@endif

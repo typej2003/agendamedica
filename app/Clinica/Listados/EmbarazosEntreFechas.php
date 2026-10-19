@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Listados;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -50,13 +51,18 @@ final class EmbarazosEntreFechas
     /** La tabla del control prenatal: la de la gesta y su FUR. */
     public const TABLA = 'pre_natal_observaciones';
 
+    /** Cuántas filas muestra una página de la pantalla. La hoja impresa las trae todas. */
+    public const POR_PAGINA = 25;
+
     /**
-     * Las gestas que caen en el rango (o en la semana) y en las edades pedidas, del médico del contexto.
+     * Una página de las gestas que caen en el rango (o en la semana) y en las edades pedidas, del médico del
+     * contexto. El corte lo hace la base.
      *
-     * @return Collection<int,object> filas con `paciente_id`, `nombres`, `apellidos`, `numhistoria`,
-     *         `fingreso`, `fnacimiento`, `codesegemp` y `fur`
+     * @return LengthAwarePaginator<int,object>|Collection<int,object> filas con `paciente_id`, `nombres`,
+     *         `apellidos`, `numhistoria`, `fingreso`, `fnacimiento`, `codesegemp` y `fur`; una colección vacía
+     *         cuando la semana pedida no se entiende
      */
-    public function filas(string $regMedico, FiltroDeEmbarazos $filtro): Collection
+    public function filas(string $regMedico, FiltroDeEmbarazos $filtro): LengthAwarePaginator|Collection
     {
         // Una semana que no se entiende no se busca: no hay rango de FUR que la represente y devolver "todo"
         // sería peor que no devolver nada (la pantalla lo explica).
@@ -64,6 +70,28 @@ final class EmbarazosEntreFechas
             return collect();
         }
 
+        return $this->consultaDelRango($regMedico, $filtro)
+            ->paginate(self::POR_PAGINA)
+            ->withQueryString();
+    }
+
+    /**
+     * Todas las gestas del rango, sin cortar: es lo que imprime la hoja del listado (el papel no tiene páginas).
+     *
+     * @return Collection<int,object>
+     */
+    public function todas(string $regMedico, FiltroDeEmbarazos $filtro): Collection
+    {
+        if (! $filtro->esValido()) {
+            return collect();
+        }
+
+        return $this->consultaDelRango($regMedico, $filtro)->get();
+    }
+
+    /** La consulta con los filtros del rango (o de la semana) y el orden del `sort="compute_1 D"` del legado. */
+    private function consultaDelRango(string $regMedico, FiltroDeEmbarazos $filtro)
+    {
         $fur = $filtro->rangoDeFur();
         $nacimiento = $filtro->rangoDeNacimiento();
 
@@ -72,7 +100,7 @@ final class EmbarazosEntreFechas
             ->whereBetween('pacientes.fnacimiento', [$nacimiento->desde(), $nacimiento->hasta()])
             ->orderByDesc(self::TABLA . '.fur')
             ->orderBy(self::TABLA . '.id')
-            ->get([
+            ->select([
                 'pacientes.id as paciente_id',
                 'pacientes.nombres',
                 'pacientes.apellidos',

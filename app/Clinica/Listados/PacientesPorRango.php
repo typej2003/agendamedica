@@ -2,7 +2,7 @@
 
 namespace App\Clinica\Listados;
 
-use App\Clinica\Pacientes\CamposDePaciente;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -34,13 +34,45 @@ use Illuminate\Support\Facades\DB;
  */
 final class PacientesPorRango
 {
+    /** Cuántas filas muestra una página de la pantalla. La hoja impresa las trae todas. */
+    public const POR_PAGINA = 25;
+
     /**
-     * Los pacientes del médico del contexto que cumplen los filtros.
+     * Una página de los pacientes del médico del contexto que cumplen los filtros.
      *
-     * @return Collection<int,object> filas con `paciente_id`, `nombres`, `apellidos`, `nac`, `cedula`,
-     *         `fnacimiento`, `codeestado`, `sexo`, `fingreso`, `codesegemp` y `numhistoria`
+     * El corte lo hace la base (`paginate`): con el rango de ingreso abierto —el de la pantalla arranca en
+     * 2000— el listado abarca **todos** los pacientes del consultorio, así que traerlos enteros para mostrar
+     * veinticinco era lo que hacía lento «Pacientes por rango».
+     *
+     * @return LengthAwarePaginator<int,object> filas con `paciente_id`, `nombres`, `apellidos`, `nac`,
+     *         `cedula`, `fnacimiento`, `codeestado`, `sexo`, `fingreso`, `codesegemp` y `numhistoria`
      */
-    public function filas(string $regMedico, FiltroDePacientesPorRango $filtro): Collection
+    public function filas(string $regMedico, FiltroDePacientesPorRango $filtro): LengthAwarePaginator
+    {
+        return $this->consulta($regMedico, $filtro)
+            ->paginate(self::POR_PAGINA)
+            ->withQueryString();
+    }
+
+    /**
+     * Todas las filas, sin cortar: es lo que imprime la hoja del listado (el papel no tiene páginas).
+     *
+     * @return Collection<int,object>
+     */
+    public function todas(string $regMedico, FiltroDePacientesPorRango $filtro): Collection
+    {
+        return $this->consulta($regMedico, $filtro)->get();
+    }
+
+    /**
+     * La consulta con sus filtros y el orden del legado: el número de historia **como número**, los pacientes
+     * sin número al final y el `id` como desempate.
+     *
+     * **Sin `distinct()`**: `medicos.reg_medico` es único y el pivote tiene `UNIQUE (medico_id, paciente_id)`,
+     * así que un paciente del consultorio aparece una sola vez. Quitarlo es lo que permite paginar en la base:
+     * con `DISTINCT`, MySQL no deja ordenar por una expresión que no esté en el `SELECT`.
+     */
+    private function consulta(string $regMedico, FiltroDePacientesPorRango $filtro)
     {
         $ingreso = $filtro->rangoDeIngreso();
 
@@ -67,9 +99,25 @@ final class PacientesPorRango
             $consulta->where('pacientes.codesegemp', $filtro->codigoDeProcedencia());
         }
 
+        // El orden numérico se resuelve en SQL, con el `CAST` de cada motor: así la base puede cortar la
+        // página sin traer el listado entero. Un número que no es numérico se trata como «sin historia»
+        // (último), igual que el `CamposDePaciente::historiaNumerica()` del orden en memoria.
+        $mysql = DB::connection()->getDriverName() === 'mysql';
+        $numero = $mysql
+            ? 'CAST(TRIM(medico_pacientes.numhistoria) AS UNSIGNED)'
+            : 'CAST(TRIM(medico_pacientes.numhistoria) AS INTEGER)';
+        $esNumero = $mysql
+            ? "TRIM(medico_pacientes.numhistoria) REGEXP '^[0-9]+$'"
+            : "TRIM(medico_pacientes.numhistoria) NOT GLOB '*[^0-9]*'";
+
         return $consulta
-            ->distinct()
-            ->get([
+            ->orderByRaw(
+                "CASE WHEN medico_pacientes.numhistoria IS NULL OR TRIM(medico_pacientes.numhistoria) = ''"
+                . ' OR NOT (' . $esNumero . ') THEN 1 ELSE 0 END'
+            )
+            ->orderByRaw($numero)
+            ->orderBy('pacientes.id')
+            ->select([
                 'pacientes.id as paciente_id',
                 'pacientes.nombres',
                 'pacientes.apellidos',
@@ -81,13 +129,6 @@ final class PacientesPorRango
                 'pacientes.fingreso',
                 'pacientes.codesegemp',
                 'medico_pacientes.numhistoria',
-            ])
-            ->sortBy(function (object $fila) {
-                $numero = CamposDePaciente::historiaNumerica($fila->numhistoria);
-
-                // Primero los que tienen número, por número; después los que no, y el `id` desempata.
-                return [$numero === null ? 1 : 0, $numero ?? 0, (int) $fila->paciente_id];
-            })
-            ->values();
+            ]);
     }
 }

@@ -137,6 +137,10 @@
         @endif
     </x-ui.tarjeta>
 
+    @if ($vm->paginador())
+        <div class="mt-3">{{ $vm->paginador()->links() }}</div>
+    @endif
+
     @unless ($vm->estaVacio())
         <p class="texto-tenue small mt-2">
             <i class="bi bi-info-circle" aria-hidden="true"></i> {{ $vm->notaDeProcedencia() }}

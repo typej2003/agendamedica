@@ -7,6 +7,7 @@ use App\Clinica\Listados\FiltroDeEmbarazos;
 use App\Clinica\Listados\ListadosDisponibles;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -44,7 +45,8 @@ use Illuminate\Support\Collection;
 final class ListadoDeEmbarazosVista
 {
     /**
-     * @param  Collection<int,object>  $gestas  las filas de `EmbarazosEntreFechas::filas()`
+     * @param  Collection<int,object>|LengthAwarePaginator<int,object>  $gestas  las filas de
+     *         `EmbarazosEntreFechas::filas()` (paginadas) o `::todas()` (la hoja impresa)
      * @param  Collection<int,object>  $seguros  el catálogo del consultorio (`codesegemp`, `nombre`)
      * @param  string  $urlBase  el listado sin filtros (`route('clinica.listados')`)
      * @param  string  $urlImprimir  la hoja impresa con **los mismos filtros** que la pantalla
@@ -53,7 +55,7 @@ final class ListadoDeEmbarazosVista
      *         el formulario para no perderse al filtrar
      */
     public function __construct(
-        private Collection $gestas,
+        private Collection|LengthAwarePaginator $gestas,
         private FiltroDeEmbarazos $filtro,
         private Collection $seguros = new Collection(),
         private string $urlBase = '/clinica/listados',
@@ -103,12 +105,25 @@ final class ListadoDeEmbarazosVista
 
     public function total(): int
     {
-        return $this->gestas->count();
+        return $this->gestas instanceof LengthAwarePaginator
+            ? $this->gestas->total()
+            : $this->gestas->count();
     }
 
     public function estaVacio(): bool
     {
-        return $this->gestas->isEmpty();
+        return $this->total() === 0;
+    }
+
+    /**
+     * El paginador de la pantalla, o `null` cuando no hay nada que paginar o la hoja es la impresa (que trae
+     * todas las filas, porque el papel no tiene páginas).
+     */
+    public function paginador(): ?LengthAwarePaginator
+    {
+        return $this->gestas instanceof LengthAwarePaginator && $this->gestas->hasPages()
+            ? $this->gestas
+            : null;
     }
 
     /** ¿Hay algo puesto que se pueda limpiar? Lo usa el enlace "Limpiar" del formulario. */
@@ -168,7 +183,11 @@ final class ListadoDeEmbarazosVista
     {
         $procedencias = $this->procedencias();
 
-        return $this->gestas->map(function ($gesta) use ($procedencias) {
+        $gestas = $this->gestas instanceof LengthAwarePaginator
+            ? $this->gestas->getCollection()
+            : $this->gestas;
+
+        return $gestas->map(function ($gesta) use ($procedencias) {
             $edad = FechaClinica::edad($gesta->fnacimiento);
             $historia = CamposDePaciente::numeroDeHistoria($gesta->numhistoria ?? null);
             $codigo = CamposDePaciente::texto($gesta->codesegemp);

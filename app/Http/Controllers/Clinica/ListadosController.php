@@ -68,7 +68,7 @@ class ListadosController extends Controller
         $contexto = $request->attributes->get('contexto_clinico');
 
         return view('clinica.listados.imprimir', [
-            'vm' => $this->vista($request, $contexto),
+            'vm' => $this->vista($request, $contexto, true),
             // "Hoy" y el médico salen del contexto del consultorio, no de la vista (misma regla que el
             // resumen de historia clínica de WEB-3.5).
             'medico' => $contexto['medico']->nombreMostrar,
@@ -79,9 +79,12 @@ class ListadosController extends Controller
     /**
      * El ViewModel del listado elegido, con lo ya leído.
      *
+     * **La pantalla pagina; la hoja impresa no.** `$imprimir` decide si la lectura trae una página (25 filas)
+     * o todas: el papel no tiene páginas y el reporte se imprime completo.
+     *
      * @param  array{medico:object, reg_medico:string, office:object, specialty:object}  $contexto
      */
-    private function vista(Request $request, array $contexto): ListadoDeEmbarazosVista|ListadoDePacientesVista|ListadoDeConsultasVista
+    private function vista(Request $request, array $contexto, bool $imprimir = false): ListadoDeEmbarazosVista|ListadoDePacientesVista|ListadoDeConsultasVista
     {
         // La clave del listado viaja en la dirección; una que no exista —o que sea de otra especialidad— vuelve al listado por
         // defecto de la especialidad del contexto en vez de mostrar una pantalla a medias (en pediatría, «embarazos y partos» es
@@ -89,17 +92,19 @@ class ListadosController extends Controller
         $clave = ListadosDisponibles::normalizar($request->query('listado'), $contexto['specialty']->slug ?? null);
 
         if ($clave === ListadosDisponibles::PACIENTES) {
-            return $this->pacientesPorRango($request, $contexto, $clave);
+            return $this->pacientesPorRango($request, $contexto, $clave, $imprimir);
         }
 
         if ($clave === ListadosDisponibles::CONSULTAS) {
-            return $this->consultasPorRango($request, $contexto, $clave);
+            return $this->consultasPorRango($request, $contexto, $clave, $imprimir);
         }
 
         $filtro = FiltroDeEmbarazos::de($request->query(), FechaDelConsultorio::hoy());
 
         return new ListadoDeEmbarazosVista(
-            $this->embarazos->filas($contexto['reg_medico'], $filtro),
+            $imprimir
+                ? $this->embarazos->todas($contexto['reg_medico'], $filtro)
+                : $this->embarazos->filas($contexto['reg_medico'], $filtro),
             $filtro,
             // El catálogo con el que se resuelve la "Procedencia", ya leído: la misma lectura que usa la
             // ficha del paciente. Si todavía no está el nombre, el ViewModel muestra el código.
@@ -118,12 +123,14 @@ class ListadosController extends Controller
      *
      * @param  array{medico:object, reg_medico:string, office:object, specialty:object}  $contexto
      */
-    private function consultasPorRango(Request $request, array $contexto, string $clave): ListadoDeConsultasVista
+    private function consultasPorRango(Request $request, array $contexto, string $clave, bool $imprimir = false): ListadoDeConsultasVista
     {
         $filtro = FiltroDeConsultas::de($request->query(), FechaDelConsultorio::hoy());
 
         return new ListadoDeConsultasVista(
-            $this->consultas->filas($contexto['reg_medico'], $filtro),
+            $imprimir
+                ? $this->consultas->todas($contexto['reg_medico'], $filtro)
+                : $this->consultas->filas($contexto['reg_medico'], $filtro),
             $filtro,
             route('clinica.listados', ['listado' => $clave]),
             route('clinica.listados.imprimir', $request->query()),
@@ -138,12 +145,14 @@ class ListadosController extends Controller
      *
      * @param  array{medico:object, reg_medico:string, office:object, specialty:object}  $contexto
      */
-    private function pacientesPorRango(Request $request, array $contexto, string $clave): ListadoDePacientesVista
+    private function pacientesPorRango(Request $request, array $contexto, string $clave, bool $imprimir = false): ListadoDePacientesVista
     {
         $filtro = FiltroDePacientesPorRango::de($request->query(), FechaDelConsultorio::hoy());
 
         return new ListadoDePacientesVista(
-            $this->pacientes->filas($contexto['reg_medico'], $filtro),
+            $imprimir
+                ? $this->pacientes->todas($contexto['reg_medico'], $filtro)
+                : $this->pacientes->filas($contexto['reg_medico'], $filtro),
             $filtro,
             $this->seguros->de($contexto['reg_medico']),
             route('clinica.listados', ['listado' => $clave]),

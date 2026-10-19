@@ -326,6 +326,34 @@ class ListadosPacientesWebTest extends TestCase
             ->assertSee('de 30 a 40 años');
     }
 
+    // ------------------------------------------------------------------------------------- Paginación
+
+    public function test_el_listado_pagina_de_a_veinticinco_y_la_segunda_pagina_trae_el_resto(): void
+    {
+        // El rango de ingreso abierto abarca todos los pacientes del consultorio: el listado tiene que cortar
+        // en la base y no traerlos enteros, que era lo que lo hacía lento.
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        for ($i = 1; $i <= 27; $i++) {
+            $this->paciente($medico, $i, 'Paciente' . str_pad((string) $i, 2, '0', STR_PAD_LEFT));
+        }
+
+        $sesion = $this->conContexto($user, $medico, $gineco);
+
+        $sesion->get($this->listado())
+            ->assertOk()
+            ->assertSee('Paciente01, Ana')
+            ->assertSee('Paciente25, Ana')
+            ->assertDontSee('Paciente26, Ana')
+            ->assertSee('27 pacientes');
+
+        $sesion->get($this->listado(['page' => 2]))
+            ->assertOk()
+            ->assertSee('Paciente26, Ana')
+            ->assertSee('Paciente27, Ana')
+            ->assertDontSee('Paciente25, Ana');
+    }
+
     // ------------------------------------------------------------------------------------- Permisos
 
     public function test_la_secretaria_recibe_403(): void
