@@ -13,7 +13,8 @@ use PHPUnit\Framework\TestCase;
  *  - el peso se **topea en 30 kg** (arriba de eso, dosis de adulto);
  *  - la posología en mg por toma es `(dosis × peso) / cada`;
  *  - con presentación (`pvc` mg / `pvs` ml) pasa a **ml**, y con concentración a **gotas**;
- *  - el rótulo usa `24 / cada` **truncado a entero** (la rareza del `integer hot` del escritorio);
+ *  - el rótulo lleva **`24 / cada`** (las veces al día del vademécum) como horas entre tomas, **sin truncar** (la web
+ *    corrige el `integer hot` del escritorio);
  *  - si el medicamento no es por kilo (`dosificacion <> 'SI'`), no hay cálculo.
  */
 class DosisPediatricaTest extends TestCase
@@ -50,7 +51,7 @@ class DosisPediatricaTest extends TestCase
         $this->assertNotNull($calculo);
         $this->assertSame(12.0, $calculo['peso']);
         $this->assertEqualsWithDelta(15.0, $calculo['posologia'], 0.001);
-        $this->assertSame(3, $calculo['cadaHoras']); // 24 / 8
+        $this->assertEqualsWithDelta(3.0, $calculo['cadaHoras'], 0.001); // 24 / 8
         $this->assertNull($calculo['ml']);
         $this->assertNull($calculo['gotas']);
         // La rama sin presentación escribe «mg» y «días» en minúscula, como el escritorio (`:249`).
@@ -88,17 +89,17 @@ class DosisPediatricaTest extends TestCase
         $this->assertEqualsWithDelta(37.5, $calculo['posologia'], 0.001);
     }
 
-    public function test_las_horas_del_rotulo_son_el_cociente_truncado(): void
+    public function test_las_horas_del_rotulo_son_el_intervalo_real(): void
     {
-        // La rareza del escritorio: `integer hot = 24 / CADA`, así que «cada 5 horas» se imprime «CADA 4 HORAS».
-        // (Las horas sólo salen en las dos ramas con presentación: la de mg usa el «cada» tal cual.)
+        // El escritorio trunca (`integer hot = 24 / CADA`: «cada 5 veces al día» se imprimía «CADA 4 HORAS»); la web
+        // imprime el intervalo real. `cada` son las veces al día, así que 5 veces son 4.8 horas entre tomas.
         $calculo = (new DosisPediatrica())->calcular(
             $this->medicamento(['cada' => 5, 'pvc' => 250, 'pvs' => 5]),
             10,
         );
 
-        $this->assertSame(4, $calculo['cadaHoras']);
-        $this->assertStringContainsString('CADA 4 HORAS', $calculo['texto']);
+        $this->assertEqualsWithDelta(4.8, $calculo['cadaHoras'], 0.001);
+        $this->assertStringContainsString('CADA 4.8 HORAS', $calculo['texto']);
     }
 
     public function test_sin_peso_o_sin_ser_por_kilo_no_hay_calculo(): void

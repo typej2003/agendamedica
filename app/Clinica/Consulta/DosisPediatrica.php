@@ -22,10 +22,10 @@ namespace App\Clinica\Consulta;
  *     - `DAR <mg> mg <cada> veces al día por <días> días` (sin presentación)
  *  5. si el medicamento **no** es por kilo, deja el texto del vademécum (`uso`) tal cual (`:252-253`).
  *
- * ⚠️ **Dos rarezas del escritorio, replicadas a propósito** (el objetivo es que el récipe se lea como el de siempre):
- *  - las horas del rótulo son **`24 / cada` truncado a entero** (la variable `hot` es `integer`, `:229-232`): un
- *    «cada 5 horas» se imprime «CADA 4 HORAS»;
- *  - la rama sin presentación escribe «mg» y «días» en minúscula, distinta de las otras dos.
+ * ⚠️ **Una rareza del escritorio que la web corrige**: el `hot` del fuente es `integer`, así que **trunca** las horas
+ * (`24 / 5` = 4.8 se imprime «CADA 4 HORAS»). Acá se imprime el **intervalo real** con un decimal (4.8), que es lo que
+ * la fórmula significa: `vademecum.cada` son las **veces al día** (el propio fuente escribe «`cada` veces al día» en la
+ * rama sin presentación) y `24 / cada` son las horas entre tomas.
  */
 final class DosisPediatrica
 {
@@ -63,7 +63,7 @@ final class DosisPediatrica
      *
      * @param  object|array<string,mixed>  $medicamento  con `dosificacion`, `dosis`, `cada`, `durante`, `pvc`, `pvs`,
      *                                                   `concentracion` y `uso` (las columnas del `vademecum`)
-     * @return array{peso:float, posologia:float, cadaHoras:int, ml:?float, gotas:?float, texto:string}|null
+     * @return array{peso:float, posologia:float, cadaHoras:float, ml:?float, gotas:?float, texto:string}|null
      */
     public function calcular($medicamento, $peso): ?array
     {
@@ -89,8 +89,9 @@ final class DosisPediatrica
         // `POSOLOGIA = DEC((DOSIS * peso)/CADA)` (`:236`), en miligramos por toma.
         $posologia = $this->redondear(($dosis * $pesoDeLaDosis) / $cada);
 
-        // `hot = 24 / CADA`, entero (`:229-232`).
-        $cadaHoras = (int) floor(self::HORAS_DEL_DIA / $cada);
+        // Las horas entre tomas: `24 / cada`. El escritorio las trunca a entero (`integer hot`, `:229-232`) y la web
+        // imprime el intervalo real con un decimal: `cada` son las veces al día, no las horas.
+        $cadaHoras = round(self::HORAS_DEL_DIA / $cada, 1);
 
         $gramos = $this->numero($datos['pvc'] ?? null);
         $litros = $this->numero($datos['pvs'] ?? null);
@@ -106,9 +107,9 @@ final class DosisPediatrica
 
             if ($gotasPorMl !== null && $gotasPorMl != 0.0) {
                 $gotas = $this->redondear($ml * $gotasPorMl);
-                $texto = sprintf('DAR %s GOTAS CADA %d HORAS POR %s DÍAS', $this->texto($gotas), $cadaHoras, $this->texto($durante));
+                $texto = sprintf('DAR %s GOTAS CADA %s HORAS POR %s DÍAS', $this->texto($gotas), $this->texto($cadaHoras), $this->texto($durante));
             } else {
-                $texto = sprintf('DAR %s ML CADA %d HORAS POR %s DÍAS', $this->texto($ml), $cadaHoras, $this->texto($durante));
+                $texto = sprintf('DAR %s ML CADA %s HORAS POR %s DÍAS', $this->texto($ml), $this->texto($cadaHoras), $this->texto($durante));
             }
         } else {
             $texto = sprintf('DAR %s mg %s veces al día por %s días', $this->texto($posologia), $this->texto($cada), $this->texto($durante));
