@@ -50,8 +50,17 @@ final class ConsultasPorRango
 
         $consulta = DB::table('consultas')
             ->join('medico_pacientes', function ($join) {
-                $join->on('medico_pacientes.numhistoria', '=', 'consultas.numhistoria')
-                    ->on('medico_pacientes.reg_medico', '=', 'consultas.reg_medico');
+                // En MySQL `consultas` (tabla del legado, `utf8mb4_general_ci`) y el pivote
+                // `medico_pacientes` (`utf8mb4_unicode_ci`) tienen collation distinta y el `=` falla con el
+                // error 1267 «Illegal mix of collations»: se fuerza la del pivote, igual que en
+                // `EmbarazosEntreFechas`. SQLite no lo necesita y no entiende ese `COLLATE`.
+                if (DB::connection()->getDriverName() === 'mysql') {
+                    $join->whereRaw('medico_pacientes.numhistoria = consultas.numhistoria COLLATE utf8mb4_unicode_ci')
+                        ->whereRaw('medico_pacientes.reg_medico = consultas.reg_medico COLLATE utf8mb4_unicode_ci');
+                } else {
+                    $join->on('medico_pacientes.numhistoria', '=', 'consultas.numhistoria')
+                        ->on('medico_pacientes.reg_medico', '=', 'consultas.reg_medico');
+                }
             })
             ->join('pacientes', 'pacientes.id', '=', 'medico_pacientes.paciente_id')
             ->where('consultas.reg_medico', $regMedico)
