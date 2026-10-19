@@ -59,8 +59,8 @@ contexto, y la decisión vive en un solo lugar por tema:
   especialidad (a diferencia de las secciones de la consulta, que siguen abriendo por URL directa: acá la pantalla es de sólo
   lectura y no hay gestas que listar). Sin especialidad en el contexto no se filtra nada.
 - **Plantillas de texto**: `App\Clinica\Catalogos\PlantillasDeLaEspecialidad` traduce `AlcanceDeLaEspecialidad::tiposDePlantillaOcultos()`
-  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `EM` ni `ER`; quedan
-  `EV`, `IM`, `DI`, `EA`, `TR`, `RF` (su solapa *Examen físico* lo usa) y `UA`. Se filtra el listado, el filtro por tipo, el
+  a los tipos del ABM. En pediatría no se ofrecen `CO`, `CI`, `HI`, `RE`, `EG`, `UG`, `O1`-`O3`, `ED`, `UM`, `UA`, `EM` ni `ER`; quedan
+  `EV`, `IM`, `DI`, `EA`, `TR` y `RF` (su solapa *Examen físico* lo usa). Se filtra el listado, el filtro por tipo, el
   `<select>` del diálogo y el subtotal. **Un tipo del legado que el catálogo no conoce no se oculta nunca** (esconderlo borraría
   datos del médico), y editar por URL directa una plantilla de otra especialidad la abre y conserva su tipo. Ginecología no cambia.
 - **Formatos en blanco**: los informes de los ecos que la especialidad no tiene no se ofrecen (`FormatosEnBlanco::porEstudio()` +
@@ -68,6 +68,35 @@ contexto, y la decisión vive en un solo lugar por tema:
   (récipe, informe, constancia, reposo, referencia, hospitalización, dieta, laboratorio y estudios) se ofrece siempre.
 Tests: `Unit/Clinica/{PlantillasDeLaEspecialidadTest,AlcanceDeLaEspecialidadTest,ListadoDeEmbarazosTest}`, `MenuDelArmazonWebTest`,
 `PlantillasDeTextoWebTest` y `FormatosEnBlancoWebTest`.
+
+🧬 **Subespecialidades (postgrados) y catálogo de la consulta por especialidad (2026-10-19).** Una **subespecialidad** cuelga
+de una especialidad (nefrología pediátrica es un postgrado de pediatría) y un médico puede tener varias, en una o en varias
+especialidades. Los postgrados **de la especialidad del contexto se suman**: encienden módulos del menú y secciones de la
+consulta.
+- **Tablas**: `subespecialidades` (catálogo), `medico_subespecialidad` (qué tiene cada médico) y `subespecialidad_modulo`
+  (módulos del menú, con `implementado`/`visible_para`/`orden`, igual que `especialidad_modulo`). Migración
+  `2026_10_19_120000_create_subespecialidades`.
+- **Dónde se declaran**: en el manifiesto (`config/especialidades/<especialidad>.php` → `subespecialidades`), con `modulos`
+  (menú) y `secciones` (consulta). `ManifiestoEspecialidad::normalizarSubespecialidades()` valida slug y nombre;
+  `RegistroEspecialidades` rechaza el slug repetido entre especialidades y `EspecialidadesYModulosSeeder` siembra todo
+  (`SUBESPECIALIDAD_IMPLEMENTADA` dice qué módulo ya tiene pantalla).
+- **Contexto**: `ContextoTrabajo::actual()` resuelve `subespecialidades` (las del médico de la especialidad activa) y
+  `secciones_postgrados` (las claves que declara el manifiesto); `ContextoTrabajo::modulos()` une los módulos de la
+  especialidad con los de sus postgrados, sin duplicar. El middleware comparte esa colección como `$modulos`.
+- **Catálogo de la consulta**: `SeccionesDeLaConsulta` tiene **dos catálogos** (`ITEMS_GINECOLOGIA` e `ITEMS_PEDIATRIA`) y un
+  mapa `EXTRA` de secciones que agrega un postgrado (hoy `indicadores` = ítem 5 de pediatría, nefrología). El pediátrico es el
+  árbol de PediaReport: 14 ítems sin nefrología y 15 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
+  tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (exámenes/estudios →
+  *Resultado de exámenes*; inmunizaciones → carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la
+  sección existe en el catálogo de esa especialidad.
+- **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene
+  (`CuentaService::asignarSubespecialidades()`); quitar una especialidad quita sus postgrados (`postgradosQuitados` en el
+  resultado de `asignarEspecialidades()`).
+- **Falta**: las pantallas de los postgrados (Indicadores incidentes, neumología/espirometría, endoscopías, quirúrgico y
+  ecografía pediátrica) y el formato en blanco de esos paneles. Detalle y evidencia del fuente en
+  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.
+Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
+`Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
 ✅ **La suite ya no toca la base de desarrollo**: el bloque `<php>` de `phpunit.xml` apunta los tests a
 `database/database.testing.sqlite` (que `database/.gitignore` ya ignora) y `tests/bootstrap.php` la arma
