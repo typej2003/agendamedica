@@ -1526,9 +1526,17 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .menu-lista form { margin: 0; }
 
-/* El menú de una fila que vive en una tabla con desplazamiento horizontal: el contenedor recorta, así que el menú se
-   posiciona contra la ventana (`shell.js` le pone el `left` y el `top` del botón que lo abre) y no queda cortado. */
-.menu-lista-flotante { position: fixed; right: auto; }
+/* El menú de una fila que vive en una tabla con desplazamiento horizontal: el contenedor recorta también en
+   vertical (`overflow-x: auto` implica `overflow-y: auto`), así que el menú se posiciona contra la ventana
+   (`shell.js` le pone el `left` y el `top` del botón que lo abre, y lo abre hacia arriba si no entra abajo) y no
+   queda cortado. Con `max-height` un menú largo se desplaza adentro en vez de salirse de la pantalla. */
+.menu-lista-flotante {
+    position: fixed;
+    right: auto;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    z-index: 1070;
+}
 
 .menu-item {
     display: flex;

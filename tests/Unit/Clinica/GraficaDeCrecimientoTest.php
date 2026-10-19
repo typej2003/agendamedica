@@ -94,6 +94,19 @@ class GraficaDeCrecimientoTest extends TestCase
         $this->assertFalse($grafica->conPuntos());
         $this->assertSame([], $grafica->puntosDelNino());
         $this->assertNotSame([], $grafica->marcasDelEjeY());
+        // Sin curvas no hay fuente que acreditar (O-37): la leyenda no la inventa.
+        $this->assertSame('', $grafica->fuente());
+    }
+
+    /** La fuente de las curvas viaja en la gráfica para que la leyenda la imprima (O-37). */
+    public function test_la_grafica_lleva_la_fuente_de_sus_curvas(): void
+    {
+        $curvas = ['b' => [['x' => 0.0, 'y' => 9.0], ['x' => 1.0, 'y' => 10.0]], 'm' => [['x' => 0.0, 'y' => 10.0], ['x' => 1.0, 'y' => 11.0]], 'a' => [['x' => 0.0, 'y' => 11.0], ['x' => 1.0, 'y' => 12.0]]];
+
+        $conFuente = new GraficaDeCrecimiento('Peso', 'Edad', 'kg', $curvas, [], [0.0, 1.0], null, 'Fundacredesa');
+        $this->assertTrue($conFuente->conCurvas());
+        $this->assertSame('Fundacredesa', $conFuente->fuente());
+        $this->assertSame('Fundacredesa', \App\Clinica\Crecimiento\PercentilesDeCrecimiento::FUENTE);
     }
 
     public function test_los_numeros_van_en_espanol_sin_ceros_de_mas(): void

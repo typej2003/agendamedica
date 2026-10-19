@@ -37,6 +37,7 @@ final class GraficaDeCrecimiento
      * @param  array<int,array{x:float, y:float, etiqueta:string}>  $puntos  los del niño, ordenados por fecha
      * @param  array{0:float,1:float}|null  $dominioX  el rango fijo del eje x (el juego de edades); `null` = el de los datos
      * @param  array<int,float>|null  $marcasX  las marcas del eje x; `null` = automáticas
+     * @param  string  $fuente  la fuente de las curvas («Fundacredesa», O-37); `''` si la gráfica no dibuja curvas
      */
     public function __construct(
         private string $titulo,
@@ -46,6 +47,7 @@ final class GraficaDeCrecimiento
         private array $puntos,
         ?array $dominioX = null,
         ?array $marcasX = null,
+        private string $fuente = '',
     ) {
         $xs = array_merge(array_column($this->curvas['b'], 'x'), array_column($this->curvas['m'], 'x'), array_column($this->curvas['a'], 'x'), array_column($this->puntos, 'x'));
         $ys = array_merge(array_column($this->curvas['b'], 'y'), array_column($this->curvas['m'], 'y'), array_column($this->curvas['a'], 'y'), array_column($this->puntos, 'y'));
@@ -67,6 +69,12 @@ final class GraficaDeCrecimiento
     public function titulo(): string
     {
         return $this->titulo;
+    }
+
+    /** La fuente de las curvas («Fundacredesa»), o `''` si la gráfica no dibuja curvas de referencia. */
+    public function fuente(): string
+    {
+        return $this->fuente;
     }
 
     public function ejeX(): string

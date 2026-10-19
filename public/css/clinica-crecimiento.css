@@ -28,5 +28,8 @@
 .grafica-muestra-alta { border-top-style: dashed; }
 .grafica-muestra-nino { border-top: 3px solid var(--ds-violeta-700, #783080); }
 
+/* La fuente de las curvas (O-37): va al final de la leyenda, sin muestra de color, y se separa un poco. */
+.grafica-leyenda-fuente { margin-left: auto; font-style: italic; }
+
 .crecimiento-tabla th,
 .crecimiento-tabla td { white-space: nowrap; }

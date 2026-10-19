@@ -39,12 +39,27 @@ final class PercentilesDeCrecimiento
     public const PULSO = 'pulso';
 
     /**
+     * **La fuente de las curvas** (O-37, 2026-10-19): la gráfica y su hoja impresa dicen de dónde salen los
+     * percentiles. Hoy es **Fundacredesa**, el estudio venezolano que manda la ley de nutrición infantil y el que trae
+     * el escritorio en su carga inicial (las tablas `percentil_*`, ver el relevamiento §5). Es una constante y no un
+     * texto suelto en el Blade porque el día que se agregue la OMS (O-33) cada referencia dice la suya.
+     */
+    public const FUENTE = 'Fundacredesa';
+
+    /**
      * @param  array<int,array<string,mixed>>  $nino  filas de `percentil_nino`
      * @param  array<int,array<string,mixed>>  $nina  filas de `percentil_nina`
      * @param  array<string,array<int,array<string,mixed>>>  $otras  `sistolica`, `diastolica` y `pulso` (filas con `sexo`)
+     * @param  string|null  $fuente  el nombre de esta referencia; `null` = la de siempre (`self::FUENTE`)
      */
-    public function __construct(private array $nino, private array $nina, private array $otras = [])
+    public function __construct(private array $nino, private array $nina, private array $otras = [], private ?string $fuente = null)
     {
+    }
+
+    /** El nombre de la referencia que se está dibujando («Fundacredesa»), para la leyenda de la gráfica. */
+    public function fuente(): string
+    {
+        return $this->fuente ?? self::FUENTE;
     }
 
     /** `M` → `nino`, `F` → `nina`; cualquier otra cosa no tiene referencia. */

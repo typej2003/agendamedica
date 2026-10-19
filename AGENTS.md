@@ -205,6 +205,18 @@ consulta.
   `$pediatria` y en pediatría rotula `nariz`/`laringe`/`oido` como *Exámenes*/*Imagenología*/*Estudios exploratorios*
   (son las columnas de su ítem 6). Tests: `Feature/HistoriaEnLaConsultaWebTest` (5) y
   `Unit/Clinica/SolicitudesUnidadTest`; verificador `../.agent-tools/verificar-consulta-historia-web.js`.
+- **La fuente de las curvas de crecimiento (O-37, 2026-10-19)**: la leyenda de la gráfica dice **«Fuente: Fundacredesa»**
+  —y en el `<desc>` del SVG, para el lector de pantalla— en la pantalla **y en la hoja impresa** (el mismo parcial
+  `_grafica`). El nombre **viene de la referencia** (`PercentilesDeCrecimiento::FUENTE` + `fuente()`, que
+  `CrecimientoVista` le pasa a `GraficaDeCrecimiento`): el día que se agregue la OMS (O-33) cada referencia dice la suya.
+  Sin curvas no se dice ninguna fuente. Tests: `Feature/CrecimientoWebTest` y `Unit/Clinica/GraficaDeCrecimientoTest`;
+  verificador `../.agent-tools/verificar-crecimiento-fuente-web.js`.
+- **El menú «⋯» de una fila de tabla (O-43, 2026-10-19, web en general)**: el contenedor de la tabla (`.tabla-envoltura`,
+  `overflow-x: auto`) **también recorta en vertical**, así que el menú de una fila —en la agenda, con pocas citas o en la
+  última fila— quedaba cortado o fuera de la pantalla. `shell.js` lo flota contra la ventana por estar dentro de
+  `.tabla-envoltura`/`.table-responsive` (antes sólo si la tabla desbordaba en horizontal), lo alinea sin salirse y **lo
+  abre hacia arriba** si no entra abajo; el `<details>` abierto sube su `z-index` y el menú flotante tiene `max-height`.
+  Verificador: `../.agent-tools/verificar-agenda-menu-fila-web.js` (falla con el código anterior).
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
   postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,

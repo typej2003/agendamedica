@@ -5,7 +5,7 @@
     <svg class="grafica-svg" viewBox="{{ $grafica->viewBox() }}" role="img" aria-labelledby="{{ $id }}-titulo {{ $id }}-descripcion">
         <title id="{{ $id }}-titulo">{{ $grafica->titulo() }}</title>
         <desc id="{{ $id }}-descripcion">
-            {{ $grafica->conPuntos() ? count($grafica->puntosDelNino()) . ' mediciones del niño' : 'Sin mediciones del niño en este rango de edades' }}{{ $grafica->conCurvas() ? ' sobre las curvas baja, media y alta de la referencia.' : '.' }}
+            {{ $grafica->conPuntos() ? count($grafica->puntosDelNino()) . ' mediciones del niño' : 'Sin mediciones del niño en este rango de edades' }}{{ $grafica->conCurvas() ? ' sobre las curvas baja, media y alta de la referencia (' . $grafica->fuente() . ').' : '.' }}
         </desc>
 
         {{-- Marco y cuadrícula --}}
@@ -48,6 +48,11 @@
             <span class="grafica-leyenda-item"><i class="grafica-muestra grafica-muestra-baja" aria-hidden="true"></i> Curva baja</span>
             <span class="grafica-leyenda-item"><i class="grafica-muestra grafica-muestra-media" aria-hidden="true"></i> Curva media</span>
             <span class="grafica-leyenda-item"><i class="grafica-muestra grafica-muestra-alta" aria-hidden="true"></i> Curva alta</span>
+            {{-- **La fuente de las curvas** (O-37, Alexander): la que se está dibujando, no un texto fijo. Va al final de la
+                 leyenda y en las dos hojas —la pantalla y la impresa—, que comparten este parcial. --}}
+            @if ($grafica->fuente() !== '')
+                <span class="grafica-leyenda-fuente">Fuente: {{ $grafica->fuente() }}</span>
+            @endif
         @endif
     </figcaption>
 </figure>

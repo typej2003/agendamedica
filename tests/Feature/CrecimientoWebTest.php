@@ -167,6 +167,39 @@ class CrecimientoWebTest extends TestCase
             ->assertSee('Sobre la alta');
     }
 
+    /** O-37: con curvas, la gráfica dice **de dónde salen** —Fundacredesa—, en la pantalla y en la hoja impresa. */
+    public function test_con_referencia_la_grafica_y_su_hoja_dicen_la_fuente(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->sembrarReferencia($medico);
+        $id = $this->nino($medico);
+        $this->medir($medico, 5001, 1, '2026-10-13', ['peso' => 12, 'talla' => 62]);
+
+        $sesion = $this->conContexto($medico, $pediatria)->actingAs($user);
+
+        // La pantalla de la gráfica.
+        $sesion->get($this->url($id))->assertOk()
+            ->assertSee('Fuente: Fundacredesa')
+            ->assertSee('referencia (Fundacredesa)', false);
+
+        // La hoja que se imprime: el mismo parcial, una gráfica por bloque.
+        $sesion->get(route('clinica.pacientes.crecimiento.imprimir', $id))->assertOk()
+            ->assertSee('Fuente: Fundacredesa')
+            ->assertSee('Curvas de crecimiento');
+    }
+
+    /** Sin referencia no hay curvas que acreditar: la leyenda no inventa una fuente. */
+    public function test_sin_referencia_no_dice_la_fuente(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico);
+        $this->medir($medico, 5001, 1, '2026-10-13', ['peso' => 12]);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($id))
+            ->assertOk()
+            ->assertDontSee('Fuente: Fundacredesa');
+    }
+
     public function test_el_juego_de_edades_sigue_al_nino_y_se_puede_cambiar(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();

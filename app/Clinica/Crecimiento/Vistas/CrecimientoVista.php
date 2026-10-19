@@ -221,6 +221,8 @@ final class CrecimientoVista
             $puntos,
             $tipo === 'edad' ? [$desde, $hasta] : null,
             $tipo === 'edad' ? $marcas : null,
+            // La fuente de las curvas (O-37): sale de la referencia que se dibuja, no del Blade.
+            $this->percentiles->fuente(),
         );
     }
 
