@@ -100,8 +100,17 @@ consulta.
   + `_indicadores.blade.php` son la pantalla y `ConsultaIndicadoresController` la ruta
   `POST /clinica/consulta/{consulta}/indicadores`. Tests: `Unit/Clinica/IndicadoresIncidentesTest` (5) y
   `Feature/ConsultaIndicadoresWebTest` (6).
-- **Falta**: las pantallas de los otros postgrados (neumología/espirometría, endoscopías, quirúrgico y
-  ecografía pediátrica) y el formato en blanco de esos paneles. Detalle y evidencia del fuente en
+- **Neumología pediátrica (2026-10-19, `fe788ff`)**: **como en el escritorio**, una **solapa dentro de Evaluación
+  física** (`PestanasDelExamen::NEUMOLOGIA`) que sólo se ofrece si el médico tiene el postgrado
+  (`subespecialidad.secciones` → `secciones_postgrados`). Los tres informes: R.X. de tórax → `consultas.rayosx`,
+  espirometría → `consultas.faringe` (la columna de la citología de ginecología: el escritorio las comparte) y
+  broncoscopía → `consultas.broncoscopia`. `NeumologiaDeLaConsulta` es el mapa, `GuardarNeumologiaDeLaConsulta` la
+  escritura (sólo lo que cambió, rastro por columna), `NeumologiaVista` + `_evaluacion-neumologia.blade.php` la
+  pantalla y `ConsultaNeumologiaController` la ruta `POST /clinica/consulta/{consulta}/neumologia`. Una URL directa a
+  la solapa sin el postgrado abre la de entrada de la especialidad. Tests: `Unit/Clinica/NeumologiaDeLaConsultaTest` (2)
+  y `Feature/ConsultaNeumologiaWebTest` (4).
+- **Falta**: las pantallas de los otros postgrados (endoscopías digestivas, quirúrgico y ecografía pediátrica) y el
+  formato en blanco de esos paneles. Detalle y evidencia del fuente en
   `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
