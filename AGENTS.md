@@ -92,7 +92,15 @@ consulta.
 - **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene
   (`CuentaService::asignarSubespecialidades()`); quitar una especialidad quita sus postgrados (`postgradosQuitados` en el
   resultado de `asignarEspecialidades()`).
-- **Falta**: las pantallas de los postgrados (Indicadores incidentes, neumología/espirometría, endoscopías, quirúrgico y
+- **Indicadores incidentes (nefrología pediátrica, 2026-10-19, `3a05bc7`)**: el ítem 5 pediátrico ya tiene pantalla.
+  El escritorio **no guarda los números**: `ue_guard_exam` compone un texto `ETIQUETA: valor.` y `ue_guardar` lo deja
+  en `consultas.resultadoexamencomp` (lo imprimen el resumen médico y el pre-operatorio). `App\Clinica\Consulta\
+  IndicadoresIncidentes` tiene los 26 campos que sí entran (y no ofrece los gases/volumen/Na urinario que el
+  escritorio descarta), `GuardarIndicadoresIncidentes` escribe sólo esa columna con su rastro, `IndicadoresIncidentesVista`
+  + `_indicadores.blade.php` son la pantalla y `ConsultaIndicadoresController` la ruta
+  `POST /clinica/consulta/{consulta}/indicadores`. Tests: `Unit/Clinica/IndicadoresIncidentesTest` (5) y
+  `Feature/ConsultaIndicadoresWebTest` (6).
+- **Falta**: las pantallas de los otros postgrados (neumología/espirometría, endoscopías, quirúrgico y
   ecografía pediátrica) y el formato en blanco de esos paneles. Detalle y evidencia del fuente en
   `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
