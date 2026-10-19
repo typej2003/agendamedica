@@ -22,10 +22,14 @@ use App\Models\Consulta;
 use App\Models\Diagnostico;
 use App\Models\DiagnosticoPaciente;
 use App\Models\Doctor;
+use App\Models\EcoCardiogramaFetal;
+use App\Models\EcoDoppler;
 use App\Models\EcoObstetrico;
 use App\Models\EcoObstetricoSegundo;
 use App\Models\EcoObstetricoTercer;
 use App\Models\EcoPelvico;
+use App\Models\UltraAbdominal;
+use App\Models\UltraMama;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\ExamenFisico;
@@ -340,6 +344,23 @@ class SyncAppDataController extends Controller
             'eco_obstetrico_tercer' => ['consulta' => EcoObstetricoTercer::whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $numHistorias)
                 ->whereIn('reg_medico', $registrosMedicos)
                 ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_obstetrico_tercer'), $historiasDeLaVentana())), 'columna' => 'id'],
+            // **Los otros cuatro estudios** (ola §10 de PLAN-MOVIL.md, 2026-10-19): Doppler perinatal,
+            // mamario, abdominal y ecocardiograma fetal. Como los obstétricos, se llavean por `historia` +
+            // `consulta` y bajan con el mismo filtro doble más la ventana. ⚠️ La tabla del ecocardiograma se
+            // llama `ecocadiograma_fetal` en el legado (con el typo): así la usa la web y así la sube el
+            // escritorio; escribirla «bien» dejaría el estudio sin bajar.
+            'eco_doppler' => ['consulta' => EcoDoppler::whereIn(TablasLegado::columnaHistoria('eco_doppler'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('eco_doppler'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ultra_mama' => ['consulta' => UltraMama::whereIn(TablasLegado::columnaHistoria('ultra_mama'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ultra_mama'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ultra_abdominal' => ['consulta' => UltraAbdominal::whereIn(TablasLegado::columnaHistoria('ultra_abdominal'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ultra_abdominal'), $historiasDeLaVentana())), 'columna' => 'id'],
+            'ecocadiograma_fetal' => ['consulta' => EcoCardiogramaFetal::whereIn(TablasLegado::columnaHistoria('ecocadiograma_fetal'), $numHistorias)
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria('ecocadiograma_fetal'), $historiasDeLaVentana())), 'columna' => 'id'],
             'motivos' => ['consulta' => MotivoCita::whereIn('reg_medico', $registrosMedicos), 'columna' => 'id'],
             // Motivos de **consulta** (Paso 18.B2), que no son los de la cita: el catálogo del médico y los
             // de cada consulta, con el mismo filtro doble que `consultas`. Los carga el escritorio; el app
@@ -617,6 +638,16 @@ class SyncAppDataController extends Controller
                 ->where($de('eco_obstetrico_tercer_2'), $numHistoria)->get(),
             'eco_obstetrico_tercer' => EcoObstetricoTercer::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('eco_obstetrico_tercer'), $numHistoria)->get(),
+            // Los cuatro de la ola §10: se suman acá por el mismo motivo que los anteriores —este pedido
+            // arma el payload a mano—, para que la ficha de un paciente fuera de la ventana llegue completa.
+            'eco_doppler' => EcoDoppler::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('eco_doppler'), $numHistoria)->get(),
+            'ultra_mama' => UltraMama::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ultra_mama'), $numHistoria)->get(),
+            'ultra_abdominal' => UltraAbdominal::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ultra_abdominal'), $numHistoria)->get(),
+            'ecocadiograma_fetal' => EcoCardiogramaFetal::whereIn('reg_medico', $registrosMedicos)
+                ->where($de('ecocadiograma_fetal'), $numHistoria)->get(),
             'centros_medicos' => MedicalCenter::whereIn('id', $colas->pluck('medical_center_id')->filter()->unique()->all())->get(),
         ];
 
@@ -719,6 +750,12 @@ class SyncAppDataController extends Controller
             'eco_obstetrico' => $datos['eco_obstetrico'] ?? $vacio,
             'eco_obstetrico_tercer_2' => $datos['eco_obstetrico_tercer_2'] ?? $vacio,
             'eco_obstetrico_tercer' => $datos['eco_obstetrico_tercer'] ?? $vacio,
+            // Los otros cuatro estudios (ola §10): Doppler perinatal, mamario, abdominal y ecocardiograma
+            // fetal. La clave tiene que existir siempre por el mismo motivo que las de arriba.
+            'eco_doppler' => $datos['eco_doppler'] ?? $vacio,
+            'ultra_mama' => $datos['ultra_mama'] ?? $vacio,
+            'ultra_abdominal' => $datos['ultra_abdominal'] ?? $vacio,
+            'ecocadiograma_fetal' => $datos['ecocadiograma_fetal'] ?? $vacio,
             // Los dos catálogos del antecedente (A4b de PLAN-MOVIL.md): de dónde sale el nombre que se
             // agrega y de dónde el de su tipo/agrupación.
             'antecedentes' => $datos['antecedentes'] ?? $vacio,

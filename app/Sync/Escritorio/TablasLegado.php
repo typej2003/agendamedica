@@ -52,6 +52,13 @@ class TablasLegado
         'eco_obstetrico' => 'historia',
         'eco_obstetrico_tercer_2' => 'historia',
         'eco_obstetrico_tercer' => 'historia',
+        // Los cuatro de la ola §10 (Doppler perinatal, mamario, abdominal y ecocardiograma fetal): igual
+        // que los obstétricos, `historia`. Sin la entrada, el filtro pregunta por `numhistoria` —que no
+        // existe en esas tablas— y el estudio no baja nunca.
+        'eco_doppler' => 'historia',
+        'ultra_mama' => 'historia',
+        'ultra_abdominal' => 'historia',
+        'ecocadiograma_fetal' => 'historia',
     ];
 
     /**

@@ -86,6 +86,13 @@ class SyncAppDataRequest extends FormRequest
         'eco_obstetrico' => \App\Clinica\Consulta\EcoObstetrico::class,
         'eco_obstetrico_tercer_2' => \App\Clinica\Consulta\EcoObstetricoSegundo::class,
         'eco_obstetrico_tercer' => \App\Clinica\Consulta\EcoObstetricoTercero::class,
+        // Ola §10: el Doppler perinatal, el mamario, el abdominal y el ecocardiograma fetal. Sus tablas
+        // legadas se llaman `eco_doppler`, `ultra_mama`, `ultra_abdominal` y `ecocadiograma_fetal` (con el
+        // typo del legado en la última).
+        'eco_doppler' => \App\Clinica\Consulta\EcoDoppler::class,
+        'ultra_mama' => \App\Clinica\Consulta\EcoMamario::class,
+        'ultra_abdominal' => \App\Clinica\Consulta\EcoAbdominal::class,
+        'ecocadiograma_fetal' => \App\Clinica\Consulta\EcoCardiogramaFetal::class,
     ];
 
     /**
