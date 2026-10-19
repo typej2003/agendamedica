@@ -68,6 +68,8 @@ use App\Clinica\Consulta\Vistas\EvolucionVista;
 use App\Clinica\Consulta\Vistas\IndicadoresIncidentesVista;
 use App\Clinica\Consulta\Vistas\NeumologiaVista;
 use App\Clinica\Consulta\NeumologiaDeLaConsulta;
+use App\Clinica\Consulta\EndoscopiaDigestiva;
+use App\Clinica\Consulta\Vistas\ProcedimientosVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
 use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
@@ -1040,6 +1042,53 @@ class ConsultaController extends Controller
                 route('clinica.consulta.indicadores.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]),
                 (array) old(),
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_PROCEDIMIENTOS) {
+            // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): el ítem 8 del árbol, con una pestaña por
+            // endoscopía digestiva. El `&pestana=` elige el tipo, como el `&tipo=` del estudio.
+            $tipo = (string) request()->query('pestana', EndoscopiaDigestiva::SUPERIOR);
+            $tipo = EndoscopiaDigestiva::existe($tipo) ? $tipo : EndoscopiaDigestiva::SUPERIOR;
+
+            $lectura = new EndoscopiaDigestiva();
+            $valores = $lectura->de($consulta, $tipo);
+
+            $url = fn (string $clave) => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_PROCEDIMIENTOS,
+                'pestana' => $clave,
+            ]);
+
+            $campos = [];
+            foreach (EndoscopiaDigestiva::campos($tipo) as $clave => $campo) {
+                $campos[] = [
+                    'clave'    => $clave,
+                    'etiqueta' => $campo['etiqueta'],
+                    'clase'    => $campo['clase'],
+                    'ayuda'    => $campo['ayuda'] ?? null,
+                    'valor'    => (string) old($clave, $valores[$clave] ?? ''),
+                ];
+            }
+
+            $pestanas = [];
+            foreach (EndoscopiaDigestiva::tipos() as $clave) {
+                $pestanas[] = [
+                    'clave'   => $clave,
+                    'texto'   => EndoscopiaDigestiva::titulo($clave),
+                    'url'     => $url($clave),
+                    'activa'  => $clave === $tipo,
+                    'cargada' => $lectura->tieneDatos($consulta, $clave),
+                ];
+            }
+
+            return new ProcedimientosVista(
+                EndoscopiaDigestiva::titulo($tipo),
+                $campos,
+                $pestanas,
+                route('clinica.consulta.procedimientos.guardar', [$consulta->id, $tipo]),
+                $url($tipo),
+                $lectura->tieneDatos($consulta, $tipo),
             );
         }
 

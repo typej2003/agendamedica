@@ -121,6 +121,12 @@ final class SeccionesDeLaConsulta
     /** «Procedimientos»: las endoscopías digestivas de gastroenterología pediátrica. */
     public const SECCION_ENDOSCOPIAS = 'endoscopias';
 
+    /**
+     * **Procedimientos** (gastroenterología pediátrica, 2026-10-19): el ítem 8 del árbol de PediaReport
+     * (`tabpage_34`), con las dos endoscopías digestivas y la eco abdominal.
+     */
+    public const SECCION_PROCEDIMIENTOS = 'procedimientos';
+
     /** «I.Q.»: las intervenciones y la evaluación pre-operatoria de cirugía pediátrica. */
     public const SECCION_QUIRURGICO = 'quirurgico';
 
@@ -249,6 +255,11 @@ final class SeccionesDeLaConsulta
         self::SECCION_INDICADORES => ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Indicadores incidentes',
             'icono' => 'bi-droplet-half', 'detalle' => 'Función renal y electrolitos urinarios (nefrología pediátrica).',
             'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_INDICADORES, 'despues_de' => self::SECCION_EVALUACION],
+        // Gastroenterología pediátrica: el ítem «PROCEDIMIENTOS» del árbol, después de Inmunizaciones
+        // (`w_consulta_principal.srw:2671`, activo sólo en el build del gastroenterólogo).
+        self::SECCION_PROCEDIMIENTOS => ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Procedimientos',
+            'icono' => 'bi-camera-reels', 'detalle' => 'Endoscopías digestivas y eco abdominal (gastroenterología pediátrica).',
+            'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_PROCEDIMIENTOS, 'despues_de' => self::SECCION_INMUNIZACIONES],
     ];
 
     /** ¿La especialidad es pediatría? Su catálogo es el suyo, no el de ginecología. */

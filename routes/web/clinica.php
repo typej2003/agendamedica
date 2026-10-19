@@ -53,6 +53,7 @@ use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
 use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
 use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
+use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -361,6 +362,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
 
                 // **Neumología pediátrica** (postgrado, 2026-10-19): los tres informes de la solapa del examen.
                 Route::post('/consulta/{consulta}/neumologia', [ConsultaNeumologiaController::class, 'guardar'])->name('consulta.neumologia.guardar');
+
+                // **Procedimientos** (gastroenterología pediátrica, 2026-10-19): las endoscopías digestivas.
+                Route::post('/consulta/{consulta}/procedimientos/{tipo}', [ConsultaProcedimientosController::class, 'guardar'])
+                    ->where('tipo', '[a-z]+')->name('consulta.procedimientos.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

@@ -114,9 +114,21 @@ consulta.
   pantalla y `ConsultaNeumologiaController` la ruta `POST /clinica/consulta/{consulta}/neumologia`. Una URL directa a
   la solapa sin el postgrado abre la de entrada de la especialidad. Tests: `Unit/Clinica/NeumologiaDeLaConsultaTest` (2)
   y `Feature/ConsultaNeumologiaWebTest` (4).
-- **Falta**: las pantallas de los otros postgrados (endoscopías digestivas, quirúrgico y ecografía pediátrica) y el
-  formato en blanco de esos paneles. Detalle y evidencia del fuente en
-  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.
+- **Procedimientos (gastroenterología pediátrica, 2026-10-19)**: el ítem 8 del árbol de PediaReport
+  (`w_consulta_principal.srw:2671`, «PROCEDIMIENTOS») con las **dos endoscopías digestivas** como pestañas:
+  `superior` → `endosc_diges_super` y `inferior` → `endosc_diges_infer` (una fila por consulta, clave `historia` +
+  `consulta`; el inferior guarda esófago/estómago/duodeno con un estado `char(1)`). `full_texto` es lo que imprime el
+  informe; las columnas `ima_*`/`obs_ima_*` son rutas de la PC del consultorio y **no se tocan**.
+  `EndoscopiaDigestiva` es el mapa, `GuardarEndoscopiaDigestiva` la escritura (sólo lo cambiado, rastro por columna),
+  `ProcedimientosVista` + `_procedimientos.blade.php` la pantalla, `ConsultaProcedimientosController` la ruta
+  `POST /clinica/consulta/{consulta}/procedimientos/{tipo}` y la sección `procedimientos` del catálogo (postgrado
+  `gastroenterologia-pediatrica`, cuya `secciones` pasó de `endoscopias` a `procedimientos`). Modelos
+  `EndoscopiaSuperior` y `EndoscopiaInferior`. Tests: `Unit/Clinica/EndoscopiaDigestivaTest` (5) y
+  `Feature/ConsultaProcedimientosWebTest` (6). **Falta** la pestaña de la eco abdominal (abre desde este mismo ítem en
+  el escritorio).
+- **Falta**: las pantallas de los otros postgrados (quirúrgico y ecografía pediátrica), la eco abdominal de
+  Procedimientos y el formato en blanco de esos paneles. Detalle y evidencia del fuente en
+  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 

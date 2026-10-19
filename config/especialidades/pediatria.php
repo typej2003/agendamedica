@@ -113,7 +113,8 @@ return [
         'gastroenterologia-pediatrica' => [
             'nombre'    => 'Gastroenterología pediátrica',
             'orden'     => 30,
-            'secciones' => ['endoscopias'],
+            // El ítem «PROCEDIMIENTOS» del árbol (`w_consulta_principal.srw:2671`), con las dos endoscopías.
+            'secciones' => ['procedimientos'],
         ],
         'cirugia-pediatrica' => [
             'nombre'    => 'Cirugía pediátrica',
