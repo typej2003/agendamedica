@@ -12,13 +12,13 @@ use App\Models\Consulta;
 use Illuminate\Http\Request;
 
 /**
- * **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): guardar el panel de laboratorio del ítem 5 de
- * la consulta pediátrica.
+ * **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): guardar el panel de laboratorio del ítem 5 de la
+ * consulta pediátrica.
  *
- * Como el escritorio, el guardado **compone un texto** y lo deja en `consultas.resultadoexamencomp`; los números
- * no se guardan (ver `IndicadoresIncidentes`). La escritura es la Action
- * `App\Actions\Consulta\GuardarIndicadoresIncidentes`: ahí viven el rastro en `sync_changes` (`source = web`, por
- * columna) y el guard last-write-wins del sync. Acá sólo se valida el HTTP y se cuenta el resultado.
+ * Escribe lo mismo que el escritorio: los **números** en `examenes_paciente_consulta` y el **resumen** compuesto en
+ * `consultas.resultadoexamencomp`. La escritura es la Action `App\Actions\Consulta\GuardarIndicadoresIncidentes`:
+ * ahí viven el rastro por columna, el last-write-wins y la regla de no crear filas vacías. Acá sólo se valida el
+ * HTTP y se cuenta el resultado.
  */
 class ConsultaIndicadoresController extends Controller
 {
@@ -38,9 +38,9 @@ class ConsultaIndicadoresController extends Controller
             $contexto['reg_medico'],
         );
 
-        // Los 26 campos del panel: números, con coma o con punto decimal (el español usa coma) y sin más texto.
-        // El tope es el mismo de la columna del escritorio, que es un texto largo pero no infinito.
-        $reglas = [];
+        // Los campos del panel: números, con coma o con punto decimal (el español usa coma) y sin más texto. La
+        // fecha es la de la toma de laboratorio.
+        $reglas = ['fecha' => ['nullable', 'date']];
         foreach (IndicadoresIncidentes::claves() as $clave) {
             $reglas[$clave] = ['nullable', 'string', 'max:20', 'regex:/^-?\d+([.,]\d+)?$/'];
         }
@@ -49,16 +49,15 @@ class ConsultaIndicadoresController extends Controller
             '*.regex' => 'Escribe un número (puede llevar coma decimal).',
         ]);
 
-        $guardado = $guardar->ejecutar($consulta, $datos, null, 'web');
+        $resultado = $guardar->ejecutar($consulta, $datos, null, 'web');
 
         $destino = redirect()->route('clinica.consulta', [
             $consulta->id,
             'seccion' => ConsultaShellVista::SECCION_INDICADORES,
         ]);
 
-        if (! $guardado) {
-            // O no había ningún valor (no se crea un resumen vacío) o hay una edición más nueva del escritorio.
-            return $destino->with('error', 'No se guardó: escribe al menos un valor, o hay un cambio más reciente de esta consulta (de otro equipo) que no se pisó.');
+        if ($resultado['campos'] === 0 && ! $resultado['texto']) {
+            return $destino->with('estado', 'Sin cambios: los indicadores ya estaban así.');
         }
 
         return $destino->with('estado', 'Indicadores guardados: el resumen quedó en el resultado de exámenes de la consulta.');

@@ -1,12 +1,11 @@
 {{-- **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el ítem 5 del árbol de PediaReport
-     (`tabpage_35` del escritorio). Se teclean los valores de laboratorio y el resumen se **compone** con las
-     etiquetas y el orden del escritorio; al guardar, ese texto queda en `consultas.resultadoexamencomp`, que es lo
-     que imprimen el resumen médico y la evaluación pre-operatoria.
+     (`tabpage_35` del escritorio). Los números se guardan en `examenes_paciente_consulta` (una fila por consulta) y,
+     al guardar, se compone el resumen que va a `consultas.resultadoexamencomp` —lo que imprimen el resumen médico y
+     la evaluación pre-operatoria—, con las etiquetas y el orden del escritorio.
 
-     Los números **no se guardan** (el escritorio tampoco los guarda): el panel abre vacío en cada consulta y lo que
-     queda es el resumen. Por eso se muestra siempre el resumen ya guardado, de sólo lectura.
-
-     El aviso de cambios sin guardar lo pone `consulta.js` a partir de `data-aviso`, como en las otras secciones. --}}
+     Los gases, el volumen urinario, el sodio urinario y la creatinina calculada se guardan pero **no** entran en el
+     resumen (en el escritorio esas líneas están comentadas). El aviso de cambios sin guardar lo pone `consulta.js`
+     a partir de `data-aviso`. --}}
 @php
     $estado = $seccion->estado();
 @endphp
@@ -23,6 +22,15 @@
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="indicadores-form"
               data-consulta-indicadores data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="indicador-fecha">Fecha de la toma</label>
+                    <input type="date" class="form-control @error('fecha') is-invalid @enderror"
+                           id="indicador-fecha" name="fecha" value="{{ $seccion->fecha() }}">
+                    @error('fecha')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+            </div>
 
             @foreach ($seccion->grupos() as $grupo)
                 <fieldset class="mb-4">
@@ -60,14 +68,14 @@
     <x-ui.tarjeta titulo="Resumen guardado en la consulta" icono="bi-file-text">
         @if ($seccion->tieneGuardado())
             <p class="text-muted small mb-2">
-                Es lo que se imprime en el resumen médico y en la evaluación pre-operatoria. Guardar otra vez
-                reemplaza el resumen completo; no se puede editar por partes.
+                Es lo que se imprime en el resumen médico y en la evaluación pre-operatoria. Se recompone cada vez que
+                guardás los indicadores.
             </p>
             <pre class="mb-0 text-wrap" id="indicadores-guardado">{{ $seccion->guardado() }}</pre>
         @else
             <p class="text-muted mb-0">
-                Esta consulta todavía no tiene un resumen de laboratorio. Escribe los valores y guárdalos: el texto
-                se arma solo.
+                Esta consulta todavía no tiene un resumen de laboratorio. Escribe los valores y guardalos: el texto se
+                arma solo.
             </p>
         @endif
     </x-ui.tarjeta>

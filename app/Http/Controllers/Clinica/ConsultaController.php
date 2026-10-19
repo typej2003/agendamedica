@@ -1031,17 +1031,20 @@ class ConsultaController extends Controller
 
         if ($seccion === ConsultaShellVista::SECCION_INDICADORES) {
             // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del ítem 5
-            // pediátrico. Compone un texto y lo deja en `consultas.resultadoexamencomp`, como el escritorio.
+            // pediátrico. Los números viven en `examenes_paciente_consulta` y el resumen compuesto en
+            // `consultas.resultadoexamencomp`, como en el escritorio.
             return new IndicadoresIncidentesVista(
                 IndicadoresIncidentes::grupos(),
-                IndicadoresIncidentes::guardado($consulta),
+                (new IndicadoresIncidentes())->de($consulta),
+                IndicadoresIncidentes::textoGuardado($consulta),
                 route('clinica.consulta.indicadores.guardar', $consulta->id),
                 route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]),
                 (array) old(),
             );
         }
 
-        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
+        if ($seccion === ConsultaShellVista::SECCION_TRATAMIENTO) {
+            // El tratamiento (ítem TRATAMIENTO del legado): un texto en `consultas.laringe` con sus plantillas
             // `TR`. Es la misma pantalla que las solapas de texto del examen —`TextoDelExamenVista` y su
             // parcial—, con su propio ítem del panel; guarda por la misma ruta y vuelve a esta sección.
             $texto = new TextoDelExamen($examen);

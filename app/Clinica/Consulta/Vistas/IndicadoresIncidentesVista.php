@@ -3,23 +3,20 @@
 namespace App\Clinica\Consulta\Vistas;
 
 /**
- * **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de números que compone el resumen de
- * laboratorio y lo deja en `consultas.resultadoexamencomp`.
+ * **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de números del ítem 5, con sus valores
+ * guardados, y el resumen de laboratorio que se compone con ellos.
  *
- * La pantalla tiene dos partes, como el escritorio:
+ * Los números viven en `examenes_paciente_consulta` (una fila por consulta) y el texto en
+ * `consultas.resultadoexamencomp`; el mapa está en `IndicadoresIncidentes`. La pantalla abre **con lo que ya está
+ * guardado** y se puede corregir, como en el escritorio.
  *
- *  - **los campos** (26, en dos grupos: sangre y orina) que el médico teclea en cada consulta. Son
- *    **transitorios**: el escritorio no los guarda y la web tampoco (ver `IndicadoresIncidentes`), así que
- *    abren vacíos en cada atención y lo que queda es el texto;
- *  - **el resumen guardado**, de sólo lectura, que es lo que imprimen el resumen médico y la evaluación
- *    pre-operatoria. Si no hay, la pantalla lo dice.
- *
- * El ViewModel no sabe de `Request` ni de base de datos: recibe los grupos y el texto ya leídos.
+ * El ViewModel no sabe de `Request` ni de base de datos: recibe los grupos y los valores ya leídos.
  */
 final class IndicadoresIncidentesVista
 {
     /**
      * @param  array<string,array<string,string>>  $grupos  grupo => [clave => etiqueta], en el orden del escritorio
+     * @param  array<string,?string>  $valores  los valores guardados, por clave (más `fecha`)
      * @param  string|null  $guardado  el texto que hoy tiene `consultas.resultadoexamencomp`
      * @param  string  $urlGuardar  a dónde postea "Guardar"
      * @param  string  $urlVolver  la vuelta a la sección (el "Cancelar" de la guía de UI)
@@ -27,6 +24,7 @@ final class IndicadoresIncidentesVista
      */
     public function __construct(
         private array $grupos,
+        private array $valores,
         private ?string $guardado,
         private string $urlGuardar,
         private string $urlVolver = '',
@@ -35,8 +33,7 @@ final class IndicadoresIncidentesVista
     }
 
     /**
-     * Los grupos del formulario, ya con el valor que se está mostrando: `[['titulo' => 'Sangre', 'campos' =>
-     * [['clave', 'etiqueta', 'valor'], …]], …]`.
+     * Los grupos del formulario con el valor de cada campo: `[['titulo', 'campos' => [['clave', 'etiqueta', 'valor'], …]], …]`.
      *
      * @return array<int,array{titulo:string, campos:array<int,array{clave:string, etiqueta:string, valor:string}>}>
      */
@@ -51,7 +48,7 @@ final class IndicadoresIncidentesVista
                 $filas[] = [
                     'clave'    => $clave,
                     'etiqueta' => $etiqueta,
-                    'valor'    => trim((string) ($this->old[$clave] ?? '')),
+                    'valor'    => $this->valor($clave),
                 ];
             }
 
@@ -59,6 +56,22 @@ final class IndicadoresIncidentesVista
         }
 
         return $salida;
+    }
+
+    /** El valor que muestra el campo: lo que se acaba de escribir (`old`) o lo guardado. */
+    public function valor(string $clave): string
+    {
+        if (array_key_exists($clave, $this->old)) {
+            return trim((string) $this->old[$clave]);
+        }
+
+        return (string) ($this->valores[$clave] ?? '');
+    }
+
+    /** La fecha del panel (la de la toma de laboratorio), o vacía. */
+    public function fecha(): string
+    {
+        return $this->valor('fecha');
     }
 
     /** El resumen guardado, o `null` si la consulta todavía no tiene ninguno. */
@@ -82,23 +95,26 @@ final class IndicadoresIncidentesVista
         return $this->urlVolver;
     }
 
-    /** El estado del resumen como pastilla: "Cargado" cuando ya hay uno guardado y "Sin cargar" cuando no. */
+    /** El estado como pastilla: "Cargado" si hay algún valor o un resumen, y "Sin cargar" si no. */
     public function estado(): array
     {
-        return $this->tieneGuardado()
+        $conDatos = $this->tieneGuardado()
+            || array_filter($this->valores, fn ($valor) => $valor !== null && $valor !== '');
+
+        return $conDatos
             ? ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Cargado',
-                'titulo' => 'La consulta ya tiene un resumen de laboratorio guardado']
+                'titulo' => 'La consulta ya tiene indicadores guardados']
             : ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin cargar',
-                'titulo' => 'Todavía no hay un resumen de laboratorio en esta consulta'];
+                'titulo' => 'Todavía no hay indicadores en esta consulta'];
     }
 
-    /** La ayuda de la pantalla: qué compone el resumen y qué no se guarda. */
+    /** La ayuda de la pantalla. */
     public function ayuda(): string
     {
-        return 'Escribe los valores de laboratorio y el resumen se compone solo, con el mismo orden y las mismas '
-            . 'etiquetas que el escritorio. Al guardar queda en el resultado de exámenes de la consulta, que es lo '
-            . 'que imprimen el resumen médico y la evaluación pre-operatoria. Los números no se guardan: si vuelves '
-            . 'a la consulta, el resumen queda como texto y los campos abren vacíos.';
+        return 'Los valores se guardan en la consulta y se vuelven a mostrar cuando la abrís de nuevo. Al guardar se '
+            . 'compone el resumen de laboratorio (urea, creatinina, electrolitos, hemograma y orina), que es lo que '
+            . 'imprimen el resumen médico y la evaluación pre-operatoria. Los gases, el volumen urinario, el sodio '
+            . 'urinario y la creatinina calculada se guardan, pero no entran en ese resumen.';
     }
 
     /** El aviso de cambios sin guardar (lo usa `consulta.js` por `data-aviso`). */

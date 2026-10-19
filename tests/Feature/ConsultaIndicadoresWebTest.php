@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Consulta;
+use App\Models\ExamenPacienteConsulta;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -22,10 +23,11 @@ use Tests\TestCase;
  *
  * Lo que se fija:
  *  - la sección es el **ítem 5 de pediatría** y sólo existe con el postgrado de nefrología;
- *  - muestra los 26 campos y el resumen guardado (o el estado vacío);
- *  - guardar **compone el texto** y lo deja en `consultas.resultadoexamencomp`, con su rastro en `sync_changes`
- *    (`source = web`, por columna) y sin crear una fila vacía cuando no hay valores;
- *  - la secretaría no la usa (403), como todas las secciones clínicas de la consulta.
+ *  - muestra los 33 campos con **los valores guardados** y el resumen de la consulta;
+ *  - guardar escribe **las dos cosas**: los números en `examenes_paciente_consulta` (`hhistoria` + `hconsulta`) y
+ *    el texto compuesto en `consultas.resultadoexamencomp`, cada uno con su rastro en `sync_changes`
+ *    (`source = web`, por columna); sin valores no crea la fila;
+ *  - la secretaría no la usa (403).
  */
 class ConsultaIndicadoresWebTest extends TestCase
 {
@@ -104,38 +106,35 @@ class ConsultaIndicadoresWebTest extends TestCase
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        // Sin el postgrado, la sección no está en el catálogo: cae en el estado vacío del shell.
         $this->conContexto($user, $medico, $pediatria)->get($this->url($consulta))
             ->assertOk()->assertSee('Elige una sección en el menú');
 
         $this->conNefrologia($medico);
 
         $this->conContexto($user, $medico->fresh(), $pediatria)->get($this->url($consulta))
-            ->assertOk()->assertSee('Indicadores incidentes')
-            ->assertSee('Sin cargar');
+            ->assertOk()->assertSee('Indicadores incidentes')->assertSee('Sin cargar');
     }
 
-    public function test_la_pantalla_muestra_los_campos_y_el_resumen_guardado(): void
+    public function test_la_pantalla_muestra_los_valores_guardados_y_el_resumen(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $this->conNefrologia($medico);
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $this->conContexto($user, $medico, $pediatria)->get($this->url($consulta))
-            ->assertOk()
-            ->assertSee('UREA')->assertSee('Cr s')->assertSee('Na')
-            ->assertSee('Ac Uu')->assertSee('Ca u')
-            ->assertSee('Sangre')->assertSee('Orina')
-            ->assertSee('todavía no tiene un resumen');
-
-        // Con un resumen guardado, se muestra y la pastilla lo dice.
+        // La fila del panel con dos números y el resumen en la consulta (como los deja el escritorio).
+        ExamenPacienteConsulta::create([
+            'hhistoria' => 1001, 'hconsulta' => 1, 'urea' => 30, 'sodio' => 140, 'g_v_ph' => 7.35,
+        ]);
         $consulta->forceFill(['resultadoexamencomp' => 'UREA: 30. Na: 140.'])->save();
 
         $this->conContexto($user, $medico, $pediatria)->get($this->url($consulta))
-            ->assertOk()->assertSee('Cargado')->assertSee('UREA: 30. Na: 140.');
+            ->assertOk()
+            ->assertSee('UREA')->assertSee('Cr s')->assertSee('Na u')->assertSee('Gases')
+            ->assertSee('value="30"', false)->assertSee('value="140"', false)->assertSee('value="7.35"', false)
+            ->assertSee('Cargado')->assertSee('UREA: 30. Na: 140.');
     }
 
-    public function test_guardar_compone_el_texto_y_deja_su_rastro(): void
+    public function test_guardar_escribe_los_numeros_y_el_resumen_con_su_rastro(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $this->conNefrologia($medico);
@@ -143,40 +142,47 @@ class ConsultaIndicadoresWebTest extends TestCase
 
         $this->conContexto($user, $medico, $pediatria)
             ->post(route('clinica.consulta.indicadores.guardar', $consulta->id), [
-                'urea' => '30', 'sodio' => '140', 'calcio' => '9,5',
+                'urea' => '30', 'sodio' => '140', 'calcio' => '9,5', 'ph' => '7.35',
             ])
             ->assertRedirect($this->url($consulta))
             ->assertSessionHas('estado');
 
-        $this->assertSame(
-            'UREA: 30. Na: 140. Ca: 9,5.',
-            (string) $consulta->fresh()->resultadoexamencomp,
-        );
+        // 1) Los números, en la fila del panel (clave del DataWindow: hhistoria + hconsulta).
+        $fila = ExamenPacienteConsulta::where('hhistoria', 1001)->where('hconsulta', 1)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame(30.0, (float) $fila->urea);
+        $this->assertSame(140.0, (float) $fila->sodio);
+        $this->assertEqualsWithDelta(9.5, (float) $fila->calcio, 0.0001);
+        $this->assertEqualsWithDelta(7.35, (float) $fila->g_v_ph, 0.0001);
 
-        // El rastro del sync: la columna, con `source = web` (la sube el escritorio; sin rastro, una edición vieja
-        // la pisaría).
-        $rastro = SyncChange::where('table_name', 'consultas')
-            ->where('record_id', $consulta->id)
-            ->where('column_name', 'resultadoexamencomp')
-            ->first();
+        // 2) El resumen compuesto, sin los gases (no entran en el texto) y con la coma normalizada.
+        $this->assertSame('UREA: 30. Na: 140. Ca: 9.5.', (string) $consulta->fresh()->resultadoexamencomp);
 
-        $this->assertNotNull($rastro);
-        $this->assertSame('web', $rastro->source);
-        $this->assertSame('updated', $rastro->operation);
+        // 3) Los rastros: uno por columna de la tabla y uno del texto en la consulta.
+        foreach (['urea', 'sodio', 'calcio', 'g_v_ph'] as $columna) {
+            $rastro = SyncChange::where('table_name', 'examenes_paciente_consulta')
+                ->where('record_id', $fila->id)->where('column_name', $columna)->first();
+            $this->assertNotNull($rastro, 'Falta el rastro de ' . $columna . '.');
+            $this->assertSame('web', $rastro->source);
+        }
+
+        $texto = SyncChange::where('table_name', 'consultas')
+            ->where('record_id', $consulta->id)->where('column_name', 'resultadoexamencomp')->first();
+        $this->assertNotNull($texto);
     }
 
-    public function test_sin_valores_no_se_crea_un_resumen_vacio(): void
+    public function test_sin_valores_no_crea_fila_ni_toca_el_resumen(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $this->conNefrologia($medico);
         [, $consulta] = $this->pacienteYConsulta($medico);
-        $consulta->forceFill(['resultadoexamencomp' => 'UREA: 30.'])->save();
 
         $this->conContexto($user, $medico, $pediatria)
             ->post(route('clinica.consulta.indicadores.guardar', $consulta->id), ['urea' => ''])
-            ->assertSessionHas('error');
+            ->assertSessionHas('estado');
 
-        $this->assertSame('UREA: 30.', (string) $consulta->fresh()->resultadoexamencomp);
+        $this->assertSame(0, ExamenPacienteConsulta::count());
+        $this->assertNull($consulta->fresh()->resultadoexamencomp);
     }
 
     public function test_un_valor_que_no_es_numero_se_rechaza_y_no_borra_lo_escrito(): void
@@ -191,7 +197,7 @@ class ConsultaIndicadoresWebTest extends TestCase
             ->assertRedirect($this->url($consulta))
             ->assertSessionHasErrors('urea');
 
-        $this->assertNull($consulta->fresh()->resultadoexamencomp);
+        $this->assertSame(0, ExamenPacienteConsulta::count());
     }
 
     public function test_la_secretaria_no_puede_guardar(): void
@@ -206,8 +212,6 @@ class ConsultaIndicadoresWebTest extends TestCase
         ]);
         $secretaria->assignRole('Secretaria');
 
-        // La secretaría del consultorio: el contexto le da acceso al `reg_medico` del médico (el pivote con
-        // `user_id`), pero el grupo de rutas de la consulta es `role:Root|Medico` y la deja afuera.
         MedicoRegistro::where('medico_id', $medico->id)
             ->where('reg_medico', $medico->reg_medico)
             ->update(['user_id' => $secretaria->id]);
@@ -216,6 +220,6 @@ class ConsultaIndicadoresWebTest extends TestCase
             ->post(route('clinica.consulta.indicadores.guardar', $consulta->id), ['urea' => '30'])
             ->assertForbidden();
 
-        $this->assertNull($consulta->fresh()->resultadoexamencomp);
+        $this->assertSame(0, ExamenPacienteConsulta::count());
     }
 }
