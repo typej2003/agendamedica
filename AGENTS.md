@@ -160,8 +160,18 @@ consulta.
   hoja con la intervención, la evaluación pre-anestésica (tipo, resultado y emergencia), el riesgo con sus **puntos** y
   su clase, y la conclusión. Icono en `DocumentosParaImprimir`. Test: uno de
   `Feature/ConsultaEndoscopiaImpresionWebTest` (4 en total).
+- **Dosis pediátrica por peso en los récipes (2026-10-19)**: `App\Clinica\Consulta\DosisPediatrica` es **la fórmula
+  del escritorio** (`pw9_ws/w_agregar_nueva_gesta_medicamento.srw:223-254`): el peso del examen físico de la consulta
+  (`consultas.peso`), **topeado en 30 kg**; `posologia = (dosis × peso) / cada`; con presentación (`pvc` mg / `pvs` ml)
+  pasa a **ml** (`pvs × posologia / pvc`) y con concentración a **gotas**; el rótulo usa `24 / cada` **truncado a
+  entero** (la rareza del `integer hot`) y la rama sin presentación escribe «mg» y «días» en minúscula. Si el
+  vademécum dice `dosificacion <> 'SI'`, queda su `uso`. `RecipesDeLaConsulta::medicamentos()` trae las columnas de la
+  dosis y `ConsultaRecipesController::medicamentos()` devuelve **`indicacionSugerida`** y **`dosisCalculada`** con el
+  peso de la consulta; `consulta-recipes.js` la carga en el campo de indicaciones (editable) y la muestra al pasar por
+  encima. Tests: `Unit/Clinica/DosisPediatricaTest` (7) y `Feature/ConsultaRecipesDosisWebTest` (3).
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
-  postgrados y sus informes impresos están implementados.
+  postgrados y sus informes impresos están implementados. Del vademécum, la web todavía **no edita** las columnas de la
+  dosis (`dosificacion`, `dosis`, `cada`, `durante`, `pvc`, `pvs`, `concentracion`): llegan por el sync del escritorio.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
