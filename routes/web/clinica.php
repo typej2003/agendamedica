@@ -56,6 +56,7 @@ use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
 use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
 use App\Http\Controllers\Clinica\ConsultaIntervencionesController;
 use App\Http\Controllers\Clinica\ConsultaQuirurgicoController;
+use App\Http\Controllers\Clinica\ConsultaRiesgoQuirurgicoController;
 use App\Http\Controllers\Clinica\ConsultaImagenesController;
 use App\Http\Controllers\Clinica\ConsultaMotivosController;
 use App\Http\Controllers\Clinica\ConsultaRecipeParejaController;
@@ -376,6 +377,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                     ->name('consulta.intervenciones.guardar');
                 Route::delete('/consulta/{consulta}/intervenciones/{codigo}', [ConsultaIntervencionesController::class, 'quitar'])
                     ->where('codigo', '[A-Za-z0-9]{1,3}')->name('consulta.intervenciones.quitar');
+                Route::post('/consulta/{consulta}/riesgo-quirurgico', [ConsultaRiesgoQuirurgicoController::class, 'guardar'])
+                    ->name('consulta.riesgo.guardar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

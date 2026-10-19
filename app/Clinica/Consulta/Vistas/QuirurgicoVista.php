@@ -30,7 +30,14 @@ final class QuirurgicoVista
         private bool $cargada = false,
         private bool $emergencia = false,
         private string $urlAgregarIntervencion = '',
+        private ?RiesgoQuirurgicoVista $riesgo = null,
     ) {
+    }
+
+    /** El riesgo quirúrgico, cuando la pestaña activa es la suya. */
+    public function riesgo(): ?RiesgoQuirurgicoVista
+    {
+        return $this->riesgo;
     }
 
     public function pestana(): string

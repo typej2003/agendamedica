@@ -71,6 +71,8 @@ use App\Clinica\Consulta\NeumologiaDeLaConsulta;
 use App\Clinica\Consulta\EndoscopiaDigestiva;
 use App\Clinica\Consulta\EvaluacionPreoperatoria;
 use App\Clinica\Consulta\IntervencionesDeLaConsulta;
+use App\Clinica\Consulta\RiesgoQuirurgico;
+use App\Clinica\Consulta\Vistas\RiesgoQuirurgicoVista;
 use App\Clinica\Consulta\Vistas\QuirurgicoVista;
 use App\Clinica\Consulta\Vistas\ProcedimientosVista;
 use App\Clinica\Consulta\Vistas\HospitalizacionVista;
@@ -1134,7 +1136,7 @@ class ConsultaController extends Controller
             // **I.Q.** (cirugía pediátrica, 2026-10-19): el último ítem del árbol. Esta entrega es la evaluación
             // pre-operatoria (`tabpage_32`); las pestañas de intervenciones y riesgo quedan pendientes.
             $pestana = (string) request()->query('pestana', QuirurgicoVista::PREOPERATORIA);
-            if (! in_array($pestana, [QuirurgicoVista::INTERVENCIONES, QuirurgicoVista::PREOPERATORIA], true)) {
+            if (! in_array($pestana, [QuirurgicoVista::INTERVENCIONES, QuirurgicoVista::PREOPERATORIA, QuirurgicoVista::RIESGO], true)) {
                 $pestana = QuirurgicoVista::PREOPERATORIA;
             }
 
@@ -1144,6 +1146,7 @@ class ConsultaController extends Controller
 
             $lecturaIntervenciones = new IntervencionesDeLaConsulta();
             $intervenciones = $lecturaIntervenciones->de($consulta);
+            $riesgoLectura = new RiesgoQuirurgico();
 
             $url = fn (string $clave) => route('clinica.consulta', [
                 $consulta->id,
@@ -1174,9 +1177,48 @@ class ConsultaController extends Controller
                     'activa' => $pestana === QuirurgicoVista::INTERVENCIONES, 'cargada' => $intervenciones->isNotEmpty(), 'pendiente' => false],
                 ['clave' => QuirurgicoVista::PREOPERATORIA, 'texto' => 'Evaluación pre-operatoria', 'url' => $url(QuirurgicoVista::PREOPERATORIA),
                     'activa' => $pestana === QuirurgicoVista::PREOPERATORIA, 'cargada' => $cargada, 'pendiente' => false],
-                ['clave' => QuirurgicoVista::RIESGO, 'texto' => 'Riesgo quirúrgico', 'url' => '', 'activa' => false,
-                    'cargada' => false, 'pendiente' => true],
+                ['clave' => QuirurgicoVista::RIESGO, 'texto' => 'Riesgo quirúrgico', 'url' => $url(QuirurgicoVista::RIESGO),
+                    'activa' => $pestana === QuirurgicoVista::RIESGO, 'cargada' => $riesgoLectura->marcados($consulta)->isNotEmpty(), 'pendiente' => false],
             ];
+
+            // La solapa del riesgo quirúrgico: el catálogo del médico agrupado por `sub_tipo`, lo marcado al paciente
+            // y el resumen de la consulta.
+            $riesgo = null;
+
+            if ($pestana === QuirurgicoVista::RIESGO) {
+                $marcadas = $riesgoLectura->descripcionesMarcadas($consulta);
+                $resumen = $riesgoLectura->de($consulta);
+                $grupos = [];
+
+                foreach ($riesgoLectura->catalogo()->groupBy('sub_tipo') as $subTipo => $factores) {
+                    $grupos[] = [
+                        'titulo'   => $subTipo !== null && $subTipo !== '' ? (string) $subTipo : 'Factores',
+                        'factores' => $factores->map(fn ($factor) => [
+                            'descripcion' => (string) $factor->descripcion,
+                            'puntos'      => (int) $factor->puntos,
+                            'marcado'     => in_array((string) $factor->descripcion, $marcadas, true),
+                        ])->all(),
+                    ];
+                }
+
+                $camposRiesgo = [];
+                foreach (RiesgoQuirurgico::camposDelResumen() as $clave => $campo) {
+                    $camposRiesgo[] = [
+                        'clave'    => $clave,
+                        'etiqueta' => $campo['etiqueta'],
+                        'clase'    => $campo['clase'],
+                        'valor'    => (string) old($clave, $resumen[$clave] ?? ''),
+                    ];
+                }
+
+                $riesgo = new RiesgoQuirurgicoVista(
+                    $grupos,
+                    $camposRiesgo,
+                    $riesgoLectura->puntos($consulta),
+                    route('clinica.consulta.riesgo.guardar', $consulta->id),
+                    $url(QuirurgicoVista::RIESGO),
+                );
+            }
 
             return new QuirurgicoVista(
                 $pestana,
@@ -1188,6 +1230,7 @@ class ConsultaController extends Controller
                 $pestana === QuirurgicoVista::INTERVENCIONES ? $intervenciones->isNotEmpty() : $cargada,
                 ($valores['emergencia'] ?? null) === EvaluacionPreoperatoria::EMERGENCIA_SI,
                 route('clinica.consulta.intervenciones.guardar', $consulta->id),
+                $riesgo,
             );
         }
 

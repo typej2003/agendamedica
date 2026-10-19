@@ -29,7 +29,9 @@
 
         <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
 
-        @if ($seccion->esPestana('intervenciones'))
+        @if ($seccion->esPestana('riesgo'))
+            @include('clinica.consulta._quirurgico-riesgo', ['seccion' => $seccion])
+        @elseif ($seccion->esPestana('intervenciones'))
             {{-- Las intervenciones: una fila por intervención (`interven_consulta`). --}}
             @if ($seccion->tieneIntervenciones())
                 <div class="table-responsive mb-3">

@@ -9,6 +9,9 @@ use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\PreAnestesico;
+use App\Models\Riesgo;
+use App\Models\RiesgoPaciente;
+use App\Models\RiesgoPacienteOpera;
 use App\Models\Specialty;
 use App\Models\Subspecialty;
 use App\Models\SyncChange;
@@ -115,7 +118,7 @@ class ConsultaQuirurgicoWebTest extends TestCase
             ->assertOk()
             ->assertSee('Evaluación pre-operatoria')
             ->assertSee('Intervenciones')->assertSee('Riesgo quirúrgico')
-            ->assertSee('(próximamente)')
+            ->assertDontSee('(próximamente)')
             ->assertSee('Sin cargar');
     }
 
@@ -250,6 +253,62 @@ class ConsultaQuirurgicoWebTest extends TestCase
         $this->assertSame(0, IntervencionConsulta::count());
         $this->assertNotNull(SyncChange::where('table_name', 'interven_consulta')
             ->where('operation', 'deleted')->first());
+    }
+
+    public function test_la_pestana_de_riesgo_muestra_el_catalogo_y_lo_marcado(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conCirugia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        Riesgo::create(['reg_medico' => $medico->reg_medico, 'clave' => 1, 'puntos' => 2,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio']);
+        Riesgo::create(['reg_medico' => $medico->reg_medico, 'clave' => 2, 'puntos' => 3,
+            'descripcion' => 'Desnutrición', 'sub_tipo' => 'Nutricional']);
+        RiesgoPaciente::create(['reg_medico' => $medico->reg_medico, 'historia' => 1001,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio', 'punto' => 2]);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'quirurgico', 'pestana' => 'riesgo']))
+            ->assertOk()
+            ->assertSee('Respiratorio')->assertSee('Asma')->assertSee('Desnutrición')
+            ->assertSee('Puntos totales:')->assertSee('2');
+    }
+
+    public function test_guardar_el_riesgo_marca_y_desmarca_con_su_resumen(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conCirugia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        Riesgo::create(['reg_medico' => $medico->reg_medico, 'clave' => 1, 'puntos' => 2,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio']);
+        Riesgo::create(['reg_medico' => $medico->reg_medico, 'clave' => 2, 'puntos' => 3,
+            'descripcion' => 'Desnutrición', 'sub_tipo' => 'Nutricional']);
+        // Ya estaba marcado uno: al guardar sólo el otro, el primero se da de baja.
+        RiesgoPaciente::create(['reg_medico' => $medico->reg_medico, 'historia' => 1001,
+            'descripcion' => 'Desnutrición', 'sub_tipo' => 'Nutricional', 'punto' => 3]);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->post(route('clinica.consulta.riesgo.guardar', $consulta->id), [
+                'marcadas' => ['Asma'], 'clase' => 'II', 'conclusion' => 'Riesgo moderado.',
+            ])
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'quirurgico', 'pestana' => 'riesgo']))
+            ->assertSessionHas('estado');
+
+        $this->assertSame(['Asma'], RiesgoPaciente::where('historia', 1001)->pluck('descripcion')->all());
+
+        $resumen = RiesgoPacienteOpera::where('historia', 1001)->first();
+        $this->assertNotNull($resumen);
+        $this->assertSame(2, (int) $resumen->puntos);
+        $this->assertSame('II', $resumen->clase);
+        $this->assertSame('Riesgo moderado.', $resumen->conclusion);
+
+        // Rastro: las dos operaciones sobre lo marcado y el resumen.
+        $this->assertNotNull(SyncChange::where('table_name', 'riesgo_paciente')->where('operation', 'created')->first());
+        $this->assertNotNull(SyncChange::where('table_name', 'riesgo_paciente')->where('operation', 'deleted')->first());
+        $this->assertNotNull(SyncChange::where('table_name', 'riesgo_paciente_opera')
+            ->where('operation', 'created')->first());
     }
 
     public function test_la_secretaria_no_puede_guardar(): void
