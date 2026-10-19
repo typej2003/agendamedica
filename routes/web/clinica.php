@@ -51,6 +51,7 @@ use App\Http\Controllers\Clinica\ConsultaMedicionesController;
 use App\Http\Controllers\Clinica\ConsultaMamasController;
 use App\Http\Controllers\Clinica\ConsultaImagenDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaEvolucionController;
+use App\Http\Controllers\Clinica\ConsultaEcoRenalController;
 use App\Http\Controllers\Clinica\ConsultaIndicadoresController;
 use App\Http\Controllers\Clinica\ConsultaNeumologiaController;
 use App\Http\Controllers\Clinica\ConsultaProcedimientosController;
@@ -362,6 +363,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del
                 // ítem 5 de pediatría. Compone un texto y lo deja en `consultas.resultadoexamencomp`.
                 Route::post('/consulta/{consulta}/indicadores', [ConsultaIndicadoresController::class, 'guardar'])->name('consulta.indicadores.guardar');
+
+                // **Eco renal** (nefrología pediátrica, 2026-10-19): la segunda solapa de Indicadores incidentes.
+                Route::post('/consulta/{consulta}/eco-renal', [ConsultaEcoRenalController::class, 'guardar'])->name('consulta.eco-renal.guardar');
 
                 // **Neumología pediátrica** (postgrado, 2026-10-19): los tres informes de la solapa del examen.
                 Route::post('/consulta/{consulta}/neumologia', [ConsultaNeumologiaController::class, 'guardar'])->name('consulta.neumologia.guardar');

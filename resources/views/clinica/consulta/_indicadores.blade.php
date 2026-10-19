@@ -17,6 +17,16 @@
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
+        <nav class="pestanas-en-fila mb-3" aria-label="Indicadores">
+            @foreach ($seccion->pestanas() as $pestana)
+                <a class="pestana {{ $pestana['activa'] ? 'activa' : '' }}" href="{{ $pestana['url'] }}"
+                   @if ($pestana['activa']) aria-current="page" @endif>{{ $pestana['texto'] }}</a>
+            @endforeach
+        </nav>
+
+        @if ($seccion->esEcoRenal())
+            @include('clinica.consulta._eco-renal', ['seccion' => $seccion])
+        @else
         <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
 
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="indicadores-form"
@@ -77,6 +87,7 @@
                 Esta consulta todavía no tiene un resumen de laboratorio. Escribe los valores y guardalos: el texto se
                 arma solo.
             </p>
+        @endif
         @endif
     </x-ui.tarjeta>
 </div>

@@ -72,6 +72,8 @@ use App\Clinica\Consulta\EndoscopiaDigestiva;
 use App\Clinica\Consulta\EvaluacionPreoperatoria;
 use App\Clinica\Consulta\IntervencionesDeLaConsulta;
 use App\Clinica\Consulta\RiesgoQuirurgico;
+use App\Clinica\Consulta\EcoRenal;
+use App\Clinica\Consulta\Vistas\EcoRenalVista;
 use App\Clinica\Consulta\Vistas\RiesgoQuirurgicoVista;
 use App\Clinica\Consulta\Vistas\QuirurgicoVista;
 use App\Clinica\Consulta\Vistas\ProcedimientosVista;
@@ -1039,14 +1041,43 @@ class ConsultaController extends Controller
         if ($seccion === ConsultaShellVista::SECCION_INDICADORES) {
             // **Indicadores incidentes** (nefrología pediátrica, 2026-10-19): el panel de laboratorio del ítem 5
             // pediátrico. Los números viven en `examenes_paciente_consulta` y el resumen compuesto en
-            // `consultas.resultadoexamencomp`, como en el escritorio.
+            // `consultas.resultadoexamencomp`, como en el escritorio. Su segunda solapa es el **eco renal**, que el
+            // escritorio abre desde ese mismo panel (`w_cargar_visualizar_renal`).
+            $pestana = (string) request()->query('pestana', IndicadoresIncidentesVista::INDICADORES);
+            $pestana = $pestana === IndicadoresIncidentesVista::RENAL ? IndicadoresIncidentesVista::RENAL : IndicadoresIncidentesVista::INDICADORES;
+
+            $volver = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]);
+
+            $ecoRenal = null;
+
+            if ($pestana === IndicadoresIncidentesVista::RENAL) {
+                $lecturaRenal = new EcoRenal();
+                $tiposRenal = [];
+
+                foreach (EcoRenal::campos() as $clave => $campo) {
+                    $tiposRenal[$clave] = ['etiqueta' => $campo['etiqueta'], 'clase' => $campo['clase']];
+                }
+
+                $ecoRenal = new EcoRenalVista(
+                    EcoRenal::grupos(),
+                    $tiposRenal,
+                    $lecturaRenal->de($consulta),
+                    route('clinica.consulta.eco-renal.guardar', $consulta->id),
+                    $volver,
+                    (array) old(),
+                    $lecturaRenal->tieneDatos($consulta),
+                );
+            }
+
             return new IndicadoresIncidentesVista(
                 IndicadoresIncidentes::grupos(),
                 (new IndicadoresIncidentes())->de($consulta),
                 IndicadoresIncidentes::textoGuardado($consulta),
                 route('clinica.consulta.indicadores.guardar', $consulta->id),
-                route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_INDICADORES]),
+                $volver,
                 (array) old(),
+                $pestana,
+                $ecoRenal,
             );
         }
 

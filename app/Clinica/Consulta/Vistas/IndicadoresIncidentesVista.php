@@ -21,6 +21,9 @@ final class IndicadoresIncidentesVista
      * @param  string  $urlGuardar  a dónde postea "Guardar"
      * @param  string  $urlVolver  la vuelta a la sección (el "Cancelar" de la guía de UI)
      * @param  array<string,mixed>  $old  lo escrito en un POST que falló la validación (no se borra, guía de UI §3)
+     * @param  string  $pestana  `indicadores` o `renal`: la solapa activa de la sección
+     * @param  EcoRenalVista|null  $ecoRenal  el eco renal, cuando la solapa activa es la suya (el escritorio lo abre
+     *                                        desde el botón del panel de indicadores)
      */
     public function __construct(
         private array $grupos,
@@ -29,7 +32,38 @@ final class IndicadoresIncidentesVista
         private string $urlGuardar,
         private string $urlVolver = '',
         private array $old = [],
+        private string $pestana = self::INDICADORES,
+        private ?EcoRenalVista $ecoRenal = null,
     ) {
+    }
+
+    public const INDICADORES = 'indicadores';
+    public const RENAL = 'renal';
+
+    public function pestana(): string
+    {
+        return $this->pestana;
+    }
+
+    public function esEcoRenal(): bool
+    {
+        return $this->pestana === self::RENAL;
+    }
+
+    public function ecoRenal(): ?EcoRenalVista
+    {
+        return $this->ecoRenal;
+    }
+
+    /** Las solapas de la sección, con su URL y si están activas. @return array<int,array{clave:string, texto:string, url:string, activa:bool}> */
+    public function pestanas(): array
+    {
+        $url = fn (string $clave) => $this->urlVolver . (str_contains($this->urlVolver, '?') ? '&' : '?') . 'pestana=' . $clave;
+
+        return [
+            ['clave' => self::INDICADORES, 'texto' => 'Indicadores', 'url' => $url(self::INDICADORES), 'activa' => ! $this->esEcoRenal()],
+            ['clave' => self::RENAL, 'texto' => 'Eco renal', 'url' => $url(self::RENAL), 'activa' => $this->esEcoRenal()],
+        ];
     }
 
     /**

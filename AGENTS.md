@@ -139,9 +139,17 @@ consulta.
   `ConsultaQuirurgicoController`, `ConsultaIntervencionesController` y `ConsultaRiesgoQuirurgicoController`. Modelos
   `IntervencionConsulta`, `PreAnestesico`, `Riesgo`, `RiesgoPaciente` y `RiesgoPacienteOpera`. Tests:
   `Unit/Clinica/EvaluacionPreoperatoriaTest` (2) y `Feature/ConsultaQuirurgicoWebTest` (10).
-- **Falta**: la **ecografía pediátrica** (la abdominal ya se abre desde Procedimientos y la renal desde Indicadores),
-  el formato en blanco de los paneles nuevos y el informe impreso de endoscopías y cirugía. Detalle y evidencia del
-  fuente en `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
+- **Eco renal (nefrología pediátrica, 2026-10-19)**: la **segunda solapa de Indicadores incidentes**, que es de donde
+  el escritorio lo abre (`w_cargar_visualizar_renal`, DataWindow `d_ultra_rinom`). Una fila por consulta en
+  **`ultra_renal`** (clave `historia` + `consulta`), con las medidas de los dos riñones por prefijo (`rd_*` derecho,
+  `ri_*` izquierdo: longitud, transverso, anteroposterior, complejo, LOE, litiasis y dilatación), más el texto básico,
+  la conclusión, la sugerencia, los médicos y los datos del equipo. `EcoRenal` es el mapa, `GuardarEcoRenal` la
+  escritura (sólo lo cambiado, rastro por columna), `EcoRenalVista` + `_eco-renal.blade.php` la pantalla,
+  `ConsultaEcoRenalController` la ruta `POST /clinica/consulta/{consulta}/eco-renal` y `UltraRenal` el modelo. Tests:
+  `Unit/Clinica/EcoRenalTest` (2) y dos de `Feature/ConsultaIndicadoresWebTest`.
+- **Falta**: el formato en blanco de los paneles nuevos (endoscopías, cirugía, indicadores y eco renal) y el informe
+  impreso de endoscopías y cirugía. Detalle y evidencia del fuente en
+  `../Docs/Web/observaciones-pendientes.md` (O-35 y O-36) y `../Docs/Web/relevamiento-pediatria.md` §8.5.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 

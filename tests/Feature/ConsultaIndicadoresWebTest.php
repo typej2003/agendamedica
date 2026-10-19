@@ -200,6 +200,45 @@ class ConsultaIndicadoresWebTest extends TestCase
         $this->assertSame(0, ExamenPacienteConsulta::count());
     }
 
+    public function test_la_solapa_del_eco_renal_abre_el_formulario(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conNefrologia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'indicadores', 'pestana' => 'renal']))
+            ->assertOk()
+            ->assertSee('Eco renal')
+            ->assertSee('Riñón derecho')->assertSee('Riñón izquierdo')
+            ->assertSee('Guardar el eco renal');
+    }
+
+    public function test_guardar_el_eco_renal_escribe_su_tabla_con_rastro(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->conNefrologia($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->post(route('clinica.consulta.eco-renal.guardar', $consulta->id), [
+                'rd_longitud' => '7.2', 'ri_longitud' => '7.8', 'conlusion' => 'Riñones de tamaño normal.',
+            ])
+            ->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'indicadores', 'pestana' => 'renal']))
+            ->assertSessionHas('estado');
+
+        $fila = \App\Models\UltraRenal::where('historia', 1001)->first();
+        $this->assertNotNull($fila);
+        $this->assertEqualsWithDelta(7.2, (float) $fila->rd_longitud, 0.001);
+        $this->assertEqualsWithDelta(7.8, (float) $fila->ri_longitud, 0.001);
+
+        foreach (['rd_longitud', 'ri_longitud', 'conlusion'] as $columna) {
+            $rastro = SyncChange::where('table_name', 'ultra_renal')
+                ->where('record_id', $fila->id)->where('column_name', $columna)->first();
+            $this->assertNotNull($rastro, 'Falta el rastro de ' . $columna . '.');
+        }
+    }
+
     public function test_la_secretaria_no_puede_guardar(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
