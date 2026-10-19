@@ -104,9 +104,39 @@ class ContextoTrabajo
             'medico'         => $acceso['medico'],
             'especialidades' => $acceso['especialidades'],
             'specialty'      => $specialty,
+            // Los **postgrados del médico de esa especialidad** (2026-10-19): son los que encienden módulos y
+            // secciones de la consulta. Se suman todos (decisión del usuario): si hizo dos, ve los dos.
+            'subespecialidades' => $specialty === null
+                ? collect()
+                : $acceso['medico']->subespecialidadesDe($specialty),
             'sedes'          => $acceso['sedes'],
             'office'         => $office,
         ];
+    }
+
+    /**
+     * **Los módulos del menú del contexto**: los de la especialidad **más** los de sus postgrados.
+     *
+     * El postgrado no reemplaza la especialidad: nefrología pediátrica agrega lo suyo a lo que ya da
+     * pediatría, y los módulos repetidos se cuentan una vez (si la especialidad ya lo mostraba, manda su
+     * orden). Misma regla de visibilidad que `Specialty::modulosVisibles()`.
+     *
+     * @param  array<string,mixed>  $contexto
+     * @param  array<int,string>  $roles
+     * @return \Illuminate\Support\Collection<int, \App\Models\ModuloClinico>
+     */
+    public function modulos(array $contexto, array $roles)
+    {
+        $modulos = $contexto['specialty']?->modulosVisibles($roles) ?? collect();
+
+        foreach ($contexto['subespecialidades'] ?? [] as $subespecialidad) {
+            $modulos = $modulos->merge($subespecialidad->modulosVisibles($roles));
+        }
+
+        return $modulos
+            ->unique('slug')
+            ->sortBy(fn ($modulo) => sprintf('%05d-%05d-%s', $modulo->pivot->orden, $modulo->orden, $modulo->nombre))
+            ->values();
     }
 
     /**

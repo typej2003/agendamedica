@@ -32,6 +32,17 @@ class Specialty extends Model
         return $this->belongsToMany(Medico::class, 'medico_specialty', 'specialty_id', 'medico_id');
     }
 
+    /**
+     * Las **subespecialidades (postgrados)** que cuelgan de esta especialidad (2026-10-19): nefrología
+     * pediátrica, neumología pediátrica… El catálogo lo siembran los manifiestos.
+     */
+    public function subespecialidades()
+    {
+        return $this->hasMany(Subspecialty::class, 'specialty_id')
+            ->orderBy('orden')
+            ->orderBy('nombre');
+    }
+
     public function modulos(): BelongsToMany
     {
         return $this->belongsToMany(ModuloClinico::class, 'especialidad_modulo', 'specialty_id', 'modulo_id')

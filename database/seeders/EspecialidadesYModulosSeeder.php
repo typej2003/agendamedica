@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Especialidades\RegistroEspecialidades;
 use App\Models\ModuloClinico;
 use App\Models\Specialty;
+use App\Models\Subspecialty;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 
@@ -91,6 +92,17 @@ class EspecialidadesYModulosSeeder extends Seeder
         'pediatria'   => ['crecimiento' => ['Medico'], 'vacunas' => ['Medico']],
     ];
 
+    /**
+     * Módulos que enciende cada **subespecialidad** que ya tienen pantalla (2026-10-19): slug del postgrado =>
+     * [módulo => roles]. Lo declarado en el manifiesto que no esté acá se siembra **oculto**, igual que los
+     * módulos de una especialidad.
+     *
+     * Hoy ningún postgrado enciende un módulo del menú: sus pantallas viven **dentro de la consulta**
+     * (Indicadores incidentes, espirometría, endoscopías, quirúrgico, ecografía pediátrica) y se declaran como
+     * `secciones` en el manifiesto. El mapa existe para el día que alguna sume una entrada propia.
+     */
+    private const SUBESPECIALIDAD_IMPLEMENTADA = [];
+
     public function run(): void
     {
         $registro = new RegistroEspecialidades();
@@ -133,6 +145,56 @@ class EspecialidadesYModulosSeeder extends Seeder
         }
 
         $this->sembrarElNucleo();
+        $this->sembrarSubespecialidades($registro);
+    }
+
+    /**
+     * Las **subespecialidades (postgrados)** que declara cada manifiesto y los módulos del menú que encienden
+     * (2026-10-19). Es idempotente: la fila del postgrado se actualiza por `slug` y el pivote se completa sin
+     * borrar lo que ya estaba.
+     */
+    private function sembrarSubespecialidades(RegistroEspecialidades $registro): void
+    {
+        foreach ($registro->todos() as $manifiesto) {
+            $specialty = Specialty::where('slug', $manifiesto->specialtySlug)->first();
+
+            if ($specialty === null) {
+                continue;
+            }
+
+            foreach ($manifiesto->subespecialidades as $declarada) {
+                $subspecialty = Subspecialty::firstOrNew(['slug' => $declarada['slug']]);
+                $subspecialty->fill([
+                    'specialty_id' => $specialty->id,
+                    'nombre'       => $declarada['nombre'],
+                    'codigo'       => $declarada['codigo'],
+                    'orden'        => $declarada['orden'],
+                    'activo'       => true,
+                ])->save();
+
+                foreach ($declarada['modulos'] as $slug) {
+                    if (! isset(self::MODULOS[$slug])) {
+                        throw new RuntimeException(
+                            "La subespecialidad '{$declarada['slug']}' declara el módulo '{$slug}', que no está en el"
+                            . ' catálogo de ' . self::class . '::MODULOS.'
+                        );
+                    }
+
+                    [$nombre, $orden] = self::MODULOS[$slug];
+                    $modulo = ModuloClinico::firstOrCreate(['slug' => $slug], ['nombre' => $nombre, 'orden' => $orden]);
+
+                    $implementados = self::SUBESPECIALIDAD_IMPLEMENTADA[$declarada['slug']] ?? [];
+
+                    $subspecialty->modulos()->syncWithoutDetaching([
+                        $modulo->id => [
+                            'implementado' => array_key_exists($slug, $implementados),
+                            'visible_para' => $implementados[$slug] ?? null,
+                            'orden'        => $orden,
+                        ],
+                    ]);
+                }
+            }
+        }
     }
 
     /**

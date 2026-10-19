@@ -69,6 +69,65 @@ return [
     ],
 
     /*
+    |--------------------------------------------------------------------------
+    | SUBESPECIALIDADES (postgrados) de pediatría (2026-10-19)
+    |--------------------------------------------------------------------------
+    |
+    | Pediatría no es una sola cosa: un pediatra puede hacer uno o más postgrados y la consulta de
+    | PediaReport cambia con ellos. En el escritorio eso **no es un dato**: la ventana trae las pestañas de
+    | todas las subespecialidades y cada instalación deja visibles las suyas (medido en
+    | `Docs/MICONSULTAGI-legado/fuentes-pediatria`, 2026-10-19):
+    |
+    |  - nefrología pediátrica: el ítem «Indicadores incidentes» (`tabpage_35`: función renal y electrolitos
+    |    urinarios) y la eco renal; la variante nefrológica de la consulta lo llama «NEFROLOGÍA»
+    |    (`w_consulta_principal_modificar.srw:1648`);
+    |  - neumología pediátrica: la pestaña «Neumonología» con R.X. de tórax, espirometría y broncoscopía, y
+    |    la espirometría como solapa del examen (`tab_7` de `w_consulta_principal.srw:8987`);
+    |  - gastroenterología pediátrica: «Procedimientos» con la endoscopía digestiva superior e inferior y la
+    |    eco abdominal (`tabpage_34`);
+    |  - cirugía pediátrica: «I.Q.» con intervenciones, evaluación pre-operatoria y riesgo quirúrgico
+    |    (`tabpage_20`, `tabpage_32`), y el módulo «Control Quirúrgico» del menú;
+    |  - pediatría con ecografía: las ventanas de eco abdominal y renal (no son el «Estudio ecográfico» del
+    |    ítem 5 de ginecología).
+    |
+    | `modulos` enciende entradas del **menú** (tabla `subespecialidad_modulo`, con `implementado`); `secciones`
+    | enciende ítems de la **consulta** (catálogo de `SeccionesDeLaConsulta`, donde el postgrado inserta lo suyo
+    | en el lugar del legado). Los postgrados que el médico tenga **se suman** (decisión del usuario,
+    | 2026-10-19): si hace nefrología y neumología pediátricas ve las dos cosas.
+    |
+    | El `codeespecial` de cirugía pediátrica (`019`) y neurología pediátrica (`024`) existe en el catálogo
+    | `especial` de la base real: son **otras versiones** del escritorio, no postgrados de esta (el 029 es
+    | pediatría). Si algún día se migran, se declaran acá con su código.
+    */
+    'subespecialidades' => [
+        'nefrologia-pediatrica' => [
+            'nombre'    => 'Nefrología pediátrica',
+            'orden'     => 10,
+            'secciones' => ['indicadores'],
+        ],
+        'neumologia-pediatrica' => [
+            'nombre'    => 'Neumología pediátrica',
+            'orden'     => 20,
+            'secciones' => ['neumologia'],
+        ],
+        'gastroenterologia-pediatrica' => [
+            'nombre'    => 'Gastroenterología pediátrica',
+            'orden'     => 30,
+            'secciones' => ['endoscopias'],
+        ],
+        'cirugia-pediatrica' => [
+            'nombre'    => 'Cirugía pediátrica',
+            'orden'     => 40,
+            'secciones' => ['quirurgico'],
+        ],
+        'ecografia-pediatrica' => [
+            'nombre'    => 'Ecografía pediátrica',
+            'orden'     => 50,
+            'secciones' => ['ecografia'],
+        ],
+    ],
+
+    /*
     | Tablas del módulo: las usa SOLO esta especialidad (30 de las 56 que el API no tenía). Las que
     | comparte con otra versión del escritorio van en `compartidas`.
     */

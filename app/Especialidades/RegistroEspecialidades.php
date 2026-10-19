@@ -83,7 +83,19 @@ final class RegistroEspecialidades
     {
         $duenios = [];
 
+        // El slug de una subespecialidad es único en toda la base (es la clave estable que usan el
+        // manifiesto y la siembra): dos especialidades no pueden declarar el mismo.
+        $subespecialidades = [];
+
         foreach ($this->manifiestos as $slug => $manifiesto) {
+            foreach ($manifiesto->subespecialidades as $clave => $subespecialidad) {
+                if (isset($subespecialidades[$clave])) {
+                    $this->conflictos[] = "la subespecialidad '{$clave}' está declarada en '{$subespecialidades[$clave]}' y en '{$slug}'";
+                } else {
+                    $subespecialidades[$clave] = $slug;
+                }
+            }
+
             foreach ($manifiesto->propias as $tabla) {
                 if (isset($duenios[$tabla])) {
                     $this->conflictos[] = "la tabla '{$tabla}' está declarada como propia en '{$duenios[$tabla]}' y en '{$slug}':"

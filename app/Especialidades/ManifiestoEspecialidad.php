@@ -11,6 +11,8 @@ use InvalidArgumentException;
  * Declara, sin código especial por especialidad:
  *  - cómo la llama el legado (`codigos_legado` / `nombres_legado`), que varía por instalación;
  *  - sus módulos clínicos (los slugs del catálogo `modulos_clinicos`);
+ *  - sus **subespecialidades** (los postgrados de esa especialidad), con los módulos del menú y las secciones
+ *    de la consulta que enciende cada una (2026-10-19);
  *  - sus tablas: `propias` (del módulo), `compartidas` (las usa más de una especialidad) y
  *    `locales` (de la instalación, no se migran: usuarios del escritorio, licencias, respaldos);
  *  - `columnas_nuevas`: columnas nullable agregadas a tablas legadas;
@@ -26,6 +28,8 @@ final class ManifiestoEspecialidad
         public array $codigosLegado = [],
         public array $nombresLegado = [],
         public array $modulos = [],
+        /** @var array<string, array{slug:string, nombre:string, codigo:?string, orden:int, modulos:array<int,string>, secciones:array<int,string>}> */
+        public array $subespecialidades = [],
         public array $propias = [],
         public array $compartidas = [],
         public array $locales = [],
@@ -48,12 +52,88 @@ final class ManifiestoEspecialidad
             codigosLegado: array_map('strval', (array) ($datos['codigos_legado'] ?? [])),
             nombresLegado: array_values((array) ($datos['nombres_legado'] ?? [])),
             modulos: array_values((array) ($datos['modulos'] ?? [])),
+            subespecialidades: self::normalizarSubespecialidades($slug, $datos['subespecialidades'] ?? []),
             propias: array_values((array) ($datos['propias'] ?? [])),
             compartidas: array_values((array) ($datos['compartidas'] ?? [])),
             locales: array_values((array) ($datos['locales'] ?? [])),
             columnasNuevas: (array) ($datos['columnas_nuevas'] ?? []),
             pantallas: (array) ($datos['pantallas'] ?? [])
         );
+    }
+
+    /**
+     * **Las subespecialidades (postgrados) de la especialidad** tal como las declara el manifiesto
+     * (2026-10-19), normalizadas a una lista con la clave `slug`.
+     *
+     * La forma corta es `'slug' => 'Nombre'`; la larga agrega lo que enciende:
+     *
+     * ```php
+     * 'subespecialidades' => [
+     *     'nefrologia-pediatrica' => [
+     *         'nombre'    => 'Nefrología pediátrica',
+     *         'codigo'    => '…',            // opcional: el `codeespecial` del legado, si la tiene
+     *         'orden'     => 10,
+     *         'modulos'   => ['…'],          // módulos del MENÚ que enciende (tabla `subespecialidad_modulo`)
+     *         'secciones' => ['indicadores'],// secciones de la CONSULTA que agrega al catálogo de pediatría
+     *     ],
+     * ],
+     * ```
+     *
+     * Las `secciones` son claves del catálogo de `SeccionesDeLaConsulta`: la consulta de la especialidad
+     * arma su lista y el postgrado inserta las suyas en el lugar del legado.
+     *
+     * @param  array<string, mixed>  $declaradas
+     * @return array<string, array{slug:string, nombre:string, codigo:?string, orden:int, modulos:array<int,string>, secciones:array<int,string>}>
+     */
+    public static function normalizarSubespecialidades(string $especialidad, array $declaradas): array
+    {
+        $salida = [];
+        $posicion = 0;
+
+        foreach ($declaradas as $clave => $datos) {
+            // Forma corta: 'nefrologia-pediatrica' => 'Nefrología pediátrica'.
+            $datos = is_string($datos) ? ['nombre' => $datos] : (array) $datos;
+
+            $slug = trim((string) ($datos['slug'] ?? $clave));
+            if ($slug === '' || ! preg_match('/^[a-z0-9-]+$/', $slug)) {
+                throw new InvalidArgumentException(
+                    "El manifiesto '{$especialidad}' declara la subespecialidad '{$slug}', que no es un slug válido"
+                    . ' (minúsculas, números y guiones).'
+                );
+            }
+
+            $nombre = trim((string) ($datos['nombre'] ?? ''));
+            if ($nombre === '') {
+                throw new InvalidArgumentException(
+                    "La subespecialidad '{$slug}' del manifiesto '{$especialidad}' no declara 'nombre'."
+                );
+            }
+
+            $salida[$slug] = [
+                'slug'      => $slug,
+                'nombre'    => $nombre,
+                'codigo'    => isset($datos['codigo']) ? (string) $datos['codigo'] : null,
+                'orden'     => (int) ($datos['orden'] ?? (($posicion + 1) * 10)),
+                'modulos'   => array_values(array_map('strval', (array) ($datos['modulos'] ?? []))),
+                'secciones' => array_values(array_map('strval', (array) ($datos['secciones'] ?? []))),
+            ];
+
+            $posicion++;
+        }
+
+        return $salida;
+    }
+
+    /** Una subespecialidad declarada por su slug, o `null`. */
+    public function subespecialidad(string $slug): ?array
+    {
+        return $this->subespecialidades[$slug] ?? null;
+    }
+
+    /** Los slugs de todas las subespecialidades declaradas. */
+    public function slugsDeSubespecialidades(): array
+    {
+        return array_keys($this->subespecialidades);
     }
 
     /**
