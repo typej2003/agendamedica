@@ -163,15 +163,18 @@ consulta.
 - **Dosis pediátrica por peso en los récipes (2026-10-19)**: `App\Clinica\Consulta\DosisPediatrica` es **la fórmula
   del escritorio** (`pw9_ws/w_agregar_nueva_gesta_medicamento.srw:223-254`): el peso del examen físico de la consulta
   (`consultas.peso`), **topeado en 30 kg**; `posologia = (dosis × peso) / cada`; con presentación (`pvc` mg / `pvs` ml)
-  pasa a **ml** (`pvs × posologia / pvc`) y con concentración a **gotas**; el rótulo usa `24 / cada` **truncado a
-  entero** (la rareza del `integer hot`) y la rama sin presentación escribe «mg» y «días» en minúscula. Si el
-  vademécum dice `dosificacion <> 'SI'`, queda su `uso`. `RecipesDeLaConsulta::medicamentos()` trae las columnas de la
-  dosis y `ConsultaRecipesController::medicamentos()` devuelve **`indicacionSugerida`** y **`dosisCalculada`** con el
-  peso de la consulta; `consulta-recipes.js` la carga en el campo de indicaciones (editable) y la muestra al pasar por
-  encima. Tests: `Unit/Clinica/DosisPediatricaTest` (7) y `Feature/ConsultaRecipesDosisWebTest` (3).
+  pasa a **ml** (`pvs × posologia / pvc`) y con concentración a **gotas**; el intervalo del rótulo es `24 / cada` (el
+  vademécum guarda **veces al día**) **sin truncar**, a diferencia del `integer hot` del fuente (corregido a pedido del
+  usuario el 2026-10-19). Si el vademécum no dice `dosificacion = 'SI'`, queda su `uso`.
+  `RecipesDeLaConsulta::medicamentos()` trae las columnas de la dosis y `ConsultaRecipesController::medicamentos()`
+  devuelve **`indicacionSugerida`** y **`dosisCalculada`** con el peso de la consulta; `consulta-recipes.js` la carga en
+  el campo de indicaciones (editable) y la muestra al pasar por encima. **El ABM del vademécum ya carga los siete
+  campos** (`dosificacion`, `dosis`, `cada`, `durante`, `pvc`, `pvs`, `concentracion`) en `/clinica/catalogos/medicamentos`,
+  en un bloque «Dosis por kilo»; `dosificacion = 'SI'` es la marca que enciende el cálculo (no hay columna aparte).
+  Tests: `Unit/Clinica/DosisPediatricaTest` (7), `Feature/ConsultaRecipesDosisWebTest` (3) y
+  `Feature/MedicamentoDosisCatalogoWebTest` (4).
 - **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
-  postgrados y sus informes impresos están implementados. Del vademécum, la web todavía **no edita** las columnas de la
-  dosis (`dosificacion`, `dosis`, `cada`, `durante`, `pvc`, `pvs`, `concentracion`): llegan por el sync del escritorio.
+  postgrados y sus informes impresos están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 
