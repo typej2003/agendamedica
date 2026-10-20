@@ -19,23 +19,18 @@
 
 <x-ui.tarjeta titulo="Examen físico" icono="bi-heart-pulse">
     <x-slot name="acciones">
+        {{-- Las plantillas del resumen (`RF`) van arriba a la derecha, junto al estado (pedido del usuario, 2026-10-20). --}}
+        <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF"
+                         nombre="resumen físico" />
         <span class="texto-tenue small me-2">{{ $seccion->cargados() }} de {{ $seccion->totalCampos() }} campos con dato</span>
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                      :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="evaluacion-form"
           data-consulta-evaluacion data-autoguardar data-url-resumen="{{ $seccion->urlResumen() }}" data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
         <input type="hidden" name="pestana" value="fisico">
-
-        {{-- El panel de plantillas del resumen (`RF`) va **arriba** de todo: en el escritorio es una columna a la
-             derecha que arranca arriba y acá vivía dentro del bloque del resumen, al final de la página
-             (pedido del usuario, 2026-10-16). --}}
-        <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF"
-                         nombre="resumen físico" class="mb-3" />
 
         {{-- 1. Antropometría, signos y tensión: las siete columnas `double` de `consultas` (peso, talla,
              FC, FR y las tres circunferencias) más `examen_fisico_nuevo.tension`. --}}
@@ -47,8 +42,7 @@
 
             {{-- El IMC: derivado (peso / talla²), como en el escritorio (`gffimc.srf`). No se pide ni se
                  guarda en ninguna columna; `consulta.js` lo recalcula al escribir peso o talla. --}}
-            <x-ui.campo etiqueta="IMC" for="evaluacion-imc" class="col-6 col-md-4"
-                        ayuda="Calculado del peso y la talla. No se guarda.">
+            <x-ui.campo etiqueta="IMC" for="evaluacion-imc" class="col-6 col-md-4">
                 <output class="form-control-plaintext fw-semibold" id="evaluacion-imc"
                         data-evaluacion-imc>{{ $seccion->imc() }}</output>
             </x-ui.campo>
