@@ -167,8 +167,8 @@ class HorariosDeConsultorioWebTest extends TestCase
         $respuesta->assertSee('San José');
         $respuesta->assertSee('Lunes');
         $respuesta->assertSee('Miércoles');
-        $respuesta->assertSee('08:00 a 12:00');
-        $respuesta->assertSee('14:00 a 18:00');
+        $respuesta->assertSee('8:00 AM a 12:00 PM');
+        $respuesta->assertSee('2:00 PM a 6:00 PM');
         $respuesta->assertSee('12 pacientes');
         $respuesta->assertSee('sin tope');   // el bloque sin cupo no inventa un tope
     }
@@ -376,7 +376,7 @@ class HorariosDeConsultorioWebTest extends TestCase
         );
 
         $respuesta->assertOk();
-        $respuesta->assertSee('08:00 a 12:00');
+        $respuesta->assertSee('8:00 AM a 12:00 PM');
         $respuesta->assertSee('Cupo completo');
     }
 
@@ -402,7 +402,7 @@ class HorariosDeConsultorioWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlHorarios($consultorio));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('08:00 a 12:00');
+        $respuesta->assertSee('8:00 AM a 12:00 PM');
         $respuesta->assertSee('8 pacientes');
     }
 

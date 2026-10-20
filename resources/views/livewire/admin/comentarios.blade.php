@@ -32,7 +32,7 @@
                         {{ $seleccionado->usuario?->name ?? 'Cuenta borrada' }}
                         @if ($seleccionado->rol) · {{ $seleccionado->rol }} @endif
                         @if ($seleccionado->medico) · {{ trim($seleccionado->medico->name . ' ' . $seleccionado->medico->lastname) }} ({{ $seleccionado->reg_medico }}) @endif
-                        · {{ $seleccionado->created_at?->format('d/m/Y H:i') }}
+                        · {{ \App\Support\HoraLocal::fechaHora($seleccionado->created_at) }}
                     </small>
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="cerrar">Cerrar</button>
@@ -67,7 +67,7 @@
                 @if ($seleccionado->fueRespondido() && $seleccionado->respondido_el)
                     <p class="text-muted small mb-3">
                         Respondido por {{ $seleccionado->respondedor?->name ?? '—' }}
-                        el {{ $seleccionado->respondido_el->format('d/m/Y H:i') }}.
+                        el {{ \App\Support\HoraLocal::fechaHora($seleccionado->respondido_el) }}.
                     </p>
                 @endif
 
@@ -149,7 +149,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div>{{ $comentario->created_at?->format('d/m/Y') }}</div>
+                                    <div>{{ \App\Support\HoraLocal::instante($comentario->created_at)?->format('d/m/Y') }}</div>
                                     <small class="text-muted">{{ $comentario->created_at?->diffForHumans() }}</small>
                                 </td>
                                 <td>

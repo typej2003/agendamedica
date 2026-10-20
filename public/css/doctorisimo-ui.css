@@ -2201,7 +2201,7 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 
 .bloques-alta select { flex: 1 1 7rem; min-width: 0; }
 .bloques-alta .dias-semana { flex: 1 1 100%; }
-.bloques-alta input[type="time"] { flex: 0 1 6.5rem; min-width: 0; }
+.bloques-alta input.hora-ampm { flex: 0 1 7rem; min-width: 0; }
 .bloques-alta input[type="number"] { flex: 0 1 4.5rem; min-width: 0; }
 .bloques-alta .btn { flex: 0 0 auto; white-space: nowrap; }
 
@@ -2217,7 +2217,7 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .tabla-tarjetas td.celda-bloques { display: block; text-align: left; }
     .tabla-tarjetas td.celda-bloques::before { display: block; margin-bottom: .25rem; }
     .bloques-alta select,
-    .bloques-alta input[type="time"],
+    .bloques-alta input.hora-ampm,
     .bloques-alta input[type="number"] { flex: 1 1 5rem; }
 }
 

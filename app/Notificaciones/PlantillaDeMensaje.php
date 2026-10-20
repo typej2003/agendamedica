@@ -87,7 +87,7 @@ final class PlantillaDeMensaje
         $datos = ['paciente' => 'Ana Ejemplo', 'doctor' => $contexto['doctor']];
 
         return $this->slug === self::CITA
-            ? $datos + ['fecha' => $contexto['fecha'], 'hora' => '09:30', 'centro' => $contexto['centro']]
+            ? $datos + ['fecha' => $contexto['fecha'], 'hora' => '9:30 AM', 'centro' => $contexto['centro']]
             : $datos;
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Reservas;
 
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 
 /**
@@ -36,9 +37,9 @@ final class OpcionDeReserva
         return ucfirst(Carbon::createFromFormat('!Y-m-d', $this->fecha)->locale('es')->isoFormat('dddd D [de] MMMM'));
     }
 
-    /** "8:00 a. m." */
+    /** "8:00 AM" */
     public function hora12(): string
     {
-        return Carbon::createFromFormat('H:i', $this->hora)->format('g:i A');
+        return HoraLocal::hora12($this->hora);
     }
 }

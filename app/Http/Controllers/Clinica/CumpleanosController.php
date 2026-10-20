@@ -14,6 +14,7 @@ use App\Models\Evolucion;
 use App\Models\NotificacionCumple;
 use App\Notificaciones\Canal;
 use App\Notificaciones\ExcepcionDeEnvio;
+use App\Support\HoraLocal;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -82,7 +83,7 @@ class CumpleanosController extends Controller
             'plantilla' => ['nullable', 'string', 'max:500'],
         ], [
             'canal.in'      => 'Elige uno de los canales de envío.',
-            'hora.regex'    => 'La hora va en formato HH:MM, entre 00:00 y 23:59.',
+            'hora.regex'    => 'La hora tiene que ser una hora con AM/PM (por ejemplo 9:00 AM).',
             'hora.required' => 'Falta la hora a la que sale el saludo.',
         ]);
 
@@ -105,7 +106,7 @@ class CumpleanosController extends Controller
         return redirect()
             ->route('clinica.cumpleanos')
             ->with('estado', $activo
-                ? 'Listo: el saludo de cumpleaños sale solo todos los días a las ' . $datos['hora'] . ' por ' . Canal::etiqueta($datos['canal']) . '.'
+                ? 'Listo: el saludo de cumpleaños sale solo todos los días a las ' . HoraLocal::hora12($datos['hora']) . ' por ' . Canal::etiqueta($datos['canal']) . '.'
                 : 'Listo: se guardó la configuración, pero el envío automático queda apagado.');
     }
 

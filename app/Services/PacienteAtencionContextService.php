@@ -1384,7 +1384,7 @@ class PacienteAtencionContextService
                 'medico' => $nombreMedico,
                 'especialidad' => $especialidad,
                 'fecha' => $fechaFormateada,
-                'hora_estimada' => $horaCarbon->format('h:i A'),
+                'hora_estimada' => \App\Support\HoraLocal::hora12($horaCarbon->format('H:i')),
                 'turno' => $lugar['numorden'],
                 'consultorio' => $consultorio['consultorio'] ?? 'Consultorio principal',
                 'direccion' => $consultorio['direccion'] ?? 'Dirección no especificada',
@@ -1639,12 +1639,12 @@ class PacienteAtencionContextService
         $horaStr = '';
         if (!empty($cita->hora_ini)) {
             try {
-                $horaStr = Carbon::createFromFormat('H:i', substr($cita->hora_ini, 0, 5))->format('h:i A');
+                $horaStr = \App\Support\HoraLocal::hora12(substr($cita->hora_ini, 0, 5), (string) $cita->hora_ini);
             } catch (\Throwable $e) {
                 $horaStr = $cita->hora_ini;
             }
         } else {
-            $horaStr = '08:00 AM';
+            $horaStr = '8:00 AM';
         }
 
         $turno = $cita->numorden ?? 1;

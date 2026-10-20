@@ -85,12 +85,12 @@ final class MisComentariosVista
         return $this->comentarios->map(fn (Comentario $comentario): array => [
             'tipo' => $comentario->tipoLegible(),
             'mensaje' => $comentario->mensaje,
-            'cuando' => $comentario->created_at?->format('d/m/Y H:i') ?? '',
+            'cuando' => \App\Support\HoraLocal::fechaHora($comentario->created_at),
             'estado' => $this->estadoTexto($comentario),
             'tono' => $this->estadoTono($comentario),
             'respuesta' => $comentario->respuesta,
             'respondido' => $comentario->fueRespondido()
-                ? 'Respondido el ' . ($comentario->respondido_el?->format('d/m/Y') ?? '')
+                ? 'Respondido el ' . (\App\Support\HoraLocal::instante($comentario->respondido_el)?->format('d/m/Y') ?? '')
                 : null,
             // Lo que el usuario tiene que entender de un descartado: lo leímos y decidimos no avanzar (no es
             // que se haya perdido).

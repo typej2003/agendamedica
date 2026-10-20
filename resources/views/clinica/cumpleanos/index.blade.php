@@ -11,7 +11,7 @@
         <x-slot name="acciones">
             <x-ui.estado :tono="$vm->envioActivo() ? 'exito' : 'neutro'"
                          :icono="$vm->envioActivo() ? 'bi-send-check' : 'bi-send-slash'">
-                {{ $vm->envioActivo() ? 'Envío automático a las ' . $vm->hora() : 'Envío automático apagado' }}
+                {{ $vm->envioActivo() ? 'Envío automático a las ' . $vm->hora12() : 'Envío automático apagado' }}
             </x-ui.estado>
         </x-slot>
     </x-ui.page-head>
@@ -51,7 +51,7 @@
 
                 <x-ui.campo etiqueta="Hora" for="hora" class="col-md-4"
                             ayuda="La hora del consultorio a la que sale el saludo.">
-                    <input type="time" name="hora" id="hora" class="form-control" value="{{ $vm->hora() }}" required>
+                    <x-ui.hora name="hora" :valor="$vm->hora()" required />
                 </x-ui.campo>
 
                 <div class="col-md-4">

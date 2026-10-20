@@ -32,7 +32,7 @@ final class PlantillasDeMensaje
                 [
                     '{paciente}' => ['texto' => 'Paciente', 'ayuda' => 'El nombre del paciente.'],
                     '{fecha}' => ['texto' => 'Fecha', 'ayuda' => 'El día de la cita (dd/mm/aaaa).'],
-                    '{hora}' => ['texto' => 'Hora', 'ayuda' => 'La hora de la cita (hh:mm).'],
+                    '{hora}' => ['texto' => 'Hora', 'ayuda' => 'La hora de la cita, con AM/PM (8:00 AM).'],
                     '{doctor}' => ['texto' => 'Médico', 'ayuda' => 'El nombre del médico de la cita.'],
                     '{centro}' => ['texto' => 'Consultorio', 'ayuda' => 'El consultorio o centro donde es la cita.'],
                 ],

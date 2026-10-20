@@ -162,12 +162,12 @@
                                                   class="dias-semana-compactos" />
 
                                 <label class="visually-hidden" for="bloque-desde-{{ $fila['id'] }}">Desde qué hora</label>
-                                <input type="time" name="hora_inicio" id="bloque-desde-{{ $fila['id'] }}" class="form-control form-control-sm"
-                                       value="{{ $fila['alta']['hora_inicio'] }}" required aria-label="Desde qué hora">
+                                <x-ui.hora name="hora_inicio" :id="'bloque-desde-' . $fila['id']" class="form-control-sm"
+                                           :valor="$fila['alta']['hora_inicio']" required aria-label="Desde qué hora" />
 
                                 <label class="visually-hidden" for="bloque-hasta-{{ $fila['id'] }}">Hasta qué hora</label>
-                                <input type="time" name="hora_fin" id="bloque-hasta-{{ $fila['id'] }}" class="form-control form-control-sm"
-                                       value="{{ $fila['alta']['hora_fin'] }}" required aria-label="Hasta qué hora">
+                                <x-ui.hora name="hora_fin" :id="'bloque-hasta-' . $fila['id']" class="form-control-sm"
+                                           :valor="$fila['alta']['hora_fin']" required aria-label="Hasta qué hora" />
 
                                 <label class="visually-hidden" for="bloque-cupo-{{ $fila['id'] }}">Cupo del bloque (vacío = sin tope)</label>
                                 <input type="number" name="cupo" id="bloque-cupo-{{ $fila['id'] }}" class="form-control form-control-sm"

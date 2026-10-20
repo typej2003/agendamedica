@@ -290,7 +290,7 @@ class PlantillasDeMensajeWebTest extends TestCase
             'texto' => 'Hola {paciente}, {fecha} {hora} con {doctor}. {algo}',
         ])->assertOk();
 
-        $respuesta->assertJsonPath('vista_previa', 'Hola Ana Ejemplo, 08/10/2026 09:30 con Dra. Ana Imprime. {algo}');
+        $respuesta->assertJsonPath('vista_previa', 'Hola Ana Ejemplo, 08/10/2026 9:30 AM con Dra. Ana Imprime. {algo}');
         $respuesta->assertJsonPath('caracteres', mb_strlen('Hola {paciente}, {fecha} {hora} con {doctor}. {algo}'));
         $respuesta->assertJsonPath('maximo', 500);
         $respuesta->assertJsonPath('sms.codificacion', 'gsm7');
@@ -302,7 +302,7 @@ class PlantillasDeMensajeWebTest extends TestCase
         // Es exactamente lo que arma el envío real con los mismos datos.
         $this->assertSame(
             (new MensajeDeRecordatorio())->armar('Hola {paciente}, {fecha} {hora} con {doctor}. {algo}', [
-                'paciente' => 'Ana Ejemplo', 'fecha' => '08/10/2026', 'hora' => '09:30', 'doctor' => 'Dra. Ana Imprime', 'centro' => 'Consultorio de ejemplo',
+                'paciente' => 'Ana Ejemplo', 'fecha' => '08/10/2026', 'hora' => '9:30 AM', 'doctor' => 'Dra. Ana Imprime', 'centro' => 'Consultorio de ejemplo',
             ]),
             $respuesta->json('vista_previa'),
         );
@@ -325,7 +325,7 @@ class PlantillasDeMensajeWebTest extends TestCase
 
         $vacio = $web->postJson(route('clinica.mensajes.vista-previa', 'cita'), ['texto' => ''])->assertOk();
         $vacio->assertJsonPath('vacia', true);
-        $vacio->assertJsonPath('vista_previa', 'Recordatorio de cita para Ana Ejemplo: 08/10/2026 a las 09:30.');
+        $vacio->assertJsonPath('vista_previa', 'Recordatorio de cita para Ana Ejemplo: 08/10/2026 a las 9:30 AM.');
     }
 
     // ---------------------------------------------------------------------------------------- El API
@@ -388,7 +388,7 @@ class PlantillasDeMensajeWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->post(route('clinica.mensajes.guardar', 'cita'), ['texto' => 'WEB84 {paciente}: {fecha} a las {hora} con {doctor}.']);
 
-        $esperado = 'WEB84 Ana Alvarez: 12/10/2026 a las 09:30 con Dra. Ana Imprime.';
+        $esperado = 'WEB84 Ana Alvarez: 12/10/2026 a las 9:30 AM con Dra. Ana Imprime.';
         $notificacion = app(EnviarRecordatorio::class)->ejecutar($cita, 'correo');
         $this->assertSame($esperado, $notificacion->mensaje);
         $this->assertSame('plantilla_cita', $notificacion->plantilla);
