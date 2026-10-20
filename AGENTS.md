@@ -964,16 +964,14 @@ campo prellenado, `agregarUrl` lleva a la pantalla de alta con `?nombre=` (pacie
 alta que ya está en la pantalla (diagnósticos, antecedentes). Lo que se ate a lo que llega en la región va **delegado** en `document` o escucha
 `buscar-auto:cargado`. Tests: `Feature/BuscadorAutomaticoWebTest`.
 
-**Pauta de pantallas «buscar y agregar» (decisión del usuario, 2026-10-20):** cuando una pantalla arma una lista de
-cosas que se buscan y se agregan (medicamentos de un tratamiento, etc.), va **en una sola tarjeta**: primero los campos
-propios (nombre…), después **una barra de búsqueda de una línea con el botón de alta al final** («Nuevo medicamento»,
-que abre un diálogo lateral y prellena el nombre con lo escrito) y **debajo el listado de lo agregado**. Los resultados
-son un desplegable bajo la barra; lo creado entra directo a la lista, sin recargar. Referencia: el editor de
-tratamientos (`clinica/catalogos/tratamiento-editor.blade.php` + `_recipes-herramientas`, `POST
-/clinica/catalogos/medicamentos/rapido`). **No aplica** a las pantallas de dos columnas (`<x-ui.dos-listas>`: récipe del
-paciente, récipe de la pareja, órdenes, motivos, diagnósticos, antecedentes, referencias): esas se quedan como están
-(agregados a la izquierda, catálogo a la derecha); el usuario las dio por buenas el 2026-10-20. Pantallas **nuevas** de
-este tipo siguen la pauta salvo que sean de dos columnas.
+**Pauta de pantallas «buscar y agregar» (decisión del usuario, 2026-10-20):** una lista de cosas que se buscan y se agregan
+va en **dos columnas** (`<x-ui.dos-listas>`): a la izquierda lo que se arma (los campos propios —el nombre— y la lista de lo
+agregado, con su guardado), a la derecha **el catálogo a la vista** con su buscador que filtra la lista y el botón «Nuevo …»
+que abre el alta en un diálogo lateral con el nombre ya escrito; lo creado entra directo a la lista de la izquierda, sin
+recargar. Referencias: el editor del récipe y el de tratamientos (`clinica/catalogos/tratamiento-editor.blade.php`, que usa
+`_recipes-buscador`, `consulta-recipes.js` y `POST /clinica/catalogos/medicamentos/rapido`). *(El 2026-10-20 el editor de
+tratamientos pasó por una versión de una sola tarjeta —buscador arriba de la lista— y el usuario la cambió a dos columnas
+para aprovechar el ancho.)*
 
 **Pauta de textos de ayuda en los formularios (decisión del usuario, 2026-10-20):** **no** va texto de ayuda debajo de un campo ni
 descripciones de encabezado que expliquen mecánica obvia o términos clínicos, y **nada que mencione el escritorio ni nombres de columnas**
