@@ -25,10 +25,10 @@
         @endif
 
         <x-ui.tarjeta class="mb-3">
-            <h2 class="paso-titulo"><span class="paso-numero">1</span> Dónde y cuándo</h2>
+            <h2 class="visually-hidden">Dónde y cuándo</h2>
 
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-5 col-xl-3">
                     <label class="form-label" for="sede-elegida">Sede</label>
                     {{-- `@disabled` es de Blade 9: en Laravel 8 se escribe el atributo. --}}
                     <select name="sede" id="sede-elegida" class="form-select" data-autoenviar
@@ -39,16 +39,34 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-4 col-xl-2">
                     <label class="form-label" for="fecha-elegida">Día</label>
                     <input type="date" name="fecha" id="fecha-elegida" class="form-control" value="{{ $vm->fecha() }}" data-autoenviar>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3 col-xl-2">
                     <button class="btn btn-outline-secondary w-100">
                         <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Ver la jornada
                     </button>
                 </div>
+                @if ($jornada = $vm->jornada())
+                <div class="col-12 col-xl-5">
+                @php $modalidad = $jornada->modalidad(); @endphp
+                <div class="jornada-resumen jornada-resumen-inline">
+                    <x-ui.estado :tono="$modalidad['tono']" :icono="$modalidad['icono']">{{ $modalidad['texto'] }}</x-ui.estado>
+                    <span>{{ $jornada->horario() }}</span>
+                    <span>{{ $jornada->cantidadTexto() }}</span>
+                    @if ($jornada->tieneCupo())
+                        <span>{{ $jornada->cupoTexto() }}</span>
+                    @endif
+                    @if ($jornada->llena())
+                        <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Cupo completo</x-ui.estado>
+                    @endif
+                    <span>le tocaría el {{ $jornada->proximo() }}</span>
+                </div>
+
+                </div>
+                @endif
             </div>
 
             @if ($vm->faltaElegirSede())
@@ -68,27 +86,11 @@
                 </div>
             @endif
 
-            @if ($jornada = $vm->jornada())
-                @php $modalidad = $jornada->modalidad(); @endphp
-                <div class="jornada-resumen jornada-resumen-inline mt-3">
-                    <x-ui.estado :tono="$modalidad['tono']" :icono="$modalidad['icono']">{{ $modalidad['texto'] }}</x-ui.estado>
-                    <span>{{ $jornada->horario() }}</span>
-                    <span>{{ $jornada->cantidadTexto() }}</span>
-                    @if ($jornada->tieneCupo())
-                        <span>{{ $jornada->cupoTexto() }}</span>
-                    @endif
-                    @if ($jornada->llena())
-                        <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Cupo completo</x-ui.estado>
-                    @endif
-                    <span>le tocaría el {{ $jornada->proximo() }}</span>
-                </div>
-
-                @if ($vm->horaFueraDeBloque())
-                    <p class="form-text text-warning-emphasis mb-0 mt-2">
-                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                        La hora elegida no cae en ningún bloque configurado de ese día.
-                    </p>
-                @endif
+            @if ($vm->jornada() && $vm->horaFueraDeBloque())
+                <p class="form-text text-warning-emphasis mb-0 mt-2">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    La hora elegida no cae en ningún bloque configurado de ese día.
+                </p>
             @endif
         </x-ui.tarjeta>
     </form>
@@ -223,20 +225,20 @@
 
                 <div class="row g-3">
                     @if ($vm->esConHora())
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 col-xl">
                             <label class="form-label" for="hora">Hora de la cita *</label>
                             <input type="time" name="hora" id="hora" class="form-control" value="{{ $vm->valor('hora') }}" required>
                             @error('hora') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     @else
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 col-xl">
                             <label class="form-label" for="hora">Hora de llegada</label>
                             <input type="time" name="hora" id="hora" class="form-control" value="{{ $vm->valor('hora') }}">
                             <span class="form-text">Vacía = la apertura del bloque.</span>
                         </div>
 
                         @if ($vm->mostrarBloques())
-                            <div class="col-sm-6">
+                            <div class="col-sm-6 col-xl">
                                 <label class="form-label" for="bloque">Bloque del día</label>
                                 <select name="bloque" id="bloque" class="form-select">
                                     @foreach ($vm->opcionesDeBloque() as $opcion)
@@ -247,7 +249,7 @@
                         @endif
                     @endif
 
-                    <div class="col-sm-6">
+                    <div class="col-sm-6 col-xl">
                         <label class="form-label" for="motivo">Motivo</label>
                         <select name="motivo" id="motivo" class="form-select" data-motivo-select>
                             <option value="" data-precio="">Sin motivo</option>
@@ -277,7 +279,7 @@
                         @endif
                     </div>
 
-                    <div class="col-sm-6">
+                    <div class="col-sm-6 col-xl">
                         <label class="form-label" for="monto">Monto</label>
                         <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
                                value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->precioDelMotivo() }}">

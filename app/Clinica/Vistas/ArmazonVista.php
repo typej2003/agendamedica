@@ -84,6 +84,56 @@ final class ArmazonVista
     }
 
     /**
+     * Las fichas que quedan **en la barra** (condensada, 2026-10-20): la especialidad y la sede con su nombre. El
+     * médico y su registro pasaron al menú de la cuenta (`cuenta()`), donde no estorban.
+     *
+     * @return array<int,array{icono:string, texto:string, titulo?:string}>
+     */
+    public function fichasDeLaBarra(): array
+    {
+        if ($this->contexto === null) {
+            return [];
+        }
+
+        $sede = $this->contexto['office'];
+        $centro = $sede->medicalCenter->name ?? null;
+        $numero = $sede->office_number ?? null;
+        $texto = trim(($centro ?? '') . ($centro && $numero ? ' · ' : '') . ($numero ?? '')) ?: 'Sin sede';
+
+        return [
+            ['icono' => 'bi-clipboard2-pulse', 'texto' => $this->contexto['specialty']->name ?? 'Sin especialidad asignada'],
+            ['icono' => 'bi-geo-alt', 'texto' => $texto, 'titulo' => 'Sede de trabajo: ' . $texto],
+        ];
+    }
+
+    /**
+     * Lo que va en el encabezado del menú de la cuenta: el nombre completo del médico del contexto y su registro.
+     *
+     * @return array{nombre:string, registro:?string}
+     */
+    public function cuenta(): array
+    {
+        $medico = $this->contexto['medico'] ?? null;
+        $nombre = $medico ? trim(($medico->prefix ?? '') . ' ' . $medico->name . ' ' . $medico->lastname) : '';
+
+        return [
+            'nombre'   => $nombre !== '' ? $nombre : (string) optional(auth()->user())->name,
+            'registro' => $this->contexto !== null ? (string) $this->contexto['reg_medico'] : null,
+        ];
+    }
+
+    /**
+     * Los accesos que viven en el **menú de la cuenta**: sedes, consultorios y cambiar de consultorio. El panel
+     * de administración se queda en la barra (sólo lo ve el administrador).
+     *
+     * @return array<int,array{texto:string, icono:string, url:string, primario:bool}>
+     */
+    public function accesosDeLaCuenta(): array
+    {
+        return array_values(array_filter($this->accesos(), fn (array $acceso) => ! $acceso['primario']));
+    }
+
+    /**
      * Los accesos de la barra superior. Las sedes son el **lugar de la clínica** y el paso previo a crear un
      * consultorio (WEB-2.8b.1); los consultorios son **del médico del contexto** (WEB-2.8b.2), así que solo
      * aparecen cuando ya se eligió con quién trabajar. El panel es de administración: a un médico no se le
