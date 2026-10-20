@@ -14,6 +14,10 @@ use App\Models\RecipeFormato;
  * en los demás documentos. Tiene cuatro secciones, cada una con su botón de guardar: los textos del membrete, el logo, el
  * estilo de cada bloque con el color de la línea, y la firma con el sello. A un lado, la vista previa de la hoja.
  *
+ * Desde la Fase 5 del cambio de `reg_medico` la misma pantalla edita el formato de un **centro médico** cuando se abre
+ * con `?reg_medico=<centro>` (lo hace el `Root` desde el panel de cuentas): en ese caso cambia lo que dicen el subtítulo
+ * y el aviso, y **la firma y el sello no se ofrecen** —son siempre los del doctor que atendió, no los del centro—.
+ *
  * Como todo ViewModel de la web clínica **no consulta la base**: recibe lo guardado (`FormatoGuardado`) y las URLs ya
  * armadas. Los valores de los campos salen de lo que quedó de una validación fallida (`old()`) y, si no hay, de lo guardado:
  * un error nunca borra lo que se escribió.
@@ -60,6 +64,7 @@ final class FormatoDeImpresionVista
 
     /**
      * @param  array{vistaPrevia:string, vistaPreviaCompleta:string, membrete:string, logo:string, estilo:string, firma:string, restablecer:string}  $urls
+     * @param  bool  $esCentro  ¿se está editando el formato de un **centro médico**? (Fase 5: sin firma ni sello)
      */
     public function __construct(
         private FormatoGuardado $guardado,
@@ -67,6 +72,7 @@ final class FormatoDeImpresionVista
         private ?string $registroDelContexto,
         private array $urls,
         private array $formatosEnBlanco = [],
+        private bool $esCentro = false,
     ) {
     }
 
@@ -79,12 +85,29 @@ final class FormatoDeImpresionVista
 
     public function subtitulo(): string
     {
-        return 'Cómo salen tu membrete, tu firma y tu sello en el récipe y en los demás documentos. Lo comparten tú y tu asistente.';
+        return $this->esCentro
+            ? 'Cómo salen el membrete, el logo y el pie del centro en los reportes de sus doctores. La firma y el sello son siempre los del doctor que atendió.'
+            : 'Cómo salen tu membrete, tu firma y tu sello en el récipe y en los demás documentos. Lo comparten tú y tu asistente.';
     }
 
     public function nombreDelMedico(): string
     {
         return $this->nombreDelMedico;
+    }
+
+    /** ¿El formato que se edita es el de un centro médico? */
+    public function esCentro(): bool
+    {
+        return $this->esCentro;
+    }
+
+    /**
+     * ¿Se ofrece la sección «Firma y sello»? Sólo cuando el formato es el del médico: la firma de los reportes es la del
+     * doctor que atendió, así que la del centro no se imprime nunca y no tiene sentido configurarla.
+     */
+    public function conFirma(): bool
+    {
+        return ! $this->esCentro;
     }
 
     /** ¿El médico no tiene un registro principal? Sin él no hay dónde guardar el formato. */
@@ -94,11 +117,19 @@ final class FormatoDeImpresionVista
     }
 
     /**
-     * El aviso de que el formato es del médico y no del consultorio: si el consultorio elegido es de otro de sus registros,
-     * se dice bajo cuál se guarda. `null` si es el mismo (no hay nada que aclarar).
+     * El aviso de qué formato es el que se está editando y bajo qué registro se guarda.
+     *
+     * `null` cuando no hay nada que aclarar (el médico en su propio consultorio).
      */
     public function avisoDeRegistro(): ?string
     {
+        // El formato del centro: es suyo, vive bajo su `reg_medico` y lo usa cuando así lo eligió en el panel.
+        if ($this->esCentro) {
+            return 'Este es el formato con el que imprime el centro: lo usan todos sus doctores cuando el «Formato de los '
+                . 'reportes» del centro es «Del centro» (se elige en el panel de administración). La firma y el sello de cada '
+                . 'reporte son los del doctor que atendió.';
+        }
+
         if ($this->sinRegistro()) {
             return null;
         }
@@ -109,7 +140,8 @@ final class FormatoDeImpresionVista
 
         return 'El formato es del médico y no de cada consultorio: se guarda bajo su registro principal ('
             . $this->guardado->registro . ') y vale para todos sus consultorios, también para el que tiene el registro '
-            . $this->registroDelContexto . '.';
+            . $this->registroDelContexto . '. Si ese consultorio es un centro médico y eligió imprimir con su propio '
+            . 'formato, el membrete, el logo y el pie salen del centro, y la firma sigue siendo la suya.';
     }
 
     public function urlVistaPrevia(): string

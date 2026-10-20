@@ -61,7 +61,9 @@ class HistoriaPediatricaController extends Controller
         $datosDeLaFamilia = $familias->de($regMedico, $ficha->numhistoria);
 
         return view('clinica.historia.pediatrica', ['vm' => new HistoriaPediatricaVista(
-            new CarnetDeVacunacionVista($membretes->de($contexto['medico']), $ficha, $datos['aplicadas'], $armado, null, $hoy, $volver),
+            // El membrete es el del **formato del consultorio** de la historia (Fase 5 del cambio de `reg_medico`): el
+            // del centro si él lo eligió y el del doctor si no.
+            new CarnetDeVacunacionVista($membretes->deLaImpresion($contexto['medico'], $regMedico), $ficha, $datos['aplicadas'], $armado, null, $hoy, $volver),
             new FamiliaDePacienteVista($datosDeLaFamilia, fn (int $id) => route('clinica.pacientes.ver', $id), null, true),
             $historia === null ? collect() : $antecedentes->delPaciente($regMedico, $ficha->numhistoria),
             new CrecimientoVista(

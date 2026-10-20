@@ -14,6 +14,16 @@ class Medico extends Model
 {
     use HasFactory;
 
+    /**
+     * Los dos valores de `medicos.formato_reportes` (Fase 5 del cambio de `reg_medico`): con qué membrete un
+     * **centro** imprime los reportes de quien atiende en él. `centro` = el membrete, el logo y el pie del
+     * centro; `medico` = los del doctor. La **firma y el sello son siempre del doctor** que atendió: eso no
+     * lo decide esta columna.
+     */
+    public const FORMATO_DEL_CENTRO = 'centro';
+
+    public const FORMATO_DEL_MEDICO = 'medico';
+
     protected $table = 'medicos';
 
     protected $fillable = [
@@ -122,6 +132,24 @@ class Medico extends Model
     public function regMedicoPrincipal(): ?string
     {
         return $this->registro?->reg_medico ?? $this->reg_medico;
+    }
+
+    /**
+     * El `reg_medico` **bajo el que se guardan y se leen las filas del formato de impresión** (`evolucion` y
+     * `recipe_formatos`, más las imágenes del membrete): el propio `reg_medico` cuando la ficha es un
+     * **centro** —el centro es su propio tenant y no hay pivote que consultar— y el registro principal
+     * (`regMedicoPrincipal()`) cuando es un doctor (Fase 5 del cambio de `reg_medico`).
+     *
+     * Es la misma regla con la que se guarda desde el móvil y desde `/clinica/formato`, así que lo que se
+     * edita y lo que se imprime no pueden divergir.
+     */
+    public function registroDelFormato(): ?string
+    {
+        if ($this->es_centro) {
+            return $this->reg_medico;
+        }
+
+        return $this->regMedicoPrincipal();
     }
 
     /** Cuenta de acceso del médico (`medicos.user_id`); null si todavía no tiene. */

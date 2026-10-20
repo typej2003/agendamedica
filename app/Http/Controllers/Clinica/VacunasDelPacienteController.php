@@ -87,7 +87,9 @@ class VacunasDelPacienteController extends Controller
 
         return view('clinica.vacunas.carnet', [
             'vm' => new CarnetDeVacunacionVista(
-                $membretes->de($contexto['medico']),
+                // El membrete es el del **formato del consultorio** (Fase 5 del cambio de `reg_medico`): el del centro
+                // si él lo eligió y el del doctor si no.
+                $membretes->deLaImpresion($contexto['medico'], $regMedico),
                 $ficha,
                 $datos['aplicadas'],
                 $this->calendario->armar($ficha->fnacimiento ? (string) $ficha->fnacimiento : null, $ficha->sexo, $hoy, $datos['vacunas'], $datos['dosis'], $datos['aplicadas']),

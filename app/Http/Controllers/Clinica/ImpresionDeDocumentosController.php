@@ -10,6 +10,7 @@ use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Clinica\Impresion\DocumentosPorCita;
+use App\Clinica\Impresion\MedicoQueFirma;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\QrParaLosRecipes;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
 use App\Models\Consulta;
+use App\Models\Medico;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -45,7 +47,9 @@ use Illuminate\Http\Request;
  * de verdad para los dos o no existen.
  *
  * Todo se resuelve contra el **contexto**: una consulta o una cita de otro consultorio responde 404 sin confirmar que existe, y
- * el membrete es el del médico del contexto.
+ * el membrete es el del formato del consultorio. Desde la Fase 5 del cambio de `reg_medico` ese formato es el del **centro**
+ * cuando él lo eligió (`formato_reportes = 'centro'`), y **la firma y el sello son siempre los del doctor que atendió**: en la
+ * agenda es el doctor de la cita (`cola.medico_id`) y no el del contexto.
  */
 class ImpresionDeDocumentosController extends Controller
 {
@@ -56,6 +60,7 @@ class ImpresionDeDocumentosController extends Controller
         private ConsultasDelContexto $consultas,
         private DocumentosParaImprimir $documentos,
         private MembreteDelMedico $membretes,
+        private MedicoQueFirma $firma,
         private ProximaCitaDelRecipe $proximaCita,
         private DocumentosPorCita $porCita,
         private QrParaLosRecipes $qr,
@@ -185,15 +190,24 @@ class ImpresionDeDocumentosController extends Controller
                 ? route('clinica.agenda.documentos', $cita->id)
                 : route('clinica.agenda', ['vista' => 'dia', 'fecha' => $dia, 'sede' => 'todas']),
             count($disponibles) > 1 ? 'Volver a los documentos de la cita' : 'Volver a la agenda',
+            // **El doctor que atendió la cita** (Fase 5): la secretaría imprime con el membrete del formato del
+            // consultorio y **la firma del doctor asignado**, no la del centro.
+            null,
+            $this->firma->deUnaCita($cita, $contexto['medico']),
         );
     }
 
     // ----------------------------------------------------------------------------------------- Adentro
 
     /**
-     * La hoja: una sola implementación para los dos caminos. Arma los documentos pedidos, el membrete del médico del contexto,
-     * las opciones de impresión que quedaron guardadas (de los récipes) y la próxima cita del paciente, y devuelve la página de
-     * impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
+     * La hoja: una sola implementación para los dos caminos. Arma los documentos pedidos, el membrete del formato del
+     * consultorio (el del centro o el del doctor), las opciones de impresión que quedaron guardadas (de los récipes) y la
+     * próxima cita del paciente, y devuelve la página de impresión (sin el armazón de la web, como el listado del día y el
+     * resumen de la historia).
+     *
+     * **Quién firma** (Fase 5 del cambio de `reg_medico`): el doctor de la cita (`$firmante`, que resuelve la secretaría) o,
+     * si no se pasa, el de la consulta; y si la consulta tampoco lo dice, el del contexto. De él salen la firma, el sello y
+     * el QR. **Con qué membrete** sale lo decide `MembreteDelMedico::deLaImpresion` con el `reg_medico` de la consulta.
      *
      * **Pediatría** se decide acá, con la especialidad del contexto (`AlcanceDeLaEspecialidad`) y **no** con la edad del
      * paciente: sus documentos llevan la cabecera del escritorio (sexo, representante, historia y edad compacta). Del resto
@@ -201,11 +215,13 @@ class ImpresionDeDocumentosController extends Controller
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
+     * @param  Medico|null  $firmante  el doctor que atendió la cita; `null` = el de la consulta o el del contexto
      */
-    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null)
+    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null, ?Medico $firmante = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+        $firmante = $firmante ?? ($this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico']);
 
         $documentos = [];
 
@@ -221,14 +237,15 @@ class ImpresionDeDocumentosController extends Controller
 
         abort_if($documentos === [], 404);
 
-        // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima.
-        $documentos = $this->qr->agregar($documentos, $consulta, $contexto['medico']);
+        // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima, y
+        // avalado por el doctor que firma.
+        $documentos = $this->qr->agregar($documentos, $consulta, $firmante);
 
         $opciones = $this->membretes->opciones($contexto['medico']);
 
         return view('clinica.imprimir.hojas', [
             'vm' => new HojasImpresasVista(
-                $this->membretes->de($contexto['medico']),
+                $this->membretes->deLaImpresion($firmante, (string) $consulta->reg_medico),
                 $opciones,
                 $documentos,
                 $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId),

@@ -8,6 +8,7 @@ use App\Actions\Configuracion\LimitesDelMembrete;
 use App\Actions\Configuracion\ReglasDelFormato;
 use App\Actions\Configuracion\ResultadoDelMembrete;
 use App\Clinica\Archivos\ImagenesDelMembrete;
+use App\Http\Controllers\Clinica\Concerns\ResuelveElRegistroDelFormato;
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
 use App\Models\RecipeFormato;
@@ -27,14 +28,20 @@ use RuntimeException;
  *  - `firma`: la firma y el sello (`recipe_formatos`) y la posición del sello.
  *  - `restablecer`: una sección vuelve a los valores del legado.
  *
- * Todo es del **médico del contexto** y se guarda bajo su registro principal, igual que el móvil. Las reglas de validación y
- * de escritura son las del API (`ReglasDelFormato`, `LimitesDelMembrete`, `GuardarMembreteDelMedico`,
+ * Todo es de la **ficha del formato** (el médico del contexto o, con `?reg_medico=`, un centro médico — Fase 5 del
+ * cambio de `reg_medico`) y se guarda bajo su registro (`Medico::registroDelFormato()`), igual que el móvil. Las reglas
+ * de validación y de escritura son las del API (`ReglasDelFormato`, `LimitesDelMembrete`, `GuardarMembreteDelMedico`,
  * `GuardarFormatoDelRecipe`): este controlador sólo traduce HTTP. Las Actions no saben de la vista.
+ *
+ * **La firma y el sello de un centro no se aceptan**: la firma de los reportes es siempre la del doctor que atendió, así
+ * que la sección no se ofrece en la pantalla y un POST directo contesta con un aviso, no guardando algo que no se imprime.
  *
  * Los textos de error van en español (trampa 38: el `locale` de la app es inglés): cada regla tiene su aviso.
  */
 class FormatoDeImpresionGuardarController extends Controller
 {
+    use ResuelveElRegistroDelFormato;
+
     /** Los datos del membrete. */
     public function membrete(Request $request, GuardarMembreteDelMedico $guardar)
     {
@@ -51,7 +58,7 @@ class FormatoDeImpresionGuardarController extends Controller
             return back()->withInput()->with('error', $excepcion->getMessage());
         }
 
-        return $this->despuesDeGuardar($resultado, 'formato-membrete', 'los datos del membrete');
+        return $this->despuesDeGuardar($request, $resultado, 'formato-membrete', 'los datos del membrete');
     }
 
     /** El logo (la imagen) y sus opciones. */
@@ -82,10 +89,10 @@ class FormatoDeImpresionGuardarController extends Controller
         }
 
         if ($resultado !== null && $resultado->huboBloqueo()) {
-            return $this->bloqueado('formato-logo');
+            return $this->bloqueado($request, 'formato-logo');
         }
 
-        return $this->aFormato('formato-logo')->with('estado', $logo !== null
+        return $this->aFormato($request, 'formato-logo')->with('estado', $logo !== null
             ? 'Listo: el logo y sus opciones quedaron guardados.'
             : ($quitar ? 'Listo: se quitó el logo y se guardaron sus opciones.' : 'Listo: se guardaron las opciones del logo.'));
     }
@@ -104,12 +111,18 @@ class FormatoDeImpresionGuardarController extends Controller
             return back()->withInput()->with('error', $excepcion->getMessage());
         }
 
-        return $this->aFormato('formato-estilo')->with('estado', 'Listo: se guardó el estilo del membrete y el color de la línea.');
+        return $this->aFormato($request, 'formato-estilo')->with('estado', 'Listo: se guardó el estilo del membrete y el color de la línea.');
     }
 
     /** La firma, el sello y la posición del sello. */
     public function firma(Request $request, GuardarFormatoDelRecipe $guardar)
     {
+        // La firma de los reportes es la del doctor que atendió: la del centro no se imprime nunca, así que no se
+        // configura (la pantalla tampoco ofrece la sección cuando el formato es de un centro, Fase 5).
+        if ($this->esElFormatoDeUnCentro($request)) {
+            return $this->aFormato($request, 'formato-firma')->with('error', 'La firma y el sello son siempre los del doctor que atendió: el centro no los configura.');
+        }
+
         $datos = $request->validate([
             'firma' => array_merge(['nullable'], ImagenesDelMembrete::reglas()),
             'sello' => array_merge(['nullable'], ImagenesDelMembrete::reglas()),
@@ -133,7 +146,7 @@ class FormatoDeImpresionGuardarController extends Controller
             return back()->withInput()->with('error', 'No se pudo guardar la imagen. Inténtalo de nuevo.');
         }
 
-        return $this->aFormato('formato-firma')->with('estado', 'Listo: la firma y el sello quedaron guardados.');
+        return $this->aFormato($request, 'formato-firma')->with('estado', 'Listo: la firma y el sello quedaron guardados.');
     }
 
     /** «Restablecer valores»: una sección vuelve a los valores del legado. */
@@ -142,6 +155,11 @@ class FormatoDeImpresionGuardarController extends Controller
         $datos = $request->validate([
             'seccion' => ['required', Rule::in(GuardarFormatoDelRecipe::SECCIONES)],
         ], $this->mensajes());
+
+        // La posición del sello también es de la firma: con el formato de un centro no hay nada que restablecer ahí.
+        if ($datos['seccion'] === GuardarFormatoDelRecipe::SECCION_SELLO && $this->esElFormatoDeUnCentro($request)) {
+            return $this->aFormato($request, 'formato-firma')->with('error', 'La firma y el sello son siempre los del doctor que atendió: el centro no los configura.');
+        }
 
         try {
             $cambio = $guardar->restablecer($this->medico($request), $datos['seccion']);
@@ -152,38 +170,54 @@ class FormatoDeImpresionGuardarController extends Controller
         $ancla = ['logo' => 'formato-logo', 'textos' => 'formato-estilo', 'sello' => 'formato-firma'][$datos['seccion']];
         $que = ['logo' => 'las opciones del logo', 'textos' => 'el estilo del membrete y el color de la línea', 'sello' => 'la posición del sello'][$datos['seccion']];
 
-        return $this->aFormato($ancla)->with('estado', $cambio
+        return $this->aFormato($request, $ancla)->with('estado', $cambio
             ? 'Listo: ' . $que . ' volvieron a los valores del legado.'
             : 'No había nada que restablecer: ' . $que . ' ya están con los valores del legado.');
     }
 
     // ----------------------------------------------------------------------------------------- Adentro
 
+    /**
+     * La ficha cuyo formato se guarda: el médico del contexto o, con `?reg_medico=`, el centro (Fase 5). La regla vive
+     * en `ResuelveElRegistroDelFormato`, la misma que usa la pantalla, así que lo que se ve y lo que se guarda es
+     * siempre lo mismo.
+     */
     private function medico(Request $request): Medico
     {
-        return $request->attributes->get('contexto_clinico')['medico'];
+        return $this->fichaDelFormato($request) ?? $request->attributes->get('contexto_clinico')['medico'];
     }
 
-    private function aFormato(string $ancla)
+    private function aFormato(Request $request, string $ancla)
     {
-        return redirect(route('clinica.formato') . '#' . $ancla);
+        $pedido = $this->registroPedido($request);
+
+        return redirect(route('clinica.formato', $pedido === '' ? [] : ['reg_medico' => $pedido]) . '#' . $ancla);
     }
 
-    private function despuesDeGuardar(ResultadoDelMembrete $resultado, string $ancla, string $que)
+    private function despuesDeGuardar(Request $request, ResultadoDelMembrete $resultado, string $ancla, string $que)
     {
         if ($resultado->huboBloqueo()) {
-            return $this->bloqueado($ancla);
+            return $this->bloqueado($request, $ancla);
         }
 
-        return $this->aFormato($ancla)->with('estado', $resultado->huboCambios()
+        return $this->aFormato($request, $ancla)->with('estado', $resultado->huboCambios()
             ? 'Listo: se guardaron ' . $que . '.'
             : 'No había cambios que guardar en ' . $que . '.');
     }
 
     /** Otro equipo (el escritorio o el teléfono) editó esos datos más recientemente: no se pisa. */
-    private function bloqueado(string $ancla)
+    private function bloqueado(Request $request, string $ancla)
     {
-        return $this->aFormato($ancla)->with('error', 'No se guardó: otro equipo (el escritorio o el teléfono) editó esos datos más recientemente. Recarga la página para ver lo último.');
+        return $this->aFormato($request, $ancla)->with('error', 'No se guardó: otro equipo (el escritorio o el teléfono) editó esos datos más recientemente. Recarga la página para ver lo último.');
+    }
+
+    /**
+     * ¿El formato que se está guardando es el de un **centro**? La firma y el sello no se configuran ahí: los de cada
+     * reporte son los del doctor que atendió.
+     */
+    private function esElFormatoDeUnCentro(Request $request): bool
+    {
+        return (bool) ($this->fichaDelFormato($request)?->es_centro ?? false);
     }
 
     /**

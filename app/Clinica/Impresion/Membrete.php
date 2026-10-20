@@ -10,6 +10,12 @@ namespace App\Clinica\Impresion;
  * Es un objeto de valores ya resuelto —con los defaults del legado aplicados y las imágenes comprobadas—, que
  * arma `MembreteDelMedico` y que reusan los documentos que siguen (constancias, reposos, referencias…).
  * No lee la base ni el disco.
+ *
+ * **El membrete y la firma pueden venir de dos fichas distintas** (Fase 5 del cambio de `reg_medico`): cuando
+ * el centro médico configura `formato_reportes = 'centro'`, el nombre, la especialidad, el RIF, el logo, el pie
+ * y el aspecto de los bloques son **del centro**, y la firma, el sello y el nombre de la línea de la firma son
+ * **del doctor que atendió** (su propia fila de `recipe_formatos`). En el consultorio personal las dos cosas
+ * son del doctor y el objeto sale como siempre.
  */
 final class Membrete
 {
@@ -25,6 +31,11 @@ final class Membrete
     /**
      * @param  array<string,array<string,mixed>>  $elementos  `logo`, `medico`, `especialidad`, `rif` y `pie`, completos
      * @param  array<int,string>  $pie  las líneas de pie que tienen texto, en orden (hasta tres)
+     * @param  string|null  $firmante  el nombre que va **sobre la línea de la firma** cuando no es el del membrete.
+     *                                 Con el formato de un **centro** (Fase 5 del cambio de `reg_medico`) el
+     *                                 encabezado es el del centro y firma el doctor que atendió; `null` = firma el
+     *                                 mismo del membrete. Los demás campos —la firma, el sello y su posición— ya son
+     *                                 los del doctor que firma desde `MembreteDelMedico`.
      */
     public function __construct(
         public readonly string $medico,
@@ -37,6 +48,7 @@ final class Membrete
         public readonly ?string $firmaUrl,
         public readonly ?string $selloUrl,
         public readonly string $selloPosicion,
+        public readonly ?string $firmante = null,
     ) {
     }
 
@@ -61,6 +73,15 @@ final class Membrete
     public function colorCss(): string
     {
         return self::COLORES[$this->colorLinea] ?? self::COLORES['negro'];
+    }
+
+    /**
+     * El nombre que va **sobre la línea de la firma**: el del doctor que atendió o, cuando el formato es el
+     * del centro, el del membrete (que es el mismo doctor en el consultorio personal).
+     */
+    public function nombreDelFirmante(): string
+    {
+        return $this->firmante === null || trim($this->firmante) === '' ? $this->medico : $this->firmante;
     }
 
     // ------------------------------------------------------------------ Lo que pinta el componente

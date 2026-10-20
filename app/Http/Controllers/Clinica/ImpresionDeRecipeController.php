@@ -6,6 +6,7 @@ use App\Actions\Recipes\GuardarOpcionesDeImpresion;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Impresion\DocumentoDeRecipe;
+use App\Clinica\Impresion\MedicoQueFirma;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\QrParaLosRecipes;
@@ -36,7 +37,9 @@ use InvalidArgumentException;
  * la usan.
  *
  * Todo se resuelve contra el **contexto**: una consulta de otro consultorio responde 404 sin confirmar que existe, y el
- * membrete es el del médico del contexto.
+ * membrete es el del médico del contexto. Desde la Fase 5 del cambio de `reg_medico` el membrete es el del **centro**
+ * cuando ese consultorio lo eligió (`formato_reportes`), y **la firma y el sello siguen siendo los del doctor que
+ * atendió** (`MedicoQueFirma` + `MembreteDelMedico::deLaImpresion`).
  */
 class ImpresionDeRecipeController extends Controller
 {
@@ -53,6 +56,7 @@ class ImpresionDeRecipeController extends Controller
         private ConsultasDelContexto $consultas,
         private RecipesParaImprimir $recipes,
         private MembreteDelMedico $membretes,
+        private MedicoQueFirma $firma,
         private ProximaCitaDelRecipe $proximaCita,
         private QrParaLosRecipes $qr,
     ) {
@@ -129,9 +133,13 @@ class ImpresionDeRecipeController extends Controller
     // ----------------------------------------------------------------------------------------- Adentro
 
     /**
-     * La hoja: una sola implementación para los dos caminos. Arma los récipes pedidos, el membrete del médico del
-     * contexto, las opciones que quedaron guardadas y la próxima cita del paciente, y devuelve la página de
-     * impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
+     * La hoja: una sola implementación para los dos caminos. Arma los récipes pedidos, el membrete del formato del
+     * consultorio (el del centro o el del doctor), las opciones que quedaron guardadas y la próxima cita del paciente, y
+     * devuelve la página de impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
+     *
+     * **Quién firma** (Fase 5 del cambio de `reg_medico`) es el doctor de la consulta —o, si la consulta no lo dice, el
+     * del contexto—: de él salen la firma, el sello y el QR de verificación. **Con qué membrete** sale lo decide
+     * `MembreteDelMedico::deLaImpresion` con el `reg_medico` de la consulta.
      *
      * **Pediatría** se decide acá, con la especialidad del contexto (`AlcanceDeLaEspecialidad`) y **no** con la edad
      * del paciente —un paciente de pediatría puede tener 21 años—: su récipe lleva la cabecera del escritorio y las
@@ -143,6 +151,7 @@ class ImpresionDeRecipeController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+        $firmante = $this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico'];
 
         $documentos = [];
         foreach ($claves as $clave) {
@@ -151,14 +160,15 @@ class ImpresionDeRecipeController extends Controller
             $documentos[] = $documento;
         }
 
-        // El QR de verificación de cada récipe (WEB-5.6): se obtiene o se crea al imprimir y es el mismo cada vez.
-        $documentos = $this->qr->agregar($documentos, $consulta, $contexto['medico']);
+        // El QR de verificación de cada récipe (WEB-5.6): se obtiene o se crea al imprimir y es el mismo cada vez. El
+        // doctor que lo avala es el que firma, no el centro.
+        $documentos = $this->qr->agregar($documentos, $consulta, $firmante);
 
         $opciones = $this->membretes->opciones($contexto['medico']);
 
         return view('clinica.imprimir.hojas', [
             'vm' => new HojasDeRecipeVista(
-                $this->membretes->de($contexto['medico']),
+                $this->membretes->deLaImpresion($firmante, (string) $consulta->reg_medico),
                 $opciones,
                 $documentos,
                 $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId),
