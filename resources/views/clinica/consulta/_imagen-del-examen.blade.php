@@ -18,8 +18,6 @@
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
     {{-- **El radiobutón** (O-09): los dos modos son excluyentes. Lo guarda `imagen-del-examen.js` sin recargar la
          pantalla (cambiar de modo no puede perder el texto del informe que no se guardó); sin JS, el botón «Ver» envía
          el mismo formulario y el servidor vuelve a pintar la tarjeta en el modo elegido. --}}

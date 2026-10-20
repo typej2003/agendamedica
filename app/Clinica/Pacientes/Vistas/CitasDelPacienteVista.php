@@ -173,7 +173,7 @@ final class CitasDelPacienteVista
     {
         if ($fila->movida()) {
             return ['tono' => 'neutro', 'icono' => 'bi-arrow-right-circle', 'texto' => 'Movida',
-                'titulo' => 'El escritorio la pasó a otro día'];
+                'titulo' => 'La cita se pasó a otro día'];
         }
 
         if ($fila->atendida()) {
@@ -205,7 +205,7 @@ final class CitasDelPacienteVista
     public function motivoSinEliminar(FilaDeCitaVista $fila): ?string
     {
         if ($fila->movida()) {
-            return 'El escritorio la pasó a otro día: el paciente ya está en la fecha nueva.';
+            return 'La cita se pasó a otro día: el paciente ya está en la fecha nueva.';
         }
 
         if ($fila->atendida()) {

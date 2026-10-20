@@ -15,6 +15,8 @@
 <div class="consulta-seccion" id="consulta-evolucion">
     <x-ui.tarjeta titulo="Evolución de esta consulta" icono="bi-activity">
         <x-slot name="acciones">
+        <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#evolucion" tipo="EV"
+            nombre="evolución" />
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
@@ -23,13 +25,7 @@
               data-consulta-evolucion data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf
 
-            {{-- El panel de plantillas (WEB-11.2) va **arriba** del campo: en el escritorio es una columna a la
-                 derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). Es
-                 buscador, lista y «Guardar como plantilla». --}}
-            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#evolucion" tipo="EV"
-                             nombre="evolución" class="mb-3" />
-
-            <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion" :ayuda="$seccion->ayuda()">
+            <x-ui.campo etiqueta="Cómo sigue el paciente" for="evolucion">
                 <textarea name="evolucion" id="evolucion" class="form-control" rows="12"
                           placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('evolucion', '')) }}</textarea>
             </x-ui.campo>

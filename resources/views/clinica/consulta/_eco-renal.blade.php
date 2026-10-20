@@ -4,8 +4,6 @@
 @if ($vm === null)
     <p class="text-muted mb-0">El eco renal no está disponible.</p>
 @else
-    <p class="text-muted small mb-3">{{ $vm->ayuda() }}</p>
-
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="eco-renal-form"
           data-consulta-eco-renal data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf

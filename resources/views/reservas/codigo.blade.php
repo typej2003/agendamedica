@@ -8,7 +8,7 @@
 
 @php
     $dia = ucfirst(\Carbon\Carbon::createFromFormat('!Y-m-d', $pendiente['fecha'])->locale('es')->isoFormat('dddd D [de] MMMM'));
-    $hora = \Carbon\Carbon::createFromFormat('H:i', $pendiente['hora'])->format('g:i A');
+    $hora = \App\Support\HoraLocal::hora12($pendiente['hora']);
     $horario = $pendiente['fecha'] . '|' . $pendiente['hora'] . '|' . $pendiente['office_id'];
 @endphp
 

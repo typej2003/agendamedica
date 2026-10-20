@@ -59,8 +59,8 @@ final class ConsultaCerrada
         }
 
         if ($this->resultado === self::CITA_MOVIDA) {
-            return 'Consulta N.º ' . $numeroDeConsulta . ' terminada. La cita de ese día la había movido el '
-                . 'escritorio, así que no se marcó como atendida.';
+            return 'Consulta N.º ' . $numeroDeConsulta . ' terminada. La cita de ese día se había movido '
+                . 'a otro día, así que no se marcó como atendida.';
         }
 
         return 'Consulta N.º ' . $numeroDeConsulta . ' terminada. No se encontró una cita de la agenda de '

@@ -389,7 +389,11 @@ class ConsultoriosWebTest extends TestCase
 
         $respuesta->assertOk();
         // El orden es el de la semana (lunes antes que miércoles), no el de la carga.
-        $respuesta->assertSeeInOrder(['Lunes', '08:00 a 12:00', 'sin tope', 'Miércoles', '14:00 a 18:00', '12 pacientes'], false);
+        $respuesta->assertSeeInOrder(['Lunes', '8:00 AM a 12:00 PM', 'sin tope', 'Miércoles', '2:00 PM a 6:00 PM', '12 pacientes'], false);
+        // Las horas se escriben con AM/PM (campo de texto) y viajan en 24 h (hidden con el `name` de siempre).
+        $respuesta->assertDontSee('type="time"', false);
+        $respuesta->assertSee('data-hora-ampm="bloque-desde-' . $consultorio->id . '-valor"', false);
+        $respuesta->assertSee('<input type="hidden" name="hora_fin" id="bloque-hasta-' . $consultorio->id . '-valor" value="">', false);
         // Y el alta de un bloque está en la misma fila, con las rutas de siempre.
         $respuesta->assertSee(route('clinica.consultorios.horarios.guardar', $consultorio) . '"', false);
         $respuesta->assertSee('name="volver" value="consultorios"', false);
@@ -607,8 +611,8 @@ class ConsultoriosWebTest extends TestCase
         $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/consultorios')->assertOk()->getContent();
 
-        preg_match('/id="bloque-desde-' . $uno->id . '"[^>]*value="([^"]*)"/', $html, $suyo);
-        preg_match('/id="bloque-desde-' . $dos->id . '"[^>]*value="([^"]*)"/', $html, $ajeno);
+        preg_match('/id="bloque-desde-' . $uno->id . '-valor"[^>]*value="([^"]*)"/', $html, $suyo);
+        preg_match('/id="bloque-desde-' . $dos->id . '-valor"[^>]*value="([^"]*)"/', $html, $ajeno);
 
         $this->assertSame('10:00', $suyo[1] ?? null, 'El consultorio que mandó el alta tiene que reponer lo escrito.');
         $this->assertSame('', $ajeno[1] ?? 'x', 'El otro consultorio no tiene que heredar lo escrito.');

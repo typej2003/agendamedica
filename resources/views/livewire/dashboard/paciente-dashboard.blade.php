@@ -43,7 +43,7 @@
                                     @if($esModoHorario)
                                         <div class="text-primary fw-bold fs-5">
                                             <i class="bi bi-clock me-1"></i>
-                                            {{ \Carbon\Carbon::parse($proximaCita->hora_ini)->format('h:i A') }}
+                                            {{ \App\Support\HoraLocal::hora12(substr((string) $proximaCita->hora_ini, 0, 5)) }}
                                         </div>
                                         <span class="badge bg-info text-dark extra-small">Cita por Horario</span>
                                     @else

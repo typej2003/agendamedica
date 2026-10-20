@@ -109,7 +109,7 @@ final class JornadaVista
     {
         $movidas = $this->jornada->movidas()->count();
 
-        return $movidas === 0 ? null : $movidas . ($movidas === 1 ? ' movida' : ' movidas') . ' por el escritorio';
+        return $movidas === 0 ? null : $movidas . ($movidas === 1 ? ' movida' : ' movidas') . ' a otro día';
     }
 
     public function urlAgendar(): string

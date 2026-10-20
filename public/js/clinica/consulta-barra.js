@@ -31,7 +31,9 @@
 
     function hora() {
         var ahora = new Date();
-        return ('0' + ahora.getHours()).slice(-2) + ':' + ('0' + ahora.getMinutes()).slice(-2);
+        // La hora del navegador, en 12 h con AM/PM («Guardado 1:05 PM»).
+        var h = ahora.getHours();
+        return (h % 12 === 0 ? 12 : h % 12) + ':' + ('0' + ahora.getMinutes()).slice(-2) + ' ' + (h >= 12 ? 'PM' : 'AM');
     }
 
     if (!form) {

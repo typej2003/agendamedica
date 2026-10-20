@@ -80,7 +80,7 @@ class PlantillasDeMensajeController extends Controller
         }
 
         if ($resultado->huboBloqueo()) {
-            return $this->aMensajes($plantilla)->with('error', 'No se guardó: otro equipo (el teléfono o el escritorio) editó esta plantilla más recientemente. Recarga la página para ver lo último.');
+            return $this->aMensajes($plantilla)->with('error', 'No se guardó: otro equipo (por ejemplo el teléfono) editó esta plantilla más recientemente. Recarga la página para ver lo último.');
         }
 
         if (! $resultado->huboCambios()) {
@@ -106,7 +106,7 @@ class PlantillasDeMensajeController extends Controller
         }
 
         if ($resultado->huboBloqueo()) {
-            return $this->aMensajes($plantilla)->with('error', 'No se restableció: otro equipo (el teléfono o el escritorio) editó esta plantilla más recientemente. Recarga la página para ver lo último.');
+            return $this->aMensajes($plantilla)->with('error', 'No se restableció: otro equipo (por ejemplo el teléfono) editó esta plantilla más recientemente. Recarga la página para ver lo último.');
         }
 
         return $this->aMensajes($plantilla)->with('estado', $resultado->huboCambios()

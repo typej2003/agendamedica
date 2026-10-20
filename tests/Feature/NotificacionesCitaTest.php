@@ -235,7 +235,7 @@ class NotificacionesCitaTest extends TestCase
         $this->assertSame(NotificacionCita::ESTADO_ENVIADA, $notificacion->estado);
         $this->assertSame('correo', $notificacion->canal);
         $this->assertSame('ana@example.com', $notificacion->destino);
-        $this->assertSame('Hola Ana Alvarez, su cita es el 05/10/2026 a las 09:30.', $notificacion->mensaje);
+        $this->assertSame('Hola Ana Alvarez, su cita es el 05/10/2026 a las 9:30 AM.', $notificacion->mensaje);
         $this->assertSame('plantilla_cita', $notificacion->plantilla);
 
         Mail::assertSent(RecordatorioDeCita::class, function (RecordatorioDeCita $correo) use ($medico) {

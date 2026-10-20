@@ -85,7 +85,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_lista_cada_medico_con_su_plan_vencimiento_y_estado(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico('Vigente');
         $this->actingAs($this->admin());
 
@@ -100,7 +100,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_los_estados_se_distinguen_y_los_contadores_filtran(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $porVencer = $this->medico('PorVencer');
         $this->vencerEl($porVencer, '2026-10-20');
         $gracia = $this->medico('EnGracia');
@@ -123,7 +123,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_renovar_sigue_donde_termina_el_actual_y_deja_el_historial(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $anual = $this->plan(['frecuencia' => 'anual', 'precio_usd' => 199.99, 'precio_tachado_usd' => 239.98, 'nombre' => 'Anual 12']);
         $this->actingAs($this->admin());
@@ -155,7 +155,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_renovar_con_monto_cero_es_cortesia_y_un_vencido_empieza_hoy(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $this->vencerEl($medico, '2026-08-01');
         $this->actingAs($this->admin());
@@ -202,7 +202,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_cancelar_un_periodo_lo_saca_del_vencimiento(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $extra = app(ServicioService::class)->renovar($medico->reg_medico, $this->plan(['frecuencia' => 'anual']));
         $this->assertSame('2027-11-05', app(ServicioService::class)->estado($medico->reg_medico)['vence_el']);
@@ -257,7 +257,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_reemplazar_empieza_hoy_sin_conservar_el_tiempo_y_deja_quien_cuando_y_por_que(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $viejo = RegMedicoServicio::where('reg_medico', $medico->reg_medico)->first(); // prueba: hasta 05/11
         $anual = $this->plan(['frecuencia' => 'anual', 'precio_usd' => 120, 'nombre' => 'Anual 12']);
@@ -291,7 +291,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_reemplazar_cancela_todos_los_periodos_activos_no_solo_el_vigente(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         app(ServicioService::class)->renovar($medico->reg_medico, $this->plan(['frecuencia' => 'anual'])); // renovó por adelantado
         $plan = $this->plan(['nombre' => 'Mensual nuevo']);
@@ -308,7 +308,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_reemplazar_con_monto_cero_es_cortesia_y_exige_motivo_y_datos_validos(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $plan = $this->plan();
         $this->actingAs($this->admin());
@@ -326,7 +326,7 @@ class ServiciosPanelTest extends TestCase
 
     public function test_quitar_plan_quita_todo_el_servicio_y_deja_de_sincronizar_sin_regalar_otra_prueba(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $medico = $this->medico();
         $servicios = app(ServicioService::class);
         $servicios->renovar($medico->reg_medico, $this->plan(['frecuencia' => 'anual']));

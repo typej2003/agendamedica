@@ -24,6 +24,7 @@ use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\InformeDeLaConsulta;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
 use App\Clinica\Consulta\ReferenciasDeLaConsulta;
+use App\Clinica\Consulta\PreFacturaDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ResumenMedico;
 use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
@@ -108,6 +109,7 @@ final class SolicitudesParaImprimir
         private InformeDeLaConsulta $informes,
         private HospitalizacionDeLaConsulta $hospitalizaciones,
         private DietaDeLaConsulta $dietas,
+        private PreFacturaDeLaConsulta $preFacturas,
         private LaboratorioDeLaConsulta $laboratorios,
         private EstudiosDeLaConsulta $estudios,
         private EcoGinecologico $ecos,
@@ -430,6 +432,18 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // La **pre-factura** (F9): se ofrece si tiene algún concepto. La lista de la cita lleva sólo la cuenta, no los montos.
+        $conceptos = $this->preFacturas->de($consulta)->count();
+        if ($conceptos > 0) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::PREFACTURA,
+                'tipo' => DocumentoImpreso::PREFACTURA,
+                'titulo' => 'Pre-factura',
+                'resumen' => $conceptos . ($conceptos === 1 ? ' concepto' : ' conceptos'),
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         return $disponibles;
     }
 
@@ -646,6 +660,12 @@ final class SolicitudesParaImprimir
             $dieta = $this->dietas->fila($consulta);
 
             return $this->dietas->esReal($dieta) ? $this->dieta($paciente, $dieta, $fechaDeLaConsulta) : null;
+        }
+
+        if ($clave === DocumentoImpreso::PREFACTURA) {
+            $items = $this->preFacturas->de($consulta);
+
+            return $items->isEmpty() ? null : $this->preFactura($paciente, $items, $fechaDeLaConsulta);
         }
 
         if (preg_match('/^' . DocumentoImpreso::REFERENCIA . '-(\d+)$/', $clave, $coincidencia) === 1) {
@@ -877,6 +897,43 @@ final class SolicitudesParaImprimir
             PacienteImpreso::datos($paciente, $fecha),
             [],
             array_merge($parrafos, DocumentoImpreso::parrafosDe($resumen, 'RESUMEN CLÍNICO:', true)),
+        );
+    }
+
+    /**
+     * La **pre-factura** (F9): un renglón por concepto (`1. CONSULTA — 2 × 50,00 = 100,00`) y el total. El monto de cada
+     * renglón es el de la fila (el que el médico dejó), no el del catálogo.
+     *
+     * @param  Collection<int,\App\Models\PreFacturaConsulta>  $items
+     */
+    private function preFactura(Paciente $paciente, Collection $items, string $fecha): DocumentoImpreso
+    {
+        $dinero = fn (float $valor) => number_format($valor, 2, ',', '.');
+        $cantidad = fn (float $valor) => rtrim(rtrim(number_format($valor, 2, ',', '.'), '0'), ',');
+        $parrafos = [];
+
+        foreach ($items->values() as $posicion => $item) {
+            $nombre = trim((string) $item->descripcion) !== '' ? trim((string) $item->descripcion) : 'Concepto ' . trim((string) $item->codigo);
+
+            $parrafos[] = [
+                'texto' => ($posicion + 1) . '. ' . $nombre . ' — ' . $cantidad((float) $item->cantidad) . ' × ' . $dinero((float) $item->monto)
+                    . ' = ' . $dinero(PreFacturaDeLaConsulta::subtotal($item)),
+                'etiqueta' => $posicion === 0 ? 'CONCEPTOS:' : null,
+                'aparte' => $posicion === 0,
+            ];
+        }
+
+        $parrafos[] = ['texto' => $dinero(PreFacturaDeLaConsulta::total($items)), 'etiqueta' => 'TOTAL:', 'aparte' => true];
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::PREFACTURA,
+            DocumentoImpreso::PREFACTURA,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::PREFACTURA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::PREFACTURA][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            $parrafos,
         );
     }
 
@@ -1898,7 +1955,7 @@ final class SolicitudesParaImprimir
         try {
             return Carbon::parse($consulta->fecha)->toDateString();
         } catch (Throwable $e) {
-            return Carbon::now()->toDateString();
+            return \App\Clinica\FechaDelConsultorio::hoyComoTexto();
         }
     }
 

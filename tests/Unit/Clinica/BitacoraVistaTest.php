@@ -69,7 +69,7 @@ class BitacoraVistaTest extends TestCase
     public function test_solo_unos_pocos_valores_son_visibles_y_los_demas_nunca(): void
     {
         $this->assertSame('25,00', DiccionarioDeLaBitacora::valorVisible('cola', 'monto', '25'));
-        $this->assertSame('09:30', DiccionarioDeLaBitacora::valorVisible('cola', 'hora_ini', '09:30:00'));
+        $this->assertSame('9:30 AM', DiccionarioDeLaBitacora::valorVisible('cola', 'hora_ini', '09:30:00'));
         $this->assertSame('12/10/2026', DiccionarioDeLaBitacora::valorVisible('cola', 'fecha', '2026-10-12 00:00:00'));
         $this->assertSame('atendida', DiccionarioDeLaBitacora::valorVisible('cola', 'atendido', '1'));
         $this->assertNull(DiccionarioDeLaBitacora::valorVisible('consultas', 'evolucion', 'Dolor'));
@@ -123,8 +123,8 @@ class BitacoraVistaTest extends TestCase
     {
         $linea = $this->vista([$this->grupo(['columnas' => ['estado' => '1', 'monto' => '30']])])->lineas()[0];
 
-        $this->assertSame('Hoy 10:32', $linea['cuando']);
-        $this->assertSame('12/10/2026 10:32:10', $linea['cuandoCompleto']);
+        $this->assertSame('Hoy 10:32 AM', $linea['cuando']);
+        $this->assertSame('12/10/2026 10:32:10 AM', $linea['cuandoCompleto']);
         $this->assertSame(['nombre' => 'María Gómez', 'rol' => 'secretaría', 'sinUsuario' => false], $linea['quien']);
         $this->assertSame('Editó una cita', $linea['accion']);
         $this->assertSame('Cambió: Estado, Monto: 30,00', $linea['detalle']);
@@ -162,8 +162,8 @@ class BitacoraVistaTest extends TestCase
             $this->grupo(['ultimo' => '2026-09-30 13:00:00']),
         ])->lineas();
 
-        $this->assertSame('Ayer 16:15', $lineas[0]['cuando']);
-        $this->assertSame('30/09/2026 09:00', $lineas[1]['cuando']);
+        $this->assertSame('Ayer 4:15 PM', $lineas[0]['cuando']);
+        $this->assertSame('30/09/2026 9:00 AM', $lineas[1]['cuando']);
     }
 
     public function test_quien_cuando_no_hay_usuario(): void
@@ -171,7 +171,7 @@ class BitacoraVistaTest extends TestCase
         $quien = fn (array $extra) => $this->vista([$this->grupo($extra + ['user_id' => null])])->lineas()[0]['quien'];
 
         $this->assertSame('App del móvil', $quien(['origen' => 'mobile'])['nombre']);
-        $this->assertSame('Escritorio (PowerBuilder)', $quien(['origen' => 'escritorio'])['nombre']);
+        $this->assertSame('Sistema anterior', $quien(['origen' => 'escritorio'])['nombre']);
         $this->assertSame('Sin usuario', $quien(['origen' => 'web'])['nombre']);
         $this->assertTrue($quien(['origen' => 'web'])['sinUsuario']);
         $this->assertSame('Usuario eliminado', $quien(['user_id' => 999])['nombre']);

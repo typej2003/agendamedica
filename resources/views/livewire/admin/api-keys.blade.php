@@ -41,7 +41,7 @@
                                 </td>
                                 <td>
                                     @if ($r['ultima_escritorio'])
-                                        <div>{{ $r['ultima_escritorio']->format('d/m/Y H:i') }}</div>
+                                        <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_escritorio']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_escritorio']->locale('es')->diffForHumans() }}</small>
                                     @else
                                         <span class="text-muted">Nunca</span>
@@ -49,7 +49,7 @@
                                 </td>
                                 <td>
                                     @if ($r['ultima_app'])
-                                        <div>{{ $r['ultima_app']->format('d/m/Y H:i') }}</div>
+                                        <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_app']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_app']->locale('es')->diffForHumans() }}</small>
                                     @else
                                         <span class="text-muted">Nunca</span>
@@ -69,7 +69,7 @@
                                     @if ($r['carga'] && $r['carga']->estado === 'completa')
                                         <span class="badge bg-success">Completa</span>
                                         @if ($r['carga']->finalizada_at)
-                                            <div><small class="text-muted">{{ $r['carga']->finalizada_at->format('d/m/Y') }}</small></div>
+                                            <div><small class="text-muted">{{ \App\Support\HoraLocal::instante($r['carga']->finalizada_at)?->format('d/m/Y') }}</small></div>
                                         @endif
                                     @elseif ($r['carga'])
                                         <span class="badge bg-warning text-dark">En curso</span>
@@ -142,9 +142,9 @@
                                     @forelse ($credenciales as $c)
                                         <tr wire:key="cred-{{ $c->id }}">
                                             <td class="fw-semibold">{{ $c->machine_label }}</td>
-                                            <td>{{ $c->created_at?->format('d/m/Y') }}</td>
+                                            <td>{{ \App\Support\HoraLocal::instante($c->created_at)?->format('d/m/Y') }}</td>
                                             <td>{{ $c->expires_at?->format('d/m/Y') }}</td>
-                                            <td>{{ $c->last_used_at ? $c->last_used_at->format('d/m/Y H:i') : 'Nunca' }}</td>
+                                            <td>{{ \App\Support\HoraLocal::fechaHora($c->last_used_at, 'Nunca') }}</td>
                                             <td>
                                                 @if ($c->estaRevocada())
                                                     <span class="badge bg-danger">Revocada</span>

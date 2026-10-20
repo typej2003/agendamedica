@@ -112,7 +112,7 @@ class CitasDelPacienteVistaTest extends TestCase
         $fila = $this->fila();
 
         $this->assertSame('lunes 05/10/2026', $vista->cuando($fila));
-        $this->assertSame('09:30', $fila->hora());
+        $this->assertSame('9:30 AM', $fila->hora());
         $this->assertSame('', $fila->turno(), 'sin jornada a la vista no hay número de turno');
     }
 
@@ -121,7 +121,7 @@ class CitasDelPacienteVistaTest extends TestCase
         $vista = $this->vista([]);
 
         $this->assertSame(
-            '¿Eliminar la cita del lunes 05/10/2026 a las 09:30? No se puede deshacer.',
+            '¿Eliminar la cita del lunes 05/10/2026 a las 9:30 AM? No se puede deshacer.',
             $vista->confirmarEliminar($this->fila())
         );
     }

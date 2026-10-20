@@ -760,7 +760,8 @@ class CatalogosRecetasWebTest extends TestCase
         $this->assertStringNotContainsString('data-recipe-modo="tratamientos"', $html, 'un tratamiento no se arma con otros');
         $this->assertStringContainsString('id="recipe-nuevo-medicamento"', $html, 'el medicamento que falta se crea desde el buscador');
         $this->assertStringContainsString('id="dialogo-medicamento"', $html);
-        $this->assertSame(1, substr_count($html, '<section class="card'), 'nombre, buscador y lista van en una sola tarjeta');
+        $this->assertStringContainsString('dos-listas', $html, 'el tratamiento a la izquierda y el vademécum a la vista a la derecha');
+        $this->assertStringContainsString('data-recipe-lista-en-linea="1"', $html, 'la lista del vademécum se carga sola');
 
         $editar = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.tratamientos.editar', $id))
             ->assertOk()->assertSee('Editar tratamiento')->assertSee('Código 0001')->assertSee('CONTROL PRENATAL')

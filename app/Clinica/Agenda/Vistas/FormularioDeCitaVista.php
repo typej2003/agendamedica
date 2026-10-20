@@ -5,6 +5,7 @@ namespace App\Clinica\Agenda\Vistas;
 use App\Actions\Catalogos\ReglasDelMotivoDeCita;
 use App\Clinica\Agenda\Jornada;
 use App\Models\Office;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -247,7 +248,7 @@ final class FormularioDeCitaVista
         return [
             'paciente' => $this->paciente['nombre'] ?? 'Este paciente',
             'fecha'    => $otra->fecha->format('d/m/Y'),
-            'hora'     => $otra->hora_ini ? substr($otra->hora_ini, 0, 5) : null,
+            'hora'     => $otra->hora_ini ? HoraLocal::hora12($otra->hora_ini) : null,
             'sede'     => $sede ? ($sede->medicalCenter->name ?? 'esa sede') : null,
         ];
     }
@@ -287,7 +288,7 @@ final class FormularioDeCitaVista
     {
         return $this->bloques->map(fn ($bloque, $indice) => [
             'valor'   => (int) $indice,
-            'texto'   => substr($bloque->hora_inicio, 0, 5) . ' a ' . substr($bloque->hora_fin, 0, 5),
+            'texto'   => HoraLocal::rango($bloque->hora_inicio, $bloque->hora_fin),
             'elegido' => (int) $this->valor('bloque', 0) === (int) $indice,
         ])->values()->all();
     }

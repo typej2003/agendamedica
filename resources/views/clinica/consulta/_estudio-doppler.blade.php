@@ -15,11 +15,11 @@
 <div class="consulta-seccion" id="consulta-estudio-doppler">
     <x-ui.tarjeta :titulo="$vm->titulo()" :icono="$vm->icono()">
         <x-slot name="acciones">
+            @include('clinica.consulta._estudio-formato-boton', ['formato' => $formato ?? null])
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-doppler-form" novalidate
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
@@ -72,8 +72,8 @@
                                 <div class="col-12">
                                     <textarea class="form-control" rows="6" id="{{ $campo['columna'] }}"
                                               name="{{ $campo['columna'] }}"
-                                              aria-label="{{ $campo['ayuda'] }}">{{ $campo['valor'] }}</textarea>
-                                    <span class="form-text d-block">{{ $campo['ayuda'] }}</span>
+                                              placeholder="{{ $campo['ayuda'] }}"
+                                          aria-label="{{ $campo['ayuda'] }}">{{ $campo['valor'] }}</textarea>
                                 </div>
                             @else
                                 @include('clinica.consulta._estudio-campo', [
@@ -113,11 +113,7 @@
 
     {{-- El informe en texto libre del escritorio: fuera del formulario porque es de lectura. --}}
     @if ($vm->hayPuroTexto())
-        <x-ui.tarjeta titulo="Informe en texto libre del escritorio" icono="bi-card-text" class="mt-3">
-            <p class="texto-tenue small mb-2">
-                Lo escribió el escritorio con su modo <em>Plantillas</em>. Se muestra tal como quedó y todavía
-                no se edita desde acá.
-            </p>
+        <x-ui.tarjeta titulo="Informe en texto libre" icono="bi-card-text" class="mt-3">
             <div class="examen-resumen">{{ $vm->puroTexto() }}</div>
         </x-ui.tarjeta>
     @endif

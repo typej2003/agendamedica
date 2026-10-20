@@ -23,6 +23,6 @@ trait ResuelveLaCitaDelContexto
 
     private function avisoDeCitaMovida(): string
     {
-        return 'El escritorio movió esta cita a otro día: el paciente ya está en la fecha nueva.';
+        return 'Esta cita se movió a otro día: el paciente ya está en la fecha nueva.';
     }
 }

@@ -205,9 +205,22 @@
                     <ol class="linea-tiempo">
                         @foreach ($vm->consultas() as $consulta)
                             <li>
+                                {{-- Cada consulta abre su pantalla: la fecha es el enlace y, al costado, el
+                                     botón que lo dice. Sólo para quien trabaja la consulta (el médico): la
+                                     secretaría lee la ficha sin el enlace, igual que en la historia. --}}
                                 <div class="linea-tiempo-cabeza">
-                                    <strong>{{ $consulta['fecha'] }}</strong>
-                                    <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                                    @if ($consulta['url'])
+                                        <span>
+                                            <a href="{{ $consulta['url'] }}" class="fw-bold text-decoration-none" title="Abrir la consulta">{{ $consulta['fecha'] }}</a>
+                                            <span class="texto-tenue small ms-1">{{ $consulta['numero'] }}</span>
+                                        </span>
+                                        <a href="{{ $consulta['url'] }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Ver consulta
+                                        </a>
+                                    @else
+                                        <strong>{{ $consulta['fecha'] }}</strong>
+                                        <span class="texto-tenue small">{{ $consulta['numero'] }}</span>
+                                    @endif
                                 </div>
                                 @if ($consulta['resumen'])
                                     <p class="linea-tiempo-texto">{{ $consulta['resumen'] }}</p>

@@ -68,7 +68,7 @@ class ReactivosDelLaboratorioTest extends TestCase
 
     /**
      * **El formulario** resuelve una fila vieja —la que la web guardó con el rótulo— a su código, así el
-     * `<select>` la muestra elegida en vez de agregar un «Negativo (del escritorio)».
+     * `<select>` la muestra elegida en vez de agregar un «Negativo (valor anterior)».
      */
     public function test_el_formulario_resuelve_un_rotulo_viejo_a_su_codigo(): void
     {

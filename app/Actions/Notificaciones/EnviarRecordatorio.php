@@ -19,6 +19,7 @@ use App\Notificaciones\ExcepcionDeEnvio;
 use App\Notificaciones\MensajeDeRecordatorio;
 use App\Notificaciones\Telefono;
 use App\Support\FechaClinica;
+use App\Support\HoraLocal;
 use InvalidArgumentException;
 
 /**
@@ -214,7 +215,7 @@ final class EnviarRecordatorio
         return $this->mensajes->armar($plantilla, [
             'paciente' => $this->nombreDelPaciente($paciente),
             'fecha'    => $this->fechaCorta($cita->fecha),
-            'hora'     => $cita->hora_ini ? substr((string) $cita->hora_ini, 0, 5) : '',
+            'hora'     => HoraLocal::hora12((string) $cita->hora_ini),
             'doctor'   => $this->nombreDelMedico($medico),
             'centro'   => (string) $centro,
         ]);

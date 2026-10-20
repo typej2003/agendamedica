@@ -214,6 +214,14 @@ class PacienteController extends Controller
         $historia = $pacienteDeLaCita->historia((int) $ficha->id, [$contexto['reg_medico']]);
         $vm = $vm->conHistoriaRegistrada($historia !== null);
 
+        // **Cada consulta de la lista abre su pantalla** (2026-10-20): la ficha mostraba la línea de tiempo
+        // pero no llevaba a la consulta; la historia del paciente (WEB-3.5) sí. Se ofrece con la misma regla
+        // que ahí —la consulta es del médico, la secretaría recibe 403—, así que sin `trabajaLaConsulta` la
+        // fila queda como texto.
+        if ($request->user()?->trabajaLaConsulta()) {
+            $vm = $vm->conUrlConsulta(fn (int $consulta) => route('clinica.consulta', $consulta));
+        }
+
         // «¿Atender ahora?» (O-05): la ficha lo ofrece **sólo en el momento en que el paciente quedó
         // atendible** —lo deja dicho el flash de la acción que le puso el número—, sólo si la historia está
         // registrada y sólo a quien trabaja la consulta: atender es del médico (WEB-4.9). Un **centro** no
@@ -667,12 +675,12 @@ class PacienteController extends Controller
             'representante_direccion'  => ['nullable', 'string', 'max:60'],
         ], [
             'representante_nombre.max'        => 'El nombre del representante no puede pasar de 40 caracteres.',
-            'representante_parentesco.max'    => 'El parentesco del representante es un solo carácter (es el ancho del escritorio).',
+            'representante_parentesco.max'    => 'El parentesco del representante es un solo carácter.',
             'representante_cedula.regex'      => 'La cédula del representante solo lleva números (hasta 10 dígitos).',
             'representante_telefono.max'      => 'El teléfono del representante no puede pasar de 20 caracteres.',
             'representante_email.email'       => 'Revisa el correo del representante: no tiene forma de correo.',
             'representante_email.max'         => 'El correo del representante no puede pasar de 100 caracteres.',
-            'representante_direccion.max'     => 'La dirección del representante no puede pasar de 60 caracteres (es el ancho del escritorio).',
+            'representante_direccion.max'     => 'La dirección del representante no puede pasar de 60 caracteres.',
         ]);
 
         $datos = [];

@@ -97,7 +97,7 @@ class HacerCitaDesdeRecipesWebTest extends TestCase
         // Y la hoja del récipe ya la imprime como próxima cita.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.consulta.recipes.imprimir', [$consulta->id, 1]))
-            ->assertSee('Próxima cita: 14/10/2026  09:30');
+            ->assertSee('Próxima cita: 14/10/2026  9:30 AM');
     }
 
     public function test_si_el_paciente_ya_tiene_cita_pendiente_la_pregunta_conserva_el_regreso(): void

@@ -4,6 +4,7 @@ namespace App\Clinica\Agenda;
 
 use App\Models\Office;
 use App\Models\OfficeSchedule;
+use App\Support\HoraLocal;
 use Illuminate\Support\Collection;
 
 /**
@@ -114,7 +115,7 @@ final class Jornada
             return 'Sin horario configurado';
         }
 
-        return substr($this->horario->hora_inicio, 0, 5) . ' a ' . substr($this->horario->hora_fin, 0, 5);
+        return HoraLocal::rango($this->horario->hora_inicio, $this->horario->hora_fin);
     }
 
     /**

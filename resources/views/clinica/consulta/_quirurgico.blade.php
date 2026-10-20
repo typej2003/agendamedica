@@ -27,8 +27,6 @@
             @endforeach
         </nav>
 
-        <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
-
         @if ($seccion->esPestana('riesgo'))
             @include('clinica.consulta._quirurgico-riesgo', ['seccion' => $seccion])
         @elseif ($seccion->esPestana('intervenciones'))

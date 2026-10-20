@@ -28,7 +28,7 @@ class PacienteDashboard extends Component
             // Obtener la cita activa/pendiente (estado = 0 o 'pendiente' y no atendido)
             $this->proximaCita = Cola::with('medicoUser')
                 ->where('numhistoria', $numHistoriaUser)
-                ->whereDate('fecha', '>=', Carbon::today())
+                ->whereDate('fecha', '>=', \App\Clinica\FechaDelConsultorio::hoyComoTexto())
                 ->where('atendido', 0)
                 ->where(function ($query) {
                     $query->where('estado', 0)

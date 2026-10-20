@@ -16,8 +16,9 @@ use Illuminate\Support\Collection;
  * buscador del vademécum es uno solo. Lo que cambia, y este ViewModel apaga o enciende:
  *
  *  - **no ofrece el modo "Tratamientos"** (un tratamiento no se arma con otros);
- *  - el buscador va **dentro de la misma tarjeta** del nombre y la lista, con un botón al final que abre el alta del
- *    medicamento que falta en un diálogo lateral (`urlCrearMedicamento()`, el alta rápida del vademécum);
+ *  - va en **dos columnas** como el récipe: el tratamiento a la izquierda y el vademécum a la vista a la derecha, con su
+ *    buscador y un botón que abre el alta del medicamento que falta en un diálogo lateral (`urlCrearMedicamento()`, el
+ *    alta rápida del vademécum);
  *  - **ofrece subir y bajar** cada medicamento: el `orden` de un tratamiento es el de la lista;
  *  - el guardado es del tratamiento entero y explícito, con el aviso de cambios sin guardar de siempre.
  *

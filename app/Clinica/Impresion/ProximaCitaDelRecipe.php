@@ -6,6 +6,7 @@ use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\Office;
 use App\Support\FechaClinica;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 
 /**
@@ -95,6 +96,6 @@ final class ProximaCitaDelRecipe
             ->orderBy('id')
             ->value('modalidad');
 
-        return $modalidad === Office::MODALIDAD_HORA ? substr((string) $cita->hora_ini, 0, 5) : null;
+        return $modalidad === Office::MODALIDAD_HORA ? HoraLocal::hora12((string) $cita->hora_ini) : null;
     }
 }

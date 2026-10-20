@@ -62,7 +62,7 @@ final class FechaClinica
             return '';
         }
 
-        if ($fecha->year < 1900 || $fecha->greaterThan(Carbon::now())) {
+        if ($fecha->year < 1900 || $fecha->greaterThan(\App\Clinica\FechaDelConsultorio::hoyComoFecha())) {
             return '';
         }
 
@@ -86,11 +86,11 @@ final class FechaClinica
 
         // Una fecha de nacimiento en el futuro o con un año imposible tampoco da edad: `diffInYears` es
         // absoluto, así que un `2099-01-01` mal cargado mostraba "73 años" en un recién nacido.
-        if ($fecha->year < 1900 || $fecha->greaterThan(Carbon::now())) {
+        if ($fecha->year < 1900 || $fecha->greaterThan(\App\Clinica\FechaDelConsultorio::hoyComoFecha())) {
             return null;
         }
 
-        return $fecha->diffInYears(Carbon::now());
+        return $fecha->diffInYears(\App\Clinica\FechaDelConsultorio::hoyComoFecha());
     }
 
     /**
@@ -110,7 +110,7 @@ final class FechaClinica
         }
 
         $nacimiento = Carbon::parse(trim((string) $fnacimiento));
-        $diferencia = $nacimiento->diff(Carbon::now());
+        $diferencia = $nacimiento->diff(\App\Clinica\FechaDelConsultorio::hoyComoFecha());
         $partes = [];
 
         if ($diferencia->y > 0) {

@@ -250,7 +250,7 @@ class EcoAbdominalTest extends TestCase
         // Un código que el DataWindow no tiene se conserva al final (no se pierde el dato del escritorio).
         $ajeno = $vm->grupos()[2]['campos'][2];
         $this->assertSame(['', 'N', 'A', 'Z'], array_column($ajeno['opciones'], 'valor'));
-        $this->assertSame('Z (del escritorio)', $ajeno['opciones'][3]['texto']);
+        $this->assertSame('Z (valor anterior)', $ajeno['opciones'][3]['texto']);
     }
 
     /**

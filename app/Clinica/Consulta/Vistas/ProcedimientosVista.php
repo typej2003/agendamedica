@@ -89,8 +89,7 @@ final class ProcedimientosVista
     public function ayuda(): string
     {
         return 'Cada endoscopía se guarda en la consulta y se vuelve a mostrar cuando la abrís de nuevo. El «Texto para '
-            . 'imprimir» es lo que sale en el informe: el escritorio lo arma con su plantilla de estudio normal y después '
-            . 'se puede corregir.';
+            . 'imprimir» es lo que sale en el informe.';
     }
 
     public function avisoSinGuardar(): string

@@ -388,7 +388,7 @@ class ConsultaEcoWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
             ->assertSee('INFORME EN TEXTO LIBRE DEL ESCRITORIO')
-            ->assertSee('Informe en texto libre del escritorio');
+            ->assertSee('Informe en texto libre');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
             'cuerpo' => '58',
@@ -418,7 +418,7 @@ class ConsultaEcoWebTest extends TestCase
         // El desplegable ofrece el código guardado aunque no esté en la lista del DataWindow.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertSee('Z (del escritorio)');
+            ->assertSee('Z (valor anterior)');
 
         // Y si el médico guarda sin tocar ese campo, el código sigue ahí.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
@@ -447,8 +447,7 @@ class ConsultaEcoWebTest extends TestCase
         // El formulario llega con la FUR del control prenatal y dice de dónde salió.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertSee('value="2026-05-20"', false)
-            ->assertSee('La trajimos del control prenatal de esta historia.');
+            ->assertSee('value="2026-05-20"', false);
 
         // Y al guardar queda escrita, como cuando el escritorio entra a la pestaña.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
@@ -466,7 +465,7 @@ class ConsultaEcoWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertDontSee('La trajimos del control prenatal de esta historia.');
+            ->assertDontSee('value="2026-05-20"', false);
     }
 
     // ------------------------------------------------------------------------------------ Permisos

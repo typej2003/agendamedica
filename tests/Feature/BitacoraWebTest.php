@@ -128,18 +128,18 @@ class BitacoraWebTest extends TestCase
         $filas = $this->filas($respuesta);
 
         $this->assertCount(3, $filas, 'La creación, el mostrador (estado y monto en el mismo segundo) y la consulta: una línea por acción.');
-        $this->assertStringContainsString('Hoy 05:13', $filas[0]);
+        $this->assertStringContainsString('Hoy 5:13 AM', $filas[0]);
         $this->assertStringContainsString($user->name, $filas[0]);
         $this->assertStringContainsString('médico', $filas[0]);
         $this->assertStringContainsString('Editó una consulta', $filas[0]);
         $this->assertStringContainsString('Cambió: Enfermedad actual', $filas[0]);
-        $this->assertStringContainsString('Hoy 05:03', $filas[1]);
+        $this->assertStringContainsString('Hoy 5:03 AM', $filas[1]);
         $this->assertStringContainsString('María Gómez', $filas[1]);
         $this->assertStringContainsString('secretaría', $filas[1]);
         $this->assertStringContainsString('Editó una cita', $filas[1]);
         $this->assertStringContainsString('Estado', $filas[1]);
         $this->assertStringContainsString('Monto: 40,00', $filas[1]);
-        $this->assertStringContainsString('Hoy 05:00', $filas[2]);
+        $this->assertStringContainsString('Hoy 5:00 AM', $filas[2]);
         $this->assertStringContainsString('Creó una cita', $filas[2]);
         $this->assertStringContainsString('Alvarez, Ana', $filas[2], 'La línea dice de qué paciente es.');
     }
@@ -192,7 +192,7 @@ class BitacoraWebTest extends TestCase
         $filas = implode("\n", $this->filas($respuesta));
 
         $this->assertStringContainsString('App del móvil', $filas);
-        $this->assertStringContainsString('Escritorio (PowerBuilder)', $filas);
+        $this->assertStringContainsString('Sistema anterior', $filas);
         $this->assertStringContainsString('Sin usuario', $filas);
         $this->assertStringContainsString('anterior a la bitácora', $filas);
         $this->assertCount(3, $this->filas($respuesta), 'Ni la migración de archivos ni el alias del teléfono aparecen.');
@@ -207,9 +207,9 @@ class BitacoraWebTest extends TestCase
 
         $filas = $this->filas($this->como($user, $medico, $gineco)->get(route('clinica.bitacora')));
 
-        $this->assertStringContainsString('Hoy 04:30', $filas[0]);
-        $this->assertStringContainsString('Ayer 21:30', $filas[1]);
-        $this->assertStringContainsString('05/10/2026 11:00', $filas[2]);
+        $this->assertStringContainsString('Hoy 4:30 AM', $filas[0]);
+        $this->assertStringContainsString('Ayer 9:30 PM', $filas[1]);
+        $this->assertStringContainsString('05/10/2026 11:00 AM', $filas[2]);
     }
 
     public function test_se_pagina_de_a_cincuenta_en_el_servidor(): void
@@ -275,7 +275,7 @@ class BitacoraWebTest extends TestCase
 
         // Las opciones del filtro: todos, sin usuario, el médico y la secretaria (aunque no hubiera hecho nada).
         $opciones = $como->get(route('clinica.bitacora'));
-        $opciones->assertSee('>Sin usuario (móvil, escritorio o anterior a la bitácora)<', false);
+        $opciones->assertSee('>Sin usuario (móvil, sistema anterior o previo a la bitácora)<', false);
         $opciones->assertSee('(secretaría)');
         $opciones->assertSee('(médico)');
     }
@@ -292,8 +292,8 @@ class BitacoraWebTest extends TestCase
 
         $dia5 = $this->filas($como->get(route('clinica.bitacora', ['desde' => '2026-10-05', 'hasta' => '2026-10-05'])));
         $this->assertCount(2, $dia5, 'El día 5 del consultorio, de 00:00 a 23:59, no el día 5 en UTC.');
-        $this->assertStringContainsString('05/10/2026 23:59', $dia5[0]);
-        $this->assertStringContainsString('05/10/2026 01:00', $dia5[1]);
+        $this->assertStringContainsString('05/10/2026 11:59 PM', $dia5[0]);
+        $this->assertStringContainsString('05/10/2026 1:00 AM', $dia5[1]);
 
         $this->assertCount(3, $this->filas($como->get(route('clinica.bitacora', ['desde' => '2026-10-05']))));
         $this->assertCount(3, $this->filas($como->get(route('clinica.bitacora', ['hasta' => '2026-10-05']))), 'Hasta el día 5 incluido.');

@@ -324,9 +324,6 @@ class ConsultaAntecedentesWebTest extends TestCase
             $this->chipsDeLaRespuesta($respuesta->getContent()),
             fn ($c) => $c['activo'],
         ), 'nombre'));
-
-        // La ayuda dice de quién son los antecedentes: es la decisión de la sección.
-        $respuesta->assertSee('son del paciente, no de esta consulta', false);
     }
 
     /**

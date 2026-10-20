@@ -8,8 +8,6 @@
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="cuestionario-form" data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 

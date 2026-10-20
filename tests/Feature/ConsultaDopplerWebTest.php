@@ -399,7 +399,7 @@ class ConsultaDopplerWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertSee('Informe en texto libre del escritorio')
+            ->assertSee('Informe en texto libre')
             ->assertSee('INFORME DEL ESCRITORIO')
             ->assertSee('Segunda línea.')
             // El campo del escritorio no se pinta como un control del formulario.

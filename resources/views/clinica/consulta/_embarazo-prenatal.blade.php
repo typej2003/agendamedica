@@ -36,8 +36,6 @@
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
         {{-- Las gestas de la historia: la que se está mirando se elige con un enlace, como las pestañas. --}}
         @if (! $vm->sinGestas())
             <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />

@@ -244,6 +244,7 @@
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
 <script src="{{ asset('js/clinica/buscar-auto.js') }}"></script>
+<script src="{{ asset('js/clinica/hora-ampm.js') }}"></script>
 <script src="{{ asset('js/clinica/chips.js') }}"></script>
 {{-- El latido de la sesión (2026-10-19): en **todas** las pantallas del consultorio, no sólo en la consulta.
      Un GET vacío cada pocos minutos con la pestaña a la vista; la URL sale del `meta` de arriba. --}}

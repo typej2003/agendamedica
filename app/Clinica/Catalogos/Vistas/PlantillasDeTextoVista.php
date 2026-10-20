@@ -234,7 +234,7 @@ final class PlantillasDeTextoVista
         }
 
         if ($otros !== []) {
-            $grupos[] = ['grupo' => 'Otros formatos del escritorio (la consulta de la web todavía no los ofrece)', 'opciones' => $otros];
+            $grupos[] = ['grupo' => 'Otros formatos (la consulta todavía no los ofrece)', 'opciones' => $otros];
         }
 
         $actual = $this->tipoSeleccionado();

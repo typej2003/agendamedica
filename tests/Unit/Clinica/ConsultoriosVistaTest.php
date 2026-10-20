@@ -71,7 +71,7 @@ class ConsultoriosVistaTest extends TestCase
 
         // El orden es el de una semana (día y después hora), no el de la carga.
         $this->assertSame(
-            [['Lunes', '08:00 a 12:00'], ['Lunes', '13:00 a 17:00'], ['Miércoles', '14:00 a 18:00']],
+            [['Lunes', '8:00 AM a 12:00 PM'], ['Lunes', '1:00 PM a 5:00 PM'], ['Miércoles', '2:00 PM a 6:00 PM']],
             array_map(fn ($bloque) => [$bloque['dia'], $bloque['horario']], $fila['bloques']),
         );
         $this->assertSame('12 pacientes', $fila['bloques'][2]['cupo']);
@@ -101,7 +101,7 @@ class ConsultoriosVistaTest extends TestCase
         $confirmar = $vista->filas()[0]['bloques'][0]['confirmar'];
 
         $this->assertStringContainsString('Martes', $confirmar);
-        $this->assertStringContainsString('08:00 a 12:00', $confirmar);
+        $this->assertStringContainsString('8:00 AM a 12:00 PM', $confirmar);
         $this->assertStringContainsString('no se borran', $confirmar);
     }
 

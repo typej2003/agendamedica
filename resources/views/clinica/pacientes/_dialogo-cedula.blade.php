@@ -19,7 +19,7 @@
             </x-ui.campo>
 
             <x-ui.campo etiqueta="Cédula nueva" for="cedula" requerido
-                        ayuda="Solo números, igual que en el escritorio. La cédula identifica al paciente en todos los consultorios.">
+                        ayuda="Solo números. La cédula identifica al paciente en todos los consultorios.">
                 <input type="text" name="cedula" id="cedula" class="form-control" inputmode="numeric"
                        pattern="[0-9]{1,10}" maxlength="10" value="{{ old('cedula') }}"
                        @if ($errors->has('cedula')) aria-invalid="true" @endif required>

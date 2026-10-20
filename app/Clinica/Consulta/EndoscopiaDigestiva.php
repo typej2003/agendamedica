@@ -53,7 +53,7 @@ final class EndoscopiaDigestiva
             'descripcion'  => ['etiqueta' => 'Hallazgos', 'columna' => 'descripcion', 'clase' => 'parrafo'],
             'conclusiones' => ['etiqueta' => 'Conclusiones', 'columna' => 'conclusiones', 'clase' => 'parrafo'],
             'full_texto'   => ['etiqueta' => 'Texto para imprimir', 'columna' => 'full_texto', 'clase' => 'parrafo',
-                'ayuda' => 'Es lo que imprime el informe. El escritorio lo arma con su plantilla de estudio normal y después se puede corregir.'],
+                'ayuda' => ''],
         ],
         self::INFERIOR => [
             'fecha'        => ['etiqueta' => 'Fecha', 'columna' => 'fecha', 'clase' => 'fecha'],
@@ -61,7 +61,7 @@ final class EndoscopiaDigestiva
             'indicacion'   => ['etiqueta' => 'Indicación', 'columna' => 'indicacion', 'clase' => 'texto'],
             'sedacion'     => ['etiqueta' => 'Sedación', 'columna' => 'sedacion', 'clase' => 'texto'],
             'esofago_estado'      => ['etiqueta' => 'Esófago (estado)', 'columna' => 'esofago_estado', 'clase' => 'opcion',
-                'ayuda' => 'Un carácter, como en el escritorio («N» = normal).'],
+                'ayuda' => ''],
             'esofago_descripcion' => ['etiqueta' => 'Esófago', 'columna' => 'esofago_descripcion', 'clase' => 'parrafo'],
             'estomago_estado'      => ['etiqueta' => 'Estómago (estado)', 'columna' => 'estomago_estado', 'clase' => 'opcion'],
             'estomago_descripcion' => ['etiqueta' => 'Estómago', 'columna' => 'estomago_descripcion', 'clase' => 'parrafo'],

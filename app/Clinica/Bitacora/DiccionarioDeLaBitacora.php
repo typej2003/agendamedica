@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Bitacora;
 
+use App\Support\HoraLocal;
+
 /**
  * El diccionario único de la **bitácora** (WEB-8.5): cómo se le llama, en lenguaje claro, a cada tabla y a cada columna que deja su
  * rastro en `sync_changes`, de qué familia es (para el filtro «tipo de dato»), cuál de sus valores se puede mostrar y cómo se llega
@@ -231,7 +233,7 @@ final class DiccionarioDeLaBitacora
         }
 
         if (in_array($columna, ['hora_ini', 'hora_fin'], true) && preg_match('/^(\d{2}:\d{2})/', $valor, $m) === 1) {
-            return $m[1];
+            return HoraLocal::hora12($m[1]);
         }
 
         if (is_numeric($valor) && in_array($columna, ['monto', 'monto_pagado', 'precio'], true)) {

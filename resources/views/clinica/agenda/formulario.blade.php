@@ -227,13 +227,13 @@
                     @if ($vm->esConHora())
                         <div class="col-sm-6 col-xl">
                             <label class="form-label" for="hora">Hora de la cita *</label>
-                            <input type="time" name="hora" id="hora" class="form-control" value="{{ $vm->valor('hora') }}" required>
+                            <x-ui.hora name="hora" :valor="$vm->valor('hora')" required />
                             @error('hora') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     @else
                         <div class="col-sm-6 col-xl">
                             <label class="form-label" for="hora">Hora de llegada</label>
-                            <input type="time" name="hora" id="hora" class="form-control" value="{{ $vm->valor('hora') }}">
+                            <x-ui.hora name="hora" :valor="$vm->valor('hora')" />
                             <span class="form-text">Vacía = la apertura del bloque.</span>
                         </div>
 

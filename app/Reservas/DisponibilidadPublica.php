@@ -91,7 +91,7 @@ final class DisponibilidadPublica
 
         $dia = Carbon::createFromFormat('!Y-m-d', $fecha);
 
-        if ($dia->isPast() && ! $dia->isToday()) {
+        if ($dia->lt(FechaDelConsultorio::hoyComoFecha())) {
             return null;
         }
 

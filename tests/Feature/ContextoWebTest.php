@@ -229,6 +229,17 @@ class ContextoWebTest extends TestCase
 
     // ------------------------------------------------------------- Con algo que elegir: hay pantalla
 
+    public function test_con_consultorios_en_dos_sedes_se_ofrece_todas_las_sedes(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso(2);
+        $this->consultorio($medico, $this->sede(), '811');
+        $this->consultorio($medico, $this->sede(), '812');
+
+        $this->actingAs($user)->get('/clinica/contexto')
+            ->assertOk()
+            ->assertSee('Todas las sedes de mis consultorios');
+    }
+
     public function test_con_dos_especialidades_y_dos_consultorios_se_preguntan_los_dos(): void
     {
         [$user, $medico] = $this->medicoConAcceso(2);
@@ -241,7 +252,8 @@ class ContextoWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('<select name="specialty_id"', false);
         $respuesta->assertSee('<select name="office_id"', false);
-        $respuesta->assertSee('Todas las sedes de mis consultorios');
+        // Los dos consultorios son de la misma sede: «Todas las sedes» no se ofrece.
+        $respuesta->assertDontSee('Todas las sedes de mis consultorios');
         $respuesta->assertSee('value="' . $primero->id . '"', false);
         $respuesta->assertSee('value="' . $segundo->id . '"', false);
         $respuesta->assertDontSee('type="hidden" name="specialty_id"', false);

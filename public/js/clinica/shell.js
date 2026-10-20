@@ -276,3 +276,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const guiado = document.querySelector('dialog#dialogo-paso-esencial[data-abrir-al-cargar]');
     if (guiado && typeof guiado.showModal === 'function' && !guiado.open) guiado.showModal();
 });
+
+// ---- El «i» de `<x-ui.info>`: un clic abre el cuadro con el texto, otro clic, Esc o un clic afuera lo cierran.
+// Delegado en `document`: sirve también a lo que se pinte después de cargar la página.
+(function () {
+    const cerrar = function (excepto) {
+        document.querySelectorAll('.info-pista .info-boton[aria-expanded="true"]').forEach(function (boton) {
+            if (boton === excepto) return;
+            boton.setAttribute('aria-expanded', 'false');
+            const texto = boton.parentNode.querySelector('.info-texto');
+            if (texto) texto.hidden = true;
+        });
+    };
+
+    document.addEventListener('click', function (evento) {
+        const boton = evento.target.closest ? evento.target.closest('[data-info]') : null;
+        if (!boton) {
+            if (!evento.target.closest || !evento.target.closest('.info-texto')) cerrar(null);
+            return;
+        }
+        evento.preventDefault();
+        const texto = boton.parentNode.querySelector('.info-texto');
+        if (!texto) return;
+        const abrir = texto.hidden;
+        cerrar(boton);
+        texto.hidden = !abrir;
+        boton.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    });
+
+    document.addEventListener('keydown', function (evento) {
+        if (evento.key !== 'Escape') return;
+        const abierto = document.querySelector('.info-pista .info-boton[aria-expanded="true"]');
+        if (!abierto) return;
+        cerrar(null);
+        abierto.focus();
+    });
+})();

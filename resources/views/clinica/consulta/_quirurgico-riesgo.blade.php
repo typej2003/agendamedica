@@ -8,8 +8,6 @@
 @if ($vm === null)
     <p class="text-muted mb-0">El riesgo quirúrgico no está disponible.</p>
 @else
-    <p class="text-muted small mb-3">{{ $vm->ayuda() }}</p>
-
     @if (! $vm->tieneCatalogo())
         <div class="alert alert-info py-2 mb-3">
             <i class="bi bi-info-circle me-1" aria-hidden="true"></i>

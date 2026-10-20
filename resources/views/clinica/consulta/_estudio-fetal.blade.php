@@ -18,18 +18,18 @@
 <div class="consulta-seccion" id="consulta-estudio-fetal">
     <x-ui.tarjeta :titulo="$vm->titulo()" :icono="$vm->icono()">
         <x-slot name="acciones">
+            @include('clinica.consulta._estudio-formato-boton', ['formato' => $formato ?? null])
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-fetal-form" novalidate
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
             @if ($eg !== null || $fpp !== null)
-                {{-- La EG y la FPP no son columnas: el escritorio las muestra con un `compute` de la FUR. --}}
+                {{-- La EG y la FPP no son columnas: se calculan de la FUR. --}}
                 <p class="texto-tenue small mb-3">
                     Calculadas con la FUR:
                     @if ($eg !== null)
@@ -54,8 +54,8 @@
                             <div class="col-12">
                                 <textarea class="form-control" rows="6" id="{{ $campo['columna'] }}"
                                           name="{{ $campo['columna'] }}"
+                                          placeholder="{{ $campo['ayuda'] }}"
                                           aria-label="{{ $campo['ayuda'] }}">{{ $campo['valor'] }}</textarea>
-                                <span class="form-text d-block">{{ $campo['ayuda'] }}</span>
                             </div>
                         @else
                             @include('clinica.consulta._estudio-campo', [

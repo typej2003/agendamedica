@@ -78,7 +78,7 @@ final class RepresentanteDeAltaVista
         }
 
         if ($elegido !== null && $elegido !== '' && ! $this->catalogoDeParentescos->contains('codigo', $elegido)) {
-            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (código del escritorio)', 'elegido' => true];
+            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (código anterior)', 'elegido' => true];
         }
 
         return $opciones;
