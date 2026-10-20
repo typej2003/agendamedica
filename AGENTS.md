@@ -257,7 +257,7 @@ consulta.
   código va en el cuerpo). Modelos `PreFacturaConsulta` y `MotivoFactura`. ⚠️ **No relevado del escritorio** (las
   fuentes no están en el repo): si `his_con_pre_factura` tiene clave primaria en el PowerBuilder, cómo genera
   `id_registro` y cuándo aplica `monto_seg`; por eso la tabla entró a `sin_clave_con_altas_del_app` (inocuo si se sube
-  por fila). El ABM de `motivo_factura` en la web no existe todavía. Tests: `Feature/ConsultaPreFacturaWebTest` (7).
+  por fila). **ABM de `motivo_factura`** (2026-10-20): `/clinica/catalogos/motivos-factura` («Conceptos de factura» en el submenú; `MotivoFacturaCatalogoController`, `Crear/Editar/QuitarMotivoDeFactura`, `ReglasDelMotivoDeFactura`, `MotivosDeFacturaDelCatalogo`, `MotivosDeFacturaVista`): código del servidor (mayor numérico + 1, 3 dígitos — convención, no relevada), nombre en mayúsculas ≤ 45 sin duplicar, `monto` obligatorio y `monto_seg` opcional; `tipo` no se toca. Quitar no borra si una pre-factura lo usa (`UsoDeUnItemDelCatalogo::motivoDeFactura`). Test: `MotivosDeFacturaCatalogoWebTest` (7). **Informe impreso** (`DocumentoImpreso::PREFACTURA`, clave `prefactura`): un renglón por concepto con el monto de la fila y el total; se ofrece sólo con conceptos y `DocumentosPorCita` lo cuenta. Test: `ConsultaPreFacturaImpresionWebTest` (3). No está en `HistoriaDelPaciente` ni tiene formato en blanco. Tests: `Feature/ConsultaPreFacturaWebTest` (7).
 - El árbol de PediaReport, sus cinco postgrados, sus informes impresos y la pre-factura están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
