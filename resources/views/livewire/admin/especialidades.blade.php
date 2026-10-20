@@ -79,7 +79,7 @@
                                 </td>
                                 <td class="text-end text-nowrap">
                                     <button wire:click="abrirAsignar({{ $medico->id }})" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-stethoscope me-1"></i> Especialidades
+                                        <i class="bi bi-heart-pulse-fill me-1"></i> Especialidades
                                     </button>
                                 </td>
                             </tr>
