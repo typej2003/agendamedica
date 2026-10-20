@@ -57,7 +57,7 @@
                                 </td>
                                 <td>
                                     @if ($r['ultima_web'])
-                                        <div>{{ $r['ultima_web']->format('d/m/Y H:i') }}</div>
+                                        <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_web']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_web']->locale('es')->diffForHumans() }}</small>
                                     @elseif ($medico->user_id)
                                         <span class="text-muted" title="Se registra desde el 20/10/2026: antes de esa fecha no hay dato.">Sin registro</span>
