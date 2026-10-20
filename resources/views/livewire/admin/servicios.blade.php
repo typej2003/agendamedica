@@ -428,8 +428,8 @@
                                         <tr wire:key="serv-{{ $s->id }}" class="{{ $s->estado === 'cancelado' ? 'text-muted' : '' }}">
                                             <td class="fw-semibold">{{ $s->plan_nombre }}</td>
                                             <td>{{ $origenes[$s->origen] ?? $s->origen }}</td>
-                                            <td>{{ $s->inicia_el->format('d/m/Y') }}</td>
-                                            <td>{{ $s->vence_el->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ $s->inicia_el->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ $s->vence_el->format('d/m/Y') }}</td>
                                             <td class="text-end">{{ number_format((float) $s->monto_usd, 2, ',', '.') }}</td>
                                             <td><small>{{ $s->nota }}</small></td>
                                             <td>
