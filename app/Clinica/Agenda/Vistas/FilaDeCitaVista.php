@@ -32,6 +32,15 @@ final class FilaDeCitaVista
          * para toda la agenda (`DocumentosPorCita::conDocumentos`), no por fila.
          */
         private bool $tieneDocumentos = false,
+        /**
+         * **Los doctores que atienden en el consultorio del contexto** (`medicos.id` => nombre), resueltos por
+         * `MedicosDeLaCita`. Es lo que decide si la fila muestra el médico de la cita —sólo con **más de un
+         * doctor**: en un consultorio personal el nombre se repetiría en todas las filas— y lo que llena el
+         * menú «Asignar médico».
+         *
+         * @var array<int,string>
+         */
+        private array $medicos = [],
     ) {
     }
 
@@ -106,6 +115,72 @@ final class FilaDeCitaVista
     public function razon(): string
     {
         return $this->cita->razon();
+    }
+
+    // ---------------------------------------------------------------------------------- El médico (Fase 3)
+
+    /**
+     * **¿La fila dice el médico de la cita?** Sólo cuando el consultorio del contexto tiene **más de un
+     * doctor** (decisión de Alexander): en un consultorio personal el nombre del doctor se repetiría en
+     * todas las filas. La lista de doctores la resuelve el controlador con `MedicosDeLaCita::nombres()`.
+     */
+    public function muestraMedico(): bool
+    {
+        return count($this->medicos) > 1;
+    }
+
+    /**
+     * El médico de la cita como pastilla, o `null` si la fila no lo muestra (un solo doctor en el
+     * consultorio). Sin doctor asignado la pastilla dice «Sin asignar»: es un estado del dato, no un error,
+     * y es lo que la secretaría resuelve con `asignarMedico()`.
+     *
+     * @return array{tono:string, icono:string, texto:string, titulo:?string}|null
+     */
+    public function doctor(): ?array
+    {
+        if (! $this->muestraMedico()) {
+            return null;
+        }
+
+        if ($this->cita->medicoNombre !== null && $this->cita->medicoNombre !== '') {
+            return [
+                'tono'   => 'info',
+                'icono'  => 'bi-person-badge',
+                'texto'  => $this->cita->medicoNombre,
+                'titulo' => 'Médico asignado a la cita',
+            ];
+        }
+
+        return [
+            'tono'   => 'neutro',
+            'icono'  => 'bi-person-dash',
+            'texto'  => 'Sin asignar',
+            'titulo' => 'La cita todavía no tiene médico: asígnalo para que la consulta quede a su nombre',
+        ];
+    }
+
+    /**
+     * **«Asignar médico»** (Fase 3 del cambio de `reg_medico`): el menú con los doctores del consultorio.
+     *
+     * Lo ven la secretaría y el médico (la ruta está en el grupo de la agenda) y sólo mientras la cita **no
+     * esté atendida**: una cita atendida ya ocurrió y su doctor no cambia. Se ofrece únicamente donde la fila
+     * muestra el médico —más de un doctor en el consultorio—, porque en un consultorio con uno solo no hay
+     * nada que elegir; ahí la cita personal ya nace con su doctor y la del centro la toma el médico al
+     * atenderla (un menú de una sola opción está prohibido).
+     *
+     * @return array{url:string, medicos:array<int,string>, reasignar:bool}|null
+     */
+    public function asignarMedico(): ?array
+    {
+        if ($this->movida() || $this->atendida() || ! $this->muestraMedico()) {
+            return null;
+        }
+
+        return [
+            'url'        => route('clinica.agenda.medico', $this->cita->id),
+            'medicos'    => $this->medicos,
+            'reasignar'  => $this->cita->tieneMedico(),
+        ];
     }
 
     /** Lo que va debajo del nombre: la historia y la razón de la cita. */

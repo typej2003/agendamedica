@@ -7,6 +7,7 @@ use App\Actions\Agenda\CitaNoAtendible;
 use App\Clinica\Consulta\CitaDeLaConsulta;
 use App\Models\Cola;
 use App\Models\Consulta;
+use App\Models\Medico;
 use Carbon\CarbonInterface;
 
 /**
@@ -64,6 +65,8 @@ final class CerrarConsulta
      *                          mismo paciente el mismo día en dos consultorios
      * @param  CarbonInterface  $cuando  el "ahora" del consultorio (`FechaDelConsultorio::ahora()`), que
      *                                   es el que resuelve el last-write-wins por columna del sync
+     * @param  Medico|null  $medicoDelContexto  el médico que atendió: si la cita del centro no tenía doctor,
+     *                                          queda a su nombre (Fase 3 del cambio de `reg_medico`)
      *
      * @throws CitaNoAtendible si la cita no tiene historia y no se la puede resolver
      */
@@ -74,6 +77,7 @@ final class CerrarConsulta
         int $pacienteId,
         ?int $sede = null,
         string $origen = 'web',
+        ?Medico $medicoDelContexto = null,
     ): ConsultaCerrada {
         $cita = $this->citas->de(
             (int) $consulta->numhistoria,
@@ -91,7 +95,7 @@ final class CerrarConsulta
             return ConsultaCerrada::citaMovida($cita->id);
         }
 
-        $this->atenderCita->ejecutar(Cola::findOrFail($cita->id), true, $cuando, $origen);
+        $this->atenderCita->ejecutar(Cola::findOrFail($cita->id), true, $cuando, $origen, $medicoDelContexto);
 
         return ConsultaCerrada::atendida($cita->id);
     }

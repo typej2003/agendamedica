@@ -9,6 +9,7 @@ use App\Actions\Consulta\AbrirConsulta;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\DiasNoLaborables;
 use App\Clinica\Agenda\Jornada;
+use App\Clinica\Agenda\MedicosDeLaCita;
 use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\Historia;
@@ -45,6 +46,7 @@ final class AtencionInmediata
         private CrearCita $crearCita,
         private ArmadorDeAgenda $armador,
         private DiasNoLaborables $diasNoLaborables,
+        private MedicosDeLaCita $medicosDeLaCita,
     ) {
     }
 
@@ -84,9 +86,11 @@ final class AtencionInmediata
         // La marca va **después** de abrir: no se marca una cita cuya consulta no se pudo abrir (la misma
         // regla del mostrador). Atender implica confirmar, y eso no se deshace. Una cita que ya estaba
         // atendida no se vuelve a marcar: se entra a su consulta, como «Editar consulta» en la agenda.
+        // El doctor del contexto va con el «Atender»: si la cita es del centro y no tenía médico, queda a
+        // nombre del médico que la atiende (Fase 3 del cambio de `reg_medico`).
         if ((int) $cita->atendido !== 1) {
             try {
-                $this->atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
+                $this->atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web', $contexto['medico']);
             } catch (CitaNoAtendible $excepcion) {
                 return ResultadoDeAtencion::noSePudo($excepcion->getMessage());
             }
@@ -132,6 +136,10 @@ final class AtencionInmediata
      * jornada que arma `ArmadorDeAgenda` (la misma cuenta que después lee la agenda para agrupar la cita).
      * Si la sede no tiene bloques para hoy la cita se rechaza: una cita "a las 08:00 por defecto" en un día
      * que el consultorio no abre es un dato inventado.
+     *
+     * **De quién nace** es la misma regla que el alta de la agenda (`MedicosDeLaCita::deUnaCitaNueva()`): del
+     * doctor en su consultorio y del centro —sin doctor— en el de un centro. Acá el paciente se está
+     * atendiendo, así que el «Atender» de atrás le pone el médico del contexto.
      */
     private function crearLaCitaDelDia(array $contexto, Historia $historia, CarbonInterface $hoy): Cola|ResultadoDeAtencion
     {
@@ -168,19 +176,16 @@ final class AtencionInmediata
         $sedes = $this->armador->sedes($regMedico);
         $jornada = $this->armador->jornadaPara($regMedico, $sedes, $hoy->copy(), $office->medical_center_id, $hora);
 
-        return $this->crearCita->ejecutar($regMedico, [
+        return $this->crearCita->ejecutar($regMedico, array_merge([
             'fecha'             => $hoy->toDateString(),
             'hora_ini'          => $hora,
             'turno'             => Jornada::turnoDe($hora),
             'numorden'          => $jornada->siguienteNumero(),
             'medical_center_id' => $office->medical_center_id,
             'numhistoria'       => (int) $historia->numhistoria,
-            // La clave legacy es la del **doctor** y se busca en sus registros, no en el `reg_medico` del
-            // contexto (Fase 2 del cambio de `reg_medico`); el mismo criterio que `AgendamientoDeCitas`.
-            'medico'            => $medico->claveDeEvolucion($medico->registrosDeTrabajo()),
             'atendido'          => 0,
             // Nace confirmada: el paciente ya está en el consultorio (decisión de O-05).
             'estado'            => Cola::ESTADO_CONFIRMADA,
-        ], FechaDelConsultorio::ahora(), 'web');
+        ], $this->medicosDeLaCita->deUnaCitaNueva((string) $regMedico, $medico)), FechaDelConsultorio::ahora(), 'web');
     }
 }

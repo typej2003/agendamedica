@@ -77,6 +77,10 @@ class ConsultaCerrarController extends Controller
                 FechaDelConsultorio::ahora(),
                 (int) $paciente->id,
                 $sede,
+                // El médico que cierra es el del contexto: si la cita del centro no tenía doctor, queda a su
+                // nombre (Fase 3 del cambio de `reg_medico`).
+                'web',
+                $contexto['medico'],
             );
         } catch (CitaNoAtendible $excepcion) {
             // La regla del servidor (WEB-4.8). En la web no debería pasar —sin historia no se abre una

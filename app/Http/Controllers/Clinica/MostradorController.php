@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Agenda\AsignarMedicoACita;
 use App\Actions\Agenda\AtenderCita;
 use App\Actions\Agenda\CitaNoAtendible;
 use App\Actions\Agenda\CobrarCita;
@@ -62,6 +63,51 @@ class MostradorController extends Controller
         return back()->with(
             'estado',
             $estado === Cola::ESTADO_NO_CONFIRMADA ? 'Se quitó la confirmación.' : 'Cita confirmada.'
+        );
+    }
+
+    /**
+     * **Asignarle el médico a una cita** (Fase 3 del cambio de `reg_medico`, 2026-10-20): lo que la
+     * secretaría hace desde la fila de la agenda antes de la consulta, y lo que el médico puede hacer con la
+     * suya (asignarse o asignar a otro del consultorio).
+     *
+     * La cita de un **centro** nace a nombre del centro y sin doctor (`cola.medico_id = null`); acá se elige
+     * quién la atiende. Las dos reglas —el doctor tiene que atender en ese consultorio y una cita **ya
+     * atendida** no cambia de médico— viven en `AsignarMedicoACita`, que es el único lugar donde se escribe
+     * `medico_id`/`medico`. Acá sólo se valida que la cita sea del contexto y se traduce el resultado.
+     *
+     * El rol no se pregunta: la ruta está en el grupo de la agenda (`Root|Medico|Secretaria`), que es
+     * exactamente quién puede asignar. **No hay 403 nuevo**: atender sigue siendo sólo del médico
+     * (`atender()`), asignar no lo es.
+     */
+    public function asignarMedico(Request $request, Cola $cola, AsignarMedicoACita $asignar)
+    {
+        $cita = $this->citaDelContexto($request, $cola);
+
+        if ($cita->movida_escritorio) {
+            return back()->with('error', $this->avisoDeCitaMovida());
+        }
+
+        $datos = $request->validate([
+            'medico_id' => ['required', 'integer'],
+        ], [
+            'medico_id.required' => 'Elige el médico que atiende la cita.',
+            'medico_id.integer'  => 'El médico elegido no es válido.',
+        ]);
+
+        try {
+            $resultado = $asignar->ejecutar($cita, (int) $datos['medico_id'], FechaDelConsultorio::ahora(), 'web');
+        } catch (InvalidArgumentException $excepcion) {
+            return back()->with('error', $excepcion->getMessage());
+        }
+
+        $nombre = $resultado['medico']->nombreMostrar;
+
+        return back()->with(
+            'estado',
+            $resultado['aplicadas'] === []
+                ? 'La cita ya era de ' . $nombre . '.'
+                : 'La cita quedó a nombre de ' . $nombre . '.'
         );
     }
 
@@ -151,8 +197,11 @@ class MostradorController extends Controller
         // caso 2 ya mandó a asignarla—, pero una cita sin paciente identificable (las filas del legado con
         // `numhistoria` nulo y sin ancla) sí llega hasta acá, y tiene que volver con un aviso en vez de con
         // un error del servidor.
+        //
+        // **La cita sin doctor la toma este médico** (Fase 3 del cambio de `reg_medico`): la cita de un
+        // centro nace a nombre del centro, y al atenderla queda a nombre del doctor del contexto.
         try {
-            $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web');
+            $atenderCita->ejecutar($cita, true, FechaDelConsultorio::ahora(), 'web', $contexto['medico']);
         } catch (CitaNoAtendible $excepcion) {
             return back()->with('error', $excepcion->getMessage());
         }

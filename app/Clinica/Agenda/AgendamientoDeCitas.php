@@ -42,6 +42,7 @@ class AgendamientoDeCitas
         private CrearPaciente $crearPaciente,
         private AsignarHistoria $asignarHistoria,
         private EditarCita $editar,
+        private MedicosDeLaCita $medicos,
     ) {
     }
 
@@ -155,7 +156,9 @@ class AgendamientoDeCitas
 
     /**
      * Reagendar es editar la misma fila (wiki `02-modulo-agenda.md` §4). El paciente no se toca: cambiar
-     * de paciente es otra acción, sin reglas definidas todavía.
+     * de paciente es otra acción, sin reglas definidas todavía. **El doctor tampoco**: una cita que ya
+     * tiene médico lo conserva al moverla (Fase 3 del cambio de `reg_medico`); si no lo tiene, sigue sin
+     * él y lo asigna la secretaría o lo toma el médico al atenderla.
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
      */
@@ -286,6 +289,11 @@ class AgendamientoDeCitas
      * La fila de `cola` tal como nace: con la jornada ya resuelta (número, turno) y el paciente anclado por
      * su número de historia o, si todavía no tiene, por `paciente_sinhistoria_id`.
      *
+     * **De quién nace la cita** (Fase 3 del cambio de `reg_medico`): en un consultorio de **centro** es del
+     * centro y nace **sin doctor** —`medico_id = null` y el `medicos.id` del centro en la columna legacy
+     * `medico`, que es lo que el escritorio espera—; en el consultorio personal es del doctor, con su clave
+     * de `evolucion`. La regla vive en `MedicosDeLaCita::deUnaCitaNueva()` y no se repite acá.
+     *
      * @param  array{paciente: ?Paciente, numhistoria: ?int}  $objetivo
      */
     private function filaDeCita(
@@ -300,7 +308,7 @@ class AgendamientoDeCitas
         ?float $monto,
         int $estado = Cola::ESTADO_NO_CONFIRMADA
     ): array {
-        $fila = [
+        $fila = array_merge([
             'fecha'             => $fecha->toDateString(),
             'hora_ini'          => $hora,
             'turno'             => Jornada::turnoDe($hora),
@@ -310,14 +318,9 @@ class AgendamientoDeCitas
             // legado trae el nombre del paciente y la web no lo escribe.
             'tipo'              => $valores['motivo'] ?? null,
             'monto'             => $monto,
-            // La `clave` legacy de `cola.medico` es la del **doctor**, y se busca en **sus** registros (el
-            // suyo y los centros donde trabaja), no en el `reg_medico` del contexto: la fila de `evolucion`
-            // del médico vive bajo su registro y en un centro el `reg_medico` del contexto no la tiene
-            // (Fase 2 del cambio de `reg_medico`). El `medico_id` de la cita es otra fase.
-            'medico'            => $contexto['medico']->claveDeEvolucion($contexto['medico']->registrosDeTrabajo()),
             'atendido'          => 0,
             'estado'            => $estado,
-        ];
+        ], $this->medicos->deUnaCitaNueva((string) $contexto['reg_medico'], $contexto['medico']));
 
         if ($objetivo['numhistoria'] !== null) {
             $fila['numhistoria'] = $objetivo['numhistoria'];

@@ -55,7 +55,27 @@ final class CitaDeAgenda
         public readonly ?string $email = null,
         /** `pacientes.cedula`: el listado que se imprime la lleva (como el DataWindow del escritorio). */
         public readonly ?string $cedula = null,
+        /**
+         * `cola.medico_id`: el `medicos.id` del **doctor asignado a la cita** (Fase 3 del cambio de
+         * `reg_medico`), o `null` si todavía no tiene. **No es `medico`**, que es la clave legacy de
+         * `evolucion` (`Cola::$medico`).
+         */
+        public readonly ?int $medicoId = null,
+        /**
+         * El nombre del doctor asignado, ya resuelto en lote por `ArmadorDeAgenda` (`medicos.id` → nombre, con
+         * la clave legacy como respaldo). `null` = la cita no tiene doctor o no se pudo resolver.
+         */
+        public readonly ?string $medicoNombre = null,
     ) {
+    }
+
+    /**
+     * ¿La cita ya tiene doctor? Es lo que la fila de la agenda muestra como nombre y lo que distingue
+     * «Sin asignar» en un consultorio con varios doctores.
+     */
+    public function tieneMedico(): bool
+    {
+        return $this->medicoId !== null || ($this->medicoNombre !== null && $this->medicoNombre !== '');
     }
 
     /**

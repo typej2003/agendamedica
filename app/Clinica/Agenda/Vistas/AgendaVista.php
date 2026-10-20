@@ -28,6 +28,14 @@ final class AgendaVista
         private bool $puedeAbrirLaConsulta = true,
         /** @var array<int,int>  ids de cita (ya atendida) cuya consulta tiene documentos para imprimir: récipes (WEB-5.2) o solicitudes (WEB-5.3a) */
         private array $citasConDocumentos = [],
+        /**
+         * **Los doctores del consultorio del contexto** (`medicos.id` => nombre, ver `MedicosDeLaCita`): con
+         * más de uno, la fila muestra el médico de cada cita y ofrece asignarlo (Fase 3 del cambio de
+         * `reg_medico`).
+         *
+         * @var array<int,string>
+         */
+        private array $medicos = [],
     ) {
     }
 
@@ -322,6 +330,7 @@ final class AgendaVista
                 $conArrastre,
                 $this->puedeAbrirLaConsulta,
                 $this->citasConDocumentos,
+                $this->medicos,
             ))
             ->all();
     }

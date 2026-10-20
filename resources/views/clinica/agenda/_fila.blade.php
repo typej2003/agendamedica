@@ -4,6 +4,9 @@
 @php
     $estado = $fila->estado();
     $pago = $fila->pago();
+    // El médico de la cita (Fase 3 del cambio de `reg_medico`): `null` cuando el consultorio tiene un solo
+    // doctor (ahí el nombre se repetiría en todas las filas) y «Sin asignar» cuando todavía no lo tiene.
+    $doctor = $fila->doctor();
 @endphp
 
 <tr class="{{ $fila->clase() }}"
@@ -28,12 +31,16 @@
 
     <td class="celda-principal">
         {{-- Una línea: la identidad y el aviso de «sin historia» —que es estado y se queda— en la misma fila
-             (pauta de Alexander). --}}
+             (pauta de Alexander). El médico de la cita va en la misma línea, como pastilla discreta: sólo
+             aparece cuando el consultorio tiene más de un doctor. --}}
         <span class="d-flex align-items-center gap-2 min-w-0">
             <x-ui.identidad :nombre="$fila->paciente()" :detalle="$fila->detalle()" :href="$fila->urlPaciente()" tamano="sm" />
             @unless ($fila->historia())
                 <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Sin historia</x-ui.estado>
             @endunless
+            @if ($doctor)
+                <x-ui.estado :tono="$doctor['tono']" :icono="$doctor['icono']" :title="$doctor['titulo']">{{ $doctor['texto'] }}</x-ui.estado>
+            @endif
         </span>
     </td>
 
@@ -55,6 +62,10 @@
                 $recordatorio = $fila->recordatorio();
                 $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
+                // «Asignar médico» (Fase 3 del cambio de `reg_medico`): el menú con los doctores del
+                // consultorio, sólo donde la fila muestra el médico (más de un doctor) y mientras la cita no
+                // esté atendida. Lo ven la secretaría y el médico (la ruta está en el grupo de la agenda).
+                $asignarMedico = $fila->asignarMedico();
 
                 // El menú «…» es para **dos o más** acciones secundarias (pauta de Alexander: un menú de una sola
                 // opción está prohibido). Si queda una sola —hoy pasa con «Citas del paciente» en una cita atendida
@@ -124,6 +135,22 @@
                             data-detalle="{{ $cobro['detalle'] }}">
                         <i class="bi bi-cash-coin" aria-hidden="true"></i> <span class="accion-texto">Cobrar</span>
                     </button>
+                @endif
+
+                {{-- **El médico de la cita** (Fase 3 del cambio de `reg_medico`): la cita del centro nace a
+                     nombre del centro y sin doctor, y la secretaría (o el médico) elige quién la atiende. Un
+                     ítem por doctor del consultorio; con la cita ya asignada el mismo menú la reasigna. --}}
+                @if ($asignarMedico)
+                    <x-ui.menu :etiqueta="$asignarMedico['reasignar'] ? 'Cambiar el médico de la cita' : 'Asignar médico'"
+                               icono="bi-person-badge">
+                        @foreach ($asignarMedico['medicos'] as $medicoId => $nombreMedico)
+                            <form method="POST" action="{{ $asignarMedico['url'] }}">
+                                @csrf
+                                <input type="hidden" name="medico_id" value="{{ $medicoId }}">
+                                <button class="menu-item"><i class="bi bi-person-check" aria-hidden="true"></i> {{ $nombreMedico }}</button>
+                            </form>
+                        @endforeach
+                    </x-ui.menu>
                 @endif
 
                 {{-- Si lo único que queda es «Citas del paciente», va como botón directo (un menú de una sola opción

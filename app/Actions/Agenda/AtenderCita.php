@@ -4,6 +4,7 @@ namespace App\Actions\Agenda;
 
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Cola;
+use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
@@ -20,6 +21,14 @@ use Carbon\Carbon;
  *
  * Abrir la consulta es otra cosa y no vive acá: en el móvil `AccionesCita.atender` además abre la
  * consulta del día; en la web eso llegó con `AbrirConsulta` (WEB-4.1) y el mostrador lo llama antes.
+ *
+ * ## La cita sin doctor la toma el médico que la atiende (Fase 3 del cambio de `reg_medico`)
+ *
+ * La cita de un **centro** nace a nombre del centro y **sin doctor** (`cola.medico_id = null`): el doctor se
+ * elige antes de la consulta. Cuando el médico la atiende, esta Action —el único camino a `atendido`— se la
+ * queda, por la Action `AsignarMedicoACita` (`tomar()`), que es la que sabe quién atiende en el consultorio.
+ * Si la cita ya tenía doctor **no cambia**: reasignar es una acción de la agenda y sólo mientras no esté
+ * atendida.
  *
  * ## La regla "cita atendida ⇒ tiene historia" (WEB-4.8)
  *
@@ -50,10 +59,31 @@ use Carbon\Carbon;
  */
 final class AtenderCita
 {
-    public function ejecutar(Cola $cita, bool $atendida = true, ?Carbon $cuando = null, string $origen = 'web'): bool
+    public function __construct(private AsignarMedicoACita $asignar)
     {
+    }
+
+    /**
+     * @param  Medico|null  $medicoDelContexto  el doctor que atiende: si la cita **no tiene** doctor, queda a
+     *                                          su nombre (Fase 3 del cambio de `reg_medico`). El sync del
+     *                                          móvil no lo pasa y no toca el doctor de la cita.
+     */
+    public function ejecutar(
+        Cola $cita,
+        bool $atendida = true,
+        ?Carbon $cuando = null,
+        string $origen = 'web',
+        ?Medico $medicoDelContexto = null,
+    ): bool {
         $cuando = $cuando ?: Carbon::now();
         $aplicado = false;
+
+        // **La cita sin doctor la toma el médico que la atiende.** Sólo si no tiene ninguno: una cita ya
+        // asignada no cambia de doctor al abrirse (sí se cambia desde la agenda, mientras no esté
+        // atendida). No falla: no poder guardar el nombre del doctor no puede impedir la atención.
+        if ($atendida && $medicoDelContexto !== null) {
+            $this->asignar->tomar($cita, (int) $medicoDelContexto->id, $cuando, $origen);
+        }
 
         if ($atendida && (int) $cita->estado === Cola::ESTADO_NO_CONFIRMADA) {
             $confirmo = (new ConfirmarCita())->ejecutar($cita, Cola::ESTADO_CONFIRMADA, $cuando, $origen);

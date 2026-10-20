@@ -38,6 +38,9 @@ final class InicioVista
      * @param  array  $contexto  el `contexto_clinico` de la petición (médico, especialidad y sede)
      * @param  int  $cumpleanosDeHoy  cuántos pacientes del médico cumplen años hoy (WEB-2.9)
      * @param  array<int,int>  $citasConDocumentos  ids de cita atendida con documentos para imprimir
+     * @param  array<int,string>  $medicos  los doctores del consultorio del contexto (`medicos.id` => nombre,
+     *                                      ver `MedicosDeLaCita`): con más de uno, la fila muestra el médico de
+     *                                      cada cita y deja asignarlo (Fase 3 del cambio de `reg_medico`).
      */
     public function __construct(
         private LecturaDeAgenda $lectura,
@@ -45,6 +48,7 @@ final class InicioVista
         private int $cumpleanosDeHoy = 0,
         private bool $puedeAbrirLaConsulta = true,
         private array $citasConDocumentos = [],
+        private array $medicos = [],
     ) {
     }
 
@@ -101,6 +105,7 @@ final class InicioVista
                 $this->lectura->mensajes[$cita->id] ?? '',
                 $this->puedeAbrirLaConsulta,
                 isset($this->citasConDocumentos[$cita->id]),
+                $this->medicos,
             ),
         ], $this->citas());
     }

@@ -6,6 +6,8 @@ use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Cola;
+use App\Models\Evolucion;
+use App\Models\Medico;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Notificaciones\Telefono;
@@ -137,9 +139,9 @@ final class ArmadorDeAgenda
     }
 
     /**
-     * Las filas de `cola` ya resueltas a `CitaDeAgenda`: el nombre del paciente, la sede y la razón se
-     * leen en lote (no una consulta por fila) y con las mismas reglas para la agenda y para la pantalla
-     * de las citas de un paciente.
+     * Las filas de `cola` ya resueltas a `CitaDeAgenda`: el nombre del paciente, la sede, la razón y el
+     * **doctor asignado** se leen en lote (no una consulta por fila) y con las mismas reglas para la agenda
+     * y para la pantalla de las citas de un paciente.
      *
      * @param  Collection<int,Cola>  $filas
      * @return Collection<int,CitaDeAgenda>
@@ -171,7 +173,11 @@ final class ArmadorDeAgenda
             ]])
             ->all();
 
-        return $filas->map(function (Cola $cola) use ($centroPorHistoria, $fichaPorHistoria, $fichaSinHistoria, $motivoPorCodigo) {
+        // El nombre del doctor de cada cita (Fase 3 del cambio de `reg_medico`), en lote: la agenda muestra
+        // quién atiende cuando el consultorio tiene más de un doctor.
+        $medicos = $this->nombresDeLosMedicos($regMedico, $filas);
+
+        return $filas->map(function (Cola $cola) use ($centroPorHistoria, $fichaPorHistoria, $fichaSinHistoria, $motivoPorCodigo, $medicos) {
             $numHistoria = $cola->numhistoria !== null ? (int) $cola->numhistoria : null;
             $centroId = $cola->medical_center_id !== null
                 ? (int) $cola->medical_center_id
@@ -207,6 +213,8 @@ final class ArmadorDeAgenda
                 telefono: $ficha['telefono'] ?? null,
                 email: $ficha['email'] ?? null,
                 cedula: $ficha['cedula'] ?? null,
+                medicoId: $cola->medico_id !== null ? (int) $cola->medico_id : null,
+                medicoNombre: $medicos[(int) $cola->id] ?? null,
             );
         });
     }
@@ -451,6 +459,75 @@ final class ArmadorDeAgenda
             ->pluck('medical_center_id', 'numhistoria')
             ->mapWithKeys(fn ($centro, $historia) => [(int) $historia => (int) $centro])
             ->all();
+    }
+
+    /**
+     * **El nombre del doctor de cada cita** (Fase 3 del cambio de `reg_medico`), por `cola.id`.
+     *
+     * La fuente es `cola.medico_id` (`medicos.id`), que es la verdad del doctor asignado; se resuelve **en
+     * lote** porque la agenda de un mes son cientos de filas.
+     *
+     * **Respaldo por la clave legacy**: una cita sin `medico_id` pero con `cola.medico` —las que creó la web
+     * hasta la Fase 2— se resuelve con la `clave` de `evolucion` del consultorio, igual que el recordatorio
+     * (`RecordatoriosDeAgenda`). Se saltea el `medicos.id` del **centro**, que es lo que la web escribe en
+     * `cola.medico` mientras la cita no tiene doctor: no es una clave de `evolucion` y podría coincidir con
+     * la de otro médico.
+     *
+     * @param  Collection<int,Cola>  $filas
+     * @return array<int,string>  id de cita => nombre del doctor
+     */
+    private function nombresDeLosMedicos(string $regMedico, Collection $filas): array
+    {
+        $conDoctor = $filas->pluck('medico_id')->filter()->unique()->values();
+        $porId = $conDoctor->isEmpty() ? [] : Medico::whereIn('id', $conDoctor->all())
+            ->get(['id', 'name', 'lastname', 'prefix'])
+            ->mapWithKeys(fn (Medico $medico) => [(int) $medico->id => $medico->nombreMostrar])
+            ->all();
+
+        // La clave legacy sólo se mira en las citas **sin** doctor y nunca contra el id del centro.
+        $claves = collect();
+        if ($filas->contains(fn (Cola $fila) => $fila->medico_id === null && $fila->medico !== null)) {
+            $centroId = (int) (Medico::where('reg_medico', $regMedico)->where('es_centro', true)->value('id') ?? 0);
+            $claves = $filas
+                ->filter(fn (Cola $fila) => $fila->medico_id === null && $fila->medico !== null)
+                ->pluck('medico')
+                ->map(fn ($clave) => (int) $clave)
+                ->reject(fn (int $clave) => $clave === 0 || $clave === $centroId)
+                ->unique()
+                ->values();
+        }
+
+        $porClave = [];
+        if ($claves->isNotEmpty()) {
+            $evoluciones = Evolucion::where('reg_medico', $regMedico)
+                ->whereIn('clave', $claves->all())
+                ->get(['clave', 'correo_med']);
+
+            $porCorreo = Medico::whereIn('email', $evoluciones->pluck('correo_med')->filter()->unique()->all())
+                ->get(['name', 'lastname', 'prefix', 'email'])
+                ->keyBy('email');
+
+            foreach ($evoluciones as $evolucion) {
+                $medico = $porCorreo->get($evolucion->correo_med);
+
+                if ($medico !== null) {
+                    $porClave[(int) $evolucion->clave] = $medico->nombreMostrar;
+                }
+            }
+        }
+
+        $nombres = [];
+        foreach ($filas as $fila) {
+            $nombre = $fila->medico_id !== null
+                ? ($porId[(int) $fila->medico_id] ?? null)
+                : ($porClave[(int) $fila->medico] ?? null);
+
+            if ($nombre !== null && $nombre !== '') {
+                $nombres[(int) $fila->id] = $nombre;
+            }
+        }
+
+        return $nombres;
     }
 
     /**

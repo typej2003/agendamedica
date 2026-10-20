@@ -26,6 +26,13 @@ final class JornadaVista
         private bool $puedeAbrirLaConsulta = true,
         /** @var array<int,int>  ids de cita (ya atendida) cuya consulta tiene documentos para imprimir: récipes (WEB-5.2) o solicitudes (WEB-5.3a) */
         private array $citasConDocumentos = [],
+        /**
+         * **Los doctores del consultorio del contexto** (`medicos.id` => nombre, ver `MedicosDeLaCita`): la
+         * fila de la agenda muestra el médico de cada cita —y deja asignarlo— cuando hay más de uno.
+         *
+         * @var array<int,string>
+         */
+        private array $medicos = [],
     ) {
     }
 
@@ -141,6 +148,7 @@ final class JornadaVista
                 $this->mensajes[$fila['cita']->id] ?? '',
                 $this->puedeAbrirLaConsulta,
                 isset($this->citasConDocumentos[$fila['cita']->id]),
+                $this->medicos,
             ))
             ->all();
     }

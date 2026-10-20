@@ -685,6 +685,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 ->name('agenda.pasar-a-cita-formal');
             Route::post('/agenda/{cola}/notificar', [RecordatorioController::class, 'notificar'])->name('agenda.notificar');
             Route::post('/agenda/{cola}/confirmar', [MostradorController::class, 'confirmar'])->name('agenda.confirmar');
+            // **Asignarle el médico a la cita** (Fase 3 del cambio de `reg_medico`): la cita del centro nace
+            // sin doctor y la secretaría lo elige desde la fila (el médico también, para sí o para otro del
+            // consultorio). Es una acción sobre la cita, así que va antes de `POST /agenda/{cola}`.
+            Route::post('/agenda/{cola}/medico', [MostradorController::class, 'asignarMedico'])->name('agenda.medico');
             Route::post('/agenda/{cola}/atender', [MostradorController::class, 'atender'])->name('agenda.atender');
             Route::post('/agenda/{cola}/cobrar', [MostradorController::class, 'cobrar'])->name('agenda.cobrar');
             Route::post('/agenda/{cola}/eliminar', [CitaController::class, 'eliminar'])->name('agenda.eliminar');

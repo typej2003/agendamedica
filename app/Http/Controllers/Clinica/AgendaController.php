@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Agenda\LectorDeAgenda;
+use App\Clinica\Agenda\MedicosDeLaCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\Vistas\AgendaVista;
 use App\Clinica\Agenda\Vistas\ListadoDelDiaVista;
@@ -20,6 +21,10 @@ use Illuminate\Http\Request;
  */
 class AgendaController extends Controller
 {
+    public function __construct(private MedicosDeLaCita $medicosDeLaCita)
+    {
+    }
+
     public function index(Request $request, LectorDeAgenda $lector, DocumentosPorCita $documentosPorCita)
     {
         $contexto = $request->attributes->get('contexto_clinico');
@@ -34,6 +39,9 @@ class AgendaController extends Controller
                 (bool) $request->user()?->trabajaLaConsulta(),
                 // "Imprimir documentos" (WEB-5.2/5.3a): qué citas atendidas tienen algo que imprimir, en lote para toda la agenda.
                 $documentosPorCita->conDocumentos($contexto['reg_medico'], $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas)),
+                // El médico de cada cita (Fase 3 del cambio de `reg_medico`): con más de un doctor en el
+                // consultorio la fila lo muestra y deja asignarlo. Se resuelve una vez para toda la página.
+                $this->medicosDeLaCita->nombres($contexto['reg_medico']),
             ),
         ]);
     }
