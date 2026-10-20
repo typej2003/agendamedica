@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Impresion\MedicoQueFirma;
 use App\Models\Cola;
 use App\Models\Consulta;
+use App\Models\Evolucion;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -261,5 +263,56 @@ class CreacionesClinicasTest extends TestCase
         $this->assertCount(2, $response->json('rechazados'));
         // La fecha mal formada no rechaza la consulta: se usa la de hoy.
         $this->assertSame(now()->toDateString(), Consulta::find($this->creado($response, 'consultas', -20)['id'])->fecha->toDateString());
+    }
+
+    /**
+     * **La consulta que crea el sync queda con su doctor** (2026-10-20).
+     *
+     * El teléfono abre la consulta sin conexión y el servidor la sella con el médico autenticado del sync —el
+     * dueño de la sesión, que es el que está atendiendo—, igual que hace la web al "Atender". Antes nacía con
+     * `consultas.medico_id` y `consultas.medico` nulos y `MedicoQueFirma` caía en la clave o en el médico del
+     * contexto, así que la hoja de una consulta del teléfono podía firmarla otro.
+     *
+     * Lo que se fija:
+     *
+     *  - `medico_id` es el `medicos.id` del doctor (la fuente de verdad del firmante) y `medico` su `clave` legacy
+     *    de `evolucion`, la misma que lee el escritorio (Fase 2: buscada en sus registros de trabajo);
+     *  - `MedicoQueFirma` la resuelve **por `medico_id`** sin caer en el respaldo, y sin él —una fila vieja— por
+     *    la clave;
+     *  - el resto del contrato no cambia: el teléfono manda lo mismo y el número de consulta sigue siendo del
+     *    servidor.
+     */
+    public function test_la_consulta_del_sync_queda_con_su_doctor_y_la_firma_la_resuelve_por_medico_id(): void
+    {
+        $medico = $this->medico();
+        $this->paciente($medico, 6);
+        // La `clave` de `evolucion` del doctor: la que identifica al médico dentro del consultorio y la que se
+        // copia a `consultas.medico` para el escritorio.
+        Evolucion::create(['reg_medico' => $medico->reg_medico, 'correo_med' => $medico->email, 'clave' => 7]);
+
+        $response = $this->sync([
+            ['table' => 'consultas', 'operation' => 'created', 'temp_id' => -20, 'numhistoria' => 6, 'fecha' => '2026-09-24'],
+        ]);
+
+        $this->assertSame([], $response->json('rechazados'));
+
+        $consulta = Consulta::find($this->creado($response, 'consultas', -20)['id']);
+
+        // Las dos columnas del doctor: el `medicos.id` y su clave legacy.
+        $this->assertSame((int) $medico->id, (int) $consulta->medico_id);
+        $this->assertSame(7, (int) $consulta->medico);
+        // Y la regla del número sigue siendo del servidor.
+        $this->assertSame(1, (int) $consulta->nroconsulta);
+
+        // Otro médico del sistema: el respaldo que no tiene que ganar.
+        $otro = $this->medico(autenticar: false);
+        $firma = app(MedicoQueFirma::class);
+
+        // Manda el `medico_id` de la consulta, no el respaldo.
+        $this->assertSame((int) $medico->id, (int) $firma->deUnaConsulta($consulta, $otro)->id);
+
+        // Y sin `medico_id` —una consulta de antes del 2026-10-20— la clave legacy resuelve al mismo doctor.
+        $consulta->forceFill(['medico_id' => null])->save();
+        $this->assertSame((int) $medico->id, (int) $firma->deUnaConsulta($consulta->fresh(), $otro)->id);
     }
 }

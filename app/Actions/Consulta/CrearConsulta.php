@@ -31,11 +31,13 @@ use Illuminate\Support\Facades\DB;
  *    pisarse.
  *
  * **El doctor de la consulta** (2026-10-20) lo trae quien la abre: la web pasa el médico del contexto —el
- * doctor que está atendiendo— y se escribe en las **dos** columnas que entienden las dos superficies:
- * `medico_id` (el `medicos.id`, la fuente de verdad de `App\Clinica\Impresion\MedicoQueFirma`) y `medico` (la
- * `clave` de `evolucion` que sigue leyendo el escritorio, resuelta con `Medico::claveDeEvolucion()` sobre sus
- * registros de trabajo, la misma de la Fase 2). Sin médico —el sync del móvil, que resuelve la historia y no el
- * doctor— la consulta nace con las dos en `null`, como antes, y el firmante cae en el médico del contexto.
+ * doctor que está atendiendo— y **el sync del móvil el médico autenticado** (`CreacionesClinicas`, el dueño de
+ * la sesión del teléfono), así que las dos superficies sellan la consulta con su doctor. Se escribe en las
+ * **dos** columnas que entienden las dos superficies: `medico_id` (el `medicos.id`, la fuente de verdad de
+ * `App\Clinica\Impresion\MedicoQueFirma`) y `medico` (la `clave` de `evolucion` que sigue leyendo el
+ * escritorio, resuelta con `Medico::claveDeEvolucion()` sobre sus registros de trabajo, la misma de la Fase 2).
+ * Sin médico —el parámetro sigue siendo opcional para quien no lo tenga a mano— la consulta nace con las dos
+ * en `null`, como antes, y el firmante cae en la clave o en el médico del contexto.
  *
  * Las demás columnas son las que el sync ya escribía —`reg_medico`, `numhistoria`, `nroconsulta` y `fecha`—
  * sobre la tabla legada real, para que el escritorio la baje como si la hubiera creado él (ver

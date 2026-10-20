@@ -45,10 +45,10 @@ final class MedicoQueFirma
     }
 
     /**
-     * El doctor de la **consulta** (el médico imprime desde la consulta), o el de respaldo. La consulta que crea la
-     * web ya lo dice (`CrearConsulta` escribe `medico_id` y su clave); las que crea el sync del móvil y las viejas
-     * pueden no tenerlo, y en ese caso el que firma es el que se pasa como respaldo —el médico del contexto, que es
-     * el que está imprimiendo—.
+     * El doctor de la **consulta** (el médico imprime desde la consulta), o el de respaldo. La consulta que crean
+     * la web y el sync del móvil ya lo dice (`CrearConsulta` escribe `medico_id` y su clave); las que se crearon
+     * antes del 2026-10-20 pueden no tenerlo, y en ese caso el que firma es el que se pasa como respaldo —el médico
+     * del contexto, que es el que está imprimiendo—.
      */
     public function deUnaConsulta(Consulta $consulta, ?Medico $porDefecto = null): ?Medico
     {

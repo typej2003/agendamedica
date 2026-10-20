@@ -307,6 +307,12 @@ class CreacionesClinicas
      * (PLAN-WEB.md, R3; el mismo camino que hizo `AsignarHistoria` en WEB-2.11). Lo único propio del
      * sync es el rastro: a qué id temporal corresponde la consulta que se acaba de crear.
      *
+     * **Y el doctor que la atiende** (2026-10-20): igual que la web, se le pasa a la Action el médico
+     * autenticado del sync —el dueño de la sesión del teléfono, que es el que está atendiendo—, así que la
+     * consulta nace con `medico_id` y con su clave legacy en `medico` en vez de nulas. Es lo que hace que
+     * `App\Clinica\Impresion\MedicoQueFirma` firme sus hojas con ese doctor sin depender del médico del
+     * contexto (el respaldo). El endpoint no cambia: el teléfono sigue mandando lo mismo.
+     *
      * **A4c: la creación trae las columnas clínicas.** El "Atender" del teléfono crea la consulta
      * **sin conexión**, y el médico escribe la enfermedad actual, la evolución, el tratamiento o la
      * antropometría **antes** de que esa consulta exista en el servidor. El teléfono no puede mandarlas
@@ -330,7 +336,9 @@ class CreacionesClinicas
 
         $fecha = $this->fechaValida($change['fecha'] ?? null) ?? now()->toDateString();
 
-        $consulta = $this->crearConsulta->ejecutar($historia, Carbon::parse($fecha));
+        // El doctor es el médico autenticado del sync: la consulta queda sellada con él (`medico_id` y su
+        // clave legacy en `medico`), igual que la que abre la web al "Atender".
+        $consulta = $this->crearConsulta->ejecutar($historia, Carbon::parse($fecha), $this->medico);
 
         // Las columnas del cliente, al crear la fila. Va después de la Action para no pisar el número ni
         // el tenant, y no deja rastro por columna: la fila es nueva y su `created` (el de `anotar`, más

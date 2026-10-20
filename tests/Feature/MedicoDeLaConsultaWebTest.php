@@ -36,7 +36,9 @@ use Tests\TestCase;
  *  - en el **consultorio personal** sigue igual (la consulta es del doctor y firma él);
  *  - una consulta que **ya existía** no se toca: "re-atender" la reusa y no le escribe el doctor ni ninguna otra
  *    columna;
- *  - el sync del móvil, que llama a la misma Action **sin médico**, sigue dejando la consulta sin doctor.
+ *  - una llamada a la Action **sin médico** —el tercer parámetro sigue siendo opcional— deja la consulta sin doctor
+ *    y el firmante cae en el respaldo: es el estado de las consultas creadas antes del 2026-10-20 (el sync del móvil
+ *    ya pasa el suyo, ver `CreacionesClinicasTest`).
  *
  * `DatabaseTransactions`, como el resto de los tests de la web clínica. "Hoy" es `2026-10-07 09:00` (UTC) = las 05:00 en
  * Caracas, el mismo día del consultorio.
@@ -281,10 +283,11 @@ class MedicoDeLaConsultaWebTest extends TestCase
     }
 
     /**
-     * **El sync del móvil sigue igual**: llama a la misma Action sin médico, así que la consulta nace sin doctor y el
-     * firmante cae en el de la clave o en el del contexto.
+     * **Sin médico la consulta nace sin doctor**: el tercer parámetro de la Action es opcional, así que una llamada
+     * sin él deja `medico_id` y `medico` nulos y el firmante cae en el respaldo. Es lo que queda de las consultas
+     * creadas antes del 2026-10-20 (el sync del móvil y la web ya pasan su médico).
      */
-    public function test_sin_medico_la_consulta_nace_sin_doctor_como_la_crea_el_sync(): void
+    public function test_sin_medico_la_consulta_nace_sin_doctor_y_el_firmante_cae_en_el_respaldo(): void
     {
         $datos = $this->escenarioDelCentro();
         $pacienteId = $this->pacienteConHistoria($datos['centro'], 7006);
