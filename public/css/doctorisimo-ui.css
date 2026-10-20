@@ -560,6 +560,15 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
     padding: .35rem;
 }
 
+/* El correo del menú del usuario va en una sola línea: si no cabe se corta con «…» (el completo queda en el `title`)
+   en vez de salirse del menú. */
+.menu-usuario-correo {
+    max-width: min(18rem, calc(100vw - 4rem));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .dropdown-item {
     border-radius: var(--ds-radio-sm);
     padding: .45rem .7rem;
