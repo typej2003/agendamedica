@@ -1,9 +1,9 @@
 {{-- Las tarjetas de campos de la ficha del paciente (cédula, contacto y datos del consultorio): las comparten el formulario de la ficha y
      la sección «Datos personales» de la consulta (WEB-11.25). Recibe `$vm` (FormularioDePacienteVista). Sin <form>: lo pone quien la incluye. --}}
-<x-ui.tarjeta titulo="Quién es" icono="bi-person-vcard" class="mb-3">
+<div class="campos-paciente"><div class="campos-paciente-rejilla">
+<x-ui.tarjeta titulo="Quién es" icono="bi-person-vcard" class="campos-paciente-ancha">
     <div class="row g-3">
-        <x-ui.campo etiqueta="Cédula" for="cedula" :requerido="! $vm->sinCedula()" class="col-md-6"
-                    ayuda="Si la cédula ya está cargada, el paciente se enlaza a su ficha; no se duplica ni se pisa lo que ya tenga.">
+        <x-ui.campo etiqueta="Cédula" for="cedula" :requerido="! $vm->sinCedula()" class="col-md-6">
             <div class="input-group">
                 <select name="nac" id="nac" class="form-select campo-nacionalidad" aria-label="Nacionalidad">
                     @foreach ($vm->nacionalidades() as $opcion)
@@ -33,7 +33,7 @@
                    autocomplete="off" value="{{ $vm->valor('nombres') }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Sexo" for="sexo" class="col-md-3">
+        <x-ui.campo etiqueta="Sexo" for="sexo" class="col-md-2">
             <select name="sexo" id="sexo" class="form-select">
                 <option value="">— Sin dato —</option>
                 @foreach ($vm->sexos() as $opcion)
@@ -46,7 +46,7 @@
             <input type="date" name="fnacimiento" id="fnacimiento" class="form-control" value="{{ $vm->fecha('fnacimiento') }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Lugar de nacimiento" for="lnacimiento" class="col-md-3">
+        <x-ui.campo etiqueta="Lugar de nacimiento" for="lnacimiento" class="col-md-4">
             <input type="text" name="lnacimiento" id="lnacimiento" class="form-control" maxlength="100"
                    value="{{ $vm->valor('lnacimiento') }}">
         </x-ui.campo>
@@ -62,14 +62,14 @@
     </div>
 </x-ui.tarjeta>
 
-<x-ui.tarjeta titulo="Cómo se lo contacta" icono="bi-telephone" class="mb-3">
+<x-ui.tarjeta titulo="Cómo se lo contacta" icono="bi-telephone">
     <div class="row g-3">
-        <x-ui.campo etiqueta="Dirección" for="direccion" class="col-md-8">
+        <x-ui.campo etiqueta="Dirección" for="direccion" class="col-12">
             <input type="text" name="direccion" id="direccion" class="form-control" maxlength="200"
                    value="{{ $vm->valor('direccion') }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Celular" for="telefono" class="col-md-4">
+        <x-ui.campo etiqueta="Celular" for="telefono" class="col-md-6">
             <input type="text" name="telefono" id="telefono" class="form-control" maxlength="20"
                    autocapitalize="off" value="{{ $vm->valor('telefono') }}">
         </x-ui.campo>
@@ -81,7 +81,7 @@
     </div>
 </x-ui.tarjeta>
 
-<x-ui.tarjeta titulo="Datos del consultorio" icono="bi-briefcase" class="mb-3">
+<x-ui.tarjeta titulo="Datos del consultorio" icono="bi-briefcase">
     <div class="row g-3">
         <x-ui.campo etiqueta="Profesión" for="profesion" class="col-md-4">
             <input type="text" name="profesion" id="profesion" class="form-control" maxlength="50"
@@ -118,3 +118,4 @@
         </x-ui.campo>
     </div>
 </x-ui.tarjeta>
+</div></div>

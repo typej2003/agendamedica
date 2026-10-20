@@ -125,30 +125,44 @@
 
                 @if ($armazon->tieneContexto())
                     <div class="d-none d-md-flex flex-wrap gap-1">
-                        @foreach ($armazon->fichas() as $ficha)
-                            <span class="chip"><i class="bi {{ $ficha['icono'] }}" aria-hidden="true"></i> {{ $ficha['texto'] }}</span>
+                        @foreach ($armazon->fichasDeLaBarra() as $ficha)
+                            <span class="chip chip-barra" title="{{ $ficha['titulo'] ?? $ficha['texto'] }}"><i class="bi {{ $ficha['icono'] }}" aria-hidden="true"></i> {{ $ficha['texto'] }}</span>
                         @endforeach
                     </div>
                 @endif
             </div>
 
             <div class="d-flex align-items-center gap-2">
+                {{-- El panel de administración es la única puerta que se queda en la barra, y sólo la ve el administrador. --}}
                 @foreach ($armazon->accesos() as $acceso)
-                    <a href="{{ $acceso['url'] }}" class="btn btn-sm {{ $acceso['primario'] ? 'btn-outline-primary' : 'btn-outline-secondary' }}"
-                       title="{{ $acceso['texto'] }}">
-                        <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
-                    </a>
+                    @if ($acceso['primario'])
+                        <a href="{{ $acceso['url'] }}" class="btn btn-sm btn-outline-primary" title="{{ $acceso['texto'] }}">
+                            <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> <span class="d-none d-sm-inline">{{ $acceso['texto'] }}</span>
+                        </a>
+                    @endif
                 @endforeach
 
-                {{-- La cuenta: cambiar la contraseña y **cerrar sesión**. Antes no había cómo salir desde el consultorio
-                     (el cierre de sesión solo existía en el panel de administración). --}}
+                {{-- La cuenta: el nombre completo del médico en el botón; dentro, su registro, sedes, consultorios, cambiar de
+                     consultorio, la contraseña y **cerrar sesión**. Antes no había cómo salir desde el consultorio. --}}
                 @auth
-                    <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="\Illuminate\Support\Str::words(auth()->user()->name, 1, '')">
+                    @php $cuenta = $armazon->cuenta(); @endphp
+                    <x-ui.menu etiqueta="Mi cuenta" icono="bi-person-circle" :texto="$cuenta['nombre']" class="menu-cuenta">
+                        <div class="menu-cuenta-cabecera">
+                            <strong>{{ $cuenta['nombre'] }}</strong>
+                            @if ($cuenta['registro'])
+                                <span class="texto-tenue small"><i class="bi bi-hash" aria-hidden="true"></i> {{ $cuenta['registro'] }}</span>
+                            @endif
+                        </div>
                         @if (count(auth()->user()->panelesDisponibles()) > 1)
                             <a class="menu-item" href="{{ route('elegir-panel') }}">
                                 <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Cambiar de área
                             </a>
                         @endif
+                        @foreach ($armazon->accesosDeLaCuenta() as $acceso)
+                            <a class="menu-item" href="{{ $acceso['url'] }}">
+                                <i class="bi {{ $acceso['icono'] }}" aria-hidden="true"></i> {{ $acceso['texto'] }}
+                            </a>
+                        @endforeach
                         <a class="menu-item" href="{{ route('cuenta.password') }}">
                             <i class="bi bi-key" aria-hidden="true"></i> Cambiar contraseña
                         </a>

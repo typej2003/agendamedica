@@ -17,7 +17,7 @@
         $contador = $vm->estadoDelEditor();
     @endphp
 
-    <div class="consulta-seccion" id="consulta-recipes"
+    <div class="consulta-seccion editor-dos-columnas" id="consulta-recipes"
          data-url-medicamentos="{{ $vm->urlMedicamentos() }}"
          data-url-tratamientos="">
 
@@ -34,7 +34,7 @@
                 </x-slot>
 
                 <div class="row g-3 mb-3">
-                    <x-ui.campo etiqueta="Nombre del tratamiento" for="tratamiento-nombre" error="tratamiento" requerido class="col-12 col-md-8"
+                    <x-ui.campo etiqueta="Nombre del tratamiento" for="tratamiento-nombre" error="tratamiento" requerido class="col-12"
                                 :ayuda="'Hasta ' . $vm->largoDelNombre() . ' caracteres. Se guarda en mayúsculas.'">
                         <input type="text" id="tratamiento-nombre" name="tratamiento" class="form-control" data-recipe-extra
                                maxlength="{{ $vm->largoDelNombre() }}" value="{{ $editor['nombre'] }}" autocomplete="off">
