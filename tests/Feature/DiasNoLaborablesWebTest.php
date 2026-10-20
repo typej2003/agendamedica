@@ -117,10 +117,15 @@ class DiasNoLaborablesWebTest extends TestCase
         return $id;
     }
 
-    /** La clave con la que la web marca los días y con la que el escritorio los lee (`cola.medico`). */
+    /**
+     * La clave con la que la web marca los días y con la que el escritorio los lee (`cola.medico`).
+     *
+     * Desde la Fase 2 del cambio de `reg_medico` sale de los **registros del doctor** (los suyos y los
+     * centros donde trabaja), no del `reg_medico` del contexto: `claveDe()` ya no recibe el tenant.
+     */
     private function clave(Medico $medico): int
     {
-        return app(DiasNoLaborables::class)->claveDe($medico, $medico->reg_medico);
+        return app(DiasNoLaborables::class)->claveDe($medico);
     }
 
     // ------------------------------------------------------------------------ La regla, en el dominio

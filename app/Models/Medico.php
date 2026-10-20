@@ -90,6 +90,31 @@ class Medico extends Model
     }
 
     /**
+     * Los `reg_medico` **de este médico**: el suyo (`medicos.reg_medico`) más los que tiene en
+     * `medico_registros` —los centros donde trabaja y los consultorios que le dieron—, sin repetidos.
+     *
+     * Es la lista con la que se resuelven las dos cosas que son del doctor y **no del tenant**: su `clave`
+     * de `evolucion` (que el legado guarda en el registro donde el médico se configuró) y la lista global
+     * de pacientes de la web clínica (Fase 2 del cambio de `reg_medico`). La comparten el contexto de
+     * trabajo, la agenda, la ficha y `CuentaService`, para que las cuatro no tengan cada una la suya.
+     *
+     * Ojo: el `reg_medico` de un **centro** (`medicos.es_centro = 1`) es su propio tenant y no tiene
+     * doctores colgando de `medicos.user_id`; en ese caso la lista es sólo la del centro.
+     *
+     * @return array<int,string>
+     */
+    public function registrosDeTrabajo(): array
+    {
+        $registros = $this->registros()->orderBy('id')->pluck('reg_medico')->all();
+
+        if (! empty($this->reg_medico)) {
+            array_unshift($registros, $this->reg_medico);
+        }
+
+        return array_values(array_unique(array_filter($registros, fn ($registro) => trim((string) $registro) !== '')));
+    }
+
+    /**
      * Registro médico bajo el que se guardan las filas "una por médico" (`evolucion`,
      * `recipe_formatos`). Se prefiere la relación `registro()` sobre la columna `reg_medico`
      * porque esa está marcada como temporal ("tiende a cambiar, no usar").

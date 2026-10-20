@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
+use App\Clinica\ContextoTrabajo;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Historia\HistoriaDelPaciente;
 use App\Clinica\Historia\Vistas\HistoriaDePacienteVista;
@@ -21,8 +22,17 @@ use Illuminate\Http\Request;
  * consultas)—, y es la misma partición que ya hace el escritorio entre *Mantenimiento de pacientes* y la
  * consulta. El listado y la ficha siguen en `PacienteController`.
  *
- * **Quién es el paciente lo dice el vínculo** (`medico_pacientes`), y el `numhistoria` sale de ahí, no de
- * la URL: un paciente de otro `reg_medico` responde **404** sin confirmar que exista, igual que su ficha.
+ * **Quién es el paciente lo dicen los vínculos** (`medico_pacientes`), y el `numhistoria` **del consultorio
+ * que se está mirando**, no la URL: un paciente de otro médico responde **404** sin confirmar que exista,
+ * igual que su ficha.
+ *
+ * **«Ver otra historia»** (Fase 2 del cambio de `reg_medico`, 2026-10-20): un paciente del doctor puede
+ * tener historia en más de uno de sus consultorios (el personal y los centros donde trabaja), y cada una
+ * es **otra** historia, con su número. `?reg_medico=` elige cuál se lee, validado contra los registros del
+ * doctor —nunca un consultorio ajeno—; sin él se abre la del **contexto**, que es donde se atiende. No se
+ * pregunta al abrir: el selector es de sólo lectura y viene con la que corresponde.
+ *
+ * La **consulta** (`/clinica/consulta/{consulta}`) no cambia: es del contexto.
  */
 class HistoriaDelPacienteController extends Controller
 {
@@ -35,17 +45,23 @@ class HistoriaDelPacienteController extends Controller
     public function ver(Request $request, int $paciente)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $ficha = $this->ficha($contexto['reg_medico'], $paciente);
-        $consultas = $this->historia->consultas($contexto['reg_medico'], $ficha->numhistoria);
+        $registros = $this->registrosDelContexto($request);
+        $elegido = $this->registroElegido($request, $contexto, $registros);
+
+        $ficha = $this->ficha($registros, $elegido, $paciente);
+        $consultas = $this->historia->consultas($elegido, $ficha->numhistoria);
 
         $vista = new HistoriaDePacienteVista(
             $ficha,
             $consultas,
-            $this->historia->antecedentes($contexto['reg_medico'], $ficha->numhistoria),
-            $this->historia->documentos($contexto['reg_medico'], $ficha->numhistoria, $consultas),
+            $this->historia->antecedentes($elegido, $ficha->numhistoria),
+            $this->historia->documentos($elegido, $ficha->numhistoria, $consultas),
             // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
             route('clinica.pacientes.ver', $paciente),
-            route('clinica.pacientes.historia.imprimir', $paciente),
+            route('clinica.pacientes.historia.imprimir', array_filter([
+                'paciente'   => $paciente,
+                'reg_medico' => $elegido === $contexto['reg_medico'] ? null : $elegido,
+            ])),
             // La hoja impresa de cada récipe (WEB-5.2): sólo para quien puede abrir la consulta —el médico—.
             // La secretaría imprime desde la fila de la cita en la agenda; este enlace le daría 403.
             $request->user()?->trabajaLaConsulta()
@@ -60,6 +76,15 @@ class HistoriaDelPacienteController extends Controller
                 ? fn (int $consulta) => route('clinica.consulta', $consulta)
                 : null,
         );
+
+        // El selector **«ver otra historia»** de sólo lectura: los consultorios del doctor donde el paciente
+        // tiene historia, con su número. Sin historia en ningún lado no hay nada que elegir.
+        $vista = $vista
+            ->conOtrasHistorias($this->pacientes->registrosConHistoria($registros, $paciente, $elegido))
+            ->conUrlOtraHistoria(fn (string $regMedico) => route('clinica.pacientes.historia', [
+                'paciente'   => $paciente,
+                'reg_medico' => $regMedico,
+            ]));
 
         // **El cajón de la consulta** (O-30): la misma lectura y el mismo ViewModel que la pantalla, en un
         // fragmento sin el armazón, para inyectarlo en el panel lateral mientras el médico escribe. El permiso
@@ -76,18 +101,24 @@ class HistoriaDelPacienteController extends Controller
      * día de la agenda: una vista sin el armazón de la web y un CSS con `@page`. No es el PDF del servidor.
      *
      * Un paciente sin historia llega igual a la página (no es un error: la pantalla principal ya lo dice):
-     * la impresión muestra el encabezado y avisa que no hay consultas que resumir.
+     * la impresión muestra el encabezado y avisa que no hay consultas que resumir. Con `?reg_medico=` se
+     * imprime la historia de **ese** consultorio del doctor (el mismo que se estaba mirando).
      */
     public function imprimir(Request $request, int $paciente)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $ficha = $this->ficha($contexto['reg_medico'], $paciente);
+        $registros = $this->registrosDelContexto($request);
+        $elegido = $this->registroElegido($request, $contexto, $registros);
+
+        $ficha = $this->ficha($registros, $elegido, $paciente);
 
         return view('clinica.historia.imprimir', [
             'vm' => new ResumenDeHistoriaVista(
                 $ficha,
+                // La firma sigue siendo la del médico del contexto; el número y las consultas son los del
+                // consultorio elegido.
                 $contexto['medico']->nombreMostrar,
-                $this->historia->consultas($contexto['reg_medico'], $ficha->numhistoria),
+                $this->historia->consultas($elegido, $ficha->numhistoria),
                 // "Hoy" en la zona del consultorio, no en UTC (`FechaDelConsultorio`, WEB-2.9).
                 FechaDelConsultorio::hoy(),
                 // En pediatría tres columnas del examen físico son los textos de *Exámenes/Estudios* (2026-10-19).
@@ -97,16 +128,44 @@ class HistoriaDelPacienteController extends Controller
     }
 
     /**
-     * La ficha del paciente **con el número de historia del pivote**, o 404 si es de otro médico. Es la
-     * misma lectura que usa la ficha (`PacientesDelConsultorio::ficha`): un solo lugar decide de quién es
-     * un paciente y cómo se limpia su número.
+     * La ficha del paciente **con el número de historia del consultorio elegido**, o 404 si no es visible en
+     * ninguno de los registros del usuario. Es la misma lectura que usa la ficha
+     * (`PacientesDelConsultorio::ficha`): un solo lugar decide de quién es un paciente y cómo se limpia su
+     * número.
+     *
+     * @param  array<int,string>  $registros
      */
-    private function ficha(string $regMedico, int $paciente): object
+    private function ficha(array $registros, string $elegido, int $paciente): object
     {
-        $ficha = $this->pacientes->ficha($regMedico, $paciente);
+        $ficha = $this->pacientes->ficha($registros, $paciente, $elegido);
 
         abort_unless($ficha !== null, 404);
 
         return $ficha;
+    }
+
+    /**
+     * El consultorio cuya historia se está leyendo: el `?reg_medico=` **si es uno de los registros del
+     * usuario** (nunca otro consultorio) y, si no, el del contexto.
+     *
+     * @param  array<string,mixed>  $contexto
+     * @param  array<int,string>  $registros
+     */
+    private function registroElegido(Request $request, array $contexto, array $registros): string
+    {
+        $pedido = trim((string) $request->query('reg_medico', ''));
+
+        return $pedido !== '' && in_array($pedido, $registros, true) ? $pedido : $contexto['reg_medico'];
+    }
+
+    /**
+     * Los `reg_medico` que puede ver el usuario: los del doctor (el suyo y los centros donde trabaja) o, en
+     * la secretaría, sólo el del centro. La regla vive en `ContextoTrabajo`.
+     *
+     * @return array<int,string>
+     */
+    private function registrosDelContexto(Request $request): array
+    {
+        return app(ContextoTrabajo::class)->registrosDelContexto($request->attributes->get('contexto_clinico'));
     }
 }

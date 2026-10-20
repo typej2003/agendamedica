@@ -72,7 +72,7 @@ class AgendamientoDeCitas
         $numerarHistoria = $opciones['numerar_historia'] ?? true;
         $estado = (int) ($opciones['estado'] ?? Cola::ESTADO_NO_CONFIRMADA);
 
-        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
+        $sedes = $this->armador->sedes($regMedico);
         $sede = $this->sedeElegida($sedes, $valores['sede'] ?? null);
         $fecha = Carbon::createFromFormat('!Y-m-d', $valores['fecha']);
         $bloques = $sede ? $sede->bloquesDe($fecha->dayOfWeekIso) : collect();
@@ -163,7 +163,7 @@ class AgendamientoDeCitas
     {
         $regMedico = $contexto['reg_medico'];
 
-        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
+        $sedes = $this->armador->sedes($regMedico);
         $sede = $this->sedeElegida($sedes, $valores['sede'] ?? null);
         $fecha = Carbon::createFromFormat('!Y-m-d', $valores['fecha']);
         $bloques = $sede ? $sede->bloquesDe($fecha->dayOfWeekIso) : collect();
@@ -310,7 +310,11 @@ class AgendamientoDeCitas
             // legado trae el nombre del paciente y la web no lo escribe.
             'tipo'              => $valores['motivo'] ?? null,
             'monto'             => $monto,
-            'medico'            => $contexto['medico']->claveDeEvolucion($contexto['reg_medico']),
+            // La `clave` legacy de `cola.medico` es la del **doctor**, y se busca en **sus** registros (el
+            // suyo y los centros donde trabaja), no en el `reg_medico` del contexto: la fila de `evolucion`
+            // del médico vive bajo su registro y en un centro el `reg_medico` del contexto no la tiene
+            // (Fase 2 del cambio de `reg_medico`). El `medico_id` de la cita es otra fase.
+            'medico'            => $contexto['medico']->claveDeEvolucion($contexto['medico']->registrosDeTrabajo()),
             'atendido'          => 0,
             'estado'            => $estado,
         ];

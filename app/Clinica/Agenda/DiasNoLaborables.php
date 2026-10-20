@@ -26,12 +26,15 @@ class DiasNoLaborables
      * La clave con la que se marcan los días de este médico: la de `evolucion` o, si el consultorio
      * todavía no tiene esa configuración cargada (lo común en los datos reales), el id del médico.
      *
-     * Es la misma resolución —y el mismo respaldo— que usa `cola.medico` al agendar, para que el día
-     * marcado y la cita caigan bajo el mismo número.
+     * **La clave se busca en los registros del doctor**, no en el `reg_medico` del contexto (Fase 2 del
+     * cambio de `reg_medico`): la fila de `evolucion` del médico vive donde él se configuró, y en un centro
+     * —donde la marca del día sí es del centro— la clave tiene que seguir siendo la del doctor para que el
+     * día marcado y la cita caigan bajo el mismo número. Es la misma resolución —y el mismo respaldo— que
+     * usa `cola.medico` al agendar.
      */
-    public function claveDe(Medico $medico, string $regMedico): int
+    public function claveDe(Medico $medico): int
     {
-        return $medico->claveDeEvolucion($regMedico) ?? $medico->id;
+        return $medico->claveDeEvolucion($medico->registrosDeTrabajo()) ?? $medico->id;
     }
 
     /**
@@ -44,7 +47,7 @@ class DiasNoLaborables
     {
         $dia = $this->delDia(
             $contexto['reg_medico'],
-            $this->claveDe($contexto['medico'], $contexto['reg_medico']),
+            $this->claveDe($contexto['medico']),
             $fecha,
         );
 

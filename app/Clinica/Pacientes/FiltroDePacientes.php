@@ -66,15 +66,21 @@ final class FiltroDePacientes
      * La condición de "no tiene número de historia", para el `whereRaw` del listado y para los contadores
      * del segmentado. Es **la misma** en los dos usos: si el contador y el filtro no miraran lo mismo, el
      * segmentado ofrecería "Sin historia (2)" y traería una fila.
+     *
+     * La columna se pasa porque desde la Fase 2 del cambio de `reg_medico` el listado lee el número del
+     * **vínculo del contexto**, que entra como `LEFT JOIN medico_pacientes as vinculo` (el pivote se
+     * consulta dos veces: una para saber qué pacientes ve el usuario y otra para el número del
+     * consultorio en el que se está trabajando). El nombre por defecto es el de siempre, así que las
+     * pantallas de un solo consultorio no cambian.
      */
-    public static function sqlSinHistoria(): string
+    public static function sqlSinHistoria(string $columna = 'medico_pacientes.numhistoria'): string
     {
-        return "TRIM(COALESCE(medico_pacientes.numhistoria, '')) = ''";
+        return "TRIM(COALESCE({$columna}, '')) = ''";
     }
 
     /** La condición complementaria, con la misma vara. */
-    public static function sqlConHistoria(): string
+    public static function sqlConHistoria(string $columna = 'medico_pacientes.numhistoria'): string
     {
-        return "TRIM(COALESCE(medico_pacientes.numhistoria, '')) <> ''";
+        return "TRIM(COALESCE({$columna}, '')) <> ''";
     }
 }

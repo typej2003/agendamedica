@@ -148,7 +148,7 @@ final class AtencionInmediata
 
         // Día no laborable: el escritorio aborta el agendamiento; la web avisa y deja decidir (WEB-2.8). Acá
         // **no se crea nada**: el aviso explica el motivo y el paciente queda con su historia.
-        if ($this->diasNoLaborables->delDia($regMedico, $this->diasNoLaborables->claveDe($medico, $regMedico), $hoy) !== null) {
+        if ($this->diasNoLaborables->delDia($regMedico, $this->diasNoLaborables->claveDe($medico), $hoy) !== null) {
             return ResultadoDeAtencion::noSePudo(
                 $this->diasNoLaborables->avisoDelDia($contexto, $hoy)
                 . ' No se le crea la cita de hoy: el paciente quedó con su historia y puedes agendarlo a mano desde la agenda.'
@@ -165,7 +165,7 @@ final class AtencionInmediata
         }
 
         $hora = substr((string) $bloques->first()->hora_inicio, 0, 5);
-        $sedes = $this->armador->sedes($regMedico, $medico->id);
+        $sedes = $this->armador->sedes($regMedico);
         $jornada = $this->armador->jornadaPara($regMedico, $sedes, $hoy->copy(), $office->medical_center_id, $hora);
 
         return $this->crearCita->ejecutar($regMedico, [
@@ -175,7 +175,9 @@ final class AtencionInmediata
             'numorden'          => $jornada->siguienteNumero(),
             'medical_center_id' => $office->medical_center_id,
             'numhistoria'       => (int) $historia->numhistoria,
-            'medico'            => $medico->claveDeEvolucion($regMedico),
+            // La clave legacy es la del **doctor** y se busca en sus registros, no en el `reg_medico` del
+            // contexto (Fase 2 del cambio de `reg_medico`); el mismo criterio que `AgendamientoDeCitas`.
+            'medico'            => $medico->claveDeEvolucion($medico->registrosDeTrabajo()),
             'atendido'          => 0,
             // Nace confirmada: el paciente ya está en el consultorio (decisión de O-05).
             'estado'            => Cola::ESTADO_CONFIRMADA,

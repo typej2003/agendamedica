@@ -48,7 +48,7 @@ class MotivoCitaCatalogoController extends Controller
             $buscar,
             $this->motivos->total($regMedico),
             $editando,
-            $this->motivos->sedes($regMedico, $contexto['medico']->id),
+            $this->motivos->sedes($regMedico, null),
             $base,
             [
                 'guardar' => route('clinica.catalogos.motivos-cita.guardar'),

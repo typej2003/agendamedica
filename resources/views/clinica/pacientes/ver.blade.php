@@ -110,6 +110,11 @@
         </x-ui.tarjeta>
     @endif
 
+    {{-- «Ver otra historia» (Fase 2 del cambio de `reg_medico`): las historias del paciente en los otros
+         consultorios del doctor, con su número. Va después del bloque de "falta la historia" porque es la
+         respuesta a "la tiene en otro lado, no acá". --}}
+    @include('clinica.pacientes._otras-historias', ['historias' => $vm->otrasHistorias()])
+
     {{-- Representante del paciente (WEB-3.4): el adulto que responde por él —pediatría y casos
          generales— y el que presta su teléfono para el recordatorio (PLAN-WEB.md §6). Es **uno** por
          paciente: en el legado la tabla `representante` tiene `PRIMARY KEY (numhistoria)`, así que se

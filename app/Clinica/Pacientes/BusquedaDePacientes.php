@@ -104,11 +104,17 @@ final class BusquedaDePacientes
      * Agrega el grupo de búsqueda a la consulta: un `where` por palabra (se exigen todas), y dentro de
      * cada uno un `or` entre las columnas del paciente. El grupo va anidado para que el `or` no se
      * escape del filtro por `reg_medico`.
+     *
+     * `$columnaHistoria` es la columna del número: desde la Fase 2 del cambio de `reg_medico` el listado
+     * lee el pivote del **contexto** con el alias `vinculo` (`LEFT JOIN medico_pacientes as vinculo`), y
+     * el nombre pelado ya no existe en esa consulta. El valor por defecto es el de siempre.
+     *
+     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $consulta
      */
-    public static function aplicar($consulta, string $buscar)
+    public static function aplicar($consulta, string $buscar, string $columnaHistoria = 'medico_pacientes.numhistoria')
     {
         foreach (self::palabras($buscar) as $palabra) {
-            $consulta->where(function ($grupo) use ($palabra) {
+            $consulta->where(function ($grupo) use ($palabra, $columnaHistoria) {
                 $termino = '%' . self::escaparLike(self::normalizar($palabra)) . '%';
 
                 $grupo->whereRaw(self::columnaNormalizada('pacientes.nombres') . " like ? escape '!'", [$termino])
@@ -116,7 +122,7 @@ final class BusquedaDePacientes
                     ->orWhereRaw("pacientes.cedula like ? escape '!'", [$termino]);
 
                 foreach (self::formasDeNumero($palabra) as $forma) {
-                    $grupo->orWhereRaw("medico_pacientes.numhistoria like ? escape '!'", ['%' . self::escaparLike($forma) . '%']);
+                    $grupo->orWhereRaw("{$columnaHistoria} like ? escape '!'", ['%' . self::escaparLike($forma) . '%']);
                 }
             });
         }

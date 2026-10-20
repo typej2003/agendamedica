@@ -30,7 +30,7 @@ class LectorDeAgenda
         $regMedico = $contexto['reg_medico'];
         [$desde, $hasta] = $parametros->rango();
 
-        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
+        $sedes = $this->armador->sedes($regMedico);
         $centroId = $parametros->sedeId ? $sedes->firstWhere('id', $parametros->sedeId)?->medical_center_id : null;
 
         // La posición del paciente se calcula sobre **todas** las citas del rango, no sobre las que
@@ -87,10 +87,10 @@ class LectorDeAgenda
         );
     }
 
-    /** @return Collection<int,Office> las sedes del médico del contexto */
+    /** @return Collection<int,Office> los consultorios del contexto (todos los del tenant) */
     public function sedes(array $contexto): Collection
     {
-        return $this->armador->sedes($contexto['reg_medico'], $contexto['medico']->id);
+        return $this->armador->sedes($contexto['reg_medico']);
     }
 
     /**

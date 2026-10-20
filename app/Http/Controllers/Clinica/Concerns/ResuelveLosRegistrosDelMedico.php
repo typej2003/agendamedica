@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Clinica\Concerns;
 
 use App\Models\Medico;
-use App\Models\MedicoRegistro;
 
 /**
  * Los `reg_medico` de un médico, resueltos **igual que en el sync del móvil** (`SyncAppDataController`):
@@ -15,6 +14,10 @@ use App\Models\MedicoRegistro;
  * era una sola y vivía adentro de `MostradorController` (WEB-2.11); al necesitarla la ficha de paciente
  * (WEB-3.3) se extrajo acá —entre los controladores de `/clinica`— en vez de copiarla, que es lo que la
  * guía de la web pide para las reglas que dos pantallas comparten.
+ *
+ * Desde la Fase 2 del cambio de `reg_medico` la lista incluye **los centros donde el doctor está
+ * vinculado**, que es lo que hace que la lista de pacientes sea la global del doctor. La regla vive en
+ * `Medico::registrosDeTrabajo()`, compartida con el contexto de trabajo y la agenda.
  */
 trait ResuelveLosRegistrosDelMedico
 {
@@ -23,12 +26,6 @@ trait ResuelveLosRegistrosDelMedico
      */
     protected function registrosDelMedico(Medico $medico): array
     {
-        $registros = MedicoRegistro::where('medico_id', $medico->id)->pluck('reg_medico')->filter()->toArray();
-
-        if (! empty($medico->reg_medico)) {
-            $registros[] = $medico->reg_medico;
-        }
-
-        return array_values(array_unique($registros));
+        return $medico->registrosDeTrabajo();
     }
 }

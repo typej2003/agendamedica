@@ -34,7 +34,7 @@ class NoLaborableController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $regMedico = $contexto['reg_medico'];
-        $clave = $this->dias->claveDe($contexto['medico'], $regMedico);
+        $clave = $this->dias->claveDe($contexto['medico']);
         $mes = $this->mes($request->query('mes'));
 
         return view('clinica.agenda.no-laborables', ['vm' => new NoLaborablesVista(
@@ -55,7 +55,7 @@ class NoLaborableController extends Controller
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $regMedico = $contexto['reg_medico'];
-        $clave = $this->dias->claveDe($contexto['medico'], $regMedico);
+        $clave = $this->dias->claveDe($contexto['medico']);
 
         $datos = $request->validate([
             'id'     => ['nullable', 'integer'],

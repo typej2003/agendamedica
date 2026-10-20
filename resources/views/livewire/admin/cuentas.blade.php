@@ -68,6 +68,9 @@
                                     @if ($pestana === 'medicos')
                                         <div class="fw-semibold">{{ trim($fila->name . ' ' . $fila->lastname) }}</div>
                                         <small class="text-muted">{{ $fila->reg_medico }}</small>
+                                        @if ($fila->es_centro)
+                                            <span class="badge bg-primary" title="Es un centro médico: no inicia sesión ni atiende, es el tenant de sus doctores">Centro médico</span>
+                                        @endif
                                         @php $extras = $fila->registros->where('reg_medico', '!=', $fila->reg_medico)->count(); @endphp
                                         @if ($extras > 0)
                                             <span class="badge bg-light text-dark border" title="Además ve los datos de otros {{ $extras }} reg_medico">+{{ $extras }} registro{{ $extras > 1 ? 's' : '' }}</span>
@@ -100,7 +103,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end text-nowrap">
-                                    @if (! $u)
+                                    @if (! $u && ! $fila->es_centro)
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
                                         </button>
@@ -134,14 +137,17 @@
                                                 @if ($m)
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirRegistros({{ $m->id }})">
-                                                            <i class="bi bi-database-lock me-2"></i> Registros de datos
+                                                            <i class="bi bi-database-lock me-2"></i>
+                                                            {{ $m->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
                                                         </button>
                                                     </li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item" wire:click="abrirEmitir({{ $m->id }})">
-                                                            <i class="bi bi-key-fill me-2"></i> Generar API key
-                                                        </button>
-                                                    </li>
+                                                    @if (! $m->es_centro)
+                                                        <li>
+                                                            <button type="button" class="dropdown-item" wire:click="abrirEmitir({{ $m->id }})">
+                                                                <i class="bi bi-key-fill me-2"></i> Generar API key
+                                                            </button>
+                                                        </li>
+                                                    @endif
                                                 @endif
 
                                                 @if ($u)
@@ -218,8 +224,11 @@
                                 @endif
 
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">Correo <span class="text-danger">*</span></label>
+                                    <label class="form-label">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
                                     <input type="email" class="form-control" wire:model.defer="email" autocomplete="off">
+                                    @if ($es_centro)
+                                        <div class="form-text">Opcional: un centro médico no inicia sesión.</div>
+                                    @endif
                                     @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
@@ -227,14 +236,39 @@
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Registro médico (reg_medico) <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off">
-                                        <div class="form-text">Debe ser el mismo que tiene el médico en su GinecoReport (tabla <code>evolucion</code>).</div>
+                                        <div class="form-text">
+                                            @if ($es_centro)
+                                                El del centro, por ejemplo <code>centro_001</code>. Es el tenant donde trabajan sus doctores.
+                                            @else
+                                                Debe ser el mismo que tiene el médico en su GinecoReport (tabla <code>evolucion</code>).
+                                            @endif
+                                        </div>
                                         @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    {{-- **Centro médico** (Fase 2 del cambio de `reg_medico`): una fila de `medicos` con
+                                         `es_centro` y su `reg_medico`, SIN cuenta de acceso. Es el tenant donde trabajan
+                                         los doctores; el centro no atiende. --}}
+                                    <div class="col-12 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="alta-es-centro" wire:model="es_centro">
+                                            <label class="form-check-label" for="alta-es-centro">
+                                                <strong>Es centro médico</strong>
+                                                <span class="d-block form-text mb-0">
+                                                    No tendrá cuenta de acceso (no inicia sesión ni atiende): sólo la ficha del centro, con
+                                                    sus consultorios, su agenda y sus pacientes. Los doctores se asocian después desde
+                                                    «Registros de datos».
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
                                 @endif
 
                                 <div class="col-12 mb-1">
                                     <label class="form-label">Contraseña temporal</label>
-                                    <input type="text" class="form-control" wire:model.defer="clave" autocomplete="off" placeholder="Vacío = se genera una">
+                                    <input type="text" class="form-control" wire:model.defer="clave" autocomplete="off"
+                                           placeholder="{{ $es_centro ? 'No se usa: un centro no inicia sesión' : 'Vacío = se genera una' }}"
+                                           {{ $es_centro ? 'disabled' : '' }}>
                                     <div class="form-text">Mínimo 8 caracteres. En su primer inicio de sesión se le obliga a cambiarla.</div>
                                     @error('clave') <span class="text-danger small">{{ $message }}</span> @enderror
                                     @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -369,9 +403,11 @@
                                 @endif
 
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">Correo <span class="text-danger">*</span></label>
+                                    <label class="form-label">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
                                     <input type="email" class="form-control" wire:model.defer="email" autocomplete="off">
-                                    <div class="form-text">Es el correo con el que inicia sesión.</div>
+                                    <div class="form-text">
+                                        {{ $es_centro ? 'Opcional: un centro médico no inicia sesión.' : 'Es el correo con el que inicia sesión.' }}
+                                    </div>
                                     @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
@@ -386,10 +422,39 @@
                                         <input type="text" class="form-control" wire:model.defer="license_number">
                                         @error('license_number') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
-                                    <div class="col-12 mb-1">
+                                    <div class="col-12 mb-3">
                                         <label class="form-label">Registro médico (reg_medico)</label>
                                         <input type="text" class="form-control" value="{{ $reg_medico }}" disabled>
                                         <div class="form-text">No se puede cambiar: con él están guardados todos los datos del médico en la nube.</div>
+                                    </div>
+
+                                    {{-- **Centro médico** y el formato de sus reportes (Fase 2 del cambio de `reg_medico`).
+                                         El formato decide el membrete de los reportes del centro; la firma es siempre la del
+                                         doctor que atendió, y la impresión que lo usa es otra fase. --}}
+                                    <div class="col-12 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="editar-es-centro" wire:model="es_centro">
+                                            <label class="form-check-label" for="editar-es-centro">
+                                                <strong>Es centro médico</strong>
+                                                <span class="d-block form-text mb-0">
+                                                    El centro no inicia sesión ni atiende: es el tenant donde trabajan sus doctores.
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 mb-1">
+                                        <label class="form-label" for="editar-formato">Formato de los reportes</label>
+                                        <select class="form-select" id="editar-formato" wire:model.defer="formato_reportes">
+                                            <option value="">— Sin elegir —</option>
+                                            @foreach ($formatosDeReporte as $formato)
+                                                <option value="{{ $formato }}">{{ $formato === 'centro' ? 'Del centro' : 'Del médico' }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="form-text">
+                                            Con qué membrete se imprimen los reportes del centro. La firma es siempre la del doctor que atendió.
+                                        </div>
+                                        @error('formato_reportes') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
                             </div>
@@ -461,49 +526,104 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Registros de datos · {{ trim($medicoRegistros->name . ' ' . $medicoRegistros->lastname) }}</h5>
+                        <h5 class="modal-title">
+                            {{ $medicoRegistros->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
+                            · {{ trim($medicoRegistros->name . ' ' . $medicoRegistros->lastname) }}
+                        </h5>
                         <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         @if ($avisoRegistros) <div class="alert alert-success py-2">{{ $avisoRegistros }}</div> @endif
                         @error('regNuevo') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+                        @error('doctorNuevo') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
 
-                        <p class="text-muted small">
-                            Los <code>reg_medico</code> cuyos datos (agenda, pacientes, consultas, récipes) ve este médico. Sirve para que un
-                            colega o una asistente compartan un consultorio, o para depurar con otra cuenta. <strong>Mirar es seguro</strong>;
-                            si edita algo que ya existe (confirmar o cobrar una cita), el cambio queda en los datos de ese registro.
-                            Quitar un registro no borra ningún dato: solo el acceso de este médico.
-                        </p>
+                        @if ($medicoRegistros->es_centro)
+                            {{-- **Los doctores del centro** (Fase 2 del cambio de `reg_medico`): el centro asocia
+                                 doctores ya registrados y acá se ven los que trabajan en él hoy. Desvincular sólo
+                                 quita la fila de `medico_registros`: no borra datos ni la cuenta del doctor. --}}
+                            <p class="text-muted small">
+                                Los doctores que trabajan en el centro. Cada uno lo ve en su contexto —con sus
+                                pacientes y su agenda— y el centro no gana ninguna cuenta: el centro no atiende.
+                                Desvincular no borra ningún dato, sólo el acceso del doctor a este centro.
+                            </p>
 
-                        <ul class="list-group mb-3">
-                            @foreach ($regsDelMedico as $reg)
-                                <li class="list-group-item d-flex justify-content-between align-items-center" wire:key="reg-{{ $reg }}">
-                                    <span>
-                                        <code>{{ $reg }}</code>
-                                        @if ($reg === $medicoRegistros->reg_medico) <span class="badge bg-secondary ms-1">propio</span> @endif
-                                    </span>
-                                    @if ($reg !== $medicoRegistros->reg_medico)
-                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="quitarRegistro({{ json_encode($reg) }})"
-                                                wire:loading.attr="disabled">
-                                            <i class="bi bi-x-circle me-1"></i> Quitar
-                                        </button>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
+                            <h6 class="mt-3">Doctores del centro</h6>
+                            @if ($doctoresDelCentro->isEmpty())
+                                <p class="text-muted small mb-2">Todavía no tiene doctores vinculados.</p>
+                            @else
+                                <ul class="list-group mb-3">
+                                    @foreach ($doctoresDelCentro as $doctor)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center" wire:key="doctor-{{ $doctor->id }}">
+                                            <span>
+                                                {{ trim($doctor->name . ' ' . $doctor->lastname) }}
+                                                <small class="text-muted">· {{ $doctor->reg_medico }}</small>
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    wire:click="quitarDoctorDelCentro({{ $doctor->id }})" wire:loading.attr="disabled">
+                                                <i class="bi bi-x-circle me-1"></i> Desvincular
+                                            </button>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
 
-                        <form wire:submit.prevent="asignarRegistro" class="d-flex gap-2">
-                            <select class="form-select" wire:model.defer="regNuevo" aria-label="reg_medico a asignar">
-                                <option value="">Asignar un reg_medico…</option>
-                                @foreach ($asignables as $reg => $etiqueta)
-                                    <option value="{{ $reg }}">{{ $etiqueta }}</option>
+                            <h6 class="mt-3">Vincular un doctor que ya está registrado</h6>
+                            @if ($doctoresVinculables->isEmpty())
+                                <p class="text-muted small mb-0">
+                                    No hay doctores sin vincular. Se dan de alta desde «Nuevo médico», con su propio registro profesional.
+                                </p>
+                            @else
+                                <form wire:submit.prevent="vincularDoctorAlCentro" class="d-flex gap-2">
+                                    <select class="form-select" wire:model.defer="doctorNuevo" aria-label="doctor a vincular al centro">
+                                        <option value="">Elegir un doctor…</option>
+                                        @foreach ($doctoresVinculables as $doctor)
+                                            <option value="{{ $doctor->id }}">{{ trim($doctor->name . ' ' . $doctor->lastname) }} ({{ $doctor->reg_medico }})</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="vincularDoctorAlCentro">Vincular</span>
+                                        <span wire:loading wire:target="vincularDoctorAlCentro">Vinculando…</span>
+                                    </button>
+                                </form>
+                            @endif
+                        @else
+                            <p class="text-muted small">
+                                Los <code>reg_medico</code> cuyos datos (agenda, pacientes, consultas, récipes) ve este médico. Sirve para que un
+                                colega o una asistente compartan un consultorio, o para depurar con otra cuenta. <strong>Mirar es seguro</strong>;
+                                si edita algo que ya existe (confirmar o cobrar una cita), el cambio queda en los datos de ese registro.
+                                Quitar un registro no borra ningún dato: solo el acceso de este médico.
+                            </p>
+
+                            <ul class="list-group mb-3">
+                                @foreach ($regsDelMedico as $reg)
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" wire:key="reg-{{ $reg }}">
+                                        <span>
+                                            <code>{{ $reg }}</code>
+                                            @if ($reg === $medicoRegistros->reg_medico) <span class="badge bg-secondary ms-1">propio</span> @endif
+                                        </span>
+                                        @if ($reg !== $medicoRegistros->reg_medico)
+                                            <button type="button" class="btn btn-sm btn-outline-danger" wire:click="quitarRegistro({{ json_encode($reg) }})"
+                                                    wire:loading.attr="disabled">
+                                                <i class="bi bi-x-circle me-1"></i> Quitar
+                                            </button>
+                                        @endif
+                                    </li>
                                 @endforeach
-                            </select>
-                            <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
-                                <span wire:loading.remove wire:target="asignarRegistro">Asignar</span>
-                                <span wire:loading wire:target="asignarRegistro">Asignando…</span>
-                            </button>
-                        </form>
+                            </ul>
+
+                            <form wire:submit.prevent="asignarRegistro" class="d-flex gap-2">
+                                <select class="form-select" wire:model.defer="regNuevo" aria-label="reg_medico a asignar">
+                                    <option value="">Asignar un reg_medico…</option>
+                                    @foreach ($asignables as $reg => $etiqueta)
+                                        <option value="{{ $reg }}">{{ $etiqueta }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="asignarRegistro">Asignar</span>
+                                    <span wire:loading wire:target="asignarRegistro">Asignando…</span>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cerrar</button>

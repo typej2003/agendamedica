@@ -125,7 +125,7 @@ class CitaController extends Controller
             return $this->volverConError($cita, 'Una cita ya atendida no se reagenda. Si hay que corregir el monto, usa Cobrar.');
         }
 
-        $sedes = $this->armador->sedes($contexto['reg_medico'], $contexto['medico']->id);
+        $sedes = $this->armador->sedes($contexto['reg_medico']);
         $sede = $sedes->first(fn (Office $opcion) => $opcion->medical_center_id === ($cita->medical_center_id !== null ? (int) $cita->medical_center_id : null));
         $paciente = $this->pacientes->deLaCita($cita);
 

@@ -42,6 +42,13 @@ class CuentaService
     /** Sin caracteres que se confunden al dictarlos (0/O, 1/l/I). */
     private const ALFABETO_CLAVE = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
 
+    /**
+     * Los valores de `medicos.formato_reportes` (Fase 2 del cambio de `reg_medico`): con qué membrete se
+     * imprimen los reportes del centro. La **firma** es siempre la del doctor que atendió; esto decide el
+     * membrete. En esta fase es sólo el campo y su ABM: la impresión que lo usa es otra fase.
+     */
+    public const FORMATOS_DE_REPORTE = ['centro', 'medico'];
+
     /** Clave temporal aleatoria, legible. */
     public function claveTemporal(int $largo = 10): string
     {
@@ -130,13 +137,101 @@ class CuentaService
     }
 
     /**
+     * Crea la ficha de un **centro médico** (Fase 2 del cambio de `reg_medico`): una fila de `medicos` con
+     * `es_centro = 1` y su propio `reg_medico` (p. ej. `centro_001`).
+     *
+     * Un centro **no es un doctor y no tiene cuenta de acceso**: `user_id` queda nulo (si algún día lo
+     * tuviera, no atiende: el contexto de un centro no ofrece la consulta). Es el **tenant** donde trabajan
+     * uno o varios doctores: los consultorios, los pacientes, las historias y la agenda son suyos, y los
+     * doctores se vinculan con `asignarRegistro()` —el pivote `medico_registros`—, que ya no copia
+     * pacientes.
+     *
+     * El correo es opcional: el centro no inicia sesión. Si viene, tiene que estar libre, igual que el
+     * `reg_medico` (es único).
+     *
+     * @param  array{name:string, lastname:string, reg_medico:string, prefix?:?string, email?:?string, phone?:?string}  $datos
+     */
+    public function crearCentro(array $datos): Medico
+    {
+        $nombre = trim((string) ($datos['name'] ?? ''));
+        $apellido = trim((string) ($datos['lastname'] ?? ''));
+        $regMedico = trim((string) ($datos['reg_medico'] ?? ''));
+
+        if ($nombre === '' || $apellido === '') {
+            throw ValidationException::withMessages(['name' => 'El nombre y el apellido del centro son obligatorios.']);
+        }
+
+        $this->exigirRegMedicoLibre($regMedico);
+
+        $email = isset($datos['email']) && trim((string) $datos['email']) !== ''
+            ? $this->normalizarCorreo((string) $datos['email'])
+            : null;
+
+        if ($email !== null) {
+            $this->exigirCorreoLibre($email);
+        }
+
+        return DB::transaction(function () use ($datos, $nombre, $apellido, $regMedico, $email) {
+            return Medico::create([
+                'user_id'    => null,
+                'name'       => $nombre,
+                'lastname'   => $apellido,
+                'prefix'     => $datos['prefix'] ?? null,
+                'email'      => $email,
+                'phone'      => $this->vacioANull($datos['phone'] ?? null),
+                'reg_medico' => $regMedico,
+                'is_active'  => true,
+                'es_centro'  => true,
+            ]);
+        });
+    }
+
+    /**
+     * Marca o desmarca una ficha como **centro médico** y le guarda el **formato de sus reportes**
+     * (`centro`/`medico`).
+     *
+     * En esta fase el formato es **sólo el campo y su ABM**: quien lo usa para imprimir llega en otra fase.
+     * La firma de los reportes es siempre la del doctor que atendió, elija lo que elija el centro.
+     *
+     * No se valida contra un catálogo cerrado de fichas existentes: convertir un médico en centro es
+     * exactamente lo que pide el panel.
+     *
+     * @param  string|null  $formato  `centro`, `medico` o `null` (sin elegir)
+     */
+    public function configurarCentro(Medico $medico, bool $esCentro, ?string $formato = null): Medico
+    {
+        $formato = $this->vacioANull($formato);
+
+        if ($formato !== null && ! in_array($formato, self::FORMATOS_DE_REPORTE, true)) {
+            throw ValidationException::withMessages([
+                'formato_reportes' => 'El formato de los reportes es «centro» o «medico».',
+            ]);
+        }
+
+        $medico->forceFill([
+            'es_centro'        => $esCentro,
+            'formato_reportes' => $formato,
+        ])->save();
+
+        return $medico->fresh();
+    }
+
+    /**
      * Cuenta de acceso para un médico que ya existe en `medicos` pero no puede entrar (p. ej. lo creó el
      * panel viejo, que no pide clave). Si ya tiene cuenta, no hace nada y lo avisa.
+     *
+     * Un **centro médico** no tiene cuenta: un centro no inicia sesión (y si algún día la tuviera, no
+     * atiende). Lo atiende un doctor vinculado.
      *
      * @return array{user: User, clave: string}
      */
     public function darAccesoAMedico(Medico $medico, ?string $clave = null): array
     {
+        if ($medico->es_centro) {
+            throw ValidationException::withMessages([
+                'medico' => 'Un centro médico no tiene cuenta de acceso: lo atienden los doctores vinculados.',
+            ]);
+        }
         if ($medico->user_id && User::whereKey($medico->user_id)->exists()) {
             throw ValidationException::withMessages(['medico' => 'Este médico ya tiene una cuenta de acceso.']);
         }
@@ -232,7 +327,11 @@ class CuentaService
      * llave con la que están guardados todos sus datos clínicos en la nube, cambiarlo los dejaría huérfanos.
      * Si tiene cuenta de acceso, nombre y correo se actualizan también ahí (el correo es con el que inicia sesión).
      *
-     * @param  array{name:string, lastname:string, email:string, prefix?:?string, phone?:?string, license_number?:?string}  $datos
+     * El correo puede quedar **vacío** desde la Fase 2 del cambio de `reg_medico`: un **centro médico** no
+     * inicia sesión y no lo necesita. En ese caso no se toca el de la cuenta (que sí es obligatorio para
+     * entrar), y uno que la tenga se queda con el suyo.
+     *
+     * @param  array{name:string, lastname:string, email?:?string, prefix?:?string, phone?:?string, license_number?:?string}  $datos
      */
     public function actualizarMedico(Medico $medico, array $datos): Medico
     {
@@ -241,8 +340,11 @@ class CuentaService
         if ($nombre === '' || $apellido === '') {
             throw ValidationException::withMessages(['name' => 'El nombre y el apellido son obligatorios.']);
         }
-        $email = $this->normalizarCorreo((string) ($datos['email'] ?? ''));
-        $this->exigirCorreoLibre($email, $medico->user_id ? User::find($medico->user_id) : null, $medico);
+        $correo = trim((string) ($datos['email'] ?? ''));
+        $email = $correo === '' ? null : $this->normalizarCorreo($correo);
+        if ($email !== null) {
+            $this->exigirCorreoLibre($email, $medico->user_id ? User::find($medico->user_id) : null, $medico);
+        }
 
         return DB::transaction(function () use ($medico, $datos, $nombre, $apellido, $email) {
             $medico->forceFill([
@@ -259,7 +361,12 @@ class CuentaService
             $medico->save();
 
             if ($medico->user_id) {
-                User::whereKey($medico->user_id)->update(['name' => trim("{$nombre} {$apellido}"), 'email' => $email]);
+                // El correo de la cuenta es con el que entra: si la ficha no tiene, se conserva el suyo.
+                $cambios = ['name' => trim("{$nombre} {$apellido}")];
+                if ($email !== null) {
+                    $cambios['email'] = $email;
+                }
+                User::whereKey($medico->user_id)->update($cambios);
             }
 
             return $medico->fresh();
@@ -399,14 +506,18 @@ class CuentaService
      */
     public function registrosDe(Medico $medico): array
     {
-        return collect([$medico->reg_medico])
-            ->merge(MedicoRegistro::where('medico_id', $medico->id)->orderBy('id')->pluck('reg_medico'))
-            ->filter()->unique()->values()->all();
+        // La regla vive en el modelo (`Medico::registrosDeTrabajo`): es la misma lista que usan el contexto
+        // de la web clínica y la agenda para resolver la `clave` de `evolucion` del doctor.
+        return $medico->registrosDeTrabajo();
     }
 
     /**
      * Los `reg_medico` que se le pueden asignar: los de otros médicos que existen (no se inventan a mano, para que un
      * error de tipeo no abra acceso a un registro vacío), menos los que ya tiene.
+     *
+     * Desde la Fase 2 del cambio de `reg_medico` la lista es la de **los centros donde el doctor puede
+     * trabajar**, así que se marcan los que son centro (`medicos.es_centro`): el panel tiene que dejar ver
+     * qué está asociando.
      *
      * @return array<string, string> reg_medico => "Nombre (reg_medico)"
      */
@@ -415,8 +526,12 @@ class CuentaService
         return Medico::whereNotNull('reg_medico')
             ->whereNotIn('reg_medico', $this->registrosDe($medico))
             ->orderBy('name')->orderBy('lastname')
-            ->get(['name', 'lastname', 'reg_medico'])
-            ->mapWithKeys(fn (Medico $m) => [$m->reg_medico => trim($m->name . ' ' . $m->lastname) . " ({$m->reg_medico})"])
+            ->get(['name', 'lastname', 'reg_medico', 'es_centro'])
+            ->mapWithKeys(fn (Medico $m) => [
+                $m->reg_medico => trim($m->name . ' ' . $m->lastname)
+                    . " ({$m->reg_medico})"
+                    . ($m->es_centro ? ' · centro médico' : ''),
+            ])
             ->all();
     }
 

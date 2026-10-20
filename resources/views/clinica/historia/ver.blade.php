@@ -25,6 +25,11 @@
         </x-slot>
     </x-ui.page-head>
 
+    {{-- «Ver otra historia» (Fase 2 del cambio de `reg_medico`): el paciente puede tener historia en más de un
+         consultorio del doctor; cada una es otra historia y acá se elige cuál se lee. Es de sólo lectura y con
+         una sola no se pinta. --}}
+    @include('clinica.pacientes._otras-historias', ['historias' => $vm->otrasHistorias()])
+
     {{-- El resumen propiamente dicho vive en el parcial `_resumen` (O-30): lo muestra esta pantalla y también
          el cajón de la consulta, para no armar un segundo resumen. --}}
     @include('clinica.historia._resumen')

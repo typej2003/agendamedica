@@ -14,10 +14,14 @@ use Illuminate\Validation\ValidationException;
 /**
  * Contexto de trabajo de la web clínica: **con qué datos** está operando el usuario.
  *
- * Un usuario puede tener acceso a varios `reg_medico` (el suyo, los que le asignaron desde el panel, o
- * los de la secretaría que lo atiende) y cada médico puede tener más de una especialidad y varias sedes.
+ * Un usuario puede tener acceso a varios `reg_medico` (el suyo, los centros donde trabaja y los que le
+ * asignaron desde el panel) y cada uno puede tener más de una especialidad y varios consultorios.
  * Todo eso se elige una vez, se guarda en la sesión y **se revalida en cada request**: si le quitaron el
  * acceso, el contexto deja de ser válido y la web lo manda a elegirlo de nuevo.
+ *
+ * Desde la Fase 2 del cambio de `reg_medico` (2026-10-20) el `medico` del contexto es **el doctor
+ * logueado** en todos sus registros —también en los centros donde trabaja—, y en la **secretaría** es la
+ * fila del **centro** con las especialidades de sus doctores. Las dos reglas están en `acceso()`.
  *
  * La especialidad es lo que decide qué módulos se ven (PLAN-WEB.md, R1/R2): no hay `if` por especialidad.
  */
@@ -34,7 +38,20 @@ class ContextoTrabajo
     /**
      * Todo lo que este usuario puede elegir: `reg_medico` => [medico, especialidades, sedes].
      *
-     * @return array<string, array{reg_medico: string, medico: Medico, especialidades: Collection, sedes: Collection}>
+     * **El `medico` de cada acceso no siempre es el dueño del `reg_medico`** (Fase 2 del cambio de
+     * `reg_medico`, 2026-10-20):
+     *
+     *  - si el usuario tiene **ficha de médico** en ese registro, el médico es **él** —aunque el registro
+     *    sea el de un centro donde trabaja—, con **sus** especialidades;
+     *  - si no (la secretaría), el médico es la **fila del centro** (`Medico::where('reg_medico')`) y las
+     *    especialidades que ofrece son la **unión de las de los doctores del centro**: el centro no tiene
+     *    especialidades propias. En un registro que no es un centro (el caso heredado, una secretaría
+     *    asignada al `reg_medico` de un doctor) la unión es la de ese doctor, que es lo que ya hacía.
+     *
+     * Los **consultorios** son los del tenant en los dos casos: es donde se atiende el consultorio, no
+     * donde el doctor atendía en otra instalación.
+     *
+     * @return array<string, array{reg_medico: string, medico: Medico, es_centro: bool, especialidades: Collection, sedes: Collection}>
      */
     public function disponibles(User $user): array
     {
@@ -58,29 +75,17 @@ class ContextoTrabajo
 
         $salida = [];
         foreach (array_values(array_unique($registros)) as $registro) {
-            $medico = $medicos->firstWhere('reg_medico', $registro) ?? Medico::where('reg_medico', $registro)->first();
-            if (! $medico) {
-                continue; // datos sin ficha de médico: no hay nombre ni especialidad que mostrar
+            $acceso = $this->acceso($registro, $medicos);
+
+            if ($acceso !== null) {
+                $salida[$registro] = $acceso;
             }
-
-            // Los consultorios vigentes del médico: activos y de su registro (la regla vive en el
-            // scope, para que el contexto y la agenda no tengan cada uno la suya).
-            $sedes = Office::vigentesDe($registro, $medico->id)
-                ->orderBy('id')
-                ->get();
-
-            $salida[$registro] = [
-                'reg_medico'     => $registro,
-                'medico'         => $medico,
-                'especialidades' => $medico->specialties->where('activo', true)->values(),
-                'sedes'          => $sedes,
-            ];
         }
 
         return $salida;
     }
 
-    /** Contexto vigente, o `null` si no hay ninguno elegido (o el elegido ya no es accesible). */
+    /** El contexto vigente, o `null` si no hay ninguno elegido (o el elegido ya no es accesible). */
     public function actual(User $user): ?array
     {
         $guardado = session(self::SESION);
@@ -108,6 +113,9 @@ class ContextoTrabajo
         return [
             'reg_medico'     => $registro,
             'medico'         => $acceso['medico'],
+            // ¿El contexto es un **centro**? El centro no atiende: si algún día tiene login, la web no le
+            // ofrece «Atender» ni la consulta (la secretaría ya lo cubre por rol, esto es el seguro).
+            'es_centro'      => $acceso['es_centro'],
             'especialidades' => $acceso['especialidades'],
             'specialty'      => $specialty,
             // Los **postgrados del médico de esa especialidad** (2026-10-19): son los que encienden módulos y
@@ -119,6 +127,114 @@ class ContextoTrabajo
             'sedes'          => $acceso['sedes'],
             'office'         => $office,
         ];
+    }
+
+    /**
+     * Los **`reg_medico` del contexto**: el del doctor (el suyo y los centros donde trabaja) o, en la
+     * secretaría, sólo el del centro elegido.
+     *
+     * Es la lista con la que se leen los pacientes (la lista global del doctor) y con la que se valida el
+     * "ver otra historia". Nunca incluye un consultorio ajeno: sale del médico del contexto.
+     *
+     * @param  array<string,mixed>  $contexto  el `contexto_clinico` de la petición
+     * @return array<int,string>
+     */
+    public function registrosDelContexto(array $contexto): array
+    {
+        $medico = $contexto['medico'] ?? null;
+        $registros = $medico instanceof Medico ? $medico->registrosDeTrabajo() : [];
+
+        if ($registros === [] && ! empty($contexto['reg_medico'])) {
+            $registros = [(string) $contexto['reg_medico']];
+        }
+
+        // El del contexto siempre está: es el tenant con el que se está trabajando.
+        if (! empty($contexto['reg_medico']) && ! in_array((string) $contexto['reg_medico'], $registros, true)) {
+            array_unshift($registros, (string) $contexto['reg_medico']);
+        }
+
+        return $registros;
+    }
+
+    /**
+     * Un acceso al contexto, o `null` si el registro no tiene ficha de médico que mostrar.
+     *
+     * @param  Collection<int,Medico>  $medicosDelUsuario  las fichas del usuario (`medicos.user_id`)
+     * @return array{reg_medico: string, medico: Medico, es_centro: bool, especialidades: Collection, sedes: Collection}|null
+     */
+    private function acceso(string $registro, Collection $medicosDelUsuario): ?array
+    {
+        // Los consultorios vigentes **del tenant**: activos, de su registro y de una sede activa. Sin filtrar
+        // por `medico_id` (Fase 2): el consultorio es del consultorio, y el doctor que trabaja en un centro
+        // tiene que ver todos sus consultorios, no sólo los que creó él.
+        $sedes = Office::vigentesDe($registro)->orderBy('id')->get();
+
+        // 1. La ficha del usuario **en este registro**: es el doctor en su consultorio personal, o el
+        //    centro en el caso raro de que un centro tenga cuenta. El médico del contexto es esa ficha.
+        $propio = $medicosDelUsuario->firstWhere('reg_medico', $registro);
+
+        // 2. Si el usuario **tiene ficha de médico**, en los demás registros —los centros donde trabaja— el
+        //    médico del contexto es **él**, no el centro: sus especialidades son las que deciden los módulos
+        //    y su firma es la de la consulta.
+        $duenio = $propio ?? $medicosDelUsuario->first();
+
+        if ($duenio !== null) {
+            return [
+                'reg_medico'     => $registro,
+                'medico'         => $duenio,
+                'es_centro'      => (bool) $duenio->es_centro,
+                'especialidades' => $duenio->specialties->where('activo', true)->values(),
+                'sedes'          => $sedes,
+            ];
+        }
+
+        // 3. Sin ficha de médico (la secretaría): el médico del contexto es la fila del **centro** y las
+        //    especialidades que ofrece son la unión de las de sus doctores.
+        $centro = Medico::where('reg_medico', $registro)->orderBy('id')->first();
+
+        if ($centro === null) {
+            return null; // datos sin ficha de médico: no hay nombre ni especialidad que mostrar
+        }
+
+        return [
+            'reg_medico'     => $registro,
+            'medico'         => $centro,
+            'es_centro'      => (bool) $centro->es_centro,
+            'especialidades' => $this->especialidadesDelRegistro($registro, $centro),
+            'sedes'          => $sedes,
+        ];
+    }
+
+    /**
+     * Las especialidades que **ofrece un registro** cuando quien lo mira no es su dueño: la unión de las de
+     * los doctores que trabajan ahí (`medico_registros` con ese `reg_medico`) más la del propio registro,
+     * activas y sin repetir.
+     *
+     * Es la regla de la secretaría: el **centro no tiene especialidades propias**, ofrece las de sus
+     * doctores —lo que hace que el menú de la secretaría muestre los módulos de todas—. En un registro
+     * heredado sin centro (una secretaría asignada al `reg_medico` de un doctor) la unión es la de ese
+     * doctor, porque es el único vinculado.
+     *
+     * @return Collection<int, Specialty>
+     */
+    private function especialidadesDelRegistro(string $registro, Medico $duenio): Collection
+    {
+        $ids = MedicoRegistro::where('reg_medico', $registro)
+            ->pluck('medico_id')
+            ->push($duenio->id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return Medico::whereIn('id', $ids)
+            ->with('specialties')
+            ->get()
+            ->flatMap(fn (Medico $medico) => $medico->specialties)
+            ->where('activo', true)
+            ->unique('id')
+            ->sortBy(fn (Specialty $especialidad) => mb_strtolower($especialidad->name))
+            ->values();
     }
 
     /**

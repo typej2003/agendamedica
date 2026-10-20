@@ -30,7 +30,7 @@ class FormularioDeCita
     public function armar(array $contexto, array $datos): FormularioDeCitaVista
     {
         $regMedico = $contexto['reg_medico'];
-        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id);
+        $sedes = $this->armador->sedes($regMedico);
         $fecha = $datos['fecha'];
         $sede = $datos['sedeId'] !== null ? $sedes->firstWhere('id', (int) $datos['sedeId']) : null;
         $bloques = $sede ? $sede->bloquesDe($fecha->dayOfWeekIso) : collect();

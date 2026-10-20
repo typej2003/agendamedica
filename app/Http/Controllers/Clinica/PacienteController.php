@@ -7,6 +7,7 @@ use App\Actions\Pacientes\GuardarFamilia;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\GuardarRepresentante;
 use App\Actions\Pacientes\IdentidadDePaciente;
+use App\Clinica\ContextoTrabajo;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\AtencionInmediata;
 use App\Clinica\Consulta\PacienteDeLaCita;
@@ -22,7 +23,6 @@ use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
 use App\Clinica\Pacientes\Vistas\RepresentanteDeAltaVista;
-use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Historia;
 use App\Models\Paciente;
@@ -59,8 +59,6 @@ use Throwable;
  */
 class PacienteController extends Controller
 {
-    use ResuelveLosRegistrosDelMedico;
-
     /**
      * Los campos del **representante del alta de pediatría**, con las claves que usan `GuardarRepresentante` y
      * `RepresentantePorCedula`. En el formulario viajan con el prefijo `representante_` para no pisar los del niño.
@@ -79,13 +77,18 @@ class PacienteController extends Controller
 
     public function index(Request $request)
     {
-        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
+        $contexto = $request->attributes->get('contexto_clinico');
         $buscar = trim((string) $request->query('buscar', ''));
         // Un `?historia=` que no sea uno de los valores válidos vuelve a "Todos" en vez de mostrar una
         // lista mezclada: la pantalla no le hace caso a lo que no entiende.
         $filtro = FiltroDePacientes::normalizar($request->query('historia'));
 
-        $listado = $this->pacientes->listar($regMedico, $buscar, $filtro);
+        // **La lista global del doctor** (Fase 2 del cambio de `reg_medico`): todos sus registros —el suyo y
+        // los centros donde trabaja—, y el número de historia del consultorio del contexto. La secretaría
+        // recibe sólo el registro del centro, porque el `medico` de su contexto es la fila del centro.
+        $registros = $this->registrosDelContexto($request);
+
+        $listado = $this->pacientes->listar($registros, $contexto['reg_medico'], $buscar, $filtro);
 
         // Una página que ya no existe (`?page=999`, o se borró gente) mostraba la tabla vacía y un
         // "Mostrando – de 1033": se lleva a la **última**, con la búsqueda y el filtro que traía. Sin
@@ -102,7 +105,7 @@ class PacienteController extends Controller
                 $listado,
                 $buscar,
                 $filtro,
-                $this->pacientes->conteos($regMedico, $buscar),
+                $this->pacientes->conteos($registros, $contexto['reg_medico'], $buscar),
                 // La URL base la resuelve el controlador: el ViewModel no llama a `route()` (se prueba
                 // sin contenedor) y el segmentado arma sus enlaces sobre esto.
                 route('clinica.pacientes'),
@@ -113,9 +116,14 @@ class PacienteController extends Controller
     /** JSON para el buscador de "Nueva cita": pocos pacientes del contexto que coinciden con `q`. */
     public function buscar(Request $request)
     {
-        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
+        $contexto = $request->attributes->get('contexto_clinico');
 
-        return response()->json($this->pacientes->sugerencias($regMedico, trim((string) $request->query('q', ''))));
+        return response()->json($this->pacientes->sugerencias(
+            $this->registrosDelContexto($request),
+            trim((string) $request->query('q', '')),
+            10,
+            $contexto['reg_medico'],
+        ));
     }
 
     /**
@@ -166,36 +174,50 @@ class PacienteController extends Controller
 
     public function ver(Request $request, int $paciente, RepresentanteController $representante, PacienteDeLaCita $pacienteDeLaCita)
     {
-        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
+        $contexto = $request->attributes->get('contexto_clinico');
+        $registros = $this->registrosDelContexto($request);
 
-        $ficha = $this->pacientes->ficha($regMedico, $paciente);
+        // La ficha abre para un paciente visible en **cualquier** registro del doctor (Fase 2 del cambio de
+        // `reg_medico`): el número que muestra —y el que decide si hay algo que asignar— es el del
+        // consultorio del **contexto**, porque la consulta es del contexto.
+        $ficha = $this->pacientes->ficha($registros, $paciente, $contexto['reg_medico']);
 
         // Un paciente de otro médico no se muestra ni se confirma que exista.
         abort_unless($ficha, 404);
 
-        $vm = new FichaDePacienteVista($ficha, $this->pacientes->consultasDe($regMedico, $ficha->numhistoria));
+        $vm = new FichaDePacienteVista($ficha, $this->pacientes->consultasDe($contexto['reg_medico'], $ficha->numhistoria));
 
         // El seguro se muestra por su **nombre** (el catálogo es del consultorio); un código que no esté
         // en él se muestra tal cual, y `00` (PERSONAL) como "sin seguro": lo decide el ViewModel.
-        $vm = $vm->conSeguro($this->seguros->nombreDe($this->seguros->de($regMedico), $vm->codigoDelSeguro()));
+        $vm = $vm->conSeguro($this->seguros->nombreDe($this->seguros->de($contexto['reg_medico']), $vm->codigoDelSeguro()));
 
         // La URL de la acción que llena la historia la arma el controlador (el ViewModel se prueba sin
         // contenedor): la ficha la usa si el paciente todavía no tiene número.
         $vm = $vm->conUrlAsignarHistoria(route('clinica.pacientes.asignar-historia', $ficha->id));
 
+        // **«Ver otra historia»** (Fase 2): los consultorios del doctor donde el paciente **sí** tiene
+        // historia, con su número. El del contexto primero; el resto se ofrece como enlace de sólo lectura a
+        // la historia de ese consultorio (`?reg_medico=`). La secretaría recibe uno solo (el del centro), así
+        // que no ve ningún selector.
+        $vm = $vm
+            ->conOtrasHistorias($this->pacientes->registrosConHistoria($registros, $paciente, $contexto['reg_medico']))
+            ->conUrlOtraHistoria(fn (string $regMedico) => route('clinica.pacientes.historia', [
+                'paciente'   => $paciente,
+                'reg_medico' => $regMedico,
+            ]));
+
         // ¿La historia **del consultorio** existe? El número del vínculo puede estar sin su fila en
         // `historias` (trampa 143): en ese caso la ficha muestra el número pero ofrece **registrarla**,
         // porque atender es justamente lo que no se puede. Se resuelve con el mismo lector que «Atender»
-        // (`PacienteDeLaCita`), para que la ficha y el botón no puedan dar respuestas distintas.
-        $historia = $pacienteDeLaCita->historia(
-            (int) $ficha->id,
-            $this->registrosDelMedico($request->attributes->get('contexto_clinico')['medico']),
-        );
+        // (`PacienteDeLaCita`), para que la ficha y el botón no puedan dar respuestas distintas. Se mira
+        // **sólo el consultorio del contexto**: la historia de otro de los registros del doctor no es ésta.
+        $historia = $pacienteDeLaCita->historia((int) $ficha->id, [$contexto['reg_medico']]);
         $vm = $vm->conHistoriaRegistrada($historia !== null);
 
         // «¿Atender ahora?» (O-05): la ficha lo ofrece **sólo en el momento en que el paciente quedó
         // atendible** —lo deja dicho el flash de la acción que le puso el número—, sólo si la historia está
-        // registrada y sólo a quien trabaja la consulta: atender es del médico (WEB-4.9).
+        // registrada y sólo a quien trabaja la consulta: atender es del médico (WEB-4.9). Un **centro** no
+        // atiende, ni siquiera si algún día tiene login (`es_centro`).
         if ($this->ofreceAtender($request, $historia !== null, (int) $ficha->id)) {
             $vm = $vm->conUrlAtender(route('clinica.pacientes.atender', $ficha->id));
         }
@@ -221,7 +243,7 @@ class PacienteController extends Controller
                 : null,
             // La familia del niño del escritorio de pediatría (WEB-7.4.2a): en cualquier otro paciente el bloque no existe.
             'familia'       => new FamiliaDePacienteVista(
-                $this->familias->de($regMedico, $ficha->numhistoria),
+                $this->familias->de($contexto['reg_medico'], $ficha->numhistoria),
                 fn (int $id) => route('clinica.pacientes.ver', $id),
                 // Sin historia no hay clave con la que guardar: no se ofrece el formulario (misma decisión que el representante).
                 $ficha->numhistoria === null ? null : route('clinica.pacientes.familia', $ficha->id),
@@ -260,15 +282,25 @@ class PacienteController extends Controller
     public function asignarHistoria(Request $request, int $paciente, AsignarHistoria $accion, PacienteDeLaCita $pacienteDeLaCita)
     {
         $contexto = $request->attributes->get('contexto_clinico');
+
+        // El paciente tiene que ser visible en alguno de los registros del doctor (o en el centro de la
+        // secretaría): si no, 404 sin confirmar que exista.
+        abort_unless($this->pacientes->ficha($this->registrosDelContexto($request), $paciente, $contexto['reg_medico']) !== null, 404);
+
+        // **El paciente puede venir de otro consultorio del doctor** (Fase 2 del cambio de `reg_medico`): en
+        // éste todavía no tiene vínculo, y la historia que se le va a asignar es la de **este** consultorio,
+        // así que el vínculo se crea acá. Es idempotente: si ya lo tenía, no lo toca.
+        $this->pacientes->vincular($contexto['reg_medico'], $paciente, (int) $contexto['medico']->id);
+
         $vinculo = $this->pacientes->vinculo($contexto['reg_medico'], $paciente);
 
         abort_unless($vinculo !== null, 404);
 
         // "Ya la tenía" es que la **historia del consultorio** exista, no que el vínculo muestre un número:
         // si el número está sin su fila en `historias` (trampa 143), la Action se la registra con ese mismo
-        // número y el mensaje tiene que decir eso, no "ya tenía".
-        $registros = $this->registrosDelMedico($contexto['medico']);
-        $yaTenia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, $registros) !== null;
+        // número y el mensaje tiene que decir eso, no "ya tenía". Se mira **sólo el consultorio del
+        // contexto**: la historia de otro de sus registros no es ésta.
+        $yaTenia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, [$contexto['reg_medico']]) !== null;
 
         try {
             // El número es **del consultorio del contexto** (el tenant del vínculo), no de todos los
@@ -307,18 +339,25 @@ class PacienteController extends Controller
      */
     public function atender(Request $request, int $paciente, AtencionInmediata $atencion, PacienteDeLaCita $pacienteDeLaCita)
     {
+        // Atender es clínico y es del médico (WEB-4.9) —y un **centro** no atiende, ni siquiera si algún día
+        // tiene login: la secretaría ya lo cubre por rol, esto es el seguro de `es_centro`.
         abort_unless((bool) $request->user()?->trabajaLaConsulta(), 403);
+        abort_if((bool) ($request->attributes->get('contexto_clinico')['es_centro'] ?? false), 403);
 
         $contexto = $request->attributes->get('contexto_clinico');
+
+        // Un paciente visible en otro de los registros del doctor se puede atender acá, pero **la historia es
+        // la del consultorio del contexto**: si en éste no tiene número, no hay nada que atender.
+        abort_unless($this->pacientes->ficha($this->registrosDelContexto($request), $paciente, $contexto['reg_medico']) !== null, 404);
+
         $vinculo = $this->pacientes->vinculo($contexto['reg_medico'], $paciente);
 
-        // Un paciente de otro médico no se atiende ni se confirma que exista (el mismo 404 de la ficha).
-        abort_unless($vinculo !== null, 404);
-
-        $registros = $this->registrosDelMedico($contexto['medico']);
-        // La historia se resuelve igual que al abrir la consulta (por el pivote del paciente): si no la
-        // tiene, no hay nada que atender y se lo manda a la ficha, que es donde vive la acción.
-        $historia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, $registros);
+        // La historia se resuelve igual que al abrir la consulta (por el pivote del paciente en **este**
+        // consultorio): si no la tiene, no hay nada que atender y se lo manda a la ficha, que es donde vive
+        // la acción.
+        $historia = $vinculo !== null
+            ? $pacienteDeLaCita->historia((int) $vinculo->paciente_id, [$contexto['reg_medico']])
+            : null;
 
         if ($historia === null) {
             return redirect()
@@ -326,7 +365,7 @@ class PacienteController extends Controller
                 ->with('error', 'Este paciente todavía no tiene número de historia: asígnaselo antes de atenderlo.');
         }
 
-        $resultado = $atencion->ejecutar($contexto, $registros, $historia);
+        $resultado = $atencion->ejecutar($contexto, $this->registrosDelContexto($request), $historia);
 
         if (! $resultado->abrio()) {
             return redirect()
@@ -399,7 +438,7 @@ class PacienteController extends Controller
     public function editar(Request $request, int $paciente)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $ficha = $this->pacientes->editable($contexto['reg_medico'], $paciente);
+        $ficha = $this->pacientes->editable($this->registrosDelContexto($request), $paciente, $contexto['reg_medico']);
 
         abort_unless($ficha !== null, 404);
 
@@ -416,7 +455,7 @@ class PacienteController extends Controller
     public function actualizar(Request $request, int $paciente, GuardarPaciente $accion)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $ficha = $this->pacientes->editable($contexto['reg_medico'], $paciente);
+        $ficha = $this->pacientes->editable($this->registrosDelContexto($request), $paciente, $contexto['reg_medico']);
 
         abort_unless($ficha !== null, 404);
 
@@ -468,14 +507,26 @@ class PacienteController extends Controller
             return null;
         }
 
-        $regMedico = $request->attributes->get('contexto_clinico')['reg_medico'];
-        $ficha = $this->pacientes->ficha($regMedico, $pacienteId);
+        $contexto = $request->attributes->get('contexto_clinico');
+        $ficha = $this->pacientes->ficha($this->registrosDelContexto($request), $pacienteId, $contexto['reg_medico']);
 
-        if ($ficha === null || $ficha->numhistoria === null || $this->familias->de($regMedico, $ficha->numhistoria) === null) {
+        if ($ficha === null || $ficha->numhistoria === null || $this->familias->de($contexto['reg_medico'], $ficha->numhistoria) === null) {
             return null;
         }
 
         return $ficha;
+    }
+
+    /**
+     * Los `reg_medico` que puede ver el usuario en esta pantalla: **todos los del doctor** (el suyo y los
+     * centros donde trabaja) o, en la secretaría, sólo el del centro del contexto. La regla vive en
+     * `ContextoTrabajo` y es la misma que usan la agenda y el `medico` del contexto.
+     *
+     * @return array<int,string>
+     */
+    private function registrosDelContexto(Request $request): array
+    {
+        return app(ContextoTrabajo::class)->registrosDelContexto($request->attributes->get('contexto_clinico'));
     }
 
     /** @param  array{paciente:\App\Models\Paciente, numhistoria:?string}|null  $ficha */

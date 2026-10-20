@@ -48,7 +48,68 @@ final class HistoriaDePacienteVista
          * (la secretaría): sin esto la fila del listado no lleva enlace.
          */
         private ?Closure $urlConsulta = null,
+        /**
+         * **Los consultorios del doctor donde el paciente tiene historia** (Fase 2 del cambio de
+         * `reg_medico`), con su número y con la del contexto marcada. Es el selector de sólo lectura
+         * «ver otra historia»: cada consultorio es **otra** historia, con su propio número.
+         *
+         * @var array<int, array{reg_medico:string, nombre:string, numhistoria:?string, es_contexto?:bool}>
+         */
+        private array $otrasHistorias = [],
+        /**
+         * `fn(string $reg_medico): string` — la URL de la historia de **ese otro consultorio**
+         * (`?reg_medico=`). La resuelve el controlador: el ViewModel se prueba sin contenedor.
+         */
+        private ?Closure $urlOtraHistoria = null,
     ) {
+    }
+
+    /**
+     * El mismo ViewModel con **las historias del paciente en los consultorios del doctor**. Sólo se pinta
+     * el selector cuando hay más de una que elegir: con una sola no hay nada que preguntar.
+     *
+     * @param  array<int, array{reg_medico:string, nombre:string, numhistoria:?string, es_contexto?:bool}>  $historias
+     */
+    public function conOtrasHistorias(array $historias): self
+    {
+        $copia = clone $this;
+        $copia->otrasHistorias = $historias;
+
+        return $copia;
+    }
+
+    /** El mismo ViewModel con la URL de la historia de otro consultorio (`?reg_medico=`). */
+    public function conUrlOtraHistoria(Closure $url): self
+    {
+        $copia = clone $this;
+        $copia->urlOtraHistoria = $url;
+
+        return $copia;
+    }
+
+    /** ¿La pantalla ofrece el selector «ver otra historia»? Sólo con más de una historia que elegir. */
+    public function ofreceOtrasHistorias(): bool
+    {
+        return count($this->otrasHistorias) > 1;
+    }
+
+    /**
+     * Los consultorios con historia, para el selector: el nombre del consultorio, su número y si es el que
+     * se está mirando. El del contexto no lleva enlace (es el que ya está abierto).
+     *
+     * @return array<int, array{reg_medico:string, nombre:string, numhistoria:?string, actual:bool, url:?string}>
+     */
+    public function otrasHistorias(): array
+    {
+        return array_map(fn (array $historia) => [
+            'reg_medico'  => $historia['reg_medico'],
+            'nombre'      => $historia['nombre'],
+            'numhistoria' => $historia['numhistoria'],
+            'actual'      => (bool) ($historia['es_contexto'] ?? false),
+            'url'         => ($historia['es_contexto'] ?? false) || $this->urlOtraHistoria === null
+                ? null
+                : ($this->urlOtraHistoria)($historia['reg_medico']),
+        ], $this->otrasHistorias);
     }
 
     public function id(): int
@@ -104,20 +165,52 @@ final class HistoriaDePacienteVista
     }
 
     /**
-     * El estado vacío de un paciente **sin historia**: no es que le falten datos, es que todavía no tiene
-     * número, y el camino es asignárselo desde su ficha (WEB-3.3). Va como bloque propio de la pantalla,
-     * porque sin historia los tres bloques de abajo no tienen nada que mostrar.
+     * El estado vacío de un paciente **sin historia** en este consultorio: no es que le falten datos, es
+     * que no tiene número acá —puede tenerlo en otro consultorio del doctor, y entonces se dice—, y el
+     * camino es asignárselo desde su ficha (WEB-3.3). Va como bloque propio de la pantalla, porque sin
+     * historia los tres bloques de abajo no tienen nada que mostrar.
      *
      * @return array{icono:string, titulo:string, texto:string}
      */
     public function sinHistoria(): array
     {
+        $enOtro = $this->otrasHistoriasDeOtroConsultorio();
+
+        if ($enOtro !== []) {
+            $listado = implode(', ', array_map(
+                fn (array $historia) => $historia['nombre'] . ' (H. ' . $historia['numhistoria'] . ')',
+                $enOtro,
+            ));
+
+            return [
+                'icono'  => 'bi-journal-medical',
+                'titulo' => 'Sin historia en este consultorio',
+                'texto'  => 'Este paciente tiene historia en ' . $listado . ', pero no en el consultorio en el que estás '
+                    . 'trabajando: la consulta se atiende con la historia de este consultorio. '
+                    . 'Se la asigna el servidor con el correlativo de este consultorio desde la ficha del paciente.',
+            ];
+        }
+
         return [
             'icono'  => 'bi-journal-medical',
             'titulo' => 'Este paciente todavía no tiene historia',
             'texto'  => 'Sin número de historia no hay consultas, antecedentes ni documentos que mostrar. '
                 . 'Se lo asigna el servidor con el correlativo de este consultorio desde la ficha del paciente.',
         ];
+    }
+
+    /**
+     * Las historias del paciente en **otros** consultorios (con número): lo que hace que el estado vacío no
+     * diga "no tiene historia" cuando la tiene en otro lado.
+     *
+     * @return array<int, array{reg_medico:string, nombre:string, numhistoria:string}>
+     */
+    private function otrasHistoriasDeOtroConsultorio(): array
+    {
+        return array_values(array_filter(
+            $this->otrasHistorias,
+            fn (array $historia) => ! ($historia['es_contexto'] ?? false) && ($historia['numhistoria'] ?? null) !== null,
+        ));
     }
 
     // ------------------------------------------------------------------------------------ Consultas

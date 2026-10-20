@@ -33,6 +33,11 @@ final class ArmadorDeAgenda
      * Las sedes donde atiende el médico, con sus bloques y su centro, más las compartidas del
      * consultorio (las que no tienen dueño). Solo las activas.
      *
+     * `$medicoId` filtra por el **creador** del consultorio. La web clínica lo llama con `null` a
+     * propósito (Fase 2 del cambio de `reg_medico`, 2026-10-20): el consultorio es del **tenant**, así que
+     * el doctor que trabaja en un centro tiene que ver **todos** sus consultorios y no sólo los que creó
+     * él. El portal público de reservas sigue pasando el id del médico que se reserva.
+     *
      * @return Collection<int,Office>
      */
     public function sedes(string $regMedico, ?int $medicoId = null): Collection

@@ -10,6 +10,11 @@ namespace App\Clinica\Vistas;
  * catálogo de sedes (`medical_centers`): el nombre viene del armado del contexto y se dejó como está (no se
  * renombra), pero la pantalla lo rotula "Consultorio" porque es lo que lista.
  *
+ * **Una tarjeta por acceso** (Fase 2 del cambio de `reg_medico`): en el doctor, una por cada registro suyo
+ * —el personal y los centros donde trabaja— y el nombre de la tarjeta es **él**; en la secretaría, una por
+ * centro y el nombre es el del **centro**, con sus especialidades (la unión de las de sus doctores) y sus
+ * consultorios. La pantalla no cambia: muestra lo que el contexto le da.
+ *
  * **No se pregunta lo que ya está decidido** (decisión del usuario, 2026-10-19): si el médico tiene **una
  * sola especialidad** y **uno o ningún consultorio**, esos dos campos no se ofrecen —se entra con el único
  * valor que hay— y la pantalla sólo muestra cuál es. La elección se sigue ofreciendo en cuanto haya algo
@@ -64,6 +69,9 @@ final class ContextoVista
                 'regMedico'      => (string) $regMedico,
                 'nombre'         => trim(($medico->prefix ?? '') . ' ' . $medico->name . ' ' . $medico->lastname),
                 'licencia'       => $medico->license_number ?: null,
+                // ¿La tarjeta es de un **centro médico**? (Fase 2 del cambio de `reg_medico`): en la
+                // secretaría el médico del contexto es la fila del centro, y conviene decir que lo es.
+                'esCentro'       => (bool) ($acceso['es_centro'] ?? false),
                 'especialidades' => $especialidades->all(),
                 'sedes'          => $sedes->all(),
                 // Sin consultorios no hay sede que elegir: la agenda no puede calcular la jornada. El camino

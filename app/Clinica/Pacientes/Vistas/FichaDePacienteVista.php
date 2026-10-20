@@ -4,6 +4,7 @@ namespace App\Clinica\Pacientes\Vistas;
 
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Support\FechaClinica;
+use Closure;
 use Illuminate\Support\Collection;
 
 /**
@@ -29,7 +30,96 @@ final class FichaDePacienteVista
          * acción de la ficha es lo que la registra con ese mismo número.
          */
         private bool $historiaRegistrada = true,
+        /**
+         * **Los consultorios del doctor donde el paciente sí tiene historia** (Fase 2 del cambio de
+         * `reg_medico`), con su número, el del contexto primero. Es lo que hace que la ficha diga "sin
+         * historia **en este consultorio**" cuando el número existe en otro de sus registros, y lo que
+         * alimenta el selector «ver otra historia».
+         *
+         * @var array<int, array{reg_medico:string, nombre:string, numhistoria:?string, es_contexto:bool}>
+         */
+        private array $otrasHistorias = [],
+        /**
+         * `fn(string $reg_medico, string $numhistoria): string` — la URL de la historia **de ese otro
+         * consultorio**, o `null` si la ficha no ofrece el selector (la secretaría, que sólo ve el centro).
+         * La resuelve el controlador: el ViewModel se prueba sin contenedor y no llama a `route()`.
+         */
+        private ?Closure $urlOtraHistoria = null,
     ) {
+    }
+
+    /**
+     * El mismo ViewModel con **las historias que el paciente tiene en los otros consultorios del doctor**
+     * (Fase 2 del cambio de `reg_medico`). El del contexto viene incluido y primero; el selector de la
+     * ficha sólo se pinta cuando hay más de uno.
+     *
+     * @param  array<int, array{reg_medico:string, nombre:string, numhistoria:?string, es_contexto:bool}>  $historias
+     */
+    public function conOtrasHistorias(array $historias): self
+    {
+        $copia = clone $this;
+        $copia->otrasHistorias = $historias;
+
+        return $copia;
+    }
+
+    /**
+     * El mismo ViewModel con la **URL de la historia de otro consultorio**: la usa el selector de sólo
+     * lectura para abrir la hoja de ese tenant (`?reg_medico=`).
+     */
+    public function conUrlOtraHistoria(Closure $url): self
+    {
+        $copia = clone $this;
+        $copia->urlOtraHistoria = $url;
+
+        return $copia;
+    }
+
+    /**
+     * ¿El paciente tiene historia en **otro** consultorio del doctor? Es lo que cambia el mensaje: no es
+     * "sin historia", es "sin historia en este consultorio".
+     */
+    public function tieneHistoriaEnOtroConsultorio(): bool
+    {
+        foreach ($this->otrasHistorias as $historia) {
+            if (! ($historia['es_contexto'] ?? false) && ($historia['numhistoria'] ?? null) !== null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Las historias que el paciente tiene en los consultorios del doctor, para el selector «ver otra
+     * historia». Cada una dice si es **la del contexto** (la que se está viendo) y trae su URL si el
+     * controlador la resolvió.
+     *
+     * @return array<int, array{reg_medico:string, nombre:string, numhistoria:?string, es_contexto:bool, url:?string, actual:bool}>
+     */
+    public function otrasHistorias(): array
+    {
+        $actual = $this->numeroDeHistoria();
+
+        return array_map(fn (array $historia) => [
+            'reg_medico'  => $historia['reg_medico'],
+            'nombre'      => $historia['nombre'],
+            'numhistoria' => $historia['numhistoria'],
+            'es_contexto' => (bool) ($historia['es_contexto'] ?? false),
+            // El enlace sólo para las otras: la del contexto es la que se está viendo.
+            'url'         => ($historia['es_contexto'] ?? false) || $this->urlOtraHistoria === null || $historia['numhistoria'] === null
+                ? null
+                : ($this->urlOtraHistoria)($historia['reg_medico'], $historia['numhistoria']),
+            // "Actual" es la del contexto, no la que coincide con un número: dos consultorios pueden
+            // numerar igual y son dos historias distintas.
+            'actual'      => (bool) ($historia['es_contexto'] ?? false) && $historia['numhistoria'] === $actual,
+        ], $this->otrasHistorias);
+    }
+
+    /** ¿La ficha ofrece el selector «ver otra historia»? Sólo con más de una historia que elegir. */
+    public function ofreceOtrasHistorias(): bool
+    {
+        return count($this->otrasHistorias) > 1;
     }
 
     /**
@@ -41,7 +131,10 @@ final class FichaDePacienteVista
      */
     public function conUrlAsignarHistoria(string $url): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $url, $this->urlAtender, $this->historiaRegistrada);
+        $copia = clone $this;
+        $copia->urlAsignarHistoria = $url;
+
+        return $copia;
     }
 
     /**
@@ -51,7 +144,10 @@ final class FichaDePacienteVista
      */
     public function conUrlAtender(string $url): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $url, $this->historiaRegistrada);
+        $copia = clone $this;
+        $copia->urlAtender = $url;
+
+        return $copia;
     }
 
     /**
@@ -66,7 +162,10 @@ final class FichaDePacienteVista
      */
     public function conHistoriaRegistrada(bool $registrada): self
     {
-        return new self($this->paciente, $this->consultas, $this->seguro, $this->urlAsignarHistoria, $this->urlAtender, $registrada);
+        $copia = clone $this;
+        $copia->historiaRegistrada = $registrada;
+
+        return $copia;
     }
 
     /** ¿La historia del consultorio está registrada? Si no, al paciente no se lo puede atender todavía. */
@@ -84,7 +183,10 @@ final class FichaDePacienteVista
      */
     public function conSeguro(?string $seguro): self
     {
-        return new self($this->paciente, $this->consultas, $seguro, $this->urlAsignarHistoria, $this->urlAtender, $this->historiaRegistrada);
+        $copia = clone $this;
+        $copia->seguro = $seguro;
+
+        return $copia;
     }
 
     /**
@@ -133,9 +235,23 @@ final class FichaDePacienteVista
         return $numero !== null && is_numeric($numero) ? (int) $numero : null;
     }
 
+    /**
+     * El subtítulo del encabezado.
+     *
+     * **Un paciente puede tener historia en otro consultorio del mismo doctor y no en éste** (Fase 2 del
+     * cambio de `reg_medico`): en ese caso no se dice "sin historia" —sería falso— sino "sin historia en
+     * este consultorio", que es lo que la consulta del contexto necesita y lo que la acción de la ficha
+     * resuelve asignándole una de acá.
+     */
     public function subtitulo(): string
     {
-        return $this->tieneHistoria() ? 'Historia N.º ' . $this->numeroDeHistoria() : 'Todavía sin número de historia';
+        if ($this->tieneHistoria()) {
+            return 'Historia N.º ' . $this->numeroDeHistoria();
+        }
+
+        return $this->tieneHistoriaEnOtroConsultorio()
+            ? 'Sin historia en este consultorio (la tiene en otro)'
+            : 'Todavía sin número de historia';
     }
 
     /**
@@ -148,8 +264,11 @@ final class FichaDePacienteVista
         $numero = $this->numeroUtilizable();
 
         $estados = [$numero === null
-            // Sin número utilizable (`null`, `''` o la basura del legado como `S/H`) no hay historia.
-            ? ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Sin historia']
+            // Sin número utilizable (`null`, `''` o la basura del legado como `S/H`) no hay historia **en este
+            // consultorio**: si la tiene en otro se dice, porque "sin historia" a secas sería falso.
+            ? ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => $this->tieneHistoriaEnOtroConsultorio()
+                ? 'Sin historia en este consultorio'
+                : 'Sin historia']
             : ($this->historiaRegistrada
                 ? ['tono' => 'marca', 'icono' => 'bi-journal-medical', 'texto' => 'Historia ' . $this->numeroDeHistoria()]
                 // El número está pero la historia no: el estado lo dice con el mismo tono que «Sin historia»
@@ -315,6 +434,17 @@ final class FichaDePacienteVista
                 'texto'  => 'El vínculo del paciente tiene el número ' . $this->numeroDeHistoria()
                     . ', pero su historia no está registrada en este consultorio: hasta registrarla no se lo puede atender. '
                     . 'Se registra con ese mismo número, no se le asigna otro.',
+            ];
+        }
+
+        if ($this->tieneHistoriaEnOtroConsultorio()) {
+            // El paciente ya está en el consultorio, pero su historia es de otro de los registros del doctor:
+            // acá hay que abrirle una nueva, y la consulta del contexto necesita ésa.
+            return [
+                'titulo' => 'Sin historia en este consultorio',
+                'texto'  => 'Este paciente tiene historia en otro consultorio, pero no en éste: '
+                    . 'la consulta se atiende con la historia del consultorio en el que se está trabajando. '
+                    . 'Se le asigna el número correlativo de este consultorio, que es otro número y otra historia.',
             ];
         }
 

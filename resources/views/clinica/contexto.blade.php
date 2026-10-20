@@ -29,7 +29,7 @@
             <div class="col-12 col-lg-6">
                 <x-ui.tarjeta class="h-100">
                     <x-ui.identidad :nombre="$medico['nombre']"
-                                    :detalle="'Registro ' . $medico['regMedico'] . ($medico['licencia'] ? ' · Licencia ' . $medico['licencia'] : '')"
+                                    :detalle="($medico['esCentro'] ? 'Centro médico · ' : '') . 'Registro ' . $medico['regMedico'] . ($medico['licencia'] ? ' · Licencia ' . $medico['licencia'] : '')"
                                     class="mb-3" />
 
                     <form method="POST" action="{{ $vm->urlGuardar() }}">
@@ -45,7 +45,9 @@
                                     @forelse ($medico['especialidades'] as $especialidad)
                                         <option value="{{ $especialidad['valor'] }}">{{ $especialidad['texto'] }}</option>
                                     @empty
-                                        <option value="">(el médico no tiene especialidad asignada)</option>
+                                        <option value="">{{ $medico['esCentro']
+                                            ? '(el centro todavía no tiene doctores con especialidad)'
+                                            : '(el médico no tiene especialidad asignada)' }}</option>
                                     @endforelse
                                 </select>
                             </x-ui.campo>
