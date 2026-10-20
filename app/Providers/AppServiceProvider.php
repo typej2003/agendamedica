@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
         // El armazón de la web clínica (barra, accesos y menú) lo arma un ViewModel, no el layout.
         View::composer('clinica.layout', ArmazonClinicaComposer::class);
+        View::composer('clinica.layout', \App\Http\View\Composers\PasoEsencialComposer::class);
 
         // El tour guiado de la pantalla (A-15) también: el layout lo pinta si la ruta tiene uno y el usuario
         // todavía no lo vio. Los controladores de las pantallas no se tocan. Desde O-31 la **consulta** recibe

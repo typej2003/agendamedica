@@ -76,6 +76,7 @@ class ConsultorioController extends Controller
 
         return redirect()
             ->route('clinica.consultorios', $request->boolean('ver_inactivos') ? ['inactivos' => 1] : [])
+            ->with('guiado', true)
             ->with('estado', $consultorio !== null ? 'Consultorio actualizado.' : 'Consultorio registrado.');
     }
 

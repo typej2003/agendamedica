@@ -268,3 +268,9 @@
         if (document.querySelector('.menu-lista-flotante')) cerrarMenus(null);
     }, true);
 })();
+
+// ---- El diálogo guiado de la puesta en marcha: se abre solo al cargar la pantalla (`data-abrir-al-cargar`).
+document.addEventListener('DOMContentLoaded', () => {
+    const guiado = document.querySelector('dialog[data-abrir-al-cargar]');
+    if (guiado && typeof guiado.showModal === 'function') guiado.showModal();
+});
