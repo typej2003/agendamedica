@@ -189,6 +189,16 @@
                 <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ session('error') }}
             </div>
         @endif
+        {{-- La guía de puesta en marcha: el siguiente dato esencial que le falta al médico, de uno en uno
+             (`PasosEsenciales`). Tras guardar una sede, un consultorio o un bloque de horario (`guiado`), además se
+             le pregunta en un diálogo si quiere seguir ahora. --}}
+        @if (! empty($pasoEsencial))
+            <div class="alert alert-info py-2 d-flex align-items-center gap-2" role="status" data-paso-esencial="{{ $pasoEsencial->clave }}">
+                <i class="bi bi-signpost-split-fill" aria-hidden="true"></i>
+                <span>{{ $pasoEsencial->banner }} <a class="alert-link" href="{{ $pasoEsencial->url() }}">{{ $pasoEsencial->enlace }} aquí</a>.</span>
+            </div>
+        @endif
+
         {{-- Avisos que no son el resultado de la operación (el día no laborable que se eligió al agendar, el
              solape de un bloque de horario con otro consultorio del mismo médico): van en lista para que no
              se pisen con `estado` ni entre ellos. --}}
@@ -207,6 +217,16 @@
         @yield('contenido')
     </main>
 </div>
+
+@if (! empty($pasoEsencial) && session('guiado'))
+    <x-ui.dialogo id="dialogo-paso-esencial" titulo="Sigamos con tu configuración" data-abrir-al-cargar>
+        <div class="dialogo-cuerpo"><p class="mb-0">{{ $pasoEsencial->pregunta }}</p></div>
+        <div class="dialogo-pie">
+            <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Más tarde</button>
+            <a class="btn btn-primary" href="{{ $pasoEsencial->url() }}">Sí, ahora</a>
+        </div>
+    </x-ui.dialogo>
+@endif
 
 <script src="{{ asset('js/clinica/shell.js') }}"></script>
 <script src="{{ asset('js/clinica/chips.js') }}"></script>

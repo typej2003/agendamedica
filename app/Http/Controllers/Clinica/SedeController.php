@@ -65,6 +65,7 @@ class SedeController extends Controller
 
         return redirect()
             ->route('clinica.sedes', $request->boolean('ver_todas') ? ['todas' => 1] : [])
+            ->with('guiado', true)
             ->with('estado', $sede !== null ? 'Sede actualizada.' : 'Sede registrada.');
     }
 

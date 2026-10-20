@@ -80,6 +80,7 @@ class HorarioController extends Controller
         $aviso = $accion->ejecutar($datos, $consultorio, $contexto['reg_medico'], $bloque);
 
         return $this->volver($request, $consultorio)
+            ->with('guiado', true)
             ->with('estado', $bloque !== null ? 'Bloque actualizado.' : 'Bloque agregado al consultorio.')
             // El solape con otro consultorio del médico **no** impide guardar: se avisa y se sigue
             // (decisión del 2026-10-09). Va por `avisos` para no pisar el resultado de la operación.
