@@ -21,7 +21,12 @@ final class FechaDelConsultorio
 {
     public static function zona(): string
     {
-        return (string) config('clinica.zona', 'America/Caracas');
+        // Sin aplicación levantada (tests unitarios puros de edades) no hay `config()`: se usa el default.
+        try {
+            return (string) config('clinica.zona', 'America/Caracas');
+        } catch (\Throwable $e) {
+            return 'America/Caracas';
+        }
     }
 
     /** El momento actual en el consultorio. */
@@ -48,6 +53,34 @@ final class FechaDelConsultorio
     public static function hoyComoFecha(): Carbon
     {
         return Carbon::createFromFormat('!Y-m-d', self::hoy()->toDateString());
+    }
+
+    /** La fecha de hoy del consultorio como texto `AAAA-MM-DD`. */
+    public static function hoyComoTexto(): string
+    {
+        return self::hoy()->toDateString();
+    }
+
+    /** ¿Esa fecha (`AAAA-MM-DD`, Carbon o fecha-hora) es el día de hoy del consultorio? Compara sólo el día. */
+    public static function esHoy($fecha): bool
+    {
+        return self::textoDeFecha($fecha) === self::hoyComoTexto();
+    }
+
+    /** ¿Esa fecha es anterior al día de hoy del consultorio? Compara sólo el día. */
+    public static function esAnteriorAHoy($fecha): bool
+    {
+        return self::textoDeFecha($fecha) < self::hoyComoTexto();
+    }
+
+    /** El día de calendario (`AAAA-MM-DD`) de lo que llegue, sin convertir de zona. */
+    private static function textoDeFecha($fecha): string
+    {
+        if ($fecha instanceof \DateTimeInterface) {
+            return $fecha->format('Y-m-d');
+        }
+
+        return substr(trim((string) $fecha), 0, 10);
     }
 
     /**

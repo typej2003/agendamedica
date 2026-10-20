@@ -28,8 +28,8 @@ class RootDashboard extends Component
         $usuariosConectados = $listaUsuariosConectados->count();
 
         // Métricas de Citas usando la tabla 'cola'
-        $fechaHoy = Carbon::today()->toDateString();
-        $fechaManana = Carbon::tomorrow()->toDateString();
+        $fechaHoy = \App\Clinica\FechaDelConsultorio::hoyComoTexto();
+        $fechaManana = \App\Clinica\FechaDelConsultorio::hoyComoFecha()->addDay()->toDateString();
 
         $citasTotales = DB::table('cola')->count();
         $citasHoy = DB::table('cola')->whereDate('fecha', $fechaHoy)->count();

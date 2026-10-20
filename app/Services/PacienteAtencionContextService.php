@@ -263,7 +263,7 @@ class PacienteAtencionContextService
                 'nac' => $nac,
                 'cedula' => $cedulaLimpia,
                 'telefono' => $telefono,
-                'fingreso' => now()->toDateString(),
+                'fingreso' => \App\Clinica\FechaDelConsultorio::hoyComoTexto(),
             ]);
 
             // Limpiar estado de registro de caché
@@ -882,7 +882,7 @@ class PacienteAtencionContextService
                 // Mantener límite por defecto
             }
 
-            $hoy = Carbon::today();
+            $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
             $disponibles = [];
             $ocupadasPrimerDia = null;
 
@@ -1298,7 +1298,7 @@ class PacienteAtencionContextService
                 $fechaCita = Carbon::parse($disponible['fecha']);
             } else {
                 $fechaCita = Carbon::parse($fecha);
-                if ($fechaCita->isPast() && !$fechaCita->isToday()) {
+                if (\App\Clinica\FechaDelConsultorio::esAnteriorAHoy($fechaCita)) {
                     return [
                         'exito' => false,
                         'mensaje' => "La fecha solicitada ({$fecha}) ya ha pasado. Por favor indica una fecha actual o futura.",
@@ -1422,7 +1422,7 @@ class PacienteAtencionContextService
     {
         $armador = $this->armador();
         $sedes = $armador->sedes($regMedico, $medico->id);
-        $hoy = Carbon::today();
+        $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
 
         // Se empieza en la fecha pedida (o hoy si ya pasó): así `--dias` cuenta desde ahí y una consulta
         // por un día concreto mira ese día, no treinta desde hoy.

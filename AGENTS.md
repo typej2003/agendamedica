@@ -919,6 +919,11 @@ alguna vez hace falta limpiar a mano, va **por `id`** y contra la base de desarr
 la arma sola la suite): dos limpiezas por `numhistoria`/`nroconsulta` ya borraron filas de otros pacientes
 (6 de `consultas` y 6 de `examen_fisico_nuevo`).
 
+**«Hoy» y «ahora» de negocio (2026-10-20):** toda decisión de día u hora del negocio (agenda, calendario, dashboards, reservas, chatbot,
+edades, vencimiento del servicio) usa `App\Clinica\FechaDelConsultorio` (`hoy()`, `ahora()`, `hoyComoFecha()`, `hoyComoTexto()`, `esHoy()`,
+`esAnteriorAHoy()`), no `Carbon::today()/now()/isToday()/isPast()` (UTC; desde las 20:00 de Caracas ya serían «mañana»). Los **instantes de
+escritura** (`updated_at`, `$cuando` del rastro, tokens, caché) siguen en UTC con `now()`. Tests: `Feature/HoyLocalDelConsultorioTest`.
+
 ## Sistema visual (web clínica y panel)
 
 **Antes de tocar una pantalla de `/clinica` leé [`../Docs/Web/guia-ui.md`](../Docs/Web/guia-ui.md) (cómo se ve: tokens,

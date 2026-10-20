@@ -42,7 +42,7 @@ class ViewCalendar extends Component
             $this->medicalCenter = MedicalCenter::find($medicalCenterId);
         }
 
-        $this->currentDate = Carbon::now()->startOfMonth();
+        $this->currentDate = \App\Clinica\FechaDelConsultorio::hoyComoFecha()->startOfMonth();
         $this->buildCalendar();
     }
 
@@ -56,7 +56,7 @@ class ViewCalendar extends Component
     private function buildCalendar()
     {
         Carbon::setLocale('es');
-        $today = Carbon::today();
+        $today = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
         $startOfMonth = Carbon::parse($this->currentDate)->startOfMonth();
         $endOfMonth = Carbon::parse($this->currentDate)->endOfMonth();
 
@@ -102,7 +102,7 @@ class ViewCalendar extends Component
                     'date' => $currentDay->copy(),
                     'dateString' => $dateString,
                     'isCurrentMonth' => $currentDay->month === $startOfMonth->month,
-                    'isToday' => $currentDay->isToday(),
+                    'isToday' => $currentDay->toDateString() === $today->toDateString(),
                     'isPastDay' => $isPastDay,
                     'citasCount' => $count,
                     'bgColor' => $bgColor,

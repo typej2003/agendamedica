@@ -59,8 +59,8 @@ class MedicoDashboard extends Component
             $usuariosConectados = $listaUsuariosConectados->count();
 
             // 5. Métricas de Citas / Agendamientos desde la tabla cola usando reg_medico
-            $fechaHoy = Carbon::today()->toDateString();
-            $fechaManana = Carbon::tomorrow()->toDateString();
+            $fechaHoy = \App\Clinica\FechaDelConsultorio::hoyComoTexto();
+            $fechaManana = \App\Clinica\FechaDelConsultorio::hoyComoFecha()->addDay()->toDateString();
 
             // Consulta base filtrando por reg_medico
             $queryCitasMedico = Cola::query();
@@ -93,8 +93,8 @@ class MedicoDashboard extends Component
             $citasTotales = 0;
             $citasHoy = 0;
             $citasManana = 0;
-            $fechaHoy = Carbon::today()->toDateString();
-            $fechaManana = Carbon::tomorrow()->toDateString();
+            $fechaHoy = \App\Clinica\FechaDelConsultorio::hoyComoTexto();
+            $fechaManana = \App\Clinica\FechaDelConsultorio::hoyComoFecha()->addDay()->toDateString();
             $medico = (object)['id' => 0];
         }
 

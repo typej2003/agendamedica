@@ -77,7 +77,7 @@ class ServicioService
      */
     public function clasificar(Carbon $venceEl, ?Carbon $hoy = null): array
     {
-        $hoy = ($hoy ?? Carbon::today())->copy()->startOfDay();
+        $hoy = ($hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoFecha())->copy()->startOfDay();
         $vence = $venceEl->copy()->startOfDay();
         $dias = (int) $hoy->diffInDays($vence, false);
         $graciaHasta = $vence->copy()->addDays(config('servicios.dias_gracia'));
@@ -164,7 +164,7 @@ class ServicioService
     /** "Motivo (por Fulano, 06/10/2026)": lo que queda escrito en el historial de quien cambió el servicio. */
     private function notaDeAuditoria(string $motivo, ?string $por): string
     {
-        return trim($motivo) . ' (' . ($por ? "por {$por}, " : '') . Carbon::today()->format('d/m/Y') . ')';
+        return trim($motivo) . ' (' . ($por ? "por {$por}, " : '') . \App\Clinica\FechaDelConsultorio::hoyComoFecha()->format('d/m/Y') . ')';
     }
 
     /**
@@ -291,7 +291,7 @@ class ServicioService
     {
         $actual = $this->actual($regMedico);
 
-        return $actual && $actual->vence_el->gte(Carbon::today()) ? $actual->vence_el->copy() : null;
+        return $actual && $actual->vence_el->gte(\App\Clinica\FechaDelConsultorio::hoyComoFecha()) ? $actual->vence_el->copy() : null;
     }
 
     /**
@@ -317,7 +317,7 @@ class ServicioService
             throw new DomainException('El servicio tiene que durar al menos un mes.');
         }
 
-        $inicia = ($desde ?? Carbon::today())->copy()->startOfDay();
+        $inicia = ($desde ?? \App\Clinica\FechaDelConsultorio::hoyComoFecha())->copy()->startOfDay();
 
         return RegMedicoServicio::create([
             'reg_medico' => $regMedico,
