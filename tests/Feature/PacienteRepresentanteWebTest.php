@@ -533,7 +533,7 @@ class PacienteRepresentanteWebTest extends TestCase
         // El código crudo tal cual, ofrecido en el `<select>` para no perderlo al guardar (que el nombre
         // del catálogo **no** se le adjudique se prueba en el unitario del ViewModel: en la página el
         // `<select>` lista todos los parentescos).
-        $respuesta->assertSee('X (código del escritorio)');
+        $respuesta->assertSee('X (código anterior)');
 
         // Guardar otro dato sin tocar el parentesco lo conserva.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)

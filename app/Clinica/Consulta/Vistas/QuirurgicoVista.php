@@ -119,7 +119,7 @@ final class QuirurgicoVista
         return $this->esPestana(self::INTERVENCIONES)
             ? 'Las intervenciones de la consulta, con su código, su descripción y el detalle. Se guardan de a una y se '
                 . 'pueden quitar; el riesgo quirúrgico llega en la próxima entrega.'
-            : 'Es la evaluación pre-operatoria del escritorio: el tipo, el resultado y si es una emergencia. Se guarda '
+            : 'Evaluación pre-operatoria: el tipo, el resultado y si es una emergencia. Se guarda '
                 . 'en la consulta y se vuelve a mostrar cuando la abrís de nuevo.';
     }
 

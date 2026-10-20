@@ -37,14 +37,13 @@ final class NeumologiaDeLaConsulta
             'etiqueta' => 'R.X. de tórax',
             'columna'  => 'rayosx',
             'filas'    => 4,
-            'ayuda'    => 'El informe de la radiografía de tórax. Es el mismo texto que imprime el escritorio.',
+            'ayuda'    => '',
         ],
         'espirometria' => [
             'etiqueta' => 'Espirometría',
             'columna'  => 'faringe',
             'filas'    => 6,
-            'ayuda'    => 'El informe de la espirometría. El escritorio lo guarda en la columna de la citología '
-                . '(«faringe»); en pediatría esa solapa no existe y no se pisan.',
+            'ayuda'    => '',
         ],
         'broncoscopia' => [
             'etiqueta' => 'Broncoscopía',

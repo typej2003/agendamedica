@@ -23,7 +23,7 @@
         @if ($fila->tieneTurno())
             <span class="turno">{{ $fila->turno() }}</span>
         @else
-            <span class="turno turno-vacio" title="El escritorio la movió a otro día">—</span>
+            <span class="turno turno-vacio" title="La cita se movió a otro día">—</span>
         @endif
     </td>
 
@@ -53,7 +53,7 @@
 
     <td class="celda-acciones text-end">
         @if ($fila->movida())
-            <span class="texto-tenue small">Sin acciones: el escritorio la movió</span>
+            <span class="texto-tenue small">Sin acciones: la cita se movió</span>
         @else
             @php
                 $confirmar = $fila->confirmar();

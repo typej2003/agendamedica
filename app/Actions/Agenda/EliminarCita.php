@@ -30,7 +30,7 @@ final class EliminarCita
     {
         if ($cita->movida_escritorio) {
             throw new InvalidArgumentException(
-                'El escritorio movió esta cita a otro día: el paciente ya está en la fecha nueva.'
+                'Esta cita se movió a otro día: el paciente ya está en la fecha nueva.'
             );
         }
 

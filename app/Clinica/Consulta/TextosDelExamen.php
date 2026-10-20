@@ -113,8 +113,7 @@ final class TextosDelExamen
             'documento' => null,
             'imagenes' => null,
             'marcador' => 'El resultado de la citología: la toma, la calidad de la muestra, el informe del laboratorio…',
-            'ayuda' => 'El texto de la citología de esta consulta. El escritorio no tiene una hoja propia para '
-                . 'este texto: se guarda y queda en la historia del paciente.',
+            'ayuda' => '',
         ],
         self::HISTEROSCOPIA => [
             'titulo' => 'Histeroscopía',

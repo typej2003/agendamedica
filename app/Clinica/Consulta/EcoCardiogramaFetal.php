@@ -114,10 +114,10 @@ final class EcoCardiogramaFetal
             ['titulo' => 'Ficha', 'icono' => 'bi-calendar-heart', 'campos' => [
                 self::fecha('fecha', 'Fecha',
                     'La fecha del estudio: abre con la de hoy y se puede cambiar.'),
-                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa (de ella salen la EG y la FPP: la FUR + 280 días).'),
+                self::fechaTecleada('fur', 'FUR', 'dd/mm/aaaa'),
                 ['columna' => 'gesta', 'etiqueta' => 'Gesta', 'tipo' => 'opciones',
                     'opciones' => self::romanos(), 'ayuda' => 'El número de la gesta que se está siguiendo.'],
-                self::numero('parto', 'Para', 'Los partos de la paciente (el «PARA:» del escritorio).'),
+                self::numero('parto', 'Para', ''),
                 self::numero('aborto', 'Abortos', 'Los abortos.'),
                 self::numero('cesarea', 'Cesáreas', 'Las cesáreas.'),
                 ['columna' => 'otros', 'etiqueta' => 'Otros', 'tipo' => 'texto', 'tope' => 20,
@@ -128,8 +128,7 @@ final class EcoCardiogramaFetal
                 // El memo grande del estudio: el DataWindow **no le pone rótulo** y su ventana lo precarga al
                 // abrir una consulta sin fila.
                 ['columna' => self::COLUMNA_TEXTO_INICIO, 'etiqueta' => '', 'tipo' => 'area',
-                    'ayuda' => 'El informe del estudio, en texto libre: el escritorio lo precarga al abrir la '
-                        . 'consulta, así que acá aparece escrito y se puede corregir.'],
+                    'ayuda' => 'Informe del estudio'],
             ]],
 
             ['titulo' => 'Datos biométricos', 'icono' => 'bi-rulers', 'campos' => [
@@ -150,8 +149,7 @@ final class EcoCardiogramaFetal
             ['titulo' => 'Datos anatómicos', 'icono' => 'bi-heart-pulse', 'campos' => [
                 // El segundo memo: tampoco lleva rótulo, porque el bloque ya lo titula.
                 ['columna' => self::COLUMNA_ANATOMIA, 'etiqueta' => '', 'tipo' => 'area',
-                    'ayuda' => 'Los hallazgos anatómicos del corazón fetal: el escritorio los precarga con su '
-                        . 'texto de siempre y se corrigen acá.'],
+                    'ayuda' => 'Hallazgos anatómicos del corazón fetal'],
             ]],
 
             ['titulo' => 'Datos placento - funiculares', 'icono' => 'bi-diagram-3', 'campos' => [
@@ -165,10 +163,10 @@ final class EcoCardiogramaFetal
                     // La web desempata Previa con `M`, la misma desviación consciente del eco del 3.er
                     // trimestre (2026-10-13): un código repetido no puede leerse de vuelta.
                     'Previa' => 'M',
-                ], 'El rótulo del escritorio es «PLACENTA:». Previa va con `M` (el escritorio la duplica en `P`).'),
+                ], ''),
                 self::lista('pla_funi_grado', 'Grado',
                     ['O' => '0', 'I' => 'I', 'II' => 'II', 'III' => 'III'],
-                    'La madurez placentaria: el escritorio guarda `O` para el grado 0.') + ['sufijo' => '/ III'],
+                    '') + ['sufijo' => '/ III'],
                 self::medida('pla_funi_grosor', 'Groso'),
                 self::lista('pla_funi_cordon_umb', 'Cordón umbilical',
                     ['3 ELEMENTOS VASCULARES' => 'N', 'ANORMAL' => 'A']),
@@ -180,9 +178,9 @@ final class EcoCardiogramaFetal
 
             ['titulo' => 'Conclusión', 'icono' => 'bi-file-earmark-text', 'campos' => [
                 ['columna' => 'conclusion', 'etiqueta' => 'Signos ecográficos sugestivos de', 'tipo' => 'area',
-                    'ayuda' => 'El rótulo del escritorio es «SIGNOS ECOGRÁFICOS SUGESTIVOS DE:».'],
+                    'ayuda' => ''],
                 ['columna' => 'sugerencia', 'etiqueta' => 'Sugerencias', 'tipo' => 'area',
-                    'ayuda' => 'El rótulo del escritorio es «SUGERENCIAS».'],
+                    'ayuda' => ''],
             ]],
         ];
     }
@@ -361,7 +359,7 @@ final class EcoCardiogramaFetal
             'unidad' => $unidad,
             'sufijo' => $sufijo,
             'ayuda' => $unidad === null
-                ? 'La medida que imprime el informe del escritorio.'
+                ? ''
                 : 'La medida en ' . $unidad . ' (el informe la imprime así).',
         ];
     }

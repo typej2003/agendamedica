@@ -13,11 +13,11 @@
 <div class="consulta-seccion" id="consulta-estudio-obstetrico">
     <x-ui.tarjeta :titulo="$vm->titulo()" :icono="$vm->icono()">
         <x-slot name="acciones">
+            @include('clinica.consulta._estudio-formato-boton', ['formato' => $formato ?? null])
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form" novalidate
               data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">

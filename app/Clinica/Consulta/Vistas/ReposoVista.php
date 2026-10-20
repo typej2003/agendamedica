@@ -122,7 +122,7 @@ final class ReposoVista
 
     public function ayudaDeLaJustificacion(): string
     {
-        return 'Obligatoria si el reposo es de un solo día: sin ella no se distingue de la plantilla vacía del escritorio.';
+        return 'Obligatoria si el reposo es de un solo día: sin ella el reposo no cuenta como documento.';
     }
 
     public function ayuda(): string

@@ -171,7 +171,7 @@ class BitacoraVistaTest extends TestCase
         $quien = fn (array $extra) => $this->vista([$this->grupo($extra + ['user_id' => null])])->lineas()[0]['quien'];
 
         $this->assertSame('App del móvil', $quien(['origen' => 'mobile'])['nombre']);
-        $this->assertSame('Escritorio (PowerBuilder)', $quien(['origen' => 'escritorio'])['nombre']);
+        $this->assertSame('Sistema anterior', $quien(['origen' => 'escritorio'])['nombre']);
         $this->assertSame('Sin usuario', $quien(['origen' => 'web'])['nombre']);
         $this->assertTrue($quien(['origen' => 'web'])['sinUsuario']);
         $this->assertSame('Usuario eliminado', $quien(['user_id' => 999])['nombre']);

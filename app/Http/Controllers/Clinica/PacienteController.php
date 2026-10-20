@@ -659,12 +659,12 @@ class PacienteController extends Controller
             'representante_direccion'  => ['nullable', 'string', 'max:60'],
         ], [
             'representante_nombre.max'        => 'El nombre del representante no puede pasar de 40 caracteres.',
-            'representante_parentesco.max'    => 'El parentesco del representante es un solo carácter (es el ancho del escritorio).',
+            'representante_parentesco.max'    => 'El parentesco del representante es un solo carácter.',
             'representante_cedula.regex'      => 'La cédula del representante solo lleva números (hasta 10 dígitos).',
             'representante_telefono.max'      => 'El teléfono del representante no puede pasar de 20 caracteres.',
             'representante_email.email'       => 'Revisa el correo del representante: no tiene forma de correo.',
             'representante_email.max'         => 'El correo del representante no puede pasar de 100 caracteres.',
-            'representante_direccion.max'     => 'La dirección del representante no puede pasar de 60 caracteres (es el ancho del escritorio).',
+            'representante_direccion.max'     => 'La dirección del representante no puede pasar de 60 caracteres.',
         ]);
 
         $datos = [];

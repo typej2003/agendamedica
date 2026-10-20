@@ -17,10 +17,12 @@
          derecha **todo el catálogo a la vista**, por páginas, donde cada uno se pasa con «Pasar» o con doble clic. Desde O-27
          «Pasar» escribe en el acto. --}}
     <x-ui.dos-listas titulo-izquierda="Diagnósticos de esta consulta" titulo-derecha="Tu catálogo de diagnósticos">
-    <x-slot name="izquierda">
     @if ($vm->tieneAnterior())
-        <div class="mb-2"><x-ui.anterior :url="$vm->urlAnterior('diagnosticos')" que="los diagnósticos" /></div>
+        <x-slot name="accionesIzquierda">
+            <x-ui.anterior :url="$vm->urlAnterior('diagnosticos')" que="los diagnósticos" />
+        </x-slot>
     @endif
+    <x-slot name="izquierda">
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="diagnosticos-form"
           data-consulta-diagnosticos data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
@@ -31,11 +33,9 @@
         </div>
         <div>
 
-            <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
             @if ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos">
-                    Pásalos desde tu catálogo, a la derecha. Puedes cargar más de uno.
+                    Pásalos desde tu catálogo, a la derecha.
                 </x-ui.vacio>
             @else
                 <ul class="diagnosticos-lista">
@@ -103,8 +103,6 @@
     </x-slot>
 
     <x-slot name="derecha">
-        <p class="texto-tenue small mb-3">{{ $seccion->ayudaDelBuscador() }}</p>
-
         {{-- El filtro del catálogo: un `GET` a esta misma sección (no hay `fetch`: el buscador se recarga
              con el filtro y "Pasar" es un `POST`, así la sección entera funciona sin JavaScript). --}}
         <form method="GET" action="{{ $seccion->urlVolver() }}" class="row g-2 align-items-end mb-3" id="diagnostico-buscar-form">
@@ -169,13 +167,10 @@
              nombre se guarda en mayúsculas; desde O-27 el nuevo queda **agregado a la consulta** en el acto. --}}
         <hr class="my-3">
 
-        <p class="texto-tenue small mb-2">{{ $seccion->ayudaDelAlta() }}</p>
-
         <form method="POST" action="{{ $seccion->urlCrear() }}" class="row g-2 align-items-end" id="diagnostico-crear-form">
             @csrf
 
-            <x-ui.campo etiqueta="Nombre del diagnóstico" for="diagnostico-descripcion" class="col-12 col-md-9"
-                        :ayuda="'Hasta ' . $seccion->limiteDescripcion() . ' caracteres. Se guarda en mayúsculas.'">
+            <x-ui.campo etiqueta="Nombre del diagnóstico" for="diagnostico-descripcion" class="col-12 col-md-9">
                 <input type="text" id="diagnostico-descripcion" name="descripcion" class="form-control"
                        maxlength="{{ $seccion->limiteDescripcion() }}" value="{{ old('descripcion') }}" autocomplete="off">
             </x-ui.campo>

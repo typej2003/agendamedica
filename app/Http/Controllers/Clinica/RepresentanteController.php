@@ -129,10 +129,10 @@ class RepresentanteController extends Controller
             'email'          => ['nullable', 'email', 'max:100'],
             'direccion'      => ['nullable', 'string', 'max:60'],
         ], [
-            'codeparentesco.max' => 'El parentesco es un solo carácter (es el ancho del escritorio).',
+            'codeparentesco.max' => 'El parentesco es un solo carácter.',
             'cedula.regex'       => 'La cédula solo lleva números (hasta 10 dígitos).',
             'email.email'        => 'Revisa el correo: no tiene forma de correo.',
-            'direccion.max'      => 'La dirección no puede pasar de 60 caracteres (es el ancho del escritorio).',
+            'direccion.max'      => 'La dirección no puede pasar de 60 caracteres.',
         ]);
 
         // Un formulario sin nada escrito no es un representante: creaba una fila en blanco ("Representante

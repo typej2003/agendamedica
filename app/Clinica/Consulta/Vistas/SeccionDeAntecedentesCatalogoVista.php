@@ -166,15 +166,14 @@ final class SeccionDeAntecedentesCatalogoVista
     /** La ayuda del buscador: qué hace y de dónde salen los antecedentes. */
     public function ayuda(): string
     {
-        return 'Busca en el catálogo de tu consultorio: es el mismo que usa el escritorio, así que lo que '
-            . 'agregues acá lo verás allá. Un antecedente por nombre y sin distinguir tildes.';
+        return 'Busca en el catálogo de tu consultorio, sin distinguir tildes.';
     }
 
     /** La ayuda del alta del catálogo: el código lo da el servidor y la descripción se guarda en mayúsculas. */
     public function ayudaDelAlta(): string
     {
         return 'Si el antecedente no está en tu catálogo, créalo: el código lo asigna el sistema (el '
-            . 'correlativo de cuatro dígitos del escritorio) y se guarda en mayúsculas. Necesita conexión.';
+            . 'correlativo de cuatro dígitos) y se guarda en mayúsculas. Necesita conexión.';
     }
 
     /**

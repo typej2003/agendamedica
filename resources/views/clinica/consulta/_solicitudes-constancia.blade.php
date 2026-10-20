@@ -10,8 +10,6 @@
         </x-ui.imprimir-guardando>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="constancia-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 

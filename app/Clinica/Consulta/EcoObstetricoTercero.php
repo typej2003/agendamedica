@@ -76,7 +76,7 @@ class EcoObstetricoTercero
                     'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11']),
                 self::lista('gestacion', 'Gestación', ['Única' => 'U', 'Múltiple' => 'M']),
                 self::lista('situacion', 'Situación', ['Longitudinal' => 'L', 'Transversa' => 'T', 'Oblicua' => 'O'],
-                    'El escritorio escribe «Longitudina»; la web lo rotula bien.'),
+                    ''),
                 self::lista('dorso', 'Dorso', ['Derecho' => 'D', 'Izquierdo' => 'I', 'Superior' => 'S', 'Inferior' => 'F']),
                 self::lista('presentacion', 'Presentación', ['Cefálica' => 'C', 'Podálica' => 'P']),
             ]],
@@ -144,7 +144,7 @@ class EcoObstetricoTercero
 
             ['titulo' => 'La conclusión', 'icono' => 'bi-file-earmark-text', 'campos' => [
                 ['columna' => 'conclusion', 'etiqueta' => 'Conclusiones', 'tipo' => 'area',
-                    'ayuda' => 'Las conclusiones del estudio (la columna se llama `conclusion`).'],
+                    'ayuda' => ''],
                 ['columna' => 'observacion', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
                     'ayuda' => 'Las observaciones (acá el rótulo coincide con la columna).'],
             ]],

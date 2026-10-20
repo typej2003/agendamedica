@@ -71,8 +71,6 @@
                  (incluso sin medicamentos) en vez de releer la base. --}}
             <input type="hidden" name="editor" value="1">
 
-            <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
             {{-- Los datos de la pareja: obligatorios (el escritorio no deja agregar un medicamento sin ellos). La
                  cédula y el nombre cuentan para el aviso de «cambios sin guardar» (`data-recipe-extra`). --}}
             <div class="row g-3 mb-3">

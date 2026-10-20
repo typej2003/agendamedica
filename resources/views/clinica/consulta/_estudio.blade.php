@@ -16,10 +16,9 @@
          viene abajo, sin pisar lo escrito. Van arriba del formulario y se alcanzan por su `action`. --}}
     @include('clinica.consulta._estudio-formato', ['formato' => $seccion->formato()])
 
-    @include($seccion->parcial(), ['vm' => $seccion->estudio(), 'plantillas' => $seccion->plantillas()])
+    @include($seccion->parcial(), ['vm' => $seccion->estudio(), 'plantillas' => $seccion->plantillas(), 'formato' => $seccion->formato()])
 
-    {{-- Las imágenes del estudio (WEB-11.12): se suben **una a una y sin límite**, etiquetadas para este tipo de estudio (la etiqueta que el
-         escritorio usa para sus grillas). --}}
+    {{-- Las imágenes del estudio (WEB-11.12): se suben **una a una y sin límite**, etiquetadas para este tipo de estudio (la etiqueta de sus grillas). --}}
     @if ($imagenes ?? null)
         <div class="mt-3">
             @include('clinica.consulta._imagenes', [

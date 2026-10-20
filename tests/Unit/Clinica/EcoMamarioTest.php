@@ -218,7 +218,7 @@ class EcoMamarioTest extends TestCase
         // Un código que el catálogo ya no tiene se conserva al final (no se pierde el dato del escritorio).
         $ajeno = $this->vista(['referido' => 99999], [], $medicos)->grupos()[0]['campos'][1];
         $this->assertSame(['', '10432', '20877', '99999'], array_column($ajeno['opciones'], 'valor'));
-        $this->assertSame('99999 (del escritorio)', $ajeno['opciones'][3]['texto']);
+        $this->assertSame('99999 (valor anterior)', $ajeno['opciones'][3]['texto']);
     }
 
     public function test_el_viewmodel_muestra_lo_escrito_en_el_post_que_fallo(): void

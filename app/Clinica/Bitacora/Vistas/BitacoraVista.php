@@ -85,7 +85,7 @@ final class BitacoraVista
     {
         $opciones = [
             ['valor' => '', 'texto' => 'Todos'],
-            ['valor' => FiltroDeBitacora::SIN_USUARIO, 'texto' => 'Sin usuario (móvil, escritorio o anterior a la bitácora)'],
+            ['valor' => FiltroDeBitacora::SIN_USUARIO, 'texto' => 'Sin usuario (móvil, sistema anterior o previo a la bitácora)'],
         ];
 
         foreach ($this->opcionesDeUsuario as $usuario) {
@@ -204,7 +204,7 @@ final class BitacoraVista
 
         return match ($grupo['origen']) {
             'mobile' => ['nombre' => 'App del móvil', 'rol' => null, 'sinUsuario' => true],
-            'escritorio' => ['nombre' => 'Escritorio (PowerBuilder)', 'rol' => null, 'sinUsuario' => true],
+            'escritorio' => ['nombre' => 'Sistema anterior', 'rol' => null, 'sinUsuario' => true],
             default => ['nombre' => 'Sin usuario', 'rol' => 'anterior a la bitácora', 'sinUsuario' => true],
         };
     }

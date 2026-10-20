@@ -4,6 +4,8 @@
 
 <x-ui.tarjeta :titulo="$vm->rotulo()" icono="bi-egg-fried">
     <x-slot name="acciones">
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
+            nombre="dieta" titulo-destino="#dieta-titulo" />
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
             <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="dieta-form" documento="dieta" class="btn btn-sm btn-outline-secondary">
@@ -12,18 +14,11 @@
         @endif
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="dieta-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 
-        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
-             una columna a la derecha y acá, al no caber, caía debajo del texto. --}}
-        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#dieta-descripcion" tipo="DI"
-                         nombre="dieta" titulo-destino="#dieta-titulo" class="mb-3" />
-
-        <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3" ayuda="Opcional. Sale en negrita sobre el texto.">
-            <input type="text" name="titulo" id="dieta-titulo" class="form-control" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
+        <x-ui.campo etiqueta="Título" for="dieta-titulo" error="titulo" class="mb-3">
+            <input type="text" name="titulo" id="dieta-titulo" class="form-control" placeholder="Opcional" maxlength="{{ $vm->largoDelTitulo() }}" value="{{ $vm->titulo() }}">
         </x-ui.campo>
 
         <x-ui.campo :etiqueta="$vm->etiquetaDelTexto()" for="dieta-descripcion" error="descripcion" requerido>

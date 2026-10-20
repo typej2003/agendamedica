@@ -102,7 +102,7 @@ class PlantillasDeTextoWebTest extends TestCase
         $respuesta->assertSee('Todavía no tienes plantillas de texto');
         $respuesta->assertSee('Nueva plantilla');
         $respuesta->assertSee('Se ofrecen en la consulta de la web', false);
-        $respuesta->assertSee('Otros formatos del escritorio', false);
+        $respuesta->assertSee('Otros formatos', false);
         // La entrada está en el grupo «Catálogos» del menú lateral.
         $this->como($user, $medico, $gineco)->get(route('clinica.inicio'))->assertSee(route('clinica.catalogos.plantillas-texto'), false);
     }

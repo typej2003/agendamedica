@@ -1,4 +1,4 @@
-@props(['etiqueta', 'for', 'error' => null, 'ayuda' => null, 'requerido' => false])
+@props(['etiqueta', 'for', 'error' => null, 'ayuda' => null, 'info' => null, 'requerido' => false])
 
 {{-- Un campo de formulario: etiqueta + control (slot) + error del campo + ayuda. El control lleva
      `id="{{ $for }}"` y `name` igual. La clase de columna (`col-md-4`) va en el propio componente.
@@ -9,7 +9,7 @@
      el del representante usa `id="representante-cedula"` y `name="cedula"`). --}}
 @php $claveDelError = $error ?? $for; @endphp
 <div {{ $attributes->merge(['class' => 'campo']) }}>
-    <label class="form-label" for="{{ $for }}">{{ $etiqueta }}@if ($requerido) <span aria-hidden="true">*</span>@endif</label>
+    <label class="form-label" for="{{ $for }}">{{ $etiqueta }}@if ($requerido) <span aria-hidden="true">*</span>@endif</label>@if ($info) <x-ui.info>{{ $info }}</x-ui.info>@endif
     {{ $slot }}
     @error($claveDelError)
         <span class="campo-error d-block">{{ $message }}</span>

@@ -17,8 +17,6 @@
         </a>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
     @if (! $vm->puedeImprimir())
         <x-ui.estado tono="aviso" icono="bi-info-circle">{{ $vm->sinHistoria() }}</x-ui.estado>
     @endif
