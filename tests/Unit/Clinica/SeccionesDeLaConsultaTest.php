@@ -28,8 +28,8 @@ class SeccionesDeLaConsultaTest extends TestCase
             'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura',
         ], array_column($todas, 'titulo'));
 
-        // Doce con pantalla (la pre-factura llega con F9), agrupados como el legado.
-        $this->assertSame(12, SeccionesDeLaConsulta::disponibles());
+        // Los trece con pantalla (la pre-factura llegó con F9), agrupados como el legado.
+        $this->assertSame(13, SeccionesDeLaConsulta::disponibles());
         $this->assertSame(['Consulta', 'Documentos'], array_values(array_unique(array_column($todas, 'grupo'))));
     }
 
@@ -37,8 +37,9 @@ class SeccionesDeLaConsultaTest extends TestCase
     {
         $this->assertSame('motivos', SeccionesDeLaConsulta::normalizar('motivos'));
         $this->assertTrue(SeccionesDeLaConsulta::existeSeccion('recipes'));
-        // Un valor inventado, vacío o el de un ítem sin pantalla no abre ninguna sección.
-        $this->assertNull(SeccionesDeLaConsulta::normalizar('prefactura'));
+        // La pre-factura es una sección desde F9; un valor inventado o vacío no abre ninguna.
+        $this->assertSame('prefactura', SeccionesDeLaConsulta::normalizar('prefactura'));
+        $this->assertNull(SeccionesDeLaConsulta::normalizar('no-existe'));
         $this->assertNull(SeccionesDeLaConsulta::normalizar(''));
         $this->assertNull(SeccionesDeLaConsulta::normalizar(null));
         $this->assertNull(SeccionesDeLaConsulta::porSeccion('no-existe'));
@@ -69,17 +70,17 @@ class SeccionesDeLaConsultaTest extends TestCase
         $this->assertCount(1, $activos);
         $this->assertSame('Diagnóstico', $activos[0]['texto']);
 
-        // La pre-factura todavía no tiene pantalla: no ofrece enlace y va deshabilitada.
-        $this->assertNull($items[12]['url']);
-        $this->assertTrue($items[12]['deshabilitado']);
+        // La pre-factura (F9) también enlaza a su sección.
+        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'prefactura']), $items[12]['url']);
+        $this->assertFalse($items[12]['deshabilitado']);
         $this->assertFalse($items[12]['activo']);
 
         // «Exámenes» ya no está: no hay ítem ni enlace a esa sección.
         $this->assertNotContains('Exámenes', array_column($items, 'texto'));
 
-        // Sin sección (el shell recién abierto) no hay ningún ítem activo y el ítem sin pantalla sigue deshabilitado.
+        // Sin sección (el shell recién abierto) o con una inventada no hay ningún ítem activo.
         $this->assertSame([], array_values(array_filter(SeccionesDeLaConsulta::submenu(42, null), fn (array $item) => $item['activo'])));
-        $this->assertSame([], array_values(array_filter(SeccionesDeLaConsulta::submenu(42, 'prefactura'), fn (array $item) => $item['activo'])));
+        $this->assertSame([], array_values(array_filter(SeccionesDeLaConsulta::submenu(42, 'no-existe'), fn (array $item) => $item['activo'])));
     }
 
     public function test_el_icono_y_el_estado_de_cada_item_salen_del_catalogo(): void
@@ -109,8 +110,8 @@ class SeccionesDeLaConsultaTest extends TestCase
 
         // Una sección válida sigue siendo la suya; una inventada no se normaliza y cae en el vacío.
         $this->assertSame('evolucion', SeccionesDeLaConsulta::deEntrada('evolucion'));
-        $this->assertSame('prefactura', SeccionesDeLaConsulta::deEntrada('prefactura'));
-        $this->assertNull(SeccionesDeLaConsulta::normalizar(SeccionesDeLaConsulta::deEntrada('prefactura')));
+        $this->assertSame('no-existe', SeccionesDeLaConsulta::deEntrada('no-existe'));
+        $this->assertNull(SeccionesDeLaConsulta::normalizar(SeccionesDeLaConsulta::deEntrada('no-existe')));
     }
 
     /**

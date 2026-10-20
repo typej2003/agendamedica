@@ -659,10 +659,10 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertDontSee('13 de 14 disponibles', false);
         $respuesta->assertDontSee('12 de 13 disponibles', false);
 
-        // Trae los 13 ítems (O-22 retiró *Exámenes*): 12 enlazan a su sección dentro de esta consulta y la
-        // pre-factura va deshabilitada.
+        // Trae los 13 ítems (O-22 retiró *Exámenes*) y, desde F9, los 13 enlazan a su sección dentro de esta consulta.
         $respuesta->assertSee('Pre-factura');
-        $respuesta->assertSee('aria-disabled="true"', false);
+        $respuesta->assertDontSee('aria-disabled="true"', false);
+        $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'motivos']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'enfermedad']), false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'antecedentes']), false);
@@ -756,7 +756,7 @@ class ConsultaSeccionesWebTest extends TestCase
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'no-existe']));
 
         $respuesta->assertOk();
         $respuesta->assertSee('Elige una sección en el menú', false);

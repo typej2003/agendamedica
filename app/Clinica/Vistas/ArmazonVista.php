@@ -137,8 +137,8 @@ final class ArmazonVista
         // pantalla y sus 14 ítems viven en este grupo plegable, con los mismos nombres y su icono, **sólo dentro de
         // una consulta** y sólo para quien la trabaja (la consulta es del médico: `role:Root|Medico`). Afuera de la
         // consulta el menú queda como siempre. El catálogo y los enlaces salen de `SeccionesDeLaConsulta`, la misma
-        // fuente que usa el shell: agregar una sección es una línea, y el ítem sin pantalla (la pre-factura) se
-        // dibuja deshabilitado en vez de ofrecer un enlace muerto.
+        // fuente que usa el shell: agregar una sección es una línea, y un ítem sin pantalla se dibujaría deshabilitado
+        // en vez de ofrecer un enlace muerto.
         if ($this->tieneContexto() && $this->trabajaLaConsulta && $this->enLaConsulta()) {
             $consultaId = (int) ($this->consultaEnCurso['id'] ?? 0);
             $seccion = $this->consultaEnCurso['seccion'] ?? null;

@@ -52,8 +52,8 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-15.
         $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], $this->numeros($vm));
         $this->assertSame(14, $vm->totalItems());
-        // Catorce ítems menos la pre-factura, que todavía no tiene pantalla = trece.
-        $this->assertSame(13, $vm->totalListos());
+        // Los catorce tienen pantalla desde F9 (la pre-factura).
+        $this->assertSame(14, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void

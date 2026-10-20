@@ -232,9 +232,9 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta->assertSee('Estudio ecográfico');
         // El enlace del panel es el de la sección a secas: el tipo por defecto es el ginecológico.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]), false);
-        // El control de embarazo (WEB-6.6) también está disponible: el único ítem sin pantalla es la pre-factura.
+        // El control de embarazo (WEB-6.6) también está disponible, y desde F9 la pre-factura: ningún ítem va deshabilitado.
         $respuesta->assertSee('Control de embarazo');
-        $respuesta->assertSee('aria-disabled="true"', false);
+        $respuesta->assertDontSee('aria-disabled="true"', false);
     }
 
     // ------------------------------------------------------------------------------------ El guardado

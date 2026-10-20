@@ -40,8 +40,8 @@ class SeccionesPediatricasTest extends TestCase
         $this->assertNotContains('Estudio ecográfico', array_column($items, 'titulo'));
         $this->assertNotContains('Control de embarazo', array_column($items, 'titulo'));
 
-        // Trece con pantalla: sólo falta la pre-factura.
-        $this->assertSame(13, SeccionesDeLaConsulta::disponibles('pediatria'));
+        // Los catorce con pantalla desde F9 (la pre-factura).
+        $this->assertSame(14, SeccionesDeLaConsulta::disponibles('pediatria'));
     }
 
     public function test_el_panel_de_nefrologia_es_el_item_cinco_y_solo_con_ese_postgrado(): void
@@ -87,8 +87,8 @@ class SeccionesPediatricasTest extends TestCase
         $this->assertCount(1, $activos);
         $this->assertSame('Inmunizaciones', $activos[0]['texto']);
 
-        // La pre-factura no tiene pantalla: sin enlace y deshabilitada.
-        $this->assertNull($items[13]['url']);
-        $this->assertTrue($items[13]['deshabilitado']);
+        // La pre-factura (F9) enlaza a su sección.
+        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'prefactura']), $items[13]['url']);
+        $this->assertFalse($items[13]['deshabilitado']);
     }
 }
