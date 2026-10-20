@@ -19,13 +19,30 @@ class CambiarPasswordWebController extends Controller
 {
     public function formulario(Request $request)
     {
-        return view('auth.cambiar-password', ['obligatorio' => (bool) $request->user()->must_change_password]);
+        return view('auth.cambiar-password', [
+            'obligatorio'     => (bool) $request->user()->must_change_password,
+            'pideClaveActual' => ! $this->recienVerificada($request),
+        ]);
+    }
+
+    /**
+     * La clave es temporal y esta sesión nació de un login con ella (`CustomLoginController`): la persona
+     * acaba de escribirla, así que no se le vuelve a pedir. Un acceso por «recordarme» no la trae.
+     */
+    private function recienVerificada(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user->must_change_password
+            && $request->session()->get(CuentaService::SESION_CLAVE_TEMPORAL) === $user->id;
     }
 
     public function actualizar(Request $request, CuentaService $cuentas)
     {
+        $exento = $this->recienVerificada($request);
+
         $datos = $request->validate([
-            'password_actual' => ['required', 'string'],
+            'password_actual' => $exento ? ['nullable', 'string'] : ['required', 'string'],
             'password_nueva'  => ['required', 'string', 'confirmed', 'min:' . CuentaService::LARGO_MINIMO_CLAVE],
         ], [
             'password_nueva.confirmed' => 'La confirmación no coincide con la contraseña nueva.',
@@ -34,14 +51,15 @@ class CambiarPasswordWebController extends Controller
 
         $user = $request->user();
 
-        if (! Hash::check($datos['password_actual'], $user->password)) {
+        if (! $exento && ! Hash::check($datos['password_actual'], $user->password)) {
             throw ValidationException::withMessages(['password_actual' => 'La contraseña actual no es correcta.']);
         }
-        if ($datos['password_actual'] === $datos['password_nueva']) {
+        if (Hash::check($datos['password_nueva'], $user->password)) {
             throw ValidationException::withMessages(['password_nueva' => 'La contraseña nueva debe ser distinta de la actual.']);
         }
 
         $cuentas->cambiarClave($user, $datos['password_nueva']);
+        $request->session()->forget(CuentaService::SESION_CLAVE_TEMPORAL);
 
         // Se vuelve al área del usuario, la misma a la que entra al iniciar sesión: un médico con clave
         // temporal tiene que terminar en el consultorio, no en el panel de administración. Si la cuenta

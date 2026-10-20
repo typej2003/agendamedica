@@ -29,9 +29,11 @@ class MedicoDashboard extends Component
                         ?? $medico->reg_medico 
                         ?? null;
 
-            // 2. Obtener IDs de pacientes asociados al médico
+            // 2. Obtener IDs de pacientes asociados al consultorio. El vínculo `medico_pacientes` es del
+            //    **tenant** (`(reg_medico, paciente_id)`, migración del 2026-10-20), así que se lee por
+            //    `reg_medico` —el mismo criterio con el que se cuentan las citas— y no por `medico_id`.
             $pacientesIds = DB::table('medico_pacientes')
-                ->where('medico_id', $medico->id)
+                ->where('reg_medico', $regMedico)
                 ->pluck('paciente_id')
                 ->toArray();
 

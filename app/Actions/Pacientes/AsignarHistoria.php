@@ -13,34 +13,42 @@ use InvalidArgumentException;
 
 /**
  * **Llenar la historia** de un paciente que ya está dado de alta sin número: le asigna el
- * `numhistoria` del médico y deja la ficha lista para atender.
+ * `numhistoria` de su consultorio y deja la ficha lista para atender.
  *
- * Es la regla **"el número lo asigna el servidor, con el correlativo del médico"** (wiki
+ * Es la regla **"el número lo asigna el servidor, con el correlativo del consultorio"** (wiki
  * `04-historia-clinica.md`: "No se atiende sin historia") y vive **acá y en un solo lugar**, como las
- * Actions de agenda (PLAN-WEB.md, R3). La usan las dos superficies:
+ * Actions de agenda (PLAN-WEB.md, R3). La usan las superficies:
  *
  *  - el **sync del móvil**, cuando un teléfono manda la creación de `historias` al atender
  *    (`App\Sync\CreacionesClinicas`), y
  *  - la **web**, con la acción "Pasar a cita formal" del panel "Pacientes sin historia" de la agenda
- *    (WEB-2.11). El rótulo del escritorio está sobre un botón muerto (`w_hacer_cita.srw:801-805`);
- *    la acción real es la de `w_pasar_pacientes_n_reg_consulta_cita.srw`, que asigna un número nuevo
- *    (`:161-176`, la última del `DataWindow` + 1) y recién después enlaza la cita — eso es lo que se
- *    porta, sobre el modelo de AppDDR en vez de `paciente_no_regi` (decisión del 2026-10-10).
+ *    (WEB-2.11) y con el alta de la ficha, que numera en el mismo paso (O-04). El rótulo del escritorio
+ *    está sobre un botón muerto (`w_hacer_cita.srw:801-805`); la acción real es la de
+ *    `w_pasar_pacientes_n_reg_consulta_cita.srw`, que asigna un número nuevo (`:161-176`, la última del
+ *    `DataWindow` + 1) y recién después enlaza la cita — eso es lo que se porta, sobre el modelo de
+ *    AppDDR en vez de `paciente_no_regi` (decisión del 2026-10-10).
  *
- * Cinco cosas que no son obvias y **son** la regla:
+ * Seis cosas que no son obvias y **son** la regla:
  *
- *  - **El número es el correlativo del médico**: la última de `historias` **más** las del pivote
- *    `medico_pacientes`, comparando como entero (la columna guarda texto), y + 1. La unicidad del
- *    esquema es `(reg_medico, numhistoria)`, así que dos caminos pueden calcular el mismo número: el
- *    que pierde **reintenta** con el siguiente en vez de romper.
- *  - **Es idempotente**: si el paciente ya tiene historia, devuelve la que tiene y no numera otra vez.
- *    Con eso el reintento del sync y el doble clic de la web terminan en el mismo lugar.
+ *  - **El vínculo se busca por paciente + consultorio**, no por médico. Desde la Fase 1 del cambio de
+ *    `reg_medico` el vínculo (`medico_pacientes`) es del **tenant**: una sola fila por
+ *    `(reg_medico, paciente_id)`, aunque el `medico_id` sea el de otro doctor o el del centro. Preguntar
+ *    por `medico_id` dejaría afuera al paciente que vinculó otro doctor del mismo consultorio.
+ *  - **El número es el correlativo del consultorio**, no el de todos los registros del médico: la última
+ *    de `historias` de ese `reg_medico` **más** las del pivote del mismo `reg_medico`, comparando como
+ *    entero (la columna guarda texto), y + 1. La unicidad del esquema es `(reg_medico, numhistoria)`, así
+ *    que dos caminos pueden calcular el mismo número: el que pierde **reintenta** con el siguiente en
+ *    vez de romper. Por eso un paciente del mismo doctor en otro consultorio **no** corre este
+ *    correlativo.
+ *  - **Es idempotente**: si el paciente ya tiene historia **en este consultorio**, devuelve la que tiene
+ *    y no numera otra vez. Con eso el reintento del sync y el doble clic de la web terminan en el mismo
+ *    lugar.
  *  - **La cita sigue siendo la misma fila**: las de `cola` que estaban ancladas al paciente por
- *    `paciente_sinhistoria_id` y sin número pasan a llevarlo. La agenda y el sync leen
- *    `cola.numhistoria`, así que esa columna es lo que hace que la cita pase a ser "formal" sin
+ *    `paciente_sinhistoria_id` y sin número **de este consultorio** pasan a llevarlo. La agenda y el sync
+ *    leen `cola.numhistoria`, así que esa columna es lo que hace que la cita pase a ser "formal" sin
  *    duplicarla ni reinsertarla.
  *  - **El `reg_medico` sale del vínculo del paciente**, nunca de un formulario: es el tenant, y una
- *    superficie no lo elige. Si el vínculo no lo tiene, cae al principal del médico.
+ *    superficie no lo elige (por eso llega como parámetro y no lo busca el formulario).
  *  - **El número puede estar ya en el vínculo sin la fila de `historias`** (una pantalla o un script que
  *    escribió sólo el pivote: trampa 143). Ese número es el que la ficha, la agenda y las citas muestran,
  *    así que se **registra con él** en `historias` en vez de numerar otro: numerar otro dejaría las citas
@@ -54,19 +62,19 @@ final class AsignarHistoria
     private const INTENTOS = 3;
 
     /**
-     * @param  Medico  $medico  el médico con el que el paciente está vinculado
-     * @param  array<int,string>  $registrosMedicos  todos sus `reg_medico`, para leer el correlativo
-     *                             completo (el suyo y los que tenga asignados)
+     * @param  Medico  $medico  el médico **del contexto**: es el que queda en `historias.medico_id`
+     * @param  string  $regMedico  el consultorio (tenant) del vínculo: de él sale el correlativo y es el
+     *                            `reg_medico` de la historia nueva
      * @param  int  $pacienteId  `pacientes.id` de la cita que se quiere pasar a formal — el que la
      *                           cita ancla en `cola.paciente_sinhistoria_id`
      *
-     * @throws InvalidArgumentException si ese paciente no es de este médico
+     * @throws InvalidArgumentException si ese paciente no está vinculado a este consultorio
      */
-    public function ejecutar(Medico $medico, array $registrosMedicos, int $pacienteId): Historia
+    public function ejecutar(Medico $medico, string $regMedico, int $pacienteId): Historia
     {
-        // Sin el vínculo no se numera: el número es **de este médico**, y un paciente de otro
-        // consultorio no se toca (la web responde 404 con esto mismo).
-        $relacion = MedicoPaciente::where('medico_id', $medico->id)
+        // Sin el vínculo no se numera: el número es **de este consultorio**, y un paciente de otro no se
+        // toca (la web responde 404 con esto mismo).
+        $relacion = MedicoPaciente::where('reg_medico', $regMedico)
             ->where('paciente_id', $pacienteId)
             ->first();
 
@@ -74,30 +82,28 @@ final class AsignarHistoria
             throw new InvalidArgumentException('Ese paciente no es de este médico.');
         }
 
-        $yaTiene = $this->historiaDe($medico, (int) $relacion->paciente_id);
+        $yaTiene = $this->historiaDe($regMedico, (int) $relacion->paciente_id);
         if ($yaTiene !== null) {
             return $yaTiene;
         }
-
-        $regMedico = $relacion->reg_medico ?: $medico->regMedicoPrincipal();
 
         // Dos teléfonos (o el escritorio) llenando historias a la vez pueden calcular el mismo número:
         // la unicidad `(reg_medico, numhistoria)` hace que uno falle, y ese reintenta con el siguiente.
         for ($intento = 0; ; $intento++) {
             try {
-                return DB::transaction(function () use ($relacion, $regMedico, $medico, $registrosMedicos) {
+                return DB::transaction(function () use ($relacion, $regMedico, $medico) {
                     $historia = $this->laQueElVinculoYaTiene($relacion, $regMedico);
 
                     if ($historia === null) {
                         // Número nuevo: el correlativo del consultorio.
                         $historia = new Historia([
-                            'numhistoria' => (string) $this->siguienteNumero($medico, $registrosMedicos),
+                            'numhistoria' => (string) $this->siguienteNumero($regMedico),
                             'reg_medico'  => $regMedico,
                             'paciente_id' => $relacion->paciente_id,
                         ]);
                     }
 
-                    // La fila —nueva o adoptada— queda del médico del vínculo.
+                    // La fila —nueva o adoptada— queda del médico del contexto.
                     $historia->medico_id = $medico->id;
                     $historia->save();
 
@@ -108,10 +114,11 @@ final class AsignarHistoria
                     $relacion->numhistoria = (string) $historia->numhistoria;
                     $relacion->save();
 
-                    // La cita "sin historia" se enlaza a la historia nueva sin cambiar de fila: es la
-                    // misma cita, y lo que el escritorio y la agenda leen para saber que ya es formal.
+                    // La cita "sin historia" **del mismo consultorio** se enlaza a la historia nueva sin
+                    // cambiar de fila: es la misma cita, y es lo que el escritorio y la agenda leen para
+                    // saber que ya es formal. La de otro consultorio es otra historia y no se toca.
                     Cola::where('paciente_sinhistoria_id', $relacion->paciente_id)
-                        ->whereIn('reg_medico', $registrosMedicos)
+                        ->where('reg_medico', $regMedico)
                         ->whereNull('numhistoria')
                         ->update(['numhistoria' => $numero]);
 
@@ -166,30 +173,38 @@ final class AsignarHistoria
     }
 
     /**
-     * El correlativo vigente del médico: la última de `historias` **más** las del pivote, + 1.
+     * El correlativo vigente del **consultorio**: la última de `historias` de ese `reg_medico` **más** las
+     * del pivote del mismo `reg_medico`, + 1.
      *
      * Las dos vías son necesarias porque el legado deja la historia en las dos: `historias` es la que
-     * llena el sync (y el escritorio, que sube pacientes) y `medico_pacientes.numhistoria` es el
-     * vínculo por médico. El número se guarda como texto, así que se compara como entero en PHP —
+     * llena el sync (y el escritorio, que sube pacientes) y `medico_pacientes.numhistoria` es el número
+     * que muestra la ficha. El número se guarda como texto, así que se compara como entero en PHP —
      * `max()` sobre texto ordenaría "9" después de "10".
      *
-     * @param  array<int,string>  $registrosMedicos
+     * No mira los demás registros del médico: el paciente de otro consultorio es **otra historia**, con
+     * su propio correlativo (Fase 1 del cambio de `reg_medico`).
      */
-    public function siguienteNumero(Medico $medico, array $registrosMedicos): int
+    public function siguienteNumero(string $regMedico): int
     {
-        $numeros = Historia::whereIn('reg_medico', $registrosMedicos)->pluck('numhistoria')
-            ->merge(MedicoPaciente::where('medico_id', $medico->id)->pluck('numhistoria'))
+        $numeros = Historia::where('reg_medico', $regMedico)->pluck('numhistoria')
+            ->merge(MedicoPaciente::where('reg_medico', $regMedico)->pluck('numhistoria'))
             ->filter(fn ($n) => $n !== null && is_numeric($n))
             ->map(fn ($n) => (int) $n);
 
         return ((int) $numeros->max()) + 1;
     }
 
-    /** La historia que el paciente **ya tiene** con este médico, o `null` si todavía no tiene ninguna. */
-    private function historiaDe(Medico $medico, int $pacienteId): ?Historia
+    /**
+     * La historia que el paciente **ya tiene en este consultorio**, o `null` si todavía no tiene ninguna.
+     *
+     * Se busca por el tenant y el paciente, no por `medico_id`: la historia es del consultorio y el
+     * `medico_id` es sólo el doctor que la registró (puede haberlo hecho otro doctor del mismo centro).
+     */
+    private function historiaDe(string $regMedico, int $pacienteId): ?Historia
     {
-        return Historia::where('paciente_id', $pacienteId)
-            ->where('medico_id', $medico->id)
+        return Historia::where('reg_medico', $regMedico)
+            ->where('paciente_id', $pacienteId)
+            ->orderBy('id')
             ->first();
     }
 }

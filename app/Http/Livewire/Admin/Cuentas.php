@@ -340,8 +340,10 @@ class Cuentas extends Component
     {
         $this->ejecutar(function () use ($cuentas) {
             $this->avisoRegistros = null;
-            $vinculados = $cuentas->asignarRegistro(Medico::findOrFail($this->medicoId), (string) $this->regNuevo);
-            $this->avisoRegistros = "Registro {$this->regNuevo} asignado: {$vinculados} pacientes vinculados.";
+            // **No copia pacientes**: el vínculo es del consultorio y el médico los ve por el `reg_medico`
+            // que acaba de recibir (Fase 1 del cambio de `reg_medico`).
+            $cuentas->asignarRegistro(Medico::findOrFail($this->medicoId), (string) $this->regNuevo);
+            $this->avisoRegistros = "Registro {$this->regNuevo} asignado: el médico ve sus pacientes y su agenda.";
             $this->regNuevo = '';
         });
     }

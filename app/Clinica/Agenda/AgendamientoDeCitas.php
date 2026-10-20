@@ -54,9 +54,11 @@ class AgendamientoDeCitas
      * existe: se agenda directo (WEB-2.17).
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
-     * @param  array<int,string>  $registrosMedicos  los `reg_medico` del médico: los necesita el número de
-     *                                               historia que se le asigna al paciente del alta rápida
-     *                                               (O-04), para que el correlativo sea el mismo de siempre
+     * @param  array<int,string>  $registrosMedicos  los `reg_medico` del médico. **Ya no decide el número de
+     *                                               historia**: desde la Fase 1 del cambio de `reg_medico` el
+     *                                               correlativo es el del **consultorio de la cita**
+     *                                               (`$contexto['reg_medico']`). Se conserva en la firma porque
+     *                                               es la que comparten el mostrador, el portal y el móvil.
      * @param  array{numerar_historia?: bool, estado?: int}  $opciones
      *                                               El portal público de reservas (2026-10-19) agenda sin
      *                                               numerar la historia —el número lo asigna el consultorio
@@ -117,7 +119,8 @@ class AgendamientoDeCitas
             // `CrearPaciente` sin contexto, siguen sin número. El portal público tampoco numera: la cita
             // queda anclada por `paciente_sinhistoria_id` y el consultorio numera cuando el paciente llega.
             if ($numerarHistoria) {
-                $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $registrosMedicos, (int) $paciente->getKey());
+                // El número es **del consultorio de la cita** (`$regMedico`), que es el tenant del vínculo.
+                $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $regMedico, (int) $paciente->getKey());
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
             } else {
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => null];

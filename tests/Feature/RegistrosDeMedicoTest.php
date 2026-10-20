@@ -19,9 +19,10 @@ use Tests\TestCase;
  * Registros de datos (`reg_medico`) de un médico: un administrador le asigna o le quita acceso a los datos de otro
  * registro desde "Usuarios" → menú de 3 puntos → "Registros de datos".
  *
- * Lo que fijan: asignar suma la fila de `medico_registros` Y vincula los pacientes (el sync lee por las dos);
- * quitar deshace solo eso y no borra ningún dato; el registro propio no se quita; y el sync del médico que lo
- * recibió devuelve de verdad los pacientes del otro registro.
+ * Lo que fijan: asignar **sólo** suma la fila de `medico_registros` —el vínculo paciente ↔ consultorio NO se
+ * copia, porque es del tenant (Fase 1 del cambio de `reg_medico`)— y el médico igual ve los pacientes del
+ * registro por el `reg_medico`; quitar deshace sólo el acceso y no borra ningún dato; el registro propio no se
+ * quita; y el sync del médico que lo recibió devuelve de verdad los pacientes del otro registro.
  */
 class RegistrosDeMedicoTest extends TestCase
 {
@@ -61,21 +62,21 @@ class RegistrosDeMedicoTest extends TestCase
         return $r;
     }
 
-    public function test_asignar_suma_el_registro_y_vincula_los_pacientes(): void
+    public function test_asignar_suma_el_registro_y_no_copia_los_pacientes(): void
     {
         $real = $this->medico('real', true);
         $temporal = $this->medico('temporal');
 
-        $vinculados = $this->cuentas->asignarRegistro($temporal['medico'], $real['medico']->reg_medico);
+        $this->cuentas->asignarRegistro($temporal['medico'], $real['medico']->reg_medico);
 
-        $this->assertSame(1, $vinculados);
         $this->assertSame([$temporal['medico']->reg_medico, $real['medico']->reg_medico], $this->cuentas->registrosDe($temporal['medico']));
-        $this->assertTrue(
-            MedicoPaciente::where('medico_id', $temporal['medico']->id)->where('paciente_id', $real['paciente']->id)
-                ->where('reg_medico', $real['medico']->reg_medico)->exists()
-        );
-        // Lo del médico real queda intacto.
-        $this->assertSame(1, MedicoPaciente::where('medico_id', $real['medico']->id)->count());
+
+        // **El vínculo no se copia**: es del consultorio (`(reg_medico, paciente_id)`), no del médico. El
+        // paciente sigue teniendo una sola fila, con el `medico_id` del médico que lo vinculó.
+        $this->assertSame(0, MedicoPaciente::where('medico_id', $temporal['medico']->id)->count());
+        $this->assertSame(1, MedicoPaciente::where('reg_medico', $real['medico']->reg_medico)->count());
+        $this->assertSame($real['medico']->id, (int) MedicoPaciente::where('reg_medico', $real['medico']->reg_medico)
+            ->where('paciente_id', $real['paciente']->id)->value('medico_id'));
     }
 
     public function test_quitar_deshace_solo_el_acceso_y_no_borra_datos(): void
@@ -87,7 +88,9 @@ class RegistrosDeMedicoTest extends TestCase
         $this->cuentas->quitarRegistro($temporal['medico'], $real['medico']->reg_medico);
 
         $this->assertSame([$temporal['medico']->reg_medico], $this->cuentas->registrosDe($temporal['medico']));
-        $this->assertFalse(MedicoPaciente::where('medico_id', $temporal['medico']->id)->where('paciente_id', $real['paciente']->id)->exists());
+        // **No se borran filas del pivote**: el vínculo es del consultorio, no del médico que tenía el acceso.
+        $this->assertTrue(MedicoPaciente::where('reg_medico', $real['medico']->reg_medico)
+            ->where('paciente_id', $real['paciente']->id)->exists());
         // Su paciente propio y todo lo del médico real siguen ahí.
         $this->assertTrue(MedicoPaciente::where('medico_id', $temporal['medico']->id)->where('paciente_id', $temporal['paciente']->id)->exists());
         $this->assertNotNull(Paciente::find($real['paciente']->id));
@@ -164,7 +167,7 @@ class RegistrosDeMedicoTest extends TestCase
             ->set('regNuevo', $real['medico']->reg_medico)
             ->call('asignarRegistro')
             ->assertHasNoErrors()
-            ->assertSet('avisoRegistros', "Registro {$real['medico']->reg_medico} asignado: 1 pacientes vinculados.")
+            ->assertSet('avisoRegistros', "Registro {$real['medico']->reg_medico} asignado: el médico ve sus pacientes y su agenda.")
             ->call('quitarRegistro', $real['medico']->reg_medico)
             ->assertHasNoErrors()
             ->call('quitarRegistro', $temporal['medico']->reg_medico)    // el propio: error visible, no excepción

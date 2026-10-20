@@ -144,8 +144,10 @@ class AppAgendaMedicaController extends Controller
 
                     $registrosMedicos = array_values(array_unique($registrosMedicos));
 
-                    // Buscar las relaciones pivote asociadas al medico_id
-                    $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+                    // El vínculo `medico_pacientes` es del **consultorio** (una fila por `(reg_medico,
+                    // paciente_id)`, migración del 2026-10-20): los pacientes se leen por los registros que
+                    // trabaja el médico y no por las filas que él mismo vinculó.
+                    $relaciones = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)->get();
                     
                     $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
                     $historias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();

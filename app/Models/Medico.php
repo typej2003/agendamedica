@@ -31,6 +31,15 @@ class Medico extends Model
         'consultation_fee',
         'is_active',
         'reg_medico', // temporal, tiende a cambiar no usar
+        // El médico que en realidad es un **centro**: sus filas del pivote `medico_pacientes` son del
+        // centro y no de un doctor. Columnas nuevas de la migración del 2026-10-20, para las fases
+        // siguientes (el contexto doctor/centro y el formato configurable).
+        'es_centro',
+        'formato_reportes',
+    ];
+
+    protected $casts = [
+        'es_centro' => 'boolean',
     ];
 
     /** Al crearse un médico (por cualquier camino) recibe su mes de prueba: ver App\Listeners\OtorgarServicioDePrueba. */

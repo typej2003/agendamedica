@@ -271,7 +271,9 @@ class PacienteController extends Controller
         $yaTenia = $pacienteDeLaCita->historia((int) $vinculo->paciente_id, $registros) !== null;
 
         try {
-            $historia = $accion->ejecutar($contexto['medico'], $registros, (int) $vinculo->paciente_id);
+            // El número es **del consultorio del contexto** (el tenant del vínculo), no de todos los
+            // registros del médico: el paciente de otro consultorio del mismo doctor es otra historia.
+            $historia = $accion->ejecutar($contexto['medico'], $contexto['reg_medico'], (int) $vinculo->paciente_id);
         } catch (InvalidArgumentException $excepcion) {
             return redirect()
                 ->route('clinica.pacientes.ver', $paciente)
@@ -509,7 +511,7 @@ class PacienteController extends Controller
         $historia = $ficha === null
             ? app(AsignarHistoria::class)->ejecutar(
                 $contexto['medico'],
-                $this->registrosDelMedico($contexto['medico']),
+                $contexto['reg_medico'],
                 (int) $paciente->getKey(),
             )
             : null;

@@ -243,7 +243,9 @@ class CambiosEscritorio
             return 'omitido'; // el app lo editó después: gana la edición
         }
 
-        MedicoPaciente::where('medico_id', $carga->medico_id)->where('paciente_id', $historia->paciente_id)->delete();
+        // El vínculo es del **consultorio** (`reg_medico`): se borra el de este registro, no el de otro
+        // consultorio donde el mismo paciente también esté vinculado (migración del 2026-10-20).
+        MedicoPaciente::where('reg_medico', $carga->reg_medico)->where('paciente_id', $historia->paciente_id)->delete();
         SyncChange::create([
             'reg_medico'  => $carga->reg_medico,
             'table_name'  => 'pacientes',
@@ -257,18 +259,18 @@ class CambiosEscritorio
         return 'aplicado';
     }
 
-    /** El mismo número del escritorio si está libre en el API para este médico; si no, el siguiente. */
+    /** El mismo número del escritorio si está libre en el API para este consultorio; si no, el siguiente. */
     private function numeroHistoriaLibre(SyncCarga $carga, $local): string
     {
         $local = (int) $local;
         $ocupado = Historia::where('reg_medico', $carga->reg_medico)->where('numhistoria', (string) $local)->exists()
-            || MedicoPaciente::where('medico_id', $carga->medico_id)->where('numhistoria', (string) $local)->exists();
+            || MedicoPaciente::where('reg_medico', $carga->reg_medico)->where('numhistoria', (string) $local)->exists();
         if (! $ocupado) {
             return (string) $local;
         }
 
         $maximo = Historia::where('reg_medico', $carga->reg_medico)->pluck('numhistoria')
-            ->merge(MedicoPaciente::where('medico_id', $carga->medico_id)->pluck('numhistoria'))
+            ->merge(MedicoPaciente::where('reg_medico', $carga->reg_medico)->pluck('numhistoria'))
             ->map(fn ($n) => (int) $n)
             ->max();
 

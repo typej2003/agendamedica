@@ -299,14 +299,17 @@ class DaySchedule extends Component
             'medico'      => $this->medicoId,
         ]);
 
-        // Registrar relación en MedicoPaciente
-        MedicoPaciente::firstOrCreate([
-            'medico_id'   => $this->medicoId,
-            'paciente_id' => $user->id,
-        ], [
-            'numhistoria' => $numHistoriaUser,
-            'reg_medico'  => $this->regMedico,
-        ]);
+        // Registrar el **vínculo del consultorio** (`(reg_medico, paciente_id)`, migración del 2026-10-20).
+        // Sin paciente no hay a quién vincular: el `paciente_id` del pivote tiene que existir en `pacientes`.
+        if ($paciente) {
+            MedicoPaciente::firstOrCreate([
+                'reg_medico'  => $this->regMedico,
+                'paciente_id' => $paciente->id,
+            ], [
+                'medico_id'   => $this->medicoId,
+                'numhistoria' => $numHistoriaUser === '' ? null : $numHistoriaUser,
+            ]);
+        }
 
         session()->flash('message', '¡Cita agendada exitosamente!');
         $this->cargarAgenda();

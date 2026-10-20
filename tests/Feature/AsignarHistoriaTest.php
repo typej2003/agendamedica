@@ -17,11 +17,15 @@ use Tests\TestCase;
  * La Action que **llena la historia** de un paciente dado de alta sin número (WEB-2.11).
  *
  * Es la regla que antes vivía adentro del sync del móvil (`CreacionesClinicas::crearHistoria()`): el
- * correlativo del médico, la idempotencia y el enlace de las citas que estaban "sin historia". Acá se
+ * correlativo del consultorio, la idempotencia y el enlace de las citas que estaban "sin historia". Acá se
  * prueba sola, que es justamente lo que la extracción buscaba — los tests del sync
  * (`tests/Feature/CreacionesClinicasTest.php`) siguen cubriendo el camino del teléfono **sin tocarse**.
  *
- * Necesita base de datos (escribe historias, el pivote y citas), así que va en `Feature` con
+ * Desde la Fase 1 del cambio de `reg_medico` el número es **del consultorio (tenant)** y no del médico:
+ * el vínculo es uno por `(reg_medico, paciente_id)`, el correlativo mira sólo ese registro y la cita que
+ * se enlaza es la de ese registro. Eso es lo que fijan los dos últimos tests.
+ *
+ * Necesita base de datos (escribe historias, el vínculo y citas), así que va en `Feature` con
  * `DatabaseTransactions`, como el resto de la web clínica, y no en `Unit/Clinica/` como los ViewModels.
  */
 class AsignarHistoriaTest extends TestCase
@@ -44,17 +48,11 @@ class AsignarHistoriaTest extends TestCase
         return $medico;
     }
 
-    /** @return array<int,string> los registros del médico, como los resuelven el sync y la web */
-    private function registros(Medico $medico): array
-    {
-        return array_values(array_unique(array_filter(
-            MedicoRegistro::where('medico_id', $medico->id)->pluck('reg_medico')->all()
-        )));
-    }
-
     /** Un paciente vinculado al médico, con historia (`$numhistoria`) o sin ella. */
-    private function paciente(Medico $medico, ?int $numhistoria = null): Paciente
+    private function paciente(Medico $medico, ?int $numhistoria = null, ?string $regMedico = null): Paciente
     {
+        $regMedico = $regMedico ?? $medico->reg_medico;
+
         $paciente = Paciente::create([
             'cedula'    => (string) random_int(10000000, 99999999),
             'nombres'   => 'Paciente',
@@ -64,14 +62,14 @@ class AsignarHistoriaTest extends TestCase
         MedicoPaciente::create([
             'medico_id'   => $medico->id,
             'paciente_id' => $paciente->id,
-            'reg_medico'  => $medico->reg_medico,
+            'reg_medico'  => $regMedico,
             'numhistoria' => $numhistoria === null ? null : (string) $numhistoria,
         ]);
 
         if ($numhistoria !== null) {
             Historia::create([
                 'numhistoria' => (string) $numhistoria,
-                'reg_medico'  => $medico->reg_medico,
+                'reg_medico'  => $regMedico,
                 'paciente_id' => $paciente->id,
                 'medico_id'   => $medico->id,
             ]);
@@ -92,7 +90,7 @@ class AsignarHistoriaTest extends TestCase
             'paciente_sinhistoria_id' => $nuevo->id,
         ]);
 
-        $historia = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $nuevo->id);
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $nuevo->id);
 
         // La última (4) + 1, guardada como texto como en el legado.
         $this->assertSame('5', $historia->numhistoria);
@@ -118,8 +116,8 @@ class AsignarHistoriaTest extends TestCase
         $nuevo = $this->paciente($medico);
 
         // "10" > "9" solo si se compara como entero: con texto, `max()` devolvería "9".
-        $this->assertSame(11, app(AsignarHistoria::class)->siguienteNumero($medico, $this->registros($medico)));
-        $this->assertSame(11, (int) app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $nuevo->id)->numhistoria);
+        $this->assertSame(11, app(AsignarHistoria::class)->siguienteNumero($medico->reg_medico));
+        $this->assertSame(11, (int) app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $nuevo->id)->numhistoria);
     }
 
     public function test_si_el_paciente_ya_tiene_historia_devuelve_la_suya_sin_numerar_de_nuevo(): void
@@ -129,14 +127,14 @@ class AsignarHistoriaTest extends TestCase
         $otro = $this->paciente($medico);
 
         $accion = app(AsignarHistoria::class);
-        $historia = $accion->ejecutar($medico, $this->registros($medico), $paciente->id);
+        $historia = $accion->ejecutar($medico, $medico->reg_medico, $paciente->id);
 
         // Idempotente: la que tenía, y ninguna fila nueva.
         $this->assertSame(12, (int) $historia->numhistoria);
         $this->assertSame(1, Historia::where('paciente_id', $paciente->id)->count());
 
         // Y el doble clic sobre el mismo paciente tampoco numera dos veces.
-        $repetida = $accion->ejecutar($medico, $this->registros($medico), $paciente->id);
+        $repetida = $accion->ejecutar($medico, $medico->reg_medico, $paciente->id);
         $this->assertSame($historia->id, $repetida->id);
         $this->assertSame(1, Historia::where('paciente_id', $paciente->id)->count());
 
@@ -165,7 +163,7 @@ class AsignarHistoriaTest extends TestCase
             'paciente_sinhistoria_id' => $paciente->id,
         ]);
 
-        $historia = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $paciente->id);
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $paciente->id);
 
         // La historia es la 7001, del paciente y del médico: no se inventó un correlativo (habría sido 1).
         $this->assertSame('7001', $historia->numhistoria);
@@ -180,7 +178,7 @@ class AsignarHistoriaTest extends TestCase
         $this->assertSame(7001, (int) $anclada->fresh()->numhistoria);
 
         // Y la segunda vez devuelve esa misma fila: no numera de nuevo.
-        $repetida = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $paciente->id);
+        $repetida = app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $paciente->id);
         $this->assertSame($historia->id, $repetida->id);
         $this->assertSame(1, Historia::where('paciente_id', $paciente->id)->count());
     }
@@ -193,7 +191,7 @@ class AsignarHistoriaTest extends TestCase
         // Dos vínculos con el mismo número (dato roto): la historia 7001 ya es de otro paciente.
         MedicoPaciente::where('paciente_id', $otro->id)->update(['numhistoria' => '7001']);
 
-        $historia = app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $otro->id);
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $otro->id);
 
         // Al otro no se le quita la historia: se numera el siguiente del consultorio.
         $this->assertSame('7002', $historia->numhistoria);
@@ -209,7 +207,7 @@ class AsignarHistoriaTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Ese paciente no es de este médico.');
 
-        app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $ajeno->id);
+        app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $ajeno->id);
     }
 
     public function test_no_toca_las_citas_sin_numero_de_otro_registro(): void
@@ -235,9 +233,73 @@ class AsignarHistoriaTest extends TestCase
             'paciente_sinhistoria_id' => $paciente->id,
         ]);
 
-        app(AsignarHistoria::class)->ejecutar($medico, $this->registros($medico), $paciente->id);
+        app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $paciente->id);
 
         $this->assertSame(1, (int) $propia->fresh()->numhistoria);
         $this->assertNull($ajena->fresh()->numhistoria, 'la cita del otro registro no se toca');
+    }
+
+    /**
+     * **El número es del consultorio, no de todos los registros del médico** (Fase 1 del cambio de
+     * `reg_medico`): el paciente de su otro consultorio es otra historia, con su propio correlativo, y no
+     * corre el número de éste.
+     */
+    public function test_el_correlativo_es_del_consultorio_y_no_de_los_otros_registros_del_medico(): void
+    {
+        $otroRegistro = 'test-ah-otro-' . substr(uniqid(), -6);
+        $medico = $this->medico([$otroRegistro]);
+
+        // En el consultorio propio hay una historia con el 40; en el otro registro, una con el 900.
+        $this->paciente($medico, 40);
+        $this->paciente($medico, 900, $otroRegistro);
+
+        // El paciente sin historia del consultorio propio recibe la 41, no la 901.
+        $nuevo = $this->paciente($medico);
+        $this->assertSame(41, (int) app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $nuevo->id)->numhistoria);
+
+        // Y el del otro registro recibe la 901: cada consultorio numera lo suyo.
+        $ajeno = $this->paciente($medico, null, $otroRegistro);
+        $this->assertSame(901, (int) app(AsignarHistoria::class)->ejecutar($medico, $otroRegistro, $ajeno->id)->numhistoria);
+
+        $this->assertSame(41, (int) Historia::where('reg_medico', $medico->reg_medico)->where('paciente_id', $nuevo->id)->value('numhistoria'));
+        $this->assertSame(901, (int) Historia::where('reg_medico', $otroRegistro)->where('paciente_id', $ajeno->id)->value('numhistoria'));
+    }
+
+    /**
+     * **El vínculo se busca por paciente + consultorio, no por médico**: el que lo creó pudo ser otro
+     * doctor del mismo centro o el centro mismo, y el paciente igual se numera.
+     */
+    public function test_numera_aunque_el_vinculo_lo_haya_creado_otro_medico_del_consultorio(): void
+    {
+        $medico = $this->medico();
+        $centro = Medico::create([
+            'name'       => 'Centro',
+            'lastname'   => 'Del Consultorio',
+            'reg_medico' => 'test-ah-centro-' . substr(uniqid(), -6),
+            'es_centro'  => true,
+        ]);
+
+        $paciente = Paciente::create([
+            'cedula'    => (string) random_int(10000000, 99999999),
+            'nombres'   => 'Paciente',
+            'apellidos' => 'Del Centro',
+        ]);
+
+        // El vínculo es del consultorio, pero el `medico_id` es el del **centro**.
+        MedicoPaciente::create([
+            'medico_id'   => $centro->id,
+            'paciente_id' => $paciente->id,
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => null,
+        ]);
+
+        $historia = app(AsignarHistoria::class)->ejecutar($medico, $medico->reg_medico, $paciente->id);
+
+        $this->assertSame('1', $historia->numhistoria);
+        $this->assertSame($medico->id, $historia->medico_id, 'la historia queda del médico del contexto');
+        $this->assertSame($medico->reg_medico, $historia->reg_medico);
+        $this->assertSame('1', MedicoPaciente::where('paciente_id', $paciente->id)->value('numhistoria'));
+        // El vínculo sigue siendo del centro: no se le cambia el `medico_id`.
+        $this->assertSame($centro->id, (int) MedicoPaciente::where('paciente_id', $paciente->id)->value('medico_id'));
     }
 }

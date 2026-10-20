@@ -61,16 +61,36 @@ class PacientesLegado
         }
 
         $paciente = $paciente ?? new Paciente();
+        $nuevo = ! $paciente->exists;
         $paciente->forceFill($datos);
+
+        // `pacientes.reg_medico` es el tenant del **primer** vínculo del paciente (migración del 2026-10-20):
+        // se completa al crear la ficha, nunca al actualizar una que ya era de otro consultorio.
+        if ($nuevo && trim((string) $paciente->reg_medico) === '') {
+            $paciente->reg_medico = $carga->reg_medico;
+        }
+
         $cambiadas = $paciente->exists ? array_diff_key($paciente->getDirty(), array_flip(['updated_at', 'created_at'])) : [];
         $paciente->save();
 
-        MedicoPaciente::updateOrCreate(
-            ['medico_id' => $carga->medico_id, 'paciente_id' => $paciente->id],
-            ['numhistoria' => $numHistoriaApi, 'reg_medico' => $carga->reg_medico]
-        );
+        // El vínculo es del **consultorio** (`(reg_medico, paciente_id)`, migración del 2026-10-20), no del
+        // médico. Si el paciente ya estaba vinculado a este registro —lo vinculó la web o el centro— se
+        // conserva su `medico_id` y sólo se refresca la copia del número que lee el app viejo.
+        $vinculo = MedicoPaciente::firstOrNew([
+            'reg_medico'  => $carga->reg_medico,
+            'paciente_id' => $paciente->id,
+        ]);
 
-        $historia = $historia ?? Historia::firstOrNew(['paciente_id' => $paciente->id, 'medico_id' => $carga->medico_id]);
+        if (! $vinculo->exists) {
+            $vinculo->medico_id = $carga->medico_id;
+        }
+
+        $vinculo->numhistoria = $numHistoriaApi;
+        $vinculo->save();
+
+        // La historia también es la del consultorio: se busca por `(reg_medico, paciente_id)`, no por el
+        // médico que la sube (el mismo paciente en dos consultorios tiene una historia en cada uno).
+        $historia = $historia ?? Historia::firstOrNew(['reg_medico' => $carga->reg_medico, 'paciente_id' => $paciente->id]);
         $historia->forceFill([
             'paciente_id'      => $paciente->id,
             'medico_id'        => $carga->medico_id,
