@@ -3616,7 +3616,30 @@ body.auth-pagina {
     scroll-margin: 5rem;
 }
 
-/* El globo: no tapa el elemento (el JS lo pone arriba o abajo), no bloquea la pantalla y a 375 px entra igual. */
+/* El velo del tour (2026-10-20): cubre toda la ventana, transparente, y se come los clics de la pantalla; el
+   gris lo pinta la sombra del `.tour-foco`, que deja un hueco claro sobre el elemento señalado. El scroll se
+   bloquea en `html.tour-activo`. Va por encima de todo (barra lateral, cajones, menús) y debajo del globo. */
+.tour-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 2070;
+    background: transparent;
+    cursor: default;
+}
+.tour-foco {
+    position: fixed;
+    z-index: 2071;
+    pointer-events: none;
+    border-radius: var(--ds-radio-sm);
+    box-shadow: 0 0 0 200vmax rgba(33, 37, 41, .5);
+    transition: left .15s ease, top .15s ease, width .15s ease, height .15s ease;
+}
+@media (prefers-reduced-motion: reduce) { .tour-foco { transition: none; } }
+.tour-velo[hidden], .tour-foco[hidden] { display: none; }
+html.tour-activo, html.tour-activo body { overflow: hidden; overscroll-behavior: none; }
+
+/* El globo: no tapa el elemento (el JS lo pone arriba o abajo) y a 375 px entra igual. Es modal: el velo de
+   arriba bloquea el resto de la pantalla. */
 .tour-globo {
     position: fixed;
     z-index: 2080;

@@ -9,8 +9,9 @@
       y alineado a la derecha. Vuelve a lanzar el tour aunque ya esté visto: no lo marca de nuevo hasta que se
       termine o se salte. **En la consulta no se pinta acá** (O-31): su encabezado es una sola fila y el botón
       va dentro, junto a Guardar y Terminar (`$tour->enElEncabezado()`); lo incluye `consulta/ver.blade.php`.
-    - los **pasos**, ocultos, y el **globo** donde se muestran. El globo es `role="dialog"` sin `aria-modal`:
-      no bloquea la pantalla (se puede cerrar con «Saltar», con `Esc` y con «Listo»).
+    - los **pasos**, ocultos, y el **globo** donde se muestran. El globo es un `role="dialog"` **modal**
+      (2026-10-20): el JS tiende un velo gris sobre la pantalla, atrapa el foco y bloquea el scroll; se cierra
+      con «Saltar», con «Listo» o con `Esc`.
 
     Lo pinta `clinica/layout` para todas las pantallas; el compositor `TourDeLaPantallaComposer` deja `$tour`
     en `null` cuando la ruta no tiene tour, así que acá no hay nada que decidir.
@@ -36,7 +37,7 @@
             @endforeach
         </div>
 
-        <div class="tour-globo" data-tour-globo role="dialog" aria-modal="false"
+        <div class="tour-globo" data-tour-globo role="dialog" aria-modal="true"
              aria-labelledby="tour-globo-titulo" aria-live="polite" tabindex="-1" hidden>
             <p class="tour-globo-cuenta" data-tour-cuenta></p>
             <h2 class="tour-globo-titulo" id="tour-globo-titulo" data-tour-titulo></h2>
