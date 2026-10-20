@@ -270,7 +270,9 @@
 })();
 
 // ---- El diálogo guiado de la puesta en marcha: se abre solo al cargar la pantalla (`data-abrir-al-cargar`).
+// Es **sólo ese diálogo**: los demás (nueva secretaria, medicamento, dosis…) declaran `data-abrir-al-cargar="0|1"` y los
+// abre el script de su pantalla. Buscar cualquier `dialog[data-abrir-al-cargar]` abría el primero aunque dijera «0».
 document.addEventListener('DOMContentLoaded', () => {
-    const guiado = document.querySelector('dialog[data-abrir-al-cargar]');
-    if (guiado && typeof guiado.showModal === 'function') guiado.showModal();
+    const guiado = document.querySelector('dialog#dialogo-paso-esencial[data-abrir-al-cargar]');
+    if (guiado && typeof guiado.showModal === 'function' && !guiado.open) guiado.showModal();
 });
