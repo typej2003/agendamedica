@@ -51,17 +51,18 @@
 
         <x-slot name="derecha">
             {{-- El filtro del catálogo: un `GET` a esta misma sección. --}}
-            <form method="GET" action="{{ $seccion->urlDelFiltro() }}" class="dos-listas-buscar" role="search">
+            <form method="GET" action="{{ $seccion->urlDelFiltro() }}" class="dos-listas-buscar" role="search" data-buscar-auto>
                 <input type="hidden" name="seccion" value="motivos">
                 <label class="visually-hidden" for="motivo-texto">Buscar un motivo en tu catálogo</label>
                 <input type="search" id="motivo-texto" name="buscar" value="{{ $seccion->buscar() }}"
                        class="form-control form-control-sm" autocomplete="off" placeholder="Buscar:">
-                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
-                @if ($seccion->buscar() !== '')
-                    <a class="btn btn-sm btn-link" href="{{ $seccion->urlSeccion() }}">Limpiar</a>
-                @endif
+                <button class="btn btn-sm btn-outline-secondary" data-buscar-enviar><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                <a class="btn btn-sm btn-link" href="{{ $seccion->urlSeccion() }}" data-buscar-limpiar @if ($seccion->buscar() === '') hidden @endif>Limpiar</a>
             </form>
 
+            {{-- Lo que cambia al buscar solo (`buscar-auto.js`): el «Crear «texto»» (el servidor decide si lo escrito ya existe), la lista y su
+                 paginación. --}}
+            <div data-buscar-resultados>
             @if ($seccion->ofreceCrearLoBuscado())
                 <button type="button" class="btn btn-sm btn-outline-primary mb-2" data-motivo-crear="{{ $seccion->buscar() }}">
                     <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear «{{ $seccion->buscar() }}» en mi catálogo
@@ -101,6 +102,7 @@
             @endif
 
             <p class="texto-tenue small mt-2 mb-2">Tip: doble clic en un motivo para pasarlo a la consulta.</p>
+            </div>
 
             {{-- El alta del motivo nuevo. El aviso de conexión va acá, donde se decide crearlo, y no en una
                  franja que se pierde: es la única parte de la pantalla que no funciona sin red. --}}

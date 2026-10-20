@@ -107,22 +107,30 @@
 
         {{-- El filtro del catálogo: un `GET` a esta misma sección (no hay `fetch`: el buscador se recarga
              con el filtro y "Pasar" es un `POST`, así la sección entera funciona sin JavaScript). --}}
-        <form method="GET" action="{{ $seccion->urlVolver() }}" class="row g-2 align-items-end mb-3" id="diagnostico-buscar-form">
+        <form method="GET" action="{{ $seccion->urlVolver() }}" class="row g-2 align-items-end mb-3" id="diagnostico-buscar-form"
+              data-buscar-auto data-buscar-filas=".dos-listas-fila-texto">
             <input type="hidden" name="seccion" value="diagnostico">
 
             <x-ui.campo etiqueta="Buscar en tu catálogo" for="diagnostico-buscar" class="col-12 col-md-9">
-                <input type="text" id="diagnostico-buscar" name="buscar" value="{{ $seccion->buscar() }}"
+                <input type="search" id="diagnostico-buscar" name="buscar" value="{{ $seccion->buscar() }}"
                        class="form-control" autocomplete="off"
                        placeholder="Hipertensión, amenaza de aborto, control…">
             </x-ui.campo>
 
             <div class="col-12 col-md-3 d-grid">
-                <button class="btn btn-outline-secondary">
+                <button class="btn btn-outline-secondary" data-buscar-enviar>
                     <i class="bi bi-search" aria-hidden="true"></i> Buscar
+                </button>
+            </div>
+            <div class="col-12">
+                <a class="btn btn-sm btn-link" href="{{ $seccion->urlVolver() }}" data-buscar-limpiar @if ($seccion->buscar() === '') hidden @endif>Limpiar</a>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-buscar-agregar hidden data-agregar-campo="diagnostico-descripcion">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar «<span data-buscar-agregar-texto></span>»
                 </button>
             </div>
         </form>
 
+        <div data-buscar-resultados>
         @if ($seccion->resultados() === [])
             @php $vacio = $seccion->sinResultados(); @endphp
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
@@ -163,6 +171,7 @@
 
             <p class="texto-tenue small mt-2 mb-0">Tip: doble clic en un diagnóstico para pasarlo a la consulta.</p>
         @endif
+        </div>
 
         {{-- El alta del diagnóstico que falta: es el botón *Agregar* del escritorio
              (`w_nuevo_diagnostico`). El código lo da el servidor (el correlativo de cuatro dígitos) y el

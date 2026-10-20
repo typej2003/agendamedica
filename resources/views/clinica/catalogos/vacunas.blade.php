@@ -30,12 +30,13 @@
     @endif
 
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlBase()"
+        <x-ui.buscador agregar="dialogo-vacuna" campo="vacuna-nombre" :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlBase()"
                        placeholder="Nombre, código o cobertura" etiqueta="Buscar vacuna" />
     </x-ui.barra-herramientas>
 
     <x-ui.errores />
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno>
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -111,6 +112,7 @@
             </x-ui.tabla>
         @endif
     </x-ui.tarjeta>
+    </div>
 
     {{-- El alta y la edición de la vacuna, en un diálogo lateral (lo abre `vacunas-catalogo.js` con `?nuevo=1`, con `?editar=` o si la validación falló). --}}
     <x-ui.dialogo id="dialogo-vacuna" :titulo="$vm->tituloDelFormulario()" lateral

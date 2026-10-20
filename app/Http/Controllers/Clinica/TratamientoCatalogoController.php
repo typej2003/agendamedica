@@ -58,7 +58,7 @@ class TratamientoCatalogoController extends Controller
 
     public function nuevo(Request $request)
     {
-        return $this->editor($request, null);
+        return $this->editor($request, null, mb_substr(trim((string) $request->query('nombre', '')), 0, GuardarTratamiento::LARGO_NOMBRE));
     }
 
     public function editar(Request $request, RecipeGrupo $tratamiento)
@@ -102,7 +102,7 @@ class TratamientoCatalogoController extends Controller
 
     // ------------------------------------------------------------------------------------------ Adentro
 
-    private function editor(Request $request, ?RecipeGrupo $tratamiento)
+    private function editor(Request $request, ?RecipeGrupo $tratamiento, ?string $nombreInicial = null)
     {
         return view('clinica.catalogos.tratamiento-editor', ['vm' => new EditorDeTratamientoVista(
             $tratamiento,
@@ -116,6 +116,7 @@ class TratamientoCatalogoController extends Controller
                 'crearMedicamento' => route('clinica.catalogos.medicamentos.rapido'),
             ],
             (array) old(),
+            $nombreInicial !== '' ? $nombreInicial : null,
         )]);
     }
 

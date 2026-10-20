@@ -15,7 +15,8 @@
          secretaría necesita para ir a llenar las que faltan, y el conteo de cada segmento sale del ViewModel y respeta
          la búsqueda escrita. --}}
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="route('clinica.pacientes')" :valor="$vm->buscar()"
+        <x-ui.buscador :agregar-url="route('clinica.pacientes.nuevo')" agregar-texto="Nuevo paciente" data-buscar-filas=".identidad-nombre"
+                       :accion="route('clinica.pacientes')" :valor="$vm->buscar()"
                        :limpiar="$vm->urlLimpiarBusqueda()"
                        placeholder="Nombre, cédula o n.º de historia" etiqueta="Buscar paciente">
             {{-- Buscar dentro del segmento en el que se está: si no, escribir en el buscador
@@ -29,6 +30,7 @@
         </x-slot>
     </x-ui.barra-herramientas>
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno>
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -100,4 +102,5 @@
             @endif
         </div>
     @endunless
+    </div>
 @endsection
