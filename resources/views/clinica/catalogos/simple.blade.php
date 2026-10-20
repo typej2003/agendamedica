@@ -16,12 +16,13 @@
     @include('clinica.catalogos._novedades-iniciales')
 
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+        <x-ui.buscador agregar="dialogo-catalogo" campo="catalogo-descripcion" :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        :placeholder="$vm->placeholder()" :etiqueta="$vm->etiquetaDeBuscar()" />
     </x-ui.barra-herramientas>
 
     <x-ui.errores />
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -95,6 +96,7 @@
             @endif
         </div>
     @endunless
+    </div>
 
     {{-- El alta y la edición, en un diálogo lateral: un solo diálogo para toda la página (`catalogos.js` lo abre con
          `?nuevo=1`, con `?editar=` o si la validación falló, para que el error no quede detrás de una ventana cerrada). --}}
