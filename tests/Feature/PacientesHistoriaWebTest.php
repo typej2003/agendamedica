@@ -123,6 +123,74 @@ class PacientesHistoriaWebTest extends TestCase
         return $id;
     }
 
+    // ---------------------------------------------- Abrir la consulta desde la ficha (2026-10-20)
+
+    /**
+     * Una consulta de la historia, como la deja la web al atender. Devuelve su id: es lo que enlaza la ficha.
+     */
+    private function consulta(Medico $medico, string $numhistoria, int $nroconsulta): int
+    {
+        return DB::table('consultas')->insertGetId([
+            'reg_medico'       => $medico->reg_medico,
+            'numhistoria'      => (int) $numhistoria,
+            'nroconsulta'      => $nroconsulta,
+            'fecha'            => '2026-10-1' . $nroconsulta,
+            'enfermedadactual' => 'Enfermedad actual de la consulta ' . $nroconsulta,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+    }
+
+    /** El médico ve la lista de consultas de la ficha y **cada una abre su pantalla**. */
+    public function test_la_ficha_del_medico_abre_cada_consulta_de_la_lista(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Ana', 'Con Historia', '1001');
+        $consulta = $this->consulta($medico, '1001', 2);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee(route('clinica.consulta', $consulta), false);
+        $respuesta->assertSee('Ver consulta');
+    }
+
+    /**
+     * La consulta es **del médico** (su ruta responde 403 a la secretaría), así que la ficha de la
+     * secretaría no ofrece el enlace: la lista se lee como texto, igual que en la historia del paciente.
+     */
+    public function test_la_ficha_de_la_secretaria_no_abre_la_consulta(): void
+    {
+        $this->seed(EspecialidadesYModulosSeeder::class);
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+
+        $medico = Medico::create(['name' => 'Dr. Dueño', 'lastname' => 'Datos', 'reg_medico' => 'pac-hist-enl' . substr(uniqid(), -6)]);
+        $medico->specialties()->attach($gineco->id);
+
+        $secretaria = User::create([
+            'name'                 => 'Secretaria',
+            'email'                => 'pac-hist-enl' . substr(uniqid(), -6) . '@example.com',
+            'password'             => Hash::make('secreto123'),
+            'is_active'            => true,
+            'must_change_password' => false,
+        ]);
+        $secretaria->assignRole('Secretaria');
+        MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
+
+        $paciente = $this->paciente($medico, 'Beto', 'Con Historia', '1002');
+        $consulta = $this->consulta($medico, '1002', 1);
+
+        $respuesta = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $respuesta->assertOk();
+        // La consulta se lista (es el historial del paciente, que la secretaría sí ve) pero sin enlace.
+        $respuesta->assertSee('Consulta 1');
+        $respuesta->assertDontSee('Ver consulta');
+        $respuesta->assertDontSee(route('clinica.consulta', $consulta), false);
+    }
+
     // ------------------------------------------------------------------ La ficha (la acción a la vista)
 
     public function test_la_ficha_sin_historia_ofrece_la_accion_y_explica_el_efecto(): void

@@ -167,6 +167,26 @@ class PacientesVistasTest extends TestCase
         $this->assertNull($filas[1]['resumen']);
     }
 
+    public function test_las_consultas_llevan_la_url_de_su_pantalla_cuando_el_controlador_la_da(): void
+    {
+        $consultas = collect([
+            (object) ['id' => 41, 'fecha' => '2026-09-30', 'nroconsulta' => 3, 'enfermedadactual' => 'Control'],
+            // Sin id no hay a dónde ir: la fila no es un enlace.
+            (object) ['fecha' => '2026-08-01', 'nroconsulta' => 2, 'enfermedadactual' => null],
+        ]);
+
+        // Sin URL —la secretaría, que no entra a la consulta— la fila queda como texto.
+        $sin = (new FichaDePacienteVista($this->paciente(), $consultas))->consultas();
+        $this->assertNull($sin[0]['url']);
+
+        $con = (new FichaDePacienteVista($this->paciente(), $consultas))
+            ->conUrlConsulta(fn (int $id) => '/clinica/consulta/' . $id)
+            ->consultas();
+
+        $this->assertSame('/clinica/consulta/41', $con[0]['url']);
+        $this->assertNull($con[1]['url']);
+    }
+
     public function test_el_listado_distingue_vacio_de_busqueda_sin_resultados(): void
     {
         $vacio = $this->paginador([], 0);

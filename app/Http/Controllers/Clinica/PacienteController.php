@@ -214,6 +214,14 @@ class PacienteController extends Controller
         $historia = $pacienteDeLaCita->historia((int) $ficha->id, [$contexto['reg_medico']]);
         $vm = $vm->conHistoriaRegistrada($historia !== null);
 
+        // **Cada consulta de la lista abre su pantalla** (2026-10-20): la ficha mostraba la línea de tiempo
+        // pero no llevaba a la consulta; la historia del paciente (WEB-3.5) sí. Se ofrece con la misma regla
+        // que ahí —la consulta es del médico, la secretaría recibe 403—, así que sin `trabajaLaConsulta` la
+        // fila queda como texto.
+        if ($request->user()?->trabajaLaConsulta()) {
+            $vm = $vm->conUrlConsulta(fn (int $consulta) => route('clinica.consulta', $consulta));
+        }
+
         // «¿Atender ahora?» (O-05): la ficha lo ofrece **sólo en el momento en que el paciente quedó
         // atendible** —lo deja dicho el flash de la acción que le puso el número—, sólo si la historia está
         // registrada y sólo a quien trabaja la consulta: atender es del médico (WEB-4.9). Un **centro** no
