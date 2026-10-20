@@ -3514,3 +3514,45 @@ body.auth-pagina {
 
 /* Los pasos son la fuente del texto: el JS los lee y los pinta en el globo. Nunca se ven. */
 .tour-pasos { display: none; }
+
+/* ==========================================================================
+   Formularios condensados (2026-10-20)
+   Pedido del usuario: los formularios desperdiciaban pantalla (tres campos y había que bajar para ver el
+   último). Se compacta el espaciado vertical de toda la web, sin tocar el alto de los controles (36 px, §2 de
+   la guía), y se ponen en dos columnas la cita (paciente | cita) y el editor de tratamientos (editor | vademécum).
+   ========================================================================== */
+body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
+.page-head { margin-bottom: .65rem; }
+.page-head .page-head-sub { margin-top: .1rem; }
+.main-content .card-body { padding: .85rem 1rem; }
+.main-content .card-header { padding: .5rem 1rem; }
+.main-content .card.mb-3 { margin-bottom: .75rem !important; }
+.main-content .row.g-3 { --bs-gutter-y: .6rem; --bs-gutter-x: .85rem; }
+.main-content .form-label { margin-bottom: .15rem; font-size: .8125rem; }
+.main-content .form-text { margin-top: .15rem; font-size: .78rem; }
+.empty-state { padding: 1.1rem 1rem; }
+.empty-state > i { font-size: 1.3rem; margin-bottom: .25rem; }
+
+/* Cita: paciente | cita lado a lado. */
+.paso { padding: .8rem 1rem; }
+.paso-titulo { margin-bottom: .6rem; font-size: .95rem; }
+.paso-numero { width: 1.4rem; height: 1.4rem; font-size: .75rem; }
+.pasos-columnas { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 992px) {
+    .pasos-columnas { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .pasos-columnas > .paso { border-bottom: 0; }
+    .pasos-columnas > .paso + .paso { border-left: 1px solid var(--ds-borde); }
+}
+.pasos-columnas + .tarjeta-pie { border-top: 1px solid var(--ds-borde); }
+
+/* Editor de tratamientos: el editor a la izquierda y el vademécum siempre a la vista a la derecha. */
+.editor-dos-columnas { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; align-items: start; }
+.editor-dos-columnas > * { grid-column: 1 / -1; }
+@media (min-width: 1100px) {
+    .editor-dos-columnas { grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr); }
+    .editor-dos-columnas > form { grid-column: 1; grid-row: 1; }
+    .editor-dos-columnas > #recipe-herramientas {
+        grid-column: 2; grid-row: 1; margin-top: 0 !important;
+        position: sticky; top: 4.5rem;
+    }
+}
