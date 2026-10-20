@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -89,7 +90,11 @@ class LoginAppController extends Controller
             try {
                 // Token Sanctum
                 $token = \method_exists($user, 'createToken')
-                    ? $user->createToken('agenda-token')->plainTextToken
+                    // Con clave temporal el token lleva la marca de que acaba de escribirla: el cambio
+                    // obligatorio no se la vuelve a pedir (CambiarPasswordController).
+                    ? $user->createToken('agenda-token', $user->must_change_password
+                        ? ['*', CuentaService::HABILIDAD_CLAVE_TEMPORAL]
+                        : ['*'])->plainTextToken
                     : \base64_encode(Str::random(40) . '|' . $user->id);
 
                 // Roles y Permisos de Spatie
