@@ -15,8 +15,8 @@
  *
  *    En el editor de récipes (A-04) la lista es la **columna derecha**, en línea y siempre a la vista
  *    (`data-recipe-lista-en-linea`): el vademécum se carga al abrir el editor, sin escribir nada, y la lista no
- *    se esconde al hacer clic afuera. En el catálogo de tratamientos (WEB-8.1a) sigue siendo el desplegable
- *    flotante de una sola columna.
+ *    se esconde al hacer clic afuera. En el catálogo de tratamientos (WEB-8.1a) es el desplegable flotante de la
+ *    barra de búsqueda, que va dentro de la tarjeta del tratamiento junto al botón «Nuevo medicamento».
  *
  * 2. **Las filas del récipe** (`#recipe-items`): se agregan clonando la plantilla de la vista (el script no
  *    arma HTML), un medicamento entra **una sola vez** por récipe (la clave del escritorio es historia +
@@ -414,6 +414,8 @@
 
     texto.addEventListener('keydown', function (evento) {
         if (evento.key === 'Escape' && !listaEnLinea) ocultarResultados();
+        // El buscador puede estar dentro del formulario (el editor de tratamientos): Enter no lo guarda.
+        if (evento.key === 'Enter') evento.preventDefault();
     });
 
     // --------------------------------------------------------------- El alta del medicamento que falta
@@ -476,7 +478,7 @@
                     ayuda.textContent = (resultado.datos.creado
                         ? 'Creaste «' + medicamento.nombre + '» en tu vademécum'
                         : '«' + medicamento.nombre + '» ya estaba en tu vademécum')
-                        + (fila ? ' y quedó agregado al récipe.' : ' y ya estaba en el récipe.');
+                        + (fila ? ' y quedó agregado al ' + cosa + '.' : ' y ya estaba en el ' + cosa + '.');
                 })
                 .catch(function () {
                     botonCrear.disabled = false;

@@ -38,7 +38,7 @@
 
         <div class="dialogo-pie">
             <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
-            <button class="btn btn-primary" id="medicamento-crear">Crear y agregar al récipe</button>
+            <button class="btn btn-primary" id="medicamento-crear">{{ $seccion->textoCrearMedicamento() }}</button>
         </div>
     </form>
 </x-ui.dialogo>

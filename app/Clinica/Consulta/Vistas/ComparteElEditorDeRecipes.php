@@ -107,7 +107,7 @@ trait ComparteElEditorDeRecipes
      * modo "Tratamientos" (un tratamiento no se arma con otros tratamientos), el alta rápida del medicamento (en el
      * catálogo se crea en su propia pantalla, `enlaceDeMedicamentos()`) y los botones de subir y bajar un
      * medicamento (el orden de un tratamiento importa; el de un récipe, no). Los dos editores de récipes quedan
-     * como estaban: ofrecen las dos primeras y no la tercera.
+     * como estaban: ofrecen las dos primeras y no la tercera. El alta rápida la ofrecen los tres.
      */
     public function ofreceTratamientos(): bool
     {
@@ -122,12 +122,6 @@ trait ComparteElEditorDeRecipes
     public function ofreceOrdenar(): bool
     {
         return false;
-    }
-
-    /** A dónde manda la caja de herramientas cuando no ofrece crear el medicamento (`null`: a ningún lado). */
-    public function enlaceDeMedicamentos(): ?string
-    {
-        return null;
     }
 
     public function cantidadMaxima(): int
@@ -153,6 +147,12 @@ trait ComparteElEditorDeRecipes
     public function avisoSinGuardar(): string
     {
         return 'Hay cambios sin guardar en el récipe. Si sales ahora, se pierden.';
+    }
+
+    /** El botón del diálogo del alta rápida: dice a dónde entra el medicamento creado. */
+    public function textoCrearMedicamento(): string
+    {
+        return 'Crear y agregar al récipe';
     }
 
     public function avisoDeConexion(): string

@@ -151,6 +151,34 @@ class MedicamentoCatalogoController extends Controller
         ]);
     }
 
+    /**
+     * **El alta rápida** del editor de tratamientos: crea (o reusa, si ya hay uno igual) el medicamento que falta con
+     * lo que el diálogo pide —nombre, principio activo, presentación e indicaciones— y lo devuelve en JSON para que el
+     * editor lo agregue a la lista sin recargar (recargar perdería lo que hay sin guardar). Es la misma Action del alta
+     * del ABM, así que el correlativo, el rastro y el «no duplicar» son los mismos.
+     */
+    public function crearRapido(Request $request, CrearMedicamentoEnElCatalogo $crear, RecipesDeLaConsulta $lectura): JsonResponse
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $regMedico = (string) $contexto['reg_medico'];
+
+        $datos = $request->validate(
+            array_intersect_key($this->reglas(), array_flip(['nombrecomercial', 'nombregenerico', 'presentacion', 'uso'])),
+            $this->mensajes(),
+        );
+
+        try {
+            [$medicamento, $creado] = $this->crear($crear, $regMedico, $this->registrosDelMedico($contexto['medico']), $datos);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'creado' => $creado,
+            'medicamento' => $lectura->delVademecum($regMedico, $medicamento->codemedicina),
+        ], $creado ? 201 : 200);
+    }
+
     // ------------------------------------------------------------------------------------------ Adentro
 
     /** A dónde vuelve la lista: la misma búsqueda y página (la 1 no hace falta escribirla). */

@@ -525,6 +525,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/catalogos/medicamentos', [MedicamentoCatalogoController::class, 'index'])->name('catalogos.medicamentos');
                 Route::get('/catalogos/medicamentos/buscar', [MedicamentoCatalogoController::class, 'buscar'])->name('catalogos.medicamentos.buscar');
                 Route::post('/catalogos/medicamentos', [MedicamentoCatalogoController::class, 'guardar'])->name('catalogos.medicamentos.guardar');
+                Route::post('/catalogos/medicamentos/rapido', [MedicamentoCatalogoController::class, 'crearRapido'])->name('catalogos.medicamentos.rapido');
                 Route::delete('/catalogos/medicamentos/{medicamento}', [MedicamentoCatalogoController::class, 'quitar'])->whereNumber('medicamento')->name('catalogos.medicamentos.quitar');
                 Route::get('/catalogos/tratamientos', [TratamientoCatalogoController::class, 'index'])->name('catalogos.tratamientos');
                 Route::get('/catalogos/tratamientos/nuevo', [TratamientoCatalogoController::class, 'nuevo'])->name('catalogos.tratamientos.nuevo');

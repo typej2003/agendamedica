@@ -205,7 +205,7 @@ class CatalogosVistaTest extends TestCase
         'guardar' => '/clinica/catalogos/tratamientos/9',
         'lista' => '/clinica/catalogos/tratamientos',
         'medicamentos' => '/clinica/catalogos/medicamentos/buscar',
-        'vademecum' => '/clinica/catalogos/medicamentos',
+        'crearMedicamento' => '/clinica/catalogos/medicamentos/rapido',
     ];
 
     private function grupo(): RecipeGrupo
@@ -230,9 +230,10 @@ class CatalogosVistaTest extends TestCase
         $vista = new EditorDeTratamientoVista($this->grupo(), $this->filasDelTratamiento(), self::URLS_EDITOR);
 
         $this->assertFalse($vista->ofreceTratamientos(), 'un tratamiento no se arma con otros');
-        $this->assertFalse($vista->ofreceCrearMedicamento(), 'el medicamento que falta se crea en su pantalla');
+        $this->assertTrue($vista->ofreceCrearMedicamento(), 'el medicamento que falta se crea desde el buscador');
         $this->assertTrue($vista->ofreceOrdenar());
-        $this->assertSame('/clinica/catalogos/medicamentos', $vista->enlaceDeMedicamentos());
+        $this->assertSame('/clinica/catalogos/medicamentos/rapido', $vista->urlCrearMedicamento());
+        $this->assertSame('Crear y agregar al tratamiento', $vista->textoCrearMedicamento());
         $this->assertSame('/clinica/catalogos/medicamentos/buscar', $vista->urlMedicamentos());
         $this->assertStringContainsString('tratamiento', $vista->avisoSinGuardar());
 
