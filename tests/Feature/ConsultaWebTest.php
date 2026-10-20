@@ -492,6 +492,9 @@ class ConsultaWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->sede($medico);
+        // Un segundo consultorio: con uno solo la barra no ofrece «Cambiar consultorio» (2026-10-19), porque la
+        // pantalla de elegir consultorio se salta y no habría a dónde ir.
+        $this->sede($medico);
         $this->paciente($medico, 'Ana', 'Alvarez', 1001);
         $consulta = Consulta::create([
             'reg_medico'  => $medico->reg_medico,

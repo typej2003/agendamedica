@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
+use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -68,6 +71,32 @@ class ClinicaTest extends TestCase
         ]]);
     }
 
+    /** Una sede activa, para poder cargarle consultorios a un médico de la prueba. */
+    private function sedeDePrueba(): MedicalCenter
+    {
+        return MedicalCenter::create([
+            'country_id' => DB::table('countries')->value('id'),
+            'state_id'   => City::firstOrFail()->state_id,
+            'city_id'    => City::firstOrFail()->id,
+            'name'       => 'Sede de prueba ' . substr(uniqid(), -6),
+            'address'    => 'Av. Principal',
+            'activo'     => true,
+        ]);
+    }
+
+    private function consultorioDePrueba(Medico $medico, MedicalCenter $sede, string $numero): Office
+    {
+        return Office::create([
+            'medical_center_id' => $sede->id,
+            'medico_id'         => $medico->id,
+            'reg_medico'        => $medico->reg_medico,
+            'office_number'     => $numero,
+            'modalidad'         => Office::MODALIDAD_ORDEN,
+            'duracion_cita'     => 30,
+            'activo'            => true,
+        ]);
+    }
+
     public function test_un_invitado_no_entra_a_la_web_clinica(): void
     {
         $this->get('/clinica')->assertRedirect(route('login'));
@@ -83,7 +112,12 @@ class ClinicaTest extends TestCase
 
     public function test_el_contexto_muestra_los_datos_del_medico_y_su_registro(): void
     {
+        // Con **dos** consultorios la pantalla existe: es la que se ve cuando hay algo que elegir (con uno
+        // solo se salta, ver `ContextoWebTest`).
         [$user, $medico] = $this->medicoConAcceso();
+        $sede = $this->sedeDePrueba();
+        $this->consultorioDePrueba($medico, $sede, '701');
+        $this->consultorioDePrueba($medico, $sede, '702');
 
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
 

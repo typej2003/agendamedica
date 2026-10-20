@@ -226,21 +226,24 @@ consulta.
   contesta **419 en JSON** si la petición es de `fetch`, para que el autoguardado no crea que guardó) y
   `consulta-barra.js` lo dice en la barra. Fuera de `/clinica` el 419 sigue igual. Tests: `Feature/SesionWebTest`
   (8); verificador `../.agent-tools/verificar-sesion-consulta-web.js` (falla con el código anterior). Trampa 146.
-- **Elegir consultorio no pregunta lo que ya está decidido (2026-10-19, `/clinica/contexto`)**: con **una sola
-  especialidad** y **uno o ningún consultorio** la pantalla no ofrece esos dos campos —se entra con el único valor
-  que hay—: los muestra como texto (`<output>` dentro de `<x-ui.campo>`, el patrón de sólo lectura que ya usan las
-  mediciones) y manda el valor en un `input[type=hidden]`, así que «Trabajar aquí» fija el consultorio de verdad
-  (sin consultorios no se manda nada: queda «todos»). Con **dos o más** vuelve el `<select>` de siempre, y sin
-  ninguna especialidad también (es el mensaje de «no tiene especialidad asignada»). El encabezado acompaña:
-  pregunta sólo si hay algo que elegir (`ContextoVista::hayAlgoQueElegir()`, que cuenta también la elección de
-  médico de la secretaría). La regla vive en `ContextoVista` (`elegirEspecialidad`/`especialidadFija`,
-  `elegirConsultorio`/`consultorioFijo`, `sinConsultorios`); el guardado no cambió, porque `ContextoTrabajo::fijar()`
-  ya tomaba la primera especialidad y `null` = todos. Tests: `Feature/ContextoWebTest` (6); verificador
-  `../.agent-tools/verificar-contexto-elegir-web.js` con el ayudante `../.agent-tools/contexto-elegir-preparar.php`
+- **Elegir consultorio se salta cuando no hay nada que elegir (2026-10-19, `/clinica/contexto`)**: con **un solo
+  médico**, **una sola especialidad** y **uno o ningún consultorio** la pantalla **no aparece**: `ContextoController::editar()`
+  fija el contexto y redirige a `/clinica` (sin consultorios deja un `aviso` de cargarlos, porque la agenda no puede
+  armar la jornada). La regla vive en **`App\Clinica\ContextoAutomatico`** (`de($user)` devuelve
+  `reg_medico`/`specialty_id`/`office_id` o `null`), que lee `ContextoTrabajo::disponibles()` —la misma fuente que
+  pinta la pantalla—; **cero especialidades no se salta** (es una configuración incompleta y es donde se ve el aviso),
+  y varios médicos tampoco (hay que decir con cuál se entra). Cuando la pantalla sí se muestra, cada tarjeta ofrece
+  sólo los campos con más de una opción (`ContextoVista`; con un solo valor lo muestra como texto y lo manda en un
+  `input[type=hidden]`), y el encabezado pregunta sólo si hay algo que elegir. La barra superior **no ofrece «Cambiar
+  consultorio»** cuando no hay nada que cambiar (`ArmazonVista::accesos()` + el composer). El guardado no cambió:
+  `ContextoTrabajo::fijar()` ya tomaba la primera especialidad y `null` = todos. Tests: `Feature/ContextoWebTest` (11);
+  verificador `../.agent-tools/verificar-contexto-elegir-web.js` con el ayudante `../.agent-tools/contexto-elegir-preparar.php`
   (tres cuentas: 1 especialidad + 1 consultorio, 2 + 2, 1 + 0), que falla con el código anterior. ⚠️ Los
-  verificadores que entran por `/clinica/contexto` **no pueden dar por hecho que existe `select[name=office_id]`**:
-  se adaptaron `verificar-menu-por-especialidad-web.js`, `verificar-alta-rapida-y-sede-web.js` y
-  `verificar-observaciones-2026-10-17.js`. Trampa 147.
+  verificadores que entran por `/clinica/contexto` **no pueden dar por hecho que existe la pantalla ni
+  `select[name=office_id]`**: se adaptaron `verificar-menu-por-especialidad-web.js`,
+  `verificar-alta-rapida-y-sede-web.js` y `verificar-observaciones-2026-10-17.js`. Lo mismo en los tests: los que
+  miran esa pantalla le cargan dos consultorios al médico (`ShellDeLaWebClinicaTest`, `ClinicaTest`,
+  `SedesWebTest`) y los que sólo cuentan la barra tampoco pueden dar por hecho el acceso (`ConsultaWebTest`). Trampa 147.
 - **Pre-factura (F9, 2026-10-20, ginecología y pediatría)**: `?seccion=prefactura`, el último ítem «Documentos» de los
   dos catálogos (ya no quedan ítems «Próximamente»: 13 de 13 y 14 de 14; `ANCLAS_SIN_SECCION` se borró y «I.Q.» se
   ancla detrás de la pre-factura como cualquier postgrado). Los ítems viven en **`his_con_pre_factura`** —clave de

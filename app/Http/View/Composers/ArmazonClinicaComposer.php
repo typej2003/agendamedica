@@ -2,6 +2,7 @@
 
 namespace App\Http\View\Composers;
 
+use App\Clinica\ContextoAutomatico;
 use App\Clinica\Vistas\ArmazonVista;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -17,19 +18,31 @@ class ArmazonClinicaComposer
     {
         $compartidos = $vista->getFactory()->getShared();
         $peticion = request();
+        $usuario = $peticion->user();
+        $contexto = $compartidos['contexto'] ?? null;
+
+        // ¿Queda algo que elegir en la pantalla de consultorio? (2026-10-19). Si no queda nada, esa pantalla
+        // se salta, así que la barra no ofrece un «Cambiar consultorio» que rebotaría a la misma pantalla. Se
+        // pregunta sólo cuando hay contexto elegido: en las pantallas sin contexto el acceso se deja (desde
+        // sedes, por ejemplo, sirve para entrar al consultorio).
+        $hayAlgoQueElegir = true;
+        if ($contexto !== null && $usuario !== null) {
+            $hayAlgoQueElegir = app(ContextoAutomatico::class)->de($usuario) === null;
+        }
 
         $vista->with('armazon', new ArmazonVista(
-            $compartidos['contexto'] ?? null,
+            $contexto,
             $compartidos['modulos'] ?? new Collection(),
-            (bool) $peticion->user()?->esAdministrador(),
+            (bool) $usuario?->esAdministrador(),
             $peticion->route()?->getName(),
-            (bool) $peticion->user()?->trabajaLaConsulta(),
+            (bool) $usuario?->trabajaLaConsulta(),
             // El listado clínico elegido (WEB-6.8): «Listados» es un grupo y sus tres hijos comparten ruta, así que
             // el activo sale de la query. En cualquier otra pantalla el valor no se usa.
             $peticion->query('listado') !== null ? (string) $peticion->query('listado') : null,
             // La consulta abierta (revisión de Alexander): el controlador del shell la comparte con `id` y `seccion`;
             // el armazon la usa para el grupo «Consulta» del menú lateral y nada más.
             is_array($compartidos['consulta_en_curso'] ?? null) ? $compartidos['consulta_en_curso'] : null,
+            $hayAlgoQueElegir,
         ));
     }
 }

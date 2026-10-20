@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\ContextoAutomatico;
 use App\Clinica\ContextoTrabajo;
 use App\Clinica\Vistas\ContextoVista;
 use App\Http\Controllers\Controller;
@@ -9,6 +10,10 @@ use Illuminate\Http\Request;
 
 /**
  * Elegir el contexto de trabajo de la web clínica: con qué médico/registro, especialidad y sede se opera.
+ *
+ * **Cuando no hay nada que elegir la pantalla se salta** (decisión del usuario, 2026-10-19): un solo médico
+ * con una sola especialidad y uno o ningún consultorio entra directo al consultorio, sin pasar por acá. La
+ * regla y su porqué están en `ContextoAutomatico`.
  */
 class ContextoController extends Controller
 {
@@ -21,6 +26,25 @@ class ContextoController extends Controller
 
     public function editar(Request $request)
     {
+        $automatico = app(ContextoAutomatico::class)->de($request->user());
+
+        if ($automatico !== null) {
+            $this->contexto->fijar(
+                $request->user(),
+                $automatico['reg_medico'],
+                $automatico['specialty_id'],
+                $automatico['office_id']
+            );
+
+            $destino = redirect()->route('clinica.inicio');
+
+            // Sin consultorios cargados no hay nada que elegir, pero sí algo que hacer: la agenda no puede
+            // armar la jornada. Es el mismo aviso que daba la pantalla que ya no se ve.
+            return $automatico['office_id'] === null
+                ? $destino->with('avisos', ['Todavía no tienes consultorios cargados: cárgalos en «Consultorios y horarios» para que la agenda pueda armar la jornada.'])
+                : $destino;
+        }
+
         return view('clinica.contexto', [
             'vm' => new ContextoVista($this->contexto->disponibles($request->user())),
         ]);

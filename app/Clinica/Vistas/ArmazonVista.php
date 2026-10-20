@@ -36,6 +36,10 @@ final class ArmazonVista
         // La consulta que se está atendiendo (revisión de Alexander): `['id' => int, 'seccion' => ?string]`. Sólo se
         // usa en la ruta de la consulta, donde el shell le pasa el ítem abierto al grupo «Consulta» del menú.
         private ?array $consultaEnCurso = null,
+        // ¿La pantalla de elegir consultorio tiene algo que ofrecer? (2026-10-19). Sin nada que elegir esa
+        // pantalla se salta, así que tampoco se ofrece «Cambiar consultorio». Lo resuelve el composer con
+        // `ContextoAutomatico`; sin contexto (sedes, la propia pantalla) queda en `true`.
+        private bool $hayAlgoQueElegir = true,
     ) {
     }
 
@@ -100,7 +104,11 @@ final class ArmazonVista
             $accesos[] = ['texto' => 'Consultorios', 'icono' => 'bi-door-closed', 'url' => route('clinica.consultorios'), 'primario' => false];
         }
 
-        $accesos[] = ['texto' => 'Cambiar consultorio', 'icono' => 'bi-arrow-repeat', 'url' => route('clinica.contexto'), 'primario' => false];
+        // «Cambiar consultorio» sólo si hay algo que elegir: con un solo médico, una sola especialidad y uno
+        // o ningún consultorio la pantalla se salta (2026-10-19), así que el acceso no llevaría a ninguna parte.
+        if ($this->hayAlgoQueElegir) {
+            $accesos[] = ['texto' => 'Cambiar consultorio', 'icono' => 'bi-arrow-repeat', 'url' => route('clinica.contexto'), 'primario' => false];
+        }
 
         if ($this->esAdministrador) {
             $accesos[] = ['texto' => 'Panel', 'icono' => 'bi-speedometer2', 'url' => route('dashboard'), 'primario' => true];

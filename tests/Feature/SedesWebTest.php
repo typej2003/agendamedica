@@ -327,25 +327,35 @@ class SedesWebTest extends TestCase
 
     public function test_el_contexto_avisa_cuando_el_medico_no_tiene_consultorios(): void
     {
+        // Sin consultorios no hay nada que elegir: la pantalla se salta (2026-10-19) y el aviso viaja al
+        // consultorio, que es donde el médico lo va a leer.
         [$user, $medico, $gineco] = $this->usuarioClinico();
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/contexto')
+            ->assertRedirect(route('clinica.inicio'))
+            ->assertSessionHas('avisos');
+
+        $this->actingAs($user)->get('/clinica')
             ->assertOk()
-            ->assertSee('todavía no tiene consultorios cargados');
+            ->assertSee('Todavía no tienes consultorios cargados');
     }
 
     public function test_la_sede_inactiva_deja_de_ofrecerse_en_el_contexto(): void
     {
         [$user, $medico, $gineco] = $this->usuarioClinico();
-        $sede = $this->sedePropia($medico, 'Sede que se cierra');
+        // Dos sedes abiertas para que la pantalla exista (con una sola se salta) y una que se cierra.
+        $abierta = $this->sedePropia($medico, 'Sede abierta');
+        $this->sedePropia($medico, 'Otra sede abierta');
+        $cerrada = $this->sedePropia($medico, 'Sede que se cierra');
 
-        $sede->update(['activo' => false]);
+        $cerrada->update(['activo' => false]);
 
         // `ContextoTrabajo` sólo lista sedes activas, así que la sede cerrada no se puede elegir.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/contexto')
             ->assertOk()
-            ->assertDontSee($sede->name);
+            ->assertSee($abierta->name)
+            ->assertDontSee($cerrada->name);
     }
 }

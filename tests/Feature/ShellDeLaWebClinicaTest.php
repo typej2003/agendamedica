@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
+use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -68,6 +72,36 @@ class ShellDeLaWebClinicaTest extends TestCase
         ]]);
     }
 
+    /**
+     * Le carga **dos** consultorios al médico, para que `/clinica/contexto` muestre la pantalla.
+     *
+     * Desde el 2026-10-19 esa pantalla **se salta** cuando el médico tiene una sola especialidad y uno o
+     * ningún consultorio (redirige a `/clinica`), así que un test que la mire tiene que dejar algo que elegir.
+     */
+    private function conDosConsultorios(Medico $medico): void
+    {
+        $centro = MedicalCenter::create([
+            'country_id' => DB::table('countries')->value('id'),
+            'state_id'   => City::firstOrFail()->state_id,
+            'city_id'    => City::firstOrFail()->id,
+            'name'       => 'Sede del armazón ' . substr(uniqid(), -6),
+            'address'    => 'Av. Principal',
+            'activo'     => true,
+        ]);
+
+        foreach (['701', '702'] as $numero) {
+            Office::create([
+                'medical_center_id' => $centro->id,
+                'medico_id'         => $medico->id,
+                'reg_medico'        => $medico->reg_medico,
+                'office_number'     => $numero,
+                'modalidad'         => Office::MODALIDAD_ORDEN,
+                'duracion_cita'     => 30,
+                'activo'            => true,
+            ]);
+        }
+    }
+
     // ------------------------------------------------------------------------------- Cerrar sesión
 
     public function test_el_encabezado_ofrece_cambiar_la_contrasena_y_cerrar_sesion(): void
@@ -99,7 +133,8 @@ class ShellDeLaWebClinicaTest extends TestCase
      */
     public function test_tambien_se_puede_cerrar_sesion_desde_la_pantalla_de_elegir_consultorio(): void
     {
-        [$user] = $this->medicoConAcceso();
+        [$user, $medico] = $this->medicoConAcceso();
+        $this->conDosConsultorios($medico);
 
         $this->actingAs($user)->get('/clinica/contexto')
             ->assertOk()
@@ -188,6 +223,8 @@ class ShellDeLaWebClinicaTest extends TestCase
     public function test_cada_pantalla_ofrece_saltar_al_contenido(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
+        // La pantalla de elegir consultorio sólo existe si hay algo que elegir (2026-10-19).
+        $this->conDosConsultorios($medico);
 
         foreach (['/clinica', '/clinica/pacientes', '/clinica/agenda', '/clinica/contexto'] as $ruta) {
             $respuesta = $this->conContexto($user, $medico, $gineco)->get($ruta)->assertOk();
