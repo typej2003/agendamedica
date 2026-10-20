@@ -11,9 +11,12 @@
  * «Agregar»: si lo escrito no coincide **exactamente** con el nombre de ninguna fila (sin mayúsculas ni tildes), aparece
  * el botón `[data-buscar-agregar]` del formulario. Según lo que declare:
  *  - `data-agregar-dialogo` + `data-prefill-campo`: abre ese diálogo de alta con el campo ya escrito con la búsqueda;
+ *  - `data-agregar-campo` (sin diálogo): el alta ya está en la pantalla (un formulario aparte); escribe la búsqueda en ese campo,
+ *    lo lleva a la vista y le da el foco;
  *  - `data-agregar-url`: es un enlace a la pantalla de alta, con la búsqueda en el parámetro `data-agregar-parametro`
  *    (por defecto `nombre`).
- * El nombre de cada fila es el `<strong>` (o el texto) de su `td.celda-principal` (`data-buscar-filas` lo cambia).
+ * El nombre de cada fila es su `<strong>` o, si no lo tiene, su texto propio (sin el de los elementos hijos: chips, detalles)
+ * de cada elemento que elige `data-buscar-filas` (por defecto `td.celda-principal`).
  *
  * Después de cambiar la región se dispara `buscar-auto:cargado` (en la región, burbujea) para quien tenga que volver a
  * atar algo de lo que acaba de llegar.
@@ -25,6 +28,16 @@
 
     function normalizar(texto) {
         return String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function nombreDe(celda) {
+        const fuerte = celda.querySelector('strong');
+        if (fuerte) return fuerte.textContent;
+
+        const propio = Array.prototype.filter.call(celda.childNodes, function (nodo) { return nodo.nodeType === 3; })
+            .map(function (nodo) { return nodo.textContent; }).join(' ');
+
+        return propio.trim() !== '' ? propio : celda.textContent;
     }
 
     function iniciar(formulario) {
@@ -70,8 +83,7 @@
 
             const buscado = normalizar(escrito);
             const hayExacta = Array.prototype.some.call(zona.querySelectorAll(selectorFilas), function (celda) {
-                const nombre = celda.querySelector('strong') || celda;
-                return normalizar(nombre.textContent) === buscado;
+                return normalizar(nombreDe(celda)) === buscado;
             });
 
             agregar.hidden = hayExacta;
@@ -166,6 +178,17 @@
                 if (!dialogo.open) dialogo.showModal();
                 const primero = destino || dialogo.querySelector('[data-foco-inicial]');
                 if (primero) primero.focus();
+            });
+        }
+
+        if (agregar && agregar.dataset.agregarCampo) {
+            agregar.addEventListener('click', function () {
+                const destino = document.getElementById(agregar.dataset.agregarCampo);
+                if (!destino) return;
+
+                destino.value = destino.maxLength > 0 ? agregar.dataset.prefillValor.slice(0, destino.maxLength) : agregar.dataset.prefillValor;
+                destino.scrollIntoView({ block: 'center' });
+                destino.focus();
             });
         }
 

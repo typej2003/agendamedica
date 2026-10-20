@@ -16,11 +16,12 @@
     @include('clinica.catalogos._novedades-iniciales')
 
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
+        <x-ui.buscador :agregar-url="$vm->urlNuevo()" agregar-texto="Crear" :accion="$vm->urlBase()" :valor="$vm->buscar()" placeholder="Nombre del tratamiento" etiqueta="Buscar tratamiento" />
     </x-ui.barra-herramientas>
 
     <x-ui.errores />
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -93,4 +94,5 @@
             <span class="texto-tenue small">{{ $vm->rango() }}</span>
         </div>
     @endunless
+    </div>
 @endsection
