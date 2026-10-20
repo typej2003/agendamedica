@@ -22,6 +22,7 @@
             <form method="POST" action="{{ route('cuenta.password.update') }}">
                 @csrf
 
+                @if ($pideClaveActual)
                 <div class="mb-3">
                     <label for="password_actual" class="form-label small fw-bold">Contraseña actual</label>
                     <input type="password" name="password_actual" id="password_actual"
@@ -29,12 +30,13 @@
                            required autocomplete="current-password" autofocus>
                     @error('password_actual') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                @endif
 
                 <div class="mb-3">
                     <label for="password_nueva" class="form-label small fw-bold">Contraseña nueva</label>
                     <input type="password" name="password_nueva" id="password_nueva"
                            class="form-control @error('password_nueva') is-invalid @enderror"
-                           required minlength="8" autocomplete="new-password">
+                           required minlength="8" autocomplete="new-password" @unless ($pideClaveActual) autofocus @endunless>
                     <div class="form-text">Mínimo 8 caracteres.</div>
                     @error('password_nueva') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>

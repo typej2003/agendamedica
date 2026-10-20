@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\AutenticacionPorCorreo;
+use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -38,6 +39,11 @@ class CustomLoginController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+
+        // Acaba de escribir su clave temporal: el cambio obligatorio no se la vuelve a pedir.
+        if ($user->must_change_password) {
+            $request->session()->put(CuentaService::SESION_CLAVE_TEMPORAL, $user->id);
+        }
 
         // `intended` primero: si la persona venía de una página protegida, se sigue por ahí (ese es el
         // único caso en que no se pregunta el área, porque ya la eligió al pedir la página).

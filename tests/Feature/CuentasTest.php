@@ -176,11 +176,8 @@ class CuentasTest extends TestCase
         $r = $this->nuevoMedico('Temporal123');
         $token = $this->loginApi($r['user']->email, 'Temporal123')->json('access_token');
 
-        // Clave actual equivocada, confirmación distinta, igual a la actual y muy corta: todo se rechaza.
-        $this->conToken('POST', '/api/app/cambiar-password', $token, [
-            'password_actual' => 'Equivocada1', 'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
-        ])->assertStatus(422)->assertJsonValidationErrors('password_actual');
-
+        // Confirmación distinta, igual a la actual y muy corta: todo se rechaza. (La clave actual no se pide:
+        // el token sale del login con la temporal; ver los tests de «Clave temporal recién escrita».)
         $this->conToken('POST', '/api/app/cambiar-password', $token, [
             'password_actual' => 'Temporal123', 'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'Distinta99',
         ])->assertStatus(422)->assertJsonValidationErrors('password_nueva');
@@ -212,6 +209,94 @@ class CuentasTest extends TestCase
             ->assertOk()
             ->assertJsonPath('must_change_password', false)
             ->assertJsonPath('user.must_change_password', false);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Clave temporal recién escrita: no se vuelve a pedir                 */
+    /* ------------------------------------------------------------------ */
+
+    public function test_api_tras_login_con_clave_temporal_no_pide_la_clave_actual(): void
+    {
+        $r = $this->nuevoMedico('Temporal123');
+        $token = $this->loginApi($r['user']->email, 'Temporal123')->json('access_token');
+
+        // Sin `password_actual`: alcanza con la nueva y su confirmación.
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_nueva' => 'Temporal123', 'password_nueva_confirmation' => 'Temporal123',
+        ])->assertStatus(422)->assertJsonValidationErrors('password_nueva');
+
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
+        ])->assertOk()->assertJsonPath('must_change_password', false);
+
+        $user = $r['user']->fresh();
+        $this->assertFalse($user->must_change_password);
+        $this->assertTrue(Hash::check('NuevaClave99', $user->password));
+
+        // El token conservado pierde la marca: un reseteo posterior no lo dejaría saltarse la clave.
+        $abilities = $user->tokens()->sole()->abilities;
+        $this->assertNotContains(CuentaService::HABILIDAD_CLAVE_TEMPORAL, $abilities);
+
+        // Ya no es temporal: el cambio voluntario vuelve a pedir la clave actual, y correcta.
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_nueva' => 'OtraClave123', 'password_nueva_confirmation' => 'OtraClave123',
+        ])->assertStatus(422)->assertJsonValidationErrors('password_actual');
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_actual' => 'Equivocada1', 'password_nueva' => 'OtraClave123', 'password_nueva_confirmation' => 'OtraClave123',
+        ])->assertStatus(422)->assertJsonValidationErrors('password_actual');
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_actual' => 'NuevaClave99', 'password_nueva' => 'OtraClave123', 'password_nueva_confirmation' => 'OtraClave123',
+        ])->assertOk();
+    }
+
+    public function test_api_un_token_que_no_salio_del_login_con_clave_temporal_sigue_pidiendola(): void
+    {
+        $r = $this->nuevoMedico('Temporal123');
+        $token = $r['user']->createToken('agenda-token')->plainTextToken;
+
+        $this->conToken('POST', '/api/app/cambiar-password', $token, [
+            'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
+        ])->assertStatus(422)->assertJsonValidationErrors('password_actual');
+
+        $this->assertTrue($r['user']->fresh()->must_change_password);
+    }
+
+    public function test_web_tras_login_con_clave_temporal_no_pide_la_clave_actual(): void
+    {
+        $r = $this->nuevoMedico('Temporal123');
+        $this->post('/login', ['email' => $r['user']->email, 'password' => 'Temporal123'])->assertRedirect();
+
+        $this->get('/cambiar-password')
+            ->assertOk()
+            ->assertSee('Tu contraseña es temporal')
+            ->assertDontSee('name="password_actual"', false);
+
+        $this->post('/cambiar-password', [
+            'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
+        ])->assertRedirect(route('clinica.inicio'));
+
+        $this->assertFalse($r['user']->fresh()->must_change_password);
+        $this->assertNull(session(CuentaService::SESION_CLAVE_TEMPORAL));
+
+        // El cambio voluntario posterior vuelve a pedirla.
+        $this->get('/cambiar-password')->assertOk()->assertSee('name="password_actual"', false);
+        $this->from('/cambiar-password')->post('/cambiar-password', [
+            'password_nueva' => 'OtraClave123', 'password_nueva_confirmation' => 'OtraClave123',
+        ])->assertSessionHasErrors('password_actual');
+    }
+
+    public function test_web_sesion_que_no_nacio_del_login_con_clave_temporal_sigue_pidiendola(): void
+    {
+        $r = $this->nuevoMedico('Temporal123');
+        $this->actingAs($r['user']);
+
+        $this->get('/cambiar-password')->assertOk()->assertSee('name="password_actual"', false);
+
+        $this->from('/cambiar-password')->post('/cambiar-password', [
+            'password_nueva' => 'NuevaClave99', 'password_nueva_confirmation' => 'NuevaClave99',
+        ])->assertSessionHasErrors('password_actual');
+
+        $this->assertTrue($r['user']->fresh()->must_change_password);
     }
 
     /* ------------------------------------------------------------------ */
