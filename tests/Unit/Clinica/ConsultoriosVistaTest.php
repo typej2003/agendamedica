@@ -81,21 +81,16 @@ class ConsultoriosVistaTest extends TestCase
         $this->assertSame(7, $fila['id']);
     }
 
-    public function test_la_fila_trae_el_alta_de_un_bloque_con_sus_siete_dias(): void
+    public function test_la_fila_trae_el_alta_de_un_bloque_sin_ningun_dia_encendido(): void
     {
         $vista = $this->vista([$this->consultorio('San José', '701')]);
 
         $fila = $vista->filas()[0];
 
         $this->assertSame([], $fila['bloques']);
-        $this->assertSame(
-            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-            array_column($fila['opcionesDeDia'], 'texto'),
-        );
-        $this->assertSame([1, 2, 3, 4, 5, 6, 7], array_column($fila['opcionesDeDia'], 'valor'));
-        // El alta arranca vacía y ningún día viene elegido.
-        $this->assertSame(['dia_semana' => '', 'hora_inicio' => '', 'hora_fin' => '', 'cupo' => ''], $fila['alta']);
-        $this->assertSame([false], array_values(array_unique(array_column($fila['opcionesDeDia'], 'elegido'))));
+        // El alta arranca vacía: ningún día viene encendido.
+        $this->assertSame([], $fila['diasElegidos']);
+        $this->assertSame(['dias' => [], 'hora_inicio' => '', 'hora_fin' => '', 'cupo' => ''], $fila['alta']);
     }
 
     /** El borrado no se lleva citas: la confirmación nombra el bloque y dice qué deja de contar. */
