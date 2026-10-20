@@ -77,8 +77,9 @@ final class AtencionInmediata
 
         try {
             // El mismo camino del diálogo «Abrir la consulta» de la agenda: re-atender reusa la consulta
-            // del día si el paciente ya tiene una.
-            $abierta = $this->abrir->abrir($cita, $registrosMedicos, $hoy);
+            // del día si el paciente ya tiene una. La consulta que se cree queda **del doctor del
+            // contexto** (2026-10-20).
+            $abierta = $this->abrir->abrir($cita, $registrosMedicos, $hoy, false, $contexto['medico']);
         } catch (InvalidArgumentException $excepcion) {
             return ResultadoDeAtencion::noSePudo($excepcion->getMessage());
         }

@@ -16,7 +16,9 @@ use App\Clinica\Impresion\Vistas\OpcionesDeImpresionVista;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
+use App\Models\Cola;
 use App\Models\Consulta;
+use App\Models\Medico;
 use App\Models\RecipeFormato;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -31,10 +33,12 @@ use InvalidArgumentException;
  * `ImpresionDeDocumentosController` (la lista de todo lo imprimible de la cita y su vista previa), que arma la misma hoja del
  * récipe con `HojasImpresasVista`.
  *
- * La elección de cómo sale (`POST /clinica/recipes/opciones-de-impresion`) es del **médico del contexto** y la
- * puede hacer cualquiera de los dos: lo que elige la asistente es lo que ve el médico (decisión del usuario,
- * 2026-10-11). Vive acá porque es la opción **del récipe** (el modo y el nombre del medicamento); los demás documentos no
- * la usan.
+ * La elección de cómo sale (`POST /clinica/recipes/opciones-de-impresion`) es del **doctor que firma la hoja** y no
+ * del médico del contexto (2026-10-20): en la secretaría de un centro el médico del contexto es la fila del
+ * **centro**, así que las opciones se guardan bajo el registro del doctor que atendió —el mismo del que salen la
+ * firma y el sello—. Las puede cambiar cualquiera de los dos: lo que elige la asistente es lo que ve el médico.
+ * Vive acá porque es la opción **del récipe** (el modo y el nombre del medicamento); los demás documentos no la
+ * usan.
  *
  * Todo se resuelve contra el **contexto**: una consulta de otro consultorio responde 404 sin confirmar que existe, y el
  * membrete es el del médico del contexto. Desde la Fase 5 del cambio de `reg_medico` el membrete es el del **centro**
@@ -51,6 +55,12 @@ class ImpresionDeRecipeController extends Controller
      * de redirección abierta.
      */
     private const SIGUIENTE_VALIDO = '#^/clinica/[A-Za-z0-9_/-]+/imprimir(\?[A-Za-z0-9_=&%:.-]*)?$#';
+
+    /** La vista previa de una **consulta** (`…/consulta/{id}/recipes/2/imprimir`): de ahí sale el doctor que firma. */
+    private const SIGUIENTE_DE_LA_CONSULTA = '#^/clinica/consulta/(\d+)/#';
+
+    /** La vista previa de una **cita** de la agenda (`…/agenda/{id}/documentos/imprimir`): de ahí, el de la cita. */
+    private const SIGUIENTE_DE_LA_CITA = '#^/clinica/agenda/(\d+)/#';
 
     public function __construct(
         private ConsultasDelContexto $consultas,
@@ -97,8 +107,8 @@ class ImpresionDeRecipeController extends Controller
     // ------------------------------------------------------------------------------------ Las opciones
 
     /**
-     * Guarda cómo sale la hoja (modo y nombre del medicamento) en el formato del médico del contexto y sigue a la
-     * vista previa. La hacen el médico y la secretaría: las opciones son **del médico** y se comparten.
+     * Guarda cómo sale la hoja (modo y nombre del medicamento) en el formato del **doctor que firma** y sigue a la
+     * vista previa. La hacen el médico y la secretaría: las opciones son **del doctor** y se comparten.
      */
     public function guardarOpciones(Request $request, GuardarOpcionesDeImpresion $guardar)
     {
@@ -120,9 +130,10 @@ class ImpresionDeRecipeController extends Controller
         ]);
 
         $contexto = $request->attributes->get('contexto_clinico');
+        $firmante = $this->firmanteDeLaVistaPrevia($datos['siguiente'], $contexto);
 
         try {
-            $guardar->ejecutar($contexto['medico'], $datos['modo'], $datos['nombre']);
+            $guardar->ejecutar($firmante, $datos['modo'], $datos['nombre']);
         } catch (InvalidArgumentException $excepcion) {
             return back()->with('error', $excepcion->getMessage());
         }
@@ -134,12 +145,13 @@ class ImpresionDeRecipeController extends Controller
 
     /**
      * La hoja: una sola implementación para los dos caminos. Arma los récipes pedidos, el membrete del formato del
-     * consultorio (el del centro o el del doctor), las opciones que quedaron guardadas y la próxima cita del paciente, y
-     * devuelve la página de impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
+     * consultorio (el del centro o el del doctor), las opciones que quedaron guardadas —las del **doctor que firma**— y
+     * la próxima cita del paciente, y devuelve la página de impresión (sin el armazón de la web, como el listado del día
+     * y el resumen de la historia).
      *
      * **Quién firma** (Fase 5 del cambio de `reg_medico`) es el doctor de la consulta —o, si la consulta no lo dice, el
-     * del contexto—: de él salen la firma, el sello y el QR de verificación. **Con qué membrete** sale lo decide
-     * `MembreteDelMedico::deLaImpresion` con el `reg_medico` de la consulta.
+     * del contexto—: de él salen la firma, el sello, el QR de verificación y **las opciones de impresión**. **Con qué
+     * membrete** sale lo decide `MembreteDelMedico::deLaImpresion` con el `reg_medico` de la consulta.
      *
      * **Pediatría** se decide acá, con la especialidad del contexto (`AlcanceDeLaEspecialidad`) y **no** con la edad
      * del paciente —un paciente de pediatría puede tener 21 años—: su récipe lleva la cabecera del escritorio y las
@@ -164,7 +176,9 @@ class ImpresionDeRecipeController extends Controller
         // doctor que lo avala es el que firma, no el centro.
         $documentos = $this->qr->agregar($documentos, $consulta, $firmante);
 
-        $opciones = $this->membretes->opciones($contexto['medico']);
+        // Las opciones son del doctor que firma, no del médico del contexto (que en la secretaría de un centro es el
+        // centro): salen de su fila de `recipe_formatos` aunque la hoja lleve el membrete del centro.
+        $opciones = $this->membretes->opciones($firmante);
 
         return view('clinica.imprimir.hojas', [
             'vm' => new HojasDeRecipeVista(
@@ -177,6 +191,40 @@ class ImpresionDeRecipeController extends Controller
                 $pediatria,
             ),
         ]);
+    }
+
+    /**
+     * **Quién firma la hoja a la que se vuelve**, resuelto con `MedicoQueFirma`: el doctor de la consulta o de la
+     * cita que se está imprimiendo, no el médico del contexto. En la secretaría de un centro el médico del contexto
+     * es la fila del **centro**, así que usarlo guardaría las opciones en el formato del centro; el firmante es el
+     * doctor que atendió, el mismo de la firma y el sello.
+     *
+     * `siguiente` ya está validado como una de las vistas previas de la web clínica; de su ruta sale la consulta o
+     * la cita. Se acota al consultorio del contexto como todo lo demás —una de otro consultorio no se toca— y, si no
+     * se puede resolver, firma el médico del contexto, que es lo que hacía antes.
+     *
+     * @param  array<string,mixed>  $contexto  el `contexto_clinico` de la petición
+     */
+    private function firmanteDeLaVistaPrevia(string $siguiente, array $contexto): Medico
+    {
+        if (preg_match(self::SIGUIENTE_DE_LA_CONSULTA, $siguiente, $partes) === 1) {
+            $consulta = Consulta::whereIn('reg_medico', $this->registrosDelMedico($contexto['medico']))
+                ->find((int) $partes[1]);
+
+            if ($consulta !== null) {
+                return $this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico'];
+            }
+        }
+
+        if (preg_match(self::SIGUIENTE_DE_LA_CITA, $siguiente, $partes) === 1) {
+            $cita = Cola::where('reg_medico', $contexto['reg_medico'])->find((int) $partes[1]);
+
+            if ($cita !== null) {
+                return $this->firma->deUnaCita($cita, $contexto['medico']) ?? $contexto['medico'];
+            }
+        }
+
+        return $contexto['medico'];
     }
 
     /**

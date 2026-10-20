@@ -278,6 +278,101 @@ class ImpresionConElFormatoDelCentroWebTest extends TestCase
         $this->assertSame($datos['doctor']->id, (int) $verificacion->medico_id);
     }
 
+    // ------------------------------------------------------ Las opciones de impresión son del doctor
+
+    /** Las dos opciones de la fila de `recipe_formatos` de ese registro, o `[null, null]` si no tiene fila. */
+    private function opcionesDe(string $regMedico): array
+    {
+        $fila = RecipeFormato::where('reg_medico', $regMedico)->first();
+
+        return $fila === null ? [null, null] : [$fila->modo_impresion, $fila->nombre_medicamento];
+    }
+
+    /** El `siguiente` del diálogo de la secretaría: la hoja del récipe 1 de la cita. */
+    private function siguienteDeLaCita(Cola $cita): string
+    {
+        return '/clinica/agenda/' . $cita->id . '/documentos/imprimir?documento=recipe-1';
+    }
+
+    /**
+     * **La secretaría de un centro cambia las opciones y quedan en la fila del doctor** (2026-10-20): su médico
+     * del contexto es la fila del centro, así que antes caían en el `recipe_formatos` del centro —el del membrete y
+     * el estilo—. Ahora se guardan bajo el registro del **doctor que firma** la hoja, que es el que atendió la cita.
+     */
+    public function test_la_secretaria_cambia_las_opciones_y_quedan_en_la_fila_del_doctor(): void
+    {
+        $datos = $this->escenarioDelCentro();
+        $siguiente = $this->siguienteDeLaCita($datos['cita']);
+
+        $this->como($datos['secretaria'], $datos['centro'], $datos['gineco'])
+            ->post(route('clinica.recipes.opciones'), ['modo' => 'solo_indicaciones', 'nombre' => 'generico', 'siguiente' => $siguiente])
+            ->assertRedirect($siguiente);
+
+        // En la fila del **doctor** que atendió.
+        $this->assertSame(['solo_indicaciones', 'generico'], $this->opcionesDe($datos['doctor']->reg_medico));
+        // La del centro no se pisó: es la del membrete y el estilo, y sigue sin opciones.
+        $this->assertSame([null, null], $this->opcionesDe($datos['centro']->reg_medico));
+        $this->assertSame('azul', RecipeFormato::where('reg_medico', $datos['centro']->reg_medico)->value('color_linea'));
+        // Y la firma y el sello del doctor siguen en su fila: sólo se escribieron las dos columnas de las opciones.
+        $delDoctor = RecipeFormato::where('reg_medico', $datos['doctor']->reg_medico)->first();
+        $this->assertSame('recipe/firmas/doctor.png', $delDoctor->firma);
+        $this->assertSame('recipe/sellos/doctor.png', $delDoctor->sello);
+        // Dos filas y ninguna de más: no se creó un formato nuevo para el centro.
+        $this->assertSame(2, RecipeFormato::whereIn('reg_medico', [$datos['centro']->reg_medico, $datos['doctor']->reg_medico])->count());
+
+        // Y la hoja de la cita —la imprima la secretaría o el doctor— sale con lo elegido.
+        $this->assertStringContainsString(
+            'Solo indicaciones · nombre genérico',
+            $this->hojaDeLaCita($datos['secretaria'], $datos['centro'], $datos['gineco'], $datos['cita']),
+        );
+    }
+
+    /** El doctor, que trabaja en el centro, cambia las opciones desde la consulta: quedan en su fila. */
+    public function test_el_doctor_cambia_las_opciones_desde_la_consulta_y_quedan_en_la_suya(): void
+    {
+        $datos = $this->escenarioDelCentro();
+        $siguiente = '/clinica/consulta/' . $datos['consulta']->id . '/recipes/1/imprimir';
+
+        $this->como($datos['doctorUser'], $datos['centro'], $datos['gineco'])
+            ->post(route('clinica.recipes.opciones'), ['modo' => 'solo_indicaciones', 'nombre' => 'generico', 'siguiente' => $siguiente])
+            ->assertRedirect($siguiente);
+
+        $this->assertSame(['solo_indicaciones', 'generico'], $this->opcionesDe($datos['doctor']->reg_medico));
+        $this->assertSame([null, null], $this->opcionesDe($datos['centro']->reg_medico));
+    }
+
+    /**
+     * **La impresión las usa aunque el membrete sea del centro**: el membrete, el logo, el pie y el color salen del
+     * centro y las opciones (y la firma) del doctor. Si se leyeran del centro, la hoja saldría con las otras.
+     */
+    public function test_la_impresion_usa_las_opciones_del_doctor_aunque_el_membrete_sea_del_centro(): void
+    {
+        $datos = $this->escenarioDelCentro();
+
+        // Las dos filas con opciones **distintas**, para que se vea cuál gana.
+        DB::table('recipe_formatos')->where('reg_medico', $datos['centro']->reg_medico)->update([
+            'modo_impresion' => 'rp_indicaciones',
+            'nombre_medicamento' => 'comercial',
+        ]);
+        DB::table('recipe_formatos')->where('reg_medico', $datos['doctor']->reg_medico)->update([
+            'modo_impresion' => 'solo_indicaciones',
+            'nombre_medicamento' => 'generico',
+        ]);
+
+        $html = $this->hojaDeLaCita($datos['secretaria'], $datos['centro'], $datos['gineco'], $datos['cita']);
+
+        // Las del doctor: sólo indicaciones y el nombre genérico del medicamento.
+        $this->assertStringContainsString('Solo indicaciones · nombre genérico', $html);
+        $this->assertStringContainsString('CEFALEXINA / CAP. 500 MG', $html);
+        $this->assertStringNotContainsString('KEFORAL', $html);
+        $this->assertStringNotContainsString('recipe-mitad-rp', $html);
+        // Y el membrete, el logo y el color siguen siendo los del centro (no se mezclan los formatos).
+        $this->assertStringContainsString('Servicio del centro', $html);
+        $this->assertStringContainsString('/storage/logos/centro.png', $html);
+        $this->assertStringContainsString('linea-azul', $html);
+        $this->assertStringContainsString('firma-nombre">Dra. Ana Imprime', $html);
+    }
+
     // ------------------------------------------------------------------------- La historia del paciente
 
     public function test_la_historia_imprime_el_encabezado_del_formato_del_centro(): void

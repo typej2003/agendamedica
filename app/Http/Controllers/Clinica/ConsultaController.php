@@ -117,6 +117,7 @@ use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
+use App\Clinica\Impresion\MedicoQueFirma;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Verificacion\VerificacionesDeLaConsulta;
@@ -167,6 +168,7 @@ class ConsultaController extends Controller
         private MembreteDelMedico $membretes,
         private ProximaCitaDelRecipe $proximaCita,
         private VerificacionesDeLaConsulta $verificaciones,
+        private MedicoQueFirma $firma,
     ) {
     }
 
@@ -1871,9 +1873,12 @@ class ConsultaController extends Controller
 
     /**
      * Lo que la sección de récipes ofrece para **imprimir** (WEB-5.2): el diálogo con las opciones guardadas del
-     * médico, la próxima cita que saldría al pie de la hoja, "Hacer cita" —el formulario de la agenda con el
-     * paciente ya elegido, que vuelve a esta sección— y la vista previa de cada récipe. Las URLs las resuelve
-     * el controlador, como en el resto de la web clínica.
+     * **doctor que firma** la hoja, la próxima cita que saldría al pie de la hoja, "Hacer cita" —el formulario de la
+     * agenda con el paciente ya elegido, que vuelve a esta sección— y la vista previa de cada récipe. Las URLs las
+     * resuelve el controlador, como en el resto de la web clínica.
+     *
+     * Las opciones son las del firmante (`MedicoQueFirma`) y no las del médico del contexto: en la secretaría de un
+     * centro el contexto es la fila del centro, y la consulta pudo atenderla otro doctor del centro (2026-10-20).
      *
      * @return array{dialogo:OpcionesDeImpresionVista, proximaCita:?string, hacerCita:string, imprimir:\Closure, imprimirPareja:string}
      */
@@ -1881,9 +1886,10 @@ class ConsultaController extends Controller
     {
         $id = $consulta->id;
         $proxima = $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId);
+        $firmante = $this->firma->deUnaConsulta($consulta, $medico) ?? $medico;
 
         return [
-            'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($medico), route('clinica.recipes.opciones')),
+            'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($firmante), route('clinica.recipes.opciones')),
             'proximaCita' => $proxima === null ? null : ProximaCitaDelRecipe::texto($proxima),
             'hacerCita' => route('clinica.agenda.nueva', ['paciente_id' => $pacienteId, 'volver_consulta' => $id]),
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),

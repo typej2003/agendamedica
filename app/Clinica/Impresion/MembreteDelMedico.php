@@ -64,14 +64,17 @@ final class MembreteDelMedico
     }
 
     /**
-     * Las opciones de impresión que dejó la última vez cualquiera que imprimió con este médico.
+     * Las opciones de impresión que dejó la última vez cualquiera que imprimió con **este médico**.
      *
-     * Son **del médico y no del membrete**: se guardan bajo su registro principal (`GuardarOpcionesDeImpresion`),
-     * así que se leen de ahí aunque la hoja salga con el membrete del centro.
+     * Son **del doctor que firma y no del membrete** (decisión del usuario, 2026-10-20): el parámetro es el
+     * **firmante** (`MedicoQueFirma`), no el médico del contexto —en la secretaría de un centro ese es la fila del
+     * centro—, y se leen de su registro de formato (`Medico::registroDelFormato()`, el mismo bajo el que escribe
+     * `GuardarOpcionesDeImpresion`), así que salen de ahí aunque la hoja se imprima con el membrete del centro. La
+     * fila del centro es **otra**: tiene su membrete y su estilo, y no se toca.
      */
     public function opciones(Medico $medico): OpcionesDeRecipe
     {
-        $registro = $medico->regMedicoPrincipal();
+        $registro = $medico->registroDelFormato();
 
         return OpcionesDeRecipe::desde($registro === null ? null : RecipeFormato::where('reg_medico', $registro)->first());
     }

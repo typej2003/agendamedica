@@ -16,6 +16,7 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
+use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -176,11 +177,13 @@ class MostradorController extends Controller
         // abre una si no hay, para que la pantalla tenga qué mostrar). No pide confirmación porque no
         // hay nada que marcar; lo resuelve el diálogo de la vista.
         if (! $this->citaPorAtender($cita)) {
-            return $this->entrarALaConsulta($request, $cita, $abrir, $registros, $pacienteId, $dia);
+            return $this->entrarALaConsulta($request, $cita, $abrir, $registros, $pacienteId, $dia, $contexto['medico']);
         }
 
         try {
-            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+            // La consulta que se cree queda **del doctor del contexto** (2026-10-20):
+            // `medico_id` y su clave legacy, que es lo que después resuelve quién firma la hoja.
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'), $contexto['medico']);
         } catch (InvalidArgumentException $excepcion) {
             return $this->sinHistoria($pacienteId, $excepcion->getMessage());
         }
@@ -220,11 +223,12 @@ class MostradorController extends Controller
         array $registros,
         int $pacienteId,
         Carbon $dia,
+        Medico $medico,
     ): RedirectResponse {
         try {
             // `nueva` también vale acá: desde una cita ya atendida se puede abrir la consulta nueva del
             // día (el "consulta nueva" del legado no exige que la cita esté sin atender).
-            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'), $medico);
         } catch (InvalidArgumentException $excepcion) {
             return $this->sinHistoria($pacienteId, $excepcion->getMessage());
         }

@@ -16,8 +16,9 @@ use App\Models\Medico;
  *
  * De dónde sale, en orden (el primero que exista gana):
  *
- *  1. **`consultas.medico_id` / `cola.medico_id`** — el `medicos.id` del doctor. Es la fuente de verdad desde la
- *     Fase 3, la escribe `AsignarMedicoACita` y es el único camino a la cita de un centro.
+ *  1. **`consultas.medico_id` / `cola.medico_id`** — el `medicos.id` del doctor. Es la fuente de verdad: la
+ *     escribe `AsignarMedicoACita` en la cita (Fase 3) y `CrearConsulta` en la consulta que abre la web
+ *     (2026-10-20), con el doctor del contexto.
  *  2. **`consultas.medico` / `cola.medico`** — la **clave legacy** de `evolucion` que sigue leyendo el escritorio.
  *     La clave identifica al doctor dentro de un consultorio, así que se buscan los doctores que atienden en el
  *     consultorio de la cita y, entre sus filas de `evolucion` (en cualquiera de sus registros), la que tiene esa
@@ -44,9 +45,10 @@ final class MedicoQueFirma
     }
 
     /**
-     * El doctor de la **consulta** (el médico imprime desde la consulta), o el de respaldo. La consulta no siempre
-     * dice quién la atendió —las que crea la web dejan `medico_id` y `medico` nulos (`CrearConsulta`)—: en ese caso
-     * el que firma es el médico del contexto, que es el que está imprimiendo.
+     * El doctor de la **consulta** (el médico imprime desde la consulta), o el de respaldo. La consulta que crea la
+     * web ya lo dice (`CrearConsulta` escribe `medico_id` y su clave); las que crea el sync del móvil y las viejas
+     * pueden no tenerlo, y en ese caso el que firma es el que se pasa como respaldo —el médico del contexto, que es
+     * el que está imprimiendo—.
      */
     public function deUnaConsulta(Consulta $consulta, ?Medico $porDefecto = null): ?Medico
     {

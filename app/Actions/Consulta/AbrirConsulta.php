@@ -7,6 +7,7 @@ use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\Medico;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
 
@@ -54,6 +55,9 @@ final class AbrirConsulta
      * @param  CarbonInterface|null  $fecha  el día de la consulta; por defecto, **hoy en el consultorio**
      * @param  bool  $nueva  `true` = "consulta nueva" (el `nroconsulta` siguiente aunque haya una hoy);
      *                       `false` = "re-atender" (la de hoy si existe)
+     * @param  Medico|null  $medico  **el doctor que atiende** (el del contexto): la consulta que se cree queda
+     *                               con él en `medico_id` y con su clave legacy en `medico` (2026-10-20). La
+     *                               consulta que ya existía no se toca.
      *
      * @throws InvalidArgumentException si la cita no dice a qué paciente de este médico pertenece, o si
      *                                  ese paciente todavía no tiene número de historia
@@ -63,6 +67,7 @@ final class AbrirConsulta
         array $registrosMedicos,
         ?CarbonInterface $fecha = null,
         bool $nueva = false,
+        ?Medico $medico = null,
     ): ConsultaAbierta {
         $pacienteId = $this->pacienteDeLaCita->opcional($cita, $registrosMedicos);
 
@@ -85,7 +90,7 @@ final class AbrirConsulta
         $consulta = $nueva ? null : $this->delDia($historia, $dia);
 
         return new ConsultaAbierta(
-            $consulta ?? $this->crearConsulta->ejecutar($historia, $dia),
+            $consulta ?? $this->crearConsulta->ejecutar($historia, $dia, $medico),
             $historia,
             $pacienteId,
         );

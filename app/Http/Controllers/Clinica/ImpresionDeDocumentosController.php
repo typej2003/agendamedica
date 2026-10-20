@@ -143,6 +143,10 @@ class ImpresionDeDocumentosController extends Controller
             return redirect()->route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => $disponibles[0]['clave']]);
         }
 
+        // Las opciones de la hoja son del **doctor que atendió** la cita (el de la firma), no del médico del contexto:
+        // en la secretaría de un centro el contexto es la fila del centro (2026-10-20).
+        $firmante = $this->firma->deUnaCita($cita, $contexto['medico']) ?? $contexto['medico'];
+
         return view('clinica.imprimir.documentos-de-la-cita', [
             'vm' => new DocumentosDeLaCitaVista(
                 $de['nombre'],
@@ -151,7 +155,7 @@ class ImpresionDeDocumentosController extends Controller
                 $disponibles,
                 route('clinica.agenda', ['vista' => 'dia', 'fecha' => $dia, 'sede' => 'todas']),
                 fn (string $clave) => route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => $clave]),
-                new OpcionesDeImpresionVista($this->membretes->opciones($contexto['medico']), route('clinica.recipes.opciones')),
+                new OpcionesDeImpresionVista($this->membretes->opciones($firmante), route('clinica.recipes.opciones')),
             ),
         ]);
     }
@@ -201,9 +205,9 @@ class ImpresionDeDocumentosController extends Controller
 
     /**
      * La hoja: una sola implementación para los dos caminos. Arma los documentos pedidos, el membrete del formato del
-     * consultorio (el del centro o el del doctor), las opciones de impresión que quedaron guardadas (de los récipes) y la
-     * próxima cita del paciente, y devuelve la página de impresión (sin el armazón de la web, como el listado del día y el
-     * resumen de la historia).
+     * consultorio (el del centro o el del doctor), las opciones de impresión que quedaron guardadas —las del **doctor
+     * que firma**— y la próxima cita del paciente, y devuelve la página de impresión (sin el armazón de la web, como el
+     * listado del día y el resumen de la historia).
      *
      * **Quién firma** (Fase 5 del cambio de `reg_medico`): el doctor de la cita (`$firmante`, que resuelve la secretaría) o,
      * si no se pasa, el de la consulta; y si la consulta tampoco lo dice, el del contexto. De él salen la firma, el sello y
@@ -241,7 +245,9 @@ class ImpresionDeDocumentosController extends Controller
         // avalado por el doctor que firma.
         $documentos = $this->qr->agregar($documentos, $consulta, $firmante);
 
-        $opciones = $this->membretes->opciones($contexto['medico']);
+        // Las opciones de la hoja son del **doctor que firma**, no del médico del contexto (en la secretaría de un
+        // centro el contexto es el centro): salen de su fila de `recipe_formatos` aunque el membrete sea del centro.
+        $opciones = $this->membretes->opciones($firmante);
 
         return view('clinica.imprimir.hojas', [
             'vm' => new HojasImpresasVista(
