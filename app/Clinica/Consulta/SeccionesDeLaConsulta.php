@@ -24,8 +24,8 @@ namespace App\Clinica\Consulta;
  *  - `titulo`, `icono` y `detalle`: lo que se muestra en la pantalla.
  *  - `tarea`: la tarea de la web que lo completa (`WEB-4.2`… y `F9`).
  *  - `estado`: `listo` (ya tiene pantalla) o `proximamente`.
- *  - `seccion`: la clave de `?seccion=` que lo abre **dentro de la misma consulta**; `null` en el que todavía no
- *    tiene pantalla (la pre-factura, que llega con F9).
+ *  - `seccion`: la clave de `?seccion=` que lo abre **dentro de la misma consulta**; `null` en un ítem que
+ *    todavía no tenga pantalla (desde F9, con la pre-factura, no queda ninguno).
  *
  * El orden del catálogo es el del legado y no se reordena.
  */
@@ -112,7 +112,7 @@ final class SeccionesDeLaConsulta
     /** «Indicadores incidentes»: el panel de **nefrología pediátrica** (`tabpage_35` del escritorio). */
     public const SECCION_INDICADORES = 'indicadores';
 
-    /** «Pre-factura»: llega con F9. */
+    /** «Pre-factura» (F9): los conceptos facturables de la consulta (`his_con_pre_factura`). */
     public const SECCION_PREFACTURA = 'prefactura';
 
     /** «Neumología»: la pestaña de neumología pediátrica (R.X. de tórax, espirometría, broncoscopía). */
@@ -182,8 +182,8 @@ final class SeccionesDeLaConsulta
             'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
             'seccion' => self::SECCION_DATOS],
         ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
-            'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente',
-            'seccion' => null],
+            'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
+            'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
     ];
 
     /**
@@ -238,8 +238,8 @@ final class SeccionesDeLaConsulta
             'detalle' => 'El adulto que responde por el paciente: quién lo trae y a quién se le avisa.', 'tarea' => 'F3', 'estado' => 'listo',
             'seccion' => self::SECCION_REPRESENTANTE],
         ['numero' => 15, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
-            'detalle' => 'Los ítems de facturación de la consulta.', 'tarea' => 'F9', 'estado' => 'proximamente',
-            'seccion' => null],
+            'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
+            'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
     ];
 
     /**
@@ -321,10 +321,9 @@ final class SeccionesDeLaConsulta
             $extras = [];
         }
 
-        // Las secciones del postgrado se insertan detrás de su ítem ancla, en el orden en que las declara. Un
-        // postgrado cuya ancla es un ítem **sin sección** (la pre-factura, que todavía no tiene pantalla) se agrega
-        // **al final**, que es donde el escritorio lo pone: «I.Q.» va después de la pre-factura.
-        $alFinal = [];
+        // Las secciones del postgrado se insertan detrás de su ítem ancla, en el orden en que las declara («I.Q.» va
+        // después de la pre-factura, que es donde el escritorio lo pone).
+        $salida = [];
 
         foreach ($base as $item) {
             $salida[] = $item;
@@ -333,28 +332,11 @@ final class SeccionesDeLaConsulta
                 if ($extra['despues_de'] === $item['seccion']) {
                     $salida[] = $extra;
                     unset($extras[$indice]);
-                } elseif (self::anclaSinSeccion($extra['despues_de'])) {
-                    $alFinal[] = $extra;
-                    unset($extras[$indice]);
                 }
             }
         }
 
-        return array_merge($salida, $alFinal);
-    }
-
-    /**
-     * Los ítems del catálogo que **todavía no tienen sección** (la pre-factura, F9): un postgrado que se ancla en uno
-     * de ellos se agrega **al final** de la lista, en lugar de desaparecer.
-     *
-     * @var array<string,true>
-     */
-    private const ANCLAS_SIN_SECCION = [self::SECCION_PREFACTURA => true];
-
-    /** ¿La clave ancla es un ítem del catálogo sin sección? */
-    private static function anclaSinSeccion(?string $despuesDe): bool
-    {
-        return $despuesDe !== null && isset(self::ANCLAS_SIN_SECCION[$despuesDe]);
+        return $salida;
     }
 
     public static function total(?string $especialidad = null, array $seccionesPostgrados = []): int
@@ -362,7 +344,7 @@ final class SeccionesDeLaConsulta
         return count(self::delaEspecialidad($especialidad, $seccionesPostgrados));
     }
 
-    /** Cuántos ítems ya tienen pantalla: 12 de 13 en ginecología (sólo falta la pre-factura → F9) y 13 de 14 en pediatría. */
+    /** Cuántos ítems ya tienen pantalla: desde F9 (la pre-factura), todos: 13 de 13 en ginecología y 14 de 14 en pediatría. */
     public static function disponibles(?string $especialidad = null, array $seccionesPostgrados = []): int
     {
         return count(array_filter(self::delaEspecialidad($especialidad, $seccionesPostgrados), fn (array $item) => $item['estado'] === 'listo'));
@@ -419,9 +401,8 @@ final class SeccionesDeLaConsulta
     /**
      * **Los hijos del grupo «Consulta» del menú lateral**: un ítem por sección, con el activo marcado.
      *
-     * Sólo el nombre y el icono (nada de descripciones, contadores ni la pastilla "Próximamente"). El ítem que todavía
-     * no tiene pantalla (la pre-factura) va **sin enlace** y con `deshabilitado`, para que la lista no se rompa cuando
-     * F9 le agregue su sección: alcanza con cambiar su `estado` en el catálogo.
+     * Sólo el nombre y el icono (nada de descripciones, contadores ni la pastilla "Próximamente"). Un ítem que todavía
+     * no tenga pantalla iría **sin enlace** y con `deshabilitado` (desde F9 no queda ninguno).
      *
      * El enlace es el de la consulta que se está atendiendo, con la sección en la query —la misma dirección que el
      * shell usaba en su panel—, así que navegar por el menú no cambia de pantalla.

@@ -241,8 +241,21 @@ consulta.
   verificadores que entran por `/clinica/contexto` **no pueden dar por hecho que existe `select[name=office_id]`**:
   se adaptaron `verificar-menu-por-especialidad-web.js`, `verificar-alta-rapida-y-sede-web.js` y
   `verificar-observaciones-2026-10-17.js`. Trampa 147.
-- **Falta**: sólo la **pre-factura** (F9, administración: se deja para después). El árbol de PediaReport, sus cinco
-  postgrados y sus informes impresos están implementados.
+- **Pre-factura (F9, 2026-10-20, ginecología y pediatría)**: `?seccion=prefactura`, el último ítem «Documentos» de los
+  dos catálogos (ya no quedan ítems «Próximamente»: 13 de 13 y 14 de 14; `ANCLAS_SIN_SECCION` se borró y «I.Q.» se
+  ancla detrás de la pre-factura como cualquier postgrado). Los ítems viven en **`his_con_pre_factura`** —clave de
+  negocio `numhistoria` + `nroconsulta` + `codigo`, un concepto por consulta; cargarlo otra vez corrige
+  `cantidad`/`monto`— y salen **sólo** del catálogo `motivo_factura` del médico (sin texto libre; la descripción se
+  copia al cargar, el monto propuesto es el `monto` del catálogo y es editable; `monto_seg` se muestra como referencia).
+  El total es Σ `cantidad × monto` y no se guarda. `id_registro` (`double NOT NULL`) = mayor del médico + 1. No escribe
+  `factura_cliente` ni `cola`. `PreFacturaDeLaConsulta` es el mapa, `GuardarItemDePreFactura`/`QuitarItemDePreFactura`
+  la escritura (sólo lo cambiado, rastro por columna, `created`/`deleted`), `PreFacturaVista` + `_prefactura.blade.php`
+  la pantalla y `ConsultaPreFacturaController` las rutas `POST`/`DELETE /clinica/consulta/{consulta}/prefactura` (el
+  código va en el cuerpo). Modelos `PreFacturaConsulta` y `MotivoFactura`. ⚠️ **No relevado del escritorio** (las
+  fuentes no están en el repo): si `his_con_pre_factura` tiene clave primaria en el PowerBuilder, cómo genera
+  `id_registro` y cuándo aplica `monto_seg`; por eso la tabla entró a `sin_clave_con_altas_del_app` (inocuo si se sube
+  por fila). El ABM de `motivo_factura` en la web no existe todavía. Tests: `Feature/ConsultaPreFacturaWebTest` (7).
+- El árbol de PediaReport, sus cinco postgrados, sus informes impresos y la pre-factura están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
 

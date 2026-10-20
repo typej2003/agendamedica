@@ -92,6 +92,9 @@ final class ConsultaShellVista
     /** La clave de la sección de **Procedimientos** (gastroenterología pediátrica, ítem 8 de pediatría) en `?seccion=`. */
     public const SECCION_PROCEDIMIENTOS = SeccionesDeLaConsulta::SECCION_PROCEDIMIENTOS;
 
+    /** La clave de la sección de la **pre-factura** (F9) en `?seccion=`. */
+    public const SECCION_PREFACTURA = SeccionesDeLaConsulta::SECCION_PREFACTURA;
+
     /** La clave de la sección de **I.Q.** (cirugía pediátrica, último ítem de pediatría) en `?seccion=`. */
     public const SECCION_QUIRURGICO = SeccionesDeLaConsulta::SECCION_QUIRURGICO;
 
@@ -411,7 +414,7 @@ final class ConsultaShellVista
      *
      * Desde O-06 la consulta sin `?seccion=` abre en Motivos de consulta, así que este estado dejó de ser el
      * camino normal; no se borra porque sigue siendo el destino de una sección pedida que no está en el
-     * catálogo (y de la pre-factura, que todavía no tiene pantalla).
+     * catálogo.
      *
      * No dice que "no hay datos" —sería mentira: hay una consulta abierta—, dice qué es la pantalla y que
      * las secciones se abren desde el **menú lateral** (el grupo «Consulta», que reemplazó al panel). Con
@@ -423,8 +426,7 @@ final class ConsultaShellVista
             'icono' => 'bi-list-ul',
             'titulo' => 'Elige una sección en el menú',
             'texto' => 'Esta es la pantalla de la consulta. Los ítems del grupo «Consulta» del menú lateral '
-                . '—desde los motivos de consulta hasta los datos personales del paciente— se abren acá; el que '
-                . 'todavía no tiene pantalla (la pre-factura) llega con la tarea siguiente. Cuando termines la atención, la acción '
+                . '—desde los motivos de consulta hasta la pre-factura— se abren acá. Cuando termines la atención, la acción '
                 . 'del encabezado la cierra y te devuelve a la agenda del día.',
         ];
     }

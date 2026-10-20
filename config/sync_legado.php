@@ -149,6 +149,10 @@ return [
         // sentencia (`tr_ddrsync_formato_print`, `op = T`, sin los `_ins/_upd/_del`), así que cada subida reemplaza la tabla entera del
         // médico. Sin esta línea esa subida borraría las plantillas que creó la web. Cada fila anota su `created` bajo `formato_print`.
         'formato_print' => 'formato_print',
+        // Los ítems de la pre-factura que crea la web (F9, `GuardarItemDePreFactura`). **No está relevado** si
+        // `his_con_pre_factura` tiene clave primaria en el PowerBuilder (`id_registro` lo sugiere): si la tiene, se sube por
+        // fila y esta línea no se usa nunca; si no, evita que la subida de la tabla entera borre las filas de la web.
+        'his_con_pre_factura' => 'his_con_pre_factura',
     ],
 
     // Columnas que el escritorio NO conoce y que el reemplazo de una tabla sin clave no debe borrar (WEB-8.1c). Al reemplazar
