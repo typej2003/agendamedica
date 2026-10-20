@@ -783,6 +783,11 @@ fases siguientes. Lo nuevo se apoya en eso:
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
   los conteos de pacientes e historias (`SyncResumenService`, en lote por página). El token en claro se muestra una
   sola vez (copiar o descargar `sync-token.txt`); en la base solo queda su SHA-256.
+  **Última actividad web** (2026-10-20): `users.ultima_actividad_web_at`. El middleware `RegistrarActividadWeb` (grupo
+  `web`, sin el latido `clinica.sesion`) **no escribe en la base**: dispara `ActividadWebRegistrada` como mucho una vez
+  cada 5 min por cuenta (`Cache::add`) y el listener `GuardarUltimaActividadWeb` (`ShouldQueue`) hace un `UPDATE` que
+  sólo avanza la fecha. ⚠️ Con `QUEUE_CONNECTION=sync` corre en el request; en producción hace falta una cola real
+  y su worker (`queue:work`), y con `database` encolar es un `INSERT` (de ahí el límite). Tests: `ActividadWebTest`.
 
 **Sync del sistema legado PowerBuilder**
 

@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\DB;
  *  - App móvil: lo más reciente entre `personal_access_tokens.last_used_at` del usuario del médico y
  *    `sync_changes` con `source = mobile`. Ojo: cerrar sesión o resetear la clave borra los tokens, así que la
  *    última actividad puede verse más vieja de lo real hasta que el app vuelva a conectarse.
+ *  - Web: `users.ultima_actividad_web_at` del usuario del médico (panel o `/clinica`). Lo escribe la cola
+ *    (`GuardarUltimaActividadWeb`) con resolución de `RegistrarActividadWeb::INTERVALO`; `null` no distingue
+ *    "nunca entró" de "entró antes de que existiera el dato" (2026-10-20), por eso la vista dice "Sin registro".
  *  - Conteos: pacientes (`medico_pacientes`) e historias (`historias`), los dos indexados por médico.
  */
 class SyncResumenService
@@ -38,6 +41,7 @@ class SyncResumenService
      *     carga: ?SyncCarga,
      *     ultima_escritorio: ?Carbon,
      *     ultima_app: ?Carbon,
+     *     ultima_web: ?Carbon,
      *     pacientes: int,
      *     historias: int
      * }> indexado por `medicos.id`
@@ -80,6 +84,10 @@ class SyncResumenService
                 ->pluck('ultimo', 'tokenable_id')
             : collect();
 
+        $actividadWeb = $userIds
+            ? DB::table('users')->whereIn('id', $userIds)->pluck('ultima_actividad_web_at', 'id')
+            : collect();
+
         // El vínculo es del **consultorio** (`(reg_medico, paciente_id)`, migración del 2026-10-20), así que
         // los pacientes se cuentan por `reg_medico` —como las historias— y no por `medico_id`: contar por
         // médico dejaría afuera a los de los registros que tiene asignados.
@@ -119,6 +127,7 @@ class SyncResumenService
                     collect([$this->fecha($sesiones[$medico->user_id] ?? null)]),
                     $deCambios('mobile')
                 ),
+                'ultima_web'        => $this->fecha($actividadWeb[$medico->user_id] ?? null),
                 'pacientes'         => (int) collect($regs)->sum(fn ($r) => $pacientes[$r] ?? 0),
                 'historias'         => (int) collect($regs)->sum(fn ($r) => $historias[$r] ?? 0),
             ];
