@@ -80,8 +80,13 @@ class SyncResumenService
                 ->pluck('ultimo', 'tokenable_id')
             : collect();
 
-        $pacientes = DB::table('medico_pacientes')->whereIn('medico_id', $ids)
-            ->selectRaw('medico_id, count(*) as n')->groupBy('medico_id')->pluck('n', 'medico_id');
+        // El vínculo es del **consultorio** (`(reg_medico, paciente_id)`, migración del 2026-10-20), así que
+        // los pacientes se cuentan por `reg_medico` —como las historias— y no por `medico_id`: contar por
+        // médico dejaría afuera a los de los registros que tiene asignados.
+        $pacientes = $todosLosRegs
+            ? DB::table('medico_pacientes')->whereIn('reg_medico', $todosLosRegs)
+                ->selectRaw('reg_medico, count(distinct paciente_id) as n')->groupBy('reg_medico')->pluck('n', 'reg_medico')
+            : collect();
         $historias = $todosLosRegs
             ? DB::table('historias')->whereIn('reg_medico', $todosLosRegs)
                 ->selectRaw('reg_medico, count(*) as n')->groupBy('reg_medico')->pluck('n', 'reg_medico')
@@ -114,7 +119,7 @@ class SyncResumenService
                     collect([$this->fecha($sesiones[$medico->user_id] ?? null)]),
                     $deCambios('mobile')
                 ),
-                'pacientes'         => (int) ($pacientes[$medico->id] ?? 0),
+                'pacientes'         => (int) collect($regs)->sum(fn ($r) => $pacientes[$r] ?? 0),
                 'historias'         => (int) collect($regs)->sum(fn ($r) => $historias[$r] ?? 0),
             ];
         }

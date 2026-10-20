@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\DB;
  *
  * El número de historia vive en `historias` y en `medico_pacientes`, y los dos los escriben juntos todos
  * los caminos de sync (carga inicial, escritorio, alta del app, `AsignarHistoria`). Acá se lee **del
- * pivote**, que es el vínculo por médico —el mismo que usan la agenda y los cumpleaños—, y se limpia con
- * `CamposDePaciente`: el legado lo guarda como texto y acepta vacíos y espacios. `FiltroDePacientes` es
- * quien dice, en SQL y en un solo lugar, qué filas de ese pivote están "sin historia" (WEB-3.3).
+ * pivote**, que desde la Fase 1 del cambio de `reg_medico` es el vínculo **del consultorio** —una fila
+ * por `(reg_medico, paciente_id)`—, y se limpia con `CamposDePaciente`: el legado lo guarda como texto y
+ * acepta vacíos y espacios. `FiltroDePacientes` es quien dice, en SQL y en un solo lugar, qué filas de
+ * ese pivote están "sin historia" (WEB-3.3).
  */
 class PacientesDelConsultorio
 {
@@ -54,12 +55,14 @@ class PacientesDelConsultorio
      */
     public function listar(string $regMedico, string $buscar = '', string $filtro = FiltroDePacientes::TODOS): LengthAwarePaginator
     {
+        // Sin `distinct()`: desde la Fase 1 del cambio de `reg_medico` el vínculo es **uno por paciente y
+        // consultorio** (`UNIQUE (reg_medico, paciente_id)`, migración del 2026-10-20), así que el `join`
+        // devuelve una fila por paciente y ni la tabla ni la cuenta del paginador pueden duplicarse.
         return $this->conFiltro($this->delConsultorio($regMedico), $filtro)
             ->when($buscar !== '', fn ($consulta) => BusquedaDePacientes::aplicar($consulta, $buscar))
             ->orderBy('pacientes.apellidos')
             ->orderBy('pacientes.nombres')
             ->select(self::COLUMNAS)
-            ->distinct()
             ->paginate(self::POR_PAGINA)
             ->withQueryString();
     }

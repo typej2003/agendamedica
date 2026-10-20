@@ -11,14 +11,15 @@ use App\Models\Paciente;
  * **Poblar `medico_pacientes` e `historias` desde la tabla `pacientes`**, después de importar un dump del
  * legado por el panel del `/admin` (`CargarSql`).
  *
- * El número de historia es único **por registro** (`historias` tiene `(reg_medico, numhistoria)` único),
- * pero esa unicidad **no** está en el vínculo `medico_pacientes`. El importador escribía el vínculo con el
- * número del dump y **después** creaba la historia: si el número ya era de otro paciente de ese mismo
- * registro (un dump cargado dos veces, o el import de pediatría sobre un consultorio que ya tenía
- * pacientes), la fila de `historias` fallaba por la clave única, el proceso se cortaba a la mitad **y el
- * vínculo quedaba escrito**. El resultado era el peor de los estados: dos pacientes con el mismo número en
- * el mismo consultorio, sin que ninguna pantalla pudiera saber cuál es el bueno — la agenda nombraba a uno
- * y «Atender» abría al otro (informe del usuario, 2026-10-19).
+ * El número de historia es único **por registro** (`historias` tiene `(reg_medico, numhistoria)` único), y
+ * desde la Fase 1 del cambio de `reg_medico` el **vínculo también** es único **por consultorio**
+ * (`(reg_medico, paciente_id)`, migración del 2026-10-20). El importador escribía el vínculo con el número
+ * del dump y **después** creaba la historia: si el número ya era de otro paciente de ese mismo registro (un
+ * dump cargado dos veces, o el import de pediatría sobre un consultorio que ya tenía pacientes), la fila de
+ * `historias` fallaba por la clave única, el proceso se cortaba a la mitad **y el vínculo quedaba escrito**.
+ * El resultado era el peor de los estados: dos pacientes con el mismo número en el mismo consultorio, sin
+ * que ninguna pantalla pudiera saber cuál es el bueno — la agenda nombraba a uno y «Atender» abría al otro
+ * (informe del usuario, 2026-10-19).
  *
  * La regla, ahora, es **mirar antes de escribir** y no dejar nunca un vínculo con un número ajeno:
  *
@@ -67,14 +68,29 @@ final class PoblarPacientesDelImportador
                     continue;
                 }
 
-                $yaEstaba = MedicoPaciente::where('medico_id', $medicoId)
+                $yaEstaba = MedicoPaciente::where('reg_medico', $regMedico)
                     ->where('paciente_id', $paciente->id)
                     ->exists();
 
-                MedicoPaciente::updateOrCreate(
-                    ['medico_id' => $medicoId, 'paciente_id' => $paciente->id],
-                    ['numhistoria' => $texto, 'reg_medico' => $regMedico]
-                );
+                // El vínculo es **del consultorio** (`(reg_medico, paciente_id)`, migración del 2026-10-20):
+                // si ya existía se conserva su `medico_id` y sólo se actualiza la copia del número.
+                $vinculo = MedicoPaciente::firstOrNew([
+                    'reg_medico'  => $regMedico,
+                    'paciente_id' => $paciente->id,
+                ]);
+
+                if (! $vinculo->exists) {
+                    $vinculo->medico_id = $medicoId;
+                }
+
+                $vinculo->numhistoria = $texto;
+                $vinculo->save();
+
+                // `pacientes.reg_medico` = el tenant del **primer** vínculo del paciente (no se pisa el de
+                // una ficha que ya era de otro consultorio).
+                if (! $yaEstaba && trim((string) $paciente->reg_medico) === '') {
+                    $paciente->forceFill(['reg_medico' => $regMedico])->save();
+                }
 
                 // La historia **siempre**, con la clave única del esquema: un número que sólo vive en el
                 // vínculo no se puede atender (trampa 143).

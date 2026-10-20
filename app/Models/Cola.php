@@ -73,12 +73,17 @@ class Cola extends Model
         'sms',
         'sms_text',
         'medico',
+        // ⚠️ `medico_id` **no** es `medico`: `medico` es la `clave` de `evolucion` con la que el legado
+        // identifica al doctor. `medico_id` es el `medicos.id` del **doctor asignado a la cita** (columna
+        // nueva de la migración del 2026-10-20). Nullable: la cita sin doctor queda con `null`.
+        'medico_id',
     ];
 
     protected $casts = [
         'fecha' => 'date',
         'movida_escritorio' => 'boolean',
         'facturada_escritorio' => 'boolean',
+        'medico_id' => 'integer',
     ];
 
     /** Lo que falta por cobrar de esta cita. */

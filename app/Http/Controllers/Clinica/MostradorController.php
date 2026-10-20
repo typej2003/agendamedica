@@ -280,7 +280,9 @@ class MostradorController extends Controller
         $teniaHistoria = $cita->numhistoria !== null;
 
         try {
-            $historia = $accion->ejecutar($contexto['medico'], $this->registrosDelMedico($contexto['medico']), $pacienteId);
+            // El número es del **consultorio de la cita** (el tenant del vínculo): el correlativo y la
+            // cita "sin historia" que se enlaza son los de ese registro, no los de los demás del médico.
+            $historia = $accion->ejecutar($contexto['medico'], $cita->reg_medico, $pacienteId);
         } catch (InvalidArgumentException $excepcion) {
             return $volver->with('error', $excepcion->getMessage());
         }

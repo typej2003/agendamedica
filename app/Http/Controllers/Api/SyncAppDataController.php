@@ -142,7 +142,10 @@ class SyncAppDataController extends Controller
             return $bloqueo;
         }
 
-        $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+        // Los pacientes del médico salen de los **consultorios que trabaja** (`medico_registros`), no de las
+        // filas que él mismo vinculó: el vínculo `medico_pacientes` es del tenant —una fila por
+        // `(reg_medico, paciente_id)`— desde la Fase 1 del cambio de `reg_medico` (migración del 2026-10-20).
+        $relaciones = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)->get();
         $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
         $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
 
@@ -160,7 +163,7 @@ class SyncAppDataController extends Controller
         // Lo mismo con una historia recién llenada: sin releer, el número nuevo no estaría en
         // `$numHistorias` y la consulta y el récipe que colgaron de ella no bajarían.
         if ($resultadoChanges['creo_pacientes'] || $resultadoChanges['creo_clinicas']) {
-            $relaciones = MedicoPaciente::where('medico_id', $medicoModel->id)->get();
+            $relaciones = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)->get();
             $pacienteIds = $relaciones->pluck('paciente_id')->filter()->unique()->toArray();
             $numHistorias = $relaciones->pluck('numhistoria')->filter()->unique()->toArray();
         }
@@ -1302,8 +1305,11 @@ class SyncAppDataController extends Controller
                 return;
             }
 
-            $relacion = MedicoPaciente::where('medico_id', $medico->id)
+            // El vínculo es del **consultorio**: se busca al paciente entre los registros que trabaja el
+            // médico, sin preguntar por `medico_id` (lo pudo vincular otro doctor del mismo centro).
+            $relacion = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where('paciente_id', $pacienteId)
+                ->orderBy('id')
                 ->first();
             if (!$relacion) {
                 $rechazar('Ese paciente no es de este médico.');

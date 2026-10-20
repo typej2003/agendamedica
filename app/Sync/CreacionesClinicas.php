@@ -274,7 +274,7 @@ class CreacionesClinicas
         }
 
         try {
-            $historia = $this->asignarHistoria->ejecutar($this->medico, $this->registrosMedicos, (int) $pacienteId);
+            $historia = $this->asignarHistoria->ejecutar($this->medico, $this->regMedicoDelSync(), (int) $pacienteId);
         } catch (InvalidArgumentException $e) {
             $rechazar($e->getMessage());
             return null;
@@ -284,6 +284,18 @@ class CreacionesClinicas
         $this->historias[$tempId] = $historia->id;
 
         return $this->respuestaHistoria($tempId, $historia);
+    }
+
+    /**
+     * El consultorio (tenant) con el que el sync del móvil numera las historias: el `reg_medico` de la
+     * cuenta o, si no lo tiene, el primero de sus registros. Es **el mismo criterio** con el que
+     * `SyncAppDataController::crearPaciente` da de alta al paciente: si los dos no coincidieran, el
+     * paciente quedaría vinculado a un consultorio y su historia en otro (Fase 1 del cambio de
+     * `reg_medico`: el vínculo es del tenant, no del médico).
+     */
+    private function regMedicoDelSync(): string
+    {
+        return (string) ($this->medico->reg_medico ?: ($this->registrosMedicos[0] ?? ''));
     }
 
     /**

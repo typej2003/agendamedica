@@ -370,9 +370,10 @@ class CuentaService
     /* ------------------------------------------------------------------ */
 
     /**
-     * Qué `reg_medico` ve un médico. El sync lee la agenda, las consultas y los récipes por `medico_registros` y la
-     * lista de pacientes por `medico_pacientes`, así que dar acceso a un registro hace las dos cosas: suma la fila de
-     * `medico_registros` y vincula al médico con los pacientes de ese registro (y quitarlo, lo contrario).
+     * Qué `reg_medico` ve un médico. El sync lee la agenda, las consultas y los récipes por `medico_registros` y
+     * la lista de pacientes por el **`reg_medico` del vínculo** (`medico_pacientes`), así que dar acceso a un
+     * registro le muestra sus pacientes sin copiar una sola fila: **el vínculo es del consultorio** (Fase 1 del
+     * cambio de `reg_medico`, migración del 2026-10-20).
      *
      * El `reg_medico` propio (`medicos.reg_medico`) no se puede quitar. Escrituras: lo que el médico CREE cuelga de su
      * propio `reg_medico`; lo que EDITE de un registro ajeno (confirmar o cobrar una cita) queda en los datos de ese
@@ -403,8 +404,16 @@ class CuentaService
             ->all();
     }
 
-    /** @return int cuántos pacientes se le vincularon */
-    public function asignarRegistro(Medico $medico, string $regMedico): int
+    /**
+     * Le da acceso al médico a los datos de otro consultorio. **Sólo agrega la fila de `medico_registros`.**
+     *
+     * Antes copiaba además cada paciente del registro a `medico_pacientes` con el `medico_id` del médico, porque
+     * el vínculo era uno por médico y la lista se leía por `medico_id`. Desde que el vínculo es **uno por
+     * paciente y consultorio** (`UNIQUE (reg_medico, paciente_id)`) esa copia no sólo era inútil: chocaba con el
+     * único o duplicaba al paciente. La visibilidad ahora sale del `reg_medico` —el mismo que usa la agenda—, así
+     * que alcanza con la fila de `medico_registros`.
+     */
+    public function asignarRegistro(Medico $medico, string $regMedico): void
     {
         $regMedico = trim($regMedico);
         if ($regMedico === '') {
@@ -417,33 +426,18 @@ class CuentaService
             throw ValidationException::withMessages(['regNuevo' => 'Este médico ya tiene acceso a ese reg_medico.']);
         }
 
-        return DB::transaction(function () use ($medico, $regMedico) {
+        DB::transaction(function () use ($medico, $regMedico) {
             MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
-
-            $yaTiene = DB::table('medico_pacientes')->where('medico_id', $medico->id)->pluck('paciente_id')->flip();
-            $vinculados = 0;
-            DB::table('medico_pacientes')->where('reg_medico', $regMedico)->where('medico_id', '!=', $medico->id)
-                ->orderBy('id')->get(['paciente_id', 'numhistoria'])
-                ->unique('paciente_id')
-                ->reject(fn ($f) => $yaTiene->has($f->paciente_id))
-                ->chunk(500)
-                ->each(function ($lote) use ($medico, $regMedico, &$vinculados) {
-                    DB::table('medico_pacientes')->insert($lote->map(fn ($f) => [
-                        'medico_id'   => $medico->id,
-                        'paciente_id' => $f->paciente_id,
-                        'numhistoria' => $f->numhistoria,
-                        'reg_medico'  => $regMedico,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
-                    ])->all());
-                    $vinculados += $lote->count();
-                });
-
-            return $vinculados;
         });
     }
 
-    /** Quita el acceso a un registro asignado. No borra ningún dato: solo los vínculos de este médico. */
+    /**
+     * Quita el acceso a un registro asignado. **No borra ningún dato**: sólo la fila de `medico_registros`.
+     *
+     * Antes borraba además las filas de `medico_pacientes` de ese médico y ese registro. Ya no: esas filas son
+     * **del consultorio** (el vínculo paciente ↔ tenant) y no del médico que tenía el acceso, así que borrarlas
+     * le quitaría el paciente al consultorio entero — y, con el único nuevo, dejaba al paciente sin vínculo.
+     */
     public function quitarRegistro(Medico $medico, string $regMedico): void
     {
         $regMedico = trim($regMedico);
@@ -456,7 +450,6 @@ class CuentaService
 
         DB::transaction(function () use ($medico, $regMedico) {
             DB::table('medico_registros')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
-            DB::table('medico_pacientes')->where('medico_id', $medico->id)->where('reg_medico', $regMedico)->delete();
         });
     }
 

@@ -16,6 +16,9 @@ class Paciente extends Model
 
     protected $fillable = [
         'user_id', // Relación con la tabla de usuarios modelo User, cuando ya tiene un registro en User
+        // El **consultorio (tenant) del primer vínculo** del paciente: lo escribe `CrearPaciente` sólo al
+        // crear la ficha (enlazar por cédula no lo toca) y lo rellenó la migración del 2026-10-20.
+        'reg_medico',
         'numhistoria',
         'nac',
         'cedula',
@@ -49,13 +52,14 @@ class Paciente extends Model
     /**
      * Deja rastro en `sync_changes` antes de borrarse — es lo que le permite a
      * `SyncAppDataController::pull()` avisarle al cliente que esta fila ya no existe.
-     * `reg_medico` no vive en esta tabla (ver ROADMAP.md), se resuelve por su historia.
+     * `reg_medico` es el del primer vínculo del paciente (la columna existe desde la migración del
+     * 2026-10-20); si la ficha es vieja y no lo tiene, se resuelve por su historia como antes.
      */
     protected static function booted()
     {
         static::deleting(function (Paciente $paciente) {
             SyncChange::create([
-                'reg_medico' => $paciente->historias()->value('reg_medico'),
+                'reg_medico' => $paciente->reg_medico ?? $paciente->historias()->value('reg_medico'),
                 'table_name' => 'pacientes',
                 'record_id' => $paciente->id,
                 'operation' => 'deleted',

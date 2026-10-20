@@ -19,9 +19,10 @@ class PacientesDeCita
     /** Un paciente del `reg_medico` del contexto; de otro médico no se muestra ni se confirma que exista. */
     public function delContexto(array $contexto, int $pacienteId): ?Paciente
     {
-        $relacion = MedicoPaciente::where('medico_id', $contexto['medico']->id)
+        // El vínculo es **del consultorio** (`(reg_medico, paciente_id)`), no del médico: el que lo creó
+        // pudo ser otro doctor del mismo centro o el centro mismo.
+        $relacion = MedicoPaciente::where('reg_medico', $contexto['reg_medico'])
             ->where('paciente_id', $pacienteId)
-            ->where('reg_medico', $contexto['reg_medico'])
             ->first();
 
         return $relacion !== null ? Paciente::find($relacion->paciente_id) : null;
@@ -29,7 +30,7 @@ class PacientesDeCita
 
     public function numHistoriaDe(array $contexto, Paciente $paciente): ?int
     {
-        $numhistoria = MedicoPaciente::where('medico_id', $contexto['medico']->id)
+        $numhistoria = MedicoPaciente::where('reg_medico', $contexto['reg_medico'])
             ->where('paciente_id', $paciente->id)
             ->value('numhistoria');
 

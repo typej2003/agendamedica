@@ -1352,13 +1352,15 @@ class PacienteAtencionContextService
 
             $nuevaCita = $this->crearCita()->ejecutar($regMedico, $fila, Carbon::now(), 'whatsapp');
 
-            // Vincular al paciente con el médico en medico_pacientes si aún no existe
+            // Vincular al paciente con el **consultorio** en `medico_pacientes` si aún no existe. El
+            // vínculo es uno por paciente y tenant (`(reg_medico, paciente_id)`, migración del 2026-10-20):
+            // si ya existía se conserva su `medico_id` y su `numhistoria`.
             try {
                 MedicoPaciente::firstOrCreate([
-                    'medico_id' => $medico->id,
+                    'reg_medico'  => $regMedico,
                     'paciente_id' => $paciente->id,
                 ], [
-                    'reg_medico' => $regMedico,
+                    'medico_id'   => $medico->id,
                     'numhistoria' => $numhistoria,
                 ]);
             } catch (\Throwable $e) {

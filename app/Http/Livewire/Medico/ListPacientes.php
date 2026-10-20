@@ -118,13 +118,13 @@ class ListPacientes extends Component
     {
         $paciente = Paciente::findOrFail($id);
         
-        // 1. Obtener el ID del Médico utilizando el user_id del Auth::id()
+        // 1. El médico de la cuenta (de su consultorio sale el vínculo del paciente).
         $medico = Medico::where('user_id', Auth::id())->first();
-        $medicoId = $medico ? $medico->id : null;
 
-        // 2. Obtener el numhistoria del pivote MedicoPaciente
+        // 2. Obtener el numhistoria del vínculo (`medico_pacientes`), que es **del consultorio** desde la
+        //    Fase 1 del cambio de `reg_medico`: se busca por `(reg_medico, paciente_id)`, no por médico.
         $relacionMedico = MedicoPaciente::where('paciente_id', $paciente->id)
-            ->where('medico_id', $medicoId)
+            ->where('reg_medico', $medico?->reg_medico)
             ->first();
 
         $this->paciente_id = $paciente->id;
@@ -188,13 +188,14 @@ class ListPacientes extends Component
                 $paciente = Paciente::findOrFail($this->paciente_id);
                 $paciente->update($data);
 
-                // Guardar o actualizar la relación en medico_pacientes
+                // Guardar o actualizar el **vínculo del consultorio** (`(reg_medico, paciente_id)`).
                 MedicoPaciente::updateOrCreate(
                     [
-                        'medico_id'   => $medicoId,
+                        'reg_medico'  => $medico->reg_medico,
                         'paciente_id' => $paciente->id,
                     ],
                     [
+                        'medico_id'   => $medicoId,
                         'numhistoria' => $this->numhistoria,
                     ]
                 );
@@ -203,12 +204,17 @@ class ListPacientes extends Component
             } else {
                 $paciente = Paciente::create($data);
 
-                // Crear el registro de la relación en medico_pacientes
-                MedicoPaciente::create([
-                    'medico_id'   => $medicoId,
-                    'paciente_id' => $paciente->id,
-                    'numhistoria' => $this->numhistoria,
-                ]);
+                // Crear el registro del vínculo con el consultorio del médico
+                MedicoPaciente::firstOrCreate(
+                    [
+                        'reg_medico'  => $medico->reg_medico,
+                        'paciente_id' => $paciente->id,
+                    ],
+                    [
+                        'medico_id'   => $medicoId,
+                        'numhistoria' => $this->numhistoria,
+                    ]
+                );
 
                 $mensaje = 'Paciente registrado correctamente.';
             }
@@ -235,11 +241,10 @@ class ListPacientes extends Component
         try {
             $paciente = Paciente::findOrFail($id);
             $medico = Medico::where('user_id', Auth::id())->first();
-            $medicoId = $medico ? $medico->id : null;
 
-            // Eliminar la relación pivot MedicoPaciente
+            // Eliminar el **vínculo del consultorio** con este paciente
             MedicoPaciente::where('paciente_id', $id)
-                ->where('medico_id', $medicoId)
+                ->where('reg_medico', $medico?->reg_medico)
                 ->delete();
 
             // Eliminar el paciente
