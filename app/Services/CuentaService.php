@@ -29,6 +29,16 @@ class CuentaService
 {
     public const LARGO_MINIMO_CLAVE = 8;
 
+    /**
+     * Habilidad del token Sanctum emitido en un login con clave temporal: prueba que quien lo usa acaba de
+     * escribir esa clave, así que `POST /api/app/cambiar-password` no se la vuelve a pedir. Se le quita al
+     * token que se conserva al cambiar la clave (`cambiarClave`), para que un reseteo posterior no lo reavive.
+     */
+    public const HABILIDAD_CLAVE_TEMPORAL = 'clave-temporal';
+
+    /** Marca de sesión web equivalente: el login con clave temporal acaba de verificarla. */
+    public const SESION_CLAVE_TEMPORAL = 'cuenta.clave_temporal_verificada';
+
     /** Sin caracteres que se confunden al dictarlos (0/O, 1/l/I). */
     private const ALFABETO_CLAVE = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
 
@@ -192,6 +202,12 @@ class CuentaService
             $tokens = $user->tokens();
             if ($conservarToken !== null) {
                 $tokens->where('id', '!=', $conservarToken);
+                $conservado = $user->tokens()->whereKey($conservarToken)->first();
+                if ($conservado && in_array(self::HABILIDAD_CLAVE_TEMPORAL, $conservado->abilities ?? [], true)) {
+                    $conservado->forceFill(['abilities' => array_values(array_diff(
+                        $conservado->abilities, [self::HABILIDAD_CLAVE_TEMPORAL]
+                    ))])->save();
+                }
             }
             $tokens->delete();
         });
