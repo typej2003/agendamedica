@@ -113,7 +113,7 @@ class TratamientoCatalogoController extends Controller
                     : route('clinica.catalogos.tratamientos.guardar', $tratamiento->id),
                 'lista' => route('clinica.catalogos.tratamientos'),
                 'medicamentos' => route('clinica.catalogos.medicamentos.buscar'),
-                'vademecum' => route('clinica.catalogos.medicamentos'),
+                'crearMedicamento' => route('clinica.catalogos.medicamentos.rapido'),
             ],
             (array) old(),
         )]);

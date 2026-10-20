@@ -1,35 +1,37 @@
-{{-- La caja de herramientas del editor de **tratamientos del catálogo** (WEB-8.1a): el buscador del vademécum y el
-     alta del medicamento que falta. Es el mismo editor del récipe (WEB-5.1), con los mismos ids y el mismo
-     `consulta-recipes.js`; lo que cambia es que el catálogo no se arma con otros tratamientos (sin modo
-     «Tratamientos»), el medicamento que falta se crea en su propia pantalla y las filas se ordenan.
+{{-- El buscador del editor de **tratamientos del catálogo** (WEB-8.1a): **una sola línea** dentro de la tarjeta del
+     tratamiento, entre el nombre y la lista de medicamentos. A la derecha de la barra va «Nuevo medicamento», que abre
+     el alta del que falta en un diálogo lateral (`_recipes-alta-medicamento`) con lo escrito en la barra ya puesto
+     como nombre. Los resultados son un desplegable que flota bajo la barra; elegir uno lo agrega a la lista.
 
-     Los récipes de la consulta **no** usan este parcial desde A-04: su buscador es la columna derecha de
-     `<x-ui.dos-listas>` (`_recipes-buscador`), siempre a la vista. Acá queda el buscador flotante de una sola
-     columna, que es el del catálogo.
+     Es el mismo editor del récipe (WEB-5.1): los mismos ids y el mismo `consulta-recipes.js`; lo que cambia es que el
+     catálogo no se arma con otros tratamientos (sin modo «Tratamientos») y las filas se ordenan.
 
-     Recibe `$seccion` (`ComparteElEditorDeRecipes`). Se incluye **dentro** de `#consulta-recipes`, que lleva los
-     `data-url-*` del buscador. --}}
-@include('clinica.consulta._recipes-fila-plantilla')
+     Los récipes de la consulta **no** usan este parcial desde A-04 (su buscador es `_recipes-buscador`). Recibe
+     `$seccion` (`ComparteElEditorDeRecipes`) y va **dentro** de `#consulta-recipes`, que lleva los `data-url-*`. El
+     buscador no manda nada por sí solo: lo que se elige entra a la lista y se guarda con el botón del tratamiento. --}}
+<div class="mb-3">
+    <label class="form-label" for="recipe-texto" id="recipe-etiqueta">Agregar medicamentos</label>
 
-{{-- Las herramientas para llenar el tratamiento: van **fuera** del formulario (no mandan nada por sí solas; lo que
-     eligen entra al editor y se guarda con su botón). --}}
-<x-ui.tarjeta titulo="Agregar medicamentos" icono="bi-search" class="mt-3" id="recipe-herramientas">
-    <div class="position-relative" id="recipe-busqueda">
-        <label class="form-label" for="recipe-texto" id="recipe-etiqueta">Busca en tu vademécum</label>
+    <div class="d-flex gap-2 align-items-start">
+        <div class="position-relative flex-grow-1" id="recipe-busqueda">
+            <div class="buscador-campo buscador-vivo">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" id="recipe-texto" class="form-control" autocomplete="off"
+                       placeholder="{{ $seccion->placeholderMedicamentos() }}"
+                       data-placeholder-medicamentos="{{ $seccion->placeholderMedicamentos() }}"
+                       data-placeholder-tratamientos="{{ $seccion->placeholderTratamientos() }}"
+                       aria-controls="recipe-resultados">
+            </div>
 
-        <div class="buscador-campo buscador-vivo">
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <input type="search" id="recipe-texto" class="form-control form-control-sm" autocomplete="off"
-                   placeholder="{{ $seccion->placeholderMedicamentos() }}"
-                   data-placeholder-medicamentos="{{ $seccion->placeholderMedicamentos() }}"
-                   data-placeholder-tratamientos="{{ $seccion->placeholderTratamientos() }}"
-                   aria-controls="recipe-resultados">
+            <div class="list-group resultados-flotantes" id="recipe-resultados" aria-label="Resultados de la búsqueda" aria-live="polite" hidden></div>
         </div>
 
-        <div class="list-group resultados-flotantes" id="recipe-resultados" aria-label="Resultados de la búsqueda" hidden></div>
+        <button type="button" class="btn btn-outline-primary flex-shrink-0" id="recipe-nuevo-medicamento">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo medicamento
+        </button>
     </div>
 
-    <p class="form-text mt-2 mb-0" id="recipe-ayuda"
+    <p class="form-text mt-1 mb-0" id="recipe-ayuda"
        data-ayuda-medicamentos="{{ $seccion->ayudaDelBuscador() }}"
        data-ayuda-tratamientos="{{ $seccion->ayudaDeTratamientos() }}">{{ $seccion->ayudaDelBuscador() }}</p>
 
@@ -45,14 +47,4 @@
             </span>
         </button>
     </template>
-
-    @if ($seccion->enlaceDeMedicamentos())
-        {{-- En el catálogo el medicamento que falta se crea en su pantalla (el vademécum). --}}
-        <p class="form-text mb-0 mt-2">
-            ¿No está el medicamento? Créalo primero en <a href="{{ $seccion->enlaceDeMedicamentos() }}" target="_blank" rel="noopener">Medicamentos</a>
-            (se abre en otra pestaña, así no pierdes lo que llevas).
-        </p>
-    @endif
-</x-ui.tarjeta>
-
-@include('clinica.consulta._recipes-alta-medicamento')
+</div>

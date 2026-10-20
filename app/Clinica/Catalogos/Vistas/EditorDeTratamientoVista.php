@@ -15,8 +15,9 @@ use Illuminate\Support\Collection;
  * `consulta-recipes.js`): un tratamiento y un récipe son una lista de medicamentos con cantidad e indicaciones, y el
  * buscador del vademécum es uno solo. Lo que cambia, y este ViewModel apaga o enciende:
  *
- *  - **no ofrece el modo "Tratamientos"** (un tratamiento no se arma con otros) ni el alta rápida del medicamento
- *    (en el catálogo se crea en su pantalla, `enlaceDeMedicamentos()`);
+ *  - **no ofrece el modo "Tratamientos"** (un tratamiento no se arma con otros);
+ *  - el buscador va **dentro de la misma tarjeta** del nombre y la lista, con un botón al final que abre el alta del
+ *    medicamento que falta en un diálogo lateral (`urlCrearMedicamento()`, el alta rápida del vademécum);
  *  - **ofrece subir y bajar** cada medicamento: el `orden` de un tratamiento es el de la lista;
  *  - el guardado es del tratamiento entero y explícito, con el aviso de cambios sin guardar de siempre.
  *
@@ -30,8 +31,8 @@ final class EditorDeTratamientoVista
     /**
      * @param  RecipeGrupo|null  $tratamiento  el que se edita, o `null` si es uno nuevo
      * @param  Collection<int,object>|null  $items  sus medicamentos (`TratamientosDelCatalogo::itemsDe`)
-     * @param  array<string,string>  $urls  `guardar`, `lista`, `medicamentos` (el JSON del buscador) y `vademecum`
-     *         (la pantalla de medicamentos)
+     * @param  array<string,string>  $urls  `guardar`, `lista`, `medicamentos` (el JSON del buscador) y
+     *         `crearMedicamento` (el alta rápida del vademécum, también en JSON)
      * @param  array<string,mixed>  $old  el `old()` de un POST que falló (`[]` en la primera carga)
      */
     public function __construct(
@@ -93,25 +94,9 @@ final class EditorDeTratamientoVista
         return false;
     }
 
-    public function ofreceCrearMedicamento(): bool
-    {
-        return false;
-    }
-
     public function ofreceOrdenar(): bool
     {
         return true;
-    }
-
-    public function enlaceDeMedicamentos(): ?string
-    {
-        return $this->urls['vademecum'];
-    }
-
-    /** El editor no tiene alta rápida: la trait lo pide por la URL, que acá no existe. */
-    public function urlCrearMedicamento(): string
-    {
-        return '';
     }
 
     // --------------------------------------------------------------------------------------------- Textos
@@ -124,6 +109,11 @@ final class EditorDeTratamientoVista
     public function urlTratamientos(): string
     {
         return '';
+    }
+
+    public function textoCrearMedicamento(): string
+    {
+        return 'Crear y agregar al tratamiento';
     }
 
     public function botonGuardar(): string

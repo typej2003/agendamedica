@@ -4,10 +4,11 @@
 
 @section('contenido')
     {{-- El editor de un tratamiento del catálogo (WEB-8.1a). Es **el mismo editor del récipe** (WEB-5.1): las filas de
-         medicamento (`_recipes-fila`) y la caja de herramientas (`_recipes-herramientas`) son los parciales de la
-         consulta y el JS es `consulta-recipes.js`; se declara con los mismos `id` y `data-*`. Lo que suma el
-         tratamiento es el nombre y el orden de sus medicamentos (subir y bajar). El guardado es del tratamiento
-         entero y explícito, con el aviso de «cambios sin guardar». --}}
+         medicamento (`_recipes-fila`) y el buscador (`_recipes-herramientas`) son los parciales de la consulta y el
+         JS es `consulta-recipes.js`; se declara con los mismos `id` y `data-*`. **Una sola tarjeta**: el nombre, la
+         barra de búsqueda con su botón «Nuevo medicamento» y la lista de los agregados. El alta del medicamento que
+         falta es un diálogo lateral, que va **fuera** del formulario (un formulario no se anida en otro). El guardado
+         es del tratamiento entero y explícito, con el aviso de «cambios sin guardar». --}}
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()" :volver="$vm->urlLista()" volver-texto="Volver a los tratamientos" />
 
     <x-ui.errores />
@@ -41,6 +42,8 @@
                     </x-ui.campo>
                 </div>
 
+                @include('clinica.consulta._recipes-herramientas', ['seccion' => $vm])
+
                 <ul class="recipe-editor" id="recipe-items">
                     @foreach ($editor['filas'] as $fila)
                         @include('clinica.consulta._recipes-fila', ['fila' => $fila, 'seccion' => $vm])
@@ -49,7 +52,7 @@
 
                 <div id="recipe-vacio" @if ($editor['filas'] !== []) hidden @endif>
                     <x-ui.vacio icono="bi-capsule" titulo="Todavía no hay medicamentos en este tratamiento">
-                        Búscalos abajo en tu vademécum y agrégalos. Puedes ponerles cantidad, indicaciones y orden.
+                        Búscalos arriba en tu vademécum y agrégalos. Puedes ponerles cantidad, indicaciones y orden.
                     </x-ui.vacio>
                 </div>
 
@@ -72,7 +75,8 @@
             </x-ui.tarjeta>
         </form>
 
-        @include('clinica.consulta._recipes-herramientas', ['seccion' => $vm])
+        @include('clinica.consulta._recipes-fila-plantilla', ['seccion' => $vm])
+        @include('clinica.consulta._recipes-alta-medicamento', ['seccion' => $vm])
     </div>
 @endsection
 
