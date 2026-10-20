@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\PacienteSyncController;
 use App\Http\Controllers\Api\ConsultaSyncController;
 use App\Http\Controllers\Api\ColaSyncController;
+use App\Http\Controllers\Api\ComentarioController;
 use App\Http\Controllers\Api\LoginAppController;
 use App\Http\Controllers\Api\CambiarPasswordController;
 use App\Http\Controllers\Api\NotificacionCitaController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\CambiosEscritorioController;
 use App\Http\Controllers\Api\ImagenesPcController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
+use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Services\WhatsAppService;
@@ -108,6 +110,18 @@ Route::middleware(['auth:api', 'account.active', 'password.changed'])->group(fun
     // crear motivos es poco frecuente, así que no pasa por la cola de sync. Ver MotivoConsultaController.
     Route::post('/app/motivos-consulta', [MotivoConsultaController::class, 'crear'])
         ->middleware('throttle:60,1');
+
+    // **"Ayúdanos a mejorar"** desde el app (ROADMAP §9): el comentario del médico o de su secretaría, con sus
+    // capturas opcionales, y los suyos con la respuesta. Online-only, como el alta de motivos: un comentario no se
+    // encola (si no hay señal, el app avisa y conserva lo escrito) y una imagen no puede viajar por el sync de
+    // columnas. La regla del alta es la Action `EnviarComentario`, la misma de `/clinica/ayuda`.
+    Route::get('/app/comentarios', [ComentarioController::class, 'index']);
+    Route::post('/app/comentarios', [ComentarioController::class, 'guardar'])->middleware('throttle:30,1');
+
+    // La captura adjunta, para **su autor**: la misma puerta que «Mis comentarios» de la web. El archivo vive en
+    // el disco privado `comentarios` y no hay ninguna URL pública que lo alcance, así que el app la pide con su
+    // token y la pinta como miniatura; un comentario de otra cuenta da 404.
+    Route::get('/app/comentarios/{comentario}/imagenes/{imagen}', [ImagenDelComentarioController::class, 'delAutor']);
 });
 
 Route::prefix('upload-servers')->group(function () {
