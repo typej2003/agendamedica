@@ -276,6 +276,45 @@ class ComentariosAppTest extends TestCase
         $this->assertNull($comentario->contexto);
     }
 
+    // ---------------------------------------------------------- De dónde salió (2026-10-20)
+
+    public function test_la_plataforma_del_equipo_se_guarda_para_saber_dónde_reproducirlo(): void
+    {
+        $this->medicoDePrueba();
+
+        $response = $this->enviar(['plataforma' => 'android'])->assertCreated();
+
+        $comentario = Comentario::findOrFail($response->json('data.id'));
+        $this->assertSame('android', $comentario->plataforma);
+        $this->assertSame('App · Android', $comentario->origenLegible(), 'es lo que se lee en la bandeja');
+    }
+
+    public function test_un_app_anterior_que_sólo_mandaba_la_plataforma_en_el_contexto_igual_la_deja(): void
+    {
+        $this->medicoDePrueba();
+
+        // Lo que mandaba la 0.7.0: dentro del JSON del contexto, con el nombre de `TargetPlatform`, que escribe
+        // `iOS` y `macOS` con mayúscula.
+        $response = $this->enviar([
+            'contexto' => json_encode(['version' => 'v0.7.0-dev', 'plataforma' => 'iOS']),
+        ])->assertCreated();
+
+        $comentario = Comentario::findOrFail($response->json('data.id'));
+        $this->assertSame('ios', $comentario->plataforma);
+        $this->assertSame('App · iOS', $comentario->origenLegible());
+    }
+
+    public function test_una_plataforma_que_no_se_conoce_no_rechaza_el_comentario(): void
+    {
+        $this->medicoDePrueba();
+
+        $response = $this->enviar(['plataforma' => 'calculadora'])->assertCreated();
+
+        $comentario = Comentario::findOrFail($response->json('data.id'));
+        $this->assertNull($comentario->plataforma, 'lo que importa es el comentario: el valor raro se descarta');
+        $this->assertSame('App', $comentario->origenLegible(), 'sin equipo se dice sólo el canal');
+    }
+
     // -------------------------------------------------------------------- La lectura y la respuesta
 
     public function test_la_respuesta_de_la_bandeja_llega_al_app(): void

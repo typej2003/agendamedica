@@ -42,10 +42,30 @@ class Comentario extends Model
         self::CARENCIA => 'Algo que le falta',
     ];
 
+    /**
+     * **De dónde salió el comentario.** `origen` es el canal (`web` = la clínica en el navegador, `app` = el
+     * app móvil) y `plataforma` es el equipo: las dos juntas dicen «Web» o «App · Android», que es lo que
+     * necesita quien atiende la bandeja para ir a reproducir el problema donde pasó (2026-10-20).
+     *
+     * Los nombres son los que manda el app (`defaultTargetPlatform`, en minúsculas) más `web`, que es tanto
+     * la clínica como el app abierto en un navegador (ahí `origen` los distingue).
+     */
+    public const PLATAFORMAS = [
+        'web' => 'Web',
+        'android' => 'Android',
+        'ios' => 'iOS',
+        'windows' => 'Windows',
+        'macos' => 'macOS',
+        'linux' => 'Linux',
+    ];
+
+    /** La plataforma de la web clínica; la pone el servidor, no el formulario. */
+    public const PLATAFORMA_WEB = 'web';
+
     protected $table = 'comentarios';
 
     protected $fillable = [
-        'user_id', 'medico_id', 'reg_medico', 'rol', 'origen', 'tipo', 'mensaje', 'contexto',
+        'user_id', 'medico_id', 'reg_medico', 'rol', 'origen', 'plataforma', 'tipo', 'mensaje', 'contexto',
         'estado', 'respuesta', 'respondido_por', 'respondido_el',
     ];
 
@@ -98,5 +118,64 @@ class Comentario extends Model
     public function tipoLegible(): string
     {
         return self::TIPOS[$this->tipo] ?? $this->tipo;
+    }
+
+    /**
+     * **De dónde salió, como se lee en la bandeja**: «Web» o «App · Android». Una fila anterior a la columna
+     * (o un app que no dijo su plataforma) queda en «App» o «Web», que es lo único que se sabía de ella.
+     */
+    public function origenLegible(): string
+    {
+        $plataforma = $this->plataformaLegible();
+
+        // El comentario de la web clínica: ahí la plataforma es el navegador y no hay nada más que decir.
+        if ($this->origen !== 'app') {
+            return $plataforma ?? 'Web';
+        }
+
+        if ($plataforma === null) {
+            return 'App';
+        }
+
+        // El app abierto en un navegador (Flutter web): `origen` lo distingue de la clínica, que también dice
+        // `web` en la columna.
+        return 'App · ' . ($this->plataforma === self::PLATAFORMA_WEB ? 'navegador' : $plataforma);
+    }
+
+    /** El nombre de la plataforma para pantalla; `null` si no se sabe. */
+    public function plataformaLegible(): ?string
+    {
+        $plataforma = self::normalizarPlataforma($this->plataforma);
+
+        return $plataforma === null ? null : (self::PLATAFORMAS[$plataforma] ?? ucfirst($plataforma));
+    }
+
+    /** El ícono del panel (`bootstrap-icons`) que le corresponde a la plataforma. */
+    public function iconoDeLaPlataforma(): string
+    {
+        return match (self::normalizarPlataforma($this->plataforma)) {
+            'android' => 'bi-android2',
+            'ios', 'macos' => 'bi-apple',
+            'windows' => 'bi-windows',
+            'linux' => 'bi-ubuntu',
+            default => 'bi-globe2',
+        };
+    }
+
+    /**
+     * La plataforma que se guarda, a partir de lo que mandó el cliente: en minúsculas y sólo si es una de las
+     * conocidas. `null` si no dijo nada usable —un valor raro no rechaza el comentario, igual que el contexto
+     * de `ComentarioController::contexto()`—: lo que nos tiene que llegar es lo que escribió el usuario.
+     */
+    public static function normalizarPlataforma(mixed $crudo): ?string
+    {
+        if (! is_string($crudo)) {
+            return null;
+        }
+
+        // `iOS` y `macOS` llegan capitalizados (`defaultTargetPlatform.name`); el resto, en minúsculas.
+        $plataforma = strtolower(trim($crudo));
+
+        return $plataforma === '' ? null : (array_key_exists($plataforma, self::PLATAFORMAS) ? $plataforma : null);
     }
 }

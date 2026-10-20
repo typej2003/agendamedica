@@ -58,6 +58,9 @@ class AyudaController extends Controller
         // `$request->file()` devuelve `null` cuando no vino ningún adjunto: la Action recibe una lista vacía.
         $imagenes = array_values(array_filter((array) $request->file('imagenes', [])));
 
+        // De dónde salió: la plataforma la pone el servidor —acá es una web— y no se acepta del formulario.
+        $datos['plataforma'] = Comentario::PLATAFORMA_WEB;
+
         try {
             $enviar->ejecutar($request->user(), $datos, 'web', $imagenes);
         } catch (RuntimeException $e) {

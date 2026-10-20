@@ -52,6 +52,10 @@ class ComentarioController extends Controller
             // El contexto del app (versión, pantalla) llega como cadena JSON dentro del formulario; su contenido
             // lo interpreta `contexto()`, que no rechaza el comentario si viene mal.
             'contexto' => ['nullable'],
+            // **De dónde salió** (2026-10-20): `android`, `ios`, `windows`, `macos`, `linux` o `web`. Es
+            // informativa, como el contexto —un valor raro se descarta y el comentario entra igual—, así que no
+            // lleva `in:`; quien la normaliza es `Comentario::normalizarPlataforma`.
+            'plataforma' => ['nullable', 'string', 'max:20'],
             // La cantidad es de la pantalla; el tipo y el tamaño de cada archivo, de la política compartida.
             'imagenes' => ['nullable', 'array', 'max:' . Comentario::MAXIMO_IMAGENES],
             'imagenes.*' => ArchivosDeLosComentarios::reglas(),
@@ -70,11 +74,16 @@ class ComentarioController extends Controller
         // `$request->file('imagenes')` es `null` cuando no vino ninguna captura: la Action recibe una lista vacía.
         $imagenes = array_values(array_filter((array) $request->file('imagenes', [])));
 
+        $contexto = $this->contexto($request->input('contexto'));
+
         try {
             $comentario = $enviar->ejecutar($request->user(), [
                 'tipo' => $datos['tipo'],
                 'mensaje' => $datos['mensaje'],
-                'contexto' => $this->contexto($request->input('contexto')),
+                'contexto' => $contexto,
+                // La plataforma viene aparte desde la 0.8 del app; las versiones anteriores sólo la traían dentro
+                // del contexto, así que se usa de respaldo (la bandeja la muestra igual).
+                'plataforma' => $datos['plataforma'] ?? ($contexto['plataforma'] ?? null),
             ], self::ORIGEN, $imagenes);
         } catch (RuntimeException $e) {
             // Un disco lleno o sin permisos es un problema del servidor: se dice sin lenguaje técnico —el app
