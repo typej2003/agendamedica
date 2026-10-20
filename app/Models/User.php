@@ -77,6 +77,12 @@ class User extends Authenticatable
         return $this->hasOne(Medico::class, 'user_id');
     }
 
+    /** Ficha de paciente de esta cuenta (vínculo `pacientes.user_id`). */
+    public function paciente(): HasOne
+    {
+        return $this->hasOne(Paciente::class, 'user_id');
+    }
+
     /**
      * Usuarios con rol Root o Administrador. No usa el scope `role()` de Spatie a propósito: ese lanza
      * `RoleDoesNotExist` si algún rol de la lista todavía no existe (por ejemplo `Administrador` en un
@@ -106,7 +112,12 @@ class User extends Authenticatable
             return 'clinica.inicio';
         }
 
-        // TODO (/consultorio): cuando exista el área del paciente, acá va su ruta.
+        // El paciente tiene su propia área desde el 2026-10-19 («Mis citas»): ya no entra al panel de
+        // administración. Un paciente que además atiende (Medico/Secretaria) sigue yendo al consultorio.
+        if (! $this->esAdministrador() && $this->hasRole('Paciente')) {
+            return 'paciente.citas';
+        }
+
         return 'dashboard';
     }
 

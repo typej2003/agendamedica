@@ -161,12 +161,15 @@ class AgendamientoDeCitas
      * él y lo asigna la secretaría o lo toma el médico al atenderla.
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
+     * @param  array{estado?: int}  $opciones  `estado`: el que queda al mover (el portal del paciente
+     *                                        deja la cita confirmada por él; la web clínica no lo manda)
      */
-    public function reagendar(array $contexto, Cola $cita, array $valores): ResultadoDeAgendamiento
+    public function reagendar(array $contexto, Cola $cita, array $valores, array $opciones = []): ResultadoDeAgendamiento
     {
         $regMedico = $contexto['reg_medico'];
+        $estado = isset($opciones['estado']) ? (int) $opciones['estado'] : null;
 
-        $sedes = $this->armador->sedes($regMedico);
+        $sedes = $this->armador->sedes($regMedico, $contexto['medico']->id ?? null);
         $sede = $this->sedeElegida($sedes, $valores['sede'] ?? null);
         $fecha = Carbon::createFromFormat('!Y-m-d', $valores['fecha']);
         $bloques = $sede ? $sede->bloquesDe($fecha->dayOfWeekIso) : collect();
@@ -197,8 +200,12 @@ class AgendamientoDeCitas
         // de otro día). Es lo que hace el móvil al reagendar.
         if ($jornadaActual->clave() !== $jornada->clave()) {
             $cambios['numorden'] = $jornada->siguienteNumero();
-            $cambios['estado'] = Cola::ESTADO_NO_CONFIRMADA;
+            $cambios['estado'] = $estado ?? Cola::ESTADO_NO_CONFIRMADA;
             $cambios['sms_text'] = null;
+        } elseif ($estado !== null) {
+            // El portal del paciente mueve dentro de la misma jornada y la cita tiene que quedar
+            // confirmada por él aunque no cambie el número.
+            $cambios['estado'] = $estado;
         }
 
         $aplicadas = $this->editar->ejecutar($cita, $cambios, Carbon::now(), 'web');

@@ -14,8 +14,7 @@ use Tests\TestCase;
  *
  * Desde el login unificado (2026-10-19) la pantalla no pregunta el tipo de cuenta: el rol lo resuelve
  * `AutenticacionPorCorreo`. El panel `/dashboard` quedó para administración: el médico y la secretaría
- * trabajan en `/clinica`, y si llegan al panel se los devuelve a su consultorio. El paciente sigue
- * entrando al panel mientras no exista `/consultorio` (ver el TODO en `User::rutaDeInicio`). Quien tiene
+ * trabajan en `/clinica`, y el paciente entra a **`/mis-citas`** (su área propia desde el 2026-10-19). Quien tiene
  * dos áreas no entra directo: elige en `/elegir-panel` (`User::rutaDeEntrada`).
  *
  * `DatabaseTransactions` por la razón de siempre (ver MedicAPI/AGENTS.md).
@@ -61,7 +60,7 @@ class DestinoTrasLoginTest extends TestCase
     {
         $this->assertSame('dashboard', $this->usuario('Root')->rutaDeInicio());
         $this->assertSame('dashboard', $this->usuario('Administrador')->rutaDeInicio());
-        $this->assertSame('dashboard', $this->usuario('Paciente')->rutaDeInicio());
+        $this->assertSame('paciente.citas', $this->usuario('Paciente')->rutaDeInicio());
 
         $this->assertSame('clinica.inicio', $this->usuario('Medico')->rutaDeInicio());
         $this->assertSame('clinica.inicio', $this->usuario('Secretaria')->rutaDeInicio());

@@ -128,7 +128,7 @@ class LoginUnificadoTest extends TestCase
         $this->post('/login', [
             'email'    => $paciente->email,
             'password' => 'secreto123',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('paciente.citas'));
 
         $this->assertAuthenticated();
 
