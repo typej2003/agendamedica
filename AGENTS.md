@@ -980,23 +980,79 @@ este tipo siguen la pauta salvo que sean de dos columnas.
 primera deja los botones deshabilitados con el color viejo (el "Atender" de la agenda quedaba en 1,8:1).
 Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. Y desde WEB-4.2 la hoja trae `[hidden] { display: none !important }`: Bootstrap pisaba el atributo `hidden` con `.d-flex` (ver trampa 23).
 
+## El tenant `reg_medico` y el centro médico (2026-10-20)
+
+El cambio de `reg_medico`, hecho en fases, quedó implementado del lado del servidor y de la web (commits
+`0354e4a` Fase 1, `21f2fe8` y `1b070f0` Fase 2, `4d1a07b` Fase 3, `b3a215c` Fase 5, `9467ba9` el doctor de
+la consulta y `ee8baf6` el del sync del móvil). ⚠️ En los comentarios del código y en los mensajes de commit
+la numeración es **1, 2, 3 y 5** (ninguno dice «Fase 4»), y los pacientes globales entraron con la 2. Lo que
+hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`](TRAMPAS.md) son de acá):
+
+- **`reg_medico` es el tenant.** `medico_pacientes` tiene **`UNIQUE (reg_medico, paciente_id)`** (migración
+  `2026_10_20_100000_vinculo_de_pacientes_por_reg_medico.php`): una fila por paciente y consultorio, con
+  `medico_id` = **quién lo creó** (el doctor o el centro) y `numhistoria` como **copia** para el app viejo.
+  `historias` es **la historia del tenant** (`reg_medico` + `numhistoria` + `paciente_id`),
+  `pacientes.reg_medico` es el del **primer vínculo** (se escribe sólo al crear la ficha) y `cola.medico_id`
+  es el **doctor de la cita**. La migración rellena los `reg_medico` vacíos del pivote, **deduplica** (gana la
+  fila del centro y, si no, la de id más bajo, con el número de `historias`) y **no se deshace**.
+- **El centro médico es una fila de `medicos`** con `es_centro = 1` y su propio `reg_medico`
+  (`CuentaService::crearCentro()`, desde el panel de cuentas): **no atiende** y no tiene cuenta de acceso. Los
+  doctores se vinculan con `medico_registros` (`asignarRegistro()` ya no copia pacientes), las
+  **especialidades del centro son la unión de las de sus doctores** y el formato con el que imprime es
+  `medicos.formato_reportes` (`centro`/`medico`).
+- **Contexto** (`ContextoTrabajo`/`ContextoAutomatico`): el `medico` del contexto es **el doctor logueado**
+  en todos sus registros —también en los centros donde trabaja— y, en la **secretaría**, la fila del centro
+  con la unión de especialidades; los **consultorios** son los del tenant; `/clinica/contexto` muestra **una
+  tarjeta por médico** (el menú de consultorios combina los del doctor y los del centro) y el **auto-skip
+  agrupa por médico**.
+- **Pacientes**: la lista es **global del doctor** (`PacientesDelConsultorio::listar()`: todos sus registros,
+  con el número del contexto o «sin historia en este consultorio»); la ficha **abre sin 404** si el paciente
+  está en otro registro del doctor; «ver otra historia» es un selector de **sólo lectura** y `?reg_medico=`
+  se valida contra los registros del doctor (`HistoriaDelPacienteController::registroElegido()`).
+- **Cita**: la del centro nace con **`medico_id = null`** y `cola.medico` = **`medicos.id` del centro**
+  (`MedicosDeLaCita::deUnaCitaNueva()`); la del consultorio personal, con el doctor y su `evolucion.clave`.
+  El doctor se asigna desde la agenda (la ruta `POST /clinica/agenda/{cola}/medico`, que escribe
+  `AsignarMedicoACita`) o **lo toma el médico al atender** (`AtenderCita` llama a `tomar()`), una cita
+  **atendida no cambia de doctor** e Inicio/Agenda muestran el médico o «Sin asignar» **sólo cuando el
+  consultorio tiene más de un doctor** (`MedicosDeLaCita::varios()`).
+- **Impresión**: el formato se elige por `medicos.formato_reportes` del `reg_medico` de la impresión; la
+  **firma y el sello son siempre del doctor que atendió** (`MedicoQueFirma` +
+  `MembreteDelMedico::deLaImpresion()`), el QR lo avala ese doctor y las **opciones de impresión** (modo y
+  nombre) son **del firmante** (`GuardarOpcionesDeImpresion`, `MembreteDelMedico::opciones()`). La pantalla
+  `/clinica/formato?reg_medico=<centro>` la abre el `Root`, **sólo acepta centros** (con un doctor da
+  **404**) y **no ofrece firma ni sello** (`ResuelveElRegistroDelFormato`).
+- **`consultas.medico_id`** (migración `2026_10_20_120000_add_medico_id_a_consultas.php`, nullable): la web la
+  escribe en `CrearConsulta` (con la clave legacy en `consultas.medico`) y **el sync del móvil también** desde
+  `ee8baf6`: `CreacionesClinicas::crearConsulta()` le pasa `$this->medico` a la misma Action (el médico
+  autenticado del teléfono; lo cubre `CreacionesClinicasTest`). `Consulta::medicoUsuario()` es **legacy**:
+  apunta `medico_id` a `users` y no se usa (señalada, **no** arreglada, como pide la regla 6 del workspace).
+- **Pendiente**: el **móvil** no elige ni muestra el doctor de la cita (sólo sella la consulta que crea) y el
+  **listado impreso del día** no tiene columna de médico
+  (`resources/views/clinica/agenda/imprimir.blade.php`), así que el papel no dice quién atiende cada cita.
+
 ## Convenciones y nomenclatura del dominio
 
 - **El esquema es del legado**: tablas en `snake_case` español (`cola`, `consultas`, `motivos_consulta`,
   `examen_fisico`…), con nombres de columna heredados de PowerBuilder. No renombres ni "normalices" sin
   confirmar: hay compatibilidad de datos en juego. Detalle en
   [../Docs/Wiki/07-modelo-de-datos.md](../Docs/Wiki/07-modelo-de-datos.md).
-- **`reg_medico`** es el registro profesional del médico y funciona como **clave de negocio** (el
-  modelo `MedicoRegistro` lo liga a `medicos.id`); **`numhistoria`** es la clave de negocio del paciente.
-  Casi todas las consultas cruzan por esas dos columnas, no por `id`.
-- La tabla pivote `medico_pacientes` relaciona médico ↔ paciente y lleva `numhistoria` y `reg_medico`.
+- **`reg_medico`** es el registro profesional del médico y funciona como **clave de negocio** y como
+  **tenant** (`medico_registros` liga `medicos.id` con sus registros, y un **centro médico** es otra fila
+  de `medicos` con `es_centro` y su propio `reg_medico`); **`numhistoria`** es la clave de negocio del
+  paciente. Casi todas las consultas cruzan por esas dos columnas, no por `id`.
+- La tabla pivote `medico_pacientes` relaciona **el consultorio con el paciente** (`UNIQUE (reg_medico,
+  paciente_id)`, una fila por tenant), lleva `numhistoria` y `reg_medico`, y su `medico_id` es **quién lo
+  creó** (el doctor o el centro).
+- **`medico` no es `medico_id`**: `medico` (en `cola`, `consultas` y `cola_dia_no_labor`) es la **`clave` de
+  `evolucion`** del legado y `medico_id` es el `medicos.id` de AppDDR (el doctor asignado a la cita o el que
+  atendió la consulta). La fuente de verdad es `medico_id`; la clave se sigue escribiendo para el escritorio.
 - Código y datos en **español**, archivos UTF-8.
 - Los controladores de API crecen rápido y son muy explícitos (mapeos manuales a mano). Si agregás un
   campo a una respuesta, revisá **todos** los caminos por tipo de usuario (`Medico`, `Paciente`, `Root`).
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **90** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **156** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de
