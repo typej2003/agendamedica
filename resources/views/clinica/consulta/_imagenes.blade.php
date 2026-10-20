@@ -22,9 +22,6 @@
                      :title="$estadoImagenes['titulo']">{{ $estadoImagenes['texto'] }}</x-ui.estado>
     </x-slot>
 
-    @if ($imagenes->examen() !== null)
-        <p class="texto-tenue small mb-3">{{ $imagenes->ayudaDelExamen() }}</p>
-    @endif
 
     {{-- «Esta consulta | Todas» (WEB-11.22): sólo en la galería genérica de la consulta. --}}
     @if ($imagenes->alcances() !== [])

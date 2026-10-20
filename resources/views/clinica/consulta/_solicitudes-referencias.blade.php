@@ -130,7 +130,7 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="referencia-nuevo-boton">
                     <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar un médico que no está
                 </button>
-                <p class="form-text mb-0 mt-1"><i class="bi bi-wifi" aria-hidden="true"></i> Agregar un médico necesita conexión: no se guarda sin ella.</p>
+                <p class="form-text mb-0 mt-1"><i class="bi bi-wifi" aria-hidden="true"></i> Agregar un médico necesita conexión.</p>
             @endif
         </x-slot>
     </x-ui.dos-listas>
@@ -166,7 +166,7 @@
                     <x-ui.campo etiqueta="Ciudad" for="medico-ciudad" error="ciudad" class="mb-3">
                         <input type="text" name="ciudad" id="medico-ciudad" class="form-control" maxlength="30" value="{{ old('ciudad') }}">
                     </x-ui.campo>
-                    <p class="form-text mb-0">Se agrega a tu catálogo y se refiere al paciente a él. Los nombres se guardan en mayúsculas.</p>
+                    <p class="form-text mb-0">Se agrega a tu catálogo. Los nombres se guardan en mayúsculas.</p>
                 </div>
                 <div class="dialogo-pie">
                     <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>

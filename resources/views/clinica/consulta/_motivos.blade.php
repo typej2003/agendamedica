@@ -15,9 +15,7 @@
         @endif
         <x-slot name="izquierda">
             @if ($seccion->estaVacio())
-                <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
-                    Pásalos desde tu catálogo, a la derecha.
-                </x-ui.vacio>
+                <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta"></x-ui.vacio>
             @else
                 <ul class="motivos-lista">
                     @foreach ($seccion->cargados() as $motivo)
@@ -120,7 +118,7 @@
             @csrf
             <div class="dialogo-cuerpo">
                 <x-ui.campo etiqueta="Nombre del motivo" for="motivo-descripcion" requerido
-                            :ayuda="'Hasta ' . $seccion->largoMaximo() . ' caracteres. Se guarda en mayúsculas, como en tu catálogo.'">
+                            :ayuda="'Hasta ' . $seccion->largoMaximo() . ' caracteres. Se guarda en mayúsculas.'">
                     <input type="text" name="descripcion" id="motivo-descripcion" class="form-control"
                            maxlength="{{ $seccion->largoMaximo() }}" value="{{ old('descripcion') }}" autocomplete="off">
                 </x-ui.campo>

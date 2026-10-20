@@ -16,8 +16,7 @@
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="hospitalizacion-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
 
-        <x-ui.campo etiqueta="Lugar a hospitalizar" for="hospitalizacion-hospital" error="hospital" class="mb-3"
-                    ayuda="La clínica u hospital, como quieres que salga en la orden.">
+        <x-ui.campo etiqueta="Lugar a hospitalizar" for="hospitalizacion-hospital" error="hospital" class="mb-3">
             <input type="text" name="hospital" id="hospitalizacion-hospital" class="form-control" maxlength="{{ $vm->largoDelHospital() }}" value="{{ $vm->hospital() }}">
         </x-ui.campo>
 

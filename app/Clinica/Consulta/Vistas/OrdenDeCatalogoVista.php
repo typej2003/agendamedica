@@ -313,8 +313,7 @@ final class OrdenDeCatalogoVista
                 : 'Ningún resultado con «' . $this->buscar . '». Prueba con otra palabra o quita el filtro.';
         }
 
-        return 'Cada «' . $this->verbo() . '» los agrega a la ' . $this->documentoEnMinuscula() . ' al instante; cada «Quitar», los saca. '
-            . 'El resumen clínico se guarda con su botón.';
+        return '«' . $this->verbo() . '» y «Quitar» se aplican al instante; el resumen clínico, con su botón.';
     }
 
     /** El rótulo del botón de la fila: «Pasar» en exámenes, «Pasar» en estudios (el del escritorio). */

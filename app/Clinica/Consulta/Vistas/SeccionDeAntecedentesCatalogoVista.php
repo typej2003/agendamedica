@@ -186,7 +186,7 @@ final class SeccionDeAntecedentesCatalogoVista
             return [
                 'icono' => 'bi-search',
                 'titulo' => 'Tu catálogo no tiene antecedentes que coincidan',
-                'texto' => 'Prueba con otra palabra o créalo abajo: se agrega a tu catálogo y al paciente.',
+                'texto' => 'Prueba con otra palabra o créalo abajo.',
             ];
         }
 
@@ -203,7 +203,7 @@ final class SeccionDeAntecedentesCatalogoVista
         return [
             'icono' => 'bi-search',
             'titulo' => 'Tu catálogo no tiene antecedentes de ' . $delTipo,
-            'texto' => 'Crea el primero abajo —queda en este tipo— o elige otro de los tipos de arriba.',
+            'texto' => 'Crea el primero abajo o elige otro tipo.',
         ];
     }
 }

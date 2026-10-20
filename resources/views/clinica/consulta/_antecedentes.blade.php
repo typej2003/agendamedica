@@ -17,10 +17,6 @@
      aparece o desaparece de la lista del paciente sin apretar el botón de guardar. El aviso de "cambios sin
      guardar" del detalle y la alerta lo resuelve `consulta.js` desde los `data-*`: la vista no lleva JS ni
      estilos. --}}
-@php
-    $estado = $seccion->estado();
-@endphp
-
 <div class="consulta-seccion" id="consulta-antecedentes">
     {{-- Los chips de tipo: siete (los del catálogo, en el orden de las solapas) más «Sin clasificar» si el
          paciente tiene antecedentes sin tipo. Con scroll horizontal cuando no entran: no se envuelven a
@@ -37,14 +33,6 @@
     <x-ui.dos-listas titulo-izquierda="Antecedentes del paciente" titulo-derecha="Tu catálogo de antecedentes"
                      :resumen="$seccion->resumen()">
         <x-slot name="izquierda">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
-                             :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-                @if ($seccion->nombreDelTipo())
-                    <span class="texto-tenue small">{{ $seccion->nombreDelTipo() }}</span>
-                @endif
-            </div>
-
             {{-- El `action` es el del guardado del detalle y la alerta. El agregado y la baja ya no vienen en
                  este formulario: cada uno tiene su propio `POST` inmediato (O-07). --}}
             <form method="POST" action="{{ $seccion->urlGuardar() }}" id="antecedentes-form"
@@ -52,17 +40,13 @@
                 @csrf
 
                 @if ($seccion->estaVacio())
-                    <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados">
-                        Búscalos en el catálogo de la derecha y agrégalos. Quedan en su historia clínica, no en esta
-                        consulta.
-                    </x-ui.vacio>
+                    <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados"></x-ui.vacio>
                 @elseif ($seccion->sinAntecedentesDeEsteTipo())
                     {{-- El estado vacío **por tipo**: decir «no tiene antecedentes cargados» sería falso (tiene
                          {{ $seccion->total() }} en otros tipos) y el médico concluiría que la historia está vacía. --}}
                     <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Sin antecedentes de este tipo">
-                        Este paciente tiene {{ $seccion->total() }}
-                        {{ $seccion->total() === 1 ? 'antecedente cargado' : 'antecedentes cargados' }} en otros tipos:
-                        elige su chip arriba para verlos, o agrega uno de este tipo desde el catálogo de la derecha.
+                        Tiene {{ $seccion->total() }}
+                        {{ $seccion->total() === 1 ? 'antecedente cargado' : 'antecedentes cargados' }} en otros tipos.
                     </x-ui.vacio>
                 @else
                     <ul class="antecedentes-lista">

@@ -164,14 +164,12 @@ trait ComparteElEditorDeRecipes
     /** La ayuda del buscador: qué se busca y cómo. */
     public function ayudaDelBuscador(): string
     {
-        return 'Busca por nombre comercial o por principio activo (genérico), sin importar las tildes. '
-            . 'Elige un medicamento para agregarlo con su indicación del vademécum; puedes editarla.';
+        return 'Por nombre comercial o principio activo.';
     }
 
     public function ayudaDeTratamientos(): string
     {
-        return 'Un tratamiento carga de una vez todos sus medicamentos, con su cantidad e indicaciones. '
-            . 'Después puedes quitar o cambiar lo que quieras antes de guardar.';
+        return 'Carga todos sus medicamentos; puedes cambiarlos antes de guardar.';
     }
 
     /** El `placeholder` del cuadro de búsqueda en cada modo. */

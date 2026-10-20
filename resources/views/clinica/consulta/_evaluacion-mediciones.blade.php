@@ -16,9 +16,6 @@
         @endif
     </x-slot>
 
-    <p class="texto-tenue small mb-3">
-        Peso en kilogramos y talla y perímetros en centímetros. Todas son opcionales; lo que escribas se guarda solo.
-    </p>
 
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="mediciones-form"
           data-autoguardar data-consulta-mediciones data-aviso="{{ $seccion->avisoSinGuardar() }}">
@@ -43,15 +40,14 @@
 
         <h3 class="paso-titulo mb-2">Calculados</h3>
         <div class="row g-3 mb-3">
-            <x-ui.campo etiqueta="IMC" for="medicion-imc" class="col-6 col-md-4"
-                        ayuda="Peso entre talla al cuadrado. Se guarda con las mediciones.">
+            <x-ui.campo etiqueta="IMC" for="medicion-imc" class="col-6 col-md-4">
                 <output class="form-control-plaintext fw-semibold" id="medicion-imc" data-medicion-imc>{{ $seccion->imc() }}</output>
                 @if ($seccion->posicionDelImc())
                     <span class="form-text d-block">{{ $seccion->posicionDelImc() }}</span>
                 @endif
             </x-ui.campo>
             <x-ui.campo etiqueta="AC" for="medicion-ac" class="col-6 col-md-4"
-                        info="Superficie corporal calculada. No se guarda.">
+                        info="No se guarda.">
                 <output class="form-control-plaintext fw-semibold" id="medicion-ac" data-medicion-ac>{{ $seccion->ac() }}</output>
             </x-ui.campo>
         </div>

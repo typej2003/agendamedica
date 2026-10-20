@@ -220,6 +220,6 @@ final class SeccionDeMotivosVista
      */
     public function avisoDeConexion(): string
     {
-        return 'Crear un motivo nuevo necesita conexión: el servidor le da su código y no duplica uno que ya exista.';
+        return 'Crear un motivo nuevo necesita conexión.';
     }
 }

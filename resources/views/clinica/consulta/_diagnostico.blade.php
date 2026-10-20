@@ -34,9 +34,7 @@
         <div>
 
             @if ($seccion->estaVacio())
-                <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos">
-                    Pásalos desde tu catálogo, a la derecha.
-                </x-ui.vacio>
+                <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos"></x-ui.vacio>
             @else
                 <ul class="diagnosticos-lista">
                     @foreach ($seccion->filas() as $fila)

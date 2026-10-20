@@ -70,9 +70,7 @@
                 </table>
             </div>
         @else
-            <x-ui.vacio icono="bi-receipt" titulo="Todavía no hay conceptos en la pre-factura">
-                Agrega los conceptos que se le cobrarán al paciente por esta consulta.
-            </x-ui.vacio>
+            <x-ui.vacio icono="bi-receipt" titulo="Todavía no hay conceptos en la pre-factura"></x-ui.vacio>
         @endif
 
         @if ($seccion->tieneCatalogo())

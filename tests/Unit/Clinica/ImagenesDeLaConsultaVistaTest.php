@@ -127,11 +127,10 @@ class ImagenesDeLaConsultaVistaTest extends TestCase
         // fuente de la política de la subida.
         $this->assertStringContainsString(ArchivosClinicos::textosAceptados(), $vm->ayudaArchivo());
         $this->assertStringContainsString(ArchivosClinicos::textoMaximo(), $vm->ayudaArchivo());
-        $this->assertStringContainsString('disco privado', $vm->ayudaArchivo());
 
         $this->assertSame('/clinica/consulta/42/examenes', $vm->urlSubir());
         $this->assertStringContainsString('imagen', $vm->avisoSinGuardar());
-        $this->assertStringContainsString('Qué es la imagen', $vm->ayudaDescripcion());
+        $this->assertStringContainsString('lista', $vm->ayudaDescripcion());
     }
 
     public function test_la_descripcion_escrita_sobrevive_al_error_de_validacion(): void

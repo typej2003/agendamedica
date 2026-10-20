@@ -31,7 +31,7 @@
             <x-ui.chips class="mb-3" :opciones="$vm->fechas()" etiqueta="Fechas" />
         @else
             <p class="texto-tenue small mb-3">
-                Esta gesta todavía no tiene nada cargado en esta pestaña. Cargá la primera fecha y guardala.
+                Esta gesta todavía no tiene nada cargado en esta pestaña.
             </p>
         @endif
 

@@ -142,7 +142,7 @@
                 @if ($vm->ofreceRutinas())
                     <div class="mt-3" id="orden-rutinas">
                         <h3 class="orden-subtitulo">Rutinas</h3>
-                        <p class="form-text mt-0 mb-2">Una rutina agrega de una vez todos los exámenes de un tipo (los que ya están en la orden no se repiten).</p>
+                        <p class="form-text mt-0 mb-2">Agrega todos los exámenes del tipo.</p>
                         <div class="orden-rutinas">
                             @foreach ($vm->tipos() as $tipo)
                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-orden-rutina="{{ $tipo['codigo'] }}"

@@ -371,7 +371,8 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Sin cargar', false);
+        // La pastilla «Sin cargar» se quitó (revisión de Alexander, 2026-10-20): el contador y el vacío lo dicen.
+        $respuesta->assertDontSee('Sin cargar', false);
         $respuesta->assertSee('Este paciente no tiene antecedentes cargados', false);
         // Sin antecedentes, el tipo por defecto es el primero del catálogo: el alta arranca en un tipo concreto.
         $this->assertSame(['PERSONAL'], array_column(array_filter(

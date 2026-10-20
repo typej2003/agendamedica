@@ -93,9 +93,7 @@
             </ul>
 
             <div id="recipe-vacio" @if ($editor['filas'] !== []) hidden @endif>
-                <x-ui.vacio icono="bi-capsule" titulo="La pareja todavía no tiene medicamentos">
-                    Búscalos a la derecha, en tu vademécum o en tus tratamientos. Puedes agregar los que necesites.
-                </x-ui.vacio>
+                <x-ui.vacio icono="bi-capsule" titulo="La pareja todavía no tiene medicamentos"></x-ui.vacio>
             </div>
 
             {{-- El aviso de "hay cambios sin guardar": `consulta-recipes.js` lo muestra cuando algo del

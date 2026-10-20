@@ -75,15 +75,10 @@
 
     <x-ui.tarjeta titulo="Resumen guardado en la consulta" icono="bi-file-text">
         @if ($seccion->tieneGuardado())
-            <p class="text-muted small mb-2">
-                Es lo que se imprime en el resumen médico y en la evaluación pre-operatoria. Se recompone cada vez que
-                guardás los indicadores.
-            </p>
             <pre class="mb-0 text-wrap" id="indicadores-guardado">{{ $seccion->guardado() }}</pre>
         @else
             <p class="text-muted mb-0">
-                Esta consulta todavía no tiene un resumen de laboratorio. Escribe los valores y guardalos: el texto se
-                arma solo.
+                Esta consulta todavía no tiene un resumen de laboratorio.
             </p>
         @endif
     </x-ui.tarjeta>
