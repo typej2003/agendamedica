@@ -34,12 +34,14 @@ final class EditorDeTratamientoVista
      * @param  array<string,string>  $urls  `guardar`, `lista`, `medicamentos` (el JSON del buscador) y
      *         `crearMedicamento` (el alta rápida del vademécum, también en JSON)
      * @param  array<string,mixed>  $old  el `old()` de un POST que falló (`[]` en la primera carga)
+     * @param  string|null  $nombreInicial  lo que el médico buscó en la lista antes de «Agregar»: el nombre de un tratamiento nuevo
      */
     public function __construct(
         private ?RecipeGrupo $tratamiento,
         private ?Collection $items,
         private array $urls,
         private array $old = [],
+        private ?string $nombreInicial = null,
     ) {
     }
 
@@ -69,6 +71,10 @@ final class EditorDeTratamientoVista
     public function editor(): array
     {
         $nombre = (string) ($this->tratamiento->tratamiento ?? '');
+
+        if ($this->esNuevo() && $this->nombreInicial !== null) {
+            $nombre = $this->nombreInicial;
+        }
 
         if (($this->old['editor'] ?? null) !== null) {
             $nombre = is_string($this->old['tratamiento'] ?? null) ? $this->old['tratamiento'] : '';

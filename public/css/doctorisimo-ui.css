@@ -2200,9 +2200,16 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 }
 
 .bloques-alta select { flex: 1 1 7rem; min-width: 0; }
+.bloques-alta .dias-semana { flex: 1 1 100%; }
 .bloques-alta input[type="time"] { flex: 0 1 6.5rem; min-width: 0; }
 .bloques-alta input[type="number"] { flex: 0 1 4.5rem; min-width: 0; }
 .bloques-alta .btn { flex: 0 0 auto; white-space: nowrap; }
+
+/* Los siete días como botones de dos letras que se encienden (`<x-ui.dias-semana>`): el horario de «Lu a Vi» se carga de
+   una vez. Cuadrados de tamaño parejo; el encendido es el relleno del primario de `.btn-check:checked`. */
+.dias-semana { display: flex; flex-wrap: wrap; gap: .3rem; }
+.dias-semana-boton { min-width: 2.5rem; text-align: center; font-weight: 600; }
+.dias-semana-compactos .dias-semana-boton { min-width: 2rem; padding-left: .35rem; padding-right: .35rem; }
 
 /* En el celular la tabla es una tarjeta por fila: la celda deja de ser «etiqueta a la izquierda, valor a la
    derecha» y su rótulo pasa arriba, porque adentro va una lista y un formulario. */

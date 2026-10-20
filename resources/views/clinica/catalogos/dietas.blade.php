@@ -14,12 +14,13 @@
     </x-ui.page-head>
 
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+        <x-ui.buscador agregar="dialogo-catalogo" campo="dieta-titulo" :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        placeholder="Título, texto o código" etiqueta="Buscar dieta" />
     </x-ui.barra-herramientas>
 
     <x-ui.errores />
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -90,6 +91,7 @@
             @endif
         </div>
     @endunless
+    </div>
 
     <x-ui.dialogo id="dialogo-catalogo" :titulo="$vm->tituloDelFormulario()" lateral data-catalogo-dialogo
                   data-abrir-al-cargar="{{ ($vm->abrirAlCargar() || $errors->any()) ? '1' : '0' }}">

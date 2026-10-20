@@ -13,13 +13,10 @@
 
         <x-ui.tarjeta :titulo="$vm->tituloDelFormulario()" icono="bi-clock-history" class="mb-3" data-tour="horarios-alta">
             <div class="row g-3">
-                <x-ui.campo etiqueta="Día" for="dia_semana" requerido class="col-md-3">
-                    <select name="dia_semana" id="dia_semana" class="form-select" required>
-                        <option value="">— Elige el día —</option>
-                        @foreach ($vm->opcionesDeDia() as $opcion)
-                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
-                        @endforeach
-                    </select>
+                <x-ui.campo :etiqueta="$vm->variosDias() ? 'Días' : 'Día'" for="dia-1" error="dias" requerido class="col-md-4"
+                            :ayuda="$vm->variosDias() ? 'Enciende todos los días que tengan este horario.' : null">
+                    <x-ui.dias-semana :nombre="$vm->variosDias() ? 'dias' : 'dia_semana'" :multiple="$vm->variosDias()"
+                                      :elegidos="$vm->diasElegidos()" prefijo="dia" />
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Desde" for="hora_inicio" requerido class="col-md-2">

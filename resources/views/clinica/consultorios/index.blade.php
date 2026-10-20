@@ -158,13 +158,8 @@
                                 <input type="hidden" name="ver_inactivos" value="{{ $vm->verInactivos() }}">
                                 <input type="hidden" name="consultorio" value="{{ $fila['id'] }}">
 
-                                <label class="visually-hidden" for="bloque-dia-{{ $fila['id'] }}">Día del bloque nuevo en {{ $fila['sede'] }} {{ $fila['consultorio'] }}</label>
-                                <select name="dia_semana" id="bloque-dia-{{ $fila['id'] }}" class="form-select form-select-sm" required>
-                                    <option value="">Día…</option>
-                                    @foreach ($fila['opcionesDeDia'] as $opcion)
-                                        <option value="{{ $opcion['valor'] }}" @if ($opcion['elegido']) selected @endif>{{ $opcion['texto'] }}</option>
-                                    @endforeach
-                                </select>
+                                <x-ui.dias-semana nombre="dias" :elegidos="$fila['diasElegidos']" :prefijo="'bloque-dia-' . $fila['id']"
+                                                  class="dias-semana-compactos" />
 
                                 <label class="visually-hidden" for="bloque-desde-{{ $fila['id'] }}">Desde qué hora</label>
                                 <input type="time" name="hora_inicio" id="bloque-desde-{{ $fila['id'] }}" class="form-control form-control-sm"

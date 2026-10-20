@@ -148,23 +148,14 @@ final class ConsultoriosVista
     }
 
     /**
-     * Los días de la semana para el alta de un bloque, con el que quedó elegido si el POST de **este**
-     * consultorio falló la validación (los otros formularios de la tabla nacen vacíos).
+     * Los días encendidos en el alta de un bloque, si el POST de **este** consultorio falló la validación (los otros
+     * formularios de la tabla nacen sin ninguno).
      *
-     * @return array<int,array{valor:int, texto:string, elegido:bool}>
+     * @return array<int,int>
      */
-    public function opcionesDeDia(int $consultorio): array
+    public function diasElegidos(int $consultorio): array
     {
-        $elegido = $this->valoresDelBloque($consultorio)['dia_semana'];
-
-        return collect(OfficeSchedule::DIAS)
-            ->map(fn ($nombre, $numero) => [
-                'valor'   => (int) $numero,
-                'texto'   => $nombre,
-                'elegido' => (string) $elegido === (string) $numero,
-            ])
-            ->values()
-            ->all();
+        return array_map('intval', $this->valoresDelBloque($consultorio)['dias']);
     }
 
     /**
@@ -175,14 +166,14 @@ final class ConsultoriosVista
      * un día mal elegido en el primero de la tabla aparecería escrito en todos. (La guía de UI pide no
      * borrar lo escrito ante un error.)
      *
-     * @return array{dia_semana:string, hora_inicio:string, hora_fin:string, cupo:string}
+     * @return array{dias:array<int,string>, hora_inicio:string, hora_fin:string, cupo:string}
      */
     public function valoresDelBloque(int $consultorio): array
     {
         $esDeEste = (string) old('consultorio') === (string) $consultorio;
 
         return [
-            'dia_semana'  => $esDeEste ? (string) old('dia_semana', '') : '',
+            'dias'        => $esDeEste ? (array) old('dias', old('dia_semana') !== null ? [old('dia_semana')] : []) : [],
             'hora_inicio' => $esDeEste ? (string) old('hora_inicio', '') : '',
             'hora_fin'    => $esDeEste ? (string) old('hora_fin', '') : '',
             'cupo'        => $esDeEste ? (string) old('cupo', '') : '',
@@ -230,7 +221,7 @@ final class ConsultoriosVista
                     : ['tono' => 'neutro', 'icono' => 'bi-clock', 'texto' => $modalidades[$consultorio->modalidad] ?? $consultorio->modalidad],
                 'duracion'    => $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : null,
                 'bloques'     => $bloques,
-                'opcionesDeDia' => $this->opcionesDeDia((int) $consultorio->id),
+                'diasElegidos' => $this->diasElegidos((int) $consultorio->id),
                 'alta'        => $this->valoresDelBloque((int) $consultorio->id),
                 'urlGuardarBloque' => route('clinica.consultorios.horarios.guardar', $consultorio),
                 'estado'      => $consultorio->activo

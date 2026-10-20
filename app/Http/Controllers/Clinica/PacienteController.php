@@ -428,6 +428,14 @@ class PacienteController extends Controller
             $request->session()->now('_old_input', ['apellidos' => $hermano->apellidos, 'hermano_de' => $hermano->id]);
         }
 
+        // «Agregar «texto»» de la búsqueda del listado: lo escrito (si trae letras) llega a `?nombre=` y se precarga en el primer
+        // campo del nombre. Un `old()` de verdad (validación fallida) no pasa por acá: es una carga por GET.
+        $buscado = mb_substr(preg_replace('/\s+/u', ' ', trim((string) $request->query('nombre', ''))), 0, 25);
+
+        if ($hermano === null && $buscado !== '' && preg_match('/\p{L}/u', $buscado) === 1) {
+            $request->session()->now('_old_input', ['apellidos' => $buscado]);
+        }
+
         return $this->formulario($request, null, $hermano);
     }
 

@@ -61,15 +61,27 @@ final class HorariosVista
         return $this->editando() ? 'Guardar cambios' : 'Agregar el bloque';
     }
 
-    /** @return array<int,array{valor:int, texto:string, elegido:bool}> */
-    public function opcionesDeDia(): array
+    /**
+     * Los días encendidos: el del bloque que se edita (un solo botón) o, en el alta, los que quedaron marcados si el
+     * POST falló la validación.
+     *
+     * @return array<int,int>
+     */
+    public function diasElegidos(): array
     {
-        $elegido = (int) $this->valor('dia_semana');
+        if ($this->editando()) {
+            return [(int) old('dia_semana', $this->editando->dia_semana)];
+        }
 
-        return collect(OfficeSchedule::DIAS)
-            ->map(fn ($nombre, $numero) => ['valor' => (int) $numero, 'texto' => $nombre, 'elegido' => $elegido === (int) $numero])
-            ->values()
-            ->all();
+        $viejos = old('dias', old('dia_semana') !== null ? [old('dia_semana')] : []);
+
+        return array_map('intval', (array) $viejos);
+    }
+
+    /** Un bloque que ya existe es de un solo día (botones de radio); el alta enciende los que quiera. */
+    public function variosDias(): bool
+    {
+        return ! $this->editando();
     }
 
     /** La hora como `HH:MM` (el formulario guarda `HH:MM:SS`). */

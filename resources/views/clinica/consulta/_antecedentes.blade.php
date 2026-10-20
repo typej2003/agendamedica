@@ -164,7 +164,8 @@
 
                 {{-- El buscador del catálogo, **siempre a la vista** (A-06: antes estaba detrás de un botón):
                      es un `GET` a esta misma sección. El tipo viaja oculto para que buscar no cambie el chip. --}}
-                <form method="GET" action="{{ $seccion->urlVolver() }}" class="dos-listas-buscar" role="search" id="antecedente-buscar-form">
+                <form method="GET" action="{{ $seccion->urlVolver() }}" class="dos-listas-buscar" role="search" id="antecedente-buscar-form"
+                      data-buscar-auto data-buscar-filas=".dos-listas-fila-texto">
                     <input type="hidden" name="seccion" value="antecedentes">
                     <input type="hidden" name="tipo" value="{{ $catalogo->tipo() }}">
 
@@ -173,13 +174,16 @@
                            class="form-control form-control-sm" autocomplete="off"
                            placeholder="Hipertensión, cesárea, tabaco…">
 
-                    <button class="btn btn-sm btn-outline-secondary">
+                    <button class="btn btn-sm btn-outline-secondary" data-buscar-enviar>
                         <i class="bi bi-search" aria-hidden="true"></i> Buscar
                     </button>
-                    @if ($catalogo->buscar() !== '')
-                        <a class="btn btn-sm btn-link" href="{{ $catalogo->urlLimpiar() }}">Limpiar</a>
-                    @endif
+                    <a class="btn btn-sm btn-link" href="{{ $catalogo->urlLimpiar() }}" data-buscar-limpiar @if ($catalogo->buscar() === '') hidden @endif>Limpiar</a>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-buscar-agregar hidden data-agregar-campo="antecedente-descripcion">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar «<span data-buscar-agregar-texto></span>»
+                    </button>
                 </form>
+
+                <div data-buscar-resultados>
 
                 @if ($catalogo->resultados() === [])
                     @php $vacio = $catalogo->sinResultados(); @endphp
@@ -220,6 +224,7 @@
 
                     <p class="texto-tenue small mt-2 mb-0">Tip: doble clic en un antecedente para agregarlo.</p>
                 @endif
+                </div>
 
                 {{-- El alta del antecedente que falta: es el botón *Agregar* del escritorio
                      (`w_nuevo_antecedente`). El código lo da el servidor y el tipo viene elegido con el chip

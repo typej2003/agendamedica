@@ -121,6 +121,9 @@ final class ExamenFisicoDeLaConsulta
      * La máscara es de la pantalla: en la base la talla y el peso siguen siendo `double` con punto
      * (`1.62`) y la tensión sigue siendo el texto `120/80` (`App\Support\NumeroDeFormulario`).
      *
+     * `ayuda` es el **hint** que se escribe dentro del campo (`placeholder`): un ejemplo o qué se anota ahí, nunca una
+     * explicación de dónde se guarda ni de qué pantalla del escritorio viene (los médicos no lo necesitan).
+     *
      * @return array<int,array{columna:string,etiqueta:string,unidad:?string,ayuda:string,tipo:string,mascara:string,enteros:int,decimales:int}>
      */
     public static function antropometria(): array
@@ -128,28 +131,28 @@ final class ExamenFisicoDeLaConsulta
         return [
             ['columna' => 'peso', 'etiqueta' => 'Peso', 'unidad' => 'kg', 'tipo' => 'numero',
                 'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
-                'ayuda' => 'El peso de hoy.'],
+                'ayuda' => '70,5'],
             ['columna' => 'talla', 'etiqueta' => 'Talla', 'unidad' => 'm', 'tipo' => 'numero',
                 'mascara' => 'decimal', 'enteros' => 1, 'decimales' => 2,
-                'ayuda' => 'En metros (1,62), como en el escritorio.'],
+                'ayuda' => '1,62'],
             ['columna' => 'tension', 'etiqueta' => 'Tensión arterial', 'unidad' => 'mmHg', 'tipo' => 'texto',
                 'mascara' => 'tension', 'enteros' => 3, 'decimales' => 0,
-                'ayuda' => 'Sistólica/diastólica (120/80): escribe 12080 y la barra se pone sola.'],
+                'ayuda' => '120/80'],
             ['columna' => 'fc', 'etiqueta' => 'Frecuencia cardiaca', 'unidad' => 'x min', 'tipo' => 'numero',
                 'mascara' => 'entero', 'enteros' => 3, 'decimales' => 0,
-                'ayuda' => 'Latidos por minuto.'],
+                'ayuda' => '72'],
             ['columna' => 'pp', 'etiqueta' => 'Frecuencia respiratoria', 'unidad' => 'x min', 'tipo' => 'numero',
                 'mascara' => 'entero', 'enteros' => 3, 'decimales' => 0,
-                'ayuda' => 'Respiraciones por minuto.'],
+                'ayuda' => '16'],
             ['columna' => 'circabdominal', 'etiqueta' => 'Circunferencia abdominal', 'unidad' => 'cm', 'tipo' => 'numero',
                 'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
-                'ayuda' => 'En la columna `circabdominal` (solapa *Abdominal* del escritorio).'],
+                'ayuda' => ''],
             ['columna' => 'circtoraxica', 'etiqueta' => 'Circunferencia toráxica', 'unidad' => 'cm', 'tipo' => 'numero',
                 'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
-                'ayuda' => 'En la columna `circtoraxica` (solapa *Toráxica* del escritorio).'],
+                'ayuda' => ''],
             ['columna' => 'circcefalica', 'etiqueta' => 'Circunferencia cefálica', 'unidad' => 'cm', 'tipo' => 'numero',
                 'mascara' => 'decimal', 'enteros' => 3, 'decimales' => 2,
-                'ayuda' => 'En la columna `circcefalica` (solapa *Cefálica* del escritorio).'],
+                'ayuda' => ''],
         ];
     }
 
@@ -174,9 +177,9 @@ final class ExamenFisicoDeLaConsulta
             ['columna' => 'tiroides', 'etiqueta' => 'Tiroides', 'unidad' => null, 'tipo' => 'area',
                 'ayuda' => 'Tamaño, nódulos, dolor.'],
             ['columna' => 'mamas', 'etiqueta' => 'Mama derecha', 'unidad' => null, 'tipo' => 'area',
-                'ayuda' => 'El rótulo del escritorio. Se guarda en `mamas`.'],
+                'ayuda' => 'Hallazgos de la mama derecha.'],
             ['columna' => 'mama_derecha', 'etiqueta' => 'Mama izquierda', 'unidad' => null, 'tipo' => 'area',
-                'ayuda' => 'El rótulo del escritorio. Se guarda en `mama_derecha`.'],
+                'ayuda' => 'Hallazgos de la mama izquierda.'],
             ['columna' => 'abdomen', 'etiqueta' => 'Abdomen', 'unidad' => null, 'tipo' => 'area',
                 'ayuda' => 'Blando, depresible, doloroso…'],
             ['columna' => 'extremidades', 'etiqueta' => 'Extremidades', 'unidad' => null, 'tipo' => 'area',

@@ -441,6 +441,98 @@ class ConsultoriosWebTest extends TestCase
         $this->assertDatabaseMissing('office_schedules', ['id' => $bloque->id]);
     }
 
+    /** «Lunes a viernes de 8 a 13» se carga de una vez: un bloque por día encendido, con el mismo horario y cupo. */
+    public function test_encender_varios_dias_crea_un_bloque_por_dia(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(
+            '/clinica/consultorios/' . $consultorio->id . '/horarios',
+            ['dias' => [1, 2, 3, 4, 5], 'hora_inicio' => '08:00', 'hora_fin' => '13:00', 'cupo' => 15],
+        );
+
+        $respuesta->assertRedirect(route('clinica.consultorios.horarios', $consultorio));
+        $respuesta->assertSessionHas('estado', fn ($texto) => str_contains($texto, '5 bloques') && str_contains($texto, 'viernes'));
+        $this->assertSame(
+            [1, 2, 3, 4, 5],
+            OfficeSchedule::where('office_id', $consultorio->id)->orderBy('dia_semana')->pluck('dia_semana')->map(fn ($d) => (int) $d)->all(),
+        );
+        $this->assertSame(5, OfficeSchedule::where('office_id', $consultorio->id)->where('hora_fin', 'like', '13:00%')->where('cupo', 15)->count());
+    }
+
+    /** Es todo o nada: si un día se pisa con un bloque del mismo consultorio no se guarda ninguno y se nombra el día. */
+    public function test_si_un_dia_se_pisa_no_se_guarda_ninguno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 3, 'hora_inicio' => '10:00', 'hora_fin' => '12:00',
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/consultorios/' . $consultorio->id . '/horarios')
+            ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', [
+                'dias' => [1, 2, 3], 'hora_inicio' => '08:00', 'hora_fin' => '13:00',
+            ]);
+
+        $respuesta->assertSessionHasErrors('hora_inicio');
+        $this->assertStringContainsString('Miércoles', session('errors')->first('hora_inicio'));
+        $this->assertSame(1, OfficeSchedule::where('office_id', $consultorio->id)->count(), 'el lunes y el martes no quedaron');
+    }
+
+    public function test_sin_ningun_dia_encendido_se_pide_elegir_al_menos_uno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/consultorios/' . $consultorio->id . '/horarios')
+            ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', ['hora_inicio' => '08:00', 'hora_fin' => '13:00'])
+            ->assertSessionHasErrors('dias');
+
+        $this->assertSame(0, OfficeSchedule::where('office_id', $consultorio->id)->count());
+    }
+
+    public function test_la_pantalla_ofrece_siete_botones_de_dos_letras_y_el_alta_en_linea_tambien(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+
+        $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios/' . $consultorio->id . '/horarios')->assertOk();
+        $listado = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios')->assertOk();
+
+        foreach ([$pantalla, $listado] as $r) {
+            $html = $r->getContent();
+            $this->assertSame(7, substr_count($html, 'name="dias[]"'));
+            foreach (['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'] as $dos) {
+                $this->assertStringContainsString('>' . $dos . '</label>', $html);
+            }
+            $this->assertStringNotContainsString('<select name="dia_semana"', $html);
+        }
+    }
+
+    /** Un bloque que ya existe es de un solo día: al editarlo los botones son de radio y llevan su día. */
+    public function test_editar_un_bloque_muestra_su_dia_como_un_solo_boton_encendido(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $bloque = OfficeSchedule::create([
+            'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 4, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
+        ]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios/' . $consultorio->id . '/horarios?editar=' . $bloque->id)
+            ->assertOk()->getContent();
+
+        $this->assertSame(7, substr_count($html, 'type="radio" class="btn-check" name="dia_semana"'));
+        $this->assertSame(1, preg_match_all('/<input[^>]*checked/', $html), 'un solo día encendido');
+        $this->assertSame(1, preg_match('/id="dia-4"[^>]*checked/', $html), 'el jueves');
+    }
+
     /** La regla del solape es la de `GuardarBloqueHorario`: desde el listado se comporta igual. */
     public function test_desde_el_listado_el_solape_del_mismo_consultorio_se_rechaza(): void
     {

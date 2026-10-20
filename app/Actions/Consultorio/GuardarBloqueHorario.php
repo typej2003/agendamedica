@@ -4,6 +4,7 @@ namespace App\Actions\Consultorio;
 
 use App\Models\Office;
 use App\Models\OfficeSchedule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -67,6 +68,43 @@ final class GuardarBloqueHorario
         $bloque->save();
 
         return $this->avisoDeOtroConsultorio($bloque, $consultorio, $regMedico);
+    }
+
+    /**
+     * **Alta de varios días de una vez** con el mismo horario y cupo («lunes a viernes de 8:00 a 13:00»): un bloque por
+     * día, cada uno con las mismas reglas de solape que `ejecutar()`. Es **todo o nada**: si un día se pisa con un
+     * bloque del mismo consultorio no se guarda ninguno y el aviso nombra el día.
+     *
+     * @param  array{hora_inicio: string, hora_fin: string, cupo?: ?int}  $datos
+     * @param  array<int,int>  $dias  números ISO de día (lunes = 1), sin repetir
+     * @return array<int,string>  los avisos de solape con otros consultorios del médico (uno por día que cruza)
+     *
+     * @throws ValidationException si algún día se pisa con un bloque del mismo consultorio
+     */
+    public function ejecutarVarios(array $datos, array $dias, Office $consultorio, string $regMedico): array
+    {
+        $dias = array_values(array_unique(array_map('intval', $dias)));
+        sort($dias);
+
+        return DB::transaction(function () use ($datos, $dias, $consultorio, $regMedico) {
+            $avisos = [];
+
+            foreach ($dias as $dia) {
+                try {
+                    $aviso = $this->ejecutar(['dia_semana' => $dia] + $datos, $consultorio, $regMedico);
+                } catch (ValidationException $e) {
+                    throw ValidationException::withMessages([
+                        'hora_inicio' => OfficeSchedule::DIAS[$dia] . ': ' . ($e->errors()['hora_inicio'][0] ?? 'el horario se pisa con otro bloque.'),
+                    ]);
+                }
+
+                if ($aviso !== null) {
+                    $avisos[] = $aviso;
+                }
+            }
+
+            return $avisos;
+        });
     }
 
     /** El bloque del mismo consultorio y día que se pisa con el que se está guardando. */

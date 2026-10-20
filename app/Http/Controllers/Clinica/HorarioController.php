@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * **Bloques de horario de un consultorio** (WEB-2.8b.3): "los lunes de 8:00 a 12:00, hasta 20 pacientes".
@@ -57,14 +58,18 @@ class HorarioController extends Controller
 
         $datos = $request->validate([
             'id'          => ['nullable', 'integer'],
-            'dia_semana'  => ['required', 'integer', 'min:1', 'max:7'],
+            // Editar un bloque manda su `dia_semana`; el alta manda los `dias` encendidos (uno o varios).
+            'dia_semana'  => ['nullable', 'integer', 'min:1', 'max:7'],
+            'dias'        => ['nullable', 'array', 'max:7'],
+            'dias.*'      => ['integer', 'min:1', 'max:7'],
             'hora_inicio' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
             'hora_fin'    => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/', 'after:hora_inicio'],
             'cupo'        => ['nullable', 'integer', 'min:1', 'max:65535'],
         ], [
-            'dia_semana.required'  => 'Elige el día de la semana.',
             'dia_semana.min'       => 'Elige un día de la semana.',
             'dia_semana.max'       => 'Elige un día de la semana.',
+            'dias.*.min'           => 'Elige un día de la semana.',
+            'dias.*.max'           => 'Elige un día de la semana.',
             'hora_inicio.required' => 'Pon la hora en que empieza el bloque.',
             'hora_inicio.regex'    => 'La hora de inicio tiene que ser HH:MM (por ejemplo 08:00).',
             'hora_fin.required'    => 'Pon la hora en que termina el bloque.',
@@ -77,14 +82,32 @@ class HorarioController extends Controller
             ? $consultorio->schedules()->whereKey((int) $request->input('id'))->firstOrFail()
             : null;
 
-        $aviso = $accion->ejecutar($datos, $consultorio, $contexto['reg_medico'], $bloque);
+        // Un bloque que ya existe es de **un** día; el alta puede traer varios («Lu a Vi»). Quien manda sólo
+        // `dia_semana` (el formulario de antes, el teléfono) sigue funcionando como un alta de un día.
+        $dias = $bloque !== null
+            ? [(int) $datos['dia_semana']]
+            : array_map('intval', $datos['dias'] ?? (isset($datos['dia_semana']) ? [$datos['dia_semana']] : []));
+
+        if ($dias === []) {
+            throw ValidationException::withMessages(['dias' => 'Elige al menos un día de la semana.']);
+        }
+
+        if ($bloque !== null || count($dias) === 1) {
+            $aviso = $accion->ejecutar(['dia_semana' => $dias[0]] + $datos, $consultorio, $contexto['reg_medico'], $bloque);
+            $avisos = $aviso !== null ? [$aviso] : [];
+            $estado = $bloque !== null ? 'Bloque actualizado.' : 'Bloque agregado al consultorio.';
+        } else {
+            $avisos = $accion->ejecutarVarios($datos, $dias, $consultorio, $contexto['reg_medico']);
+            $estado = count($dias) . ' bloques agregados al consultorio: '
+                . implode(', ', array_map(fn ($dia) => mb_strtolower(OfficeSchedule::DIAS[$dia]), collect($dias)->sort()->values()->all())) . '.';
+        }
 
         return $this->volver($request, $consultorio)
             ->with('guiado', true)
-            ->with('estado', $bloque !== null ? 'Bloque actualizado.' : 'Bloque agregado al consultorio.')
+            ->with('estado', $estado)
             // El solape con otro consultorio del médico **no** impide guardar: se avisa y se sigue
             // (decisión del 2026-10-09). Va por `avisos` para no pisar el resultado de la operación.
-            ->with('avisos', $aviso !== null ? [$aviso] : []);
+            ->with('avisos', $avisos);
     }
 
     /**

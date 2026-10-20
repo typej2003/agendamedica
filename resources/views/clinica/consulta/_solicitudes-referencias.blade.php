@@ -76,18 +76,23 @@
 
         <x-slot name="derecha">
             {{-- El filtro del catálogo: un `GET` a esta misma pestaña. --}}
-            <form method="GET" action="{{ $vm->urlDelFiltro() }}" class="dos-listas-buscar" role="search">
+            <form method="GET" action="{{ $vm->urlDelFiltro() }}" class="dos-listas-buscar" role="search" data-buscar-auto data-buscar-filas=".dos-listas-fila-texto">
                 <input type="hidden" name="seccion" value="solicitudes">
                 <input type="hidden" name="solicitud" value="referencias">
                 <label class="visually-hidden" for="referencia-texto">Buscar un médico en tu catálogo</label>
                 <input type="search" id="referencia-texto" name="buscar" value="{{ $vm->buscar() }}"
                        class="form-control form-control-sm" autocomplete="off" placeholder="Nombre, especialidad o clínica…">
-                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
-                @if ($vm->buscar() !== '')
-                    <a class="btn btn-sm btn-link" href="{{ $vm->urlSeccion() }}">Limpiar</a>
+                <button class="btn btn-sm btn-outline-secondary" data-buscar-enviar><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                <a class="btn btn-sm btn-link" href="{{ $vm->urlSeccion() }}" data-buscar-limpiar @if ($vm->buscar() === '') hidden @endif>Limpiar</a>
+                @if ($vm->puedeCrearMedico())
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-buscar-agregar hidden
+                            data-agregar-dialogo="dialogo-medico" data-prefill-campo="medico-apellidos">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar «<span data-buscar-agregar-texto></span>»
+                    </button>
                 @endif
             </form>
 
+            <div data-buscar-resultados>
             @if ($vm->hayResultados())
                 <ul class="dos-listas-catalogo">
                     @foreach ($vm->catalogo() as $medico)
@@ -122,6 +127,7 @@
 
             {{-- La ayuda del catálogo: qué escribe el «Referir» y qué queda para el botón (es lo que cambió en O-29). --}}
             <p class="texto-tenue small mt-2 mb-2">{{ $vm->ayudaDelCatalogo() }}</p>
+            </div>
 
             @if ($vm->puedeCrearMedico())
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="referencia-nuevo-boton">

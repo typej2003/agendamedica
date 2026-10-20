@@ -10,6 +10,11 @@
 <div class="consulta-seccion" id="consulta-enfermedad">
     <x-ui.tarjeta titulo="Enfermedad actual" icono="bi-file-text">
         <x-slot name="acciones">
+            {{-- Las plantillas (WEB-11.7, tipo `EA`) van **arriba a la derecha**, junto al estado (pedido del usuario,
+                 2026-10-20): es un solo campo, así que no necesita título ni descripción encima ni debajo. El `destino`
+                 es el campo, que está más abajo en el mismo formulario. --}}
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#enfermedadactual" tipo="EA"
+                             nombre="enfermedad actual" />
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
@@ -18,16 +23,9 @@
               data-consulta-enfermedad data-autoguardar data-aviso="Hay cambios sin guardar. Si sales ahora, se pierden.">
             @csrf
 
-            {{-- El panel de plantillas (WEB-11.7, tipo `EA`) va **arriba** del campo: en el escritorio es una columna
-                 a la derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). --}}
-            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#enfermedadactual" tipo="EA"
-                             nombre="enfermedad actual" class="mb-3" />
-
-            <x-ui.campo etiqueta="Lo que el paciente tiene hoy" for="enfermedadactual"
-                        :ayuda="$seccion->ayuda()">
-                <textarea name="enfermedadactual" id="enfermedadactual" class="form-control" rows="10"
-                          placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('enfermedadactual', '')) }}</textarea>
-            </x-ui.campo>
+            <label class="visually-hidden" for="enfermedadactual">Enfermedad actual: lo que el paciente tiene hoy</label>
+            <textarea name="enfermedadactual" id="enfermedadactual" class="form-control" rows="10"
+                      placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor(old('enfermedadactual', '')) }}</textarea>
 
             {{-- El aviso de "hay cambios sin guardar" se muestra recién cuando el texto cambió: se
                  controla por `hidden`, que es lo que el script alterna. --}}

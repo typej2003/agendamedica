@@ -8,23 +8,17 @@
 
 <x-ui.tarjeta titulo="Examen ginecológico" icono="bi-gender-female">
     <x-slot name="acciones">
+        <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG"
+                         nombre="examen ginecológico" />
         <span class="texto-tenue small me-2">{{ $seccion->cargados() }} de {{ $seccion->totalCampos() }} campos con dato</span>
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                      :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="evaluacion-form"
           data-consulta-evaluacion data-autoguardar data-url-resumen="{{ $seccion->urlResumen() }}" data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
         <input type="hidden" name="pestana" value="ginecologico">
-
-        {{-- El panel de plantillas del resumen (`EG`) va **arriba** de todo: en el escritorio es una columna a la
-             derecha que arranca arriba y acá vivía dentro del bloque del resumen, al final de la página
-             (pedido del usuario, 2026-10-16). --}}
-        <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG"
-                         nombre="examen ginecológico" class="mb-3" />
 
         <h3 class="paso-titulo mb-2">Hallazgos</h3>
         <div class="row g-3 mb-3">

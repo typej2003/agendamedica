@@ -16,7 +16,7 @@
     @include('clinica.catalogos._novedades-iniciales')
 
     <x-ui.barra-herramientas>
-        <x-ui.buscador :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
+        <x-ui.buscador agregar="dialogo-catalogo" campo="examen-nombre" :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        placeholder="Nombre, código o tipo" etiqueta="Buscar examen">
             <select name="tipo" class="form-select catalogo-filtro" aria-label="Filtrar por tipo de examen">
                 @foreach ($vm->opcionesDelFiltro() as $opcion)
@@ -28,6 +28,7 @@
 
     <x-ui.errores />
 
+    <div data-buscar-resultados>
     <x-ui.tarjeta sin-relleno data-tour="catalogos-lista">
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp
@@ -107,6 +108,7 @@
             @endif
         </div>
     @endunless
+    </div>
 
     <x-ui.dialogo id="dialogo-catalogo" :titulo="$vm->tituloDelFormulario()" lateral data-catalogo-dialogo
                   data-abrir-al-cargar="{{ ($vm->abrirAlCargar() || $errors->any()) ? '1' : '0' }}">

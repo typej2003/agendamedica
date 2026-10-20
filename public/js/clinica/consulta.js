@@ -71,8 +71,10 @@
             botonNuevo.addEventListener('click', function () { abrirCrear(''); });
         }
 
-        motivos.querySelectorAll('[data-motivo-crear]').forEach(function (boton) {
-            boton.addEventListener('click', function () { abrirCrear(boton.dataset.motivoCrear); });
+        // Delegado: el botón llega con la lista que `buscar-auto.js` vuelve a pedir al escribir en el buscador.
+        motivos.addEventListener('click', function (evento) {
+            const boton = evento.target.closest('[data-motivo-crear]');
+            if (boton) abrirCrear(boton.dataset.motivoCrear);
         });
 
         // El diálogo se abre solo después de un error de validación: el servidor dejó `crear_motivo` en la
