@@ -23,6 +23,22 @@
                     @endif
                     <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
                 </p>
+                {{-- La cabecera de pediatría (2026-10-20): el sexo, el representante y la historia, como en el récipe del
+                     escritorio; en las demás especialidades los tres son `null` y la línea no sale. La mide
+                     `MedidasDeLaMitad::altoDeLosDatos`. --}}
+                @if (($mitad['sexo'] ?? null) || ($mitad['representante'] ?? null) || ($mitad['historia'] ?? null))
+                    <p class="recipe-dato-linea">
+                        @if ($mitad['sexo'] ?? null)
+                            <span class="recipe-dato"><span class="recipe-dato-etiqueta">SEXO:</span> {{ $mitad['sexo'] }}</span>
+                        @endif
+                        @if ($mitad['representante'] ?? null)
+                            <span class="recipe-dato"><span class="recipe-dato-etiqueta">Rep.:</span> {{ $mitad['representante'] }}</span>
+                        @endif
+                        @if ($mitad['historia'] ?? null)
+                            <span class="recipe-dato"><span class="recipe-dato-etiqueta">Historia:</span> {{ $mitad['historia'] }}</span>
+                        @endif
+                    </p>
+                @endif
             </div>
         @endif
 

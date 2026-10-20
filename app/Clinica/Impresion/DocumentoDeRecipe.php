@@ -10,6 +10,10 @@ namespace App\Clinica\Impresion;
  * `edad` (en años a la fecha del récipe, o `null`) y `direccion` (o `null`). En el **récipe de la pareja** no
  * hay edad ni dirección: el legado les imprime los datos de la pareja que se cargaron (cédula y nombre) y los
  * demás no se conocen.
+ *
+ * En **pediatría** la persona trae además `sexo`, `representante`, `historia` y `edadCompacta` (`PacienteImpreso::datosPediatricos`)
+ * y el récipe sus `medidas` (peso, talla, circunferencia cefálica y tensión), que salen **sólo en la mitad de
+ * *Indicaciones*** (`MedidasDeLaConsulta`). En el récipe de la pareja nunca van: el bloque es del paciente.
  */
 final class DocumentoDeRecipe
 {
@@ -20,6 +24,7 @@ final class DocumentoDeRecipe
     /**
      * @param  array{nombre:string, cedula:?string, edad:?int, direccion:?string}  $persona
      * @param  array<int,ItemImpreso>  $items
+     * @param  array<int,array{etiqueta:string, valor:string}>  $medidas  las de la consulta, ya formateadas (pediatría)
      */
     public function __construct(
         public readonly string $tipo,
@@ -29,13 +34,14 @@ final class DocumentoDeRecipe
         public readonly array $persona,
         public readonly array $items,
         public readonly ?QrDelRecipe $qr = null,
+        public readonly array $medidas = [],
     ) {
     }
 
     /** El mismo récipe con su QR de verificación (WEB-5.6): lo agrega quien imprime, después de armarlo. */
     public function conQr(QrDelRecipe $qr): self
     {
-        return new self($this->tipo, $this->titulo, $this->numero, $this->fecha, $this->persona, $this->items, $qr);
+        return new self($this->tipo, $this->titulo, $this->numero, $this->fecha, $this->persona, $this->items, $qr, $this->medidas);
     }
 
     public function esDeLaPareja(): bool

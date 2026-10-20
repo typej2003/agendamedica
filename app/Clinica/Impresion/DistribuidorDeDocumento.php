@@ -108,16 +108,19 @@ final class DistribuidorDeDocumento
             // La caja del destinatario (el resumen médico, WEB-5.3c) ocupa su franja en la cabecera de la primera
             // mitad: el cuerpo de esa mitad tiene que medirse sin ella.
             $para = $primera ? $documento->para : null;
+            // Las líneas de la cabecera de pediatría (2026-10-20) ocupan su lugar sólo en la primera mitad; fuera de
+            // pediatría la lista viene vacía y la cuenta no cambia.
+            $datosExtra = $primera ? $this->datosExtra($documento) : [];
 
             // ¿Lo que queda entra en esta mitad **con la firma** (y con el bloque de imágenes)? Entonces es la última.
-            if ($this->alto($fijos, $restantes, $puntos) + $reserva <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para)) {
+            if ($this->alto($fijos, $restantes, $puntos) + $reserva <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para, $datosExtra)) {
                 $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes, 'imagenes' => $imagenes];
 
                 return $mitades;
             }
 
             // Si no, se llena esta mitad (sin firma, con el «Continúa →») con todo lo que entra.
-            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para);
+            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para, $datosExtra);
             $total = $this->palabras($restantes);
             $cuantas = $this->mayorCorteQueEntra($fijos, $restantes, $total, $puntos, $capacidad);
 
@@ -205,6 +208,17 @@ final class DistribuidorDeDocumento
     private function altoDeLasImagenes(DocumentoImpreso $documento): float
     {
         return $this->medidas->altoDeLasImagenes(count($documento->imagenes));
+    }
+
+    /**
+     * Las líneas que la **cabecera de pediatría** agrega arriba de la primera mitad (2026-10-20): el sexo, el
+     * representante y la historia. Fuera de pediatría la `persona` no las trae y la lista queda vacía.
+     *
+     * @return array<int,string>
+     */
+    private function datosExtra(DocumentoImpreso $documento): array
+    {
+        return array_values(array_filter([PacienteImpreso::lineaPediatrica($documento->persona)]));
     }
 
     /**

@@ -28,6 +28,10 @@ namespace App\Clinica\Impresion;
  * salvo que un medicamento no tenga indicación, caso en que los dos miden casi igual y el de "Rp." tiene menos
  * alto por la dirección.
  *
+ * En **pediatría** (2026-10-20) la cabecera ocupa una línea más —`SEXO` / `Rep.` / `Historia`— en las dos mitades y,
+ * en la de indicaciones, otra con las medidas: se le piden a `MedidasDeLaMitad` para que el cuerpo se achique en esa
+ * medida y la lista de medicamentos no se salga de la hoja.
+ *
  * Es una clase **sin estado y sin base de datos**.
  */
 final class DistribuidorDeRecipe
@@ -61,9 +65,15 @@ final class DistribuidorDeRecipe
         $nombre = $documento->persona['nombre'];
         $generico = $opciones->esGenerico();
 
-        $capacidadDeIndicaciones = $this->medidas->altoDelCuerpo($membrete, $nombre, null);
+        // Las líneas que agrega la cabecera de pediatría (2026-10-20): la del sexo, el representante y la historia
+        // —en las dos mitades— y, en la de indicaciones, la de las medidas. Fuera de pediatría no hay ninguna y la
+        // cuenta es la de siempre.
+        $cabecera = array_values(array_filter([PacienteImpreso::lineaPediatrica($documento->persona)]));
+        $medidas = array_values(array_filter([MedidasDeLaConsulta::linea($documento->medidas)]));
+
+        $capacidadDeIndicaciones = $this->medidas->altoDelCuerpo($membrete, $nombre, null, array_merge($cabecera, $medidas));
         $capacidadDeRp = $opciones->conRpEIndicaciones()
-            ? $this->medidas->altoDelCuerpo($membrete, $nombre, $documento->persona['direccion'])
+            ? $this->medidas->altoDelCuerpo($membrete, $nombre, $documento->persona['direccion'], $cabecera)
             : null;
 
         $mejor = null;

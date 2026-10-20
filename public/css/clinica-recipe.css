@@ -69,13 +69,23 @@
 
 /* ------------------------------------------------------------------------------------ Datos del paciente
    Texto a 9 pt; la etiqueta, en negrita a 8. `C.I.` / `EDAD` / `FECHA` van en una línea; la dirección sólo en la mitad
-   "Rp.". 4 mm de aire debajo. */
+   "Rp.". 4 mm de aire debajo. En pediatría se suma una línea con `SEXO` / `Rep.` / `Historia` —en las dos mitades— y, en
+   la de indicaciones, la de las medidas (2026-10-20). */
 
 .recipe-datos { flex: none; margin-bottom: 4mm; font-size: 9pt; line-height: 1.25; }
 .recipe-dato { margin: 0; }
 .recipe-dato-etiqueta { margin-right: 1.5mm; font-size: 8pt; font-weight: 700; }
 .recipe-datos-fila { display: flex; justify-content: space-between; gap: 2mm; margin: 1mm 0 0; }
 .recipe-dato-direccion { margin-top: 1mm; }
+
+/* La línea extra de la cabecera de pediatría: «SEXO: F  Rep.: …  Historia: 00025» (y la de las medidas). Va **sin
+   `display: flex`** a propósito: los datos fluyen como texto y así una línea del navegador es una línea de la cuenta de
+   `MedidasDeLaMitad::altoDeLosDatos` (con flex, cada dato se plegaría dentro de su columna y la fila podría medir más que
+   lo que la cuenta le reserva). Los 4 mm entre dato y dato y el 1,5 mm del rótulo no están en el texto que se mide: la
+   cuenta los descuenta de su ancho (`DESCUENTO_DE_LA_LINEA_EXTRA_MM`). */
+.recipe-dato-linea { margin: 1mm 0 0; }
+.recipe-dato-linea .recipe-dato { margin-right: 4mm; }
+.recipe-dato-linea .recipe-dato:last-child { margin-right: 0; }
 
 /* ------------------------------------------------------------------------------------------------ Título
    "Rp." / "Indicaciones:" a 14 pt en negrita itálica; a la derecha, "Hoja 1 de 2" si el récipe sigue. */

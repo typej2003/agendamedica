@@ -107,15 +107,17 @@ final class DocumentosParaImprimir
      * El documento pedido por su clave, o `null` si la consulta no lo tiene.
      *
      * @param  array<int,string>  $registros
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador): sus documentos llevan la
+     *                           cabecera del escritorio —sexo, representante, historia y edad compacta—
      */
-    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): DocumentoDeRecipe|DocumentoImpreso|null
+    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null, bool $pediatria = false): DocumentoDeRecipe|DocumentoImpreso|null
     {
         if (str_starts_with($clave, self::PREFIJO_RECIPE)) {
-            return $this->recipes->documento($consulta, $pacienteId, substr($clave, strlen(self::PREFIJO_RECIPE)));
+            return $this->recipes->documento($consulta, $pacienteId, substr($clave, strlen(self::PREFIJO_RECIPE)), $pediatria);
         }
 
         // La gesta del control de embarazo (`&gesta=2`) tiene que cruzar esta fachada: es la única de las
         // solicitudes que no es de la consulta, y sin pasarla el informe salía siempre con la gesta actual.
-        return $this->solicitudes->documento($consulta, $pacienteId, $registros, $clave, $gesta);
+        return $this->solicitudes->documento($consulta, $pacienteId, $registros, $clave, $gesta, $pediatria);
     }
 }

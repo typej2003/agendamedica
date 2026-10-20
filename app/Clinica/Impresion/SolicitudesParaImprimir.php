@@ -83,6 +83,14 @@ use Throwable;
  *  «Resumen clínico» es sólo el **rótulo de la observación** de esa orden (el campo que el médico escribe), no un texto que el escritorio arme
  *  con los diagnósticos: la web no agrega ninguna línea automática.
  *
+ * ## La cabecera de pediatría (2026-10-20)
+ *
+ * En pediatría —lo decide el controlador con `AlcanceDeLaEspecialidad`, **no** la edad del paciente— todos los documentos
+ * de la consulta llevan la cabecera del escritorio: además del nombre, la cédula, la edad y la fecha, el **sexo**, el
+ * **representante**, el **número de historia** y la **edad compacta** (`PacienteImpreso::datosPediatricos`). La arma
+ * `documento()` al final, cuando el documento ya está armado, así ninguna de las ramas de abajo se ocupa de eso. Fuera de
+ * pediatría la hoja queda exactamente igual que antes.
+ *
  * ## Qué se ofrece
  *
  * Sólo los **documentos de verdad** (`QueEsUnDocumento`): nada de las plantillas vacías del escritorio. La **constancia**
@@ -117,6 +125,7 @@ final class SolicitudesParaImprimir
         private ImagenesParaElInforme $imagenesDelInforme,
         private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
         private ImagenesDelExamenParaElInforme $imagenesDelExamen,
+        private RepresentanteParaLaHoja $representantes,
     ) {
     }
 
@@ -429,9 +438,43 @@ final class SolicitudesParaImprimir
      * tiene. La constancia siempre se puede armar (su texto base existe para toda consulta); quien llama decide si la
      * ofrece (`disponibles`).
      *
+     * `$pediatria` (2026-10-20) es la especialidad del contexto —la pasa el controlador desde
+     * `AlcanceDeLaEspecialidad`, **no** se adivina por la edad del paciente—: con ella, la cabecera del documento es la del
+     * escritorio de pediatría (sexo, representante, historia y edad compacta), que arma `PacienteImpreso::datosPediatricos`.
+     * El cuerpo, el título y el reparto no cambian. La orden de laboratorio **de la pareja** no la lleva: su cabecera es de
+     * la pareja, no del paciente.
+     *
      * @param  array<int,string>  $registros
      */
-    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): ?DocumentoImpreso
+    public function documento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null, bool $pediatria = false): ?DocumentoImpreso
+    {
+        $documento = $this->armarDocumento($consulta, $pacienteId, $registros, $clave, $gesta);
+
+        if ($documento === null || ! $pediatria || $documento->clave === DocumentoImpreso::LABORATORIO_PAREJA) {
+            return $documento;
+        }
+
+        $paciente = Paciente::find($pacienteId);
+
+        if ($paciente === null) {
+            return $documento;
+        }
+
+        return $documento->conPersona(PacienteImpreso::datosPediatricos(
+            $paciente,
+            $documento->fecha,
+            (string) $consulta->numhistoria,
+            $this->representantes->nombre((string) $consulta->reg_medico, (string) $consulta->numhistoria),
+        ));
+    }
+
+    /**
+     * El documento pedido, con la cabecera de siempre: la de pediatría se la agrega `documento()` después, para que
+     * ninguna de las ramas de abajo tenga que acordarse.
+     *
+     * @param  array<int,string>  $registros
+     */
+    private function armarDocumento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): ?DocumentoImpreso
     {
         $paciente = Paciente::find($pacienteId);
 

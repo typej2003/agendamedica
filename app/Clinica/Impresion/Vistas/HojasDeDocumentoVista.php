@@ -32,11 +32,15 @@ final class HojasDeDocumentoVista
      * @param  array<int,DocumentoImpreso>  $documentos
      * @param  DistribuidorDeDocumento|null  $distribuidor  el reparto de la media hoja; `null` usa el de siempre (el que inyecta
      *                                                      el contenedor)
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador con
+     *                           `AlcanceDeLaEspecialidad`, no la edad): la cabecera lleva además sexo, representante, historia y
+     *                           la edad compacta (2026-10-20)
      */
     public function __construct(
         private Membrete $membrete,
         private array $documentos,
         private ?DistribuidorDeDocumento $distribuidor = null,
+        private bool $pediatria = false,
     ) {
         $this->distribuidor ??= new DistribuidorDeDocumento();
     }
@@ -99,7 +103,12 @@ final class HojasDeDocumentoVista
             'titulo' => $mitad['primera'] ? $documento->titulo : $documento->titulo . ' (continuación)',
             'paciente' => $persona['nombre'],
             'cedula' => $persona['cedula'] ?? '',
-            'edad' => $this->edad($persona['edad'] ?? null),
+            'edad' => $this->edad($persona['edad'] ?? null, $this->pediatria ? ($persona['edadCompacta'] ?? null) : null),
+            // La cabecera de pediatría (2026-10-20): el sexo, el representante y la historia. Fuera de pediatría los tres
+            // salen `null` y la vista no imprime sus rótulos.
+            'sexo' => $this->pediatria ? ($persona['sexo'] ?? null) : null,
+            'representante' => $this->pediatria ? ($persona['representante'] ?? null) : null,
+            'historia' => $this->pediatria ? ($persona['historia'] ?? null) : null,
             'fecha' => FechaClinica::formato($documento->fecha),
             // El destinatario del resumen médico (WEB-5.3c, `informe.para`): sale en la cabecera, en una
             // caja con borde. En los demás documentos va en el cuerpo y esto es `null`.
@@ -114,8 +123,13 @@ final class HojasDeDocumentoVista
         ];
     }
 
-    private function edad(?int $edad): string
+    /** La edad en años o, en pediatría, la compacta del escritorio («21A 10M 16D»); `''` si no se conoce. */
+    private function edad(?int $edad, ?string $compacta = null): string
     {
+        if ($compacta !== null) {
+            return $compacta;
+        }
+
         return $edad === null ? '' : $edad . ($edad === 1 ? ' año' : ' años');
     }
 }

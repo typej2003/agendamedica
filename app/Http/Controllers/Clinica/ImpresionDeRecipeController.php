@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Recipes\GuardarOpcionesDeImpresion;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Impresion\DocumentoDeRecipe;
 use App\Clinica\Impresion\MembreteDelMedico;
@@ -132,15 +133,20 @@ class ImpresionDeRecipeController extends Controller
      * contexto, las opciones que quedaron guardadas y la próxima cita del paciente, y devuelve la página de
      * impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
      *
+     * **Pediatría** se decide acá, con la especialidad del contexto (`AlcanceDeLaEspecialidad`) y **no** con la edad
+     * del paciente —un paciente de pediatría puede tener 21 años—: su récipe lleva la cabecera del escritorio y las
+     * medidas de la consulta. Del resto de las especialidades, la hoja no cambia.
+     *
      * @param  array<int,string>  $claves  `'2'`, `'pareja'`… los récipes de la consulta que se imprimen, en orden
      */
     private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $claves, string $volver, string $textoVolver)
     {
         $contexto = $request->attributes->get('contexto_clinico');
+        $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
 
         $documentos = [];
         foreach ($claves as $clave) {
-            $documento = $this->recipes->documento($consulta, $pacienteId, $clave);
+            $documento = $this->recipes->documento($consulta, $pacienteId, $clave, $pediatria);
             abort_if($documento === null, 404);
             $documentos[] = $documento;
         }
@@ -158,6 +164,7 @@ class ImpresionDeRecipeController extends Controller
                 $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId),
                 ['volver' => $volver, 'volverTexto' => $textoVolver],
                 new OpcionesDeImpresionVista($opciones, route('clinica.recipes.opciones'), $request->getRequestUri()),
+                $pediatria,
             ),
         ]);
     }

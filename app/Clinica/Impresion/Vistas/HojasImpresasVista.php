@@ -28,6 +28,8 @@ final class HojasImpresasVista
      * @param  array<int,DocumentoDeRecipe|DocumentoImpreso>  $documentos  en el orden en que se imprimen
      * @param  array{fecha:string, hora:?string}|null  $proximaCita  la que sale al pie de los récipes
      * @param  array{volver:string, volverTexto:string}  $urls
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador): cada hoja lleva la
+     *                           cabecera del escritorio (sexo, representante, historia y edad compacta) y el récipe sus medidas
      */
     public function __construct(
         private Membrete $membrete,
@@ -36,6 +38,7 @@ final class HojasImpresasVista
         private ?array $proximaCita,
         private array $urls,
         private OpcionesDeImpresionVista $dialogo,
+        private bool $pediatria = false,
     ) {
     }
 
@@ -158,6 +161,7 @@ final class HojasImpresasVista
                     $this->proximaCita,
                     $this->urls,
                     $this->dialogo,
+                    $this->pediatria,
                 ))->hojas();
 
                 foreach ($delRecipe as $hoja) {
@@ -178,7 +182,7 @@ final class HojasImpresasVista
                 continue;
             }
 
-            foreach ((new HojasDeDocumentoVista($this->membrete, [$documento]))->hojas() as $hoja) {
+            foreach ((new HojasDeDocumentoVista($this->membrete, [$documento], null, $this->pediatria))->hojas() as $hoja) {
                 $hojas[] = $hoja;
             }
         }

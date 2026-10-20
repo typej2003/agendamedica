@@ -277,6 +277,17 @@ final class DocumentoImpreso
     }
 
     /**
+     * El mismo documento con **otra cabecera de paciente** (la de pediatría, que suma sexo, representante, historia y
+     * la edad compacta: `PacienteImpreso::datosPediatricos`). El cuerpo, la fecha y el título no cambian.
+     *
+     * @param  array<string,mixed>  $persona
+     */
+    public function conPersona(array $persona): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes);
+    }
+
+    /**
      * El mismo documento con sus **imágenes para la hoja del informe** (A-13: los dibujos de la colposcopía y la
      * histeroscopía). Salen **en la misma página** que el texto, debajo de él (2026-10-18, como el subreporte del
      * escritorio): el reparto del texto les reserva su alto (`DistribuidorDeDocumento`).

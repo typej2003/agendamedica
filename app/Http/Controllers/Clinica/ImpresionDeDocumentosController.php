@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
@@ -194,17 +195,22 @@ class ImpresionDeDocumentosController extends Controller
      * las opciones de impresión que quedaron guardadas (de los récipes) y la próxima cita del paciente, y devuelve la página de
      * impresión (sin el armazón de la web, como el listado del día y el resumen de la historia).
      *
+     * **Pediatría** se decide acá, con la especialidad del contexto (`AlcanceDeLaEspecialidad`) y **no** con la edad del
+     * paciente: sus documentos llevan la cabecera del escritorio (sexo, representante, historia y edad compacta). Del resto
+     * de las especialidades, la hoja no cambia.
+     *
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
      */
     private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
+        $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
 
         $documentos = [];
 
         foreach ($claves as $clave) {
-            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta);
+            $documento = $this->documentos->documento($consulta, $pacienteId, $registros, $clave, $gesta, $pediatria);
 
             // Un documento que no se pudo armar (dos pestañas abiertas y el estudio se borró en el medio) **no rompe el
             // lote**: se saltea. Si no queda ninguno, sí es un 404 (O-16: el lote de la cita no se cae por uno).
@@ -228,6 +234,7 @@ class ImpresionDeDocumentosController extends Controller
                 $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId),
                 ['volver' => $volver, 'volverTexto' => $textoVolver],
                 new OpcionesDeImpresionVista($opciones, route('clinica.recipes.opciones'), $request->getRequestUri()),
+                $pediatria,
             ),
         ]);
     }

@@ -19,6 +19,31 @@
                 @endif
                 <span class="recipe-dato"><span class="recipe-dato-etiqueta">FECHA:</span> {{ $mitad['fecha'] }}</span>
             </p>
+            {{-- La cabecera de pediatría (2026-10-20): el sexo, el representante y la historia del récipe del escritorio,
+                 cada dato con su rótulo y sin el que no hay (no queda un «Rep.:» colgando). En las demás especialidades
+                 los tres son `null` y la línea no sale. Su alto lo mide `MedidasDeLaMitad::altoDeLosDatos`. --}}
+            @if (($mitad['sexo'] ?? null) || ($mitad['representante'] ?? null) || ($mitad['historia'] ?? null))
+                <p class="recipe-dato-linea">
+                    @if ($mitad['sexo'] ?? null)
+                        <span class="recipe-dato"><span class="recipe-dato-etiqueta">SEXO:</span> {{ $mitad['sexo'] }}</span>
+                    @endif
+                    @if ($mitad['representante'] ?? null)
+                        <span class="recipe-dato"><span class="recipe-dato-etiqueta">Rep.:</span> {{ $mitad['representante'] }}</span>
+                    @endif
+                    @if ($mitad['historia'] ?? null)
+                        <span class="recipe-dato"><span class="recipe-dato-etiqueta">Historia:</span> {{ $mitad['historia'] }}</span>
+                    @endif
+                </p>
+            @endif
+            {{-- Las medidas de la consulta (pediatría): sólo en la mitad de «Indicaciones», como el escritorio, y sólo las
+                 que existen; la línea entera no sale si no hay ninguna. --}}
+            @if (($mitad['medidas'] ?? []) !== [])
+                <p class="recipe-dato-linea recipe-dato-medidas">
+                    @foreach ($mitad['medidas'] as $medida)
+                        <span class="recipe-dato"><span class="recipe-dato-etiqueta">{{ $medida['etiqueta'] }}</span> {{ $medida['valor'] }}</span>
+                    @endforeach
+                </p>
+            @endif
             @if ($mitad['direccion'])
                 <p class="recipe-dato recipe-dato-direccion"><span class="recipe-dato-etiqueta">DIRECCIÓN:</span> {{ $mitad['direccion'] }}</p>
             @endif

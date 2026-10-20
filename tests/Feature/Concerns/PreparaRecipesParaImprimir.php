@@ -41,12 +41,17 @@ trait PreparaRecipesParaImprimir
         Carbon::setTestNow();
     }
 
-    /** @return array{0:User, 1:Medico, 2:Specialty} */
-    private function medicoConAcceso(string $rol = 'Medico'): array
+    /**
+     * Un médico con su consultorio y una especialidad del contexto. Por defecto ginecología; los tests de los impresos de
+     * pediatría piden `'pediatria'` (2026-10-20).
+     *
+     * @return array{0:User, 1:Medico, 2:Specialty}
+     */
+    private function medicoConAcceso(string $rol = 'Medico', string $especialidad = 'ginecologia-y-obstetricia'): array
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
 
-        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $gineco = Specialty::where('slug', $especialidad)->firstOrFail();
         $regMedico = 'imprimir-test' . substr(uniqid(), -6);
 
         $user = User::create([

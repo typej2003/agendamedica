@@ -92,6 +92,20 @@ final class MedidasDeLaMitad
     /** El aire encima del pie de página: `.recipe-pie`. */
     private const AIRE_DEL_PIE_MM = 1.5;
 
+    /**
+     * El aire de cada línea extra de los datos del paciente (`.recipe-dato-linea`, 1 mm arriba). Son las de la cabecera de
+     * **pediatría** —`SEXO` / `Rep.` / `Historia` y, en la mitad de *Indicaciones*, las medidas— (2026-10-20).
+     */
+    private const AIRE_DE_LA_LINEA_EXTRA_MM = 1.0;
+
+    /**
+     * Lo que ocupan en una línea extra de pediatría los espaciados que **no están en el texto** que se mide: los rótulos en
+     * negrita (1,5 mm cada uno) y los 4 mm entre dato y dato de `.recipe-dato-linea` (el texto los une con un espacio). Se
+     * descuenta del ancho al contar las líneas para no quedarse corto: la cabecera lleva tres datos y las medidas hasta
+     * cuatro, y entre todos suman ~12 mm de aire.
+     */
+    private const DESCUENTO_DE_LA_LINEA_EXTRA_MM = 12.0;
+
     private const RESERVA_MM = 4.0;
 
     /**
@@ -205,12 +219,14 @@ final class MedidasDeLaMitad
      *
      * @param  string  $paciente  el nombre que se imprime en `PACIENTE`
      * @param  string|null  $direccion  la dirección, sólo en la mitad "Rp." (en la de indicaciones es `null`)
+     * @param  array<int,string>  $lineasExtra  las líneas que agrega la cabecera de pediatría: la de `SEXO` / `Rep.` /
+     *                                         `Historia` en las dos mitades y, en la de indicaciones, la de las medidas
      */
-    public function altoDelCuerpo(Membrete $membrete, string $paciente, ?string $direccion): float
+    public function altoDelCuerpo(Membrete $membrete, string $paciente, ?string $direccion, array $lineasExtra = []): float
     {
         $ocupado = $this->altoDelMembrete($membrete)
             + self::LINEA_MM
-            + $this->altoDeLosDatos($paciente, $direccion) + self::AIRE_DE_LOS_DATOS_MM
+            + $this->altoDeLosDatos($paciente, $direccion, $lineasExtra) + self::AIRE_DE_LOS_DATOS_MM
             + self::TITULO_MM
             + self::FIRMA_MM
             + $this->altoDelPie($membrete)
@@ -240,13 +256,15 @@ final class MedidasDeLaMitad
      * @param  bool  $conFirma  `true` si es la última mitad del documento (lleva la firma), `false` si sigue en otra
      * @param  ?string  $para  el destinatario que va **en la cabecera, en una caja con borde** (el resumen médico, WEB-5.3c);
      *                         ocupa su franja sólo en la primera mitad
+     * @param  array<int,string>  $datosExtra  las líneas que agrega la cabecera de pediatría (`SEXO` / `Rep.` / `Historia`),
+     *                                         sólo en la primera mitad
      */
-    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null): float
+    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null, array $datosExtra = []): float
     {
         $arriba = $primera
             ? $this->altoDelMembrete($membrete)
                 + self::LINEA_MM
-                + $this->altoDeLosDatos($paciente, null) + self::AIRE_DE_LOS_DATOS_MM
+                + $this->altoDeLosDatos($paciente, null, $datosExtra) + self::AIRE_DE_LOS_DATOS_MM
                 + self::TITULO_MM
                 + ($para === null ? 0.0 : self::PARA_MM)
             : $this->altoDelEncabezadoDeContinuacion($paciente)
@@ -333,14 +351,25 @@ final class MedidasDeLaMitad
     /**
      * Los datos del paciente: `PACIENTE`, luego `C.I.` / `EDAD` / `FECHA` en una sola línea y, en la mitad
      * "Rp.", la `DIRECCIÓN` (que puede ocupar más de una línea).
+     *
+     * En pediatría se les suma una **línea extra** con `SEXO` / `Rep.` / `Historia` (y, en la mitad de *Indicaciones*,
+     * la de las medidas): se miden como texto corrido, que es como las pinta el CSS (`.recipe-dato-linea`, sin flex,
+     * así una línea del navegador es una línea de la cuenta).
+     *
+     * @param  array<int,string>  $lineasExtra
      */
-    public function altoDeLosDatos(string $paciente, ?string $direccion): float
+    public function altoDeLosDatos(string $paciente, ?string $direccion, array $lineasExtra = []): float
     {
         $linea = 9.0 * self::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
 
         // "PACIENTE:" en negrita ocupa ~17 mm antes del nombre.
         $lineasDelNombre = max($this->medidor->lineas($paciente, $this->anchoUtil - 17.0, 9.0), 1);
         $alto = $lineasDelNombre * $linea + 1.0 + $linea;
+
+        foreach ($lineasExtra as $texto) {
+            $alto += self::AIRE_DE_LA_LINEA_EXTRA_MM
+                + max($this->medidor->lineas($texto, $this->anchoUtil - self::DESCUENTO_DE_LA_LINEA_EXTRA_MM, 9.0), 1) * $linea;
+        }
 
         if ($direccion !== null && trim($direccion) !== '') {
             // "DIRECCIÓN:" ocupa ~21 mm.

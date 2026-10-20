@@ -19,6 +19,11 @@ use App\Support\FechaClinica;
  * en otra (`DistribuidorDeRecipe`), y cada hoja repite el membrete y la firma. Con varios récipes (la secretaría
  * puede imprimir "todos") las hojas van una detrás de otra.
  *
+ * En **pediatría** (`$pediatria`, que decide el controlador con `AlcanceDeLaEspecialidad` y **no** la edad del
+ * paciente) la cabecera de las dos mitades lleva además el **sexo**, el **representante**, la **historia** y la
+ * **edad compacta**, y la mitad de *Indicaciones* —sólo ella— la línea de las **medidas** (peso, talla,
+ * circunferencia cefálica y tensión). Fuera de pediatría la hoja sale exactamente como siempre.
+ *
  * Como todo ViewModel de la web clínica **no consulta la base**: recibe el membrete, las opciones, los récipes y
  * la próxima cita ya leídos. Se prueba sin base de datos.
  */
@@ -28,6 +33,7 @@ final class HojasDeRecipeVista
      * @param  array<int,DocumentoDeRecipe>  $documentos
      * @param  array{fecha:string, hora:?string}|null  $proximaCita
      * @param  array{volver:string, volverTexto:string}  $urls
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría: la cabecera del escritorio y las medidas
      */
     public function __construct(
         private Membrete $membrete,
@@ -36,6 +42,7 @@ final class HojasDeRecipeVista
         private ?array $proximaCita,
         private array $urls,
         private OpcionesDeImpresionVista $dialogo,
+        private bool $pediatria = false,
         private DistribuidorDeRecipe $distribuidor = new DistribuidorDeRecipe(),
     ) {
     }
@@ -173,16 +180,19 @@ final class HojasDeRecipeVista
                 'indicaciones' => $item->indicaciones,
             ],
             $items,
-        ));
+        ), $this->pediatria ? $documento->medidas : []);
     }
 
     /**
      * @param  array<int,array<string,mixed>>  $filas
+     * @param  array<int,array{etiqueta:string, valor:string}>  $medidas  las de la consulta, sólo en la mitad de indicaciones de pediatría
      * @return array<string,mixed>
      */
-    private function mitad(string $clase, string $titulo, DocumentoDeRecipe $documento, ?string $etiqueta, bool $conDireccion, array $filas): array
+    private function mitad(string $clase, string $titulo, DocumentoDeRecipe $documento, ?string $etiqueta, bool $conDireccion, array $filas, array $medidas = []): array
     {
         $persona = $documento->persona;
+        // El bloque de pediatría es del paciente: el récipe de la pareja no lo lleva aunque el contexto sea pediatría.
+        $pediatria = $this->pediatria && ! $documento->esDeLaPareja();
 
         return [
             'clase' => $clase,
@@ -191,10 +201,16 @@ final class HojasDeRecipeVista
             'paciente' => $persona['nombre'],
             'cedula' => $persona['cedula'] ?? '',
             // La pareja no tiene edad (no se conoce): el dato no se imprime en vez de quedar en blanco.
-            'edad' => $documento->esDeLaPareja() ? null : $this->edad($persona['edad']),
+            'edad' => $documento->esDeLaPareja() ? null : $this->edad($persona['edad'], $pediatria ? ($persona['edadCompacta'] ?? null) : null),
+            // La cabecera de pediatría: el sexo, el representante y la historia; sin el dato, la vista no imprime su rótulo.
+            'sexo' => $pediatria ? ($persona['sexo'] ?? null) : null,
+            'representante' => $pediatria ? ($persona['representante'] ?? null) : null,
+            'historia' => $pediatria ? ($persona['historia'] ?? null) : null,
             'fecha' => FechaClinica::formato($documento->fecha),
             // La dirección es sólo de la mitad "Rp." (la farmacia) y sólo si el paciente la tiene.
             'direccion' => $conDireccion && ! $documento->esDeLaPareja() ? ($persona['direccion'] ?? null) : null,
+            // Las medidas de la consulta (pediatría): sólo en la mitad de "Indicaciones", como el escritorio.
+            'medidas' => $medidas,
             'filas' => $filas,
             'proximaCita' => $this->proximaCita(),
             // El QR de verificación (WEB-5.6): el mismo en las dos mitades. `null` si quien armó el récipe no se lo puso.
@@ -202,8 +218,13 @@ final class HojasDeRecipeVista
         ];
     }
 
-    private function edad(?int $edad): string
+    /** La edad en años o, en pediatría, la compacta del escritorio («21A 10M 16D»); `''` si no se conoce. */
+    private function edad(?int $edad, ?string $compacta = null): string
     {
+        if ($compacta !== null) {
+            return $compacta;
+        }
+
         return $edad === null ? '' : $edad . ($edad === 1 ? ' año' : ' años');
     }
 

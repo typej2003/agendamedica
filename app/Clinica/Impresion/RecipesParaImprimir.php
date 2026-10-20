@@ -30,6 +30,14 @@ use Illuminate\Support\Collection;
  *    paciente es un dato que no tiene por qué viajar en ella. (El legado imprime además la **edad del
  *    paciente principal** en la hoja de la pareja: es un descuido de la fuente y no se replica.)
  *
+ * ## El récipe de pediatría (2026-10-20)
+ *
+ * `$pediatria` lo pasa el controlador (la especialidad del contexto, `AlcanceDeLaEspecialidad`; **no** la edad: un
+ * paciente de pediatría puede tener 21 años). Cuando viene encendido, el récipe del paciente lleva la cabecera del
+ * escritorio —sexo, representante, historia y edad compacta, vía `PacienteImpreso::datosPediatricos`— y las
+ * **medidas de la consulta** (`MedidasDeLaConsulta`), que la hoja imprime sólo en la mitad de *Indicaciones*. El
+ * récipe de la pareja no las lleva nunca.
+ *
  * Es de **sólo lectura**.
  */
 final class RecipesParaImprimir
@@ -37,6 +45,7 @@ final class RecipesParaImprimir
     public function __construct(
         private RecipesDeLaConsulta $recipes,
         private RecipeDeLaPareja $pareja,
+        private RepresentanteParaLaHoja $representantes,
     ) {
     }
 
@@ -82,8 +91,10 @@ final class RecipesParaImprimir
     /**
      * El récipe pedido por su clave (`'2'` o `'pareja'`), o `null` si la consulta no lo tiene o no tiene
      * medicamentos.
+     *
+     * @param  bool  $pediatria  la especialidad del contexto: agrega la cabecera del escritorio y las medidas
      */
-    public function documento(Consulta $consulta, int $pacienteId, string $clave): ?DocumentoDeRecipe
+    public function documento(Consulta $consulta, int $pacienteId, string $clave, bool $pediatria = false): ?DocumentoDeRecipe
     {
         $regMedico = (string) $consulta->reg_medico;
         $fechaDeLaConsulta = Carbon::parse($consulta->fecha)->toDateString();
@@ -126,14 +137,27 @@ final class RecipesParaImprimir
 
         $fecha = $recipe->fecha ?? $fechaDeLaConsulta;
 
+        // La cabecera del paciente es la misma de todos los documentos impresos (`PacienteImpreso`); en pediatría
+        // lleva además lo que imprime el escritorio y, en esta hoja, las medidas de la consulta (sólo en la mitad de
+        // «Indicaciones», y sólo del paciente: el récipe de la pareja no las lleva).
+        $persona = $pediatria
+            ? PacienteImpreso::datosPediatricos(
+                $paciente,
+                $fecha,
+                (string) $consulta->numhistoria,
+                $this->representantes->nombre($regMedico, (string) $consulta->numhistoria),
+            )
+            : PacienteImpreso::datos($paciente, $fecha);
+
         return new DocumentoDeRecipe(
             DocumentoDeRecipe::PACIENTE,
             'Récipe ' . $recipe->numero,
             $recipe->numero,
             $fecha,
-            // La cabecera del paciente es la misma de todos los documentos impresos (`PacienteImpreso`).
-            PacienteImpreso::datos($paciente, $fecha),
+            $persona,
             $this->items($recipe->items),
+            null,
+            $pediatria ? MedidasDeLaConsulta::de($consulta) : [],
         );
     }
 
