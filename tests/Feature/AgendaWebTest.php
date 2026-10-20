@@ -1400,7 +1400,7 @@ class AgendaWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('data-dialogo="recordatorio"', false);
         // Las etiquetas ya sustituidas, en el texto que el diálogo ofrece de arranque.
-        $respuesta->assertSee('Hola Alvarez, Ana: cita el 05/10/2026 a las 09:30 con el Dr. de prueba Agenda.', false);
+        $respuesta->assertSee('Hola Alvarez, Ana: cita el 05/10/2026 a las 9:30 AM con el Dr. de prueba Agenda.', false);
         $respuesta->assertSee('data-tiene-telefono="1"', false);
         $respuesta->assertSee('data-tiene-correo="1"', false);
     }

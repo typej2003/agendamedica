@@ -5,6 +5,7 @@ namespace App\Clinica\Bitacora\Vistas;
 use App\Clinica\Bitacora\DiccionarioDeLaBitacora;
 use App\Clinica\Bitacora\FiltroDeBitacora;
 use App\Clinica\FechaDelConsultorio;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 
 /**
@@ -163,7 +164,7 @@ final class BitacoraVista
 
         return [
             'cuando' => $this->cuando($momento),
-            'cuandoCompleto' => $momento->format('d/m/Y H:i:s'),
+            'cuandoCompleto' => HoraLocal::fechaHoraConSegundos($momento),
             'quien' => $this->quien($grupo),
             'accion' => $this->accion($grupo),
             'detalle' => $this->detalle($grupo),
@@ -178,7 +179,7 @@ final class BitacoraVista
     {
         $hoy = FechaDelConsultorio::ahora()->startOfDay();
         $dia = $momento->copy()->startOfDay();
-        $hora = $momento->format('H:i');
+        $hora = HoraLocal::hora12($momento->format('H:i'));
 
         if ($dia->equalTo($hoy)) {
             return 'Hoy ' . $hora;

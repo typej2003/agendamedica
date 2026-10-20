@@ -88,7 +88,7 @@ class PlantillasDeMensajeUnidadTest extends TestCase
         $texto = 'Hola {paciente}, el {fecha} a las {hora} con {doctor} en {centro}.';
 
         $this->assertSame((new MensajeDeRecordatorio())->armar($texto, $datos), $cita->armar($texto, $datos));
-        $this->assertSame('Hola Ana Ejemplo, el 15/11/2026 a las 09:30 con Dra. Ana Prueba en Consultorio Norte.', $cita->armar($texto, $datos));
+        $this->assertSame('Hola Ana Ejemplo, el 15/11/2026 a las 9:30 AM con Dra. Ana Prueba en Consultorio Norte.', $cita->armar($texto, $datos));
 
         $cumple = PlantillasDeMensaje::de('cumple');
         $this->assertSame(
@@ -96,7 +96,7 @@ class PlantillasDeMensajeUnidadTest extends TestCase
             $cumple->armar('¡Feliz cumpleaños {paciente}! {doctor}', $cumple->datosDeEjemplo(self::EJEMPLO)),
         );
         // Una plantilla vacía vale la de por defecto, en las dos.
-        $this->assertSame('Recordatorio de cita para Ana Ejemplo: 15/11/2026 a las 09:30.', $cita->armar(null, $datos));
+        $this->assertSame('Recordatorio de cita para Ana Ejemplo: 15/11/2026 a las 9:30 AM.', $cita->armar(null, $datos));
         $this->assertSame('¡Feliz cumpleaños Ana Ejemplo! Le deseamos un excelente día. Saludos.', $cumple->armar('  ', $cumple->datosDeEjemplo(self::EJEMPLO)));
     }
 
@@ -145,7 +145,7 @@ class PlantillasDeMensajeUnidadTest extends TestCase
         $this->assertSame('', $cita['texto']);
         $this->assertFalse($cita['personalizada']);
         $this->assertSame('Usa el mensaje por defecto', $cita['estado']['texto']);
-        $this->assertSame('Recordatorio de cita para Ana Ejemplo: 15/11/2026 a las 09:30.', $cita['analisis']['vista_previa']);
+        $this->assertSame('Recordatorio de cita para Ana Ejemplo: 15/11/2026 a las 9:30 AM.', $cita['analisis']['vista_previa']);
         $this->assertSame('plantilla-cita', $cita['ancla']);
         $this->assertSame(['{paciente}', '{fecha}', '{hora}', '{doctor}', '{centro}'], array_column($cita['etiquetas'], 'etiqueta'));
         $this->assertSame(['{paciente}', '{doctor}'], array_column($cumple['etiquetas'], 'etiqueta'));

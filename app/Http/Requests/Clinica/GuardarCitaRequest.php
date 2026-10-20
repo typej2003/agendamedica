@@ -56,7 +56,7 @@ class GuardarCitaRequest extends FormRequest
             'sede.integer'                  => 'La sede elegida no es válida.',
             'fecha.required'                => 'Elige el día de la cita.',
             'fecha.date_format'             => 'El día de la cita no tiene un formato válido.',
-            'hora.regex'                    => 'La hora no tiene un formato válido (por ejemplo, 09:30).',
+            'hora.regex'                    => 'La hora no tiene un formato válido: escríbela con AM/PM (por ejemplo, 9:30 AM).',
             'bloque.integer'                => 'El bloque de horario elegido no es válido.',
             'bloque.min'                    => 'El bloque de horario elegido no es válido.',
             'motivo.max'                    => 'El motivo no puede pasar de 50 caracteres.',

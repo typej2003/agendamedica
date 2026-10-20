@@ -8,6 +8,7 @@ use App\Models\Medico;
 use App\Models\Office;
 use App\Notificaciones\MensajeDeRecordatorio;
 use App\Support\FechaClinica;
+use App\Support\HoraLocal;
 use Illuminate\Support\Collection;
 
 /**
@@ -59,7 +60,7 @@ class RecordatoriosDeAgenda
                 [
                     'paciente' => $cita->paciente,
                     'fecha'    => FechaClinica::formato($cita->fecha, 'd/m/Y'),
-                    'hora'     => $cita->horaIni ? substr($cita->horaIni, 0, 5) : '',
+                    'hora'     => HoraLocal::hora12($cita->horaIni),
                     'doctor'   => ($doctor['nombre'] ?? '') !== '' ? $doctor['nombre'] : $plantillas['medicoDelRegistro'],
                     'centro'   => $centros[$cita->centroId ?? ''] ?? '',
                 ]

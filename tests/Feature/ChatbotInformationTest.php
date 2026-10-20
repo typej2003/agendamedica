@@ -491,7 +491,7 @@ class ChatbotInformationTest extends TestCase
         $this->assertStringContainsString('Fernando Sucre', $res['mensaje']);
         $this->assertStringContainsString('Dr. Marcos Pérez', $res['mensaje']);
         $this->assertStringContainsString('Turno asignado:* #3', $res['mensaje']);
-        $this->assertStringContainsString('08:40 AM', $res['mensaje']);
+        $this->assertStringContainsString('8:40 AM', $res['mensaje']);
         $this->assertStringContainsString('Control cardiovascular', $res['mensaje']);
         $this->assertStringContainsString('Cons. 402', $res['mensaje']);
         $this->assertStringContainsString('Centro Médico Caracas', $res['mensaje']);

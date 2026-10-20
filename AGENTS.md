@@ -964,6 +964,14 @@ campo prellenado, `agregarUrl` lleva a la pantalla de alta con `?nombre=` (pacie
 alta que ya está en la pantalla (diagnósticos, antecedentes). Lo que se ate a lo que llega en la región va **delegado** en `document` o escucha
 `buscar-auto:cargado`. Tests: `Feature/BuscadorAutomaticoWebTest`.
 
+**Horas (2026-10-20):** se muestran **en la hora del consultorio y en 12 h AM/PM** («8:00 AM», «1:00 PM», rangos «8:00 AM a 1:00 PM»).
+`App\Support\HoraLocal` es la única puerta: `hora12()`/`rango()` formatean una hora que **ya es local** (`cola.hora_ini`, bloques de
+`office_schedules`, hora del recordatorio y del cumpleaños: no se convierten de zona) e `instante()`/`fechaHora()`/`hora()` convierten un
+**instante UTC** (`created_at`, `sync_changes.occurred_at`, última sincronización…) a `config('clinica.zona')`; `config('app.timezone')` sigue en UTC.
+La **entrada** es `<x-ui.hora name=… :valor="'HH:MM'">` + `public/js/clinica/hora-ampm.js` (texto tolerante: «1pm», «13:00», «0800»; sin AM/PM,
+1–6 = PM, 7–11 = AM, 12 = PM; test de Node en `tests/js/hora-ampm.test.js`). **El servidor sigue recibiendo `HH:MM` de 24 h** (un `hidden` con el
+`name`): ninguna validación ni Action cambió, y el API del móvil, el sync y los logs siguen en 24 h. No usar `<input type="time">` en `/clinica`.
+
 **Pauta de pantallas «buscar y agregar» (decisión del usuario, 2026-10-20):** una lista de cosas que se buscan y se agregan
 va en **dos columnas** (`<x-ui.dos-listas>`): a la izquierda lo que se arma (los campos propios —el nombre— y la lista de lo
 agregado, con su guardado), a la derecha **el catálogo a la vista** con su buscador que filtra la lista y el botón «Nuevo …»

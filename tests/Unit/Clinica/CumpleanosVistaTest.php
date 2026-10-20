@@ -86,7 +86,7 @@ class CumpleanosVistaTest extends TestCase
         // `created_at` se guarda en UTC: 13:03 UTC son las 09:03 en Caracas (UTC-4).
         $vm = $this->vista([$this->cumpleano()], [1 => '2026-10-10 13:03:00']);
 
-        $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Enviado 09:03'], $vm->filas()[0]['estado']);
+        $this->assertSame(['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Enviado 9:03 AM'], $vm->filas()[0]['estado']);
         $this->assertTrue($vm->filas()[0]['enviado']);
     }
 

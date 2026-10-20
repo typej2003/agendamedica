@@ -71,9 +71,9 @@ class HorarioController extends Controller
             'dias.*.min'           => 'Elige un día de la semana.',
             'dias.*.max'           => 'Elige un día de la semana.',
             'hora_inicio.required' => 'Pon la hora en que empieza el bloque.',
-            'hora_inicio.regex'    => 'La hora de inicio tiene que ser HH:MM (por ejemplo 08:00).',
+            'hora_inicio.regex'    => 'La hora de inicio tiene que ser una hora con AM/PM (por ejemplo 8:00 AM).',
             'hora_fin.required'    => 'Pon la hora en que termina el bloque.',
-            'hora_fin.regex'       => 'La hora de fin tiene que ser HH:MM (por ejemplo 12:00).',
+            'hora_fin.regex'       => 'La hora de fin tiene que ser una hora con AM/PM (por ejemplo 12:00 PM).',
             'hora_fin.after'       => 'La hora de fin tiene que ser posterior a la de inicio.',
             'cupo.min'             => 'El cupo, si lo pones, tiene que ser de al menos 1 paciente.',
         ]);
