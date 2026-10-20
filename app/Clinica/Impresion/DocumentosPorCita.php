@@ -151,6 +151,8 @@ final class DocumentosPorCita
         //  - dieta con texto (la tabla llama `histroria` a la historia y `consulta` al número de la consulta);
         $this->marcar($conAlgo, DB::table('dieta_paciente')->where('reg_medico', $regMedico)->whereIn('histroria', $historias)
             ->whereRaw("TRIM(COALESCE(descripcion, '')) <> ''"), 'histroria', 'consulta');
+        //  - pre-factura (F9): al menos un concepto cargado;
+        $this->marcar($conAlgo, DB::table('his_con_pre_factura')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias), 'numhistoria', 'nroconsulta');
         //  - orden de laboratorio (WEB-5.4): al menos un examen, o un resumen clínico con texto (`QueEsUnDocumento::laboratorio`; el literal
         //    `none` del DataWindow no es texto, como en `TextoDeLaConsulta`);
         $this->marcar($conAlgo, DB::table('examen_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');

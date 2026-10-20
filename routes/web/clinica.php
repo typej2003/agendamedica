@@ -9,6 +9,7 @@ use App\Http\Controllers\Clinica\CatalogoController;
 use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
+use App\Http\Controllers\Clinica\MotivoFacturaCatalogoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionController;
 use App\Http\Controllers\Clinica\FormatosEnBlancoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
@@ -552,6 +553,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/catalogos/motivos-cita/{id}', [MotivoCitaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-cita.quitar');
                 // La dirección vieja de WEB-2.17 (con su mismo nombre de ruta) lleva a la nueva. Va antes de `/agenda/{cola}`.
                 Route::get('/agenda/motivos', [MotivoCitaCatalogoController::class, 'pantallaAnterior'])->name('agenda.motivos');
+                // **Conceptos de la pre-factura** (F9): `motivo_factura` con su monto y su monto con seguro.
+                Route::get('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'index'])->name('catalogos.motivos-factura');
+                Route::post('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'guardar'])->name('catalogos.motivos-factura.guardar');
+                Route::delete('/catalogos/motivos-factura/{id}', [MotivoFacturaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-factura.quitar');
                 Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
                 Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
                 Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');
