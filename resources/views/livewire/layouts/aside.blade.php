@@ -49,7 +49,7 @@
             <li class="nav-item">
                 <a href="{{ route('admin.especialidades') }}" class="nav-link {{ request()->routeIs('admin.especialidades') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.especialidades')) aria-current="page" @endif title="Especialidades">
-                    <i class="bi bi-stethoscope" aria-hidden="true"></i>
+                    <i class="bi bi-heart-pulse-fill" aria-hidden="true"></i>
                     <span class="link-text">Especialidades</span>
                 </a>
             </li>
