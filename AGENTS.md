@@ -955,6 +955,17 @@ que ya los usaban cambiaron de color sin tocarlas.
   `../.agent-tools/capturas-ui-web.js` saca las capturas de todas las pantallas (público, clínica y panel,
   escritorio y celular) para revisarlas.
 
+**Pauta de pantallas «buscar y agregar» (decisión del usuario, 2026-10-20):** cuando una pantalla arma una lista de
+cosas que se buscan y se agregan (medicamentos de un tratamiento, etc.), va **en una sola tarjeta**: primero los campos
+propios (nombre…), después **una barra de búsqueda de una línea con el botón de alta al final** («Nuevo medicamento»,
+que abre un diálogo lateral y prellena el nombre con lo escrito) y **debajo el listado de lo agregado**. Los resultados
+son un desplegable bajo la barra; lo creado entra directo a la lista, sin recargar. Referencia: el editor de
+tratamientos (`clinica/catalogos/tratamiento-editor.blade.php` + `_recipes-herramientas`, `POST
+/clinica/catalogos/medicamentos/rapido`). **No aplica** a las pantallas de dos columnas (`<x-ui.dos-listas>`: récipe del
+paciente, récipe de la pareja, órdenes, motivos, diagnósticos, antecedentes, referencias): esas se quedan como están
+(agregados a la izquierda, catálogo a la derecha); el usuario las dio por buenas el 2026-10-20. Pantallas **nuevas** de
+este tipo siguen la pauta salvo que sean de dos columnas.
+
 **Trampa medida (2026-10-08):** un botón deshabilitado **no** usa `--bs-btn-color` sino
 `--bs-btn-disabled-color`, que cada variante de Bootstrap fija con su propio color. Sobreescribir solo la
 primera deja los botones deshabilitados con el color viejo (el "Atender" de la agenda quedaba en 1,8:1).
