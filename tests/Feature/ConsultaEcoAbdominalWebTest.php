@@ -372,7 +372,7 @@ class ConsultaEcoAbdominalWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
             ->assertSee('INFORME EN TEXTO LIBRE DEL ESCRITORIO')
-            ->assertSee('Informe en texto libre del escritorio');
+            ->assertSee('Informe en texto libre');
 
         // Y sigue ahí después de guardar (la web no edita esa columna).
         $this->conContexto($user, $medico, $gineco)->actingAs($user)

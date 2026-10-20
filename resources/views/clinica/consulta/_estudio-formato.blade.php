@@ -20,19 +20,6 @@
         $cuentaFormato = count($formato['plantillas']);
     @endphp
 
-    <div class="mb-3 d-flex align-items-start gap-2 flex-wrap" data-formato-panel
-         data-formato-form='form[action$="/estudio/{{ $formato['tipo'] }}"]'
-         data-formato-campos='@json($formato['campos'])'
-         data-formato-boton="{{ $idFormato }}-disparador"
-         data-url-guardar="{{ $formato['urlGuardar'] }}">
-        <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="{{ $idFormato }}"
-                aria-haspopup="dialog" aria-controls="{{ $idFormato }}" id="{{ $idFormato }}-disparador">
-            <i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i>
-            <span>Plantillas del formato <span data-formato-cuenta>@if ($cuentaFormato > 0)({{ $cuentaFormato }})@endif</span></span>
-        </button>
-        <span class="texto-tenue small">{{ $formato['queHace'] }}</span>
-    </div>
-
     <x-ui.dialogo :id="$idFormato" titulo="Plantillas del formato del estudio" lateral>
         <div class="plantillas-cajon" data-formato-cajon data-boton="{{ $idFormato }}-disparador">
 

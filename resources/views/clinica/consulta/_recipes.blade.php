@@ -51,8 +51,6 @@
             </a>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
         {{-- Lo que sale al pie de la hoja (WEB-5.2): la próxima cita que el paciente ya tiene agendada y el atajo
              para hacerla. «Hacer cita» abre el formulario de la agenda con el paciente elegido y vuelve acá. --}}
         @include('clinica.consulta._recipes-cita', ['seccion' => $seccion])

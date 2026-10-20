@@ -82,6 +82,8 @@ final class ContextoVista
                     // El `reg_medico` **del consultorio**: es el que fija el contexto al elegirlo (el
                     // personal del médico o el centro donde está ese consultorio).
                     'regMedico' => (string) $regMedico,
+                    // La sede (`medical_centers`) del consultorio: «Todas las sedes» sólo se ofrece si el menú junta más de una.
+                    'sedeId'    => (int) $sede->medical_center_id,
                     // El nombre del centro dueño del consultorio, para agrupar el menú: `null` = los
                     // consultorios personales del médico ("Mis consultorios").
                     'centro'    => $centro !== null && (int) $centro->id !== (int) $medico->id

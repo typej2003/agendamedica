@@ -69,7 +69,7 @@ final class CrecimientoVista
             return (string) $clave;
         }
 
-        $dias = PercentilesDeCrecimiento::diasDeEdad($nacimiento, $hoy ?? Carbon::now()->toDateString());
+        $dias = PercentilesDeCrecimiento::diasDeEdad($nacimiento, $hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoTexto());
 
         return $dias !== null && $dias / 365.25 > 5 ? '5-19' : '0-5';
     }
@@ -95,7 +95,7 @@ final class CrecimientoVista
     {
         $partes = ['Historia H. ' . ($this->paciente->numhistoria ?? '—')];
 
-        $edad = EdadEnTexto::entre($this->paciente->fnacimiento ?? null, $this->hoy ?? Carbon::now()->toDateString());
+        $edad = EdadEnTexto::entre($this->paciente->fnacimiento ?? null, $this->hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoTexto());
         if ($edad !== null) {
             $partes[] = $edad;
         }
@@ -326,7 +326,7 @@ final class CrecimientoVista
     /** La fecha de hoy, para el encabezado de la hoja impresa. */
     public function fechaDeHoy(): string
     {
-        return self::fecha($this->hoy ?? Carbon::now()->toDateString());
+        return self::fecha($this->hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoTexto());
     }
 
     // ---------------------------------------------------------------------------------- Adentro

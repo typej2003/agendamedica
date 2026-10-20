@@ -2201,7 +2201,7 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
 
 .bloques-alta select { flex: 1 1 7rem; min-width: 0; }
 .bloques-alta .dias-semana { flex: 1 1 100%; }
-.bloques-alta input[type="time"] { flex: 0 1 6.5rem; min-width: 0; }
+.bloques-alta input.hora-ampm { flex: 0 1 7rem; min-width: 0; }
 .bloques-alta input[type="number"] { flex: 0 1 4.5rem; min-width: 0; }
 .bloques-alta .btn { flex: 0 0 auto; white-space: nowrap; }
 
@@ -2217,7 +2217,7 @@ button.resultado-motivo-crear:hover .resultado-paciente-datos { color: var(--ds-
     .tabla-tarjetas td.celda-bloques { display: block; text-align: left; }
     .tabla-tarjetas td.celda-bloques::before { display: block; margin-bottom: .25rem; }
     .bloques-alta select,
-    .bloques-alta input[type="time"],
+    .bloques-alta input.hora-ampm,
     .bloques-alta input[type="number"] { flex: 1 1 5rem; }
 }
 
@@ -3339,6 +3339,7 @@ body.auth-pagina {
     margin-bottom: .75rem;
 }
 .dos-listas-titulo { margin: 0; font-size: 1rem; font-weight: 600; }
+.dos-listas-acciones { display: inline-flex; align-items: center; gap: .35rem; flex-shrink: 0; }
 .dos-listas-buscar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .75rem; }
 .dos-listas-buscar .form-control { flex: 1 1 10rem; min-width: 0; }
 .dos-listas-catalogo { list-style: none; margin: 0; padding: 0; }
@@ -3794,3 +3795,20 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
 .page-head .page-head-volver { flex: 0 0 100%; margin-bottom: 0; }
 .page-head .page-head-sub { margin: 0; }
 .jornada-resumen-inline { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; font-size: .8125rem; padding: .35rem .6rem; }
+
+/* El «i» de <x-ui.info>: un botón chico pegado a la etiqueta y un cuadro flotante bajo ella (contraste AA). */
+.info-pista { position: relative; display: inline-block; vertical-align: baseline; }
+.info-boton {
+    border: 0; background: transparent; padding: 0 .2rem; line-height: 1; cursor: pointer;
+    color: var(--ds-info); font-size: .95em;
+}
+.info-boton:hover, .info-boton[aria-expanded="true"] { color: var(--ds-violeta-700); }
+.info-texto {
+    position: absolute; top: calc(100% + .3rem); left: 0; z-index: 1080;
+    width: max-content; max-width: min(16rem, 80vw); padding: .4rem .6rem;
+    background: var(--ds-superficie); color: var(--ds-texto); border: 1px solid var(--ds-borde-2);
+    border-radius: 8px; box-shadow: 0 4px 14px rgba(32, 16, 72, .18);
+    font-size: .85rem; font-weight: 400; line-height: 1.35; text-align: left; white-space: normal;
+}
+.info-texto[hidden] { display: none; }
+

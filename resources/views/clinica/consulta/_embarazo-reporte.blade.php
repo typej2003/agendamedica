@@ -19,8 +19,6 @@
             </a>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
         @if (! $vm->hayInforme())
             <p class="texto-tenue small mb-0">
                 Esta historia todavía no tiene ninguna gesta, así que no hay informe que imprimir. Cargá la
@@ -76,10 +74,6 @@
                 </ul>
             @endif
         @endforeach
-
-        {{-- La FPP que sale en la hoja. Desde WEB-11.16 es la misma de la pantalla, así que la nota sólo
-             explica la diferencia si alguna vez no lo fueran (un dato viejo). --}}
-        <p class="texto-tenue small mt-4 mb-0">{{ $vm->notaDeLaFpp() }}</p>
         @endif
     </x-ui.tarjeta>
 </div>

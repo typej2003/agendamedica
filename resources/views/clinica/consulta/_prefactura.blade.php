@@ -11,8 +11,6 @@
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
-
         <x-ui.errores />
 
         @if ($seccion->tieneItems())
@@ -110,7 +108,7 @@
             </form>
         @else
             <p class="alert alert-info py-2 mb-0">
-                El consultorio todavía no tiene conceptos de facturación en su catálogo: se cargan desde el escritorio y llegan con la sincronización.
+                El consultorio todavía no tiene conceptos de facturación en su catálogo: cárgalos primero en el catálogo de motivos de facturación.
             </p>
         @endif
     </x-ui.tarjeta>

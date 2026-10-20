@@ -1,8 +1,6 @@
 {{-- Imágenes de mamas (WEB-11.10): un lienzo por mama sobre su imagen base, con selector de color y grosor, por consulta.
      El dibujo se guarda solo (`mamas-lienzo.js`) y no se imprime. Recibe `$seccion` (DibujosDeMamasVista). --}}
 <x-ui.tarjeta titulo="Imágenes de mamas" icono="bi-brush">
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
     <div class="mamas-herramientas d-flex flex-wrap align-items-center gap-3 mb-3" data-mamas-herramientas>
         <div class="d-flex align-items-center gap-2">
             <label class="etiqueta mb-0" for="mamas-color">Color</label>

@@ -72,7 +72,7 @@ final class CalendarioDeVacunasVista
     /** La fecha más tardía que acepta el formulario (hoy en el consultorio). */
     public function maxima(): string
     {
-        return $this->hoy ?? Carbon::now()->toDateString();
+        return $this->hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoTexto();
     }
 
     /** La fecha de nacimiento (`AAAA-MM-DD`) o vacío: la más temprana que acepta el formulario. */

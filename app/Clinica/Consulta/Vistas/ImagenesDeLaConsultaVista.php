@@ -141,7 +141,7 @@ final class ImagenesDeLaConsultaVista
                         ? (($imagen->descarga ?? false)
                             ? 'Es una foto HEIC: el navegador no la muestra, se descarga. Sólo la baja el médico dueño de la historia.'
                             : 'Se abre en una pestaña nueva; sólo la ve el médico dueño de la historia.')
-                        : 'Quedó en la PC donde se cargó (el escritorio guarda la ruta del archivo). '
+                        : 'Quedó en la PC donde se cargó. '
                             . 'Todavía no se subió a la nube (se sube con la herramienta subir-imagenes) o se omitió por no ser una imagen.',
                 ];
             })
@@ -197,8 +197,7 @@ final class ImagenesDeLaConsultaVista
     /** El texto de la ayuda de la subida cuando las imágenes son de un examen. */
     public function ayudaDelExamen(): string
     {
-        return 'Son las fotos de ' . $this->nombreDelExamen() . ': se guardan con la etiqueta de este examen, '
-            . 'que es la que el escritorio usa para sus imágenes.';
+        return 'Son las fotos de ' . $this->nombreDelExamen() . ': se guardan con la etiqueta de este examen.';
     }
 
     /** Cómo se llama el examen del que son estas imágenes (`colposcopía`). */
@@ -221,7 +220,7 @@ final class ImagenesDeLaConsultaVista
             return null;
         }
 
-        return 'Las imágenes marcadas «En el disco del consultorio» las cargó el escritorio: la base '
+        return 'Las imágenes marcadas «En el disco del consultorio» se cargaron en la PC del consultorio: la base '
             . 'guarda la ruta del archivo en esa PC, no el archivo. Se listan para que no se pierdan de '
             . 'vista, pero no se pueden abrir desde la web hasta que el consultorio corra la herramienta que sube las imágenes.';
     }

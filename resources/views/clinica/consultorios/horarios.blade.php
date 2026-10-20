@@ -20,11 +20,11 @@
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Desde" for="hora_inicio" requerido class="col-md-2">
-                    <input type="time" name="hora_inicio" id="hora_inicio" class="form-control" required value="{{ $vm->hora('hora_inicio') }}">
+                    <x-ui.hora name="hora_inicio" :valor="$vm->hora('hora_inicio')" required />
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Hasta" for="hora_fin" requerido class="col-md-2" ayuda="La hora de fin no cuenta como cita.">
-                    <input type="time" name="hora_fin" id="hora_fin" class="form-control" required value="{{ $vm->hora('hora_fin') }}">
+                    <x-ui.hora name="hora_fin" :valor="$vm->hora('hora_fin')" required />
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Cupo" for="cupo" class="col-md-2" ayuda="Vacío = sin tope.">

@@ -92,7 +92,7 @@ final class EcoCardiogramaFetalVista extends EcoObstetricoVista
     {
         if (! $this->hayFila) {
             return ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin guardar',
-                'titulo' => 'El escritorio precarga el estudio al abrir la consulta; todavía no hay nada guardado'];
+                'titulo' => 'Todavía no hay nada guardado'];
         }
 
         return parent::estado();

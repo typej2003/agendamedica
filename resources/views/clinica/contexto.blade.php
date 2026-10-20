@@ -83,9 +83,13 @@
                                 <select name="office_id" id="sede-{{ $medico['regMedico'] }}" class="form-select">
                                     @foreach ($gruposDeConsultorios as $etiqueta => $sedes)
                                         <optgroup label="{{ $etiqueta }}">
-                                            <option value="" data-reg-medico="{{ $sedes->first()['regMedico'] }}">
-                                                Todas las sedes de {{ $etiqueta === 'Mis consultorios' ? 'mis consultorios' : $etiqueta }}
-                                            </option>
+                                            {{-- «Todas las sedes» sólo tiene sentido con más de una sede: con una sola es lo mismo
+                                                 que elegir sus consultorios (2026-10-20). --}}
+                                            @if ($sedes->pluck('sedeId')->unique()->count() > 1)
+                                                <option value="" data-reg-medico="{{ $sedes->first()['regMedico'] }}">
+                                                    Todas las sedes de {{ $etiqueta === 'Mis consultorios' ? 'mis consultorios' : $etiqueta }}
+                                                </option>
+                                            @endif
                                             @foreach ($sedes as $sede)
                                                 <option value="{{ $sede['valor'] }}" data-reg-medico="{{ $sede['regMedico'] }}">
                                                     {{ $sede['texto'] }}

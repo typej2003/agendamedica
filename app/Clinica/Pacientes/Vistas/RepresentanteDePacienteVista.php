@@ -222,7 +222,7 @@ final class RepresentanteDePacienteVista
         // Un código que no está en el catálogo (una fila del escritorio con su propio código) se ofrece
         // igual: si no, al guardar cualquier otro dato se perdería sin que nadie lo haya pedido.
         if ($elegido !== null && ! $this->catalogoDeParentescos->contains('codigo', $elegido)) {
-            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (código del escritorio)', 'elegido' => true];
+            $opciones[] = ['valor' => $elegido, 'texto' => $elegido . ' (código anterior)', 'elegido' => true];
         }
 
         return $opciones;

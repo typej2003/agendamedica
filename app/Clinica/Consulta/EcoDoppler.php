@@ -93,7 +93,7 @@ final class EcoDoppler
                 // `para` es `char(10)`: el rótulo parece pedir un número, pero el escritorio la guarda como
                 // texto (ahí entran cosas como «1 cesárea»).
                 ['columna' => 'para', 'etiqueta' => 'Para', 'tipo' => 'texto', 'tope' => 10,
-                    'ayuda' => 'La paridad, como la escriba el médico: el escritorio la guarda como texto.'],
+                    'ayuda' => ''],
             ]],
 
             ['titulo' => 'Eco Doppler Obstétrico en 4 Vasos', 'icono' => 'bi-table', 'grilla' => true, 'campos' => [
@@ -125,8 +125,7 @@ final class EcoDoppler
                 // sale de este mismo mapa, así que también dice «Ductus venoso».
                 self::lista('ductos_venosos', 'Ductus venoso',
                     ['Trifásico con Reversa' => 'N', 'Trifásico sin Reversa' => 'S'],
-                    'El rótulo del escritorio decía «Ductos»; en la web es «Ductus venoso» (errata del '
-                    . 'escritorio corregida el 2026-10-17).'),
+                    ''),
                 self::lista('ven_umbilical', 'Señal Venoso Umbilical (Pulsatilidad)',
                     ['Sí' => 'N', 'No' => 'A'],
                     'Ojo con los códigos: **Sí guarda `N` y No guarda `A`**, al revés de lo que parece '
@@ -138,10 +137,9 @@ final class EcoDoppler
                 // El memo grande del estudio: el DataWindow **no le pone rótulo**, así que la pantalla lo
                 // pinta sin etiqueta visible (con un nombre accesible para el campo).
                 ['columna' => 'texto', 'etiqueta' => '', 'tipo' => 'area',
-                    'ayuda' => 'El informe del estudio, en texto libre.'],
+                    'ayuda' => 'Informe del estudio'],
                 ['columna' => 'sugerencias', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
-                    'ayuda' => 'El rótulo de la pantalla es «Observaciones:» (la columna se llama '
-                        . '`sugerencias`); en la hoja se imprime «Sugerencias:».'],
+                    'ayuda' => ''],
                 ['columna' => 'conclusion', 'etiqueta' => 'Conclusiones', 'tipo' => 'area',
                     'ayuda' => 'El rótulo de la pantalla es «Conclusiones:»; en la hoja se imprime '
                         . '«Conclusión:», en singular, como el DataWindow de impresión.'],
@@ -321,7 +319,7 @@ final class EcoDoppler
             'tope' => 20,
             'fila' => $fila,
             'eje' => $eje,
-            'ayuda' => 'El escritorio guarda los milímetros como texto.',
+            'ayuda' => '',
         ];
     }
 

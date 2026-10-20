@@ -404,7 +404,7 @@ class ConsultaCierreWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlCerrar($consulta));
 
         $respuesta->assertRedirect($this->urlAgenda($sede));
-        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'movido el escritorio'));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'se había movido a otro día'));
         $this->assertSame(0, (int) $cita->fresh()->atendido);
     }
 

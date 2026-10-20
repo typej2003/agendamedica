@@ -27,8 +27,6 @@
         @if ($seccion->esEcoRenal())
             @include('clinica.consulta._eco-renal', ['vm' => $seccion->ecoRenal()])
         @else
-        <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
-
         <form method="POST" action="{{ $seccion->urlGuardar() }}" id="indicadores-form"
               data-consulta-indicadores data-aviso="{{ $seccion->avisoSinGuardar() }}">
             @csrf

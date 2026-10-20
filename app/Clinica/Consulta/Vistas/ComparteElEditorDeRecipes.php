@@ -157,8 +157,8 @@ trait ComparteElEditorDeRecipes
 
     public function avisoDeConexion(): string
     {
-        return 'Crear un medicamento necesita conexión con el servidor: se guarda en tu vademécum, el mismo '
-            . 'que usa el escritorio y el teléfono.';
+        return 'Crear un medicamento necesita conexión con el servidor: se guarda en tu vademécum, '
+            . 'el mismo que usa el teléfono.';
     }
 
     /** La ayuda del buscador: qué se busca y cómo. */

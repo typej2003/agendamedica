@@ -77,7 +77,7 @@ class PacientesSinHistoriaVistaTest extends TestCase
         $fila = $this->vista([$this->cita()])->filas()[0];
 
         $this->assertSame('Alvarez, Ana', $fila->paciente());
-        $this->assertSame('09:30', $fila->hora());
+        $this->assertSame('9:30 AM', $fila->hora());
         $this->assertSame('Control', $fila->razon());
         $this->assertSame(route('clinica.pacientes.ver', 77), $fila->urlPaciente());
         $this->assertSame(route('clinica.agenda.pasar-a-cita-formal', 10), $fila->urlPasarACitaFormal());

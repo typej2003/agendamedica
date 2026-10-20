@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\SyncChange;
+use App\Support\HoraLocal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -74,10 +75,10 @@ class OfficeSchedule extends Model
         return self::DIAS[(int) $this->dia_semana] ?? '—';
     }
 
-    /** "08:00 a 12:00", sin los segundos que trae la columna `time`. */
+    /** "8:00 AM a 12:00 PM": hora del consultorio en 12 h, sin los segundos que trae la columna `time`. */
     public function rango(): string
     {
-        return substr((string) $this->hora_inicio, 0, 5) . ' a ' . substr((string) $this->hora_fin, 0, 5);
+        return HoraLocal::rango($this->hora_inicio, $this->hora_fin);
     }
 
     /**

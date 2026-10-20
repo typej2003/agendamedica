@@ -209,15 +209,14 @@ final class SeccionDeDiagnosticosVista
     /** La ayuda del buscador: de dónde sale el catálogo y cómo se busca. */
     public function ayudaDelBuscador(): string
     {
-        return 'Busca en tu catálogo de diagnósticos: es el mismo que usa el escritorio, así que lo que '
-            . 'agregues acá lo verás allá. Un diagnóstico por nombre y sin distinguir tildes.';
+        return 'Busca en tu catálogo de diagnósticos, sin distinguir tildes.';
     }
 
     /** La ayuda del alta: el código lo da el servidor y el nombre se guarda en mayúsculas. */
     public function ayudaDelAlta(): string
     {
-        return 'Si el diagnóstico no está en tu catálogo, créalo: el código lo asigna el sistema (el '
-            . 'correlativo de cuatro dígitos del escritorio) y se guarda en mayúsculas. Necesita conexión.';
+        return 'Si el diagnóstico no está en tu catálogo, créalo: el código lo asigna el sistema (un '
+            . 'correlativo de cuatro dígitos) y se guarda en mayúsculas. Necesita conexión.';
     }
 
     /** El estado vacío del buscador, con el nombre que falta en el catálogo. */

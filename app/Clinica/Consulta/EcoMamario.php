@@ -109,7 +109,7 @@ final class EcoMamario
                 ['columna' => 'tranductor', 'etiqueta' => 'Transductor', 'tipo' => 'texto', 'tope' => 100,
                     'ayuda' => 'El transductor con el que se hizo el estudio, como lo escriba el médico.'],
                 ['columna' => 'menarquia', 'etiqueta' => 'Menarquia', 'tipo' => 'texto', 'tope' => 20,
-                    'ayuda' => 'La menarquia: el escritorio la guarda como texto.'],
+                    'ayuda' => ''],
                 ['columna' => 'quirurgicos', 'etiqueta' => 'Quirúrgicos', 'tipo' => 'texto', 'tope' => 60,
                     'ayuda' => 'Los antecedentes quirúrgicos que el médico quiera dejar escritos.'],
                 ['columna' => 'hormonas', 'etiqueta' => 'Hormonas', 'tipo' => 'texto', 'tope' => 100,

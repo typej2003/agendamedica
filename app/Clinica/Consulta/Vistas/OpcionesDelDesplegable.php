@@ -62,7 +62,7 @@ final class OpcionesDelDesplegable
         }
 
         if (! $conocido) {
-            $opciones[] = ['valor' => $valor, 'texto' => $valor . ' (del escritorio)'];
+            $opciones[] = ['valor' => $valor, 'texto' => $valor . ' (valor anterior)'];
         }
 
         return $opciones;

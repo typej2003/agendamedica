@@ -124,18 +124,17 @@ final class SeccionDeExamenesVista
             return [
                 'icono' => 'bi-clipboard2-x',
                 'titulo' => 'Tu catálogo de exámenes está vacío',
-                'texto' => 'Los exámenes que se le piden a un paciente salen de la lista que el escritorio '
-                    . 'mantiene (la tabla examenes) y que llega a la nube con la sincronización. Mientras '
-                    . 'no haya ninguna cargada, esta consulta no puede tener exámenes. Puedes crearlos en '
-                    . 'Catálogos → Exámenes (WEB-8.1).',
+                'texto' => 'Los exámenes que se le piden a un paciente salen de tu catálogo. Mientras '
+                    . 'no haya ninguno cargado, esta consulta no puede tener exámenes. Puedes crearlos en '
+                    . 'Catálogos → Exámenes.',
             ];
         }
 
         return [
             'icono' => 'bi-droplet',
             'titulo' => 'Esta consulta no tiene exámenes pedidos',
-            'texto' => 'Los exámenes de laboratorio se piden en Solicitudes → Laboratorio (los que cargó el escritorio '
-                . 'llegan con la sincronización); acá se ven para tenerlos a la mano. Lo que sí puedes cargar en esta '
+            'texto' => 'Los exámenes de laboratorio se piden en Solicitudes → Laboratorio; '
+                . 'acá se ven para tenerlos a la mano. Lo que sí puedes cargar en esta '
                 . 'sección son las imágenes de un estudio.',
         ];
     }

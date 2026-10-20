@@ -51,7 +51,7 @@
                 @endif
             </x-ui.campo>
             <x-ui.campo etiqueta="AC" for="medicion-ac" class="col-6 col-md-4"
-                        ayuda="Superficie corporal calculada con la fórmula del escritorio. No se guarda.">
+                        info="Superficie corporal calculada. No se guarda.">
                 <output class="form-control-plaintext fw-semibold" id="medicion-ac" data-medicion-ac>{{ $seccion->ac() }}</output>
             </x-ui.campo>
         </div>

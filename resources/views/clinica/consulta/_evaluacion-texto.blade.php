@@ -14,25 +14,19 @@
 
 <x-ui.tarjeta :titulo="$seccion->titulo()" :icono="$seccion->icono()">
     <x-slot name="acciones">
+        @if ($seccion->tienePlantillas())
+            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
+                             :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" />
+        @endif
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                      :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
-
-    <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
 
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="{{ $clave }}-form"
           data-consulta-plantillas data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
 
-        {{-- El panel de plantillas (WEB-11.2) va **arriba** del campo: en el escritorio es una columna a la
-             derecha y acá, al no caber, caía debajo del texto (pedido del usuario, 2026-10-16). La
-             histeroscopía no tiene plantillas en el escritorio. --}}
-        @if ($seccion->tienePlantillas())
-            <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
-                             :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" class="mb-3" />
-        @endif
-
-        <label class="etiqueta" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
+        <label class="etiqueta visually-hidden" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
         <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"
                   data-plantilla-destino placeholder="{{ $seccion->marcador() }}">{{ $seccion->valor() }}</textarea>
 

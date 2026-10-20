@@ -5,6 +5,8 @@
 
 <x-ui.tarjeta titulo="Informe médico" icono="bi-file-earmark-text">
     <x-slot name="acciones">
+        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM"
+            nombre="informe" />
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         @if ($vm->esReal())
             <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="informe-form" documento="informe" class="btn btn-sm btn-outline-secondary">
@@ -20,16 +22,8 @@
         @endif
     </x-slot>
 
-    <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
     <form method="POST" action="{{ $vm->urlGuardar() }}" id="informe-form" data-solicitud-form data-aviso="{{ $vm->avisoSinGuardar() }}">
         @csrf
-
-        {{-- El panel de plantillas va **arriba** del campo (pedido del usuario, 2026-10-16): en el escritorio es
-             una columna a la derecha y acá, al no caber, caía debajo del texto. Los informes anteriores siguen
-             al lado del editor: se copian, no son plantillas del médico. --}}
-        <x-ui.plantillas :plantillas="$vm->plantillas()" destino="#informe-descripcion" tipo="IM"
-                         nombre="informe" class="mb-3" />
 
         <div class="row g-3">
             <div class="col-12 col-xl-8">

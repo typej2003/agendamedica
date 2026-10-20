@@ -8,6 +8,7 @@ use App\Cumpleanos\Cumpleano;
 use App\Cumpleanos\MensajeDeCumpleanos;
 use App\Notificaciones\Canal;
 use App\Support\FechaClinica;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -128,10 +129,16 @@ final class CumpleanosVista
         return $this->configuracion->activo();
     }
 
-    /** La hora configurada, `HH:MM` (con la de por defecto aplicada si no había ninguna). */
+    /** La hora configurada, `HH:MM` de 24 h (con la de por defecto aplicada si no había ninguna): lo que viaja en el formulario. */
     public function hora(): string
     {
         return $this->configuracion->hora();
+    }
+
+    /** La misma hora para leerla: «9:00 AM». */
+    public function hora12(): string
+    {
+        return HoraLocal::hora12($this->configuracion->hora());
     }
 
     /** Si el médico ya guardó la configuración alguna vez, o lo que se ve son los valores por defecto. */
@@ -245,6 +252,6 @@ final class CumpleanosVista
      */
     private function horaDe(string $momento): string
     {
-        return Carbon::parse($momento)->setTimezone(FechaDelConsultorio::zona())->format('H:i');
+        return HoraLocal::hora($momento);
     }
 }

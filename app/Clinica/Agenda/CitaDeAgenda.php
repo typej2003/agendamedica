@@ -5,6 +5,7 @@ namespace App\Clinica\Agenda;
 use App\Models\Cola;
 use App\Notificaciones\Correo;
 use App\Notificaciones\Telefono;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 
 /**
@@ -167,7 +168,7 @@ final class CitaDeAgenda
 
     public function horaCorta(): string
     {
-        return $this->horaIni ? substr($this->horaIni, 0, 5) : '—';
+        return HoraLocal::hora12($this->horaIni, '—');
     }
 
     /**

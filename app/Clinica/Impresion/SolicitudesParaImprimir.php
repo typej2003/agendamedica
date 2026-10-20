@@ -1955,7 +1955,7 @@ final class SolicitudesParaImprimir
         try {
             return Carbon::parse($consulta->fecha)->toDateString();
         } catch (Throwable $e) {
-            return Carbon::now()->toDateString();
+            return \App\Clinica\FechaDelConsultorio::hoyComoTexto();
         }
     }
 

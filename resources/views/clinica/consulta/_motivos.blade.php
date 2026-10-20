@@ -8,13 +8,15 @@
      data-crear-abierto="{{ $seccion->crearAbierto() ? '1' : '0' }}">
 
     <x-ui.dos-listas titulo-izquierda="Motivos de esta consulta" titulo-derecha="Tu catálogo de motivos" :resumen="$seccion->resumen()">
+        @if ($vm->tieneAnterior())
+            <x-slot name="accionesIzquierda">
+                <x-ui.anterior :url="$vm->urlAnterior('motivos')" que="los motivos" />
+            </x-slot>
+        @endif
         <x-slot name="izquierda">
-            @if ($vm->tieneAnterior())
-                <div class="mb-2"><x-ui.anterior :url="$vm->urlAnterior('motivos')" que="los motivos" /></div>
-            @endif
             @if ($seccion->estaVacio())
                 <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
-                    Pasa los motivos de esta atención desde tu catálogo, a la derecha. Puedes cargar más de uno.
+                    Pásalos desde tu catálogo, a la derecha.
                 </x-ui.vacio>
             @else
                 <ul class="motivos-lista">
@@ -97,8 +99,6 @@
                 @if ($seccion->paginador() && $seccion->paginador()->hasPages())
                     <div class="mt-2">{{ $seccion->paginador()->links() }}</div>
                 @endif
-            @else
-                <p class="texto-tenue small mb-2">{{ $seccion->ayuda() }}</p>
             @endif
 
             <p class="texto-tenue small mt-2 mb-2">Tip: doble clic en un motivo para pasarlo a la consulta.</p>

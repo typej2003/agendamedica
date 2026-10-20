@@ -164,7 +164,7 @@ class CitasDelPacienteWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('Movida');
-        $respuesta->assertSee('El escritorio la pasó a otro día');
+        $respuesta->assertSee('La cita se pasó a otro día');
         // La fuente la escondía (`atendido <> 2`); acá se ve, pero no se toca.
         $this->assertStringNotContainsString(route('clinica.agenda.editar', $movida), $respuesta->getContent());
     }

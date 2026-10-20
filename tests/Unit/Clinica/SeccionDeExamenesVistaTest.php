@@ -99,12 +99,11 @@ class SeccionDeExamenesVistaTest extends TestCase
     {
         $conCatalogo = $this->vista(['hayCatalogo' => true])->sinExamenes();
         $this->assertSame('Esta consulta no tiene exámenes pedidos', $conCatalogo['titulo']);
-        $this->assertStringContainsString('escritorio', $conCatalogo['texto']);
+        $this->assertStringContainsString('Solicitudes → Laboratorio', $conCatalogo['texto']);
 
         $sinCatalogo = $this->vista(['hayCatalogo' => false])->sinExamenes();
         $this->assertSame('Tu catálogo de exámenes está vacío', $sinCatalogo['titulo']);
-        $this->assertStringContainsString('examenes', $sinCatalogo['texto']);
-        $this->assertStringContainsString('WEB-8.1', $sinCatalogo['texto']);
+        $this->assertStringContainsString('Catálogos → Exámenes', $sinCatalogo['texto']);
     }
 
     public function test_la_observacion_del_conjunto_es_de_la_consulta_y_no_de_una_fila(): void

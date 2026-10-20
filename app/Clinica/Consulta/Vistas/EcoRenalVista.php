@@ -92,7 +92,7 @@ final class EcoRenalVista
 
     public function ayuda(): string
     {
-        return 'El eco renal del escritorio, con las medidas de los dos riñones, la conclusión y la sugerencia. Se guarda '
+        return 'El eco renal, con las medidas de los dos riñones, la conclusión y la sugerencia. Se guarda '
             . 'en la consulta y se vuelve a mostrar cuando la abrís de nuevo.';
     }
 
