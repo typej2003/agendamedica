@@ -220,8 +220,29 @@
         agregar(Array.prototype.slice.call(campo.files || []));
     });
 
+    var mensaje = formulario.querySelector('#mensaje');
+    var contador = formulario.querySelector('[data-ayuda-con-capturas]');
+
     // Antes de enviar se vuelve a copiar la lista al campo: es lo que viaja en el `POST`.
-    formulario.addEventListener('submit', function () {
+    //
+    // Y si el comentario no pasa la regla del servidor (vacío o de menos de 5 caracteres) no se envía: el
+    // navegador **vacía el campo de archivo** cuando el servidor devuelve el formulario con errores, y las
+    // capturas se perdían sin aviso. Parando acá el formulario no se recarga y no se pierde nada.
+    formulario.addEventListener('submit', function (evento) {
+        if (mensaje && mensaje.value.trim().length < 5) {
+            evento.preventDefault();
+            avisar('Escribí tu comentario (al menos 5 caracteres) antes de enviar' +
+                (adjuntos.length ? '; tus capturas siguen adjuntas.' : '.'));
+            mensaje.focus();
+
+            return;
+        }
+
         sincronizarCampo();
+
+        // Si igual el servidor lo rechaza, la página avisa que las capturas hay que volver a adjuntarlas.
+        if (contador) {
+            contador.value = String(adjuntos.length || (campo.files ? campo.files.length : 0));
+        }
     });
 })();

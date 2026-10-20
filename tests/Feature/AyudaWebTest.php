@@ -149,6 +149,26 @@ class AyudaWebTest extends TestCase
         $this->assertSame(0, Comentario::count(), 'no se guardó nada a medias');
     }
 
+    public function test_si_el_envio_vuelve_con_errores_avisa_que_las_capturas_se_perdieron(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $sesion = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $sesion->from(route('clinica.ayuda'))
+            ->post(route('clinica.ayuda.guardar'), ['tipo' => 'bug', 'mensaje' => '', 'con_capturas' => '1'])
+            ->assertRedirect(route('clinica.ayuda'));
+
+        $sesion->get(route('clinica.ayuda'))
+            ->assertSee('Tus capturas no se conservaron');
+
+        // Sin capturas el aviso no aparece: no es ruido en un error cualquiera.
+        $this->flushSession();
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->from(route('clinica.ayuda'))
+            ->post(route('clinica.ayuda.guardar'), ['tipo' => 'bug', 'mensaje' => '', 'con_capturas' => '0'])
+            ->assertRedirect(route('clinica.ayuda'));
+        $this->get(route('clinica.ayuda'))->assertDontSee('Tus capturas no se conservaron');
+    }
+
     public function test_el_medico_ve_la_respuesta_y_el_descarte_se_explica(): void
     {
         [$user, $medico, $gineco] = $this->medicoDePrueba();

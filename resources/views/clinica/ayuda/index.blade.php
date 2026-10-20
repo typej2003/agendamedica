@@ -21,7 +21,16 @@
     <form method="POST" action="{{ route('clinica.ayuda.guardar') }}" class="card mb-4"
           enctype="multipart/form-data" id="ayuda-form" data-ayuda>
         @csrf
+        {{-- Lo llena el JS al enviar: si el servidor devuelve el formulario con errores, el navegador ya vació el
+             campo de archivo y hay que avisarlo (los archivos no se pueden devolver al formulario). --}}
+        <input type="hidden" name="con_capturas" value="" data-ayuda-con-capturas>
         <div class="card-body">
+            @if ($errors->any() && (int) old('con_capturas') > 0)
+                <p class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                    <span>Tus capturas no se conservaron: vuelve a adjuntarlas antes de enviar.</span>
+                </p>
+            @endif
             <div class="mb-3">
                 <label for="tipo" class="form-label">¿Qué nos querés contar?</label>
                 <select name="tipo" id="tipo" class="form-select @error('tipo') is-invalid @enderror" required>
