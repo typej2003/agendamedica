@@ -11,7 +11,12 @@
  *  - Los pasos cuyo elemento no existe o no está a la vista (una fila que no hay, el menú lateral en el
  *    celular) se saltan: la lista se arma en el navegador. Si no queda ninguno, no se muestra.
  *  - El globo no tapa el elemento (va arriba o abajo) y se reubica al hacer scroll o al cambiar el tamaño.
- *  - Se cierra con «Saltar», con «Listo», con `Esc` y con el botón de reabrir (que lo vuelve a empezar).
+ *  - Es **modal** (2026-10-20): mientras está abierto, un velo gris semitransparente cubre la pantalla (con
+ *    un hueco sobre el elemento señalado) y se come los clics, la rueda y el toque; el foco queda atrapado
+ *    en el globo (`Tab` gira entre sus botones) y las teclas de desplazamiento no mueven la página. Así el
+ *    usuario sólo puede seguir, volver o saltar. El scroll que hace el propio tour (`scrollIntoView`) sí
+ *    funciona: es programático.
+ *  - Se cierra con «Saltar», con «Listo» y con `Esc` (la salida de teclado de cualquier diálogo modal).
  *  - Al terminar o saltar avisa por `POST` (nunca por GET) para no volver a mostrarlo. `Esc` cuenta como
  *    saltar: si no, el tour reaparecería en cada visita de quien lo cerró con el teclado.
  */
@@ -38,6 +43,27 @@
 
     if (!globo || !pasos.length) return;
 
+    // El velo y el foco viven en `<body>`, igual que el globo mientras el tour está abierto: dentro de `<main>`
+    // quedarían por debajo de la barra lateral si algún contenedor arma su propio contexto de apilamiento.
+    const velo = document.createElement('div');
+    velo.className = 'tour-velo';
+    velo.setAttribute('data-tour-velo', '');
+    velo.setAttribute('aria-hidden', 'true');
+    velo.hidden = true;
+
+    const foco = document.createElement('div');
+    foco.className = 'tour-foco';
+    foco.setAttribute('aria-hidden', 'true');
+    foco.hidden = true;
+
+    // Un clic en el velo no hace nada y tampoco le quita el foco al globo (el `mousedown` lo mandaría a `<body>`).
+    velo.addEventListener('mousedown', function (evento) { evento.preventDefault(); });
+
+    document.body.appendChild(velo);
+    document.body.appendChild(foco);
+
+    const TECLAS_DE_DESPLAZAMIENTO = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+
     const MARGEN = 8;
     const SEPARACION = 12;
 
@@ -47,6 +73,7 @@
     let abierto = false;
     let marcado = false;
     let pendienteDeUbicar = false;
+    let focoAnterior = null;
 
     // ---------------------------------------------------------------- Utilidades de la pantalla
 
@@ -104,10 +131,20 @@
 
     // ---------------------------------------------------------------- Posición del globo
 
+    /** El hueco del velo: un recuadro sobre el elemento señalado cuya sombra enorme es el gris de alrededor. */
+    const ubicarFoco = function (caja) {
+        const holgura = 4;
+        foco.style.left = Math.round(caja.left - holgura) + 'px';
+        foco.style.top = Math.round(caja.top - holgura) + 'px';
+        foco.style.width = Math.round(caja.width + holgura * 2) + 'px';
+        foco.style.height = Math.round(caja.height + holgura * 2) + 'px';
+    };
+
     const ubicar = function () {
         if (!abierto || !resaltado) return;
 
         const caja = resaltado.getBoundingClientRect();
+        ubicarFoco(caja);
         const ancho = globo.offsetWidth;
         const alto = globo.offsetHeight;
 
@@ -211,7 +248,16 @@
         }
 
         globo.hidden = true;
+        velo.hidden = true;
+        foco.hidden = true;
+        document.documentElement.classList.remove('tour-activo');
         raiz.setAttribute('data-abierto', '0');
+
+        // El foco vuelve a donde estaba (el botón de reabrir, si se abrió desde ahí).
+        if (focoAnterior && document.contains(focoAnterior) && typeof focoAnterior.focus === 'function') {
+            focoAnterior.focus({ preventScroll: true });
+        }
+        focoAnterior = null;
 
         if (marcar) marcarVisto();
     };
@@ -219,8 +265,16 @@
     const abrir = function () {
         if (!recolectar()) return; // ningún elemento a la vista: no se muestra ni se marca
 
+        if (!abierto) {
+            focoAnterior = document.activeElement;
+        }
+
         abierto = true;
         raiz.setAttribute('data-abierto', '1');
+        if (globo.parentElement !== document.body) document.body.appendChild(globo);
+        document.documentElement.classList.add('tour-activo');
+        velo.hidden = false;
+        foco.hidden = false;
         mostrar(0);
 
         // El foco entra al globo (es un `role="dialog"`): así se oye el primer paso y `Tab` lleva a sus botones.
@@ -257,8 +311,54 @@
         if (evento.key === 'Escape') {
             evento.preventDefault();
             cerrar(true);
+            return;
+        }
+
+        // El foco no sale del globo: `Tab` y `Shift+Tab` giran entre sus botones habilitados.
+        if (evento.key === 'Tab') {
+            const enfocables = Array.prototype.filter.call(
+                globo.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+                function (el) { return !el.disabled && el.offsetParent !== null; }
+            );
+            if (!enfocables.length) {
+                evento.preventDefault();
+                globo.focus({ preventScroll: true });
+                return;
+            }
+            const primero = enfocables[0];
+            const ultimo = enfocables[enfocables.length - 1];
+            const dentro = globo.contains(document.activeElement);
+            if (evento.shiftKey && (!dentro || document.activeElement === primero || document.activeElement === globo)) {
+                evento.preventDefault();
+                ultimo.focus({ preventScroll: true });
+            } else if (!evento.shiftKey && (!dentro || document.activeElement === ultimo)) {
+                evento.preventDefault();
+                primero.focus({ preventScroll: true });
+            }
+            return;
+        }
+
+        // Las teclas de desplazamiento no mueven la página. El espacio sobre un botón del globo sí lo activa.
+        if (TECLAS_DE_DESPLAZAMIENTO.indexOf(evento.key) !== -1) {
+            const esBoton = evento.key === ' ' && evento.target && evento.target.closest
+                && evento.target.closest('button') && globo.contains(evento.target);
+            if (!esBoton) evento.preventDefault();
+        }
+    }, true);
+
+    // Si el foco se escapa (un clic programático, un `autofocus` tardío), vuelve al globo.
+    document.addEventListener('focusin', function (evento) {
+        if (abierto && !globo.contains(evento.target)) {
+            globo.focus({ preventScroll: true });
         }
     });
+
+    // La rueda y el toque no desplazan nada mientras el tour está abierto (salvo dentro del globo).
+    const bloquearDesplazamiento = function (evento) {
+        if (abierto && !globo.contains(evento.target)) evento.preventDefault();
+    };
+    document.addEventListener('wheel', bloquearDesplazamiento, { passive: false });
+    document.addEventListener('touchmove', bloquearDesplazamiento, { passive: false });
 
     // El globo sigue al elemento: al hacer scroll (también dentro de un contenedor) y al cambiar el tamaño.
     window.addEventListener('scroll', pedirUbicacion, true);

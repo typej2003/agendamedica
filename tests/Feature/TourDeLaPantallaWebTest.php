@@ -121,6 +121,7 @@ class TourDeLaPantallaWebTest extends TestCase
         $this->assertStringContainsString('Los pacientes de hoy', $html);
         $this->assertStringContainsString('¿Cómo funciona esta pantalla?', $html, 'El botón de reabrir está desde el principio.');
         $this->assertGreaterThan(0, $this->pasosEnElHtml($html));
+        $this->assertStringContainsString('role="dialog" aria-modal="true"', $html, 'El globo es modal: el velo bloquea la pantalla.');
 
         $this->assertDatabaseCount('tours_vistos', 0);
     }
