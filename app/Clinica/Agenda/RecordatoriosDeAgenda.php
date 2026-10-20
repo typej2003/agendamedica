@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Models\Cola;
 use App\Models\Evolucion;
 use App\Models\Medico;
 use App\Models\Office;
@@ -31,7 +32,7 @@ class RecordatoriosDeAgenda
     }
 
     /**
-     * @param  Collection<int,CitaDeAgenda>  $citas
+     * @param  Collection<int,CitaDeAgenda|Cola>  $citas
      * @param  Collection<int,Office>  $sedes
      * @return array<int,string>  id de cita => mensaje
      */
@@ -45,9 +46,12 @@ class RecordatoriosDeAgenda
         foreach ($citas as $cita) {
             // El doctor de la cita, en este orden: el asignado (`medico_id`), la clave legacy si no es el
             // id del centro, y si no hay ninguno, el médico del registro (el centro o el doctor del
-            // consultorio personal).
-            $doctor = $cita->medicoId !== null
-                ? ($plantillas['porMedico'][$cita->medicoId] ?? null)
+            // consultorio personal). La cita puede llegar como `CitaDeAgenda` (la pantalla) o como `Cola`
+            // (el envío del día), así que el id se lee de las dos formas.
+            $medicoId = $cita->medicoId ?? $cita->medico_id ?? null;
+
+            $doctor = $medicoId !== null
+                ? ($plantillas['porMedico'][$medicoId] ?? null)
                 : ($plantillas['porClave'][(int) $cita->medico] ?? null);
 
             $mensajes[$cita->id] = $this->mensajes->armar(
