@@ -169,6 +169,10 @@ class ContextoTrabajo
         // tiene que ver todos sus consultorios, no sólo los que creó él.
         $sedes = Office::vigentesDe($registro)->orderBy('id')->get();
 
+        // El dueño del registro: el doctor en su consultorio, o el centro donde está el consultorio. Se usa
+        // para agrupar el menú de consultorios de la pantalla (el personal vs. el del centro).
+        $centro = Medico::where('reg_medico', $registro)->orderBy('id')->first();
+
         // 1. La ficha del usuario **en este registro**: es el doctor en su consultorio personal, o el
         //    centro en el caso raro de que un centro tenga cuenta. El médico del contexto es esa ficha.
         $propio = $medicosDelUsuario->firstWhere('reg_medico', $registro);
@@ -182,6 +186,7 @@ class ContextoTrabajo
             return [
                 'reg_medico'     => $registro,
                 'medico'         => $duenio,
+                'centro'         => $centro,
                 'es_centro'      => (bool) $duenio->es_centro,
                 'especialidades' => $duenio->specialties->where('activo', true)->values(),
                 'sedes'          => $sedes,
@@ -190,8 +195,6 @@ class ContextoTrabajo
 
         // 3. Sin ficha de médico (la secretaría): el médico del contexto es la fila del **centro** y las
         //    especialidades que ofrece son la unión de las de sus doctores.
-        $centro = Medico::where('reg_medico', $registro)->orderBy('id')->first();
-
         if ($centro === null) {
             return null; // datos sin ficha de médico: no hay nombre ni especialidad que mostrar
         }
@@ -199,6 +202,7 @@ class ContextoTrabajo
         return [
             'reg_medico'     => $registro,
             'medico'         => $centro,
+            'centro'         => $centro,
             'es_centro'      => (bool) $centro->es_centro,
             'especialidades' => $this->especialidadesDelRegistro($registro, $centro),
             'sedes'          => $sedes,
@@ -334,6 +338,20 @@ class ContextoTrabajo
     /** @return Collection<int, Medico> */
     private function medicosDelUsuario(User $user): Collection
     {
-        return Medico::where('user_id', $user->id)->get();
+        // El médico del usuario puede estar enlazado por `medicos.user_id` o, como pasa con las cuentas
+        // creadas desde el panel, por las filas de `medico_registros` de ese usuario (`medico_id`). Las dos
+        // vías son la misma persona; se unen para que el médico del contexto sea **siempre él** y no el
+        // dueño de cada `reg_medico`.
+        $porUsuario = Medico::where('user_id', $user->id)->get();
+
+        $porRegistro = Medico::whereIn(
+            'id',
+            MedicoRegistro::where('user_id', $user->id)
+                ->whereNotNull('medico_id')
+                ->pluck('medico_id')
+                ->all()
+        )->get();
+
+        return $porUsuario->merge($porRegistro)->unique('id')->values();
     }
 }

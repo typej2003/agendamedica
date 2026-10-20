@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\ContextoAutomatico;
 use App\Clinica\ContextoTrabajo;
 use App\Clinica\Vistas\ContextoVista;
 use App\Models\City;
@@ -190,6 +191,40 @@ class ContextoDoctorYCentroWebTest extends TestCase
             $accesos[$centros[0]->reg_medico]['sedes']->pluck('id')->all(),
         );
         $this->assertSame([$personal->id], $accesos[$doctor->reg_medico]['sedes']->pluck('id')->all());
+    }
+
+    /**
+     * **El doctor es una sola tarjeta**, no una por registro (corrección del usuario, 2026-10-20): sus
+     * especialidades son las suyas y el menú de consultorios combina los suyos con los del centro, con el
+     * `reg_medico` de cada uno para que elegir el consultorio fije el contexto correcto. Como hay dos
+     * consultorios, la pantalla se muestra (no se salta).
+     */
+    public function test_el_doctor_es_una_sola_tarjeta_y_el_menu_combina_sus_consultorios_con_los_del_centro(): void
+    {
+        ['user' => $user, 'doctor' => $doctor, 'centros' => $centros] = $this->doctorConDosCentros();
+
+        $personal = $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
+        $delCentro = $this->consultorio($centros[0]->reg_medico, $centros[0]->id, 'C1');
+
+        $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
+        $tarjetas = $vista->medicos();
+
+        $this->assertCount(1, $tarjetas, 'El doctor es una sola tarjeta, no una por registro.');
+        $this->assertSame($doctor->reg_medico, $tarjetas[0]['regMedico']);
+        // Sus especialidades (las dos), no las del centro.
+        $this->assertCount(2, $tarjetas[0]['especialidades']);
+
+        // El menú de consultorios combina los suyos con los del centro.
+        $sedes = collect($tarjetas[0]['sedes'])->keyBy('valor');
+        $this->assertCount(2, $sedes);
+        $this->assertSame($doctor->reg_medico, $sedes[$personal->id]['regMedico']);
+        $this->assertNull($sedes[$personal->id]['centro'], 'El consultorio personal va en «Mis consultorios».');
+        $this->assertSame($centros[0]->reg_medico, $sedes[$delCentro->id]['regMedico']);
+        $this->assertNotNull($sedes[$delCentro->id]['centro'], 'El consultorio del centro va agrupado con el centro.');
+
+        $this->assertTrue($tarjetas[0]['elegirConsultorio']);
+        $this->assertTrue($vista->hayAlgoQueElegir());
+        $this->assertNull(app(ContextoAutomatico::class)->de($user), 'Con dos consultorios hay algo que elegir.');
     }
 
     // ------------------------------------------------------------------------------------ La secretaría

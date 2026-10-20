@@ -32,9 +32,15 @@
                                     :detalle="($medico['esCentro'] ? 'Centro médico · ' : '') . 'Registro ' . $medico['regMedico'] . ($medico['licencia'] ? ' · Licencia ' . $medico['licencia'] : '')"
                                     class="mb-3" />
 
-                    <form method="POST" action="{{ $vm->urlGuardar() }}">
+                    <form method="POST" action="{{ $vm->urlGuardar() }}" class="form-contexto"
+                          data-reg-medico="{{ $medico['regMedico'] }}">
                         @csrf
-                        <input type="hidden" name="reg_medico" value="{{ $medico['regMedico'] }}">
+                        {{-- El registro del contexto es **el del consultorio elegido**: el personal del
+                             médico o el del centro donde está ese consultorio. El script del final lo
+                             mantiene sincronizado con el menú; cuando hay un solo consultorio ya viene
+                             fijado. --}}
+                        <input type="hidden" name="reg_medico"
+                               value="{{ $medico['consultorioFijo']['regMedico'] ?? $medico['regMedico'] }}">
 
                         {{-- Con una sola especialidad no hay nada que elegir: se entra con esa y se muestra
                              cuál es. El valor viaja igual, en un campo oculto, para que el contexto quede
@@ -63,19 +69,35 @@
                         {{-- El campo guarda el **consultorio** del médico (`offices`), no la sede
                              (`medical_centers`): se etiqueta por lo que es, porque el rótulo "Sede" hacía
                              buscar una pantalla para asignarle una sede al médico (2026-10-11). Vacío =
-                             todos sus consultorios: la agenda muestra las sedes juntas. Con **un solo**
-                             consultorio tampoco se pregunta: se trabaja en él (2026-10-19). --}}
+                             todos los consultorios de ese registro: la agenda muestra las sedes juntas.
+                             **El menú combina los consultorios del médico con los del centro** (corrección
+                             del usuario, 2026-10-20): cada opción sabe de qué registro es y el script fija
+                             el contexto con ese. Con **un solo** consultorio tampoco se pregunta: se trabaja
+                             en él (2026-10-19). --}}
                         @if ($medico['elegirConsultorio'])
+                            @php
+                                $gruposDeConsultorios = collect($medico['sedes'])
+                                    ->groupBy(fn ($sede) => $sede['centro'] ?? 'Mis consultorios');
+                            @endphp
                             <x-ui.campo etiqueta="Consultorio" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
                                 <select name="office_id" id="sede-{{ $medico['regMedico'] }}" class="form-select">
-                                    <option value="">Todos mis consultorios (sin especificar)</option>
-                                    @foreach ($medico['sedes'] as $sede)
-                                        <option value="{{ $sede['valor'] }}">{{ $sede['texto'] }}</option>
+                                    @foreach ($gruposDeConsultorios as $etiqueta => $sedes)
+                                        <optgroup label="{{ $etiqueta }}">
+                                            <option value="" data-reg-medico="{{ $sedes->first()['regMedico'] }}">
+                                                Todas las sedes de {{ $etiqueta === 'Mis consultorios' ? 'mis consultorios' : $etiqueta }}
+                                            </option>
+                                            @foreach ($sedes as $sede)
+                                                <option value="{{ $sede['valor'] }}" data-reg-medico="{{ $sede['regMedico'] }}">
+                                                    {{ $sede['texto'] }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
                                     @endforeach
                                 </select>
                                 <span class="form-text d-block">
-                                    El consultorio es dónde atiende el médico dentro de una sede. ¿Falta uno o quieres
-                                    cambiarlo? <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
+                                    El consultorio es dónde atiende el médico dentro de una sede; el menú combina
+                                    los tuyos con los del centro. ¿Falta uno o quieres cambiarlo?
+                                    <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
                                 </span>
                             </x-ui.campo>
                         @elseif ($medico['sinConsultorios'])
@@ -107,4 +129,23 @@
             </div>
         @endforeach
     </div>
+
+    <script>
+        // El menú de consultorios combina los del médico y los del centro: cada opción trae el `reg_medico`
+        // del consultorio y el formulario se fija con ese al enviar. Sin menú (un solo consultorio o
+        // ninguno) el `reg_medico` ya viene fijado desde el servidor.
+        document.querySelectorAll('form.form-contexto').forEach(function (form) {
+            var select = form.querySelector('select[name="office_id"]');
+            var oculto = form.querySelector('input[name="reg_medico"]');
+            if (! select || ! oculto) {
+                return;
+            }
+            var sincronizar = function () {
+                var opcion = select.options[select.selectedIndex];
+                oculto.value = (opcion && opcion.dataset.regMedico) ? opcion.dataset.regMedico : form.dataset.regMedico;
+            };
+            select.addEventListener('change', sincronizar);
+            sincronizar();
+        });
+    </script>
 @endsection

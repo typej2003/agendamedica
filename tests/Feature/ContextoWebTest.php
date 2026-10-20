@@ -241,9 +241,9 @@ class ContextoWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('<select name="specialty_id"', false);
         $respuesta->assertSee('<select name="office_id"', false);
-        $respuesta->assertSee('Todos mis consultorios (sin especificar)');
-        $respuesta->assertSee('<option value="' . $primero->id . '">', false);
-        $respuesta->assertSee('<option value="' . $segundo->id . '">', false);
+        $respuesta->assertSee('Todas las sedes de mis consultorios');
+        $respuesta->assertSee('value="' . $primero->id . '"', false);
+        $respuesta->assertSee('value="' . $segundo->id . '"', false);
         $respuesta->assertDontSee('type="hidden" name="specialty_id"', false);
         $respuesta->assertDontSee('type="hidden" name="office_id"', false);
         // Acá sí hay algo que elegir: el encabezado vuelve a preguntar.
