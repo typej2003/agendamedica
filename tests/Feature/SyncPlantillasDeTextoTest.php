@@ -38,7 +38,8 @@ class SyncPlantillasDeTextoTest extends TestCase
 
     private function medico(string $sufijo = '', bool $autenticar = true): Medico
     {
-        $regMedico = 'test-plantillas-' . ($sufijo !== '' ? $sufijo : substr(uniqid(), -6));
+        // `reg_medico` es VARCHAR(20) en el legado: prefijo + 6 tiene que entrar (trampa 141).
+        $regMedico = 'tst-plant-' . ($sufijo !== '' ? $sufijo : substr(uniqid(), -6));
         $user = User::create([
             'name' => 'Doctora de prueba',
             'email' => 'plantillas-' . substr(uniqid(), -6) . '@example.com',

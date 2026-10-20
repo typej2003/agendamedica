@@ -292,9 +292,8 @@ class ConsultaRecipesWebTest extends TestCase
         $panel->assertOk();
         $panel->assertSee('Pre-factura', false);
         $panel->assertSee('seccion=recipes', false);
-        // El que falta: la pre-factura (F9), que el grupo «Consulta» del menú dibuja deshabilitada. El estudio
-        // ecográfico (WEB-6.1), el control de embarazo (WEB-6.6) y las solicitudes (WEB-5.3a) ya están.
-        $this->assertSame(1, substr_count($panel->getContent(), 'aria-disabled="true"'));
+        // Desde F9 (la pre-factura) no falta ninguno: el grupo «Consulta» del menú no dibuja ítems deshabilitados.
+        $this->assertSame(0, substr_count($panel->getContent(), 'aria-disabled="true"'));
 
         // O-28: entrar a Récipes **es** el editor del récipe nuevo (todavía no hay ninguno)…
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));

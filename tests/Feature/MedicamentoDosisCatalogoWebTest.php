@@ -121,7 +121,8 @@ class MedicamentoDosisCatalogoWebTest extends TestCase
             ->post(route('clinica.catalogos.medicamentos.guardar'), $this->datosDelAlta());
 
         $fila = Vademecum::where('reg_medico', $medico->reg_medico)->firstOrFail();
-        $rastros = SyncChange::where('tabla', 'vademecum')->where('registro_id', (string) $fila->codemedicina)->count();
+        $rastros = SyncChange::where('table_name', 'vademecum')->where('record_id', $fila->id)->count();
+        $this->assertGreaterThan(0, $rastros, 'El alta tiene que dejar rastro: si no, la comparación de abajo no prueba nada.');
 
         // Se vuelve a guardar lo mismo, con los números escritos de otra forma (`8` contra `8.0`).
         $this->conContexto($user, $medico, $pediatria)
@@ -132,7 +133,7 @@ class MedicamentoDosisCatalogoWebTest extends TestCase
             ]))
             ->assertRedirect();
 
-        $this->assertSame($rastros, SyncChange::where('tabla', 'vademecum')->where('registro_id', (string) $fila->codemedicina)->count());
+        $this->assertSame($rastros, SyncChange::where('table_name', 'vademecum')->where('record_id', $fila->id)->count());
     }
 
     public function test_una_dosis_que_no_es_numero_se_rechaza(): void

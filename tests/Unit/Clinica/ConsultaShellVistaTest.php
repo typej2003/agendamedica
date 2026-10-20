@@ -199,10 +199,10 @@ class ConsultaShellVistaTest extends TestCase
             }
         }
 
-        // Con O-22 hay **doce** ítems con pantalla: motivos, enfermedad actual, antecedentes, evaluación
-        // física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento y
-        // solicitudes, que se abren **dentro** del shell, y Datos personales, que enlaza a la ficha (F3).
-        $this->assertSame(12, $vm->totalListos());
+        // Desde F9 los **trece** ítems tienen pantalla: motivos, enfermedad actual, antecedentes, evaluación
+        // física, estudio ecográfico, control de embarazo, diagnóstico, evolución, récipes, tratamiento,
+        // solicitudes, datos personales y la pre-factura, todos **dentro** del shell.
+        $this->assertSame(13, $vm->totalListos());
 
         $this->assertSame('/clinica/consulta/42?seccion=motivos', $disponibles['Motivos de consulta']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=enfermedad', $disponibles['Enfermedad actual']['url']);
@@ -215,6 +215,7 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('/clinica/consulta/42?seccion=tratamiento', $disponibles['Tratamiento']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=solicitudes', $disponibles['Solicitudes']['url']);
         $this->assertSame('/clinica/consulta/42?seccion=datos', $disponibles['Datos personales']['url']);
+        $this->assertSame('/clinica/consulta/42?seccion=prefactura', $disponibles['Pre-factura']['url']);
 
         // La sección *Exámenes* ya no existe (O-22): ni ítem ni enlace.
         $this->assertArrayNotHasKey('Exámenes', $disponibles);
@@ -227,7 +228,7 @@ class ConsultaShellVistaTest extends TestCase
 
         // El resto no ofrece enlace y dice que llega después, con la tarea en el `title`.
         foreach ($disponibles as $titulo => $item) {
-            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales'], true)) {
+            if (in_array($titulo, ['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física', 'Estudio ecográfico', 'Control de embarazo', 'Diagnóstico', 'Evolución', 'Récipes', 'Tratamiento', 'Solicitudes', 'Datos personales', 'Pre-factura'], true)) {
                 continue;
             }
 
@@ -338,7 +339,7 @@ class ConsultaShellVistaTest extends TestCase
     {
         // Un valor inventado en la URL no abre una sección que no exista (y la vista vuelve al estado
         // vacío del shell en vez de romperse).
-        $vm = $this->vista(['seccion' => 'prefactura']);
+        $vm = $this->vista(['seccion' => 'no-existe']);
 
         $this->assertNull($vm->seccion());
         $this->assertNull($vm->parcial());

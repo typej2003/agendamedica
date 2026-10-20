@@ -72,6 +72,8 @@ use App\Clinica\Consulta\NeumologiaDeLaConsulta;
 use App\Clinica\Consulta\EndoscopiaDigestiva;
 use App\Clinica\Consulta\EvaluacionPreoperatoria;
 use App\Clinica\Consulta\IntervencionesDeLaConsulta;
+use App\Clinica\Consulta\PreFacturaDeLaConsulta;
+use App\Clinica\Consulta\Vistas\PreFacturaVista;
 use App\Clinica\Consulta\RiesgoQuirurgico;
 use App\Clinica\Consulta\EcoRenal;
 use App\Clinica\Consulta\Vistas\EcoRenalVista;
@@ -369,8 +371,7 @@ class ConsultaController extends Controller
      *
      * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
      * duplica: *Inmunizaciones* es el carnet de vacunas del paciente y *Representante* la ficha del paciente.
-     * Devuelve `null` para cualquier otra sección (incluidas la pre-factura, que todavía no tiene pantalla y cae
-     * en el estado vacío del shell, y *Exámenes/Estudios* y *Alimentación*, que **dejaron de redirigir** el
+     * Devuelve `null` para cualquier otra sección (incluidas *Exámenes/Estudios* y *Alimentación*, que **dejaron de redirigir** el
      * 2026-10-19: cada una tiene su propia sección, como en el escritorio).
      */
     private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
@@ -1156,6 +1157,31 @@ class ConsultaController extends Controller
                 $url($tipo),
                 $ecoActivo ? false : $lectura->tieneDatos($consulta, $tipo),
                 $vistaEco,
+            );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_PREFACTURA) {
+            // **Pre-factura** (F9): los conceptos de `motivo_factura` cargados en `his_con_pre_factura`, con su total.
+            $prefactura = new PreFacturaDeLaConsulta();
+            $items = $prefactura->de($consulta);
+
+            return new PreFacturaVista(
+                $items->map(fn ($item) => [
+                    'codigo'      => (string) $item->codigo,
+                    'descripcion' => (string) $item->descripcion,
+                    'cantidad'    => (float) ($item->cantidad ?? 0),
+                    'monto'       => (float) ($item->monto ?? 0),
+                    'subtotal'    => PreFacturaDeLaConsulta::subtotal($item),
+                ])->all(),
+                $prefactura->catalogo($this->registrosDelMedico($medico))->map(fn ($concepto) => [
+                    'codigo'      => trim((string) $concepto->codigo),
+                    'descripcion' => trim((string) $concepto->descripcion),
+                    'monto'       => (float) ($concepto->monto ?? 0),
+                    'monto_seg'   => $concepto->monto_seg !== null ? (float) $concepto->monto_seg : null,
+                ])->all(),
+                PreFacturaDeLaConsulta::total($items),
+                route('clinica.consulta.prefactura.guardar', $consulta->id),
+                route('clinica.consulta.prefactura.quitar', $consulta->id),
             );
         }
 
