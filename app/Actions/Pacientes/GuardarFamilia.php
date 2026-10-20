@@ -83,7 +83,7 @@ final class GuardarFamilia
                 DB::table('familia_bebe')->insert($columnas + [
                     'reg_medico' => $regMedico,
                     'familia' => $numeroDeFamilia,
-                    'fecha_ingreso' => now()->toDateString(),
+                    'fecha_ingreso' => \App\Clinica\FechaDelConsultorio::hoyComoTexto(),
                     'created_at' => now(),
                 ]);
             }
@@ -210,7 +210,7 @@ final class GuardarFamilia
             'nombre' => $nombre === 'Paciente sin nombre' ? null : mb_substr($nombre, 0, 200),
             'sexo' => CamposDePaciente::texto($nino->sexo ?? null),
             'f_nacimiento' => CamposDePaciente::texto($nino->fnacimiento ?? null),
-            'f_ingreso' => now()->toDateString(),
+            'f_ingreso' => \App\Clinica\FechaDelConsultorio::hoyComoTexto(),
             'pediatrico' => 'S',
             'created_at' => now(),
             'updated_at' => now(),

@@ -693,7 +693,7 @@ class GeminiService
      */
     protected function construirSystemInstruction(array $contexto): string
     {
-        $hoy = Carbon::now()->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY');
+        $hoy = \App\Clinica\FechaDelConsultorio::ahora()->copy()->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY');
 
         $prompt = "Eres el asistente virtual oficial de Doctorisimo, la plataforma de gestión médica y clínica.\n";
         $prompt .= "Tu objetivo es brindar una atención cálida, humana, profesional, clara y eficiente por WhatsApp.\n";

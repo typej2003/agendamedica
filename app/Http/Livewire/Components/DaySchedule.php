@@ -38,7 +38,7 @@ class DaySchedule extends Component
         Carbon::setLocale('es');
 
         // Validar que no se ingrese directamente a una fecha pasada mediante URL
-        if (Carbon::parse($fecha)->lt(Carbon::today())) {
+        if (\App\Clinica\FechaDelConsultorio::esAnteriorAHoy($fecha)) {
             session()->flash('error', 'No se pueden agendar o gestionar citas en fechas anteriores.');
             redirect()->route('agendar.cita', ['medicoId' => $medicoId]);
             return;
@@ -142,8 +142,8 @@ class DaySchedule extends Component
     {
         $citasPorOrden = $citas->keyBy('numorden');
         $slots = [];
-        $now = Carbon::now();
-        $esHoy = Carbon::parse($this->fecha)->isToday();
+        $now = \App\Clinica\FechaDelConsultorio::ahora();
+        $esHoy = \App\Clinica\FechaDelConsultorio::esHoy($this->fecha);
 
         for ($i = 1; $i <= $this->maxCupos; $i++) {
             $cita = $citasPorOrden->get($i);
@@ -183,8 +183,8 @@ class DaySchedule extends Component
 
         $inicio = Carbon::createFromFormat('H:i', $this->horaInicio);
         $fin = Carbon::createFromFormat('H:i', $this->horaFin);
-        $now = Carbon::now();
-        $esHoy = Carbon::parse($this->fecha)->isToday();
+        $now = \App\Clinica\FechaDelConsultorio::ahora();
+        $esHoy = \App\Clinica\FechaDelConsultorio::esHoy($this->fecha);
 
         $slots = [];
         $orden = 1;
@@ -318,7 +318,7 @@ class DaySchedule extends Component
     public function eliminarCita($colaId)
     {
         $cita = Cola::findOrFail($colaId);
-        $esMismoDia = Carbon::parse($cita->fecha)->isToday();
+        $esMismoDia = \App\Clinica\FechaDelConsultorio::esHoy($cita->fecha);
 
         if (!$this->esPersonalAutorizado && $esMismoDia) {
             session()->flash('error', 'Los pacientes no pueden cancelar o eliminar citas el mismo día de la atención. Por favor contacte al consultorio.');

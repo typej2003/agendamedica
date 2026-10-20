@@ -93,7 +93,7 @@ final class EdadGestacional
             return null;
         }
 
-        $hoy = $hoy === null ? Carbon::now() : $hoy;
+        $hoy = $hoy === null ? \App\Clinica\FechaDelConsultorio::hoyComoFecha() : $hoy;
         $dias = (int) $desde->startOfDay()->diffInDays($hoy->copy()->startOfDay(), false);
 
         // Una FUR futura no da edad gestacional (ver el docblock de la clase).

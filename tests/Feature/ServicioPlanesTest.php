@@ -138,7 +138,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_un_medico_nuevo_recibe_el_plan_por_defecto_gratis_por_un_mes(): void
     {
-        Carbon::setTestNow('2026-10-05 10:00:00');
+        Carbon::setTestNow('2026-10-05 14:00:00');
         $reg = 'srv-nuevo-' . substr(uniqid(), -6);
         $this->medico($reg);
 
@@ -219,7 +219,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_renovar_sigue_donde_termina_el_servicio_si_aun_no_vencio(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $reg = 'srv-ren-' . substr(uniqid(), -6);
         $this->medico($reg); // prueba: vence 2026-11-05
         $anual = Plan::create(['codigo' => 'anual-t', 'nombre' => 'Anual', 'frecuencia' => 'anual', 'precio_usd' => 199.99, 'precio_tachado_usd' => 239.98]);
@@ -235,7 +235,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_renovar_un_servicio_ya_vencido_empieza_hoy(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $reg = 'srv-renv-' . substr(uniqid(), -6);
         $this->medico($reg);
         $this->vencerEl($reg, '2026-08-01');
@@ -261,7 +261,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_la_primera_vez_que_el_escritorio_habla_recibe_un_anio_gratis_una_sola_vez(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $reg = 'srv-pb-' . substr(uniqid(), -6);
 
         $r = $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk();
@@ -277,7 +277,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_un_medico_con_su_mes_de_prueba_tambien_recibe_el_anio_al_sincronizar_desde_el_escritorio(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $reg = 'srv-prpb-' . substr(uniqid(), -6);
         $this->medico($reg); // prueba hasta 2026-11-05
 
@@ -289,7 +289,7 @@ class ServicioPlanesTest extends TestCase
 
     public function test_el_anio_de_cortesia_no_se_vuelve_a_regalar_cuando_vence(): void
     {
-        Carbon::setTestNow('2026-10-05');
+        Carbon::setTestNow('2026-10-05 12:00:00');
         $reg = 'srv-pb2-' . substr(uniqid(), -6);
         $this->escritorio('cambios/estado', ['reg_medico' => $reg])->assertOk();
         $this->vencerEl($reg, '2026-09-01');
