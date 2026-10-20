@@ -9,7 +9,7 @@
 
      En un desplegable, las opciones llegan **resueltas** por el ViewModel con `OpcionesDelDesplegable`: la
      vacía adelante y el valor que no está en la lista del escritorio al final. La vista sólo las recorre. --}}
-<x-ui.campo :etiqueta="$campo['etiqueta']" :for="$campo['columna']" :ayuda="$campo['ayuda'] ?? null"
+<x-ui.campo :etiqueta="$campo['etiqueta']" :for="$campo['columna']" :info="$campo['info'] ?? null"
             class="{{ $campo['ancho'] ?? 'col-6 col-md-3' }}">
     @if ($campo['tipo'] === 'calculo')
         {{-- Una de las dos cuentas del escritorio (la EG y la FPP del control prenatal): se muestran

@@ -28,9 +28,4 @@ class NeumologiaDeLaConsultaTest extends TestCase
         $this->assertSame('Espirometría', $campos['espirometria']['etiqueta']);
         $this->assertSame('Broncoscopía', $campos['broncoscopia']['etiqueta']);
     }
-
-    public function test_la_ayuda_de_la_espirometria_avisa_de_la_columna_compartida(): void
-    {
-        $this->assertStringContainsString('citología', NeumologiaDeLaConsulta::campos()['espirometria']['ayuda']);
-    }
 }

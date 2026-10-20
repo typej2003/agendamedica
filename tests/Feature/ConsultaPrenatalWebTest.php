@@ -469,7 +469,7 @@ class ConsultaPrenatalWebTest extends TestCase
         // El valor viejo viaja como una opción más —la última— y es la elegida.
         $select = $this->control($html, 'tipiaje');
         $this->assertMatchesRegularExpression('/<option value="A positivo"\s+selected/s', $select);
-        $this->assertStringContainsString('(del escritorio)', $select);
+        $this->assertStringContainsString('(valor anterior)', $select);
         // Y `AB+`, que tampoco está entre los ocho, igual.
         $this->assertMatchesRegularExpression('/<option value="AB\+"\s+selected/s', $this->control($html, 'tipiaje_cony'));
 
@@ -822,7 +822,6 @@ class ConsultaPrenatalWebTest extends TestCase
             ->assertSee('Imprimir el informe')
             // La ficha de la gesta, con su FPP (una sola desde WEB-11.16: la hoja y la pantalla).
             ->assertSee('FUR')->assertSee('FPP')
-            ->assertSee('La hoja imprime la FPP de la gesta')
             ->assertSee('Tipiaje (madre)')
             // Y lo cargado en los controles, que es lo que sale en la hoja.
             ->assertSee('Peso: 68')->assertSee('Placenta: Fúndica');

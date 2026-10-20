@@ -385,8 +385,8 @@ class AgendaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('Movida');                        // la fila no desaparece en silencio
-        $respuesta->assertSee('1 movida por el escritorio');
-        $respuesta->assertSee('Sin acciones: el escritorio la movió');
+        $respuesta->assertSee('1 movida a otro día');
+        $respuesta->assertSee('Sin acciones: la cita se movió');
         $respuesta->assertSee('AlOtroDia');
 
         // Fuera del cupo: 1 sola cita cuenta (no “cupo 2/2”).

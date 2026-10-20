@@ -183,7 +183,7 @@ class FormatoDeImpresionGuardarController extends Controller
     /** Otro equipo (el escritorio o el teléfono) editó esos datos más recientemente: no se pisa. */
     private function bloqueado(string $ancla)
     {
-        return $this->aFormato($ancla)->with('error', 'No se guardó: otro equipo (el escritorio o el teléfono) editó esos datos más recientemente. Recarga la página para ver lo último.');
+        return $this->aFormato($ancla)->with('error', 'No se guardó: otro equipo (por ejemplo el teléfono) editó esos datos más recientemente. Recarga la página para ver lo último.');
     }
 
     /**

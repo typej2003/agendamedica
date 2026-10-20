@@ -36,11 +36,6 @@
                 @endif
             </div>
 
-            {{-- Una línea de ayuda como máximo (§10.1). --}}
-            <p class="texto-tenue small mb-3">
-                Pasa {{ $vm->cosas() }} de tu catálogo y quítalos cuando quieras: cada clic se guarda. El resumen clínico, con su botón.
-            </p>
-
             @if ($vm->total() === 0)
                 <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>
             @else

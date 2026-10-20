@@ -73,7 +73,7 @@ class PreNatalDesarrolloFino extends Model
                 'ayuda' => 'Tensión arterial, como «120/80».'],
             ['columna' => 'presentacion', 'etiqueta' => 'Presentación', 'tipo' => 'opciones',
                 'ancho' => 'col-6 col-md-3',
-                'ayuda' => 'La columna guarda el código del escritorio (C, P, T, CC…).',
+                'ayuda' => '',
                 // Los pares del `values` del DataWindow (`:39`): `texto<TAB>código` separados por `/`. El
                 // escritorio guarda el **código**, así que la web también (la columna es `char(20)`).
                 'opciones' => self::conCodigos([

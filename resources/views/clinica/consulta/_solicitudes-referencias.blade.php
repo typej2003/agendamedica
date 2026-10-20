@@ -14,9 +14,6 @@
                 <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
             </div>
 
-            {{-- Una línea de ayuda como máximo (§10.1). --}}
-            <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
             @if ($vm->estaVacia())
                 @php $vacio = $vm->sinReferencias(); @endphp
                 <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">{{ $vacio['texto'] }}</x-ui.vacio>

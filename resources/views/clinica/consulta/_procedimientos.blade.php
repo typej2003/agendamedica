@@ -22,8 +22,6 @@
             @endforeach
         </nav>
 
-        <p class="text-muted small mb-3">{{ $seccion->ayuda() }}</p>
-
         @if ($seccion->esEcoAbdominal())
             {{-- La tercera pestaña del escritorio: el ítem «Procedimientos» también abre el eco abdominal. Se reusa
                  la pantalla del estudio con su `volver` a esta sección. --}}

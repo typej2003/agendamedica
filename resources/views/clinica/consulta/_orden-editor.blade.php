@@ -29,8 +29,6 @@
                 @endif
             </div>
 
-            <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
             <form method="POST" action="{{ $vm->urlGuardar() }}" id="orden-form" data-orden-form data-aviso="{{ $vm->avisoSinGuardar() }}">
                 @csrf
 

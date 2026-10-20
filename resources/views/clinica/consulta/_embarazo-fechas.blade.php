@@ -26,8 +26,6 @@
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <p class="texto-tenue small mb-3">{{ $vm->ayuda() }}</p>
-
         {{-- Las fechas cargadas de esta gesta: la que se mira se elige con un enlace. --}}
         @if (! $vm->sinFilas())
             <x-ui.chips class="mb-3" :opciones="$vm->fechas()" etiqueta="Fechas" />
@@ -53,8 +51,7 @@
             <input type="hidden" name="gesta" value="{{ $vm->gestaClave() }}">
 
             <div class="row g-2 mb-3">
-                <x-ui.campo etiqueta="Fecha" for="fecha" class="col-6 col-md-3"
-                            ayuda="La fecha del examen: identifica la fila de la gesta.">
+                <x-ui.campo etiqueta="Fecha" for="fecha" class="col-6 col-md-3">
                     <input type="date" class="form-control" id="fecha" name="fecha" value="{{ $vm->fecha() }}">
                 </x-ui.campo>
 

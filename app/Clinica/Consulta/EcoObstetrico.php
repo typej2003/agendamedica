@@ -67,10 +67,10 @@ final class EcoObstetrico
         return [
             ['titulo' => 'El embarazo', 'icono' => 'bi-calendar-heart', 'campos' => [
                 self::fecha('fecha', 'Fecha', 'La fecha del estudio: abre con la de hoy y se puede cambiar.'),
-                self::fechaTecleada('fur', 'FUR', 'La fecha de la última regla: se teclea como dd/mm/aaaa (en el escritorio se teclea a mano: su ventana no la lee del control prenatal).'),
+                self::fechaTecleada('fur', 'FUR', 'dd/mm/aaaa'),
                 self::lista('gesta', 'Gesta', ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5',
                     'VI' => '6', 'VII' => '7', 'VIII' => '8', 'IX' => '9', 'X' => '10', 'XI' => '11'],
-                    'El número de la gesta que se está siguiendo (el escritorio lo numera en romanos).'),
+                    ''),
             ]],
 
             ['titulo' => 'El útero y los ovarios', 'icono' => 'bi-circle', 'campos' => [
@@ -123,9 +123,9 @@ final class EcoObstetrico
 
             ['titulo' => 'La conclusión', 'icono' => 'bi-file-earmark-text', 'campos' => [
                 ['columna' => 'observacion', 'etiqueta' => 'Conclusión', 'tipo' => 'area',
-                    'ayuda' => 'La conclusión del estudio (la columna se llama `observacion`).'],
+                    'ayuda' => ''],
                 ['columna' => 'otros', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
-                    'ayuda' => 'Las observaciones (la columna se llama `otros`).'],
+                    'ayuda' => ''],
             ]],
         ];
     }

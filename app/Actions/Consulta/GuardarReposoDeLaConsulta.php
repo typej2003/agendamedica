@@ -67,7 +67,7 @@ final class GuardarReposoDeLaConsulta
         if (! QueEsUnDocumento::reposo($dias, $observacion)) {
             throw new InvalidArgumentException(
                 'Un reposo de un solo día necesita su justificación: escribe el motivo o indica más de un día. '
-                . 'Sin eso no se distingue de la plantilla vacía que crea el escritorio y no cuenta como documento.'
+                . 'Sin eso el reposo no cuenta como documento.'
             );
         }
 

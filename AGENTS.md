@@ -975,6 +975,13 @@ paciente, récipe de la pareja, órdenes, motivos, diagnósticos, antecedentes, 
 (agregados a la izquierda, catálogo a la derecha); el usuario las dio por buenas el 2026-10-20. Pantallas **nuevas** de
 este tipo siguen la pauta salvo que sean de dos columnas.
 
+**Pauta de textos de ayuda en los formularios (decisión del usuario, 2026-10-20):** **no** va texto de ayuda debajo de un campo ni
+descripciones de encabezado que expliquen mecánica obvia o términos clínicos, y **nada que mencione el escritorio ni nombres de columnas**
+(el médico no necesita saberlo). Si hace falta aclarar qué se escribe, va un **hint dentro del campo** (`placeholder`: un ejemplo o qué se
+anota); si la etiqueta y la unidad ya lo dicen, nada. Sólo para un dato **calculado o de sólo lectura** (sin input) o un contexto que no
+cabe en un hint se usa el «i» (`<x-ui.info>` o la prop `info` de `<x-ui.campo>`): un clic abre el cuadro, otro clic, Esc o clic afuera lo
+cierran (`shell.js`, por delegación). Los botones de plantillas van en el slot `acciones` de la tarjeta, junto al estado.
+
 **Trampa medida (2026-10-08):** un botón deshabilitado **no** usa `--bs-btn-color` sino
 `--bs-btn-disabled-color`, que cada variante de Bootstrap fija con su propio color. Sobreescribir solo la
 primera deja los botones deshabilitados con el color viejo (el "Atender" de la agenda quedaba en 1,8:1).

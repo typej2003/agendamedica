@@ -107,7 +107,7 @@ class ConsultaCierreVistaTest extends TestCase
         $movida = ConsultaCerrada::citaMovida(151);
         $this->assertFalse($movida->quedoAtendida());
         $this->assertSame(151, $movida->citaId);
-        $this->assertStringContainsString('movido el escritorio', $movida->mensaje('3'));
+        $this->assertStringContainsString('se había movido a otro día', $movida->mensaje('3'));
 
         // Las tres nombran la consulta: es lo que el médico acaba de cerrar.
         foreach ([$atendida, $sinCita, $movida] as $resultado) {

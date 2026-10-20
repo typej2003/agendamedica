@@ -147,9 +147,9 @@ final class PrenatalVista
             if ($campo['columna'] === 'fur') {
                 // Las dos cuentas del escritorio, en el lugar que les da el DataWindow.
                 $renglones[$fila][] = $this->calculo('prenatal-fpp', 'FPP', 'col-6 col-md-2',
-                    'La FUR más 280 días.', $this->fpp() ? FechaClinica::formato($this->fpp()) : null);
+                    'FUR + 280 días.', $this->fpp() ? FechaClinica::formato($this->fpp()) : null);
                 $renglones[$fila][] = $this->calculo('prenatal-eg', 'Edad gestacional', 'col-6 col-md-3',
-                    'Se calcula de la FUR.', $this->edadGestacional());
+                    'Calculada desde la FUR.', $this->edadGestacional());
             }
         }
 
@@ -316,7 +316,7 @@ final class PrenatalVista
     {
         return [
             'columna' => $columna, 'etiqueta' => $etiqueta, 'tipo' => 'calculo',
-            'ancho' => $ancho, 'ayuda' => $ayuda, 'valor' => $valor ?? '—',
+            'ancho' => $ancho, 'info' => $ayuda, 'valor' => $valor ?? '—',
         ];
     }
 

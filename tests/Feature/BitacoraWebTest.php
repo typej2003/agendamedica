@@ -192,7 +192,7 @@ class BitacoraWebTest extends TestCase
         $filas = implode("\n", $this->filas($respuesta));
 
         $this->assertStringContainsString('App del móvil', $filas);
-        $this->assertStringContainsString('Escritorio (PowerBuilder)', $filas);
+        $this->assertStringContainsString('Sistema anterior', $filas);
         $this->assertStringContainsString('Sin usuario', $filas);
         $this->assertStringContainsString('anterior a la bitácora', $filas);
         $this->assertCount(3, $this->filas($respuesta), 'Ni la migración de archivos ni el alias del teléfono aparecen.');
@@ -275,7 +275,7 @@ class BitacoraWebTest extends TestCase
 
         // Las opciones del filtro: todos, sin usuario, el médico y la secretaria (aunque no hubiera hecho nada).
         $opciones = $como->get(route('clinica.bitacora'));
-        $opciones->assertSee('>Sin usuario (móvil, escritorio o anterior a la bitácora)<', false);
+        $opciones->assertSee('>Sin usuario (móvil, sistema anterior o previo a la bitácora)<', false);
         $opciones->assertSee('(secretaría)');
         $opciones->assertSee('(médico)');
     }

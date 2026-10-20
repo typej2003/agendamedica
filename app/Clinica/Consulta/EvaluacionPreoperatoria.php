@@ -34,7 +34,7 @@ final class EvaluacionPreoperatoria
      */
     private const CAMPOS = [
         'tipo'       => ['etiqueta' => 'Tipo de evaluación', 'columna' => 'tipo', 'clase' => 'opcion',
-            'ayuda' => 'Un carácter, como en el escritorio.'],
+            'ayuda' => ''],
         'resultado'  => ['etiqueta' => 'Resultado', 'columna' => 'resultado', 'clase' => 'parrafo'],
         'emergencia' => ['etiqueta' => '¿Es una emergencia?', 'columna' => 'emergencia', 'clase' => 'si_no'],
     ];

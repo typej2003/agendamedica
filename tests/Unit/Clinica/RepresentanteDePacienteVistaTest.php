@@ -122,7 +122,7 @@ class RepresentanteDePacienteVistaTest extends TestCase
 
         // Y se ofrece en el `<select>` —marcado y distinguido— para que guardar otro dato no lo pierda.
         $opciones = collect($vista->parentescos());
-        $this->assertSame('X (código del escritorio)', $opciones->firstWhere('valor', 'X')['texto']);
+        $this->assertSame('X (código anterior)', $opciones->firstWhere('valor', 'X')['texto']);
         $this->assertTrue($opciones->firstWhere('valor', 'X')['elegido']);
         $this->assertFalse($opciones->firstWhere('valor', null)['elegido']);
     }

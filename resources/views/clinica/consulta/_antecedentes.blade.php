@@ -45,8 +45,6 @@
                 @endif
             </div>
 
-            <p class="texto-tenue small mb-3">{{ $seccion->ayuda() }}</p>
-
             {{-- El `action` es el del guardado del detalle y la alerta. El agregado y la baja ya no vienen en
                  este formulario: cada uno tiene su propio `POST` inmediato (O-07). --}}
             <form method="POST" action="{{ $seccion->urlGuardar() }}" id="antecedentes-form"
@@ -160,8 +158,6 @@
 
         <x-slot name="derecha">
             @if ($catalogo)
-                <p class="texto-tenue small mb-3">{{ $catalogo->ayuda() }}</p>
-
                 {{-- El buscador del catálogo, **siempre a la vista** (A-06: antes estaba detrás de un botón):
                      es un `GET` a esta misma sección. El tipo viaja oculto para que buscar no cambie el chip. --}}
                 <form method="GET" action="{{ $seccion->urlVolver() }}" class="dos-listas-buscar" role="search" id="antecedente-buscar-form"
@@ -231,12 +227,9 @@
                      activo, para que lo que se cree caiga en el tipo que se está mirando. --}}
                 <hr class="my-3">
 
-                <p class="texto-tenue small mb-2">{{ $catalogo->ayudaDelAlta() }}</p>
-
                 <form method="POST" action="{{ $catalogo->urlCrear() }}" class="row g-2 align-items-end" id="antecedente-crear-form">
                     @csrf
-                    <x-ui.campo etiqueta="Nombre del antecedente" for="antecedente-descripcion" class="col-12 col-md-8"
-                                :ayuda="'Hasta ' . $catalogo->limiteDescripcion() . ' caracteres. Se guarda en mayúsculas.'">
+                    <x-ui.campo etiqueta="Nombre del antecedente" for="antecedente-descripcion" class="col-12 col-md-8">
                         <input type="text" id="antecedente-descripcion" name="descripcion" class="form-control"
                                maxlength="{{ $catalogo->limiteDescripcion() }}" value="{{ old('descripcion') }}" autocomplete="off">
                     </x-ui.campo>

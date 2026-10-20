@@ -225,7 +225,7 @@ final class FilaDeCitaVista
     {
         if ($this->movida()) {
             return ['tono' => 'neutro', 'icono' => 'bi-arrow-right-circle', 'texto' => 'Movida',
-                'titulo' => 'El escritorio la postergó: el paciente ya está en la fecha nueva'];
+                'titulo' => 'La cita se postergó: el paciente ya está en la fecha nueva'];
         }
 
         if ($this->atendida()) {

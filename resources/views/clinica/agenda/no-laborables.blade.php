@@ -49,7 +49,7 @@
                     </select>
                 </x-ui.campo>
 
-                <x-ui.campo etiqueta="Motivo" for="motivo" class="col-md-6" ayuda="Es el texto que muestra la agenda, como en el escritorio.">
+                <x-ui.campo etiqueta="Motivo" for="motivo" class="col-md-6">
                     <input type="text" name="motivo" id="motivo" class="form-control" maxlength="100"
                            placeholder="Lo que se le avisa a la secretaria" value="{{ $vm->valor('motivo') }}">
                 </x-ui.campo>

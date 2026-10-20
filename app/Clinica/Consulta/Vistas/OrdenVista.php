@@ -335,7 +335,7 @@ final class OrdenVista
     {
         return $this->esLaboratorio()
             ? ['icono' => 'bi-clipboard2-x', 'titulo' => 'Tu catálogo de exámenes está vacío',
-                'texto' => 'Los exámenes salen de tu catálogo (el que mantiene el escritorio o el que crees en Catálogos → Exámenes).']
+                'texto' => 'Los exámenes salen de tu catálogo (puedes crearlos en Catálogos → Exámenes).']
             : ['icono' => 'bi-clipboard2-x', 'titulo' => 'Tu catálogo no tiene estudios de imágenes',
                 'texto' => 'Los estudios son los exámenes del catálogo con el tipo «ESTUDIO DE IMAGENES». Créalos en Catálogos → Exámenes.'];
     }

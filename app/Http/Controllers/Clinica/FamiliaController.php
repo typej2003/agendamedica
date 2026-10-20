@@ -58,9 +58,9 @@ class FamiliaController extends Controller
             'dinamica_familiar' => ['nullable', 'string', 'max:5000'],
             'familia_texto'     => ['nullable', 'string', 'max:5000'],
         ], [
-            'celu_madre.max'          => 'El celular de la madre no puede pasar de 12 caracteres (es el ancho del escritorio).',
-            'cel_padre.max'           => 'El celular del padre no puede pasar de 12 caracteres (es el ancho del escritorio).',
-            'telefono.max'            => 'El teléfono no puede pasar de 12 caracteres (es el ancho del escritorio).',
+            'celu_madre.max'          => 'El celular de la madre no puede pasar de 12 caracteres.',
+            'cel_padre.max'           => 'El celular del padre no puede pasar de 12 caracteres.',
+            'telefono.max'            => 'El teléfono no puede pasar de 12 caracteres.',
             'ced_representante.regex' => 'La cédula del representante solo lleva números (hasta 10 dígitos).',
             'email.email'             => 'Revisa el correo: no tiene forma de correo.',
             'fecn_madre.before_or_equal' => 'La fecha de nacimiento de la madre no puede ser futura.',
