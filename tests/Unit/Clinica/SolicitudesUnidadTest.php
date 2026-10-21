@@ -277,8 +277,9 @@ class SolicitudesUnidadTest extends TestCase
         $this->assertSame('36 años', $hojas[0]['mitades'][0]['edad']);
         $this->assertSame('07/10/2026', $hojas[0]['mitades'][0]['fecha']);
 
-        $larga = new HojasDeDocumentoVista($this->membrete(), [$this->documento(DocumentoImpreso::parrafosDe($this->palabras(330)))]);
-        $mitades = $larga->hojas()[0]['mitades'];
+        // En la página pequeña cada trozo va en su propia página.
+        $larga = new HojasDeDocumentoVista($this->membrete(), [$this->documento(DocumentoImpreso::parrafosDe($this->palabras(330)))->conPagina('pequena')]);
+        $mitades = array_merge(...array_column($larga->hojas(), 'mitades'));
         $this->assertSame('INFORME MÉDICO (continuación)', $mitades[1]['titulo']);
         $this->assertTrue($mitades[0]['sigue']);
         $this->assertTrue($mitades[1]['firma']);

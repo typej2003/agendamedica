@@ -275,7 +275,7 @@ final class DocumentoImpreso
         return $this->modo() === ModoDeLaHoja::COMPLETA;
     }
 
-    /** El mismo documento con la **página elegida** (`grande`/`pequena`); sólo cambia la hoja del informe médico y del reposo. */
+    /** El mismo documento con la **página elegida** (`grande`/`pequena`); sólo cambia la hoja de las solicitudes (`ModoDeLaHoja::seEligeLaPagina`). */
     public function conPagina(?string $pagina): self
     {
         return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $pagina);

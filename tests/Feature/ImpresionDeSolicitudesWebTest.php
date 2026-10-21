@@ -129,9 +129,9 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             ->assertSee('Av. Principal, Torre Salud, piso 3')
             ->assertSee('Constancia · Ana Alvarez');
         $this->assertSame(1, $this->hojasDe($respuesta->getContent()));
-        // Media hoja: la mitad izquierda lleva el documento y la derecha queda en blanco.
+        // A4 vertical: el documento ocupa la página, sin mitad derecha en blanco.
         $this->assertSame(1, substr_count($respuesta->getContent(), 'recipe-mitad-documento'));
-        $this->assertSame(1, substr_count($respuesta->getContent(), 'recipe-mitad-vacia'));
+        $this->assertSame(0, substr_count($respuesta->getContent(), 'recipe-mitad-vacia'));
         $this->assertSame(1, substr_count($respuesta->getContent(), 'class="firmas"'));
         // Una constancia no tiene el diálogo de opciones del récipe.
         $respuesta->assertDontSee('data-abrir-opciones', false);
@@ -219,13 +219,13 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $this->assertSame(2, substr_count($hoja->getContent(), 'class="documento-parrafo"'));
     }
 
-    public function test_el_informe_y_el_reposo_salen_en_a4_vertical_grande_por_defecto_y_pequena_a_eleccion(): void
+    public function test_las_solicitudes_salen_en_a4_vertical_grande_por_defecto_y_pequena_a_eleccion(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->informe($medico);
         $this->reposo($medico, 3, '2026-10-10');
 
-        foreach (['informe', 'reposo'] as $documento) {
+        foreach (['informe', 'reposo', 'constancia'] as $documento) {
             $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
             $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
@@ -236,10 +236,10 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             $this->assertMatchesRegularExpression('/pagina=pequena"\s+aria-current="true"\s*>Pequeña</', $pequena);
         }
 
-        // La constancia sigue en media hoja horizontal y sin el selector de página.
-        $constancia = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'constancia'))->getContent();
-        $this->assertStringNotContainsString('recipe-hoja-completa', $constancia);
-        $this->assertStringNotContainsString('aria-label="Página"', $constancia);
+        // Con un récipe en el lote la elección no le cambia la hoja: sigue en media hoja horizontal.
+        $this->recipe($medico, 1001, 1, 1, ['0001'], '2026-10-05');
+        $todos = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'todos') . '&pagina=pequena')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/class="recipe-hoja tamano-/', $todos);
     }
 
     public function test_los_documentos_llevan_el_membrete_y_la_linea_del_formato_del_medico(): void

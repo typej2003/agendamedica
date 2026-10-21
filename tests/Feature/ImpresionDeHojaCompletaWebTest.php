@@ -111,19 +111,11 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             $this->assertSame(1, ModoDeLaHoja::porPagina(ModoDeLaHoja::MITAD_SUPERIOR));
         }
 
-        // El informe médico y el reposo: A4 vertical, grande por defecto y pequeña (mitad superior) a elección; nunca media
-        // hoja horizontal (2026-10-21).
-        foreach ([DocumentoImpreso::INFORME, DocumentoImpreso::REPOSO] as $documento) {
-            $this->assertTrue(ModoDeLaHoja::seEligeLaPagina($documento), $documento);
-            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento), $documento);
-            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_GRANDE), $documento);
-            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, 'cualquiera'), $documento);
-            $this->assertSame(ModoDeLaHoja::MITAD_SUPERIOR, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_PEQUENA), $documento);
-        }
-        $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de(DocumentoImpreso::CONSTANCIA, ModoDeLaHoja::PAGINA_PEQUENA));
-
-        // Media hoja: los récipes y las demás solicitudes.
+        // Las solicitudes: A4 vertical, grande por defecto y pequeña (mitad superior) a elección; nunca media hoja horizontal
+        // (2026-10-21).
         foreach ([
+            DocumentoImpreso::INFORME,
+            DocumentoImpreso::REPOSO,
             DocumentoImpreso::CONSTANCIA,
             DocumentoImpreso::REFERENCIA,
             DocumentoImpreso::HOSPITALIZACION,
@@ -131,6 +123,17 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             DocumentoImpreso::LABORATORIO,
             DocumentoImpreso::LABORATORIO_PAREJA,
             DocumentoImpreso::ESTUDIOS,
+        ] as $documento) {
+            $this->assertTrue(ModoDeLaHoja::seEligeLaPagina($documento), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_GRANDE), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, 'cualquiera'), $documento);
+            $this->assertSame(ModoDeLaHoja::MITAD_SUPERIOR, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_PEQUENA), $documento);
+        }
+        $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de(DocumentoImpreso::RESUMEN_MEDICO, ModoDeLaHoja::PAGINA_PEQUENA));
+
+        // Media hoja horizontal: los récipes y el resumen médico.
+        foreach ([
             DocumentoImpreso::RESUMEN_MEDICO,
         ] as $documento) {
             $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de($documento), $documento);
@@ -173,7 +176,7 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             ->assertDontSee('recipe-mitad-vacia', false);
     }
 
-    public function test_la_constancia_sigue_en_media_hoja(): void
+    public function test_la_constancia_sale_en_a4_vertical_y_no_en_media_hoja(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $this->constancia($medico);
@@ -182,9 +185,8 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
 
         $hoja->assertOk()
             ->assertSee('CONSTANCIA')
-            ->assertDontSee('recipe-hoja-completa', false)
-            // La mitad derecha va vacía: dos documentos por A4 horizontal.
-            ->assertSee('recipe-mitad-vacia', false);
+            ->assertSee('recipe-hoja-completa', false)
+            ->assertDontSee('recipe-mitad-vacia', false);
     }
 
     // ============================================================================ El lote mixto
@@ -225,11 +227,11 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
     {
         [$user, $medico, $gineco] = $this->escenario();
 
-        // La constancia, en media hoja (con su mitad derecha vacía); el control de embarazo, en hoja completa.
+        // La constancia, en A4 vertical (la grande, la que sale si no se elige); el eco, en hoja completa.
         $this->como($user, $medico, $gineco)->get(route('clinica.formato.en-blanco', DocumentoImpreso::CONSTANCIA))
             ->assertOk()
-            ->assertDontSee('recipe-hoja-completa', false)
-            ->assertSee('recipe-mitad-vacia', false);
+            ->assertSee('recipe-hoja-completa', false)
+            ->assertDontSee('recipe-mitad-vacia', false);
 
         $this->como($user, $medico, $gineco)->get(route('clinica.formato.en-blanco', DocumentoImpreso::ECO_OBSTETRICO))
             ->assertOk()

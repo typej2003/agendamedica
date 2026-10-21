@@ -174,18 +174,18 @@ class ImpresionDeHospitalizacionDietaWebTest extends TestCase
 
     // ================================================================== El texto largo sigue en la otra mitad
 
-    public function test_una_orden_larga_sigue_en_la_otra_mitad_con_continua_y_continuacion_y_la_firma_solo_al_final(): void
+    public function test_una_orden_larga_en_pagina_pequena_sigue_en_otra_pagina_con_continua_y_continuacion_y_la_firma_solo_al_final(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $diagnostico = $this->textoLargo(200);
         $recomendaciones = collect(range(1, 140))->map(fn ($n) => 'rec' . $n)->implode(' ');
         $this->orden($medico, ['diagprev' => $diagnostico, 'dieta' => $recomendaciones]);
 
-        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'hospitalizacion'));
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'hospitalizacion') . '&pagina=pequena');
         $html = $respuesta->getContent();
 
         $respuesta->assertOk()->assertSee('Continúa')->assertSee('ORDEN DE HOSPITALIZACIÓN (continuación)');
-        $this->assertSame(1, $this->hojasDe($html));
+        $this->assertSame(2, $this->hojasDe($html), 'la mitad superior lleva un trozo por página');
         $this->assertSame(2, substr_count($html, 'recipe-mitad-documento'));
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         $this->assertSame(1, substr_count($html, 'class="membrete '));
@@ -196,13 +196,13 @@ class ImpresionDeHospitalizacionDietaWebTest extends TestCase
         );
     }
 
-    public function test_una_dieta_larga_sigue_en_la_otra_mitad_y_una_larguisima_en_otra_hoja_sin_perder_palabras(): void
+    public function test_una_dieta_larga_en_pagina_pequena_sigue_en_otra_pagina_sin_perder_palabras(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $texto = $this->textoLargo(330);
         $this->dieta($medico, ['descripcion' => $texto]);
 
-        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'dieta'));
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'dieta') . '&pagina=pequena');
         $html = $respuesta->getContent();
 
         $respuesta->assertSee('Continúa')->assertSee('DIETA / RECOMENDACIONES (continuación)');
@@ -212,7 +212,7 @@ class ImpresionDeHospitalizacionDietaWebTest extends TestCase
 
         DB::table('dieta_paciente')->where('reg_medico', $medico->reg_medico)->update(['descripcion' => $this->textoLargo(1500)]);
         $html = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'dieta'))->getContent();
-        $this->assertGreaterThan(1, $this->hojasDe($html));
+        $this->assertGreaterThan(1, $this->hojasDe($html), 'ni la página grande alcanza');
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         $this->assertSame(explode(' ', $this->textoLargo(1500)), $this->palabrasDelCuerpo($html));
     }

@@ -21,9 +21,10 @@ namespace App\Clinica\Impresion;
  *    hoja —el contenido en la mitad de arriba de una página vertical, como el escritorio— y llevan la imagen del examen **en la
  *    misma página**, debajo del texto (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad
  *    de abajo de la hoja queda en blanco a propósito.
- *  - **A4 vertical, completa o mitad superior a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio): el
- *    **informe médico** y el **reposo**. Por defecto, la grande; nunca media hoja horizontal (es la del récipe).
- *  - **Media hoja**: todo lo demás — récipes, constancia, referencia, hospitalización, dieta, laboratorio y estudios.
+ *  - **A4 vertical, completa o mitad superior a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio): las
+ *    solicitudes — informe médico, reposo, constancia, referencia, hospitalización, dieta, laboratorio (también el de la
+ *    pareja) y estudios. Por defecto, la grande; nunca media hoja horizontal.
+ *  - **Media hoja horizontal**: todo lo demás — los récipes y el resumen médico.
  *
  * Los ecos imprimen además su **informe en formulario** (WEB-11.13), que no sale de acá: lo pinta `_informe-eco` a página
  * completa. Esta clase decide la hoja de los documentos que se reparten como texto (`DistribuidorDeDocumento`), que es el caso
@@ -59,6 +60,13 @@ final class ModoDeLaHoja
     private const PAGINA_A_ELEGIR = [
         DocumentoImpreso::INFORME,
         DocumentoImpreso::REPOSO,
+        DocumentoImpreso::CONSTANCIA,
+        DocumentoImpreso::REFERENCIA,
+        DocumentoImpreso::HOSPITALIZACION,
+        DocumentoImpreso::DIETA,
+        DocumentoImpreso::LABORATORIO,
+        DocumentoImpreso::LABORATORIO_PAREJA,
+        DocumentoImpreso::ESTUDIOS,
     ];
 
     /**

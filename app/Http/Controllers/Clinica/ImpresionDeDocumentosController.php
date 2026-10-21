@@ -242,7 +242,7 @@ class ImpresionDeDocumentosController extends Controller
 
         abort_if($documentos === [], 404);
 
-        // La página del informe médico y del reposo (`?pagina=grande|pequena`, el «Página» del escritorio): los demás la ignoran.
+        // La página de las solicitudes (`?pagina=grande|pequena`, el «Página» del escritorio): los demás la ignoran.
         $pagina = ModoDeLaHoja::pagina($request->query('pagina'));
         $documentos = array_map(fn ($documento) => $documento instanceof DocumentoImpreso ? $documento->conPagina($pagina) : $documento, $documentos);
 

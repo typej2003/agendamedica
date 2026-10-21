@@ -46,7 +46,7 @@ final class HojasImpresasVista
     }
 
     /**
-     * «Página: Grande / Pequeña» (el informe médico y el reposo, como el escritorio): enlaces GET a esta misma hoja con
+     * «Página: Grande / Pequeña» (las solicitudes, como el escritorio): enlaces GET a esta misma hoja con
      * `?pagina=`. Vacío si no hay ninguno de esos documentos en lo que se imprime.
      *
      * @return array<int,array{texto:string, url:string, activa:bool}>

@@ -19,7 +19,7 @@
         <h1 class="barra-impresion-titulo">{{ $vm->titulo() }}</h1>
         <p class="barra-impresion-detalle">{{ $vm->resumenDeLaImpresion() }}@if ($vm->conOpciones()) · {{ $vm->resumenDeLasOpciones() }}@endif</p>
 
-        {{-- «Página: Grande / Pequeña» del informe médico y del reposo: A4 vertical entero o su mitad de arriba. --}}
+        {{-- «Página: Grande / Pequeña» de las solicitudes: A4 vertical entero o su mitad de arriba. --}}
         @if ($vm->paginas() !== [])
             <div class="barra-impresion-modos" role="group" aria-label="Página">
                 <span class="barra-impresion-modos-rotulo">Página</span>
