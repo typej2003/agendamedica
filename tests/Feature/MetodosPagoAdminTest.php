@@ -236,10 +236,24 @@ class MetodosPagoAdminTest extends TestCase
 
         Livewire::test(MetodosPago::class)
             ->set('tasaAutomatica', false)
-            ->call('guardarTasaAutomatica')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertSet('modal', null);
 
         $this->assertFalse((bool) ConfiguracionPago::actual()->tasa_automatica);
+    }
+
+    public function test_al_activar_la_sincronizacion_pregunta_si_sincronizar_ahora(): void
+    {
+        $this->actingAs($this->administrador());
+
+        $panel = Livewire::test(MetodosPago::class)
+            ->set('tasaAutomatica', false)
+            ->set('tasaAutomatica', true)
+            ->assertSet('modal', 'sincronizar');
+
+        $this->assertTrue((bool) ConfiguracionPago::actual()->tasa_automatica);
+
+        $panel->call('noSincronizarAhora')->assertSet('modal', null);
     }
 
     public function test_la_pestana_de_tasa_muestra_la_ultima_sincronizacion_y_el_boton_de_forzar(): void

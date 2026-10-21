@@ -357,20 +357,33 @@ class MetodosPago extends Component
         $this->cerrarModal();
     }
 
-    /** Guarda la preferencia: ¿la tasa se sincroniza sola desde el BCV o queda fija? */
-    public function guardarTasaAutomatica(): void
+    /** La preferencia se guarda sola al mover el switch; si se enciende, se pregunta si sincronizar ahora. */
+    public function updatedTasaAutomatica($valor): void
     {
-        ConfiguracionPago::actual()->update(['tasa_automatica' => (bool) $this->tasaAutomatica]);
+        $automatica = (bool) $valor;
+        ConfiguracionPago::actual()->update(['tasa_automatica' => $automatica]);
 
-        session()->flash('message', $this->tasaAutomatica
-            ? 'La tasa se va a sincronizar automáticamente desde el BCV.'
-            : 'La sincronización automática quedó apagada: la tasa no se va a mover sola.');
+        if ($automatica) {
+            $this->modal = 'sincronizar';
+
+            return;
+        }
+
+        session()->flash('message', 'La sincronización automática quedó apagada: la tasa no se va a mover sola.');
+    }
+
+    /** "Ahora no" del diálogo que aparece al encender la sincronización. */
+    public function noSincronizarAhora(): void
+    {
+        $this->modal = null;
+        session()->flash('message', 'La sincronización automática quedó activada: se va a hacer sola en la próxima corrida.');
     }
 
     /** "Forzar actualización": lee el BCV y guarda la tasa aunque no haya cambiado. */
     public function sincronizarTasaBcv(TasaBcv $bcv): void
     {
         $resultado = $bcv->intentar(null, true);
+        $this->modal = null;
 
         if (! $resultado['ok']) {
             session()->flash('error', 'No se pudo leer la tasa del BCV: ' . $resultado['mensaje']);
@@ -403,7 +416,7 @@ class MetodosPago extends Component
         return view('livewire.admin.metodos-pago', [
             'metodos' => MetodoPago::deLaPlataforma()->orderBy('orden')->orderBy('id')->get(),
             'tasaActual' => TasaDeCambio::actual(),
-            'historialTasas' => TasaDeCambio::orderByDesc('vigente_desde')->orderByDesc('id')->limit(15)->get(),
+            'historialTasas' => TasaDeCambio::orderByDesc('vigente_desde')->orderByDesc('id')->limit(7)->get(),
             'configuracion' => ConfiguracionPago::actual(),
             'variantes' => CatalogoDePasarelas::variantesDe($this->pasarela),
             'pasarelas' => CatalogoDePasarelas::PASARELAS,
