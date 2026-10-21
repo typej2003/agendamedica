@@ -2,11 +2,13 @@
 
 namespace App\Pagos\Tasas;
 
+use App\Models\ConfiguracionPago;
 use App\Models\TasaDeCambio;
 use App\Pagos\Tasa;
 use DateTimeInterface;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Throwable;
 
 /**
  * **La tasa oficial del BCV** (USD→VES), tomada de la página del Banco Central como en el
@@ -16,8 +18,8 @@ use RuntimeException;
  * La sincronización es **idempotente**: si la última tasa del BCV es la misma, no se guarda otra fila.
  * Así el comando puede correr cada media hora sin llenar el historial de duplicados.
  *
- * No decide si la tasa se usa: eso lo dice `configuracion_pagos.tasa_origen`. El administrador puede
- * dejarla en manual y el comando no toca nada.
+ * No decide si la tasa se usa: eso lo dice `configuracion_pagos.tasa_automatica` (la preferencia que
+ * enciende o apaga la sincronización). El administrador puede apagarla y fijar la tasa a mano.
  */
 final class TasaBcv
 {
@@ -35,7 +37,9 @@ final class TasaBcv
             'Accept' => 'text/html,application/xhtml+xml',
         ])->timeout(max(5, (int) config('pagos.bcv.timeout', 20)));
 
-        if (! config('pagos.bcv.verificar_tls', true)) {
+        // Sólo en local se salta la verificación del certificado (el PHP de desarrollo no tiene el CA
+        // del BCV). En QA y producción se verifica siempre.
+        if (app()->environment('local')) {
             $http = $http->withoutVerifying();
         }
 
@@ -89,6 +93,43 @@ final class TasaBcv
     public function sincronizar(?DateTimeInterface $cuando = null, bool $forzar = false): ?TasaDeCambio
     {
         return $this->guardar($this->obtener(), $cuando, $forzar);
+    }
+
+    /**
+     * **El intento completo**: lee, guarda si cambió y deja registrado en `configuracion_pagos` cuándo fue
+     * el último intento y cómo terminó. Es lo que usan el comando y el botón del panel.
+     *
+     * No lanza: devuelve el resultado para que el que llama decida qué mostrar. Un fallo del BCV queda en
+     * `tasa_sincronizacion_error` y la tasa anterior sigue vigente.
+     *
+     * @return array{ok:bool, tasa:?TasaDeCambio, leida:?string, mensaje:string}
+     */
+    public function intentar(?DateTimeInterface $cuando = null, bool $forzar = false): array
+    {
+        $configuracion = ConfiguracionPago::actual();
+
+        try {
+            $leida = $this->obtener();
+            $nueva = $this->guardar($leida, $cuando, $forzar);
+        } catch (Throwable $e) {
+            $configuracion->registrarSincronizacion(false, $e->getMessage());
+
+            return [
+                'ok' => false,
+                'tasa' => null,
+                'leida' => null,
+                'mensaje' => $e->getMessage(),
+            ];
+        }
+
+        $configuracion->registrarSincronizacion(true);
+
+        return [
+            'ok' => true,
+            'tasa' => $nueva,
+            'leida' => $leida,
+            'mensaje' => $nueva ? 'Tasa actualizada' : 'Sin cambios',
+        ];
     }
 
     /**

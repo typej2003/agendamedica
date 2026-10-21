@@ -28,16 +28,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | El comando `tasas:bcv` baja la página del Banco Central y lee el valor del
-    | dólar (`#dolar strong`). No se configura desde el panel: la URL y el TLS
-    | son del entorno. La política de si la tasa es automática o manual vive en
-    | `configuracion_pagos.tasa_origen`.
+    | dólar (`#dolar strong`). No se configura desde el panel: la URL es del
+    | entorno y el certificado se verifica siempre, salvo en `local` (el PHP de
+    | desarrollo no tiene el CA del BCV). La preferencia de si la tasa es
+    | automática vive en `configuracion_pagos.tasa_automatica`.
     |
     */
     'bcv' => [
         'url' => env('BCV_URL', 'https://www.bcv.org.ve'),
-        // El certificado del BCV suele fallar en servidores con un CA viejo (cURL 60); el ejemplo de
-        // DonDemand lo salta. Se deja configurable: si el servidor tiene el CA al día, poner true.
-        'verificar_tls' => (bool) env('BCV_VERIFICAR_TLS', false),
         'timeout' => (int) env('BCV_TIMEOUT', 20),
     ],
 

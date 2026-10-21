@@ -216,36 +216,58 @@
 
         <div class="card mt-3">
             <div class="card-header bg-white py-3">
-                <strong>Origen de la tasa</strong>
-                <span class="text-muted small ms-2">El BCV publica el valor oficial del dólar; la tasa manual es para fijarlo a propósito.</span>
+                <strong>Sincronización con el BCV</strong>
+                <span class="text-muted small ms-2">El BCV publica el valor oficial del dólar; apagala si querés fijar la tasa a mano.</span>
             </div>
             <div class="card-body">
                 <div class="row align-items-end g-3">
-                    <div class="col-md-5">
-                        <label class="form-label" for="tasa_origen">¿Quién actualiza la tasa?</label>
-                        <select id="tasa_origen" class="form-select" wire:model.defer="tasaOrigen">
-                            @foreach ($origenesTasa as $clave => $etiqueta)
-                                <option value="{{ $clave }}">{{ $etiqueta }}</option>
-                            @endforeach
-                        </select>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="tasa_automatica" wire:model.defer="tasaAutomatica">
+                            <label class="form-check-label" for="tasa_automatica">Sincronizar automáticamente desde el BCV</label>
+                        </div>
+                        <p class="form-text mb-0">Cada 30 minutos, de 5:00 a 21:00 (hora de Caracas). Sólo guarda cuando el valor cambia.</p>
                     </div>
-                    <div class="col-md-7 d-flex flex-wrap gap-2">
-                        <button wire:click="guardarOrigenTasa" class="btn btn-primary btn-sm">
-                            <i class="bi bi-check2 me-1"></i> Guardar origen
+                    <div class="col-md-6 d-flex flex-wrap gap-2 justify-content-md-end">
+                        <button wire:click="guardarTasaAutomatica" class="btn btn-primary btn-sm">
+                            <i class="bi bi-check2 me-1"></i> Guardar preferencia
                         </button>
                         <button wire:click="sincronizarTasaBcv" class="btn btn-outline-secondary btn-sm"
                                 wire:loading.attr="disabled" wire:target="sincronizarTasaBcv">
-                            <i class="bi bi-arrow-repeat me-1"></i> Sincronizar ahora
+                            <i class="bi bi-arrow-repeat me-1"></i> Forzar actualización
                         </button>
                     </div>
                 </div>
-                <p class="form-text mb-0 mt-2">
-                    @if ($tasaOrigen === \App\Models\ConfiguracionPago::TASA_BCV)
-                        Se actualiza sola cada 30 minutos (5:00 a 21:00, hora de Caracas) y solo guarda cuando el BCV publica un valor distinto.
-                    @else
-                        La tasa no se actualiza sola: la cargás con «Nueva tasa». «Sincronizar ahora» la trae igual, como excepción.
-                    @endif
-                </p>
+
+                <hr>
+
+                <div class="row g-3 small">
+                    <div class="col-md-6">
+                        <div class="text-muted">Última sincronización</div>
+                        @if ($configuracion->tasa_sincronizada_el)
+                            <div>
+                                {{ $configuracion->tasa_sincronizada_el->format('d/m/Y H:i') }}
+                                <span class="badge bg-{{ $configuracion->tasa_sincronizacion_estado === \App\Models\ConfiguracionPago::SINCRONIZACION_OK ? 'success' : 'danger' }}">
+                                    {{ $configuracion->estadoSincronizacionLegible() }}
+                                </span>
+                            </div>
+                            @if ($configuracion->tasa_sincronizacion_error)
+                                <div class="text-danger">{{ $configuracion->tasa_sincronizacion_error }}</div>
+                            @endif
+                        @else
+                            <div class="text-muted">Todavía no se intentó sincronizar.</div>
+                        @endif
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted">Última actualización de la tasa</div>
+                        @if ($tasaActual)
+                            <div>{{ $tasaActual->created_at?->format('d/m/Y H:i') ?? $tasaActual->vigente_desde->format('d/m/Y H:i') }}</div>
+                            <div class="text-muted">{{ \App\Models\TasaDeCambio::ORIGENES[$tasaActual->origen] ?? $tasaActual->origen }}</div>
+                        @else
+                            <div class="text-muted">Sin tasa cargada.</div>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 

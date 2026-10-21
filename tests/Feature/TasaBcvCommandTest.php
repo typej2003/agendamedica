@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * **La sincronización automática de la tasa del BCV** (`tasas:bcv`, 2026-10-21).
+ * **La sincronizaciÃ³n automÃ¡tica de la tasa del BCV** (`tasas:bcv`, 2026-10-21).
  *
  * Lo que se fija:
- *  - guarda la tasa leída con origen `bcv`;
+ *  - guarda la tasa leÃ­da con origen `bcv`;
  *  - no duplica filas cuando el BCV publica el mismo valor;
  *  - guarda una nueva cuando cambia;
  *  - en modo manual no toca nada;
@@ -45,7 +45,7 @@ class TasaBcvCommandTest extends TestCase
 
     public function test_sincroniza_la_tasa_del_bcv(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_BCV]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => true]);
 
         $this->artisan('tasas:bcv')->assertExitCode(0);
 
@@ -53,11 +53,16 @@ class TasaBcvCommandTest extends TestCase
         $this->assertNotNull($tasa);
         $this->assertSame(TasaDeCambio::BCV, $tasa->origen);
         $this->assertSame('36.123400', (string) $tasa->tasa);
+
+        $configuracion = ConfiguracionPago::actual();
+        $this->assertNotNull($configuracion->tasa_sincronizada_el);
+        $this->assertSame(ConfiguracionPago::SINCRONIZACION_OK, $configuracion->tasa_sincronizacion_estado);
+        $this->assertNull($configuracion->tasa_sincronizacion_error);
     }
 
     public function test_no_duplica_la_fila_si_la_tasa_no_cambio(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_BCV]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => true]);
 
         $this->artisan('tasas:bcv')->assertExitCode(0);
         $this->artisan('tasas:bcv')->assertExitCode(0);
@@ -67,7 +72,7 @@ class TasaBcvCommandTest extends TestCase
 
     public function test_guarda_una_tasa_nueva_cuando_el_bcv_cambia(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_BCV]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => true]);
 
         $this->tarifaBcv('36,1234');
         $this->artisan('tasas:bcv')->assertExitCode(0);
@@ -79,28 +84,30 @@ class TasaBcvCommandTest extends TestCase
         $this->assertSame('36.500000', (string) TasaDeCambio::actual()->tasa);
     }
 
-    public function test_en_modo_manual_no_toca_nada(): void
+    public function test_con_la_sincronizacion_apagada_no_toca_nada(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_MANUAL]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => false]);
 
         $this->tarifaBcv('40,0000');
         $this->artisan('tasas:bcv')->assertExitCode(0);
 
         $this->assertSame(0, TasaDeCambio::where('origen', TasaDeCambio::BCV)->count());
+        $this->assertNull(ConfiguracionPago::actual()->tasa_sincronizada_el);
     }
 
     public function test_el_dry_run_no_guarda(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_BCV]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => true]);
 
         $this->artisan('tasas:bcv', ['--dry-run' => true])->assertExitCode(0);
 
         $this->assertSame(0, TasaDeCambio::where('origen', TasaDeCambio::BCV)->count());
+        $this->assertNull(ConfiguracionPago::actual()->tasa_sincronizada_el);
     }
 
     public function test_si_el_bcv_falla_la_tasa_anterior_sigue_vigente(): void
     {
-        ConfiguracionPago::actual()->update(['tasa_origen' => ConfiguracionPago::TASA_BCV]);
+        ConfiguracionPago::actual()->update(['tasa_automatica' => true]);
 
         $this->artisan('tasas:bcv')->assertExitCode(0);
 
@@ -108,6 +115,10 @@ class TasaBcvCommandTest extends TestCase
         $this->artisan('tasas:bcv')->assertExitCode(1);
 
         $this->assertSame('36.123400', (string) TasaDeCambio::actual()->tasa);
+
+        $configuracion = ConfiguracionPago::actual();
+        $this->assertSame(ConfiguracionPago::SINCRONIZACION_ERROR, $configuracion->tasa_sincronizacion_estado);
+        $this->assertNotNull($configuracion->tasa_sincronizacion_error);
     }
 
     private function tarifaBcv(string $valor): void
@@ -115,3 +126,4 @@ class TasaBcvCommandTest extends TestCase
         $this->tasaBcv = $valor;
     }
 }
+

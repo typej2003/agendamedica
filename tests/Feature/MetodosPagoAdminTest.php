@@ -224,18 +224,22 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertNotNull($tasa);
         $this->assertSame(TasaDeCambio::BCV, $tasa->origen);
         $this->assertSame('36.123400', (string) $tasa->tasa);
+
+        $configuracion = ConfiguracionPago::actual();
+        $this->assertNotNull($configuracion->tasa_sincronizada_el);
+        $this->assertSame(ConfiguracionPago::SINCRONIZACION_OK, $configuracion->tasa_sincronizacion_estado);
     }
 
-    public function test_el_origen_de_la_tasa_se_guarda(): void
+    public function test_la_sincronizacion_automatica_se_puede_apagar(): void
     {
         $this->actingAs($this->administrador());
 
         Livewire::test(MetodosPago::class)
-            ->set('tasaOrigen', ConfiguracionPago::TASA_MANUAL)
-            ->call('guardarOrigenTasa')
+            ->set('tasaAutomatica', false)
+            ->call('guardarTasaAutomatica')
             ->assertHasNoErrors();
 
-        $this->assertSame(ConfiguracionPago::TASA_MANUAL, ConfiguracionPago::actual()->tasa_origen);
+        $this->assertFalse((bool) ConfiguracionPago::actual()->tasa_automatica);
     }
 
     public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void

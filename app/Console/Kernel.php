@@ -46,7 +46,7 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping();
 
         // Tasa oficial del BCV (2026-10-21): cada media hora en la ventana en la que el Banco Central
-        // publica, y sólo guarda si cambió. Si `configuracion_pagos.tasa_origen` está en `manual`, el
+        // publica, y sólo guarda si cambió. Si `configuracion_pagos.tasa_automatica` está apagada, el
         // comando no toca nada. Hora de Caracas: la app corre en UTC.
         $schedule->command('tasas:bcv')
             ->everyThirtyMinutes()
