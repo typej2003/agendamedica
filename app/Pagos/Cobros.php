@@ -41,13 +41,8 @@ final class Cobros
         if ($regMedico === '') {
             throw new RuntimeException('Falta el consultorio del médico.');
         }
-        if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO) {
+        if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
             throw new RuntimeException('El método de pago elegido no está disponible.');
-        }
-
-        $tasa = TasaDeCambio::actual();
-        if (! $tasa) {
-            throw new RuntimeException('Todavía no hay una tasa VES/USD cargada. El administrador tiene que cargarla para poder cobrar.');
         }
 
         $montoUsdE2 = Centavos::deDecimal((string) $plan->precio_usd);
@@ -58,10 +53,26 @@ final class Cobros
             throw new RuntimeException('El monto del plan supera el máximo permitido.');
         }
 
-        $montoVesE2 = $tasa->convertirUsdAVes($montoUsdE2);
-        if ($montoVesE2 <= 0) {
-            throw new RuntimeException('El monto en bolívares quedó en cero: revisá la tasa.');
+        // La moneda la decide el método: SyPago cobra en VES; un método que cobre en USD no necesita tasa.
+        $moneda = strtoupper((string) ($metodo->cuentaBancaria?->moneda ?: 'VES'));
+
+        if ($moneda === 'VES') {
+            $tasa = TasaDeCambio::actual();
+            if (! $tasa) {
+                throw new RuntimeException('Todavía no hay una tasa VES/USD cargada. El administrador tiene que cargarla para poder cobrar.');
+            }
+            $montoE2 = $tasa->convertirUsdAVes($montoUsdE2);
+            $tasaPago = $tasa->tasa;
+            if ($montoE2 <= 0) {
+                throw new RuntimeException('El monto en bolívares quedó en cero: revisa la tasa.');
+            }
+        } elseif ($moneda === 'USD') {
+            $montoE2 = $montoUsdE2;
+            $tasaPago = null;
+        } else {
+            throw new RuntimeException('La moneda del método de pago no está soportada.');
         }
+
         $minutos = max(1, (int) ConfiguracionPago::actual()->vigencia_tasa_minutos);
 
         return Pago::create([
@@ -75,13 +86,13 @@ final class Cobros
             'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($plan->frecuencia === Plan::ANUAL ? 'anual' : 'mensual'),
             'metodo_pago_id' => $metodo->id,
             'cuenta_bancaria_id' => $metodo->cuenta_bancaria_id,
-            'moneda' => 'VES',
-            'monto_e2' => $montoVesE2,
+            'moneda' => $moneda,
+            'monto_e2' => $montoE2,
             'monto_usd_e2' => $montoUsdE2,
-            'tasa' => $tasa->tasa,
+            'tasa' => $tasaPago,
             // Un plan es ingreso de la plataforma: no hay comisión ni liquidación al médico.
             'neto_usd_e2' => $montoUsdE2,
-            'neto_ves_e2' => $montoVesE2,
+            'neto_ves_e2' => $moneda === 'VES' ? $montoE2 : 0,
             'estado' => Pago::PENDIENTE,
             'expira_el' => now()->addMinutes($minutos),
             'estado_liquidacion' => Pago::LIQUIDACION_NO_APLICA,
@@ -98,17 +109,17 @@ final class Cobros
     public function iniciar(Pago $pago, array $pagador): ResultadoDeCobro
     {
         if (! $pago->estaPendiente()) {
-            return ResultadoDeCobro::error('Este pago ya no está pendiente. Empezá uno nuevo.', $pago);
+            return ResultadoDeCobro::error('Este pago ya no está pendiente. Empieza uno nuevo.', $pago);
         }
         if ($pago->expira_el && $pago->expira_el->isPast()) {
             $pago->update(['estado' => Pago::EXPIRADO]);
 
-            return ResultadoDeCobro::error('El pago venció. Empezá uno nuevo para tomar la tasa actual.', $pago);
+            return ResultadoDeCobro::error('El pago venció. Empieza uno nuevo para tomar la tasa actual.', $pago);
         }
 
         $metodo = $pago->metodoPago;
         if (! $metodo || ! $metodo->activo || ! $metodo->estaConfigurado()) {
-            return ResultadoDeCobro::error('El método de pago no está configurado. Avisale al administrador.', $pago);
+            return ResultadoDeCobro::error('El método de pago no está configurado. Avísale al administrador.', $pago);
         }
 
         try {
@@ -130,7 +141,7 @@ final class Cobros
         ]);
         $pago->registrarEvento(PagoEvento::ORIGEN_MANUAL, 'otp_solicitado', $respuesta, $anterior);
 
-        return ResultadoDeCobro::ok('Te enviamos el código a tu teléfono. Escribilo para confirmar el pago.', $pago, $respuesta);
+        return ResultadoDeCobro::ok('Te enviamos el código a tu teléfono. Escríbelo para confirmar el pago.', $pago, $respuesta);
     }
 
     /** Confirma el cobro con el OTP que recibió el pagador. */

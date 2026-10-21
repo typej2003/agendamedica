@@ -141,6 +141,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // se crea con la tasa congelada y se aprueba por el webhook o el sondeo, no acá.
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
+                // El plan elegido: método de pago y monto en su moneda. `whereNumber` para que no capture
+                // `comprar` ni `pago`.
+                Route::get('/plan/{plan}', [PlanController::class, 'elegir'])->whereNumber('plan')->name('plan.elegir');
                 Route::post('/plan/comprar', [PlanController::class, 'comprar'])->name('plan.comprar');
                 Route::get('/plan/pago/{pago}', [PlanController::class, 'pagar'])->name('plan.pagar');
                 Route::post('/plan/pago/{pago}/iniciar', [PlanController::class, 'iniciar'])->name('plan.iniciar');

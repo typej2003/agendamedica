@@ -45,8 +45,10 @@ final class ConfirmarPagoDePlan
         }
 
         $montoUsd = (float) ($pago->monto_usd_e2 / 100);
-        $nota = 'Pago #' . $pago->id . ' · ' . $pago->montoTexto()
-            . ' (tasa ' . number_format((float) $pago->tasa, 4, ',', '.') . ')';
+        $nota = 'Pago #' . $pago->id . ' · ' . $pago->montoTexto();
+        if ($pago->tasa !== null) {
+            $nota .= ' (tasa ' . number_format((float) $pago->tasa, 4, ',', '.') . ')';
+        }
 
         return $this->servicios->renovar(
             $regMedico,

@@ -18,14 +18,18 @@
             <td style="color: #55555f;">Monto cobrado</td>
             <td><strong>{{ $pago->montoTexto() }}</strong></td>
         </tr>
-        <tr>
-            <td style="color: #55555f;">Equivalente en dólares</td>
-            <td>{{ $pago->montoUsdTexto() }}</td>
-        </tr>
-        <tr>
-            <td style="color: #55555f;">Tasa</td>
-            <td>1 USD = {{ number_format((float) $pago->tasa, 4, ',', '.') }} VES</td>
-        </tr>
+        @if (strtoupper((string) $pago->moneda) !== 'USD')
+            <tr>
+                <td style="color: #55555f;">Equivalente en dólares</td>
+                <td>{{ $pago->montoUsdTexto() }}</td>
+            </tr>
+        @endif
+        @if ($pago->tasa !== null)
+            <tr>
+                <td style="color: #55555f;">Tasa</td>
+                <td>1 USD = {{ number_format((float) $pago->tasa, 4, ',', '.') }} VES</td>
+            </tr>
+        @endif
         <tr>
             <td style="color: #55555f;">Referencia</td>
             <td>{{ $pago->referencia }}</td>

@@ -4,7 +4,6 @@ namespace App\Clinica\Pagos\Vistas;
 
 use App\Models\MetodoPago;
 use App\Models\Pago;
-use App\Models\TasaDeCambio;
 use App\Pagos\Centavos;
 
 /**
@@ -16,7 +15,6 @@ final class PagoVista
     public function __construct(
         public readonly Pago $pago,
         public readonly ?MetodoPago $metodo,
-        public readonly ?TasaDeCambio $tasa,
     ) {
     }
 
@@ -79,14 +77,9 @@ final class PagoVista
         return Centavos::formatear((int) $this->pago->monto_usd_e2, 'USD');
     }
 
-    public function montoVes(): string
+    public function monto(): string
     {
         return Centavos::formatear((int) $this->pago->monto_e2, (string) $this->pago->moneda);
-    }
-
-    public function tasaTexto(): string
-    {
-        return $this->pago->tasa === null ? '—' : number_format((float) $this->pago->tasa, 4, ',', '.');
     }
 
     public function estadoLegible(): string

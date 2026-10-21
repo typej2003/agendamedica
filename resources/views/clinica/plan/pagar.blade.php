@@ -3,7 +3,7 @@
 @section('titulo', $vm->titulo())
 
 @section('contenido')
-    <x-ui.page-head :titulo="$vm->titulo()" subtitulo="Revisá el monto y completá el pago. El servicio se renueva solo cuando SyPago confirma." />
+    <x-ui.page-head :titulo="$vm->titulo()" subtitulo="Revisa el monto y completa el pago. El servicio se renueva solo cuando SyPago confirma." />
 
     <x-ui.errores />
 
@@ -23,10 +23,7 @@
                         <dd class="col-6 text-end fw-semibold">{{ $vm->montoUsd() }}</dd>
 
                         <dt class="col-6 fw-normal text-muted">Monto a pagar</dt>
-                        <dd class="col-6 text-end fw-semibold">{{ $vm->montoVes() }}</dd>
-
-                        <dt class="col-6 fw-normal text-muted">Tasa</dt>
-                        <dd class="col-6 text-end">1 USD = {{ $vm->tasaTexto() }} VES</dd>
+                        <dd class="col-6 text-end fw-semibold">{{ $vm->monto() }}</dd>
 
                         <dt class="col-6 fw-normal text-muted">Método</dt>
                         <dd class="col-6 text-end">{{ $vm->metodoEtiqueta() }}</dd>
@@ -60,7 +57,7 @@
                         @else
                             SyPago rechazó la operación. No se te cobró nada.
                         @endif
-                        Podés empezar de nuevo con la tasa vigente.
+                        Puedes empezar de nuevo con la tasa vigente.
                     </p>
                 </div>
                 <a href="{{ route('clinica.plan') }}" class="btn btn-primary">
@@ -102,11 +99,17 @@
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label" for="tipo_cuenta">¿Desde dónde pagás?</label>
-                                    <select name="tipo_cuenta" id="tipo_cuenta" class="form-select" required>
-                                        <option value="cuenta" @selected(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'cuenta')>Cuenta bancaria</option>
-                                        <option value="pago_movil" @selected(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'pago_movil')>Pago móvil</option>
-                                    </select>
+                                    <span class="form-label d-block">¿Desde dónde pagas?</span>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipo_cuenta" id="tipo-cuenta-cuenta"
+                                               value="cuenta" @checked(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'cuenta') required>
+                                        <label class="form-check-label" for="tipo-cuenta-cuenta">Cuenta bancaria</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipo_cuenta" id="tipo-cuenta-movil"
+                                               value="pago_movil" @checked(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'pago_movil')>
+                                        <label class="form-check-label" for="tipo-cuenta-movil">Pago móvil</label>
+                                    </div>
                                 </div>
                                 <div class="col-md-8 mb-3">
                                     <label class="form-label" for="cuenta">Cuenta bancaria o teléfono</label>
@@ -126,10 +129,10 @@
                 </div>
             @elseif ($vm->enOtp())
                 <div class="card">
-                    <div class="card-header bg-white py-3"><strong>Confirmá con el código</strong></div>
+                    <div class="card-header bg-white py-3"><strong>Confirma con el código</strong></div>
                     <div class="card-body">
                         <p class="text-muted small">
-                            Te enviamos un código al teléfono asociado a la cuenta. Escribilo acá para autorizar el débito.
+                            Te enviamos un código al teléfono asociado a la cuenta. Escríbelo aquí para autorizar el débito.
                         </p>
                         <form method="POST" action="{{ route('clinica.plan.confirmar', $vm->pago) }}">
                             @csrf
@@ -164,7 +167,7 @@
                 </form>
             @else
                 <div class="alert alert-warning" role="alert">
-                    Este pago no se puede continuar desde acá. Volvé a tu plan y empezá uno nuevo.
+                    Este pago no se puede continuar desde aquí. Vuelve a tu plan y empieza uno nuevo.
                 </div>
                 <a href="{{ route('clinica.plan') }}" class="btn btn-primary">Volver a mi plan</a>
             @endif

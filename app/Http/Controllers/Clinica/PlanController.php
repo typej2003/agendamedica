@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Pagos\Vistas\PagoVista;
+use App\Clinica\Pagos\Vistas\PlanElegidoVista;
 use App\Clinica\Pagos\Vistas\PlanVista;
 use App\Http\Controllers\Controller;
 use App\Models\CuentaBancaria;
@@ -21,10 +22,13 @@ use RuntimeException;
 /**
  * **Cobrar el plan del médico con SyPago** (MVP, 2026-10-21).
  *
- * El médico ve su servicio y el catálogo, elige un plan y un método de la plataforma, carga sus datos de
- * pagador, recibe el OTP y lo confirma. El pago se crea en `pendiente` con la tasa congelada; la
- * aprobación y la renovación del servicio las hace `App\Pagos\Cobros` (también desde el webhook y el
- * sondeo), no este controlador.
+ * Tres pantallas:
+ *  1. `/clinica/plan` — el servicio actual y el catálogo. Sólo se elige el plan.
+ *  2. `/clinica/plan/{plan}` — el plan elegido, el método de pago y el monto en la moneda del método.
+ *  3. `/clinica/plan/pago/{pago}` — el checkout de SyPago: datos del pagador, OTP y resultado.
+ *
+ * El pago se crea en `pendiente` al confirmar la pantalla 2, con la tasa congelada. La aprobación y la
+ * renovación las hace `App\Pagos\Cobros` (también desde el webhook y el sondeo), no este controlador.
  *
  * El pago se busca **por el `reg_medico` del contexto**: un médico no puede pagar ni mirar el pago de otro
  * adivinando el id.
@@ -41,6 +45,19 @@ class PlanController extends Controller
             ->orderBy('id')
             ->get();
 
+        return view('clinica.plan.index', [
+            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes),
+        ]);
+    }
+
+    /** La pantalla del plan elegido: método de pago y monto en su moneda. */
+    public function elegir(Request $request, Plan $plan)
+    {
+        $this->regMedicoDelContexto($request);
+
+        // Sólo se puede pagar un plan del catálogo vigente.
+        $plan = Plan::where('activo', true)->where('visible', true)->findOrFail($plan->id);
+
         $metodos = MetodoPago::deLaPlataforma()
             ->activos()
             ->paraUso(MetodoPago::PLANES)
@@ -52,8 +69,8 @@ class PlanController extends Controller
                 && $metodo->estaConfigurado())
             ->values();
 
-        return view('clinica.plan.index', [
-            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes, $metodos, TasaDeCambio::actual()),
+        return view('clinica.plan.elegir', [
+            'vm' => new PlanElegidoVista($plan, $metodos, TasaDeCambio::actual()),
         ]);
     }
 
@@ -101,7 +118,7 @@ class PlanController extends Controller
         }
 
         return view('clinica.plan.pagar', [
-            'vm' => new PagoVista($pago, $pago->metodoPago, TasaDeCambio::actual()),
+            'vm' => new PagoVista($pago, $pago->metodoPago),
         ]);
     }
 
@@ -133,8 +150,8 @@ class PlanController extends Controller
             'documento_numero.required' => 'Falta tu documento.',
             'nombre.required' => 'Falta tu nombre.',
             'banco_codigo.digits' => 'El código del banco son 4 dígitos (por ejemplo 0172).',
-            'tipo_cuenta.required' => 'Elegí si pagás con cuenta bancaria o con pago móvil.',
-            'cuenta.required' => 'Falta la cuenta o el teléfono desde donde pagás.',
+            'tipo_cuenta.required' => 'Elige si pagas con cuenta bancaria o con pago móvil.',
+            'cuenta.required' => 'Falta la cuenta o el teléfono desde donde pagas.',
         ], [
             'documento_tipo' => 'tipo de documento', 'documento_numero' => 'documento',
             'nombre' => 'nombre', 'banco_codigo' => 'banco', 'tipo_cuenta' => 'tipo de cuenta',
@@ -180,7 +197,7 @@ class PlanController extends Controller
         $datos = $request->validate([
             'otp' => ['required', 'string', 'min:4', 'max:10'],
         ], [
-            'otp.required' => 'Escribí el código que te llegó al teléfono.',
+            'otp.required' => 'Escribe el código que te llegó al teléfono.',
         ], ['otp' => 'código']);
 
         $resultado = $cobros->confirmar($pago, $datos['otp']);
@@ -207,7 +224,7 @@ class PlanController extends Controller
         $contexto = $request->attributes->get('contexto_clinico');
         $regMedico = is_array($contexto) ? trim((string) ($contexto['reg_medico'] ?? '')) : '';
 
-        abort_if($regMedico === '', 403, 'Elegí un consultorio para ver tu plan.');
+        abort_if($regMedico === '', 403, 'Elige un consultorio para ver tu plan.');
 
         return $regMedico;
     }

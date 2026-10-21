@@ -156,7 +156,7 @@ class PlanPagoWebTest extends TestCase
         });
     }
 
-    public function test_el_medico_ve_su_plan_y_los_precios_en_bolivares(): void
+    public function test_el_medico_ve_su_plan_y_el_catalogo_sin_tasa_ni_metodos(): void
     {
         [$user, $medico, $gineco] = $this->medicoDePrueba();
         $plan = $this->planDePrueba('visible-' . substr(uniqid(), -5));
@@ -169,8 +169,39 @@ class PlanPagoWebTest extends TestCase
             ->assertSee('Mi plan')
             ->assertSee($plan->nombre)
             ->assertSee('USD 20,00')
+            // La tasa y el método se eligen en la pantalla siguiente, no acá.
+            ->assertDontSee('VES 730,00')
+            ->assertDontSee('1 USD =')
+            ->assertSee(route('clinica.plan.elegir', $plan), false);
+    }
+
+    public function test_al_elegir_un_plan_se_ve_el_monto_en_bolivares_y_el_metodo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan.elegir', $plan))
+            ->assertOk()
+            ->assertSee('¿Cómo quieres pagar?')
+            ->assertSee($metodo->etiqueta())
             ->assertSee('VES 730,00')
-            ->assertSee('1 USD = 36,5000 VES');
+            ->assertSee('Continuar');
+    }
+
+    public function test_sin_tasa_la_pantalla_del_plan_avisa_y_no_deja_continuar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $this->metodoDePrueba();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan.elegir', $plan))
+            ->assertOk()
+            ->assertSee('Falta la tasa VES/USD')
+            ->assertSee('disabled', false);
     }
 
     public function test_comprar_crea_un_pago_pendiente_con_la_tasa_congelada(): void
