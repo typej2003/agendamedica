@@ -209,6 +209,21 @@ class MetodosPagoAdminTest extends TestCase
             ->assertHasErrors('tasa');
     }
 
+    public function test_el_dialogo_de_nueva_tasa_avisa_si_la_sincronizacion_esta_activa(): void
+    {
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->call('nuevaTasa')
+            ->assertSee('La sincronización automática está activada')
+            ->assertDontSee('La tasa nueva rige desde ahora');
+
+        Livewire::test(MetodosPago::class)
+            ->set('tasaAutomatica', false)
+            ->call('nuevaTasa')
+            ->assertDontSee('La sincronización automática está activada');
+    }
+
     public function test_la_tasa_se_puede_sincronizar_desde_bcv(): void
     {
         Http::fake(['*' => Http::response('<html><body><div id="dolar"><strong>36,1234</strong></div></body></html>', 200)]);

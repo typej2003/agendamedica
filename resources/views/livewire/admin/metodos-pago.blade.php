@@ -478,9 +478,15 @@
                                 <label class="form-label">VES por 1 USD <span class="text-danger">*</span></label>
                                 <input type="number" min="0.000001" step="0.000001" class="form-control" wire:model.defer="tasa"
                                        placeholder="36,5000">
-                                <div class="form-text">La tasa nueva rige desde ahora. Las anteriores quedan en el historial y no se reescriben.</div>
                                 @error('tasa') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
+                            @if ($tasaAutomatica)
+                                <div class="alert alert-danger py-2 small mb-3" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                                    La sincronización automática está activada: el BCV puede sobrescribir este valor en la
+                                    próxima actualización. Si querés fijarlo, apagala primero.
+                                </div>
+                            @endif
                             @if ($tasa !== '' && is_numeric($tasa) && \App\Pagos\Tasa::aEscala($tasa) > 0)
                                 <p class="small mb-0">
                                     Un plan de <strong>USD 20,00</strong> se va a cobrar como
