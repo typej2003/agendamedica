@@ -14,6 +14,7 @@ final class CatalogoDePasarelas
     public const VARIANTES = [
         self::SYPAGO => [
             'debito_inmediato' => 'Débito inmediato (OTP)',
+            'cuenta_o_movil' => 'Cuenta o pago móvil',
             'pago_movil' => 'Pago móvil',
         ],
         self::MANUAL => [

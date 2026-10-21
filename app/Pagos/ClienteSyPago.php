@@ -386,17 +386,33 @@ final class ClienteSyPago
      */
     private function cuentaDelPagador(Pago $pago, array $pagador): array
     {
-        $movil = $this->metodo->variante === 'pago_movil';
+        // SyPago acepta cuenta bancaria (`CNTA`) o teléfono de pago móvil (`CELE`). El tipo lo elige el
+        // pagador en el checkout; si no vino, se usa el de la variante del método.
+        $tipo = (string) ($pagador['tipo_cuenta'] ?? '');
+        if (! in_array($tipo, ['cuenta', 'pago_movil'], true)) {
+            $tipo = $this->metodo->variante === 'pago_movil' ? 'pago_movil' : 'cuenta';
+        }
+
+        $movil = $tipo === 'pago_movil';
         $numero = $movil
-            ? preg_replace('/\D/', '', (string) ($pagador['telefono'] ?? ''))
+            ? preg_replace('/\D/', '', (string) ($pagador['telefono'] ?? $pagador['cuenta'] ?? ''))
             : preg_replace('/\D/', '', (string) ($pagador['cuenta'] ?? ''));
 
         if ($numero === '') {
             throw new RuntimeException($movil ? 'Falta el teléfono del pagador.' : 'Falta el número de cuenta del pagador.');
         }
 
+        if ($movil && ! preg_match('/^04\d{9}$/', $numero)) {
+            throw new RuntimeException('El teléfono del pago móvil debe tener 11 dígitos y empezar con 04.');
+        }
+
+        $banco = (string) ($pagador['banco_codigo'] ?? '');
+        if (! $movil && $banco !== '' && ! str_starts_with($numero, $banco)) {
+            throw new RuntimeException('El número de cuenta debe empezar con el código del banco (' . $banco . ').');
+        }
+
         return [
-            'bank_code' => (string) ($pagador['banco_codigo'] ?? ''),
+            'bank_code' => $banco,
             'type' => $movil ? 'CELE' : 'CNTA',
             'number' => $numero,
         ];

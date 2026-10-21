@@ -63,6 +63,12 @@ final class PagoVista
         return $this->metodo?->variante === 'pago_movil';
     }
 
+    /** Con qué arranca el selector del checkout: el método de pago móvil sugiere teléfono; el resto, cuenta. */
+    public function tipoCuentaPorDefecto(): string
+    {
+        return $this->esPagoMovil() ? 'pago_movil' : 'cuenta';
+    }
+
     public function metodoEtiqueta(): string
     {
         return $this->metodo?->etiqueta() ?? '—';

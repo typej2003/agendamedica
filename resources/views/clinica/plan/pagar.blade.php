@@ -100,20 +100,23 @@
                                        value="{{ old('nombre', auth()->user()->name) }}" maxlength="120" autocomplete="off" required>
                             </div>
 
-                            @if ($vm->esPagoMovil())
-                                <div class="mb-3">
-                                    <label class="form-label" for="telefono">Teléfono del pago móvil</label>
-                                    <input type="text" name="telefono" id="telefono" class="form-control"
-                                           value="{{ old('telefono') }}" maxlength="20" inputmode="tel" autocomplete="off" required>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label" for="tipo_cuenta">¿Desde dónde pagás?</label>
+                                    <select name="tipo_cuenta" id="tipo_cuenta" class="form-select" required>
+                                        <option value="cuenta" @selected(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'cuenta')>Cuenta bancaria</option>
+                                        <option value="pago_movil" @selected(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'pago_movil')>Pago móvil</option>
+                                    </select>
                                 </div>
-                            @else
-                                <div class="mb-3">
-                                    <label class="form-label" for="cuenta">Número de cuenta</label>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label" for="cuenta">Cuenta bancaria o teléfono</label>
                                     <input type="text" name="cuenta" id="cuenta" class="form-control"
                                            value="{{ old('cuenta') }}" maxlength="30" inputmode="numeric" autocomplete="off" required>
-                                    <div class="form-text">La cuenta desde la que se debita el pago.</div>
+                                    <div class="form-text">
+                                        Cuenta: 20 dígitos y empieza con el código del banco. Pago móvil: teléfono 0412…
+                                    </div>
                                 </div>
-                            @endif
+                            </div>
 
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-shield-lock me-1" aria-hidden="true"></i> Enviar código de confirmación

@@ -309,6 +309,7 @@ final class Cobros
             'documento_tipo' => strtoupper(trim((string) ($pagador['documento_tipo'] ?? ''))),
             'documento_numero' => trim((string) ($pagador['documento_numero'] ?? '')),
             'banco_codigo' => trim((string) ($pagador['banco_codigo'] ?? '')),
+            'tipo_cuenta' => trim((string) ($pagador['tipo_cuenta'] ?? '')),
             'cuenta' => trim((string) ($pagador['cuenta'] ?? '')),
             'telefono' => trim((string) ($pagador['telefono'] ?? '')),
         ], fn ($valor) => $valor !== '');

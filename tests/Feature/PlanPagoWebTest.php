@@ -130,7 +130,8 @@ class PlanPagoWebTest extends TestCase
             'documento_tipo' => 'V',
             'documento_numero' => '12345678',
             'nombre' => 'Dra. de prueba',
-            'banco_codigo' => '0172',
+            'banco_codigo' => '0134',
+            'tipo_cuenta' => 'cuenta',
             'cuenta' => '01340123456789012345',
         ];
     }
@@ -232,6 +233,62 @@ class PlanPagoWebTest extends TestCase
         $this->assertSame('tx-1', $pago->referencia_externa);
         $this->assertSame('12345678', $pago->datos_pagador['documento_numero']);
         $this->assertArrayNotHasKey('otp', $pago->datos_pagador);
+    }
+
+    public function test_iniciar_con_pago_movil_manda_cele(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+        $this->falsificarSyPago();
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+
+        $datos = $this->pagador();
+        $datos['tipo_cuenta'] = 'pago_movil';
+        $datos['banco_codigo'] = '0102';
+        $datos['cuenta'] = '04121198667';
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.plan.iniciar', $pago), $datos)
+            ->assertRedirect(route('clinica.plan.pagar', $pago));
+
+        // Aunque el método sea de débito inmediato, el pagador eligió pago móvil: va como CELE.
+        Http::assertSent(function (ClientRequest $request) {
+            if (! str_contains($request->url(), 'request/otp')) {
+                return false;
+            }
+
+            $enviado = $request->data();
+
+            return $enviado['debitor_account']['type'] === 'CELE'
+                && $enviado['debitor_account']['number'] === '04121198667';
+        });
+
+        $this->assertSame(Pago::EN_PROCESO, $pago->fresh()->estado);
+    }
+
+    public function test_una_cuenta_que_no_empieza_con_el_banco_se_rechaza_antes_de_sypago(): void
+    {
+        Http::fake();
+
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+
+        $datos = $this->pagador();
+        $datos['cuenta'] = '04121198667'; // un teléfono cargado como cuenta
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.plan.iniciar', $pago), $datos)
+            ->assertSessionHasErrors('cuenta');
+
+        $this->assertSame(Pago::PENDIENTE, $pago->fresh()->estado);
+        Http::assertNothingSent();
     }
 
     public function test_confirmar_aprueba_y_renueva_el_servicio(): void
