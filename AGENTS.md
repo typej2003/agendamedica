@@ -619,7 +619,9 @@ tests que las necesitan fallan sin ellas, y `php artisan route:list` también): 
 Meta—, están en `.env.example` con valor vacío, pero no en el `.env`) y, desde el portal público de reservas
 (2026-10-19), **`WHATSAPP_TEMPLATE_CODIGO`** (la plantilla aprobada para el código de 6 dígitos; sin ella el
 portal manda el código por SMS y, en local, lo simula). También están las del **SMS por
-Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). El correo usa el **SMTP del servidor**
+Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`). **En QA y producción Twilio ya está
+configurado** (confirmado por el usuario el 2026-10-21), así que el código de la reserva y del registro de
+pacientes sale por SMS real; en local se sigue simulando. El correo usa el **SMTP del servidor**
 (`MAIL_*`). Y **`SYNC_API_KEY`** (clave de sync del escritorio) tampoco está en el ejemplo: `config/app.php`
 la lee con un default de transición (ver trampas conocidas).
 
