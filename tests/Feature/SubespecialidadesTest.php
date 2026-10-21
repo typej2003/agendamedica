@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Clinica\ContextoTrabajo;
+use App\Http\Livewire\Admin\Especialidades;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -16,6 +17,8 @@ use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -285,5 +288,38 @@ class SubespecialidadesTest extends TestCase
         $this->conContexto($user, $medico, $gineco)
             ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
             ->assertOk()->assertSee('Elige una sección en el menú');
+    }
+
+    /**
+     * En la ventana de `/admin/especialidades` las especialidades van **arriba** y las subespecialidades
+     * **abajo**, agrupadas por su especialidad (pedido del usuario, 2026-10-21). Las de una especialidad que el
+     * médico no tiene se ven, pero deshabilitadas.
+     */
+    public function test_la_ventana_del_admin_lista_especialidades_arriba_y_subespecialidades_abajo(): void
+    {
+        [, $medicoPediatra] = $this->medicoConAcceso('pediatria');
+        [, $medicoGineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
+
+        Role::findOrCreate('Root', 'web');
+        $admin = User::create([
+            'name' => 'Admin de prueba', 'email' => 'admin-' . substr(uniqid(), -6) . '@example.com',
+            'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
+        ]);
+        $admin->assignRole('Root');
+        $this->actingAs($admin);
+
+        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoPediatra->id)->lastRenderedDom;
+        $especialidades = strpos($html, '>Especialidades</h6>');
+        $subespecialidades = strpos($html, '>Subespecialidades</h6>');
+        $this->assertNotFalse($especialidades);
+        $this->assertNotFalse($subespecialidades);
+        $this->assertLessThan($subespecialidades, $especialidades);
+        $this->assertGreaterThan($subespecialidades, strpos($html, 'Nefrología pediátrica'));
+        $this->assertDoesNotMatchRegularExpression('/id="postgrado-\d+" wire:model.defer="postgrados"\s+disabled/', $html);
+
+        // Sin pediatría, sus postgrados se ven deshabilitados.
+        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoGineco->id)->lastRenderedDom;
+        $this->assertStringContainsString('Nefrología pediátrica', $html);
+        $this->assertMatchesRegularExpression('/id="postgrado-\d+" wire:model.defer="postgrados"\s+disabled/', $html);
     }
 }

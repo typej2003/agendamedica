@@ -114,6 +114,7 @@
                             @if ($catalogo->isEmpty())
                                 <p class="text-muted mb-0">El catálogo de especialidades está vacío.</p>
                             @else
+                                <h6 class="fw-semibold mb-1">Especialidades</h6>
                                 <p class="text-muted small">
                                     Se puede elegir más de una. La especialidad es lo que enciende los módulos del
                                     consultorio: sin ninguna <strong>activa</strong>, el médico entra a la web clínica y no ve nada.
@@ -152,32 +153,39 @@
                                 @error('especialidades') <span class="text-danger small d-block">{{ $message }}</span> @enderror
 
                                 @php
-                                    // Los postgrados que se pueden tildar: los de las especialidades que el médico **ya tiene**
-                                    // (los que se acaban de tildar aparecen después de guardar y volver a abrir; usar
-                                    // `$seleccionadas` obligaría a quitarle el `.defer` a las casillas y volvería la
-                                    // carrera de dos clics seguidos — TRAMPAS 51).
-                                    $conPostgrados = $catalogo->filter(fn ($e) => $seleccionado->specialties->contains('id', $e->id)
-                                        && $e->subespecialidades->isNotEmpty());
+                                    // Las subespecialidades van **abajo, agrupadas por su especialidad**. Sólo se pueden
+                                    // tildar las de las especialidades que el médico **ya tiene** guardadas (las de una
+                                    // recién tildada se habilitan al guardar y volver a abrir; usar `$seleccionadas`
+                                    // obligaría a quitarle el `.defer` a las casillas y volvería la carrera de dos clics
+                                    // seguidos — TRAMPAS 51). Las demás se ven deshabilitadas, para que se sepa que existen.
+                                    $conPostgrados = $catalogo->filter(fn ($e) => $e->subespecialidades->isNotEmpty());
                                 @endphp
 
                                 @if ($conPostgrados->isNotEmpty())
                                     <hr>
+                                    <h6 class="fw-semibold mb-1">Subespecialidades</h6>
                                     <p class="text-muted small mb-2">
-                                        <strong>Postgrados.</strong> Una subespecialidad cuelga de su especialidad —nefrología
-                                        pediátrica es un postgrado de pediatría— y enciende sus propias secciones de la consulta.
-                                        Si el médico tiene más de una, <strong>se suman</strong>. Para asignar los de una
-                                        especialidad que recién agregas, guarda y vuelve a abrir esta ventana.
+                                        Una subespecialidad (postgrado) cuelga de su especialidad —nefrología pediátrica es un
+                                        postgrado de pediatría— y enciende sus propias secciones de la consulta. Si el médico
+                                        tiene más de una, <strong>se suman</strong>.
                                     </p>
 
                                     @foreach ($conPostgrados as $especialidad)
+                                        @php($tieneEspecialidad = $seleccionado->specialties->contains('id', $especialidad->id))
                                         <div class="mb-2" wire:key="postgrados-{{ $especialidad->id }}">
-                                            <p class="small fw-semibold mb-1">{{ $especialidad->name }}</p>
+                                            <p class="small fw-semibold mb-1">
+                                                {{ $especialidad->name }}
+                                                @unless ($tieneEspecialidad)
+                                                    <span class="fw-normal text-muted">· asigna {{ $especialidad->name }}, guarda y vuelve a abrir para elegirlas</span>
+                                                @endunless
+                                            </p>
                                             <div class="row">
                                                 @foreach ($especialidad->subespecialidades as $postgrado)
                                                     <div class="col-md-6" wire:key="postgrado-{{ $postgrado->id }}">
                                                         <div class="form-check mb-1">
                                                             <input class="form-check-input" type="checkbox" value="{{ $postgrado->id }}"
-                                                                   id="postgrado-{{ $postgrado->id }}" wire:model.defer="postgrados">
+                                                                   id="postgrado-{{ $postgrado->id }}" wire:model.defer="postgrados"
+                                                                   {{ $tieneEspecialidad ? '' : 'disabled' }}>
                                                             <label class="form-check-label" for="postgrado-{{ $postgrado->id }}">
                                                                 {{ $postgrado->nombre }}
                                                                 @if ($postgrado->codigo)
