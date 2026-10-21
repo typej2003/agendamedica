@@ -82,17 +82,30 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.pagos') }}" class="nav-link {{ request()->routeIs('admin.pagos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.pagos')) aria-current="page" @endif
+                   title="Pagos{{ $avisos['pagos'] ? ' (' . $avisos['pagos'] . ' sin confirmar)' : '' }}">
+                    <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                    <span class="link-text">Pagos</span>
+                    @include('livewire.layouts.aviso', ['total' => $avisos['pagos'], 'que' => 'sin confirmar'])
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif title="Solicitudes de médicos">
+                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif
+                   title="Solicitudes de médicos{{ $avisos['solicitudes'] ? ' (' . $avisos['solicitudes'] . ' sin responder)' : '' }}">
                     <i class="bi bi-person-badge" aria-hidden="true"></i>
                     <span class="link-text">Solicitudes de médicos</span>
+                    @include('livewire.layouts.aviso', ['total' => $avisos['solicitudes'], 'que' => 'sin responder'])
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif title="Ayúdanos a mejorar">
+                   @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif
+                   title="Ayúdanos a mejorar{{ $avisos['comentarios'] ? ' (' . $avisos['comentarios'] . ' sin responder)' : '' }}">
                     <i class="bi bi-chat-heart" aria-hidden="true"></i>
                     <span class="link-text">Ayúdanos a mejorar</span>
+                    @include('livewire.layouts.aviso', ['total' => $avisos['comentarios'], 'que' => 'sin responder'])
                 </a>
             </li>
         @endif
@@ -100,16 +113,8 @@
   </div>
 
   <div class="app-sidebar-pie">
-      <a href="{{ route('logout') }}" class="nav-link" title="Cerrar sesión"
-         onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
-          <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
-          <span class="link-text">Cerrar sesión</span>
-      </a>
-
-      {{-- Formulario oculto necesario para procesar la petición POST con CSRF --}}
-      <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-          @csrf
-      </form>
+      {{-- Cerrar sesión vive en el menú del usuario (barra superior); acá sólo la versión. --}}
+      <span class="app-sidebar-version" title="Versión {{ config('app.version') }}">v{{ config('app.version') }}</span>
 
       <button class="app-sidebar-plegar" type="button" wire:click="toggleMinimize"
               title="{{ $isMinimized ? 'Desplegar el menú' : 'Plegar el menú' }}"

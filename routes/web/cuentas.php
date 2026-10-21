@@ -9,6 +9,7 @@ use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
 use App\Http\Livewire\Admin\Especialidades;
 use App\Http\Livewire\Admin\MetodosPago;
+use App\Http\Livewire\Admin\Pagos;
 use App\Http\Livewire\Admin\Servicios;
 use App\Http\Livewire\Admin\SolicitudesDeMedicos;
 use App\Http\Controllers\RegistroDeMedicos\CarnetDeLaSolicitudController;
@@ -52,6 +53,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     // **Métodos de pago de la plataforma** (2026-10-21): con qué cobra Doctorisimo los planes y, a
     // futuro, los cobros de los pacientes. Incluye la tasa VES/USD manual.
     Route::get('/metodos-pago', MetodosPago::class)->name('metodos-pago');
+    // **Pagos** (2026-10-21): lo que entró por SyPago, con su bitácora y la conciliación manual.
+    Route::get('/pagos', Pagos::class)->name('pagos');
     // **Sedes del médico** (2026-10-20): el administrador ayuda a configurar dónde atiende cada médico, en
     // profundidad: sedes → consultorios de la sede → horarios y cupos del consultorio. Las reglas son las Actions
     // de `/clinica` (`GuardarSede`, `GuardarConsultorio`, `GuardarBloqueHorario`); el tenant, el `reg_medico` del médico.

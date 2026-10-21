@@ -599,18 +599,25 @@ class CuentasPanelTest extends TestCase
     /* Cerrar sesión pide confirmación                                     */
     /* ------------------------------------------------------------------ */
 
-    public function test_cerrar_sesion_pide_confirmacion_en_el_panel_lateral_y_en_el_menu_del_usuario(): void
+    public function test_cerrar_sesion_pide_confirmacion_en_el_menu_del_usuario(): void
     {
         $this->actingAs($this->admin());
 
         $pagina = $this->get('/admin/cuentas')->assertOk();
 
-        // La función que muestra la confirmación está en el layout...
+        // La función que muestra la confirmación está en el layout y el menú del usuario la usa, en vez de enviar
+        // el formulario directo.
         $pagina->assertSee('function confirmarCierreSesion', false);
-        // ...y los dos controles de "Cerrar sesión" la usan, en vez de enviar el formulario directo.
-        $pagina->assertSee("onclick=\"return confirmarCierreSesion(event, document.getElementById('logout-form'));\"", false);
         $pagina->assertSee('onsubmit="return confirmarCierreSesion(event, this);"', false);
-        $pagina->assertDontSee("document.getElementById('logout-form').submit();\">", false);
+    }
+
+    public function test_el_pie_del_panel_lateral_muestra_la_version_y_no_cierra_sesion(): void
+    {
+        $this->actingAs($this->admin());
+
+        $this->get('/admin/cuentas')->assertOk()
+            ->assertSee('v' . config('app.version'))
+            ->assertDontSee('logout-form', false);
     }
 
     public function test_el_prefijo_se_escribe_libre_y_se_guarda_con_punto(): void

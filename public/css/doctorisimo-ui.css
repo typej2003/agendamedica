@@ -740,6 +740,36 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
     transform: translateY(-50%);
 }
 
+/* El número de pendientes de una bandeja (pagos, solicitudes, comentarios): una píldora celeste a la derecha
+   del ítem. Plegada la barra, se sube a la esquina del icono. */
+.app-sidebar .app-sidebar-aviso {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 .375rem;
+    border-radius: 999px;
+    background: var(--ds-celeste-200);
+    color: var(--ds-barra);
+    font-size: .6875rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.app-sidebar.minimizado .app-sidebar-aviso {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 .25rem;
+    font-size: .625rem;
+}
+
 .app-sidebar .nav-link.disabled {
     color: var(--ds-barra-texto-2);
     opacity: .55;
@@ -760,6 +790,14 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 }
 
 .app-sidebar .app-sidebar-pie .nav-link { margin: 0; flex: 1 1 auto; }
+
+/* La versión de la aplicación (config('app.version')), a la izquierda del pie. */
+.app-sidebar .app-sidebar-version {
+    flex: 1 1 auto;
+    padding: 0 .5rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
 
 .app-sidebar .app-sidebar-plegar {
     flex: 0 0 auto;
@@ -801,6 +839,7 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 .app-sidebar.minimizado .nav-link { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
 .app-sidebar.minimizado .app-sidebar-pie { flex-direction: column; }
 .app-sidebar.minimizado .app-sidebar-pie .nav-link { flex: 0 0 auto; width: 100%; }
+.app-sidebar.minimizado .app-sidebar-version { flex: 0 0 auto; padding: 0; font-size: .6875rem; }
 
 /* Grupo plegable del menú lateral (Catálogos): un `<details>` cuyo `<summary>` es el ítem padre y cuyos hijos son
    enlaces con su icono. Nace abierto dentro de uno de sus hijos. Plegada la barra, los hijos siguen siendo
