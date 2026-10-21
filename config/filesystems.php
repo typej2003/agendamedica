@@ -88,6 +88,17 @@ return [
             'visibility' => 'private',
         ],
 
+        /*
+         * **La foto del carnet de una solicitud de registro de médico** (ROADMAP §10.4, fase 2). Privado, igual
+         * que los adjuntos de los comentarios: el único camino al archivo es la ruta de la bandeja de `/admin`.
+         * Ver `App\RegistroDeMedicos\CarnetDeLaSolicitud`.
+         */
+        'solicitudes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/solicitudes'),
+            'visibility' => 'private',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

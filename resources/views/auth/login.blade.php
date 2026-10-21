@@ -101,15 +101,16 @@
                     @endif
                 </div>
 
-                {{-- La cuenta del paciente ya está abierta; el registro de médicos (con aprobación) es
-                     la fase siguiente (ver ROADMAP §10.4). --}}
+                {{-- El paciente crea su cuenta al momento; el médico deja una solicitud que aprueba un
+                     administrador (ROADMAP §10.4, fase 2). --}}
                 <div class="text-center mt-4">
                     <p class="small mb-1">
                         ¿Eres paciente y es tu primera vez?
                         <a href="{{ route('paciente.registro') }}">Crea tu cuenta</a>
                     </p>
-                    <p class="text-muted small mb-0">
-                        ¿Eres médico? El registro de médicos estará disponible próximamente.
+                    <p class="small mb-0">
+                        ¿Eres médico?
+                        <a href="{{ route('medico.registro') }}">Solicita tu cuenta</a>
                     </p>
                 </div>
             </form>

@@ -82,6 +82,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif title="Solicitudes de médicos">
+                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                    <span class="link-text">Solicitudes de médicos</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif title="Ayúdanos a mejorar">
                     <i class="bi bi-chat-heart" aria-hidden="true"></i>
