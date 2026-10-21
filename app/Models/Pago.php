@@ -62,7 +62,7 @@ class Pago extends Model
         'moneda', 'monto_e2', 'monto_usd_e2', 'tasa',
         'comision_metodo_usd_e2', 'comision_cita_online_usd_e2', 'comision_total_usd_e2', 'neto_usd_e2',
         'comision_total_ves_e2', 'neto_ves_e2',
-        'estado', 'referencia_externa', 'datos_pagador', 'respuesta', 'otp_enviado_el', 'otp_intentos',
+        'estado', 'referencia_externa', 'operation_secret', 'datos_pagador', 'respuesta', 'otp_enviado_el', 'otp_intentos',
         'pagado_el', 'expira_el', 'disponible_el', 'estado_liquidacion', 'liquidacion_id', 'creado_por',
     ];
 

@@ -106,25 +106,43 @@ class MetodoPago extends Model
         }
 
         $credenciales = $this->credenciales ?? [];
+        $tipo = (string) ($credenciales['tipo'] ?? '');
+        if ($tipo === '') {
+            // Compatibilidad: antes sólo existía el token fijo.
+            $tipo = trim((string) ($credenciales['client_id'] ?? '')) !== '' ? 'api_key' : 'jwt';
+        }
 
-        return trim((string) ($credenciales['access_token'] ?? '')) !== ''
-            && ($this->cuentaBancaria?->estaCompleta() ?? false);
+        $credencialesOk = $tipo === 'api_key'
+            ? trim((string) ($credenciales['client_id'] ?? '')) !== ''
+                && trim((string) ($credenciales['secret'] ?? '')) !== ''
+            : trim((string) ($credenciales['access_token'] ?? '')) !== '';
+
+        return $credencialesOk && ($this->cuentaBancaria?->estaCompleta() ?? false);
     }
 
     /**
-     * Las credenciales para mostrar en el panel: el token enmascarado. Nunca se manda el valor real a la
-     * vista.
+     * Las credenciales para mostrar en el panel: el secreto y el token enmascarados. Nunca se manda el
+     * valor real a la vista.
      *
-     * @return array{host:string, access_token:string, tiene_token:bool}
+     * @return array{tipo:string, client_id:string, host:string, secret:string, access_token:string, tiene_secret:bool, tiene_token:bool}
      */
     public function credencialesSeguras(): array
     {
         $credenciales = $this->credenciales ?? [];
+        $tipo = (string) ($credenciales['tipo'] ?? '');
+        if ($tipo === '') {
+            $tipo = trim((string) ($credenciales['client_id'] ?? '')) !== '' ? 'api_key' : 'jwt';
+        }
+        $secret = (string) ($credenciales['secret'] ?? '');
         $token = (string) ($credenciales['access_token'] ?? '');
 
         return [
+            'tipo' => $tipo,
+            'client_id' => (string) ($credenciales['client_id'] ?? ''),
             'host' => (string) ($credenciales['host'] ?? config('pagos.sypago.host')),
+            'secret' => $secret === '' ? '' : '••••' . substr($secret, -4),
             'access_token' => $token === '' ? '' : '••••' . substr($token, -4),
+            'tiene_secret' => $secret !== '',
             'tiene_token' => $token !== '',
         ];
     }

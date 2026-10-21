@@ -5,6 +5,7 @@ namespace App\Pagos;
 use App\Models\MetodoPago;
 use App\Models\Pago;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
@@ -12,22 +13,26 @@ use Throwable;
 /**
  * El **cliente de SyPago** para un método configurado.
  *
- * Dos direcciones, como en el ejemplo funcional de DonDemand:
- *  - **Cobrar** (lo que usa el MVP): `POST request/otp` pide el código, `POST transaction/otp` lo confirma
- *    y crea la transacción; `GET transaction/{id}` la consulta.
- *  - **Pagar** (futuro, para liquidarle al médico): `POST transaction/credit` desde la cuenta de la
- *    plataforma al `receiving_user`.
+ * **Autenticación** (docs de SyPago): hay dos modalidades de API Key.
+ *  - **JWT fijo**: el valor ya es el token y viaja en `Authorization: Bearer`.
+ *  - **API Key dinámica**: se manda `client_id` + `secret` a `POST auth/token`, que devuelve un
+ *    `access_token` (≈1 hora); ése es el Bearer. El token se cachea y se renueva solo.
  *
- * Los montos viajan en VES con dos decimales, armados desde el entero en centavos (`Centavos::aDecimal`),
- * nunca con un `float`. El host y el token salen de las credenciales cifradas del método.
+ * **Cobro**: `POST request/otp` (con `creditor_account`/`debitor_*`) pide el código; `POST transaction/otp`
+ * lo confirma y devuelve `transaction_id` + `operation_secret`; `GET transaction/{id}` consulta el estado.
+ * El `operation_secret` es parte de la cadena que SyPago firma en el webhook.
+ *
+ * El host es configurable (producción o certificación) y las credenciales salen cifradas del método.
  */
 final class ClienteSyPago
 {
-    /** Estados normalizados que entiende el motor. */
     public const APROBADO = 'aprobado';
     public const EN_PROCESO = 'en_proceso';
     public const RECHAZADO = 'rechazado';
     public const DESCONOCIDO = 'desconocido';
+
+    public const TIPO_JWT = 'jwt';
+    public const TIPO_API_KEY = 'api_key';
 
     public function __construct(private readonly MetodoPago $metodo)
     {
@@ -38,9 +43,20 @@ final class ClienteSyPago
         return new self($metodo);
     }
 
-    public function configurado(): bool
+    /** `jwt` (token fijo) o `api_key` (client_id + secret). */
+    public function tipo(): string
     {
-        return trim($this->token()) !== '' && trim($this->host()) !== '';
+        $credenciales = $this->metodo->credenciales ?? [];
+        $tipo = (string) ($credenciales['tipo'] ?? '');
+
+        if ($tipo === self::TIPO_JWT || $tipo === self::TIPO_API_KEY) {
+            return $tipo;
+        }
+
+        // Compatibilidad con las credenciales que se cargaron antes de existir el tipo.
+        return trim((string) ($credenciales['client_id'] ?? '')) !== ''
+            ? self::TIPO_API_KEY
+            : self::TIPO_JWT;
     }
 
     public function host(): string
@@ -50,18 +66,98 @@ final class ClienteSyPago
         return rtrim(trim((string) ($credenciales['host'] ?? config('pagos.sypago.host'))), '/') . '/';
     }
 
+    public function clientId(): string
+    {
+        return trim((string) (($this->metodo->credenciales ?? [])['client_id'] ?? ''));
+    }
+
+    public function secret(): string
+    {
+        return trim((string) (($this->metodo->credenciales ?? [])['secret'] ?? ''));
+    }
+
+    public function accessTokenFijo(): string
+    {
+        return trim((string) (($this->metodo->credenciales ?? [])['access_token'] ?? ''));
+    }
+
+    public function configurado(): bool
+    {
+        if (trim($this->host()) === '') {
+            return false;
+        }
+
+        return $this->tipo() === self::TIPO_JWT
+            ? $this->accessTokenFijo() !== ''
+            : $this->clientId() !== '' && $this->secret() !== '';
+    }
+
+    /**
+     * El Bearer que va en cada request: el JWT fijo o el que se obtiene con client_id/secret (cacheado).
+     *
+     * @throws RuntimeException si SyPago rechaza las credenciales
+     */
     public function token(): string
     {
-        $credenciales = $this->metodo->credenciales ?? [];
+        if ($this->tipo() === self::TIPO_JWT) {
+            if ($this->accessTokenFijo() === '') {
+                throw new RuntimeException('Falta el JWT fijo de SyPago.');
+            }
 
-        return trim((string) ($credenciales['access_token'] ?? ''));
+            return $this->accessTokenFijo();
+        }
+
+        return $this->tokenDinamico();
+    }
+
+    private function tokenDinamico(): string
+    {
+        $clientId = $this->clientId();
+        $secret = $this->secret();
+
+        if ($clientId === '' || $secret === '') {
+            throw new RuntimeException('Faltan el usuario SyPago (client_id) o la API Key (secret).');
+        }
+
+        $clave = 'sypago.token.' . $this->metodo->id . '.' . $this->huella();
+        $cacheado = Cache::get($clave);
+        if (is_string($cacheado) && $cacheado !== '') {
+            return $cacheado;
+        }
+
+        $respuesta = $this->httpSinToken()->post('auth/token', [
+            'client_id' => $clientId,
+            'secret' => $secret,
+        ]);
+
+        $json = $respuesta->json();
+        $token = is_array($json) ? (string) ($json['access_token'] ?? '') : '';
+
+        if (! $respuesta->successful() || $token === '') {
+            $detalle = is_array($json)
+                ? (string) ($json['message'] ?? $json['error'] ?? '')
+                : '';
+
+            throw new RuntimeException('SyPago rechazó las credenciales'
+                . ($detalle !== '' ? ': ' . $detalle : ' (HTTP ' . $respuesta->status() . ').'));
+        }
+
+        // `expires_in` viene en segundos; se renueva un par de minutos antes.
+        $minutos = max(1, (int) (($json['expires_in'] ?? 3600) / 60) - 2);
+        Cache::put($clave, $token, now()->addMinutes($minutos));
+
+        return $token;
     }
 
     public function http(): PendingRequest
     {
-        $http = Http::acceptJson()
-            ->withToken($this->token())
-            ->baseUrl($this->host());
+        return $this->httpSinToken()->withToken($this->token());
+    }
+
+    /** Sin Bearer: lo usan `auth/token` y `GET banks` (la doc dice que bancos no requiere autenticación). */
+    private function httpSinToken(): PendingRequest
+    {
+        $http = Http::acceptJson()->baseUrl($this->host());
 
         if (! config('pagos.sypago.verificar_tls', false)) {
             $http = $http->withoutVerifying();
@@ -77,7 +173,7 @@ final class ClienteSyPago
      */
     public function bancos(): array
     {
-        $respuesta = $this->http()->get('banks')->throw();
+        $respuesta = $this->httpSinToken()->get('banks')->throw();
         $json = $respuesta->json();
 
         $lista = is_array($json) && isset($json['data']) && is_array($json['data']) ? $json['data'] : $json;
@@ -107,8 +203,33 @@ final class ClienteSyPago
     }
 
     /**
-     * **Pide el código (OTP)** para debitar la cuenta del pagador. No crea la transacción todavía: eso lo
-     * hace `capturarOtp()` con el código que el pagador recibe.
+     * La clave pública con la que SyPago firma sus webhooks (`GET user/key`). Se cachea un día.
+     *
+     * @throws RuntimeException si no se puede obtener
+     */
+    public function clavePublica(): string
+    {
+        $clave = 'sypago.public_key.' . $this->metodo->id . '.' . $this->huella();
+        $cacheada = Cache::get($clave);
+        if (is_string($cacheada) && $cacheada !== '') {
+            return $cacheada;
+        }
+
+        $respuesta = $this->http()->get('user/key');
+        $json = $respuesta->json();
+        $publica = is_array($json) ? (string) ($json['public_key'] ?? '') : '';
+
+        if (! $respuesta->successful() || $publica === '') {
+            throw new RuntimeException('No se pudo obtener la clave pública de SyPago (HTTP ' . $respuesta->status() . ').');
+        }
+
+        Cache::put($clave, $publica, now()->addDay());
+
+        return $publica;
+    }
+
+    /**
+     * **Pide el código (OTP)** para debitar la cuenta del pagador.
      *
      * @param  array{nombre:string, documento_tipo:string, documento_numero:string, banco_codigo:string, cuenta?:string, telefono?:string}  $pagador
      * @return array<string,mixed>
@@ -126,7 +247,7 @@ final class ClienteSyPago
     }
 
     /**
-     * **Confirma con el código** y crea la transacción. La respuesta trae el `status` (ACCP/PEND/…).
+     * **Confirma con el código** y crea la transacción. Devuelve `transaction_id` y `operation_secret`.
      *
      * @return array<string,mixed>
      */
@@ -304,6 +425,19 @@ final class ClienteSyPago
         return route('pagos.webhook.sypago', ['token' => $this->metodo->webhook_token]);
     }
 
+    /** Una huella de host + credenciales: si el admin cambia el secreto, la caché vieja no se usa. */
+    private function huella(): string
+    {
+        $credenciales = $this->metodo->credenciales ?? [];
+
+        return md5(implode('|', [
+            $this->host(),
+            (string) ($credenciales['client_id'] ?? ''),
+            (string) ($credenciales['secret'] ?? ''),
+            (string) ($credenciales['access_token'] ?? ''),
+        ]));
+    }
+
     /**
      * @param  array<string,mixed>  $datos
      * @return array<string,mixed>
@@ -325,30 +459,32 @@ final class ClienteSyPago
     }
 
     /**
-     * Prueba la configuración sin lanzar: devuelve el resultado para mostrarlo en el panel.
+     * Prueba el host y las credenciales sin lanzar: devuelve el resultado para el panel.
      *
      * @return array{ok:bool, mensaje:string, bancos:list<array{codigo:string,nombre:string,activo:bool,debito_otp:bool}>}
      */
     public function probar(): array
     {
-        if (! $this->configurado()) {
-            return ['ok' => false, 'mensaje' => 'Falta el token de acceso o el host de SyPago.', 'bancos' => []];
+        if (trim($this->host()) === '') {
+            return ['ok' => false, 'mensaje' => 'Falta el host de SyPago.', 'bancos' => []];
         }
 
         try {
             $bancos = $this->bancos();
-
-            return [
-                'ok' => true,
-                'mensaje' => 'Conexión correcta: ' . count($bancos) . ' bancos disponibles.',
-                'bancos' => $bancos,
-            ];
         } catch (Throwable $e) {
-            return [
-                'ok' => false,
-                'mensaje' => 'No se pudo conectar: ' . $e->getMessage(),
-                'bancos' => [],
-            ];
+            return ['ok' => false, 'mensaje' => 'No se pudo conectar con el host: ' . $e->getMessage(), 'bancos' => []];
         }
+
+        try {
+            $this->token();
+        } catch (Throwable $e) {
+            return ['ok' => false, 'mensaje' => 'El host responde, pero las credenciales no: ' . $e->getMessage(), 'bancos' => $bancos];
+        }
+
+        return [
+            'ok' => true,
+            'mensaje' => 'Conexión correcta: ' . count($bancos) . ' bancos y credenciales OK.',
+            'bancos' => $bancos,
+        ];
     }
 }

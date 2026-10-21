@@ -275,16 +275,45 @@
                                         <label class="form-label">Host de SyPago</label>
                                         <input type="url" class="form-control" wire:model.defer="host" autocomplete="off"
                                                placeholder="https://app.sypago.net:8086/api/v1/">
+                                        <div class="form-text">Producción o certificación (<code>https://pruebas.api.sypago.net/api/v1/</code>).</div>
                                         @error('host') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Token de acceso</label>
-                                        <input type="password" class="form-control" wire:model.defer="accessToken" autocomplete="new-password"
-                                               placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'Bearer token' }}">
-                                        <div class="form-text">Se guarda cifrado.</div>
-                                        @error('accessToken') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                        <label class="form-label">Tipo de credencial</label>
+                                        <select class="form-select" wire:model="tipoCredencial">
+                                            <option value="api_key">API Key dinámica</option>
+                                            <option value="jwt">JWT fijo</option>
+                                        </select>
+                                        <div class="form-text">La API Key dinámica pide el token a SyPago; el JWT fijo ya es el token.</div>
+                                        @error('tipoCredencial') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
+
+                                @if ($tipoCredencial === 'api_key')
+                                    <div class="row">
+                                        <div class="col-md-5 mb-3">
+                                            <label class="form-label">Usuario SyPago (client_id) <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" wire:model.defer="clientId" autocomplete="off"
+                                                   placeholder="ddrs">
+                                            @error('clientId') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div class="col-md-7 mb-3">
+                                            <label class="form-label">API Key (secret) <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control" wire:model.defer="secret" autocomplete="new-password"
+                                                   placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'La API Key de SyPago' }}">
+                                            <div class="form-text">Se guarda cifrada. Con ella se pide el access token a SyPago.</div>
+                                            @error('secret') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="mb-3">
+                                        <label class="form-label">JWT fijo <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" wire:model.defer="accessToken" autocomplete="new-password"
+                                               placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'El token que ya es el Bearer' }}">
+                                        <div class="form-text">Se guarda cifrado. Sólo si SyPago te entregó un token sin expiración.</div>
+                                        @error('accessToken') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
                             @endif
 
                             <div class="row">

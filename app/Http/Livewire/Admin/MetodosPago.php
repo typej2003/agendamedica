@@ -40,6 +40,10 @@ class MetodosPago extends Component
     public $disponiblePara = MetodoPago::AMBOS;
     public $comisionPorcentaje = '';
     public $host = '';
+    // Cómo se autentica en SyPago: API Key dinámica (client_id + secret) o JWT fijo.
+    public $tipoCredencial = 'api_key';
+    public $clientId = '';
+    public $secret = '';
     public $accessToken = '';
 
     // Cuenta que recibe (la del comercio en SyPago)
@@ -88,11 +92,12 @@ class MetodosPago extends Component
     {
         $this->resetErrorBag();
         $this->reset([
-            'metodoId', 'nombre', 'comisionPorcentaje', 'accessToken', 'bancoCodigo', 'cuentaNumero',
-            'cuentaTitular', 'cuentaDocumentoNumero', 'resultadoPrueba', 'bancos',
+            'metodoId', 'nombre', 'comisionPorcentaje', 'clientId', 'secret', 'accessToken',
+            'bancoCodigo', 'cuentaNumero', 'cuentaTitular', 'cuentaDocumentoNumero', 'resultadoPrueba', 'bancos',
         ]);
         $this->pasarela = CatalogoDePasarelas::SYPAGO;
         $this->variante = 'debito_inmediato';
+        $this->tipoCredencial = 'api_key';
         $this->nombre = CatalogoDePasarelas::etiqueta($this->pasarela, $this->variante);
         $this->activo = true;
         $this->entorno = MetodoPago::PRODUCCION;
@@ -121,7 +126,11 @@ class MetodosPago extends Component
         // Los puntos base se muestran como porcentaje: 1000 bp = "10.00".
         $this->comisionPorcentaje = $metodo->comision_bp === null ? '' : Centavos::aDecimal($metodo->comision_bp);
         $this->host = (string) (($metodo->credenciales ?? [])['host'] ?? config('pagos.sypago.host'));
-        // El token no se manda a la vista: si se deja vacío, se conserva el que ya estaba.
+        // El secreto y el token no se mandan a la vista: si se dejan vacíos, se conservan los que ya estaban.
+        $this->tipoCredencial = (string) (($metodo->credenciales ?? [])['tipo']
+            ?? (trim((string) (($metodo->credenciales ?? [])['client_id'] ?? '')) !== '' ? 'api_key' : 'jwt'));
+        $this->clientId = (string) (($metodo->credenciales ?? [])['client_id'] ?? '');
+        $this->secret = '';
         $this->accessToken = '';
         $this->bancoCodigo = (string) ($cuenta->banco_codigo ?? '');
         $this->cuentaNumero = (string) ($cuenta->numero ?? '');
@@ -154,6 +163,9 @@ class MetodosPago extends Component
             'orden' => 'required|integer|min:0|max:9999',
             'comisionPorcentaje' => 'nullable|numeric|min:0|max:100',
             'host' => 'nullable|url|max:255',
+            'tipoCredencial' => ['required', Rule::in(['api_key', 'jwt'])],
+            'clientId' => 'nullable|string|max:100',
+            'secret' => 'nullable|string|max:500',
             'accessToken' => 'nullable|string|max:500',
             'bancoCodigo' => 'required|digits:4',
             'cuentaNumero' => 'required|string|min:10|max:30',
@@ -166,19 +178,34 @@ class MetodosPago extends Component
             'cuentaTitular.required' => 'Falta el titular de la cuenta.',
         ], [
             'pasarela' => 'pasarela', 'variante' => 'variante', 'nombre' => 'nombre',
-            'accessToken' => 'token de acceso', 'bancoCodigo' => 'código del banco',
+            'tipoCredencial' => 'tipo de credencial', 'clientId' => 'usuario SyPago',
+            'secret' => 'API Key', 'accessToken' => 'JWT', 'bancoCodigo' => 'código del banco',
             'cuentaNumero' => 'número de cuenta', 'cuentaTitular' => 'titular',
             'cuentaDocumentoNumero' => 'documento del titular', 'comisionPorcentaje' => 'comisión',
         ]);
 
         $metodo = $this->metodoId ? MetodoPago::deLaPlataforma()->findOrFail($this->metodoId) : null;
+        $credencialesExistentes = $metodo?->credenciales ?? [];
 
-        if ($this->pasarela === CatalogoDePasarelas::SYPAGO
-            && trim((string) $this->accessToken) === ''
-            && ($metodo === null || trim((string) (($metodo->credenciales ?? [])['access_token'] ?? '')) === '')) {
-            $this->addError('accessToken', 'SyPago necesita el token de acceso para poder cobrar.');
+        if ($this->pasarela === CatalogoDePasarelas::SYPAGO) {
+            if ($this->tipoCredencial === 'api_key') {
+                if (trim((string) $this->clientId) === '') {
+                    $this->addError('clientId', 'Falta el usuario SyPago (client_id).');
 
-            return;
+                    return;
+                }
+                if (trim((string) $this->secret) === ''
+                    && trim((string) ($credencialesExistentes['secret'] ?? '')) === '') {
+                    $this->addError('secret', 'Falta la API Key (secret) de SyPago.');
+
+                    return;
+                }
+            } elseif (trim((string) $this->accessToken) === ''
+                && trim((string) ($credencialesExistentes['access_token'] ?? '')) === '') {
+                $this->addError('accessToken', 'Falta el JWT fijo de SyPago.');
+
+                return;
+            }
         }
 
         DB::transaction(function () use ($metodo) {
@@ -200,10 +227,21 @@ class MetodosPago extends Component
 
             $credenciales = $metodo?->credenciales ?? [];
             if ($this->pasarela === CatalogoDePasarelas::SYPAGO) {
-                if (trim((string) $this->accessToken) !== '') {
-                    $credenciales['access_token'] = trim((string) $this->accessToken);
-                }
+                $credenciales['tipo'] = $this->tipoCredencial;
                 $credenciales['host'] = trim((string) ($this->host ?: config('pagos.sypago.host')));
+
+                if ($this->tipoCredencial === 'api_key') {
+                    $credenciales['client_id'] = trim((string) $this->clientId);
+                    if (trim((string) $this->secret) !== '') {
+                        $credenciales['secret'] = trim((string) $this->secret);
+                    }
+                    unset($credenciales['access_token']);
+                } else {
+                    if (trim((string) $this->accessToken) !== '') {
+                        $credenciales['access_token'] = trim((string) $this->accessToken);
+                    }
+                    unset($credenciales['client_id'], $credenciales['secret']);
+                }
             } else {
                 $credenciales = [];
             }

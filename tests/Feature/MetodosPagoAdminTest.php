@@ -7,6 +7,8 @@ use App\Models\MetodoPago;
 use App\Models\TasaDeCambio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -34,6 +36,7 @@ class MetodosPagoAdminTest extends TestCase
     {
         parent::setUp();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        Cache::flush();
     }
 
     private function usuario(string $rol): User
@@ -67,7 +70,9 @@ class MetodosPagoAdminTest extends TestCase
             'orden' => 1,
             'comisionPorcentaje' => '10',
             'host' => 'https://app.sypago.net:8086/api/v1/',
-            'accessToken' => 'token-secreto-1234',
+            'tipoCredencial' => 'api_key',
+            'clientId' => 'ddrs',
+            'secret' => 'api-key-secreta-1234',
             'bancoCodigo' => '0172',
             'cuentaNumero' => '01340123456789012345',
             'cuentaTitular' => 'Doctorisimo, C.A.',
@@ -108,12 +113,14 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertTrue($metodo->estaConfigurado());
 
         // El modelo lo descifra…
-        $this->assertSame('token-secreto-1234', $metodo->credenciales['access_token']);
+        $this->assertSame('api_key', $metodo->credenciales['tipo']);
+        $this->assertSame('ddrs', $metodo->credenciales['client_id']);
+        $this->assertSame('api-key-secreta-1234', $metodo->credenciales['secret']);
 
-        // …y en la columna no está el token en claro.
+        // …y en la columna no está el secreto en claro.
         $crudo = DB::table('metodos_pago')->where('id', $metodo->id)->value('credenciales');
         $this->assertIsString($crudo);
-        $this->assertStringNotContainsString('token-secreto-1234', $crudo);
+        $this->assertStringNotContainsString('api-key-secreta-1234', $crudo);
 
         // La cuenta quedó vinculada y completa.
         $this->assertSame('0172', $metodo->cuentaBancaria->banco_codigo);
@@ -121,7 +128,7 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertTrue($metodo->cuentaBancaria->estaCompleta());
     }
 
-    public function test_editar_sin_token_conserva_el_token_guardado(): void
+    public function test_editar_sin_secreto_conserva_el_secreto_guardado(): void
     {
         $this->actingAs($this->administrador());
 
@@ -135,14 +142,16 @@ class MetodosPagoAdminTest extends TestCase
 
         Livewire::test(MetodosPago::class)
             ->call('editarMetodo', $metodo->id)
-            ->assertSet('accessToken', '')
+            ->assertSet('secret', '')
+            ->assertSet('clientId', 'ddrs')
             ->set('nombre', 'SyPago · Débito inmediato (editado)')
             ->call('guardarMetodo')
             ->assertHasNoErrors();
 
         $metodo->refresh();
         $this->assertSame('SyPago · Débito inmediato (editado)', $metodo->nombre);
-        $this->assertSame('token-secreto-1234', $metodo->credenciales['access_token']);
+        $this->assertSame('api-key-secreta-1234', $metodo->credenciales['secret']);
+        $this->assertSame('ddrs', $metodo->credenciales['client_id']);
     }
 
     public function test_la_tasa_se_carga_con_historial_y_queda_vigente(): void
@@ -175,14 +184,18 @@ class MetodosPagoAdminTest extends TestCase
             ->assertHasErrors('tasa');
     }
 
-    public function test_probar_conexion_trae_los_bancos_de_sypago(): void
+    public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void
     {
-        Http::fake([
-            '*' => Http::response([
+        Http::fake(function (ClientRequest $request) {
+            if (str_contains($request->url(), 'auth/token')) {
+                return Http::response(['access_token' => 'jwt-prueba', 'expires_in' => 3600], 200);
+            }
+
+            return Http::response([
                 ['Code' => '0172', 'Name' => 'Bancamiga', 'Active' => true, 'IsDebitOTP' => true],
                 ['Code' => '0102', 'Name' => 'Banco de Venezuela', 'Active' => true, 'IsDebitOTP' => false],
-            ], 200),
-        ]);
+            ], 200);
+        });
 
         $this->actingAs($this->administrador());
 

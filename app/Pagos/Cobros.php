@@ -124,6 +124,7 @@ final class Cobros
             'datos_pagador' => $this->datosDelPagador($pagador),
             'respuesta' => $respuesta,
             'referencia_externa' => $this->referenciaExterna($respuesta) ?? $pago->referencia_externa,
+            'operation_secret' => $this->operationSecret($respuesta) ?? $pago->operation_secret,
             'otp_enviado_el' => now(),
             'estado' => Pago::EN_PROCESO,
         ]);
@@ -162,6 +163,7 @@ final class Cobros
         $pago->update([
             'respuesta' => $respuesta,
             'referencia_externa' => $this->referenciaExterna($respuesta) ?? $pago->referencia_externa,
+            'operation_secret' => $this->operationSecret($respuesta) ?? $pago->operation_secret,
             'otp_intentos' => $pago->otp_intentos + 1,
         ]);
 
@@ -251,6 +253,7 @@ final class Cobros
                 'pagado_el' => now(),
                 'respuesta' => $respuesta,
                 'referencia_externa' => $this->referenciaExterna($respuesta) ?? $bloqueado->referencia_externa,
+                'operation_secret' => $this->operationSecret($respuesta) ?? $bloqueado->operation_secret,
             ]);
             $bloqueado->registrarEvento($origen, 'aprobado', $respuesta, $anterior);
 
@@ -321,5 +324,18 @@ final class Cobros
         }
 
         return null;
+    }
+
+    /**
+     * El `operation_secret` que SyPago devuelve al iniciar la operación. Es la tercera parte de la cadena
+     * que firma el webhook; sin él no se puede verificar la firma.
+     *
+     * @param  array<string,mixed>  $respuesta
+     */
+    private function operationSecret(array $respuesta): ?string
+    {
+        $secreto = $respuesta['operation_secret'] ?? null;
+
+        return is_scalar($secreto) && (string) $secreto !== '' ? (string) $secreto : null;
     }
 }
