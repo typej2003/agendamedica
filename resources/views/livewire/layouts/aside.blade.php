@@ -75,6 +75,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.metodos-pago') }}" class="nav-link {{ request()->routeIs('admin.metodos-pago') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.metodos-pago')) aria-current="page" @endif title="Métodos de pago">
+                    <i class="bi bi-credit-card" aria-hidden="true"></i>
+                    <span class="link-text">Métodos de pago</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif title="Ayúdanos a mejorar">
                     <i class="bi bi-chat-heart" aria-hidden="true"></i>

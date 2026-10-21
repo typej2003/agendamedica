@@ -1,0 +1,399 @@
+<div>
+    <x-ui.page-head titulo="Métodos de pago"
+                    subtitulo="Con qué cobra Doctorisimo: los planes de los médicos y, a futuro, los cobros de los pacientes cuando el médico usa el canal de la plataforma." />
+
+    <x-ui.avisos />
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button type="button" class="nav-link {{ $pestana === 'metodos' ? 'active' : '' }}" wire:click="cambiarPestana('metodos')">
+                <i class="bi bi-credit-card me-1"></i> Métodos de la plataforma
+            </button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link {{ $pestana === 'tasa' ? 'active' : '' }}" wire:click="cambiarPestana('tasa')">
+                <i class="bi bi-currency-exchange me-1"></i> Tasa de cambio
+            </button>
+        </li>
+    </ul>
+
+    {{-- ============================ Métodos ============================ --}}
+    @if ($pestana === 'metodos')
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Los planes se cobran en <strong>VES</strong> con la tasa vigente y se acreditan en <strong>USD</strong>,
+            que es la moneda de la plataforma. Las credenciales se guardan cifradas y nunca se muestran completas.
+        </div>
+
+        <div class="card">
+            <x-ui.cargando cubre wire:loading.delay.flex />
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Un método por pasarela y variante. El webhook se genera solo.</span>
+                <button wire:click="nuevoMetodo" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Nuevo método
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Método</th>
+                                <th>Cuenta que recibe</th>
+                                <th>Para</th>
+                                <th class="text-center">Comisión</th>
+                                <th>Estado</th>
+                                <th>Verificación</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($metodos as $metodo)
+                                <tr wire:key="metodo-{{ $metodo->id }}" class="{{ $metodo->activo ? '' : 'text-muted' }}">
+                                    <td>
+                                        <div class="fw-semibold">{{ $metodo->etiqueta() }}</div>
+                                        <small class="text-muted">
+                                            {{ $metodo->pasarela }} · {{ $metodo->variante }} · {{ $metodo->entorno }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if ($metodo->cuentaBancaria)
+                                            <div>{{ $metodo->cuentaBancaria->descripcion() }}</div>
+                                            <small class="text-muted">{{ $metodo->cuentaBancaria->titular }}</small>
+                                        @else
+                                            <span class="text-danger">Sin cuenta</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $usos[$metodo->disponible_para] ?? $metodo->disponible_para }}</td>
+                                    <td class="text-center">
+                                        @if ($metodo->comision_bp === null)
+                                            <span class="text-muted" title="Usa la regla global">Global</span>
+                                        @else
+                                            {{ \App\Pagos\Porcentaje::aTexto($metodo->comision_bp) }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($metodo->activo)
+                                            <span class="badge bg-success">Activo</span>
+                                        @else
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        @endif
+                                        @unless ($metodo->estaConfigurado())
+                                            <div><small class="text-danger">Falta configurar</small></div>
+                                        @endunless
+                                    </td>
+                                    <td>
+                                        @if ($metodo->verificado_el)
+                                            <span class="badge bg-success">Probado</span>
+                                            <div><small class="text-muted">{{ $metodo->verificado_el->format('d/m/Y H:i') }}</small></div>
+                                        @elseif ($metodo->ultimo_error)
+                                            <span class="badge bg-danger">Con error</span>
+                                            <div><small class="text-danger" title="{{ $metodo->ultimo_error }}">{{ \Illuminate\Support\Str::limit($metodo->ultimo_error, 45) }}</small></div>
+                                        @else
+                                            <span class="badge bg-light text-dark">Sin probar</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <button wire:click="editarMetodo({{ $metodo->id }})" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </button>
+                                        @if ($metodo->pasarela === 'sypago')
+                                            <button wire:click="probarConexion({{ $metodo->id }})" class="btn btn-sm btn-outline-secondary"
+                                                    wire:loading.attr="disabled" wire:target="probarConexion">
+                                                <i class="bi bi-plug"></i> Probar
+                                            </button>
+                                        @endif
+                                        <button wire:click="alternarActivo({{ $metodo->id }})" class="btn btn-sm btn-outline-{{ $metodo->activo ? 'danger' : 'success' }}">
+                                            {{ $metodo->activo ? 'Desactivar' : 'Activar' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <p class="mb-2 text-muted">Todavía no hay ningún método de pago configurado.</p>
+                                        <button wire:click="nuevoMetodo" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-plus-lg me-1"></i> Configurar SyPago
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @if ($bancos)
+            <div class="card mt-3">
+                <div class="card-header bg-white py-3">
+                    <strong>Bancos que devolvió SyPago</strong>
+                    <span class="text-muted small ms-2">Los que tienen OTP sirven para débito inmediato; los activos, para pago móvil.</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 18rem; overflow-y: auto;">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>Código</th><th>Banco</th><th>Activo</th><th>Débito con OTP</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($bancos as $banco)
+                                    <tr wire:key="banco-{{ $banco['codigo'] }}">
+                                        <td><code>{{ $banco['codigo'] }}</code></td>
+                                        <td>{{ $banco['nombre'] }}</td>
+                                        <td>{{ $banco['activo'] ? 'Sí' : 'No' }}</td>
+                                        <td>{{ $banco['debito_otp'] ? 'Sí' : 'No' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
+
+    {{-- ============================== Tasa ============================== --}}
+    @if ($pestana === 'tasa')
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <strong>Tasa vigente</strong>
+                        <button wire:click="nuevaTasa" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Nueva tasa
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if ($tasaActual)
+                            <div class="display-6 fw-semibold">1 USD = {{ $tasaActual->aTexto() }} VES</div>
+                            <p class="text-muted small mb-1">
+                                {{ \App\Models\TasaDeCambio::ORIGENES[$tasaActual->origen] ?? $tasaActual->origen }}
+                                · desde el {{ $tasaActual->vigente_desde->format('d/m/Y H:i') }}
+                            </p>
+                            <p class="small mb-0">
+                                Un plan de <strong>USD 20,00</strong> se cobra como
+                                <strong>VES {{ \App\Pagos\Centavos::aTexto($tasaActual->convertirUsdAVes(2000)) }}</strong>.
+                            </p>
+                        @else
+                            <div class="alert alert-warning mb-0">
+                                No hay ninguna tasa cargada. Sin tasa no se puede cobrar un plan en VES.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <strong>Historial</strong>
+                        <span class="text-muted small ms-2">La tasa que se aplica es la última con fecha de vigencia.</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr><th>VES por USD</th><th>Origen</th><th>Vigente desde</th><th>Cargada</th></tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($historialTasas as $fila)
+                                        <tr wire:key="tasa-{{ $fila->id }}">
+                                            <td class="fw-semibold">{{ $fila->aTexto() }}</td>
+                                            <td>{{ \App\Models\TasaDeCambio::ORIGENES[$fila->origen] ?? $fila->origen }}</td>
+                                            <td>{{ $fila->vigente_desde->format('d/m/Y H:i') }}</td>
+                                            <td><small class="text-muted">{{ $fila->created_at?->format('d/m/Y H:i') }}</small></td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-center text-muted py-4">Sin tasas cargadas.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border small mt-3 mb-0">
+            La plataforma lleva sus libros en <strong>{{ $configuracion->moneda_plataforma }}</strong> y liquida a los
+            médicos en <strong>{{ $configuracion->moneda_liquidacion }}</strong>.
+            La comisión de cita online se calcula sobre lo que queda después de la comisión del método de pago
+            (cascada), no sobre el bruto.
+        </div>
+    @endif
+
+    {{-- ===================== Ventana: método ===================== --}}
+    @if ($modal === 'metodo')
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form wire:submit.prevent="guardarMetodo">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ $metodoId ? 'Editar método de pago' : 'Nuevo método de pago' }}</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Pasarela <span class="text-danger">*</span></label>
+                                    <select class="form-select" wire:model="pasarela">
+                                        @foreach ($pasarelas as $clave => $etiqueta)
+                                            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('pasarela') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Variante <span class="text-danger">*</span></label>
+                                    <select class="form-select" wire:model.defer="variante">
+                                        @foreach ($variantes as $clave => $etiqueta)
+                                            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('variante') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Entorno</label>
+                                    <select class="form-select" wire:model.defer="entorno">
+                                        <option value="produccion">Producción</option>
+                                        <option value="pruebas">Pruebas</option>
+                                    </select>
+                                    @error('entorno') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nombre visible <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model.defer="nombre" maxlength="100" autocomplete="off">
+                                <div class="form-text">Es lo que ve el médico o el paciente al elegir cómo pagar.</div>
+                                @error('nombre') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+
+                            @if ($pasarela === 'sypago')
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">Host de SyPago</label>
+                                        <input type="url" class="form-control" wire:model.defer="host" autocomplete="off"
+                                               placeholder="https://app.sypago.net:8086/api/v1/">
+                                        @error('host') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Token de acceso</label>
+                                        <input type="password" class="form-control" wire:model.defer="accessToken" autocomplete="new-password"
+                                               placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'Bearer token' }}">
+                                        <div class="form-text">Se guarda cifrado.</div>
+                                        @error('accessToken') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Para qué se ofrece</label>
+                                    <select class="form-select" wire:model.defer="disponiblePara">
+                                        @foreach ($usos as $clave => $etiqueta)
+                                            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('disponiblePara') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Comisión por prestar el método (%)</label>
+                                    <input type="number" min="0" max="100" step="0.01" class="form-control"
+                                           wire:model.defer="comisionPorcentaje" placeholder="Global">
+                                    <div class="form-text">Vacío = la regla global. Ejemplo: 10.</div>
+                                    @error('comisionPorcentaje') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Orden</label>
+                                    <input type="number" min="0" class="form-control" wire:model.defer="orden">
+                                    @error('orden') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <hr>
+                            <p class="fw-semibold mb-2">Cuenta donde se recibe el dinero</p>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Código del banco <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.defer="bancoCodigo" maxlength="4" placeholder="0172" autocomplete="off">
+                                    @error('bancoCodigo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Número de cuenta <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.defer="cuentaNumero" maxlength="30" autocomplete="off">
+                                    @error('cuentaNumero') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Titular <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.defer="cuentaTitular" maxlength="120" autocomplete="off">
+                                    @error('cuentaTitular') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Tipo de documento</label>
+                                    <select class="form-select" wire:model.defer="cuentaDocumentoTipo">
+                                        @foreach (\App\Models\CuentaBancaria::DOCUMENTOS as $tipo)
+                                            <option value="{{ $tipo }}">{{ $tipo }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Documento del titular <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.defer="cuentaDocumentoNumero" maxlength="20" autocomplete="off">
+                                    @error('cuentaDocumentoNumero') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-4 pt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="metodo-activo" wire:model.defer="activo">
+                                        <label class="form-check-label" for="metodo-activo">Activo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ====================== Ventana: tasa ====================== --}}
+    @if ($modal === 'tasa')
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form wire:submit.prevent="guardarTasa">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Nueva tasa VES/USD</h5>
+                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">VES por 1 USD <span class="text-danger">*</span></label>
+                                <input type="number" min="0.000001" step="0.000001" class="form-control" wire:model.defer="tasa"
+                                       placeholder="36,5000">
+                                <div class="form-text">La tasa nueva rige desde ahora. Las anteriores quedan en el historial y no se reescriben.</div>
+                                @error('tasa') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                            @if ($tasa !== '' && is_numeric($tasa) && \App\Pagos\Tasa::aEscala($tasa) > 0)
+                                <p class="small mb-0">
+                                    Un plan de <strong>USD 20,00</strong> se va a cobrar como
+                                    <strong>VES {{ \App\Pagos\Centavos::aTexto(\App\Pagos\Tasa::usdAVes(2000, $tasa)) }}</strong>.
+                                </p>
+                            @endif
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar tasa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
