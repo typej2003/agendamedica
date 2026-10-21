@@ -18,6 +18,8 @@
             <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
                              :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" />
         @endif
+        {{-- «Anterior» (WEB-11.4): sólo el tratamiento la tiene (`$vm->anterior()` es `null` en las solapas del examen). --}}
+        <x-ui.anterior :anterior="$vm->anterior()" destino="#{{ $seccion->campo() }}" />
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                      :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>

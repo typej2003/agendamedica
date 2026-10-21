@@ -43,9 +43,6 @@
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-            @if ($vm->tieneAnterior())
-                <x-ui.anterior :url="$vm->urlAnterior('recipes')" que="los récipes" />
-            @endif
             <a class="btn btn-sm btn-outline-secondary" href="{{ $seccion->urlEntrada() }}">
                 <i class="bi bi-pencil-square" aria-hidden="true"></i> Volver al editor
             </a>
@@ -170,6 +167,8 @@
             {{-- El contador vivo de medicamentos: `consulta-recipes.js` lo mantiene al agregar y quitar. --}}
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <x-ui.estado id="recipe-contador" :tono="$contador['tono']" :icono="$contador['icono']">{{ $contador['texto'] }}</x-ui.estado>
+                {{-- «Anterior» (WEB-11.4): pone en este récipe los medicamentos del último récipe de la consulta anterior. --}}
+                <x-ui.anterior :anterior="$vm->anterior()" />
             </div>
 
             <form method="POST" action="{{ $editor['urlGuardar'] }}" id="recipe-form" data-consulta-recipe

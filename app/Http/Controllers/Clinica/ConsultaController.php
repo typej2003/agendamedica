@@ -323,6 +323,10 @@ class ConsultaController extends Controller
                 (string) $request->query('solicitud', ''),
                 // Las secciones que encienden los postgrados de la especialidad del contexto (2026-10-19).
                 $contexto['secciones_postgrados'] ?? [],
+                // La casilla «Anterior» de la sección abierta (WEB-11.4): trae lo de la consulta anterior de la historia.
+                \App\Clinica\Consulta\Vistas\AnteriorVista::deLaSeccion(
+                    $seccion, $consulta, app(\App\Actions\Consulta\CopiarDeLaConsultaAnterior::class),
+                ),
             ),
             // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
             // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el

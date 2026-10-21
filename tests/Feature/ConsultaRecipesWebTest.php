@@ -1261,28 +1261,28 @@ class ConsultaRecipesWebTest extends TestCase
         $this->assertNotNull(DB::table('recipes')->find($ajena), 'la fila del otro registro sigue ahí');
     }
 
-    public function test_anterior_copia_los_recipes_completos_como_recipes_nuevos(): void
+    public function test_anterior_de_los_recipes_va_en_el_editor_y_no_copia_por_post(): void
     {
-        // WEB-11.4: «Anterior» copia cada récipe de la consulta previa (cantidad e indicaciones incluidas) a esta.
+        // WEB-11.4 (casilla, 2026-10-20): «Anterior» pone en el récipe que se edita los medicamentos del **último** récipe de la
+        // consulta previa, con su cantidad e indicaciones, y se guarda con «Guardar el récipe». El `POST` que copiaba récipes
+        // enteros ya no existe (el detalle, en `ConsultaAnteriorWebTest`).
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->vademecum($medico);
         [, $primera] = $this->pacienteYConsulta($medico, 1001, 1);
         $segunda = Consulta::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 2, 'fecha' => $primera->fecha]);
         $this->fila($medico, 1001, 1, '0001', 1, ['cantidad' => 3, 'indicaciones' => 'Cada 6 horas']);
-        $this->fila($medico, 1001, 1, '0002', 1);
         $this->fila($medico, 1001, 1, '0003', 2);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post(route('clinica.consulta.anterior', [$segunda->id, 'recipes']))
-            ->assertRedirect()->assertSessionHas('estado', 'Copiados 2 récipes de la consulta N.º 1.');
+            ->post(route('clinica.consulta.anterior', [$segunda->id, 'recipes']), ['activar' => '1'])
+            ->assertNotFound();
+        $this->assertCount(0, $this->filasDe($medico, 1001, 2));
 
-        $copiadas = $this->filasDe($medico, 1001, 2);
-        $this->assertCount(3, $copiadas);
-        $primero = $copiadas->firstWhere('codemedicina', '0001');
-        $this->assertSame(3, (int) $primero->cantidad);
-        $this->assertSame('Cada 6 horas', $primero->indicaciones);
-        $this->assertCount(2, $copiadas->pluck('recipe')->unique());
-        // Y la consulta de origen no se tocó.
-        $this->assertCount(3, $this->filasDe($medico, 1001, 1));
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', [$segunda->id, 'seccion' => 'recipes']))
+            ->assertOk()
+            ->assertSee('data-anterior-recipe', false)
+            ->assertSee('&quot;codigo&quot;:&quot;0003&quot;', false)
+            ->assertDontSee('&quot;codigo&quot;:&quot;0001&quot;', false);
     }
 }

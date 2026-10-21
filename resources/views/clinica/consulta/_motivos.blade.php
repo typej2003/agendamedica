@@ -8,9 +8,9 @@
      data-crear-abierto="{{ $seccion->crearAbierto() ? '1' : '0' }}">
 
     <x-ui.dos-listas titulo-izquierda="Motivos de esta consulta" titulo-derecha="Tu catálogo de motivos" :resumen="$seccion->resumen()">
-        @if ($vm->tieneAnterior())
+        @if ($vm->anterior())
             <x-slot name="accionesIzquierda">
-                <x-ui.anterior :url="$vm->urlAnterior('motivos')" que="los motivos" />
+                <x-ui.anterior :anterior="$vm->anterior()" />
             </x-slot>
         @endif
         <x-slot name="izquierda">

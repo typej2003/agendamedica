@@ -758,8 +758,8 @@ class ConsultaDiagnosticosWebTest extends TestCase
         $this->diagnostico($medico, 1001, 2, '0002'); // ya está en la 2.ª
 
         $url = route('clinica.consulta.anterior', [$segunda->id, 'diagnosticos']);
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url)->assertRedirect()
-            ->assertSessionHas('estado', 'Copiados 1 diagnóstico de la consulta N.º 1.');
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($url, ['activar' => '1'])->assertRedirect()
+            ->assertSessionHas('estado', 'Traídos 1 diagnóstico de la consulta N.º 1.');
 
         $codigos = DB::table('diagnostico_paciente')->where('reg_medico', $medico->reg_medico)->where('nroconsulta', 2)->orderBy('codediagnostico')->pluck('codediagnostico')->map(fn ($c) => trim($c))->all();
         $this->assertSame(['0001', '0002'], $codigos);
