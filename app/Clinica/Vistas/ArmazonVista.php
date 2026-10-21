@@ -304,6 +304,7 @@ final class ArmazonVista
 
             if ($this->trabajaLaConsulta) {
                 foreach ([
+                    ['clinica.plan', 'Mi plan', 'bi-credit-card'],
                     ['clinica.formato', 'Formato de impresión', 'bi-printer'],
                     ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
                     ['clinica.usuarios', 'Usuarios', 'bi-people'],

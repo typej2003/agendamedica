@@ -57,7 +57,7 @@ class Pago extends Model
     protected $table = 'pagos';
 
     protected $fillable = [
-        'referencia', 'token_publico', 'beneficiario_tipo', 'beneficiario_reg_medico', 'recaudador',
+        'referencia', 'token_publico', 'beneficiario_tipo', 'beneficiario_reg_medico', 'reg_medico', 'recaudador',
         'canal', 'pagable_tipo', 'pagable_id', 'concepto', 'metodo_pago_id', 'cuenta_bancaria_id',
         'moneda', 'monto_e2', 'monto_usd_e2', 'tasa',
         'comision_metodo_usd_e2', 'comision_cita_online_usd_e2', 'comision_total_usd_e2', 'neto_usd_e2',

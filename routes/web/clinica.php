@@ -78,6 +78,7 @@ use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\PlanController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -134,6 +135,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
+
+            // **Mi plan** (2026-10-21): el médico ve su suscripción y la renueva pagando con SyPago. Es
+            // sólo del médico (`role:Root|Medico`): la secretaría no paga el plan del consultorio. El pago
+            // se crea con la tasa congelada y se aprueba por el webhook o el sondeo, no acá.
+            Route::middleware('role:Root|Medico')->group(function () {
+                Route::get('/plan', [PlanController::class, 'index'])->name('plan');
+                Route::post('/plan/comprar', [PlanController::class, 'comprar'])->name('plan.comprar');
+                Route::get('/plan/pago/{pago}', [PlanController::class, 'pagar'])->name('plan.pagar');
+                Route::post('/plan/pago/{pago}/iniciar', [PlanController::class, 'iniciar'])->name('plan.iniciar');
+                Route::post('/plan/pago/{pago}/confirmar', [PlanController::class, 'confirmar'])->name('plan.confirmar');
+                Route::post('/plan/pago/{pago}/consultar', [PlanController::class, 'consultar'])->name('plan.consultar');
+            });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
             // —una petición de lectura no escribe— y vive acá, fuera del grupo de la consulta, porque también

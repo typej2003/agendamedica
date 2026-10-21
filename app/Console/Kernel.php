@@ -37,6 +37,13 @@ class Kernel extends ConsoleKernel
             // Sin solapamiento: una corrida lenta no puede pisar a la siguiente (el registro igual lo
             // cubre, pero así el log del comando se lee).
             ->withoutOverlapping();
+
+        // Conciliación de pagos (2026-10-21): expira los pendientes vencidos y consulta a SyPago los que
+        // quedaron en proceso. El webhook es el camino principal; esto es la red de seguridad. En
+        // producción también necesita el cron del servidor (la misma nota que el cumpleaños).
+        $schedule->command('pagos:conciliar')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
 
     /**
