@@ -301,8 +301,8 @@ final class OrdenVista
     public function ayudaDelResumen(): string
     {
         return $this->esLaboratorio()
-            ? 'Opcional. Sale en la hoja bajo los exámenes (por ejemplo, el motivo o lo que se quiere descartar).'
-            : 'Opcional. Sale en la hoja bajo los estudios (por ejemplo, el motivo del estudio).';
+            ? 'Opcional. Sale en la hoja bajo los exámenes.'
+            : 'Opcional. Sale en la hoja bajo los estudios.';
     }
 
     public function etiquetaDelBuscador(): string
@@ -317,9 +317,7 @@ final class OrdenVista
 
     public function ayudaDelBuscador(): string
     {
-        return $this->esLaboratorio()
-            ? 'Escribe parte del nombre (sin importar tildes ni mayúsculas) o elige un tipo. Lo que agregas entra a la orden; se guarda con el botón.'
-            : 'Escribe parte del nombre (sin importar tildes ni mayúsculas). Lo que agregas entra a la solicitud; se guarda con el botón.';
+        return 'Lo que agregas se guarda con el botón.';
     }
 
     /** El estado vacío de la lista de la orden. */

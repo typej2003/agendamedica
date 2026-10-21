@@ -174,7 +174,7 @@ final class ReferenciasVista
                 : 'Ningún médico de tu catálogo coincide con «' . $this->buscar . '». Si no está, agrégalo.';
         }
 
-        return 'Cada «Referir» crea la referencia al instante; escribe su motivo y guárdalo con el botón. Se refiere al paciente a varios médicos.';
+        return '«Referir» crea la referencia al instante; el motivo se guarda con su botón.';
     }
 
     public function urlAgregar(): string

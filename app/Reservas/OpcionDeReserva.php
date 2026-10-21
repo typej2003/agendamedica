@@ -2,6 +2,7 @@
 
 namespace App\Reservas;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Support\HoraLocal;
 use Carbon\Carbon;
 
@@ -41,5 +42,11 @@ final class OpcionDeReserva
     public function hora12(): string
     {
         return HoraLocal::hora12($this->hora);
+    }
+
+    /** El momento de la cita en la zona del consultorio (para comparar con el reloj y las 24 horas). */
+    public function inicio(): Carbon
+    {
+        return Carbon::createFromFormat('Y-m-d H:i', $this->fecha . ' ' . $this->hora, FechaDelConsultorio::zona());
     }
 }

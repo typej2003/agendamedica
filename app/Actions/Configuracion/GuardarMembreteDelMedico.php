@@ -24,8 +24,9 @@ use Throwable;
  *
  *  - Escribe **sólo** las columnas que vienen en `$campos` (actualización parcial: lo que no viene queda como estaba) y,
  *    de ellas, sólo las que **cambian** (`''` y `null` son lo mismo).
- *  - Guarda bajo el **`reg_medico` principal** del médico, una fila por médico, igual que el móvil. La fila nueva lleva
- *    `clave = 0`: es `NOT NULL` en el esquema legado y un dato del reporte viejo que acá no se usa.
+ *  - Guarda bajo el **registro del formato** del médico (`Medico::registroDelFormato()`: su registro principal y,
+ *    si la ficha es un centro médico, el propio del centro), una fila por médico, igual que el móvil. La fila nueva
+ *    lleva `clave = 0`: es `NOT NULL` en el esquema legado y un dato del reporte viejo que acá no se usa.
  *  - El **logo** va al disco `public` (`logos/…`, la misma ruta del API) y su ruta se escribe en `evolucion.logo`. Al
  *    reemplazarlo o quitarlo se borra el archivo anterior **si nadie más lo usa**; si la fila no queda, se borra el que
  *    se acababa de subir (no quedan huérfanos).
@@ -54,7 +55,7 @@ final class GuardarMembreteDelMedico
         ?CarbonInterface $cuando = null,
         ?string $origen = null,
     ): ResultadoDelMembrete {
-        $registro = $medico->regMedicoPrincipal();
+        $registro = $medico->registroDelFormato();
 
         if ($registro === null || trim($registro) === '') {
             throw new InvalidArgumentException('Este médico no tiene un número de registro principal bajo el cual guardar el membrete.');

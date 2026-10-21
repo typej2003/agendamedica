@@ -77,7 +77,7 @@ final class SeccionDeRecipeDeLaParejaVista
 
     public function ayudaDeLaPareja(): string
     {
-        return 'Son texto libre: la pareja no se busca ni se registra como paciente de tu consulta.';
+        return 'Texto libre: la pareja no se registra como paciente.';
     }
 
     /** El estado de la sección como pastilla: si la consulta ya tiene récipe de la pareja. */

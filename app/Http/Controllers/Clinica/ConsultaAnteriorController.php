@@ -11,18 +11,19 @@ use App\Models\Consulta;
 use Illuminate\Http\Request;
 
 /**
- * **«Anterior»** (WEB-11.4): copia a la consulta los motivos, los diagnósticos o los récipes de la consulta anterior de la misma historia.
- * Es un `POST` con redirect a la sección (el resultado se cuenta en la franja de arriba); la regla es la Action `CopiarDeLaConsultaAnterior`.
+ * **La casilla «Anterior»** de motivos y diagnósticos (WEB-11.4), las dos secciones que guardan al instante: marcarla (`activar=1`)
+ * trae lo de la consulta anterior de la misma historia y desmarcarla saca de ésta lo que coincide con la anterior. Es un `POST` con
+ * redirect a la sección; la regla es la Action `CopiarDeLaConsultaAnterior`. (Los récipes y los textos traen en el editor y guardan
+ * con su propio botón: no pasan por acá.)
  */
 class ConsultaAnteriorController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
-    /** `qué se copia => [método de la Action, sección a la que se vuelve, cómo se nombra lo copiado]` */
+    /** `qué se trae => [método que trae, método que saca, sección a la que se vuelve, singular, plural]` */
     private const COPIABLES = [
-        'motivos' => ['motivos', ConsultaShellVista::SECCION_MOTIVOS, 'motivo', 'motivos'],
-        'diagnosticos' => ['diagnosticos', ConsultaShellVista::SECCION_DIAGNOSTICO, 'diagnóstico', 'diagnósticos'],
-        'recipes' => ['recipes', ConsultaShellVista::SECCION_RECIPES, 'récipe', 'récipes'],
+        'motivos' => ['motivos', 'quitarMotivos', ConsultaShellVista::SECCION_MOTIVOS, 'motivo', 'motivos'],
+        'diagnosticos' => ['diagnosticos', 'quitarDiagnosticos', ConsultaShellVista::SECCION_DIAGNOSTICO, 'diagnóstico', 'diagnósticos'],
     ];
 
     public function __construct(private ConsultasDelContexto $consultas)
@@ -40,25 +41,32 @@ class ConsultaAnteriorController extends Controller
             $contexto['reg_medico'],
         );
 
-        [$metodo, $seccion, $singular, $plural] = self::COPIABLES[$que];
+        [$traer, $sacar, $seccion, $singular, $plural] = self::COPIABLES[$que];
 
         $destino = redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => $seccion]);
 
         if (! $copiar->hayAnterior($consulta)) {
-            return $destino->with('error', 'Esta es la primera consulta de la historia: no hay una anterior de la que copiar.');
+            return $destino->with('error', 'Es la primera consulta de la historia: no hay una anterior.');
         }
 
-        $resultado = $copiar->{$metodo}($consulta, 'web');
+        $activar = $request->boolean('activar');
+        $resultado = $copiar->{$activar ? $traer : $sacar}($consulta, 'web');
 
         if ($resultado['desde'] === null) {
-            return $destino->with('error', 'Ninguna consulta anterior de este paciente tiene ' . $plural . ' para copiar.');
+            return $destino->with('error', 'Ninguna consulta anterior tiene ' . $plural . '.');
         }
 
-        if ($resultado['copiados'] === 0) {
-            return $destino->with('estado', 'La consulta N.º ' . $resultado['desde'] . ' no tenía ' . $plural . ' nuevos: ya estaban en esta.');
-        }
+        $cuantos = $resultado[$activar ? 'copiados' : 'quitados'];
+        $numero = 'la consulta N.º ' . $resultado['desde'];
+        $cosa = $cuantos === 1 ? $singular : $plural;
 
-        return $destino->with('estado', 'Copiados ' . $resultado['copiados'] . ' ' . ($resultado['copiados'] === 1 ? $singular : $plural)
-            . ' de la consulta N.º ' . $resultado['desde'] . '.');
+        $mensaje = match (true) {
+            $activar && $cuantos === 0 => 'Los ' . $plural . ' de ' . $numero . ' ya estaban en ésta.',
+            $activar => 'Traídos ' . $cuantos . ' ' . $cosa . ' de ' . $numero . '.',
+            $cuantos === 0 => 'Esta consulta no tenía ' . $plural . ' de ' . $numero . '.',
+            default => 'Quitados ' . $cuantos . ' ' . $cosa . ' que venían de ' . $numero . '.',
+        };
+
+        return $destino->with('estado', $mensaje);
     }
 }

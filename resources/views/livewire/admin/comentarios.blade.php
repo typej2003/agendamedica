@@ -27,7 +27,11 @@
         <div class="card mb-3 border-primary">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-start gap-2">
                 <div>
-                    <div class="fw-semibold">{{ $seleccionado->tipoLegible() }}</div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-semibold">{{ $seleccionado->tipoLegible() }}</span>
+                        {{-- De dónde salió (2026-10-20): la web o el app y en qué equipo, para reproducirlo ahí. --}}
+                        <x-ui.estado tono="neutro" icono="{{ $seleccionado->iconoDeLaPlataforma() }}">{{ $seleccionado->origenLegible() }}</x-ui.estado>
+                    </div>
                     <small class="text-muted">
                         {{ $seleccionado->usuario?->name ?? 'Cuenta borrada' }}
                         @if ($seleccionado->rol) · {{ $seleccionado->rol }} @endif
@@ -83,7 +87,7 @@
                     <textarea id="respuesta" rows="4" maxlength="2000"
                               class="form-control @error('respuesta') is-invalid @enderror"
                               wire:model.defer="respuesta"
-                              placeholder="Contale qué pasó, qué hicimos, o qué va a pasar con esto."></textarea>
+                              placeholder="Cuéntale qué pasó, qué hicimos, o qué va a pasar con esto."></textarea>
                     @error('respuesta')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -111,6 +115,9 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Quién</th>
+                            {{-- Desde dónde lo mandaron (2026-10-20): es lo primero que se mira para ir a
+                                 reproducir un error en el equipo donde pasó. --}}
+                            <th>Desde</th>
                             <th>Tipo</th>
                             <th>Comentario</th>
                             <th>Cuándo</th>
@@ -127,6 +134,9 @@
                                         {{ $comentario->rol ?? '—' }}
                                         @if ($comentario->medico) · {{ $comentario->reg_medico }} @endif
                                     </small>
+                                </td>
+                                <td>
+                                    <x-ui.estado tono="neutro" icono="{{ $comentario->iconoDeLaPlataforma() }}">{{ $comentario->origenLegible() }}</x-ui.estado>
                                 </td>
                                 <td>{{ $comentario->tipoLegible() }}</td>
                                 <td>
@@ -176,7 +186,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                                <td colspan="7" class="text-center text-muted py-4">
                                     {{ $estado === 'nuevo' ? 'No hay comentarios sin responder.' : 'No hay comentarios en esta lista.' }}
                                 </td>
                             </tr>

@@ -24,6 +24,7 @@ final class CatalogosDisponibles
         'diagnosticos' => ['texto' => 'Diagnósticos', 'icono' => 'bi-clipboard2-pulse', 'ruta' => 'clinica.catalogos.diagnosticos'],
         'motivos-consulta' => ['texto' => 'Motivos de consulta', 'icono' => 'bi-chat-left-text', 'ruta' => 'clinica.catalogos.motivos-consulta'],
         'motivos-cita' => ['texto' => 'Motivos de cita', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.motivos-cita'],
+        'motivos-factura' => ['texto' => 'Conceptos de factura', 'icono' => 'bi-receipt', 'ruta' => 'clinica.catalogos.motivos-factura'],
         'examenes' => ['texto' => 'Exámenes', 'icono' => 'bi-eyedropper', 'ruta' => 'clinica.catalogos.examenes'],
         'tipos-examen' => ['texto' => 'Tipos de examen', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.tipos-examen'],
         'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],

@@ -32,6 +32,13 @@
         </div>
     @endif
 
+    @unless ($vm->conFirma())
+        <div class="alert alert-secondary d-flex align-items-start gap-2" role="status">
+            <i class="bi bi-pen" aria-hidden="true"></i>
+            <span>La <strong>firma y el sello</strong> no se configuran acá: cada reporte lleva la firma y el sello del <strong>doctor que atendió</strong>, que los sube en su propio formato de impresión.</span>
+        </div>
+    @endunless
+
     <div class="row g-3" data-formato-impresion>
         {{-- La vista previa va primero en el HTML (en el celular se ve arriba) y a la derecha en pantallas anchas. --}}
         <div class="col-12 col-xl-7 order-xl-2">
@@ -42,7 +49,11 @@
             @include('clinica.formato._membrete')
             @include('clinica.formato._logo')
             @include('clinica.formato._estilo')
-            @include('clinica.formato._firma')
+
+            @if ($vm->conFirma())
+                @include('clinica.formato._firma')
+            @endif
+
             @include('clinica.formato._en-blanco')
         </div>
     </div>

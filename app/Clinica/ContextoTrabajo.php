@@ -303,7 +303,7 @@ class ContextoTrabajo
     {
         $disponibles = $this->disponibles($user);
         if (! isset($disponibles[$regMedico])) {
-            throw ValidationException::withMessages(['reg_medico' => 'No tenés acceso a los datos de ese médico.']);
+            throw ValidationException::withMessages(['reg_medico' => 'No tienes acceso a los datos de ese médico.']);
         }
 
         $acceso = $disponibles[$regMedico];

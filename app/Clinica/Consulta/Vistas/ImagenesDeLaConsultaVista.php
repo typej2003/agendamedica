@@ -228,17 +228,13 @@ final class ImagenesDeLaConsultaVista
     /** La ayuda del campo del archivo: qué se acepta y qué pasa con el nombre del archivo. */
     public function ayudaArchivo(): string
     {
-        return 'Una foto o un escaneo del estudio (' . ArchivosClinicos::textosAceptados() . ', hasta '
-            . ArchivosClinicos::textoMaximo() . '). El nombre lo pone el servidor y el archivo no se sirve '
-            . 'por una URL pública: se guarda en un disco privado y se abre por una ruta que comprueba que '
-            . 'la historia es tuya.';
+        return ArchivosClinicos::textosAceptados() . ', hasta ' . ArchivosClinicos::textoMaximo() . '.';
     }
 
     /** La ayuda de la descripción: por qué se pide. */
     public function ayudaDescripcion(): string
     {
-        return 'Qué es la imagen (por ejemplo «Colposcopia: ectopia leve» o «Eco pélvico 12/10»). Es lo '
-            . 'que se lee en la lista, sin abrir el archivo.';
+        return 'Es lo que se lee en la lista.';
     }
 
     /** El aviso del navegador al salir: la subida de un archivo se pierde si se sale sin enviarla. */

@@ -84,7 +84,7 @@ class OrdenDeCatalogoVistaTest extends TestCase
         $this->assertSame('/c/42/laboratorio/rutinas/001', $vm->urlDeLaRutina('001'));
         $this->assertSame('Pasar', $vm->verbo());
         $this->assertStringContainsString('al instante', $vm->ayudaDelCatalogo());
-        $this->assertStringContainsString('resumen clínico se guarda con su botón', $vm->ayudaDelCatalogo());
+        $this->assertStringContainsString('resumen clínico, con su botón', $vm->ayudaDelCatalogo());
     }
 
     public function test_sin_resultados_la_ayuda_distingue_el_catalogo_vacio_de_una_busqueda_sin_coincidencias(): void

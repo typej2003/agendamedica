@@ -64,6 +64,8 @@ class ConsultaAntecedentesController extends Controller
             [],
             null,
             'web',
+            // La consulta desde la que se escribe, para el registro de movimientos (2026-10-20).
+            (int) $consulta->id,
         );
 
         return $this->volver($consulta, $resultado);
@@ -94,6 +96,8 @@ class ConsultaAntecedentesController extends Controller
             [],
             null,
             'web',
+            // La consulta desde la que se escribe, para el registro de movimientos (2026-10-20).
+            (int) $consulta->id,
         );
 
         $destino = $this->destino($consulta, $datos);
@@ -132,6 +136,8 @@ class ConsultaAntecedentesController extends Controller
             [trim((string) $datos['codigo'])],
             null,
             'web',
+            // La consulta desde la que se escribe, para el registro de movimientos (2026-10-20).
+            (int) $consulta->id,
         );
 
         $destino = $this->destino($consulta, $datos);
@@ -196,6 +202,8 @@ class ConsultaAntecedentesController extends Controller
             [],
             null,
             'web',
+            // La consulta desde la que se escribe, para el registro de movimientos (2026-10-20).
+            (int) $consulta->id,
         );
 
         $mensaje = $resultado->agregados === []

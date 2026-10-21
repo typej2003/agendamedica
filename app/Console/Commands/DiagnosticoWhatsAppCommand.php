@@ -160,7 +160,7 @@ class DiagnosticoWhatsAppCommand extends Command
             ])->withBody($cuerpo, 'application/json')->timeout(15)->post($url);
         } catch (\Throwable $e) {
             $this->error('No se pudo conectar: ' . $e->getMessage());
-            $this->line('Si es local, levantá el servidor (<comment>php artisan serve</comment>) y probá de nuevo.');
+            $this->line('Si es local, levanta el servidor (<comment>php artisan serve</comment>) y prueba de nuevo.');
 
             return;
         }
@@ -169,9 +169,9 @@ class DiagnosticoWhatsAppCommand extends Command
 
         match (true) {
             $status === 200 => $this->info("HTTP 200: la firma valida y el webhook acepta el evento. Camino OK."),
-            $status === 403 => $this->error('HTTP 403: hay secreto pero la firma no coincide. Revisá que WHATSAPP_APP_SECRET sea el *app secret* de Meta (no el token del número).'),
-            $status === 503 => $this->error('HTTP 503: el webhook no ve el secreto. Cargá WHATSAPP_APP_SECRET y corré config:clear (o config:cache si el deploy lo usa).'),
-            $status === 429 => $this->warn('HTTP 429: el throttle de la ruta te frenó. Esperá un minuto.'),
+            $status === 403 => $this->error('HTTP 403: hay secreto pero la firma no coincide. Revisa que WHATSAPP_APP_SECRET sea el *app secret* de Meta (no el token del número).'),
+            $status === 503 => $this->error('HTTP 503: el webhook no ve el secreto. Carga WHATSAPP_APP_SECRET y corre config:clear (o config:cache si el deploy lo usa).'),
+            $status === 429 => $this->warn('HTTP 429: el throttle de la ruta te frenó. Espera un minuto.'),
             default => $this->error("HTTP {$status}: " . mb_substr((string) $respuesta->body(), 0, 300)),
         };
     }
@@ -185,7 +185,7 @@ class DiagnosticoWhatsAppCommand extends Command
             return;
         }
 
-        $this->line('Enviando un texto REAL a ' . $numero . ' (llega a la persona: usá tu propio número)…');
+        $this->line('Enviando un texto REAL a ' . $numero . ' (llega a la persona: usa tu propio número)…');
 
         $resultado = app(WhatsAppService::class)->sendTextMessage(
             $numero,
@@ -193,7 +193,7 @@ class DiagnosticoWhatsAppCommand extends Command
         );
 
         if (($resultado['success'] ?? false) === true) {
-            $this->info('Enviado. HTTP ' . ($resultado['status'] ?? '?') . ' — revisá el teléfono.');
+            $this->info('Enviado. HTTP ' . ($resultado['status'] ?? '?') . ' — revisa el teléfono.');
 
             return;
         }

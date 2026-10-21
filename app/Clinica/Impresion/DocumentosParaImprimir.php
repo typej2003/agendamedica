@@ -64,6 +64,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::RESUMEN_MEDICO => 'bi-journal-medical',
         DocumentoImpreso::HOSPITALIZACION => 'bi-hospital',
         DocumentoImpreso::DIETA => 'bi-egg-fried',
+        DocumentoImpreso::PREFACTURA => 'bi-receipt',
     ];
 
     public function __construct(

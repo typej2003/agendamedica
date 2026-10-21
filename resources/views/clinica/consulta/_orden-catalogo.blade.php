@@ -154,7 +154,7 @@
 
                 @if ($vm->ofreceRutinas())
                     <h3 class="orden-subtitulo mt-3">Rutinas</h3>
-                    <p class="form-text mt-0 mb-2">Una rutina pasa de una vez todos los exámenes de un tipo (los que ya están no se repiten).</p>
+                    <p class="form-text mt-0 mb-2">Pasa todos los exámenes del tipo.</p>
                     <div class="orden-rutinas">
                         @foreach ($vm->rutinas() as $tipo)
                             <form method="POST" action="{{ $vm->urlDeLaRutina($tipo['codigo']) }}">
@@ -171,7 +171,7 @@
 
                 <p class="form-text mb-0 mt-3">
                     <a href="{{ $vm->urlAdministrar() }}" target="_blank" rel="noopener">{{ $vm->textoDelEnlaceAlCatalogo() }}</a>
-                    (se abre en otra pestaña, así no pierdes lo que llevas).
+                    <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                 </p>
             @endif
         </x-slot>

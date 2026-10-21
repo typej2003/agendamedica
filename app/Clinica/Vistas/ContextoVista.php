@@ -47,7 +47,7 @@ final class ContextoVista
 
     public function urlConsultorios(): string
     {
-        return route('clinica.consultorios');
+        return route('clinica.sedes');
     }
 
     /** @return array<int,array<string,mixed>> */

@@ -194,6 +194,8 @@
     <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
     <script src="{{ asset('js/clinica/imagen-del-examen.js') }}"></script>
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
+    {{-- La casilla «Anterior» (WEB-11.4) de motivos, diagnósticos, enfermedad actual y tratamiento (la de récipes va en su script). --}}
+    <script src="{{ asset('js/clinica/anterior.js') }}"></script>
     {{-- La fila del encabezado (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta. --}}
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
     {{-- Las fechas que se teclean (O-18 y O-19): la máscara de la FUR pone las barras y no deja escribir un

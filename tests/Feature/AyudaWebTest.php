@@ -93,6 +93,7 @@ class AyudaWebTest extends TestCase
         $this->assertSame($medico->reg_medico, $comentario->reg_medico);
         $this->assertSame('Medico', $comentario->rol);
         $this->assertSame('web', $comentario->origen);
+        $this->assertSame('web', $comentario->plataforma, 'de dónde salió, para la bandeja del panel');
         $this->assertSame(Comentario::NUEVO, $comentario->estado);
         $this->assertTrue($comentario->estaNuevo());
 
@@ -103,6 +104,22 @@ class AyudaWebTest extends TestCase
             ->assertSee('Un error')
             ->assertSee('Cuando imprimo el récipe sale sin el sello.')
             ->assertSee('Recibido');
+    }
+
+    public function test_la_plataforma_de_la_web_la_pone_el_servidor_y_no_el_formulario(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.ayuda.guardar'), [
+                'tipo' => Comentario::BUG,
+                'mensaje' => 'El botón de imprimir no hace nada.',
+                // El formulario no manda la plataforma: si alguien la colara, se ignora.
+                'plataforma' => 'android',
+            ])
+            ->assertRedirect(route('clinica.ayuda'));
+
+        $this->assertSame('web', Comentario::firstOrFail()->plataforma);
     }
 
     public function test_la_secretaria_manda_el_suyo_y_no_ve_el_del_medico(): void
@@ -177,7 +194,7 @@ class AyudaWebTest extends TestCase
             'user_id' => $user->id, 'medico_id' => $medico->id, 'reg_medico' => $medico->reg_medico,
             'rol' => 'Medico', 'origen' => 'web', 'tipo' => Comentario::BUG,
             'mensaje' => 'El buscador de pacientes no encuentra por cédula.',
-            'estado' => Comentario::RESPONDIDO, 'respuesta' => 'Ya lo arreglamos, actualizá el app.',
+            'estado' => Comentario::RESPONDIDO, 'respuesta' => 'Ya lo arreglamos, actualiza el app.',
             'respondido_el' => now(),
         ]);
         Comentario::create([
@@ -191,7 +208,7 @@ class AyudaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.ayuda'))
             ->assertOk()
-            ->assertSee('Ya lo arreglamos, actualizá el app.')
+            ->assertSee('Ya lo arreglamos, actualiza el app.')
             ->assertSee('Respondido')
             ->assertSee('Revisado')
             ->assertSee('por ahora no vamos a avanzar');

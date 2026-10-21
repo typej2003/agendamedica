@@ -194,7 +194,12 @@ class Especialidades extends Component
                 . ' quitado' . ($cambios['postgradosQuitados'] > 1 ? 's' : '') . ' por quedarse sin su especialidad';
         }
 
-        return "Especialidades de {$nombre} actualizadas: " . implode(' y ', $partes) . '.';
+        $catalogo = $cambios['catalogoInicial'] ?? null;
+        $extra = ($catalogo['filas'] ?? 0) > 0
+            ? ' Se le cargó el catálogo inicial (' . number_format($catalogo['filas'], 0, ',', '.') . ' filas) en los catálogos que tenía vacíos.'
+            : (($catalogo['saltado'] ?? null) === 'trabaja con el escritorio' ? ' No se le cargó el catálogo inicial: trabaja con el escritorio.' : '');
+
+        return "Especialidades de {$nombre} actualizadas: " . implode(' y ', $partes) . '.' . $extra;
     }
 
     /**

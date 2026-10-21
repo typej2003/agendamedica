@@ -70,7 +70,7 @@ class ProbarTriajeJevCommand extends Command
 
         if ($mensajes === [] || $categorias === []) {
             $this->error('El corpus no tiene `mensajes` o `categorias`.');
-            $this->line('Mirá el formato en database/datos/triaje-whatsapp.json.');
+            $this->line('Mira el formato en database/datos/triaje-whatsapp.json.');
 
             return self::FAILURE;
         }
@@ -92,7 +92,7 @@ class ProbarTriajeJevCommand extends Command
         if (! $servicio->tieneClave()) {
             $this->newLine();
             $this->error('Falta JEV_API_KEY.');
-            $this->line('Agregala al .env de MedicAPI (junto a GEMINI_API_KEY) y volvé a correr el comando:');
+            $this->line('Agrégala al .env de MedicAPI (junto a GEMINI_API_KEY) y vuelve a correr el comando:');
             $this->newLine();
             $this->line('  <comment># Jev AI — decisiones tipadas (prueba de concepto jev:triaje)</comment>');
             $this->line('  <comment>JEV_API_KEY=sk_...</comment>');
@@ -218,7 +218,7 @@ class ProbarTriajeJevCommand extends Command
         return [
             'intencion' => [
                 'type' => 'choice',
-                'instructions' => 'Sos la secretaría de un consultorio médico. ¿Qué quiere la persona que escribe este mensaje de WhatsApp? Elegí la categoría que mejor lo describa. Regla para no confundir el apuro con el cuadro clínico: si PIDE O CAMBIA UNA CITA, la categoría es agendar, reprogramar o cancelar aunque diga «urgente», «para hoy» o «lo antes posible»; reservá `urgencia` para cuando relata un cuadro clínico grave y no está pidiendo una cita.',
+                'instructions' => 'Eres la secretaría de un consultorio médico. ¿Qué quiere la persona que escribe este mensaje de WhatsApp? Elige la categoría que mejor lo describa. Regla para no confundir el apuro con el cuadro clínico: si PIDE O CAMBIA UNA CITA, la categoría es agendar, reprogramar o cancelar aunque diga «urgente», «para hoy» o «lo antes posible»; reserva `urgencia` para cuando relata un cuadro clínico grave y no está pidiendo una cita.',
                 'criteria' => $categorias,
             ],
             'es_urgencia' => [

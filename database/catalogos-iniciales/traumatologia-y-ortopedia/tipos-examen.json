@@ -1,0 +1,34 @@
+[
+ {
+  "codigo_origen": "001",
+  "tipo": "LABORATORIO"
+ },
+ {
+  "codigo_origen": "004",
+  "tipo": "Preoperatorio"
+ },
+ {
+  "codigo_origen": "005",
+  "tipo": "OSTEOPOROSIS"
+ },
+ {
+  "codigo_origen": "003",
+  "tipo": "ESTUDIO DE IMAGENES"
+ },
+ {
+  "codigo_origen": "002",
+  "tipo": "ESTUDIOS ESPECIALES"
+ },
+ {
+  "codigo_origen": "006",
+  "tipo": "PERFIL 20"
+ },
+ {
+  "codigo_origen": "007",
+  "tipo": "PERFIL REUMATOIDEO"
+ },
+ {
+  "codigo_origen": "008",
+  "tipo": "ESTUDIOS ONCOLOGICOS"
+ }
+]

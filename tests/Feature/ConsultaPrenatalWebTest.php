@@ -735,7 +735,7 @@ class ConsultaPrenatalWebTest extends TestCase
         $this->assertMatchesRegularExpression('/id="hemoglobina"[^>]*value=""/s', $otraVez);
 
         // Y dice que se está **agregando** una fecha a la gesta, no que la gesta esté vacía.
-        $nuevo->assertSee('Fecha nueva: completá y guardá para agregarla a la gesta.');
+        $nuevo->assertSee('Fecha nueva: completa y guarda para agregarla a la gesta.');
     }
 
     /**

@@ -21,8 +21,7 @@
 
         @if (! $vm->hayInforme())
             <p class="texto-tenue small mb-0">
-                Esta historia todavía no tiene ninguna gesta, así que no hay informe que imprimir. Cargá la
-                primera en la pestaña <em>Prenatal</em>.
+                Sin gestas: no hay informe que imprimir.
             </p>
         @else
         @if (count($vm->gestas()) > 1)

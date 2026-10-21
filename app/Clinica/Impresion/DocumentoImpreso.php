@@ -33,6 +33,9 @@ final class DocumentoImpreso
 
     public const DIETA = 'dieta';
 
+    /** La **pre-factura** (F9): los conceptos facturables de la consulta con su cantidad, su monto y el total. */
+    public const PREFACTURA = 'prefactura';
+
     public const LABORATORIO = 'laboratorio';
 
     public const ESTUDIOS = 'estudios';
@@ -161,6 +164,7 @@ final class DocumentoImpreso
         self::INFORME => ['INFORME MÉDICO', 'Informe médico'],
         self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
+        self::PREFACTURA => ['PRE-FACTURA', 'Pre-factura'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
         self::LABORATORIO_PAREJA => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio de la pareja'],
         self::ESTUDIOS => ['SOLICITUD DE ESTUDIOS', 'Solicitud de estudios'],

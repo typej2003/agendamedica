@@ -15,6 +15,7 @@
                  es el campo, que está más abajo en el mismo formulario. --}}
             <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#enfermedadactual" tipo="EA"
                              nombre="enfermedad actual" />
+            <x-ui.anterior :anterior="$vm->anterior()" destino="#enfermedadactual" />
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>

@@ -23,6 +23,7 @@
                             <th>Médico</th>
                             <th>Última sync del escritorio</th>
                             <th>Última actividad del app</th>
+                            <th>Última actividad web</th>
                             <th>Carga inicial</th>
                             <th class="text-end">Pacientes</th>
                             <th class="text-end">Historias</th>
@@ -52,6 +53,16 @@
                                         <small class="text-muted">{{ $r['ultima_app']->locale('es')->diffForHumans() }}</small>
                                     @else
                                         <span class="text-muted">Nunca</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($r['ultima_web'])
+                                        <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_web']) }}</div>
+                                        <small class="text-muted">{{ $r['ultima_web']->locale('es')->diffForHumans() }}</small>
+                                    @elseif ($medico->user_id)
+                                        <span class="text-muted" title="Se registra desde el 20/10/2026: antes de esa fecha no hay dato.">Sin registro</span>
+                                    @else
+                                        <span class="text-muted">Sin cuenta</span>
                                     @endif
                                 </td>
                                 <td>
@@ -86,7 +97,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No se encontraron médicos.</td>
+                                <td colspan="9" class="text-center text-muted py-4">No se encontraron médicos.</td>
                             </tr>
                         @endforelse
                     </tbody>

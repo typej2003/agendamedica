@@ -77,7 +77,7 @@ class SyncCredencialCommand extends Command
             if (! $confirmado) {
                 $this->error($this->input->isInteractive()
                     ? 'Cancelado.'
-                    : 'Sin confirmación: agregá --si para emitir credenciales de un médico inexistente.');
+                    : 'Sin confirmación: agrega --si para emitir credenciales de un médico inexistente.');
                 return self::FAILURE;
             }
         }
@@ -94,7 +94,7 @@ class SyncCredencialCommand extends Command
         $previas = $servicio->previasDelEquipo($regMedico, $equipo);
         if ($previas->isNotEmpty() && ! $this->option('forzar')) {
             $this->error("Ya hay {$previas->count()} credencial(es) activa(s) para '{$equipo}'. "
-                . 'Usá --forzar para revocarlas y emitir una nueva.');
+                . 'Usa --forzar para revocarlas y emitir una nueva.');
             return self::FAILURE;
         }
 
@@ -126,7 +126,7 @@ class SyncCredencialCommand extends Command
         );
 
         $this->newLine();
-        $this->line('Guardá este token en el equipo — NO se vuelve a mostrar:');
+        $this->line('Guarda este token en el equipo — NO se vuelve a mostrar:');
         $this->line('');
         $this->line('    ' . $token);
         $this->line('');
@@ -211,7 +211,7 @@ class SyncCredencialCommand extends Command
 
     private function accionInvalida(): int
     {
-        $this->error('Acción inválida. Usá: emitir | listar | revocar');
+        $this->error('Acción inválida. Usa: emitir | listar | revocar');
         return self::FAILURE;
     }
 }

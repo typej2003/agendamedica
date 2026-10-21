@@ -3745,6 +3745,72 @@ html.tour-activo, html.tour-activo body { overflow: hidden; overscroll-behavior:
     .adjunto-nombre { max-width: 92px; }
 }
 
+/* ==========================================================================
+   Formularios condensados (2026-10-20)
+   Pedido del usuario: los formularios desperdiciaban pantalla (tres campos y había que bajar para ver el
+   último). Se compacta el espaciado vertical de toda la web, sin tocar el alto de los controles (36 px, §2 de
+   la guía), y se ponen en dos columnas la cita (paciente | cita) y el editor de tratamientos (editor | vademécum).
+   ========================================================================== */
+body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
+.page-head { margin-bottom: .65rem; }
+.page-head .page-head-sub { margin-top: .1rem; }
+.main-content .card-body { padding: .85rem 1rem; }
+.main-content .card-header { padding: .5rem 1rem; }
+.main-content .card.mb-3 { margin-bottom: .75rem !important; }
+.main-content .row.g-3 { --bs-gutter-y: .6rem; --bs-gutter-x: .85rem; }
+.main-content .form-label { margin-bottom: .15rem; font-size: .8125rem; }
+.main-content .form-text { margin-top: .15rem; font-size: .78rem; }
+.empty-state { padding: 1.1rem 1rem; }
+.empty-state > i { font-size: 1.3rem; margin-bottom: .25rem; }
+
+/* Cita: paciente | cita lado a lado. */
+.paso { padding: .8rem 1rem; }
+.paso-titulo { margin-bottom: .6rem; font-size: .95rem; }
+.paso-numero { width: 1.4rem; height: 1.4rem; font-size: .75rem; }
+.pasos-columnas { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 992px) {
+    .pasos-columnas { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .pasos-columnas > .paso { border-bottom: 0; }
+    .pasos-columnas > .paso + .paso { border-left: 1px solid var(--ds-borde); }
+}
+.pasos-columnas + .tarjeta-pie { border-top: 1px solid var(--ds-borde); }
+
+/* Editor de tratamientos: el editor a la izquierda y el vademécum siempre a la vista a la derecha. */
+.editor-dos-columnas { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; align-items: start; }
+.editor-dos-columnas > * { grid-column: 1 / -1; }
+@media (min-width: 1100px) {
+    .editor-dos-columnas { grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr); }
+    .editor-dos-columnas > form { grid-column: 1; grid-row: 1; }
+    .editor-dos-columnas > #recipe-herramientas {
+        grid-column: 2; grid-row: 1; margin-top: 0 !important;
+        position: sticky; top: 4.5rem;
+    }
+}
+
+/* Ficha del paciente: «Quién es» a todo el ancho y las otras dos tarjetas lado a lado (si la sección mide >= 60rem). */
+.campos-paciente { container-type: inline-size; }
+.campos-paciente-rejilla { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; margin-bottom: .75rem; align-items: start; }
+.campos-paciente-rejilla > .card { margin-bottom: 0 !important; }
+@container (min-width: 60rem) {
+    .campos-paciente-rejilla { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .campos-paciente-rejilla > .campos-paciente-ancha { grid-column: 1 / -1; }
+}
+
+/* Barra superior condensada: dos fichas (especialidad y sede) y la cuenta con el nombre completo; lo demás, en su menú. */
+.chip-barra { max-width: 22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-topbar .menu-cuenta > summary { max-width: 18rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 575.98px) { .app-topbar .menu-cuenta > summary > span { display: none; } }
+.menu-cuenta-cabecera { display: flex; flex-direction: column; gap: .1rem; padding: .4rem .6rem .5rem; margin-bottom: .25rem; border-bottom: 1px solid var(--ds-borde); }
+
+/* Encabezado y barra más bajos: el título y su subtítulo comparten renglón (el subtítulo pasa abajo si no cabe). */
+.app-topbar { min-height: 48px; }
+.app-topbar.py-2 { padding-top: .3rem !important; padding-bottom: .3rem !important; }
+.app-contenido.p-lg-4 { padding: .85rem 1.25rem 1.25rem !important; }
+.page-head .page-head-texto { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .75rem; row-gap: 0; }
+.page-head .page-head-volver { flex: 0 0 100%; margin-bottom: 0; }
+.page-head .page-head-sub { margin: 0; }
+.jornada-resumen-inline { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; font-size: .8125rem; padding: .35rem .6rem; }
+
 /* El «i» de <x-ui.info>: un botón chico pegado a la etiqueta y un cuadro flotante bajo ella (contraste AA). */
 .info-pista { position: relative; display: inline-block; vertical-align: baseline; }
 .info-boton {
@@ -3760,3 +3826,87 @@ html.tour-activo, html.tour-activo body { overflow: hidden; overscroll-behavior:
     font-size: .85rem; font-weight: 400; line-height: 1.35; text-align: left; white-space: normal;
 }
 .info-texto[hidden] { display: none; }
+
+
+/* ==========================================================================
+   Web clínica — Sedes y consultorios (`/clinica/sedes`, 2026-10-20)
+   ========================================================================== */
+
+/* Una tarjeta por sede con sus consultorios adentro. La grilla decide por el ancho del contenido (`auto-fill`), no por
+   la ventana: plegar el menú lateral suma columnas (trampa 125). A 375 px queda una sola columna. */
+.sedes-grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.sede-tarjeta .card-titulo { min-width: 0; overflow-wrap: anywhere; }
+.sede-tarjeta .card-body { padding-top: .75rem; }
+
+.sede-datos {
+    display: flex; flex-wrap: wrap; gap: .1rem .9rem;
+    margin: 0 0 .5rem; font-size: .875rem; color: var(--ds-texto-3);
+}
+
+.sede-sin-consultorios { margin: 0; font-size: .875rem; color: var(--ds-texto-3); }
+
+.sede-consultorios { list-style: none; margin: 0; padding: 0; }
+.sede-consultorio { padding: .6rem 0; border-top: 1px solid var(--ds-borde); }
+.sede-consultorio:last-child { padding-bottom: 0; }
+
+/* El menú «…» se queda a la derecha del renglón: lo que envuelve es la identidad (nombre, modalidad, duración). */
+.sede-consultorio-cabeza { display: flex; align-items: flex-start; gap: .5rem; }
+.sede-consultorio-identidad { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .4rem; flex: 1 1 auto; min-width: 0; padding-top: .2rem; }
+.sede-consultorio-identidad > .bi-door-closed { color: var(--ds-violeta-700); }
+.sede-consultorio-nombre { overflow-wrap: anywhere; }
+.sede-consultorio-cabeza .menu-acciones { flex: 0 0 auto; }
+
+.sede-consultorio-bloques { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .45rem; }
+
+/* Un bloque de horario como pastilla, con su «x» para quitarlo (el `<form>` no ocupa caja). */
+.bloque-chip {
+    display: inline-flex; align-items: center; gap: .2rem;
+    padding: .1rem .15rem .1rem .55rem;
+    font-size: .8125rem; line-height: 1.3;
+    background: var(--ds-fondo); border: 1px solid var(--ds-borde); border-radius: var(--ds-radio-sm);
+}
+.bloque-chip abbr { font-weight: 600; text-decoration: none; }
+.bloque-chip form { display: contents; }
+.bloque-chip-quitar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.75rem; height: 1.75rem; padding: 0;
+    border: 0; border-radius: var(--ds-radio-sm); background: transparent; color: var(--ds-texto-3);
+}
+.bloque-chip-quitar:hover { background: var(--ds-peligro-bg); color: var(--ds-peligro); }
+
+.sede-pie { margin-top: .75rem; }
+
+/* El resto del catálogo de la clínica, plegado. */
+.sedes-otras > summary {
+    display: inline-flex; align-items: center; gap: .4rem;
+    margin-bottom: .75rem; font-weight: 600; color: var(--ds-texto-2); cursor: pointer;
+}
+.sedes-otras > summary::-webkit-details-marker { display: none; }
+.sedes-otras > summary .bi-chevron-right { transition: transform var(--ds-dur-base) var(--ds-ease); }
+.sedes-otras[open] > summary .bi-chevron-right { transform: rotate(90deg); }
+
+/* El error que escribe `sedes.js` en la sede rápida (llega por `fetch`, no por `<x-ui.campo>`). */
+.campo-error[data-error-de] { display: block; }
+
+/* «Sede creada. ¿Agregar un consultorio?» */
+.sede-creada { text-align: center; padding: 1rem 0; }
+.sede-creada-icono { display: block; font-size: 2.25rem; color: var(--ds-exito); margin-bottom: .5rem; }
+.sede-creada-pregunta { margin: 0; font-size: 1rem; }
+
+@media (max-width: 767.98px) {
+    /* Objetivo táctil de 40 px en el celular. */
+    .bloque-chip-quitar { width: 2.5rem; height: 2.5rem; }
+}
+
+/* ==========================================================================
+   Dosis por kilo del medicamento (catálogo del médico y catálogo inicial del admin, 2026-10-21)
+   La casilla «La dosis es por kilo» despliega el panel con la fórmula del récipe: sin JS, con `:has()`.
+   ========================================================================== */
+.dosis-por-kilo:not(:has(.dosis-por-kilo__casilla:checked)) .dosis-por-kilo__panel { display: none; }

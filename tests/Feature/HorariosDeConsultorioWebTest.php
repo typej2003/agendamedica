@@ -390,14 +390,15 @@ class HorariosDeConsultorioWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $consultorio = $this->sede($medico, 'San José', '701');
 
-        // Alta desde el listado (con su `volver`, que es lo único que cambia la vuelta).
+        // Alta desde el listado (con su `volver`, que es lo único que cambia la vuelta). `consultorios` es el nombre de
+        // antes: desde el 2026-10-20 la vuelta es la pantalla de sedes y consultorios.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios/' . $consultorio->id . '/horarios', $this->datosDeBloque([
                 'volver'      => 'consultorios',
                 'consultorio' => $consultorio->id,
                 'cupo'        => 8,
             ]))
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlHorarios($consultorio));
 
@@ -422,6 +423,6 @@ class HorariosDeConsultorioWebTest extends TestCase
                 'consultorio' => $consultorio->id,
                 'dia_semana'  => 2,
             ]))
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
     }
 }

@@ -104,14 +104,14 @@ class ComentariosAdminTest extends TestCase
         Livewire::test(Comentarios::class)
             ->call('abrir', $comentario->id)
             ->assertSet('comentarioId', $comentario->id)
-            ->set('respuesta', 'Actualizá el app: eso ya está corregido.')
+            ->set('respuesta', 'Actualiza el app: eso ya está corregido.')
             ->call('responder')
             ->assertHasNoErrors();
 
         $comentario->refresh();
         $this->assertSame(Comentario::RESPONDIDO, $comentario->estado);
         $this->assertTrue($comentario->fueRespondido());
-        $this->assertSame('Actualizá el app: eso ya está corregido.', $comentario->respuesta);
+        $this->assertSame('Actualiza el app: eso ya está corregido.', $comentario->respuesta);
         $this->assertSame($root->id, $comentario->respondido_por);
         $this->assertNotNull($comentario->respondido_el);
 
@@ -161,6 +161,34 @@ class ComentariosAdminTest extends TestCase
         $this->assertTrue($comentario->estaNuevo());
         $this->assertNull($comentario->respuesta);
         $this->assertNull($comentario->respondido_el);
+    }
+
+    public function test_la_bandeja_dice_desde_dónde_se_mandó_cada_comentario(): void
+    {
+        $autor = $this->usuario('Medico');
+        $web = $this->comentario('DESDE-LA-WEB', Comentario::NUEVO, $autor);
+
+        $app = Comentario::create([
+            'user_id' => $autor->id, 'rol' => 'Medico',
+            'origen' => 'app', 'plataforma' => 'android',
+            'tipo' => Comentario::BUG, 'mensaje' => 'DESDE-EL-APP', 'estado' => Comentario::NUEVO,
+        ]);
+
+        $this->assertSame('Web', $web->origenLegible());
+        $this->assertSame('App · Android', $app->origenLegible());
+
+        // Y se ve en la lista, sin abrir el comentario: la columna «Desde» con el equipo al lado del canal.
+        $this->actingAs($this->usuario('Root'))
+            ->get('/admin/comentarios')
+            ->assertOk()
+            ->assertSee('Desde')
+            ->assertSee('App · Android')
+            ->assertSee('bi-android2');
+
+        // Y en la tarjeta abierta, junto al tipo, para no perderlo al responder.
+        Livewire::test(Comentarios::class)
+            ->call('abrir', $app->id)
+            ->assertSee('App · Android');
     }
 
     public function test_la_secretaria_y_el_medico_no_entran_a_la_bandeja(): void

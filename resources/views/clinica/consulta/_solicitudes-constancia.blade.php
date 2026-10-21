@@ -16,7 +16,7 @@
         <p class="solicitud-texto-base" id="constancia-texto-base">{{ $vm->textoBase() }}</p>
 
         <x-ui.campo etiqueta="Diagnósticos (IDX)" for="constancia-diagnosticos" error="diagnosticos" class="mb-3"
-                    :ayuda="$vm->siguenALaConsulta() ? 'Son los de esta consulta: si agregas uno en el ítem Diagnóstico, la constancia lo trae sola. Si los editas aquí, dejan de seguirla.' : 'Editaste los diagnósticos: la constancia ya no sigue a los de la consulta.'">
+                    :ayuda="$vm->siguenALaConsulta() ? 'Siguen a los diagnósticos de la consulta hasta que los editas.' : 'Editaste los diagnósticos: la constancia ya no sigue a los de la consulta.'">
             <textarea name="diagnosticos" id="constancia-diagnosticos" class="form-control" rows="3"
                       placeholder="{{ $vm->sinDiagnosticos() ? 'Esta consulta todavía no tiene diagnósticos: escríbelos o cárgalos en el ítem Diagnóstico.' : '' }}">{{ $vm->diagnosticos() }}</textarea>
         </x-ui.campo>

@@ -21,9 +21,9 @@ use Illuminate\Support\Facades\DB;
 class EnviarComentario
 {
     /**
-     * @param  array{tipo: string, mensaje: string, contexto?: array|null}  $datos
-     * @param  string  $origen  `web` (hoy) o `app` (cuando el móvil lo mande)
-     * @param  array<int,mixed>  $imagenes  los archivos ya validados (el móvil, cuando adjunte, usará el mismo camino)
+     * @param  array{tipo: string, mensaje: string, contexto?: array|null, plataforma?: string|null}  $datos
+     * @param  string  $origen  `web` (la clínica) o `app` (el móvil)
+     * @param  array<int,mixed>  $imagenes  los archivos ya validados (el móvil, cuando adjunte, usa el mismo camino)
      */
     public function ejecutar(Authenticatable $usuario, array $datos, string $origen = 'web', array $imagenes = []): Comentario
     {
@@ -38,6 +38,10 @@ class EnviarComentario
                 'reg_medico' => $medico?->regMedicoPrincipal() ?? $medico?->reg_medico,
                 'rol' => $usuario->getRoleNames()->first(),
                 'origen' => $origen,
+                // De dónde salió, para la bandeja (2026-10-20): la que mandó el cliente —un valor raro se
+                // descarta— y, si no dijo nada, la que se deduce del canal: la web es el navegador.
+                'plataforma' => Comentario::normalizarPlataforma($datos['plataforma'] ?? null)
+                    ?? ($origen === 'web' ? Comentario::PLATAFORMA_WEB : null),
                 'tipo' => $datos['tipo'],
                 'mensaje' => $datos['mensaje'],
                 'contexto' => $datos['contexto'] ?? null,

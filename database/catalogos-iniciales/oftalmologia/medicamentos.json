@@ -1,0 +1,6326 @@
+[
+ {
+  "codigo_origen": "0008",
+  "nombregenerico": "LAGRIMAS",
+  "nombrecomercial": "LACRYVISC",
+  "uso": "1 aplicacion 4 veces al día",
+  "presentacion": "gel oftálmico",
+  "durante": "4",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0009",
+  "nombregenerico": "ACETAZOLAMIDA",
+  "nombrecomercial": "DIAMOX",
+  "dosificacion": "GLAUCOMA\r\nPRE-OPERATORIO",
+  "uso": "1 tableta cada 8 horas",
+  "presentacion": "Tabs 250 mg",
+  "durante": "3",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0063",
+  "nombrecomercial": "VOLTAREN",
+  "uso": "Una gota cada 6 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0064",
+  "nombrecomercial": "NYOLOL",
+  "uso": "1 gota cada 12  horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0077",
+  "nombrecomercial": "MAXICROM",
+  "uso": "1 gota cada 8 horas  por 20 dias",
+  "presentacion": "Solución Oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0015",
+  "nombregenerico": "CLORHIDRATO DE PILOCARPINA",
+  "nombrecomercial": "PILOGEL",
+  "uso": "1 APLICACIÓN  2 VECES AL DÍA",
+  "presentacion": "GEL OFTALMICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0068",
+  "nombrecomercial": "CILOXAN",
+  "uso": "1 gota cada 12 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0065",
+  "nombrecomercial": "DALACIN",
+  "uso": "Una tableta cada 8 horas",
+  "presentacion": "Tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0004",
+  "nombregenerico": "CICLOPENTOLATO",
+  "nombrecomercial": "CICLOGYL",
+  "dosificacion": "1 GOTA CADA 8 HORAS",
+  "uso": "1 gota cada 8 horas",
+  "presentacion": "Solución oftálmica",
+  "durante": "3",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0006",
+  "nombregenerico": "LATANOPROST",
+  "nombrecomercial": "XALATAN",
+  "dosificacion": "1 GOTA CADA NOCHE",
+  "uso": "GLAUCOMA",
+  "presentacion": "SOLUCION OFTALMICA",
+  "durante": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0066",
+  "nombrecomercial": "FORCRIM",
+  "uso": "Una tableta cada 12 horas",
+  "presentacion": "Tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0072",
+  "nombrecomercial": "CEFADRIL",
+  "uso": "Una cápsula cada 12 horas por 7 dias",
+  "presentacion": "Caps 500 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0029",
+  "nombregenerico": "VITAMINA  B12",
+  "nombrecomercial": "MEGANEUBION",
+  "uso": "UNA AMPOLLA INTRAMUSCULAR INTERDIARIA",
+  "presentacion": "ampollas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0106",
+  "nombrecomercial": "AULIN",
+  "uso": "una tableta 7pm",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0434",
+  "nombrecomercial": "CENTRUM",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0062",
+  "nombrecomercial": "ERITROMICINA",
+  "uso": "Aplicar unguento dos veces al día previa limpieza con shampo Jhonson",
+  "presentacion": "Unguento oftálmico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0010",
+  "nombregenerico": "TIMOPTOL/DORZOLAMIDA",
+  "nombrecomercial": "COSOPT",
+  "dosificacion": "GLAUCOMA",
+  "uso": "1 GOTA CADA 12 HORAS",
+  "presentacion": "SOLUCION OFTALMICA",
+  "durante": "3",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0075",
+  "nombrecomercial": "MEGANEUBIÓN",
+  "uso": "Una tableta junto con cada comida por un mes",
+  "presentacion": "Tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0076",
+  "nombrecomercial": "TRAVATAN",
+  "uso": "1 gota al acostarse",
+  "presentacion": "Solución Oftólmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0078",
+  "nombrecomercial": "FLUDIL",
+  "uso": "1 tableta antes de acostarse por un mes",
+  "presentacion": "Tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0001",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "QUINOFTAL",
+  "dosificacion": "postoperatorio",
+  "uso": "1 gota cada 6 horas",
+  "presentacion": "solucion oftalmica",
+  "durante": "4",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0069",
+  "nombrecomercial": "TRAZIDEX",
+  "uso": "Aplicar unguento cada 6 horas",
+  "presentacion": "Unguento Oftálmico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0070",
+  "nombrecomercial": "OCLUSIÓN OCULAR",
+  "uso": "Ocluir ojo izquierdo por 2 semanas",
+  "presentacion": "t",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0005",
+  "nombregenerico": "TIMOPTOL",
+  "nombrecomercial": "NYOLOL GEL",
+  "uso": "1 gota diaria",
+  "presentacion": "Gel Oftálmico",
+  "durante": "2",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0071",
+  "nombrecomercial": "SOLUCIÓN SALINA HIPERTÓNICA AL 5%",
+  "uso": "Una gota cada 4 horas",
+  "presentacion": "Gotero",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0067",
+  "nombrecomercial": "METICORTEN",
+  "uso": "Una tableta a las 7 am diaria por 7 dias",
+  "presentacion": "Tabs 50 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0073",
+  "nombrecomercial": "PROSTAFILINA",
+  "uso": "Una cápsula cada 6 horas por 10 días",
+  "presentacion": "Tabs 500 mgr",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0074",
+  "nombrecomercial": "AFLAREX",
+  "uso": "1 gota cada 6 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0060",
+  "nombregenerico": "TOBRAMICINA",
+  "nombrecomercial": "TOBREX",
+  "uso": "Aplicar unguento antes de acostarse",
+  "presentacion": "Unguento oftálmico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0061",
+  "nombrecomercial": "SHAMPO JHONSON",
+  "uso": "Limpiar 2 veces al dia borde del pßrpado con shampo y agua tibia (con un hisopo)",
+  "presentacion": "Frasco",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0024",
+  "nombregenerico": "LAGRIMAS  ARTIFICIALES",
+  "nombrecomercial": "HYPOTEARS",
+  "uso": "1  gota  cada  2 -3 horas si presenta escozor en los ojos",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0025",
+  "nombrecomercial": "ALOMIDE",
+  "uso": "1 gota cada 8 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0033",
+  "nombregenerico": "BENDAZAC  LISINA",
+  "nombrecomercial": "BENDALINA",
+  "uso": "1 gota cada 8 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0058",
+  "nombregenerico": "VITAMINAS Y ANTIOXIDANTES",
+  "nombrecomercial": "VITALUX PLUS",
+  "uso": "Una tableta junto con la cena",
+  "presentacion": "Tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0036",
+  "nombregenerico": "LOMEFLOXACINA",
+  "nombrecomercial": "LOMEX",
+  "uso": "1  GOTA CADA 30VMINUTOS POR  2  HORAS, LUEGO  UNA GOTA  CADA HORA.",
+  "presentacion": "SOLUCIËN  OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0038",
+  "nombregenerico": "PILOCARPINA",
+  "nombrecomercial": "ISOPTOCARPINA  4%",
+  "uso": "1 gota cada 6 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0039",
+  "nombrecomercial": "OFTENO  3A",
+  "uso": "1  gota  cada 6  horas  por  5  días",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0040",
+  "nombregenerico": "NIMESULIDE",
+  "nombrecomercial": "SCAFLAN",
+  "uso": "1  tableta  2  veces  al  días",
+  "presentacion": "tabletas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0057",
+  "nombrecomercial": "TRAZIDEX",
+  "uso": "1 gota cada 4 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0049",
+  "nombrecomercial": "BLEPHAGEL",
+  "uso": "1 APLICACION 2 VECES AL DIA",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0054",
+  "nombrecomercial": "PATANOL",
+  "uso": "1  gota cada 12 horas",
+  "presentacion": "Solución oftálmica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0079",
+  "nombregenerico": "LAGRIMAS",
+  "nombrecomercial": "LAGRIMAS ARTIFICIALES II",
+  "uso": "UNA GOTA 4 VECES AL DIA SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0080",
+  "nombrecomercial": "SYSTANE",
+  "uso": "UNA GOTA 3-4 VECES AL DIA SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0081",
+  "nombregenerico": "COLIRIO",
+  "nombrecomercial": "GENTEAL",
+  "uso": "UNA GOTA 3-4 VECES AL DIA SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0082",
+  "nombregenerico": "LAGRIMAS",
+  "nombrecomercial": "GENTEAL",
+  "uso": "APLICAR 3 VECES AL DIA Y AL ACOSTARSE",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0083",
+  "nombregenerico": "TOBRAMICINA + DEXA",
+  "nombrecomercial": "TOBRADEX",
+  "uso": "UNA GOTA CADA 4 HORAS POR 7 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0084",
+  "nombregenerico": "TOBRAMICINA + DEXA",
+  "nombrecomercial": "TOBRADEX",
+  "uso": "APLICAR 3 VECES A DIA POR 7 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0157",
+  "nombrecomercial": "ASPIRINA INFANTIL",
+  "uso": "UNA TABLETA DIARIA",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0159",
+  "nombregenerico": "ciclosporina",
+  "nombrecomercial": "RESTASIS",
+  "uso": "Una gota cada 12 horas. Agitar antes de usar",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0091",
+  "nombregenerico": "meloxicam",
+  "nombrecomercial": "ACABEL",
+  "uso": "una tableta cada 12 horas",
+  "presentacion": "tab",
+  "sico": "N",
+  "nombrecomercial1": "D",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0087",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "PREDNEFRIN FORTE",
+  "uso": "AGITAR ANTES DE APLICAR UNA GOTA CADA 2 HORAS POR 5 DIAS LUEGO CADA 6 HORAS POR 5 DIAS, DESPUES CADA 8 HORAS POR 5 DIAS SEGUIDO CADA 12 HORAS Y TERMINA CON UNA GOTA DIARIA HASTA QUE TERMINE EL FRASCO",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0088",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "LOTESOFT",
+  "uso": "UNA GOTA 2 VECES AL DÍA POR 7 DÍAS, LUEGO UNA VEZ AL DÍA POR 7 DÍAS, LUEGO INTERDIARIO POR 14 DÍAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0089",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "SOPHIPREN",
+  "uso": "AGITAR ANTES DE APLICAR UNA GOTA CADA 2 HORAS POR 5 DIAS LUEGO CADA 6 HORAS POR 5 DIAS, DESPUES CADA 8 HORAS POR 5 DIAS SEGUIDO CADA 12 HORAS Y TERMINA CON UNA GOTA DIARIA HASTA QUE TERMINE EL FRASCO",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0090",
+  "nombregenerico": "LAGRIMA",
+  "nombrecomercial": "LACRIDOS",
+  "uso": "UNA GOTA 4 VECES AL DIA SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0092",
+  "nombregenerico": "ibuprofeno",
+  "nombrecomercial": "IBUPROFENO",
+  "uso": "una tableta cada 6 horas",
+  "presentacion": "tab 400 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0093",
+  "nombregenerico": "tobra+dexa",
+  "nombrecomercial": "TODEX",
+  "uso": "una gota cada 4 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0102",
+  "nombrecomercial": "ATROPICEL",
+  "uso": "UNA GOTA CADA 6 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0094",
+  "nombregenerico": "tobra+dexa",
+  "nombrecomercial": "TODEX",
+  "uso": "aplicar 3 veces al dia",
+  "presentacion": "unguento",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0095",
+  "nombregenerico": "hialurinato sodio",
+  "nombrecomercial": "LAGRICEL",
+  "uso": "una gota 4 veces al dia siempre.",
+  "presentacion": "FIOLA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0059",
+  "nombregenerico": "glaucoma",
+  "nombrecomercial": "AZOPT",
+  "uso": "una gota cada 8 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0096",
+  "nombregenerico": "/CLOROHIDRATO DE MOXIFLOXACINA 0.5%",
+  "nombrecomercial": "VIGAMOX",
+  "uso": "una gota cada 6 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "nombrecomercial1": "-VIGADEXA",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0097",
+  "nombregenerico": "DORZOLAMIDA + TIMOLOL",
+  "nombrecomercial": "GLAUCOTENSIL T",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0098",
+  "nombrecomercial": "VISCOTEARS",
+  "uso": "APLICAR 4 VECES AL DIA Y AL ACOSTARSE",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0099",
+  "nombregenerico": "ciprofloxacina",
+  "nombrecomercial": "CIPRONAX",
+  "uso": "una gota cada 4 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0100",
+  "nombregenerico": "genta + dexa",
+  "nombrecomercial": "GARABET",
+  "uso": "aplicar 3 veces al dia",
+  "presentacion": "unguento",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0101",
+  "nombrecomercial": "DOBET",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0103",
+  "nombrecomercial": "MYDROX",
+  "uso": "UNA GOTA CADA 6 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0104",
+  "nombrecomercial": "LUMIGAN",
+  "uso": "una gota diaria 7pm",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0105",
+  "nombrecomercial": "XALACOM",
+  "uso": "una gota 7pm",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0107",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "aplicar 5 veces al dia",
+  "presentacion": "ung",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0108",
+  "nombrecomercial": "KETOPTIC",
+  "uso": "una gota cada 12 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0187",
+  "nombrecomercial": "ATAMEL",
+  "uso": "Cada 8 horas",
+  "presentacion": "Jarabe",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0154",
+  "nombrecomercial": "TRAZINAC",
+  "uso": "UNA GOTA CADA 6 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0109",
+  "nombrecomercial": "CLARIDEX",
+  "uso": "UNA CUCHARADA CADA 12 HORAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0110",
+  "nombrecomercial": "ALERGOT",
+  "uso": "una gota cada 12 horas por 1 mes",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0113",
+  "nombrecomercial": "TRENTAL",
+  "uso": "una gragea 3 veces al dia",
+  "presentacion": "grag",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0114",
+  "nombrecomercial": "OCUPRED",
+  "uso": "una gota cada 4 horas por 7 dias luego cada 8 horas por 3 dias y luego cada 12 horas AGITAR ANTES DE APLICAR",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0115",
+  "nombrecomercial": "CLARASOL",
+  "uso": "UNA GOTA 3 VECES AL DIA",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0116",
+  "nombrecomercial": "BETAGEN SOLUSPAN",
+  "uso": "una ampolla intramuscular el dia de hoy",
+  "presentacion": "ampolla",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0118",
+  "nombrecomercial": "TODENAC",
+  "uso": "UNA GOTA CADA 4 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0119",
+  "nombrecomercial": "DESLORANT",
+  "uso": "UNA TABLETA AL DIA POR 7 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0120",
+  "nombrecomercial": "VITAVISION",
+  "uso": "una capsula con la cena siempre",
+  "presentacion": "capsula",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0121",
+  "nombrecomercial": "MATIGEL",
+  "uso": "UNA GOTA CADA 12 HORAS DIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0122",
+  "nombrecomercial": "MATILOL",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0123",
+  "nombrecomercial": "GARASONE",
+  "uso": "una gota cada 6 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0124",
+  "nombrecomercial": "QUINOCORT",
+  "uso": "una gota cada 4 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0170",
+  "nombrecomercial": "AVASTIN",
+  "presentacion": "ampolla",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0125",
+  "nombrecomercial": "PREDNISONA",
+  "uso": "2 TABLETAS CADA 8 HORAS",
+  "presentacion": "TAB 5 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0126",
+  "nombrecomercial": "VOLTEN",
+  "uso": "una gota cada 6 horas por 7 dias",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0127",
+  "nombrecomercial": "ACUAFIL",
+  "uso": "una gota 4 veces al dia siempre",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0128",
+  "nombrecomercial": "FLUMETOL",
+  "uso": "UNA GOTA CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0129",
+  "nombrecomercial": "CELESTONE SOLUSPAN",
+  "uso": "UNA AMPOLLA INTRAMUSCULAR",
+  "presentacion": "AMPOLLA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0130",
+  "nombrecomercial": "ACETAZOLAMIDA",
+  "uso": "una tableta cada 8 horas con jugo de naranja",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0131",
+  "nombrecomercial": "SOPHIXIN",
+  "uso": "una gota cada 3 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0132",
+  "nombrecomercial": "GLOBITAN",
+  "uso": "una gota cada 12 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0133",
+  "nombrecomercial": "DOBETIN",
+  "uso": "una ampolla intramuscular interdiaria",
+  "presentacion": "ampolla",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0134",
+  "nombrecomercial": "PREDNISONA",
+  "uso": "una tableta diaria",
+  "presentacion": "tab 50 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0135",
+  "nombrecomercial": "SICCAFLUID",
+  "uso": "una gota 4 veces al dia siempre",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0136",
+  "nombrecomercial": "OCUDOL",
+  "uso": "una gota cada 6 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0137",
+  "nombrecomercial": "VITAMINA C",
+  "uso": "una tableta cada 12 horas",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0138",
+  "nombrecomercial": "LARMABAK",
+  "uso": "una gota 4 veces al dia siempre",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0139",
+  "nombrecomercial": "AZ",
+  "uso": "UNA GOTA CADA 12 HORAS POR 1 MES",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0140",
+  "nombrecomercial": "AGGLAD",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0141",
+  "nombrecomercial": "CEFADROXILO",
+  "uso": "una cucharada cada 12 horas por 10 dias",
+  "presentacion": "susp 250 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0142",
+  "nombrecomercial": "SOLUMEDROL",
+  "uso": "una ampolla diluida via endovenosa",
+  "presentacion": "ampolla 500 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0193",
+  "nombrecomercial": "RELESTAT",
+  "uso": "1 GOTA EN CADA OJO CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0145",
+  "nombrecomercial": "SOLUCLEAR",
+  "uso": "una gota 4 veces al dia",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0146",
+  "nombrecomercial": "POLIDEXIN",
+  "uso": "una gota cada 4 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0147",
+  "nombrecomercial": "TIMOPTOL",
+  "uso": "una gota cada 12 horas",
+  "presentacion": "colirio 0,5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0148",
+  "nombrecomercial": "CLARIDEX",
+  "uso": "una tableta cada 12 horas",
+  "presentacion": "ab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0149",
+  "nombrecomercial": "NAABAK",
+  "uso": "una gota cada 12 horas por un mes",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0150",
+  "nombrecomercial": "DECADRON",
+  "uso": "UNA AMPOLLA VEV DILUIDA CADA 12 HORAS",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0151",
+  "nombrecomercial": "CICLOFTAL",
+  "uso": "una gota cada 6 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0155",
+  "nombrecomercial": "COXYLAN",
+  "uso": "UNA GOTA CADA 6 HORA",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0153",
+  "nombrecomercial": "PILOCAR 2%",
+  "uso": "UNA GOTA CADA 8 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0156",
+  "nombrecomercial": "IBUPROFENO",
+  "uso": "una cucharada cada 8 horas",
+  "presentacion": "jarabe",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0158",
+  "nombrecomercial": "ASAPROL",
+  "uso": "UNA TABLETA DIARIA",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0162",
+  "nombrecomercial": "AZEL",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0160",
+  "nombrecomercial": "POENTOBRAL F",
+  "uso": "UNA GOTA CADA 4 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0161",
+  "nombrecomercial": "OPTIFRESH",
+  "uso": "una gota 4 veces al dia",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0163",
+  "nombrecomercial": "LEXOTANIL",
+  "uso": "UNA TABLETA AL ACOSTARSE",
+  "presentacion": "TAB 3MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0164",
+  "nombrecomercial": "LITONATE",
+  "uso": "UNA TABLETA 2 VECES AL DIA",
+  "presentacion": "TAB 30 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0165",
+  "nombrecomercial": "KELACOTE",
+  "uso": "APLICAR DIARIAMENTE EN LAS HERIDAS",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0166",
+  "nombrecomercial": "FLUCONAZOL",
+  "uso": "una gota cada 3 horas",
+  "presentacion": "frasco infusion iv",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0167",
+  "nombrecomercial": "ZADITEN",
+  "uso": "una gota cada 12 horas",
+  "presentacion": "coliriro",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0168",
+  "nombrecomercial": "TAFIL",
+  "uso": "UNA TABLETA HORA SUEÑO",
+  "presentacion": "TAB 25 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0169",
+  "nombrecomercial": "DUOZOPT",
+  "uso": "una gota cada 12 horas siempre",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0171",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "uso": "una tableta cada 12 horas por 7 dias",
+  "presentacion": "tab 500 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0172",
+  "nombrecomercial": "QUINOMAX",
+  "uso": "UNA GOTA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0173",
+  "nombrecomercial": "POENKERAT",
+  "uso": "una gota cada 6 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0174",
+  "nombrecomercial": "ARTREN",
+  "uso": "una tableta diaria",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0175",
+  "nombrecomercial": "POENTOBRAL",
+  "uso": "aplcar una gota 3 veces al dia",
+  "presentacion": "gel",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0176",
+  "nombrecomercial": "TOBRACORT",
+  "uso": "una gota cada 6 horas por 7 dias",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0177",
+  "nombrecomercial": "CLORASONA",
+  "uso": "una gota cada 4 horas",
+  "presentacion": "colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0178",
+  "nombrecomercial": "REFRESH TEARS",
+  "uso": "UNA GOTA 4 VECES AL DIA  SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0179",
+  "nombrecomercial": "REFRESH LIQUIGEL",
+  "uso": "UNA GOTA 4 VECES AL DIA SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0180",
+  "nombregenerico": "GATIFLOXACINA",
+  "nombrecomercial": "ZYMARAN",
+  "uso": "UNA GOTA CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0188",
+  "nombrecomercial": "MIDROX",
+  "uso": "un agota cada 8 horas",
+  "presentacion": "Colirio",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0182",
+  "nombrecomercial": "ALPHAGAN P",
+  "uso": "UNA GOTA CADA 12 HORAS SIEMPRE",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0183",
+  "nombrecomercial": "NEVENAC",
+  "uso": "UNA GOTA CADA 6 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0184",
+  "nombregenerico": "/ACETAMINOFEN",
+  "nombrecomercial": "ALFADYN",
+  "uso": "UNA GOTA CADA 12 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "nombrecomercial1": "AGGLAD",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0185",
+  "nombrecomercial": "AUGMENTIN",
+  "uso": "una tableta cada 8 horas por 10 dias",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0186",
+  "nombrecomercial": "PIRIMETAMINA",
+  "uso": "Un com. por 3 666",
+  "presentacion": "Comprimidos 25mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0189",
+  "nombrecomercial": "MIOVIT",
+  "uso": "Una interdiaria por 6 dias",
+  "presentacion": "Amp",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0190",
+  "nombregenerico": "OLOPATADINA",
+  "nombrecomercial": "PATANOL S  0.2%",
+  "uso": "1 GOTA CADA 24 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "nombrecomercial1": "OPAT",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0191",
+  "nombrecomercial": "PATANOL S",
+  "uso": "1 GOTA EN AMBOS OJOS CADA 24 HORAS POR 1 MES",
+  "presentacion": "SOLUCION OFTALMOLOGICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0192",
+  "nombrecomercial": "SUPRANETTES",
+  "uso": "USAR UNA GASA PARA LIMPIAR LA PIEL DE LOS PARPADOS Y LAS PESTAÑAS, DE CADA OJO, DOS VECES AL DIA, POR UNA SEMANA.",
+  "presentacion": "GASAS OFTALMICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0194",
+  "nombrecomercial": "SYSTANE ULTRA",
+  "uso": "UNA GOTA 3 O 4 VECES AL DÍA SIEMPRE",
+  "presentacion": "GOTAS / COLIRIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0195",
+  "nombregenerico": "5- MONONITRATO DE ISOSORBIDA",
+  "nombrecomercial": "ELATAN",
+  "uso": "20 mg 2-3 veces al día o 40 mg 2 veces al día (10 mg 2 veces al día en aquellos que no han recibido previamente nitratos)",
+  "presentacion": "Fco de 20mg x 20",
+  "sico": "N",
+  "nombrecomercial1": "ELATANLONG",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0196",
+  "nombregenerico": "5- MONONITRATO DE ISOSORBIDA",
+  "nombrecomercial": "ELATAN",
+  "uso": "20 mg 2-3 veces al día o 40 mg 2 veces al día (10 mg 2 veces al día en aquellos que no han recibido previamente nitratos)",
+  "presentacion": "Fco de 20mg x 20",
+  "sico": "N",
+  "nombrecomercial1": "ELATANLONG",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0197",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "NOTOLAC",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "20 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0198",
+  "nombregenerico": "HIPERSON",
+  "nombrecomercial": "SOLUCION SALINA",
+  "presentacion": "UNGUENTO AL 5 %",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0199",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "DOLAC",
+  "presentacion": "TABLETAS 20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0200",
+  "nombregenerico": "VITAMINAS",
+  "nombrecomercial": "KIDDI",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N",
+  "nombrecomercial1": "DAYAMINERAL"
+ },
+ {
+  "codigo_origen": "0201",
+  "nombregenerico": "HIALURONATO DE SODIO",
+  "nombrecomercial": "TOPTEARS",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS USO CONTINUO",
+  "presentacion": "COLIRIO",
+  "sico": "N",
+  "nombrecomercial1": "LAGRICEL"
+ },
+ {
+  "codigo_origen": "0202",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "ACULAR",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0203",
+  "nombregenerico": "PROPANOLOL",
+  "nombrecomercial": "ALGOREN",
+  "presentacion": "TABLETAS 10 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0204",
+  "nombrecomercial": "LAGRICEL",
+  "uso": "APLICAR 1 GOTA CADA 6 H USO CONTINUO",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0205",
+  "nombrecomercial": "DESLORAT",
+  "presentacion": "5MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0206",
+  "nombrecomercial": "VIGADEXA",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 8 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0207",
+  "nombrecomercial": "DOXIUM",
+  "uso": "TOMAR 1 TABLETA CADA  12 HORAS POR 2 MESES",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0208",
+  "nombrecomercial": "TALZIC",
+  "uso": "TOMAR UNA TABLETA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0209",
+  "nombrecomercial": "PRANEX LP",
+  "presentacion": "TABLETAS 90 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0210",
+  "nombrecomercial": "ZOVANTA",
+  "uso": "TOMAR 1 VEZ AL DIA  POR 15 DIAS",
+  "presentacion": "TABLETAS 40 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0211",
+  "nombrecomercial": "VITAMINA A",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "25.000 UI CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0213",
+  "nombrecomercial": "CALCORT",
+  "uso": "TOMAR UNA TABLETA 1 VEZ AL DIA POR 3 DIAS LUEGO MEDIA TABLETA 1 VEZ AL DIA POR 5 DIAS LUEGO 1 CUARTO 1 VEZ AL DIA POR 5 DIAS",
+  "presentacion": "TABLETAS 30 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0282",
+  "nombrecomercial": "BEDUCEN",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0214",
+  "nombrecomercial": "LOTEMICIN",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0217",
+  "nombrecomercial": "DERMAVITE",
+  "uso": "LAVAR LA CARA 1 VEZ AL DIA",
+  "presentacion": "JAVON",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0218",
+  "nombrecomercial": "OXINORM",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0219",
+  "nombrecomercial": "GLAUCOTENSIL D",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0220",
+  "nombrecomercial": "GANFORT",
+  "uso": "APLICAR 1 GOTA 8 PM OJO IZQUIERDO",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0222",
+  "nombrecomercial": "PR 88",
+  "uso": "APLICAR EN LAS HERIDAS ANTES DE DORMIR POR 1 MES",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0223",
+  "nombrecomercial": "NEUROTIN",
+  "presentacion": "300 MG TABLETA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0224",
+  "nombrecomercial": "VALTREX",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "CAPSULAS DE 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0225",
+  "nombrecomercial": "SUPRADYN",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA  USO CONTINUO",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0226",
+  "nombrecomercial": "DIPROSPAM",
+  "uso": "COLOCAR 1 AMOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "1 AMP 1 CC",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0227",
+  "nombrecomercial": "CENTRUM",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0228",
+  "nombrecomercial": "BIDROXYL",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "500 MG CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0229",
+  "nombrecomercial": "AFLAMAX",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "50 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0230",
+  "nombrecomercial": "ONMUNAL",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0231",
+  "nombrecomercial": "COMBIGAN",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0234",
+  "nombrecomercial": "ZIRTEC",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0235",
+  "nombrecomercial": "DAYAMINERAL",
+  "uso": "TOMAR UNA CUCHADA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0236",
+  "nombrecomercial": "AZARGA",
+  "uso": "APLICAR 1 GOTA CADA 12 H USO CONTINUO",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0238",
+  "nombrecomercial": "AZITROMICINA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "500 MG CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0239",
+  "nombrecomercial": "GAAP",
+  "uso": "APLICAR 1 GOTA A LAS 8 PM AMBOS OJOS USO CONTINUO",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0240",
+  "nombrecomercial": "PRANEX",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 8 DIAS",
+  "presentacion": "60 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0241",
+  "nombrecomercial": "VOLTAREN",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR INTERDIARIA POR 2 DOSIS",
+  "presentacion": "75 MG AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0242",
+  "nombrecomercial": "CROMOFTAL",
+  "uso": "APLICAR 1 GORA CADA 12 HORAS",
+  "presentacion": "COLIRIO 4 %",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0243",
+  "nombrecomercial": "OPTIVE",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS EN AMBOS OJOS USO CONTINUO",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0244",
+  "nombrecomercial": "POENTOBRAL PLUS",
+  "uso": "APLICAR EN EL BORDE DE LOS PARPADOS ANTES DE DORMIR POR 7 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0245",
+  "nombrecomercial": "GLAUCOPROST",
+  "uso": "APLICAR 1 GOTA  8 PM EN AMBOS OJOS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0246",
+  "nombrecomercial": "MOTRIN",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "400 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0247",
+  "nombrecomercial": "LOUTENT",
+  "uso": "APLICAR 1 GOTA A LAS 8 PM",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0248",
+  "nombrecomercial": "NEVANAC",
+  "uso": "1 GOTA CADA 8 HORAS POR 1 MES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0249",
+  "nombrecomercial": "POENBIOTIC",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 8 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0250",
+  "nombrecomercial": "CLARICORT",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0251",
+  "nombrecomercial": "TREMESAL",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "200 M TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0253",
+  "nombregenerico": "MIGREN",
+  "nombrecomercial": "MIGREN",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0255",
+  "nombrecomercial": "TERRAMICINA",
+  "uso": "APLICAR EN EL PARPADO CADA 12 HORAS POR 15 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0256",
+  "nombrecomercial": "SALAGEN",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "nombrecomercial1": "PILOCARPINA"
+ },
+ {
+  "codigo_origen": "0259",
+  "nombrecomercial": "BACTRON FORTE",
+  "uso": "TOMAR UNA TABLETA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0309",
+  "nombregenerico": "CLOROTRIMETRON",
+  "nombrecomercial": "CLOROTRIMETRON",
+  "presentacion": "AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0260",
+  "nombrecomercial": "FLEBOSMIN",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  USO CONTINUO",
+  "presentacion": "500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0261",
+  "nombrecomercial": "KETESSE",
+  "uso": "TOMAR UNA TABLETA CADA 8 HORAS POR 8 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0262",
+  "nombrecomercial": "MEDROL",
+  "uso": "TOMAR 1 TABLETA  1 VEZ AL DIA POR 7 DIAS LUEGO MEDIA TABLETA 1 VEZ AL DIA POR 7 DIAS LUEGO 1/4 DE TABLETA POR 7 DIAS",
+  "presentacion": "16 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0263",
+  "nombrecomercial": "DEXAMIN",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 10 DIAS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0264",
+  "nombrecomercial": "CEDAX",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 8 DIAS",
+  "presentacion": "400 MG CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0266",
+  "nombrecomercial": "MANDELAMINE",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0267",
+  "nombrecomercial": "TRAFLAM O VOLTAREN",
+  "uso": "COLAR 1 AMPOLLA VIA INTRAMUSCULAR 1 VEZ AL DIA POR 3 DIAS",
+  "presentacion": "3 AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0268",
+  "nombrecomercial": "DIOVENOR",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0269",
+  "nombrecomercial": "SALDIAR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0280",
+  "nombregenerico": "CONTROL",
+  "nombrecomercial": "CONTROL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0272",
+  "nombrecomercial": "VADIRAL",
+  "uso": "TOMAR 2 TABLETAS CADA 8 HORAS POR 14 DIAS",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0273",
+  "nombrecomercial": "ENTEROGERMINA",
+  "uso": "TOMAR 1 VIAL CADA 8 HORAS",
+  "presentacion": "VIALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0274",
+  "nombrecomercial": "DUOTRAV",
+  "uso": "APLICAR 1 GOTA A LAS 8 PM EN AMBOS OJOS",
+  "presentacion": "COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0275",
+  "nombrecomercial": "NEURONTIN",
+  "uso": "TOMAR 1 TABLETA  ANTES DE DORMIR POR 1 MES",
+  "presentacion": "300 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0276",
+  "nombrecomercial": "VITAMINA A",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 6 MESES",
+  "presentacion": "CAPSULAS 50000UI",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0277",
+  "nombrecomercial": "ZIRTEC",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0278",
+  "nombrecomercial": "ARCOXIA",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "60 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0279",
+  "nombrecomercial": "CATAFLAM",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 5 DIAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0281",
+  "nombrecomercial": "CETAPHIL",
+  "presentacion": "JABON",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0283",
+  "nombrecomercial": "LACRIFORT",
+  "uso": "APLICAR 1 GOTA 2 O 3 VECES AL DIA SIEMPRE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0284",
+  "nombrecomercial": "QADRIDERM",
+  "uso": "APLICAR SOBRE LA PIEL EVITAR EL CONTACTO CON LOS OJOS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0285",
+  "nombregenerico": "GATIFLOXACINA",
+  "nombrecomercial": "POENGATIF",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 10 DIAS.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0286",
+  "nombrecomercial": "BRIXIA",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS POR 1 MES.",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0287",
+  "nombregenerico": "ACTEAMINOFEN ERGOTAMINA Y CAFEINA",
+  "nombrecomercial": "DOL PLUS",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS CUANDO TENGA DOLOR",
+  "presentacion": "TAB 650 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0289",
+  "nombrecomercial": "AZ OFTENO",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1 MES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0290",
+  "nombregenerico": "ALPRAZOLAM",
+  "nombrecomercial": "ALPRAM",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA .",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0291",
+  "nombregenerico": "ALPRAZOLAM",
+  "nombrecomercial": "ALPRAM",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0292",
+  "nombrecomercial": "LACRIVISC",
+  "uso": "APLICAR GEL ANTES DE ACOSTARSE POR 1 MES",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0293",
+  "nombrecomercial": "AIRON",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  POR 2 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0294",
+  "nombrecomercial": "ALLEGRA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "180 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0295",
+  "nombrecomercial": "CELESTAMINE",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0296",
+  "nombregenerico": "PILOCARPINA DILUIDA",
+  "nombrecomercial": "GOTAS PREPARADAS DE PILOCARPINA",
+  "uso": "APLICAR 1 GOTA 6 PM",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0297",
+  "nombrecomercial": "-PR-88",
+  "uso": "APLICAR CREMA ANTES DE ACOSTARSE POR 3 MESES.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0298",
+  "nombregenerico": "NAFAZOLINA",
+  "nombrecomercial": "NAFCON",
+  "uso": "APLICAR 1 GOTA 2 VECES AL DIA POR 10 DIAS, LUEG O APLICAR 1 GOTA CUANDO TENGA ENROJECIMIENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0300",
+  "nombregenerico": "NAFAZOLINA",
+  "nombrecomercial": "NAFCON",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS POR 10 DIAS, LUEGO SOLO APLICAR 1 GOTA CUANDO TENGA ENROJECIMIENTO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0301",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "ZITROMAX",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 6 DIAS",
+  "presentacion": "TAB 500 MG",
+  "sico": "N",
+  "nombrecomercial1": "AZITROMICINA"
+ },
+ {
+  "codigo_origen": "0316",
+  "nombrecomercial": "ZYRTEC",
+  "presentacion": "TAB",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0302",
+  "nombregenerico": "NAFAZOLINA",
+  "nombrecomercial": "NAPHCON",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS POR 10 DIAS. LUEGO SOLO APLICAR 1 GOTA CUNDO TENGA ENROJECIMIENTO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0303",
+  "nombregenerico": "GATIFLOXACINA",
+  "nombrecomercial": "POENGATIF",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0304",
+  "nombrecomercial": "DESLORAT",
+  "uso": "DARLE 4 CC VIA ORAL 1 VEZ AL DIA",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0305",
+  "nombrecomercial": "RINOMAX",
+  "uso": "APLICAR 1 GOTA EN CADA FOSA NASAL CADA 8 HORAS POR 8 DIAS",
+  "presentacion": "GOTAS NASALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0306",
+  "nombrecomercial": "NASONEX",
+  "uso": "APLICAR 1 PUFF EN CADA FOSA NASAL CADA 12 H POR 7 DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0307",
+  "nombrecomercial": "NARICLEAR",
+  "uso": "HACER 1 PUFF CADA 8 H EN CADA FOSA NASAL POR 10DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0308",
+  "nombrecomercial": "AMBROXOL",
+  "uso": "TOMAR 1 CUCHARADA CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0311",
+  "nombregenerico": "CLONAZEPAM",
+  "nombrecomercial": "CLONAC",
+  "presentacion": "TAB 2MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0313",
+  "nombrecomercial": "SOLTIN",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS CUANDO TENGA EL OJO ROJO.",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0315",
+  "nombrecomercial": "ARCOXIA",
+  "presentacion": "TAB/90MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0314",
+  "nombrecomercial": "MAXICORT",
+  "uso": "APLICAR EN EML PARPADO ANTES DE DORMIR POR 7 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0317",
+  "nombrecomercial": "-FOTORRETIN",
+  "uso": "1 GOTA CADA 6 HORAS",
+  "presentacion": "SOLUCION OSTALMICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0318",
+  "nombrecomercial": "FOTORRETIN",
+  "uso": "1 GOTA CADA 4 HORAS",
+  "presentacion": "-COLIRIO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0324",
+  "nombregenerico": "OMEGA 3",
+  "nombrecomercial": "OMEGA 3",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0325",
+  "nombrecomercial": "MAXEPA",
+  "uso": "OMAR 1 TABLETA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "CAPS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0326",
+  "nombrecomercial": "NEVANAC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 21 DIAS",
+  "sico": "N",
+  "nombrecomercial3": "GOTAS"
+ },
+ {
+  "codigo_origen": "0327",
+  "nombrecomercial": "DECOBEL",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0334",
+  "nombrecomercial": "RIVOTRIL",
+  "presentacion": "TAB 2 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0328",
+  "nombrecomercial": "-IVAGAM FORTE",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 5 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0329",
+  "nombrecomercial": "LIRYCA",
+  "uso": "TOMAR 1 TABLETA ANTES DE ACOSTARSE POR 1 MES",
+  "presentacion": "TAB 75 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0330",
+  "nombrecomercial": "EUFITOCE",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 30 DIAS",
+  "presentacion": "TAB",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0331",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "TOMAR 1 CAPSULA CADA 8 H POR 15 DIAS",
+  "presentacion": "400MG  CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0332",
+  "nombrecomercial": "SYSTANE ULTRA",
+  "uso": "APLICAR 1 GOTA 2 O 3 VECES AL DIA USO FRECUENTE AMBOS OJOS.(CADA VIAL SIRVE PARA UN DIA)",
+  "presentacion": "VIALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0333",
+  "nombrecomercial": "CALCIBON D",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TAB",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0335",
+  "nombrecomercial": "OQSEE",
+  "uso": "APLICAR 1 CADA 12 H POR 2 MESES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0336",
+  "nombrecomercial": "CEDAX SUSPENCION PEDIATRICA (200 G)",
+  "uso": "TOMAR 12CC VIA ORAL 1 VEZ AL DIA X 10 DIAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0621",
+  "nombrecomercial": "-DICLOFENAC",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0340",
+  "nombrecomercial": "CATAFLAM SUSPENSION PEDIATRICA",
+  "uso": "TOMAS 6 CC CADA 8 HOTAS POR 6 DIAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0341",
+  "nombrecomercial": "ESOX (CAPSULAS)",
+  "uso": "TOMAR 1 CAPSULA EN LA MAÑANA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0342",
+  "nombrecomercial": "L-CARNITINA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 4 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0343",
+  "nombrecomercial": "ZINC /CALCIO",
+  "uso": "TOMAR 1 CAPSULA 1  VEZ AL DIA POR 6 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0344",
+  "nombrecomercial": "ISOPTO ATROPINA",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS  POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0345",
+  "nombrecomercial": "AVELOX",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "1G",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0346",
+  "nombrecomercial": "TIOCOLFEN",
+  "uso": "TOMAR UNA TABLETA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0347",
+  "nombrecomercial": "LORECORT",
+  "uso": "DARLE 3.5 CC 1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0350",
+  "nombrecomercial": "CICLOSPORINA",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 2 MESES",
+  "presentacion": "1%",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0349",
+  "nombrecomercial": "TRACOLIMUS",
+  "uso": "APLICAR 1 GOTA  CADA 12 HORAS POR 2 MESES",
+  "presentacion": "COLIRIO OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0351",
+  "nombrecomercial": "AVELOX",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "400 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0352",
+  "nombrecomercial": "MITOMICINA",
+  "uso": "APLICAR 1 GORA CADA 12 HORAS POR 5 SEMANAS INTERCALADAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0353",
+  "nombregenerico": "SULTAMICILINA",
+  "nombrecomercial": "SULAN",
+  "uso": "DARLE 7 CC VIA ORAL CADA 12 H POR 10 DIAS",
+  "presentacion": "500MGR/ 5 CC SUSPENSION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0354",
+  "nombrecomercial": "DIKLASOL",
+  "uso": "TOMAR 5 CC CADA 8 HORAS POR 8 DIAS",
+  "presentacion": "200MG/5 CC",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0355",
+  "nombrecomercial": "GINGO BILOBA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0356",
+  "nombrecomercial": "APROXEN",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 8 DIAS",
+  "presentacion": "550 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0357",
+  "nombrecomercial": "METROTEXATE",
+  "uso": "TOMAR 10 MG SEMANALES USO CONTINUO",
+  "presentacion": "2,5 Mg tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0358",
+  "nombrecomercial": "APROXEN",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR O DIAS",
+  "presentacion": "550M",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0359",
+  "nombrecomercial": "APRANAX",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 8 DIAS",
+  "presentacion": "550MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0360",
+  "nombrecomercial": "CICLOSPORINA  AL 1 %",
+  "uso": "APLICAR 1 GOTACA CADA 8 HORAS POR 3 MESES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0361",
+  "nombrecomercial": "QUINOFTAL",
+  "uso": "aplicar dentro del ojo antes de dormir por 8 dias",
+  "presentacion": "unguento",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0362",
+  "nombrecomercial": "VITISIVAL",
+  "uso": "TOMAR 1 CUCHARADA  1 VEZ AL DIA",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0363",
+  "nombrecomercial": "LETISAN",
+  "uso": "DARLE 12 GOTAS VIA ORAL 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0364",
+  "nombrecomercial": "APRONAX",
+  "uso": "tomar 1 tableta 1 vez al dia por 7 dias",
+  "presentacion": "550 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0365",
+  "nombrecomercial": "MIOVIT",
+  "uso": "DARLE 5 CC 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0366",
+  "nombrecomercial": "LETISAN",
+  "uso": "DARLE 5 CC 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0367",
+  "nombrecomercial": "LIRYCA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "25 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0368",
+  "nombrecomercial": "FISIOLIN",
+  "uso": "COLOCAR 1 GOTA EN CADA FOSA NASAL POR 15 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0369",
+  "nombrecomercial": "MARADEX",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 8 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0370",
+  "nombrecomercial": "AGURIN",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "1 GR TABLETA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0371",
+  "nombrecomercial": "MIOVIT",
+  "uso": "DARLE 1 CUCHARADA 1 VEZ AL DIA",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0379",
+  "nombrecomercial": "KENACORT",
+  "presentacion": "1 AMP INTRAARTICULAR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0372",
+  "nombrecomercial": "VIAJESAN",
+  "uso": "tomar 1 tableta 1 vez al dia",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0373",
+  "nombrecomercial": "VIAGESAN",
+  "uso": "tomar 1 tableta cada 12 horas",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0374",
+  "nombrecomercial": "MIOVIT",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0375",
+  "nombrecomercial": "VISCOELASTICO",
+  "uso": "APLICAR DENTRO DEL OJO 3 MESES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0376",
+  "nombrecomercial": "INDOCID",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 8 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0377",
+  "nombrecomercial": "OMEPRAZOL O ENSOMEPRAZOL",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETA  40 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0378",
+  "nombrecomercial": "PR88",
+  "uso": "APLICAR DANDO MASAJE TODAS LAS NOCHES POR 3 MESES",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0380",
+  "nombrecomercial": "SOPHIXIN DX",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 8 DOAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0381",
+  "nombrecomercial": "CEFONAX",
+  "uso": "TOMAR 1 CAPSULA  CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "500 MG CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0382",
+  "nombrecomercial": "ACETAB",
+  "uso": "TOMAR MEDIA TABLETA CADA 12 HORAS CON JUGO DE NARANJA TOMATE O CAMBUR POR 10 DIAS",
+  "presentacion": "250 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0383",
+  "nombrecomercial": "BENZETACIL",
+  "uso": "colocar 1 ampolla 1 vez al mes por dosis",
+  "presentacion": "1 amp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0385",
+  "nombrecomercial": "SULTAMICILINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H POR 8 DIAS",
+  "presentacion": "750 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0389",
+  "nombrecomercial": "POENFLOX",
+  "uso": "1 GOTA CADA 4 HORAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0390",
+  "nombrecomercial": "NORFLEX",
+  "uso": "COLOCAR 1 AMOLLA VIA INTRAMUSCULAR",
+  "presentacion": "1 AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0391",
+  "nombrecomercial": "SINGULAIR  MONTELUKAST",
+  "uso": "TOMAR UNA TABLETA 1 TABLETA DIARIA O AIRON  POR 3 MESES",
+  "presentacion": "TABLETAS 25 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0392",
+  "nombrecomercial": "DOL PLUS",
+  "uso": "tomar 1 tableta cada 8 horas si hay cefalea",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0393",
+  "nombrecomercial": "BETADUO",
+  "uso": "APLICAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "1 AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0394",
+  "nombrecomercial": "ATAMEL",
+  "uso": "tomar 1 tableta cada 8 horas por 6 dias",
+  "presentacion": "500 mg tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0395",
+  "nombregenerico": "BRI",
+  "nombrecomercial": "BRIMOPREST",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0397",
+  "nombrecomercial": "ICAPS",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0398",
+  "nombrecomercial": "BRIMOPRESS",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS   AMBOS OJOS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0399",
+  "nombrecomercial": "DOLAK",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0400",
+  "nombrecomercial": "TRENTAL",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 2 MESES",
+  "presentacion": "400 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0401",
+  "nombrecomercial": "ENSOZ O ENZOMEPRAZOL",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "TABLETAS 40 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0402",
+  "nombrecomercial": "SUERO AUTOLOGO",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0403",
+  "nombrecomercial": "ZALDIAR",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS SI HAY  DOLOR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0404",
+  "nombrecomercial": "CETIRIZINA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0405",
+  "nombrecomercial": "ACIDO FOLICO",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0406",
+  "nombrecomercial": "SOLUCION MULTIPLUS",
+  "uso": "PARA LENTES DE CONTACTO BLANDOS",
+  "presentacion": "SOLUCION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0407",
+  "nombrecomercial": "BETAGEN",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "4MG 1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0408",
+  "nombrecomercial": "POENTOBRAL PLUS",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0409",
+  "nombregenerico": "DOTRON",
+  "nombrecomercial": "DOTRON",
+  "uso": "TOMAR 1 GRAGEA CADA 8 H POR 7 DIAS",
+  "presentacion": "50 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0410",
+  "nombrecomercial": "DESLER M",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "sico": "N",
+  "nombrecomercial3": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0411",
+  "nombrecomercial": "KRITAN-TEK",
+  "uso": "APLICAR 1 GOTA 1 VEZ AL DIA",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0412",
+  "nombrecomercial": "RINARIS",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0413",
+  "nombrecomercial": "CICLOKAPRON",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 15 DIAS",
+  "presentacion": "500MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0415",
+  "nombrecomercial": "RINOLAST D",
+  "uso": "tomar 1 tableta cada 12 h por 8 dias",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0418",
+  "nombrecomercial": "LUCENTIS",
+  "presentacion": "3 AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0419",
+  "nombrecomercial": "CONFORT C",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0420",
+  "nombrecomercial": "ADVANTAN",
+  "uso": "APLICAR EN  LA CARA 1 VEZ AL DIA POR 3 DIAS",
+  "presentacion": "CRMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0421",
+  "nombrecomercial": "DERAIN",
+  "uso": "APLICAR EN LOS BRAZOS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0422",
+  "nombrecomercial": "SPLASH TEARS",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0423",
+  "nombrecomercial": "BRIMONIDINA",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0424",
+  "nombrecomercial": "-ACRYLARM",
+  "uso": "APLICAR 1 GOTA  ANTES DE DORMIR",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0426",
+  "nombrecomercial": "OPAT",
+  "uso": "APLICAR 1 GOTA CADA  12 H POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0427",
+  "nombrecomercial": "KETOROLAC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 15 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0428",
+  "nombrecomercial": "DESLER M",
+  "uso": "TOMAR 1 TABLETA  1 VEZ AL DIA POR 5 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0429",
+  "nombrecomercial": "BRUGESIC",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "400MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0430",
+  "nombrecomercial": "KUARA",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0431",
+  "nombrecomercial": "MAXITOX",
+  "presentacion": "500 UI AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0432",
+  "nombrecomercial": "TOBREX",
+  "uso": "aplicar 1 gota cada 3 horas",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0433",
+  "nombrecomercial": "CLORANFENICOL",
+  "uso": "APLICAR 1 GOTA CADA  4 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0435",
+  "nombrecomercial": "CETIRIZINA",
+  "uso": "TOMAR 5 CC 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0436",
+  "nombrecomercial": "CLOFEN",
+  "uso": "DARLE 5 CC CADA 8 HORAS POR 3 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0437",
+  "nombrecomercial": "TIMOLOL",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS USO CONTINUO",
+  "presentacion": "0,5 % GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0438",
+  "nombrecomercial": "MELOXICAM",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0439",
+  "nombrecomercial": "NIMESULIDE",
+  "uso": "TOMAR 1 TABLETA  CADA 12 H POR 7 DIAS",
+  "presentacion": "100 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0440",
+  "nombrecomercial": "FERGANIC",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0441",
+  "nombrecomercial": "YODURO DE POTASIO",
+  "uso": "TOMAR 7 GOTAS CON  MEDIO VASO DE AGUA 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "MAYOR CONCENTRACION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0443",
+  "nombrecomercial": "NEURIXA",
+  "uso": "TOMAR 1 TABLETA  ANTES DORMIR",
+  "presentacion": "75 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0444",
+  "nombrecomercial": "DINITRILE VIT",
+  "uso": "colocar 1 ampolla vbia intramuscular interdiaria por 3 dosis",
+  "presentacion": "ampolla",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0542",
+  "nombrecomercial": "CEFTRIAXONE",
+  "presentacion": "1GR 2 AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0445",
+  "nombrecomercial": "FLUOXETINA",
+  "uso": "TOMAR 1 TABETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0446",
+  "nombrecomercial": "INDERAL",
+  "uso": "TOMAR TABLETA 1 VEZ AL DIA",
+  "presentacion": "10 MG  TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0447",
+  "nombrecomercial": "MICROCER",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0448",
+  "nombrecomercial": "-CENTELLA  ASIATICA",
+  "uso": "TOMAR 1 CAPSULA  1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0449",
+  "nombrecomercial": "BAICUTEN",
+  "uso": "APLICAR EN LA NOCHE POR 10 DIAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0450",
+  "nombrecomercial": "PRAXONA",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0451",
+  "nombrecomercial": "TEGRETOL",
+  "uso": "TO,AR 1 TABLETA CADA 12 HORAS USO CONTINUO",
+  "presentacion": "TABLETAS 200MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0452",
+  "nombrecomercial": "KENALGESIC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0453",
+  "nombregenerico": "F",
+  "nombrecomercial": "FLUCONAZOL",
+  "uso": "APLICAR 1 GOTA CADA 2 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0454",
+  "nombrecomercial": "NATACYN ( NATAMICINA)",
+  "uso": "APLICAR 1 GOTA CADA 2 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0455",
+  "nombrecomercial": "MIGRA DORIXINA",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 5 DIAS  SI HAY DOLOR DE CABEZA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0855",
+  "nombrecomercial": "LOCION",
+  "presentacion": "DERMACORTINE"
+ },
+ {
+  "codigo_origen": "0456",
+  "nombrecomercial": "DORZOL",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0457",
+  "nombrecomercial": "KETOPROFENO",
+  "uso": "tomar 1 tableta cada 12 horas por 10 dias",
+  "presentacion": "100mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0458",
+  "nombrecomercial": "ISOPTOCARPINA  2%",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1 MES 8 AM Y 8 PM",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0459",
+  "nombrecomercial": "BENADRYL",
+  "uso": "TOMAR 8 CC CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "-JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0460",
+  "nombrecomercial": "BENADRYL",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA SI CRISIS DE ALERGIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0461",
+  "nombrecomercial": "PROVICAR",
+  "uso": "DARLE 10 CC 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0462",
+  "nombrecomercial": "ALBENDAZOL",
+  "uso": "DAR EN 2 TOMAS A LOS 8 DIAS",
+  "presentacion": "400 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0463",
+  "nombrecomercial": "AMOXIDUO",
+  "uso": "DARLE 3 CC VIA ORAL CADA 12 HORAS",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0464",
+  "nombrecomercial": "ALIVET",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 5 DIAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0465",
+  "nombrecomercial": "MAXITOX",
+  "presentacion": "150 MG 1 AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0466",
+  "nombrecomercial": "HYFLON O DAFLON",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0469",
+  "nombrecomercial": "RIBOFLAVINA",
+  "presentacion": "1 AM 3 ML CON DEXTRAN",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0467",
+  "nombrecomercial": "AVASTIN",
+  "uso": "AMERITA 3 DOSIS DE BEVACIZUMAB INTRAVITREO POR DEGENERACION MACULAR RELACIONADA A LA EDAD HUMEDA POR MEMBRANA NEOVASCULAR CON EDEMA MACULAR EN OJO IZQUIERDO",
+  "presentacion": "100MG / 4 ML",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0468",
+  "nombrecomercial": "GARABET",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 8 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0470",
+  "nombrecomercial": "RIBOFLAVINA",
+  "uso": "DEXTRAN 20 % EPI ON TRANSEPITELIAL",
+  "presentacion": "1 AMPOLLA 3 ML",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0471",
+  "nombrecomercial": "COLAGENO",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0472",
+  "nombrecomercial": "ZYVOX",
+  "uso": "TOMAR UNA TABLETA CADA 12 HORAS POR 14 DIAS",
+  "presentacion": "600 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0473",
+  "nombrecomercial": "LAGRICEL",
+  "uso": "APLICAR 1 GOTA CADA  3 HORAS POR USO CONTINUO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0474",
+  "nombrecomercial": "HUMIRA",
+  "uso": "AMERITA 1 AMPOLLA  SEMANAL SUBCUTANEA USO CONTINUO",
+  "presentacion": "AMP 40 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0475",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "1 GR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0476",
+  "nombrecomercial": "MELATONINA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  ANTES DE DORMIR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0497",
+  "nombrecomercial": "BETAGEN SOLSPEN",
+  "presentacion": "1 AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0477",
+  "nombrecomercial": "EQUALIV",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0478",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0479",
+  "nombrecomercial": "CEFALEXINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "500 MG CAPSULAS",
+  "sico": "N",
+  "nombrecomercial2": "500 MG"
+ },
+ {
+  "codigo_origen": "0480",
+  "nombrecomercial": "MELOVAX O MELOXICAM",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 8 DIAS",
+  "sico": "N",
+  "nombrecomercial2": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0481",
+  "nombrecomercial": "TRUZOPT",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS USO CONTINUO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0482",
+  "nombrecomercial": "MANITOL AL 18%",
+  "uso": "PASAR 200 CC VIA ENDOVENOSA CADA 12 HORAS POR 3 DIAS .",
+  "presentacion": "500 CC 1 FRASCO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0483",
+  "nombrecomercial": "DORZOPT",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0484",
+  "nombrecomercial": "CARBAMACEPINA",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 3 MESES",
+  "presentacion": "200 MG TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0485",
+  "nombrecomercial": "VITAMINA E",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0486",
+  "nombrecomercial": "RETAINE",
+  "uso": "APLICAR DENTRO DEL OJO 4 VECES AL DIA  POR 10 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0489",
+  "nombrecomercial": "MFLOX",
+  "uso": "APLICAR 1 GOTA CADA 3 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0487",
+  "nombrecomercial": "KETOLAC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORASPOR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0488",
+  "nombrecomercial": "VORICONAZOL",
+  "uso": "aplicar 1 gota cada 2 horas en ojo izquierdo",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0490",
+  "nombrecomercial": "GINOCANESTEN",
+  "uso": "aplicar dentro del ojo  cada 12 h",
+  "presentacion": "crema",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0491",
+  "nombrecomercial": "ACUAISS",
+  "uso": "APLICAR 1 GOTA CADA 2 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0492",
+  "nombrecomercial": "AZITROMICINA",
+  "uso": "DARLE 2, 5 CC 1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA ICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0493",
+  "nombrecomercial": "BACTRON",
+  "uso": "DARLE 2,5 CC CADA  8 HORAS  POR 6 SEMANAS,LUEGO  2,5 CC CADA 8 HORAS TRES VECES A LA SEMANA",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0494",
+  "nombrecomercial": "PREDNISOLONA",
+  "uso": "15 GOTAS 1 VEZ AL DIA POR 14 DIAS LUEGO 7 GOTAS POR 7 DIAS",
+  "presentacion": "GOTAS PEDIATRICAS O SUSPENSION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0495",
+  "nombrecomercial": "-SULTAMICILINA",
+  "uso": "DARLE 3 CC CADA 12 HORAS POR 7DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0496",
+  "nombrecomercial": "DIOSMINA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "500MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0499",
+  "nombrecomercial": "OPTIVITA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0498",
+  "nombrecomercial": "TINTURA ARNICA",
+  "uso": "TOMAR 8 GOTAS EN JUGO DE FRUTAS 2 VECES AL DIA  POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0500",
+  "nombrecomercial": "AMOXIDUO",
+  "presentacion": "CAPSULAS  750 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0501",
+  "nombrecomercial": "CENTRUM SILVER",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0502",
+  "nombrecomercial": "SUOVISC",
+  "uso": "APLICAR 2 VECES AL DIA",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0503",
+  "nombrecomercial": "DUOVISC",
+  "uso": "APLICAR 2 VECES AL DIA",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0504",
+  "nombrecomercial": "GAAP OFTENO 0.005%",
+  "uso": "LATANOPROST . 1 GOTA A LAS 8 PM",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0505",
+  "nombrecomercial": "COLIPAN",
+  "uso": "TOMAR 1 TABLETA ANTES DE COMER  POR 1 MES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0506",
+  "nombrecomercial": "FESTAL",
+  "uso": "TOMAR UNA TABLETA DESPUES DE CADA COMIDA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0507",
+  "nombrecomercial": "SERTRALINA",
+  "uso": "TOMAR 1 TABLETA ANTES DE DORMIR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0508",
+  "nombrecomercial": "FREX CLEAN T",
+  "uso": "HACER HIGIENE DE PESTAÑAS DOS VECES AL DIA",
+  "presentacion": "ESPUMA OFTALMICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0509",
+  "nombrecomercial": "DESLER M",
+  "uso": "DARLE 1 SOBRE EN  COMPOTA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "SOBRES PEDIATRICOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0510",
+  "nombrecomercial": "SOPHIXIN DX",
+  "uso": "APLICAR EN EL BORDE DE LAS PESTAÑAS ANTES DE DORMIR POR 10 DIAS PREVIA HIGIENE DE PESTAÑAS CON CHAMPU DE BEBE .",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0511",
+  "nombrecomercial": "PREDNISOLONA",
+  "uso": "DARLE 8 CC 1 VEZ AL DIA LAS 3 PM POR 8 DIAS",
+  "presentacion": "jarabe pediatrico",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0512",
+  "nombrecomercial": "PEDIACORT",
+  "uso": "DARLE 4 CC VIA ORAL A LAS3 PM POR 8 DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0513",
+  "nombrecomercial": "FLUGRAM",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "875 mg tabletas  ( 2 cajas )",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0514",
+  "nombrecomercial": "FULGRAM",
+  "uso": "TOMAR UNA TABLETA CADA 12 HORAS POR 10DIAS",
+  "presentacion": "875 MG TABLETAS ( 2 CAJAS )",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0515",
+  "nombrecomercial": "DUOVENT",
+  "uso": "HACER 2 PUFF CADA 4 HORAS CON AEROCHAMBER O VORTEX CONTAR 10 SEGUNDOS POR 5 DIAS LUEGO 2 PUFF CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "NEBULIZADOR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0516",
+  "nombrecomercial": "-ALOVENT O BERODUAL",
+  "uso": "20 GOTAS EN 3CC DE SOLUCION FISIOLOGICA   NEBULIZAR POR 5 MINUTOS CADA 4 HORAS",
+  "presentacion": "FRASCO GOTERO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0546",
+  "nombrecomercial": "DORZOPT",
+  "uso": "APLICAR 1 GOTA CADA 12H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0517",
+  "nombrecomercial": "BUDECORT",
+  "uso": "Drle 10 gotas en 3 cc de slc fisiologica cada 12 horas",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0518",
+  "nombrecomercial": "ANTIFOM",
+  "uso": "TOMAR1 TABLETA DESPUES DE CADA COMIDA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0519",
+  "nombrecomercial": "MFLOX DM",
+  "uso": "APLICAR 1 GOTACADA 4 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0520",
+  "nombrecomercial": "CICATRICURE",
+  "uso": "APLICAR EN LASHERIDAS 2 VECES AL DIA",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0521",
+  "nombrecomercial": "PROVICAR",
+  "uso": "dar 5 cc 1 vez al dia por 3 meses",
+  "presentacion": "jarabe",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0522",
+  "nombrecomercial": "CEFTRIAZONA",
+  "uso": "APLICAR 1 GOTA CADA  2 HORAS POR 15 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0523",
+  "nombrecomercial": "UMBRELLA",
+  "uso": "APLICAR EN LA CARA 3 VECES AL DIA",
+  "presentacion": "100% PROTECCION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0524",
+  "nombrecomercial": "BENADRYL",
+  "uso": "DARLE 2,5 CC VIA ORAL A LAS 7 AM",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0525",
+  "nombrecomercial": "CICLOSPORINA AL 2 %",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0526",
+  "nombrecomercial": "VANCOMICINA",
+  "uso": "COLOCAR 1 AMPOLLA VIA ENDOVENOSA DILUIDA EN 200 CC  DE SOLUCION FISIOLOGICA  CADA 12 H",
+  "presentacion": "500 MG   3 AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0540",
+  "nombrecomercial": "VORCUM",
+  "presentacion": "AMPOLLA   1 GR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0527",
+  "nombrecomercial": "VENTIDE",
+  "uso": "2 PUFF CADA 4 HORAS POR 5 DIAS  LUEGO CADA 2 PUFF POR 5 DIAS Y LUEGO CADA 12 POR 5 DIAS",
+  "presentacion": "INHALADOR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0528",
+  "nombrecomercial": "BUDESONIDA PULMICORT",
+  "uso": "1 PUFF CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "INHALADOR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0529",
+  "nombrecomercial": "FENACOF",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 3 MESES",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0530",
+  "nombrecomercial": "ZECNIDAZOL",
+  "uso": "tomar 2 tableta 1g 1 vez al dia por 2 dias",
+  "presentacion": "500 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0531",
+  "nombrecomercial": "CLORANFENICOL",
+  "uso": "APLICAR DENTRO 3 VECES",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0532",
+  "nombrecomercial": "GLIBENCLAMIDA",
+  "uso": "TOMAR 1 TABLETA DESPUES DE LA COMIDA 2 VECES AL DIA",
+  "presentacion": "5 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0533",
+  "nombrecomercial": "LIPITOR",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0534",
+  "nombrecomercial": "IMIQUIMOD AL 5 %",
+  "uso": "aplicar todas las noches por 1 mes",
+  "presentacion": "crema al %%",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0535",
+  "nombrecomercial": "DORZOLOL",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0536",
+  "nombrecomercial": "LETISAN",
+  "uso": "tomar 1 tableta 1 vez al dia",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0576",
+  "nombrecomercial": "JABON DE GLICERINA O DE AVENA",
+  "presentacion": "JAVON",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0537",
+  "nombrecomercial": "ACUVAIL",
+  "uso": "aplicar 1 gota cada 8 horas por 1 mes",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0538",
+  "nombrecomercial": "TP OFTENO",
+  "uso": "aplicar 1 gota antes de dormir por 15 dias",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0539",
+  "nombrecomercial": "VORCUM",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR  15 DIAS",
+  "presentacion": "TABLETAS 200 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0541",
+  "nombrecomercial": "VANCOMICINA",
+  "uso": "APLICAR 1 GOTA CADA 2 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0543",
+  "nombrecomercial": "TP OFTENO",
+  "uso": "FENILEFRINA Y TROPICAMIDA . APLICAR 1 GOTA ANTES DE DORMIR",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0544",
+  "nombrecomercial": "PREDNISOLONA",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0545",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "uso": "APLICAR 1 GOTA CADA  6 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0548",
+  "nombrecomercial": "VALGANCICLOVIR",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "1 GR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0549",
+  "nombrecomercial": "MOXIDEX",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0553",
+  "nombrecomercial": "LATANOPROST",
+  "uso": "APLICAR 1 GOTA  A LAS 8 PM",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0550",
+  "nombrecomercial": "HUMYLUB",
+  "uso": "aplicar 1 gota cada 12 h",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0551",
+  "nombrecomercial": "OCUVITE",
+  "uso": "tomar 1 capsula 1 vez al dia",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0552",
+  "nombrecomercial": "DORPRETIN",
+  "uso": "APLICAR 1 GOTA CADA 12 H USO CONTINUO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0555",
+  "nombrecomercial": "NEURIXA",
+  "uso": "TOMAR 1 TABLETA ANTES DE DORMIR POR 1 MES",
+  "presentacion": "25 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0556",
+  "nombrecomercial": "DORPRETIM",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0557",
+  "nombrecomercial": "OPTIVE ADVANCE",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0558",
+  "nombrecomercial": "BETAHISTINA",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 15 DIAS",
+  "presentacion": "16 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0559",
+  "nombrecomercial": "SYSTANE",
+  "uso": "APLICAR DENTRO DEL OJO ANTES DE DORMIR",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0560",
+  "nombrecomercial": "OCUSEE",
+  "uso": "APLICAR 1 GOTA CADA 12 HORAS  POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0561",
+  "nombrecomercial": "CLORANFENICOL 1 %",
+  "uso": "APLICAR DENTRO DEL OJO ANTES DE DORMIR  POR 8 DIAS",
+  "presentacion": "unguento",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0562",
+  "nombrecomercial": "TOBRAMICINA",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "-GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0563",
+  "nombrecomercial": "AZITROMICINA",
+  "uso": "APLICAR DENTRO DEL OJO ANTES DE  DORMIR POR 8 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0564",
+  "nombrecomercial": "VOLTAREN",
+  "uso": "APLICAR EN LAS RODILLAS CADA 8 HORAS",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0565",
+  "nombrecomercial": "SOPHIXIN DX",
+  "uso": "PLICAR EN EL PARPADO Y LAS PESTAÑAS 3 VECES AL DIA POR 7 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0566",
+  "nombrecomercial": "SPORANOX",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA  POR 10 DIAS",
+  "presentacion": "100 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0567",
+  "nombrecomercial": "WASSERTROL",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 15 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0568",
+  "nombrecomercial": "ARAGEL",
+  "uso": "aplicar dentro del ojo derecho cada 8 horas",
+  "presentacion": "gel",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0569",
+  "nombrecomercial": "SIMBRINZA",
+  "uso": "APLICAR 1 GOTA CADA 12 H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMOGICOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0570",
+  "nombrecomercial": "DOLAK O KETOROLACO",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR",
+  "presentacion": "1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0571",
+  "nombrecomercial": "ESPUMA DE TE DE ARBOL",
+  "uso": "APLICAR EN LA RAIZ DE LAS PESTAÑAS 2 VECES AL DIA CON HISOPO POR 5 SEMANAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0572",
+  "nombrecomercial": "VIRGAN",
+  "uso": "APLICAR DENTRO DEL OJO CADA 6 HORAS POR 10 DIAS",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0573",
+  "nombrecomercial": "CLAREAZE",
+  "uso": "APLICAR 1 GOTA CADA 12 H SI HAY OJO ROJO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0574",
+  "nombrecomercial": "PREPARACION H",
+  "uso": "APLICAR EN LAS BOLSAS INFERIORES ANTES DE DORMIR POR 1 MES",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0575",
+  "nombrecomercial": "DOLAK",
+  "uso": "colocar 1 comprimido debajo de la lengua cada 8 horas si hay dolor",
+  "presentacion": "30 mg sublingual",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0577",
+  "nombrecomercial": "CREMA REGENERADORA  BEDUCEN",
+  "uso": "APLICAR EN EL PARPADO 1 VEZ A  LA SEMANA",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0578",
+  "nombrecomercial": "BETAXOLOL",
+  "uso": "aplicar 1 gota 1 vez al dia uso continuo",
+  "presentacion": "gotasoftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0579",
+  "nombrecomercial": "CUTICLEAN",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "TABLETAS 20 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0580",
+  "nombrecomercial": "NAZIL",
+  "uso": "APLICAR 1 GOTA 1 VEZ AL DIAVSI HAY OJO ROJO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0581",
+  "nombrecomercial": "CROMOGLICATO DE SODIO 4 %",
+  "uso": "APLICAR 1 GOTA CADA12 HORAS POR 5 MESES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0583",
+  "nombrecomercial": "SYSTANE ZADITOR",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 5 MESES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0584",
+  "nombrecomercial": "COMPRESAS FRIAS",
+  "uso": "COLOCAR COMPRESAS FRIASDUARANTE 10 MINUTOS 3 VECES AL DIA  POR 5 DIAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0585",
+  "nombrecomercial": "NEPAFENAC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0586",
+  "nombrecomercial": "VIRA GEL  GANCICLOVIR",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8HORASPOR 10 DIAS",
+  "presentacion": "GEL OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0587",
+  "nombrecomercial": "VITAMINA C 1 GR",
+  "uso": "TOMAR 1 GR 1 VEZ AL DIA  POR 4 MESES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0588",
+  "nombrecomercial": "KIDCAL",
+  "uso": "TOMAR 10 CC 1 VEZ AL DIA POR 1 MES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0589",
+  "nombrecomercial": "DICLOFENAC",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0590",
+  "nombrecomercial": "HIERRO",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR INTERDIARIA POR 4 DOSIS",
+  "presentacion": "4 AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0591",
+  "nombrecomercial": "SYSTANE ADVANCE",
+  "uso": "APLICAR1 GOTA CADA 6 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0592",
+  "nombrecomercial": "TIOCOLCHICOSIDO",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0608",
+  "nombrecomercial": "I DROPS GEL",
+  "uso": "APLICAR1 GOTA CADA 12 HORAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0593",
+  "nombrecomercial": "COLFENE",
+  "uso": "TOMAR UNA TABLETA CADA 8 POR 5 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0595",
+  "nombrecomercial": "OCCUMOX ( MOXIFLOXACINA)",
+  "uso": "APLICAR1GOTA CADA4HORAS POR 8 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0596",
+  "nombrecomercial": "0CCUCOM (MOXIFLOXACINA Y DEXAMETASO",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 8 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0597",
+  "nombrecomercial": "NATAK (NATAMICINA)",
+  "uso": "APLICAR 1 GOTA CADA  1 HORA POR 3 SEMANAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0598",
+  "nombrecomercial": "CORTIOFTAL( PREDNISOLONA)",
+  "uso": "APLICAR 1 GOTA CADA2 HORAS POR 7 DIAS LUEGO CADA 4 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0599",
+  "nombrecomercial": "ETAPRED 0,5% (LOTEPREDNOL)",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS POR 7 DIAS LUEGO CADA 12 H POR 7 DIAS LUEGO CADA 12 H POR 7 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0600",
+  "nombrecomercial": "ALGIC (KETOROLACO)",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 1 MES",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0835",
+  "nombrecomercial": "GLUCERNA",
+  "presentacion": "POLVO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0601",
+  "nombrecomercial": "CIBRIM ( BRIMONIDINA TIMOLOL)",
+  "uso": "APLICAR1GOTA CADA12H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0602",
+  "nombrecomercial": "TRAVOSUN ( TRAVOPROST)",
+  "uso": "APLICAR 1 GOTA  A LAS 8 PM USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0603",
+  "nombrecomercial": "NASACORT",
+  "uso": "APLICA 1 PUFF EN CADA FOSA NASAL CADA 12 HORAS POR 8DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0604",
+  "nombrecomercial": "CLORANFENICOL",
+  "uso": "APLICAR DENTRO DE OJO ANTES DORMIR POR 7 DIAS",
+  "presentacion": "UNGUENTO OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0605",
+  "nombrecomercial": "CUTICLEAN",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0606",
+  "nombrecomercial": "CLINDAMICINA TOPICA",
+  "uso": "APLICAR EN LA CARATODAS LAS NOCHES POR 1 MES",
+  "presentacion": "TOPICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0607",
+  "nombrecomercial": "OPHTHOVIR",
+  "uso": "APLICAR DENTRO DEL OJO CADA 6 HORAS POR 10 DIAS",
+  "presentacion": "UNGUENTO OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0609",
+  "nombrecomercial": "JUST TEARS",
+  "uso": "APLICAR1 GOTA CADA 6 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0610",
+  "nombrecomercial": "OCCUMOX",
+  "uso": "APLICAR 1 GOTA CADA4 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0611",
+  "nombrecomercial": "DERMACORTINE",
+  "uso": "APLICAR EN LA PIEL 2 VECES AL DIA  POR 6 DIAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0612",
+  "nombrecomercial": "ESTOCIN ( AZITROMICINA)",
+  "uso": "Aplicar dentro del ojo cada 6 horas",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0613",
+  "nombrecomercial": "CORASPIRINA",
+  "uso": "TOMAR 1 COMPRIMIDO 1 VEZAL DIA",
+  "presentacion": "COMPRIMIDOS  80 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0614",
+  "nombrecomercial": "CLINDAMICINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "300 MGR CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0615",
+  "nombrecomercial": "BAYCUTEN",
+  "uso": "APLICAR EN LA HERIDA CADA 8 HORASPOR 7 DIAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0616",
+  "nombrecomercial": "DEFLAXACORT",
+  "uso": "TOMAR 2 TABLETAS 1 VEZ AL DIA POR 7 DIAS LUEGO 1 TABETA 1 VEZ AL DIA POR 7 DIAS . LUEGO MEDIA TABLETA  1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "-16 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0617",
+  "nombrecomercial": "BONITROP",
+  "uso": "TOMAR 1 TABLETA1 VEZ AL DIA",
+  "presentacion": "20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0618",
+  "nombrecomercial": "VITAMINA A",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "10.0000 UI",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0619",
+  "nombrecomercial": "QUINOFTAL",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 HORAS POR 6 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0620",
+  "nombrecomercial": "ARNICA",
+  "uso": "aplicar dando masaje en la region glutea 2 veces al dia por 1 mes",
+  "presentacion": "gel",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0622",
+  "nombrecomercial": "RINOLAST D  O CETRAL D",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0623",
+  "nombrecomercial": "GLUCOSAMINA CONDRITIN",
+  "uso": "TOMAR 1CAPSULA 1 VEZ DIA POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0624",
+  "nombrecomercial": "LACRIDOS",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS  USO CONTINUO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0625",
+  "nombrecomercial": "SEDIVAL",
+  "uso": "TOMAR1 TABLETA  1 VEZ AL DIA .",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0626",
+  "nombrecomercial": "CLOROSUN CLORANFENICOL  HIDROCORTIS",
+  "uso": "APLICAR DENTRO DEL OJO CADA 12 HORAS POR 7DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0627",
+  "nombrecomercial": "DOBET",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0628",
+  "nombrecomercial": "FOTORRETIN",
+  "uso": "APLICAR 1 GOTA CADA 8 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0629",
+  "nombrecomercial": "FLUOCIN",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 7 DIAS LUEGO CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0630",
+  "nombrecomercial": "AZELASTINA  AZ OFTENO,",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1 MES",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0631",
+  "nombrecomercial": "DICLOXACILINA",
+  "uso": "DARLE 6 CC CADA 12 H POR 8 DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0632",
+  "nombrecomercial": "ATAMEL FORTE",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 3 DIAS",
+  "presentacion": "650 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0702",
+  "nombrecomercial": "PROLARDII",
+  "uso": "tomar un sobre diario",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0633",
+  "nombrecomercial": "TIOCOLCHICOSIDO",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR DIARIO POR 3 DOSIS",
+  "presentacion": "AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0634",
+  "nombrecomercial": "OCCUCOM",
+  "uso": "APLICAR 1 GOTA CADA 6 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0635",
+  "nombrecomercial": "MOXIDEX",
+  "uso": "aplicar 1 gota cada 6 horas por 10 dias",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0636",
+  "nombrecomercial": "ZINC",
+  "uso": "tomar 1 capsula 1 vez al dia",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0637",
+  "nombrecomercial": "POLIOTICO",
+  "uso": "APLICAR 1GOTA CADA 8 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0638",
+  "nombrecomercial": "LONGACEF",
+  "uso": "DARLE 7 CC CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0639",
+  "nombrecomercial": "ENSURE",
+  "uso": "DARLE 1 VASO CADA 12 HORAS",
+  "presentacion": "3 POTES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0640",
+  "nombrecomercial": "FISIOLOGICA 0,9%",
+  "uso": "PASAR 1 AMPOLLA DE COMPLEJO B ENDOVENOSO EN 500 CC DE SOLUCION 0,9 %",
+  "presentacion": "500 CC",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0641",
+  "nombrecomercial": "CLODOXIM",
+  "uso": "TOMAR 1 CUCHARADA CADA 12 H POR 4 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0642",
+  "nombrecomercial": "COMPLEJO B",
+  "uso": "PASAR UNA  AMPOLLA  VIA  ENDOVENOSA  DE COMPLEJO B EN 500 CC DE SOLUCION 0,9",
+  "presentacion": "ENDOVENOSO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0660",
+  "nombrecomercial": "DORZOLAM",
+  "uso": "aplicar 1 gota cada 8 h",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0643",
+  "nombrecomercial": "DICLOFENAC",
+  "uso": "colocar 1 ampolla via intramuscular diaria por 3 dosis",
+  "presentacion": "75 mgr ampolla",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0644",
+  "nombrecomercial": "-DEFLAXACORT",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 5 DIAS , LUEGO MEDIA TABLETA 1 VEZ AL DIA POR 7 DIAS LUEGO 1/4 DE TABLETA POR 7 DIAS",
+  "presentacion": "30 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0645",
+  "nombrecomercial": "VITAMINA D 3",
+  "uso": "tomar 1 capsula 1 vez al dia por 3 meses",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0646",
+  "nombrecomercial": "TODEX",
+  "uso": "APLICAR 1 GOTA CADA 3 HORAS POR 7 DIAS LUEGO CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0647",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ DIA  POR 7 DIAS",
+  "presentacion": "capsulas 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0648",
+  "nombrecomercial": "DEFLAXACORT",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "6 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0649",
+  "nombrecomercial": "CFADROXILO",
+  "uso": "tomar 1 capsula cada 12 horas por 7 dias",
+  "presentacion": "500 mgr cap",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0650",
+  "nombrecomercial": "ZONAT (NATAMICINA )",
+  "uso": "aplicar 1 gota cada 1 hora por 4 dias luego cada 2 horas",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0657",
+  "nombrecomercial": "LAGRIOFTOL",
+  "uso": "APLICAR 1 GOTA CADA 6 HUSO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0651",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "COLOCAR 250 MGRDE ACICLOVIR VIA ENDOVENOSA DILUIRLO EN 100CC CADA 12 HORAS POR5 DIAS",
+  "presentacion": "250 MGR AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0652",
+  "nombrecomercial": "ACETAMINOFEN CON CODEINA",
+  "uso": "TOMAR 1 TABLETA CADA 8 OR 7 DIAS",
+  "presentacion": "325MGR/30 MGR  TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0653",
+  "nombrecomercial": "COFADOR ( DORZOLAMIDA 2%)",
+  "uso": "APLICAR 1GOTA CADA 8HUSO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0654",
+  "nombrecomercial": "COFADOR -T ( DORZOLAMIDA + TIMOLOL)",
+  "uso": "APLICAR 1 GOTA CADA 12H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0655",
+  "nombrecomercial": "PRENACOF ( PREDNISOLONA ACETATO !%)",
+  "uso": "APLICAR 1 GOTA CADA2 H POR 7 DIAS LUEGO CADA4 H POR 7 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0656",
+  "nombrecomercial": "COFASTANE( LAGRIMAS ARTIFICIALES)",
+  "uso": "APLICAR 1 GOTA CADA 6 HUSO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0658",
+  "nombrecomercial": "LATACOF  DUO",
+  "uso": "APLICAR 1 GOTA A LAS 8 PM",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0659",
+  "nombrecomercial": "BRIMOFTAL",
+  "uso": "aplicar 1 gota cada o h en ojo izquierdo",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0665",
+  "nombrecomercial": "LACRICOF",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "sico": "N",
+  "nombrecomercial3": "GOTAS"
+ },
+ {
+  "codigo_origen": "0661",
+  "nombrecomercial": "OPCON A",
+  "uso": "aplicar 1gota cada 12 h si hay ojo rojo",
+  "sico": "N",
+  "nombrecomercial3": "GOTAS"
+ },
+ {
+  "codigo_origen": "0662",
+  "nombrecomercial": "BRIMOFTAL",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0663",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "uso": "APLICAR DENTRO DEL OJO CADA 6 HORAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0664",
+  "nombrecomercial": "LAGRICOF",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0666",
+  "nombrecomercial": "OLOCOF",
+  "uso": "APLICAR 1 GOTA CADA 12 POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0667",
+  "nombrecomercial": "WASERTROL",
+  "uso": "APLICAR EN EL BORDE DE LAS PESTAÑAS ANTES DE DORMIR POR 7 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0668",
+  "nombrecomercial": "THERA TEARS",
+  "uso": "TOMAR 1 CAPSULA DIARIA POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0669",
+  "nombrecomercial": "BACTIN   (CIPROFLOXACINA)",
+  "uso": "APLICAR 1 GOTA CADA 4 H",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0670",
+  "nombrecomercial": "MELOXICAM",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0671",
+  "nombrecomercial": "9 VIT",
+  "uso": "COLOCAR 1 AMPOLLA VIA ENDOVENOSA DILUIDA EN 500 CC DE SOLUCION 0,9 % LENTO EN 2 HORAS",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0689",
+  "nombrecomercial": "SOLUCION MULTIPLUS ULTRA",
+  "presentacion": "-SOLUCION LENTES DE CONTACTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0672",
+  "nombrecomercial": "CELECTAN O GIVOTAN",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 3 DIAS",
+  "presentacion": "500 MGR TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0673",
+  "nombrecomercial": "LEVOSINA TS (LEVOFLOXACINA)",
+  "uso": "aplicar 1 gota cada 4 horas por 10dias",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0674",
+  "nombrecomercial": "PATALON (OLOPATADINA)",
+  "uso": "APLICAR 1 GOTA CADA 12 H   POR 1 MES",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0675",
+  "nombrecomercial": "GLAMOR (LAGRIMAS ARTIFICIALES)",
+  "uso": "APLICAR 1 GOTA 3 VECES AL DIA USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0676",
+  "nombrecomercial": "AVOST (TRAVAPROST 0,004%)",
+  "uso": "APLICAR 1 GOTA A LAS 8 PM USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0677",
+  "nombrecomercial": "BACTIN (CIPROFLOXACINA  0,3 %)",
+  "uso": "APLICAR 1 GOTA CADA 4 HORAS POR 8 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0678",
+  "nombrecomercial": "FLEBOSMIN (DIOSMINA 450 MGR HESPERI",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  POR 2 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0679",
+  "nombrecomercial": "LAGRIFRESH ( LAGRIMAS ARTIFICIALES",
+  "uso": "APLICAR 1 GOTA CADA 6 H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0700",
+  "nombrecomercial": "AVASTIN",
+  "uso": "aplicar 1 gota cada 8 h",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0680",
+  "nombrecomercial": "DORZOLAMIDA Y TIMOLOL(ZUKATI)",
+  "uso": "APLICAR 1 GOTA CADA 12 H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0681",
+  "nombrecomercial": "TRIPUR ( TRIMETROPIN SUFAMETOXAZOL)",
+  "uso": "TOMAR UN COMPRIMIDO CADA  12 H POR 10 DIAS",
+  "presentacion": "80MGR  40 MGR COMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0682",
+  "nombrecomercial": "LYFLOX ( LOMEFLOXACINA) 3MGR/ML",
+  "uso": "APLICAR 1 GOTA CADA4 HORAS POR 10 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0683",
+  "nombrecomercial": "WASSERTROL",
+  "uso": "APLICAR EN EL BORDE DE LAS PESTAÑAS ANTES DE DORMIR POR 8 DIAS",
+  "presentacion": "UNGUENTO OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0684",
+  "nombrecomercial": "CROMOLOX 4%",
+  "uso": "aplicar 1 gota cada 12 h por1 mes",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0685",
+  "nombrecomercial": "NOTOLAC 30 MGR",
+  "uso": "tomar1 tableta debajo de la lengua cada 8 h",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0686",
+  "nombrecomercial": "ATORVASTATINA",
+  "uso": "TOMAR 1 TABLETA  1 VEZ AL DIA  4 MESES",
+  "presentacion": "20 MGR TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0687",
+  "nombrecomercial": "DIOSMINA",
+  "uso": "TOMAR 1 TABLETA  1 VEZ AL DIA",
+  "presentacion": "600 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0688",
+  "nombrecomercial": "IVERMECTINA",
+  "uso": "TOMAR 1 TABLETA 1 CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "TABLETAS 67 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0758",
+  "nombrecomercial": "INFLAPRED",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0690",
+  "nombrecomercial": "PREDNA ( PREDNISOLONA )",
+  "uso": "DARLE 3,5  CC 1 VEZ AL DIA  POR 8 DIAS",
+  "presentacion": "SUSPENCION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0691",
+  "nombrecomercial": "FLUOMETOL",
+  "uso": "APLICAR 1 GOTA CADA 3 GORAS POR 7 DIAS LUEGO CADA 4 HORAS POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0692",
+  "nombrecomercial": "LUTEINA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0693",
+  "nombrecomercial": "TRAMADOL( ACETAMINOFEN CON CODEINA)",
+  "uso": "TOMAR 1TABLETA CADA 12 H POR 6 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0694",
+  "nombrecomercial": "OCUCOM (MOXIFLOXACINA DEXAMETASONA)",
+  "uso": "aplicar 1 gotacada 4 h por 8 dias",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0695",
+  "nombrecomercial": "CEFADROXILO",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H POR 7 DIAS",
+  "presentacion": "500 mgr capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0696",
+  "nombrecomercial": "ENZOMEPRAZOL",
+  "uso": "DARLE 1 VEZ A DIA EN LA MAÑANA POR 1 MES",
+  "presentacion": "20 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0697",
+  "nombrecomercial": "VISCOELASTICO",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 HORAS",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0698",
+  "nombrecomercial": "PRESERVISION",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0699",
+  "nombrecomercial": "MYDROX",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0701",
+  "nombrecomercial": "CETRAL D",
+  "uso": "TOMAR 1 TABLETA CADA 12 H  POR 3 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0703",
+  "nombrecomercial": "ALLISON",
+  "uso": "TOMAR 1 CUCHARADA 2 VECES AL DIA POR 2 MESES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0705",
+  "nombrecomercial": "SUPER C",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0706",
+  "nombrecomercial": "VITAMINAS CON OMEGA 3",
+  "uso": "DOS GOMITAS DIARIAS POR 4 MESES",
+  "presentacion": "GOMITAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0707",
+  "nombrecomercial": "AFRIN",
+  "uso": "APLICAR 1 PUFF EN CADA FOSA NASAL CADA 12 H POR 6 DIAS",
+  "presentacion": "SPRASY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0708",
+  "nombrecomercial": "FLUTICASONA",
+  "uso": "COLOCAR 1 PUFF EN CADA FOSA NASALPOR 15 DIAS CADA 12 H",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0709",
+  "nombrecomercial": "-CENTRUM TEEN WOMAN",
+  "uso": "1 DIARIA POR 1 MES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0710",
+  "nombrecomercial": "PROLLARDI",
+  "uso": "TOMAR 1 SOBRE EN AGUA 1 VEZ AL DIA POR 1 MES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0711",
+  "nombrecomercial": "LUBRIGEL",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 HORAS",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0721",
+  "nombrecomercial": "THERA TEARS",
+  "uso": "1 GOTA CADA 4HORAS EN CADA OJO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0712",
+  "nombrecomercial": "LONGACEF O CEFIXIMA",
+  "uso": "TOMAR UNA CAPSULA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "400 MGR CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0713",
+  "nombrecomercial": "FORTUM CEFOTAXIME",
+  "uso": "APLICAR 1 GOTA CADA 2 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0714",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "APLICAR 0,5 CC SUBTENONIANO DIA POR MEDIOEN OJO IZQUIERDO",
+  "presentacion": "1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0715",
+  "nombrecomercial": "FORTUM",
+  "uso": "COLOCAR  0.5 CC VIA SUBTENONIANA CON DIUCION 50 MGREN 0,5 CC , DILUIR LA AMPOLLA DE 1 GR EN 10CC DE SOLUCION 0,9",
+  "presentacion": "1 AMP  1 GR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0716",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "uso": "COLOCAR 1 AMPOLLA VIA ENDOVENOSA 1 VEZ AL DIA POR 8 DIAS",
+  "presentacion": "400 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0717",
+  "nombrecomercial": "FORTUM  CEFTRIAZONA",
+  "uso": "COLOCAR 1 AMPOLLA DE 1 GR VIA ENDOVENOSA CADA 12 H",
+  "presentacion": "1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0718",
+  "nombrecomercial": "CORTYNASE",
+  "uso": "COLOCAR 1 PUFF EN CADA FOSA NASAL CADA 12 HORAS POR 10DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0719",
+  "nombrecomercial": "MACRODANTINA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0720",
+  "nombrecomercial": "PILO1 % PRESBICIA",
+  "uso": "APLICAR 1 GOTA CADA 12 H CONTINUO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0722",
+  "nombrecomercial": "N ACETL CISTEINA",
+  "uso": "TOMAR 1 SOBRE EN MEDIO VASO DE AGUA O JUGO, DESPUES DEL ALMUERZO POR 6 DIAS",
+  "presentacion": "SOBRES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0723",
+  "nombrecomercial": "GLUCOFAGE",
+  "uso": "TOMAR UNA TABLETA 1 VEZ AL DIA DESPUES DEL ALMUERZO",
+  "presentacion": "-500 MGR TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0724",
+  "nombrecomercial": "SYSTANE BALANCE",
+  "uso": "APLICAR 1 GOTA CADA 12  H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0725",
+  "nombregenerico": "FEBRANIC",
+  "nombrecomercial": "FEBRANIC O DICLOFENAC POTASICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0726",
+  "nombrecomercial": "TOMICIN D",
+  "uso": "APLICAR 1 GOTA CADA 6 H POR 7 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0727",
+  "nombrecomercial": "GATIFLOXACINA",
+  "uso": "APLICAR 1 GOTA CADA 3 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0728",
+  "nombrecomercial": "FLUVIRIN",
+  "uso": "TOMAR UNA CUCHARADA CADA 8 H",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0729",
+  "nombrecomercial": "TOBRAM - DX",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 H POR 10 DIAS",
+  "presentacion": "UNGUENTO OFTAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0730",
+  "nombrecomercial": "DORSUN",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0731",
+  "nombrecomercial": "SYSTANE COMPLETE",
+  "uso": "APLICAR 1 GOTA CADA6H CONTINUO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0732",
+  "nombrecomercial": "OXITETRACICLINA",
+  "uso": "APLICAR EN EL BORD EDE LAS PESTAÑAS ANTES DE DORMIR POR 10 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0733",
+  "nombrecomercial": "DIPIRONA",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT SI HAY CEFALEA",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0734",
+  "nombrecomercial": "VIBRAMICINA. DOCIXICLINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12H POR 10 DIAS",
+  "presentacion": "100 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0735",
+  "nombrecomercial": "LEVOCETIRIZINA",
+  "uso": "1 tableta 1 vez al dia por 8 dias",
+  "presentacion": "tableta",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0736",
+  "nombrecomercial": "N ACETILCISTEINA",
+  "uso": "TOMAR 1 SOBRE EN AGUA CADA 12 H",
+  "presentacion": "SOBRES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0737",
+  "nombrecomercial": "STILNOX",
+  "uso": "TOMAR ANTES DE DORMIR POR 1 MES",
+  "presentacion": "10 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0738",
+  "nombrecomercial": "CENTRUM TEEN",
+  "uso": "comer 2 gomitas diarias por 2 meses",
+  "presentacion": "gomitas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0739",
+  "nombrecomercial": "ART EYE DROPS ( LAGRIMAS AC. BORICO",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 15 DIAS",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0740",
+  "nombrecomercial": "FLUOXETINA",
+  "uso": "tomar 1 tableta en la mañana a las 8 am",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0741",
+  "nombrecomercial": "TOBRAM DX",
+  "uso": "APLICAR EN EL BORDE DE LAS PESTAÑAS ANTES DE DORMIR POR 8 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0742",
+  "nombrecomercial": "FREEGEN",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0743",
+  "nombrecomercial": "SYSTALAN ULTRA",
+  "uso": "APLICAR1 GOTA CADA 6 H CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0744",
+  "nombrecomercial": "KONOFTAL MAX",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 2 MESES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0745",
+  "nombrecomercial": "TOMYCIN",
+  "uso": "APLICAR 1 GOTA CADA 4HPOR 1MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0746",
+  "nombrecomercial": "VISCOELASTICO OPTIFLEX",
+  "uso": "APLICAR DENTRO DEL OJO 2 VECES AL DIA",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0747",
+  "nombrecomercial": "SIRDALUD",
+  "uso": "tomar media tableta antes de dormir",
+  "presentacion": "-4 mgr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0748",
+  "nombrecomercial": "MUPORICIN",
+  "uso": "APLICAR ENLASLESIONES5 VECES AL DIA  POR 10 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0749",
+  "nombrecomercial": "DECADURABOLIN",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0750",
+  "nombrecomercial": "NEVAC",
+  "uso": "APLICAR 21 GOTA CADA 8 H POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0751",
+  "nombrecomercial": "CENTRUM  TEEN",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0752",
+  "nombrecomercial": "STUGERON FORTE",
+  "uso": "CINARIZINA ,TOMAR 1 TABLETA  DIARIA",
+  "presentacion": "75 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0753",
+  "nombrecomercial": "YONAL",
+  "uso": "DARLE 1 CUCHARADA CADA 8 H",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0754",
+  "nombrecomercial": "HYDRASENSE  DIA",
+  "uso": "APLICAR 1 GOTA 4 VECES AL DIA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "nombrecomercial2": "GOTAS"
+ },
+ {
+  "codigo_origen": "0786",
+  "nombrecomercial": "UMBRELLA",
+  "presentacion": "crema  100 %",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0755",
+  "nombrecomercial": "HYDRASENSE NOCHE",
+  "uso": "APLICAR 1 GOTA ANTES DE DORMIR",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0756",
+  "nombrecomercial": "BARGONIL",
+  "uso": "APLICAR EN EL PARPADO 1 VEZ AL DIA",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0757",
+  "nombrecomercial": "NAPROXEN",
+  "uso": "TOMAR 1 TABLETA CADA12 H",
+  "presentacion": "TABLETAS 200 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0759",
+  "nombrecomercial": "LEVOFLOXACINA",
+  "uso": "TOMAR 1 CAPSULA 1 VZ AL DIA POR 7 DIAS",
+  "presentacion": "500 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0760",
+  "nombrecomercial": "OCUVITE LIGHT BLUE",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0761",
+  "nombrecomercial": "DIEUDRIN",
+  "uso": "TOMAR 1 TABLETA1VEZAL DIA POR 2 MESES",
+  "presentacion": "25 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0762",
+  "nombrecomercial": "-OXITETRACILINA",
+  "uso": "APLICAR EN EL BORDE  DE LOS PARPADOS ANTES DE DORMIR POR 8 DIAS",
+  "presentacion": "UNGUENTO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0763",
+  "nombrecomercial": "INSULINA",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0764",
+  "nombrecomercial": "NETARSUDIL OFTALMICO",
+  "uso": "INHIBIDOR DE LA ROQUINASA , APLICAR 1 GOTA CADA 12 H CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0765",
+  "nombrecomercial": "SOLUNOVAR",
+  "uso": "HACER GARGARAS 1 VEZ AL DIA",
+  "presentacion": "TOPICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0766",
+  "nombrecomercial": "ALLEGRA",
+  "uso": "DARLE 8 CC 1 VEZ AL DIA",
+  "presentacion": "SUSPENSION PEDIATRICA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0768",
+  "nombrecomercial": "DOXICAL",
+  "uso": "TOMAR 1 TABLETA 1 VZ AL DIA",
+  "presentacion": "500 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0769",
+  "nombrecomercial": "VIZERUL",
+  "uso": "DARLE 5 CCNLA MAÑANA POR 2 MESES",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0770",
+  "nombrecomercial": "CARMELUB",
+  "uso": "APLICAR DENTRO DEL OJO CADA  8 H",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0771",
+  "nombrecomercial": "IVERMECTINA",
+  "uso": "tomar una tableta 1 vez al dia por 6 dias",
+  "presentacion": "6mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0772",
+  "nombrecomercial": "SYSTANE ULTRA HA",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0773",
+  "nombrecomercial": "SYSTANE HA",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0774",
+  "nombrecomercial": "CICLOSPORINA  0,5%",
+  "uso": "APLICAR 1 GOTA CADA 12H POR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0775",
+  "nombrecomercial": "MAGALEX",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0776",
+  "nombrecomercial": "HIRUDOID",
+  "uso": "aplicar en el parpadoen la noche por 7 dias",
+  "presentacion": "crema",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0777",
+  "nombrecomercial": "OPTIVE FUSION",
+  "uso": "aplicar 1 gota cada 6 h",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0778",
+  "nombrecomercial": "DIEUDRIN",
+  "uso": "TOMAR MEDIA TABLETA  1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0779",
+  "nombrecomercial": "HIDROXIPOPILMETILCELULOSA",
+  "uso": "APLICAR DENTRO DL OJO EN LA NOCHE",
+  "presentacion": "GEL OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0780",
+  "nombrecomercial": "HIDROXIPOPILMETILCELULOSA",
+  "uso": "APLICAR DENTRO DEL OJO ANTES DE DORMIR",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0781",
+  "nombrecomercial": "OCUSEPTIC",
+  "uso": "APLICAR 1GOTA  EN LA NOCHEDIA POR POR MEDIO POR 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0782",
+  "nombrecomercial": "DORIXINA FREX",
+  "uso": "TOMAR UNA TABLETA ANTES DE DORMIR",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0783",
+  "nombrecomercial": "REFRESH  OPTIVE OMGA 3",
+  "uso": "APLICAR DENTRO DEL OJO CADA 6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0784",
+  "nombrecomercial": "REFRESH OPTIVE OMEGA 3",
+  "uso": "APLICAR 1 GOTA CADA 4 H USO CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0785",
+  "nombrecomercial": "TRIPLEGAN",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0787",
+  "nombrecomercial": "ACUTEN( ACETAMINOFEN + CODEINA)",
+  "uso": "TOMAR 1 TABLETA CADA 8 H SIHAY MIGRAÑA",
+  "presentacion": "TABLETAS 500 MGR 25 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0788",
+  "nombrecomercial": "KENOFTAL MAX",
+  "uso": "APLICAR 1 GOTA CADA 12H POR 2 MESES",
+  "presentacion": "GOTAS )( KETOTIFENO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0789",
+  "nombrecomercial": "KETOTIFENO",
+  "uso": "DARLE 6 CC CADA 12 H POR 10 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0790",
+  "nombrecomercial": "CITRATO DE MAGNESIO",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 3MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0791",
+  "nombrecomercial": "DORMOL",
+  "uso": "APLICAR 1 GOTA CADA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0792",
+  "nombrecomercial": "DORMOL",
+  "uso": "APLICAR 1GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0793",
+  "nombrecomercial": "DORSOLAN",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0794",
+  "nombrecomercial": "PROLARDI",
+  "uso": "TOMAR CON AGUA 1 VEZ AL DIA",
+  "presentacion": "SOBRES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0795",
+  "nombrecomercial": "GINODERAIN",
+  "uso": "COLOCAR UN OVULOINTRAVAGINAL DIARIO POR 8 DIAS",
+  "presentacion": "OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0796",
+  "nombrecomercial": "AMOXICILINA  ACIDO CLAVULANICO",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H",
+  "presentacion": "875 MGR CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0797",
+  "nombrecomercial": "CONFORT VISION",
+  "uso": "APLICAR ELSPRAY 3 VECES AL DIA",
+  "presentacion": "SPREAY OFTALMICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0798",
+  "nombrecomercial": "EYESUPLY",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA  POR 4 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0799",
+  "nombrecomercial": "T TREE GEL PLUS",
+  "uso": "LIMPIAR EL BORDE DE LAS PESTAÑAS 2 VECES AL DIA POR 2 MESES PREVIO LAVADO CON CHAMPU DE NIÑOS",
+  "presentacion": "TOALLAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0800",
+  "nombrecomercial": "BREINOX",
+  "uso": "TOMAR 1 TABLETA A LAS 9 PM",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0801",
+  "nombrecomercial": "TONIMER",
+  "uso": "HACE 2 PUFF EN CADA FOSA NASALCADA 8 H POR 8 DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0802",
+  "nombrecomercial": "DI EUDRIN",
+  "uso": "tomar un cuarto de tableta 1 VEZ AL DIA POR 10 DIAS",
+  "presentacion": "12.5 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0803",
+  "nombrecomercial": "N ACETIL CISTEINA",
+  "uso": "APLICAR 1GOTA CADA 12 H",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0804",
+  "nombrecomercial": "MODUSIK",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0805",
+  "nombrecomercial": "ESPIRONOLACTONA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA POR 20 DIAS",
+  "presentacion": "25 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0806",
+  "nombrecomercial": "BRIMODOR",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0807",
+  "nombrecomercial": "METROVAX  METRONIDAZOL",
+  "uso": "tomar 1  tableta cada 12 h por 10 dias",
+  "presentacion": "500 mgr capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0809",
+  "nombrecomercial": "WANPOLE",
+  "uso": "DARLE UNA CUCHARADA 1 VEZ AL DIA",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0810",
+  "nombrecomercial": "NAPROXEN",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 8 DIAS",
+  "presentacion": "250 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0811",
+  "nombrecomercial": "CONFORT VISION",
+  "uso": "APLICAR1 GOTA CADA6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0831",
+  "nombrecomercial": "CHAMPU DE T DE ARBOL",
+  "presentacion": "CHAMPU",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0812",
+  "nombrecomercial": "CEFALEXINA",
+  "uso": "DARLE 8 CC CADA 12H POR 8 DIAS",
+  "presentacion": "SUSPENSION PEDIATRICA 250 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0813",
+  "nombrecomercial": "ITRACONAZOL",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H POR 10 DIAS",
+  "presentacion": "100 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0814",
+  "nombrecomercial": "AZITROMICINA",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0815",
+  "nombrecomercial": "REFESH RELIEVA PF",
+  "uso": "APLICAR 1 GOTA CADA 6 H EN AMBOS OJOS CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0816",
+  "nombrecomercial": "SYSTANE HIDRATACION PF",
+  "uso": "APLICAR 1 GOTA CADA 6 H EN AMBOS OJOS CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0817",
+  "nombrecomercial": "SYSTANE ULTRA PF",
+  "uso": "APLICAR 1 GOTA CADA 6 H CONTINUO EN AMBOS OJOS",
+  "presentacion": "VIALES GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0818",
+  "nombrecomercial": "IBUPROFENO",
+  "uso": "tomar 1 capsula cada 8 h por 6 dias",
+  "presentacion": "200 mg  capsulas blandas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0819",
+  "nombrecomercial": "I DROPS",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0820",
+  "nombrecomercial": "DECA- DURABOLIN",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "1 AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0821",
+  "nombrecomercial": "PROBIOTICOS",
+  "uso": "TOMAR 1 CAPSULA  1 VEZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0822",
+  "nombrecomercial": "ATROPINA  0,01%",
+  "uso": "COLOCAR 1 GOTA ANTES DE DORMIR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0823",
+  "nombrecomercial": "UROVAXOM",
+  "uso": "TOMAR 1 CAPSULA 1 VEX AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0824",
+  "nombrecomercial": "CREMA  AZUFRADA",
+  "uso": "COLOCAR DESPUES DE BAÑAR EN LA MAÑANA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0825",
+  "nombrecomercial": "GLUCOFAGE",
+  "uso": "TOMAR 1 TABLETA  DESPUES DE COMER",
+  "presentacion": "800 MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0826",
+  "nombrecomercial": "GLAUCOFF",
+  "uso": "APLICAR 1 GOTA CADA 8 H USO CONTINUO EN OO IZQUIERDO",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0827",
+  "nombrecomercial": "-BRINZOLAN T",
+  "uso": "aplicar 1 gota cada 12 h uso continuo",
+  "presentacion": "gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0828",
+  "nombrecomercial": "METILPREDNISOLONA",
+  "uso": "COLOCAR 1 GR VIA ENDOVENOSA EN BOLO DILUIDO EN 100 CC  STAT",
+  "presentacion": "1 GR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0829",
+  "nombrecomercial": "BETADERM",
+  "uso": "APLICAR EN FRENTE Y CEJAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0830",
+  "nombrecomercial": "BRUCEN",
+  "uso": "APLICAR EN CUERO Y EL CUERPO 1 VEZ AL DIA",
+  "presentacion": "CREMA CORPORAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0832",
+  "nombrecomercial": "GINSENG",
+  "uso": "TOMAR 1 CAPSULA  1 VEZ AL DIA  POR 4 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0833",
+  "nombrecomercial": "ACULAR",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 2 MESES",
+  "presentacion": "gotas oftalmologico",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0834",
+  "nombrecomercial": "ESPIRONOLACTONA",
+  "uso": "tomar 1 tableta 1 vez al dia por 10 dias",
+  "presentacion": "50 mgr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0836",
+  "nombrecomercial": "EYLEA  INTRAVITREO",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0837",
+  "nombrecomercial": "VSIQQ  INTRAVITREO",
+  "presentacion": "AMPOLLA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0838",
+  "nombrecomercial": "IVERMECTINA",
+  "uso": "TOMAR 6 GOTAS MEDIA TABLETA1 VEZAL DIA POR6 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0839",
+  "nombrecomercial": "OPTIVE FUSUIN OMEGA 3",
+  "uso": "aplicar 1 gota cada 6 h",
+  "presentacion": "gotas oftalmicas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0840",
+  "nombrecomercial": "OPTIQUA",
+  "uso": "APLICAR1 GOTA CADA8 H",
+  "presentacion": "GOTAS OFTALMOLOGICO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0841",
+  "nombrecomercial": "PATADAY",
+  "uso": "APLICAR 1 GOTA  CADA 12 HPOR 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0842",
+  "nombrecomercial": "PULMICORT O BUMESONIDA",
+  "uso": "DARL 1 PUFF CADA 12 H POR 15 DIAS",
+  "presentacion": "INHALADOR 100MGR",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0843",
+  "nombrecomercial": "VORTEX",
+  "uso": "MASCARA PEDIATRICA ,RESPIRE 10 VECES CON EL SALBUTAMOL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0844",
+  "nombrecomercial": "KEPRORET",
+  "uso": "DARLE 5 CC CADA 8 HSI HAY DOLOR EN EL OJO",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0845",
+  "nombrecomercial": "ELIPTIC",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0846",
+  "nombrecomercial": "GENTEAL",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0847",
+  "nombrecomercial": "FLAXOL",
+  "uso": "TO,AR 1 TABLETA 1 VZ AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0848",
+  "nombrecomercial": "AGUA DE ROSAS FARMATODO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0849",
+  "nombrecomercial": "MASCARILLA  DE CARBON ACTIVADO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0850",
+  "nombrecomercial": "CETAPHIL",
+  "presentacion": "LOCION JABONOSA PIEL SENSIBL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0851",
+  "nombrecomercial": "FARIZUMAB",
+  "presentacion": "1 ampolla intravitreo",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0852",
+  "nombrecomercial": "BENADRYL",
+  "uso": "APLICAR  EN LA PIL EN LA NOCHE",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0853",
+  "nombrecomercial": "BROXOL PEDIATRICO",
+  "uso": "DARLE 4CC CADA 12 H POR 7 DIAS",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0856",
+  "nombrecomercial": "DERMACORTINE",
+  "uso": "APLICAR EN ELCUERO CABELLO",
+  "presentacion": "LOCION"
+ },
+ {
+  "codigo_origen": "0857",
+  "nombrecomercial": "OLOCOF",
+  "uso": "APLICAR 1 GOTA CADA12 H POR 1MES",
+  "presentacion": "GOTASOFTALMICAS 0,02 %"
+ },
+ {
+  "codigo_origen": "0858",
+  "nombrecomercial": "PREDNACOF",
+  "uso": "APLICAR 1 GOTA CADA 2 H POR 7 DIAS LUEGO CADA 4 HORAS POR 7 DIAS",
+  "presentacion": "GOTASOFTALMICAS 1 %"
+ },
+ {
+  "codigo_origen": "0861",
+  "nombrecomercial": "CLOREXIDINA",
+  "uso": "APLICAR 1 GOTA CADA 2 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0864",
+  "nombrecomercial": "NEUROMAG",
+  "uso": "TOMAR 1 CAPSULA ANTESDE DORMIR",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0865",
+  "nombrecomercial": "SOLUMER",
+  "uso": "COLOCAR 2 PUFF EN CADA FOSA NASALPOR15 DIAS",
+  "presentacion": "SPRAY"
+ },
+ {
+  "codigo_origen": "0866",
+  "nombrecomercial": "CITICOLINA",
+  "uso": "TOMAR 1 TABLETA CADA 12  H POR 3 MESES",
+  "presentacion": "500 MGR COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0867",
+  "nombrecomercial": "XEGREX",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "DORSOLAMIDA TIMOLOL BRIMONIDINA   GOTAS"
+ },
+ {
+  "codigo_origen": "0868",
+  "nombrecomercial": "LOTARSAN POTASICO",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0869",
+  "nombrecomercial": "LOSARTAN",
+  "uso": "APLICAR1 GOTA CADA 12 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0870",
+  "nombrecomercial": "BRIMOFTAL",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0872",
+  "nombrecomercial": "CITICOLINA",
+  "uso": "TOMAR 1 COMPRIMIDO 1 VEZ ALDIA POR 3 MESES",
+  "presentacion": "250 MGR COMP"
+ },
+ {
+  "codigo_origen": "0874",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "APLICAR 1GOTA CADA 6 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0875",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "APLICAR 1 GOTA CADA 6  H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0876",
+  "nombrecomercial": "CIPROFLXACINA",
+  "uso": "TOMAR 1CAPSULA CADA 12 H",
+  "presentacion": "CAPSULAS 750 MG"
+ },
+ {
+  "codigo_origen": "0877",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12H POR 10 DIAS",
+  "presentacion": "750 MGR"
+ },
+ {
+  "codigo_origen": "0878",
+  "nombrecomercial": "BIOXIDEX",
+  "uso": "APLICAR1 GOTA CADA 6 H",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0879",
+  "nombrecomercial": "BIOPAT",
+  "uso": "APLICAR 1GOTACADA12 H  POR 1MES",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0880",
+  "nombrecomercial": "BIOLFEN",
+  "uso": "APLICAR 1 GOTACADA12 H"
+ },
+ {
+  "codigo_origen": "0881",
+  "nombrecomercial": "ARUDIL",
+  "uso": "TOMAR 1 TABLETA DIARIA POR 3 MESES",
+  "presentacion": "15 MGR TABLETAS"
+ },
+ {
+  "codigo_origen": "0882",
+  "nombrecomercial": "DORMIR SEMISENTADO",
+  "uso": "POSICION SEMISENTADA POR 3 SEMANAS"
+ },
+ {
+  "codigo_origen": "0883",
+  "nombrecomercial": "POSICION SEMISENTADA",
+  "uso": "DORMIR SEMISENTADO POR 3 SEMANAS"
+ },
+ {
+  "codigo_origen": "0884",
+  "nombrecomercial": "ALERPAT",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1 MES",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0885",
+  "nombrecomercial": "L LISINA",
+  "uso": "1 TABLETAS CON LAS COMIDAS POR 3 MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0886",
+  "nombrecomercial": "SEMILLAS DE UVA",
+  "uso": "TOMAR 2 VECES AL DIA POR 3 MESES",
+  "presentacion": "TAB"
+ },
+ {
+  "codigo_origen": "0887",
+  "nombrecomercial": "DOXICICLINA",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H POR 20 DIAS",
+  "presentacion": "100 MG"
+ },
+ {
+  "codigo_origen": "0888",
+  "nombrecomercial": "XENDA",
+  "uso": "APLICAR 1 GOTA 8 PM",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0889",
+  "nombrecomercial": "COSOMIDOL",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0890",
+  "nombrecomercial": "MIGRASTIK",
+  "uso": "aplicar en en el ojo y en l aregion temporal si hay migraña",
+  "presentacion": "rollon migraña"
+ },
+ {
+  "codigo_origen": "0891",
+  "nombrecomercial": "ACETAMINOFEN CON CODEINA",
+  "uso": "TOMAR 1 TABLETA CADA 8 H SI HAY DOLOR",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0892",
+  "nombrecomercial": "BIOGLYCOL",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0893",
+  "nombrecomercial": "PHARMATON",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0894",
+  "nombrecomercial": "CRISTALTEARS  PLUS",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 8 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0897",
+  "nombrecomercial": "NIMODIPINA",
+  "uso": "TOMAR 1 TABLETA CADA 12 H",
+  "presentacion": "NIMODIPINA DE 30 MHGR"
+ },
+ {
+  "codigo_origen": "0898",
+  "nombrecomercial": "SOOLANTRA",
+  "uso": "APLICAR EN EL BORDE DE LAS PESTAÑAS ANTES DE DORMIR POR 10 DIAS",
+  "presentacion": "IVERMECTINA UNGUENTO OFTALMICO"
+ },
+ {
+  "codigo_origen": "0899",
+  "nombrecomercial": "HYLO",
+  "uso": "HIALUROMNATO DE SODIO . APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0900",
+  "nombrecomercial": "BIORZOLAM",
+  "uso": "APLICAR 1 GOTA CAD 8 H",
+  "presentacion": "DORZOLAMIDA 2 %"
+ },
+ {
+  "codigo_origen": "0901",
+  "nombrecomercial": "ZEBESTEN",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 1 MES",
+  "presentacion": "bromfenaco 0.09%"
+ },
+ {
+  "codigo_origen": "0902",
+  "nombrecomercial": "LASTACAFT",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 2 MESES",
+  "presentacion": "ALCAFTADINA 0,25%"
+ },
+ {
+  "codigo_origen": "0903",
+  "nombrecomercial": "ELIPTIC OFTENO PF",
+  "uso": "APLICAR 1 GOTA CADA 12 H USO CONTINUO",
+  "presentacion": "DORZOLAMIDA TIMOLOL"
+ },
+ {
+  "codigo_origen": "0904",
+  "nombrecomercial": "FLU- SURE T",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 10 DIAS",
+  "presentacion": "FLUROMETALONA TETRIZOLINA HCL"
+ },
+ {
+  "codigo_origen": "0905",
+  "nombrecomercial": "VISODEX OFT",
+  "uso": "APLICAR 1 GOTA CADA  G POR 10 DIAS",
+  "presentacion": "DEXAMETASONA NAFAZOLINA"
+ },
+ {
+  "codigo_origen": "0906",
+  "nombrecomercial": "CIPRODAN OFTALMICO",
+  "uso": "APLICAR 1 GOTA CADA 3 H POR 7 DIAS LUEGO CADA 4 H POR 7 DIAS",
+  "presentacion": "CIPROFLOXACINA"
+ },
+ {
+  "codigo_origen": "0907",
+  "nombrecomercial": "NAABAK",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 15 DIAS",
+  "presentacion": "N ACETIL CISTEINA 4.9 %"
+ },
+ {
+  "codigo_origen": "0908",
+  "nombrecomercial": "HYABAK",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0909",
+  "nombrecomercial": "HIALUB",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS SIN PRESERVANTES"
+ },
+ {
+  "codigo_origen": "0910",
+  "nombrecomercial": "BIODINA",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "1000",
+  "nombrecomercial": "JAVON AZUFRADO"
+ },
+ {
+  "codigo_origen": "0913",
+  "nombrecomercial": "BIODEX",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 7 DIAS",
+  "presentacion": "GOTAS OFTALMICOS"
+ },
+ {
+  "codigo_origen": "0914",
+  "nombrecomercial": "MELATONINA",
+  "uso": "DARLE 2 GOMITAS A LAS 8 PM",
+  "presentacion": "KIDS"
+ },
+ {
+  "codigo_origen": "0917",
+  "nombrecomercial": "HUMYLUB PF",
+  "uso": "APLICAR DENTRO DEL OJO CADA 8 H",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0919",
+  "nombrecomercial": "SERUM DE CAFEINA Y NIACINAMIDA",
+  "uso": "APLICAR EN EL CONTORNO DE OJOS ANTES DE DORMIR Y EN LA MAÑANA",
+  "presentacion": "SERUM"
+ },
+ {
+  "codigo_origen": "0920",
+  "nombrecomercial": "5 FLUOROURACIL",
+  "uso": "APLICAR EN LA LESION TODAS LAS NOCHES  POR 15 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0921",
+  "nombrecomercial": "PROTECTOR SOLAR 50% FACIAL",
+  "uso": "APLICAR EN TODA LA CARA Y CUELLO 4 VECES AL DIA"
+ },
+ {
+  "codigo_origen": "0922",
+  "nombrecomercial": "LUBRIDERM",
+  "uso": "APLICAR EM LA CARA Y CUERPO ANTES DE DORMIR"
+ },
+ {
+  "codigo_origen": "0923",
+  "nombrecomercial": "ACICLOVIR",
+  "uso": "APLICAR EN EL PARPADO CADA 8 H",
+  "presentacion": "UNGUENTO OFTALMICO"
+ },
+ {
+  "codigo_origen": "0924",
+  "nombrecomercial": "LIZENOLID",
+  "uso": "APLICAR 1 GOTA CADA 2 H",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0925",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "400 MGR"
+ },
+ {
+  "codigo_origen": "0926",
+  "nombrecomercial": "POENTOBRAL",
+  "uso": "APLICAR 1 GOTA CADA 6 H POR 7 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0927",
+  "nombrecomercial": "SYSTANE BALANCE",
+  "uso": "APLICAR 1 GOTA CADA 4 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0928",
+  "nombrecomercial": "PARACETAMOL",
+  "uso": "TOMAR 1 TABLETA CADA 12 H SI HAY DOLOR",
+  "presentacion": "1 GR"
+ },
+ {
+  "codigo_origen": "0929",
+  "nombrecomercial": "ULCON SUCRALFADO",
+  "uso": "TOMAR 1 TABLETA DESPUES DE CADA COMIDA",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0930",
+  "nombrecomercial": "KALMAX",
+  "uso": "TOMAR 1 TABLETA ANTES DE DRMIR POR 8 DIAS",
+  "presentacion": "TABLETAS MASTICABLES"
+ },
+ {
+  "codigo_origen": "0931",
+  "nombrecomercial": "MEIBOS",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 10  DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0932",
+  "nombrecomercial": "ARUDIL",
+  "uso": "TOMAR 1 TABLETA CADA12 H POR 7 DIAS LUEGO 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "20 MGR"
+ },
+ {
+  "codigo_origen": "0933",
+  "nombrecomercial": "GENURIN",
+  "uso": "TOMAR UNA TABLETA CADA 8 H  POR 6 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0934",
+  "nombrecomercial": "CITRATO DE POTASIO",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0935",
+  "nombrecomercial": "PLIDAN COMPOSITUM",
+  "uso": "TOMAR 1 TABLETA CADA 8 H",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0953",
+  "nombrecomercial": "OCLUSORES OCULARES OPTICLUDE"
+ },
+ {
+  "codigo_origen": "0936",
+  "nombrecomercial": "LANDAX",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 8 DIAS",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0937",
+  "nombrecomercial": "PREDSO",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 8 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0938",
+  "nombrecomercial": "ATORVASTATIBA",
+  "uso": "TOMAR 1 TABLETA 1 VEZ AL DIA  POR 4 MESES",
+  "presentacion": "40 MGR"
+ },
+ {
+  "codigo_origen": "0939",
+  "nombrecomercial": "N ACETIL CISTEINA",
+  "uso": "DISOLVER U SOBRE EN MEDIO VASO DE AGUA Y TOMAR 1 VEZ AKL DIA POR 10 DIAS",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0940",
+  "nombrecomercial": "NEUROMAG",
+  "uso": "APLICAR 1 CAPSULA  ANTES DE DORMIR",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0941",
+  "nombrecomercial": "MEIBOS ( AZITROMMICINA )",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 8 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0942",
+  "nombrecomercial": "PATADINE PLUS",
+  "uso": "APLICAR 1 GOTA 1 VEZ AL DIA",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0943",
+  "nombrecomercial": "FITOESTROGENOS",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0944",
+  "nombrecomercial": "PHARMORAT FORTE",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0945",
+  "nombrecomercial": "DOL KIDS",
+  "uso": "TOMAR 1 TABLETA CADA 8 H",
+  "presentacion": "TABLETAS MASTICABLES"
+ },
+ {
+  "codigo_origen": "0946",
+  "nombrecomercial": "OFTERRA",
+  "uso": "APLICAR EN EL BORDE DE LOS PARPADOS CADA 12 H POR 10 DIAS",
+  "presentacion": "UNGUENTO"
+ },
+ {
+  "codigo_origen": "0947",
+  "nombrecomercial": "HYALO CONFORT",
+  "uso": "aplicar 1 gota cada 8 h",
+  "presentacion": "gotas"
+ },
+ {
+  "codigo_origen": "0948",
+  "nombrecomercial": "BIOMETHIL",
+  "uso": "APLICAR 1 GOTA CADA 6 H CONTINUO",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0949",
+  "nombrecomercial": "BIOBET",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0950",
+  "nombrecomercial": "BIODINA",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0951",
+  "nombrecomercial": "BIOXACIN ( OXIFLOXACINA)",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 10 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0952",
+  "nombrecomercial": "VABYSMO FARICIMAB (ROCHE)",
+  "uso": "PARA COLOCACION INTRAVITREA POR OFTALMOLOGO",
+  "presentacion": "SOLUCION INYECTABLE  6MG /0.05 ML"
+ },
+ {
+  "codigo_origen": "0954",
+  "nombrecomercial": "MAXIDEX",
+  "uso": "APLICAR DENTRO DEL OJO Y EN EL PARPADO ANTES DE DORMIR POR 10 DIAS",
+  "presentacion": "unguento"
+ },
+ {
+  "codigo_origen": "0955",
+  "nombrecomercial": "PATADINE PLUS",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1  MES",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0956",
+  "nombrecomercial": "PATADINE",
+  "uso": "APLICAR 1 GOTA CADA 12 H POR 1 MES",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0957",
+  "nombrecomercial": "HUMED",
+  "uso": "APLICAR 1 GOTA CADA 4 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0958",
+  "nombrecomercial": "DICLOPTIC",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0959",
+  "nombrecomercial": "BIOPRED",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 1 10 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0960",
+  "nombrecomercial": "AZATIOPRIMA",
+  "uso": "TOMAR 1 TABLRTA 1 VEZ AL DIA",
+  "presentacion": "50 MGR  TABLETAS"
+ },
+ {
+  "codigo_origen": "0961",
+  "nombrecomercial": "BIODINA",
+  "uso": "APLICAR 1 GOTA CADA 12",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0962",
+  "nombrecomercial": "LAGRICEL PF",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0963",
+  "nombrecomercial": "SYSTANE OMEGA3",
+  "uso": "APLICAR 1 GOTA CADA 6 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0964",
+  "nombrecomercial": "PARACODINA",
+  "uso": "TOMAR 1 CUCHARA CADA 12 H SI HAY TOS",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0965",
+  "nombrecomercial": "BIOFTAL",
+  "uso": "APLICAR 1 GOTA CADA 4 H POR 10 DIAS",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0966",
+  "nombrecomercial": "L LISINA",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "CAPSULAS 500 MGR"
+ },
+ {
+  "codigo_origen": "0967",
+  "nombrecomercial": "TEKRON",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA POR 3 MESES",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0968",
+  "nombrecomercial": "MARADEX",
+  "uso": "APLICAR 2 VECES AL DIA POR 8 DIAS",
+  "presentacion": "UNGUENTO"
+ },
+ {
+  "codigo_origen": "0969",
+  "nombrecomercial": "PREGABALINA",
+  "uso": "TOMAR 1 TABLETA ANTES DE DORMIR",
+  "presentacion": "150 MGR"
+ },
+ {
+  "codigo_origen": "0970",
+  "nombrecomercial": "ETOFENAMATO  O TRAFLAM",
+  "uso": "COLOCAR 1 AMPOLLLA INTRAMUSCULAR 1 VEZ AL DIA POR 3 DIAS",
+  "presentacion": "AMPOLLA IM 1G/2 ML"
+ },
+ {
+  "codigo_origen": "0971",
+  "nombrecomercial": "ALLEGRA",
+  "uso": "TABLETAS . TOMAR 1 TABLETA 1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "120 MMGR"
+ },
+ {
+  "codigo_origen": "0972",
+  "nombrecomercial": "NEUROMAG O TETRIONATO DE MAGNESIO",
+  "uso": "OMAR 2 CAPSULAS ANTES DE DORMIR"
+ },
+ {
+  "codigo_origen": "0976",
+  "nombrecomercial": "ZUDENINA",
+  "uso": "APLICAR EN LA NOCHE POR 1 MES",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0973",
+  "nombrecomercial": "ONDASETRON",
+  "uso": "TOMAR 1 TABLETA CADA 12 H SI HAY VOMITO",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0974",
+  "nombrecomercial": "ETORICOXIB O ARCOXIA",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 7 DIAS",
+  "presentacion": "90 MGR"
+ },
+ {
+  "codigo_origen": "0975",
+  "nombrecomercial": "CLINAC",
+  "uso": "APLICAR EN LA PIEL DE ÑA CARA ANTES DE DORMIR",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0977",
+  "nombrecomercial": "GLUTATION",
+  "uso": "TOMAR 1 CAPSULA 1 VEZ AL DIA",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0978",
+  "nombrecomercial": "NITARSUDIL",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "gotas oftalmologico"
+ },
+ {
+  "codigo_origen": "0979",
+  "nombrecomercial": "VORICONAZOL",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H POR 4 SEMANAS",
+  "presentacion": "200 MGR"
+ },
+ {
+  "codigo_origen": "0980",
+  "nombrecomercial": "RIPASUDIL",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0981",
+  "nombrecomercial": "IDROFOG",
+  "uso": "APLICAR 1 GOTA CADA 8 H POR 1 MES",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0982",
+  "nombrecomercial": "KRITANTEK PF",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0983",
+  "nombrecomercial": "MACA",
+  "uso": "TOMAR 1 CAPSULA CADA 12 H",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0984",
+  "nombrecomercial": "FERGANIC FOLIC",
+  "uso": "TTOMAR 5 CC 1 VEZ AL DIA POR 2 MESES",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0985",
+  "nombrecomercial": "VALGANCICLOVIR",
+  "uso": "TOMAR 1 TABLETA CADA 12 H POR 20 DIAS",
+  "presentacion": "500 MGR"
+ },
+ {
+  "codigo_origen": "0986",
+  "nombrecomercial": "ASHWAGANDHA",
+  "presentacion": "450 MGR CAPSULAS"
+ },
+ {
+  "codigo_origen": "0989",
+  "nombrecomercial": "PREGABALINA",
+  "uso": "TOMAR 1 TABLETA CADA 12 H",
+  "presentacion": "150 MGR"
+ },
+ {
+  "codigo_origen": "0987",
+  "nombrecomercial": "BIOCLAR",
+  "uso": "APLICAR 1 GOTA CADA 12 H PARA OJO ROJO",
+  "presentacion": "GOTAS OFTALMICAS"
+ },
+ {
+  "codigo_origen": "0988",
+  "nombrecomercial": "APYRENE",
+  "uso": "DARLE 1 CAPSULA CADA 8 H POR 7 DIAS",
+  "presentacion": "650 MG"
+ },
+ {
+  "codigo_origen": "0990",
+  "nombrecomercial": "OROFENO",
+  "uso": "TOMAR 1 TABLETA CADA 8 H",
+  "presentacion": "150 MGR"
+ },
+ {
+  "codigo_origen": "0991",
+  "nombrecomercial": "CODEBROMIL",
+  "uso": "TOMAR 1 CUCHARADA CADA 12 H",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0992",
+  "nombrecomercial": "EDTA",
+  "uso": "APLICAR 1 GOTA CADA 12 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0993",
+  "nombrecomercial": "LETISAN",
+  "uso": "VITAMINA C . TOMAR 1 CAPSULA CADA 12 H POR 15 DIAS, LUEGO 1 GR DIARIO",
+  "presentacion": "1 GR CAPSULAS"
+ },
+ {
+  "codigo_origen": "0994",
+  "nombrecomercial": "LAMOFLOX",
+  "uso": "APLICAR 1 GOTA CADA 8 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0995",
+  "nombrecomercial": "ULGARIN",
+  "uso": "TOMAR 1 TABLETA CADA 12 H",
+  "presentacion": "40 MGR"
+ },
+ {
+  "codigo_origen": "0996",
+  "nombrecomercial": "CICAPLAST",
+  "uso": "APLICAR EN LAS HERIDAS EN LA NOCHE",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0997",
+  "nombrecomercial": "GABAPENTINA",
+  "uso": "TOMAR 1 TABLETA ANTES DE DORMIR  POR 10 DIAS",
+  "presentacion": "150 MGR"
+ },
+ {
+  "codigo_origen": "0998",
+  "nombrecomercial": "PLEXAMIN",
+  "uso": "TOMAR UNA CUCHARADA 1 VEZ AL DIA",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0999",
+  "nombrecomercial": "ALPRAM",
+  "uso": "TOMAR MEDIA TABLETA ANTES DE DORMIR POR 1 MES",
+  "presentacion": "0.5 MGR"
+ },
+ {
+  "codigo_origen": "1001",
+  "nombrecomercial": "JABON AZUFRADO",
+  "uso": "BAÑAESE TODOS LOS DIAS CON JABON AZUFRADO"
+ },
+ {
+  "codigo_origen": "1002",
+  "nombrecomercial": "SOMERGAN",
+  "uso": "APLICAR EN LA PIEL SI HAY PICAZON"
+ },
+ {
+  "codigo_origen": "1003",
+  "nombrecomercial": "PERIDONT",
+  "uso": "APLICAR 1 GOTA CADA 4 H",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "1004",
+  "nombrecomercial": "DEXAMETASONA",
+  "uso": "COLOCAR 1 AMPOLLA VIA INTRAMUSCULAR STAT",
+  "presentacion": "AMPOLLA 8 MGR"
+ },
+ {
+  "codigo_origen": "1005",
+  "nombrecomercial": "SOLUCION HIPERTONICA UNGUENTO",
+  "uso": "APLICAR DENTRO DEL OJO CADA 12 H POR 7 DIAS",
+  "presentacion": "5%"
+ },
+ {
+  "codigo_origen": "1006",
+  "nombrecomercial": "ATORVASTATINA",
+  "uso": "TOMAR 1 TABLETA 1 EZ AL DIA POR 4 MESES",
+  "presentacion": "40 MGR TABLETAS"
+ },
+ {
+  "codigo_origen": "1007",
+  "nombrecomercial": "SOLUCION HIPERTONICA  MURO",
+  "uso": "APLICAR DENTRO DEL OJO ANTES DE DORMIR",
+  "presentacion": "al 5 % unguento"
+ }
+]

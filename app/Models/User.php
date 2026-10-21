@@ -49,6 +49,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'must_change_password' => 'boolean',
         'is_active' => 'boolean',
+        'ultima_actividad_web_at' => 'datetime',
     ];
 
     /** Roles Spatie que dan acceso al dashboard de administración. */
@@ -74,6 +75,12 @@ class User extends Authenticatable
     public function medico(): HasOne
     {
         return $this->hasOne(Medico::class, 'user_id');
+    }
+
+    /** Ficha de paciente de esta cuenta (vínculo `pacientes.user_id`). */
+    public function paciente(): HasOne
+    {
+        return $this->hasOne(Paciente::class, 'user_id');
     }
 
     /**
@@ -105,7 +112,12 @@ class User extends Authenticatable
             return 'clinica.inicio';
         }
 
-        // TODO (/consultorio): cuando exista el área del paciente, acá va su ruta.
+        // El paciente tiene su propia área desde el 2026-10-19 («Mis citas»): ya no entra al panel de
+        // administración. Un paciente que además atiende (Medico/Secretaria) sigue yendo al consultorio.
+        if (! $this->esAdministrador() && $this->hasRole('Paciente')) {
+            return 'paciente.citas';
+        }
+
         return 'dashboard';
     }
 

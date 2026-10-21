@@ -1,0 +1,224 @@
+/* ==========================================================================
+   Área del paciente («Mis citas») y registro de la cuenta
+   ========================================================================== */
+
+.paciente-pagina {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--ds-fondo);
+}
+
+.paciente-barra {
+    background: var(--ds-barra);
+    color: var(--ds-barra-texto);
+    box-shadow: var(--ds-sombra-1);
+}
+
+.paciente-barra-interior {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .8rem 1.2rem;
+    padding-top: .8rem;
+    padding-bottom: .8rem;
+}
+
+.paciente-marca {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--ds-barra-texto);
+    text-decoration: none;
+    margin-right: auto;
+}
+
+.paciente-marca .app-marca-ficha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: var(--ds-radio);
+    background: #fff;
+    color: var(--ds-violeta-700);
+    font-size: 1.15rem;
+}
+
+.paciente-marca-nombre { font-weight: 700; font-size: 1.1rem; }
+.paciente-marca-nombre span { color: var(--ds-celeste-200); }
+
+.paciente-nav { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+.paciente-nav-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .45rem .7rem;
+    border-radius: var(--ds-radio);
+    color: rgba(255, 255, 255, .82);
+    font-size: .9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.paciente-nav-enlace:hover,
+.paciente-nav-activo {
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+}
+
+.paciente-cuenta { display: flex; align-items: center; gap: .6rem; }
+.paciente-cuenta-nombre { font-size: .85rem; color: rgba(255, 255, 255, .8); }
+.paciente-cuenta .btn { --bs-btn-color: #fff; --bs-btn-border-color: rgba(255, 255, 255, .5); --bs-btn-hover-bg: rgba(255, 255, 255, .15); --bs-btn-hover-border-color: #fff; }
+
+.paciente-contenido { flex: 1; padding-top: 2rem; padding-bottom: 3rem; }
+
+.paciente-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-bottom: 1rem;
+    color: var(--ds-celeste-700);
+    font-size: .9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.paciente-volver:hover { text-decoration: underline; }
+
+.paciente-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.paciente-titulo {
+    margin: 0 0 .25rem;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--ds-tinta);
+}
+
+.paciente-bajada { margin: 0; color: var(--ds-texto-2); }
+
+.paciente-seccion { margin-bottom: 2.2rem; }
+.paciente-seccion-titulo { font-size: 1.15rem; font-weight: 700; color: var(--ds-tinta); margin: 0 0 .9rem; }
+
+.paciente-cita {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    box-shadow: var(--ds-sombra-1);
+    margin-bottom: .8rem;
+}
+
+.paciente-cita-fecha {
+    flex: none;
+    width: 4.6rem;
+    padding: .55rem .3rem;
+    border-radius: var(--ds-radio);
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-800);
+    text-align: center;
+}
+
+.paciente-cita-dia { display: block; font-size: 1.55rem; font-weight: 800; line-height: 1; }
+.paciente-cita-mes { display: block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+
+.paciente-cita-cuerpo { flex: 1; min-width: 14rem; }
+.paciente-cita-medico { margin: 0 0 .15rem; font-size: 1.05rem; font-weight: 700; color: var(--ds-tinta); }
+.paciente-cita-especialidad { margin: 0 0 .35rem; color: var(--ds-violeta-700); font-size: .85rem; font-weight: 600; }
+.paciente-cita-dato { margin: 0 0 .15rem; color: var(--ds-texto-2); font-size: .85rem; }
+
+.paciente-cita-lado { display: flex; flex-direction: column; align-items: flex-end; gap: .4rem; min-width: 10rem; }
+.paciente-cita-hora { font-size: 1.1rem; font-weight: 800; color: var(--ds-tinta); }
+
+.paciente-estado {
+    display: inline-flex;
+    align-items: center;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.paciente-estado-confirmada { background: var(--ds-exito-bg, #e8f6f0); color: var(--ds-exito, #14654a); }
+.paciente-estado-pendiente { background: #fff4d6; color: #7a5200; }
+.paciente-estado-atendida { background: var(--ds-superficie-2); color: var(--ds-texto-2); }
+.paciente-estado-movida { background: #fde8e8; color: #8a1f1f; }
+
+.paciente-cita-acciones { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: flex-end; }
+.paciente-aviso-cita { max-width: 16rem; margin: 0; color: var(--ds-texto-2); font-size: .76rem; text-align: right; }
+
+.paciente-vacio {
+    padding: 2.5rem 1.5rem;
+    border: 1px dashed var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    text-align: center;
+}
+
+.paciente-vacio i { font-size: 2rem; color: var(--ds-violeta-700); }
+.paciente-vacio p { margin: .6rem 0 1rem; color: var(--ds-texto-2); }
+
+.paciente-tarjeta {
+    padding: 1.4rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    box-shadow: var(--ds-sombra-1);
+}
+
+.paciente-resumen { padding: .9rem 1rem; border-radius: var(--ds-radio); background: var(--ds-superficie-2); margin: 1rem 0 1.4rem; }
+.paciente-resumen p { margin: 0; color: var(--ds-texto-2); font-size: .9rem; }
+.paciente-resumen fuerte { color: var(--ds-tinta); }
+
+.paciente-opciones { display: grid; grid-template-columns: 1fr; gap: .65rem; }
+@media (min-width: 768px) { .paciente-opciones { grid-template-columns: 1fr 1fr; } }
+
+.paciente-opcion {
+    position: relative;
+    display: block;
+    padding: .85rem 1rem;
+    border: 1px solid var(--ds-borde-control);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+    cursor: pointer;
+}
+
+.paciente-opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.paciente-opcion:focus-within { outline: 2px solid var(--ds-violeta-700); outline-offset: 2px; }
+.paciente-opcion:has(input:checked) { border-color: var(--ds-violeta-700); background: var(--ds-violeta-50); box-shadow: inset 0 0 0 1px var(--ds-violeta-700); }
+.paciente-opcion-dia { display: block; font-weight: 700; color: var(--ds-tinta); }
+.paciente-opcion-hora { display: block; font-size: 1.15rem; font-weight: 800; color: var(--ds-violeta-800); }
+.paciente-opcion-sede { display: block; color: var(--ds-texto-2); font-size: .8rem; }
+
+.paciente-pie { padding: 1rem 0; color: var(--ds-texto-2); font-size: .8rem; background: var(--ds-superficie); border-top: 1px solid var(--ds-borde); }
+.paciente-pie p { margin: 0; }
+
+/* Registro público (usa el armazón del sitio) */
+.paciente-registro { max-width: 44rem; margin: 0 auto; }
+.paciente-registro .paciente-tarjeta { box-shadow: var(--ds-sombra-2); }
+.paciente-registro-encabezado { margin-bottom: 1.4rem; }
+.paciente-registro-encabezado h1 { margin: 0 0 .35rem; font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 800; color: var(--ds-tinta); }
+.paciente-registro-encabezado p { margin: 0; color: var(--ds-texto-2); }
+.paciente-codigo-dev { font-size: 1.2rem; font-weight: 800; letter-spacing: .15em; }
+.paciente-codigo { letter-spacing: .35em; font-weight: 800; text-align: center; }
+.paciente-letra-chica { color: var(--ds-texto-2); font-size: .8rem; }
+
+@media (max-width: 575.98px) {
+    .paciente-cuenta { width: 100%; justify-content: space-between; }
+    .paciente-cita-lado { align-items: flex-start; min-width: 0; }
+    .paciente-cita-acciones { justify-content: flex-start; }
+    .paciente-aviso-cita { text-align: left; }
+}

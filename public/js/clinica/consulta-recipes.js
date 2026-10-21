@@ -62,6 +62,10 @@
     const botonCrear = document.getElementById('medicamento-crear');
     const botonNuevo = document.getElementById('recipe-nuevo-medicamento');
 
+    // La casilla «Anterior» (WEB-11.4): los medicamentos del último récipe de la consulta anterior.
+    const casillaAnterior = document.querySelector('[data-anterior-recipe]');
+    const itemsAnteriores = casillaAnterior ? JSON.parse(casillaAnterior.dataset.items || '[]') : [];
+
     // Lo que se edita: «récipe» (la consulta) o «tratamiento» (el catálogo, WEB-8.1a, que usa este mismo editor).
     const cosa = formulario.dataset.cosa || 'récipe';
 
@@ -124,6 +128,17 @@
         }
 
         if (avisoSucio) avisoSucio.hidden = !sucio();
+
+        marcarAnterior();
+    }
+
+    /** La casilla «Anterior» está marcada si todos los medicamentos del récipe anterior están en éste. */
+    function marcarAnterior() {
+        if (!casillaAnterior) return;
+
+        const actuales = codigos();
+        casillaAnterior.checked = itemsAnteriores.length > 0
+            && itemsAnteriores.every(function (item) { return actuales.indexOf(item.codigo) >= 0; });
     }
 
     /**
@@ -484,6 +499,35 @@
                     botonCrear.disabled = false;
                     mostrarError('No se pudo crear el medicamento: revisa la conexión con el servidor.');
                 });
+        });
+    }
+
+    // ------------------------------------------------------------------------- La casilla «Anterior»
+
+    // 5. **«Anterior»** (WEB-11.4): marcarla agrega al récipe en edición los medicamentos del último récipe de la consulta
+    //    anterior, con su cantidad e indicaciones (lo que ya está no se repite); desmarcarla saca los que coinciden con ese
+    //    récipe. Como todo el editor, no se guarda hasta «Guardar el récipe».
+    if (casillaAnterior) {
+        casillaAnterior.addEventListener('change', function () {
+            if (casillaAnterior.checked) {
+                itemsAnteriores.forEach(function (item) {
+                    agregar({
+                        codigo: item.codigo,
+                        nombre: item.nombre,
+                        generico: item.generico,
+                        cantidad: item.cantidad,
+                        indicaciones: item.indicaciones,
+                    });
+                });
+            } else {
+                const anteriores = itemsAnteriores.map(function (item) { return item.codigo; });
+                filas().forEach(function (fila) {
+                    if (anteriores.indexOf(fila.dataset.codigo) >= 0) fila.remove();
+                });
+            }
+
+            actualizar();
+            pintarMarcas();
         });
     }
 

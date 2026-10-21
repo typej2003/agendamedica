@@ -41,6 +41,16 @@
                     </li>
                 @endguest
 
+                @auth
+                    @if ($usuario->hasRole('Paciente'))
+                        <li class="nav-item">
+                            <a class="nav-link px-3 py-2 py-lg-1 fw-semibold" href="{{ route('paciente.citas') }}">
+                                <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>Mis citas
+                            </a>
+                        </li>
+                    @endif
+                @endauth
+
                 <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
                     @if (Route::has('login'))
                         @auth

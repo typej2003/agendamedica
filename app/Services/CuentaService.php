@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\Catalogos\CargarCatalogosInicialesAlMedico;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -45,9 +46,9 @@ class CuentaService
     /**
      * Los valores de `medicos.formato_reportes` (Fase 2 del cambio de `reg_medico`): con qué membrete se
      * imprimen los reportes del centro. La **firma** es siempre la del doctor que atendió; esto decide el
-     * membrete. En esta fase es sólo el campo y su ABM: la impresión que lo usa es otra fase.
+     * membrete. Quien lo usa para imprimir es `MembreteDelMedico::deLaImpresion()` (Fase 5).
      */
-    public const FORMATOS_DE_REPORTE = ['centro', 'medico'];
+    public const FORMATOS_DE_REPORTE = [Medico::FORMATO_DEL_CENTRO, Medico::FORMATO_DEL_MEDICO];
 
     /** Clave temporal aleatoria, legible. */
     public function claveTemporal(int $largo = 10): string
@@ -190,8 +191,11 @@ class CuentaService
      * Marca o desmarca una ficha como **centro médico** y le guarda el **formato de sus reportes**
      * (`centro`/`medico`).
      *
-     * En esta fase el formato es **sólo el campo y su ABM**: quien lo usa para imprimir llega en otra fase.
-     * La firma de los reportes es siempre la del doctor que atendió, elija lo que elija el centro.
+     * El formato decide el **membrete, el logo y el pie** con los que el centro imprime los reportes de sus
+     * doctores (`MembreteDelMedico::deLaImpresion()`, Fase 5): `centro` usa las filas del propio centro —las
+     * que se configuran en `/clinica/formato?reg_medico=<centro>`, que abre el `Root` desde el panel— y
+     * `medico` las del doctor, como en un consultorio personal. La **firma y el sello son siempre los del
+     * doctor que atendió**, elija lo que elija el centro.
      *
      * No se valida contra un catálogo cerrado de fichas existentes: convertir un médico en centro es
      * exactamente lo que pide el panel.
@@ -782,7 +786,7 @@ class CuentaService
             ]);
         }
 
-        return DB::transaction(function () use ($medico, $ids) {
+        $resultado = DB::transaction(function () use ($medico, $ids) {
             // `sync` deja el pivote con exactamente estos ids: agrega los que faltan y quita los que sobran.
             $cambios = $medico->specialties()->sync($ids->all());
 
@@ -803,6 +807,14 @@ class CuentaService
                 'postgradosQuitados' => count($huerfanos),
             ];
         });
+
+        // **El médico nuevo no empieza en cero** (WEB-12.9): al sumarle una especialidad se le copia el catálogo inicial en los
+        // catálogos que tiene vacíos. Va después de guardar: si la copia fallara, la especialidad igual queda asignada.
+        $resultado['catalogoInicial'] = $resultado['asignadas'] > 0
+            ? app(CargarCatalogosInicialesAlMedico::class)->ejecutar($medico->fresh())
+            : null;
+
+        return $resultado;
     }
 
     /**

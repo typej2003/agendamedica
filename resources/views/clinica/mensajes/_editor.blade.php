@@ -35,7 +35,7 @@
 
                 <x-ui.campo etiqueta="Mensaje" :for="'plantilla-' . $id . '-texto'" error="texto"
                             :class="'mb-2'">
-                    <textarea name="texto" id="plantilla-{{ $id }}-texto" rows="5" maxlength="{{ $editor['maximo'] }}"
+                    <textarea name="texto" id="plantilla-{{ $id }}-texto" rows="3" maxlength="{{ $editor['maximo'] }}"
                               class="form-control" data-plantilla-texto
                               aria-describedby="plantilla-{{ $id }}-contador"
                               placeholder="{{ $editor['porDefecto'] }}">{{ $editor['texto'] }}</textarea>

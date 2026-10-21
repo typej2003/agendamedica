@@ -41,7 +41,7 @@
             <x-ui.chips class="mb-3" :opciones="$vm->gestas()" etiqueta="Gestas" />
         @else
             <p class="texto-tenue small mb-3">
-                Esta historia todavía no tiene ninguna gesta. Cargá la primera con su FUR y guardala.
+                Esta historia todavía no tiene ninguna gesta.
             </p>
         @endif
 
@@ -134,7 +134,7 @@
         @csrf
         <div class="dialogo-cuerpo">
             <x-ui.campo etiqueta="¿Cuántos bebés son?" for="gesta-bebes" requerido
-                        ayuda="1 si es un solo bebé; con 2 o más el embarazo queda como múltiple. La FUR y lo demás se completan después.">
+                        ayuda="Con 2 o más, el embarazo queda como múltiple.">
                 <input type="number" id="gesta-bebes" name="bebes" class="form-control" min="1" max="6" value="1">
             </x-ui.campo>
         </div>

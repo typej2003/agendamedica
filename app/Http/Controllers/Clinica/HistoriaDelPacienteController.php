@@ -8,6 +8,7 @@ use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Historia\HistoriaDelPaciente;
 use App\Clinica\Historia\Vistas\HistoriaDePacienteVista;
 use App\Clinica\Historia\Vistas\ResumenDeHistoriaVista;
+use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class HistoriaDelPacienteController extends Controller
     public function __construct(
         private PacientesDelConsultorio $pacientes,
         private HistoriaDelPaciente $historia,
+        private MembreteDelMedico $membretes,
     ) {
     }
 
@@ -116,8 +118,9 @@ class HistoriaDelPacienteController extends Controller
             'vm' => new ResumenDeHistoriaVista(
                 $ficha,
                 // La firma sigue siendo la del médico del contexto; el número y las consultas son los del
-                // consultorio elegido.
-                $contexto['medico']->nombreMostrar,
+                // consultorio elegido. El **encabezado** es el del formato del consultorio de la historia (Fase 5
+                // del cambio de `reg_medico`): el del centro si él lo eligió y el suyo si no.
+                $this->membretes->deLaImpresion($contexto['medico'], $elegido)->medico,
                 $this->historia->consultas($elegido, $ficha->numhistoria),
                 // "Hoy" en la zona del consultorio, no en UTC (`FechaDelConsultorio`, WEB-2.9).
                 FechaDelConsultorio::hoy(),

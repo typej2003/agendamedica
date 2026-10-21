@@ -59,6 +59,17 @@
                 </button>
                 <a class="btn btn-outline-secondary" href="{{ route('reservas.catalogo') }}">Reservar otra cita</a>
             </div>
+
+            @if (!empty($reserva['cedula']))
+                <div class="alert alert-light border text-start mt-4" role="note">
+                    <strong>¿Quieres gestionar tus citas desde aquí?</strong>
+                    <p class="mb-2 small">Crea tu cuenta de paciente con la misma cédula y teléfono: podrás ver, cancelar y reprogramar tus citas.</p>
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ route('paciente.registro', ['cedula' => $reserva['cedula'], 'telefono' => \App\Notificaciones\Telefono::mostrar($reserva['telefono'])]) }}">
+                        Crear mi cuenta
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 @endsection

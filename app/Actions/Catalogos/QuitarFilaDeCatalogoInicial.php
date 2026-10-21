@@ -3,6 +3,7 @@
 namespace App\Actions\Catalogos;
 
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
+use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -51,6 +52,7 @@ final class QuitarFilaDeCatalogoInicial
                 DB::table($hijo['tabla'])->whereNull('reg_medico')->where($hijo['enlace'], $codigo)->delete();
             }
             DB::table($def['tabla'])->whereNull('reg_medico')->where('id', $id)->delete();
+            EspecialidadesDelCatalogoInicial::quitarFila($slug, $id);
 
             return $nombre;
         });

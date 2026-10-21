@@ -7,6 +7,7 @@ use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Office;
+use App\Models\OfficeSchedule;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -109,7 +110,7 @@ class SedesWebTest extends TestCase
         $respuesta = $this->actingAs($user)->get('/clinica/sedes');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Sedes');
+        $respuesta->assertSee('Sedes y consultorios');
         $respuesta->assertSee($sede->name);
         $respuesta->assertSee('Av. Principal');
     }
@@ -131,32 +132,284 @@ class SedesWebTest extends TestCase
         $this->actingAs($user)->get('/clinica/sedes?todas=1')->assertOk()->assertSee($vieja->name);
     }
 
-    public function test_muestra_cuantos_consultorios_activos_tiene_la_sede(): void
+    /**
+     * **Sedes y consultorios** (2026-10-20): cada sede es una tarjeta con los consultorios del médico adentro y sus
+     * horarios; las sedes donde el médico no tiene consultorio van plegadas en «Otras sedes de la clínica».
+     */
+    public function test_cada_sede_muestra_sus_consultorios_y_las_ajenas_van_plegadas(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $conConsultorio = $this->sedePropia($medico, 'Con consultorio');
+        OfficeSchedule::create([
+            'office_id' => $conConsultorio->offices()->first()->id, 'reg_medico' => $medico->reg_medico,
+            'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00', 'cupo' => 20,
+        ]);
+        $sinConsultorio = $this->sedeSuelta('Sede sin usar');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Sedes y consultorios', $html);
+        // La sede del médico va primero, con su consultorio, su modalidad y su horario.
+        $this->assertMatchesRegularExpression(
+            '/' . preg_quote(e($conConsultorio->name), '/') . '.*?sede-consultorio-nombre">C1<.*?Hora de cita.*?8:00 AM a 12:00 PM.*?20 pacientes.*?Otras sedes de la clínica \(\d+\).*?' . preg_quote(e($sinConsultorio->name), '/') . '/s',
+            $html,
+        );
+        // Cada tarjeta ofrece agregarle un consultorio, con la sede ya elegida.
+        $this->assertStringContainsString('data-panel="dialogo-consultorio" data-sede="' . $sinConsultorio->id . '"', $html);
+        $this->assertStringContainsString(e(route('clinica.sedes', ['panel' => 'consultorio', 'en' => $sinConsultorio->id])), $html);
+    }
+
+    public function test_sin_contexto_la_pantalla_muestra_solo_las_sedes(): void
     {
         [$user, $medico] = $this->usuarioClinico();
-        $conConsultorio = $this->sedePropia($medico, 'Con consultorio');
-        $sinConsultorio = MedicalCenter::create([
+        $sede = $this->sedePropia($medico, 'Sede sin contexto');
+
+        $html = $this->actingAs($user)->get('/clinica/sedes')->assertOk()->getContent();
+
+        $this->assertStringContainsString(e($sede->name), $html);
+        // Sin médico elegido no hay consultorios que mostrar ni panel para cargarlos.
+        $this->assertStringNotContainsString('id="dialogo-consultorio"', $html);
+        $this->assertStringNotContainsString('sede-consultorio-nombre', $html);
+        $this->assertStringContainsString('id="dialogo-sede"', $html);
+    }
+
+    public function test_sin_ninguna_sede_la_tarjeta_guia_ofrece_la_primera(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        MedicalCenter::query()->update(['activo' => false]);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Empieza por tu primera sede', $html);
+        // El botón de la tarjeta es la única acción principal: el encabezado no lo repite.
+        $this->assertSame(1, substr_count($html, 'data-tour="sedes-nueva"'));
+        $this->assertStringContainsString(e(route('clinica.sedes', ['panel' => 'sede'])), $html);
+    }
+
+    // ----------------------------------------------------------- Las rutas de antes y el menú
+
+    public function test_la_ruta_vieja_de_consultorios_lleva_a_la_pantalla_unificada(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios')
+            ->assertRedirect(route('clinica.sedes'));
+
+        // Lo que pedía la ruta vieja se traduce: editar uno es su panel y «inactivos» es «Todas».
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/consultorios?editar=55&inactivos=1')
+            ->assertRedirect(route('clinica.sedes', ['todas' => 1, 'consultorio' => 55]));
+    }
+
+    public function test_el_menu_tiene_una_sola_entrada_para_sedes_y_consultorios(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Sedes y consultorios', $html);
+        $this->assertStringContainsString('href="' . route('clinica.sedes') . '"', $html);
+        $this->assertStringNotContainsString('href="' . route('clinica.consultorios') . '"', $html);
+        $this->assertStringNotContainsString('Consultorios y horarios', $html);
+    }
+
+    // ----------------------------------------------------------- Crear la sede y la pregunta
+
+    public function test_crear_una_sede_pregunta_si_agregar_un_consultorio_en_ella(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $datos = $this->datosDeSede(['name' => 'Sede nueva ' . substr(uniqid(), -6)]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/sedes', $datos + ['formulario' => 'sede'])
+            ->assertRedirect(route('clinica.sedes'))
+            ->assertSessionHas('sede_creada');
+
+        $sede = MedicalCenter::where('name', $datos['name'])->firstOrFail();
+        $this->assertSame($sede->id, session('sede_creada'));
+
+        $html = $this->get('/clinica/sedes')->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-panel-al-cargar="dialogo-sede-creada"', $html);
+        $this->assertStringContainsString('¿Agregar un consultorio en <strong>' . e($sede->name) . '</strong>?', $html);
+        $this->assertStringContainsString('Ahora no', $html);
+        // «Agregar consultorio» abre el panel del consultorio con esa sede elegida.
+        $this->assertStringContainsString('data-panel="dialogo-consultorio" data-sede="' . $sede->id . '" autofocus', $html);
+        // La sede recién creada se ve aunque el médico todavía no tenga consultorio en ella.
+        $this->assertStringContainsString(e($sede->name), $html);
+    }
+
+    public function test_editar_una_sede_no_vuelve_a_preguntar(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $sede = $this->sedeSuelta('Sede ya creada');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/sedes', $this->datosDeSede(['id' => $sede->id, 'name' => $sede->name, 'activo' => 1]))
+            ->assertRedirect(route('clinica.sedes'))
+            ->assertSessionMissing('sede_creada');
+    }
+
+    public function test_sin_contexto_crear_la_sede_no_pregunta_por_el_consultorio(): void
+    {
+        [$user] = $this->usuarioClinico();
+        $datos = $this->datosDeSede();
+
+        $this->actingAs($user)->post('/clinica/sedes', $datos)->assertSessionHas('sede_creada');
+
+        $this->get('/clinica/sedes')->assertOk()->assertDontSee('dialogo-sede-creada', false);
+    }
+
+    public function test_el_panel_del_consultorio_llega_con_la_sede_elegida(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $sede = $this->sedeSuelta('Sede elegida');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.sedes', ['panel' => 'consultorio', 'en' => $sede->id]))
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-panel-al-cargar="dialogo-consultorio"', $html);
+        $this->assertMatchesRegularExpression('/<option value="' . $sede->id . '" selected>/', $html);
+        $this->assertStringContainsString('data-abrir-sede-rapida', $html);
+    }
+
+    public function test_con_una_sola_sede_activa_el_consultorio_nace_con_ella(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        MedicalCenter::query()->update(['activo' => false]);
+        $unica = $this->sedeSuelta('La única');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.sedes', ['panel' => 'consultorio']))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<option value="' . $unica->id . '" selected>/', $html);
+    }
+
+    public function test_el_consultorio_se_crea_en_la_sede_elegida_y_vuelve_a_la_pantalla(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $sede = $this->sedeSuelta('Sede del consultorio');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/consultorios', [
+                'formulario'        => 'consultorio',
+                'medical_center_id' => $sede->id,
+                'office_number'     => 'P2-5',
+                'modalidad'         => Office::MODALIDAD_HORA,
+                'duracion_cita'     => 20,
+                'activo'            => 1,
+            ])
+            ->assertRedirect(route('clinica.sedes'))
+            ->assertSessionHas('estado', 'Consultorio registrado.');
+
+        $this->assertDatabaseHas('offices', [
+            'medical_center_id' => $sede->id, 'office_number' => 'P2-5',
+            'reg_medico' => $medico->reg_medico, 'medico_id' => $medico->id,
+        ]);
+
+        // La sede pasa a ser «suya»: su tarjeta lista el consultorio.
+        $this->get('/clinica/sedes')->assertOk()->assertSeeInOrder([$sede->name, 'P2-5']);
+    }
+
+    // ----------------------------------------------------------- La sede rápida (desde el consultorio)
+
+    /** «Nueva sede» del panel del consultorio la crea por `fetch`: la respuesta es JSON, sin la pregunta. */
+    public function test_crear_la_sede_desde_el_consultorio_responde_json(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $datos = $this->datosDeSede(['name' => 'Sede rápida ' . substr(uniqid(), -6), 'activo' => 1]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->postJson('/clinica/sedes', $datos);
+
+        $sede = MedicalCenter::where('name', $datos['name'])->firstOrFail();
+        $respuesta->assertCreated()->assertExactJson(['id' => $sede->id, 'nombre' => $datos['name'], 'estado' => 'Sede registrada.']);
+        $respuesta->assertSessionMissing('sede_creada');
+        $this->assertTrue($sede->activo);
+    }
+
+    public function test_los_errores_de_la_sede_rapida_vuelven_como_json(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson('/clinica/sedes', ['city_id' => $this->ciudad()->id])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['name', 'address']);
+    }
+
+    // ----------------------------------------------------------- Errores: el panel vuelve abierto
+
+    public function test_un_error_de_la_sede_reabre_su_panel_con_lo_escrito(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/sedes')
+            ->followingRedirects()
+            ->post('/clinica/sedes', ['formulario' => 'sede', 'name' => 'Sin dirección', 'phone' => '0414-1112233', 'city_id' => $this->ciudad()->id])
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-panel-al-cargar="dialogo-sede"', $html);
+        $this->assertStringContainsString('La dirección es obligatoria', $html);
+        $this->assertMatchesRegularExpression('/id="sede-name"[^>]*value="Sin dirección"/s', $html);
+        // El teléfono de la sede no se cuela en el del consultorio (los dos formularios mandan `phone`).
+        $this->assertMatchesRegularExpression('/id="consultorio-telefono"[^>]*value=""/', $html);
+    }
+
+    public function test_un_error_del_consultorio_reabre_su_panel_con_lo_escrito(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $sede = $this->sedeSuelta('Sede con error');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/sedes')
+            ->followingRedirects()
+            ->post('/clinica/consultorios', [
+                'formulario' => 'consultorio', 'medical_center_id' => $sede->id, 'office_number' => '', 'modalidad' => Office::MODALIDAD_ORDEN,
+                'phone' => '0212-5556677',
+            ])
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-panel-al-cargar="dialogo-consultorio"', $html);
+        $this->assertStringContainsString('Pon el número o el nombre del consultorio.', $html);
+        $this->assertMatchesRegularExpression('/<option value="' . $sede->id . '" selected>/', $html);
+        $this->assertMatchesRegularExpression('/id="consultorio-telefono"[^>]*value="0212-5556677"/', $html);
+        // Y no se pinta en el panel de la sede.
+        $this->assertMatchesRegularExpression('/id="sede-phone"[^>]*value=""/s', $html);
+    }
+
+    public function test_la_secretaria_ve_y_carga_los_consultorios_del_medico_en_la_misma_pantalla(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $secretaria = User::create([
+            'name' => 'Secretaria', 'email' => 'sec-sedes-' . substr(uniqid(), -6) . '@example.com',
+            'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
+        ]);
+        $secretaria->assignRole('Secretaria');
+        MedicoRegistro::create(['user_id' => $secretaria->id, 'reg_medico' => $medico->reg_medico]);
+        $sede = $this->sedePropia($medico, 'Sede de la secretaria');
+
+        $html = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
+            ->get('/clinica/sedes')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="dialogo-consultorio"', $html);
+        $this->assertStringContainsString('data-sede="' . $sede->id . '"', $html);
+    }
+
+    private function sedeSuelta(string $nombre): MedicalCenter
+    {
+        return MedicalCenter::create([
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
-            'name'       => 'Sede sin usar' . substr(uniqid(), -6),
+            'name'       => $nombre . ' ' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => true,
         ]);
-
-        $respuesta = $this->actingAs($user)->get('/clinica/sedes');
-        $respuesta->assertOk();
-        $respuesta->assertSee($conConsultorio->name);
-        $respuesta->assertSee($sinConsultorio->name);
-        // El conteo es el dato que dice si la sede se usa: sin consultorios es una sede cargada y sin usar.
-        $respuesta->assertSee('ninguno');
-
-        // El listado cuenta los consultorios **activos**: dar de baja el consultorio deja la sede en 0.
-        $this->assertSame(1, $conConsultorio->loadCount(['offices as consultorios_activos' => fn ($q) => $q->where('activo', true)])->consultorios_activos);
-
-        $conConsultorio->offices()->update(['activo' => false]);
-
-        $this->assertSame(0, $conConsultorio->loadCount(['offices as consultorios_activos' => fn ($q) => $q->where('activo', true)])->consultorios_activos);
     }
 
     private function sedePropia(Medico $medico, string $nombre): MedicalCenter

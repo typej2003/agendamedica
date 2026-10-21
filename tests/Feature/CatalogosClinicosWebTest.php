@@ -480,7 +480,7 @@ class CatalogosClinicosWebTest extends TestCase
         $html = $this->conContexto($user, $medico, $gineco)->get(route('clinica.catalogos.diagnosticos'))->assertOk()->getContent();
         $submenu = $this->submenuDeCatalogos($html);
         $this->assertSame(
-            ['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Motivos de cita', 'Exámenes', 'Tipos de examen', 'Médicos referidos', 'Plantillas de texto'],
+            ['Medicamentos', 'Tratamientos', 'Diagnósticos', 'Motivos de consulta', 'Motivos de cita', 'Conceptos de factura', 'Exámenes', 'Tipos de examen', 'Médicos referidos', 'Plantillas de texto'],
             $submenu['textos']
         );
         $this->assertSame(['Diagnósticos'], $submenu['activos']);

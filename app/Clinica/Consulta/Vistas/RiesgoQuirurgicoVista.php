@@ -58,7 +58,7 @@ final class RiesgoQuirurgicoVista
 
     public function ayuda(): string
     {
-        return 'Marcá los factores de riesgo del paciente: los puntos se suman solos y quedan en el resumen de la '
+        return 'Marca los factores de riesgo del paciente: los puntos se suman solos y quedan en el resumen de la '
             . 'evaluación. Los factores son el catálogo de riesgo del médico; el paciente es el mismo en todas sus '
             . 'consultas, así que lo marcado se conserva de una consulta a la otra.';
     }

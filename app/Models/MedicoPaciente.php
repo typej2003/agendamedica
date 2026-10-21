@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class MedicoPaciente extends Pivot
@@ -17,4 +18,14 @@ class MedicoPaciente extends Pivot
         'numhistoria',
         'reg_medico',
     ];
+
+    public function medico(): BelongsTo
+    {
+        return $this->belongsTo(Medico::class, 'medico_id');
+    }
+
+    public function paciente(): BelongsTo
+    {
+        return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
 }

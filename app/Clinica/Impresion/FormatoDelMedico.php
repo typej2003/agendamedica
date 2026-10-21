@@ -8,7 +8,8 @@ use App\Models\RecipeFormato;
 
 /**
  * **Lee el formato de impresión del médico** para la pantalla que lo edita (WEB-8.2): sus filas de `evolucion` y de
- * `recipe_formatos` bajo el **registro principal** y el membrete resuelto.
+ * `recipe_formatos` bajo el **registro del formato** (`Medico::registroDelFormato()`: el principal del doctor o el
+ * propio del centro, Fase 5 del cambio de `reg_medico`) y el membrete resuelto.
  *
  * Es la misma lectura que hace la hoja (`MembreteDelMedico`) —mismas filas, mismo registro—, así que lo que la pantalla
  * muestra y lo que se imprime no pueden divergir. Sólo agrega las filas crudas, que el formulario necesita para saber si
@@ -24,7 +25,7 @@ final class FormatoDelMedico
 
     public function de(Medico $medico): FormatoGuardado
     {
-        $registro = (string) $medico->regMedicoPrincipal();
+        $registro = (string) $medico->registroDelFormato();
 
         return new FormatoGuardado(
             $registro,

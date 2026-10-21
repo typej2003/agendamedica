@@ -1,0 +1,1162 @@
+[
+ {
+  "codigo_origen": "041",
+  "examen": "ANTIESTREPTOLISINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "043",
+  "examen": "TGO, TGP, LDH",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "045",
+  "examen": "METANEFRINAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "047",
+  "examen": "ANTICOAGULANTE L+PICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "049",
+  "examen": "ANTIGENOS PROSTATICOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "051",
+  "examen": "PAI 1",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "064",
+  "examen": "RA TEST",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "055",
+  "examen": "DIGOXINA SERICA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "057",
+  "examen": "INMUNOGLOBULINAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "059",
+  "examen": "HEMATOLOGIA COMPLETA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "062",
+  "examen": "ANTICUERPOS ANTITIROIDEO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "065",
+  "examen": "BK EN ESPUTO SERIADO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "067",
+  "examen": "TROPONINA T CUANTIFICADA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "069",
+  "examen": "AMILASAS",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "071",
+  "examen": "RH",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "001",
+  "examen": "GLICEMIA EN AYUNAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "073",
+  "examen": "CALCIO ,  FOSFORO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "010",
+  "examen": "CREATININA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "013",
+  "examen": "PT   PTT  INR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "017",
+  "examen": "HECES",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "020",
+  "examen": "PLAQUETAS",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "022",
+  "examen": "ACIDO URICO",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "028",
+  "examen": "DEPURACION DE CREATININA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "030",
+  "examen": "HOMOCISTEINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "032",
+  "examen": "T3 T4 TSH",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "036",
+  "examen": "CELULAS LE",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "038",
+  "examen": "GLICEMIA POST PANDRIAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "076",
+  "examen": "RX DE TORAX  PA  LI",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "082",
+  "examen": "ECOCARDIOGRAMA DOPPLER COLOR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "084",
+  "examen": "MONITOREO HOLTER DE 24 HORAS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "042",
+  "examen": "CPK",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "078",
+  "examen": "TAC DE TORAX",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "105",
+  "examen": "RX DE SENOS PARANASALES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "044",
+  "examen": "ACIDO VANILIL MANDELICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "046",
+  "examen": "PROTEINAS   C  Y  S",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "048",
+  "examen": "ANTICARDIOLIPINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "050",
+  "examen": "COLESTEROL LDL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "052",
+  "examen": "PPD",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "054",
+  "examen": "FOSFATASAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "056",
+  "examen": "ELECTROLITOS: CL, NA, K, MG, P, CA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "058",
+  "examen": "ANTICUERPOS ANTINUCLEARES",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "061",
+  "examen": "ORINA COMPLETA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "063",
+  "examen": "PROTEINA C REACTIVA ALTA SENSIBILIDAD",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "066",
+  "examen": "INSULINEMIA BASAL EN AYUNAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "068",
+  "examen": "EXUDADO FARINGEO.CULTIVO Y ANTIBIOGR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "070",
+  "examen": "GRUPO SANGUINEO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "072",
+  "examen": "BILIRRUBINA TOTAL Y FRACCIONADA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "002",
+  "examen": "UREA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "074",
+  "examen": "Lp-PLA2",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "012",
+  "examen": "FINBRINOGENO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "014",
+  "examen": "CUENTA BLANCA Y FORMULA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "018",
+  "examen": "HIV",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "021",
+  "examen": "MACHADO GUERREIRO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "023",
+  "examen": "VDRL",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "029",
+  "examen": "PROTEINURIA DE 24 HORAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "031",
+  "examen": "HEMOGLOBINA GLICOSILADA    HBA1C",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "035",
+  "examen": "TITULOS DE TOXOPLASMOSIS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "037",
+  "examen": "CH50",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "077",
+  "examen": "TAC CRANEO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "080",
+  "examen": "RX DE COLUMNA CERVICAL   3 POSICIONES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "130",
+  "examen": "ECOGRAMA PANCREATICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "091",
+  "examen": "RX DE COLUMNA LUMBO SACRA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "093",
+  "examen": "ECODOPPLER VENOSO DE MIEMBROS INFERIORES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "095",
+  "examen": "ECOSONOGRAMA TIROIDEO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "075",
+  "examen": "RESONANCIA MAGNETICA DE CRANEO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "079",
+  "examen": "RESONANCIA MAGNETICA DE TORAX",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "081",
+  "examen": "ARTERIOGRAFIA DE MIEMBROS INFERIORES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "083",
+  "examen": "PRUEBA DE ESFUERZO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "085",
+  "examen": "MONITOREO DE PRESION DE 24  HORAS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "086",
+  "examen": "ECODOPPLER ARTERIAL DE MIEMBROS INFERIORES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "088",
+  "examen": "ECO STRES FARMACOLOGICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "089",
+  "examen": "ECO STRES DE ESFUERZO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "090",
+  "examen": "ECO STRESS CON CONTRASTE",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "092",
+  "examen": "DENSITOMETRIA OSEA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "094",
+  "examen": "ECOSONOGRAMA RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "096",
+  "examen": "CASOALITIS",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "097",
+  "examen": "PRUEBA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "098",
+  "examen": "BIOPSIA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "099",
+  "examen": "COLESTEROL VLDL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "101",
+  "examen": "COLESTEROL TOTAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "102",
+  "examen": "COLESTEROL HDL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "103",
+  "examen": "TRIGLICERIDOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "104",
+  "examen": "MICROALBUMINURIA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "106",
+  "examen": "RX DE  TORAX",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "003",
+  "examen": "HEMATOLOGIA COMPLETA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "004",
+  "examen": "CONTAJE DE PLAQUETAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "005",
+  "examen": "ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "006",
+  "examen": "PH Y AZUCARES REDUCTORES",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "007",
+  "examen": "HECES",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "008",
+  "examen": "BILIRRUBINA TOTAL Y FRACCIONADA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "009",
+  "examen": "GRUPO SANGUINEO Y FACTOR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "011",
+  "examen": "CALCIO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "015",
+  "examen": "POTASIO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "016",
+  "examen": "SODIO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "024",
+  "examen": "COLESTEROL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "025",
+  "examen": "TRIGLICERIDOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "026",
+  "examen": "HECES SERIADAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "027",
+  "examen": "TP Y TPT",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "107",
+  "examen": "RX SIMPLE DE ABDOMEN",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "108",
+  "examen": "ECOGRAMA  ABDOMINAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "109",
+  "examen": "CULTIVO DE SECRECION OCULAR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "110",
+  "examen": "RESONANCIA MAGNETICA DE CEREBRO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "111",
+  "examen": "PROTEINA C REACTIVA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "112",
+  "examen": "VSG",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "113",
+  "examen": "TOXOPLASMOSIS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "114",
+  "examen": "MONOTEST",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "115",
+  "examen": "SANGRE OCULTA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "116",
+  "examen": "SANGRE OCULTA EN HECES",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "117",
+  "examen": "RX MANO DERECHA (DEDO PULGAR)",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "118",
+  "examen": "UROCULTIVO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "119",
+  "examen": "% SATURACION DE TRANSFERINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "120",
+  "examen": "HIERRO  SERICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "124",
+  "examen": "CELULAS LE",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "126",
+  "examen": "VDRL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "121",
+  "examen": "TRANSFERRINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "122",
+  "examen": "ECOGRAMA ABDOMINAL QUE INCLUYA RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "123",
+  "examen": "ECOGRAMA ABDOMINAL INCLUYENDO RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "125",
+  "examen": "FACTOR REUMATOIDEO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "127",
+  "examen": "HIV",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "128",
+  "examen": "COPROCULTIVO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "129",
+  "examen": "ECOGRAMA HEPATOBILIAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "131",
+  "examen": "ECOGRAMA PANCREATICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "132",
+  "examen": "ECOGRAMA ABDOMINAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "133",
+  "examen": "ECOGRAMA PELVICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "134",
+  "examen": "CALCIO, FOSFORO, AC URICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "135",
+  "examen": "EXAMEN DE ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "136",
+  "examen": "CALCIO EN ORINA 24HORAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "137",
+  "examen": "FOSFORO ORINA 24HS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "138",
+  "examen": "AC URICO ORINA 24HS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "139",
+  "examen": "FOSFATASAS ALCALINAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "140",
+  "examen": "ELECTROLITOS SERICOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "141",
+  "examen": "REL CAL/CREAT (2DA ORINA)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "142",
+  "examen": "REL AC URICO/CREAT ( 2DA ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "143",
+  "examen": "REL FOSF/CREAT ( 2DA ORINA)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "144",
+  "examen": "ECOSONOGRAMA RENAL - VESICAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "145",
+  "examen": "GASES VENOSOS ( 1 HORA POSTDESAYUNO)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "146",
+  "examen": "CREATININA EN 24 HORAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "147",
+  "examen": "GAMMAGRAMA RENAL CON DMSA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "148",
+  "examen": "EDAD OSEA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "149",
+  "examen": "PERFIL LIPIDICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "150",
+  "examen": "RX TORAX PA Y LATERAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "151",
+  "examen": "PROTEINAS TOT Y FRAC",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "152",
+  "examen": "REL ALB/CREAT ( ORIN PARCIAL)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "153",
+  "examen": "URETROCISTOGRAFIA MICCIONAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "154",
+  "examen": "UROTAC CON  RECONSTRUCCION DE URETERES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "155",
+  "examen": "SEROLOGIA PARA MYCOPLASMA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "156",
+  "examen": "SEROLOGIA PARA CMV Y EBV",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "157",
+  "examen": "CITRATO EN ORINA 24HS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "158",
+  "examen": "OXALATO EN ORINA 24HS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "159",
+  "examen": "GRAM DE ORINA SIN CENTRIFUGAR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "160",
+  "examen": "ELECTROLITOS URINARIOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "161",
+  "examen": "GAMMAGRAMA RENAL CON MAG 3",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "162",
+  "examen": "MORFOLOGIA DE HEMATIES EN ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "163",
+  "examen": "DETERMINACION CRISTALOGRAFICA  DE LITO RENAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "164",
+  "examen": "CREATININA EN ORINA PARCIAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "165",
+  "examen": "SEROLOGIA PARA DENGUE",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "166",
+  "examen": "ANTI DNA ,",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "167",
+  "examen": "COMPLEMENTO SERICO ( C3,C4,CH50)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "168",
+  "examen": "ANCA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "169",
+  "examen": "LEUCOGRAMA FECAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "170",
+  "examen": "ECODOOPLER RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "172",
+  "examen": "ESTUDIOS URODINAMICOS.",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "171",
+  "examen": "URETROCISTOGRAFIA MICCIONAL ISOTOPICA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "173",
+  "examen": "ANTIGENOS FEBRILES",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "174",
+  "examen": "ECOSONOGRAMA DOPPLER RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "175",
+  "examen": "RX DE RINOFARINGE LATERAL CON BOCA ABIERTA Y",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "176",
+  "examen": "PTH",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "177",
+  "examen": "INMUGLOBULINA E SERICA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "178",
+  "examen": "UROTAC SIN CONTRASTE",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "179",
+  "examen": "UROTAC CON CONTRASTE ENDOVENOSO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "180",
+  "examen": "FROTIS DE SANGRE PERIFERICA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "181",
+  "examen": "TOMOGRAFIA ABDOMINO PELVICA SIMPLE",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "182",
+  "examen": "TAC ABDOMINO PELVICA SIMPLE",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "183",
+  "examen": "ASTO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "184",
+  "examen": "ECOSONOGRAMA ABDOMINO PELVICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "185",
+  "examen": "SEROLOGIA PARA HEPATITIS B Y C.",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "186",
+  "examen": "INMUNOGLOBULINA G",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "187",
+  "examen": "INMUNOGLOBULINA A",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "188",
+  "examen": "MICROALBUMINURIA  EN 24 HORAS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "189",
+  "examen": "PROLACTINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "190",
+  "examen": "ALDOSTERONA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "191",
+  "examen": "ACTH",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "192",
+  "examen": "RESONANCIA MAGNETICA CEREBRAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "193",
+  "examen": "SEROLOGIA PARA TOXOPLASMOSIS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "194",
+  "examen": "ECOSONOGRAMA TESTICULAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "195",
+  "examen": "UROGRAFIA POR ELIMINACION",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "196",
+  "examen": "ANGIORESONANCIA RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "197",
+  "examen": "ANGIOTAC RENAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "198",
+  "examen": "FERRITINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "199",
+  "examen": "ECOCARDIOGRAMA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "200",
+  "examen": "NIVELES SERICOS DE CICLOSPORINA A",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "201",
+  "examen": "MONITOREO AMBULATORIO DE PA ( MAPA)",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "202",
+  "examen": "ECOSONOGRAMA DE RODILLA IZQUIERDA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "203",
+  "examen": "ECO DOPPLER DE MIEMBROS INFERIORES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "204",
+  "examen": "CARIOTIPO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "205",
+  "examen": "ANDROSTENODIONA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "206",
+  "examen": "DHEA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "207",
+  "examen": "INMUNOGLOBULINA E.",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "208",
+  "examen": "MAGNESIO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "209",
+  "examen": "INSULINA POST PRANDIAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "210",
+  "examen": "ANTICUERPOS ANTIFOSFOLIPIDOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "211",
+  "examen": "NIVELES SERICOS DE DIGOXINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "212",
+  "examen": "CATECOLAMINAS EN ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "213",
+  "examen": "DETERMINACION DE ERLICHIA EN SANGRE",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "214",
+  "examen": "VIDEOURODINAMIA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "215",
+  "examen": "ECOSONOGRAMA TESTICULAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "216",
+  "examen": "ECOSONOGRAMA MAMARIO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "217",
+  "examen": "UROTAC  CON DOBLE CONTRASTE ( ENDOVENOSO Y OR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "218",
+  "examen": "PT Y PTT",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "219",
+  "examen": "ANTI-DNA ( DE DOBLE CADENA)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "233",
+  "examen": "PCR PARA CMV Y EBV",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "220",
+  "examen": "UROTAC SIMPLE CON RECONSTRUCCION DE URETERES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "221",
+  "examen": "UROTAC SIMPLE CON PROTOCOLO DE LITIASIS",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "222",
+  "examen": "ANGIO TAC DE ARTERIAS RENALES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "223",
+  "examen": "ECOSONOGRAMA DOPPLER DE MS INFERIORES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "224",
+  "examen": "SEROLOGIA PARA HELYCOBACTER PILORY",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "225",
+  "examen": "SEROLOGIA PARA HEPATITIS A, B Y C",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "226",
+  "examen": "SOMATOMEDINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "227",
+  "examen": "ECOSONOGRAMA PELVICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "228",
+  "examen": "INSULINA PRE Y POSTPRANDIAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "229",
+  "examen": "HEMOCULTIVO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "230",
+  "examen": "FOSFORO SERICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "231",
+  "examen": "FIBRINOGENO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "232",
+  "examen": "SEROLOGIA PARA COVID -19",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "234",
+  "examen": "PCR PARA PARVOVIRUS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "235",
+  "examen": "VITAMINA D",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "236",
+  "examen": "(25 HIDROXI) VITAMINA D",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "237",
+  "examen": "CORTISOL SERICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "238",
+  "examen": "RX DE AMBOS MIEMBROS INFERIORES",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "239",
+  "examen": "EOSINOFILOS EN ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "240",
+  "examen": "SEROLOGIA PARA DENGUE (IGG - IGM)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "241",
+  "examen": "ANTICUERPOS ANTI-CCP",
+  "codetipo": "001"
+ }
+]

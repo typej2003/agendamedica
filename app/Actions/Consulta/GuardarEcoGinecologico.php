@@ -66,7 +66,7 @@ final class GuardarEcoGinecologico
         $nuevos[EcoGinecologico::COLUMNA_FECHA] ??= FechaDelConsultorio::hoyComoFecha()->toDateString();
 
         if (! QueEsUnDocumento::ecografia($this->conDatos($nuevos))) {
-            throw new InvalidArgumentException('El eco necesita algún dato: cargá lo que haya dado el estudio.');
+            throw new InvalidArgumentException('El eco necesita algún dato: carga lo que haya dado el estudio.');
         }
 
         $cuando = $this->ahora($cuando);

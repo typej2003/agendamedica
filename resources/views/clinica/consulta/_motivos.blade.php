@@ -8,16 +8,14 @@
      data-crear-abierto="{{ $seccion->crearAbierto() ? '1' : '0' }}">
 
     <x-ui.dos-listas titulo-izquierda="Motivos de esta consulta" titulo-derecha="Tu catálogo de motivos" :resumen="$seccion->resumen()">
-        @if ($vm->tieneAnterior())
+        @if ($vm->anterior())
             <x-slot name="accionesIzquierda">
-                <x-ui.anterior :url="$vm->urlAnterior('motivos')" que="los motivos" />
+                <x-ui.anterior :anterior="$vm->anterior()" />
             </x-slot>
         @endif
         <x-slot name="izquierda">
             @if ($seccion->estaVacio())
-                <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta">
-                    Pásalos desde tu catálogo, a la derecha.
-                </x-ui.vacio>
+                <x-ui.vacio icono="bi-list-check" titulo="Todavía no hay motivos en esta consulta"></x-ui.vacio>
             @else
                 <ul class="motivos-lista">
                     @foreach ($seccion->cargados() as $motivo)
@@ -120,7 +118,7 @@
             @csrf
             <div class="dialogo-cuerpo">
                 <x-ui.campo etiqueta="Nombre del motivo" for="motivo-descripcion" requerido
-                            :ayuda="'Hasta ' . $seccion->largoMaximo() . ' caracteres. Se guarda en mayúsculas, como en tu catálogo.'">
+                            :ayuda="'Hasta ' . $seccion->largoMaximo() . ' caracteres. Se guarda en mayúsculas.'">
                     <input type="text" name="descripcion" id="motivo-descripcion" class="form-control"
                            maxlength="{{ $seccion->largoMaximo() }}" value="{{ old('descripcion') }}" autocomplete="off">
                 </x-ui.campo>

@@ -17,9 +17,9 @@
          derecha **todo el catálogo a la vista**, por páginas, donde cada uno se pasa con «Pasar» o con doble clic. Desde O-27
          «Pasar» escribe en el acto. --}}
     <x-ui.dos-listas titulo-izquierda="Diagnósticos de esta consulta" titulo-derecha="Tu catálogo de diagnósticos">
-    @if ($vm->tieneAnterior())
+    @if ($vm->anterior())
         <x-slot name="accionesIzquierda">
-            <x-ui.anterior :url="$vm->urlAnterior('diagnosticos')" que="los diagnósticos" />
+            <x-ui.anterior :anterior="$vm->anterior()" />
         </x-slot>
     @endif
     <x-slot name="izquierda">
@@ -34,9 +34,7 @@
         <div>
 
             @if ($seccion->estaVacio())
-                <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos">
-                    Pásalos desde tu catálogo, a la derecha.
-                </x-ui.vacio>
+                <x-ui.vacio icono="bi-clipboard2-check" titulo="Esta consulta todavía no tiene diagnósticos"></x-ui.vacio>
             @else
                 <ul class="diagnosticos-lista">
                     @foreach ($seccion->filas() as $fila)

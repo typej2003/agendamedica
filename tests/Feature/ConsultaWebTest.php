@@ -510,7 +510,8 @@ class ConsultaWebTest extends TestCase
         $enLaConsulta->assertDontSee(route('clinica.contexto'), false);
         $enLaConsulta->assertDontSee('Cerrar sesión');
         $enLaConsulta->assertDontSee('aria-label="Mi cuenta"', false);
-        $enLaConsulta->assertDontSee(route('clinica.sedes'), false);
+        // «Sedes y consultorios» queda sólo en el menú lateral (Configuración); el atajo del menú de la cuenta no se pinta.
+        $this->assertSame(1, substr_count($enLaConsulta->getContent(), 'href="' . route('clinica.sedes') . '"'));
 
         // La salida sigue estando: la flecha del principio, que guarda lo escrito antes de volver.
         $enLaConsulta->assertSee('Volver a la agenda');
@@ -524,6 +525,7 @@ class ConsultaWebTest extends TestCase
         $enLaAgenda->assertSee(route('clinica.contexto'), false);
         $enLaAgenda->assertSee('Cerrar sesión');
         $enLaAgenda->assertSee('aria-label="Mi cuenta"', false);
+        $this->assertSame(2, substr_count($enLaAgenda->getContent(), 'href="' . route('clinica.sedes') . '"'));
     }
 
     public function test_una_consulta_de_otro_medico_da_404(): void
@@ -585,7 +587,7 @@ class ConsultaWebTest extends TestCase
 
     /**
      * **La secretaría no puede atender** (WEB-4.9, decisión del usuario del 2026-10-11: "Atender es sólo
-     * del médico"). El POST a mano responde **403** —el mismo "no podés hacer esto" que la ruta del shell
+     * del médico"). El POST a mano responde **403** —el mismo "no puedes hacer esto" que la ruta del shell
      * le da por la misma regla (`User::trabajaLaConsulta()`)— y **no deja media marca**: la cita no queda
      * atendida, ni confirmada por el "atender implica confirmada", ni con rastro de sync, ni con una
      * consulta abierta al lado.

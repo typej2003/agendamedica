@@ -96,6 +96,8 @@ use App\Clinica\Consulta\Vistas\ReposoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
+use App\Clinica\Consulta\HistorialDeAntecedentes;
+use App\Clinica\Consulta\Vistas\HistorialDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEstudioVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEvaluacionVista;
@@ -117,6 +119,7 @@ use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
+use App\Clinica\Impresion\MedicoQueFirma;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Verificacion\VerificacionesDeLaConsulta;
@@ -167,6 +170,7 @@ class ConsultaController extends Controller
         private MembreteDelMedico $membretes,
         private ProximaCitaDelRecipe $proximaCita,
         private VerificacionesDeLaConsulta $verificaciones,
+        private MedicoQueFirma $firma,
     ) {
     }
 
@@ -319,6 +323,10 @@ class ConsultaController extends Controller
                 (string) $request->query('solicitud', ''),
                 // Las secciones que encienden los postgrados de la especialidad del contexto (2026-10-19).
                 $contexto['secciones_postgrados'] ?? [],
+                // La casilla «Anterior» de la sección abierta (WEB-11.4): trae lo de la consulta anterior de la historia.
+                \App\Clinica\Consulta\Vistas\AnteriorVista::deLaSeccion(
+                    $seccion, $consulta, app(\App\Actions\Consulta\CopiarDeLaConsultaAnterior::class),
+                ),
             ),
             // La sección activa: una sola. Sin `?seccion=` es Motivos (O-06) y el shell sin ninguna sección
             // válida muestra su estado vacío. Se llama `contenido` y no `seccion` porque `seccion` ya es el
@@ -993,6 +1001,8 @@ class ConsultaController extends Controller
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
             // Con el nombre que cada médico les da (WEB-12.3: las siete categorías de pediatría; ginecología no cambia).
             $tipos = $antecedentes->tipos($regMedico);
+            $historial = app(HistorialDeAntecedentes::class);
+            $movimientos = $historial->delPaciente($regMedico, (string) $consulta->numhistoria);
 
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
@@ -1006,6 +1016,14 @@ class ConsultaController extends Controller
                 (array) old(),
                 // El "Quitar" de cada fila (O-07): un POST inmediato, con el código en el cuerpo.
                 route('clinica.consulta.antecedentes.quitar', $consulta->id),
+                // El registro de movimientos (2026-10-20): el «desde» de cada fila y el «Historial».
+                $historial->desdePorCodigo($movimientos),
+                new HistorialDeAntecedentesVista(
+                    $movimientos,
+                    (int) $consulta->id,
+                    fn (int $id) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
+                    (string) $consulta->numhistoria,
+                ),
             );
         }
 
@@ -1871,9 +1889,12 @@ class ConsultaController extends Controller
 
     /**
      * Lo que la sección de récipes ofrece para **imprimir** (WEB-5.2): el diálogo con las opciones guardadas del
-     * médico, la próxima cita que saldría al pie de la hoja, "Hacer cita" —el formulario de la agenda con el
-     * paciente ya elegido, que vuelve a esta sección— y la vista previa de cada récipe. Las URLs las resuelve
-     * el controlador, como en el resto de la web clínica.
+     * **doctor que firma** la hoja, la próxima cita que saldría al pie de la hoja, "Hacer cita" —el formulario de la
+     * agenda con el paciente ya elegido, que vuelve a esta sección— y la vista previa de cada récipe. Las URLs las
+     * resuelve el controlador, como en el resto de la web clínica.
+     *
+     * Las opciones son las del firmante (`MedicoQueFirma`) y no las del médico del contexto: en la secretaría de un
+     * centro el contexto es la fila del centro, y la consulta pudo atenderla otro doctor del centro (2026-10-20).
      *
      * @return array{dialogo:OpcionesDeImpresionVista, proximaCita:?string, hacerCita:string, imprimir:\Closure, imprimirPareja:string}
      */
@@ -1881,9 +1902,10 @@ class ConsultaController extends Controller
     {
         $id = $consulta->id;
         $proxima = $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId);
+        $firmante = $this->firma->deUnaConsulta($consulta, $medico) ?? $medico;
 
         return [
-            'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($medico), route('clinica.recipes.opciones')),
+            'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($firmante), route('clinica.recipes.opciones')),
             'proximaCita' => $proxima === null ? null : ProximaCitaDelRecipe::texto($proxima),
             'hacerCita' => route('clinica.agenda.nueva', ['paciente_id' => $pacienteId, 'volver_consulta' => $id]),
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),

@@ -1,0 +1,917 @@
+[
+ {
+  "codigo_origen": "014",
+  "examen": "COLESTEROL Y TRIGLICERIDOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "009",
+  "examen": "TP, TP, ACT, PROT. (COAGULACION)",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "011",
+  "examen": "CORROPARASITOLOGICO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "012",
+  "examen": "UROCULTIVO",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "013",
+  "examen": "VSG.",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "032",
+  "examen": "R.M.N LUMBAR",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "031",
+  "examen": "T.A.C   C4-C5-C6-C7",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "034",
+  "examen": "Rx hombro derecho AP-AXIAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "036",
+  "examen": "Rx. Columna dorso-lumbar ap.lat(parada)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "038",
+  "examen": "Rx tobillo derecho AP-LAT.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "040",
+  "examen": "T.A.C -L4-L5S1",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "042",
+  "examen": "RMN RODILLA DERECHA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "044",
+  "examen": "Rx de pelvis ap.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "046",
+  "examen": "Rx rodilla derecha Ap-Lat.-Parada.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "048",
+  "examen": "Rx de pelvis Ap-Lowestein. (Rana)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "050",
+  "examen": "FOTOPODOGRAMA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "052",
+  "examen": "Rx tobillo izq. Ap-Lat.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "054",
+  "examen": "Rx rod.izq. Ap-Lat.(parado)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "056",
+  "examen": "MEDICION RADIOLOGICA MSIS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "058",
+  "examen": "RX PELVIS CEFALICA 30°",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "060",
+  "examen": "RX ANTEPIE DORSO PLANTAR C/S APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "062",
+  "examen": "TOMOGRAFIA HELICOIDAL 3D",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "064",
+  "examen": "RX AP Y LATERAL ANTEBRAZO IZQ",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "065",
+  "examen": "RX AP Y LATERAL BRAZO IZQ.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "001",
+  "examen": "HOMOGRAMA COMPLETO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "004",
+  "examen": "CURVA DE TOLRRANCIA A LA GLUCOSA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "018",
+  "examen": "PROGESTERONA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "023",
+  "examen": "RESTOSTERONA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "026",
+  "examen": "CITOQUIMICO LIQUIDO SINOVIAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "027",
+  "examen": "ESTUDIO DE CRISTALES LIQUIDO SINOV",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "030",
+  "examen": "Rx cervical ap, lat. y oblicuas",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "033",
+  "examen": "Rx COLUMNA LUMBOSACRA AP, L Y OBLICUAS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "035",
+  "examen": "RX ambas rodillas ap-lat ( parada)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "037",
+  "examen": "R.M.N. ambas rodillas",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "039",
+  "examen": "Rx rod.derecha ap-lat. parado",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "041",
+  "examen": "RX AP DE AMBAS RODILLAS EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "043",
+  "examen": "Rx muñeca derecha ap-lat.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "045",
+  "examen": "Rx ambos pies AP-LAT con apoyo",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "047",
+  "examen": "Rx Pelvis Ap.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "049",
+  "examen": "Rx hombro izq.Ap-Axial",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "051",
+  "examen": "RX TORAX AP",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "053",
+  "examen": "Rx humero izq. Ap-Lat.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "055",
+  "examen": "ECODOPLER VASCULAR DE MS IS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "057",
+  "examen": "RX PELVIS CAUDAL 30°",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "059",
+  "examen": "GAMMAGRAMA OSEO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "061",
+  "examen": "TAC DE TOBILLO IZQUIERDO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "063",
+  "examen": "RX AP Y LATERAL RODILLA DCHA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "074",
+  "examen": "RNM HOMBRO IZQ",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "067",
+  "examen": "RX AP RODILLAS CON APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "066",
+  "examen": "COSONOGRAFIA FASCIA PLANTAR COMP",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "068",
+  "examen": "RX. RODILLAS AP CON APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "069",
+  "examen": "ECOGRAFIA DEL HOMBRO COMPARATIVO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "070",
+  "examen": "RX RODILLAS AP-L-AXIALES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "071",
+  "examen": "ECOGRAFIA TENDON TIBIAL ANTERIOR",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "072",
+  "examen": "ECOGRAFIA ANSERINA (COMPARATIVA)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "073",
+  "examen": "ECOGRAFIA DE TENDONES ROTULIANOS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "075",
+  "examen": "DENSITOMETRIA OSEA CORPORAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "076",
+  "examen": "RNM COLUMNA CERVICAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "077",
+  "examen": "RX. FEMUR DCHO AP Y LATERAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "078",
+  "examen": "RX ANTEPIE DORSOPLANTAR Y OBLICUA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "079",
+  "examen": "RNM CRANEO (SILLA TURCA)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "080",
+  "examen": "RX CRANEO AP- LATERAL-TOWNE",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "081",
+  "examen": "RX. PERFIL COLUMNA CERVICAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "082",
+  "examen": "RX PEÑASCO TEMPORAL IZQ",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "083",
+  "examen": "RX. HOMBRO IZQ AP/CAUDAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "084",
+  "examen": "RX. HOMBRO PERFIL ESCAPULAR (ACROMION)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "085",
+  "examen": "RNM RODILLA IZQUIERDA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "086",
+  "examen": "ECOSONOGRAMA INGUINAL BIL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "087",
+  "examen": "RX CADERA DERECHA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "088",
+  "examen": "ECOSONOGRAMA DE RODILLAS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "089",
+  "examen": "RX. FEMUR IZQUIERDO AP Y LATERAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "090",
+  "examen": "ECOGRAFIA DEL T. AQUILES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "091",
+  "examen": "RX AXIALES ROTULA 20° Y 45°",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "092",
+  "examen": "ECOGRAFIA CODOS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "093",
+  "examen": "RX CODO IZQ AP Y LATERAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "094",
+  "examen": "RNM DEL HOMBRO DCHO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "095",
+  "examen": "RX MANO AP Y OBLICUA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "096",
+  "examen": "RX CADERA IZQ AP Y AXIAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "158",
+  "examen": "ACIDO URICO",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "097",
+  "examen": "RNM TOBILLO DCHO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "098",
+  "examen": "PILOTO PARA EJE MSIS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "099",
+  "examen": "RX MUÑECA IZQ AP-LAT-AP/DR-AP/DC",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "100",
+  "examen": "RX ANTEBRAZO DCHO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "160",
+  "examen": "ASLO",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "016",
+  "examen": "T3-T4 TSH.",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "162",
+  "examen": "C3 - C4",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "017",
+  "examen": "LH, Y FSH.",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "101",
+  "examen": "NUEVA RADILOGIA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "102",
+  "examen": "NUEVO ESTUDIO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "103",
+  "examen": "IMAGEN",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "104",
+  "examen": "IMAGEN NUEVA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "105",
+  "examen": "SEGUNADA NUEVA IMAGEN",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "106",
+  "examen": "OTRA IMAGEN",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "107",
+  "examen": "NUEVA NUEVA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "108",
+  "examen": "RX AP LATERAL DE TIBIA IZQ",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "109",
+  "examen": "RX LATERAL EN FLEXIÓN Y EN EXTENSIÓN DE COLUMNA LUMBAR. EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "122",
+  "examen": "UREA",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "164",
+  "examen": "ANTI CCP",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "110",
+  "examen": "RX OBLICUAS DE COLUMNA LUMBOSACRA EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "111",
+  "examen": "RX AXIAL 30° DE AMBAS RODILLAS",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "112",
+  "examen": "RX AP - LATERAL DE COLUMNA LUMBAR EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "113",
+  "examen": "RX AP PANORAMICA DE COLUMNA C7S1 EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "114",
+  "examen": "METODO DE GREEN MIEMBROS INFERIORES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "115",
+  "examen": "RX LATERAL DE COLUMNA LUMBAR EN FLEXIÓN Y EXTENSIÓN",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "116",
+  "examen": "RX AP DE HOMBRO DERECHO (CAUDAL)",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "117",
+  "examen": "RX AP Y OBLICUA DE HOMBRO DERECHO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "118",
+  "examen": "RA LATERAL DE AMBOS PIES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "119",
+  "examen": "CALCIO SERICO",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "120",
+  "examen": "HEMATOLOGIA COMPLETA",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "121",
+  "examen": "25-HIDROXIVITAMINA D",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "123",
+  "examen": "CREATININA",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "124",
+  "examen": "TGO - TGP",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "125",
+  "examen": "FOSFATASAS ALCALINAS",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "126",
+  "examen": "CALCIO EN ORINA 24 HS",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "127",
+  "examen": "V.S.G",
+  "codetipo": "005"
+ },
+ {
+  "codigo_origen": "128",
+  "examen": "HEMOGRAMA",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "129",
+  "examen": "GLICEMIA",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "130",
+  "examen": "UREA Y CREATININA",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "131",
+  "examen": "ACIDO URICO",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "132",
+  "examen": "COLESTEROL TOTAL",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "133",
+  "examen": "COLESTEROL HDL",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "134",
+  "examen": "CLESTEROL LDL",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "135",
+  "examen": "TRIGLICERIDOS",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "136",
+  "examen": "BILIRRUBINA TOTAL Y FRACCIONADA",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "137",
+  "examen": "TRANSAMINASAS",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "138",
+  "examen": "FOSFATASAS",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "139",
+  "examen": "GAMMA-GLUTAMIL TRANSFERASA (GGT)",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "140",
+  "examen": "ALBUMINA",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "141",
+  "examen": "PROTEINAS",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "142",
+  "examen": "SODIO, POTASIO Y CLORO",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "143",
+  "examen": "CALCIO Y FOSFORO",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "144",
+  "examen": "HIERRO",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "145",
+  "examen": "MAGNESIO",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "146",
+  "examen": "TASA DE FILTRACIÓN GLOMERULAR (TFG)",
+  "codetipo": "006"
+ },
+ {
+  "codigo_origen": "147",
+  "examen": "HEMOGRAMA COMPLETO",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "148",
+  "examen": "GLUCOSA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "149",
+  "examen": "UREA - CREATININA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "150",
+  "examen": "TP - TPT",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "151",
+  "examen": "PROTEINAS TOTALES",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "152",
+  "examen": "HIV",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "153",
+  "examen": "VDRL",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "154",
+  "examen": "HEPATITIS B",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "155",
+  "examen": "UROANALISIS",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "156",
+  "examen": "HEMATOLOGIA COMPLETA",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "157",
+  "examen": "VELOCIDAD DE SEDIMENTACIÓN GLOBULAR",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "159",
+  "examen": "RA TEST",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "161",
+  "examen": "PCR CUANTIFICADA",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "163",
+  "examen": "AAN",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "165",
+  "examen": "EXUDADO FARINGEO",
+  "codetipo": "007"
+ },
+ {
+  "codigo_origen": "166",
+  "examen": "BIOMETRIA HEMÁTICA",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "168",
+  "examen": "UREA/CREATININA",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "169",
+  "examen": "FOSFATASA ALCALINA Y ACIDA",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "167",
+  "examen": "CALCIO Y FOSFORO SANGUINEO",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "170",
+  "examen": "PROTEINAS TOTALES Y FRACCIONADAS, ALBUMINA",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "171",
+  "examen": "ANTIGENO PROSTATICO (PSA TOTAL, LIBRE)",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "172",
+  "examen": "CA 19.9",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "173",
+  "examen": "CA 125 (OVARIO)",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "174",
+  "examen": "CEA (CARCINOEMBRIONARIO)",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "175",
+  "examen": "ALFAFETOPROTEINAS (TESTICULAR)",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "176",
+  "examen": "LDH",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "177",
+  "examen": "PTH",
+  "codetipo": "008"
+ },
+ {
+  "codigo_origen": "178",
+  "examen": "RX AP - LATERAL DE RODILLA IZQUIERDA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "179",
+  "examen": "RX AP-}LATERAL DE COLUMNA CERVICAL",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "180",
+  "examen": "RX AP, LATERAL Y OBLICUA DE TOBILLO IZQUIERDO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "181",
+  "examen": "RMN DE HOMBRO IZQUIERDO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "182",
+  "examen": "RX LATERAL DE COLUMNA LUMBAR EN APOYO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "183",
+  "examen": "RMN DE CADERA BILATERAL CON SUPRESIÓN GRASA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "184",
+  "examen": "RX AP - LOWESTEIN DE PELVIS.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "185",
+  "examen": "RX AP-LATERALDE TORAX",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "186",
+  "examen": "TELEMETRIA DE MIEMBROS INFERIORES.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "187",
+  "examen": "RMN DE COLUMNA LUMBAR CON SUPRESIÓN GRASA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "188",
+  "examen": "RX LATERAL DE AMBAS RODILLAS EN APOYO.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "189",
+  "examen": "RX AP DE HOMBRO IZQUIERDO.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "190",
+  "examen": "RX AP DE TORAX",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "191",
+  "examen": "PA DE TORAX",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "192",
+  "examen": "RAX LATERAL DE TORAX",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "193",
+  "examen": "CEMVID 02758827605",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "194",
+  "examen": "CENTRO PROFESIONAL SANTA TERESITA  0274 2638339",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "195",
+  "examen": "RX LATERAL DE RODILLA IZQUIERDA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "196",
+  "examen": "TA DE RODILLA IZQUIERDA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "197",
+  "examen": "RX AP - LATERAL Y OBLICUA DE TOBILLO DERECHO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "198",
+  "examen": "RX AP - LATERAL Y OBLICUA  DE MUÑECA DERECHA.",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "199",
+  "examen": "RX AP, LATERAL Y OBLICUA DE PIE DERECHO.",
+  "codetipo": "003"
+ }
+]

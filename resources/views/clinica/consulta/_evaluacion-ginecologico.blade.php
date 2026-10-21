@@ -37,7 +37,6 @@
                 </div>
                 <textarea name="total_g" id="total_g" class="form-control" rows="5"
                           placeholder="Aprieta «Actualizar» para armar el resumen con los datos de arriba, o escríbelo.">{{ $seccion->totalGinecologico() }}</textarea>
-                <p class="texto-tenue small mt-1 mb-0">El resumen incluye la colposcopía y la citología, que se cargan en sus propios chips.</p>
             </div>
         </div>
 

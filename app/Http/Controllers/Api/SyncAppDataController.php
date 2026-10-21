@@ -15,6 +15,7 @@ use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
 use App\Models\Antecedente;
+use App\Actions\Pacientes\RegistrarMovimientoDeAntecedente;
 use App\Models\AntecePaciente;
 use App\Models\Cola;
 use App\Models\ConstanciaObs;
@@ -995,6 +996,13 @@ class SyncAppDataController extends Controller
             if ($operation === 'deleted') {
                 if (!$yaEliminado) {
                     $fila->delete();
+
+                    // El registro de movimientos de los antecedentes (2026-10-20): lo que tenía al quitarse.
+                    if ($table === 'antece_paciente') {
+                        RegistrarMovimientoDeAntecedente::quitado(
+                            $fila->getAttributes(), 'mobile', null, Carbon::parse($change['occurred_at'] ?? now()),
+                        );
+                    }
                 }
                 continue;
             }
@@ -1031,8 +1039,14 @@ class SyncAppDataController extends Controller
                     continue;
                 }
 
+                $antes = $fila->getAttributes();
                 $fila->{$column} = $valor;
                 $fila->save();
+
+                // El registro de movimientos de los antecedentes (2026-10-20): sólo si cambió algo visible.
+                if ($table === 'antece_paciente') {
+                    RegistrarMovimientoDeAntecedente::editado($antes, $fila->getAttributes(), 'mobile', null, $occurredAt);
+                }
 
                 // El rastro se escribe con el `reg_medico` **de la fila**: es el tenant de lo que se
                 // acaba de editar y el que después acota el delta del teléfono. En `pacientes` la fila

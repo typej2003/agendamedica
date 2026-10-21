@@ -1,0 +1,1806 @@
+[
+ {
+  "codigo_origen": "0172",
+  "descripcion": "LINFEDEMA PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0042",
+  "descripcion": "BCRDHH"
+ },
+ {
+  "codigo_origen": "0044",
+  "descripcion": "BIRDHH"
+ },
+ {
+  "codigo_origen": "0046",
+  "descripcion": "EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0048",
+  "descripcion": "INSUFICIENCIA MITRAL MODERADA"
+ },
+ {
+  "codigo_origen": "0050",
+  "descripcion": "HERNIA UMBILICAL"
+ },
+ {
+  "codigo_origen": "0053",
+  "descripcion": "ESTRABISMO"
+ },
+ {
+  "codigo_origen": "0054",
+  "descripcion": "ESTENOSIS AORTICA"
+ },
+ {
+  "codigo_origen": "0056",
+  "descripcion": "CARDIOPATIA CONGENITA ACIANOGENA"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "OBESIDAD"
+ },
+ {
+  "codigo_origen": "0060",
+  "descripcion": "CATARATA"
+ },
+ {
+  "codigo_origen": "0062",
+  "descripcion": "I.C.C.G.C"
+ },
+ {
+  "codigo_origen": "0064",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA.CAI.HVI.DILATACION VI,VD"
+ },
+ {
+  "codigo_origen": "0066",
+  "descripcion": "INSUFICIENCIA AORTICA LEVE"
+ },
+ {
+  "codigo_origen": "0068",
+  "descripcion": "DILATACION AI,VI,VD,HVI"
+ },
+ {
+  "codigo_origen": "0070",
+  "descripcion": "HERNIA DISCAL"
+ },
+ {
+  "codigo_origen": "0072",
+  "descripcion": "ISQUEMIA LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0016",
+  "descripcion": "ENFERMEDAD DE CHAGAS"
+ },
+ {
+  "codigo_origen": "0018",
+  "descripcion": "TBC"
+ },
+ {
+  "codigo_origen": "0005",
+  "descripcion": "CARDIOPATIA  HIPERTENSIVA .HVI"
+ },
+ {
+  "codigo_origen": "0007",
+  "descripcion": "CARDIOPATIA ISQUEMICA CRONICA"
+ },
+ {
+  "codigo_origen": "0022",
+  "descripcion": "EBPOC"
+ },
+ {
+  "codigo_origen": "0011",
+  "descripcion": "HIPERTENSION ARTERIAL  I"
+ },
+ {
+  "codigo_origen": "0013",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA E ISQUEMI"
+ },
+ {
+  "codigo_origen": "0015",
+  "descripcion": "HIPOKINECIA POSTERIOR"
+ },
+ {
+  "codigo_origen": "0073",
+  "descripcion": "CVPS 3A,3B,4A,4B"
+ },
+ {
+  "codigo_origen": "0026",
+  "descripcion": "INSUFICIENCIA PULMONAR"
+ },
+ {
+  "codigo_origen": "0028",
+  "descripcion": "CA DE ESOFAGO"
+ },
+ {
+  "codigo_origen": "0031",
+  "descripcion": "TROMBOSIS VENOSA PROFUNDA MIEMBRO INFERIOR"
+ },
+ {
+  "codigo_origen": "0033",
+  "descripcion": "INSUFICIENCIA AORTICA"
+ },
+ {
+  "codigo_origen": "0080",
+  "descripcion": "CISTOCELE"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "CRISIS HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "SINDROME ANSIOSO"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "SINDROME MULTINFARTO CEREBRAL"
+ },
+ {
+  "codigo_origen": "0041",
+  "descripcion": "HBSAI"
+ },
+ {
+  "codigo_origen": "0043",
+  "descripcion": "VARICES"
+ },
+ {
+  "codigo_origen": "0045",
+  "descripcion": "ANEMIA"
+ },
+ {
+  "codigo_origen": "0047",
+  "descripcion": "ACV ISQUEMICO"
+ },
+ {
+  "codigo_origen": "0049",
+  "descripcion": "HIPERPLASIA PROSTATICA"
+ },
+ {
+  "codigo_origen": "0051",
+  "descripcion": "BOCIO DIFUSO"
+ },
+ {
+  "codigo_origen": "0052",
+  "descripcion": "SINDROME VERTIGINOSO"
+ },
+ {
+  "codigo_origen": "0055",
+  "descripcion": "HIPERTROFIA SIMETRICA VENTRICULAR IZQ"
+ },
+ {
+  "codigo_origen": "0057",
+  "descripcion": "ISQUEMIA SUBEPICARDICA ANTERIOR"
+ },
+ {
+  "codigo_origen": "0059",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0061",
+  "descripcion": "GLAUCOMA"
+ },
+ {
+  "codigo_origen": "0063",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA.CAI.HVI"
+ },
+ {
+  "codigo_origen": "0065",
+  "descripcion": "INSUFICIENCIA MITRAL SEVERA"
+ },
+ {
+  "codigo_origen": "0067",
+  "descripcion": "HIPOKINECIA SEPTAL Y AKINECIA POSTERIOR"
+ },
+ {
+  "codigo_origen": "0069",
+  "descripcion": "HIPERTROFIA PARED POSTERIOR"
+ },
+ {
+  "codigo_origen": "0071",
+  "descripcion": "SINDROME DE PREEXITACIËN"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "CA GASTRICO"
+ },
+ {
+  "codigo_origen": "0017",
+  "descripcion": "PERICARDITIS"
+ },
+ {
+  "codigo_origen": "0019",
+  "descripcion": "DISLIPIDEMIA"
+ },
+ {
+  "codigo_origen": "0020",
+  "descripcion": "DIABETES MELLITUS TIPO II"
+ },
+ {
+  "codigo_origen": "0021",
+  "descripcion": "ARTERIOPATIA OBSTRUCTIVA MIEMBROS INFERIORES"
+ },
+ {
+  "codigo_origen": "0010",
+  "descripcion": "INSUFICIENCIA RENAL CRONICA"
+ },
+ {
+  "codigo_origen": "0012",
+  "descripcion": "ARTERIOESCLEROSIS CORONARIA"
+ },
+ {
+  "codigo_origen": "0014",
+  "descripcion": "HIPERTROFIA SEPTAL ASIMETRICA"
+ },
+ {
+  "codigo_origen": "0023",
+  "descripcion": "ARTERIOPATIA CAROTIDEA"
+ },
+ {
+  "codigo_origen": "0025",
+  "descripcion": "GASTRITIS"
+ },
+ {
+  "codigo_origen": "0027",
+  "descripcion": "INSUFICIENCIA MITRAL LEVE"
+ },
+ {
+  "codigo_origen": "0029",
+  "descripcion": "TU OVARIO"
+ },
+ {
+  "codigo_origen": "0032",
+  "descripcion": "NEURITIS INTERCOSTAL"
+ },
+ {
+  "codigo_origen": "0035",
+  "descripcion": "PARO SINUSAL MODERADO"
+ },
+ {
+  "codigo_origen": "0036",
+  "descripcion": "ENFERMEDAD DEL NODO SINUSAL"
+ },
+ {
+  "codigo_origen": "0037",
+  "descripcion": "SIN CRITERIO DE CARDIOPATIA ACTUAL"
+ },
+ {
+  "codigo_origen": "0038",
+  "descripcion": "HIPERGLICEMIA"
+ },
+ {
+  "codigo_origen": "0039",
+  "descripcion": "LITIASIS RENAL"
+ },
+ {
+  "codigo_origen": "0074",
+  "descripcion": "DUCTUS ARTERIOSO PERSISTENTE"
+ },
+ {
+  "codigo_origen": "0075",
+  "descripcion": "CRISIS TAQUICARDIA SUPRAVENTRICULAR"
+ },
+ {
+  "codigo_origen": "0076",
+  "descripcion": "DILATACION VI."
+ },
+ {
+  "codigo_origen": "0077",
+  "descripcion": "HERNIA INGUINAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0078",
+  "descripcion": "VARICOCELE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0079",
+  "descripcion": "ISQUEMIA SUBEPICARDICA INFERIOR"
+ },
+ {
+  "codigo_origen": "0081",
+  "descripcion": "FIBRILACION AURICULAR CRONICA"
+ },
+ {
+  "codigo_origen": "0083",
+  "descripcion": "PAUSAS SINUSALES SEVERAS"
+ },
+ {
+  "codigo_origen": "0084",
+  "descripcion": "CVPS 2,3A,3B,4A,4B"
+ },
+ {
+  "codigo_origen": "0085",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA.CAI.HVI.DILATACION   VI.."
+ },
+ {
+  "codigo_origen": "0086",
+  "descripcion": "INSUFICIENCIA AORTICA SEVERA"
+ },
+ {
+  "codigo_origen": "0087",
+  "descripcion": "EMBARAZO"
+ },
+ {
+  "codigo_origen": "0088",
+  "descripcion": "BOCIO NODULAR"
+ },
+ {
+  "codigo_origen": "0089",
+  "descripcion": "HERNIA INGUINAL DERECHA"
+ },
+ {
+  "codigo_origen": "0090",
+  "descripcion": "PERICARDITIS CON DERRAME"
+ },
+ {
+  "codigo_origen": "0091",
+  "descripcion": "ASMA BRONQUIAL"
+ },
+ {
+  "codigo_origen": "0092",
+  "descripcion": "INSUFICIENCIA TRICUSPIDEA LEVE"
+ },
+ {
+  "codigo_origen": "0093",
+  "descripcion": "CVPS 1A"
+ },
+ {
+  "codigo_origen": "0094",
+  "descripcion": "BCRIHH"
+ },
+ {
+  "codigo_origen": "0095",
+  "descripcion": "EPILEPSIA"
+ },
+ {
+  "codigo_origen": "0096",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA.CAI.DILATACION VI"
+ },
+ {
+  "codigo_origen": "0097",
+  "descripcion": "DILATACION AI,VI"
+ },
+ {
+  "codigo_origen": "0099",
+  "descripcion": "CA DE PROSTATA"
+ },
+ {
+  "codigo_origen": "0098",
+  "descripcion": "CARDIOPATIA VALVULAR.DILATACION AI,VI"
+ },
+ {
+  "codigo_origen": "0100",
+  "descripcion": "TU URETRAL"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "LESION SUBENDOCARDICA ANTEROLATERAL"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "E.B.P.O.C."
+ },
+ {
+  "codigo_origen": "0103",
+  "descripcion": "CSVPS"
+ },
+ {
+  "codigo_origen": "0104",
+  "descripcion": "FIBROMIOMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "RITMO AURICULAR CAOTICO"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "DISFUNCION DIASTOLICA"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "DESVIACION TABIQUE NASAL"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "EXTRASISTOLIA VENTRICULAR 3B"
+ },
+ {
+  "codigo_origen": "0109",
+  "descripcion": "HIDROCELE"
+ },
+ {
+  "codigo_origen": "0110",
+  "descripcion": "RINITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "NEUMOPATIA CRONICA"
+ },
+ {
+  "codigo_origen": "0112",
+  "descripcion": "HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0113",
+  "descripcion": "LIPOMA"
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "SINDROME DEPRESIVO"
+ },
+ {
+  "codigo_origen": "0115",
+  "descripcion": "CRISIS DE PANICO"
+ },
+ {
+  "codigo_origen": "0116",
+  "descripcion": "DILATACION AURICULAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "INSUFICIENCIA AORTICA MODERADA"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "FLUTTER AURICULAR"
+ },
+ {
+  "codigo_origen": "0119",
+  "descripcion": "GLAUCOMA NEOVASACULAR OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0120",
+  "descripcion": "EVENTRACION"
+ },
+ {
+  "codigo_origen": "0122",
+  "descripcion": "INFARTO AGUDO DEL MIOCARDIO"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "Z.E.I. LATERAL, LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0124",
+  "descripcion": "PAUSAS SINUSALES SEVERAS"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "DERRAME PERICARDICO LEVE"
+ },
+ {
+  "codigo_origen": "0126",
+  "descripcion": "AKINECIA POSTERIOR"
+ },
+ {
+  "codigo_origen": "0127",
+  "descripcion": "MENOPAUSIA"
+ },
+ {
+  "codigo_origen": "0129",
+  "descripcion": "DILATACION AORTICA"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "HERNIA HIATAL"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "CVPS 1A,3A"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "CVPS 2,3A,4B"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "CVPS 3A, 4A, 4B"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "ISQUEMIA SUBEPICARDICA ANTEROSEPTAL"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "OSTEOPOROSIS"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "ISQUEMIA SUBEPICARDICA ANTEROLATERAL-LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0137",
+  "descripcion": "LITIASIS VESICULAR"
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "TUMORACION AURICULAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA.DILATACION VI.HVI"
+ },
+ {
+  "codigo_origen": "0140",
+  "descripcion": "EXTRASISTOLIA VENTRICULAR 2, 4A"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "MIGRAÐA"
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "INSUFICIENCIA VENOSA DE SAFENA DERECHA"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "INSUFICIENCIA TRICUSPIDEA LEVE"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "CARDIOPATIA ISQUEMICA"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "ANGOR INESTABLE"
+ },
+ {
+  "codigo_origen": "0147",
+  "descripcion": "LESION SUBENDOCARDICA ANTEROSEPTAL"
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "CVPS 2,3A,4A"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "QUISTE MAMARIO"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "QUISTE SUBMAXILAR"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "HIPERCALCIURIA"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "ALERGIA A AINES,ASA"
+ },
+ {
+  "codigo_origen": "0153",
+  "descripcion": "MIOCARDIOPATIA DILATADA"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "PAUSAS SEVERAS"
+ },
+ {
+  "codigo_origen": "0155",
+  "descripcion": "Z.E.I. ANTERIOR"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "INFARTO RECIENTE DEL MIOCARDIO"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "HIPERURICEMIA"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "TU MAXILAR INFERIOR"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "BRADICARDIA SINUSAL"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "IRC"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "BLOQUEO AV IER GRADO"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "CVPS CLASE 2"
+ },
+ {
+  "codigo_origen": "0162",
+  "descripcion": "FRACTURA CALCANEO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "CVPS CLASE 2,3A"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "TAQUICARDIA SINUSAL"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "CVPS 3B"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "TU PANCREATICO"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "TU DE MAMA"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "FORAMEN OVAL PERMEABLE"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "VARICOCELE"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "HEMORROIDES"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "FRACTURA TIBIA DERECHA"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "INSUFICIENCIA VENOSA"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "ISQUEMIA SUBEPICARDICA LATERAL,LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "HIPOKINECIA POSTERIOR MEDIAL Y LATERAL BASAL Y MED"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "ALERGIA"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "QUISTE RENAL"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "ESTENOSIS AORTICA MODERADA"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "ESTENOSIS MITRAL LEVE"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "NEUMOPATIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "LUPUS ERITEMATOSO SISTEMICO"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "DERRAME PLEURAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "TU PULMONAR"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "AORTOESCLEROSIS"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "OSTEOARTROSIS"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "LINFEDEMA"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "COMPLEJO FLEBECTASICO MIEMBRO INFERIOR"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "PROLAPSO GENITAL"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "LESION ULCERADA REGION CLAVICULAR DERECHA"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "CA  DE  PIEL"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "ARTROPATIA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "CARDIOPATIA VALVULAR"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "ESTENOSIS AORTICA SEVERA"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "MARCAPASO AURICULAR MIGRATORIO"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "TU PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "DERRAME PLEURAL DERECHO"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "SINDROME MULTIINFARTO"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "ZEI ANTEROSEPTAL"
+ },
+ {
+  "codigo_origen": "0201",
+  "descripcion": "LESION SUBENDOCARDICA LATERAL"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "LESION SUBENDOCARDICA LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "LESION SUBENDOCARDICA INFERIOR"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "TROMBOCITOPENIA"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "ZEI INFERIOR"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "ANEURISMA DE AORTA ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "HIPERTENSION ARTERIAL PULMONAR"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "ABCESO MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "MIOCARDIOPATIA HIPERTROFICA"
+ },
+ {
+  "codigo_origen": "0210",
+  "descripcion": "ARTERIOPATIA MIEMBRO SUPERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "HIPOPARATIROIDISMO"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "ZEI SEPTAL"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "GANGLION"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "RUPTURA TENDON DE AQUILES"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "LESION SUBENDOCARDICA ANTERIOR EXTENSA"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "QUISTE TESTICULAR"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "CARDIOPATIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "SINDROME DE RESISTENCIA A LA INSULINA"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "ARTRITIS DEFORMANTE"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "COARTACION DE LA AORTA"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "ESCOLIOSIS"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "ZEI LATERAL"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "ACV TROMBOTICO"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "CVPS 2,4A"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "DEDOS EN RESORTE"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "HVD"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "ESTENOSIS PULMONAR"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "CVPS 4A"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "POLIPOSIS NASAL"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "SEPTUM NASAL DESVIADO"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "INSUFICIENCIA TRICUSPIDEA MODERADA"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "INSUFICIENCIA PULMONAR LEVE"
+ },
+ {
+  "codigo_origen": "0233",
+  "descripcion": "DILATACION AD"
+ },
+ {
+  "codigo_origen": "0234",
+  "descripcion": "DILATACION VD"
+ },
+ {
+  "codigo_origen": "0235",
+  "descripcion": "FRACTURA DE PERONE"
+ },
+ {
+  "codigo_origen": "0236",
+  "descripcion": "CVPS 4B"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "TROMBOFLEBITIS MIEMBRO INFERIOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0238",
+  "descripcion": "CARDIOPATIA CONGENITA CIANOGENA"
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "DOBLE TRACTO DE SALIDA DEL VI"
+ },
+ {
+  "codigo_origen": "0240",
+  "descripcion": "QT PROLONGADO"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "RUPTURA MANGUITO ROTADOR HOMBRO"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "SINDROME ADHERENCIAL ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "RETINOPATIA"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "HIRSUTISMO"
+ },
+ {
+  "codigo_origen": "0245",
+  "descripcion": "ALERGIA AL YODO"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "DIABETES MELLITUS INSULINODEPENDIENTE"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "HIPOKINECIA INFERIOR"
+ },
+ {
+  "codigo_origen": "0248",
+  "descripcion": "PROLAPSO VALVA POSTERIOR DE LA MITRAL"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "FIBROADENOMA MAMARIO"
+ },
+ {
+  "codigo_origen": "0253",
+  "descripcion": "FIMOSIS"
+ },
+ {
+  "codigo_origen": "0250",
+  "descripcion": "FRACTURA PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0251",
+  "descripcion": "ARTERIOPATIA OBSTRUCTIVA MIEMBRO INFERIOR IZQUIERD"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "ENDOMETROSIS"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "HIPERTRIGLICERIDEMIA"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "HIPERCOLESTEROLEMIA"
+ },
+ {
+  "codigo_origen": "0256",
+  "descripcion": "FIBRILACION AURICULAR AGUDA"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "ALERGIA A CITRICOS"
+ },
+ {
+  "codigo_origen": "0258",
+  "descripcion": "FISTULA ARTERIOVENOSA VERTEBRAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0259",
+  "descripcion": "TU CARA LATERAL IZQUIERDA DE CUELLO"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "CERVICOARTRALGIA"
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "HIPERTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL DERECHA"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "HALLUX VALGUS"
+ },
+ {
+  "codigo_origen": "0264",
+  "descripcion": "HIPOKINECIA SEPTAL"
+ },
+ {
+  "codigo_origen": "0265",
+  "descripcion": "DIVERTICULITIS"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "FRACTURA CUBITO DERECHO"
+ },
+ {
+  "codigo_origen": "0267",
+  "descripcion": "SEPTUM PARADOJICO"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "ARTROPATIA HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0269",
+  "descripcion": "LESION SUBEPICARDICA ANTEROSEPAL"
+ },
+ {
+  "codigo_origen": "0270",
+  "descripcion": "DISFUNCION ENDOTELIAL"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "LITIASIS VESICAL"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "SINDROME TAQUICARDIA BRADICARDIA"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "NODULO MAMARIO DERECHO"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "SINUSITIS"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "MAMAS SUPERNUMERARIAS"
+ },
+ {
+  "codigo_origen": "0276",
+  "descripcion": "LESION SUBEPICARDICA LATERAL-LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0277",
+  "descripcion": "ARAINOCELE"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "DIVERTICULOSIS"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "AMAUROSIS"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "ANOSMIA"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "ESTENOSIS AORTICA LEVE"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "TROMBOEMBOLISMO PULMONAR"
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "INFARTO PULMONAR"
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "MIOCARDIOPATIA CHAGASICA"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "ALERGIA A PENICILINA"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "OSTEOCONDRITIS"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "LESION SUBEPICARDICA INFERIOR"
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "QUISTE TIROIDEO"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "ANGOR ESTABLE"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "LESION SUBEPICARDICA ANTEROLATERAL"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "TROMBOSIS INTRACARDIACA DEL VI"
+ },
+ {
+  "codigo_origen": "0292",
+  "descripcion": "HIPOKINECIA LATERAL"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "HIPOKINECIA APICAL ,LATERAL,ANTERIOR, SEPTAL E INF"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "HIPERINSULINEMIA"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "BRONQUITIS CRONICA"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "QUISTE OVARICO"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "CERVICITIS"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "EPICONDILITIS"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "DIABETES MELLITUS TIPO I"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "ZEI LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "ALERGIA DIPIRONA"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "ALERGIA METILBROMURO DE HIOSCINA"
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "ARTROPATIA RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "GINECOMASTIA"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "ALERGIA AL MERTHIOLATE"
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "ISQUEMIA SUBEPICARDICA ANTERIOR EXTENSA"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "HVI"
+ },
+ {
+  "codigo_origen": "0307",
+  "descripcion": "WOLF PARKINSON WHITE"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "ULCERA GASTRICA"
+ },
+ {
+  "codigo_origen": "0309",
+  "descripcion": "PSORIASIS"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "AKINECIA APICAL SEPTAL,INFERIOR,ANTERIOR,LATERAL"
+ },
+ {
+  "codigo_origen": "0311",
+  "descripcion": "DISPLASIA CERVICAL  NICIII"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "FIEBRE REUMATICA"
+ },
+ {
+  "codigo_origen": "0313",
+  "descripcion": "QUISTE HIPOFISIARIO"
+ },
+ {
+  "codigo_origen": "0314",
+  "descripcion": "PROLACTINEMIA"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "BLOQUEO AV COMPLETO"
+ },
+ {
+  "codigo_origen": "0316",
+  "descripcion": "RITMO IDIOVENTRICULAR"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "ALERGIA ACETAMINOFEN"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "TROMBOSIS INTRACAVITARIA VI"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "AKINECIA SEPTAL"
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "ICCGC"
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "DERMATITIS ATOPICA"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "LONE GANONG LEVINE"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "CISTOCELE"
+ },
+ {
+  "codigo_origen": "0324",
+  "descripcion": "RIÐON POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "ALERGIA A DETERGENTES"
+ },
+ {
+  "codigo_origen": "0326",
+  "descripcion": "MIOCROINFARTO TALLO ENCEFALICO"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "CVPS 2,3A, 3B,4A"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "NEUMOTORAX ESPONTANEO"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "AKINECIA APICOLATERAL"
+ },
+ {
+  "codigo_origen": "0331",
+  "descripcion": "NEUMOTORAX ESPONTANEO"
+ },
+ {
+  "codigo_origen": "0332",
+  "descripcion": "ARTERIOPATIA VERTEBRAL"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "NEUROPATIA PERIFERICA"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "FORAMEN OVAL PERMEABLE"
+ },
+ {
+  "codigo_origen": "0335",
+  "descripcion": "CORTOCIRCUITO IZQUIERDA DERECHA"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "FRACTURA DE HUMERO"
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "FRACTURA DE RADIO"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "ESTENOSIS MITRAL MODERADA"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "MIOMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "CA DE CUELLO UTERINO"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "PTOSIS PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "ARTERIOPATIA OBSTRUCTIVA MIEMBRO INFERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "LITIASIS COLEDOCIANA"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "PANCREATITIS"
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "CONDRITIS"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "CAPSULITIS ADHESIVA HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "TU DEDO MEDIO MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "PTERIGION"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "NODULO TIROIDEO"
+ },
+ {
+  "codigo_origen": "0351",
+  "descripcion": "QUISTE TIROIDEO"
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "SINDROME QT LARGO"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "FRACTURA METACARPIANO"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "ERISIPELA"
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "ALERGIA ASA"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "METASTASIS OSEAS"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "METASTASIS COLONICA"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "POLIPOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "INSUFICIENCIA VENOSA FEMORAL COMUN"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "HIPOKINECIA ANTERIOR"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "ESCLEROSIS VALVA POSTERIOR D ELA MITRAL"
+ },
+ {
+  "codigo_origen": "0362",
+  "descripcion": "SINCOPE"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "ULCERA DUODENAL"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "SOBRECARGA SISTOLICA DEL VI"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "ANGIOSESPASMO CORONARIO"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "ENDOCARDITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "ESOFAGITIS"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "EDEMA AGUDO PULMONAR"
+ },
+ {
+  "codigo_origen": "0368",
+  "descripcion": "FIBRILACION AURICULAR CON ALTO GRADO DE BLOQUEO"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "FRACTURA DE COLLET"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "CA DE RECTO"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "MAL DE PARKINSON"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "SINDROME DEL TUNEL CARPIANO"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "RITMO NODAL"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "TUMORACION EN CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "TOXOPLASMOSIS"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "CVPS 3A"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "ARTERIOESCLEROSIS NO OBSTRUCTIVA DE MIEMBROS INFER"
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "COLITIS"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "COR ANEMICO"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "COLON IRRITABLE"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "DISFUNCION DE MARCAPASO"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "HEMANGIOMA CAVERNOSO MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "ENFERMEDAD DE CHAGAS"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "QUISTE DE BEKER"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "HEMATURIA"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "HERNIA EPIGASTRICA"
+ },
+ {
+  "codigo_origen": "0388",
+  "descripcion": "SINDROME DE QUERBAIN"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "QUISTE DERMICO"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "HEMORRAGIA DIGESTIVA SUPERIOR"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "INCONTINENCIA URINARIA"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "RADICULOPATIA CERVICAL"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "OSTEOFITOSIS CERVICAL"
+ },
+ {
+  "codigo_origen": "0394",
+  "descripcion": "LESION CARDIACA"
+ },
+ {
+  "codigo_origen": "0395",
+  "descripcion": "DIAGNOSTICO"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "CICATRIZ HIPETROFICA"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "INSUFICIENCIA VERTEBROBASILAR"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "FIBROMIALGIA"
+ },
+ {
+  "codigo_origen": "0400",
+  "descripcion": "ENFERMEDAD CORONARIA"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "CEFALEA VASCULAR"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "NEURALGIA DEL TRIGEMINO"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "HTA ESTADIO 1. ARRITMIA CARDIACA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "ARRITMIA CARDIACA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "HTA ESTADIO 1."
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "HTA ESTADIO 2"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "ARRITMIA VENTRICULAR"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "ENFERMEDAD DE MARFAN"
+ },
+ {
+  "codigo_origen": "0409",
+  "descripcion": "INSUFICIENCIA MITRAL TRIVIAL"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "INSUFICIENCIA MITRAL TRIVIAL"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "INSUFICIENCIA CARDIACA COGESTIVA DESCOMPENSADA"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "ENFERMEDAD ATEROESCLEROTICA"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "IMPLANTE DE MARCAPSO"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "TAQUICARDIA PAROXISTICA SUPRAVENTRICULAR"
+ },
+ {
+  "codigo_origen": "0415",
+  "descripcion": "DISLIPIDEMIA MIXTA"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "SINDROME VERITIGINOSO"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "ENFERMEDAD VALVULAR AORTICA DEGENERATIVA ."
+ },
+ {
+  "codigo_origen": "0418",
+  "descripcion": "ENFERMEDAD VALVULAR REUMATICA."
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "ESTENOSIS MITRAL SEVERA"
+ },
+ {
+  "codigo_origen": "0420",
+  "descripcion": "INSUFICIENCIA TRISCUPIDEA SEVERA."
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "HIPERTENSION ARTERIAL II"
+ },
+ {
+  "codigo_origen": "0424",
+  "descripcion": "AORTOESCLEROSIS"
+ },
+ {
+  "codigo_origen": "0426",
+  "descripcion": "HIPERTROFIA SEPTAL ASIMETRICA"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "BARDHH"
+ },
+ {
+  "codigo_origen": "0427",
+  "descripcion": "TAQUIARRITMIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0428",
+  "descripcion": "HIPERTENSION ARTERIAL SISTOLICA"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "ESCLEROSIS VALVULAR AORTICA"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "FIBRILACION AURICULAR"
+ },
+ {
+  "codigo_origen": "0431",
+  "descripcion": "CEFALEA VASCULAR"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "PR CORTO"
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "SINDROME DE PRE-EXCITACIÓN"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "INFARTO INFERIOR ANTIGUO"
+ },
+ {
+  "codigo_origen": "0435",
+  "descripcion": "HTA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "BLOQUEO BIFASICULAR"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "DOLOR TORACICO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "DISFUNCION AUTONOMICA"
+ },
+ {
+  "codigo_origen": "0439",
+  "descripcion": "DESCARTAR PROLAPSO MITRAL"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "FIBRILACION AURICULAR PAROXISTICA"
+ },
+ {
+  "codigo_origen": "0441",
+  "descripcion": "SINDROME DE MENIER"
+ },
+ {
+  "codigo_origen": "0442",
+  "descripcion": "INFARTO  ANTEROSEPTAL"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "CERVICOBRAQUIALGIA"
+ },
+ {
+  "codigo_origen": "0444",
+  "descripcion": "COR SANO"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "SIDA"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "POLIQUITOSIS RENAL"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "SINCOPE VASOVAGAL."
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "DEGENERACION MOXIMATOSA DE VM"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "ENFERMEDAD ARTERIAL PERIFERICA OBSTRUCTIVA"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "HTA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "ASTENIA"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "DESCARTAR ENFERMEDAD CORONARIA"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "ARRITMIA SUPRAVENTRICULAR"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "BURSITIS HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "HTA SISTOLICA"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "CARDIOPATIA HIPERTENSIVA EN FASE DILATADA"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "EMERGENCIA HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "CIC IM Q ANTERIOR EXTENSO"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "DISNEA DE ESFUERZO"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "CARDIOPATIA MIXTA ISQUEMICA E HIPERTENSIVA EN FD"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "MIOCARDIOPATIA HIPERTROFICA"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "ICTUS HEMMORRAGICO"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "PROLAPSO DE LA VALVA ANTERIOR DE LA MITRAL"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "SINDROME METABOLICO"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "HIPOTENSION ARTERIAL"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "HIPERTENSION ARTERIAL ESTADIO III"
+ }
+]

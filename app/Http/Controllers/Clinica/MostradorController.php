@@ -16,6 +16,7 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
+use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -120,7 +121,7 @@ class MostradorController extends Controller
      *
      * Quien no trabaja la consulta recibe **403** y **no se toca nada**: ni `cola.atendido`, ni la
      * confirmación que "atender" implica, ni `sync_changes`, ni se abre ninguna consulta. El 403 es el
-     * mismo "no podés hacer esto" que la ruta del shell le da a la secretaría (y no un redirect con aviso
+     * mismo "no puedes hacer esto" que la ruta del shell le da a la secretaría (y no un redirect con aviso
      * como el de la cita movida o la cita sin historia): acá no falla el estado de la cita —es atendible—
      * sino quién la atiende, que es exactamente lo que el grupo `role:Root|Medico` de `/consulta` responde
      * con 403. La comprobación va **antes** de resolver la cita, como ese middleware: la respuesta no
@@ -176,11 +177,13 @@ class MostradorController extends Controller
         // abre una si no hay, para que la pantalla tenga qué mostrar). No pide confirmación porque no
         // hay nada que marcar; lo resuelve el diálogo de la vista.
         if (! $this->citaPorAtender($cita)) {
-            return $this->entrarALaConsulta($request, $cita, $abrir, $registros, $pacienteId, $dia);
+            return $this->entrarALaConsulta($request, $cita, $abrir, $registros, $pacienteId, $dia, $contexto['medico']);
         }
 
         try {
-            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+            // La consulta que se cree queda **del doctor del contexto** (2026-10-20):
+            // `medico_id` y su clave legacy, que es lo que después resuelve quién firma la hoja.
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'), $contexto['medico']);
         } catch (InvalidArgumentException $excepcion) {
             return $this->sinHistoria($pacienteId, $excepcion->getMessage());
         }
@@ -220,11 +223,12 @@ class MostradorController extends Controller
         array $registros,
         int $pacienteId,
         Carbon $dia,
+        Medico $medico,
     ): RedirectResponse {
         try {
             // `nueva` también vale acá: desde una cita ya atendida se puede abrir la consulta nueva del
             // día (el "consulta nueva" del legado no exige que la cita esté sin atender).
-            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'));
+            $abierta = $abrir->abrir($cita, $registros, $dia, $request->boolean('nueva'), $medico);
         } catch (InvalidArgumentException $excepcion) {
             return $this->sinHistoria($pacienteId, $excepcion->getMessage());
         }

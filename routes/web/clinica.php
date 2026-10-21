@@ -9,6 +9,7 @@ use App\Http\Controllers\Clinica\CatalogoController;
 use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
+use App\Http\Controllers\Clinica\MotivoFacturaCatalogoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionController;
 use App\Http\Controllers\Clinica\FormatosEnBlancoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
@@ -77,6 +78,7 @@ use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\PlanController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -122,13 +124,33 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // médico, así que va fuera del grupo que exige contexto: se da de alta antes de asignarle un
         // consultorio a nadie. La segunda mitad —consultorios, modalidad y horarios— va adentro
         // (WEB-2.8b.2/3), porque eso sí es de cada médico.
-        Route::get('/sedes', [SedeController::class, 'index'])->name('sedes');
+        //
+        // Desde el 2026-10-20 es **una sola pantalla «Sedes y consultorios»** (tarjeta por sede con sus consultorios y
+        // paneles laterales). Se abre con el contexto **opcional**: si hay médico elegido muestra y carga sus
+        // consultorios; si no, sólo las sedes. `GET /consultorios` redirige acá.
+        Route::get('/sedes', [SedeController::class, 'index'])->middleware('clinica.contexto:opcional')->name('sedes');
         Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
         Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
 
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {
             Route::get('/', [ShellController::class, 'index'])->name('inicio');
+
+            // **Mi plan** (2026-10-21): el médico ve su suscripción y la renueva pagando con SyPago. Es
+            // sólo del médico (`role:Root|Medico`): la secretaría no paga el plan del consultorio. El pago
+            // se crea con la tasa congelada y se aprueba por el webhook o el sondeo, no acá.
+            Route::middleware('role:Root|Medico')->group(function () {
+                Route::get('/plan', [PlanController::class, 'index'])->name('plan');
+                // El plan elegido: método de pago y monto en su moneda. `whereNumber` para que no capture
+                // `comprar` ni `pago`.
+                Route::get('/plan/{plan}', [PlanController::class, 'elegir'])->whereNumber('plan')->name('plan.elegir');
+                Route::post('/plan/comprar', [PlanController::class, 'comprar'])->name('plan.comprar');
+                Route::get('/plan/pago/{pago}', [PlanController::class, 'pagar'])->name('plan.pagar');
+                Route::post('/plan/pago/{pago}/iniciar', [PlanController::class, 'iniciar'])->name('plan.iniciar');
+                Route::post('/plan/pago/{pago}/confirmar', [PlanController::class, 'confirmar'])->name('plan.confirmar');
+                Route::post('/plan/pago/{pago}/consultar', [PlanController::class, 'consultar'])->name('plan.consultar');
+                Route::post('/plan/pago/{pago}/refrescar', [PlanController::class, 'refrescar'])->name('plan.refrescar');
+            });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
             // —una petición de lectura no escribe— y vive acá, fuera del grupo de la consulta, porque también
@@ -553,6 +575,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::delete('/catalogos/motivos-cita/{id}', [MotivoCitaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-cita.quitar');
                 // La dirección vieja de WEB-2.17 (con su mismo nombre de ruta) lleva a la nueva. Va antes de `/agenda/{cola}`.
                 Route::get('/agenda/motivos', [MotivoCitaCatalogoController::class, 'pantallaAnterior'])->name('agenda.motivos');
+                // **Conceptos de la pre-factura** (F9): `motivo_factura` con su monto y su monto con seguro.
+                Route::get('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'index'])->name('catalogos.motivos-factura');
+                Route::post('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'guardar'])->name('catalogos.motivos-factura.guardar');
+                Route::delete('/catalogos/motivos-factura/{id}', [MotivoFacturaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-factura.quitar');
                 Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
                 Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
                 Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');
@@ -582,21 +608,6 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::get('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'index'])->name('catalogos.plantillas-texto');
                 Route::post('/catalogos/plantillas-texto', [PlantillaDeTextoCatalogoController::class, 'guardar'])->name('catalogos.plantillas-texto.guardar');
                 Route::delete('/catalogos/plantillas-texto/{id}', [PlantillaDeTextoCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.plantillas-texto.quitar');
-
-                // **Formato de impresión del médico** (WEB-8.2): el membrete, el logo, el estilo de cada bloque, la firma y el sello con
-                // los que sale el récipe y los demás documentos, más la hoja de prueba. Sólo del médico, como los catálogos: la
-                // secretaría imprime con el formato pero no lo configura (403). El formato es del médico y no del consultorio: se
-                // guarda bajo su registro principal, igual que el móvil. Cada sección tiene su ruta de guardado.
-                Route::get('/formato', [FormatoDeImpresionController::class, 'index'])->name('formato');
-                Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
-                // **Formatos en blanco** (WEB-5.5b): cada documento sin datos de paciente, para rellenar a mano. Sólo lee; la clave la acota el `where`.
-                // El guion entra en la clave (`eco-obstetrico` y su hermano del 3.er trimestre, WEB-6.2): con `[a-z]+` la ruta no matcheaba y salía un 404 antes de llegar al controlador.
-                Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z][a-z-]*')->name('formato.en-blanco');
-                Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
-                Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
-                Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
-                Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
-                Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
 
                 // **Mensajes a pacientes** (WEB-8.4): las plantillas del recordatorio de cita y del saludo de cumpleaños, con sus etiquetas,
                 // el contador de caracteres y de SMS y la vista previa. Sólo del médico (la secretaría manda los mensajes pero no escribe sus
@@ -697,5 +708,29 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como
             // id de cita, así que las de arriba tienen que estar declaradas primero.
             Route::post('/agenda/{cola}', [CitaController::class, 'actualizar'])->name('agenda.actualizar');
+        });
+
+        // **Formato de impresión** (WEB-8.2 y Fase 5 del cambio de `reg_medico`): el membrete, el logo, el estilo de
+        // cada bloque, la firma y el sello con los que sale el récipe y los demás documentos, más la hoja de prueba y
+        // los formatos en blanco. Sólo del médico y del `Root` (`role:Root|Medico`): la secretaría imprime con el
+        // formato pero no lo configura (403).
+        //
+        // Va **fuera** del grupo que exige contexto a propósito: un **centro médico** tiene su propio formato (bajo su
+        // `reg_medico`) y no inicia sesión, así que el `Root` lo abre desde el panel de cuentas con
+        // `?reg_medico=<centro>`. Por eso el contexto se pide como `clinica.contexto:opcional`: se comparte cuando
+        // existe (la pantalla del doctor es la de siempre) y no manda a elegir consultorio cuando no (el `Root` sin
+        // ficha de médico). La regla de qué ficha se edita vive en `ResuelveElRegistroDelFormato`, y cada sección
+        // tiene su ruta de guardado.
+        Route::middleware(['role:Root|Medico', 'clinica.imprimir', 'clinica.contexto:opcional'])->group(function () {
+            Route::get('/formato', [FormatoDeImpresionController::class, 'index'])->name('formato');
+            Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
+            // **Formatos en blanco** (WEB-5.5b): cada documento sin datos de paciente, para rellenar a mano. Sólo lee; la clave la acota el `where`.
+            // El guion entra en la clave (`eco-obstetrico` y su hermano del 3.er trimestre, WEB-6.2): con `[a-z]+` la ruta no matcheaba y salía un 404 antes de llegar al controlador.
+            Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z][a-z-]*')->name('formato.en-blanco');
+            Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
+            Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
+            Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
+            Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
+            Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
         });
     });

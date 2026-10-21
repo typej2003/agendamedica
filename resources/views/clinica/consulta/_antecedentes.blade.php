@@ -17,10 +17,6 @@
      aparece o desaparece de la lista del paciente sin apretar el botón de guardar. El aviso de "cambios sin
      guardar" del detalle y la alerta lo resuelve `consulta.js` desde los `data-*`: la vista no lleva JS ni
      estilos. --}}
-@php
-    $estado = $seccion->estado();
-@endphp
-
 <div class="consulta-seccion" id="consulta-antecedentes">
     {{-- Los chips de tipo: siete (los del catálogo, en el orden de las solapas) más «Sin clasificar» si el
          paciente tiene antecedentes sin tipo. Con scroll horizontal cuando no entran: no se envuelven a
@@ -36,15 +32,18 @@
 
     <x-ui.dos-listas titulo-izquierda="Antecedentes del paciente" titulo-derecha="Tu catálogo de antecedentes"
                      :resumen="$seccion->resumen()">
-        <x-slot name="izquierda">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
-                             :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-                @if ($seccion->nombreDelTipo())
-                    <span class="texto-tenue small">{{ $seccion->nombreDelTipo() }}</span>
-                @endif
-            </div>
+        {{-- El «Historial» de movimientos del paciente (2026-10-20): qué se agregó, editó y quitó, cuándo y
+             desde qué consulta. Se abre en un cajón lateral (`data-abrir-dialogo`, shell.js). --}}
+        @if ($seccion->historial())
+            <x-slot name="accionesIzquierda">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-abrir-dialogo="antecedentes-historial"
+                        id="antecedentes-historial-abrir">
+                    <i class="bi bi-clock-history" aria-hidden="true"></i> Historial
+                </button>
+            </x-slot>
+        @endif
 
+        <x-slot name="izquierda">
             {{-- El `action` es el del guardado del detalle y la alerta. El agregado y la baja ya no vienen en
                  este formulario: cada uno tiene su propio `POST` inmediato (O-07). --}}
             <form method="POST" action="{{ $seccion->urlGuardar() }}" id="antecedentes-form"
@@ -52,17 +51,13 @@
                 @csrf
 
                 @if ($seccion->estaVacio())
-                    <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados">
-                        Búscalos en el catálogo de la derecha y agrégalos. Quedan en su historia clínica, no en esta
-                        consulta.
-                    </x-ui.vacio>
+                    <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Este paciente no tiene antecedentes cargados"></x-ui.vacio>
                 @elseif ($seccion->sinAntecedentesDeEsteTipo())
                     {{-- El estado vacío **por tipo**: decir «no tiene antecedentes cargados» sería falso (tiene
                          {{ $seccion->total() }} en otros tipos) y el médico concluiría que la historia está vacía. --}}
                     <x-ui.vacio icono="bi-clipboard2-pulse" titulo="Sin antecedentes de este tipo">
-                        Este paciente tiene {{ $seccion->total() }}
-                        {{ $seccion->total() === 1 ? 'antecedente cargado' : 'antecedentes cargados' }} en otros tipos:
-                        elige su chip arriba para verlos, o agrega uno de este tipo desde el catálogo de la derecha.
+                        Tiene {{ $seccion->total() }}
+                        {{ $seccion->total() === 1 ? 'antecedente cargado' : 'antecedentes cargados' }} en otros tipos.
                     </x-ui.vacio>
                 @else
                     <ul class="antecedentes-lista">
@@ -74,6 +69,9 @@
                                         <span class="antecedentes-nombre">{{ $fila['nombre'] }}</span>
                                         <span class="texto-tenue small">
                                             <span class="chip">{{ $fila['codigo'] }}</span>
+                                            @if ($fila['desde'])
+                                                <span class="antecedentes-desde" title="Fecha en que se registró en el paciente">· {{ $fila['desde'] }}</span>
+                                            @endif
                                             @if ($fila['avisoCatalogo'])
                                                 <span class="texto-tenue small"> · {{ $fila['avisoCatalogo'] }}</span>
                                             @endif
@@ -253,4 +251,48 @@
             @endif
         </x-slot>
     </x-ui.dos-listas>
+
+    @if ($historial = $seccion->historial())
+        <x-ui.dialogo id="antecedentes-historial" titulo="Historial de antecedentes" lateral>
+            <div class="dialogo-cuerpo">
+                @if ($historial->estaVacio())
+                    <x-ui.vacio icono="bi-clock-history" titulo="Sin movimientos registrados"></x-ui.vacio>
+                @else
+                    <ol class="linea-tiempo antecedentes-historial">
+                        @foreach ($historial->filas() as $movimiento)
+                            <li>
+                                <div class="linea-tiempo-cabeza">
+                                    <strong>{{ $movimiento['antecedente'] }}</strong>
+                                    <x-ui.estado :tono="$movimiento['operacion']['tono']" :icono="$movimiento['operacion']['icono']">{{ $movimiento['operacion']['texto'] }}</x-ui.estado>
+                                </div>
+                                <p class="texto-tenue small mb-0">
+                                    {{ $movimiento['fecha'] }}
+                                    @if ($movimiento['consulta'])
+                                        ·
+                                        @if ($movimiento['consulta']['url'])
+                                            <a href="{{ $movimiento['consulta']['url'] }}">{{ $movimiento['consulta']['texto'] }}</a>
+                                        @else
+                                            {{ $movimiento['consulta']['texto'] }}
+                                        @endif
+                                    @endif
+                                    · {{ $movimiento['quien'] }}
+                                </p>
+                                @if ($movimiento['detalle'] || $movimiento['alerta'])
+                                    <p class="linea-tiempo-texto mb-0">
+                                        @if ($movimiento['alerta'])
+                                            <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Alerta</x-ui.estado>
+                                        @endif
+                                        {{ $movimiento['detalle'] }}
+                                    </p>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+            </div>
+            <div class="dialogo-pie">
+                <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cerrar</button>
+            </div>
+        </x-ui.dialogo>
+    @endif
 </div>

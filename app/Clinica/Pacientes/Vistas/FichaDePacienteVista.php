@@ -45,7 +45,27 @@ final class FichaDePacienteVista
          * La resuelve el controlador: el ViewModel se prueba sin contenedor y no llama a `route()`.
          */
         private ?Closure $urlOtraHistoria = null,
+        /**
+         * `fn(int $consultaId): string` — la pantalla de la consulta, o `null` si quien mira no puede entrar
+         * a ella (la secretaría: la consulta es del médico). Sin esto la fila del listado no lleva enlace.
+         *
+         * Es el mismo enlace que ofrece la historia del paciente (WEB-3.5): la lista de consultas de la
+         * ficha y la de la historia se leen igual, así que se abren igual.
+         */
+        private ?Closure $urlConsulta = null,
     ) {
+    }
+
+    /**
+     * El mismo ViewModel con la **URL de la consulta**: cada fila de la lista abre su pantalla. La resuelve
+     * el controlador, que es quien sabe si el usuario trabaja la consulta.
+     */
+    public function conUrlConsulta(Closure $url): self
+    {
+        $copia = clone $this;
+        $copia->urlConsulta = $url;
+
+        return $copia;
     }
 
     /**
@@ -487,13 +507,22 @@ final class FichaDePacienteVista
             : ['icono' => 'bi-journal-medical', 'titulo' => 'El paciente todavía no tiene historia', 'texto' => 'Sin número de historia no hay consultas asociadas.'];
     }
 
-    /** @return array<int, array{fecha:string, numero:string, resumen:?string}> */
+    /**
+     * Las consultas de la ficha, la más reciente primero: su fecha legible, su número y el resumen de la
+     * enfermedad actual (recortado por la vista). Con `conUrlConsulta()` cada fila lleva además la URL de
+     * su pantalla; sin ella —la secretaría—, `url` es `null` y la fila no es un enlace.
+     *
+     * @return array<int, array{fecha:string, numero:string, resumen:?string, url:?string}>
+     */
     public function consultas(): array
     {
         return $this->consultas->map(fn ($consulta) => [
             'fecha'   => FechaClinica::formato($consulta->fecha),
             'numero'  => 'Consulta ' . $consulta->nroconsulta,
             'resumen' => CamposDePaciente::texto($consulta->enfermedadactual),
+            'url'     => $this->urlConsulta !== null && ($consulta->id ?? null) !== null
+                ? ($this->urlConsulta)((int) $consulta->id)
+                : null,
         ])->all();
     }
 }

@@ -114,6 +114,13 @@
                                         <i class="bi bi-pencil-square me-1"></i> Editar
                                     </button>
 
+                                    {{-- Dónde atiende: sedes → consultorios → horarios y cupos (`admin.medicos.sedes`). --}}
+                                    @if ($pestana === 'medicos')
+                                        <a href="{{ route('admin.medicos.sedes', $fila) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Ver sedes
+                                        </a>
+                                    @endif
+
                                     @if ($u || $m)
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
@@ -141,6 +148,19 @@
                                                             {{ $m->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
                                                         </button>
                                                     </li>
+                                                    {{-- **El formato de impresión del centro** (Fase 5 del cambio de `reg_medico`): el
+                                                         membrete, el logo y el pie con los que el centro imprime los reportes de sus
+                                                         doctores viven bajo su `reg_medico`. Un centro no inicia sesión, así que el
+                                                         formato se abre desde acá, con el parámetro que resuelve la pantalla de
+                                                         `/clinica/formato` (`ResuelveElRegistroDelFormato`, sólo `Root`). La firma y el
+                                                         sello de cada reporte son los del doctor que atendió. --}}
+                                                    @if ($m->es_centro && auth()->user()?->hasRole('Root'))
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('clinica.formato', ['reg_medico' => $m->reg_medico]) }}">
+                                                                <i class="bi bi-printer me-2"></i> Formato de impresión del centro
+                                                            </a>
+                                                        </li>
+                                                    @endif
                                                     @if (! $m->es_centro)
                                                         <li>
                                                             <button type="button" class="dropdown-item" wire:click="abrirEmitir({{ $m->id }})">
@@ -429,8 +449,10 @@
                                     </div>
 
                                     {{-- **Centro médico** y el formato de sus reportes (Fase 2 del cambio de `reg_medico`).
-                                         El formato decide el membrete de los reportes del centro; la firma es siempre la del
-                                         doctor que atendió, y la impresión que lo usa es otra fase. --}}
+                                         El formato decide el membrete —el del centro o el del doctor— con el que se imprimen
+                                         los reportes de sus doctores; la firma es siempre la del doctor que atendió, y el
+                                         formato del centro se edita desde «Formato de impresión del centro» (el menú de la
+                                         fila; Fase 5 de la impresión). --}}
                                     <div class="col-12 mb-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="editar-es-centro" wire:model="es_centro">
@@ -443,19 +465,23 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 mb-1">
-                                        <label class="form-label" for="editar-formato">Formato de los reportes</label>
-                                        <select class="form-select" id="editar-formato" wire:model.defer="formato_reportes">
-                                            <option value="">— Sin elegir —</option>
-                                            @foreach ($formatosDeReporte as $formato)
-                                                <option value="{{ $formato }}">{{ $formato === 'centro' ? 'Del centro' : 'Del médico' }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="form-text">
-                                            Con qué membrete se imprimen los reportes del centro. La firma es siempre la del doctor que atendió.
+                                    @if ($es_centro)
+                                        <div class="col-12 mb-1">
+                                            <label class="form-label" for="editar-formato">Formato de los reportes</label>
+                                            <select class="form-select" id="editar-formato" wire:model.defer="formato_reportes">
+                                                <option value="">— Sin elegir (se usa el del médico) —</option>
+                                                @foreach ($formatosDeReporte as $formato)
+                                                    <option value="{{ $formato }}">{{ $formato === 'centro' ? 'Del centro' : 'Del médico' }}</option>
+                                                @endforeach
+                                            </select>
+                                            <div class="form-text">
+                                                Con qué membrete, logo y pie se imprimen los reportes del centro. El del centro se edita en
+                                                «Formato de impresión del centro», en el menú de esta fila. La firma y el sello son siempre los del
+                                                doctor que atendió.
+                                            </div>
+                                            @error('formato_reportes') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
-                                        @error('formato_reportes') <span class="text-danger small">{{ $message }}</span> @enderror
-                                    </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>

@@ -30,7 +30,7 @@
             </x-ui.campo>
 
             <x-ui.campo etiqueta="Indicaciones por defecto" for="medicamento-uso" error="uso" class="mt-3"
-                        ayuda="Opcional. Es el texto que aparece al agregarlo a un récipe; allí se puede cambiar sin tocar el vademécum.">
+                        ayuda="Opcional. Se puede cambiar en cada récipe.">
                 <textarea id="medicamento-uso" name="uso" class="form-control" rows="3"
                           maxlength="{{ $seccion->largoIndicaciones() }}">{{ old('uso') }}</textarea>
             </x-ui.campo>

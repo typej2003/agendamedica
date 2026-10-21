@@ -178,7 +178,7 @@ class ConsultaEmbarazoController extends Controller
         ]);
 
         if ($gesta < 1) {
-            return $destino->with('error', 'Elegí la gesta antes de guardar: el laboratorio y los controles son de una gesta.');
+            return $destino->with('error', 'Elige la gesta antes de guardar: el laboratorio y los controles son de una gesta.');
         }
 
         try {

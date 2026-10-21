@@ -154,21 +154,19 @@
                                   maxlength="{{ $vm->largoTexto() }}">{{ $vm->texto('uso') }}</textarea>
                     </x-ui.campo>
 
-                    <x-ui.campo etiqueta="Dosificación" for="medicamento-dosificacion" error="dosificacion" class="col-12"
-                                ayuda="Escribí SI cuando la dosis sea por kilo: el récipe la calcula con el peso del niño. Cualquier otro texto es una nota tuya y no sale en el récipe.">
-                        <textarea name="dosificacion" id="medicamento-dosificacion" class="form-control" rows="2"
-                                  maxlength="{{ $vm->largoTexto() }}">{{ $vm->texto('dosificacion') }}</textarea>
-                    </x-ui.campo>
+                    {{-- La casilla «La dosis es por kilo» guarda `SI` en la dosificación y despliega la fórmula (`.dosis-por-kilo`, doctorisimo-ui.css). --}}
+                    <div class="col-12 dosis-por-kilo">
+                        <input type="hidden" name="por_kilo" value="0">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input dosis-por-kilo__casilla" type="checkbox" role="switch" name="por_kilo" value="1"
+                                   id="medicamento-por-kilo" {{ $vm->esPorKilo() ? 'checked' : '' }}>
+                            <label class="form-check-label" for="medicamento-por-kilo">La dosis es por kilo (récipe de pediatría)</label>
+                        </div>
+                        @if ($nota = $vm->notaDeDosificacion())
+                            <div class="form-text">Nota de la dosificación: {{ $nota }}</div>
+                        @endif
 
-                    <div class="col-12">
-                        <details @if ($vm->hayDosis()) open @endif>
-                            <summary class="mb-2">Dosis por kilo (para el récipe de pediatría)</summary>
-
-                            <p class="text-muted small">
-                                Con la dosificación en <strong>SI</strong>, el récipe calcula la posología con el peso del
-                                examen físico de la consulta y la presenta en gotas o en ml si cargás el envase.
-                            </p>
-
+                        <div class="dosis-por-kilo__panel mt-2">
                             <div class="row g-3">
                                 <x-ui.campo etiqueta="Dosis (mg/kg por toma)" for="medicamento-dosis" error="dosis" class="col-6 col-md-4">
                                     <input type="number" step="0.01" min="0" name="dosis" id="medicamento-dosis"
@@ -203,7 +201,7 @@
                                            class="form-control" value="{{ $vm->texto('concentracion') }}">
                                 </x-ui.campo>
                             </div>
-                        </details>
+                        </div>
                     </div>
 
                     <div class="col-12">

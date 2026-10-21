@@ -262,7 +262,7 @@ class RecipesVistaTest extends TestCase
         $this->assertSame(50, $vm->largoPresentacion());
         $this->assertStringContainsString('cambios sin guardar', $vm->avisoSinGuardar());
         $this->assertStringContainsString('conexión', $vm->avisoDeConexion());
-        $this->assertStringContainsString('sin importar las tildes', $vm->ayudaDelBuscador());
+        $this->assertStringContainsString('principio activo', $vm->ayudaDelBuscador());
         $this->assertSame('/clinica/consulta/42/recipes/medicamentos', $vm->urlMedicamentos());
         $this->assertSame('/clinica/consulta/42/recipes/tratamientos', $vm->urlTratamientos());
     }

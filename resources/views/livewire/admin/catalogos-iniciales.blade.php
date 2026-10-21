@@ -20,7 +20,17 @@
                     <label class="visually-hidden" for="buscar-inicial">Buscar</label>
                     <input type="text" id="buscar-inicial" wire:model.debounce.400ms="search" class="form-control" placeholder="Buscar por nombre o código...">
                 </div>
-                <div class="col-md-7 text-md-end mt-2 mt-md-0 text-muted small">{{ $total }} {{ $total === 1 ? 'fila inicial' : 'filas iniciales' }}</div>
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <label class="visually-hidden" for="especialidad-inicial">Especialidad</label>
+                    <select id="especialidad-inicial" class="form-select" wire:model="especialidad">
+                        <option value="">Todas</option>
+                        <option value="general">Generales</option>
+                        @foreach ($especialidades as $id => $nombre)
+                            <option value="{{ $id }}">{{ $nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 text-md-end mt-2 mt-md-0 text-muted small">{{ $total }} {{ $total === 1 ? 'fila inicial' : 'filas iniciales' }}</div>
             </div>
         </div>
 
@@ -28,7 +38,7 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
-                        <tr><th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th class="text-end">Acciones</th></tr>
+                        <tr><th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th>Especialidades</th><th class="text-end">Acciones</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($filas as $fila)
@@ -36,6 +46,13 @@
                                 <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
                                 <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
                                 <td class="text-muted small">{{ $detalles[$fila->id] ?: '—' }}</td>
+                                <td>
+                                    @forelse ($marcas[$fila->id] ?? [] as $especialidadId)
+                                        <span class="badge bg-light text-dark border">{{ $especialidades[$especialidadId] ?? '¿?' }}</span>
+                                    @empty
+                                        <span class="badge bg-secondary">General</span>
+                                    @endforelse
+                                </td>
                                 <td class="text-end text-nowrap">
                                     @if ($catalogo === 'tratamientos')
                                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirLineas({{ $fila->id }})">
@@ -52,8 +69,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    {{ trim($search) === '' ? 'Todavía no hay filas en este catálogo inicial. Agrega la primera con «Nuevo ' . $def['singular'] . '».' : 'No se encontró nada.' }}
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    {{ trim($search) === '' && $especialidad === '' ? 'Todavía no hay filas en este catálogo inicial. Agrega la primera con «Nuevo ' . $def['singular'] . '».' : 'No se encontró nada.' }}
                                 </td>
                             </tr>
                         @endforelse
@@ -80,32 +97,43 @@
                         <div class="modal-body">
                             @error('f.formulario') <div class="alert alert-danger py-2 small">{{ $message }}</div> @enderror
                             <div class="row g-3">
-                                @foreach ($def['campos'] as $columna => [$rotulo, $tipo, $max, $requerido])
-                                    <div class="{{ $tipo === 'area' ? 'col-12' : 'col-md-6' }}">
-                                        @if ($tipo === 'marca')
-                                            <div class="form-check mt-4">
-                                                <input class="form-check-input" type="checkbox" id="ini-{{ $columna }}" wire:model.defer="f.{{ $columna }}">
-                                                <label class="form-check-label" for="ini-{{ $columna }}">{{ $rotulo }}</label>
-                                            </div>
-                                        @else
-                                            <label class="form-label" for="ini-{{ $columna }}">{{ $rotulo }}@if ($requerido) <span class="text-danger" aria-hidden="true">*</span>@endif</label>
-                                            @if ($tipo === 'area')
-                                                <textarea id="ini-{{ $columna }}" rows="{{ $max > 5000 ? 8 : 3 }}" class="form-control" wire:model.defer="f.{{ $columna }}"></textarea>
-                                            @elseif ($tipo === 'ref' || $tipo === 'tipo')
-                                                <select id="ini-{{ $columna }}" class="form-select" wire:model.defer="f.{{ $columna }}">
-                                                    <option value="">Elige…</option>
-                                                    @foreach ($opciones[$columna] ?? [] as $valor => $texto)
-                                                        <option value="{{ $valor }}">{{ $texto }}</option>
-                                                    @endforeach
-                                                </select>
-                                            @else
-                                                <input type="text" id="ini-{{ $columna }}" class="form-control" @if ($tipo === 'numero') inputmode="decimal" @endif
-                                                       @if ($max > 0) maxlength="{{ $max }}" @endif wire:model.defer="f.{{ $columna }}">
-                                            @endif
-                                        @endif
-                                    </div>
+                                @foreach ($def['campos'] as $columna => $campo)
+                                    @continue(($campo[5] ?? null) === 'dosis')
+                                    @include('livewire.admin._campo-catalogo-inicial')
                                 @endforeach
                             </div>
+                            @if (collect($def['campos'])->contains(fn ($campo) => ($campo[5] ?? null) === 'dosis'))
+                                {{-- La casilla «La dosis es por kilo» despliega el panel con la fórmula (`.dosis-por-kilo`, en doctorisimo-ui.css). --}}
+                                <div class="mt-3 border rounded p-3 dosis-por-kilo">
+                                    <div class="row g-3">
+                                        @foreach ($def['campos'] as $columna => $campo)
+                                            @continue(($campo[5] ?? null) !== 'dosis' || $campo[1] !== 'porkilo')
+                                            @include('livewire.admin._campo-catalogo-inicial')
+                                        @endforeach
+                                    </div>
+                                    <div class="dosis-por-kilo__panel mt-3">
+                                        <p class="text-muted small mb-2">El récipe calcula la posología con el peso del niño y la da en gotas o en ml si se carga el envase.</p>
+                                        <div class="row g-3">
+                                            @foreach ($def['campos'] as $columna => $campo)
+                                                @continue(($campo[5] ?? null) !== 'dosis' || $campo[1] === 'porkilo')
+                                                @include('livewire.admin._campo-catalogo-inicial')
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                            <fieldset class="mt-3">
+                                <legend class="form-label fs-6 mb-1">Aplica a</legend>
+                                <div class="d-flex flex-wrap gap-3">
+                                    @foreach ($especialidades as $id => $nombre)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="aplica-{{ $id }}" value="{{ $id }}" wire:model.defer="aplica">
+                                            <label class="form-check-label" for="aplica-{{ $id }}">{{ $nombre }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="form-text">Sin ninguna marcada, es general: la recibe el médico de cualquier especialidad.</div>
+                            </fieldset>
                             <p class="text-muted small mt-3 mb-0">El código lo asigna el sistema.</p>
                         </div>
                         <div class="modal-footer">

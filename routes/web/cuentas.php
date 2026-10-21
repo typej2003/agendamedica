@@ -8,7 +8,13 @@ use App\Http\Livewire\Admin\CatalogoInicialVacunas;
 use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
 use App\Http\Livewire\Admin\Especialidades;
+use App\Http\Livewire\Admin\MetodosPago;
 use App\Http\Livewire\Admin\Servicios;
+use App\Http\Livewire\Admin\SolicitudesDeMedicos;
+use App\Http\Controllers\RegistroDeMedicos\CarnetDeLaSolicitudController;
+use App\Http\Livewire\Admin\Sedes\ConsultoriosDeLaSede;
+use App\Http\Livewire\Admin\Sedes\HorariosDelConsultorio;
+use App\Http\Livewire\Admin\Sedes\SedesDelMedico;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +43,21 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     // esta ruta es el único camino a él, con el permiso comprobado en el controlador.
     Route::get('/comentarios/{comentario}/imagenes/{imagen}', [ImagenDelComentarioController::class, 'deLaBandeja'])
         ->name('comentarios.imagen');
+    // **Solicitudes de médicos** (ROADMAP §10.4, fase 2): las que llegan de `/registro/medico`, para aprobar o
+    // rechazar. La foto del carnet vive en un disco privado y esta ruta es el único camino a ella.
+    Route::get('/solicitudes-medicos', SolicitudesDeMedicos::class)->name('solicitudes-medicos');
+    Route::get('/solicitudes-medicos/{solicitud}/carnet', CarnetDeLaSolicitudController::class)
+        ->whereNumber('solicitud')->name('solicitudes-medicos.carnet');
     Route::get('/servicios', Servicios::class)->name('servicios');
+    // **Métodos de pago de la plataforma** (2026-10-21): con qué cobra Doctorisimo los planes y, a
+    // futuro, los cobros de los pacientes. Incluye la tasa VES/USD manual.
+    Route::get('/metodos-pago', MetodosPago::class)->name('metodos-pago');
+    // **Sedes del médico** (2026-10-20): el administrador ayuda a configurar dónde atiende cada médico, en
+    // profundidad: sedes → consultorios de la sede → horarios y cupos del consultorio. Las reglas son las Actions
+    // de `/clinica` (`GuardarSede`, `GuardarConsultorio`, `GuardarBloqueHorario`); el tenant, el `reg_medico` del médico.
+    Route::get('/medicos/{medico}/sedes', SedesDelMedico::class)->name('medicos.sedes');
+    Route::get('/medicos/{medico}/sedes/{sede}/consultorios', ConsultoriosDeLaSede::class)->name('medicos.sedes.consultorios');
+    Route::get('/medicos/{medico}/sedes/{sede}/consultorios/{consultorio}/horarios', HorariosDelConsultorio::class)
+        ->name('medicos.sedes.consultorios.horarios');
 });
 

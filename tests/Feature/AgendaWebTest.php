@@ -1797,7 +1797,7 @@ class AgendaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('<option value="' . $sede->id . '" selected>', false);
-        // Y el aviso de «elegí la sede» deja de aparecer en el camino normal.
+        // Y el aviso de «elige la sede» deja de aparecer en el camino normal.
         $respuesta->assertDontSee('— Elige una sede —');
         $respuesta->assertDontSee('Elige la sede para ver su jornada');
     }

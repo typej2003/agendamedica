@@ -46,7 +46,7 @@
                 @endforeach
             </ul>
             <p class="texto-tenue small mb-2" data-formato-vacio @if ($cuentaFormato) hidden @endif>
-                <span data-formato-sin-plantillas>Todavía no tienes plantillas del formato de este estudio: cargá los campos y guardalas desde acá.</span>
+                <span data-formato-sin-plantillas>Todavía no tienes plantillas del formato de este estudio.</span>
                 <span data-formato-sin-resultados hidden>Ninguna plantilla coincide con la búsqueda.</span>
             </p>
 

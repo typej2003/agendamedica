@@ -102,7 +102,7 @@ class PasosEsencialesWebTest extends TestCase
         $this->get('/clinica')
             ->assertOk()
             ->assertSee('No has agregado ningún consultorio.')
-            ->assertSee(route('clinica.consultorios'), false)
+            ->assertSee(e(route('clinica.sedes', ['panel' => 'consultorio'])), false)
             ->assertDontSee('dialogo-paso-esencial');
 
         $this->withSession(['guiado' => true])->get('/clinica')

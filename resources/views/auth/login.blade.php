@@ -101,11 +101,18 @@
                     @endif
                 </div>
 
-                {{-- El alta de cuentas todavía no está abierta: primero va el registro de médicos con
-                     aprobación y después el de pacientes (ver ROADMAP §10.4). --}}
-                <p class="text-muted small mt-4 mb-0 text-center">
-                    El registro de médicos y pacientes estará disponible próximamente.
-                </p>
+                {{-- El paciente crea su cuenta al momento; el médico deja una solicitud que aprueba un
+                     administrador (ROADMAP §10.4, fase 2). --}}
+                <div class="text-center mt-4">
+                    <p class="small mb-1">
+                        ¿Eres paciente y es tu primera vez?
+                        <a href="{{ route('paciente.registro') }}">Crea tu cuenta</a>
+                    </p>
+                    <p class="small mb-0">
+                        ¿Eres médico?
+                        <a href="{{ route('medico.registro') }}">Solicita tu cuenta</a>
+                    </p>
+                </div>
             </form>
         </div>
     </main>

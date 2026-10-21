@@ -120,6 +120,8 @@ class ReservaPublicaController extends Controller
             'paciente' => $paciente !== null
                 ? trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''))
                 : '',
+            'cedula' => $resultado['cedula'] ?? null,
+            'telefono' => $resultado['telefono'] ?? null,
         ]);
 
         return redirect()->route('reservas.confirmada');

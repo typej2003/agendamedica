@@ -3,6 +3,9 @@
 Guía de entrada para trabajar en este repo. **Antes de escribir código, leé "Antes de empezar"** (rama
 y entorno) y la wiki indicada al final: este repo no lleva la especificación funcional.
 
+> **Idioma y trato:** todo texto que ve el usuario (pantallas, mensajes, correos, validaciones) va en
+> **tuteo**, no en voseo. Es la regla 8 de [`../AGENTS.md`](../AGENTS.md).
+
 ## Antes de empezar: rama y entorno
 
 El working tree está en la rama **`desarrollo`** y el código está presente. Dos advertencias:
@@ -257,7 +260,7 @@ consulta.
   código va en el cuerpo). Modelos `PreFacturaConsulta` y `MotivoFactura`. ⚠️ **No relevado del escritorio** (las
   fuentes no están en el repo): si `his_con_pre_factura` tiene clave primaria en el PowerBuilder, cómo genera
   `id_registro` y cuándo aplica `monto_seg`; por eso la tabla entró a `sin_clave_con_altas_del_app` (inocuo si se sube
-  por fila). El ABM de `motivo_factura` en la web no existe todavía. Tests: `Feature/ConsultaPreFacturaWebTest` (7).
+  por fila). **ABM de `motivo_factura`** (2026-10-20): `/clinica/catalogos/motivos-factura` («Conceptos de factura» en el submenú; `MotivoFacturaCatalogoController`, `Crear/Editar/QuitarMotivoDeFactura`, `ReglasDelMotivoDeFactura`, `MotivosDeFacturaDelCatalogo`, `MotivosDeFacturaVista`): código del servidor (mayor numérico + 1, 3 dígitos — convención, no relevada), nombre en mayúsculas ≤ 45 sin duplicar, `monto` obligatorio y `monto_seg` opcional; `tipo` no se toca. Quitar no borra si una pre-factura lo usa (`UsoDeUnItemDelCatalogo::motivoDeFactura`). Test: `MotivosDeFacturaCatalogoWebTest` (7). **Informe impreso** (`DocumentoImpreso::PREFACTURA`, clave `prefactura`): un renglón por concepto con el monto de la fila y el total; se ofrece sólo con conceptos y `DocumentosPorCita` lo cuenta. Test: `ConsultaPreFacturaImpresionWebTest` (3). No está en `HistoriaDelPaciente` ni tiene formato en blanco. Tests: `Feature/ConsultaPreFacturaWebTest` (7).
 - El árbol de PediaReport, sus cinco postgrados, sus informes impresos y la pre-factura están implementados.
 Tests: `SubespecialidadesTest`, `Unit/Clinica/SeccionesPediatricasTest`, `EspecialidadesDelMedicoTest`,
 `Unit/Clinica/{AlcanceDeLaEspecialidadTest,PlantillasDeLaEspecialidadTest}`.
@@ -305,6 +308,13 @@ correlativo de cuatro dígitos; **no cambia el comportamiento del sync**) y
 `App\Clinica\Consulta\AntecedentesDelPaciente` (el mapa del dato: los tres catálogos, los "vacíos" del
 legado, la casilla de Alerta `tipo2 = 'A'` y el orden de los grupos, que es el de las solapas del
 escritorio).
+**Registro de movimientos de los antecedentes (2026-10-20)**: tabla `antecedente_movimientos` (migración
+`2026_10_20_160000`, sólo del servidor, no viaja por el sync), escrita **sólo** por
+`Actions\Pacientes\RegistrarMovimientoDeAntecedente` desde la web (`GuardarAntecedentes`, con `consulta_id`),
+el móvil (`AgregarAntecedenteAlPaciente` y la edición/baja de `SyncAppDataController`) y la subida del
+escritorio (`CambiosEscritorio::guardarGenerico/borrarGenerico`); la carga inicial no anota. Lectura en
+`App\Clinica\Consulta\HistorialDeAntecedentes` y `Vistas\HistorialDeAntecedentesVista` («desde» de cada fila y el
+cajón «Historial» de la sección). Trampa 158.
 Lo que **WEB-4.5 (2026-10-10)** agregó a esas tres filas es: `ConsultaDiagnosticos` (**WEB-4.5: los
 diagnósticos de la consulta** en `?seccion=diagnostico`, con `POST /clinica/consulta/{consulta}/diagnosticos`
 y `…/diagnosticos/crear`; **la fila sí es de la consulta** —`diagnostico_paciente` se llavea por
@@ -672,10 +682,14 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `routes/api.php` | Todos los endpoints de app y de sync. **Es el mejor mapa del backend: empezá por acá.** |
 | `routes/web.php`, `routes/web/{admin,medico,customer,cuentas,clinica}.php` | Panel web Livewire + login por sesión, y la **web clínica** (`clinica.php`: contexto, pacientes —la ficha, el **alta y la edición** de WEB-3.2 en `/clinica/pacientes/nuevo` y `/clinica/pacientes/{paciente}/editar`, **asignar el número de historia** de WEB-3.3 en `POST /clinica/pacientes/{paciente}/historia` con el filtro **`?historia=sin-historia`** del listado, **la historia del paciente** de WEB-3.5 en `GET /clinica/pacientes/{paciente}/historia` y `/historia/imprimir`, el buscador JSON del alta y las **citas del paciente** de WEB-2.15—, agenda —con el recordatorio por cita y las acciones del día de WEB-2.6/2.7, los días no laborables de WEB-2.8a, los **motivos de cita** de WEB-2.17 —desde WEB-8.1c en `/clinica/catalogos/motivos-cita`; `/clinica/agenda/motivos` redirige— y **"Pasar a Cita Formal"** de WEB-2.11—, **sedes** de WEB-2.8b.1 y **consultorios** de WEB-2.8b.2, con sus **bloques de horario** de WEB-2.8b.3, y **cumpleaños** de WEB-2.9 en `/clinica/cumpleanos`). |
 | `routes/web/reservas.php` | **Portal público de reservas** (`/reservar`, `/reservar/{medico}`, `/…/codigo` y `/…/confirmar`), sin sesión de paciente: catálogo, horario, código de 6 dígitos y comprobante. |
+| `routes/web/paciente.php` | **Cuenta del paciente**: `/registro` (público, con código), `/mis-citas` y las acciones de cancelar/reprogramar (`role:Paciente`; una cita ajena responde 404). |
 | `app/Http/Controllers/Api/` | Controladores de la API (login, refresh, sync, upload, webhook WhatsApp). Incluye `AppAgendaMedicaController` y los `" - copia.php"`, que están muertos (ver trampas). |
 | `app/Http/Controllers/Auth/` | Login web **un solo formulario** (`CustomLoginController`) y la pregunta de área (`ElegirPanelController`), más el cambio de contraseña. |
 | `app/Reservas/` | **Portal público de reservas** (ROADMAP §10.5): `CatalogoDeMedicos` (solo médicos con agenda), `DisponibilidadPublica` (próximos días con un horario, sobre `primerLugarDisponible`), `CodigoDeVerificacion` (WhatsApp con plantilla / SMS / simulado en local), `SolicitarCodigoDeReserva`, `ConfirmarReservaPublica` y `ReservaPendiente` (hash del código en la sesión). La cita sale por `AgendamientoDeCitas` **sin numerar historia** y con `estado = 2`. |
-| `app/Http/Controllers/Clinica/` | Web clínica (`/clinica`), **controladores delgados por responsabilidad** (ver `../Docs/Web/guia-arquitectura-web.md`): `Shell` e `Contexto` (inicio y elegir consultorio), `Paciente` (listado, ficha, **alta y edición de la ficha** (WEB-3.2: `/clinica/pacientes/nuevo` y `/clinica/pacientes/{paciente}/editar`), **asignar el número de historia** (WEB-3.3: `POST /clinica/pacientes/{paciente}/historia`, con la Action `AsignarHistoria` y el **404** del paciente ajeno; el listado acepta `?historia=todos\|sin-historia\|con-historia`) y el buscador JSON del alta de cita), `CitasDelPaciente` (WEB-2.15: las citas de **un paciente** con modificar/eliminar y el cambio de cédula, `/clinica/pacientes/{paciente}/citas`), `Agenda` (**lectura**: día/semana/mes e imprimir), `Cita` (alta, edición y baja de una cita, con `GuardarCitaRequest`), `Mostrador` (confirmar, atender, cobrar, reordenar y **"Pasar a cita formal"** de WEB-2.11, `POST /clinica/agenda/{cola}/pasar-a-cita-formal`; **desde WEB-4.9 "atender" es sólo del médico**: la secretaría conserva confirmar, cobrar, agendar, mover y reordenar, y el `POST …/atender` le responde **403** sin marcar la cita), `Recordatorio` (el recordatorio por cita, el envío del día y su ventana), `NoLaborable` (WEB-2.8a: días no laborables), `Sede` (WEB-2.8b.1: `/clinica/sedes`), `Consultorio` (WEB-2.8b.2: modalidad y duración, `/clinica/consultorios`), `Horario` (WEB-2.8b.3: bloques de día, hora y cupo — el solape con **otro** consultorio del mismo médico avisa y guarda; el del **mismo** consultorio se rechaza), `MotivoCitaCatalogo` (WEB-8.1c, antes `MotivoCita` de WEB-2.17: el catálogo de motivos de cita del médico con su precio, sede y la marca `admite_varias_citas_pendientes`, en `/clinica/catalogos/motivos-cita`; sólo médico) y `Cumpleanos` (WEB-2.9: `/clinica/cumpleanos` —los que cumplen años hoy, el envío a mano y la configuración del automático—) y `Representante` (WEB-3.4: **el representante del paciente** —el adulto que responde por él y el que presta el teléfono para el recordatorio—, con `POST /clinica/pacientes/{paciente}/representante` como **upsert por `numhistoria`** y el bloque de la ficha que arma `bloque()`), e `HistoriaDelPaciente` (WEB-3.5: **la historia del paciente** —`GET /clinica/pacientes/{paciente}/historia`, de sólo lectura, y su `/historia/imprimir`—, que lee con `HistoriaDelPaciente` y arma los dos ViewModels de `Clinica/Historia/Vistas/`), y `Consulta` (**F4/WEB-4.1: la consulta** —`GET /clinica/consulta/{consulta}`—, que lee con `App\Clinica\Consulta\ConsultasDelContexto` (de quién es la consulta y cuál es su paciente, por `numhistoria` del pivote; una consulta de otro consultorio da 404) y arma `ConsultaShellVista`, el **shell con el panel de los 13 ítems del legado** y su estado ("Próximamente" con la tarea que lo trae); vive en un **grupo de rutas propio con `role:Root|Medico`** porque la consulta es sólo del médico (PLAN-WEB.md §3.14) y la secretaría recibe 403), `ConsultaMotivos` (**WEB-4.2: los motivos de una consulta** —`?seccion=motivos` en el shell—: agregar uno del catálogo, **crear el que falta online** y quitarlo, con el buscador en vivo en `GET /clinica/consulta/{consulta}/motivos/buscar`; la regla del catálogo y de la fila son Actions) y `ConsultaEnfermedad` (**WEB-4.2: la enfermedad actual** —`?seccion=enfermedad`—, editable y con guardado explícito por `POST /clinica/consulta/{consulta}/enfermedad`) y `ConsultaEvaluacion` (**WEB-4.3: la evaluación física** —`?seccion=evaluacion`—, el **examen general** y el **ginecológico** con guardado explícito por `POST /clinica/consulta/{consulta}/evaluacion`; sus campos viven en **dos** tablas, `consultas` y `examen_fisico_nuevo`). Las **secciones de la consulta no son pantallas**: se abren dentro del shell con `?seccion=` (el panel del legado y su área de trabajo), y su contenido lo lee `App\Clinica\Consulta\MotivosDeLaConsulta` (los motivos) y `App\Clinica\Consulta\ExamenFisicoDeLaConsulta` (la evaluación física, que además es el **mapa de campos** de esa sección). Ninguno tiene SQL ni arma textos: leen con una consulta, arman un ViewModel y devuelven la vista. Los `reg_medico` del médico los resuelve el trait `Concerns/ResuelveLosRegistrosDelMedico` (lo usan `Mostrador` y `Paciente`): el correlativo del número de historia tiene que dar igual en la web y en el sync. Y `ConsultaDiagnosticos` (**WEB-4.5: los diagnósticos de una consulta** —`?seccion=diagnostico`—: guardar el detalle editado junto con lo tildado y lo quitado por `POST /clinica/consulta/{consulta}/diagnosticos`, y **crear el que falta** en el catálogo por `…/diagnosticos/crear`; la regla es una Action de `Actions\Consulta` porque la fila **cuelga de la consulta**), y `ConsultaImagenes` (**WEB-4.7: los exámenes y las imágenes de una consulta** —`?seccion=examenes`—: **sube una imagen** a un disco privado por `POST /clinica/consulta/{consulta}/examenes`, la **quita** por `DELETE …/examenes/{imagen}` y la **sirve** por `GET …/examenes/{imagen}`, que es el **único camino al archivo**; el disco es privado (`storage/app/clinica`, fuera de `public/`), el nombre del archivo lo pone el servidor y la autorización es el `reg_medico` del contexto **y** la consulta —el médico ajeno recibe 404 y la secretaría 403—; la política de lo que se acepta es `App\Clinica\Archivos\ArchivosClinicos`). |
+| `app/Paciente/` | **Cuenta del paciente y «Mis citas»** (ROADMAP §10.6): `RegistroPendiente`/`SolicitarCodigoDeRegistro`/`ConfirmarRegistroDePaciente` (alta con código), `MisCitas`/`CitaDelPaciente` (lectura por vínculo `medico_pacientes` + `paciente_sinhistoria_id`), `PerteneceAlPaciente` (404 si la cita no es suya), `MedicoDeLaCita`, `PuedeGestionarSuCita` (24 h, futura, sin atender, sin pago) y `CancelarCitaDelPaciente`/`ReagendarCitaDelPaciente`. |
+| `app/Http/Controllers/Paciente/` | Controladores del área: `RegistroDePacienteController`, `MisCitasController`, `CancelarCitaController` y `ReagendarCitaController` (delgados; la regla vive en `App\Paciente`). |
+| `routes/web/registro-medico.php` + `app/RegistroDeMedicos/` | **Registro de médicos con aprobación** (ROADMAP §10.4, fase 2, 2026-10-21): `/registro/medico` (público, sólo invitados) → código de 6 dígitos **al correo** (`SolicitarCodigoDeRegistroDeMedico`, `SolicitudEnCurso` en la sesión) → `ConfirmarSolicitudDeMedico` guarda una fila de `solicitudes_medico` **pendiente, sin cuenta**. Foto del carnet opcional en el disco privado `solicitudes` (`CarnetDeLaSolicitud`). Todos los correos salen por `CorreosDeLaSolicitud` (si el SMTP falla se registra y no se deshace nada). La bandeja es `/admin/solicitudes-medicos` (`Livewire\Admin\SolicitudesDeMedicos`): aprobar (`Actions\Medicos\AprobarSolicitudDeMedico`) pide confirmar el `reg_medico` —propone `MPPS-<número>`; si ya hay **una ficha sin cuenta** con ese registro (un médico del escritorio), le da acceso a esa ficha en vez de crear otra— y asigna la especialidad (catálogo inicial) y, por `MedicoRegistrado`, el mes de prueba; la clave temporal va por correo **y** se muestra una vez. Rechazar (`RechazarSolicitudDeMedico`) exige motivo y no impide volver a postularse. Tests: `Feature/RegistroDeMedicoWebTest` (12). |
+| `app/Http/Controllers/Clinica/` | Web clínica (`/clinica`), **controladores delgados por responsabilidad** (ver `../Docs/Web/guia-arquitectura-web.md`): `Shell` e `Contexto` (inicio y elegir consultorio), `Paciente` (listado, ficha, **alta y edición de la ficha** (WEB-3.2: `/clinica/pacientes/nuevo` y `/clinica/pacientes/{paciente}/editar`), **asignar el número de historia** (WEB-3.3: `POST /clinica/pacientes/{paciente}/historia`, con la Action `AsignarHistoria` y el **404** del paciente ajeno; el listado acepta `?historia=todos\|sin-historia\|con-historia`) y el buscador JSON del alta de cita), `CitasDelPaciente` (WEB-2.15: las citas de **un paciente** con modificar/eliminar y el cambio de cédula, `/clinica/pacientes/{paciente}/citas`), `Agenda` (**lectura**: día/semana/mes e imprimir), `Cita` (alta, edición y baja de una cita, con `GuardarCitaRequest`), `Mostrador` (confirmar, atender, cobrar, reordenar y **"Pasar a cita formal"** de WEB-2.11, `POST /clinica/agenda/{cola}/pasar-a-cita-formal`; **desde WEB-4.9 "atender" es sólo del médico**: la secretaría conserva confirmar, cobrar, agendar, mover y reordenar, y el `POST …/atender` le responde **403** sin marcar la cita), `Recordatorio` (el recordatorio por cita, el envío del día y su ventana), `NoLaborable` (WEB-2.8a: días no laborables), `Sede` (WEB-2.8b.1; desde el 2026-10-20 es la pantalla unificada **Sedes y consultorios** en `/clinica/sedes`: tarjeta por sede con los consultorios del médico y sus horarios, paneles laterales para sede, consultorio, horario y la «sede rápida» por `fetch`/JSON, y la pregunta «¿Agregar un consultorio en esta sede?» tras crearla; ViewModel `SedesYConsultoriosVista`, JS `public/js/clinica/sedes.js`), `Consultorio` (WEB-2.8b.2: modalidad y duración; sólo escribe, `GET /clinica/consultorios` redirige a `/clinica/sedes`), `Horario` (WEB-2.8b.3: bloques de día, hora y cupo — el solape con **otro** consultorio del mismo médico avisa y guarda; el del **mismo** consultorio se rechaza), `MotivoCitaCatalogo` (WEB-8.1c, antes `MotivoCita` de WEB-2.17: el catálogo de motivos de cita del médico con su precio, sede y la marca `admite_varias_citas_pendientes`, en `/clinica/catalogos/motivos-cita`; sólo médico) y `Cumpleanos` (WEB-2.9: `/clinica/cumpleanos` —los que cumplen años hoy, el envío a mano y la configuración del automático—) y `Representante` (WEB-3.4: **el representante del paciente** —el adulto que responde por él y el que presta el teléfono para el recordatorio—, con `POST /clinica/pacientes/{paciente}/representante` como **upsert por `numhistoria`** y el bloque de la ficha que arma `bloque()`), e `HistoriaDelPaciente` (WEB-3.5: **la historia del paciente** —`GET /clinica/pacientes/{paciente}/historia`, de sólo lectura, y su `/historia/imprimir`—, que lee con `HistoriaDelPaciente` y arma los dos ViewModels de `Clinica/Historia/Vistas/`), y `Consulta` (**F4/WEB-4.1: la consulta** —`GET /clinica/consulta/{consulta}`—, que lee con `App\Clinica\Consulta\ConsultasDelContexto` (de quién es la consulta y cuál es su paciente, por `numhistoria` del pivote; una consulta de otro consultorio da 404) y arma `ConsultaShellVista`, el **shell con el panel de los 13 ítems del legado** y su estado ("Próximamente" con la tarea que lo trae); vive en un **grupo de rutas propio con `role:Root|Medico`** porque la consulta es sólo del médico (PLAN-WEB.md §3.14) y la secretaría recibe 403), `ConsultaMotivos` (**WEB-4.2: los motivos de una consulta** —`?seccion=motivos` en el shell—: agregar uno del catálogo, **crear el que falta online** y quitarlo, con el buscador en vivo en `GET /clinica/consulta/{consulta}/motivos/buscar`; la regla del catálogo y de la fila son Actions) y `ConsultaEnfermedad` (**WEB-4.2: la enfermedad actual** —`?seccion=enfermedad`—, editable y con guardado explícito por `POST /clinica/consulta/{consulta}/enfermedad`) y `ConsultaEvaluacion` (**WEB-4.3: la evaluación física** —`?seccion=evaluacion`—, el **examen general** y el **ginecológico** con guardado explícito por `POST /clinica/consulta/{consulta}/evaluacion`; sus campos viven en **dos** tablas, `consultas` y `examen_fisico_nuevo`). Las **secciones de la consulta no son pantallas**: se abren dentro del shell con `?seccion=` (el panel del legado y su área de trabajo), y su contenido lo lee `App\Clinica\Consulta\MotivosDeLaConsulta` (los motivos) y `App\Clinica\Consulta\ExamenFisicoDeLaConsulta` (la evaluación física, que además es el **mapa de campos** de esa sección). Ninguno tiene SQL ni arma textos: leen con una consulta, arman un ViewModel y devuelven la vista. Los `reg_medico` del médico los resuelve el trait `Concerns/ResuelveLosRegistrosDelMedico` (lo usan `Mostrador` y `Paciente`): el correlativo del número de historia tiene que dar igual en la web y en el sync. Y `ConsultaDiagnosticos` (**WEB-4.5: los diagnósticos de una consulta** —`?seccion=diagnostico`—: guardar el detalle editado junto con lo tildado y lo quitado por `POST /clinica/consulta/{consulta}/diagnosticos`, y **crear el que falta** en el catálogo por `…/diagnosticos/crear`; la regla es una Action de `Actions\Consulta` porque la fila **cuelga de la consulta**), y `ConsultaImagenes` (**WEB-4.7: los exámenes y las imágenes de una consulta** —`?seccion=examenes`—: **sube una imagen** a un disco privado por `POST /clinica/consulta/{consulta}/examenes`, la **quita** por `DELETE …/examenes/{imagen}` y la **sirve** por `GET …/examenes/{imagen}`, que es el **único camino al archivo**; el disco es privado (`storage/app/clinica`, fuera de `public/`), el nombre del archivo lo pone el servidor y la autorización es el `reg_medico` del contexto **y** la consulta —el médico ajeno recibe 404 y la secretaría 403—; la política de lo que se acepta es `App\Clinica\Archivos\ArchivosClinicos`). |
 | `app/Actions/` | **Dominio compartido entre la web y el sync** (R3 de `PLAN-WEB.md`): `Agenda/{CrearCita,EditarCita,EliminarCita,ConfirmarCita,AtenderCita,CobrarCita,ReordenarCola}`, `Pacientes/{CrearPaciente,GuardarPaciente,IdentidadDePaciente,CambiarCedula}` —`CrearPaciente` es la regla del **alta** (enlaza por cédula, completa solo los campos vacíos y no crea historia) y la siguen usando el sync del móvil y el alta de la cita; **`GuardarPaciente` (WEB-3.2)** es la del **alta y la edición** de la ficha y **delega el alta en `CrearPaciente`**, y **`IdentidadDePaciente`** es el único lugar donde vive "una cédula que ya es de otro paciente se rechaza" (la usan las tres, con el mismo mensaje que el cambio de cédula de WEB-2.15)—, `Pacientes/AsignarHistoria` (WEB-2.11: **el número de historia** —el correlativo del médico, con reintento e idempotencia— y el enlace de las citas que estaban "sin historia"; la usa la web con "Pasar a cita formal" **y** el sync del móvil, que antes la tenía adentro de `CreacionesClinicas`), `Notificaciones/EnviarRecordatorio` (WEB-2.6: los tres canales, con el registro del envío), `Cumpleanos/EnviarSaludoDeCumpleanos` (WEB-2.9: el saludo de cumpleaños, con su registro en `notificaciones_cumple`) y `Consultorio/{GuardarSede,GuardarConsultorio,GuardarBloqueHorario}` (WEB-2.8b: la sede con el estado y el país derivados de la ciudad, el consultorio con `reg_medico`/`medico_id` del contexto y el bloque de horario con las dos reglas del solape), y **`Consulta/{CrearConsulta,AbrirConsulta}` (WEB-4.1)**: `CrearConsulta` es **la regla del `nroconsulta`** (la última **de esa historia** + 1) y la usan la web al atender y el sync del móvil, que antes la tenía adentro de `CreacionesClinicas` —el mismo camino que hizo `AsignarHistoria` en WEB-2.11—; `AbrirConsulta` es **"Atender" abre la consulta**: recibe la cita, resuelve de quién es y devuelve la consulta **del día** (la que ya existe hoy o una nueva con `nueva: true`), con su historia y su `paciente_id`; **no marca `atendido`** (eso es `AtenderCita`) y **exige historia** (sin número lanza `InvalidArgumentException`, y la web manda a asignarla antes). Las dos superficies las usan: **ninguna regla de negocio se escribe dos veces**. **`Consulta/{AgregarMotivoAlCatalogo,AgregarMotivoALaConsulta,QuitarMotivoDeLaConsulta,GuardarEnfermedadActual}` (WEB-4.2)**: `AgregarMotivoAlCatalogo` es **el alta del catálogo de motivos** (las mayúsculas, el tope de 40, el correlativo de 4 dígitos y el "si ya existe uno igual devuelve el existente") y la usan el endpoint del app (`POST /api/app/motivos-consulta`) **y** la web —el servicio `App\Services\CatalogoMotivosConsulta` se borró porque quedó sin uso—; `AgregarMotivoALaConsulta` y `QuitarMotivoDeLaConsulta` son la fila de `motivo_consulta_paciente` (idempotente al agregar, sin tocar el catálogo al quitar) y las usan la web y el sync del móvil, **sin cambiar su comportamiento**; `GuardarEnfermedadActual` escribe `consultas.enfermedadactual` con el last-write-wins por columna y su rastro en `sync_changes` (`source = web`). **`Consulta/{GuardarEvaluacionFisica,ResultadoDeEvaluacion}` (WEB-4.3)**: `GuardarEvaluacionFisica` escribe la **evaluación física** —las siete columnas de `consultas` y las trece de `examen_fisico_nuevo`— **sólo lo que cambió**, con el mismo last-write-wins por columna y una fila de rastro por columna en la tabla que corresponde; **no toca** `colposcopia` (F6) ni los resúmenes `total_f`/`total_g`/`total_general` (los arma el escritorio). `ResultadoDeEvaluacion` distingue "no había cambios" de "otro equipo editó más recientemente": los dos llegan como cero columnas guardadas y son mensajes distintos. **`Consulta/{GuardarDiagnosticosDeLaConsulta,ResultadoDeDiagnosticos,AgregarDiagnosticoAlCatalogo,ReglasDelCatalogo}` (WEB-4.5)**: `GuardarDiagnosticosDeLaConsulta` aplica en una transacción la fila nueva (con la descripción del catálogo copiada en `detalle_diagnostco`, como el `INSERT` del escritorio, y `orden` nulo), el `detalle_diagnostco` editado de una fila que ya estaba y la baja —**sólo lo que cambió**, con el last-write-wins por columna y el rastro por columna en `sync_changes` con `source = web`—; `AgregarDiagnosticoAlCatalogo` es el alta del catálogo (correlativo de cuatro dígitos, mayúsculas, sin duplicar) y **comparte la regla con los motivos** vía `ReglasDelCatalogo` —que es el helper nuevo—; **el sync del escritorio no cambió** (sube `diagnostico_paciente` por su camino genérico, que hace un `UPDATE` con todas las columnas del lote: no es la regla de la Action) y el móvil sólo la baja. |
 | `app/Notificaciones/` | Reglas sin estado de los recordatorios (WEB-2.6), portadas del móvil (`recordatorio.dart`): `Canal` (sms/whatsapp/correo), `Telefono` (normalización a internacional), `Correo` (validación), `MensajeDeRecordatorio` (plantilla + etiquetas), `ExcepcionDeEnvio` (el envío ni se intentó: falta el dato o el proveedor) y **`DespachadorDeCanales`** (WEB-2.9: **el envío por los tres canales**, con las credenciales del servidor y el registro de la respuesta del proveedor; lo comparten el recordatorio de cita y el saludo de cumpleaños). |
 | `app/Cumpleanos/` | El **saludo de cumpleaños** (WEB-2.9) sin HTTP ni base: `Cumpleanos` (la regla de día y mes, con el **29/02 saludado el 28** en año no bisiesto), `Cumpleano` (un paciente que cumple hoy: edad, contacto, qué dato le falta), `CumpleanosDeHoy` (la lectura por `medico_pacientes`, acotada al `reg_medico`), `ConfiguracionDeCumpleanos` (interruptor, canal y hora **con los valores por defecto**, que no viven en la base), `MensajeDeCumpleanos` (la plantilla y sus etiquetas `{paciente}`/`{doctor}`), `RegistroDeCumpleanos` (a quién ya se le mandó, contra `notificaciones_cumple`) y `Vistas/CumpleanosVista`. |
@@ -711,7 +725,7 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `POST` | `/api/app/motivos-consulta` | `MotivoConsultaController@crear` — alta en el catálogo de motivos de consulta del médico (Paso 18.B2), online-only: `descripcion` → `id`, `codemotivo` (correlativo de 4 dígitos); si ya hay una igual devuelve la existente (200) en vez de duplicar. |
 | `POST` | `/api/app/configuracion/formato-recipe` | `RecipeFormatoController@actualizar` — formato de impresión del récipe (alineación/fuente/estilo por elemento, color de línea, tamaño del logo) + firma/sello (Paso 18.A). Parcial, online-only; el sync lo devuelve completo en `formato_recipe`. |
 | `GET` | `/api/app/comentarios` | `ComentarioController@index` — **«Ayúdanos a mejorar»** (ROADMAP §9): los comentarios de la cuenta, de los más nuevos a los más viejos, con su `estado`, su `respuesta` y sus capturas (`id` + `nombre`, **sin URL**: el archivo vive en un disco privado). |
-| `POST` | `/api/app/comentarios` | `ComentarioController@guardar` — el comentario del app con **hasta 3 capturas** (`multipart`, `imagenes[]`; 5 MB, PNG/JPG/WEBP, tipo real), `throttle:30,1`, online-only. La regla es `App\Actions\Comentarios\EnviarComentario` —**la misma de `/clinica/ayuda`**— y guarda `origen = app` y el `contexto` (versión, pantalla, plataforma; viaja como cadena JSON y si viene mal se descarta). Un disco lleno contesta **500 con un `message` legible**, no un 422. |
+| `POST` | `/api/app/comentarios` | `ComentarioController@guardar` — el comentario del app con **hasta 3 capturas** (`multipart`, `imagenes[]`; 5 MB, PNG/JPG/WEBP, tipo real), `throttle:30,1`, online-only. La regla es `App\Actions\Comentarios\EnviarComentario` —**la misma de `/clinica/ayuda`**— y guarda `origen = app`, **`plataforma`** (`android`, `ios`, `windows`, `macos`, `linux`, `web`; campo propio desde el 2026-10-20, y si no viene se usa la del `contexto`, que es donde la mandaban las versiones anteriores) y el `contexto` (versión, pantalla, plataforma; viaja como cadena JSON y si viene mal se descarta). Un disco lleno contesta **500 con un `message` legible**, no un 422. |
 | `GET` | `/api/app/comentarios/{comentario}/imagenes/{imagen}` | `ImagenDelComentarioController@delAutor` — la captura adjunta, **sólo para su autor** (la misma puerta que «Mis comentarios» de la web; la bandeja de `/admin` usa la suya). El disco es privado: un comentario de otra cuenta da **404**. |
 
 **Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El mecanismo de inicio de sesión (API y
@@ -719,12 +733,13 @@ web)**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medic
 doctor, como ya era. **Desde el 2026-10-19 el login web es uno solo** (pedido del usuario): la pantalla pide
 correo y contraseña, sin selector de tipo, y `App\Services\AutenticacionPorCorreo` prueba `users`, `medicos` y
 `pacientes` en ese orden (crea la cuenta y asigna el rol al médico/paciente del legado la primera vez). A dónde
-entra cada rol lo decide **`User::rutaDeInicio()`**: `clinica.inicio` para médico y secretaría y `dashboard` para
-administración (y para el paciente, mientras no exista `/consultorio`). Si la cuenta puede trabajar en **más de
-un área** (médico + administrador), **`User::rutaDeEntrada()`** manda a **`/elegir-panel`** en vez de elegir por
-ella; esa pantalla lista `User::panelesDisponibles()` y no guarda preferencia. El alta de cuentas web sigue
-cerrada (`Auth::routes(['register' => false])`): el registro de médicos con aprobación y el de pacientes son las
-fases siguientes. Lo nuevo se apoya en eso:
+entra cada rol lo decide **`User::rutaDeInicio()`**: `clinica.inicio` para médico y secretaría, `dashboard` para
+administración y **`paciente.citas` para el paciente** (desde el 2026-10-19; antes caía en el panel). Si la cuenta
+puede trabajar en **más de un área** (médico + administrador), **`User::rutaDeEntrada()`** manda a **`/elegir-panel`**
+en vez de elegir por ella; esa pantalla lista `User::panelesDisponibles()` y no guarda preferencia. El **registro de
+pacientes ya está abierto** en **`/registro`** (`role:Paciente`, con el mismo código de 6 dígitos de la reserva):
+`Auth::routes(['register' => false])` sigue apagando el `/register` genérico de Laravel, y el **registro de médicos
+con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se apoya en eso:
 - `users.must_change_password`, `users.is_active`, `users.blocked_reason` (migración `2026_10_03_200000`).
 - Toda escritura de claves, roles y bloqueos pasa por `CuentaService`, que escribe `users.password` **y** espeja
   `medicos.password` (el login prueba `users` y, si falla, `medicos`: escribir una sola dejaría dos claves válidas).
@@ -775,14 +790,46 @@ fases siguientes. Lo nuevo se apoya en eso:
   de 7 de las 8 filas del catálogo). Un médico **sin consultorios** entra igual y ve sus módulos, pero **no
   puede agendar** (la jornada se arma por sede). En `/clinica/contexto` el campo es el **consultorio**
   (`offices`) —se rotula así desde el 2026-10-11, antes decía "Sede"— y el aviso manda a
-  `/clinica/consultorios` (la sede, `medical_centers`, se crea en `/clinica/sedes`). Verificación en Chrome:
+  «Sedes y consultorios» (`/clinica/sedes`, donde se crean la sede y el consultorio). Verificación en Chrome:
   `../.agent-tools/verificar-menu-por-especialidad-web.js`. En una base ya desplegada, el paso del final del
   despliegue es **`php artisan especialidades:sembrar`** (ver "Cómo verificar cambios").
+- **Sedes del médico** (`/admin/medicos/{medico}/sedes`, 2026-10-20; misma ruta-archivo `routes/web/cuentas.php`,
+  Root o Administrador): el administrador ayuda a configurar dónde atiende un médico, **en profundidad** y con migas
+  (Médicos › médico › Sedes › sede › Consultorios › consultorio › Horarios). Se entra con el botón **«Ver sedes»** de
+  cada médico en `/admin/cuentas`. Tres componentes Livewire en `App\Http\Livewire\Admin\Sedes\` (trait
+  `ConfiguraUnMedico`: permiso en `hydrate()`) y vistas en `livewire/admin/sedes/`:
+  `SedesDelMedico` (`admin.medicos.sedes`), `ConsultoriosDeLaSede` (`admin.medicos.sedes.consultorios`,
+  `/{sede}/consultorios`) y `HorariosDelConsultorio` (`admin.medicos.sedes.consultorios.horarios`,
+  `/{sede}/consultorios/{consultorio}/horarios`). **Las reglas son las Actions de `/clinica`, sin cambios**:
+  `GuardarSede`, `GuardarConsultorio` y `GuardarBloqueHorario` (`ejecutar`/`ejecutarVarios`); las validaciones de
+  formato se copiaron de los controladores de `/clinica` (viven ahí, no en las Actions). **El tenant** es el
+  `reg_medico` del médico de la ruta y la lectura está en `App\Services\Admin\SedesDelMedico`, con un criterio
+  **estricto** (`reg_medico` y, por `medico_id`, sólo las filas sin registro): `Office::scopeDelMedico` también trae
+  los consultorios **de un centro** que creó ese doctor, y editarlos desde su ficha los habría mudado de tenant
+  (`GuardarConsultorio` reescribe `reg_medico`). Una ficha sin `reg_medico` no ofrece nada (404 en las acciones).
+  Qué hace cada nivel: **Sedes** (la sede es del catálogo de la clínica): «Agregar» elige una sede existente o
+  registra una nueva **y** su primer consultorio (sin consultorio la sede no es «del médico»), en transacción;
+  «Editar» cambia la ficha para todos y avisa cuántos otros médicos atienden ahí (le pasa a `GuardarSede` el
+  `activo` actual: sin él, la Action reactiva); «Quitar» **da de baja los consultorios del médico** en esa sede
+  (`activo = false`), dice cuántas citas tiene ahí desde hoy y no toca la sede. **Consultorios**: alta y edición
+  por `GuardarConsultorio` (editar conserva el `activo` y el `medico_id` de la fila), «Quitar» = dar de baja y
+  «Reactivar»; en una sede desactivada no se agrega ni se edita (la Action sólo acepta sedes activas).
+  **Horarios**: alta de uno o varios días (todo o nada), edición y «Quitar» que **borra** el bloque como en
+  `/clinica` (el modelo deja el rastro en `sync_changes`, con el usuario). No hay bitácora propia del panel:
+  `offices` y `medical_centers` no dejan rastro (tampoco desde `/clinica`). Nada se borra en cascada. Tests:
+  `tests/Feature/SedesDelMedicoAdminTest.php` (17); verificación en Chrome:
+  `../.agent-tools/verificar-sedes-admin-web.js` (crea una sede y dos consultorios en el primer médico del
+  listado, y no los borra). **Sin migraciones.**
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
   los conteos de pacientes e historias (`SyncResumenService`, en lote por página). El token en claro se muestra una
   sola vez (copiar o descargar `sync-token.txt`); en la base solo queda su SHA-256.
+  **Última actividad web** (2026-10-20): `users.ultima_actividad_web_at`. El middleware `RegistrarActividadWeb` (grupo
+  `web`, sin el latido `clinica.sesion`) **no escribe en la base**: dispara `ActividadWebRegistrada` como mucho una vez
+  cada 5 min por cuenta (`Cache::add`) y el listener `GuardarUltimaActividadWeb` (`ShouldQueue`) hace un `UPDATE` que
+  sólo avanza la fecha. ⚠️ Con `QUEUE_CONNECTION=sync` corre en el request; en producción hace falta una cola real
+  y su worker (`queue:work`), y con `database` encolar es un `INSERT` (de ahí el límite). Tests: `ActividadWebTest`.
 
 **Sync del sistema legado PowerBuilder**
 
@@ -910,6 +957,16 @@ como bueno. Corre después de `migrate --force`; las reglas viven en los seeders
 (`app/Console/Commands/SembrarEspecialidadesCommand.php`, tests en
 `tests/Feature/SembrarEspecialidadesCommandTest.php`).
 
+**El catálogo inicial por especialidad** (WEB-12.9, 2026-10-21) se siembra con **`php artisan catalogos:sembrar-iniciales`**
+(`--simular` para mirar), después de `especialidades:sembrar`. **No va fijo en el despliegue**: es idempotente, pero una fila
+que el administrador quitó en `/admin` vuelve si se siembra otra vez; se corre una vez por servidor y cuando cambien los
+archivos de `database/catalogos-iniciales/<especialidad>/` (los arma `bridge/tools/preparar-catalogos-iniciales.py`, en el repo
+de docs, desde lo que exporta `bridge/tools/exportar-catalogos-asa8.ps1`). La regla vive en
+`App\Actions\Catalogos\SembrarCatalogosIniciales`; el puente de especialidades, en
+`App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial`; la copia automática al médico nuevo, en
+`CargarCatalogosInicialesAlMedico` (la llama `CuentaService::asignarEspecialidades`). Tests:
+`tests/Feature/CatalogoInicialPorEspecialidadTest.php`.
+
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
 
@@ -998,23 +1055,79 @@ cierran (`shell.js`, por delegación). Los botones de plantillas van en el slot 
 primera deja los botones deshabilitados con el color viejo (el "Atender" de la agenda quedaba en 1,8:1).
 Los `btn-outline-*` deshabilitados se unifican en gris en `doctorisimo-ui.css`. Y desde WEB-4.2 la hoja trae `[hidden] { display: none !important }`: Bootstrap pisaba el atributo `hidden` con `.d-flex` (ver trampa 23).
 
+## El tenant `reg_medico` y el centro médico (2026-10-20)
+
+El cambio de `reg_medico`, hecho en fases, quedó implementado del lado del servidor y de la web (commits
+`0354e4a` Fase 1, `21f2fe8` y `1b070f0` Fase 2, `4d1a07b` Fase 3, `b3a215c` Fase 5, `9467ba9` el doctor de
+la consulta y `ee8baf6` el del sync del móvil). ⚠️ En los comentarios del código y en los mensajes de commit
+la numeración es **1, 2, 3 y 5** (ninguno dice «Fase 4»), y los pacientes globales entraron con la 2. Lo que
+hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`](TRAMPAS.md) son de acá):
+
+- **`reg_medico` es el tenant.** `medico_pacientes` tiene **`UNIQUE (reg_medico, paciente_id)`** (migración
+  `2026_10_20_100000_vinculo_de_pacientes_por_reg_medico.php`): una fila por paciente y consultorio, con
+  `medico_id` = **quién lo creó** (el doctor o el centro) y `numhistoria` como **copia** para el app viejo.
+  `historias` es **la historia del tenant** (`reg_medico` + `numhistoria` + `paciente_id`),
+  `pacientes.reg_medico` es el del **primer vínculo** (se escribe sólo al crear la ficha) y `cola.medico_id`
+  es el **doctor de la cita**. La migración rellena los `reg_medico` vacíos del pivote, **deduplica** (gana la
+  fila del centro y, si no, la de id más bajo, con el número de `historias`) y **no se deshace**.
+- **El centro médico es una fila de `medicos`** con `es_centro = 1` y su propio `reg_medico`
+  (`CuentaService::crearCentro()`, desde el panel de cuentas): **no atiende** y no tiene cuenta de acceso. Los
+  doctores se vinculan con `medico_registros` (`asignarRegistro()` ya no copia pacientes), las
+  **especialidades del centro son la unión de las de sus doctores** y el formato con el que imprime es
+  `medicos.formato_reportes` (`centro`/`medico`).
+- **Contexto** (`ContextoTrabajo`/`ContextoAutomatico`): el `medico` del contexto es **el doctor logueado**
+  en todos sus registros —también en los centros donde trabaja— y, en la **secretaría**, la fila del centro
+  con la unión de especialidades; los **consultorios** son los del tenant; `/clinica/contexto` muestra **una
+  tarjeta por médico** (el menú de consultorios combina los del doctor y los del centro) y el **auto-skip
+  agrupa por médico**.
+- **Pacientes**: la lista es **global del doctor** (`PacientesDelConsultorio::listar()`: todos sus registros,
+  con el número del contexto o «sin historia en este consultorio»); la ficha **abre sin 404** si el paciente
+  está en otro registro del doctor; «ver otra historia» es un selector de **sólo lectura** y `?reg_medico=`
+  se valida contra los registros del doctor (`HistoriaDelPacienteController::registroElegido()`).
+- **Cita**: la del centro nace con **`medico_id = null`** y `cola.medico` = **`medicos.id` del centro**
+  (`MedicosDeLaCita::deUnaCitaNueva()`); la del consultorio personal, con el doctor y su `evolucion.clave`.
+  El doctor se asigna desde la agenda (la ruta `POST /clinica/agenda/{cola}/medico`, que escribe
+  `AsignarMedicoACita`) o **lo toma el médico al atender** (`AtenderCita` llama a `tomar()`), una cita
+  **atendida no cambia de doctor** e Inicio/Agenda muestran el médico o «Sin asignar» **sólo cuando el
+  consultorio tiene más de un doctor** (`MedicosDeLaCita::varios()`).
+- **Impresión**: el formato se elige por `medicos.formato_reportes` del `reg_medico` de la impresión; la
+  **firma y el sello son siempre del doctor que atendió** (`MedicoQueFirma` +
+  `MembreteDelMedico::deLaImpresion()`), el QR lo avala ese doctor y las **opciones de impresión** (modo y
+  nombre) son **del firmante** (`GuardarOpcionesDeImpresion`, `MembreteDelMedico::opciones()`). La pantalla
+  `/clinica/formato?reg_medico=<centro>` la abre el `Root`, **sólo acepta centros** (con un doctor da
+  **404**) y **no ofrece firma ni sello** (`ResuelveElRegistroDelFormato`).
+- **`consultas.medico_id`** (migración `2026_10_20_120000_add_medico_id_a_consultas.php`, nullable): la web la
+  escribe en `CrearConsulta` (con la clave legacy en `consultas.medico`) y **el sync del móvil también** desde
+  `ee8baf6`: `CreacionesClinicas::crearConsulta()` le pasa `$this->medico` a la misma Action (el médico
+  autenticado del teléfono; lo cubre `CreacionesClinicasTest`). `Consulta::medicoUsuario()` es **legacy**:
+  apunta `medico_id` a `users` y no se usa (señalada, **no** arreglada, como pide la regla 6 del workspace).
+- **Pendiente**: el **móvil** no elige ni muestra el doctor de la cita (sólo sella la consulta que crea) y el
+  **listado impreso del día** no tiene columna de médico
+  (`resources/views/clinica/agenda/imprimir.blade.php`), así que el papel no dice quién atiende cada cita.
+
 ## Convenciones y nomenclatura del dominio
 
 - **El esquema es del legado**: tablas en `snake_case` español (`cola`, `consultas`, `motivos_consulta`,
   `examen_fisico`…), con nombres de columna heredados de PowerBuilder. No renombres ni "normalices" sin
   confirmar: hay compatibilidad de datos en juego. Detalle en
   [../Docs/Wiki/07-modelo-de-datos.md](../Docs/Wiki/07-modelo-de-datos.md).
-- **`reg_medico`** es el registro profesional del médico y funciona como **clave de negocio** (el
-  modelo `MedicoRegistro` lo liga a `medicos.id`); **`numhistoria`** es la clave de negocio del paciente.
-  Casi todas las consultas cruzan por esas dos columnas, no por `id`.
-- La tabla pivote `medico_pacientes` relaciona médico ↔ paciente y lleva `numhistoria` y `reg_medico`.
+- **`reg_medico`** es el registro profesional del médico y funciona como **clave de negocio** y como
+  **tenant** (`medico_registros` liga `medicos.id` con sus registros, y un **centro médico** es otra fila
+  de `medicos` con `es_centro` y su propio `reg_medico`); **`numhistoria`** es la clave de negocio del
+  paciente. Casi todas las consultas cruzan por esas dos columnas, no por `id`.
+- La tabla pivote `medico_pacientes` relaciona **el consultorio con el paciente** (`UNIQUE (reg_medico,
+  paciente_id)`, una fila por tenant), lleva `numhistoria` y `reg_medico`, y su `medico_id` es **quién lo
+  creó** (el doctor o el centro).
+- **`medico` no es `medico_id`**: `medico` (en `cola`, `consultas` y `cola_dia_no_labor`) es la **`clave` de
+  `evolucion`** del legado y `medico_id` es el `medicos.id` de AppDDR (el doctor asignado a la cita o el que
+  atendió la consulta). La fuente de verdad es `medico_id`; la clave se sigue escribiendo para el escritorio.
 - Código y datos en **español**, archivos UTF-8.
 - Los controladores de API crecen rápido y son muy explícitos (mapeos manuales a mano). Si agregás un
   campo a una respuesta, revisá **todos** los caminos por tipo de usuario (`Medico`, `Paciente`, `Root`).
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **90** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **156** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

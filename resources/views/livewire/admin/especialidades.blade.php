@@ -166,7 +166,7 @@
                                         <strong>Postgrados.</strong> Una subespecialidad cuelga de su especialidad —nefrología
                                         pediátrica es un postgrado de pediatría— y enciende sus propias secciones de la consulta.
                                         Si el médico tiene más de una, <strong>se suman</strong>. Para asignar los de una
-                                        especialidad que recién agregás, guardá y volvé a abrir esta ventana.
+                                        especialidad que recién agregas, guarda y vuelve a abrir esta ventana.
                                     </p>
 
                                     @foreach ($conPostgrados as $especialidad)

@@ -145,7 +145,7 @@ final class IndicadoresIncidentesVista
     /** La ayuda de la pantalla. */
     public function ayuda(): string
     {
-        return 'Los valores se guardan en la consulta y se vuelven a mostrar cuando la abrís de nuevo. Al guardar se '
+        return 'Los valores se guardan en la consulta y se vuelven a mostrar cuando la abres de nuevo. Al guardar se '
             . 'compone el resumen de laboratorio (urea, creatinina, electrolitos, hemograma y orina), que es lo que '
             . 'imprimen el resumen médico y la evaluación pre-operatoria. Los gases, el volumen urinario, el sodio '
             . 'urinario y la creatinina calculada se guardan, pero no entran en ese resumen.';

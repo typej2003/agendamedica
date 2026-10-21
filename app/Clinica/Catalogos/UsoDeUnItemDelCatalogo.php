@@ -83,6 +83,25 @@ final class UsoDeUnItemDelCatalogo
         return new self([$texto]);
     }
 
+    /**
+     * Un concepto facturable (F9): las consultas con una pre-factura (`his_con_pre_factura`) que lo nombra por su código,
+     * en cualquiera de los registros del médico.
+     *
+     * @param  array<int,string>  $registros  los registros del médico
+     */
+    public static function motivoDeFactura(array $registros, string $codigo): self
+    {
+        $consultas = DB::table('his_con_pre_factura')
+            ->whereIn('reg_medico', $registros)
+            ->where('codigo', trim($codigo))
+            ->get(['numhistoria', 'nroconsulta'])
+            ->map(fn ($fila) => (int) $fila->numhistoria . '|' . (int) $fila->nroconsulta)
+            ->unique()
+            ->count();
+
+        return new self(self::cuando($consultas, 'consulta con pre-factura', 'consultas con pre-factura'));
+    }
+
     /** @param  array<int,string>  $registros  los registros del médico */
     public static function doctor(array $registros, int $cedula): self
     {

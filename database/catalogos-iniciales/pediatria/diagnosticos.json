@@ -1,0 +1,782 @@
+[
+ {
+  "codigo_origen": "0172",
+  "descripcion": "LINFEDEMA PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "RD MALROTADO"
+ },
+ {
+  "codigo_origen": "0523",
+  "descripcion": "VEJIGA INMADURA"
+ },
+ {
+  "codigo_origen": "0046",
+  "descripcion": "EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0048",
+  "descripcion": "INSUFICIENCIA MITRAL MODERADA"
+ },
+ {
+  "codigo_origen": "0050",
+  "descripcion": "HERNIA UMBILICAL"
+ },
+ {
+  "codigo_origen": "0530",
+  "descripcion": "REFLUJO VESICO URETERAL IZQ A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0547",
+  "descripcion": "SINDROME NEFROTICO EN DEBUT"
+ },
+ {
+  "codigo_origen": "0556",
+  "descripcion": "DOBLE SISTEMA IZQ"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "OBESIDAD"
+ },
+ {
+  "codigo_origen": "0565",
+  "descripcion": "REFLUJO VESICO URETERAL BILATERAL  YA CORREGIDO"
+ },
+ {
+  "codigo_origen": "0578",
+  "descripcion": "DIABETES MELLITUS TIPO1"
+ },
+ {
+  "codigo_origen": "0589",
+  "descripcion": "PIELONEFRITIS AGUDA"
+ },
+ {
+  "codigo_origen": "0599",
+  "descripcion": "ANEMIA DREPANOCITICA"
+ },
+ {
+  "codigo_origen": "0607",
+  "descripcion": "REFLUJO VESICO URETERAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0070",
+  "descripcion": "HERNIA DISCAL"
+ },
+ {
+  "codigo_origen": "0016",
+  "descripcion": "ENFERMEDAD DE CHAGAS"
+ },
+ {
+  "codigo_origen": "0018",
+  "descripcion": "TBC"
+ },
+ {
+  "codigo_origen": "0026",
+  "descripcion": "INSUFICIENCIA PULMONAR"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "CRISIS HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "SINDROME ANSIOSO"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "SINDROME MULTINFARTO CEREBRAL"
+ },
+ {
+  "codigo_origen": "0045",
+  "descripcion": "ANEMIA"
+ },
+ {
+  "codigo_origen": "0025",
+  "descripcion": "GASTRITIS"
+ },
+ {
+  "codigo_origen": "0035",
+  "descripcion": "PARO SINUSAL MODERADO"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "GIARDIASIS"
+ },
+ {
+  "codigo_origen": "0003",
+  "descripcion": "URTICARIA"
+ },
+ {
+  "codigo_origen": "0472",
+  "descripcion": "HIPERURICOSURIA"
+ },
+ {
+  "codigo_origen": "0479",
+  "descripcion": "HIPERFOSFATURIA"
+ },
+ {
+  "codigo_origen": "0488",
+  "descripcion": "PROTEINURIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0496",
+  "descripcion": "REFLUJO VESICO URETERAL DERECHO CORREGIDO"
+ },
+ {
+  "codigo_origen": "0509",
+  "descripcion": "MAL ROTACION ANTERIOR DE RD"
+ },
+ {
+  "codigo_origen": "0522",
+  "descripcion": "HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0529",
+  "descripcion": "MACROHEMATURIA"
+ },
+ {
+  "codigo_origen": "0537",
+  "descripcion": "HIPOSPADIA CORREGIDA"
+ },
+ {
+  "codigo_origen": "0545",
+  "descripcion": "RIÑON DERECHO HIPOTROFICO"
+ },
+ {
+  "codigo_origen": "0558",
+  "descripcion": "DISLIPIDEMIA"
+ },
+ {
+  "codigo_origen": "0566",
+  "descripcion": "ENFEMEDAD RENAL CRONICA. EST 1-2"
+ },
+ {
+  "codigo_origen": "0577",
+  "descripcion": "SINDROME HEMOLITICO UREMICO"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "FRACTURA TIBIA DERECHA"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "INSUFICIENCIA VENOSA"
+ },
+ {
+  "codigo_origen": "0586",
+  "descripcion": "REFLUJO VESICO URETERAL IZQ GRADO 2-3"
+ },
+ {
+  "codigo_origen": "0600",
+  "descripcion": "SINDROME GENETICO A/D"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "CRISIS ASMATICA"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "BRONQUIOLITIS"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "ABDOMEN AGUDO"
+ },
+ {
+  "codigo_origen": "0001",
+  "descripcion": "NIÑO SANO"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "MICROLITIASIS RENAL"
+ },
+ {
+  "codigo_origen": "0480",
+  "descripcion": "DEFICIT PONDERAL"
+ },
+ {
+  "codigo_origen": "0485",
+  "descripcion": "DOBLE SISTEMA EXCRETOR BILATERAL"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "TU PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0497",
+  "descripcion": "DOBLE SIST DERECHO"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "ENURESIS NOCTURNA SECUNDARIA"
+ },
+ {
+  "codigo_origen": "0520",
+  "descripcion": "DILATACION PIELOCALICIAL DERECHA"
+ },
+ {
+  "codigo_origen": "0536",
+  "descripcion": "DIARREA BACTERIANA"
+ },
+ {
+  "codigo_origen": "0542",
+  "descripcion": "PESO ESTACIONARIO"
+ },
+ {
+  "codigo_origen": "0552",
+  "descripcion": "HIPERTENSION ARTERIAL ESENCIAL"
+ },
+ {
+  "codigo_origen": "0563",
+  "descripcion": "VEJIGA INESTABLE"
+ },
+ {
+  "codigo_origen": "0571",
+  "descripcion": "OVARIOS POLIQUISTICOS"
+ },
+ {
+  "codigo_origen": "0580",
+  "descripcion": "URETER DERECHO ECTOPICO"
+ },
+ {
+  "codigo_origen": "0591",
+  "descripcion": "CRIPTORQUIDEA IZQ"
+ },
+ {
+  "codigo_origen": "0601",
+  "descripcion": "HEPATITIS VIRAL"
+ },
+ {
+  "codigo_origen": "0608",
+  "descripcion": "GLOMERULO NEFRITIS AGUDA"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "LARINGOTRAQUEITIS"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "DISFUNCION TUBULAR RENAL"
+ },
+ {
+  "codigo_origen": "0475",
+  "descripcion": "ANEMIA FERROPENICA"
+ },
+ {
+  "codigo_origen": "0484",
+  "descripcion": "LITIASIS RENAL"
+ },
+ {
+  "codigo_origen": "0490",
+  "descripcion": "DILATACION PEILOCALCIAL IZQ"
+ },
+ {
+  "codigo_origen": "0501",
+  "descripcion": "MEGAVEJIGA"
+ },
+ {
+  "codigo_origen": "0505",
+  "descripcion": "RIÑONES HIPOTROFICOS"
+ },
+ {
+  "codigo_origen": "0516",
+  "descripcion": "ESTRECHEZ URETRAL A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0527",
+  "descripcion": "TALLA BAJA"
+ },
+ {
+  "codigo_origen": "0535",
+  "descripcion": "DESCARTAR SINDROME NEFROTICO"
+ },
+ {
+  "codigo_origen": "0549",
+  "descripcion": "RIÑON IZQ AFUNCIONAL."
+ },
+ {
+  "codigo_origen": "0553",
+  "descripcion": "HIDRONEFROSIS DERECHA"
+ },
+ {
+  "codigo_origen": "0562",
+  "descripcion": "REFLUJO VESICO URETERAL IZQ YA SUPERADO"
+ },
+ {
+  "codigo_origen": "0581",
+  "descripcion": "QUISTE RENAL IZQ"
+ },
+ {
+  "codigo_origen": "0588",
+  "descripcion": "SINDROME DE TURNER"
+ },
+ {
+  "codigo_origen": "0594",
+  "descripcion": "RIÑON IZQUIERDO ECTOPICO"
+ },
+ {
+  "codigo_origen": "0603",
+  "descripcion": "RIÑON DERECHO MALROTADO"
+ },
+ {
+  "codigo_origen": "0245",
+  "descripcion": "ALERGIA AL YODO"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "PARASITOSIS"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "ROCEOLA"
+ },
+ {
+  "codigo_origen": "0473",
+  "descripcion": "TALLA NORMAL BAJA"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "ANTECEDENTE INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "POLIURIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0502",
+  "descripcion": "ANTECEDENTE DE GMNA"
+ },
+ {
+  "codigo_origen": "0510",
+  "descripcion": "HIPOCALCEMIA ASINTOMATICA"
+ },
+ {
+  "codigo_origen": "0521",
+  "descripcion": "UROPATIA OBSTRUCTIVA IZQ"
+ },
+ {
+  "codigo_origen": "0531",
+  "descripcion": "ESTREÑIMIENTO"
+ },
+ {
+  "codigo_origen": "0540",
+  "descripcion": "HIDRONEFROSIS BILATERAL"
+ },
+ {
+  "codigo_origen": "0551",
+  "descripcion": "ESPINA BIFIDA EN L5"
+ },
+ {
+  "codigo_origen": "0559",
+  "descripcion": "DESCARTAR ACIDOSIS TUBULAR RENAL"
+ },
+ {
+  "codigo_origen": "0572",
+  "descripcion": "SINDROME METABOLICO A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0579",
+  "descripcion": "URETEROHIDRONEFROSIS BILATERAL"
+ },
+ {
+  "codigo_origen": "0595",
+  "descripcion": "URETEROCELE IZQ"
+ },
+ {
+  "codigo_origen": "0604",
+  "descripcion": "HIPERPLASIA SUPRARENAL CONGENITA"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "SINUSITIS"
+ },
+ {
+  "codigo_origen": "0002",
+  "descripcion": "CORIZA COMUN"
+ },
+ {
+  "codigo_origen": "0004",
+  "descripcion": "CRISIS MODERADA A SEVERA DE ASMA BRONQUIAL"
+ },
+ {
+  "codigo_origen": "0474",
+  "descripcion": "DESCARTAR DISFUNCION TUBULAR RENAL"
+ },
+ {
+  "codigo_origen": "0486",
+  "descripcion": "CCA"
+ },
+ {
+  "codigo_origen": "0492",
+  "descripcion": "ENF. RENAL CRONICA EST 3"
+ },
+ {
+  "codigo_origen": "0500",
+  "descripcion": "DIVERTICULO VESICAL DERECHO"
+ },
+ {
+  "codigo_origen": "0511",
+  "descripcion": "HABITO RETENTOR"
+ },
+ {
+  "codigo_origen": "0519",
+  "descripcion": "RIÑON DERECHO HIPOTROFICO"
+ },
+ {
+  "codigo_origen": "0532",
+  "descripcion": "SINDROME NEFROTICO CORTICODEPENDIENTE"
+ },
+ {
+  "codigo_origen": "0544",
+  "descripcion": "ESPINA BIFIDA EN S1"
+ },
+ {
+  "codigo_origen": "0554",
+  "descripcion": "DESCARTAR LITIASIS OBSTRUCTIVA"
+ },
+ {
+  "codigo_origen": "0564",
+  "descripcion": "ANTECEDENTE DE HIPOSPADIA"
+ },
+ {
+  "codigo_origen": "0573",
+  "descripcion": "RIÑON IZQ MAL ROTADO"
+ },
+ {
+  "codigo_origen": "0582",
+  "descripcion": "DENGUE CLASICO"
+ },
+ {
+  "codigo_origen": "0592",
+  "descripcion": "RETENCION AGUDA DE ORINA"
+ },
+ {
+  "codigo_origen": "0602",
+  "descripcion": "RIÑON DERECHO AFUNCIONAL"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "CERVICITIS"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "MIGRAÑA"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "SINDROME CATARRAL"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "BRONQUITIS"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "ESCABIOSIS"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "ACIDOSIS TUBULAR RENAL"
+ },
+ {
+  "codigo_origen": "0487",
+  "descripcion": "LITIASIS VESICAL A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0495",
+  "descripcion": "SINDROME NEFROTICO"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "FIEBRE REUMATICA"
+ },
+ {
+  "codigo_origen": "0504",
+  "descripcion": "DESCARTAR UROPATIA"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "NEFRITIS LUPICA"
+ },
+ {
+  "codigo_origen": "0526",
+  "descripcion": "COLICO NEFRITICO"
+ },
+ {
+  "codigo_origen": "0533",
+  "descripcion": "SINDROME EDEMATOSO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0546",
+  "descripcion": "DESCARTAR INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0555",
+  "descripcion": "INCONTINENCIA DIURNA"
+ },
+ {
+  "codigo_origen": "0567",
+  "descripcion": "LITIASIS OBSTRUCTIVA EN 1/3 DISTAL DE URETER IZQ"
+ },
+ {
+  "codigo_origen": "0583",
+  "descripcion": "CICATRICES RENALES"
+ },
+ {
+  "codigo_origen": "0590",
+  "descripcion": "HIPERTENSION ARTERIAL SECUNDARIA"
+ },
+ {
+  "codigo_origen": "0605",
+  "descripcion": "COALESCENCIA DE LABIOS MENORES"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "ASMA"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "FRACTURA DE HUMERO"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "NEUMONIA"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "CEFALEA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "AMIBIASIS INTESTINAL"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "SOBREPESO"
+ },
+ {
+  "codigo_origen": "0478",
+  "descripcion": "CISTITIS"
+ },
+ {
+  "codigo_origen": "0482",
+  "descripcion": "CRISTALURIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0493",
+  "descripcion": "ENURESIS NOCTURNA"
+ },
+ {
+  "codigo_origen": "0498",
+  "descripcion": "HIDRONEFROSIS IZQ"
+ },
+ {
+  "codigo_origen": "0507",
+  "descripcion": "INMADUREZ VESICAL"
+ },
+ {
+  "codigo_origen": "0515",
+  "descripcion": "PIELOECTASIA DERECHA LEVE"
+ },
+ {
+  "codigo_origen": "0528",
+  "descripcion": "RIÑON UNICO IZQ"
+ },
+ {
+  "codigo_origen": "0538",
+  "descripcion": "UROPATIA OBSTRUCTIVA CORREGIDA"
+ },
+ {
+  "codigo_origen": "0548",
+  "descripcion": "RIÑON IZQ HIPOTROFICO"
+ },
+ {
+  "codigo_origen": "0560",
+  "descripcion": "LITIASIS VESICAL"
+ },
+ {
+  "codigo_origen": "0568",
+  "descripcion": "PELVIS EXTRARENAL IZQ"
+ },
+ {
+  "codigo_origen": "0574",
+  "descripcion": "TAQUICARDIA SINUSAL"
+ },
+ {
+  "codigo_origen": "0585",
+  "descripcion": "SINDROME DE CUSHING"
+ },
+ {
+  "codigo_origen": "0596",
+  "descripcion": "URETEROHIDRONEFROSIS IZQ."
+ },
+ {
+  "codigo_origen": "0606",
+  "descripcion": "RIÑON DERECHO POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "HIPERCALCIURIA"
+ },
+ {
+  "codigo_origen": "0481",
+  "descripcion": "DEFICIT PONDOESTATURAL"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "ESOFAGITIS"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "EDEMA AGUDO PULMONAR"
+ },
+ {
+  "codigo_origen": "0491",
+  "descripcion": "SINDROME NEFROTICO CORTICORESISTENTE"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "FRACTURA DE COLLET"
+ },
+ {
+  "codigo_origen": "0503",
+  "descripcion": "RINOSINUSITIS AGUDA"
+ },
+ {
+  "codigo_origen": "0512",
+  "descripcion": "RVU IZQ"
+ },
+ {
+  "codigo_origen": "0518",
+  "descripcion": "MICROHEMATURIA"
+ },
+ {
+  "codigo_origen": "0524",
+  "descripcion": "RIÑON UNICO DERECHO"
+ },
+ {
+  "codigo_origen": "0534",
+  "descripcion": "GMNA A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0541",
+  "descripcion": "ESTENOSIS DE UNION URETERO PIELICA BILATERAL."
+ },
+ {
+  "codigo_origen": "0557",
+  "descripcion": "RVU BILATERAL CORREGIDO"
+ },
+ {
+  "codigo_origen": "0569",
+  "descripcion": "INTOLERANCIA  A LA LACTOSA"
+ },
+ {
+  "codigo_origen": "0575",
+  "descripcion": "RINITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0584",
+  "descripcion": "RINONUSITIS AGUDA"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "COLON IRRITABLE"
+ },
+ {
+  "codigo_origen": "0593",
+  "descripcion": "PARAFIMOSIS"
+ },
+ {
+  "codigo_origen": "0597",
+  "descripcion": "ANT DE TUMOR DE WILMS"
+ },
+ {
+  "codigo_origen": "0609",
+  "descripcion": "MIELOMENINGOCELE"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "OTITIS"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "FARINGOAMIGDALITIS"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "DIARREA AGUDA"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "CONTROL NIÑA"
+ },
+ {
+  "codigo_origen": "0476",
+  "descripcion": "DILATACION PIELOCALICIAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0489",
+  "descripcion": "VULVOVAGINITIS INESPECIFICA"
+ },
+ {
+  "codigo_origen": "0499",
+  "descripcion": "PELVIS BIFIDA L5 Y S1"
+ },
+ {
+  "codigo_origen": "0508",
+  "descripcion": "SINDROME DE DOWN"
+ },
+ {
+  "codigo_origen": "0514",
+  "descripcion": "QUISTE RENAL DERECHO"
+ },
+ {
+  "codigo_origen": "0525",
+  "descripcion": "DISPLASIA FIBROSA POLIOSTOTICA"
+ },
+ {
+  "codigo_origen": "0539",
+  "descripcion": "FIMOSIS"
+ },
+ {
+  "codigo_origen": "0543",
+  "descripcion": "VEJIGA NEUROPATICA"
+ },
+ {
+  "codigo_origen": "0550",
+  "descripcion": "PELVIS EXTRARENAL DERECHA"
+ },
+ {
+  "codigo_origen": "0561",
+  "descripcion": "PUBERTAD PRECOZ"
+ },
+ {
+  "codigo_origen": "0570",
+  "descripcion": "EUUP IZQ YA CORREGIDA"
+ },
+ {
+  "codigo_origen": "0576",
+  "descripcion": "ANTECEDENTE DE FALLO RENAL AGUDO"
+ },
+ {
+  "codigo_origen": "0587",
+  "descripcion": "MEGAURETERES BILATERALES"
+ },
+ {
+  "codigo_origen": "0598",
+  "descripcion": "DIVERTICULO VESICAL IZQ,"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "SIDA"
+ }
+]

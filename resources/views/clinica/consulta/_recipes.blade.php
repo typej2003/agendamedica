@@ -43,9 +43,6 @@
     <x-ui.tarjeta titulo="Récipes de esta consulta" icono="bi-prescription2">
         <x-slot name="acciones">
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
-            @if ($vm->tieneAnterior())
-                <x-ui.anterior :url="$vm->urlAnterior('recipes')" que="los récipes" />
-            @endif
             <a class="btn btn-sm btn-outline-secondary" href="{{ $seccion->urlEntrada() }}">
                 <i class="bi bi-pencil-square" aria-hidden="true"></i> Volver al editor
             </a>
@@ -57,7 +54,6 @@
 
         @if ($seccion->estaVacia())
             <x-ui.vacio icono="bi-prescription2" titulo="Esta consulta todavía no tiene récipes">
-                El récipe se escribe en el editor: ábrelo, carga los medicamentos y guárdalo.
                 <x-slot name="acciones">
                     <a class="btn btn-primary" href="{{ $seccion->urlEntrada() }}">
                         <i class="bi bi-plus-lg" aria-hidden="true"></i> Abrir el editor
@@ -171,6 +167,8 @@
             {{-- El contador vivo de medicamentos: `consulta-recipes.js` lo mantiene al agregar y quitar. --}}
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <x-ui.estado id="recipe-contador" :tono="$contador['tono']" :icono="$contador['icono']">{{ $contador['texto'] }}</x-ui.estado>
+                {{-- «Anterior» (WEB-11.4): pone en este récipe los medicamentos del último récipe de la consulta anterior. --}}
+                <x-ui.anterior :anterior="$vm->anterior()" />
             </div>
 
             <form method="POST" action="{{ $editor['urlGuardar'] }}" id="recipe-form" data-consulta-recipe
@@ -192,9 +190,7 @@
                 </ul>
 
                 <div id="recipe-vacio" @if ($editor['filas'] !== []) hidden @endif>
-                    <x-ui.vacio icono="bi-capsule" titulo="Todavía no hay medicamentos en este récipe">
-                        Búscalos a la derecha, en tu vademécum o en tus tratamientos. Puedes agregar los que necesites.
-                    </x-ui.vacio>
+                    <x-ui.vacio icono="bi-capsule" titulo="Todavía no hay medicamentos en este récipe"></x-ui.vacio>
                 </div>
 
                 {{-- El aviso de "hay cambios sin guardar": `consulta-recipes.js` lo muestra cuando algo del

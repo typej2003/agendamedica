@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\UploadServerController;
 use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Http\Controllers\Pagos\WebhookSyPagoController;
 use App\Services\WhatsAppService;
 
 /*
@@ -168,4 +169,10 @@ Route::middleware(['auth:api', 'throttle:60,1'])->post('/whatsapp/send-reminder'
 
     return response()->json($result);
 });
+
+// **Webhook de SyPago** (2026-10-21): avisa el resultado de un cobro. Sin `auth:api` (lo llama SyPago),
+// autenticado por el token secreto del método en la URL, con throttle y con reconsulta antes de aprobar.
+Route::middleware(['throttle:60,1'])
+    ->post('/pagos/sypago/{token}', [WebhookSyPagoController::class, 'handle'])
+    ->name('pagos.webhook.sypago');
 

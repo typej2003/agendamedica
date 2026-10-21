@@ -4,7 +4,9 @@ namespace App\Actions\Catalogos;
 
 use App\Actions\Consulta\ReglasDelCatalogo;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
+use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial;
 use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
+use App\Clinica\Consulta\DosisPediatrica;
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -16,6 +18,7 @@ use InvalidArgumentException;
  *  - **El código lo da el servidor** (el mayor numérico de las filas iniciales + 1, en los dígitos del catálogo) y no se edita.
  *  - **No se repite la identidad** (el nombre normalizado, y el tipo donde lo hay) dentro del catálogo inicial.
  *  - Un campo `ref` tiene que existir en el catálogo inicial al que apunta (el examen, su tipo).
+ *  - **A qué especialidades aplica** (WEB-12.9): sin ninguna, la fila es general (`EspecialidadesDelCatalogoInicial`).
  *
  * Las filas iniciales no se sincronizan con nadie: no dejan rastro en `sync_changes`. Lo que el administrador cambie acá no modifica lo que un médico ya copió.
  */
@@ -24,11 +27,32 @@ final class GuardarFilaDeCatalogoInicial
     /**
      * @param  array<string,mixed>  $datos  `columna => valor` de los `campos` del catálogo
      * @param  int|null  $id  la fila inicial que se edita (`null` = alta)
+     * @param  array<int,int|string>|null  $especialidades  a qué especialidades aplica (`[]` = general; `null` = no se tocan, WEB-12.9)
      * @return int  el id de la fila
      *
      * @throws InvalidArgumentException con el mensaje que ve el administrador
      */
-    public function ejecutar(string $slug, array $datos, ?int $id = null): int
+    public function ejecutar(string $slug, array $datos, ?int $id = null, ?array $especialidades = null): int
+    {
+        if ($especialidades !== null) {
+            $ids = collect($especialidades)->map(fn ($e) => (int) $e)->filter()->unique();
+            if ($ids->diff(DB::table('specialties')->whereIn('id', $ids->all())->pluck('id')->map(fn ($e) => (int) $e))->isNotEmpty()) {
+                throw new InvalidArgumentException('Esa especialidad no existe.');
+            }
+        }
+
+        return DB::transaction(function () use ($slug, $datos, $id, $especialidades) {
+            $id = $this->guardarFila($slug, $datos, $id);
+
+            if ($especialidades !== null) {
+                EspecialidadesDelCatalogoInicial::asignar($slug, $id, $especialidades);
+            }
+
+            return $id;
+        });
+    }
+
+    private function guardarFila(string $slug, array $datos, ?int $id): int
     {
         $def = CatalogosIniciales::de($slug);
         $fila = [];
@@ -43,6 +67,17 @@ final class GuardarFilaDeCatalogoInicial
 
             if ($id !== null && ! $existentes->contains('id', $id)) {
                 throw new InvalidArgumentException('Esa fila no está en el catálogo inicial.');
+            }
+
+            // Destildar «por kilo» no borra una nota vieja de la dosificación (el escritorio trae algunas): sólo quita el `SI`.
+            if ($id !== null) {
+                $actual = $existentes->firstWhere('id', $id);
+                foreach ($def['campos'] as $columna => $campo) {
+                    $previo = trim((string) ($actual->{$columna} ?? ''));
+                    if ($campo[1] === 'porkilo' && $fila[$columna] === null && $previo !== '' && strtoupper($previo) !== DosisPediatrica::POR_KILO) {
+                        $fila[$columna] = $previo;
+                    }
+                }
             }
 
             $clave = fn ($f) => $this->identidad($def, (array) $f);
@@ -77,6 +112,11 @@ final class GuardarFilaDeCatalogoInicial
     /** @return mixed el valor listo para guardar */
     private function valor(array $def, string $columna, string $rotulo, string $tipo, int $max, bool $requerido, bool $mayusculas, $crudo)
     {
+        if ($tipo === 'porkilo') {
+            // La casilla «La dosis es por kilo»: `SI` es lo que lee `DosisPediatrica` (y lo que guarda el escritorio).
+            return filter_var($crudo, FILTER_VALIDATE_BOOLEAN) ? DosisPediatrica::POR_KILO : null;
+        }
+
         if ($tipo === 'marca') {
             return filter_var($crudo, FILTER_VALIDATE_BOOLEAN) ? true : null;
         }
@@ -99,6 +139,18 @@ final class GuardarFilaDeCatalogoInicial
                 }
 
                 return round((float) $numero, 2);
+
+            case 'decimal':
+                // Los números de la dosis por kilo: las mismas reglas que el ABM del médico (`CamposDelMedicamento`).
+                $numero = str_replace(',', '.', $texto);
+                if (! is_numeric($numero)) {
+                    throw new InvalidArgumentException($rotulo . ' tiene que ser un número.');
+                }
+                if ((float) $numero < 0) {
+                    throw new InvalidArgumentException($rotulo . ' no puede ser negativo.');
+                }
+
+                return round((float) $numero, 3);
 
             case 'ref':
                 $destino = CatalogosIniciales::de($def['refs'][$columna]);

@@ -9,6 +9,7 @@ use App\Models\Specialty;
 use App\Models\User;
 use App\Services\CuentaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
@@ -190,11 +191,12 @@ class EspecialidadesDelMedicoTest extends TestCase
 
         // Repetida en el formulario: una sola fila en el pivote.
         $cambios = $cuentas->asignarEspecialidades($r['medico'], [(string) $esp->id, (string) $esp->id, $esp->id]);
-        $this->assertSame(['asignadas' => 1, 'quitadas' => 0, 'postgradosQuitados' => 0], $cambios);
+        // `catalogoInicial` es la copia automática del catálogo inicial (WEB-12.9): la cubre CatalogoInicialPorEspecialidadTest.
+        $this->assertSame(['asignadas' => 1, 'quitadas' => 0, 'postgradosQuitados' => 0], Arr::except($cambios, 'catalogoInicial'));
         $this->assertSame(1, $r['medico']->specialties()->count());
 
         // Volver a guardar lo mismo no cambia nada (y la pantalla lo dice).
-        $this->assertSame(['asignadas' => 0, 'quitadas' => 0, 'postgradosQuitados' => 0], $cuentas->asignarEspecialidades($r['medico'], [$esp->id]));
+        $this->assertSame(['asignadas' => 0, 'quitadas' => 0, 'postgradosQuitados' => 0, 'catalogoInicial' => null], $cuentas->asignarEspecialidades($r['medico'], [$esp->id]));
 
         $this->actingAs($this->admin());
         Livewire::test(Especialidades::class)

@@ -166,6 +166,9 @@ final class ConfirmarReservaPublica
             'cita' => $cita,
             'opcion' => $opcion,
             'paciente' => $paciente,
+            // Para ofrecer la cuenta de paciente en el comprobante, con los datos ya escritos.
+            'cedula' => $datos['cedula'],
+            'telefono' => $datos['telefono'],
         ];
     }
 

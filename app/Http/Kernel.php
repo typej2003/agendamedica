@@ -40,6 +40,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\UserOnlineMiddleware::class, // Middleware para marcar al usuario como activo
             \App\Http\Middleware\EnsureAccountActive::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,
+            // Última actividad web de la cuenta (sección "API Keys"): se escribe en la cola, no en el request.
+            \App\Http\Middleware\RegistrarActividadWeb::class,
         ],
 
         'api' => [

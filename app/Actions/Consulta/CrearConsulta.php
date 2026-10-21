@@ -4,6 +4,7 @@ namespace App\Actions\Consulta;
 
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\Medico;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -29,10 +30,18 @@ use Illuminate\Support\Facades\DB;
  *    vacía la fila del app y la del escritorio se encuentran por `numhistoria` + `nroconsulta` sin
  *    pisarse.
  *
- * Las columnas son las que el sync ya escribía —`reg_medico`, `numhistoria`, `nroconsulta` y `fecha`—
+ * **El doctor de la consulta** (2026-10-20) lo trae quien la abre: la web pasa el médico del contexto —el
+ * doctor que está atendiendo— y **el sync del móvil el médico autenticado** (`CreacionesClinicas`, el dueño de
+ * la sesión del teléfono), así que las dos superficies sellan la consulta con su doctor. Se escribe en las
+ * **dos** columnas que entienden las dos superficies: `medico_id` (el `medicos.id`, la fuente de verdad de
+ * `App\Clinica\Impresion\MedicoQueFirma`) y `medico` (la `clave` de `evolucion` que sigue leyendo el
+ * escritorio, resuelta con `Medico::claveDeEvolucion()` sobre sus registros de trabajo, la misma de la Fase 2).
+ * Sin médico —el parámetro sigue siendo opcional para quien no lo tenga a mano— la consulta nace con las dos
+ * en `null`, como antes, y el firmante cae en la clave o en el médico del contexto.
+ *
+ * Las demás columnas son las que el sync ya escribía —`reg_medico`, `numhistoria`, `nroconsulta` y `fecha`—
  * sobre la tabla legada real, para que el escritorio la baje como si la hubiera creado él (ver
- * PENDIENTES-POWERBUILDER.md). `medico` (la clave de `evolucion`) queda nula, igual que en el sync: el
- * médico de la consulta se identifica por `reg_medico`.
+ * PENDIENTES-POWERBUILDER.md).
  *
  * El correlativo se mide sobre el `reg_medico` **de la historia** y no sobre todos los registros del
  * médico: una consulta cuelga de una historia, y la historia tiene un solo registro. El resultado es el
@@ -44,12 +53,18 @@ final class CrearConsulta
     /**
      * @param  Historia  $historia  la historia a la que cuelga la consulta (ya resuelta y del médico)
      * @param  CarbonInterface  $fecha  el **día de la consulta**, en la zona del consultorio
+     * @param  Medico|null  $medico  **el doctor que la atiende** (el del contexto de la web): queda escrito en
+     *                               `medico_id` y, como clave legacy, en `medico`. Sin él, la consulta nace sin doctor.
      */
-    public function ejecutar(Historia $historia, CarbonInterface $fecha): Consulta
+    public function ejecutar(Historia $historia, CarbonInterface $fecha, ?Medico $medico = null): Consulta
     {
         $numhistoria = (int) $historia->numhistoria;
 
-        return DB::transaction(function () use ($historia, $numhistoria, $fecha) {
+        // La clave legacy es la del doctor en cualquiera de sus registros: la fila de `evolucion` del médico
+        // vive bajo su registro, no necesariamente bajo el del consultorio donde atiende (Fase 2).
+        $clave = $medico === null ? null : $medico->claveDeEvolucion($medico->registrosDeTrabajo());
+
+        return DB::transaction(function () use ($historia, $numhistoria, $fecha, $medico, $clave) {
             $ultima = Consulta::where('numhistoria', $numhistoria)
                 ->where('reg_medico', $historia->reg_medico)
                 ->max('nroconsulta');
@@ -60,6 +75,8 @@ final class CrearConsulta
                 'nroconsulta' => ((int) $ultima) + 1,
                 // La fecha se guarda como `Y-m-d` (el modelo la castea a `date` y la escribe con hora).
                 'fecha' => $fecha->toDateString(),
+                'medico_id' => $medico?->id,
+                'medico' => $clave,
             ]);
         });
     }

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\ActividadWebRegistrada;
 use App\Events\EscritorioSincronizo;
 use App\Events\MedicoRegistrado;
+use App\Listeners\GuardarUltimaActividadWeb;
 use App\Listeners\OtorgarAnioPowerBuilder;
 use App\Listeners\OtorgarServicioDePrueba;
 use Illuminate\Auth\Events\Registered;
@@ -28,6 +30,10 @@ class EventServiceProvider extends ServiceProvider
         ],
         EscritorioSincronizo::class => [
             OtorgarAnioPowerBuilder::class,
+        ],
+        // Última actividad web (sección "API Keys"): el listener es `ShouldQueue`.
+        ActividadWebRegistrada::class => [
+            GuardarUltimaActividadWeb::class,
         ],
     ];
 

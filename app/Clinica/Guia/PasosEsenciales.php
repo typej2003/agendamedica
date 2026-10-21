@@ -11,7 +11,8 @@ use App\Models\Office;
  * por el menos dependiente (sede → consultorio → horario). Es la misma exigencia que `CatalogoDeMedicos` le hace al
  * portal de reservas (consultorio activo en sede activa, con al menos un bloque); acá se redacta como pasos.
  *
- * Sin HTTP: devuelve `null` cuando no falta nada.
+ * Sin HTTP: devuelve `null` cuando no falta nada. La sede y el consultorio se cargan en la misma pantalla («Sedes y
+ * consultorios», 2026-10-20): el enlace abre directamente su panel lateral.
  */
 final class PasosEsenciales
 {
@@ -25,7 +26,7 @@ final class PasosEsenciales
 
         if (! MedicalCenter::activos()->exists()) {
             return new PasoEsencial(
-                'sede', 'clinica.sedes', [],
+                'sede', 'clinica.sedes', ['panel' => 'sede'],
                 'Todavía no hay ninguna sede registrada.',
                 'Registra el lugar donde atiendes',
                 'Todavía no hay una sede registrada. ¿Quieres registrar el lugar donde atiendes ahora?',
@@ -39,7 +40,7 @@ final class PasosEsenciales
 
         if ($consultorios->isEmpty()) {
             return new PasoEsencial(
-                'consultorio', 'clinica.consultorios', [],
+                'consultorio', 'clinica.sedes', ['panel' => 'consultorio'],
                 'No has agregado ningún consultorio.',
                 'Agrega tu primer consultorio',
                 'No has agregado ningún consultorio. ¿Quieres agregarlo ahora?',

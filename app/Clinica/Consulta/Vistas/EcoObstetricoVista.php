@@ -140,7 +140,7 @@ class EcoObstetricoVista
         if ($this->furSugerida !== null) {
             $ayuda .= ' La FUR y la gesta se completan con las del control prenatal de la historia ('
                 . 'FUR ' . $this->furSugerida . ($this->gestaSugerida !== null ? ', gesta ' . $this->gestaSugerida : '')
-                . ') si no las escribís acá.';
+                . ') si no las escribes acá.';
         }
 
         return $ayuda;

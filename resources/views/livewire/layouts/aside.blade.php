@@ -40,8 +40,8 @@
             <li class="app-sidebar-titulo link-text">Administración</li>
 
             <li class="nav-item">
-                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.cuentas')) aria-current="page" @endif title="Usuarios">
+                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas', 'admin.medicos.sedes*') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.cuentas', 'admin.medicos.sedes*')) aria-current="page" @endif title="Usuarios">
                     <i class="bi bi-people-fill" aria-hidden="true"></i>
                     <span class="link-text">Usuarios</span>
                 </a>
@@ -72,6 +72,20 @@
                    @if (request()->routeIs('admin.servicios')) aria-current="page" @endif title="Planes y servicios">
                     <i class="bi bi-card-checklist" aria-hidden="true"></i>
                     <span class="link-text">Planes y servicios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.metodos-pago') }}" class="nav-link {{ request()->routeIs('admin.metodos-pago') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.metodos-pago')) aria-current="page" @endif title="Métodos de pago">
+                    <i class="bi bi-credit-card" aria-hidden="true"></i>
+                    <span class="link-text">Métodos de pago</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif title="Solicitudes de médicos">
+                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                    <span class="link-text">Solicitudes de médicos</span>
                 </a>
             </li>
             <li class="nav-item">

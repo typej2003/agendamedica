@@ -18,6 +18,11 @@ use Throwable;
  * (`RecipeFormatoController`, "Formato del récipe") y la pantalla "Formato de impresión" de la web. Las reglas de
  * validación y la limpieza de `elementos` viven en `ReglasDelFormato`.
  *
+ * Se guarda bajo el **registro del formato** del médico (`Medico::registroDelFormato()`): su registro principal y,
+ * si la ficha es un **centro médico** (Fase 5 del cambio de `reg_medico`), el propio del centro, que es el que lleva
+ * su membrete. La firma y el sello de un centro no se usan nunca para imprimir —la firma es siempre la del doctor que
+ * atendió—, pero la fila del centro puede tenerlos y no se borran: la pantalla no los ofrece.
+ *
  * ## Actualización parcial
  *
  * Lo que no viene queda como estaba, **también dentro de `elementos`**: mandar sólo `elementos[rif][negrita]` no resetea
@@ -163,7 +168,7 @@ final class GuardarFormatoDelRecipe
 
     private function registroDe(Medico $medico): string
     {
-        $registro = $medico->regMedicoPrincipal();
+        $registro = $medico->registroDelFormato();
 
         if ($registro === null || trim($registro) === '') {
             throw new InvalidArgumentException('Este médico no tiene un número de registro principal bajo el cual guardar el formato.');

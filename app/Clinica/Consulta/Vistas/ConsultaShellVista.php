@@ -131,6 +131,8 @@ final class ConsultaShellVista
         // Las secciones de la consulta que encienden los **postgrados** del médico (2026-10-19), resueltas por el
         // contexto: el catálogo las inserta en el lugar del legado.
         private array $seccionesPostgrados = [],
+        // La casilla «Anterior» de la sección abierta (WEB-11.4), o `null`.
+        private ?AnteriorVista $anterior = null,
     ) {
     }
 
@@ -203,18 +205,13 @@ final class ConsultaShellVista
         return $this->avisarAlertas && $this->hayAlertas();
     }
 
-    /** ¿Esta consulta tiene una anterior en su historia? Es lo que ofrece el botón «Anterior» (sólo desde la 2.ª consulta). */
-    public function tieneAnterior(): bool
+    /**
+     * La casilla «Anterior» de la sección abierta (WEB-11.4): `null` en la primera consulta de la historia o en una sección que no la
+     * tiene. La arma el controlador con `AnteriorVista::deLaSeccion()`.
+     */
+    public function anterior(): ?AnteriorVista
     {
-        return $this->consultasDelPaciente !== []
-            && $this->consultaActual !== null
-            && (int) $this->consultasDelPaciente[0]['id'] !== $this->consultaActual;
-    }
-
-    /** La URL de «Anterior» para copiar `motivos`, `diagnosticos` o `recipes` de la consulta anterior (WEB-11.4). */
-    public function urlAnterior(string $que): string
-    {
-        return rtrim((string) $this->urlConsulta, '/') . '/anterior/' . $que;
+        return $this->anterior;
     }
 
     /** ¿Hay más de una consulta en la historia? (Con una sola, el navegador no se pinta.) */

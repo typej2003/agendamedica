@@ -213,7 +213,7 @@ class TourDeLaPantallaWebTest extends TestCase
             'agenda'       => [route('clinica.agenda'), '[data-tour=agenda-nueva]'],
             'consulta'     => [route('clinica.consulta', $consulta->id), '[data-tour=consulta-guardar]'],
             'catalogos'    => [route('clinica.catalogos.plantillas-texto'), '[data-tour=menu-plantillas-de-texto]'],
-            'consultorios' => [route('clinica.consultorios'), '[data-tour=consultorios-alta]'],
+            'consultorios' => [route('clinica.sedes'), '[data-tour=consultorios-alta]'],
         ];
 
         foreach ($pantallas as $pantalla => [$url, $selector]) {
@@ -258,8 +258,8 @@ class TourDeLaPantallaWebTest extends TestCase
         $this->assertStringContainsString('data-tour="agenda-barra"', $agenda);
         $this->assertStringContainsString('data-tour="agenda-nueva"', $agenda);
 
-        $consultorios = $this->conContexto($user, $medico, $gineco)->get(route('clinica.consultorios'))->assertOk()->getContent();
-        foreach (['[data-tour=consultorios-lista] tbody tr td:first-child', '[data-tour=consultorios-bloques]', '[data-tour=consultorios-alta]'] as $selector) {
+        $consultorios = $this->conContexto($user, $medico, $gineco)->get(route('clinica.sedes'))->assertOk()->getContent();
+        foreach (['[data-tour=sedes-nueva]', '[data-tour=consultorios-lista] .sede-consultorio', '[data-tour=consultorios-bloques]', '[data-tour=consultorios-alta]'] as $selector) {
             $this->assertStringContainsString('data-selector="' . $selector . '"', $consultorios);
         }
         $this->assertStringContainsString('data-tour="consultorios-lista"', $consultorios);
@@ -282,7 +282,7 @@ class TourDeLaPantallaWebTest extends TestCase
         $agenda = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
         $this->assertStringContainsString('data-pantalla="agenda"', $agenda);
 
-        $consultorios = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.consultorios'))->assertOk()->getContent();
+        $consultorios = $this->conContexto($secretaria, $medico, $gineco)->get(route('clinica.sedes'))->assertOk()->getContent();
         $this->assertStringContainsString('data-pantalla="consultorios"', $consultorios);
 
         // Los tours que no son suyos no se le pintan ni se pueden marcar.

@@ -64,7 +64,7 @@ class ImagenesEstadoCommand extends Command
             $this->table(['Tabla.columna', 'Referencias', 'Subidas', 'Omitidas', 'Pendientes', 'Peso subido'], $tabla);
             $this->line($totales['pendientes'] === 0
                 ? 'Sin pendientes: la subida de este consultorio terminó.'
-                : "Faltan {$totales['pendientes']} por subir: volvé a correr subir-imagenes en la PC del consultorio.");
+                : "Faltan {$totales['pendientes']} por subir: vuelve a correr subir-imagenes en la PC del consultorio.");
         }
 
         if (! $hubo && $this->option('todos')) {

@@ -4,6 +4,7 @@ namespace App\Actions\Catalogos;
 
 use App\Actions\Consulta\ReglasDelCatalogo;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
+use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial;
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use App\Sync\RegistroDeCambios;
 use Illuminate\Support\Collection;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  *    padre. Una fila cuya dependencia no existe en el catálogo inicial **se omite** y se informa, no se copia a medias.
  *  - Cada fila copiada anota su `created` en `sync_changes` con `source = web`: es lo que impide que la siguiente subida del escritorio, que reemplaza las tablas
  *    sin clave (`sin_clave_con_altas_del_app`: tratamientos, motivos de cita, plantillas), borre lo que se copió.
+ *  - **Por especialidad** (WEB-12.9): con `$especialidades`, sólo se ofrecen las filas generales y las marcadas con alguna de esas especialidades
+ *    (`EspecialidadesDelCatalogoInicial`). Las dependencias no se filtran: un tratamiento de ginecología se lleva su medicamento aunque sea de otra.
  *  - Nunca modifica ni borra filas iniciales ni de otro consultorio.
  */
 final class CopiarCatalogoInicial
@@ -33,15 +36,17 @@ final class CopiarCatalogoInicial
      * Las filas iniciales que el médico todavía no tiene (las **novedades**), una por identidad.
      *
      * @param  array<int,string>  $registros  todos los `reg_medico` del médico (el correlativo y la identidad se miden sobre ellos)
+     * @param  array<int,int>|null  $especialidades  las del médico (`null` = sin filtrar, todo el catálogo inicial)
      * @return Collection<int,object>
      */
-    public function novedades(string $slug, array $registros): Collection
+    public function novedades(string $slug, array $registros, ?array $especialidades = null): Collection
     {
         $this->memo = [];
         $def = CatalogosIniciales::de($slug);
         $propias = $this->clavesDelMedico($def, $registros);
+        $iniciales = $especialidades === null ? $this->iniciales($def) : EspecialidadesDelCatalogoInicial::filtrar($slug, $this->iniciales($def), $especialidades);
 
-        return $this->iniciales($def)
+        return $iniciales
             ->unique(fn ($fila) => $this->clave($def, $fila, true, $registros))
             ->reject(fn ($fila) => isset($propias[$this->clave($def, $fila, true, $registros)]))
             ->values();
@@ -49,15 +54,16 @@ final class CopiarCatalogoInicial
 
     /**
      * @param  array<int,string>  $registros
+     * @param  array<int,int>|null  $especialidades  las del médico (`null` = sin filtrar)
      * @return array{copiadas:int, dependencias:int, hijas:int, omitidas:array<int,string>}
      */
-    public function ejecutar(string $slug, string $regMedico, array $registros): array
+    public function ejecutar(string $slug, string $regMedico, array $registros, ?array $especialidades = null): array
     {
         $registros = array_values(array_unique(array_merge($registros, [$regMedico])));
         $resultado = ['copiadas' => 0, 'dependencias' => 0, 'hijas' => 0, 'omitidas' => []];
 
-        return DB::transaction(function () use ($slug, $regMedico, $registros, &$resultado) {
-            foreach ($this->novedades($slug, $registros) as $fila) {
+        return DB::transaction(function () use ($slug, $regMedico, $registros, $especialidades, &$resultado) {
+            foreach ($this->novedades($slug, $registros, $especialidades) as $fila) {
                 $this->memo = [];
                 $this->insertar(CatalogosIniciales::de($slug), $fila, $regMedico, $registros, $resultado, false);
             }
