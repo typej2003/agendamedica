@@ -32,13 +32,13 @@ class Comentario extends Model
     public const MAXIMO_IMAGENES = 3;
 
     /** Qué nos está contando. */
-    public const BUG = 'bug';
     public const SUGERENCIA = 'sugerencia';
+    public const BUG = 'bug';
     public const CARENCIA = 'carencia';
 
     public const TIPOS = [
-        self::BUG => 'Un error',
         self::SUGERENCIA => 'Una sugerencia',
+        self::BUG => 'Un error',
         self::CARENCIA => 'Algo que le falta',
     ];
 
