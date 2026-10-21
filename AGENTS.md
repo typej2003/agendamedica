@@ -789,6 +789,33 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   `/clinica/consultorios` (la sede, `medical_centers`, se crea en `/clinica/sedes`). Verificación en Chrome:
   `../.agent-tools/verificar-menu-por-especialidad-web.js`. En una base ya desplegada, el paso del final del
   despliegue es **`php artisan especialidades:sembrar`** (ver "Cómo verificar cambios").
+- **Sedes del médico** (`/admin/medicos/{medico}/sedes`, 2026-10-20; misma ruta-archivo `routes/web/cuentas.php`,
+  Root o Administrador): el administrador ayuda a configurar dónde atiende un médico, **en profundidad** y con migas
+  (Médicos › médico › Sedes › sede › Consultorios › consultorio › Horarios). Se entra con el botón **«Ver sedes»** de
+  cada médico en `/admin/cuentas`. Tres componentes Livewire en `App\Http\Livewire\Admin\Sedes\` (trait
+  `ConfiguraUnMedico`: permiso en `hydrate()`) y vistas en `livewire/admin/sedes/`:
+  `SedesDelMedico` (`admin.medicos.sedes`), `ConsultoriosDeLaSede` (`admin.medicos.sedes.consultorios`,
+  `/{sede}/consultorios`) y `HorariosDelConsultorio` (`admin.medicos.sedes.consultorios.horarios`,
+  `/{sede}/consultorios/{consultorio}/horarios`). **Las reglas son las Actions de `/clinica`, sin cambios**:
+  `GuardarSede`, `GuardarConsultorio` y `GuardarBloqueHorario` (`ejecutar`/`ejecutarVarios`); las validaciones de
+  formato se copiaron de los controladores de `/clinica` (viven ahí, no en las Actions). **El tenant** es el
+  `reg_medico` del médico de la ruta y la lectura está en `App\Services\Admin\SedesDelMedico`, con un criterio
+  **estricto** (`reg_medico` y, por `medico_id`, sólo las filas sin registro): `Office::scopeDelMedico` también trae
+  los consultorios **de un centro** que creó ese doctor, y editarlos desde su ficha los habría mudado de tenant
+  (`GuardarConsultorio` reescribe `reg_medico`). Una ficha sin `reg_medico` no ofrece nada (404 en las acciones).
+  Qué hace cada nivel: **Sedes** (la sede es del catálogo de la clínica): «Agregar» elige una sede existente o
+  registra una nueva **y** su primer consultorio (sin consultorio la sede no es «del médico»), en transacción;
+  «Editar» cambia la ficha para todos y avisa cuántos otros médicos atienden ahí (le pasa a `GuardarSede` el
+  `activo` actual: sin él, la Action reactiva); «Quitar» **da de baja los consultorios del médico** en esa sede
+  (`activo = false`), dice cuántas citas tiene ahí desde hoy y no toca la sede. **Consultorios**: alta y edición
+  por `GuardarConsultorio` (editar conserva el `activo` y el `medico_id` de la fila), «Quitar» = dar de baja y
+  «Reactivar»; en una sede desactivada no se agrega ni se edita (la Action sólo acepta sedes activas).
+  **Horarios**: alta de uno o varios días (todo o nada), edición y «Quitar» que **borra** el bloque como en
+  `/clinica` (el modelo deja el rastro en `sync_changes`, con el usuario). No hay bitácora propia del panel:
+  `offices` y `medical_centers` no dejan rastro (tampoco desde `/clinica`). Nada se borra en cascada. Tests:
+  `tests/Feature/SedesDelMedicoAdminTest.php` (17); verificación en Chrome:
+  `../.agent-tools/verificar-sedes-admin-web.js` (crea una sede y dos consultorios en el primer médico del
+  listado, y no los borra). **Sin migraciones.**
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y

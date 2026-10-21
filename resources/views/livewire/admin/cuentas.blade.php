@@ -114,6 +114,13 @@
                                         <i class="bi bi-pencil-square me-1"></i> Editar
                                     </button>
 
+                                    {{-- Dónde atiende: sedes → consultorios → horarios y cupos (`admin.medicos.sedes`). --}}
+                                    @if ($pestana === 'medicos')
+                                        <a href="{{ route('admin.medicos.sedes', $fila) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Ver sedes
+                                        </a>
+                                    @endif
+
                                     @if ($u || $m)
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"

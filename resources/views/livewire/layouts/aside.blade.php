@@ -40,8 +40,8 @@
             <li class="app-sidebar-titulo link-text">Administración</li>
 
             <li class="nav-item">
-                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.cuentas')) aria-current="page" @endif title="Usuarios">
+                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas', 'admin.medicos.sedes*') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.cuentas', 'admin.medicos.sedes*')) aria-current="page" @endif title="Usuarios">
                     <i class="bi bi-people-fill" aria-hidden="true"></i>
                     <span class="link-text">Usuarios</span>
                 </a>
