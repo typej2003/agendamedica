@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Livewire\Admin\MetodosPago;
+use App\Models\ConfiguracionPago;
 use App\Models\MetodoPago;
 use App\Models\TasaDeCambio;
 use App\Models\User;
@@ -206,6 +207,35 @@ class MetodosPagoAdminTest extends TestCase
             ->set('tasa', '0')
             ->call('guardarTasa')
             ->assertHasErrors('tasa');
+    }
+
+    public function test_la_tasa_se_puede_sincronizar_desde_bcv(): void
+    {
+        Http::fake(['*' => Http::response('<html><body><div id="dolar"><strong>36,1234</strong></div></body></html>', 200)]);
+
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->call('sincronizarTasaBcv')
+            ->assertHasNoErrors();
+
+        $tasa = TasaDeCambio::actual();
+
+        $this->assertNotNull($tasa);
+        $this->assertSame(TasaDeCambio::BCV, $tasa->origen);
+        $this->assertSame('36.123400', (string) $tasa->tasa);
+    }
+
+    public function test_el_origen_de_la_tasa_se_guarda(): void
+    {
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->set('tasaOrigen', ConfiguracionPago::TASA_MANUAL)
+            ->call('guardarOrigenTasa')
+            ->assertHasNoErrors();
+
+        $this->assertSame(ConfiguracionPago::TASA_MANUAL, ConfiguracionPago::actual()->tasa_origen);
     }
 
     public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void

@@ -16,10 +16,19 @@ class ConfiguracionPago extends Model
     public const MONEDA_PLATAFORMA = 'USD';
     public const MONEDA_LIQUIDACION = 'VES';
 
+    /** De dónde sale la tasa VES/USD. */
+    public const TASA_MANUAL = 'manual';
+    public const TASA_BCV = 'bcv';
+
+    public const TASAS = [
+        self::TASA_MANUAL => 'Manual (la carga el administrador)',
+        self::TASA_BCV => 'Automática (Banco Central de Venezuela)',
+    ];
+
     protected $table = 'configuracion_pagos';
 
     protected $fillable = [
-        'moneda_plataforma', 'moneda_liquidacion', 'liquidacion_dias', 'liquidacion_minima_usd_e2',
+        'moneda_plataforma', 'moneda_liquidacion', 'tasa_origen', 'liquidacion_dias', 'liquidacion_minima_usd_e2',
         'vigencia_tasa_minutos', 'aplica_comision_metodo_en_citas_online',
     ];
 
@@ -37,10 +46,17 @@ class ConfiguracionPago extends Model
             ?? static::create([
                 'moneda_plataforma' => self::MONEDA_PLATAFORMA,
                 'moneda_liquidacion' => self::MONEDA_LIQUIDACION,
+                'tasa_origen' => self::TASA_BCV,
                 'liquidacion_dias' => 1,
                 'liquidacion_minima_usd_e2' => 0,
                 'vigencia_tasa_minutos' => (int) config('pagos.vigencia_pago_minutos', 15),
                 'aplica_comision_metodo_en_citas_online' => false,
             ]);
+    }
+
+    /** ¿La tasa la sincroniza el comando desde el BCV? */
+    public function sincronizaLaTasa(): bool
+    {
+        return $this->tasa_origen === self::TASA_BCV;
     }
 }

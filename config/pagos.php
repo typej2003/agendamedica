@@ -9,8 +9,8 @@ return [
     |
     | Lo que no se configura desde el panel: el host por defecto de SyPago y el
     | interruptor de TLS. Las credenciales y la cuenta se cargan desde
-    | `/admin/metodos-pago` y viven cifradas en la base. La tasa VES/USD también
-    | se carga desde el panel (`tasas_de_cambio`).
+    | `/admin/metodos-pago` y viven cifradas en la base. La tasa VES/USD se
+    | carga desde el panel (`tasas_de_cambio`) o la sincroniza `tasas:bcv`.
     |
     */
 
@@ -20,6 +20,25 @@ return [
         // El host de SyPago usa un certificado que en el ejemplo funcional de DonDemand se
         // salta. Se deja configurable: en producción, si el certificado es válido, poner true.
         'verificar_tls' => (bool) env('SYPAGO_VERIFICAR_TLS', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tasa oficial del BCV
+    |--------------------------------------------------------------------------
+    |
+    | El comando `tasas:bcv` baja la página del Banco Central y lee el valor del
+    | dólar (`#dolar strong`). No se configura desde el panel: la URL y el TLS
+    | son del entorno. La política de si la tasa es automática o manual vive en
+    | `configuracion_pagos.tasa_origen`.
+    |
+    */
+    'bcv' => [
+        'url' => env('BCV_URL', 'https://www.bcv.org.ve'),
+        // El certificado del BCV suele fallar en servidores con un CA viejo (cURL 60); el ejemplo de
+        // DonDemand lo salta. Se deja configurable: si el servidor tiene el CA al día, poner true.
+        'verificar_tls' => (bool) env('BCV_VERIFICAR_TLS', false),
+        'timeout' => (int) env('BCV_TIMEOUT', 20),
     ],
 
     // Topes de seguridad para que las cuentas en centavos no desborden un entero de 64 bits.

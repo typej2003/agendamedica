@@ -214,6 +214,41 @@
             </div>
         </div>
 
+        <div class="card mt-3">
+            <div class="card-header bg-white py-3">
+                <strong>Origen de la tasa</strong>
+                <span class="text-muted small ms-2">El BCV publica el valor oficial del dólar; la tasa manual es para fijarlo a propósito.</span>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-end g-3">
+                    <div class="col-md-5">
+                        <label class="form-label" for="tasa_origen">¿Quién actualiza la tasa?</label>
+                        <select id="tasa_origen" class="form-select" wire:model.defer="tasaOrigen">
+                            @foreach ($origenesTasa as $clave => $etiqueta)
+                                <option value="{{ $clave }}">{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-7 d-flex flex-wrap gap-2">
+                        <button wire:click="guardarOrigenTasa" class="btn btn-primary btn-sm">
+                            <i class="bi bi-check2 me-1"></i> Guardar origen
+                        </button>
+                        <button wire:click="sincronizarTasaBcv" class="btn btn-outline-secondary btn-sm"
+                                wire:loading.attr="disabled" wire:target="sincronizarTasaBcv">
+                            <i class="bi bi-arrow-repeat me-1"></i> Sincronizar ahora
+                        </button>
+                    </div>
+                </div>
+                <p class="form-text mb-0 mt-2">
+                    @if ($tasaOrigen === \App\Models\ConfiguracionPago::TASA_BCV)
+                        Se actualiza sola cada 30 minutos (5:00 a 21:00, hora de Caracas) y solo guarda cuando el BCV publica un valor distinto.
+                    @else
+                        La tasa no se actualiza sola: la cargás con «Nueva tasa». «Sincronizar ahora» la trae igual, como excepción.
+                    @endif
+                </p>
+            </div>
+        </div>
+
         <div class="alert alert-light border small mt-3 mb-0">
             La plataforma lleva sus libros en <strong>{{ $configuracion->moneda_plataforma }}</strong> y liquida a los
             médicos en <strong>{{ $configuracion->moneda_liquidacion }}</strong>.

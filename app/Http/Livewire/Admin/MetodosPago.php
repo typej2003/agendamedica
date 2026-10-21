@@ -9,17 +9,19 @@ use App\Models\TasaDeCambio;
 use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Centavos;
 use App\Pagos\ClienteSyPago;
+use App\Pagos\Tasas\TasaBcv;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Throwable;
 
 /**
  * **Métodos de pago de la plataforma** (`/admin/metodos-pago`): lo que usa Doctorisimo para cobrar los
  * planes y, a futuro, para prestarle un canal al médico que no tiene el suyo.
  *
  * Dos pestañas: `metodos` (SyPago y manual, con sus credenciales cifradas y su cuenta) y `tasa` (la
- * VES/USD manual, con historial). El cobro en sí no vive acá: esto sólo deja el método configurado y
- * probado.
+ * VES/USD manual o automática desde el BCV, con historial). El cobro en sí no vive acá: esto sólo deja el
+ * método configurado y probado.
  *
  * Como `Servicios` y `ApiKeys`, `hydrate()` vuelve a comprobar el permiso en cada acción de Livewire.
  */
@@ -60,12 +62,14 @@ class MetodosPago extends Component
 
     // Tasa
     public $tasa = '';
+    public $tasaOrigen = ConfiguracionPago::TASA_MANUAL;
 
     public function mount()
     {
         $this->autorizar();
         $this->host = (string) config('pagos.sypago.host');
         $this->tasa = (string) (TasaDeCambio::actual()?->tasa ?? '');
+        $this->tasaOrigen = ConfiguracionPago::actual()->tasa_origen;
     }
 
     public function hydrate()
@@ -354,6 +358,44 @@ class MetodosPago extends Component
         $this->cerrarModal();
     }
 
+    /** Guarda si la tasa se sincroniza sola desde el BCV o la fija el administrador. */
+    public function guardarOrigenTasa(): void
+    {
+        $this->validate([
+            'tasaOrigen' => ['required', Rule::in(array_keys(ConfiguracionPago::TASAS))],
+        ], [], ['tasaOrigen' => 'origen de la tasa']);
+
+        ConfiguracionPago::actual()->update(['tasa_origen' => $this->tasaOrigen]);
+
+        session()->flash('message', $this->tasaOrigen === ConfiguracionPago::TASA_BCV
+            ? 'La tasa se va a sincronizar automáticamente desde el BCV.'
+            : 'La tasa quedó en modo manual: la sincronización no la va a pisar.');
+    }
+
+    /** "Sincronizar ahora": lee el BCV y guarda la tasa aunque no haya cambiado. */
+    public function sincronizarTasaBcv(TasaBcv $bcv): void
+    {
+        try {
+            $nueva = $bcv->sincronizar(null, true);
+        } catch (Throwable $e) {
+            report($e);
+
+            session()->flash('error', 'No se pudo leer la tasa del BCV: ' . $e->getMessage());
+
+            return;
+        }
+
+        if (! $nueva) {
+            session()->flash('error', 'No se pudo guardar la tasa del BCV.');
+
+            return;
+        }
+
+        $this->tasa = (string) $nueva->tasa;
+
+        session()->flash('message', 'Tasa del BCV guardada: 1 USD = ' . $nueva->aTexto() . ' VES.');
+    }
+
     /* ------------------------------------------------------------------ */
     /* Ventanas y render                                                   */
     /* ------------------------------------------------------------------ */
@@ -374,6 +416,7 @@ class MetodosPago extends Component
             'tasaActual' => TasaDeCambio::actual(),
             'historialTasas' => TasaDeCambio::orderByDesc('vigente_desde')->orderByDesc('id')->limit(15)->get(),
             'configuracion' => ConfiguracionPago::actual(),
+            'origenesTasa' => ConfiguracionPago::TASAS,
             'variantes' => CatalogoDePasarelas::variantesDe($this->pasarela),
             'pasarelas' => CatalogoDePasarelas::PASARELAS,
             'usos' => CatalogoDePasarelas::USOS,
