@@ -953,6 +953,16 @@ como bueno. Corre después de `migrate --force`; las reglas viven en los seeders
 (`app/Console/Commands/SembrarEspecialidadesCommand.php`, tests en
 `tests/Feature/SembrarEspecialidadesCommandTest.php`).
 
+**El catálogo inicial por especialidad** (WEB-12.9, 2026-10-21) se siembra con **`php artisan catalogos:sembrar-iniciales`**
+(`--simular` para mirar), después de `especialidades:sembrar`. **No va fijo en el despliegue**: es idempotente, pero una fila
+que el administrador quitó en `/admin` vuelve si se siembra otra vez; se corre una vez por servidor y cuando cambien los
+archivos de `database/catalogos-iniciales/<especialidad>/` (los arma `bridge/tools/preparar-catalogos-iniciales.py`, en el repo
+de docs, desde lo que exporta `bridge/tools/exportar-catalogos-asa8.ps1`). La regla vive en
+`App\Actions\Catalogos\SembrarCatalogosIniciales`; el puente de especialidades, en
+`App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial`; la copia automática al médico nuevo, en
+`CargarCatalogosInicialesAlMedico` (la llama `CuentaService::asignarEspecialidades`). Tests:
+`tests/Feature/CatalogoInicialPorEspecialidadTest.php`.
+
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
 

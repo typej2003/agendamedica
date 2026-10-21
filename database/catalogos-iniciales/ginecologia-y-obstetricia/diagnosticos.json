@@ -1,0 +1,954 @@
+[
+ {
+  "codigo_origen": "0446",
+  "descripcion": "SINDROME DE OV ARIOS POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "TRASTORNOS DEL CICLO MENSTRUAL"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "PROLAPSO GDO II"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "OSTEOPENIA LEVE"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "ABSCESO PERINEAL"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "PERIMENOPAUSIA"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "NIC I. VPH"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "HIPERPLASIA ENDOMETRIAL.POLIPO INTRACAVITARIO?"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "FLUJO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "MULTIPARIDAD"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "RESISTENCIA A LA INSULINA"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "GARDENELLA VAGINALIS"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "EMBARAZO DE 8S MAS 3 DIAS"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "MENOPAUSIA TARDIA"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "MONILIASIS"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "MENOPAUSIA QUIRURGICA"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "ALTO RIESGO MAMARIO"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "PROLAPSO GENITAL PARCIAL"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "OVARIOS POLIQUISTICOS."
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "FIBROMATOSIS UTERINA INCIPIENTE"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "TU QUISTICO DE OD"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "OBESIDAD"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "QUISTE OD"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "ENGROSAMIENTO ENDOMETRIAL"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "ANEMIA MODERADA"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "VPH VULVAR"
+ },
+ {
+  "codigo_origen": "0472",
+  "descripcion": "COLPITIS DIFUSA"
+ },
+ {
+  "codigo_origen": "0473",
+  "descripcion": "MIOMA DEL CANAL"
+ },
+ {
+  "codigo_origen": "0519",
+  "descripcion": "CM 5HHHH"
+ },
+ {
+  "codigo_origen": "0476",
+  "descripcion": "OSTEOPOROSIS LEVE"
+ },
+ {
+  "codigo_origen": "0488",
+  "descripcion": "ESTENOSIS DE CUELLO"
+ },
+ {
+  "codigo_origen": "0496",
+  "descripcion": "EMBARAZO DE 8S"
+ },
+ {
+  "codigo_origen": "0500",
+  "descripcion": "KELO-COTE"
+ },
+ {
+  "codigo_origen": "0504",
+  "descripcion": "INF. URINARIA"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "EMBARAZO DE 15S MAS UN DIA"
+ },
+ {
+  "codigo_origen": "0508",
+  "descripcion": "ASTENIA SEXUAL"
+ },
+ {
+  "codigo_origen": "0104",
+  "descripcion": "FIBROMIOMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "FIBROADENOMA MAMARIO"
+ },
+ {
+  "codigo_origen": "0250",
+  "descripcion": "FRACTURA PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0251",
+  "descripcion": "ARTERIOPATIA OBSTRUCTIVA MIEMBRO INFERIOR IZQUIERD"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "ENDOMETROSIS"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "HIPERTRIGLICERIDEMIA"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "HIPERCOLESTEROLEMIA"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "ALERGIA A CITRICOS"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "MIOMA INTRACAVITARIO"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "CERVICOARTRALGIA"
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "HIPERTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL DERECHA"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "HALLUX VALGUS"
+ },
+ {
+  "codigo_origen": "0486",
+  "descripcion": "OSTEOPENIA SEVERA"
+ },
+ {
+  "codigo_origen": "0265",
+  "descripcion": "DIVERTICULITIS"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "FRACTURA CUBITO DERECHO"
+ },
+ {
+  "codigo_origen": "0489",
+  "descripcion": "OSTEOPOROSIS MODERADA"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "ARTROPATIA HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "LITIASIS VESICAL"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "SINDROME TAQUICARDIA BRADICARDIA"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "NODULO MAMARIO DERECHO"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "SINUSITIS"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "MAMAS SUPERNUMERARIAS"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "DIVERTICULOSIS"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "AMAUROSIS"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "ANOSMIA"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "ESTENOSIS AORTICA LEVE"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "TROMBOEMBOLISMO PULMONAR"
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "INFARTO PULMONAR"
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "MIOCARDIOPATIA CHAGASICA"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "ALERGIA A PENICILINA"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "OSTEOCONDRITIS"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "LESION SUBEPICARDICA INFERIOR"
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "QUISTE TIROIDEO"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "ANGOR ESTABLE"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "LESION SUBEPICARDICA ANTEROLATERAL"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "TROMBOSIS INTRACARDIACA DEL VI"
+ },
+ {
+  "codigo_origen": "0292",
+  "descripcion": "HIPOKINECIA LATERAL"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "HIPOKINECIA APICAL ,LATERAL,ANTERIOR, SEPTAL E INF"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "HIPERINSULINEMIA"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "BRONQUITIS CRONICA"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "QUISTE OVARICO"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "CERVICITIS"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "EPICONDILITIS"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "DIABETES MELLITUS TIPO I"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "ZEI LATERAL ALTA"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "ALERGIA DIPIRONA"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "ALERGIA METILBROMURO DE HIOSCINA"
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "ARTROPATIA RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "GINECOMASTIA"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "ALERGIA AL MERTHIOLATE"
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "ISQUEMIA SUBEPICARDICA ANTERIOR EXTENSA"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "HVI"
+ },
+ {
+  "codigo_origen": "0307",
+  "descripcion": "WOLF PARKINSON WHITE"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "ULCERA GASTRICA"
+ },
+ {
+  "codigo_origen": "0309",
+  "descripcion": "PSORIASIS"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "AKINECIA APICAL SEPTAL,INFERIOR,ANTERIOR,LATERAL"
+ },
+ {
+  "codigo_origen": "0311",
+  "descripcion": "DISPLASIA CERVICAL  NICIII"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "FIEBRE REUMATICA"
+ },
+ {
+  "codigo_origen": "0313",
+  "descripcion": "QUISTE HIPOFISIARIO"
+ },
+ {
+  "codigo_origen": "0314",
+  "descripcion": "PROLACTINEMIA"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "BLOQUEO AV COMPLETO"
+ },
+ {
+  "codigo_origen": "0316",
+  "descripcion": "RITMO IDIOVENTRICULAR"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "ALERGIA ACETAMINOFEN"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "TROMBOSIS INTRACAVITARIA VI"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "AKINECIA SEPTAL"
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "ICCGC"
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "DERMATITIS ATOPICA"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "LONE GANONG LEVINE"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "CISTOCELE"
+ },
+ {
+  "codigo_origen": "0324",
+  "descripcion": "RIÑON POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "ALERGIA A DETERGENTES"
+ },
+ {
+  "codigo_origen": "0478",
+  "descripcion": "EMBARAZO DE 35 SEMANAS"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "CVPS 2,3A, 3B,4A"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "NEUMOTORAX ESPONTANEO"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "AKINECIA APICOLATERAL"
+ },
+ {
+  "codigo_origen": "0479",
+  "descripcion": "ANEMIA LEVE"
+ },
+ {
+  "codigo_origen": "0332",
+  "descripcion": "ARTERIOPATIA VERTEBRAL"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "NEUROPATIA PERIFERICA"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "FORAMEN OVAL PERMEABLE"
+ },
+ {
+  "codigo_origen": "0482",
+  "descripcion": "NEURITIS INTERCOSTAL"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "FRACTURA DE HUMERO"
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "FRACTURA DE RADIO"
+ },
+ {
+  "codigo_origen": "0487",
+  "descripcion": "RECTOCELE GDO II"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "ESTENOSIS MITRAL MODERADA"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "MIOMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "CA DE CUELLO UTERINO"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "PTOSIS PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "ARTERIOPATIA OBSTRUCTIVA MIEMBRO INFERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "LITIASIS COLEDOCIANA"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "PANCREATITIS"
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "CONDRITIS"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "CAPSULITIS ADHESIVA HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "TU DEDO MEDIO MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "PTERIGION"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "NODULO TIROIDEO"
+ },
+ {
+  "codigo_origen": "0492",
+  "descripcion": "BIRADS II"
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "SINDROME QT LARGO"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "FRACTURA METACARPIANO"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "ERISIPELA"
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "ALERGIA ASA"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "METASTASIS OSEAS"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "METASTASIS COLONICA"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "POLIPOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "INSUFICIENCIA VENOSA FEMORAL COMUN"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "HIPOKINECIA ANTERIOR"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "ESCLEROSIS VALVA POSTERIOR D ELA MITRAL"
+ },
+ {
+  "codigo_origen": "0362",
+  "descripcion": "SINCOPE"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "ULCERA DUODENAL"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "SOBRECARGA SISTOLICA DEL VI"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "ANGIOSESPASMO CORONARIO"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "ENDOCARDITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "ESOFAGITIS"
+ },
+ {
+  "codigo_origen": "0502",
+  "descripcion": "ACNE"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "EDEMA AGUDO PULMONAR"
+ },
+ {
+  "codigo_origen": "0368",
+  "descripcion": "FIBRILACION AURICULAR CON ALTO GRADO DE BLOQUEO"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "FRACTURA DE COLLET"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "CA DE RECTO"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "MAL DE PARKINSON"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "SINDROME DEL TUNEL CARPIANO"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "RITMO NODAL"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "TUMORACION EN CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "TOXOPLASMOSIS"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "CVPS 3A"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "ARTERIOESCLEROSIS NO OBSTRUCTIVA DE MIEMBROS INFER"
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "COLITIS"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "COR ANEMICO"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "COLON IRRITABLE"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "DISFUNCION DE MARCAPASO"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "HEMANGIOMA CAVERNOSO MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "ENFERMEDAD DE CHAGAS"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "QUISTE DE BEKER"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "HEMATURIA"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "HERNIA EPIGASTRICA"
+ },
+ {
+  "codigo_origen": "0481",
+  "descripcion": "PROLAPSO GDO II.IUE"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "QUISTE DERMICO"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "HEMORRAGIA DIGESTIVA SUPERIOR"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "INCONTINENCIA URINARIA"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "RADICULOPATIA CERVICAL"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "OSTEOFITOSIS CERVICAL"
+ },
+ {
+  "codigo_origen": "0485",
+  "descripcion": "EPITELIO BLANCO"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "ENDOMETRITIS"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "VULVOVAGINITIS"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "TU OVARIO 1ZQ, SX ADHERRENCIAL"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "HIPERCALCIURIA"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "OVARIOS POLIFOLICULARES"
+ },
+ {
+  "codigo_origen": "0400",
+  "descripcion": "SX OVARIO POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "EMBARAZO 9.2"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "HIPERMENORREA"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "INFERTILIDAD SECUNDARIA"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "INFERTILIDAD  PRIMARIA"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "INFECCIÓN GENITAL BAJA"
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "CONDILOMATOSIS VULVAR"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "PLANIFICACIÓN  FAMILIAR"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "CONTROL GINECOLOGICO"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "HIDROSALPINX IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "FIBROMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "CONDICIÓN FIBROQUÍSTICA III"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "EIP"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "TRSTORNO MENSTRUAL"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "UTERO INFANTIL"
+ },
+ {
+  "codigo_origen": "0518",
+  "descripcion": "ASTO"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "QUISTE EN OVARIO DERECHO"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "SX  ADHERENCIAL"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "MENOPAUSIA NATURAL"
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "TRASTORNO MENSTRUAL"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "PROTESIS MAMARIA"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "QUISTE DE OI"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "ECTOPIA MEDIANA"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "EIPGDO II"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "ATIPIA COLPOSCOPICA"
+ },
+ {
+  "codigo_origen": "0474",
+  "descripcion": "LIE BAJO GRADO"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "PACIENTE SANA"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "NIC II"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "SX COLON IRRITABLE"
+ },
+ {
+  "codigo_origen": "0484",
+  "descripcion": "ENFERMEDAD INFLAMATORIA PELVICA GDO II"
+ },
+ {
+  "codigo_origen": "0490",
+  "descripcion": "EMBARAZO DE 6 S MAS 3 DIAS"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "TU QUÍSTICO DE OI."
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "POLIPO EXOCERVICAL"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "HEMORRAGIA UTERINA ANORMAL"
+ },
+ {
+  "codigo_origen": "0520",
+  "descripcion": "SANGRADO A TRAVES DE GENITALES"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "EMBARAZO DEL I TRIMESTRE"
+ },
+ {
+  "codigo_origen": "0491",
+  "descripcion": "BIRADS III"
+ },
+ {
+  "codigo_origen": "0493",
+  "descripcion": "VPH CERVICAL"
+ },
+ {
+  "codigo_origen": "0495",
+  "descripcion": "SINDROME GRIPAL"
+ },
+ {
+  "codigo_origen": "0497",
+  "descripcion": "FETO VALIOSO"
+ },
+ {
+  "codigo_origen": "0498",
+  "descripcion": "UTERO BICORNE"
+ },
+ {
+  "codigo_origen": "0499",
+  "descripcion": "EMBARAZO DE 37 S"
+ },
+ {
+  "codigo_origen": "0501",
+  "descripcion": "ECTOPIA GIGANTE"
+ },
+ {
+  "codigo_origen": "0503",
+  "descripcion": "BLASTOCISTIS HOMINIS"
+ },
+ {
+  "codigo_origen": "0505",
+  "descripcion": "HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0507",
+  "descripcion": "ENF FI BROQUISTICA DE MAMAS"
+ },
+ {
+  "codigo_origen": "0509",
+  "descripcion": "VPH INTROITO"
+ },
+ {
+  "codigo_origen": "0510",
+  "descripcion": "SOBREPESO"
+ },
+ {
+  "codigo_origen": "0511",
+  "descripcion": "SINDROME METABOLICO"
+ },
+ {
+  "codigo_origen": "0512",
+  "descripcion": "MENARQUIA TARDIA"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "ABORTO INCOMPLETO"
+ },
+ {
+  "codigo_origen": "0514",
+  "descripcion": "EMBARAZO DE 25S MAS 6D"
+ },
+ {
+  "codigo_origen": "0515",
+  "descripcion": "HIPERTENSION"
+ },
+ {
+  "codigo_origen": "0516",
+  "descripcion": "EMBARAZO DE 24 SEMANAS"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "SALPINGITIS"
+ }
+]

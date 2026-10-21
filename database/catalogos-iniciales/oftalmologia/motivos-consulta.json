@@ -1,0 +1,458 @@
+[
+ {
+  "codigo_origen": "0127",
+  "descripcion": "ORZUELO"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "VISION DOBLE OCASIONAL HACE 2 AÑOS"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "ARDOR"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "DOLOR OCULAR"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "SEQUEDAD"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "BLEFAROESPASMO"
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "FOTOFOBIA"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "ME PICA"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "SEGUNDA OPINION"
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "SECRECIONES"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "PERDIDA DE VISION PROGRESIVA"
+ },
+ {
+  "codigo_origen": "0096",
+  "descripcion": "NO VE BIEN DE LEJOS"
+ },
+ {
+  "codigo_origen": "0098",
+  "descripcion": "NO VE BIÉN DE CERCA"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "DESVIA LOS OJOS"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "AUMENTO DE VOLUMEN EN REGION SUPRACILIAR"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "EDEMA PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "LAGRIMEO"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "DISMINUCION DE LA AGUDEZA VISUAL DE CERC"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "MAREOS"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "SEGUNDA OPINION"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "SOSPECHA DE GLAUCOMA"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "FOTOPSIAS"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "OJO ROJO"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "PARALISIS FACIAL"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "VE SOMBRAS"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "PERDIDA PRUSCA DE LA VISION"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "TRAUMATISMOCRANEOENCEFALICO"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "DISMINUCION DE LA AGUDEZA VISUAL DE LEJO"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "CANSANCIO OCULAR"
+ },
+ {
+  "codigo_origen": "0210",
+  "descripcion": "VISION BORROSA DE LEJOS"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "HIPEREMIA PAPLPEBRAL"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "DISMINUCION PROGRESIVA DE LA VISION"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "NO VE BIEN OI"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "SENSACION ARENILLA"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "VISION BORROSA"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "CONJUNTIVITIS"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "TRAUMATISMO"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "MIOPIA"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "CUERPO EXTRAÑO"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "MIODESOPSIAS"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "CEFALEA"
+ },
+ {
+  "codigo_origen": "0107",
+  "descripcion": "CHALAZION"
+ },
+ {
+  "codigo_origen": "0087",
+  "descripcion": "CAMBIO DE LENTES"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "PROPTOSIS"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "VISION BORROSA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0093",
+  "descripcion": "CONTROL POSTQUIRÚRGICO"
+ },
+ {
+  "codigo_origen": "0095",
+  "descripcion": "CHEQUEO"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "VISION DE HALOS DE LUZ"
+ },
+ {
+  "codigo_origen": "0099",
+  "descripcion": "CONTROL"
+ },
+ {
+  "codigo_origen": "0109",
+  "descripcion": "FOSFENOS ODI"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "CARNOSIDAD"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "NO VE POR EL OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "ESTRABISMO"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "MOSCAS VOLANTES"
+ },
+ {
+  "codigo_origen": "0119",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "REFERIDO"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "QUEMADURA"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "MOLESTIA EN OJO"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "NO VE POR EL OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "METE LOS OJOS"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "NO VE BIEN POR EL OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "MIOPIA MAGNA"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "CONTROL DE CIRUGIA POST LASIK"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "CAIDA DE PARPADO"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "DOLOR PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "VISION DE CORTINA"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "QUERATITIS EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "HIPERTENSION OCUAR"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "DIPLOPIA"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "DISMINUCION BRUSCA DE LA VISION"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "PESADEZ PARPADOS"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "NISTAGMUS"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "GLAUCOMA"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "INTOLERANCIA A LENTES DE CONTACTO"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "PRURITO OCULAR"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "IRRITACION EN OJO"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "QUERATOCONO"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "ASTENOPIA"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "CAIDA DE SUS PROPIO PIES"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "OJO SECO"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "TUMOR PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "VISION BORROSA DE CERCA"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "METAMORFOPSIA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "CAIDA DE PARPADO"
+ },
+ {
+  "codigo_origen": "0201",
+  "descripcion": "VISION DOBLE"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "ASTIGMATISMO MIOPICO"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "ALERGIA OCULAR"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "PRESBICIA"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "CONTROL OFTALMOLOGICO"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "ESCOTOMA TEMPORAL"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "AUMENTO DE VOLUMEN REGION PARANASAL"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "ASTIGMATISMO"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "SECRECION"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "VISION BORROSA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "PICAZON"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "OPACIDAD CAPSULAR EN AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "ASTIGMATISMO HIPERMETROPICO"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "DESLUMBRAMIENTO OI"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "VISION DISTORCIONADA"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "DISMINUCION DE LA VISION DE OJO IZQ"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "MIODESOPSIAS"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "OJO  PEQUEÑO"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "POST OPERATORIO DE PTOSIS PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0233",
+  "descripcion": "POST OPERATORIO DE CATARATA DE AMBOS OJO"
+ },
+ {
+  "codigo_origen": "0234",
+  "descripcion": "POST OPERATORIO DE CATARATA OD"
+ },
+ {
+  "codigo_origen": "0235",
+  "descripcion": "POST OPERATORIO DE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0236",
+  "descripcion": "VISION BORROSA OI"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "METAMORFOPSIAS"
+ },
+ {
+  "codigo_origen": "0238",
+  "descripcion": "L LISINA CAPSULAS"
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "TUMOR CONJUNTIVAL OI"
+ },
+ {
+  "codigo_origen": "0240",
+  "descripcion": "QUISTES EN PARPADOS SUPERIORES"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "PTOSIS POR PARALISIS DE III PAR OD"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "DESLUMBRAMIENTO"
+ }
+]

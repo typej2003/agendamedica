@@ -1,0 +1,347 @@
+[
+ {
+  "codigo_origen": "019",
+  "examen": "RX DE TORAX",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "046",
+  "examen": "GONIOSCOPIA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "048",
+  "examen": "PERFIL 20",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "023",
+  "examen": "PERFIL TIROIDEO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "025",
+  "examen": "RX SENOS PARA NASALES",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "050",
+  "examen": "MICROSCOPIA ESPECULAR",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "054",
+  "examen": "PAQUIMETRIA CORNEAL",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "030",
+  "examen": "TAC CEREBRAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "002",
+  "examen": "HEMATOLOGIA  COMPLETA + VSG",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "007",
+  "examen": "COLESTEROL Y TRIGLICERIDOS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "011",
+  "examen": "COMPLEMENTO C2 Y C4",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "015",
+  "examen": "R.A. TEST",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "003",
+  "examen": "PT Y PTT     INR",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "008",
+  "examen": "UREA Y CREATININA",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "012",
+  "examen": "HLA B27",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "016",
+  "examen": "H.I.V.",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "031",
+  "examen": "ANGIOGRAFIA FLUORESEINICA ODI",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "032",
+  "examen": "TAC ORBITAS",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "033",
+  "examen": "RESONANCIA MAGNETICA CEREBRAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "056",
+  "examen": "TOPOGRAFIA CORNEAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "036",
+  "examen": "CAMPO VISUAL COMPUTARIZADO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "057",
+  "examen": "OCT DE NERVIO OPTICO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "038",
+  "examen": "PERIMETRÍA DE FRECUENCIA DUPLICADA (FDT)",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "040",
+  "examen": "PAQUIMETRÍA CORNEAL",
+  "codetipo": "021"
+ },
+ {
+  "codigo_origen": "042",
+  "examen": "BIOMETRÍA + CÁLCULO DE LIO",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "044",
+  "examen": "ANGIOGRAFÍA FLUORESCEÍNICA (FRG)",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "059",
+  "examen": "IOL MASTER",
+  "codetipo": "021"
+ },
+ {
+  "codigo_origen": "020",
+  "examen": "RX DE CRANEO",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "024",
+  "examen": "RESONANCIA MAGNETICA CON CONTRASTE DE ORBITA",
+  "codetipo": "003"
+ },
+ {
+  "codigo_origen": "045",
+  "examen": "EVALUACION CARDIOVASCULAR",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "035",
+  "examen": "FACTOR REUMATOIDE",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "039",
+  "examen": "TOMOGRAFÍA DE COHERENCIA OPTICA (OCT)",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "041",
+  "examen": "TOPOGRAFÍA CORNEAL",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "047",
+  "examen": "OFTALMOSCOPIA  INDIRECTA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "049",
+  "examen": "PERFIL  HORMONAL",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "052",
+  "examen": "VALORACION CARDIOVASCULAR PREOPERATORIA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "004",
+  "examen": "GLICEMIA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "009",
+  "examen": "EX DE ORINA",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "013",
+  "examen": "ELISA PARA TOXOPLASMOSIS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "001",
+  "examen": "PERFIL QUIURUGICO  DE  LABORATORIO",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "006",
+  "examen": "V.D.R.L.",
+  "codetipo": "004"
+ },
+ {
+  "codigo_origen": "010",
+  "examen": "RECUENTO PLAQUETARIO",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "014",
+  "examen": "ELISA PARA TOXOCARIASIS",
+  "codetipo": "001"
+ },
+ {
+  "codigo_origen": "053",
+  "examen": "IOL MASTER AMBOS OJOS",
+  "codetipo": "020"
+ },
+ {
+  "codigo_origen": "055",
+  "examen": "PAQUIMETRIA CORNEAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "058",
+  "examen": "OCT MACULAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "060",
+  "examen": "TOPOGRAFIA CORNEAL",
+  "codetipo": "021"
+ },
+ {
+  "codigo_origen": "061",
+  "examen": "OCT DE MACULA",
+  "codetipo": "021"
+ },
+ {
+  "codigo_origen": "062",
+  "examen": "OCT DE NERVIO OPTICO",
+  "codetipo": "021"
+ },
+ {
+  "codigo_origen": "063",
+  "examen": "PRUBA DE SOBRECARGA HIDRICA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "064",
+  "examen": "ECOGRAFIA OCULAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "065",
+  "examen": "MICROSCOPIA ESPECULAR",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "066",
+  "examen": "IOL MASTER",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "067",
+  "examen": "ULTRABIOMICROSCOPIA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "068",
+  "examen": "OCT CORNEA OD",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "069",
+  "examen": "ANGIO TAC",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "070",
+  "examen": "BIOMETRIA  + CALCULO DE LIO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "071",
+  "examen": "DOOPLER CAROTIDEO",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "072",
+  "examen": "OCT CORNEA OI",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "073",
+  "examen": "OCT DE CORNEA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "074",
+  "examen": "TOPOGRAFIA CORNEAL AMBOS OJOS",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "075",
+  "examen": "BUT COMPUTARIZADO Y TOPOGRAFIA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "076",
+  "examen": "BUT COMPUTARIZADO BILATERAL",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "077",
+  "examen": "TOPOGRAFIA  MEDMONT PARA LENTES DE CONTACTO P",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "078",
+  "examen": "TOPOGRAFIA Y PAQUIMETRIA GALILEI",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "079",
+  "examen": "ELECTRORETINOGRAMA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "080",
+  "examen": "ESTUDIOS PARA CALCULO DE LENTE ESCLERAL. TOPG",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "081",
+  "examen": "TOMOGRAFIA DE ORBITAS CORTES AXIALES Y CORONA",
+  "codetipo": "002"
+ },
+ {
+  "codigo_origen": "082",
+  "examen": "RESONANCIA MAGNETICA",
+  "codetipo": "002"
+ }
+]

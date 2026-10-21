@@ -1,0 +1,4458 @@
+[
+ {
+  "codigo_origen": "0041",
+  "descripcion": "LIPOMA PRESACRO"
+ },
+ {
+  "codigo_origen": "0045",
+  "descripcion": "FX-LUXACION TOBILLO IZQ."
+ },
+ {
+  "codigo_origen": "0049",
+  "descripcion": "FX-AVULSION EN CUBOIDES IZQ"
+ },
+ {
+  "codigo_origen": "0053",
+  "descripcion": "DESCARTAR ASLO ALTERADO"
+ },
+ {
+  "codigo_origen": "0057",
+  "descripcion": "ATR IZQ. DOLOROSA"
+ },
+ {
+  "codigo_origen": "0061",
+  "descripcion": "ERSPONDILITIS???"
+ },
+ {
+  "codigo_origen": "0065",
+  "descripcion": "FX. WEBER C TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0069",
+  "descripcion": "FIBROMIALGIA GLUTEO IZQ."
+ },
+ {
+  "codigo_origen": "0025",
+  "descripcion": "ESGUINSE MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0008",
+  "descripcion": "PPV-TTI"
+ },
+ {
+  "codigo_origen": "1028",
+  "descripcion": "TENDINITIS PRIMER INTERÓSEO DORSAL INDICE IZQUIERD"
+ },
+ {
+  "codigo_origen": "0016",
+  "descripcion": "SINOVITIS CRÓNICA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0020",
+  "descripcion": "ESPOLON CALCANEO"
+ },
+ {
+  "codigo_origen": "0024",
+  "descripcion": "AVF-PPV."
+ },
+ {
+  "codigo_origen": "0030",
+  "descripcion": "PPV-GENUS VALGUS"
+ },
+ {
+  "codigo_origen": "0040",
+  "descripcion": "PPV-AVF-TTI"
+ },
+ {
+  "codigo_origen": "1039",
+  "descripcion": "TUMORACIÓN VENTRAL MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0048",
+  "descripcion": "CIATALGIA IZQ"
+ },
+ {
+  "codigo_origen": "0052",
+  "descripcion": "EPITROCLEITIS"
+ },
+ {
+  "codigo_origen": "0056",
+  "descripcion": "LUMBALGIA EAP"
+ },
+ {
+  "codigo_origen": "0060",
+  "descripcion": "CERVICOBRAQUIALGIA EAP"
+ },
+ {
+  "codigo_origen": "0064",
+  "descripcion": "COMPRESION PLEXO BRAQUIAL LEVE POR LOE"
+ },
+ {
+  "codigo_origen": "0068",
+  "descripcion": "S. ABRASIÓN MR IZQ."
+ },
+ {
+  "codigo_origen": "0543",
+  "descripcion": "LESION CFCT IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0007",
+  "descripcion": "R.V.F"
+ },
+ {
+  "codigo_origen": "0011",
+  "descripcion": "R.V.F-TTI"
+ },
+ {
+  "codigo_origen": "1075",
+  "descripcion": "PIE CAVO"
+ },
+ {
+  "codigo_origen": "0026",
+  "descripcion": "BURSITIS HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0029",
+  "descripcion": "LUXACION CONGENITA DE CADERA"
+ },
+ {
+  "codigo_origen": "0033",
+  "descripcion": "EPICONDILITIS"
+ },
+ {
+  "codigo_origen": "0039",
+  "descripcion": "DESGARRO MUSCULAR"
+ },
+ {
+  "codigo_origen": "0043",
+  "descripcion": "RIÑON ECTOPICO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0047",
+  "descripcion": "TENOSINOVITIS POSTRAUMATICA ."
+ },
+ {
+  "codigo_origen": "0051",
+  "descripcion": "CODO DE BEISBOLISTA"
+ },
+ {
+  "codigo_origen": "0055",
+  "descripcion": "S. COMPRESION RADICULAR L5-S1"
+ },
+ {
+  "codigo_origen": "0059",
+  "descripcion": "GODINIA BILATERAL"
+ },
+ {
+  "codigo_origen": "0063",
+  "descripcion": "LOE ESCAPULO TORACICO DCHO"
+ },
+ {
+  "codigo_origen": "0067",
+  "descripcion": "BURSITIS TROCANTERICA IZQ"
+ },
+ {
+  "codigo_origen": "0530",
+  "descripcion": "FRACTURA INTRAARTICULAR FII PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0006",
+  "descripcion": "CIATALGIA"
+ },
+ {
+  "codigo_origen": "0010",
+  "descripcion": "TIBIAS VARAS-TTI"
+ },
+ {
+  "codigo_origen": "1066",
+  "descripcion": "HOMBRO DOLOROSO IZQ"
+ },
+ {
+  "codigo_origen": "0018",
+  "descripcion": "MENISCOPATIA MEDIAL INTERNA RD"
+ },
+ {
+  "codigo_origen": "0022",
+  "descripcion": "PPV"
+ },
+ {
+  "codigo_origen": "0028",
+  "descripcion": "FX TERCIO MEDIO HUMERO IZQ."
+ },
+ {
+  "codigo_origen": "0038",
+  "descripcion": "TU BRAZO IZQ."
+ },
+ {
+  "codigo_origen": "0042",
+  "descripcion": "LUMBOCIATALGIA"
+ },
+ {
+  "codigo_origen": "0046",
+  "descripcion": "FX. WEBER C TOBILLO IZQ."
+ },
+ {
+  "codigo_origen": "0050",
+  "descripcion": "METATARSALGIA"
+ },
+ {
+  "codigo_origen": "0054",
+  "descripcion": "CONDROMALACIA PATELAR BILATERAL"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "RIZOARTROSIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0062",
+  "descripcion": "SECUELAS DE FX HUMERO DCHO"
+ },
+ {
+  "codigo_origen": "0066",
+  "descripcion": "TENDONITIS TIBIAL POSTERIOR DCHO"
+ },
+ {
+  "codigo_origen": "0009",
+  "descripcion": "BURSITIS"
+ },
+ {
+  "codigo_origen": "0013",
+  "descripcion": "ESCOLIOSIS DORSO-LUMBAR"
+ },
+ {
+  "codigo_origen": "0017",
+  "descripcion": "BURSITIS HOMBRO IZQ."
+ },
+ {
+  "codigo_origen": "0021",
+  "descripcion": "ESPINA BIFIDA-COMPRESION RADICULAR"
+ },
+ {
+  "codigo_origen": "0027",
+  "descripcion": "SINDROME DEL ESCALENO IZQ"
+ },
+ {
+  "codigo_origen": "0086",
+  "descripcion": "HTA"
+ },
+ {
+  "codigo_origen": "0031",
+  "descripcion": "ESGUINSE TOBILLO DERECHO GRADO II"
+ },
+ {
+  "codigo_origen": "0032",
+  "descripcion": "LESIÓN CRUZADO ANTERIOR"
+ },
+ {
+  "codigo_origen": "0034",
+  "descripcion": "FX TERCIO DISTAL PERONE IZQ."
+ },
+ {
+  "codigo_origen": "0035",
+  "descripcion": "QUISTE SINOVIAL"
+ },
+ {
+  "codigo_origen": "0036",
+  "descripcion": "LESIÓN MANGUITO ROTADOR"
+ },
+ {
+  "codigo_origen": "0037",
+  "descripcion": "ABSCESO INTERGLUTEO"
+ },
+ {
+  "codigo_origen": "0070",
+  "descripcion": "OSTEOPOROSOS POSTMENOPAUSICA"
+ },
+ {
+  "codigo_origen": "0071",
+  "descripcion": "DISPLASIA CONGENITA DE LA CADERA?"
+ },
+ {
+  "codigo_origen": "0072",
+  "descripcion": "TIBIAS VARAS FISIOLKOGICAS"
+ },
+ {
+  "codigo_origen": "0073",
+  "descripcion": "TORSION TIBIAL INTERNA MOD"
+ },
+ {
+  "codigo_origen": "0074",
+  "descripcion": "FX. X COSTILLA IZQ"
+ },
+ {
+  "codigo_origen": "0075",
+  "descripcion": "ABCESO TOBILLO IZQ"
+ },
+ {
+  "codigo_origen": "0076",
+  "descripcion": "OSTEOCONDRITIS DISECANTE IV RI"
+ },
+ {
+  "codigo_origen": "1035",
+  "descripcion": "ESPONDILOLISTESIS L1L2"
+ },
+ {
+  "codigo_origen": "0078",
+  "descripcion": "TORSION TIBIAL INTERNA"
+ },
+ {
+  "codigo_origen": "0079",
+  "descripcion": "LUMBOCIATALGIA PERSISTENTE"
+ },
+ {
+  "codigo_origen": "0080",
+  "descripcion": "ESGUIINCE ACROMIO CLAVICULAR DCHA"
+ },
+ {
+  "codigo_origen": "0081",
+  "descripcion": "NEURITIS INTERCOSTAL DERECHA"
+ },
+ {
+  "codigo_origen": "0082",
+  "descripcion": "TENDONITIS AQUILEANA D/I"
+ },
+ {
+  "codigo_origen": "1045",
+  "descripcion": "FRACTURA V METATARSIANO"
+ },
+ {
+  "codigo_origen": "0084",
+  "descripcion": "SINDROME DE FRICCION MR IZQ"
+ },
+ {
+  "codigo_origen": "0085",
+  "descripcion": "CONDROMALACIA PATELAR DCHA"
+ },
+ {
+  "codigo_origen": "0087",
+  "descripcion": "SECUELAS ACV"
+ },
+ {
+  "codigo_origen": "0088",
+  "descripcion": "FX 1/3 DISTAL TIBIA DCHA"
+ },
+ {
+  "codigo_origen": "0089",
+  "descripcion": "FX SALTER Y HARRIS III"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "DSMIIS"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "AVF"
+ },
+ {
+  "codigo_origen": "0091",
+  "descripcion": "ESGUINCE ANTEPIE DERECHO"
+ },
+ {
+  "codigo_origen": "0092",
+  "descripcion": "CONTUSION HALLUX DCHO"
+ },
+ {
+  "codigo_origen": "0093",
+  "descripcion": "SINDROME TUNEL CARPIANO DERECHO??"
+ },
+ {
+  "codigo_origen": "0094",
+  "descripcion": "TENOSINOVITIS FLEXORES"
+ },
+ {
+  "codigo_origen": "1031",
+  "descripcion": "DESGARRO DEL CRUZADO ANTERIOS"
+ },
+ {
+  "codigo_origen": "1034",
+  "descripcion": "MALALINEACIÓN ROTULIANA BILATERAL"
+ },
+ {
+  "codigo_origen": "0097",
+  "descripcion": "BURSITIS ANSERINA IZQ"
+ },
+ {
+  "codigo_origen": "0098",
+  "descripcion": "INESTABILIDAD RADIOCUBITAL DISTAL IZQ."
+ },
+ {
+  "codigo_origen": "0099",
+  "descripcion": "RIZARTROSIS PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0100",
+  "descripcion": "CERVICALGIA MECANICA"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "NECROSIS AVASCULAR CF"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "FIBROSITIS"
+ },
+ {
+  "codigo_origen": "0103",
+  "descripcion": "BURSITIS ROTULIANA"
+ },
+ {
+  "codigo_origen": "1036",
+  "descripcion": "ESPONDILOLISTESIS L2L3"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "MENISCOPIATIA INTERNA RI"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "OSTEOCONDRITIS TIBIAL DCHA POSTRM"
+ },
+ {
+  "codigo_origen": "0107",
+  "descripcion": "FX-LUXACION TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "ENFERMEDAD DEGENERATIVA ARTICULAR"
+ },
+ {
+  "codigo_origen": "1047",
+  "descripcion": "FRACTURA L2 - L4"
+ },
+ {
+  "codigo_origen": "0110",
+  "descripcion": "CERVICOBRAQUIALGIA DCHA"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "TORSION TIBIAL INTERNA (TTI)"
+ },
+ {
+  "codigo_origen": "0112",
+  "descripcion": "PIE PLANO VALGO II"
+ },
+ {
+  "codigo_origen": "0113",
+  "descripcion": "SINDORME DE TUNEL DEL CARPO DCHO."
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "LOE MUSLO INTERNO"
+ },
+ {
+  "codigo_origen": "0115",
+  "descripcion": "RODILLA IZQUIERDA RIGIDA"
+ },
+ {
+  "codigo_origen": "0116",
+  "descripcion": "GENU VARO"
+ },
+ {
+  "codigo_origen": "1095",
+  "descripcion": "QUISTE DE BAKER"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "METATARSALGIA DE MORTON"
+ },
+ {
+  "codigo_origen": "1041",
+  "descripcion": "TRAUMATISMO DE RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "TIBIAS VARAS FISIOLOGICAS"
+ },
+ {
+  "codigo_origen": "0122",
+  "descripcion": "COMDROMALACIA PATELAR D/I"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "INESTABILIDAD RI"
+ },
+ {
+  "codigo_origen": "0124",
+  "descripcion": "CONDROMALACIA PATELAR I/D"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "SACROILEITIS DCHA/IZQ"
+ },
+ {
+  "codigo_origen": "1046",
+  "descripcion": "SINDROME DEL ESCALENO DER"
+ },
+ {
+  "codigo_origen": "0127",
+  "descripcion": "FIBROMIALGIA?"
+ },
+ {
+  "codigo_origen": "0128",
+  "descripcion": "S. COMPRESION RADICULAR L5-S1?"
+ },
+ {
+  "codigo_origen": "0129",
+  "descripcion": "S. FRICCION MR DCHO"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "SECUELAS FX. CADERA IZQ."
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "RIGIDEZ DE LA RODILLA"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "DISPARIDAD MSIS"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "COXALGIA EAP"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "HERIDA POR AF"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "CUERPOS INTRAARTICULARES RI."
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "POLIARTRALGIAS"
+ },
+ {
+  "codigo_origen": "0137",
+  "descripcion": "OSTEOPOROSIS POSTM??"
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "EPICONDILITIS DERECHA"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "BURSITIS TROCANTERICA DCHA"
+ },
+ {
+  "codigo_origen": "0140",
+  "descripcion": "HALLUX VALGUS I/D"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "GARRA II DEDO PIE IZQ."
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "FX PROXIMAL DEL HUMERO DCHO"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "FX DISTAL RADIO DCHO"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "FX. DISTAL RADIO FRYKMAN IV"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "OSTEOPOROSIS SENIL"
+ },
+ {
+  "codigo_origen": "0147",
+  "descripcion": "CONDROMALACIA PATELAR IZQ."
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "OSTEONECROSIS CABEZA FEMORAL DCHA"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "MIGRACION MATERIAL SINTESIS"
+ },
+ {
+  "codigo_origen": "1029",
+  "descripcion": "ESGUINCE CRONICO DE TOBILLO IZQ"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "TALAGIA EAP"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "GOTA??"
+ },
+ {
+  "codigo_origen": "0153",
+  "descripcion": "CAPSULITIS PSTRAUMATICA IF PROXIMAL DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "ESGUINCE II TOBILLO IZQ"
+ },
+ {
+  "codigo_origen": "0155",
+  "descripcion": "FX PROXIMAL F3 DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "ARTRITIS REUMATOIDEA"
+ },
+ {
+  "codigo_origen": "1033",
+  "descripcion": "DISTROFIA SIMPATICO REFLEJA"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "HOMBRO IZQUIERDO CONGELADO"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "SUBLUIXACION GLENOHUMERAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "HERNIAS DISCALES L4-L5/L5-S1"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "SECUELAS DE ARTRITIS SEPTICA"
+ },
+ {
+  "codigo_origen": "0162",
+  "descripcion": "GENU VALGO"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "CARPO GIBOSO"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "OSTEOCONDROMA"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "H DCHO CONGELADO"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "ARC"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "COXOARTRITIS IZQ"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "ARTRITIS MULÑECAS BILATERAL"
+ },
+ {
+  "codigo_origen": "1044",
+  "descripcion": "SINDROME MIOFACIAL DE TRAPECIO"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "COXA MAGNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "ARTRITIS REACTIVA?"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "ANSIEDAD"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "OSTEONECROSIS CABEZA FEMORAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "SINDROME DE PLICA"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "OA?"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "CONDROMALACIA ROTULIANA"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "FX CUELLO FEMORAL IZQ"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "RETROVERSION FEMORAL"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "PARESIA BRAQUIAL DERECHA"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "DISPLASIA EVOLUTIVA DE CADERA BILATERAL"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "FX CLAVICULA DCHA DESPLAZADA"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "CRAQUIDO ARTICULAR"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "CONTUSION SIMPLE RI"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "INESTABILIDAD TOBILLO VS"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "ARTROPATIA EAP"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "BURSITIS TROCANTERICA"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "DISPLASIA DE CADERA I"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "FX APLASTAMIENTO D12"
+ },
+ {
+  "codigo_origen": "1037",
+  "descripcion": "DOLOR MIXTO, DIGESTIVA, URINARIA Y COLUMNA"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "FX DISTAL RADIO IZQ"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "NEUROMA DE MORTON"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "TENDONITIS IFP DEDO MEDIO"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "EPICONDILITIS PERSISTENTE CODO DCHO"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "OA. ACROMIOCLAVICULAR II"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "OA ACROMIOCLAVICULAR DCHA II"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "PIE PLANO TIPO I"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "S FRICION MR DCHO"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "SECUELAS ESGUINCE TOBILLO."
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "FASCITIS PLANTAR DERECHA"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "BURSITIS ANSERINA"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "SACROILEITIS"
+ },
+ {
+  "codigo_origen": "0210",
+  "descripcion": "PCI???"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "STC?"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "MALAALINEACION FP IZQ II"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "PIE PLANO DINAMICO"
+ },
+ {
+  "codigo_origen": "1038",
+  "descripcion": "ARTROSIS PREMATURA DE CADERA DER"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "CONTUSION MODERADA INGUINAL IZQ"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "CLAVUS IV DEDO P.I"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "V DEDO PI MARTILLO"
+ },
+ {
+  "codigo_origen": "1071",
+  "descripcion": "FRACTURA DE COCCIX"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "LUXACION REICIDIVANTE ROTULA DCHA"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "PARALISIS DE ERB"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "GODINIA DERECHA"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "FX DISTAL RADIO BIL D/I"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "TU CODO DCHO EAP"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "HIGROMA OLECRANEANO IZQ"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "DESGARRO MR DCHO"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "MERALGIA DCHA"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "CEFALEA EAP"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "PIE PALONO DINAMICO II"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "DEBILIDAD FLEXORES"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "BURSITIS PREROTULIANA POSTRM"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "SECUELAS COMPRESION MR DCHO."
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "FX. BASICERVICAL CAUELLO FEMORAL IZQ"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "OSTEALGIAS"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "GENU VARO FISIOLOGICO"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "DORSO CURVO JUVENIL"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "MENISCOPATIA INTERNA RI"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "ARTRITIS"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "FX FEMUR IZQ. EN VIAS CONSOLIDACION."
+ },
+ {
+  "codigo_origen": "0233",
+  "descripcion": "OSTEOPOROSIS"
+ },
+ {
+  "codigo_origen": "0234",
+  "descripcion": "LIGAMENTITIS INDICE DCHO"
+ },
+ {
+  "codigo_origen": "0235",
+  "descripcion": "OSTEOCONDRITIS DE OSGODD - SCHLATTER"
+ },
+ {
+  "codigo_origen": "0236",
+  "descripcion": "CIATICA??"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "CHARCOT-MARIE-TOOTH"
+ },
+ {
+  "codigo_origen": "0238",
+  "descripcion": "TROMBOFLEBITIS MIIQZ."
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "TU TIBIAL DCHO EAP"
+ },
+ {
+  "codigo_origen": "0240",
+  "descripcion": "ESGUINCE PERONEOCALCANEO IZQ"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "FX DISTAL DEL RADIO DCHO INESTABLE FRYKMAN III"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "ESGUINCE DE LA RODILLA"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "DORSO CURVO"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "TUMORACION DORSAL MUÑECA IZQ."
+ },
+ {
+  "codigo_origen": "0245",
+  "descripcion": "QUISTE EAP?"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "PULGAR DCHO EN RESORTE"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "ESPONDILOLISTESIS L5-S1"
+ },
+ {
+  "codigo_origen": "1030",
+  "descripcion": "ESGUINCE DE RODILLA IZQ II GRADO"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "DIABETES MELLITUS"
+ },
+ {
+  "codigo_origen": "1042",
+  "descripcion": "ESGUINCE ANTEPIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0251",
+  "descripcion": "QUISTE SINOVIAL MUÑECA IZQ"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "ESGUINCE MANO IZQ"
+ },
+ {
+  "codigo_origen": "0253",
+  "descripcion": "GENU VARO ARTROSICO BILATERAL"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "AFLOJAMIENTO PLACA SOSTEN CONDILAR"
+ },
+ {
+  "codigo_origen": "0256",
+  "descripcion": "EDEMA CONTUSIONAL MESETA INTERNA"
+ },
+ {
+  "codigo_origen": "0258",
+  "descripcion": "NEUROMA DE MORTON"
+ },
+ {
+  "codigo_origen": "1056",
+  "descripcion": "AUTISMO LEVE"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "TENDONITIS MUÑECA IZQ."
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "GENU VARO POSTRAUMATICO"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "SECUELAS DE FRACTURA SUPRA E INTERCONDILEA"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "DORSOLUMBALGIA"
+ },
+ {
+  "codigo_origen": "0264",
+  "descripcion": "SINDROME PREMENSTRUAL"
+ },
+ {
+  "codigo_origen": "0265",
+  "descripcion": "HEMIMELIA PARCIALTIBIAL IZQ"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "OBLICUIDAD PELVICA"
+ },
+ {
+  "codigo_origen": "0267",
+  "descripcion": "ESGUINCE TOBILLO DCHO I"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "FX DISTAL CODO IZQ"
+ },
+ {
+  "codigo_origen": "0269",
+  "descripcion": "FOCOMELIA ROTULIANA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0270",
+  "descripcion": "CONTRACTURA FLEXION R.I"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "LOE CABEZA FEMORAL DERECHA"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "NECROSIS AVASCULAR CF??"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "CERVICALGIA EAP"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "ESPONDILOLISTESIS L3L4"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "COSTILLA SUPERNUMERARIA"
+ },
+ {
+  "codigo_origen": "0276",
+  "descripcion": "FX. BIMALEOLAR TOBILLO IZQ. WEBER C"
+ },
+ {
+  "codigo_origen": "0277",
+  "descripcion": "ESPONDILITIS"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "FIBROMIALGIA??"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "TRAUMA CEFALOCRANEANO MOD"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "ESPONDILOLISIS I"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "LESION COLATERAL RADIAL D MEDIO I"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "LUXACION ROTULIANA IZQ."
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "LUXACION REICIDIVANTE ROTULKA DCHA."
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "TENDONITIS POSTTRAUMA DEL TIBIAL ANT"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "FX. F2 DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "LESION PLATO VOLAR"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "BURSITIS ANSERINA POSTRM."
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "HERIDA POR AF"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "CUERPO EXTRAÑO CUELLO"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "HALLUX VALGUS MODERAOO"
+ },
+ {
+  "codigo_origen": "0292",
+  "descripcion": "BRAQUIALGIA EAP"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "CERVICOBRAQUIALGIA"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "FASCITIS PLANTAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "FX. LUXACION IF PROXIMAL ABIERTA II"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "CERVICOBRAQUIALGIA"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "METATARSALGIA EAP"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "TENOSINOVITIS"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "TORSION TIBIAL INTERNA"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "V DEDO EN RESORTE DCHO"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "FX DISTAL RADIO DCHO"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "TROMBOFLEBITIS EN EVOLUCION??"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "POLIDACTILIA BILATERAL V DEDO PIE IZQ."
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "POLIDACTILIA BILATERAL V DEDO PIES"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "GODINIA IZQIERDA"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "FX WEBER C."
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "LUMBOCIATALGIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1040",
+  "descripcion": "MIODISTROFIA SIMPATICO REFLEJA"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "ADENOMA HIPOSFISIARIO."
+ },
+ {
+  "codigo_origen": "1050",
+  "descripcion": "SINDROME DE PINZAMIENTO DEL HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "ENFERMEDAD KIEMBOCK DCHA"
+ },
+ {
+  "codigo_origen": "0311",
+  "descripcion": "ESGUINCE DEL TOBILLO DECHO"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "FX. V METATARSIANO IZQ."
+ },
+ {
+  "codigo_origen": "0313",
+  "descripcion": "SEC. ESGUINCE RODILLA IZQ LLI"
+ },
+ {
+  "codigo_origen": "0314",
+  "descripcion": "RETROVERSION FEMORAL"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "VITILIGO"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "ESPONDILOSIS"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "RETROLISTESIS II L5-S1"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "DISPLASIA DE BLOUNT"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "GENU VARO F."
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "FX CALCANEO DCHO."
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "OSTEOPOROSIS POSTMENOPAUSICA"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "POLIARTRALGIAS EAP"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "ESPONDILODISCITIS TBC T10-T11"
+ },
+ {
+  "codigo_origen": "1032",
+  "descripcion": "HOMBRO DOLOROSO DERECHO"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "ESPONDILOSIS VERTEBRAL"
+ },
+ {
+  "codigo_origen": "1049",
+  "descripcion": "TENDINITIS PORCIÓN LARGA DEL BICEPS BRAQUIAL"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "LORDOSIS LUMBAR"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "CIFOSIS TORACICA SEVERA"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "HEMATURIA MICROSCOPICA."
+ },
+ {
+  "codigo_origen": "0331",
+  "descripcion": "TROMBOFLEBITIS?"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "SINDROME ESPALDA FALLIDA"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "QUISTE SINOVIAL PIE DCHO"
+ },
+ {
+  "codigo_origen": "0335",
+  "descripcion": "ESPONDILODISCITIS L2-L3 TBC"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "S. TUNEL DEL CARPO DCHO."
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "NEURITIS IC IZQ. ?"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "SINDROME PLICA RODILLA IZQ"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "TENOSINOVITIS PULGAR DCHO"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "HIPERTENSION ARTERIAL"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "DIUABETES MELLITUS"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "INESTABILIDAD DE LA RODILLA DCHA"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "CRURALGIA DCHA"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "S. FRICCION MR IZQ"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "CAPSULITIS ADHESIVA HIZQ."
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "FX PATOLOGICA CADERA DCHA"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "INSUFICIENCIA RENAL"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "DEDO ANULAR DCHO RESORTE"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "ESCOLIOSIS CERVICO TORACICA"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "INESTABILIDAD AP RODILLA IZQUIERDA."
+ },
+ {
+  "codigo_origen": "0351",
+  "descripcion": "ROTURA DEL LCA RI."
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "RETROVERSION FEMORAL"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "PIE PLANO VALGO SEVERO"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "INSUFICIENCIA DE LCA. RD."
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "DEFICIT MODERADO CADRICEPS DCHO"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "GONARTRITIS DCHA"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "PIE DIABETICO"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "MAL PERFORANTE PLANTAR"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "LUXACION GLENOHUMERAL DCHA"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "PARALISIS ESPASTICA PCI"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "INSUFICIENCIA LCA RD"
+ },
+ {
+  "codigo_origen": "1043",
+  "descripcion": "CONTRACTURA TRAPECIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "ESCOLIOSIS TORACOLUMBAR"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "DORSO CURVO JUEVNIL"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "SINDROME IMPACTO CADERA IZQ?"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "DESGARRO SUPRAESPINOSO??"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "SINDROME FEMOROPATELAR"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "CONDROPATIA ROTULIANA IZQ"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "CONDROPATIA ROTULIANA SEVERA"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "ARTROPLASTIA DE REVISION CADERA IZQ"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "AXONOTMESIS CIATICO COMUN  IZQ"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "GONARTRITIS AVANZADA I/D"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "ESPONDILOARTRITIS CERVICAL"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "PIE PLANO ADQUIRIDO DOLOROSO"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "SINDROME COMPRESION RADICULAR CERVICAL DCHO"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "DISFUNCION DEL TIBIAL POSTERIOR"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "TENOSINOVITIS ESTENOSANTE DCHO."
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "CAPSULITIS ADHESIVA BIL"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "CONDROPATIA ROTULIANA BIL I/D"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "SINOVITIS INFECCIOSA RI"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "FX. SUBCONDRAL MESETA EXTERNA"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "MENISCOPATIA EXTERNA RD"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "CONDROPATIA ROTULIANA D"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "INSUFICIENCIA LCA RI"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "LUXACION MTTF I Y II PE DCHO"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "ARTROPATIA CHARCOT"
+ },
+ {
+  "codigo_origen": "0388",
+  "descripcion": "DISFUNCION TIBIAL POSTERIOR"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "ARTROSIS ACROMIOCLAVICULAR III"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "NEUROAPRAXIA SE"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "TENDINOSIS DEL ROTULIANO"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "INSUFICIENCIA LINFATICA"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "OCD ASTRAGALO??"
+ },
+ {
+  "codigo_origen": "0394",
+  "descripcion": "MONOARTRITIS EAP"
+ },
+ {
+  "codigo_origen": "0395",
+  "descripcion": "SINOVITIS RI"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "CONDROPATIA ROTULIANA DCHA"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "ENFERMEDAD DQUERVAIN DCHA"
+ },
+ {
+  "codigo_origen": "0398",
+  "descripcion": "DEDO MEDIO EN RESORTE DCHO"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "LUMBOCIATALGIA DCHA"
+ },
+ {
+  "codigo_origen": "1048",
+  "descripcion": "FRACTURA 10 Y 12"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "ESCOLIOSIS LUMBAR"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "HAGLUND"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "FRACTURA DE HUMERO"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "PARONIQUIA INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "PCI  HEMIPARESIA ESPÁSTICA"
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "FRACTURA EXTREMO DISTAL DEL RADIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "FX CONMINUTA INTRAARTICULAR BASE FII INDICE IZQ"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "SINDROME DEL TUNEL CARPIANO BILATERAL"
+ },
+ {
+  "codigo_origen": "0409",
+  "descripcion": "PSEUDOARTROSIS CLAVÍCULA DERECHA"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "LESION PUNTA DE DEDOS PULGAR E INDICE TIPO I"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "ZONA II FLEXORA MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "HERIDAS SIMPLES MANO Y RODILLA IZQUIERDAS"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "STC DERECHO"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "RIZARTROSIS ST I DERECHA"
+ },
+ {
+  "codigo_origen": "0415",
+  "descripcion": "HERIDA SIMPLE INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "ENFERMEDAD CERVICAL DEGENERATIVA"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "HERIDA SIMPLE MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0418",
+  "descripcion": "FRACTURA TERCIO MEDIO FÉMUR DERECHO"
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "FRACTURA TERCIO PROX TIBIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0420",
+  "descripcion": "FRACTURA DISTAL CUBITO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "FRACTURA INTRAARTICULAR F2 PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "CELULITIS INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "TENDIVAGINITIS ESTENOSANTE DEL FPL DERECHO"
+ },
+ {
+  "codigo_origen": "0424",
+  "descripcion": "COMPRESION DEL CUBITAL CANAL EPITROCOLEC DER"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "ZONA III EXTENSORA DEL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0426",
+  "descripcion": "LESION CFCT DERECHO"
+ },
+ {
+  "codigo_origen": "0427",
+  "descripcion": "ENFERMEDAD DE DQUERVAIN IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0428",
+  "descripcion": "FRACTURA A TRES FRAGMENTOS CUBITO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "FRACTURA ABIERTA F II INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "LESION DE STENER IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0431",
+  "descripcion": "LESION SII ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "ZONA VI EXTENSORA MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "FRACTURA ABIERTA DISTAL RADIO Y CUBITO DERECHOS"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "ARTROSIS IF DEL PULGAR"
+ },
+ {
+  "codigo_origen": "0435",
+  "descripcion": "ARTROSIS IFD DEL MEÑIQUE"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "ZONA II FLEXORA ANULAR Y MEÑIQUE DERECHOS"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "LESION TIPO I PLATO VOLAR MCF PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "LESION TIPO I PLATO VOLAR IFP DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0439",
+  "descripcion": "TENOSINOVITIS FLEXORES DE LOS DEDOS"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "SINDROME REGIONAL COMPLEJO MSD"
+ },
+ {
+  "codigo_origen": "0441",
+  "descripcion": "LESION LIG CUBITAL MCF PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0442",
+  "descripcion": "FX BASE DEL II METACARPIANO IZQ"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "SINOVITIS DE EXTEENSORES DE MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0444",
+  "descripcion": "LESION PUNTA PULGAR IZQ. TIPO III"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "HERIDA SIMPLE PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "HERIDA SIMPLE MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "LESION SI PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "ZONA I EXTENSORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "FX CUELLO QUINTO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "FRACTURA INTRAARTICULAR F3 MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "EPITROCLEÍTIS DERECHA"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "ESGUINCE GRADO II TOBILLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "LESION LIG ESCAFOLUNATE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "TENDINITIS DEL BÍCEPS"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "RUPTURA PARCIAL MANGUITO ROTADOR"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "TENOSINOVITIS ANULAR Y MEDIO DERECHOS"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "LESION MENISCO INTERNO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "HERIDA SIMPLE ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "ENTESOPATÍA DE LA FASCIA LATA"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "LESION CFCT IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "TENOSINOVITIS FLEXORES DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "DEDOS MEDIOS EN GATILLO"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "AMPUTACIÓN PUNTA DE DEDO TIPO III"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "LESIUON TIPO I PLATO VOLAR MCF DEL PULGAR"
+ },
+ {
+  "codigo_origen": "0479",
+  "descripcion": "PULGARES EN RESORTE"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "CARCINOMA EPIDERMOIDE ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "TENDINITIS PATA DE GANSO"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "LUMBAGO MECANICO"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "ATRICION INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "QUISTES DE POLEAS FLEXORAS INDICE Y MEDIO"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "MEÑIQUE EN MARTILLO TIPO I"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "FX INTRAARTICULAR F3 DEL MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0472",
+  "descripcion": "LESION LIG ESCAFOLUNATE DERECHO ?"
+ },
+ {
+  "codigo_origen": "0473",
+  "descripcion": "SINDROME DEL TUNEL CARPIANO BILATERAL"
+ },
+ {
+  "codigo_origen": "0474",
+  "descripcion": "AMPUTACIÓN PUNTA DE DEDO TIPO II"
+ },
+ {
+  "codigo_origen": "0475",
+  "descripcion": "FX BASE DE LA PRIMERA FALANGE MEÑIQUE EXTRAART."
+ },
+ {
+  "codigo_origen": "0476",
+  "descripcion": "QUISTE SINOVIAL IFD DEDO MEDIO"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "FX INTRAARTICULAR IFD ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0478",
+  "descripcion": "TUMOR DEDO ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0480",
+  "descripcion": "ZONA III EXTENSORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0481",
+  "descripcion": "PSEUDOARTROSIS HIPERTRÓFICA TIBIA DERECHA"
+ },
+ {
+  "codigo_origen": "0482",
+  "descripcion": "TUMOR DEDO ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "LESION S II DEDO MEDIO  DERECHO"
+ },
+ {
+  "codigo_origen": "0484",
+  "descripcion": "HERIDA SIMPLE ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0485",
+  "descripcion": "ZONA IV EXTENSORA INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0486",
+  "descripcion": "TENOSINOVITIS FLEXORES ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0487",
+  "descripcion": "FX ABIERTA F 3 INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0488",
+  "descripcion": "TUMOR EN DORSO MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0489",
+  "descripcion": "FX INTRAARTICULAR F2 MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0490",
+  "descripcion": "HERIDA SIMPLE PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0491",
+  "descripcion": "ZONA I FLEXORA MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0492",
+  "descripcion": "QUISTE POLEA FLEXORA A2 DEDO MEDIO DER"
+ },
+ {
+  "codigo_origen": "0493",
+  "descripcion": "LESION MANGUITO ROTADOR IZQ"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "DEDO MEDIO IZQUIERDO EN GATILLO"
+ },
+ {
+  "codigo_origen": "0495",
+  "descripcion": "VISI MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0496",
+  "descripcion": "HERIDA SIMPLE DDEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0497",
+  "descripcion": "ARTROSIS MEDIOCARPIANA DERECHA"
+ },
+ {
+  "codigo_origen": "0498",
+  "descripcion": "LESION SII INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0499",
+  "descripcion": "AMPUTACIÓN INDICE Y DEDO MEDIO DERECHOS"
+ },
+ {
+  "codigo_origen": "0500",
+  "descripcion": "CUELLO DE CISNE I MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0501",
+  "descripcion": "LESION PLATO VOLAR IFP ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0502",
+  "descripcion": "GANGLION ESCAFOLUNATE DERECHO"
+ },
+ {
+  "codigo_origen": "0503",
+  "descripcion": "MANO DERECHA CATASTROFICA"
+ },
+ {
+  "codigo_origen": "0504",
+  "descripcion": "BURSITIS DEL TROCANTER MAYOR DERECHO"
+ },
+ {
+  "codigo_origen": "0505",
+  "descripcion": "CAPSULITIS MCF MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "ESGUINCE TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0507",
+  "descripcion": "PARALISIS BAJA DEL MEDIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0508",
+  "descripcion": "CONTUSION MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0509",
+  "descripcion": "FX CONSOLIDADA VICIOSA CABEZA F II INDICE DER"
+ },
+ {
+  "codigo_origen": "0510",
+  "descripcion": "FX FII SEGUNDO DEDO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0511",
+  "descripcion": "TUMOR CANA L RADIAL DERECHO"
+ },
+ {
+  "codigo_origen": "0512",
+  "descripcion": "ARTROSIS AMBAS RODILLAS"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "LESION DEL LIG COLATERAL MEDIAL RODILLA IZQ"
+ },
+ {
+  "codigo_origen": "0514",
+  "descripcion": "LESION TMC PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0515",
+  "descripcion": "EPICONDILOSIS DERECHA"
+ },
+ {
+  "codigo_origen": "0516",
+  "descripcion": "INDICE DERECHO EN MARTILLO"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "TENDINITIS SUPRAESPINOSO DERECHO"
+ },
+ {
+  "codigo_origen": "0518",
+  "descripcion": "LESION LIG MEDIAL CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0519",
+  "descripcion": "FRACTURA CONMINUTA DEL HÚMERO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0520",
+  "descripcion": "HERIDA COMPLICADA INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0521",
+  "descripcion": "DEDO ANULAR DERECHO EN RESORTE"
+ },
+ {
+  "codigo_origen": "0522",
+  "descripcion": "FRACTURA ABIERTA DEL TERCER METACARPIANO DER"
+ },
+ {
+  "codigo_origen": "0523",
+  "descripcion": "SINDROME DEL TUNEL CARPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0524",
+  "descripcion": "SINOVITIS FLEXORES MEÑIQUE IZQ."
+ },
+ {
+  "codigo_origen": "0525",
+  "descripcion": "HERIDA SIMPLE DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0526",
+  "descripcion": "LUXACION DORSAL IFP DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0527",
+  "descripcion": "ZONA V EXTENSORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0528",
+  "descripcion": "FX BASE F1 ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0529",
+  "descripcion": "ZONA VI EXTENSORA ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0531",
+  "descripcion": "TENOSINOVITIS ESTENOSANTE FLEXORES DEDO MEDIO DER"
+ },
+ {
+  "codigo_origen": "0532",
+  "descripcion": "ZONA  VII EXTENSORA  ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0533",
+  "descripcion": "TENDINOPATÍA BICIPITAL DERECHA"
+ },
+ {
+  "codigo_origen": "0534",
+  "descripcion": "HERIDA SIMPLE DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0535",
+  "descripcion": "FRACTURA MAL CONSOLIDADA RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0536",
+  "descripcion": "PULGAR DERECHO EN RESORTE"
+ },
+ {
+  "codigo_origen": "0537",
+  "descripcion": "LESION PLATO VOLAR ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0538",
+  "descripcion": "HERIDA COMPLICADA MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0539",
+  "descripcion": "HERIDA SIMPLE ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0540",
+  "descripcion": "FRACTURA A TRES FRAGMENTOS DEL HUMERO IZQ."
+ },
+ {
+  "codigo_origen": "0541",
+  "descripcion": "LESION PUNTA DE PULGAR IZQUIERDO TIPO I"
+ },
+ {
+  "codigo_origen": "0542",
+  "descripcion": "TUMOR GLÓMICO ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0544",
+  "descripcion": "ARTRITIS REUMATOIDE"
+ },
+ {
+  "codigo_origen": "0545",
+  "descripcion": "RIZARTROSIS DERECHA"
+ },
+ {
+  "codigo_origen": "0546",
+  "descripcion": "QUISTE MUCOSO INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0547",
+  "descripcion": "INESTABILIDAD MCF DEL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0548",
+  "descripcion": "FRACTURA DEL EXREMO DISTAL DEL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0549",
+  "descripcion": "ATRICION DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0550",
+  "descripcion": "LESION PUNTA DE ANULAR DERECHO TIPO I"
+ },
+ {
+  "codigo_origen": "0551",
+  "descripcion": "ATRICIÓN ÍNDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0552",
+  "descripcion": "SINDROME TUNEL CARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0553",
+  "descripcion": "SINOVITIS DEL FPL DERECHHO"
+ },
+ {
+  "codigo_origen": "0554",
+  "descripcion": "LESION LCA IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0555",
+  "descripcion": "HERIDA SIMPLE MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0556",
+  "descripcion": "HERIDA SIMPLE INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0557",
+  "descripcion": "FX EXTERMO DISTAL RADIO BILATERAL"
+ },
+ {
+  "codigo_origen": "0558",
+  "descripcion": "FRACTURA EN TALLO VERDE DIAFISIS CUBITO Y RADIO IZ"
+ },
+ {
+  "codigo_origen": "0559",
+  "descripcion": "ATRICIÓN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0560",
+  "descripcion": "CONTUSION RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0561",
+  "descripcion": "LUXACION ACROMIOCLAVICULAR IZQUIERDA TIPO II"
+ },
+ {
+  "codigo_origen": "0562",
+  "descripcion": "TUMOR PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0563",
+  "descripcion": "ZONA VI EXTENSORA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0564",
+  "descripcion": "STC BILATERAL"
+ },
+ {
+  "codigo_origen": "0565",
+  "descripcion": "PULGAR EN GATILLO BILATERAL"
+ },
+ {
+  "codigo_origen": "0566",
+  "descripcion": "ARTRITIS RADIOCARPIANA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0567",
+  "descripcion": "LESION PUNTA DE DEDO TIPO I INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0568",
+  "descripcion": "CONTUSION MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0569",
+  "descripcion": "NEUROPRAXIA CUBITAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0570",
+  "descripcion": "LESIÓN SI HALLUX DERECHO"
+ },
+ {
+  "codigo_origen": "0571",
+  "descripcion": "ATRICIÓN ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0572",
+  "descripcion": "LESION SIV ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0573",
+  "descripcion": "FX QUINTO METATAARSIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0574",
+  "descripcion": "ATRICIÓN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0575",
+  "descripcion": "LUXACIÓN DORSAL IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0576",
+  "descripcion": "LUXOFRACTURA CMC DEL CUARTO Y QUINTO RAYOS DERECHO"
+ },
+ {
+  "codigo_origen": "0577",
+  "descripcion": "LESION SI LECHO UNGUEAL MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0578",
+  "descripcion": "SINOVITIS DEL FPL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0579",
+  "descripcion": "CONTUSIÓN PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0580",
+  "descripcion": "ABSCESO INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0581",
+  "descripcion": "OSTEOMIELITIS FII INDICE IZQ"
+ },
+ {
+  "codigo_origen": "0582",
+  "descripcion": "LESION MANGUITO ROTADOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0583",
+  "descripcion": "FX ESTILOIDES DEL CÚBITO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0584",
+  "descripcion": "ENFERMEDAD DE DQUERVAIN BILATERAL"
+ },
+ {
+  "codigo_origen": "0585",
+  "descripcion": "LESION SII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0586",
+  "descripcion": "QUEMADURA DE 2DO GRADO MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0587",
+  "descripcion": "FRACTURA INTRAARTICULAR IV METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0588",
+  "descripcion": "FRACTURA INTRAARTICULAR V METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0589",
+  "descripcion": "TENDIDNITIS DEL AQUILES IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0590",
+  "descripcion": "TENDINITIS DE LOS PERONEOS LATERALES"
+ },
+ {
+  "codigo_origen": "0591",
+  "descripcion": "SINDROME TUNEL CARPIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0592",
+  "descripcion": "DISOCIACIÓN ESCAFOLUNATE IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0593",
+  "descripcion": "FRACTURA CÚPULA RADIAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0594",
+  "descripcion": "ENFERMEDAD DISCAL C3C4 ,C5C6 Y C6C7"
+ },
+ {
+  "codigo_origen": "0595",
+  "descripcion": "SECCIÓN COLATERAL SENSITIVO CUBITAL INDICE IZQ"
+ },
+ {
+  "codigo_origen": "0596",
+  "descripcion": "HERIDA COMPLEJA MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0597",
+  "descripcion": "ENFERMEDAD DISCAL L5/S1"
+ },
+ {
+  "codigo_origen": "0598",
+  "descripcion": "SACROILEITIS DERECHA"
+ },
+ {
+  "codigo_origen": "0599",
+  "descripcion": "FRACTURA BASE F1 MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0600",
+  "descripcion": "ATRAPAMIENTO DEL NERVIO CUBITAL CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0601",
+  "descripcion": "TENDINITIS FCU IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0602",
+  "descripcion": "HERIDA SIMPLE INDICE  DERECHO"
+ },
+ {
+  "codigo_origen": "0603",
+  "descripcion": "FX ABIERTA F1 ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0604",
+  "descripcion": "LESION MENISCO EXTERNO RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0605",
+  "descripcion": "LESION DEL LIGAMENTO LUNOTRIQUETAL DERECHO"
+ },
+ {
+  "codigo_origen": "0606",
+  "descripcion": "FX CONMINUTA INTRAARTICULAR DE LA BASE DEL II MC D"
+ },
+ {
+  "codigo_origen": "0607",
+  "descripcion": "LESION SI DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0608",
+  "descripcion": "ABSCESO INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0609",
+  "descripcion": "LESION LIGAMENTO RADIAL DE LA MCF DEL PULGAR"
+ },
+ {
+  "codigo_origen": "0610",
+  "descripcion": "ZONA III FLEXORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0611",
+  "descripcion": "SECCIÓN II TRONCO SENSITIVO MANO DERECHO"
+ },
+ {
+  "codigo_origen": "0612",
+  "descripcion": "ARTRITIS RADIO CARPIANA DERECHA"
+ },
+ {
+  "codigo_origen": "0613",
+  "descripcion": "FRACTURA DISTAL EXTRAARTICULAR DEL V MC DERECHO"
+ },
+ {
+  "codigo_origen": "0614",
+  "descripcion": "AMPUTACIÓN MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0615",
+  "descripcion": "AMPUTACIÓN ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0619",
+  "descripcion": "ESGUINCE MEDIO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0616",
+  "descripcion": "ZONA III EXTONSORA DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0617",
+  "descripcion": "LESION SIV INDICE Y MEDIO IZQUIERDOS"
+ },
+ {
+  "codigo_origen": "0618",
+  "descripcion": "ZONA V EXTENSORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0620",
+  "descripcion": "FRACTURA DISTAL RADIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0621",
+  "descripcion": "SECCIÓN COLATERAL SENSITIVO RADIAL DEDO MEDIO DER"
+ },
+ {
+  "codigo_origen": "0622",
+  "descripcion": "EPICONDILOSIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0623",
+  "descripcion": "LESION PARCIAL LCC DE LA MCF DEL PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0624",
+  "descripcion": "FX FII 5TO DEDO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0625",
+  "descripcion": "FX METÁFISIS DISTAL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0626",
+  "descripcion": "ESGUINCE DEL MEDIO PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0627",
+  "descripcion": "DEDO ANULAR DERECHO EN MARTILLO"
+ },
+ {
+  "codigo_origen": "0628",
+  "descripcion": "LESION SII PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0629",
+  "descripcion": "CONTUSIÓN MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0630",
+  "descripcion": "ESGUINCE TOBILLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0631",
+  "descripcion": "INESTABILIDAD ANTERIOR HOMBRO IZQ."
+ },
+ {
+  "codigo_origen": "0632",
+  "descripcion": "SLAP HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0633",
+  "descripcion": "DEDO MEDIO DERECHO EN MARTILLO TIPO I"
+ },
+ {
+  "codigo_origen": "0634",
+  "descripcion": "FRACTURA ABIERTA FI ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0635",
+  "descripcion": "FRACTURA ABIERTA CUELLO FII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0636",
+  "descripcion": "ENFERMEDAD DISCAL C5/C6 Y C6/C7"
+ },
+ {
+  "codigo_origen": "0638",
+  "descripcion": "CELULITIS MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0637",
+  "descripcion": "LUXACION DORSAL IFP ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0639",
+  "descripcion": "CONTUSIÓN HALLUX IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0640",
+  "descripcion": "LESION SI INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0641",
+  "descripcion": "DEFORMIDAD DE  MADELUNG DERECHA"
+ },
+ {
+  "codigo_origen": "0642",
+  "descripcion": "LESION SUPRAESPINOSO DERECHO"
+ },
+ {
+  "codigo_origen": "0643",
+  "descripcion": "GANGLIÓN MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0644",
+  "descripcion": "HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0645",
+  "descripcion": "STC BILATERAL"
+ },
+ {
+  "codigo_origen": "0646",
+  "descripcion": "DESGARRO MUSCULATURA GEMELAR"
+ },
+ {
+  "codigo_origen": "0647",
+  "descripcion": "DEDO INDICE EN GATILLO"
+ },
+ {
+  "codigo_origen": "0648",
+  "descripcion": "CONTUSIÓN MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0649",
+  "descripcion": "LESUION LIG MEDIAL MCF PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0650",
+  "descripcion": "LESION SII PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0651",
+  "descripcion": "OSTEOARTROSIS IFD AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0652",
+  "descripcion": "LESION LCA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0653",
+  "descripcion": "MEÑIQUE EN MARTILLO TIPO I"
+ },
+ {
+  "codigo_origen": "0654",
+  "descripcion": "LESIÓN LIGAMENTO MEDIAL MCF PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0655",
+  "descripcion": "GANGLIÓN OCULTO MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0656",
+  "descripcion": "ONICOMICOSIS HALLUX DERECHO"
+ },
+ {
+  "codigo_origen": "0657",
+  "descripcion": "ZONA VI EXTENSORA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0658",
+  "descripcion": "ZONA IV EXTENSORA ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0659",
+  "descripcion": "HERIDA SIMPLE MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0660",
+  "descripcion": "SECCIÓN DEL FCR ZONA V FLEXORA"
+ },
+ {
+  "codigo_origen": "0679",
+  "descripcion": "RIZARTROSIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0661",
+  "descripcion": "CONTUSIÓN INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0662",
+  "descripcion": "FRACTURA IV METACARPIANO IZQ"
+ },
+ {
+  "codigo_origen": "0663",
+  "descripcion": "FRACTURA V METACARPIANO IZQ"
+ },
+ {
+  "codigo_origen": "0664",
+  "descripcion": "TUMOR  DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0665",
+  "descripcion": "DESGARRO CUADRÍCEPS DERECHO"
+ },
+ {
+  "codigo_origen": "0666",
+  "descripcion": "FRACTURA CUELLO FI MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0667",
+  "descripcion": "TUMOR ÍNDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0668",
+  "descripcion": "ENFERMEDAD DE DUPUYTREN DERECHA"
+ },
+ {
+  "codigo_origen": "0669",
+  "descripcion": "LESIÓN SIII DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0670",
+  "descripcion": "LESION SII PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0671",
+  "descripcion": "LATIGAAZO CERVICAL"
+ },
+ {
+  "codigo_origen": "0672",
+  "descripcion": "CONTUSION MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0673",
+  "descripcion": "FIBROMIALGIAS"
+ },
+ {
+  "codigo_origen": "0674",
+  "descripcion": "ZONA III EXTENSORA INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0675",
+  "descripcion": "LESION PLATO VOLAR IFD ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0676",
+  "descripcion": "HERIDA SIMPLE MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0677",
+  "descripcion": "DOLOR RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0678",
+  "descripcion": "LESION MENISCO EXTERNO RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0680",
+  "descripcion": "LESION MANGUITO ROTADOR DERECHO"
+ },
+ {
+  "codigo_origen": "0681",
+  "descripcion": "FRACTURA F1 MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0682",
+  "descripcion": "TUMOR DORSO IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0683",
+  "descripcion": "LESION PLATO VOLAR MCF PULGAR DER"
+ },
+ {
+  "codigo_origen": "0684",
+  "descripcion": "TENDINITIS SUPRAESPINOSO DERECHO"
+ },
+ {
+  "codigo_origen": "1087",
+  "descripcion": "NIÑA SANA"
+ },
+ {
+  "codigo_origen": "0685",
+  "descripcion": "ZONA VI EXTENSORA ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0686",
+  "descripcion": "LESION PLATO VOLAR MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0687",
+  "descripcion": "PSEUDOARTROSIS DEL ESCAFOIDES IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0688",
+  "descripcion": "HERIDA SIMPLE ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0689",
+  "descripcion": "LESION MANGO DE LOS ROTADORES IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0690",
+  "descripcion": "CONTUSIÓN MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0691",
+  "descripcion": "SNAC GRADO III MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0692",
+  "descripcion": "TENDINITIS BICIPITAL"
+ },
+ {
+  "codigo_origen": "0693",
+  "descripcion": "INESTABILIDAD ANTERIOR HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0694",
+  "descripcion": "LESION TIPO I PLATO VOLAR IFP DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0695",
+  "descripcion": "ZONA I FLEXORA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0696",
+  "descripcion": "LESION SIII DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0697",
+  "descripcion": "LESION SI ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0698",
+  "descripcion": "CUERPO EXTRAÑO DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0699",
+  "descripcion": "CUERPO EXTRAÑO ÍNDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0700",
+  "descripcion": "PARONIQUIA RADIAL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0701",
+  "descripcion": "FRACTURA INTRAARTICULAR DISTAL RADIO DERECHO VI"
+ },
+ {
+  "codigo_origen": "0702",
+  "descripcion": "DISOCIACIÓN ESCAFOLUNATE DERECHA"
+ },
+ {
+  "codigo_origen": "0703",
+  "descripcion": "LESIÓN LIGAMENTO RADIAL IFP DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0704",
+  "descripcion": "ATRICIÓN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0719",
+  "descripcion": "FX F1 5TO DEDO PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0705",
+  "descripcion": "LESION PUNTA DE DEDO MEDIO DERECHO TIPO II"
+ },
+ {
+  "codigo_origen": "0706",
+  "descripcion": "NECROSIS ISQUÉMICA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0707",
+  "descripcion": "FRACTURA INTRAARTICULAR CUELLO V MTC IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0708",
+  "descripcion": "FRACTURA INFRASINDESMAL TOBILLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0709",
+  "descripcion": "SECCIÓN DEL EPL ZONA IV EXTENSORA DERECHA"
+ },
+ {
+  "codigo_origen": "0710",
+  "descripcion": "LESION LIG ESCAFOLUNATE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0711",
+  "descripcion": "SINDROME CANAL GUYON IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0712",
+  "descripcion": "FX CONSOLIDADAS DEL III Y IV METACARPIANOS DER"
+ },
+ {
+  "codigo_origen": "0713",
+  "descripcion": "RIGIDECES MCF E IFP DEDOS LARGOS MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0714",
+  "descripcion": "INDICE IZQUIERRDO EN MARTILLO TIPO I"
+ },
+ {
+  "codigo_origen": "0715",
+  "descripcion": "PANADIZO PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0716",
+  "descripcion": "FX DISTAL RADIO DERECHO CONSOLIDADA VICIOSAMENTE"
+ },
+ {
+  "codigo_origen": "0717",
+  "descripcion": "FRACTURA FI MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0718",
+  "descripcion": "LESION PARCIAL LCM CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0720",
+  "descripcion": "SINOVITIS DE FLEXORES DEDOS MANO IZQ."
+ },
+ {
+  "codigo_origen": "0721",
+  "descripcion": "SINDROME REGIONAL COMPLEJO MSI"
+ },
+ {
+  "codigo_origen": "0722",
+  "descripcion": "RUPTURA TOTAL MANGUITO ROTADOR DERECHO"
+ },
+ {
+  "codigo_origen": "0723",
+  "descripcion": "SACROILEÍTIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0724",
+  "descripcion": "CADERA IZQUIERDA EN RESORTE"
+ },
+ {
+  "codigo_origen": "0730",
+  "descripcion": "ARTROSIS CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0725",
+  "descripcion": "LESION S III INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0726",
+  "descripcion": "DOLOR MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0727",
+  "descripcion": "CUBITO PLUS !!!!!!"
+ },
+ {
+  "codigo_origen": "0728",
+  "descripcion": "FX INTRAARTICULAR F III ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "0729",
+  "descripcion": "QUISTE SINOVIAL POLEA A1 ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0731",
+  "descripcion": "QUISTE ÓSEO CABEZA DEL IV MTT DERECHO"
+ },
+ {
+  "codigo_origen": "0732",
+  "descripcion": "TUMOR CANAL RADIAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0733",
+  "descripcion": "FX DISTAL RADIO DERECHO FRYKMANN VI"
+ },
+ {
+  "codigo_origen": "0734",
+  "descripcion": "TUMOR TIBIA IZQUIERDA AD"
+ },
+ {
+  "codigo_origen": "0735",
+  "descripcion": "GANGLIÓN DORSO MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0736",
+  "descripcion": "FRACTURA F1 DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0737",
+  "descripcion": "LIPOMA CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0738",
+  "descripcion": "CONTUSIÓN ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0739",
+  "descripcion": "FRACTURA BASE DEL TERCER METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0740",
+  "descripcion": "FRACTURA DIÁFISIS DEL TERCER METACARPIANO DER"
+ },
+ {
+  "codigo_origen": "0741",
+  "descripcion": "FRACTURA DIAFISIS CUARTO MC DERECHO"
+ },
+ {
+  "codigo_origen": "0742",
+  "descripcion": "LESION SII PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0743",
+  "descripcion": "OSTEOMIELITIS AGUDA F III DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0744",
+  "descripcion": "PSEUDOARTROSIS ATRÓFICA HÚMERO DERECHO"
+ },
+ {
+  "codigo_origen": "0745",
+  "descripcion": "FLEGMON INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0746",
+  "descripcion": "SECCION COLATERAL SENSITIVO RADIAL DEDO MEDIO"
+ },
+ {
+  "codigo_origen": "1104",
+  "descripcion": "PIE CAVO VARO"
+ },
+ {
+  "codigo_origen": "0747",
+  "descripcion": "PARÁLISIS BAJA DEL NERVIO CUBITAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0748",
+  "descripcion": "HIGROMA CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0749",
+  "descripcion": "LESION LIG LATERAL RADIAL IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0750",
+  "descripcion": "FRACTURA ABIERTA DEL II METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0751",
+  "descripcion": "SINDROME DEL PRONADOR DERECHO"
+ },
+ {
+  "codigo_origen": "0752",
+  "descripcion": "ESGUINCE TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0753",
+  "descripcion": "LESION TIPO I PLATO VOLAR IFP MEÑIQUE IZQ"
+ },
+ {
+  "codigo_origen": "0754",
+  "descripcion": "CONTUSIÓN CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0755",
+  "descripcion": "FRACTURA CUELLO FII MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0756",
+  "descripcion": "FRACTURA INTRAARTICULAR FIII INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0757",
+  "descripcion": "HIGROMA CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0758",
+  "descripcion": "LUMBAGO"
+ },
+ {
+  "codigo_origen": "0759",
+  "descripcion": "ACTITUD ESCOLIÓTICA LUMBAR"
+ },
+ {
+  "codigo_origen": "0760",
+  "descripcion": "ARTROSIS RADIOCARPIANA DERECHA"
+ },
+ {
+  "codigo_origen": "0761",
+  "descripcion": "LESION SIII MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0762",
+  "descripcion": "LESION SIII SEGUNDO DEDO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0763",
+  "descripcion": "LESION S II INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0764",
+  "descripcion": "SINDROME REGIONAL COMPLEJO TIPO MSI"
+ },
+ {
+  "codigo_origen": "0765",
+  "descripcion": "DEDOS EN GARRA PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0766",
+  "descripcion": "PARONIQUIA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0767",
+  "descripcion": "LESION LIG MEDIAL CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0768",
+  "descripcion": "EPONIQUIA MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0769",
+  "descripcion": "ONICOMICOSIS MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0770",
+  "descripcion": "LESIÓN FASCIA PLANTAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0771",
+  "descripcion": "LESION SIII ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0772",
+  "descripcion": "FRACTURA HÚMERO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0773",
+  "descripcion": "FRACTURA BASE DEL CUARTO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0774",
+  "descripcion": "HERIDAS POR PRYECTIL DE ARMA DE FUEGO MSD"
+ },
+ {
+  "codigo_origen": "0775",
+  "descripcion": "FRACTURA ABIERTA FII INDICE IZQUIERDO POR HAF"
+ },
+ {
+  "codigo_origen": "0776",
+  "descripcion": "ABSCESO PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0777",
+  "descripcion": "LESION PUNTA DE DEDO TIPO I PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0778",
+  "descripcion": "ZONA II FLEXORA ANULAR Y MEÑIQUE DERECHOS"
+ },
+ {
+  "codigo_origen": "0779",
+  "descripcion": "FX TALLO VERDE TERCIO DISTAL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0780",
+  "descripcion": "LX ABIERTA IFP MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0781",
+  "descripcion": "FRACTURA ABIERTA DEL EXTREMO DISTAL DEL CÚBITO IZQ"
+ },
+ {
+  "codigo_origen": "0782",
+  "descripcion": "FRACTURA DE LA BASE DEL 5TO MTC DERECHO"
+ },
+ {
+  "codigo_origen": "0783",
+  "descripcion": "MORDEDURA CANINA SIMPLE MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0784",
+  "descripcion": "LESION PUNTA DE DEDO PULGAR TIPO I"
+ },
+ {
+  "codigo_origen": "0785",
+  "descripcion": "LESION SI PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0786",
+  "descripcion": "LXFX IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0787",
+  "descripcion": "LESIÓN SUBESCAPULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0788",
+  "descripcion": "ENF ARTICULAR DEGENERATIVA AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0789",
+  "descripcion": "TOFOS GOTOSOS PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0790",
+  "descripcion": "LESION SI HALLUX IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0791",
+  "descripcion": "LESION PUNTA DE DEDO MEDIO IZQ TIPO II"
+ },
+ {
+  "codigo_origen": "0792",
+  "descripcion": "CLINODACTILIA PULGARES"
+ },
+ {
+  "codigo_origen": "0793",
+  "descripcion": "LXFX TRANSESCAFOPERILUNAR DORSAL  IV IZQ."
+ },
+ {
+  "codigo_origen": "0794",
+  "descripcion": "GRANULOMA MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0795",
+  "descripcion": "FX ABIERTA FII ÍNDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0796",
+  "descripcion": "LESIÓN LECHO UNGUEAL ( S Y GERMINAL ) PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0797",
+  "descripcion": "TRAUMATISMO PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0798",
+  "descripcion": "OSTEOMIELITIS FIII MEÑIQUE IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0799",
+  "descripcion": "FRACTURA RADIO DERECHO TERCIO MEDIO"
+ },
+ {
+  "codigo_origen": "0800",
+  "descripcion": "FX DORSO DE FIII ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0801",
+  "descripcion": "HERIDA COMPLICADA PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0802",
+  "descripcion": "FRACTURA TERCIO MEDIO HUMERO DERECHO"
+ },
+ {
+  "codigo_origen": "0803",
+  "descripcion": "MANO DERECHA CATASTRÓFICA"
+ },
+ {
+  "codigo_origen": "0804",
+  "descripcion": "RUPTURA LIG. CLEYLAND RADIAL MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0805",
+  "descripcion": "SINOVITIS AGUDA FLEXORES DE LOS DEDOS MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0806",
+  "descripcion": "DEDO ANULAR IZQUIERDO EN RESORTE"
+ },
+ {
+  "codigo_origen": "0807",
+  "descripcion": "ZONA I EXTENSORA MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0808",
+  "descripcion": "FX INTRAARTICULAR FIII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0828",
+  "descripcion": "FLEGMÓN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0809",
+  "descripcion": "LX FX  IF  DEL PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0810",
+  "descripcion": "LESIÓN DE URBANIAK TIPO I PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "0811",
+  "descripcion": "STC IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0812",
+  "descripcion": "FRACTURA INTRAARTICULAR RADIO DERECHO NO DESP."
+ },
+ {
+  "codigo_origen": "0813",
+  "descripcion": "FX DISTAL DE RADIO IZQ. FRYKMANN VI"
+ },
+ {
+  "codigo_origen": "0814",
+  "descripcion": "LESION LIG LUNOTRIQUETAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0815",
+  "descripcion": "FRACTURA INTRAARTICULAR FII INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0816",
+  "descripcion": "PARONIQUIA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0817",
+  "descripcion": "ZONA V EXTENSORA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0818",
+  "descripcion": "LESION PLATO VOLAR MCF PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0819",
+  "descripcion": "ARTROSIS IFD DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0820",
+  "descripcion": "TUMOR CABEZA FII DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0821",
+  "descripcion": "CONDROMALACIA PATELOFEMORAL DERECHA"
+ },
+ {
+  "codigo_origen": "0822",
+  "descripcion": "AMPUTACIÓN TRAUMÁTICA ANULAR Y MEDIO IZQUIERDOS"
+ },
+ {
+  "codigo_origen": "0823",
+  "descripcion": "OSTEEOMIELITIS FÉMUR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0824",
+  "descripcion": "QUISTES MUCOSOS EN AMBOS PULGARES"
+ },
+ {
+  "codigo_origen": "0825",
+  "descripcion": "SINOVITIS FLEXORES INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0826",
+  "descripcion": "HERIDA SIMPLE MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0827",
+  "descripcion": "HERIDA SIMPLE ANTEBRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0829",
+  "descripcion": "ZONA IV EXTENSORA MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0901",
+  "descripcion": "FRACTURA COSTAL"
+ },
+ {
+  "codigo_origen": "0830",
+  "descripcion": "FRACTURAS CABEZAS DEL TERCER Y CUARTO MC DERECHOS"
+ },
+ {
+  "codigo_origen": "0831",
+  "descripcion": "LXFX CMC DEL 4TO RAYO DERECHO"
+ },
+ {
+  "codigo_origen": "0832",
+  "descripcion": "LESION SIII ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0833",
+  "descripcion": "PQX LXFX CADERA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0834",
+  "descripcion": "AXONOTMESIS CIATICO MAYOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0835",
+  "descripcion": "LESION PUNTA DE DEDO ANULAR IZQ TIPO II"
+ },
+ {
+  "codigo_origen": "0836",
+  "descripcion": "PARALISIS ALTA MEDIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0837",
+  "descripcion": "INESTABILIDAD CRÓNICA CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0838",
+  "descripcion": "ATRICION FPL Y FDS ANTEBRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0839",
+  "descripcion": "TENDINITIS BÍCEPS BRAQUIAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0840",
+  "descripcion": "LESION LIG COLATERAL CUBITAL MCF PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0841",
+  "descripcion": "DOLOR NEUROPÁTICO MSI"
+ },
+ {
+  "codigo_origen": "0842",
+  "descripcion": "ARTRITIS GOTOSA IFP ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0843",
+  "descripcion": "FRACTURA  AVBIERTA F III ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0844",
+  "descripcion": "LESION SIII ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0845",
+  "descripcion": "PQX DEDO MEDIO DERECHO EN GATILLO"
+ },
+ {
+  "codigo_origen": "0846",
+  "descripcion": "INFECCIÓN PQX TARDÍA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0847",
+  "descripcion": "FRACTURA INTRAARTICULAR  F III ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0848",
+  "descripcion": "NECROSIS ASÉPTICA CABEZA FII DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0849",
+  "descripcion": "ZONA II FLEXORA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0850",
+  "descripcion": "SECCIÓN COLATERALES SENSITIVOS DEL ÍNDICE"
+ },
+ {
+  "codigo_origen": "0851",
+  "descripcion": "SINOOVITIS EXTENSORES DE MUÑECA Y DEDOS IZQUIERDOS"
+ },
+ {
+  "codigo_origen": "0852",
+  "descripcion": "FX NO DESPLAZADA F III DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0853",
+  "descripcion": "LESION LIG RADIAL MCF DEL ÍNDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0854",
+  "descripcion": "HERIDA COMPLICADA MSD"
+ },
+ {
+  "codigo_origen": "0855",
+  "descripcion": "TUMOR GLÓMICO ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0856",
+  "descripcion": "LESION LIG LATERAL IF PULGAR IZQ ."
+ },
+ {
+  "codigo_origen": "0857",
+  "descripcion": "SECCIÓN FDP/FDS ZONA II FLEXORA MEÑIQUE IZQ ."
+ },
+ {
+  "codigo_origen": "0858",
+  "descripcion": "SINOVITIS DE LOS FLEXORES DEL DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0859",
+  "descripcion": "CONTUSION MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0860",
+  "descripcion": "RUPTURA FASCIA PLANTAR DERECHA"
+ },
+ {
+  "codigo_origen": "0861",
+  "descripcion": "ABSCESO PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0862",
+  "descripcion": "HERIDA COMPLICADA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0863",
+  "descripcion": "FX TALLO VERDE EXT DISTAL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0864",
+  "descripcion": "LESION PLATO VOLAR IF PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0865",
+  "descripcion": "TUMOR INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0866",
+  "descripcion": "FX TALLO VERDE DISTAL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0867",
+  "descripcion": "FX TALLO VERDE DISTAL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0868",
+  "descripcion": "LESION PLATO VOLAR TIPO I ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0871",
+  "descripcion": "DEDO MEDIO DERECHO EN RESORTE"
+ },
+ {
+  "codigo_origen": "0869",
+  "descripcion": "SINOVITIS EXTENSORES DEL ANULAR Y  MEÑIQUE"
+ },
+ {
+  "codigo_origen": "0870",
+  "descripcion": "ADHERENCIA CICATRIZAL FIII DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0872",
+  "descripcion": "CONTRACTURA CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0873",
+  "descripcion": "EPONIQUIA DEL ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0874",
+  "descripcion": "QUEMADURA 2DO GRADO MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0875",
+  "descripcion": "PARALISIS BAJA DEL MEDIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0876",
+  "descripcion": "DEDOS ANULAR EN GATILLO BILATERAL"
+ },
+ {
+  "codigo_origen": "0877",
+  "descripcion": "SECCION COLATERAL SENSITIVO CUBITAL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0878",
+  "descripcion": "SECCION COLATERAL SENSITIVO RADIAL ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "0879",
+  "descripcion": "HERIDA SIMPLE PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0880",
+  "descripcion": "LESION LIG MEDIAL CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0881",
+  "descripcion": "TUMOR CARA ANTERIOR MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0882",
+  "descripcion": "ARTRITIS REUMATOIDE"
+ },
+ {
+  "codigo_origen": "0883",
+  "descripcion": "LX  IFP 2DO DEDO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0884",
+  "descripcion": "FRACTURA INTRAARTICULAR FII PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0885",
+  "descripcion": "CONTUSION RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0886",
+  "descripcion": "CONTUSION CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0887",
+  "descripcion": "ARTROSIS PATELOFEMORAL DERECHA"
+ },
+ {
+  "codigo_origen": "0888",
+  "descripcion": "FRACTURA BASE DEL SEGUNDO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0889",
+  "descripcion": "CELULITIS PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0890",
+  "descripcion": "CONTUSIÓN HALLUX DERECHO"
+ },
+ {
+  "codigo_origen": "0891",
+  "descripcion": "FRACTURA CONMINUTA F1 ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0892",
+  "descripcion": "FX CONMINUTA F1 MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0893",
+  "descripcion": "FRACTURA BASE FII MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0894",
+  "descripcion": "QUISTE SINOVIAL IF PULGAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0895",
+  "descripcion": "FRACTURA BASE DEL 1ER  MTC DERECHO"
+ },
+ {
+  "codigo_origen": "0896",
+  "descripcion": "ARTROSIS IF PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0897",
+  "descripcion": "CONTUSIÓN IFD MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0898",
+  "descripcion": "PSEUDOARTROSIS 2DO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0899",
+  "descripcion": "RIGIDEZ IFP MEDIO ,INDICE Y ANULAR DERECHOS"
+ },
+ {
+  "codigo_origen": "0900",
+  "descripcion": "FRACTURA DEL GANCHO DEL HAMATE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0902",
+  "descripcion": "FRACTURA F III DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0903",
+  "descripcion": "FRACTURA DEL CUELLO DEL V METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0904",
+  "descripcion": "LESION DEL PLATO VOLAR IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0905",
+  "descripcion": "PARÁLISIS BAJA MEDIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0906",
+  "descripcion": "EPIFISIOLISTESIS TIPI II CUPULA RADIAL DERECHA"
+ },
+ {
+  "codigo_origen": "0907",
+  "descripcion": "FRACTURA CUPULA DEL RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0908",
+  "descripcion": "TENOSINOVITIS DEL EPL DERECHO"
+ },
+ {
+  "codigo_origen": "0909",
+  "descripcion": "FX QUINTO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0910",
+  "descripcion": "DOLOR NEUROPÁTICO MSD"
+ },
+ {
+  "codigo_origen": "0911",
+  "descripcion": "PLICA SUPRAPATELAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1150",
+  "descripcion": "HOFFITIS"
+ },
+ {
+  "codigo_origen": "0912",
+  "descripcion": "FRACTURA DESPALZADA DORSO BASE F II ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "0913",
+  "descripcion": "HERIDA POR MORDEDURA HUMANA MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0914",
+  "descripcion": "ESGUINCE MEDIO PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0915",
+  "descripcion": "LUXACION DORSAL IFP ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0916",
+  "descripcion": "DEDO ANULAR IZQUIERDO EN MARTILLO"
+ },
+ {
+  "codigo_origen": "0917",
+  "descripcion": "FRACTURA NO DESPLAZADA DEL QUINTO MC IZQ"
+ },
+ {
+  "codigo_origen": "0918",
+  "descripcion": "FX QUINTO METACARPIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0919",
+  "descripcion": "TENDINITIS DEL PERONEO LATERAL CORTO IZQ ."
+ },
+ {
+  "codigo_origen": "0920",
+  "descripcion": "HERIDAS SIMPLES EN AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0921",
+  "descripcion": "FRACTURA CONMINUTA FI ANULAR IZQ ."
+ },
+ {
+  "codigo_origen": "0922",
+  "descripcion": "DEDO MEÑIQUE EN MARTILLO"
+ },
+ {
+  "codigo_origen": "0923",
+  "descripcion": "FX CONSOLIDADA RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0924",
+  "descripcion": "FX DESPLAZADA FII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0925",
+  "descripcion": "ZONA I EXTENSORA PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0926",
+  "descripcion": "FRACTURA ABIERTA FI INDICE DERECHO HAF"
+ },
+ {
+  "codigo_origen": "0927",
+  "descripcion": "SECCIÓN RAMA SENSITIVA CUBITAL MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0928",
+  "descripcion": "TENOSINOVITIS ESTENOSANTE PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0929",
+  "descripcion": "RIGIDEZ MCF ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0930",
+  "descripcion": "TENOSINOVITIS PIÓGENA FLEXORES DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0933",
+  "descripcion": "SINDROME CAPUT ULNAR DERECHO"
+ },
+ {
+  "codigo_origen": "0931",
+  "descripcion": "FRACTURA OBLICUA LARGA III MTC DERECHO"
+ },
+ {
+  "codigo_origen": "0932",
+  "descripcion": "FRACTURA DESPLAZADA 5TO METACARPIANO DER"
+ },
+ {
+  "codigo_origen": "0934",
+  "descripcion": "SECCIÓN EXTENSORES MENIQUE Y  ANULAR ZONA VII"
+ },
+ {
+  "codigo_origen": "0935",
+  "descripcion": "TENOSINOVITIS FPL DERECHO"
+ },
+ {
+  "codigo_origen": "0936",
+  "descripcion": "ARTRITIS GOTOSA HALLUX IZQ"
+ },
+ {
+  "codigo_origen": "0937",
+  "descripcion": "RIGIDEZ IFP ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0938",
+  "descripcion": "LESION PUNTA DE DEDO TIPO I ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "0939",
+  "descripcion": "LESION TIPO I LECHO UNGUEAL ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "0940",
+  "descripcion": "SINOVITIS DE LOS FLEXORES DEL ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0941",
+  "descripcion": "FRACTURA DEL CUELLO DEL TERCER METACARPIANO DER"
+ },
+ {
+  "codigo_origen": "0942",
+  "descripcion": "FRACTURA ABIERTA DE FII PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "0943",
+  "descripcion": "FRACTURA BASE IV MC DERECHOI"
+ },
+ {
+  "codigo_origen": "0944",
+  "descripcion": "FRACTURA FIII MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0945",
+  "descripcion": "SECCIÓN RAMA SENSITIVA CUBITAL MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0946",
+  "descripcion": "PARALISIS MEDIANO CUBITAL  BAJA"
+ },
+ {
+  "codigo_origen": "0947",
+  "descripcion": "LESION PLATO VOLAR INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0948",
+  "descripcion": "LESION LIG CUBITAL MCF INDICE IZQ"
+ },
+ {
+  "codigo_origen": "0949",
+  "descripcion": "LUXACION RADIOCUBITAL DISTAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0950",
+  "descripcion": "DEFORMIDAD DE MADELUNG BILATERAL"
+ },
+ {
+  "codigo_origen": "0951",
+  "descripcion": "ABSCESO MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0952",
+  "descripcion": "LESION TIPO I PUNTA DE DEDO INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0953",
+  "descripcion": "ENFERMEDAD DE DUPUYTREN BILATERAL"
+ },
+ {
+  "codigo_origen": "0954",
+  "descripcion": "ATARPAMIENTO DEL CUBITAL EN EL CODO BILATERAL"
+ },
+ {
+  "codigo_origen": "0955",
+  "descripcion": "SINDROME PRONADOR DERECHO"
+ },
+ {
+  "codigo_origen": "0956",
+  "descripcion": "LUXACIÓN POSTERIOR CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0957",
+  "descripcion": "TUMOR AXILA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0958",
+  "descripcion": "FRACTURA TERCIO MEDIO FI MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0959",
+  "descripcion": "ENFERMEDAD DISCAL LUMBAR"
+ },
+ {
+  "codigo_origen": "0960",
+  "descripcion": "LESION GIII MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0961",
+  "descripcion": "RUPTURA BANDA SAGITAL RADIAL DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0962",
+  "descripcion": "TENDINITIS FCU IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0963",
+  "descripcion": "SECCIÓN DEL EPL ZONA I EXTENSORA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0964",
+  "descripcion": "LESION LIG LATERAL MCF DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0965",
+  "descripcion": "ENFERMEDAD DE D¨QUERVAIN BILATERAL"
+ },
+ {
+  "codigo_origen": "0966",
+  "descripcion": "FX MAL CONSOLIDADAS BASE FI MEDIO Y ANULAR"
+ },
+ {
+  "codigo_origen": "0967",
+  "descripcion": "CUERPO EXTRAÑO SUBUNGUEAL ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0968",
+  "descripcion": "LUXACION VOLAR ABIERTA DE LA IFD ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0969",
+  "descripcion": "SECCIÓN DEL EDC DEL ANULAR EN ZONA VI EXTENSORA"
+ },
+ {
+  "codigo_origen": "0970",
+  "descripcion": "FRAACTURA TALLO VERDE DISTAL RADIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0971",
+  "descripcion": "FRACTURA DIÁFISIS DEL CUARTO METACARPIANO DERECHO"
+ },
+ {
+  "codigo_origen": "0972",
+  "descripcion": "PULGAR IZQUIERDO EN GATILLO"
+ },
+ {
+  "codigo_origen": "0973",
+  "descripcion": "ATRAPAMIENTO DEL CUBITAL CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0974",
+  "descripcion": "COMPRESION CUBITAL CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0975",
+  "descripcion": "SECCION COLATERALCUBITAL DEDO MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0976",
+  "descripcion": "LXFX TRANSESCAFOPERILUNAR DORSAL DERECHA"
+ },
+ {
+  "codigo_origen": "0977",
+  "descripcion": "QUISTE POLEA FLEXORA INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0978",
+  "descripcion": "ENFERMEDAD DE KIENBOCK DERECHA"
+ },
+ {
+  "codigo_origen": "0979",
+  "descripcion": "RUPTURA LIG COLATERAL RADIAL IFP MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0980",
+  "descripcion": "FRACTURA ABIERTA CABEZA DEL 5TO MTC IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0981",
+  "descripcion": "FRACTURA DEL CUBITO Y RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0982",
+  "descripcion": "PLICA LATERAL CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0983",
+  "descripcion": "FX INTRAARTICULAR FIII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0984",
+  "descripcion": "FRACTURA CUBITO Y RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "0985",
+  "descripcion": "SINDROME MIOFASCIAL"
+ },
+ {
+  "codigo_origen": "0986",
+  "descripcion": "AMPUTACIÓN TRAUMÁTICA FIII INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0987",
+  "descripcion": "HEMANGIOMA DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "0988",
+  "descripcion": "FRACTURA BASE FII MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "0989",
+  "descripcion": "ENF. DISCAL C6/C7"
+ },
+ {
+  "codigo_origen": "0990",
+  "descripcion": "FX INTARARTICULAR FI MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0991",
+  "descripcion": "SINOVITIS EXTENSORES DE LOS DEDOS IZQ"
+ },
+ {
+  "codigo_origen": "0992",
+  "descripcion": "TENOSINOVITIS DE EXTENSORES DE LOS DEDOS"
+ },
+ {
+  "codigo_origen": "0993",
+  "descripcion": "LUXACIÓN POSTEROLATERAL CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0994",
+  "descripcion": "LESION SIII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0995",
+  "descripcion": "GANGLIÓN DORSO MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0996",
+  "descripcion": "LUXACIÓN ABIERTA IFP INDICE Y MEDIO IZQ"
+ },
+ {
+  "codigo_origen": "0997",
+  "descripcion": "DEDO MEDIO DERECHO EN GATILLO"
+ },
+ {
+  "codigo_origen": "0998",
+  "descripcion": "LESION SIII DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0999",
+  "descripcion": "LESION SIII DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1000",
+  "descripcion": "FRACTURA ABIERTA IV METACARPIANO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1001",
+  "descripcion": "LESION GII INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1002",
+  "descripcion": "LESION SIV DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1003",
+  "descripcion": "PANADIZO INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "1004",
+  "descripcion": "ZONA V FLEXORA FDS ANULAR Y MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1005",
+  "descripcion": "ZONA V FLEXORA FDP INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1006",
+  "descripcion": "FRACTURA INTRAARTICULAR RADIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1007",
+  "descripcion": "LESION PUNTA DE DEDO TIPO II MEÑIQUE IZQ"
+ },
+ {
+  "codigo_origen": "1008",
+  "descripcion": "LESIÓN LUMBRICAL ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1009",
+  "descripcion": "TUMOR ESCÁPULA DERECHA"
+ },
+ {
+  "codigo_origen": "1010",
+  "descripcion": "CONTRACTURA EN FLEXIÓN IFP MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "1011",
+  "descripcion": "FRACTURA CUBITO Y RADIO IZQUIERDOS"
+ },
+ {
+  "codigo_origen": "1012",
+  "descripcion": "FRACTURA ABIERTA FII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1013",
+  "descripcion": "OSTEOMIELITIS AGUDA FII DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1014",
+  "descripcion": "FRACTURA DIÁFISIS DEL SEGUNDO METACARPIANO"
+ },
+ {
+  "codigo_origen": "1015",
+  "descripcion": "FRACTURA BICONDILEA FII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1016",
+  "descripcion": "LESION SII DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "1017",
+  "descripcion": "FX BASE DEL PRIMER MC IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1018",
+  "descripcion": "FRACTURA INTRAARTICULAR FII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1019",
+  "descripcion": "FRACTURA CUELLO FI MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "1020",
+  "descripcion": "FRACTURA BASE FII DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1021",
+  "descripcion": "LESIÓN PUNTA DEDO MEDIO IZQ. TIPO I"
+ },
+ {
+  "codigo_origen": "1022",
+  "descripcion": "LESION LIG, COLATERAL IFP DEDO MEDIO DERECHO"
+ },
+ {
+  "codigo_origen": "1023",
+  "descripcion": "CONTUSIÓN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1024",
+  "descripcion": "CONTUSIÓN MEÑIQUE DERECHO"
+ },
+ {
+  "codigo_origen": "1025",
+  "descripcion": "PANADIZO INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "1026",
+  "descripcion": "FRACTURA FIII ANULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1027",
+  "descripcion": "FX ABIERTA FIII ANULAR IZQ"
+ },
+ {
+  "codigo_origen": "1051",
+  "descripcion": "LUXOFRACTURA DE CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1052",
+  "descripcion": "PIE TALO VALGO BILATERAL"
+ },
+ {
+  "codigo_origen": "1053",
+  "descripcion": "SINDROME DEL PIRAMIDAL"
+ },
+ {
+  "codigo_origen": "1054",
+  "descripcion": "HIPERLAXITUD LIGAMENTARIA"
+ },
+ {
+  "codigo_origen": "1055",
+  "descripcion": "HIDRARTROS DE RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1057",
+  "descripcion": "FRACTURA WEBR TIPO C IZQUIERDA CONSOLIDADA"
+ },
+ {
+  "codigo_origen": "1058",
+  "descripcion": "SINDROME COMPARTAMENTAL RESUELTO"
+ },
+ {
+  "codigo_origen": "1059",
+  "descripcion": "SINDROME MIOSIMPATICO REFLEJO (SINDROME DE SUDECK) EN RESOLUCIÓN."
+ },
+ {
+  "codigo_origen": "1060",
+  "descripcion": "PARONIQUIA DE AMBOS HALLUX"
+ },
+ {
+  "codigo_origen": "1061",
+  "descripcion": "ENFERMEDAD DE LEGG CALVE PERTHES"
+ },
+ {
+  "codigo_origen": "1062",
+  "descripcion": "DISMETRIA DE MIEMBROS INFERIORES A PREDOMINIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1063",
+  "descripcion": "TENDINITIS TENDONES DE RODILLA POST"
+ },
+ {
+  "codigo_origen": "1064",
+  "descripcion": "FRACTURA INTERTROCANTERICA DE CADERA DERECHA"
+ },
+ {
+  "codigo_origen": "1065",
+  "descripcion": "FRACTURA DE 1/3 DISTAL DE RADIO DERECHO"
+ },
+ {
+  "codigo_origen": "1067",
+  "descripcion": "OSTEITIS DE TIBIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1068",
+  "descripcion": "SINDROME DE COMPRESIÓN RADICULAR L2L3"
+ },
+ {
+  "codigo_origen": "1069",
+  "descripcion": "SINDROME DE COMPRESIÓN RADICULAR L3L4"
+ },
+ {
+  "codigo_origen": "1070",
+  "descripcion": "OSTEITIS DE TIBIA DERECHA"
+ },
+ {
+  "codigo_origen": "1072",
+  "descripcion": "SINOVITIS TRANSITORIA DE CADERA DER"
+ },
+ {
+  "codigo_origen": "1073",
+  "descripcion": "LUMBOCIATALGIA MECANICA"
+ },
+ {
+  "codigo_origen": "1074",
+  "descripcion": "DESGARRO GLUTEOS"
+ },
+ {
+  "codigo_origen": "1076",
+  "descripcion": "TALO VARO"
+ },
+ {
+  "codigo_origen": "1077",
+  "descripcion": "ANTECEDENTE DE ALGO RIESGO NEUROLOGICO"
+ },
+ {
+  "codigo_origen": "1078",
+  "descripcion": "CRISIS CONVULSIVA NEONATAL"
+ },
+ {
+  "codigo_origen": "1083",
+  "descripcion": "ANTEVERSION FEMORAL"
+ },
+ {
+  "codigo_origen": "1079",
+  "descripcion": "BURSITIS DE ISQUIOTIBIALES Y GLUTEOS"
+ },
+ {
+  "codigo_origen": "1080",
+  "descripcion": "SUBLUXAIÓN METACAPOFALAGICA DEL PULGAR DERECHO"
+ },
+ {
+  "codigo_origen": "1081",
+  "descripcion": "ESGUINCE DE LISFRANC"
+ },
+ {
+  "codigo_origen": "1082",
+  "descripcion": "FRACTURA MARGINAL DE ROTULA DERECHA"
+ },
+ {
+  "codigo_origen": "1084",
+  "descripcion": "TENDINITIS INSERCIONAL DEL AQUILES"
+ },
+ {
+  "codigo_origen": "1085",
+  "descripcion": "ENFERMEDAD DE HAGLUND"
+ },
+ {
+  "codigo_origen": "1086",
+  "descripcion": "DESGARRO BICEPSBRAQUIAL 1/3 MEDIO CON DISTAL"
+ },
+ {
+  "codigo_origen": "1088",
+  "descripcion": "DORSALGIA PARAESCAPULAR DERECHA"
+ },
+ {
+  "codigo_origen": "1089",
+  "descripcion": "FRACTURA DE T4"
+ },
+ {
+  "codigo_origen": "1090",
+  "descripcion": "ARTROSIS DE CADERA BILATERAL"
+ },
+ {
+  "codigo_origen": "1091",
+  "descripcion": "DEFICIT NEUROLOGICO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1092",
+  "descripcion": "GENU VALGO ARTROSICO"
+ },
+ {
+  "codigo_origen": "1093",
+  "descripcion": "NEURITIS INTERCOSTAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1094",
+  "descripcion": "PIE EQUINOVARO CONGENITO"
+ },
+ {
+  "codigo_origen": "1096",
+  "descripcion": "APOFISITIS"
+ },
+ {
+  "codigo_origen": "1097",
+  "descripcion": "EPIFISIOLIS TIPO  III DISTAL DE TIBIA DERECHA"
+ },
+ {
+  "codigo_origen": "1098",
+  "descripcion": "EPIFISIOLIS TIPO  III DISTAL DE TIBIA IZQUIERA"
+ },
+ {
+  "codigo_origen": "1099",
+  "descripcion": "SINDROME DE TUNEL DEL TARSO DERECHO"
+ },
+ {
+  "codigo_origen": "1100",
+  "descripcion": "OSTEOCONDRITIS DE SINDING-LARSEN ROTULA"
+ },
+ {
+  "codigo_origen": "1101",
+  "descripcion": "FRACTURA SUPRACONDILEA DE HUMERO DERECHO"
+ },
+ {
+  "codigo_origen": "1102",
+  "descripcion": "TORTICULIS"
+ },
+ {
+  "codigo_origen": "1103",
+  "descripcion": "CERVICOARTROSIS"
+ },
+ {
+  "codigo_origen": "1105",
+  "descripcion": "TENDINITIS DEL AQUILES"
+ },
+ {
+  "codigo_origen": "1106",
+  "descripcion": "ESPOLÓN DE HAGLUND"
+ },
+ {
+  "codigo_origen": "1107",
+  "descripcion": "OSTEITIS CALCANEO STOP"
+ },
+ {
+  "codigo_origen": "1108",
+  "descripcion": "QUISTE ÓSEO ANEURISMATICO"
+ },
+ {
+  "codigo_origen": "1109",
+  "descripcion": "CONTRACTURA PARAVERTEBRAL CERVICAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1110",
+  "descripcion": "CONTRACTURA PARAVERTEBRAL CERVICAL DER"
+ },
+ {
+  "codigo_origen": "1111",
+  "descripcion": "CONTRACTURA PARAVERTEBRAL CERVICAL IZQ"
+ },
+ {
+  "codigo_origen": "1112",
+  "descripcion": "POSTOPERATORIO CALCANEO STOP"
+ },
+ {
+  "codigo_origen": "1113",
+  "descripcion": "LUXACIÓN ACROMIO CLAVICULAR GRADO I IZQ"
+ },
+ {
+  "codigo_origen": "1114",
+  "descripcion": "ESCOLIOSIS IDIOPÁTICA DEL ADOLESCENTE"
+ },
+ {
+  "codigo_origen": "1115",
+  "descripcion": "ARTROSIS DE CADERA IZQ"
+ },
+ {
+  "codigo_origen": "1116",
+  "descripcion": "SÍNDROME VENOSO PROFUNDO"
+ },
+ {
+  "codigo_origen": "1117",
+  "descripcion": "METATARSUS VARUS ADUCTUS IZQ"
+ },
+ {
+  "codigo_origen": "1118",
+  "descripcion": "OSTEOCONDRITIS DE SEVER CALCANEO"
+ },
+ {
+  "codigo_origen": "1119",
+  "descripcion": "ENFERMEDAD DE SCHEUERMANN DORSAL"
+ },
+ {
+  "codigo_origen": "1120",
+  "descripcion": "OSTEOCONDRITIS DE KOHLER ESCAFOIDES"
+ },
+ {
+  "codigo_origen": "1121",
+  "descripcion": "OSTEOCONDRITIS DE FREIBERG II METATARSIANO"
+ },
+ {
+  "codigo_origen": "1122",
+  "descripcion": "CONTRACTURA FASCIA LATA"
+ },
+ {
+  "codigo_origen": "1123",
+  "descripcion": "SÍNDROME DE LA CINTILLA ILIOTIBIAL"
+ },
+ {
+  "codigo_origen": "1124",
+  "descripcion": "DISCOPATIA DEGENERATIVA CERVICAL"
+ },
+ {
+  "codigo_origen": "1125",
+  "descripcion": "PROTRUSIÓN POSTEROLATERAL IZQ.C6C7"
+ },
+ {
+  "codigo_origen": "1126",
+  "descripcion": "SINDROME DE COMPRESIÓN RADICULAR C6C7"
+ },
+ {
+  "codigo_origen": "1127",
+  "descripcion": "SÍNDROME DE RAYNAUD"
+ },
+ {
+  "codigo_origen": "1128",
+  "descripcion": "GENU VALGO INFANTIL"
+ },
+ {
+  "codigo_origen": "1129",
+  "descripcion": "ARTROSIS DE CADERA DER"
+ },
+ {
+  "codigo_origen": "1130",
+  "descripcion": "SÍNDROME FACETARIO L4L5"
+ },
+ {
+  "codigo_origen": "1131",
+  "descripcion": "ABOMBAMIENTO DISCAL L3L4 - L4L5 - L5S1"
+ },
+ {
+  "codigo_origen": "1132",
+  "descripcion": "SINDROME FACETARIO L5S1"
+ },
+ {
+  "codigo_origen": "1133",
+  "descripcion": "FRACTURA XI COSTILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1134",
+  "descripcion": "FR SUBCAPITAL DE HUMERO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1135",
+  "descripcion": "CUADRIPARESIA MIXTA A PREDOMINIO \r\nESPASTICA DISTAL BRAQUIAL DERECHA"
+ },
+ {
+  "codigo_origen": "1136",
+  "descripcion": "DISMETRIA DE MIEMBROS INFERIORES, ANISOMELIA"
+ },
+ {
+  "codigo_origen": "1137",
+  "descripcion": "SINDROME DE COMPRESIÓN RADICULAR L4L5, L5S1"
+ },
+ {
+  "codigo_origen": "1138",
+  "descripcion": "TALO VALGO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1139",
+  "descripcion": "METATARSUS VARUS ADUCTUS DER"
+ },
+ {
+  "codigo_origen": "1140",
+  "descripcion": "ESCOLIOSIS IDIOPÁTICA DEL ADULTO"
+ },
+ {
+  "codigo_origen": "1141",
+  "descripcion": "ESCAFOIDES PROMINENTE IZQ"
+ },
+ {
+  "codigo_origen": "1142",
+  "descripcion": "GENU VALGO SEVERO"
+ },
+ {
+  "codigo_origen": "1143",
+  "descripcion": "OSTEOCODRITIS DE ISELIN V METATARSIANO"
+ },
+ {
+  "codigo_origen": "1144",
+  "descripcion": "EPIFISIOLISIS TIPO II DISTAL DE FEMUR DERECHO MEDIAL"
+ },
+ {
+  "codigo_origen": "1145",
+  "descripcion": "EPIFISOLISIS PROXIMAL TIPO I DE TIBIA DERECHA MEDIAL"
+ },
+ {
+  "codigo_origen": "1146",
+  "descripcion": "ESGUINCE DE RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1147",
+  "descripcion": "ELONGACIÓN DE LIGAMENTO COLATERAL MEDIAL"
+ },
+ {
+  "codigo_origen": "1148",
+  "descripcion": "ELONGACIÓN DE LIGAMENTO CRUZADO ANTERIOR DERECHIO"
+ },
+ {
+  "codigo_origen": "1149",
+  "descripcion": "ELONGACIÓN DE LIGAMENTO COLATERAL LATERAL"
+ },
+ {
+  "codigo_origen": "1151",
+  "descripcion": "ESGUINCE DEL COMPLEJO DEL LIGAMENTO PLANTAR DEL DEDO GORDO"
+ },
+ {
+  "codigo_origen": "1152",
+  "descripcion": "ESGUINCE DE LIGAMENTO COLATERAL LATERAL DE HALLUX DER"
+ },
+ {
+  "codigo_origen": "1153",
+  "descripcion": "COXA VALGA CONGENITA"
+ },
+ {
+  "codigo_origen": "1154",
+  "descripcion": "TENDINITIS DE TIBIAL ANTERIOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1155",
+  "descripcion": "TUNEL DEL TARSO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1156",
+  "descripcion": "SINDROME VENOSO PROFUNDO"
+ },
+ {
+  "codigo_origen": "1157",
+  "descripcion": "IRRITACIÓN DE RAMAS CUTANEAS DE LOS NERVIOS DORSALES IZQ,"
+ }
+]

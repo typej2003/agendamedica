@@ -4,6 +4,7 @@ namespace App\Actions\Catalogos;
 
 use App\Actions\Consulta\ReglasDelCatalogo;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
+use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial;
 use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ use InvalidArgumentException;
  *  - **El código lo da el servidor** (el mayor numérico de las filas iniciales + 1, en los dígitos del catálogo) y no se edita.
  *  - **No se repite la identidad** (el nombre normalizado, y el tipo donde lo hay) dentro del catálogo inicial.
  *  - Un campo `ref` tiene que existir en el catálogo inicial al que apunta (el examen, su tipo).
+ *  - **A qué especialidades aplica** (WEB-12.9): sin ninguna, la fila es general (`EspecialidadesDelCatalogoInicial`).
  *
  * Las filas iniciales no se sincronizan con nadie: no dejan rastro en `sync_changes`. Lo que el administrador cambie acá no modifica lo que un médico ya copió.
  */
@@ -24,11 +26,32 @@ final class GuardarFilaDeCatalogoInicial
     /**
      * @param  array<string,mixed>  $datos  `columna => valor` de los `campos` del catálogo
      * @param  int|null  $id  la fila inicial que se edita (`null` = alta)
+     * @param  array<int,int|string>|null  $especialidades  a qué especialidades aplica (`[]` = general; `null` = no se tocan, WEB-12.9)
      * @return int  el id de la fila
      *
      * @throws InvalidArgumentException con el mensaje que ve el administrador
      */
-    public function ejecutar(string $slug, array $datos, ?int $id = null): int
+    public function ejecutar(string $slug, array $datos, ?int $id = null, ?array $especialidades = null): int
+    {
+        if ($especialidades !== null) {
+            $ids = collect($especialidades)->map(fn ($e) => (int) $e)->filter()->unique();
+            if ($ids->diff(DB::table('specialties')->whereIn('id', $ids->all())->pluck('id')->map(fn ($e) => (int) $e))->isNotEmpty()) {
+                throw new InvalidArgumentException('Esa especialidad no existe.');
+            }
+        }
+
+        return DB::transaction(function () use ($slug, $datos, $id, $especialidades) {
+            $id = $this->guardarFila($slug, $datos, $id);
+
+            if ($especialidades !== null) {
+                EspecialidadesDelCatalogoInicial::asignar($slug, $id, $especialidades);
+            }
+
+            return $id;
+        });
+    }
+
+    private function guardarFila(string $slug, array $datos, ?int $id): int
     {
         $def = CatalogosIniciales::de($slug);
         $fila = [];

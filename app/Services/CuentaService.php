@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\Catalogos\CargarCatalogosInicialesAlMedico;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -785,7 +786,7 @@ class CuentaService
             ]);
         }
 
-        return DB::transaction(function () use ($medico, $ids) {
+        $resultado = DB::transaction(function () use ($medico, $ids) {
             // `sync` deja el pivote con exactamente estos ids: agrega los que faltan y quita los que sobran.
             $cambios = $medico->specialties()->sync($ids->all());
 
@@ -806,6 +807,14 @@ class CuentaService
                 'postgradosQuitados' => count($huerfanos),
             ];
         });
+
+        // **El médico nuevo no empieza en cero** (WEB-12.9): al sumarle una especialidad se le copia el catálogo inicial en los
+        // catálogos que tiene vacíos. Va después de guardar: si la copia fallara, la especialidad igual queda asignada.
+        $resultado['catalogoInicial'] = $resultado['asignadas'] > 0
+            ? app(CargarCatalogosInicialesAlMedico::class)->ejecutar($medico->fresh())
+            : null;
+
+        return $resultado;
     }
 
     /**

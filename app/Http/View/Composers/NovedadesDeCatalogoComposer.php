@@ -6,6 +6,7 @@ use App\Actions\Catalogos\CopiarCatalogoInicial;
 use App\Clinica\Catalogos\CatalogosDisponibles;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
 use App\Clinica\Catalogos\Vistas\NovedadesDeCatalogoVista;
+use App\Http\Controllers\Clinica\CatalogoInicialController;
 use App\Models\MedicoRegistro;
 use Illuminate\View\View;
 
@@ -30,7 +31,7 @@ class NovedadesDeCatalogoComposer
 
         $def = CatalogosIniciales::de($slug);
         $registros = $this->registros($contexto);
-        $novedades = app(CopiarCatalogoInicial::class)->novedades($slug, $registros);
+        $novedades = app(CopiarCatalogoInicial::class)->novedades($slug, $registros, CatalogoInicialController::especialidades($contexto));
 
         $vista->with('novedadesIniciales', $novedades->isEmpty() ? null : new NovedadesDeCatalogoVista(
             $def['titulo'], $def['singular'], $def['etiqueta'], $novedades, route('clinica.catalogos.cargar-inicial', $slug),

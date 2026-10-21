@@ -1,0 +1,2334 @@
+[
+ {
+  "codigo_origen": "00000061",
+  "nombregenerico": "TIOCOLCHICOSIDO",
+  "nombrecomercial": "EUSILEN -COLVAL",
+  "uso": "Colocar una ampolla intramuscular diaria por 4 dìas",
+  "presentacion": "Amp 4 mg/2ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000065",
+  "nombregenerico": "RIVAROXABAN",
+  "nombrecomercial": "XARELTO - ARUDIL",
+  "uso": "Tomar i tableta (10 mg)  una vez al día, iniciado 6 horas después de la cirugìa por 10 dìas.",
+  "presentacion": "10 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000028",
+  "nombregenerico": "ACEMETACINA",
+  "nombrecomercial": "PRANEX",
+  "uso": "Tomar una tableta cada 8 horas, solo si tiene dolor.",
+  "presentacion": "Tab/60 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000067",
+  "nombregenerico": "RODILLERA",
+  "nombrecomercial": "RODILLERA AUTOCENTRANTE",
+  "uso": "Usar a diario sobre todo para las actividades de carga o al salir a caminar, por tres semanas",
+  "presentacion": "Neopreno",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000012",
+  "nombregenerico": "DICLOFENAC POTÀSICO",
+  "nombrecomercial": "CATAFLAN - CLOFEN",
+  "uso": "Dar a tomar (0,5-3 mg/kg/día) 5 cc cada 8 horas por 15 días.",
+  "presentacion": "Susp 15 mg/ml x 15 ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000045",
+  "nombregenerico": "TRITICUM VULGARE",
+  "nombrecomercial": "DERAIN",
+  "uso": "Aplicar todos los dìas en la herida, previa limpieza de la misma. Cubrir con un aposito.",
+  "presentacion": "15 % CREMA topica",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000014",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "BETAGEN SOLSPEN",
+  "uso": "(BETADUO, BEPROSPEN, DIPROSPAN): Colocar una ampolla intramuscular profunda, mensual por dos meses.",
+  "presentacion": "Amps",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000007",
+  "nombregenerico": "BACITRACINA",
+  "nombrecomercial": "BACITRACINA",
+  "uso": "Aplicar una o dos veces al día, sobre la zona afecta.",
+  "presentacion": "Ungüento Tòpico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000036",
+  "nombregenerico": "ETORICOXIB",
+  "nombrecomercial": "ETOXIA - ARCOVAL",
+  "uso": "(ETORICOXIB) Tomar una tableta cada 12 horas por 14 dìas",
+  "presentacion": "Tabs 60 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000031",
+  "nombregenerico": "ALMOHADILLA DE FREJKA",
+  "nombrecomercial": "PAÑAL DE FREJKA",
+  "uso": "Usar pemanentemente 23 horas al dia, hasta nuevo aviso.",
+  "presentacion": "PEDIATRICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000033",
+  "nombregenerico": "TWISTER ELASTICO ROTADOR EXTERNO",
+  "nombrecomercial": "FERULAS BRASILERAS",
+  "uso": "Usar todos los dìas, durante el dìa por 6 meses",
+  "presentacion": "Unido a Botas Trenzadas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000013",
+  "nombregenerico": "ACECLOFENAC",
+  "nombrecomercial": "BRISTAFLAM",
+  "uso": "Tomar 1 tableta cada 12 horas, por 10 dìas",
+  "presentacion": "100 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000006",
+  "nombregenerico": "SULFAZALAZINE 500 MGS",
+  "nombrecomercial": "AZULFIDINE",
+  "uso": "Tomar 500 mgs día, durante la 1 semana, con abundante agua, aumentando progresivamente dosis respuesta hasta llegar a 1gr cada 12 horas.",
+  "presentacion": "Tabs 500 mgs",
+  "durante": "3",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000004",
+  "nombregenerico": "AMIKACINA",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "Colocar 1 gr EV ó IM, diaria por 5 días.",
+  "presentacion": "Amps 1 gr",
+  "concentracion": "500",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000008",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "KETOPROFENO - KEFLEN",
+  "uso": "(DOLOMAX): Tomar un comprimido cada 8 horas por 7 días, luego, una cada 12 horas por 7 dìas, seguir con diaria por 15 días más. Siempre con algo de comida.",
+  "presentacion": "Comp 100 mgs",
+  "durante": "3",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000009",
+  "nombregenerico": "ALPRAZOLAM",
+  "nombrecomercial": "LOGAP AP - ALPRAM",
+  "uso": "Tomar 1 tableta a las 7 pm por 1 mes.",
+  "presentacion": "Tabs 2 mgs",
+  "sico": "S",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000011",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "PEDIACORT",
+  "uso": "CALCORT: (Predna, Sintisone), Dar a tomar 3 a 5 cc una vez al día por 15 días, no suspender (2 mgs por kg dia)",
+  "presentacion": "Sol 3 mgs x 60 ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000005",
+  "nombregenerico": "MOXIFLOXACINA",
+  "nombrecomercial": "AXOKINE:",
+  "uso": "(Moxifloxacina), Tomar 1 comprimido (400 mgs) una vez al día por 7 días.",
+  "presentacion": "400 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000035",
+  "nombregenerico": "PLANTILLAS",
+  "nombrecomercial": "PLANTILLAS ORTOPEDICAS",
+  "uso": "SP 3MM, CIT 2MM, CES 3MM",
+  "presentacion": "Flexibles",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000037",
+  "nombregenerico": "ACIDO HIALURONICO",
+  "nombrecomercial": "SYNVISC, SUPRAHYAL",
+  "uso": "Traer en la proxima consulta. (Monovisc, Cingal, suplasyn)  04242445726",
+  "presentacion": "AMP/3 FCOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000015",
+  "nombregenerico": "NIMESULIDE",
+  "nombrecomercial": "NIMESULIDE - SCAFKOGIN",
+  "uso": "(Reduben,Nise, Nisulide) Tomar 1 tableta (100 mgs) cada 12 horas por 15 días, luego una diaria por 15 días.",
+  "presentacion": "tabs 100 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000018",
+  "nombregenerico": "CELECOXIB",
+  "nombrecomercial": "CELEBREX - XELETEC",
+  "uso": "(Celecoxib - Articox) Tomar 1 capsula (200 mgs) cada 12 horas, por un mes.",
+  "presentacion": "Caps 200 mgs x 20 caps",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000017",
+  "nombregenerico": "ORFENADRINA",
+  "nombrecomercial": "NORFLEX",
+  "uso": "1 tab cada 12 horas",
+  "presentacion": "amp/caj",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000054",
+  "nombregenerico": "BENZETACIL",
+  "nombrecomercial": "BENZETACIL LA 1.200.000",
+  "uso": "Colocar una ampolla intramuscular profunda mensual por 3 dosis.",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000016",
+  "nombregenerico": "CITRATO DE CALCIO",
+  "nombrecomercial": "CALCIBON D",
+  "uso": "(CITRACAL D): Tomar 1 capsula dos veces al día por 6 meses.",
+  "presentacion": "TAB 200 MGS X 30",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000056",
+  "nombregenerico": "ACETAMINOFEN + CODEINA",
+  "nombrecomercial": "ACUTEN",
+  "uso": "Tomar una tableta cada 12 horas por 5 dìas",
+  "presentacion": "500/25 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000064",
+  "nombregenerico": "DABIGATRAN",
+  "nombrecomercial": "PRADAXA",
+  "uso": "Iniciar dentro de las 1-4 horas posteriores a la cirugía con una cápsula de 75 mg y se debe continuar posteriormente con 2 cápsulas una vez al día durante 10 días en total",
+  "presentacion": "75 mgs x 10 tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000058",
+  "nombregenerico": "TIOCOLCHICOSIDO",
+  "nombrecomercial": "COLVAL - TIOCHAX",
+  "uso": "(Eusilen)Tomar 1 tableta cada 8 horas por 10 dìas.",
+  "presentacion": "4 mgs x 12 tabs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000060",
+  "nombregenerico": "COMPLEJO B1,B6,B12",
+  "nombrecomercial": "MIOVIT",
+  "uso": "BEPLUS: Tomar 2 capsulas, una vez al día por 3 meses.",
+  "presentacion": "GRAGEAS/2 CAJAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000063",
+  "nombregenerico": "ENOXIEPARINA",
+  "nombrecomercial": "CLEXANE",
+  "uso": "Colocar una ampolla via subcutanea, diaria por 10 dias.(Xarelto, Pradaxa)",
+  "presentacion": "FCOS-AMP/40 mg.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000030",
+  "nombregenerico": "ACECLOFENAC",
+  "nombrecomercial": "BRISTAFLAM",
+  "uso": "TERMOTERAPIA: Aplicar calor, por 20 a 30 minutos sobre la zona afectada, utilizando para ello una bolsa de agua caliente, sobre un paño en la zona afectada, para evitar el contacto directo con la piel,  posteriormente aplicar la crema mediante friccion suave de la zona adolorida",
+  "presentacion": "CREMA/1 TUBO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000032",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "PROFENID - KEFLEN",
+  "uso": "Colocar 1 ampolla EV. diluida en 20 cc de soluciòn lentamente cada 12 horas por 4 dìas",
+  "presentacion": "Amp 100Mg/2Ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000020",
+  "nombregenerico": "TRAMADOL+ ACETAMINOFEN",
+  "nombrecomercial": "TRAMADOL * ACETAMINOFEN",
+  "uso": "Tomar una tableta cada 8 horas solo si hay dolor",
+  "presentacion": "50/500 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000062",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "CEFADROXILO PEDITRICO",
+  "uso": "Dar a tomar (30 mg/kg/día) cada 12 horas por 7 dìas, PPS.",
+  "presentacion": "Sol Oral 250mg/5ml x 60 ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000066",
+  "nombregenerico": "RODILLERA",
+  "nombrecomercial": "ESTABILIZADORA",
+  "uso": "Usar permanentemente por tres semanas, incluso al dormir.",
+  "presentacion": "con bisagra",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000022",
+  "nombregenerico": "DICLOFENAC SODICO",
+  "nombrecomercial": "VOLTAREN - CAMPAL",
+  "uso": "(Difenac, Viavox, Veralen, Diklason) Aplicar Hielo local por 20 minutos, luego colocar la crema suavemente. Repetir tres veces al día.",
+  "presentacion": "1% 50G Crema",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000034",
+  "nombregenerico": "COMPLEJO VITAMINA B",
+  "nombrecomercial": "NEUROMIX - MIOVIT",
+  "uso": "(Decalentermina, Bedoyecta, Benutrex ) Colocar una ampolla intramuscular, interdiaria por 3 dosis.",
+  "presentacion": "Amps",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000025",
+  "nombregenerico": "DIPRIONATO DE BETAMETASONA",
+  "nombrecomercial": "DIPROSPAM",
+  "dosificacion": "No repetir, solo bajo indicacion médica",
+  "uso": "1 Ampolla intramuscular (IM) STAT (una sola vez).",
+  "presentacion": "AMP.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000019",
+  "nombregenerico": "FÈRULA DE DENIS BRAUN",
+  "nombrecomercial": "FERULA DE DENIS BRAUN",
+  "uso": "BARRA DISTANCIADORA DE 20 CMS, CON BOTAS TRENZADAS EN POSICION NEUTRA.",
+  "presentacion": "20 CMS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000088",
+  "nombregenerico": "INDOMETACINA",
+  "nombrecomercial": "INDOMETACINA",
+  "uso": "Tomar 1 capsula cada 8 horas po 6 semanas, siempre con las comidas.",
+  "presentacion": "25 mgs x 10 capsulas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000027",
+  "nombregenerico": "ETOFENAMATO",
+  "nombrecomercial": "TRAFLAN",
+  "uso": "Colocar 1 ampolla intramuscular profunda, cada 12 horas por 3 dìas",
+  "presentacion": "AMP/1G",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000087",
+  "nombregenerico": "VITAMINA C",
+  "nombrecomercial": "LETISAN - CEBION",
+  "uso": "(Cevax) Tomar 500 mgs diarios, por las mañanas por 1 mes.",
+  "presentacion": "Caps 500mg x 30",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000038",
+  "nombregenerico": "CLARITROMICINA",
+  "nombrecomercial": "KLARICID",
+  "uso": "Tomar una diaria",
+  "presentacion": "Tab 200 mg.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000046",
+  "nombregenerico": "GENTAMICINA",
+  "nombrecomercial": "DIPROGENTA",
+  "uso": "Aplicar diariamente en la zona afecta al realizar las curas.",
+  "presentacion": "0,1% Crema",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000029",
+  "nombregenerico": "ACETAMINOFEN + TRAMADOL",
+  "nombrecomercial": "ZALDIAR",
+  "uso": "Tomar una tableta al llegar a casa, luego otra a las 6 horas, luego solo si hay dolor cada 6 horas.",
+  "presentacion": "325 mgs/37,5 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000001",
+  "nombregenerico": "ÀCIDO ALENDRONICO",
+  "nombrecomercial": "ALENDRONATO -FOSAMAX",
+  "dosificacion": "tomar minimo por 6 meses",
+  "uso": "1 tableta semanal, 15 minutos antes del desayuno, acompañar con calcio diario.",
+  "presentacion": "Tab 70 mg / Caja",
+  "concentracion": "70",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000010",
+  "nombregenerico": "ALOPURINOL",
+  "nombrecomercial": "ZYLORIC",
+  "uso": "ALURON: Tomar 1 tableta (300 mgs),  una vez al dia por un mes. (100mgs cada 8 horas por un mes)",
+  "presentacion": "300 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000021",
+  "nombregenerico": "PIROXICAM",
+  "nombrecomercial": "PIROXICAM",
+  "uso": "Tomar una capsula diaria por 7 dìas, con abundante agua y siempre con las comidas",
+  "presentacion": "Caps 20 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000023",
+  "nombregenerico": "GLUCOSAMINA",
+  "nombrecomercial": "OSTEOFLEX - ARTROSAMIN",
+  "dosificacion": "1.500 MG DIARIOS",
+  "uso": "Glucosamina. Tomar 1500 uds,  diarias por 3 meses.  (2 a 3 capsulas diarias)",
+  "presentacion": "Caps 1500 mgs",
+  "durante": "2",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000026",
+  "nombregenerico": "SULFATO DE GLUCOSAMINA",
+  "nombrecomercial": "TRIPLEFLEX",
+  "dosificacion": "1 FCO",
+  "uso": "TOMAR 1 TABLETA 2 VECES AL DIA POR 6 MESES",
+  "presentacion": "TABLETAS/4 FCOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000044",
+  "nombregenerico": "METOCARBAMOL + IBUPROFENO",
+  "nombrecomercial": "ESPASMYDOL - ROBAXIFEN",
+  "uso": "(METOCARBAMOL + IBUPROFENO)Tomar un comprimido cada 8 horas por 7 dìas, luego una cada 12 horas por 15 días más.",
+  "presentacion": "Tabs 500/200 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000024",
+  "nombregenerico": "KETOPRFENO",
+  "nombrecomercial": "BI PROFENID",
+  "dosificacion": "1 TABLETA OD POR 3 SEMANAS",
+  "uso": "Tomar un comprimido cada 12 horas por 5 dìas",
+  "presentacion": "comp 150 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000039",
+  "nombregenerico": "GABAPENTIN",
+  "nombrecomercial": "NEURONTIN - GAPTAN",
+  "uso": "Iniciar tratamiento con 1 tableta diaria por 15 dìas, aumentar a 1 tabletas cada 12 horas por 15 dìas mas y  a 1 tableta cada 8 horas por 15 dìas màs. NO SUSPENDER",
+  "presentacion": "Cap. 300 mg.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000041",
+  "nombregenerico": "ORFENADRINA",
+  "nombrecomercial": "NORFLEX",
+  "uso": "Tomar una tableta 2 veces al dìa por 10 dìas",
+  "presentacion": "100 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000040",
+  "nombregenerico": "SULFATO DE GLUCOSAMINA",
+  "nombrecomercial": "VARTALON",
+  "uso": "TOMAR ACOMPAÑADO DE JUGOS 1 DIARIAMENTE POR 6 MESES",
+  "presentacion": "POLVO 1.5 G/SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000042",
+  "nombregenerico": "PIDOLATO DE CALCIO",
+  "nombrecomercial": "LEVUCAL FORTE",
+  "dosificacion": "GRANULADO\r\nSOLUCION",
+  "uso": "TOMAR UN SOBRE DIRIO A LAS 4 PM",
+  "presentacion": "GRANULADO/SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000043",
+  "nombregenerico": "DIACEREINA",
+  "nombrecomercial": "ARTRODAR - DIACEREINA",
+  "uso": "Tomar una capsula con el almuerzo por 3 meses.",
+  "presentacion": "TAB/50 MG/CAJ",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000047",
+  "nombregenerico": "TRITICUM VULGARE",
+  "nombrecomercial": "DERAIN",
+  "uso": "Aplicar en la herida, previa limpieza de la misma. Cubrir con un aposito.",
+  "presentacion": "Gasa 15 %",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000048",
+  "nombregenerico": "ROFECOXIB",
+  "nombrecomercial": "VIOXX",
+  "uso": "1 TABLETA OD, MEDIA HORA ANTES DE LA COMIDA, PREFERIBLEMENTE EL ALMUERZO",
+  "presentacion": "TABLETAS /2 CAJS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000049",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "BIDROXYL- CEFONAX",
+  "dosificacion": "1 Caj",
+  "uso": "CEFADROXILO: Tomar una capsula cada 12 horas por 7 días.",
+  "presentacion": "CAPSULAS 500 mg.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000050",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "ZITROMAX - AZITRODEX",
+  "uso": "(Saver) Tomar 2 tableta diarias (1 gramo) por 3 dias, repetir a los 3 meses.",
+  "presentacion": "tabs 500 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000051",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "DOLAK - NOTOLAC",
+  "dosificacion": "10 mg\r\n20 mg",
+  "uso": "KETOROLAC:Tomar un comprimido cada 8 horas por 7 dìas.",
+  "presentacion": "20 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000052",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "DOLAK - NOTOLAC SL",
+  "uso": "Colocar una tableta debajo de la lengua y esperar que disuelva, repetir cada 8 horas hasta que desaparezca el dolor, máximo por 3 días.",
+  "presentacion": "30 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000053",
+  "nombregenerico": "CARBAMAZEPINA",
+  "nombrecomercial": "TEGRETOL",
+  "uso": "Tomar un comprimido a las 9 pm por 3 meses, NO SUSPENDER",
+  "presentacion": "200 mgs x 30 comp",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000055",
+  "nombregenerico": "SERTRALINA",
+  "nombrecomercial": "ZOLOFT -SERTRALINA",
+  "uso": "(Serline, Chear, Tialin), Tomar 50 mgs en las mañanas por 3 meses.",
+  "presentacion": "TAB/CAJ",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000057",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "ATAMEL, TACHIFORTE",
+  "uso": "tomar una Tableta (1 gramo) cada 6 horas por 3 días, luego solo si tiene dolor. (2 tabletas de 500 mgs cada 6 horas)",
+  "presentacion": "TAB/CAJA 1 gr",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000059",
+  "nombregenerico": "VALDECOXIB",
+  "nombrecomercial": "BEXTRA",
+  "uso": "1 TABLETA DIARIA POR 2 SEMANAS",
+  "presentacion": "TAB 40 MG, 2 CAJAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000089",
+  "nombregenerico": "ACETAMINOFEN + DIHIDROERGOTAMINA",
+  "nombrecomercial": "MIGREN",
+  "uso": "Tomar una tableta cada 12 horas por 3 dìas, luego solo si tiene dolor",
+  "presentacion": "650/1 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000090",
+  "nombregenerico": "LOXOPROFENO",
+  "nombrecomercial": "LOXONIN",
+  "uso": "Tomar una tableta cada 12 horas por 5 dìas",
+  "presentacion": "60 mgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000091",
+  "nombregenerico": "NALBUFINA",
+  "nombrecomercial": "NUBAIN",
+  "uso": "Colocar una ampolla endovenosa SOS dolor, cada 8 horas, diluido en 20 cc de soluciòn. Pasar lentamente-",
+  "presentacion": "Ampollas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000092",
+  "nombregenerico": "DOBESILATO CALCICO",
+  "nombrecomercial": "DOXIUM",
+  "uso": "Tomar una gragea cada 12 horas por 30 días",
+  "presentacion": "500 mgs Grageas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000093",
+  "nombregenerico": "ALCANFOR",
+  "nombrecomercial": "SALONPAS - ASPERCREME",
+  "uso": "Colocar en la zona adolorida por 5 dìas.",
+  "presentacion": "Parches",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "00000094",
+  "nombregenerico": "CEFTIBUTEN",
+  "nombrecomercial": "CEDAX - CEFTIMED",
+  "uso": "Tomar 1 capsula (400mgs) diaria por 7 días.",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000095",
+  "nombregenerico": "CEFTRIAXONA",
+  "nombrecomercial": "UNIXONA - CYTRIAX",
+  "uso": "CEFTRIAXONA: Colocar 1 gr EV OD, por 7 día (Cada 12 horas si es necesario)",
+  "presentacion": "Amps 1 gra",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000096",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "CIPRIVAX - CIPROFLOX -CYPRAL",
+  "uso": "CIPROFLOXACINA: (IPROXIN) Tomar 500 mgs, cada 12 horas por 7 días.",
+  "presentacion": "500 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000101",
+  "nombregenerico": "CLINDAMICINA",
+  "nombrecomercial": "DALACIN - CLIOFAR",
+  "uso": "(Clindamicina) Tomar 600 mgs, cada 8 horas por 5 días",
+  "presentacion": "300 MGS / 2 CAJAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000097",
+  "nombregenerico": "IBUPROFENO + TIOCOLCHICOSIDO",
+  "nombrecomercial": "COLFENE - TIOCOLFEN - IBUTANCOL",
+  "uso": "(TIOCHAX PLUX, IBUCOLVAL, DAYZOL COLGESIC, IBUTIL) Tomar un comprimido cada 8 horas por 15 días, repetir si persiste el dolor.",
+  "presentacion": "400/4 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000098",
+  "nombregenerico": "TRIMEBUTINA",
+  "nombrecomercial": "COLYPAN - BUMETIN RETARD",
+  "uso": "(TIMEBLOC, DOBRACID) Tomar 1 tableta (200 mgs), cada 12 horas por 1 mes. 30 minutos antes de las comidas. (Se puede agregar simeticona 150 mgs, en cada toma)",
+  "presentacion": "200 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000099",
+  "nombregenerico": "CLONAZEPAM",
+  "nombrecomercial": "CLONAZEPAM - CLONATRIL",
+  "uso": "(CLONIPRES, NACLODIN, CLONZEP): Tomar 1 tableta (2 mgs) a las 9 pm por 1 mes.",
+  "presentacion": "2 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000100",
+  "nombregenerico": "DIOSMINA + HESPERIDINA",
+  "nombrecomercial": "DAFLON - FLUVENIL",
+  "uso": "Doxium, Diosmina, Flebosmin, Hyflon, Venastat), Tomar una capsula cada 12 horas por 1 mes, luego una diaria por 3 meses.",
+  "presentacion": "500 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000103",
+  "nombregenerico": "BROMURO DE PINAVERIO",
+  "nombrecomercial": "TORIVAS - DICITEL",
+  "uso": "(Bromuro de pinaverium, disten duo) Tomar 50 mgs tres veces al día.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000102",
+  "nombregenerico": "BETAMETASONA + GENTAMICINA",
+  "nombrecomercial": "TRIDETARMON - QUADRIDERM",
+  "uso": "(DERMIDERM, TRIDERM), Aplicar una capa delgada, en la zona afecta, tres veces al día.",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000104",
+  "nombregenerico": "DICLOFENAC",
+  "nombrecomercial": "AFLAMAX, DIKLASON",
+  "uso": "(DICLOFENAC, DICLODEX) Tomar un comprimido cada 8 horas por 7 días, luego uno cada 12 horas por 7 días, luego una diaria por 15 días. Siempre con las comidas",
+  "presentacion": "50 MGS / 3CAJAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000105",
+  "nombregenerico": "PREDNISONA",
+  "nombrecomercial": "PREDNISONA",
+  "uso": "Tomar un comprimido diario, a las 9 pm por 2 meses, NO SUSPENDER",
+  "presentacion": "5 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000106",
+  "nombregenerico": "LISINA +CICLOBENZAPRINA",
+  "nombrecomercial": "DORIXINA FLEX",
+  "uso": "Tomar un comprimido cada 8 horas por 15 días.",
+  "presentacion": "COMP 125/5 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000107",
+  "nombregenerico": "DICLOFENAC COLESTIRAMINA",
+  "nombrecomercial": "FLOTAC - UDOX",
+  "uso": "(DIFENAC AP, DIKLASON AR)Tomar un comprimido cada 8 horas por 5 días, luego uno cada 12 horas por 10 días. Siempre con las comidas.",
+  "presentacion": "75 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000108",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "FLUCONAZOL",
+  "uso": "Tomar 1 tableta (150 mgs) semanal por 4 semanas.",
+  "presentacion": "150 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000109",
+  "nombregenerico": "AMOXICILINA + ACIDO CLAVULANICO",
+  "nombrecomercial": "FULGRAM",
+  "uso": "(Amoxacilina + Ac. Clavulonico), Dar a tomar (90/6.4 mg/kg/día) cada 12 hoars por 7 días.",
+  "presentacion": "600-42.9MG/5ML",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000110",
+  "nombregenerico": "AMOXICILINA + ACIDO CLAVULANICO",
+  "nombrecomercial": "FULGRAN - CLAVUMOX PLUS",
+  "uso": "Tomar un comprimido cada 12 horas por 7 días.",
+  "presentacion": "875/125Mg X 16 Comp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000112",
+  "nombregenerico": "CIPROFIBRATO",
+  "nombrecomercial": "HIPERLIPEN - CIPROFIBRATO",
+  "uso": "Tomar 1 tableta (100 mgs) diaria por 8 semanas.",
+  "presentacion": "100Mg X 30 Tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000113",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "BRUGESIC - ANAPIR",
+  "uso": "IBUPROFENO: Tomar un comprimido cada 8 horas por 7 días",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000137",
+  "nombregenerico": "CURCUMA",
+  "nombrecomercial": "TURMERIC",
+  "uso": "Tomar 1 capsula diaria por 30 dìas",
+  "presentacion": "30 caps",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000114",
+  "nombregenerico": "ACIDO IBANDRONICO",
+  "nombrecomercial": "BONAMES - ACLER",
+  "uso": "Denual, Acler, Ibone, Bonviva, Acido Ibandronico) Tomar 1 tableta (150 mgs), una vez al mes, siempre el mismo día, en ayunas, una hora antes de las comidas, y no se puede acostar por una hora.",
+  "presentacion": "150 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000115",
+  "nombregenerico": "TRIAMCINOLONA  ACETÓNIDO",
+  "nombrecomercial": "KENACORT - NUVICORT A",
+  "uso": "(Kentuni, Betagen Solspen, Betaduo) Traer en la próxima consulta",
+  "presentacion": "5 cc",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000116",
+  "nombregenerico": "L-CARNITINA:",
+  "nombrecomercial": "PROVICAR - KATIVIL",
+  "uso": "L-CARNITINA:, 5  cc, una vez al dia por tres meses",
+  "presentacion": "Solución X 60 Ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000117",
+  "nombregenerico": "LEFLUNOMIDA",
+  "nombrecomercial": "LEFRA - ARAVA",
+  "uso": "(Leflunomida): 100 mg una vez al dia por 3 días, luego 20 mgs/día, según respuesta. Traer una en la próxima consulta",
+  "presentacion": "20 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000118",
+  "nombregenerico": "LEVOFLOXACINA",
+  "nombrecomercial": "LEVOFLOXACINA - NEULEVAL",
+  "uso": "Tomar i capsula (750 mgs) una vez al día, por 10 dìas",
+  "presentacion": "750 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000129",
+  "nombregenerico": "SECNIDAZOL",
+  "nombrecomercial": "FAZOLL- SECNIDEX",
+  "uso": "Tomar 2 gr/dia, dosis única.",
+  "presentacion": "1 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000119",
+  "nombregenerico": "LOMEFLOXACINA",
+  "nombrecomercial": "LOFLOX - LOMEFLOXACINA",
+  "uso": "Tomar una tableta diaria por 5 días.",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000120",
+  "nombregenerico": "CENTELLA ASIATICA",
+  "nombrecomercial": "MADECASOL",
+  "uso": "Tomar 1 tableta en la mañana y tarde por 1 mes.",
+  "presentacion": "10 MGS X 30 TABS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000121",
+  "nombregenerico": "CENTELLA ASIATICA",
+  "nombrecomercial": "MADECASOL",
+  "uso": "Aplicar diariamente en la zona afecta una o dos veces al días. cubrir con un aposito-",
+  "presentacion": "Ungûento x 10 g",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000122",
+  "nombregenerico": "MELOXICAN",
+  "nombrecomercial": "CALMOX - MELOXICAN",
+  "uso": "(Taucaron- Movimex-Melovax) Tomar 1 tableta cada 12 horas por 10 días, luego una diaria por 20 días.",
+  "presentacion": "15 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000123",
+  "nombregenerico": "METROTEXATE",
+  "nombrecomercial": "METOTREXATE - PRISMATREX",
+  "uso": "(TRIXATE) Tomar 1 tableta (2,5 mgs) Martes y viernes por 6 meses. NO SUSPENDER.",
+  "presentacion": "2,5 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000124",
+  "nombregenerico": "OMEPRAZOL",
+  "nombrecomercial": "OMEPRAZOL",
+  "uso": "(Lanzoprazol, Pantoprazol, Esomeprazol) Tomar una capsula en ayunas por 1 mes.",
+  "presentacion": "40 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000128",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "VIZERUL",
+  "uso": "Tomar 300 mgs una vez al día o 150 mgs cada 12 horas.",
+  "presentacion": "300 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000125",
+  "nombregenerico": "HIDROXICLOROQUINA",
+  "nombrecomercial": "PLAQUINOL - PLAQUENIL",
+  "uso": "Una o dos tabletas diarias, siempre con las comidas.",
+  "presentacion": "200 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000126",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "DOLNIX-PRELIVAL-PREGABALINA",
+  "uso": "(Martesia, Pegyt, Odica, Neurixa) Tomar 1 capsula (75 mgs), a las 9 pm por 6 meses, NO SUSPENDER",
+  "presentacion": "75 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000127",
+  "nombregenerico": "SULFADIAZINA ARGENTICA",
+  "nombrecomercial": "PROTOSULFIL",
+  "uso": "Limpiar la herida con solución antiséptica, aplicar sobre la misma usando un isopo. Una vez al día.",
+  "presentacion": "Crema X 30 G",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000130",
+  "nombregenerico": "ACETAMINOFEN + TRAMADOL",
+  "nombrecomercial": "TRACEVAL",
+  "uso": "Tomar una tableta al llegar a casa, luego otra a las 6 horas, luego solo si hay dolor cada 8 horas.",
+  "presentacion": "500/50 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000131",
+  "nombregenerico": "LIDOCAINA 5%",
+  "nombrecomercial": "TOPERMA",
+  "uso": "(Versatis 5%) Aplicar en la zona adolorida, fijando con un adhesivo, cada 12 horas.",
+  "presentacion": "parches",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000132",
+  "nombregenerico": "SULTAMICILINA",
+  "nombrecomercial": "SULAMP - UNASYN",
+  "uso": "(Sultamicilina 375/750 mgs) Tomar una tableta cada 12 horas por 7 días.",
+  "presentacion": "750 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000133",
+  "nombregenerico": "VANCOMICINA",
+  "nombrecomercial": "VANCOMICINA",
+  "uso": "Colocar 500 mgs endovenoso, diluido en 20 cc de soluciòn, pasar lentamente, cada 6 horas por 7 días.",
+  "presentacion": "Amp 500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000134",
+  "nombregenerico": "SALICILATO DE METILO",
+  "nombrecomercial": "DENCORUB - VOLTAREN",
+  "uso": "(Difenac, Viavox, Veralen, Diklason, Campal) Aplicar calor local por 20 minutos, luego colocar la crema suavemente. Repetir tres veces al día.",
+  "presentacion": "Gel 25 gr,",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000135",
+  "nombregenerico": "CLORURO DE MAGNESIO",
+  "nombrecomercial": "CLORURO DE MAGNESIO",
+  "uso": "Tomar dos cucaharadas diarias por 3 meses.",
+  "presentacion": "Sol 240 ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000136",
+  "nombregenerico": "CALCIO + MAGNESIO + ZINC",
+  "nombrecomercial": "CALCIO + MAGNESIO + ZINC",
+  "uso": "Tomar una capsula en las mañanas por 3 meses",
+  "presentacion": "1000/400/15 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000138",
+  "nombregenerico": "ÀCIDO VALPROICO",
+  "nombrecomercial": "VALPRON - VALCOTE",
+  "uso": "Tomar una tableta en las noches por 3 meses",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000139",
+  "nombregenerico": "FLUNARIZINA",
+  "nombrecomercial": "FLUDIL - MISELLIM",
+  "uso": "Tomar un comprimido en las noches por 3 meses",
+  "presentacion": "comp 10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000140",
+  "nombregenerico": "DIFENHIDRAMINA CLORHIDRATO",
+  "nombrecomercial": "BENADRYL - SOMNIUM",
+  "uso": "Tomar una tableta en las noches (9 pm) por 10 dìas.",
+  "presentacion": "25 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000141",
+  "nombregenerico": "TOBILLERA",
+  "nombrecomercial": "TOBILLERA ELASTICA",
+  "uso": "Usar solo durante el día, máximo por tres semanas.",
+  "presentacion": "Ajustable",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000142",
+  "nombregenerico": "HIELO",
+  "nombrecomercial": "HIELO",
+  "uso": "Colocar por 20 minutos , protegiendo la piel para no quemarlo, tres veces al día",
+  "presentacion": "local",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000143",
+  "nombregenerico": "ARNES DE PAVLIK",
+  "nombrecomercial": "ARNES DE PAVLIK",
+  "uso": "Usar 23 horas al dìa, solo retirar con el baño o cambio de pañales.",
+  "presentacion": "a la medida",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000144",
+  "nombregenerico": "TRAMADOL",
+  "nombrecomercial": "CONTRADOL - TRAMADOL",
+  "uso": "Tomar 20 gotas diluida en agua, cada 8 horas segun el dolor.",
+  "presentacion": "Gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000145",
+  "nombregenerico": "MUÑEQUERA",
+  "nombrecomercial": "MUÑEQUERA CON FÈRULA",
+  "uso": "Usar permanentemente por 3 semanas",
+  "presentacion": "Elastica",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000146",
+  "nombregenerico": "SIMETICONA",
+  "nombrecomercial": "LEPRIT ENZIMATICO - SIMETICONA",
+  "uso": "Tomar una gragea diaria por 6 meses",
+  "presentacion": "25/80/150 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000182",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "BUDECORT - BUDESONIDA - PULMOLET",
+  "uso": "Traer a la consulta",
+  "presentacion": "Susp 1 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000147",
+  "nombregenerico": "DIMENHIDRINATO",
+  "nombrecomercial": "VIAJESAN",
+  "uso": "Tomar una tableta cada 8-12 horas por 21 dìas",
+  "presentacion": "50 mgs x 10 tabs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000148",
+  "nombregenerico": "AMBROXOL + LORATADINA",
+  "nombrecomercial": "MUCLAR -  AMBROXOL",
+  "uso": "Tomar una tableta cada 12 horas por 5 dìas",
+  "presentacion": "30/5 x 10 comp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000149",
+  "nombregenerico": "LORATADINA",
+  "nombrecomercial": "LORATADINA -  LORADEX",
+  "uso": "(Lorex) Tomar una tableta diaria por 10 dìas",
+  "presentacion": "10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000150",
+  "nombregenerico": "BETAHISTINA",
+  "nombrecomercial": "MICROSER - BETAHISTINA",
+  "uso": "Tomar una tableta vada 12 horas por 1 mes",
+  "presentacion": "16 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000151",
+  "nombregenerico": "NAPROXENO",
+  "nombrecomercial": "NAPROXENO - ANAFLEX",
+  "uso": "Tomar una tableta cada 6-8 horas, dependiendo del dolor, siempre con las comidas.",
+  "presentacion": "Tabs 500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000152",
+  "nombregenerico": "CAPSAICINA",
+  "nombrecomercial": "PARCHE LEON - ARNIK",
+  "uso": "Colocar calor por 20 minutos en la zona adolorida, luego colocar el parche o la crema, cubriendo con un aposito.",
+  "presentacion": "Parche",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000153",
+  "nombregenerico": "CLONIDINA",
+  "nombrecomercial": "CLONIDINA - CLONIPRES",
+  "uso": "Traer en la proxima consuta",
+  "presentacion": "Amp 0,150mg / ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000154",
+  "nombregenerico": "GLUCOSAMINA SULFATO",
+  "nombrecomercial": "FLEXTRIL",
+  "uso": "Traer en la proxima consulta",
+  "presentacion": "Amps 400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000155",
+  "nombregenerico": "DULOXETINA",
+  "nombrecomercial": "CYMBALTA - DULOXETINA",
+  "uso": "Tomar una Tableta a las 9 pm por 6 meses, NO SUSPENDER.",
+  "presentacion": "30 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000156",
+  "nombregenerico": "REPOSO",
+  "nombrecomercial": "REPOSO CON DESCARGA PARCIAL",
+  "uso": "Reposo absoluto en cama, restringida cualquier actividad fisica importante, como caminatas largas y subir y bajar escaleras con frecuencia. Usar muletas.",
+  "presentacion": "absoluto",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000157",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "BRUGESIC FORTE - IBUPROFENO",
+  "uso": "Dar a tomar (1/4 del peso) cc, cada 8 horas por 5 dìas.",
+  "presentacion": "Susp 200mg/5ml x 60 ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000158",
+  "nombregenerico": "BEDUCEN",
+  "nombrecomercial": "BEDUCEN",
+  "uso": "(Crema Hidratante) APLICAR EN LA ZONA  AFECTA, 3 VECES AL DIA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000159",
+  "nombregenerico": "FAJA DORSOLUMBAR",
+  "nombrecomercial": "FAJA DORSO LUMBAR",
+  "uso": "Usar solo al realizar actividades de peso, o viajes prolongados (mas de dos horas)",
+  "presentacion": "RIGIDA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000160",
+  "nombregenerico": "COMPLEJO B",
+  "nombrecomercial": "9 VIT",
+  "uso": "Aplicar una ampolla, en 500 cc de solución 0.9%, pasar lentamente en 3 horas.",
+  "presentacion": "amps",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000161",
+  "nombregenerico": "CODEINA + CLORFENIRAMINA",
+  "nombrecomercial": "CODEBROMIL",
+  "uso": "Tonar una curada cada 6-8 horas por 10 días",
+  "presentacion": "Jabe",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000162",
+  "nombregenerico": "VITAMINA C",
+  "nombrecomercial": "VITAMINA C",
+  "uso": "Tomar 1 capsula diaria por 30 dias",
+  "presentacion": "1 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000163",
+  "nombregenerico": "ACETATO DE MEDROXIPROGESTERONA",
+  "nombrecomercial": "PROVERA - MEDROXIPROGESTERONA",
+  "uso": "Tomar 1 tablta diaria por 10 días, del dia 16 al dia  25 del ciclo, contado desde el primer día de la mestrucion. Repetir Por tres meses.",
+  "presentacion": "10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000164",
+  "nombregenerico": "ENALAPRIL",
+  "nombrecomercial": "ENALAPRIL",
+  "uso": "Tomar una tableta diaria, continuo.",
+  "presentacion": "20 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000165",
+  "nombregenerico": "MICROSPORE",
+  "nombrecomercial": "MICROSPORE",
+  "uso": "Color sobre la herida al realizar la cura",
+  "presentacion": "1 p",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000166",
+  "nombregenerico": "AMITRIPTILINA",
+  "nombrecomercial": "AMITRIPTILINA",
+  "uso": "Tomar 1 tableta con el almuerzo por 3 meses",
+  "presentacion": "25 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000167",
+  "nombregenerico": "ZOLPIDEM",
+  "nombrecomercial": "ATRIMON -VALPIZOP-ZOLPIDEX",
+  "uso": "(Zolpidem) Tomar una tableta a las 8 pm por 1 mes.",
+  "presentacion": "10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000169",
+  "nombregenerico": "CITALOPRAM",
+  "nombrecomercial": "CITALOPRAM",
+  "uso": "Tomar media tableta a las 9 am",
+  "presentacion": "20 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000171",
+  "nombregenerico": "OXCARBAZEPINA",
+  "nombrecomercial": "OXCARBAXEPINA",
+  "uso": "Tomar una tableta diaria por 3 meses",
+  "presentacion": "300 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000168",
+  "nombregenerico": "TRAMADOL",
+  "nombrecomercial": "TRAMAL - TRAMADOL",
+  "uso": "Colocar una ampolla, disuelta en 250 o 500 cc de solución fisiológica, pasar lentamente en 6 horas. No colocar ningun antiinflamatorio.",
+  "presentacion": "Amps",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000170",
+  "nombregenerico": "ESCITALOPRAM",
+  "nombrecomercial": "ESCITALOPRAM",
+  "uso": "Tomar una tableta a las 9 pm",
+  "presentacion": "5 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000172",
+  "nombregenerico": "FAVIPIRAVIR",
+  "nombrecomercial": "FAVIPIRAVIR",
+  "uso": "Tomar 1 capsula cada 8 horas por 3 semanas",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000173",
+  "nombregenerico": "BICARBONATO DE SODIO",
+  "nombrecomercial": "REFLUXYL",
+  "uso": "Tomar una cucharada sopera tres veces al día",
+  "presentacion": "Susp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000174",
+  "nombregenerico": "BLOUEO",
+  "nombrecomercial": "BLOQUEO",
+  "uso": "Clonidina, Fentanilo, Procaina, cifarcaina, depomedrol (Metilprednisolona)",
+  "presentacion": "Amp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000175",
+  "nombregenerico": "DESLORATADINA + MONTELUKAST",
+  "nombrecomercial": "DESLER M",
+  "uso": "Tomar 1 tableta diaria en las noches por 1 mes.",
+  "presentacion": "5/10 mg x 30 tabs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000176",
+  "nombregenerico": "METRONIDAZOL",
+  "nombrecomercial": "METRONIDAZOL",
+  "uso": "Tomar una tableta diaria por 30 dias",
+  "presentacion": "500 mgs x  30",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000180",
+  "nombregenerico": "GASA",
+  "nombrecomercial": "GASA ESTERIL",
+  "uso": "Usar al hacer la cura",
+  "presentacion": "SOBRES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000177",
+  "nombregenerico": "SULODEXIDA",
+  "nombrecomercial": "VESSEL DUE F - SULODEXIDA",
+  "uso": "(Angioflux) Tomar una tableta diaria por 3 meses",
+  "presentacion": "250UI",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000178",
+  "nombregenerico": "ACETAMINOFEN + TRAMADOL",
+  "nombrecomercial": "TEFENOL",
+  "uso": "Tomar una tableta cada 8 horas, si hay dolor.",
+  "presentacion": "37,5 -325 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000179",
+  "nombregenerico": "PROTESIS",
+  "nombrecomercial": "PROTESIS GENESIS II",
+  "uso": "EUROCIENCIA",
+  "presentacion": "RODILLA DERECHA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000181",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "DOLNIX, PREGABALINA , LYRICA",
+  "uso": "(Martesia, Pegyt, Odica, Neurixa) Tomar 1 capsula (150 mgs), a las 9 pm por 6 meses, NO SUSPENDER",
+  "presentacion": "150 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000183",
+  "nombregenerico": "CIFARCAINA",
+  "nombrecomercial": "CIFARCAINA",
+  "uso": "Traer a la consulta",
+  "presentacion": "1 % x 100 ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000184",
+  "nombregenerico": "ALURON",
+  "nombrecomercial": "ALURON - ZILORIC",
+  "uso": "Tomar una tableta diaria por 30 días (si es de 100 mgs tomar una tableta cada 8 horas por 30 días)",
+  "presentacion": "300 mgs",
+  "sico": "N",
+  "nombrecomercial1": "ALOPURINOL"
+ },
+ {
+  "codigo_origen": "00000185",
+  "nombregenerico": "MEDIAS VARICES",
+  "nombrecomercial": "MEDIAS VARICES",
+  "uso": "Usar Permanentemente",
+  "presentacion": "Tension Media",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000186",
+  "nombregenerico": "POLISULFATO DE MUCOPOLISACARIDO",
+  "nombrecomercial": "HIRUDOID",
+  "uso": "Aplicar 3 veces al día.",
+  "presentacion": "Gel",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000187",
+  "nombregenerico": "LEVOSULPIRIDE",
+  "nombrecomercial": "DISULPEC, LEPRIT, LEVOSULPIRIDE",
+  "uso": "Tomar 1 tableta 10 minutos antes de cada comida. Por 10 días.",
+  "presentacion": "25 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000188",
+  "nombregenerico": "TOBRAMICINA + DEXANETASONA",
+  "nombrecomercial": "TODEX",
+  "uso": "Colocar 2 gotas cada 4-8 horas por 3 días.",
+  "presentacion": "0,3%",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000189",
+  "nombregenerico": "PANTOPRAZOL",
+  "nombrecomercial": "PANTOPRAZOL",
+  "uso": "Tomar una tableta en ayunas por 1 mes",
+  "presentacion": "40 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000190",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "IBUPROFENO",
+  "uso": "Tomar un comprimido cada 8 hoars por 30 días",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000191",
+  "nombregenerico": "CINCHA",
+  "nombrecomercial": "CINCHA PARA OSGOOD SCHLATER",
+  "uso": "Usar permanentemente por 6 meses, ajustado a la espina tibial anterior.",
+  "presentacion": "Ajustable",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000192",
+  "nombregenerico": "SULODEXIDE",
+  "nombrecomercial": "VESSEL DUE F - SULODEXIDE",
+  "uso": "(Angioflux) Tomar 1 capsula diaria por 30 días, lejos de las comidas.",
+  "presentacion": "250 LSU",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000193",
+  "nombregenerico": "SECNIDAZOL",
+  "nombrecomercial": "SECNIDEX - SECNIDAZOL",
+  "uso": "Tomar 1 gramo (4 tabletas)dosis unica, repetir a los 15 días",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000265",
+  "nombregenerico": "GUANTE ESTERIL",
+  "nombrecomercial": "GUANTE ESTERIL",
+  "uso": "Traer a la consulta",
+  "presentacion": "N° 8",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000194",
+  "nombregenerico": "CEFIXIMA",
+  "nombrecomercial": "UNIXIME - LONGACEF",
+  "uso": "Tomar una capsula diaria por 10 días",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000195",
+  "nombregenerico": "FLAVOXATO",
+  "nombrecomercial": "GENURIN - SIGTIPHIN",
+  "uso": "Tomar un comprimido cada 12 horas por 30 días.",
+  "presentacion": "200 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000196",
+  "nombregenerico": "PREDNISONA",
+  "nombrecomercial": "PREDNISONA - PEDIACORT",
+  "uso": "(Calcort - Predna - Sintisone - Prednabene) Dar a tomar 3 a 5 cc, una vez al día por 15 días, NO SUSPENDER. (2 mgs por kg día)",
+  "presentacion": "Sol Oral",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000197",
+  "nombregenerico": "INMOVILIZADOR",
+  "nombrecomercial": "INMOVILIZADOR DE HOMBRO",
+  "uso": "Usar permanentemente hasta el 12 de junio, que se libera codo.",
+  "presentacion": "Talla",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000198",
+  "nombregenerico": "COLCHICINA",
+  "nombrecomercial": "COLCHICINA",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 30 DIAS",
+  "presentacion": "0,5 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000199",
+  "nombregenerico": "NIMESULIDE + PARACETAMOL",
+  "nombrecomercial": "NIMESULIDE + PARACETAMOL",
+  "uso": "Tomar una tableta cada 12 horas por 10 días luego una diaria por 20 días",
+  "presentacion": "100/500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000200",
+  "nombregenerico": "OWATTA",
+  "nombrecomercial": "OWATTA",
+  "uso": "Usar luego de las gasas",
+  "presentacion": "10 cms",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000201",
+  "nombregenerico": "VENDA ELASTICA",
+  "nombrecomercial": "VENDA ELASTICA LEROY",
+  "uso": "Cubrir el miembro afecto de distal a proximal.",
+  "presentacion": "10 cms",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000202",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "GABAROL, PREGABALINA, MARTESIA",
+  "uso": "Tomar una capsula a las 9 pm por 15 días, luego dos capsulas a las 9 pm por 15 días. NO SUSPENDER.",
+  "presentacion": "25 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000203",
+  "nombregenerico": "TIZANIDINA",
+  "nombrecomercial": "TIZAFEN - TIZANIDINA",
+  "uso": "Tomar una tableta cada 8 horas por 3 días, luego una cada 12 horas por 7 días y luego una diaria por 10 días",
+  "presentacion": "350 mgs - 2 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000204",
+  "nombregenerico": "ENSURE",
+  "nombrecomercial": "ENSURE",
+  "uso": "Diluir en un vaso de agua o jugo FRIO, 2 cucaharadas, tomar 2 veces al dia",
+  "presentacion": "Lata en polvo",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000205",
+  "nombregenerico": "ACIDO HIALURONICO",
+  "nombrecomercial": "ARTHROMIC - SINGJOINT",
+  "uso": "Acido hialuronico de alta densidad  TRAER EN PROXIMA CONSULTA",
+  "presentacion": "Amps (50/60mgs)",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000206",
+  "nombregenerico": "RAMIPRIL",
+  "nombrecomercial": "RAMIPRIL",
+  "uso": "Tomar una tableta diaria de por vida",
+  "presentacion": "2,5 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000207",
+  "nombregenerico": "DICLOFENAC + CODEINA",
+  "nombrecomercial": "PAINTFORT -  DICLOFENAC + CODEINA",
+  "uso": "Tomar una tableta diaria por 15 dias",
+  "presentacion": "50/30 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000208",
+  "nombregenerico": "BROMURO DE HIOSCINA",
+  "nombrecomercial": "BUSCAPINA - PLIDAN",
+  "uso": "Tomar una tableta cada 8 horas si hay dolor",
+  "presentacion": "10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000209",
+  "nombregenerico": "SULFAMETOXAZOL - TRIMETROPIN",
+  "nombrecomercial": "SULFAMETOXAZOL - TRIMETROPIN",
+  "uso": "BACTRON; Tomar 1 tableta cada 12 horas por 10 días.",
+  "presentacion": "400/80 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000210",
+  "nombregenerico": "HEPARINA",
+  "nombrecomercial": "BARGONIL",
+  "uso": "APLICAR EN LA ZONA AFECTA 2 VECES AL DIA.",
+  "presentacion": "-CREMA 10 G",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000211",
+  "nombregenerico": "TIZANIDINA + ACETAMINOFEN",
+  "nombrecomercial": "TIZAFEN-SIRDALUD",
+  "uso": "Tomar una tableta cada 8 horas por 3 días, luego una cada 12 horas por 7 días y luego una diaria por 10 días",
+  "presentacion": "Tabs Recubiertas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000212",
+  "nombregenerico": "DEFLAZACORT",
+  "nombrecomercial": "DEFLAZCORT",
+  "uso": "Tomar una tableta diaria por 7 días, luego media tableta interdiaria por 7 dias, luego 6 mgs martes y sabado por 2 semanas. Luego suspender",
+  "presentacion": "30 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000213",
+  "nombregenerico": "ITROFURANTOINA",
+  "nombrecomercial": "NITROFORANTOINA",
+  "uso": "Tomar una tableta cada 12 horas por 30 días",
+  "presentacion": "50 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000214",
+  "nombregenerico": "SOLUHEX",
+  "nombrecomercial": "SOLUHEX",
+  "uso": "Lavar los días sabado y lunes.",
+  "presentacion": "Jabon",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000215",
+  "nombregenerico": "CEFTRIAXONA",
+  "nombrecomercial": "CEFTRIAXONA",
+  "uso": "Colocar una ampolla endovenosa diluida a 20 cc de solución. Pasar lentamente por 10 días.",
+  "presentacion": "amp 1 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000216",
+  "nombregenerico": "LORATADINA",
+  "nombrecomercial": "LORATADINA",
+  "uso": "Dar a tomar 0.2 mg/kg/día, una vez al día",
+  "presentacion": "suspensión1mg/ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000217",
+  "nombregenerico": "L- CARNITINA",
+  "nombrecomercial": "L-CARNITINA - NATURISTIK",
+  "uso": "Tomar una capsulla diaria por 90 díaria.",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000218",
+  "nombregenerico": "AMOXACILINA + AC. CLAVULONICO",
+  "nombrecomercial": "AMOXACILINA/AC. CLAVULONICO",
+  "uso": "Dar a tomar una capsula cada 12 horas por 7 días.",
+  "presentacion": "875/125mgs",
+  "sico": "N",
+  "nombrecomercial1": "FULGRAM"
+ },
+ {
+  "codigo_origen": "00000219",
+  "nombregenerico": "OVERSKIN",
+  "nombrecomercial": "OVERSKIN",
+  "uso": "Mezclar con el derain en partes iguales y aplicar sobre la escara.",
+  "presentacion": "crema",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000221",
+  "nombregenerico": "YESO",
+  "nombrecomercial": "YESO",
+  "uso": "Traer a la consulta.",
+  "presentacion": "20 cms",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000220",
+  "nombregenerico": "FEBUXOSTAT",
+  "nombrecomercial": "FEBUXOSTAT - GOUTEX",
+  "uso": "Tomar una capsula diaria por 30 días. Al terminar realizar control laboratorio.",
+  "presentacion": "Caps 80 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000222",
+  "nombregenerico": "MELOXICAN - ESOMEPRAZOL",
+  "nombrecomercial": "OCAM PROTECT",
+  "uso": "Tomar una cada 12 horas por 10 días, luego una diaria por 15 días.",
+  "presentacion": "15 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000223",
+  "nombregenerico": "ESOMEPRAZOL",
+  "nombrecomercial": "PAMESONE - ESOMEPRAZOL",
+  "uso": "Tomar una capsula en ayunas por 2 meses",
+  "presentacion": "-20 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000224",
+  "nombregenerico": "TOBILLERA",
+  "nombrecomercial": "TOBILLERA TRENZADA",
+  "uso": "Usar permanentemente por tres semanas",
+  "presentacion": "Talla L",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000225",
+  "nombregenerico": "ACETATO DE METIL PREDNISONA",
+  "nombrecomercial": "DEPO-MEDROL",
+  "uso": "Traer en la proxima consulta.",
+  "presentacion": "amp 40mg/ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000226",
+  "nombregenerico": "CEFALEXIMA",
+  "nombrecomercial": "CEFALEXIMA",
+  "uso": "Tomar una capsula cada 6 horas por 10 días",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000227",
+  "nombregenerico": "CLINDAMICINA",
+  "nombrecomercial": "CLINDAMICINA",
+  "uso": "Tomar 600 mgs cada 6 horas por 10 días",
+  "presentacion": "300 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000228",
+  "nombregenerico": "PR - 88",
+  "nombrecomercial": "PR -88",
+  "uso": "Aplicar en la zona afecta 3 veces al día",
+  "presentacion": "Crema",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000229",
+  "nombregenerico": "RODILLERA",
+  "nombrecomercial": "RODILLERA AUTOCENTRANTE CON BARRAS",
+  "uso": "Usar permanentemente por 6 semanas",
+  "presentacion": "LATERALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000230",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "uso": "Colocar 1 ampolla EV cada 12 horas por 7 días",
+  "presentacion": "200 mgs/100ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000231",
+  "nombregenerico": "OMEPRAZOL",
+  "nombrecomercial": "OMEPRAZOL",
+  "uso": "Colocar una ampolla diluida en 20 cc de solución  pasar lentamente en ayunas, por 5 días",
+  "presentacion": "amps 40 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000232",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "KETOPROFENO",
+  "uso": "Colocar una ampolla diluida en 20 cc de solución y pasar lentamente cada 12 horas.",
+  "presentacion": "amps 100 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000233",
+  "nombregenerico": "COBAN",
+  "nombrecomercial": "COBAN",
+  "uso": "Aplicar vendaje segun aplicaciones",
+  "presentacion": "5 CMS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000234",
+  "nombregenerico": "ITRACONAZOL",
+  "nombrecomercial": "FUNGOSIN",
+  "uso": "Tomar dos comprimidos cada 12 horas por una semana, descansa 3 semanas. repetir por tres meses.",
+  "presentacion": "100 mgs x 28 tabs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000235",
+  "nombregenerico": "ATORVASTATINA",
+  "nombrecomercial": "ATORVASTATINA",
+  "uso": "Tomar una tableta, todas las noches por 1 mes",
+  "presentacion": "20 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000236",
+  "nombregenerico": "ALPRAZOLAM",
+  "nombrecomercial": "ALPRAM - ALPRAZOLAM",
+  "uso": "Tomar un comprimido a las 7 pm",
+  "presentacion": "0,5 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000237",
+  "nombregenerico": "CLONAZEPAM",
+  "nombrecomercial": "CLONAZEPAM - CLONATRIL",
+  "uso": "(CLONIPRES, NACLODIN, CLONZEP): Tomar 1 tableta (1 mgs) a las 9 pm por 1 mes.",
+  "presentacion": "1 mg x 30",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000238",
+  "nombregenerico": "BOTA WALKER",
+  "nombrecomercial": "BOTA WALKER",
+  "uso": "Usar permanentemente por 10 días, luego zapato cerrado por 10 días más.",
+  "presentacion": "Talla",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000239",
+  "nombregenerico": "DONA ORTOPEDICA",
+  "nombrecomercial": "DONA ORTOPEDICA",
+  "uso": "Usar permanenetemente mientras estes sentado.",
+  "presentacion": "Ortop.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000240",
+  "nombregenerico": "CURCUMA",
+  "nombrecomercial": "CURCUMA",
+  "uso": "TOMAR UNA CAPSULA DIARAI POR 6 MESES.",
+  "presentacion": "500 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000241",
+  "nombregenerico": "DICLOFENAC, CIANOCOBALAMINA, BETAME",
+  "nombrecomercial": "FLEXIPLEN B12",
+  "uso": "Tomar una tableta vada 8 horas por 5 días , luego cada 12 horas por 5 dias y finalmente 1 diaria por 5 días.",
+  "presentacion": "-15 Comprimidos",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000243",
+  "nombregenerico": "ACIDO TRANEXAMICO",
+  "nombrecomercial": "CICLOKAPROM",
+  "uso": "Tomar una capsula dos veces al dia por 10 días",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000242",
+  "nombregenerico": "CINCHA PARA EPICONDILITIS",
+  "nombrecomercial": "CINCHA PARA EPICONDILITIS",
+  "uso": "usar ajustada, permanentemente por 3 semanas, en ambas manos.",
+  "presentacion": "Brazalete",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000244",
+  "nombregenerico": "DESKETOPROFENO",
+  "nombrecomercial": "DESKETOPROFENO CALOX",
+  "uso": "Tomar una sobre cada 8 horas por 7 días, luego cada 12 horas por 7 días, luego uno diario por 7 días",
+  "presentacion": "Solución Oral 25x10ml",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000245",
+  "nombregenerico": "BICARBONATO DE SODIO",
+  "nombrecomercial": "REFLUXYL",
+  "uso": "Tomar 2 cucaharadas cada 8 horas el primer día, luego una cada 8 horas por 5 días.",
+  "presentacion": "Susp 120mm",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000246",
+  "nombregenerico": "CITRATO DE MAGNESIO",
+  "nombrecomercial": "MAGNESIO, CITRATO",
+  "uso": "Tomar una capsula diaria a las 5 pm por 3 meses.",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000247",
+  "nombregenerico": "FERULA",
+  "nombrecomercial": "BRACE RIGIDO DE RODILLA",
+  "uso": "Férula rigida de rodila. Usar permanentemente por 3 semanas.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000249",
+  "nombregenerico": "ALPRAZOLAM",
+  "nombrecomercial": "LOGAT LP - ALPRAM",
+  "uso": "Tomar una tableta en la noche 1 hora antes de acostarse.",
+  "presentacion": "1 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000252",
+  "nombregenerico": "CABESTRILLO",
+  "nombrecomercial": "CABESTRILLO",
+  "uso": "Usar alto por 3 semanas.",
+  "presentacion": "Tala",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000250",
+  "nombregenerico": "SULCRAFATO",
+  "nombrecomercial": "ULCON - SULCRAFATO",
+  "uso": "Tomar 1 tableta cada 8 horas por 1 mes",
+  "presentacion": "1gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000251",
+  "nombregenerico": "DICLOFENAC - CARISOPRODOL",
+  "nombrecomercial": "TORSILAX",
+  "uso": "Tomar un comprimido cada 8 horas por 5 días, luego uno cada 12 horas por 10 días, luego, solo si hay dolor. Siempre con las comidas.",
+  "presentacion": "30/125/50 mg Comp.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000253",
+  "nombregenerico": "MUÑEQUERA",
+  "nombrecomercial": "MUÑEQUERA RIGIDA CON PULGAR INCLUID",
+  "uso": "Usar permanentemente por tres semanas.",
+  "presentacion": "Ajustable",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000254",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "VIZERUL",
+  "uso": "Tomar una cucahara diaria por 1 mes.",
+  "presentacion": "Jabe 75 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000255",
+  "nombregenerico": "DOXICICLINA",
+  "nombrecomercial": "DOXICICLINA",
+  "uso": "Tomar una capsula cada 12 horas por 4 semanas.",
+  "presentacion": "100 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000256",
+  "nombregenerico": "CODERA",
+  "nombrecomercial": "CODERA",
+  "uso": "Usar permanentemente por tres semanas",
+  "presentacion": "ajustable",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000257",
+  "nombregenerico": "POLIETINGLICOL",
+  "nombrecomercial": "MILAX",
+  "uso": "Tomar 2 cucharadas en cada vaso de jugo, 2 ó 3 veces al día.",
+  "presentacion": "360 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000258",
+  "nombregenerico": "METOCARBAMOL",
+  "nombrecomercial": "METOCARBAMOL",
+  "uso": "Tomar 2 (dos) tabletas cada 6 horas por dos (2) dias, luego 1 (una) tableta cada 6 horas por tres (3) días, luego 1 (una)  tableta cada 8 horas por cinco (5) días",
+  "presentacion": "750 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000259",
+  "nombregenerico": "ADHESIVO",
+  "nombrecomercial": "ADHESVIO",
+  "uso": "Colocar vendaje segun indicaciones",
+  "presentacion": "Leukoplast",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000260",
+  "nombregenerico": "HIOSCINA",
+  "nombrecomercial": "BUSCAPINA - SARIFAN",
+  "uso": "Tomar una tableta cada 8 horas por 5 días",
+  "presentacion": "20 tbs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000261",
+  "nombregenerico": "NOXPIRIN",
+  "nombrecomercial": "NOXPIRIN",
+  "uso": "Tomar uno cada 8 horas, mientras tenga sintomatologia.",
+  "presentacion": "Comp",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000262",
+  "nombregenerico": "MULETAS",
+  "nombrecomercial": "MULETAS",
+  "uso": "Usar por 10 días. Para apoyo asistido.",
+  "presentacion": "Ajustable",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000263",
+  "nombregenerico": "CASSIA ANGUSTIAFOLIA",
+  "nombrecomercial": "CIRUELAX FORTE",
+  "uso": "Tomar 2 tabletas en la noche, a las hora de acostarse",
+  "presentacion": "Comprimidos 125 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000264",
+  "nombregenerico": "GLICINATO DE MAGNESIO",
+  "nombrecomercial": "GLICINATO DE MAGNESIO",
+  "uso": "(Arco Iris) Tomar una capsula a las 5 pm por tres meses.",
+  "presentacion": "55o mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000266",
+  "nombregenerico": "CENTRO DE CAMA",
+  "nombrecomercial": "CENTRO DE CAMA",
+  "uso": "Traer a la proxima consulta",
+  "presentacion": "800 x 600 mm",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000267",
+  "nombregenerico": "MELOXICAN",
+  "nombrecomercial": "MELCOX",
+  "uso": "Tomar una cada 12 horas por 10 días.",
+  "presentacion": "15 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000268",
+  "nombregenerico": "CENTELLA ASIATICA",
+  "nombrecomercial": "CENTELLA SAM",
+  "uso": "Una capsula antes de cada comida. por 6 meses",
+  "presentacion": "90 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000269",
+  "nombregenerico": "VITAMINA D",
+  "nombrecomercial": "GIRALMET - VITAMINA D",
+  "uso": "Tomar un vial cada 3 meses. (Mensual x 3 meses, si es Osteoporotica)",
+  "presentacion": "100000 uI Solución Oral.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000270",
+  "nombregenerico": "VITAMINA D",
+  "nombrecomercial": "DEROVIT - VITAMINA D",
+  "uso": "Tomar 1 tableta diaria, cerca del almuerzo o cena, con abundante agua.",
+  "presentacion": "Caps 1000 Ui",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000271",
+  "nombregenerico": "CORRECTOR DE POSTURA",
+  "nombrecomercial": "CORRECTOR DE POSTURA",
+  "uso": "Usar permanentememnte durante el día.",
+  "presentacion": "Femenino",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000272",
+  "nombregenerico": "ASPIRINA",
+  "nombrecomercial": "ASPIRINA INFANTIL",
+  "uso": "Tomar una tableta en las mañanas  por un mes.",
+  "presentacion": "81 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000275",
+  "nombregenerico": "SEMAGLUTIDE",
+  "nombrecomercial": "OZEMPIC",
+  "uso": "Colocar una ampolla subcutanea, semanal.",
+  "presentacion": "0,5 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000273",
+  "nombregenerico": "GLUCOSAMINA",
+  "nombrecomercial": "GLUCOSAMINA - ARTROVIT",
+  "uso": "Tomar una capsula de 1500 mgs diario por tres meses. HASTA EL 15 DE NOVIEMBRE",
+  "presentacion": "1500 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000274",
+  "nombregenerico": "TANSULOSINA",
+  "nombrecomercial": "TANSULOSINA - TANSULON",
+  "uso": "Tomar una capsula con la cena por 6  meses",
+  "presentacion": "0.4 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000276",
+  "nombregenerico": "KETOROLAC",
+  "nombrecomercial": "DOLAK",
+  "uso": "Colocar una tableta debajo de la lengua y esperar que se disuelva, cada 8 horas por 7 días, luego una diaria por 7 días.",
+  "presentacion": "SL 10 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000277",
+  "nombregenerico": "ALCOHOL",
+  "nombrecomercial": "ALCOHOL ISOPROPILICO",
+  "uso": "Aplicar en la zona de la herida, al realizar la cura.",
+  "presentacion": "100 cc",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000278",
+  "nombregenerico": "DIPIRONA",
+  "nombrecomercial": "DIPIRONA",
+  "uso": "Colocar 1 ampolla EV cada 8 horas, si hay dolor.",
+  "presentacion": "1 br",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000279",
+  "nombregenerico": "DIPIRONA",
+  "nombrecomercial": "DIPIRONA - METAMIZOL",
+  "uso": "Tomar una tableta cada 6-8 horas, segun el dolor.",
+  "presentacion": "Tabs 500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000280",
+  "nombregenerico": "DESLORATADINA - MONTELUKAST",
+  "nombrecomercial": "DESLER M",
+  "uso": "Tomar una tableta diaria por 10 días.",
+  "presentacion": "2,5/5 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000281",
+  "nombregenerico": "TRAUMEEL",
+  "nombrecomercial": "TRAUMEEL",
+  "uso": "10 gotas 3 veces al día por 21 días.",
+  "presentacion": "Gotas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000282",
+  "nombregenerico": "MUPIROCINA",
+  "nombrecomercial": "DALCITRIN",
+  "uso": "Aplicar 2 o 3 veces al día.",
+  "presentacion": "Crema 15 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000283",
+  "nombregenerico": "CLOPIDROGEL",
+  "nombrecomercial": "CIGREL, CLOPIDEX",
+  "uso": "Tomar una tableta en las mañanas permanente.",
+  "presentacion": "75 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000284",
+  "nombregenerico": "PENTOXIFILINA",
+  "nombrecomercial": "PENTOXIFILINA",
+  "uso": "Tomar una capsula cada 12 horas por 6 meses",
+  "presentacion": "400  mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000285",
+  "nombregenerico": "PANCREATINA",
+  "nombrecomercial": "FESTAL",
+  "uso": "Tomar una gragea 15 minutos antes del almuezo y con la cena.",
+  "presentacion": "50 grageas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000286",
+  "nombregenerico": "PREDNISONA",
+  "nombrecomercial": "PREDNISONA",
+  "uso": "Tomar una capsula diaria por 30 días.",
+  "presentacion": "50 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000287",
+  "nombregenerico": "ORTOPEDICO",
+  "nombrecomercial": "COJIN ORTOPEDICO PARA COCCIX",
+  "uso": "Isar siempre que este sentada por 42 días.",
+  "presentacion": "Aro de hemorroides",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000288",
+  "nombregenerico": "VITAMINA D",
+  "nombrecomercial": "VITAMINA D",
+  "uso": "Tomar una tableta diaria por 6 meses.",
+  "presentacion": "3000 uds",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000289",
+  "nombregenerico": "DEFLAZACORT",
+  "nombrecomercial": "DEFLAZACORT",
+  "uso": "Tomar una tableta a las 9 pm por 1 mes.",
+  "presentacion": "6 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000290",
+  "nombregenerico": "INDOMETACINA",
+  "nombrecomercial": "ELMETACIN",
+  "uso": "Crioterapia: Aplicar hielo en la zona afectada durante 20 minutos, protegiendo para no quemarse, luego  realizar 7 aplicaciones, Dejar secar al aire completamente. Importante: No masajear ni frotar la zona.",
+  "presentacion": "Spray",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000291",
+  "nombregenerico": "OMEGA 3",
+  "nombrecomercial": "OMEGA 3, 6, 9",
+  "uso": "Tomar una diarai por 3 meses.",
+  "presentacion": "1000mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000292",
+  "nombregenerico": "BENCIDAMINA",
+  "nombrecomercial": "TANTUM",
+  "uso": "Limpiar la zona con un isopo y luego realizar buches.",
+  "presentacion": "TOPICO BUCAL.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000293",
+  "nombregenerico": "CITICOLINA",
+  "nombrecomercial": "SOMAZINA",
+  "uso": "Tomar una tableta cada 12 horas por 6 meses.",
+  "presentacion": "500 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000294",
+  "nombregenerico": "AGUJA ESPINAL",
+  "nombrecomercial": "AGUJA ESPINAL",
+  "uso": "Traer en la proxima consulta",
+  "presentacion": "N° 23",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000295",
+  "nombregenerico": "COLLARIN",
+  "nombrecomercial": "COLLARIN",
+  "uso": "Usar para las actividades indicadas. NO USAR PERMANENTEMENTE.",
+  "presentacion": "blando",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000296",
+  "nombregenerico": "PROCAINA",
+  "nombrecomercial": "PROCAINA 1% - 2%.",
+  "uso": "Traer en la proxima consulta",
+  "presentacion": "Solución Inyectable X10",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000297",
+  "nombregenerico": "ARNICA Y CALENDULA",
+  "nombrecomercial": "ARNIK",
+  "uso": "Aplicar calor por 20 minutos y luego aplicar la crema, tres veces al día. Luego de la crema, cubrir con una franela.",
+  "presentacion": "Crema",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000298",
+  "nombregenerico": "HOJILLA BISTURI",
+  "nombrecomercial": "HOJILLA BISTURI",
+  "uso": "Traer en la proxima consulta",
+  "presentacion": "11 y 15",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000299",
+  "nombregenerico": "INYECTADORA",
+  "nombrecomercial": "INYECTADORA",
+  "uso": "TRAER EN LA PROXIMA CONSULTA",
+  "presentacion": "10 CC",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000300",
+  "nombregenerico": "DROSPIRENONA",
+  "nombrecomercial": "SLINDA - DROSPIRENONA",
+  "uso": "Tomar segunel ciclo",
+  "presentacion": "4 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000301",
+  "nombregenerico": "CASTAÑO DE INDIAS",
+  "nombrecomercial": "CASTAÑO DE INDIAS",
+  "uso": "Tomar una capsula cada 12 horas por 3 meses.",
+  "presentacion": "400 mgs",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000302",
+  "nombregenerico": "PARACETAMOL",
+  "nombrecomercial": "AGURIN - PARACETAMOL",
+  "uso": "Tomar una Tableta cada 6 horas por 3 días, luego solo si tiene dolor.",
+  "presentacion": "1 gr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000303",
+  "nombregenerico": "CARBONATO DE CALCIO",
+  "nombrecomercial": "TUMS - APLACAL - FRUTACID",
+  "uso": "Tomar una tableta cada 12 horas por 7 días",
+  "presentacion": "500/700 MGS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "00000304",
+  "nombregenerico": "BIOTINA",
+  "nombrecomercial": "BIOTIN",
+  "uso": "Tomar una capsula diaria por 6 meses.",
+  "presentacion": "10000mcg",
+  "sico": "N"
+ }
+]

@@ -20,7 +20,17 @@
                     <label class="visually-hidden" for="buscar-inicial">Buscar</label>
                     <input type="text" id="buscar-inicial" wire:model.debounce.400ms="search" class="form-control" placeholder="Buscar por nombre o código...">
                 </div>
-                <div class="col-md-7 text-md-end mt-2 mt-md-0 text-muted small">{{ $total }} {{ $total === 1 ? 'fila inicial' : 'filas iniciales' }}</div>
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <label class="visually-hidden" for="especialidad-inicial">Especialidad</label>
+                    <select id="especialidad-inicial" class="form-select" wire:model="especialidad">
+                        <option value="">Todas</option>
+                        <option value="general">Generales</option>
+                        @foreach ($especialidades as $id => $nombre)
+                            <option value="{{ $id }}">{{ $nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 text-md-end mt-2 mt-md-0 text-muted small">{{ $total }} {{ $total === 1 ? 'fila inicial' : 'filas iniciales' }}</div>
             </div>
         </div>
 
@@ -28,7 +38,7 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
-                        <tr><th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th class="text-end">Acciones</th></tr>
+                        <tr><th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th>Especialidades</th><th class="text-end">Acciones</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($filas as $fila)
@@ -36,6 +46,13 @@
                                 <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
                                 <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
                                 <td class="text-muted small">{{ $detalles[$fila->id] ?: '—' }}</td>
+                                <td>
+                                    @forelse ($marcas[$fila->id] ?? [] as $especialidadId)
+                                        <span class="badge bg-light text-dark border">{{ $especialidades[$especialidadId] ?? '¿?' }}</span>
+                                    @empty
+                                        <span class="badge bg-secondary">General</span>
+                                    @endforelse
+                                </td>
                                 <td class="text-end text-nowrap">
                                     @if ($catalogo === 'tratamientos')
                                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirLineas({{ $fila->id }})">
@@ -52,8 +69,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    {{ trim($search) === '' ? 'Todavía no hay filas en este catálogo inicial. Agrega la primera con «Nuevo ' . $def['singular'] . '».' : 'No se encontró nada.' }}
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    {{ trim($search) === '' && $especialidad === '' ? 'Todavía no hay filas en este catálogo inicial. Agrega la primera con «Nuevo ' . $def['singular'] . '».' : 'No se encontró nada.' }}
                                 </td>
                             </tr>
                         @endforelse
@@ -106,6 +123,18 @@
                                     </div>
                                 @endforeach
                             </div>
+                            <fieldset class="mt-3">
+                                <legend class="form-label fs-6 mb-1">Aplica a</legend>
+                                <div class="d-flex flex-wrap gap-3">
+                                    @foreach ($especialidades as $id => $nombre)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="aplica-{{ $id }}" value="{{ $id }}" wire:model.defer="aplica">
+                                            <label class="form-check-label" for="aplica-{{ $id }}">{{ $nombre }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="form-text">Sin ninguna marcada, es general: la recibe el médico de cualquier especialidad.</div>
+                            </fieldset>
                             <p class="text-muted small mt-3 mb-0">El código lo asigna el sistema.</p>
                         </div>
                         <div class="modal-footer">

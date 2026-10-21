@@ -1,0 +1,30 @@
+[
+ {
+  "codigo_origen": "001",
+  "tipo": "LABORATORIO"
+ },
+ {
+  "codigo_origen": "002",
+  "tipo": "ESTUDIO DE IMAGENES"
+ },
+ {
+  "codigo_origen": "003",
+  "tipo": "ESTUDIOS ESPECIALES"
+ },
+ {
+  "codigo_origen": "004",
+  "tipo": "PREOPERATORIOS"
+ },
+ {
+  "codigo_origen": "005",
+  "tipo": "HISTEROSALPINGOGRAFIA"
+ },
+ {
+  "codigo_origen": "006",
+  "tipo": "MENOPAUSIA"
+ },
+ {
+  "codigo_origen": "007",
+  "tipo": "ddddddd"
+ }
+]

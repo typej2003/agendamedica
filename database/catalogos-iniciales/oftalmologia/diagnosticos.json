@@ -1,0 +1,3586 @@
+[
+ {
+  "codigo_origen": "0165",
+  "descripcion": "DISTRIQUIASIS"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "INSUFICIENCIA PARA LA CONVERGENCIA"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "ENGROSAMIENTO COROIDEO"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "BLEFARITIS"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "OJO SECO"
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "CELULITIS POST-SEPTAL"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "CONTROL"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "CORIDOPATIA SEROSA CENTRAL"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "COROIDOSIS MIÓPICA ODI"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "DRUSSEN PERIMACULARES"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "HERIDA CONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "EXCAVACIONES AMPLIAS DEL NERVIO OPTICO"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "CATARATA INCIPIENTE ODI"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "AGUJERO MACULAR"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "CEFALEA VASCULAR"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "ASTIGMATISMO MIÓPICO"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "GLAUCOMA ODI"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "CUERPO EXTRAÑO OD"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "MIOPIA"
+ },
+ {
+  "codigo_origen": "0335",
+  "descripcion": "PINGUECULA OD"
+ },
+ {
+  "codigo_origen": "0782",
+  "descripcion": "HIPERFORIA OD"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "CELULITIS PRESEPTAL OI"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "PTERIGIUM RECIDIVANTE"
+ },
+ {
+  "codigo_origen": "0783",
+  "descripcion": "QUERATITIS ULCERATIVA OD POR LENTES DE CONTACTO"
+ },
+ {
+  "codigo_origen": "0146",
+  "descripcion": "UVEITIS POSTQUIRURGICA"
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "NEURALGIA DEL TRIGÉMINO"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "CEFALEA"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "CATARATA PATOLOGICA"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "CONJUNTIVITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "ASTIGMATISMO SIMPLE"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "DEGENERACIÓN MACULAR SENIL"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "QUERATOCONJUNTIVITIS POR ADENOVIRUS"
+ },
+ {
+  "codigo_origen": "0786",
+  "descripcion": "QUERATOCONJUNTIVITIS VERNAL"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "CONJUNTIVITIS ALÉRGICA"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "AMBLIOPIA"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "CATARATA ODI"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "DESPRENDIMIENTO DE RETINA"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "PTERIGIUM NASAL"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "QUISTE DE COLA DE PÁRPADO"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "QUERATITIS HERPÉTICA"
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "EXAMEN OFTALMOLOGICO D. L. N."
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "CHALAZION"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "MOSCAS VOLANTES"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "CONJUNTIVITIS"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "ECTROPION DE PUNTO LACRIMAL"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "UVEITIS POR TOXOPLASMOSIS"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "HERIDA CORNEAL PERFORANTE"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "TU CONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "PSEUDOPTOSIS PALPEBRAL SEVERA ODI"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "GLAUCOMA AGUDO"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "GLAUCOMA A DESCARTAR"
+ },
+ {
+  "codigo_origen": "0128",
+  "descripcion": "PSEUDOFAQUIA ODI"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "AGUJEROS RETINIANOS BILATERAL"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "CELULITIS PRESEPTAL OD"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "CUERPO EXTRAÑO OI"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "CATARATA SENIL"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "DESVIA UN OJO"
+ },
+ {
+  "codigo_origen": "0362",
+  "descripcion": "EXOFTALMOS BILATERAL"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "FILTRANTE ODI"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "ENDOTROPIA"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "PTERIGION NASAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0155",
+  "descripcion": "CORIORETINITIS ANTIGUA"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "ESCLEROMALACIA NASAL"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "UVEITIS"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "HIFEMA"
+ },
+ {
+  "codigo_origen": "0368",
+  "descripcion": "QUERATOCONO GRADO II"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "OBSTRUCCION DE VIA LAGRIMAL ALTA OI"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "QUEMADURA CORNEAL POR ÁLCALI"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "TROMBOSIS DE RAMA DE VENA CENTRAL DE REINA OD"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "HIPERMETROPIA"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "ENDOTROPIA ACOMODATIVA"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "MEMBRANA NEOVASCULAR SUBFOVEAL OD"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "CATARATA GRADO II AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "QUERATITIS ESTROMAL"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "QUERATOPATIA BULOSA"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "DESPRENDIMIENTO DE VITREO POSTERIOR OI"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "OBSTRUCCIÓN DE VIAS LAGRIMALES"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "PTISIS BULBI OD"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "GLAUCOMA NEOVASCULAR OI"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "MACULOPATIA"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "AFAQUIA"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "GLAUCOMA SECUNDARIO A PROLAPSO VITREO OD"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "CUERPO EXTRAÑO"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "MACULOPATIA A PRECISAR"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "QUEMADURA CORNEAL POR ÁCIDO"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "ASTIGMATISMO HIPERMETROPICO"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "TRAUMATISMO OCULAR"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "SOSPECHA DE GLAUCOMA"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "QUISTE CONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "GRANULOMA CONJUNTIVAL POSTQUIRURGICO"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "TRAUMATISMO OCULAR PERFORANTE"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "HERIDA PALPEBRAL CON SECCION DE BORDE LIBRE"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "CELULITIS  ORBITARIA"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "CEGUERA LEGAL"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "LEUCOMA CORNEAL"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "RETINOPATIA DIABETICA PROLIFRATIVA"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "CONJUNTIVITIS PAPILAR GIGANTE"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "ESCLERITIS NODULAR"
+ },
+ {
+  "codigo_origen": "0324",
+  "descripcion": "EXCAVACIONES  ASIMETRICAS DEL NERVIO OPTICO"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "HEMORRAGIA VITREA"
+ },
+ {
+  "codigo_origen": "0326",
+  "descripcion": "ECTROPION PARPADO INFERIOR ODI"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "PSEUDOFAQUIA OI"
+ },
+ {
+  "codigo_origen": "0331",
+  "descripcion": "QUERATITIS OD"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "EPIESCLERITIS"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "HEMORRAGIA SUBCONJUNTIVAL OI"
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "QUERATITIS"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "OPACIDAD  CAPSULA POSTERIOR OD"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "HIPERTENSION OCULAR"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "EROSION CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "CATARATA OI"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "ESTENOSIS DE PUNTOS LAGRIMALES"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "EMETROPIA"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "SINDROME DE SJOGREN"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "CHALAZION COMPLICADO CON GRANULOMA PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0248",
+  "descripcion": "ESCLERITIS DIFUSA"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "ECTROPION"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "ORZUELO"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "OBSTRUCCION DE VCR OD"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "MELANOSIS CONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0253",
+  "descripcion": "EXOTROPIA OI"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "PTOSIS PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "GLAUCOMA POSTQUIRURGICO OD"
+ },
+ {
+  "codigo_origen": "0256",
+  "descripcion": "DESCEMATOCELE CORNEAL"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "HIPERTENSION OCULAR SECUND. A CATARATA INTUMESCENT"
+ },
+ {
+  "codigo_origen": "0258",
+  "descripcion": "LUXACION DEL CRISTALINO A CAMARA ANTERIOR"
+ },
+ {
+  "codigo_origen": "0259",
+  "descripcion": "TRIQUIASIS"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "PSEUDOFAQUIA OD"
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "OJO SECO SEVERO"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "ENDOFTALMITIS"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "MEIBOMITIS"
+ },
+ {
+  "codigo_origen": "0264",
+  "descripcion": "HIFEMA POSTRAUMATICO"
+ },
+ {
+  "codigo_origen": "0332",
+  "descripcion": "QUERATITIS OI"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "PSEUDOTUMOR ORBITARIO"
+ },
+ {
+  "codigo_origen": "0267",
+  "descripcion": "ORBITOPATIA DISTIROIDEA AGUDA"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "CUERPO EXTRAÑO INTRACORNEAL"
+ },
+ {
+  "codigo_origen": "0269",
+  "descripcion": "GLAUCOMA CONGENITO"
+ },
+ {
+  "codigo_origen": "0270",
+  "descripcion": "HERIDA CORNEAL PERFORANTE CON HERNIA DE IRIS"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "HERIDA ESCLERAL PERFORANTE"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "HERIDA CORNEOESCLERAL"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "QUERATOPATIA POR EXPOSICION"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "CONCRESIONES CONJUNTIVALES"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "VERRUGA PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0276",
+  "descripcion": "RETINITIS PIGMENTARIA"
+ },
+ {
+  "codigo_origen": "0277",
+  "descripcion": "FLOCULOS VITREOS"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "PINGUECULA OI"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "RECHAZO  TRANSPLANTE CORNEAL"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "PARALISIS DEL TERCER PAR CRANEAL"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "ATROFIA DEL NERVIO OPTICO"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "QUISTE PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "CATARATA CONGENITA"
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "HERIDA PARPADO"
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "EXOTROPIA"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "GLAUCOMA ABSOLUTO"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "CATARATA INTUMESCENTE"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "OJO UNICO"
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "CUERPO EXTRAÑO  INTRAOCULAR"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "RETINOPATIA HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "ULCERA CORNEAL"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "ESTRABISMO"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "PRESBICIA"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "CATARATA SUBCAPSULAR"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "TUMOR PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "GLAUCOMA CRONICO SIMPLE AVANZADO"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "EROSION CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "OCLUSION RAMA SUPERIOR VENOSA"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "UVEITIS POSTERIOR"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "UVEITIS POSTRAUMATICA"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "PINGUECULA"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "PARALISIS DEL SEXTO PAR"
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "OPACIDAD DE CAPSULA POSTERIOR"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "TUMORACION CONJUNTIVAL"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "CATARATA TRAUMATICA"
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "EXCAVACION FISIOLOGICA"
+ },
+ {
+  "codigo_origen": "0307",
+  "descripcion": "PTISIS BULBI"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "HEMORRAGIA PREMACULAR"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "PTOSIS OI"
+ },
+ {
+  "codigo_origen": "0309",
+  "descripcion": "HEMORRAGIA SUBRETINIANA"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "QUERATOCONJUNTIVITIS  ALERGICA"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "CATARATA OD"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "OPACIDAD DE CAPSULA POSTERIOR ODI"
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "PTERIGIUM NASAL OI"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "ASTIGMATISMO"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "QUERATOCONJUNTIVITIS"
+ },
+ {
+  "codigo_origen": "0316",
+  "descripcion": "UVEITIS ANTERIOR"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "ASTIGMATISMO MIOPICO OI"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "QUISTE PALPEBRAL OD"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "EVALUACION DENTRO DE LIMITES NORMALES"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "PTERIGIUM NASAL OD"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "ANISOMETROPIA"
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "CATARATA SECUNDARIA"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "ECTASIA POST LASIK"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "DESPRENDIMIENTO DEL VITREO POSTERIOR"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "NEURITIS DEL SUPRAORBITARIO"
+ },
+ {
+  "codigo_origen": "0351",
+  "descripcion": "RESTRCCION DE SUPRAVERSION RECTO SUPERIOR OI"
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "QUERIS PUNCTATA"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "PSEUDOPTOSIS PALPEBRAL ODI"
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "CATARATA GRADO III AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "EDEMA MACULAR DIABETICO BILATERAL"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "SINQUISIS CENTELLANTE"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "MIOPIA MAGNA"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "EXOFORIA"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "OFTALMOPATIA TIROIDEA"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "HIPERTENSION OCULAR"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "EDEMA MACULAR OD"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "NISTAGMOS"
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "ALBINISMO OCUALR RETINIANO"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "EDEMA MACULAR BILATERAL"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "TUMOR ORBITARIO EN OJO IZQUIERDO  LINFOMA??"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "QUERATOCONO GRADO IV"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "OBSTRUCCION DE VIA LAGRIMAL BAJA SACO RETENEDOR OI"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "DERMATITIS DE CONTACTO"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "GLAUCOMA  ANGULO ESTRECHO ODI"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "VARICES CONJUNTIVALES"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "GLAUCOMA CONGENITO"
+ },
+ {
+  "codigo_origen": "0388",
+  "descripcion": "CRECIMIENTO EPITELIAL EN ENTRECARA CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "ASTIGMATISMO IRREGULAR"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "UVEITIS ANTERIOR OI HERPETICA"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "QUERATITIS Y ENDOTELITIS HERPETICA OI"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "GLAUCOMA CRINICO DE ANGULO ABIERTO AVANZADO"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "NEURITIS OPTICA ISQUEMICA ANTERIOR OD"
+ },
+ {
+  "codigo_origen": "0394",
+  "descripcion": "OFTALMOPATIA TIROIDEA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0395",
+  "descripcion": "CATARATA GRADO IV AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "DERMATOCHALASIS"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "OBSTRUCCION DE VIA LAGRIMAL ALTA  BILATERAL"
+ },
+ {
+  "codigo_origen": "0398",
+  "descripcion": "ENTROPION BILATERAL"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "ESCLEROMALACIA TEMPORAL OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "UVEITIS HERPETICA"
+ },
+ {
+  "codigo_origen": "0400",
+  "descripcion": "DEGENERACION CORNEAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "PSEUDOFAQUIA OD"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "BLEFAROESPASMO"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "ECTASIA POR KERATOTOMIA RADIADA"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "DISTROFIA CORNEAL DE FUHCS"
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "PARESIA DEL III PAR OI"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "PROPTOSIS"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "SINDROME VOGH KOYANAYI HARADA"
+ },
+ {
+  "codigo_origen": "0409",
+  "descripcion": "MEMBRANA NEOVASCULAR SUBFOVEAL ODI"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "QUERATOCONO GRADO III AO"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "GLAUCOMA NORMOTENSIVO"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "NEURITIS OPTICA OI"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "CAVIDAD ANOFTALMICA OI"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "ASTIGMATISMO MIXTO"
+ },
+ {
+  "codigo_origen": "0415",
+  "descripcion": "NEUROPATIA GLAUCOMATOSA"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "CATARATA GRADO III OI"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "RETINOSQUISIS"
+ },
+ {
+  "codigo_origen": "0418",
+  "descripcion": "DEGENERACION MIOPICA MACULAR"
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "CONJUNTIVITIS DE INCLUSION"
+ },
+ {
+  "codigo_origen": "0420",
+  "descripcion": "GLAUCOMA CORNICO DE ANGULO ABIERTO"
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "GLAUCOMA DE ANGULO CERRADO"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "GLAUCOMA SECUNDARIO A LENTE CAMAR ANTERIOR OD"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "QUERATOCONJUNTIVITIS BERNAL"
+ },
+ {
+  "codigo_origen": "0424",
+  "descripcion": "NEVUS CONJUNTIVAL QUE SOBREPASA LIMBO CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "DEGENERACION MARGINAL DE TERRIEN"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "IRITIS"
+ },
+ {
+  "codigo_origen": "0426",
+  "descripcion": "PTOSIS DE CEJA DERECHO"
+ },
+ {
+  "codigo_origen": "0427",
+  "descripcion": "EDEMA MACULAR OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0428",
+  "descripcion": "HEMORRAGIA MACULAR OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "OBSTRUCCION DE VIA LAGRIMAL ALTA  OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "DACRIOCISTITIS"
+ },
+ {
+  "codigo_origen": "0431",
+  "descripcion": "QUERATOCONJUNTIVITIS VERNAL"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "MACULOPATIA DE STARGART"
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "QUERATITIS FILAMENTOSA"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "QUERATOCONO"
+ },
+ {
+  "codigo_origen": "0435",
+  "descripcion": "CATARATA GRADO III AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "FRACTURA DE PISO DE ORBITA DE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "DIPLOPIA"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "CATARATA GRADO IV OD"
+ },
+ {
+  "codigo_origen": "0439",
+  "descripcion": "CICATRIZ COROIDORETINIANA MACULAR POR TOXOPLASMOSI"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "GLAUCOMA FACOMORFICO AMBOS OJOS POR ANGULO ESTRECH"
+ },
+ {
+  "codigo_origen": "0441",
+  "descripcion": "CAVIDAD ANOFTALMICA OD"
+ },
+ {
+  "codigo_origen": "0442",
+  "descripcion": "SUBLUXACION DE CRISTALINO EN AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "SINDROME DE MARFAN"
+ },
+ {
+  "codigo_origen": "0444",
+  "descripcion": "OPACIDAD CAOSULAR DEL CRISTALINI II"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "CARCINOMA EPIDERMOIDE POBREMENTE DIFERENCIADO OD"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "CARCINOMA BASOCELULAR OD"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "BLEFARITIS ANTERIOR"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "GLAUCOMA POR ESTEROIDES"
+ },
+ {
+  "codigo_origen": "0505",
+  "descripcion": "PAPILEDEMA"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "DACRIOTONCELE AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "GLAUCOMA FACOMORFICO OD"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "ENFERMEDAD INFLAMATORIA ORBITARIA OI"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "ENTROPION CICATRIZAL SUPERIOR OD"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "SOCKET INSUFICIENTE"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "CATARATA GRADO V EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "CATARATA MEMBRANOSA PARCIALMENTE REABSORBIDA"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "PROTANOMALIA"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "DEUTERANOMALIA"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "DEGENERACION MIOPICA RETINIANA"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "DISTROFIA MACULAR DE CONOS"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "ENDOFORIA"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "ASTIGMATISMO MIOPICO OD"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "GLAUCOMA PIGMENTARIO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "ENFERMEDAD DE COATS OD"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "QUERATOPATIA EN BANDA CALCICA OD"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "AMBLIOPIA OD"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "DESVIACION VERTICAL DISOCIADO DEL OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "CATARATA GRADO V OD"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "CATARATA GRADO II OI"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "SINDROME DE MEIGE"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "PTOSIS CILIAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "MEMBRANA EPIMACULAR AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0472",
+  "descripcion": "DERMOIDE PARANASAL DERECHO"
+ },
+ {
+  "codigo_origen": "0473",
+  "descripcion": "MEMBRANA EPIMACULAR OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0474",
+  "descripcion": "ASTIGMATISMO MIOPICO COMPUESTO EN AO"
+ },
+ {
+  "codigo_origen": "0475",
+  "descripcion": "PTERIGIUM NASAL OI"
+ },
+ {
+  "codigo_origen": "0476",
+  "descripcion": "SINDROME DE DUANE"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "EPIBLEFARON"
+ },
+ {
+  "codigo_origen": "0478",
+  "descripcion": "MACULOPATIA MIOPICA OD"
+ },
+ {
+  "codigo_origen": "0479",
+  "descripcion": "QUERATOCONO FRUSTRUS"
+ },
+ {
+  "codigo_origen": "0480",
+  "descripcion": "QUISTE DE ZEIS"
+ },
+ {
+  "codigo_origen": "0481",
+  "descripcion": "COLOBOMA DE PARPADADO SUPERIOR OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0482",
+  "descripcion": "QUERATINIZACION CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "PINGUECULIUTIS OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0484",
+  "descripcion": "CONJUNTIVITIS DE INCLUSION"
+ },
+ {
+  "codigo_origen": "0485",
+  "descripcion": "POST OPERATORIO TARDIO DE LASIK"
+ },
+ {
+  "codigo_origen": "0486",
+  "descripcion": "QUERATOCONO OD"
+ },
+ {
+  "codigo_origen": "0487",
+  "descripcion": "CATARATA GRADO III OD"
+ },
+ {
+  "codigo_origen": "0488",
+  "descripcion": "GLAUCOMA FACOMORFICO"
+ },
+ {
+  "codigo_origen": "0489",
+  "descripcion": "CATARATA GRADO II OD"
+ },
+ {
+  "codigo_origen": "0490",
+  "descripcion": "DISTROFIA  DE CONOS"
+ },
+ {
+  "codigo_origen": "0491",
+  "descripcion": "POST OPERATORIO MEDIATO DE CURA DE PTOSIS Y ECTROP"
+ },
+ {
+  "codigo_origen": "0492",
+  "descripcion": "PTOSIS CONGENITA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0493",
+  "descripcion": "QUERATOPLASTIA PENETRANTE OI"
+ },
+ {
+  "codigo_origen": "0495",
+  "descripcion": "LESION VERRUGOSA OI PARPADO INF"
+ },
+ {
+  "codigo_origen": "0496",
+  "descripcion": "OPACIFICACION DEL LENTE OD"
+ },
+ {
+  "codigo_origen": "0497",
+  "descripcion": "RETINOPATIA DIABETICA NO APARENTE"
+ },
+ {
+  "codigo_origen": "0498",
+  "descripcion": "QUERATOCONO GRADO IV OI"
+ },
+ {
+  "codigo_origen": "0499",
+  "descripcion": "QUERATOCONO GRADO II OD"
+ },
+ {
+  "codigo_origen": "0500",
+  "descripcion": "DVD: DESVIACION VERTICAL DISOCIADA."
+ },
+ {
+  "codigo_origen": "0501",
+  "descripcion": "QUISTE DE MOLL"
+ },
+ {
+  "codigo_origen": "0502",
+  "descripcion": "GLAUCOMA UVEITICO"
+ },
+ {
+  "codigo_origen": "0503",
+  "descripcion": "PSEUDOFAQUIA OI"
+ },
+ {
+  "codigo_origen": "0504",
+  "descripcion": "MIOQUIMIA"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "PSEUDOFAQUIA OD"
+ },
+ {
+  "codigo_origen": "0507",
+  "descripcion": "PANUVEITIS"
+ },
+ {
+  "codigo_origen": "0508",
+  "descripcion": "POSTOPERATOTIO DE ANILLOS INTRAESTROMALES"
+ },
+ {
+  "codigo_origen": "0509",
+  "descripcion": "QUISTE DERMOIDE LIMBAR TEMPORAL OI"
+ },
+ {
+  "codigo_origen": "0510",
+  "descripcion": "CORIORETINITIS POR TOXOPLASMA"
+ },
+ {
+  "codigo_origen": "0511",
+  "descripcion": "VITREITIS SEVERA"
+ },
+ {
+  "codigo_origen": "0512",
+  "descripcion": "PTOSIS CILIAR ODI"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "TU DE GLANDULA LAGRIMAL OD EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0514",
+  "descripcion": "LOE EN GLANDULA LAGRIMAL DERECHA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0515",
+  "descripcion": "ADENITIS"
+ },
+ {
+  "codigo_origen": "0516",
+  "descripcion": "LINFOMA ORBITARIO OD"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "GLAUCOMA CRONICO DE ANGULO ABIERTO"
+ },
+ {
+  "codigo_origen": "0518",
+  "descripcion": "SIMBLEFARON OI"
+ },
+ {
+  "codigo_origen": "0519",
+  "descripcion": "ALERGIA OCULAR"
+ },
+ {
+  "codigo_origen": "0520",
+  "descripcion": "PTERIGIUM TEMPORAL OI"
+ },
+ {
+  "codigo_origen": "0521",
+  "descripcion": "TUMORACION PALPEBRAL DE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0522",
+  "descripcion": "PTOSIS MECANICA"
+ },
+ {
+  "codigo_origen": "0523",
+  "descripcion": "ARTRITIS REUMATOIDEA JUVENIL"
+ },
+ {
+  "codigo_origen": "0524",
+  "descripcion": "POSTOPERATORIO KERATOTOMIA RADIAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0525",
+  "descripcion": "ECTROPION PARALITICO"
+ },
+ {
+  "codigo_origen": "0526",
+  "descripcion": "PENFIGO OCULAR"
+ },
+ {
+  "codigo_origen": "0529",
+  "descripcion": "CATARATA GRADO V OI"
+ },
+ {
+  "codigo_origen": "0527",
+  "descripcion": "DESPRENDIMIENTO DE VITREO POSTERIOR"
+ },
+ {
+  "codigo_origen": "0528",
+  "descripcion": "CATARATA GRADO III OD"
+ },
+ {
+  "codigo_origen": "0530",
+  "descripcion": "VERRUGA EN EL BORDE CILIAR DEL PARPADO SUP IZQUIER"
+ },
+ {
+  "codigo_origen": "0531",
+  "descripcion": "CATARATA GRADO IV OI"
+ },
+ {
+  "codigo_origen": "0532",
+  "descripcion": "OPACIDAD DE CAPSULA OD"
+ },
+ {
+  "codigo_origen": "0533",
+  "descripcion": "HEMOVITREO OI"
+ },
+ {
+  "codigo_origen": "0534",
+  "descripcion": "AGUJERO MACULAR GRADO 3 OD"
+ },
+ {
+  "codigo_origen": "0535",
+  "descripcion": "AGUJERO MACULAR GRADO I OI"
+ },
+ {
+  "codigo_origen": "0536",
+  "descripcion": "PAPILITIS DERECHA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0537",
+  "descripcion": "DESPRENDIMIENTO DE VITREO POSTERIOR"
+ },
+ {
+  "codigo_origen": "0538",
+  "descripcion": "ASTIGMATISMO MIOPICO SIMPLE AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0539",
+  "descripcion": "NECROSIS RETINIANA AGUDA POR HERPES OI"
+ },
+ {
+  "codigo_origen": "0540",
+  "descripcion": "EXOTROPIA EXANOPSICA"
+ },
+ {
+  "codigo_origen": "0541",
+  "descripcion": "PARALISIS CONGENITA DEL VI NC DERECHO"
+ },
+ {
+  "codigo_origen": "0542",
+  "descripcion": "HIPERFUNCION DE OBLICUOS"
+ },
+ {
+  "codigo_origen": "0543",
+  "descripcion": "ENDOTROPIA ALTERNATE"
+ },
+ {
+  "codigo_origen": "0544",
+  "descripcion": "QUERATOCONO GRADO I OD"
+ },
+ {
+  "codigo_origen": "0545",
+  "descripcion": "QUERATOCONO GRADO II OI"
+ },
+ {
+  "codigo_origen": "0546",
+  "descripcion": "PSEUDOFAQUIA OD"
+ },
+ {
+  "codigo_origen": "0547",
+  "descripcion": "PARESIA IV NC"
+ },
+ {
+  "codigo_origen": "0548",
+  "descripcion": "CA BASOCELULAR EN CANTO INTERNO OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0549",
+  "descripcion": "LAGOFTALMO"
+ },
+ {
+  "codigo_origen": "0550",
+  "descripcion": "PARESIA DE III PAR CRANEAL"
+ },
+ {
+  "codigo_origen": "0551",
+  "descripcion": "QUISTE DE COLA DE CEJA DERMOIDE"
+ },
+ {
+  "codigo_origen": "0552",
+  "descripcion": "NEUROPATIA TRAUMATICA OI"
+ },
+ {
+  "codigo_origen": "0553",
+  "descripcion": "PTOSIS NEUROGENICA OI"
+ },
+ {
+  "codigo_origen": "0554",
+  "descripcion": "TROMBOSIS DE VCR OI"
+ },
+ {
+  "codigo_origen": "0555",
+  "descripcion": "CICATRIZ MACULAR OI"
+ },
+ {
+  "codigo_origen": "0556",
+  "descripcion": "ENDOTROPIA CONGENITA"
+ },
+ {
+  "codigo_origen": "0557",
+  "descripcion": "QUISTE DERMOIDE OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0558",
+  "descripcion": "HIPERTROPIA"
+ },
+ {
+  "codigo_origen": "0559",
+  "descripcion": "GLAUCOMA NEOVASCULAR OD"
+ },
+ {
+  "codigo_origen": "0560",
+  "descripcion": "PARESIA DE VI PAR OI"
+ },
+ {
+  "codigo_origen": "0561",
+  "descripcion": "VITREITIS"
+ },
+ {
+  "codigo_origen": "0562",
+  "descripcion": "MACULOPATIA OI"
+ },
+ {
+  "codigo_origen": "0563",
+  "descripcion": "DEGENERACION MARGINAL PELUCIDA EN AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0564",
+  "descripcion": "DEGENERACION MACULAR  HUMEDA"
+ },
+ {
+  "codigo_origen": "0565",
+  "descripcion": "DEFECTO PUPILAR AFERENTE OD"
+ },
+ {
+  "codigo_origen": "0566",
+  "descripcion": "NEUROPATIA TRAUMATICA"
+ },
+ {
+  "codigo_origen": "0567",
+  "descripcion": "ENOFTALMO OI"
+ },
+ {
+  "codigo_origen": "0568",
+  "descripcion": "TROMBOSIS DE RAMA DE VENA CENTRAL DE RETINA OI"
+ },
+ {
+  "codigo_origen": "0569",
+  "descripcion": "DEGENERACION RETINIANA PERIFERICA LATICCE MAYOR OI"
+ },
+ {
+  "codigo_origen": "0570",
+  "descripcion": "PUPILA DISCORICA OD"
+ },
+ {
+  "codigo_origen": "0571",
+  "descripcion": "OJO UNICO OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0572",
+  "descripcion": "CARCINOMA EPIDERMOIDE CANTO INTERNO OI"
+ },
+ {
+  "codigo_origen": "0573",
+  "descripcion": "PARALISIS FACIAL DERECHA"
+ },
+ {
+  "codigo_origen": "0574",
+  "descripcion": "HEMIANOPSIA BITEMPORAL VS CUADRAPTOSIA"
+ },
+ {
+  "codigo_origen": "0575",
+  "descripcion": "RETINOSIS PIGMENTARIA"
+ },
+ {
+  "codigo_origen": "0576",
+  "descripcion": "ECTASIA CORNEAL POST LASIK"
+ },
+ {
+  "codigo_origen": "0578",
+  "descripcion": "FISTULA LAGRIMAL OI"
+ },
+ {
+  "codigo_origen": "0577",
+  "descripcion": "COROIDORETINITIS EN SAL Y PIMIENTA EN OJO IZQUIERD"
+ },
+ {
+  "codigo_origen": "0579",
+  "descripcion": "XSANTELASMAS"
+ },
+ {
+  "codigo_origen": "0580",
+  "descripcion": "XANTELASMAS"
+ },
+ {
+  "codigo_origen": "0581",
+  "descripcion": "RETINOPATIA SEROSA CENTRAL OI"
+ },
+ {
+  "codigo_origen": "0582",
+  "descripcion": "TECTONICO CORNEAL OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0583",
+  "descripcion": "VASCULARIZACON CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0584",
+  "descripcion": "OJO CIEGO DOLOROSO OJOIZQUIERDO"
+ },
+ {
+  "codigo_origen": "0585",
+  "descripcion": "QUISTE SEBACEO"
+ },
+ {
+  "codigo_origen": "0586",
+  "descripcion": "GRANULOMA  PIOGNO EN PARPADOS"
+ },
+ {
+  "codigo_origen": "0587",
+  "descripcion": "ANOMALIA DE PETERS"
+ },
+ {
+  "codigo_origen": "0588",
+  "descripcion": "ULCERA CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0589",
+  "descripcion": "COROIDOSIS MIOPICA"
+ },
+ {
+  "codigo_origen": "0590",
+  "descripcion": "RETINOPATIA EN SAL Y PIMIENTA VS PIGMENTARIA"
+ },
+ {
+  "codigo_origen": "0591",
+  "descripcion": "PTERIGION NASAL OD"
+ },
+ {
+  "codigo_origen": "0592",
+  "descripcion": "PTOSIS PALPEBRAL OD"
+ },
+ {
+  "codigo_origen": "0593",
+  "descripcion": "NEVUS RETINIANO OI"
+ },
+ {
+  "codigo_origen": "0594",
+  "descripcion": "PTOSIS NEUROGENICA SEVERA EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0595",
+  "descripcion": "PTOSIS PALPEBRAL APONEUROTICA OI"
+ },
+ {
+  "codigo_origen": "0596",
+  "descripcion": "MIGRAÑA OFTALMOPLEGICA"
+ },
+ {
+  "codigo_origen": "0597",
+  "descripcion": "TUMOR ORBITARIO DE ETIOLOGIA A PRECISAR EN OI"
+ },
+ {
+  "codigo_origen": "0598",
+  "descripcion": "PARALISIS DOBLE DE LOS ELEVADORES"
+ },
+ {
+  "codigo_origen": "0599",
+  "descripcion": "LESION PEDUNCULADA EN PARPADO SUPERIOR OI"
+ },
+ {
+  "codigo_origen": "0600",
+  "descripcion": "DACRIOCISTITIS CRONICA OI"
+ },
+ {
+  "codigo_origen": "0601",
+  "descripcion": "PTERIGION NASAL OI"
+ },
+ {
+  "codigo_origen": "0604",
+  "descripcion": "EURIBLEFARON"
+ },
+ {
+  "codigo_origen": "0602",
+  "descripcion": "TECTONICO CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0603",
+  "descripcion": "ECTROPION CONGENITO"
+ },
+ {
+  "codigo_origen": "0605",
+  "descripcion": "PANNUS CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0606",
+  "descripcion": "POST OPERATORIO TARDIO DE CATARATA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0607",
+  "descripcion": "PTOSIS RESIDUAL LEVE OD"
+ },
+ {
+  "codigo_origen": "0608",
+  "descripcion": "RETINOPATIA DIABETICA NO PROLIFERATIVA"
+ },
+ {
+  "codigo_origen": "0609",
+  "descripcion": "EXTRUSION DE ANILLO INTRACORNEAL OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0610",
+  "descripcion": "AMILOIDOSIS CORNEAL OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0611",
+  "descripcion": "BLEFARO CONJUNTIVITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0612",
+  "descripcion": "MIASTENIA GRAVIS"
+ },
+ {
+  "codigo_origen": "0613",
+  "descripcion": "EDEMA  ANGIONEUROTICO"
+ },
+ {
+  "codigo_origen": "0614",
+  "descripcion": "DACRIOADENITIS"
+ },
+ {
+  "codigo_origen": "0615",
+  "descripcion": "LASIK OI"
+ },
+ {
+  "codigo_origen": "0616",
+  "descripcion": "DEGENERACION CORNEAL DE SALZMANN"
+ },
+ {
+  "codigo_origen": "0617",
+  "descripcion": "LUXACION DELENTE INTRAOUCLAR OD"
+ },
+ {
+  "codigo_origen": "0618",
+  "descripcion": "PTOSIS TRAUMATICA OI"
+ },
+ {
+  "codigo_origen": "0619",
+  "descripcion": "ANIRIDIA TRAUMATICA"
+ },
+ {
+  "codigo_origen": "0620",
+  "descripcion": "PARALISIS FACIAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0621",
+  "descripcion": "PANNUS CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0622",
+  "descripcion": "VITRIO FIBRILAR"
+ },
+ {
+  "codigo_origen": "0623",
+  "descripcion": "QUERATITIS SICCA"
+ },
+ {
+  "codigo_origen": "0624",
+  "descripcion": "QUERATOPATIA BULLOSA"
+ },
+ {
+  "codigo_origen": "0625",
+  "descripcion": "MIOPIA ELEVADA"
+ },
+ {
+  "codigo_origen": "0626",
+  "descripcion": "DISCAPACIDAD VISUAL POR SOLO VISION PERIFERICA"
+ },
+ {
+  "codigo_origen": "0627",
+  "descripcion": "CRECIMIENTO EPITELIAL EN ENTRECARA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0628",
+  "descripcion": "QUERATOCONO GRADO IV OD"
+ },
+ {
+  "codigo_origen": "0629",
+  "descripcion": "QUERATOCONO GRADO III OI"
+ },
+ {
+  "codigo_origen": "0630",
+  "descripcion": "UVEITIS POR HERPES EN RESOLUCION OD"
+ },
+ {
+  "codigo_origen": "0631",
+  "descripcion": "MEMBRANA EPIMACULAR OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0632",
+  "descripcion": "ENFERMEDAD DE COATS"
+ },
+ {
+  "codigo_origen": "0633",
+  "descripcion": "UVEITIS GRANULOMATOSA OI"
+ },
+ {
+  "codigo_origen": "0634",
+  "descripcion": "HEMATOMA PERIORBITARIA OI"
+ },
+ {
+  "codigo_origen": "0635",
+  "descripcion": "NEURITIS OPTICA ISQUEMICA ANTERIOR OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0636",
+  "descripcion": "DEGENERACION MACULAR SECA EN AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0637",
+  "descripcion": "TUMOR ORBITARIO DE EAP OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0638",
+  "descripcion": "QUERATOPROTESIS DE DOHLMANN OD"
+ },
+ {
+  "codigo_origen": "0639",
+  "descripcion": "DALTONISMO"
+ },
+ {
+  "codigo_origen": "0640",
+  "descripcion": "ENDOTROPIA  ALTERNANTE"
+ },
+ {
+  "codigo_origen": "0641",
+  "descripcion": "ANIRIDIA CONGENITA"
+ },
+ {
+  "codigo_origen": "0642",
+  "descripcion": "TRANSPLANTE DE CORNEA"
+ },
+ {
+  "codigo_origen": "0643",
+  "descripcion": "QUERATOPROTESIS"
+ },
+ {
+  "codigo_origen": "0644",
+  "descripcion": "DESGARRO RETINIANO PERIFERICO TRACCIONAL POR BANDA"
+ },
+ {
+  "codigo_origen": "0645",
+  "descripcion": "CIVATRIZ POR TOXOPLASMOSIS VS TOXOCARIASIS OI"
+ },
+ {
+  "codigo_origen": "0646",
+  "descripcion": "QUERATOSIS ACTINICA EN PARPADO INFERIOR OJO IZQUIE"
+ },
+ {
+  "codigo_origen": "0647",
+  "descripcion": "SINDROME ANTIFOSFOLIPIDO"
+ },
+ {
+  "codigo_origen": "0648",
+  "descripcion": "ALBINISMO OCULAR"
+ },
+ {
+  "codigo_origen": "0649",
+  "descripcion": "NEUROPATIA OPTICA COMPRESIVA POR TU CEREBRAL"
+ },
+ {
+  "codigo_origen": "0659",
+  "descripcion": "DISTROFIA DE CONOS MACULAR"
+ },
+ {
+  "codigo_origen": "0650",
+  "descripcion": "TROMBOSIS DE RAMA DE ARTERIA CENTRAL DE RETINA  OD"
+ },
+ {
+  "codigo_origen": "0651",
+  "descripcion": "PARESIA DE IV PAR CRANEAL OI"
+ },
+ {
+  "codigo_origen": "0652",
+  "descripcion": "QUERATOSIS ACTINICA"
+ },
+ {
+  "codigo_origen": "0653",
+  "descripcion": "ENDOTROPIA ACOMODATIVA"
+ },
+ {
+  "codigo_origen": "0654",
+  "descripcion": "TUMOR ORBITARIO OI ANGIOSARCOMA"
+ },
+ {
+  "codigo_origen": "0655",
+  "descripcion": "OFTALMOPLEJIA POR LESION EN SENO CAVERNOSO"
+ },
+ {
+  "codigo_origen": "0656",
+  "descripcion": "OFTALMOPLEJIA POR TU DE SENO CAVERNOSO OI"
+ },
+ {
+  "codigo_origen": "0657",
+  "descripcion": "OPERADA DE LASIK"
+ },
+ {
+  "codigo_origen": "0658",
+  "descripcion": "ESPASMO DE ACOMODACION"
+ },
+ {
+  "codigo_origen": "0660",
+  "descripcion": "DESEPITELIZACION CORNEAL"
+ },
+ {
+  "codigo_origen": "0661",
+  "descripcion": "MICROESFEROFAQUIA"
+ },
+ {
+  "codigo_origen": "0662",
+  "descripcion": "COLOBOMA DEL IRIS Y DE LA COROIDES OD"
+ },
+ {
+  "codigo_origen": "0663",
+  "descripcion": "MICROFTALMO OD"
+ },
+ {
+  "codigo_origen": "0664",
+  "descripcion": "FIBROSIS MUSCULAR ORBICULAR OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0665",
+  "descripcion": "GLAUCOMA SECUNDARIO A ESTEROIDES"
+ },
+ {
+  "codigo_origen": "0666",
+  "descripcion": "OPACIDAD DE LENTE INTRAOCULAR"
+ },
+ {
+  "codigo_origen": "0667",
+  "descripcion": "DISTROFIA DE FUCHS"
+ },
+ {
+  "codigo_origen": "0668",
+  "descripcion": "POST OPERATORIO DE LASIK"
+ },
+ {
+  "codigo_origen": "0669",
+  "descripcion": "NEVUS CILIAR OD"
+ },
+ {
+  "codigo_origen": "0670",
+  "descripcion": "ATROFI MACULAR,  CICATRIZ"
+ },
+ {
+  "codigo_origen": "0671",
+  "descripcion": "EPICANTO"
+ },
+ {
+  "codigo_origen": "0672",
+  "descripcion": "EDEMA CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0673",
+  "descripcion": "IMPREGNACION HEMATICA CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0674",
+  "descripcion": "LSIONES PAPILOMATOSAS MULTIPLES EN PARPADOS"
+ },
+ {
+  "codigo_origen": "0675",
+  "descripcion": "SINDROME DE GRAVES BASEDOW"
+ },
+ {
+  "codigo_origen": "0676",
+  "descripcion": "ENTROPION INFERIOR EN OJO IZQUIERDO OI"
+ },
+ {
+  "codigo_origen": "0677",
+  "descripcion": "NEURITIS OPTICA ISQUEMICA ANTERIOR BILATERAL"
+ },
+ {
+  "codigo_origen": "0678",
+  "descripcion": "COLOBOMA DE NERVIO OPTICO BILATERAL"
+ },
+ {
+  "codigo_origen": "0679",
+  "descripcion": "SIMBLEFARON OD"
+ },
+ {
+  "codigo_origen": "0680",
+  "descripcion": "AMBLIOPIA OI"
+ },
+ {
+  "codigo_origen": "0681",
+  "descripcion": "POST OPERATORIO DE LASIK"
+ },
+ {
+  "codigo_origen": "0682",
+  "descripcion": "EVISCERACION TRAUMATICA  OI"
+ },
+ {
+  "codigo_origen": "0683",
+  "descripcion": "HERIDA FRONTO CILIAR Y PALPEBRAL EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0684",
+  "descripcion": "DISTROFIA ENDOTELIAL DE COGAN REESE"
+ },
+ {
+  "codigo_origen": "0685",
+  "descripcion": "CELULITIS PERIORBITARIA"
+ },
+ {
+  "codigo_origen": "0686",
+  "descripcion": "CICATRIZ COROIDORETINIANA ANTIGUA OD"
+ },
+ {
+  "codigo_origen": "0687",
+  "descripcion": "HOPLOSASIA DE NERVIO OPTICO OD"
+ },
+ {
+  "codigo_origen": "0688",
+  "descripcion": "QUELOIDE CICATRIZAL"
+ },
+ {
+  "codigo_origen": "0689",
+  "descripcion": "POST OPERATORIO DE LASIK"
+ },
+ {
+  "codigo_origen": "0690",
+  "descripcion": "ENFERMEDAD INFLAMATORIA ORBITARIA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0691",
+  "descripcion": "QUERATOCONO GRADO III OD"
+ },
+ {
+  "codigo_origen": "0692",
+  "descripcion": "QUERATOCONO GRADO I OI"
+ },
+ {
+  "codigo_origen": "0693",
+  "descripcion": "POST OPERATORIO DE DACRIOINTUBACION"
+ },
+ {
+  "codigo_origen": "0694",
+  "descripcion": "OJO UNICO OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0695",
+  "descripcion": "FISTULA CAROTIDEO CAVERNOSA DE BAJO FLUJO"
+ },
+ {
+  "codigo_origen": "0696",
+  "descripcion": "QUERATITIS MICOTICA CON ABSCESO ESTROMAL OD"
+ },
+ {
+  "codigo_origen": "0697",
+  "descripcion": "ENDOTELITIS"
+ },
+ {
+  "codigo_origen": "0698",
+  "descripcion": "AGUJERO MACULAR OD"
+ },
+ {
+  "codigo_origen": "0699",
+  "descripcion": "CICATRIZ COROIDORETINIANA OI"
+ },
+ {
+  "codigo_origen": "0700",
+  "descripcion": "ESCOTOMA TEMPORAL OI"
+ },
+ {
+  "codigo_origen": "0701",
+  "descripcion": "POST OPERATORIO DE DACRIOINTUBACION CERRADA"
+ },
+ {
+  "codigo_origen": "0702",
+  "descripcion": "HIDROCISTOMA EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0703",
+  "descripcion": "FOTOFOBIA"
+ },
+ {
+  "codigo_origen": "0704",
+  "descripcion": "NEURITIS OPTICA ISQUEMICA ANTERIOR OI"
+ },
+ {
+  "codigo_origen": "0705",
+  "descripcion": "SINDROME DE MEIGE"
+ },
+ {
+  "codigo_origen": "0706",
+  "descripcion": "CICATRIZ MACULAR OI"
+ },
+ {
+  "codigo_origen": "0707",
+  "descripcion": "POSTOPERATORIO DE PTERIGION NASAL"
+ },
+ {
+  "codigo_origen": "0708",
+  "descripcion": "HEMIANOPSIA HOMONIMA"
+ },
+ {
+  "codigo_origen": "0709",
+  "descripcion": "POST OPERATORIO DE CATARATA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0710",
+  "descripcion": "POST OPERATORIO DE DESCOMPRESION ORBITARIA"
+ },
+ {
+  "codigo_origen": "0711",
+  "descripcion": "CICATRIZ DISCIFORME SUBMACULAR OD"
+ },
+ {
+  "codigo_origen": "0712",
+  "descripcion": "DIALISIS ZONULAR OI"
+ },
+ {
+  "codigo_origen": "0713",
+  "descripcion": "GLAUCOMA SECUNDARIO OI"
+ },
+ {
+  "codigo_origen": "0714",
+  "descripcion": "GLAUCOMA DE ANGULO ABIERTO"
+ },
+ {
+  "codigo_origen": "0715",
+  "descripcion": "POST OPERATORIO DE DESCOMPRESION ORBITARIA"
+ },
+ {
+  "codigo_origen": "0716",
+  "descripcion": "RETINOPATIA DE LA PREMATURIDAD AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0717",
+  "descripcion": "PTOSIS LEVE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0718",
+  "descripcion": "FRACTURA DE PARED LATERAL DE ORBITA A DESCARTAR OI"
+ },
+ {
+  "codigo_origen": "0719",
+  "descripcion": "QUERATOPLASTIA PENETRANTE OD"
+ },
+ {
+  "codigo_origen": "0740",
+  "descripcion": "PAPILITIS"
+ },
+ {
+  "codigo_origen": "0720",
+  "descripcion": "BAJA VISION OD"
+ },
+ {
+  "codigo_origen": "0721",
+  "descripcion": "UVEITIS POR TOXOCARA"
+ },
+ {
+  "codigo_origen": "0722",
+  "descripcion": "HEMATOMA PERIORBITARIO OD"
+ },
+ {
+  "codigo_origen": "0723",
+  "descripcion": "PARESIA DE VI PAR CRANEAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0724",
+  "descripcion": "RECUBIRIMIENTO CONJUNTIVAL CORNEAL OI  Y SINEQUIAS"
+ },
+ {
+  "codigo_origen": "0725",
+  "descripcion": "SINEQUIAS EN 360 GRADOS DEL IRIS OI"
+ },
+ {
+  "codigo_origen": "0726",
+  "descripcion": "SOCKET INSUFICIENTE OD"
+ },
+ {
+  "codigo_origen": "0727",
+  "descripcion": "PTOSIS PALPEBRAL NEUROGENICA OI"
+ },
+ {
+  "codigo_origen": "0728",
+  "descripcion": "PTOSIS DE LBULO PALPEBRAL DE GLANDULA LAGRIMAL OI"
+ },
+ {
+  "codigo_origen": "0729",
+  "descripcion": "NEURITIS OPTICA TRAUMATICA OI"
+ },
+ {
+  "codigo_origen": "0730",
+  "descripcion": "RETRACCION PALPEBRAL OD"
+ },
+ {
+  "codigo_origen": "0731",
+  "descripcion": "COROIDORETINOPATIA SEROSA CENTRAL OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0732",
+  "descripcion": "CONMOCION RETINIANA OD"
+ },
+ {
+  "codigo_origen": "0733",
+  "descripcion": "DESGARRO DE RETINA OD"
+ },
+ {
+  "codigo_origen": "0734",
+  "descripcion": "RUPTURA DE ESFINTER PUPILAR OD"
+ },
+ {
+  "codigo_origen": "0735",
+  "descripcion": "RECUBRIMIENTO CONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0736",
+  "descripcion": "HETEROCROMIA  DEL IRIS"
+ },
+ {
+  "codigo_origen": "0737",
+  "descripcion": "NEVUS DE OTTA"
+ },
+ {
+  "codigo_origen": "0738",
+  "descripcion": "HERPES OFTALMICO PARPADO SUPERIOR"
+ },
+ {
+  "codigo_origen": "0739",
+  "descripcion": "QUERATOTOMIA RADIADA"
+ },
+ {
+  "codigo_origen": "0741",
+  "descripcion": "RECUBRIMIENTO CONJUNTIVAL EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0742",
+  "descripcion": "CICATRIZ DISCIFORME OI"
+ },
+ {
+  "codigo_origen": "0749",
+  "descripcion": "COROIDITIS OI"
+ },
+ {
+  "codigo_origen": "0973",
+  "descripcion": "LEUCOCORIA"
+ },
+ {
+  "codigo_origen": "0743",
+  "descripcion": "DESPRENDIMIENTO DE LA MEMBRANA DE DESCEMET ENOJO D"
+ },
+ {
+  "codigo_origen": "0744",
+  "descripcion": "PARESIA DEL IV PAR CRANEAL OI"
+ },
+ {
+  "codigo_origen": "0745",
+  "descripcion": "PTOSIS PALPEBRAL NEUROGENICA  BILATERAL"
+ },
+ {
+  "codigo_origen": "0746",
+  "descripcion": "HIPERTENSION ENDOCRANEANA IDEOPATICA"
+ },
+ {
+  "codigo_origen": "0747",
+  "descripcion": "SUBLUXACION DE CROSTALINO OI"
+ },
+ {
+  "codigo_origen": "0748",
+  "descripcion": "RECHAZO CORNEAL TARDIO OD"
+ },
+ {
+  "codigo_origen": "0750",
+  "descripcion": "HIPERPLASIA CONJUNTIVAL QUERATINIZADA TEMPORAL OD"
+ },
+ {
+  "codigo_origen": "0751",
+  "descripcion": "PUPILAS ANISOCORICAS"
+ },
+ {
+  "codigo_origen": "0752",
+  "descripcion": "NEURALGIA OFTALMOPLEJICA"
+ },
+ {
+  "codigo_origen": "0753",
+  "descripcion": "ESTRABISMO ACOMODATIVO"
+ },
+ {
+  "codigo_origen": "0754",
+  "descripcion": "RETINOPATIA SEROSA CENTRAL  OD"
+ },
+ {
+  "codigo_origen": "0755",
+  "descripcion": "CORNEA CONTAJEENDOTELIAL BAJO OD"
+ },
+ {
+  "codigo_origen": "0756",
+  "descripcion": "POSTOPERATORIO DE PTERIGION NASAL OD"
+ },
+ {
+  "codigo_origen": "0757",
+  "descripcion": "MENINGIOMA DEL SENO CAVERNOSO"
+ },
+ {
+  "codigo_origen": "0758",
+  "descripcion": "AMAUROSIS FUGAZ OI"
+ },
+ {
+  "codigo_origen": "0759",
+  "descripcion": "SUBLUXACION DE LIO OD"
+ },
+ {
+  "codigo_origen": "0760",
+  "descripcion": "ULCERA DE MOOREN  OD"
+ },
+ {
+  "codigo_origen": "0761",
+  "descripcion": "ALACRIMA"
+ },
+ {
+  "codigo_origen": "0762",
+  "descripcion": "SINDROMEDE LAGRIMAS DE COCODRILO"
+ },
+ {
+  "codigo_origen": "0763",
+  "descripcion": "HIDROPS CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0764",
+  "descripcion": "RUPTURA DE MEMBRANA DE DESCEMENT OI"
+ },
+ {
+  "codigo_origen": "0765",
+  "descripcion": "QUERATOPATIA POR RUPUTURA DE DESCEMENT OD TRAUMATI"
+ },
+ {
+  "codigo_origen": "0770",
+  "descripcion": "ATALAMIA OI"
+ },
+ {
+  "codigo_origen": "0766",
+  "descripcion": "PARESIA DE VI PAR CRANEAL OI"
+ },
+ {
+  "codigo_origen": "0767",
+  "descripcion": "PAPILOMA CONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0768",
+  "descripcion": "TRAUMA OCULAR CON PERDIDA DE SUSTANCIA DE PARPADO"
+ },
+ {
+  "codigo_origen": "0769",
+  "descripcion": "ULCERA POR EXPOSICION CON PERFORACION CORNEAL OI"
+ },
+ {
+  "codigo_origen": "0771",
+  "descripcion": "PARESIA DE VI PAR OD"
+ },
+ {
+  "codigo_origen": "0772",
+  "descripcion": "QUERATITIS QUIICA PUNTACTA OD"
+ },
+ {
+  "codigo_origen": "0773",
+  "descripcion": "SINDROME DE PETERS"
+ },
+ {
+  "codigo_origen": "0774",
+  "descripcion": "ESTAFILOMA ESCLERAL POSTERIOR PERIDISCAL OI"
+ },
+ {
+  "codigo_origen": "0775",
+  "descripcion": "TRAUMATISMO CRANEOENCEFALICO"
+ },
+ {
+  "codigo_origen": "0776",
+  "descripcion": "FRACTURA DE LEFORT II"
+ },
+ {
+  "codigo_origen": "0777",
+  "descripcion": "COROIDITIS Y VITREITIS OD"
+ },
+ {
+  "codigo_origen": "0778",
+  "descripcion": "RECHAZO CORNEAL TARDIO OI"
+ },
+ {
+  "codigo_origen": "0779",
+  "descripcion": "RETINOSIS ALBENCES"
+ },
+ {
+  "codigo_origen": "0780",
+  "descripcion": "AGUJERO RETINIANO PERIFERICO OI"
+ },
+ {
+  "codigo_origen": "0781",
+  "descripcion": "TROMBOSIS DE VCR OD"
+ },
+ {
+  "codigo_origen": "0784",
+  "descripcion": "DESPRENDIMIENTO SEROSO DE RETINA"
+ },
+ {
+  "codigo_origen": "0785",
+  "descripcion": "EDEMA MACULAR QUISTICO OI"
+ },
+ {
+  "codigo_origen": "0787",
+  "descripcion": "MEMBRANA EPIMACUAR OI CON EDEMA MACULAR"
+ },
+ {
+  "codigo_origen": "0788",
+  "descripcion": "PTOSIS DE CEJA"
+ },
+ {
+  "codigo_origen": "0789",
+  "descripcion": "HERIDA CONJUNTIVAL OI"
+ },
+ {
+  "codigo_origen": "0790",
+  "descripcion": "TRAUMA OCULAR CONTUSO OI"
+ },
+ {
+  "codigo_origen": "0791",
+  "descripcion": "PARESIA DE IV PAR CRANEAL DE OD"
+ },
+ {
+  "codigo_origen": "0792",
+  "descripcion": "PTERIGION RECIDIVANTE OI"
+ },
+ {
+  "codigo_origen": "0805",
+  "descripcion": "ESCLEROCORNEA OD"
+ },
+ {
+  "codigo_origen": "0793",
+  "descripcion": "HERPES ZOSTER OFTALMICO OD"
+ },
+ {
+  "codigo_origen": "0794",
+  "descripcion": "SINDROME MIGRAÑOSO"
+ },
+ {
+  "codigo_origen": "0795",
+  "descripcion": "NEURITIS OPTICA OD"
+ },
+ {
+  "codigo_origen": "0796",
+  "descripcion": "PARESIA DEL III PAR CRANEAL OD"
+ },
+ {
+  "codigo_origen": "0797",
+  "descripcion": "QUERATOPATIA EN BANDA CALCICA OI"
+ },
+ {
+  "codigo_origen": "0798",
+  "descripcion": "ULCERA CORNEAL POR EXPOSICION  OD"
+ },
+ {
+  "codigo_origen": "0799",
+  "descripcion": "CONJUNTIVITIS PAPILAR ALERGICA"
+ },
+ {
+  "codigo_origen": "0800",
+  "descripcion": "GLAUCOMA FACOMORFICO AGUDO OI"
+ },
+ {
+  "codigo_origen": "0801",
+  "descripcion": "QUERATOCONJUNTIVITIS QUIMICA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0802",
+  "descripcion": "QUERATITIS POR EXPOSICION"
+ },
+ {
+  "codigo_origen": "0803",
+  "descripcion": "ENDOTELITIS POR HERPES VIRUS"
+ },
+ {
+  "codigo_origen": "0804",
+  "descripcion": "TRABECULITIS POR HERPES"
+ },
+ {
+  "codigo_origen": "0806",
+  "descripcion": "EDEMA CORNEAL OD"
+ },
+ {
+  "codigo_origen": "0807",
+  "descripcion": "HIALOSIS ASTEROIDE"
+ },
+ {
+  "codigo_origen": "0808",
+  "descripcion": "GLAUCOMA SECUNDARIO OI"
+ },
+ {
+  "codigo_origen": "0809",
+  "descripcion": "QUERATO- CONJUNTIVITIS FLICTENULAR"
+ },
+ {
+  "codigo_origen": "0810",
+  "descripcion": "GERONTOXON"
+ },
+ {
+  "codigo_origen": "0811",
+  "descripcion": "RETINOPATIA   ESCLOPETARIA"
+ },
+ {
+  "codigo_origen": "0812",
+  "descripcion": "EPITELIOMA CONJUNTIVAL TEMPORAL OD ?"
+ },
+ {
+  "codigo_origen": "0813",
+  "descripcion": "MACULOPATIA MIOPICA"
+ },
+ {
+  "codigo_origen": "0814",
+  "descripcion": "ESCLERO UVEITIS ANTERIOR OI"
+ },
+ {
+  "codigo_origen": "0815",
+  "descripcion": "HIPERMETROPIA  ELEVADA"
+ },
+ {
+  "codigo_origen": "0816",
+  "descripcion": "NEURITIS RETROBULBAR VIRAL"
+ },
+ {
+  "codigo_origen": "0817",
+  "descripcion": "QUERATOCONJUNTIVITIS DE INCLUSION, TRACOMA"
+ },
+ {
+  "codigo_origen": "0821",
+  "descripcion": "BUFTALMO OI"
+ },
+ {
+  "codigo_origen": "0818",
+  "descripcion": "QUERATOCONJUNTIVITIS TERMICA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0819",
+  "descripcion": "CATARATA TRAUMATICA GRADO III AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0820",
+  "descripcion": "HIPERMETROPIA  ELEVADA INDUCIDA POR LA CATARATA"
+ },
+ {
+  "codigo_origen": "0822",
+  "descripcion": "BLEFAROCONJUNTIVITIS TERMICA"
+ },
+ {
+  "codigo_origen": "0823",
+  "descripcion": "HERIDA ESCLERAL NASAL EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0824",
+  "descripcion": "EDEMA MACULAR DE BERLIN OD"
+ },
+ {
+  "codigo_origen": "0825",
+  "descripcion": "ULCERA CORNEAL PERFORADA  OI"
+ },
+ {
+  "codigo_origen": "0826",
+  "descripcion": "DELLEN CORNEAL NASAL OI"
+ },
+ {
+  "codigo_origen": "0827",
+  "descripcion": "NEURITIS RETROBULBAR OI"
+ },
+ {
+  "codigo_origen": "0828",
+  "descripcion": "AMAUROSIS OI"
+ },
+ {
+  "codigo_origen": "0829",
+  "descripcion": "HEMIANOPSIA  OD Y AMAUROSIS OI"
+ },
+ {
+  "codigo_origen": "0830",
+  "descripcion": "BLEFAROCONJUNTIVITIS VIRAL"
+ },
+ {
+  "codigo_origen": "0831",
+  "descripcion": "ENDOHIPERTROPIA OD"
+ },
+ {
+  "codigo_origen": "0832",
+  "descripcion": "ESTRABISMO PARCIALMENTE ACOMODATIVO"
+ },
+ {
+  "codigo_origen": "0833",
+  "descripcion": "LINFOMA CONJUNTIVAL A DESCARTAR OD"
+ },
+ {
+  "codigo_origen": "0834",
+  "descripcion": "POST OPERATORIO DE LASIK"
+ },
+ {
+  "codigo_origen": "0835",
+  "descripcion": "OJO CIEGO DOLOROSO OD"
+ },
+ {
+  "codigo_origen": "0836",
+  "descripcion": "BLEFAROCONJUNTIVITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0837",
+  "descripcion": "HIPERTENSION OCULAR SECUNDARIA A RECESO ANGULAR OD"
+ },
+ {
+  "codigo_origen": "0838",
+  "descripcion": "POST OPERATORIO DE CIRUGIA FACORREFRACTIVA"
+ },
+ {
+  "codigo_origen": "0839",
+  "descripcion": "NEUROPATIA HREDITARIA DE LEBER ??"
+ },
+ {
+  "codigo_origen": "0842",
+  "descripcion": "ULCERA CORNEAL MICOTICA OI"
+ },
+ {
+  "codigo_origen": "0840",
+  "descripcion": "PTOSIS PALPEBRAL TRAUMATICA OD"
+ },
+ {
+  "codigo_origen": "0841",
+  "descripcion": "GLAUCOMA DE ANGULO ESTRECHO AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0843",
+  "descripcion": "PARALISIS DE IV PAR OD"
+ },
+ {
+  "codigo_origen": "0844",
+  "descripcion": "GLAUCOMA SECUNDARIO"
+ },
+ {
+  "codigo_origen": "0845",
+  "descripcion": "HERIDA CORNEALL OD"
+ },
+ {
+  "codigo_origen": "0846",
+  "descripcion": "UVEITIS POR TOXOCARIASIS OI"
+ },
+ {
+  "codigo_origen": "0847",
+  "descripcion": "COROIDORETINITISPOR TOXOCARIASIS OI"
+ },
+ {
+  "codigo_origen": "0848",
+  "descripcion": "TU CONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0849",
+  "descripcion": "PARALISIS DE III PAR CRANEAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0850",
+  "descripcion": "ASTIGMATISMO CONTRA LA REGLA OD"
+ },
+ {
+  "codigo_origen": "0851",
+  "descripcion": "SINEQUIAS ANGULARES, GONIOSINEQUIAS OD"
+ },
+ {
+  "codigo_origen": "0852",
+  "descripcion": "CARCINOMA DE CELULAS SEBASEAS"
+ },
+ {
+  "codigo_origen": "0853",
+  "descripcion": "COROIDORETINOPATIA SEROSA CENTRAL OI"
+ },
+ {
+  "codigo_origen": "0854",
+  "descripcion": "COROIDORETINOPATIA CICATRIZAL EN MANCHAS DE LEOPAR"
+ },
+ {
+  "codigo_origen": "0855",
+  "descripcion": "ATROFIA MACULAR OI"
+ },
+ {
+  "codigo_origen": "0856",
+  "descripcion": "HIPERPLASIA CICATRIZAL OD"
+ },
+ {
+  "codigo_origen": "0857",
+  "descripcion": "QUERATITIS ULCERATIVA MARGINALCON ESCLERITIS"
+ },
+ {
+  "codigo_origen": "0858",
+  "descripcion": "ABSCESO ESTROMAL CORNEAL"
+ },
+ {
+  "codigo_origen": "0859",
+  "descripcion": "GLAUCOMA  ANGULO ESTRECHO"
+ },
+ {
+  "codigo_origen": "0860",
+  "descripcion": "POST OPERATORIO DE FACOEMULSIFICACION DE CATARATA"
+ },
+ {
+  "codigo_origen": "0861",
+  "descripcion": "DEGENERACION EN COCODRILO CORNEAL"
+ },
+ {
+  "codigo_origen": "0863",
+  "descripcion": "ENTROPION OD"
+ },
+ {
+  "codigo_origen": "0862",
+  "descripcion": "NEURITIS OPTICA COMPRESIVA ODI"
+ },
+ {
+  "codigo_origen": "0864",
+  "descripcion": "POST OPERATORIO DE CATARATA OD"
+ },
+ {
+  "codigo_origen": "0865",
+  "descripcion": "CATARATA INCIPIENTE  OI"
+ },
+ {
+  "codigo_origen": "0866",
+  "descripcion": "SINDROME DE WEST"
+ },
+ {
+  "codigo_origen": "0867",
+  "descripcion": "POST OPERATORIO DE BLEFAROPLASTIA"
+ },
+ {
+  "codigo_origen": "0868",
+  "descripcion": "ANILLOS INTRACORNEALES OD"
+ },
+ {
+  "codigo_origen": "0869",
+  "descripcion": "ECTASIA CORNEAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0870",
+  "descripcion": "HIPOACUSIA SEVERA BILATERAL"
+ },
+ {
+  "codigo_origen": "0871",
+  "descripcion": "QUEMADURA CORNEAL POR ALCALI AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0872",
+  "descripcion": "ADENOMA HIPOFISARIO"
+ },
+ {
+  "codigo_origen": "0873",
+  "descripcion": "PARSIA DE VI PAR CRANEAL OD"
+ },
+ {
+  "codigo_origen": "0874",
+  "descripcion": "POST OPERATORIO DE PTOSIS"
+ },
+ {
+  "codigo_origen": "0875",
+  "descripcion": "AMILOIDOSIS OCULAR"
+ },
+ {
+  "codigo_origen": "0876",
+  "descripcion": "AGUJERO MACULAR OI"
+ },
+ {
+  "codigo_origen": "0877",
+  "descripcion": "EDEMA DE PAPILA"
+ },
+ {
+  "codigo_origen": "0878",
+  "descripcion": "SINDROME DE HORNER"
+ },
+ {
+  "codigo_origen": "0879",
+  "descripcion": "AGUJERO DE RETINA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0880",
+  "descripcion": "GLAUCOMA DE ANGULO ESTRECHO"
+ },
+ {
+  "codigo_origen": "0881",
+  "descripcion": "UVEITIS HETEROCROMICA DE FUCHS"
+ },
+ {
+  "codigo_origen": "0882",
+  "descripcion": "PUPILA DE ADIE"
+ },
+ {
+  "codigo_origen": "0883",
+  "descripcion": "PSEUDOAGUJERO MACULAR OI"
+ },
+ {
+  "codigo_origen": "0884",
+  "descripcion": "LEUCOMA POR HERPES CORNEAL"
+ },
+ {
+  "codigo_origen": "0885",
+  "descripcion": "GLAUCOMA ANGULO ABIERTO"
+ },
+ {
+  "codigo_origen": "0886",
+  "descripcion": "NEURITIS OPTICA RETROBULBAR"
+ },
+ {
+  "codigo_origen": "0887",
+  "descripcion": "CEFALEA POR CONTRACCION"
+ },
+ {
+  "codigo_origen": "0902",
+  "descripcion": "EDEMA CORNEAL"
+ },
+ {
+  "codigo_origen": "0888",
+  "descripcion": "DESPRENDIMIENTO DE RETINA OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0889",
+  "descripcion": "DESPRENDIMIENTO VITREO POSTERIOR PARCIAL OD"
+ },
+ {
+  "codigo_origen": "0890",
+  "descripcion": "DESPRENDIMIENTO VITREO POSTERIOR ANTIGUO OI"
+ },
+ {
+  "codigo_origen": "0891",
+  "descripcion": "EDEMA MACULAR TRAUMATICO OD"
+ },
+ {
+  "codigo_origen": "0892",
+  "descripcion": "NEURITIS OPTICA  TRAUMATICA BILATERAL"
+ },
+ {
+  "codigo_origen": "0893",
+  "descripcion": "CORNEA VERTICILIAR POR AMIODARONA"
+ },
+ {
+  "codigo_origen": "0894",
+  "descripcion": "GLAUCOMA UVEITICO OD"
+ },
+ {
+  "codigo_origen": "0895",
+  "descripcion": "NEUROPATIA GLAUCOMATOSA OD"
+ },
+ {
+  "codigo_origen": "0896",
+  "descripcion": "ESCLERITIS POR GRANULOMATOSIS DE WEGENER"
+ },
+ {
+  "codigo_origen": "0897",
+  "descripcion": "COROIDORETINITIS POR TOXOCARIASIS  Y BANDASVITREAS"
+ },
+ {
+  "codigo_origen": "0898",
+  "descripcion": "DISTROFIA  HEREDITARIA  DE LA RETINA"
+ },
+ {
+  "codigo_origen": "0899",
+  "descripcion": "DISTROFIA  BASTONES CONOS"
+ },
+ {
+  "codigo_origen": "0900",
+  "descripcion": "NEUROPATIA OPTICA DE LEBER"
+ },
+ {
+  "codigo_origen": "0901",
+  "descripcion": "DISTROFIA CORNEAL ENDOTELIAL"
+ },
+ {
+  "codigo_origen": "0903",
+  "descripcion": "MENBRANA EPIRRETINIANA OI"
+ },
+ {
+  "codigo_origen": "0904",
+  "descripcion": "DESGARRO DE RETINA OI"
+ },
+ {
+  "codigo_origen": "0905",
+  "descripcion": "NEFRITIS LUPICA"
+ },
+ {
+  "codigo_origen": "0906",
+  "descripcion": "PTOSIS PALPEBRAL APONEUROTICA"
+ },
+ {
+  "codigo_origen": "0907",
+  "descripcion": "NEURITIS ORBITARIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0908",
+  "descripcion": "NEURITIS OPTICA BILATERAL"
+ },
+ {
+  "codigo_origen": "0909",
+  "descripcion": "RUBEOLA CONGENITA"
+ },
+ {
+  "codigo_origen": "0910",
+  "descripcion": "ACV ISQUEMICO"
+ },
+ {
+  "codigo_origen": "0914",
+  "descripcion": "HEMIANOPSIA BINASAL"
+ },
+ {
+  "codigo_origen": "0911",
+  "descripcion": "PARESIA DE III Y IVOAR OD"
+ },
+ {
+  "codigo_origen": "0912",
+  "descripcion": "UVEITIS POR SINDROME ANTIFOSFOLIPIDO"
+ },
+ {
+  "codigo_origen": "0913",
+  "descripcion": "POSTOPERATORIO DE CIRUGIA DE CATARATA"
+ },
+ {
+  "codigo_origen": "0915",
+  "descripcion": "HEMANGIOMA CONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0916",
+  "descripcion": "COROIDORETINOPATIA SEROSA CENTRAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0917",
+  "descripcion": "COROIDORETINOPATIA SEROSA CENTRAL ANTIGUA ?"
+ },
+ {
+  "codigo_origen": "0918",
+  "descripcion": "ENDOTROPIA CONSECUTIVA OI"
+ },
+ {
+  "codigo_origen": "0919",
+  "descripcion": "CORRESPONDENCIA RETINIANA ANOMALA OI"
+ },
+ {
+  "codigo_origen": "0920",
+  "descripcion": "HERIDA PALPEBRAL SUTURADA OI"
+ },
+ {
+  "codigo_origen": "0921",
+  "descripcion": "EDEMA MACULAR DE BERLIN OI"
+ },
+ {
+  "codigo_origen": "0922",
+  "descripcion": "MEMBRABA  NEOVASCULAR  SUBFOVEAL OI"
+ },
+ {
+  "codigo_origen": "0923",
+  "descripcion": "TU DE PARPADO SUPERIOR OD"
+ },
+ {
+  "codigo_origen": "0924",
+  "descripcion": "DISTROFIA EN OJO DE BUEY?"
+ },
+ {
+  "codigo_origen": "0925",
+  "descripcion": "ESCLERITIS NODULAR OI"
+ },
+ {
+  "codigo_origen": "0926",
+  "descripcion": "QUERATITIS MARGINAL INMUNOLOGICA"
+ },
+ {
+  "codigo_origen": "0927",
+  "descripcion": "OJO SECO EVAPORATIVO"
+ },
+ {
+  "codigo_origen": "0928",
+  "descripcion": "DESPRENDIMIENTO DE RETINA OI"
+ },
+ {
+  "codigo_origen": "0929",
+  "descripcion": "BLEFARITIS POR DEMODEX FOLICULORUM"
+ },
+ {
+  "codigo_origen": "0930",
+  "descripcion": "SINDROME DE SJOGREN  SECUNDARIO"
+ },
+ {
+  "codigo_origen": "0931",
+  "descripcion": "SINDROME DE ARNOLD CHIARI GRADO I"
+ },
+ {
+  "codigo_origen": "0932",
+  "descripcion": "HIPERTENSION ENDOCRANEANA"
+ },
+ {
+  "codigo_origen": "0933",
+  "descripcion": "SINDROME DE VOGTH KOYANAYI HARADA"
+ },
+ {
+  "codigo_origen": "0934",
+  "descripcion": "PARESIA  DE OBLICUO MAYOR  OI"
+ },
+ {
+  "codigo_origen": "0935",
+  "descripcion": "AFAQUIA OD"
+ },
+ {
+  "codigo_origen": "0936",
+  "descripcion": "POST QX DE DR OI"
+ },
+ {
+  "codigo_origen": "0937",
+  "descripcion": "POST QX DE AGUJERO MACULAR OD"
+ },
+ {
+  "codigo_origen": "0938",
+  "descripcion": "OLCUSION DE VENA CENTRAL OI"
+ },
+ {
+  "codigo_origen": "0939",
+  "descripcion": "POST OPRATORIO DE CATARATA OI"
+ },
+ {
+  "codigo_origen": "0940",
+  "descripcion": "QUERATITIS ACTINICA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0941",
+  "descripcion": "ULCERA CORNEAL HRPETICA OD"
+ },
+ {
+  "codigo_origen": "0942",
+  "descripcion": "MEMBRANA NEOVASCULAR OI"
+ },
+ {
+  "codigo_origen": "0943",
+  "descripcion": "POST OPERATORIO DE PTERIGION NASAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0944",
+  "descripcion": "NECROSIS RETINIANA POR  HERPES ZOSTER OD"
+ },
+ {
+  "codigo_origen": "0945",
+  "descripcion": "GLAUCOMA POR  DISPERCION DE PIGMENTO"
+ },
+ {
+  "codigo_origen": "0946",
+  "descripcion": "QUERATOUVEITISPOR HERPES OI"
+ },
+ {
+  "codigo_origen": "0947",
+  "descripcion": "PARESIA DE IV PAR OI"
+ },
+ {
+  "codigo_origen": "0948",
+  "descripcion": "SUBLUXACION DE CRISTALINO OI"
+ },
+ {
+  "codigo_origen": "0949",
+  "descripcion": "CATARATA GRADO I  AMBOS  OJOS"
+ },
+ {
+  "codigo_origen": "0950",
+  "descripcion": "PSEUDOAGUJERO MACYLAR OD"
+ },
+ {
+  "codigo_origen": "0951",
+  "descripcion": "SINDROM DE HORNER"
+ },
+ {
+  "codigo_origen": "0952",
+  "descripcion": "NEURITIS TRAUMATICA"
+ },
+ {
+  "codigo_origen": "0953",
+  "descripcion": "PTOSISDE GLANDULA LAGRIMAL OI"
+ },
+ {
+  "codigo_origen": "0954",
+  "descripcion": "ROSACEA"
+ },
+ {
+  "codigo_origen": "0955",
+  "descripcion": "SINDROME DE  EHLERS DANLOS"
+ },
+ {
+  "codigo_origen": "0956",
+  "descripcion": "TROMBOSIS DESENO CAVERNOSO OD"
+ },
+ {
+  "codigo_origen": "0957",
+  "descripcion": "SINDROMED TOLOSA  HUNT POR HERPES ZOSTER"
+ },
+ {
+  "codigo_origen": "0960",
+  "descripcion": "MNV OD"
+ },
+ {
+  "codigo_origen": "0958",
+  "descripcion": "NEUROPATIA  OPTICA ISQUEMICA  OD"
+ },
+ {
+  "codigo_origen": "0959",
+  "descripcion": "ECTROPION CICATRIZAL OD"
+ },
+ {
+  "codigo_origen": "0961",
+  "descripcion": "LINFOMA CONJUNTIVAL OJO IZQUIERDO RESUELTO"
+ },
+ {
+  "codigo_origen": "0962",
+  "descripcion": "QUERATITIS PUNTACTA OD"
+ },
+ {
+  "codigo_origen": "0963",
+  "descripcion": "TELEANGECTASIAS MACULARES TIPO 2"
+ },
+ {
+  "codigo_origen": "0964",
+  "descripcion": "ATROFIA MACULAR AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0965",
+  "descripcion": "RDNP ISQUEMICA  AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "0966",
+  "descripcion": "PUPILA DISCORICA OI"
+ },
+ {
+  "codigo_origen": "0967",
+  "descripcion": "ATROFIA DEL IRIS OI"
+ },
+ {
+  "codigo_origen": "0968",
+  "descripcion": "DEGENERACION MACULAR RELACIONADA CON LA EDAD"
+ },
+ {
+  "codigo_origen": "0969",
+  "descripcion": "ULCERA CORNEAL MARGINAL INMUNOLOGICA POR ARTRITIS"
+ },
+ {
+  "codigo_origen": "0970",
+  "descripcion": "LOE PARPADO SUP OD DACRIOADENITIS VS CA"
+ },
+ {
+  "codigo_origen": "0971",
+  "descripcion": "POST OPERATORIO DE QUERATOPLASTIA PENETRANTE"
+ },
+ {
+  "codigo_origen": "0972",
+  "descripcion": "POST OPERATORIO DE CATARATA OI"
+ },
+ {
+  "codigo_origen": "0974",
+  "descripcion": "DR EN EMBUDO VS RETINOBLASTOMA CALCIFICADO OI"
+ },
+ {
+  "codigo_origen": "0975",
+  "descripcion": "EDEMA MACULAR DIABETICO OD"
+ },
+ {
+  "codigo_origen": "0976",
+  "descripcion": "ENFERMEDAD DE BOWEN PARPADO OI"
+ },
+ {
+  "codigo_origen": "0977",
+  "descripcion": "RETINOPATIA POR DISCRASIA  SANGUINEA"
+ },
+ {
+  "codigo_origen": "0978",
+  "descripcion": "POST OPERTORIO DE PUNTOPLASTIA"
+ },
+ {
+  "codigo_origen": "0979",
+  "descripcion": "CATARATTA PIRAMIDAL CONGENITA BILATERAL"
+ },
+ {
+  "codigo_origen": "0981",
+  "descripcion": "ENDOFTALMITIS MICOTICA OI"
+ },
+ {
+  "codigo_origen": "0980",
+  "descripcion": "QUERATITIS MICOTICA CON ABSCESO ESTROAL OI"
+ },
+ {
+  "codigo_origen": "0982",
+  "descripcion": "RIESGO INMINENTE DE PERFORACION OCULAR POR MEELTIN"
+ },
+ {
+  "codigo_origen": "0983",
+  "descripcion": "QUEMADURA POR ACIDO BILATERAL SEVERA"
+ },
+ {
+  "codigo_origen": "0984",
+  "descripcion": "QUERATITTIS QUIMICA POR ACIDO BILATERAL"
+ },
+ {
+  "codigo_origen": "0985",
+  "descripcion": "CATARATA COMPLICADA"
+ },
+ {
+  "codigo_origen": "0986",
+  "descripcion": "ISQUEMICA LIMBAL DEL 50 % DE LAS CELULAS DE AMBOS"
+ },
+ {
+  "codigo_origen": "0987",
+  "descripcion": "GLAUCOMA SECUNDARIO POR QUEMADURA"
+ },
+ {
+  "codigo_origen": "0988",
+  "descripcion": "SINDROME DE PRESUNTA  HISTOPLASMOSIS OCULAR OD"
+ },
+ {
+  "codigo_origen": "0989",
+  "descripcion": "ECTASIA CORNEAL CON ASTIGMATISMO IRREGULAR OI"
+ },
+ {
+  "codigo_origen": "0990",
+  "descripcion": "POST OPERATORIO DE CURA DE PTOSIS"
+ },
+ {
+  "codigo_origen": "0991",
+  "descripcion": "POST OPERATORIO DE EPITELIOMA CONJUNTIVAL OD"
+ },
+ {
+  "codigo_origen": "0992",
+  "descripcion": "POST OPERATORIO DE BIOPSIA INCISIONAL DE GLANDULA"
+ },
+ {
+  "codigo_origen": "0993",
+  "descripcion": "POST OPERATORIO DE PTERIGION BILATERAL"
+ },
+ {
+  "codigo_origen": "0994",
+  "descripcion": "POST OPERATORIO DE PUNTOPLASTIA"
+ },
+ {
+  "codigo_origen": "0995",
+  "descripcion": "EDEMA MACULAR OD"
+ },
+ {
+  "codigo_origen": "0996",
+  "descripcion": "DISTROFIA ENDOTELIAL CORNEAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0997",
+  "descripcion": "CICATRIZ LEUCOMA CORNEAL POR RUPTURA DESCEMENT OI"
+ },
+ {
+  "codigo_origen": "0998",
+  "descripcion": "LUXACION DE LENTE INTRAOCULAR OD"
+ },
+ {
+  "codigo_origen": "1047",
+  "descripcion": "EDEMA MACULAR OI"
+ },
+ {
+  "codigo_origen": "0999",
+  "descripcion": "ECTOPIA  LENTIS OI"
+ },
+ {
+  "codigo_origen": "1000",
+  "descripcion": "POST OPERATORIO DE SUSPENSION AL FRONTAL"
+ },
+ {
+  "codigo_origen": "1001",
+  "descripcion": "CONJUNTIVITIS CICATRIZAL"
+ },
+ {
+  "codigo_origen": "1002",
+  "descripcion": "ESQUISIS MACULAR OD"
+ },
+ {
+  "codigo_origen": "1003",
+  "descripcion": "ESCLEROMALACIA OD"
+ },
+ {
+  "codigo_origen": "1004",
+  "descripcion": "MENINGIOMA FIBROBLASTICO CEREBRAL"
+ },
+ {
+  "codigo_origen": "1005",
+  "descripcion": "DESPRENDIMIENTO COROIDEO OI POR HIPOTONIA"
+ },
+ {
+  "codigo_origen": "1006",
+  "descripcion": "TRITANOMALIA"
+ },
+ {
+  "codigo_origen": "1007",
+  "descripcion": "DISTROFIA CORNEAL EN AVELLINO"
+ },
+ {
+  "codigo_origen": "1008",
+  "descripcion": "POST OPERATORIO DE RECUBRIMIENTO DE MEMBRANA AMNIO"
+ },
+ {
+  "codigo_origen": "1009",
+  "descripcion": "SILICON SIN EMULSIFICACION OD"
+ },
+ {
+  "codigo_origen": "1010",
+  "descripcion": "MENBRANA EPIMACULAR OD"
+ },
+ {
+  "codigo_origen": "1011",
+  "descripcion": "PAPILITIS EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "1012",
+  "descripcion": "TOXOPLASMOSIS UVEITIS ANTEIROR"
+ },
+ {
+  "codigo_origen": "1013",
+  "descripcion": "ULCERA NEUROTROFICA  OD POR HERPES  OD"
+ },
+ {
+  "codigo_origen": "1014",
+  "descripcion": "AFAQUIA OI"
+ },
+ {
+  "codigo_origen": "1015",
+  "descripcion": "EXPOSICION UVEAL POR DELLEN ESCLERAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1016",
+  "descripcion": "GLAUCOMA ANGULO ESTRECHO AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "1017",
+  "descripcion": "UVEITIS POR SINDROME DE HARADA"
+ },
+ {
+  "codigo_origen": "1018",
+  "descripcion": "ESLEROSIS MULTIPLE"
+ },
+ {
+  "codigo_origen": "1019",
+  "descripcion": "CATARATA MORGANIANA OI"
+ },
+ {
+  "codigo_origen": "1020",
+  "descripcion": "KERATOTOMIA RADIAL AO"
+ },
+ {
+  "codigo_origen": "1021",
+  "descripcion": "SX TRACCION VITREO MACULAR OD"
+ },
+ {
+  "codigo_origen": "1027",
+  "descripcion": "LEUCOMA CORNEAL OD"
+ },
+ {
+  "codigo_origen": "1022",
+  "descripcion": "CATARATA PSEUDOEXFOLIATIVA OI ."
+ },
+ {
+  "codigo_origen": "1023",
+  "descripcion": "TRAUMATISMO OCULAR PENETRANTE OD"
+ },
+ {
+  "codigo_origen": "1024",
+  "descripcion": "LUXACION DE CRISTALINO OD"
+ },
+ {
+  "codigo_origen": "1025",
+  "descripcion": "QUERATITIS FLICTENULAR"
+ },
+ {
+  "codigo_origen": "1026",
+  "descripcion": "GRANULOMA CORNEAL OI"
+ },
+ {
+  "codigo_origen": "1028",
+  "descripcion": "GLAUCOMA FACOLITICO OD"
+ },
+ {
+  "codigo_origen": "1029",
+  "descripcion": "UVEITIS POR HERPES OI"
+ },
+ {
+  "codigo_origen": "1030",
+  "descripcion": "CATARATA SUBCAPSULAR POSTERIOR POR ESTEROIDES OI"
+ },
+ {
+  "codigo_origen": "1031",
+  "descripcion": "DESPRENDIIENTO DE RETINA TRACCIONAL OI"
+ },
+ {
+  "codigo_origen": "1032",
+  "descripcion": "DESPRENDIMIENTO DE ACULA OI"
+ },
+ {
+  "codigo_origen": "1033",
+  "descripcion": "PTOSIS DE GLAUNDULA LAGRIMALOI"
+ },
+ {
+  "codigo_origen": "1034",
+  "descripcion": "ESCLERITIS NODULAR NECROTIZANTE OD"
+ },
+ {
+  "codigo_origen": "1035",
+  "descripcion": "SINDROME DE OJO SECO MIXTO"
+ },
+ {
+  "codigo_origen": "1036",
+  "descripcion": "QUERATITIS POR HERPES OD"
+ },
+ {
+  "codigo_origen": "1037",
+  "descripcion": "MUCORMICOSIS ORBITARIA OI"
+ },
+ {
+  "codigo_origen": "1038",
+  "descripcion": "SINDROME DE TOLOSA HUNT"
+ },
+ {
+  "codigo_origen": "1039",
+  "descripcion": "GLAUCOMA SECUNDARIO OD"
+ },
+ {
+  "codigo_origen": "1040",
+  "descripcion": "PSEUDOAGUJERO MACULAR OD"
+ },
+ {
+  "codigo_origen": "1041",
+  "descripcion": "VASCULOPATIA POLIPOIDEA OI"
+ },
+ {
+  "codigo_origen": "1042",
+  "descripcion": "MENBRANA NEOVASCULAR MIOPICA OI"
+ },
+ {
+  "codigo_origen": "1043",
+  "descripcion": "MEMBRANA EPIRETINIANA TRACCIONAL OD"
+ },
+ {
+  "codigo_origen": "1044",
+  "descripcion": "ESPASMO HEMIFACIAL DERECHO"
+ },
+ {
+  "codigo_origen": "1045",
+  "descripcion": "OCLUSION DE RAMA INFERIOR DERECHA"
+ },
+ {
+  "codigo_origen": "1046",
+  "descripcion": "OJO SECO MIXTO"
+ },
+ {
+  "codigo_origen": "1048",
+  "descripcion": "ISQUIEMIA DE FIBRAS NERVIOSAS DE  SECTOR SUPEIOR O"
+ },
+ {
+  "codigo_origen": "1049",
+  "descripcion": "SINDROME DE BROWN"
+ },
+ {
+  "codigo_origen": "1050",
+  "descripcion": "CATARATA  SECUNDARIA OI"
+ },
+ {
+  "codigo_origen": "1051",
+  "descripcion": "DISPLASIA FIBROSA ORBITARIA  OI"
+ },
+ {
+  "codigo_origen": "1052",
+  "descripcion": "ENFERMEDAD DE GRAVES BASEDOW"
+ },
+ {
+  "codigo_origen": "1053",
+  "descripcion": "CUADRANTOPSIA POR ALTERACION VIA VISUAL"
+ },
+ {
+  "codigo_origen": "1054",
+  "descripcion": "POT CORRECCION DE ESTRABISMO OD"
+ },
+ {
+  "codigo_origen": "1055",
+  "descripcion": "TRAUMA OCULAR OD"
+ },
+ {
+  "codigo_origen": "1056",
+  "descripcion": "QUERATOPATIA EN BANDA POR SILICON"
+ },
+ {
+  "codigo_origen": "1057",
+  "descripcion": "QUERATOUVEITIS POR HERPES ZOSTER BILATERAL"
+ },
+ {
+  "codigo_origen": "1058",
+  "descripcion": "PAPILITIS POR HERPES ZOSTER"
+ },
+ {
+  "codigo_origen": "1059",
+  "descripcion": "PAPILITIS LEVE"
+ },
+ {
+  "codigo_origen": "1060",
+  "descripcion": "GLAUCOMA JUVENIL"
+ },
+ {
+  "codigo_origen": "1061",
+  "descripcion": "NEURITIS OPTICA DESMIELINIZANTE PROGRESIVA"
+ },
+ {
+  "codigo_origen": "1062",
+  "descripcion": "PTOSIS TRAUMATICA OD"
+ },
+ {
+  "codigo_origen": "1063",
+  "descripcion": "PTOSIS PALPEBRAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1064",
+  "descripcion": "AMAUROSIS FUGAZ OD"
+ },
+ {
+  "codigo_origen": "1065",
+  "descripcion": "VITREITIS MICOTICA OD"
+ },
+ {
+  "codigo_origen": "1066",
+  "descripcion": "POST OPERATORIO DE BIOPSIA DE CARCINOMA BASOCELULA"
+ },
+ {
+  "codigo_origen": "1067",
+  "descripcion": "ATALAMIA OD"
+ },
+ {
+  "codigo_origen": "1068",
+  "descripcion": "NEURORETINITIS POR SAL Y PIMIENTA OI"
+ },
+ {
+  "codigo_origen": "1069",
+  "descripcion": "PANUVEITIS POR TOXOPLASMOSIS Y TOXOCARIASIS  BILAT"
+ },
+ {
+  "codigo_origen": "1070",
+  "descripcion": "HIDROPS CORNEAL EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "1071",
+  "descripcion": "RUPTURA DE LA MEMBRANA DE DESCEMET OD"
+ }
+]

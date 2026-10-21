@@ -6,6 +6,7 @@ use App\Actions\Catalogos\GuardarFilaDeCatalogoInicial;
 use App\Actions\Catalogos\GuardarLineaDeTratamientoInicial;
 use App\Actions\Catalogos\QuitarFilaDeCatalogoInicial;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales as Registro;
+use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial as Especialidades;
 use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,6 +20,9 @@ use Livewire\WithPagination;
  * Actions `GuardarFilaDeCatalogoInicial` y `QuitarFilaDeCatalogoInicial`; el detalle de un tratamiento es `GuardarLineaDeTratamientoInicial`. Un chip por catálogo
  * (`_catalogo-inicial-chips`). Las vacunas y la referencia de crecimiento tienen su propia pantalla.
  *
+ * **Por especialidad** (WEB-12.9): el selector filtra la lista (todas, las generales o las de una especialidad), cada fila muestra a qué especialidades aplica y el
+ * formulario las elige («Aplica a»; ninguna = general). El puente es `EspecialidadesDelCatalogoInicial`.
+ *
  * Como las demás pantallas del panel, `hydrate()` vuelve a comprobar el permiso en cada acción de Livewire (Root o Administrador).
  */
 class CatalogosIniciales extends Component
@@ -31,6 +35,12 @@ class CatalogosIniciales extends Component
     public $catalogo = '';
 
     public $search = '';
+
+    /** El filtro de especialidad: '' = todas, 'general' = sin marca, o el id de una especialidad. */
+    public $especialidad = '';
+
+    /** @var array<int,string> las especialidades a las que aplica la fila del formulario (ninguna = general) */
+    public $aplica = [];
 
     /** Ventana abierta: `fila` | `borrar` | `lineas` | null */
     public $modal = null;
@@ -68,6 +78,11 @@ class CatalogosIniciales extends Component
         $this->resetPage();
     }
 
+    public function updatingEspecialidad()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $def = Registro::de($this->catalogo);
@@ -75,7 +90,9 @@ class CatalogosIniciales extends Component
 
         $filas = DB::table($def['tabla'])->whereNull('reg_medico')
             ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w->where($def['etiqueta'], 'like', "%{$busqueda}%")->orWhere($def['codigo'], 'like', "%{$busqueda}%")))
+            ->when($this->especialidad !== '', fn ($q) => Especialidades::restringir($q, $this->catalogo, $def['tabla'], $this->especialidad))
             ->orderBy($def['etiqueta'])->orderBy('id')->paginate(15);
+        $especialidades = DB::table('specialties')->orderBy('name')->pluck('name', 'id');
 
         $lineas = collect();
         $tratamiento = null;
@@ -90,7 +107,9 @@ class CatalogosIniciales extends Component
             'def' => $def,
             'filas' => $filas,
             'detalles' => $filas->getCollection()->mapWithKeys(fn ($fila) => [$fila->id => $this->detalle($def, $fila)]),
-            'total' => DB::table($def['tabla'])->whereNull('reg_medico')->count(),
+            'total' => $filas->total(),
+            'especialidades' => $especialidades,
+            'marcas' => Especialidades::de($this->catalogo, $filas->getCollection()->pluck('id')->map(fn ($id) => (int) $id)->all()),
             'opciones' => $this->opciones($def),
             'tratamiento' => $tratamiento,
             'lineas' => $lineas,
@@ -103,6 +122,8 @@ class CatalogosIniciales extends Component
         $this->resetErrorBag();
         $this->f = $this->vacio();
         $this->filaId = null;
+        // Una fila nueva con el filtro puesto en una especialidad nace marcada con ella.
+        $this->aplica = (int) $this->especialidad > 0 ? [(string) (int) $this->especialidad] : [];
 
         if ($id) {
             $def = Registro::de($this->catalogo);
@@ -113,6 +134,7 @@ class CatalogosIniciales extends Component
                 $valor = $fila->{$columna} ?? null;
                 $this->f[$columna] = $def['campos'][$columna][1] === 'marca' ? (bool) $valor : ($valor === null ? '' : (string) $valor);
             }
+            $this->aplica = array_map('strval', Especialidades::de($this->catalogo, [(int) $fila->id])[(int) $fila->id] ?? []);
         }
 
         $this->modal = 'fila';
@@ -123,7 +145,7 @@ class CatalogosIniciales extends Component
         $this->resetErrorBag();
 
         try {
-            app(GuardarFilaDeCatalogoInicial::class)->ejecutar($this->catalogo, $this->f, $this->filaId ? (int) $this->filaId : null);
+            app(GuardarFilaDeCatalogoInicial::class)->ejecutar($this->catalogo, $this->f, $this->filaId ? (int) $this->filaId : null, (array) $this->aplica);
         } catch (InvalidArgumentException $e) {
             $this->addError('f.formulario', $e->getMessage());
 

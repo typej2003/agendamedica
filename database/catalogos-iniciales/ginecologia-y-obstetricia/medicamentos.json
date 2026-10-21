@@ -1,0 +1,5733 @@
+[
+ {
+  "codigo_origen": "0008",
+  "nombregenerico": "CENTELLA ASI-TICA",
+  "nombrecomercial": "LITONATE",
+  "dosificacion": "TOMAR UNA TABLETA TRES VECES AL DIA DURANTE 15 DIAS",
+  "uso": "Tomar 1 tableta cada 12 horas durante 15 días.",
+  "presentacion": "Tabletas 30 mg",
+  "pvc": "5230"
+ },
+ {
+  "codigo_origen": "0009",
+  "nombregenerico": "ITRACONAZOL",
+  "nombrecomercial": "FUNGOSIN",
+  "uso": "Tomar 2 cápsulas por la manana y otras 2 cápsulas por la noche un solo Tomar 1 cápsula diaria durante 15 días.",
+  "presentacion": "Cap. 100 mg",
+  "pvc": "2850"
+ },
+ {
+  "codigo_origen": "0012",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "AZITROMICINA",
+  "uso": "Tomar 1 tableta diaria por 3 días.",
+  "presentacion": "Tabletas 500 mg",
+  "durante": "1",
+  "dosis": "10"
+ },
+ {
+  "codigo_origen": "0096",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "ALBESIN",
+  "uso": "Tomar 1 cápsula usted y otra su pareja. Repetir a las 72 horas.",
+  "presentacion": "Cap. de 150 mg"
+ },
+ {
+  "codigo_origen": "0116",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "ZYTROMAX",
+  "uso": "Antes comidas bid.",
+  "presentacion": "Tab",
+  "durante": "2",
+  "dosis": "500"
+ },
+ {
+  "codigo_origen": "0002",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "DIFLUCAN G",
+  "uso": "Tomar 1 cápsula los dos. Repetir a las 72 horas",
+  "presentacion": "Cap. 150 mg"
+ },
+ {
+  "codigo_origen": "0004",
+  "nombregenerico": "SECNIDAZOL",
+  "nombrecomercial": "AMBESE",
+  "dosificacion": "TOMAR LAS DOS TABLETAS EN UNA SOLA DOSIS- SU PAREJA IGUAL Y AL MISMO TIEMPO",
+  "uso": "Tomar las 2 tabletas en una sola dosis. Su pareja igual y al mismo tiempo.",
+  "presentacion": "Comprimidos 1 gr",
+  "pvc": "6800"
+ },
+ {
+  "codigo_origen": "0119",
+  "nombrecomercial": "ALEESE",
+  "uso": "CADA",
+  "presentacion": "TABLET"
+ },
+ {
+  "codigo_origen": "0122",
+  "nombrecomercial": "ACTONEL",
+  "uso": "una semanal, ver indicaciones",
+  "presentacion": "35mgrs"
+ },
+ {
+  "codigo_origen": "0160",
+  "nombrecomercial": "PASSIFLORUM",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0010",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "MICOFLUX",
+  "dosificacion": "TOMAR UNA CAPSULA",
+  "uso": "Tomar una capsula los dos. Repetir a las 72 horas",
+  "presentacion": "Cap. 150 mg",
+  "pvc": "5500"
+ },
+ {
+  "codigo_origen": "0011",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "VIZERUL",
+  "uso": "Tomar 1 comprimido al acostarse hasta nueva orden.",
+  "presentacion": "Comprimidos 300 mg",
+  "pvc": "9345"
+ },
+ {
+  "codigo_origen": "0013",
+  "nombregenerico": "COMPLEJO B",
+  "nombrecomercial": "MEGA-NEUBION",
+  "uso": "Inyectar 1 ampolla intramuscular profundo (gluteo), cada 2 días hasta completar 6 ampollas.",
+  "presentacion": "Ampollas"
+ },
+ {
+  "codigo_origen": "0015",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "CIPRIVAX",
+  "uso": "Tomar 1 comprimido cada 12 horas empezando despuÚs de recoger la muestra de orina, hasta traerme el resultado.",
+  "presentacion": "Comprimidos 500 mg"
+ },
+ {
+  "codigo_origen": "0001",
+  "nombregenerico": "CEFALEXINA",
+  "nombrecomercial": "KEFORAL",
+  "dosificacion": "25-50 mg/kg/dia",
+  "uso": "Tomar una cápsula cada 6 horas durante siete      dias.",
+  "presentacion": "Cap. 500 mg",
+  "durante": "4"
+ },
+ {
+  "codigo_origen": "0230",
+  "nombrecomercial": "E",
+  "uso": "E",
+  "presentacion": "E"
+ },
+ {
+  "codigo_origen": "0005",
+  "nombregenerico": "ALENDRONATO SËDICO",
+  "nombrecomercial": "DEFISAL",
+  "dosificacion": "TOMAR UNA TABLETA DIARIA, EN AYUNAS, POR 2 AÐOS.",
+  "uso": "Tomar una vez a la semana. leer indicaciones dadas.",
+  "presentacion": "Tabletas 70 mg",
+  "pvc": "16800"
+ },
+ {
+  "codigo_origen": "0029",
+  "nombrecomercial": "CERAZETTE",
+  "uso": "TOMAR UN COMPRIMIDO QUINCE DIAS DESPUES DEL PARTO,A LA MISMA HORA TODA LA LACTANCIA.",
+  "presentacion": "Comprimidos"
+ },
+ {
+  "codigo_origen": "0006",
+  "nombregenerico": "OFLOXACINA",
+  "nombrecomercial": "NORLAMINE",
+  "dosificacion": "TOMAR UNA TABLETA CADA 12 HORAS DURANTE 6 DIAS",
+  "uso": "Infecciones urinarias-uretritis-gonorrea-cervicitis, etc.",
+  "presentacion": "Tabletas 400 mg",
+  "pvc": "6730"
+ },
+ {
+  "codigo_origen": "0007",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "BETAGEN",
+  "dosificacion": "INYECTAR TRES AMPOLLAS JUNTAS, INTRAMUSCULAR, EN UNA SOLA DOSIS.",
+  "uso": "Colocar 12 mg (3 ampollas), por vía intramuscular profunda diariamente por 2 días.",
+  "presentacion": "INYECTADORA PRE-LLENADA.",
+  "pvc": "6700"
+ },
+ {
+  "codigo_origen": "0016",
+  "nombregenerico": "DESOGESTR 0,150/ ETINILESTRAL0,020",
+  "nombrecomercial": "MERCILON",
+  "uso": "Tomar 1 comprimido diario a la misma hora, durante 21 días seguidos, empezando su primer envase el primer día de su regla. Descansar 7 días y reanudar otro ciclo sin tomar en cuenta el día de su regla, y seguir así sucesivamente en forma indefinida mientras no desee embarazarse.",
+  "presentacion": "Comprimidos X21"
+ },
+ {
+  "codigo_origen": "0017",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "DIFLUCAN",
+  "uso": "Tomar 1 cápsula usted,  y otra su pareja. Repetir a las 72 horas los dos",
+  "presentacion": "Cap. 150 mg"
+ },
+ {
+  "codigo_origen": "0027",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "ZITROMAX G",
+  "uso": "Tomar las 2 tabletas en una sola dosis la pareja.",
+  "presentacion": "Tabletas 500 mg"
+ },
+ {
+  "codigo_origen": "0018",
+  "nombregenerico": "COMPLEJO VITAM-NICO B",
+  "nombrecomercial": "LENTERMINA COMPLEX",
+  "uso": "Inyectar 1 ampolla intramuscular profunda en región glutea cada 2 días hasta completar las  6 ampollas.",
+  "presentacion": "Ampollas"
+ },
+ {
+  "codigo_origen": "0019",
+  "nombregenerico": "17-B-ESTRADIOL",
+  "nombrecomercial": "FEMSEVEN",
+  "dosificacion": "50  MICROG./7 DIAS",
+  "uso": "Siga las instrucciones del fabricante al pie de la letra. No olvide mantener la mano sobre el parche durante 1 minuto despuÚs de aplicarlo. Cambie de parche y de sitio de aplicaci¾n cada 7 dÝas.",
+  "presentacion": "Parches"
+ },
+ {
+  "codigo_origen": "0020",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "ZITROMAX",
+  "uso": "Tomar 2 tabletas diarias durante 3 días seguidos.",
+  "presentacion": "Tabletas 500 mg"
+ },
+ {
+  "codigo_origen": "0021",
+  "nombregenerico": "LOMEFLOXACINA",
+  "nombrecomercial": "MAXAQUIN",
+  "uso": "Tomar 1 tableta diaria durante 5 días.",
+  "presentacion": "Cajas 5 tabletas de 400 mg",
+  "concentracion": "400",
+  "durante": "1"
+ },
+ {
+  "codigo_origen": "0022",
+  "nombregenerico": "COMPLEJO B",
+  "nombrecomercial": "BENUTREX",
+  "uso": "Tomar 2 comprimidos diarios indefinidamente.",
+  "presentacion": "Comprimidos"
+ },
+ {
+  "codigo_origen": "0217",
+  "nombrecomercial": "SECNIDAZOL",
+  "uso": "DOS DESPUES DE CENA POR TRES DIAS",
+  "presentacion": "1GR"
+ },
+ {
+  "codigo_origen": "0223",
+  "nombrecomercial": "UVAGEN",
+  "uso": "UNA DIARIA POR TRES MESES.",
+  "presentacion": "CAP"
+ },
+ {
+  "codigo_origen": "0224",
+  "nombrecomercial": "PROFENID",
+  "uso": "UNA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0025",
+  "nombregenerico": "CABERGOLINA",
+  "nombrecomercial": "DOSTINEX",
+  "uso": "Tomar las 3 tabletas en una sola dosis.",
+  "presentacion": "Caja 2 tabletas 0,5 mg"
+ },
+ {
+  "codigo_origen": "0026",
+  "nombregenerico": "CABERGOLINA",
+  "nombrecomercial": "DOSTINEX",
+  "uso": "Tomar 2 tabletas semanal por 4 semanas.-",
+  "presentacion": "Caja 8 tabletas 0,5 mg"
+ },
+ {
+  "codigo_origen": "0216",
+  "nombrecomercial": "MAZEPA",
+  "uso": "Una despues de cada comida",
+  "presentacion": "CAP"
+ },
+ {
+  "codigo_origen": "0030",
+  "nombregenerico": "FERRITINA",
+  "nombrecomercial": "FERGANIC/FOLIC",
+  "uso": "Tomar 1 cápsula una vez al día hasta nueva orden.",
+  "presentacion": "Caja 24 cap.",
+  "pvc": "14900"
+ },
+ {
+  "codigo_origen": "0031",
+  "nombrecomercial": "DAFLON",
+  "uso": "Tomar 1 cápsula 3 veces al día durante 10 días.",
+  "presentacion": "Cap. 500 mg"
+ },
+ {
+  "codigo_origen": "0228",
+  "nombrecomercial": "NORVAS",
+  "uso": "Una cada 12 horas",
+  "presentacion": "Tabletas 5mg"
+ },
+ {
+  "codigo_origen": "0033",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "VIZERUL",
+  "uso": "Tomar 1 comprimido 2 veces al día.",
+  "presentacion": "Comprimidos 150 mg"
+ },
+ {
+  "codigo_origen": "0231",
+  "nombrecomercial": "FLAXOL",
+  "uso": "Tomar 1 diaria por 8 mese.-",
+  "presentacion": "capsula"
+ },
+ {
+  "codigo_origen": "0220",
+  "nombrecomercial": "STREPTOMAGMA",
+  "uso": "una dos veces al dia",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0235",
+  "nombrecomercial": "HIVIT",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "capsulas blandas"
+ },
+ {
+  "codigo_origen": "0260",
+  "nombrecomercial": "MICROFERRUM",
+  "uso": "Tomar 2 diaria por 3 semanas y luego 1 diaria todo el embarazo .",
+  "presentacion": "Capsula.-"
+ },
+ {
+  "codigo_origen": "0262",
+  "nombrecomercial": "CELL PROTECTOR",
+  "uso": "Tomoar 3 veces al dia por 3 meses.-",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0267",
+  "nombrecomercial": "MELOXICAM",
+  "uso": "Tomar 1 diaria por 20 dias.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0034",
+  "nombrecomercial": "ICADEN",
+  "uso": "Vaciar el contenido de 1 aplicador profundamente en vagina al acostarse durante 1 semana.",
+  "presentacion": "Crema vaginal"
+ },
+ {
+  "codigo_origen": "0036",
+  "nombregenerico": "KETOCONAZOL",
+  "nombrecomercial": "KETAZOL",
+  "uso": "Aplicar en área afectada al acostarse durante 10 días seguidos.",
+  "presentacion": "Ovulos"
+ },
+ {
+  "codigo_origen": "0037",
+  "nombregenerico": "AMPICILINA SULBACTAN",
+  "nombrecomercial": "FIPEXIAM",
+  "uso": "Tomar 1 tableta cada 12 horas durante         días.",
+  "presentacion": "Tabletas 375 mg"
+ },
+ {
+  "codigo_origen": "0038",
+  "nombregenerico": "AMPICILINA SULBACTAN",
+  "nombrecomercial": "UNASYN",
+  "uso": "Tomar 1 tableta cada 8 horas durante  7        días.",
+  "presentacion": "Tabletas 750 mg"
+ },
+ {
+  "codigo_origen": "0095",
+  "nombregenerico": "L-CARNITINA",
+  "nombrecomercial": "PROVICAR",
+  "uso": "Tomar 10 cc 2 veces al día hasta nueva orden.",
+  "presentacion": "Fco. soluci¾n oral de 180 ml",
+  "concentracion": "0"
+ },
+ {
+  "codigo_origen": "0040",
+  "nombrecomercial": "DIANE 35",
+  "uso": "Tomar 1 gragea diaria desde el primer día de su regla y seguir seg·n el instructivo.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0041",
+  "nombregenerico": "DIAZEPAN",
+  "nombrecomercial": "VALIUM",
+  "uso": "Tomar 1 comprimido 1 hora antes de acostarse.",
+  "presentacion": "Comprimidos  5 mg"
+ },
+ {
+  "codigo_origen": "0042",
+  "nombregenerico": "ACIDO ACETILSALIC-LICO",
+  "nombrecomercial": "ASPIRINA INFANTIL",
+  "uso": "Tomar 1 tableta diaria a partir del 5to. día de menstruación hasta el 12 del ciclo.",
+  "presentacion": "Comprimidos 100 mg"
+ },
+ {
+  "codigo_origen": "0043",
+  "nombregenerico": "DOBESILATO DE CALCIO",
+  "nombrecomercial": "DOXIUM",
+  "uso": "Tomar 1 cápsula cada 12 horas.",
+  "presentacion": "Cap. 500 mg"
+ },
+ {
+  "codigo_origen": "0044",
+  "nombregenerico": "KETOCONAZOL",
+  "nombrecomercial": "KETAZOL",
+  "uso": "Aplicar en área afectada al acostarse durante 10 días seguidos.",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0045",
+  "nombregenerico": "HIERRO",
+  "nombrecomercial": "FERROCE",
+  "uso": "TOMAR UNA DIARIA POR TRES MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0061",
+  "nombrecomercial": "FERGANIC JARABE",
+  "uso": "Tomar 1 cucharada diaria durante todo el embarazo.",
+  "presentacion": "Jarabe"
+ },
+ {
+  "codigo_origen": "0097",
+  "nombregenerico": "ANTITUSIGENO",
+  "nombrecomercial": "AMODION",
+  "uso": "Tomar 1 cucharada cada 8 horas si hay tos.",
+  "presentacion": "Jarabe"
+ },
+ {
+  "codigo_origen": "0105",
+  "nombregenerico": "CLORTRIMAZOL-DEXAMETASONA Y NEOMICI",
+  "nombrecomercial": "BAYCUTEN",
+  "uso": "Aplicar una capa delgada en el Area afectada por 5 días.",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0046",
+  "nombregenerico": "ESTRADIOL",
+  "nombrecomercial": "CLIMADERM 7 DIAS",
+  "uso": "Aplicar 1 parche en una zona discreta de la piel y cambiarlo cada 7 días en un lugar distinto retirando el  anterior.",
+  "presentacion": "Parches"
+ },
+ {
+  "codigo_origen": "0047",
+  "nombrecomercial": "FORCRIM",
+  "uso": "Tomar 1 tableta por la manana y otra por la noche, hasta completar la caja.",
+  "presentacion": "Tabletas"
+ },
+ {
+  "codigo_origen": "0060",
+  "nombrecomercial": "DERAIN",
+  "uso": "Aplicar al acostarse en zona afectada.",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0155",
+  "nombrecomercial": "VOLTAREN",
+  "uso": "COLOCAR UNA AMPOLLA CADA 8 HORAS .",
+  "presentacion": "AMPOLLA ."
+ },
+ {
+  "codigo_origen": "0048",
+  "nombregenerico": "ALFAMETIL DOPA",
+  "nombrecomercial": "ALDOMET",
+  "uso": "Tomar 1 tableta 8 a.m. y 8 p.m. durante 1 semana.",
+  "presentacion": "Env. 30 tabletas de 250 mg",
+  "concentracion": "500",
+  "durante": "2"
+ },
+ {
+  "codigo_origen": "0049",
+  "nombregenerico": "POLIVITAMINAS",
+  "nombrecomercial": "PRENAVIT",
+  "uso": "Tomar 1 cápsula diaria indefinidamente.",
+  "presentacion": "Cap. blandas"
+ },
+ {
+  "codigo_origen": "0219",
+  "nombrecomercial": "EUTHIROX",
+  "uso": "uno diario por siete dias, luego uno diaria permanente, control de tsh en un mes",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0051",
+  "nombregenerico": "ESTROGENO 0,625 + MEDROXIPROG 2,5 M",
+  "nombrecomercial": "CLIMATROL HT CONTINUO",
+  "dosificacion": "MENOPAUSIA SIN REGLA",
+  "uso": "Tomar 1 gragea diaria indefinidamente.",
+  "presentacion": "30 grageas",
+  "pvc": "16037"
+ },
+ {
+  "codigo_origen": "0052",
+  "nombregenerico": "ESTROGENO 0,625 + MEDROXIPROG 5MG",
+  "nombrecomercial": "CLIMATROL HT CONTINUO PLUS",
+  "dosificacion": "MENOPAUSIA SIN REGLA",
+  "uso": "Tomar 1 gragea diaria indefinidamente.",
+  "presentacion": "30 grageas",
+  "pvc": "16980"
+ },
+ {
+  "codigo_origen": "0053",
+  "nombregenerico": "ALFACALCIDOL",
+  "nombrecomercial": "ALPHA D3",
+  "dosificacion": "1 MG DIARIO POR UN MES Y LUEGO AJUSTAR DOSIS",
+  "uso": "Tomar 1 cápsula diaria durante 1 mes. Luego se reajustará.",
+  "presentacion": "Cap. blandas 1 mcg/10",
+  "pvc": "19849"
+ },
+ {
+  "codigo_origen": "0056",
+  "nombrecomercial": "DETRICAN",
+  "uso": "Tomar 1 gragea 3 veces al día durante 3 días seguidos.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0222",
+  "nombrecomercial": "OSCAL D",
+  "uso": "UNA DIARIA",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0054",
+  "nombregenerico": "ALENDRONATO SODICO",
+  "nombrecomercial": "OSTEODUR",
+  "uso": "Tomar 1 comprimido diario 30 minutos antes de la primera comida con un vaso completo de agua.",
+  "presentacion": "Comprimido 10 y 5 mg",
+  "pvc": "28000"
+ },
+ {
+  "codigo_origen": "0055",
+  "nombrecomercial": "DETRICAN",
+  "uso": "Aplicar en vagina al acostarse durante 10 días.",
+  "presentacion": "Gel vaginal"
+ },
+ {
+  "codigo_origen": "0114",
+  "nombrecomercial": "TAMTUM",
+  "uso": "TOMAR 1 TABLETA CADA 8 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0058",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "FEMIANE",
+  "uso": "Tomar 1 gragea diaria empezando el primer dÝa de su regla, en la primera caja durante 21 días. Descansar 7 días y repetirlo nuevamente, ahora independientemente de su regla, durante 15 ciclos seguidos.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0059",
+  "nombregenerico": "ACO - GESTODENA 75 -EEDIOL20",
+  "nombrecomercial": "HARMONET",
+  "uso": "Tomar 1 gragea diaria durante 21 días. Descansar 7 días y repetirlo.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0062",
+  "nombrecomercial": "EFFONTIL",
+  "uso": "Tomar 15 gotas cada 8 horas durante 1 semana.",
+  "presentacion": "Gotas"
+ },
+ {
+  "codigo_origen": "0218",
+  "nombregenerico": "bromuro de pinaverium",
+  "nombrecomercial": "DICETEL",
+  "uso": "tomar una antes  de cena por tres meses.-",
+  "presentacion": "tab 100 mgrs"
+ },
+ {
+  "codigo_origen": "0194",
+  "nombrecomercial": "ENEMA FLEET",
+  "uso": "COLOCAR UNA SOLA VEZ",
+  "presentacion": "FRASCO"
+ },
+ {
+  "codigo_origen": "0064",
+  "nombrecomercial": "METOCLOPRAMIDA",
+  "uso": "Inyectar 1 ampolla cada 8 horas por 3 dosis.",
+  "presentacion": "Ampollas 10 mg"
+ },
+ {
+  "codigo_origen": "0065",
+  "nombrecomercial": "PRAMIDE",
+  "uso": "Tomar 1 tableta cada 8 horas durante 1 semana y luego seguir con 1 tableta cada 12 horas, mientras tenga nauseas y vómitos.",
+  "presentacion": "Tabletas 10 mg"
+ },
+ {
+  "codigo_origen": "0066",
+  "nombrecomercial": "KAMILLOSAN",
+  "uso": "Aplicar en la zona afectada al acostarse durante 1 mes.",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0067",
+  "nombrecomercial": "ERITROMICINA",
+  "uso": "Tomar 1 tableta cada 6 horas durante 10 días.",
+  "presentacion": "Tabletas 500 mg"
+ },
+ {
+  "codigo_origen": "0068",
+  "nombrecomercial": "AMPICILINA",
+  "uso": "Tomar 1 cápsula cada 6 horas durante 6 días.",
+  "presentacion": "Cap. 500 mg"
+ },
+ {
+  "codigo_origen": "0069",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "BIDROXYL",
+  "uso": "Tomar 1 cápsula cada 12 horas durante 7 días.",
+  "presentacion": "Cap. 500 mg"
+ },
+ {
+  "codigo_origen": "0070",
+  "nombrecomercial": "PROVERA",
+  "uso": "Tomar 1 tableta cada 12 horas durante 5 dias.",
+  "presentacion": "Tabletas 10 mg"
+ },
+ {
+  "codigo_origen": "0071",
+  "nombrecomercial": "PROGYLUTON",
+  "uso": "Tomar 1 gragea diaria empezando por el \"comienzo\" hasta completar la caja.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0072",
+  "nombrecomercial": "SENOKOT",
+  "uso": "Tomar 1 tableta diaria seg·n sea su hábito intestinal.",
+  "presentacion": "Tabletas"
+ },
+ {
+  "codigo_origen": "0125",
+  "nombrecomercial": "OXINORM",
+  "uso": "UNA DESPUES DE DESAYUNO POR TRES MESES",
+  "presentacion": "CAP"
+ },
+ {
+  "codigo_origen": "0073",
+  "nombregenerico": "VALACICLOVIR",
+  "nombrecomercial": "VALTREX",
+  "uso": "Tomar 1 tableta cada 12 horas durante 10 días.",
+  "presentacion": "Tabletas 500 mg"
+ },
+ {
+  "codigo_origen": "0074",
+  "nombregenerico": "MUPIROCIN",
+  "nombrecomercial": "BACTROBAN",
+  "uso": "Aplicar en Área lesionada cada 8 horas durante 1 semana.",
+  "presentacion": "Crema 2%"
+ },
+ {
+  "codigo_origen": "0075",
+  "nombregenerico": "NIMESULIDE",
+  "nombrecomercial": "NIPROLIDE",
+  "uso": "Tomar 1 tableta cada 12 horas.",
+  "presentacion": "Tabletas 100 mg"
+ },
+ {
+  "codigo_origen": "0076",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "KELFEN",
+  "uso": "Tomar 1 cápsula cada 12 horas.",
+  "presentacion": "Comprimidos 100 mg"
+ },
+ {
+  "codigo_origen": "0077",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "KELFEN",
+  "uso": "Inyectar 1 ampolla intramuscular cada 12 horas.",
+  "presentacion": "Ampolla 100 mg"
+ },
+ {
+  "codigo_origen": "0078",
+  "nombrecomercial": "DUVADILAN",
+  "uso": "Tomar 1 tableta cada 8 horas durante 1 semana.",
+  "presentacion": "Tabletas 10 mg"
+ },
+ {
+  "codigo_origen": "0079",
+  "nombrecomercial": "CELESTONE",
+  "uso": "Inyectar las 3 ampollas intramuscular en una sola dosis una sola vez.",
+  "presentacion": "Ampollas 4 mg"
+ },
+ {
+  "codigo_origen": "0080",
+  "nombrecomercial": "IRTOPAN",
+  "uso": "Tomar 1 tableta cada 12 horas durante 1 semana.",
+  "presentacion": "Tabletas"
+ },
+ {
+  "codigo_origen": "0081",
+  "nombrecomercial": "TOXOIDE TETANICO",
+  "uso": "Inyectar 1 ampolla intramuscular una sola vez durante este mes. Anotar la fecha en su tarjeta.",
+  "presentacion": "Ampollas"
+ },
+ {
+  "codigo_origen": "0164",
+  "nombrecomercial": "ACICLOR",
+  "uso": "aplicar dos veces al dia",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0082",
+  "nombrecomercial": "METROVAX",
+  "uso": "Tomar 1 capsula por la manana y otra por la noche (cada 12 horas) durante 7 días.",
+  "presentacion": "Cap. blandas 500 mg"
+ },
+ {
+  "codigo_origen": "0083",
+  "nombregenerico": "TERCONAZOL",
+  "nombrecomercial": "FUNGISTAD",
+  "uso": "Introducir un óvulo profundamente en vagina al acostarse durante 3  días seguidos.",
+  "presentacion": "Ovulos 80 mg"
+ },
+ {
+  "codigo_origen": "0084",
+  "nombrecomercial": "MACRODANTINA",
+  "uso": "Tomar 1 tableta cada 6 horas durante 10 días.",
+  "presentacion": "Tabletas 50mg"
+ },
+ {
+  "codigo_origen": "0085",
+  "nombrecomercial": "VUSCOBRAX",
+  "uso": "Tomar 1 gragea cada 12 horas durante 3 días.",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0092",
+  "nombregenerico": "ALENDRONATO SËDICO",
+  "nombrecomercial": "GENALMEN",
+  "uso": "Tomar 1 tableta en ayunas con 1/2 vaso de agua una vez por semana por 2 anos.",
+  "presentacion": "Tab. de 70 mg",
+  "concentracion": "70",
+  "durante": "1"
+ },
+ {
+  "codigo_origen": "0093",
+  "nombrecomercial": "VIOXX",
+  "uso": "Tomar 1 tableta diaria por 5 días.",
+  "presentacion": "Tabletas de 25 mg",
+  "concentracion": "25"
+ },
+ {
+  "codigo_origen": "0089",
+  "nombregenerico": "ACIDO FOLICO",
+  "nombrecomercial": "AFOKLIN",
+  "uso": "Tomar 1 gragea diaria durante todo el embarazo.",
+  "presentacion": "Env de 20 comp. de 5 mg",
+  "concentracion": "5",
+  "durante": "1"
+ },
+ {
+  "codigo_origen": "0094",
+  "nombregenerico": "POLIVITAMINICOS",
+  "nombrecomercial": "MATERNA",
+  "uso": "Tomar 1 tableta diaria hasta nueva orden.",
+  "presentacion": "Tabletas"
+ },
+ {
+  "codigo_origen": "0101",
+  "nombregenerico": "ATENENOL",
+  "nombrecomercial": "ATENOLOL  MCK",
+  "uso": "Tomar 1 tableta diaria.",
+  "presentacion": "Tab. de 50 mg"
+ },
+ {
+  "codigo_origen": "0098",
+  "nombregenerico": "ACETATO DE CIPROTERONA",
+  "nombrecomercial": "ANDROCUR",
+  "uso": "Tomar 1 gragea diaria del 5to. al 14 día del ciclo (10 días).",
+  "presentacion": "Env. de 50 tabletas"
+ },
+ {
+  "codigo_origen": "0099",
+  "nombregenerico": "DIMETIL POLIXILOXANO",
+  "nombrecomercial": "ANTIFOM",
+  "uso": "Tomar 1 tableta cada 8 horas si hay gases.",
+  "presentacion": "Tabletas masticables"
+ },
+ {
+  "codigo_origen": "0100",
+  "nombregenerico": "ACETOMINOFENO",
+  "nombrecomercial": "ATAMEL",
+  "uso": "Tomar 1 tableta cada 6 horas si hay dolor o fiebre.",
+  "presentacion": "Tabletas de 500 mg"
+ },
+ {
+  "codigo_origen": "0102",
+  "nombregenerico": "SEMILLAS DE OLANTAGO OVATA",
+  "nombrecomercial": "AVENSYL",
+  "uso": "Disolver una medida del dosificador en un vaso de agua o jugo de frutas y tomar 2 veces al día.",
+  "presentacion": "Env. de 100 g"
+ },
+ {
+  "codigo_origen": "0103",
+  "nombregenerico": "MANDELATO DE METAMINA",
+  "nombrecomercial": "AZO-MANDELAMINE 50 MG",
+  "uso": "Tomar 1 gragea cada 8 horas por 5 días (las orinas pueden colorearse).",
+  "presentacion": "Grageas"
+ },
+ {
+  "codigo_origen": "0104",
+  "nombregenerico": "TRIBENOSIDO Y LIDOCAINA",
+  "nombrecomercial": "BARGONIL",
+  "uso": "Colocar 1 aplicación rectal 2 veces al día.",
+  "presentacion": "Tubo de crema de 10 g"
+ },
+ {
+  "codigo_origen": "0106",
+  "nombregenerico": "PIRIDOXINA B6",
+  "nombrecomercial": "BIPRIN",
+  "uso": "Tomar 1 cápsula diaria hasta nueva orden.",
+  "presentacion": "Cap."
+ },
+ {
+  "codigo_origen": "0109",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "LUMBAX",
+  "uso": "Tomar 1 tableta cada 12 horas por 5 días.",
+  "presentacion": "Tab. 600 mg"
+ },
+ {
+  "codigo_origen": "0107",
+  "nombregenerico": "PIRIDOXINA",
+  "nombrecomercial": "BENADON",
+  "uso": "Tomar 1 comprimido 2 días antes, durante y 2 días después de la menstruación.",
+  "presentacion": "Comprimidos"
+ },
+ {
+  "codigo_origen": "0108",
+  "nombregenerico": "BROMURO DE IPRATROPIO",
+  "nombrecomercial": "BERODUAL",
+  "uso": "2 pulverizaciones cada 30 minutos, no mßs de 3 durante la crisis. Luego 1 pulverización cada 8  horas hasta la mejoría.",
+  "presentacion": "Aerosol"
+ },
+ {
+  "codigo_origen": "0110",
+  "nombregenerico": "ACIDO ACETILSALICILICO",
+  "nombrecomercial": "CORASPIRINA",
+  "uso": "Tomar 1 tableta diaria a partir del 5to. día hasta el día 12 de la regla.",
+  "presentacion": "Tabletas de 81 mg"
+ },
+ {
+  "codigo_origen": "0111",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "CIPROXINA",
+  "uso": "Tomar 1 tableta dos veces al día por 5 días.",
+  "presentacion": "Tab. de 500 mg"
+ },
+ {
+  "codigo_origen": "0112",
+  "nombregenerico": "DEXPANTENOL AL 5 %",
+  "nombrecomercial": "BEDUCEN",
+  "uso": "Aplicar en el Area afectada 3 veces al día como protector y humectante.",
+  "presentacion": "Env. de 40 mg - crema"
+ },
+ {
+  "codigo_origen": "0113",
+  "nombregenerico": "HIOSCINA",
+  "nombrecomercial": "BUSCAPINA PLUS",
+  "uso": "Tomar 1 tableta cada 8 horas si hay dolor.",
+  "presentacion": "Comprimidos"
+ },
+ {
+  "codigo_origen": "0117",
+  "nombrecomercial": "CICLOKAPRON",
+  "uso": "una cada 6 horas por cinco dias",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0118",
+  "nombrecomercial": "BISOLVON",
+  "uso": "1 CUCHARADA 15 CC CADA 8 HORAS",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0124",
+  "nombrecomercial": "CALCIBON D",
+  "uso": "UNA DESPUES DE CENA",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0120",
+  "nombregenerico": "NIMESULIDE",
+  "nombrecomercial": "SCAFLAN",
+  "uso": "1 TABLETA CADA 12 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0121",
+  "nombrecomercial": "ORTHOGINEST",
+  "uso": "COLOCAR 1 OVULO CADA 7 DIAS POR 3 MESES",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0123",
+  "nombrecomercial": "DICLOCIL",
+  "uso": "DICLOCID.-UNA CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "CAP 500 MGRS"
+ },
+ {
+  "codigo_origen": "0126",
+  "nombrecomercial": "VITAMINA E . EFAN",
+  "uso": "TOMAR UNA DIARIA",
+  "presentacion": "CAP  BLANDAS 400 U.I"
+ },
+ {
+  "codigo_origen": "0128",
+  "nombrecomercial": "DALACIN",
+  "uso": "COLOCAR UN OVULO AL ACOSTARSE POR 7 NOCHES.",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0129",
+  "nombrecomercial": "SECNIVAX",
+  "uso": "DOS DE UNA VEZ LOS DOS. REPETIR A LOS SIETE DIAS LOS DOS",
+  "presentacion": "1GR"
+ },
+ {
+  "codigo_origen": "0130",
+  "nombrecomercial": "FLEGYL",
+  "uso": "UN OVULO TODAS LAS NOCHES",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0131",
+  "nombrecomercial": "CALCIBON",
+  "uso": "UNA DESPUES DE CENA",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0132",
+  "nombrecomercial": "HERROGYN",
+  "uso": "UNA CON EL ALMUERZO POR TRES MESES",
+  "presentacion": "CAP"
+ },
+ {
+  "codigo_origen": "0133",
+  "nombrecomercial": "FUNGISTAT",
+  "uso": "aplicar todas las noches vaginalmente y dos veces por fuera",
+  "presentacion": "crema vaginal"
+ },
+ {
+  "codigo_origen": "0134",
+  "nombregenerico": "drosperinona/etinilestradiol",
+  "nombrecomercial": "YAZ",
+  "uso": "leer indicaciones",
+  "presentacion": "COMP recubiertos"
+ },
+ {
+  "codigo_origen": "0135",
+  "nombrecomercial": "UTROGESTAN",
+  "uso": "DOS DIARIAS POR 10 DIAS",
+  "presentacion": "100MGRS"
+ },
+ {
+  "codigo_origen": "0136",
+  "nombrecomercial": "FASIGYN",
+  "uso": "DOS DE UNA VEZ LOS DOS. REPETIR A LOS SIETE DIAS LOS DOS",
+  "presentacion": "1GR"
+ },
+ {
+  "codigo_origen": "0137",
+  "nombrecomercial": "ENTERAL",
+  "uso": "UNA A LAS 6PM",
+  "presentacion": "300 MGRS"
+ },
+ {
+  "codigo_origen": "0138",
+  "nombrecomercial": "SAFORELLE",
+  "uso": "LAVADO DIARIO",
+  "presentacion": "JABON LIQUIDO"
+ },
+ {
+  "codigo_origen": "0139",
+  "nombrecomercial": "QUADRIDERM",
+  "uso": "APLICAR DOS VECES AL DIA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0140",
+  "nombrecomercial": "KINERTON",
+  "uso": "una despues del desayuno",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0141",
+  "nombrecomercial": "VITAMINA C NOW",
+  "uso": "una diaria",
+  "presentacion": "1 gr"
+ },
+ {
+  "codigo_origen": "0142",
+  "nombrecomercial": "SAFORELLE",
+  "uso": "lavado dos veces al dia",
+  "presentacion": "jabon"
+ },
+ {
+  "codigo_origen": "0144",
+  "nombrecomercial": "TOTELLE CICLICO",
+  "uso": "VER INDICACIONES",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0145",
+  "nombrecomercial": "CENTRUN",
+  "uso": "UNA CON EL DESAYUNO",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0146",
+  "nombrecomercial": "SPORASEC",
+  "uso": "TOMAR DOS CAPSULAS DESPUES DE DESAYUNO Y CENA.POR TRES DIAS .",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0147",
+  "nombrecomercial": "AVADEM",
+  "uso": "UNA DIARIA A PARTIR DEL 1ª DIA DE LA REGLA PERMANENTE",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0148",
+  "nombrecomercial": "AVADEN",
+  "uso": "UNA A PARTIR DEL 1ª DIA DE LA REGLA PERMANENTE",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0149",
+  "nombrecomercial": "MICOFENTIN OVULOS 2",
+  "uso": "Colocar 1 al acostarse por 2 noches.",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0150",
+  "nombrecomercial": "AGIOLAX",
+  "uso": "UNA CUCHARADA CON UN VASO DE AGUA ANTES DE ACOSTARTE. TOMAR 8 VASOS DE AGUA DIARIO",
+  "presentacion": "GRANULADO"
+ },
+ {
+  "codigo_origen": "0151",
+  "nombrecomercial": "DALACIN",
+  "uso": "UNA CADA 8 HORAS POR CINCO DIAS TOMAR YOGURT CON LA PASTILLA",
+  "presentacion": "CAP 300 MG"
+ },
+ {
+  "codigo_origen": "0152",
+  "nombrecomercial": "BRUGESINA",
+  "uso": "UNA CADA  CADA 6 HORAS SI TIENES DOLOR",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0170",
+  "nombrecomercial": "EPROFIL",
+  "presentacion": "COMP 500MGRS"
+ },
+ {
+  "codigo_origen": "0153",
+  "nombrecomercial": "METROVAX",
+  "uso": "UN OVULO POR 10 DIAS",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0154",
+  "nombrecomercial": "DECALENTERMINA",
+  "uso": "una ampolla IM interdiaria por cinco veces",
+  "presentacion": "amp"
+ },
+ {
+  "codigo_origen": "0156",
+  "nombrecomercial": "VALTREX",
+  "uso": "UNA CADA 6 HORAS POR CINCO DIAS",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0157",
+  "nombrecomercial": "GLUCOFAGE COMP 850 MG.",
+  "uso": "TOMAR TRES VECES AL DIA POR 8 MESES.",
+  "presentacion": "COMP 850"
+ },
+ {
+  "codigo_origen": "0158",
+  "nombrecomercial": "BORITOL",
+  "uso": "LAVADO SEMANAL O POST REGLA",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0159",
+  "nombrecomercial": "IDEOS",
+  "uso": "UNA DESPUES DE CENA POR UN AÑO.",
+  "presentacion": "COMP MASTICABLES"
+ },
+ {
+  "codigo_origen": "0161",
+  "nombrecomercial": "FEMOSTON",
+  "uso": "una diaria permanente",
+  "presentacion": "1-10 comp"
+ },
+ {
+  "codigo_origen": "0162",
+  "nombrecomercial": "BELARA",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0163",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "uso": "CADA 6 HORAS POR SIETE DIAS",
+  "presentacion": "500MGRS"
+ },
+ {
+  "codigo_origen": "0165",
+  "nombrecomercial": "BETADINE",
+  "uso": "LAVAR    VECES AL DIA POR    DIAS.",
+  "presentacion": "JABON"
+ },
+ {
+  "codigo_origen": "0166",
+  "nombrecomercial": "GYNODERAIN",
+  "uso": "Colocarse 1 ovulo al acostarse por 7 noches.-",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0167",
+  "nombrecomercial": "FLEGYL",
+  "uso": "UNA DOS VECES AL DIA POR 10 DIAS",
+  "presentacion": "TAB 500 MGRS"
+ },
+ {
+  "codigo_origen": "0168",
+  "nombrecomercial": "TANTUN",
+  "uso": "tomar una cada 8 horas por 7 dias",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0169",
+  "nombrecomercial": "FURFURIL",
+  "uso": "un ovulo por 21 dias",
+  "presentacion": "ovulos"
+ },
+ {
+  "codigo_origen": "0172",
+  "nombrecomercial": "GENTAMICINA",
+  "presentacion": "AMP 160 MGRS"
+ },
+ {
+  "codigo_origen": "0233",
+  "nombrecomercial": "PICOLINATO DE CROMO",
+  "uso": "Tomar 1 con el almuerzo por 8 meses.-",
+  "presentacion": "tabletas/200 mg.-"
+ },
+ {
+  "codigo_origen": "0174",
+  "nombrecomercial": "OVESTIN",
+  "uso": "un ovulo por 15 dias, continuar luego con uno tres veces por semana, venir a los 15 dias para nueva colposcopia",
+  "presentacion": "ovulos"
+ },
+ {
+  "codigo_origen": "0175",
+  "nombrecomercial": "PONSTAN",
+  "uso": "una cada 8 horas si tienes dolor",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0176",
+  "nombrecomercial": "MICOZOL",
+  "uso": "Colocar 1 ovulo al acostarse y repetir a los 4 dias.-",
+  "presentacion": "ovulos"
+ },
+ {
+  "codigo_origen": "0177",
+  "nombregenerico": "hidrotalcita 500mgr",
+  "nombrecomercial": "BAYTALCID",
+  "uso": "2 a 3cucharaditas despues de la comidas, antes de acostarse o al aparecer molestias gastricas",
+  "presentacion": "suspencion"
+ },
+ {
+  "codigo_origen": "0178",
+  "nombrecomercial": "ACIDO FOLICO",
+  "uso": "Tomar 1 vez al dia por todo el embarazo.-",
+  "presentacion": "10 MGRS"
+ },
+ {
+  "codigo_origen": "0179",
+  "nombregenerico": "Netilmicina",
+  "nombrecomercial": "NETILMICINA(NETROMICINA)",
+  "uso": "una amp im cada ocho horas por cuatro dias",
+  "presentacion": "amp 50 mgrs"
+ },
+ {
+  "codigo_origen": "0180",
+  "nombregenerico": "piperacilina",
+  "nombrecomercial": "PIPERACILINA(TAZOPRIL)",
+  "uso": "una amp ev en infusion lenta cada 8 horas",
+  "presentacion": "amp 4gr"
+ },
+ {
+  "codigo_origen": "0181",
+  "nombregenerico": "ceftazidima",
+  "nombrecomercial": "CEFTAZIDIMA(BETAZIDIM)",
+  "uso": "1gr cada 8 horas ev en sol 100cc",
+  "presentacion": "amp 1gr"
+ },
+ {
+  "codigo_origen": "0183",
+  "nombregenerico": "CENTELLA ASIATICA",
+  "nombrecomercial": "MADECASSOL",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 8 DIAS.",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0184",
+  "nombrecomercial": "CEFONAX",
+  "uso": "una cada doce horas por siete dias",
+  "presentacion": "CAP"
+ },
+ {
+  "codigo_origen": "0185",
+  "nombrecomercial": "VENASTAT",
+  "uso": "una diaria",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0186",
+  "nombrecomercial": "GYNOCANESTEN",
+  "uso": "un ovulo por seis dias",
+  "presentacion": "ovulos caja 6"
+ },
+ {
+  "codigo_origen": "0187",
+  "nombrecomercial": "BEROCCA PLUS",
+  "uso": "una diaria",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0189",
+  "nombrecomercial": "PROVAX",
+  "uso": "una despues de cada comida",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0190",
+  "nombrecomercial": "COLTRAX",
+  "uso": "una cada doce horas",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0191",
+  "nombrecomercial": "LASOBERON",
+  "uso": "uno antes de acostarse",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0192",
+  "nombrecomercial": "CLIMASOY",
+  "uso": "una diaria permanente",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0193",
+  "nombrecomercial": "PROGYNOVA",
+  "uso": "tomar 6 tabletas de una vez por seis dias",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0195",
+  "nombrecomercial": "EVISTA",
+  "uso": "un comprimido diario por un año.",
+  "presentacion": "comp 60 mgrs"
+ },
+ {
+  "codigo_origen": "0196",
+  "nombrecomercial": "ANGELIQ",
+  "uso": "uno diario permanente",
+  "presentacion": "comprimidos recubiertos"
+ },
+ {
+  "codigo_origen": "0197",
+  "nombrecomercial": "GINECOSID",
+  "uso": "DOS DE UNA VEZ",
+  "presentacion": "COMP"
+ },
+ {
+  "codigo_origen": "0198",
+  "nombrecomercial": "FEMOSTON CONTI 1/5",
+  "uso": "una diaria permenente",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0199",
+  "nombrecomercial": "NIZORAL",
+  "uso": "aplicar dos veces al dia por fuera e intravaginalmente",
+  "presentacion": "crema vaginal"
+ },
+ {
+  "codigo_origen": "0200",
+  "nombrecomercial": "MATERNAVIT",
+  "uso": "una diaria permanente hasta nuevo aviso",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0201",
+  "nombrecomercial": "PRAVACOL",
+  "uso": "una a las 6 pm",
+  "presentacion": "cap"
+ },
+ {
+  "codigo_origen": "0202",
+  "nombrecomercial": "TANTUN",
+  "uso": "lavado la noche anterior",
+  "presentacion": "lavado vaginal"
+ },
+ {
+  "codigo_origen": "0332",
+  "nombrecomercial": "MULTILOCK"
+ },
+ {
+  "codigo_origen": "0203",
+  "nombrecomercial": "MICOFENTIN",
+  "uso": "Aplicar dos veces al dia",
+  "presentacion": "crema"
+ },
+ {
+  "codigo_origen": "0204",
+  "nombrecomercial": "VITAMINA C NOW",
+  "uso": "una diaria",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0205",
+  "nombrecomercial": "ALDARA(IMIQUIMOD)",
+  "uso": "aplicar antes de acostarse interdiario",
+  "presentacion": "crema 5% X 12 SOBRES"
+ },
+ {
+  "codigo_origen": "0206",
+  "nombrecomercial": "TERAGRIP DIURNO Y NOCTURNO",
+  "uso": "tomar dos diarios y uno en la noche",
+  "presentacion": "sobres"
+ },
+ {
+  "codigo_origen": "0207",
+  "nombrecomercial": "TANTUN",
+  "uso": "aplicar tres veces al dia",
+  "presentacion": "colutorio"
+ },
+ {
+  "codigo_origen": "0208",
+  "nombrecomercial": "TEMPRA",
+  "uso": "una cada 6 horas si tienes dolor de cabeza",
+  "presentacion": "comp"
+ },
+ {
+  "codigo_origen": "0209",
+  "nombrecomercial": "NISTATINA",
+  "uso": "aplicar diariamente",
+  "presentacion": "ovulos"
+ },
+ {
+  "codigo_origen": "0210",
+  "nombrecomercial": "KENACORT",
+  "presentacion": "amp  intraarticular"
+ },
+ {
+  "codigo_origen": "0211",
+  "nombrecomercial": "KELO-COTE",
+  "uso": "COLOCAR DOS VECES AL DIA EN LA HERIDA",
+  "presentacion": "gel"
+ },
+ {
+  "codigo_origen": "0212",
+  "nombrecomercial": "ARCALION",
+  "uso": "dos despues de desayuno por tres meses ..",
+  "presentacion": "grag"
+ },
+ {
+  "codigo_origen": "0213",
+  "nombregenerico": "nitazoxanida",
+  "nombrecomercial": "CELECTAN",
+  "uso": "una con desayuno y cena por tres dias",
+  "presentacion": "tab 500 mgrs"
+ },
+ {
+  "codigo_origen": "0214",
+  "nombrecomercial": "BONADOXINA",
+  "uso": "una cada 6 horas si tienes nauseas",
+  "presentacion": "1 CAJA"
+ },
+ {
+  "codigo_origen": "0215",
+  "nombrecomercial": "CALCIO OSTELIN",
+  "uso": "una cucharada diaria",
+  "presentacion": "suspencion"
+ },
+ {
+  "codigo_origen": "0221",
+  "nombrecomercial": "KYGEL",
+  "uso": "aplicar antes de la relacion",
+  "presentacion": "tubo"
+ },
+ {
+  "codigo_origen": "0327",
+  "nombrecomercial": "ARTREN",
+  "uso": "1 AL DIA",
+  "presentacion": "CAPSULA 100 MG"
+ },
+ {
+  "codigo_origen": "0225",
+  "nombrecomercial": "BICARBONATO",
+  "uso": "lavado vaginal dos veces por semana",
+  "presentacion": "polvo"
+ },
+ {
+  "codigo_origen": "0226",
+  "nombrecomercial": "VERACEF",
+  "uso": "Un cada 12 horas x 7 días",
+  "presentacion": "Capsulas 500mg"
+ },
+ {
+  "codigo_origen": "0227",
+  "nombrecomercial": "MIPIL",
+  "uso": "uso diario pastilla anticonceptiva",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0232",
+  "nombrecomercial": "GLUCOFAGE/ GLAFORNIL",
+  "uso": "Tomar 1 despues del desayuno y cena por 8 meses.",
+  "presentacion": "tabletas/500mg.-"
+ },
+ {
+  "codigo_origen": "0234",
+  "nombrecomercial": "MICROFERRUM",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0236",
+  "nombrecomercial": "PROTOSULFIL",
+  "uso": "Colocar de 3 a 6 veces al dia.-",
+  "presentacion": "crema"
+ },
+ {
+  "codigo_origen": "0237",
+  "nombrecomercial": "PROTOSULFIL",
+  "uso": "Colocar de 3 a 6 veces al dia.-",
+  "presentacion": "polvo"
+ },
+ {
+  "codigo_origen": "0238",
+  "nombrecomercial": "GLIZIGEN",
+  "uso": "Colocar por dentro y por fuera tres veces al dia por 1 mes.-",
+  "presentacion": "Aerosol"
+ },
+ {
+  "codigo_origen": "0239",
+  "nombrecomercial": "ENERGYVIT",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0240",
+  "nombrecomercial": "DAKSOL 1 GRAMO",
+  "uso": "Tomar 2 tabletas una sola toma la pareja repetir a los 10 dias.-",
+  "presentacion": "table 1 GR."
+ },
+ {
+  "codigo_origen": "0241",
+  "nombrecomercial": "SILUVAL",
+  "uso": "Tomar 1 diaria antes de las 10 de la mañana por 3 meses.-",
+  "presentacion": "TABLETA/10GR."
+ },
+ {
+  "codigo_origen": "0242",
+  "nombrecomercial": "UTROGESTAN",
+  "uso": "Tomar 15 dias si 15 dias no por 3 meses.-",
+  "presentacion": "capsula 100 grs-"
+ },
+ {
+  "codigo_origen": "0243",
+  "nombrecomercial": "PREGNYL",
+  "uso": "Colocar intramuscula en la fecha que se indique.-",
+  "presentacion": "Ampolla"
+ },
+ {
+  "codigo_origen": "0244",
+  "nombrecomercial": "IBUTAN",
+  "uso": "Tomar cada 8 horas por 8 dias",
+  "presentacion": "tableta 600mg."
+ },
+ {
+  "codigo_origen": "0245",
+  "nombrecomercial": "CYPRAL",
+  "uso": "Tomar cada 12 horas por 8 dias.-",
+  "presentacion": "capsula 500mg."
+ },
+ {
+  "codigo_origen": "0246",
+  "nombrecomercial": "ADEL",
+  "uso": "Colocar 3 veces al dia por 1 mes.-",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0247",
+  "nombrecomercial": "LIPITOR",
+  "uso": "Tomar una diaria por 3 a 6 meses.-",
+  "presentacion": "tableta 10 mg."
+ },
+ {
+  "codigo_origen": "0248",
+  "nombrecomercial": "CATAFLAN",
+  "uso": "Tomar cada 8 hora por 7 u 8 dias.-",
+  "presentacion": "tableta 50 mg.-"
+ },
+ {
+  "codigo_origen": "0249",
+  "nombrecomercial": "MALTOFERFOL",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "tableta.-"
+ },
+ {
+  "codigo_origen": "0250",
+  "nombrecomercial": "GYNODERAIN",
+  "uso": "colocar 1 al acostarse en las noche por 7 dias.",
+  "presentacion": "Ovulos"
+ },
+ {
+  "codigo_origen": "0251",
+  "nombrecomercial": "BACTRON",
+  "uso": "Tomar 1 cada 12 horas por 10 dias.-",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0252",
+  "nombrecomercial": "MICOFENTIN",
+  "uso": "Colocar al acostarse por 7 noches.-",
+  "presentacion": "crema vaginal"
+ },
+ {
+  "codigo_origen": "0253",
+  "nombrecomercial": "BIOLETISAN",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0254",
+  "nombrecomercial": "METREN",
+  "uso": "Colocar al acostarse por 12 noches.-",
+  "presentacion": "Ovulos"
+ },
+ {
+  "codigo_origen": "0255",
+  "nombrecomercial": "TRIDERM",
+  "uso": "Colocar 3 veces al dia por 10 dias.-",
+  "presentacion": "Crema"
+ },
+ {
+  "codigo_origen": "0586",
+  "nombrecomercial": "MALOX REFLUX-",
+  "presentacion": "SUSPENCION."
+ },
+ {
+  "codigo_origen": "0256",
+  "nombrecomercial": "ILANA",
+  "uso": "Colocar al acostarse por 7 dias.-",
+  "presentacion": "Crema Vaginal"
+ },
+ {
+  "codigo_origen": "0257",
+  "nombrecomercial": "HERITAGE DIA",
+  "uso": "Tomar 2 con el desayuno y 2 con el almuerzo.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0258",
+  "nombrecomercial": "HERITAGE NOCHE",
+  "uso": "Tomar 2 con la cena.-",
+  "presentacion": "Tableta"
+ },
+ {
+  "codigo_origen": "0259",
+  "nombrecomercial": "DOSTINEX",
+  "uso": "Tomar 1 sola toma y repetir a los 8 dias",
+  "presentacion": "tabletas de 2.-"
+ },
+ {
+  "codigo_origen": "0261",
+  "nombrecomercial": "DOLOMAX",
+  "uso": "Colocar 1 intramuscular cada 12 horas.-",
+  "presentacion": "ampolla"
+ },
+ {
+  "codigo_origen": "0263",
+  "nombrecomercial": "REDUGRAS",
+  "uso": "Tomar 3 veces al dia por 3 meses.-",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0264",
+  "nombrecomercial": "CLINFOL",
+  "uso": "Colocar 1 Ovulo al acostarse por 8 noches.-",
+  "presentacion": "Ovulos"
+ },
+ {
+  "codigo_origen": "0265",
+  "nombrecomercial": "DAKSOL 2 X 1 .",
+  "uso": "Tomar 2 tableta una sola toma la pareja repetir a los 8 dias.-No tomar licor por 5 dias.-",
+  "presentacion": "tableta 1 gr"
+ },
+ {
+  "codigo_origen": "0266",
+  "nombrecomercial": "SAVER",
+  "uso": "Tomar 2 en una sola toma repetir a las 24 horas.-",
+  "presentacion": "capsulas 500 mg/5"
+ },
+ {
+  "codigo_origen": "0268",
+  "nombrecomercial": "TRAFLAM",
+  "uso": "Colocar 1 ampolla intramuscular cada 24 horas por 2 dosis.-",
+  "presentacion": "ampolla"
+ },
+ {
+  "codigo_origen": "0269",
+  "nombrecomercial": "CALCIBON /SOYA",
+  "uso": "Tomar 1 diaria por 1 año.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0270",
+  "nombrecomercial": "ROWANTINEX",
+  "uso": "Tomar 1 cada 8 horas por 20 dias.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0374",
+  "nombrecomercial": "ALURON",
+  "uso": "tomar una cada 8 horas por 1 mes",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0271",
+  "nombrecomercial": "ESTIN",
+  "uso": "Tomar 1 cucharada cada tres horas por 1 mes.-",
+  "presentacion": "Jarabe"
+ },
+ {
+  "codigo_origen": "0272",
+  "nombrecomercial": "LACTACYD",
+  "uso": "Lavarse las veces que sea necesario.-",
+  "presentacion": "Jabon"
+ },
+ {
+  "codigo_origen": "0273",
+  "nombrecomercial": "ALIOT",
+  "uso": "Tomar 1semanal 20 min antes del desayuno con agua por 1 año.-",
+  "presentacion": "Tabletas 70 mg"
+ },
+ {
+  "codigo_origen": "0274",
+  "nombrecomercial": "EPROFIL",
+  "uso": "Tomar 2 antes del desayuno 2 despues de la cena por 3 dias.-",
+  "presentacion": "Comprimidos 500mg."
+ },
+ {
+  "codigo_origen": "0275",
+  "nombrecomercial": "EPROFIL",
+  "uso": "Tomar en una sola toma el contenido del frasco.-",
+  "presentacion": "Suspension"
+ },
+ {
+  "codigo_origen": "0276",
+  "nombrecomercial": "EQUALIV",
+  "uso": "Tomar 1 a las 8 am y 1 8 pm por 4 meses.-",
+  "presentacion": "Tableta"
+ },
+ {
+  "codigo_origen": "0277",
+  "nombrecomercial": "SUPER SUSTAGEN",
+  "uso": "Tomar 2 cucharada con un vaso de leche 2 veces al dia por 3 meses.-",
+  "presentacion": "polvo"
+ },
+ {
+  "codigo_origen": "0278",
+  "nombrecomercial": "DALACIN",
+  "uso": "Colorar por 7 noche al acostarse.-",
+  "presentacion": "crema vaginal"
+ },
+ {
+  "codigo_origen": "0279",
+  "nombrecomercial": "VOLTAREN",
+  "uso": "Colocar 1 supositorio rectal cada 12 horas.-",
+  "presentacion": "Supositorio."
+ },
+ {
+  "codigo_origen": "0280",
+  "nombrecomercial": "TAFIL",
+  "uso": "Tomar antes de acostarse 8 pm por 1 mes.-",
+  "presentacion": "tableta 5ml"
+ },
+ {
+  "codigo_origen": "0281",
+  "nombrecomercial": "MAGNESIO",
+  "uso": "Tomar 1 diaria por 3 meses.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0302",
+  "nombrecomercial": "METHERGIN",
+  "uso": "1 CADA 8 HORAS POR 5 DIAS",
+  "presentacion": "TAB"
+ },
+ {
+  "codigo_origen": "0282",
+  "nombrecomercial": "YECTOFERR Ó INTAFER",
+  "uso": "Coloca 1 ampolla intramuscular cada dos dias por 5 dosis.-",
+  "presentacion": "Ampollas"
+ },
+ {
+  "codigo_origen": "0283",
+  "nombrecomercial": "EUVEKAN",
+  "uso": "Tomar 1 o 2 grageas media hora antes de acostarse.-",
+  "presentacion": "Gragea"
+ },
+ {
+  "codigo_origen": "0284",
+  "nombrecomercial": "FLUCON",
+  "uso": "Tomar las dos capsulas en una sola toma.-",
+  "presentacion": "Capsula. 150mg.-"
+ },
+ {
+  "codigo_origen": "0285",
+  "nombrecomercial": "EFEXOR XR",
+  "uso": "Tomar 1 diaria por 1 año.-",
+  "presentacion": "Capsula 75 MG."
+ },
+ {
+  "codigo_origen": "0286",
+  "nombrecomercial": "VERACEF",
+  "uso": "Tomar 1 cada 12 hora por 7 dias.-",
+  "presentacion": "capsula 1 gr."
+ },
+ {
+  "codigo_origen": "0287",
+  "nombrecomercial": "GENURIN",
+  "uso": "Tomar 1 cada 6 horas por 7 dias.-",
+  "presentacion": "grageas"
+ },
+ {
+  "codigo_origen": "0288",
+  "nombrecomercial": "UTROGESTAN",
+  "uso": "Tomar 1 diaria hasta la Semana 13.-",
+  "presentacion": "Capsula 100 grs."
+ },
+ {
+  "codigo_origen": "0289",
+  "nombrecomercial": "NEUBION",
+  "uso": "Tomar 1 diaria por 15 dias.-",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0290",
+  "nombrecomercial": "AMOXICILINA",
+  "uso": "Tomar 1 cada 8 horas por 14 dias.-",
+  "presentacion": "Capsula 500 mg."
+ },
+ {
+  "codigo_origen": "0291",
+  "nombrecomercial": "YASMIN",
+  "uso": "Tomar desde el primer dia de la regla por 21 dias a la misma hora descansar 7 dias, comenzar al 8vo dia el nuevo carton.-",
+  "presentacion": "anticonceptivo/Oral"
+ },
+ {
+  "codigo_origen": "0292",
+  "nombrecomercial": "DOLOMAX",
+  "uso": "Tomar cada 8 horas por 5 dias.-",
+  "presentacion": "Tableta"
+ },
+ {
+  "codigo_origen": "0313",
+  "nombrecomercial": "MAXEPA",
+  "uso": "1 diaria",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0293",
+  "nombrecomercial": "HYFLON",
+  "uso": "Tomar 2 diaria por 1 semanas y luego 1 diaria por 3 meses.-",
+  "presentacion": "Capsula.-"
+ },
+ {
+  "codigo_origen": "0294",
+  "nombrecomercial": "DIKLASON",
+  "uso": "Toma 1 diaria por 10 dias.-",
+  "presentacion": "Comprimidos"
+ },
+ {
+  "codigo_origen": "0295",
+  "nombrecomercial": "CALCIBON NATAL .",
+  "uso": "Tomar 1 diaria todo por seis meses.-",
+  "presentacion": "Tableta.-"
+ },
+ {
+  "codigo_origen": "0296",
+  "nombrecomercial": "PROCTOGLYBENOL",
+  "uso": "Colocar rectal cada 12 horas por 15 dias.-",
+  "presentacion": "supositorio"
+ },
+ {
+  "codigo_origen": "0297",
+  "nombrecomercial": "BENZETACIL KIT",
+  "uso": "Colocar 1ampolla intramuscular  cada 20 dias por 5 meses.-",
+  "presentacion": "AMPOLLA 1.200.000"
+ },
+ {
+  "codigo_origen": "0298",
+  "nombregenerico": "OXIBUTININA CLORHIDRATO 5 mg.",
+  "nombrecomercial": "RETEVEN  LP",
+  "uso": "Tomar una diaria por 3 meses.-",
+  "presentacion": "comprimido 5 mg."
+ },
+ {
+  "codigo_origen": "0300",
+  "nombrecomercial": "CATAFLAN",
+  "uso": "1 ampolla intramuscular cada 12 horas",
+  "presentacion": "ampolla"
+ },
+ {
+  "codigo_origen": "0301",
+  "nombrecomercial": "FLATORIL",
+  "uso": "1 despues de comidas por 2 meses",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0303",
+  "nombrecomercial": "YECTOFER O INTAFER",
+  "uso": "1 AMPOLLA INTRAMUSCULAR PROFUNDA INTERDIARIA",
+  "presentacion": "ampolla"
+ },
+ {
+  "codigo_origen": "0304",
+  "nombrecomercial": "HEPAFOL",
+  "uso": "1 DIARIA TODO EL EMBARAZO",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0305",
+  "nombrecomercial": "PROVAMICINA",
+  "uso": "1 CADA 8 HORAS POR 8 DIAS",
+  "presentacion": "capsulas 500 mg"
+ },
+ {
+  "codigo_origen": "0307",
+  "nombrecomercial": "VIAVOX",
+  "uso": "COLOCAR 1 DIARIO POR 7 DIAS",
+  "presentacion": "SUPOSITORIOS"
+ },
+ {
+  "codigo_origen": "0306",
+  "nombrecomercial": "NOVIAL",
+  "uso": "TOMAR DESDE EL 1er DIA DE LA REGLA POR 21 DIAS , DESCANSAR 7 DIAS Y COMENZAR AL 8º DIA EL NUEVO CARTON",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0308",
+  "nombrecomercial": "PROVAMICINA",
+  "uso": "1 cada 12 horas por 8 dias",
+  "presentacion": "CAPSULAS 1500 mg"
+ },
+ {
+  "codigo_origen": "0309",
+  "nombrecomercial": "PRANEX LP",
+  "uso": "1 diaria por 10 dias",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0310",
+  "nombrecomercial": "LOFTYL",
+  "uso": "tomar 1 cada 12 horas hasta nueva orden",
+  "presentacion": "tabletas 600 mg"
+ },
+ {
+  "codigo_origen": "0311",
+  "nombrecomercial": "UNASYN",
+  "uso": "1 cada 12 horas por 8 dias",
+  "presentacion": "capsulas de 375 mg"
+ },
+ {
+  "codigo_origen": "0312",
+  "nombrecomercial": "CIMETIDINA",
+  "uso": "tomar 1 cada 12 horas",
+  "presentacion": "tabletas 100 mg"
+ },
+ {
+  "codigo_origen": "0314",
+  "nombrecomercial": "DIP",
+  "uso": "1 cucharada 1 hora y 3 horas despues de cada comida o con los medicamentos",
+  "presentacion": "suspension"
+ },
+ {
+  "codigo_origen": "0315",
+  "nombrecomercial": "L-ARGININA",
+  "uso": "toma 1 cada 8 horas",
+  "presentacion": "TABLETAS 500 mg"
+ },
+ {
+  "codigo_origen": "0316",
+  "nombrecomercial": "BRUGESIC PLUS",
+  "uso": "tomar 1 cada 12 horas por 7 dias",
+  "presentacion": "polvo 600 mg"
+ },
+ {
+  "codigo_origen": "0317",
+  "nombrecomercial": "REDUCTIL",
+  "uso": "tomar 1 diaria entre las 8 y 10 de la mañana",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0318",
+  "nombrecomercial": "PROXIME",
+  "uso": "1 diaria por 7 dias",
+  "presentacion": "CAPSULAS 400 mg"
+ },
+ {
+  "codigo_origen": "0320",
+  "nombrecomercial": "PROTELOS",
+  "uso": "una diaria por un año",
+  "presentacion": "granulado2g"
+ },
+ {
+  "codigo_origen": "0319",
+  "nombrecomercial": "URAPLEX",
+  "uso": "1 cada 12 horas por 1 semanas luego 1 diaria por 3 meses",
+  "presentacion": "tabletas 20 mg"
+ },
+ {
+  "codigo_origen": "0321",
+  "nombrecomercial": "ARTHROTEC",
+  "uso": "1 CADA 6 HORAS",
+  "presentacion": "TABLETAS 50 MG"
+ },
+ {
+  "codigo_origen": "0322",
+  "nombrecomercial": "MEGA WOMEN",
+  "uso": "1 DIARIA DUANTE 6 MESES",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0323",
+  "nombrecomercial": "PROGENDO",
+  "uso": "tomar 2 diaria hasta parar sangrado",
+  "presentacion": "CAPSULAS BLANDAS 100mg"
+ },
+ {
+  "codigo_origen": "0324",
+  "nombrecomercial": "VITAMINA K",
+  "uso": "COLOCAR IM CADA 24 HORAS POR 2 DOSIS",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0325",
+  "nombrecomercial": "GESLUTIN",
+  "uso": "1 DIA DIARIA HASTA LA SEMANA 13",
+  "presentacion": "200MG"
+ },
+ {
+  "codigo_origen": "0326",
+  "nombregenerico": "PROGESTERONA",
+  "nombrecomercial": "GESLUTIN",
+  "uso": "TOMAR UNA CAPSULA DIARIA 15 DIAS SI 15 DIAS NO POR 3 MESES EN CASO DE NO SER TOLERADO EN VIA ORAL COLOCAR VIA VAGINAL.",
+  "presentacion": "CAPSULAS 200 MG"
+ },
+ {
+  "codigo_origen": "0328",
+  "nombrecomercial": "GINECOSID",
+  "uso": "1 AMPOLLA INTRA MUSCULAR",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0329",
+  "nombrecomercial": "KENACORT",
+  "presentacion": "AMPOLLA INTRARTICULAR"
+ },
+ {
+  "codigo_origen": "0330",
+  "nombrecomercial": "AVELOX",
+  "uso": "1 VEZ AL DIA POR 7 DIAS",
+  "presentacion": "TABL 400 MG"
+ },
+ {
+  "codigo_origen": "0331",
+  "nombrecomercial": "GLUCOFAGE XR",
+  "uso": "TOMAR 15 MINUTOS DESPUES DEL ALMUERZO Y POR 8 MESES",
+  "presentacion": "COMP 750 MG."
+ },
+ {
+  "codigo_origen": "0333",
+  "nombrecomercial": "DIOVENOR",
+  "uso": "UNA DIARIA DURANTE 3 MESES",
+  "presentacion": "TABL"
+ },
+ {
+  "codigo_origen": "0334",
+  "nombrecomercial": "LITONATE",
+  "uso": "COLOCAR DIARIO",
+  "presentacion": "POLVO"
+ },
+ {
+  "codigo_origen": "0335",
+  "nombrecomercial": "CURAM",
+  "uso": "TOMAR 1CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "500 MG"
+ },
+ {
+  "codigo_origen": "0336",
+  "nombrecomercial": "AVIR",
+  "uso": "COLOCAR TRES VECES AL DIA POR 15 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0337",
+  "nombrecomercial": "AVIR",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "TABL 1 GR"
+ },
+ {
+  "codigo_origen": "0338",
+  "nombrecomercial": "CARDIPIRINA",
+  "uso": "tomar una diaria",
+  "presentacion": "tabl"
+ },
+ {
+  "codigo_origen": "0339",
+  "nombregenerico": "TABLETAS",
+  "nombrecomercial": "AMYLIN",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "875 MG"
+ },
+ {
+  "codigo_origen": "0340",
+  "nombregenerico": "tabletas",
+  "nombrecomercial": "CALCIBON D MAGNESIO",
+  "uso": "tomar una diaria con el desayuno por un año.",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0341",
+  "nombrecomercial": "KALMAX",
+  "uso": "masticar una tableta cada 12 horas por 7 dias",
+  "presentacion": "tabletas masticables"
+ },
+ {
+  "codigo_origen": "0342",
+  "nombrecomercial": "SENOKOT",
+  "uso": "tomar una cucharadita 2 veces al dia",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0343",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "colocar una cada 12 horas por tres dosis",
+  "presentacion": "ampolla 500mg"
+ },
+ {
+  "codigo_origen": "0344",
+  "nombrecomercial": "PROGESTOGEL",
+  "uso": "colocar 2 veces al dia",
+  "presentacion": "gel"
+ },
+ {
+  "codigo_origen": "0345",
+  "nombrecomercial": "BUMETIN RETARD",
+  "uso": "tomar una diaria por 3 meses",
+  "presentacion": "TABLETAS 300MG"
+ },
+ {
+  "codigo_origen": "0346",
+  "nombrecomercial": "FLORESTOR",
+  "uso": "una diaria por 5 dias",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0347",
+  "nombregenerico": "CLOMIFENO",
+  "nombrecomercial": "SEROFENE OMIFIN",
+  "uso": "TOMAR UNA DIARIA DESDES EL TERCER DIA DE LA REGLA POR 5 DIAS",
+  "presentacion": "TABLETAS 50 MG"
+ },
+ {
+  "codigo_origen": "0348",
+  "nombrecomercial": "COLOSTRUM( COMPRAR EN CASA NATURIST",
+  "uso": "TOMAR 2 DIARIAS POR TRES MESES",
+  "presentacion": "capsulas"
+ },
+ {
+  "codigo_origen": "0349",
+  "nombrecomercial": "ENEMA FEET",
+  "uso": "colocar via rectal esperar 20 minutos para ir al baño"
+ },
+ {
+  "codigo_origen": "0350",
+  "nombrecomercial": "METICORTEN",
+  "uso": "1 DIARIA POR UNA SEMANA LUEGO 2 DIARIAS  POR 2 SEMANAS Y LUEGO 1 CADA 8 HORAS POR UNA SEMANA - CONTINUAR CON 2 DIARIAS POR DOS SEMANAS Y LUEGO  1 DIARIA POR UNA SEMANA.",
+  "presentacion": "TABLETAS 5 MG"
+ },
+ {
+  "codigo_origen": "0351",
+  "nombrecomercial": "PROFENIDBI",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 5 DIAS",
+  "presentacion": "150 mg"
+ },
+ {
+  "codigo_origen": "0352",
+  "nombrecomercial": "AVELOX",
+  "uso": "TOMAR UNA DIARIA POR 7 DIAS",
+  "presentacion": "400 mg"
+ },
+ {
+  "codigo_origen": "0353",
+  "nombrecomercial": "OVESTIN",
+  "uso": "colocar tres veces por semanas",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0354",
+  "nombrecomercial": "RETEVEN LP",
+  "uso": "tomar una 1 diaria por tres meses",
+  "presentacion": "5 mg"
+ },
+ {
+  "codigo_origen": "0355",
+  "nombrecomercial": "DUSPATALIN",
+  "uso": "tomar una antes de desayuno y almuerzo por tres meses",
+  "presentacion": "CAPSULA 200 MG"
+ },
+ {
+  "codigo_origen": "0356",
+  "nombrecomercial": "DERMABIOTIC",
+  "uso": "colocar 2 a 3 veces al dia en la zona afectada por un mes",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0357",
+  "nombrecomercial": "AMIKACINA",
+  "uso": "COLOCAR 1 CADA 12 HORAS POR 2 DIAS LUEGO CADA 24 HORAS POR 2 DIAS",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0358",
+  "nombrecomercial": "SIMPLA",
+  "uso": "tomar 1 mensual  en ayunas 60 minutos antes de la primera comida solo con agua evitar acostarse hasta 60 minutos despues",
+  "presentacion": "comprimido 150mgs"
+ },
+ {
+  "codigo_origen": "0359",
+  "nombrecomercial": "DOLOMAX",
+  "uso": "colocar 2 a 3 veces al dia sobre el area afectada",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0360",
+  "nombrecomercial": "EFAM",
+  "uso": "tomar una diaria por 4 meses",
+  "presentacion": "capsula 400 mg"
+ },
+ {
+  "codigo_origen": "0361",
+  "nombrecomercial": "HEPA-DESICOL",
+  "uso": "tomar una despues de las comidas por 7 dias",
+  "presentacion": "capsulas blandas"
+ },
+ {
+  "codigo_origen": "0362",
+  "nombrecomercial": "SENLAX",
+  "uso": "tomar 3 diarias por un mes",
+  "presentacion": "capsula blandas"
+ },
+ {
+  "codigo_origen": "0363",
+  "nombrecomercial": "PLANTABEN",
+  "uso": "DILUIR EN MEDIO VASO DE AGUA FRIA Y TOMAR 3 VECES AL DIA POR 7 DIAS.",
+  "presentacion": "POLVO GRANULADO"
+ },
+ {
+  "codigo_origen": "0364",
+  "nombrecomercial": "CALCIOFAR D",
+  "uso": "tomar una diaria todo el embarazo",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0365",
+  "nombrecomercial": "DEBRIDAT",
+  "uso": "tomar una cada 12 horas por una semana y luego diaria por 2 meses",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0366",
+  "nombrecomercial": "NATECAL D",
+  "uso": "tomar 2 diarias por 1 AÑO",
+  "presentacion": "COMPRIMIDO MASTICABLE"
+ },
+ {
+  "codigo_origen": "0367",
+  "nombrecomercial": "CALCIOFAR D",
+  "uso": "tomar una diaria por un año",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0368",
+  "nombrecomercial": "CITRACAL D SOYA",
+  "uso": "tomar 1 diaria por un año",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0369",
+  "nombrecomercial": "DONG QUAI",
+  "uso": "2 diarias por tres meses",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0370",
+  "nombrecomercial": "DESALEX",
+  "uso": "UNA DIARIA POR 7 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0371",
+  "nombrecomercial": "CELECTAN",
+  "uso": "tomar 1 cada 12 horas por 3 dias",
+  "presentacion": "tableta"
+ },
+ {
+  "codigo_origen": "0372",
+  "nombregenerico": "levofloxacina 500 mg",
+  "nombrecomercial": "IFOS",
+  "uso": "tomar una cada 12 horas por 5 dias",
+  "presentacion": "comprimido recubierto"
+ },
+ {
+  "codigo_origen": "0373",
+  "nombrecomercial": "LIOLACTIL",
+  "uso": "UN SOBRE EN UN VASO DE AGUA 2 VECES AL DIA POR 5 DIAS",
+  "presentacion": "POLVO"
+ },
+ {
+  "codigo_origen": "0375",
+  "nombrecomercial": "LIVIAL",
+  "uso": "tomar media pastilla por UN AÑO.",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0376",
+  "nombrecomercial": "CLIMENE",
+  "uso": "tomar desde el primer dia de la regla por 21 descansar 7 dias y al 8 dia comenzar el nuevo carton",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0377",
+  "nombrecomercial": "AMYLIN",
+  "uso": "tomar una cada 12 horas por 7 dias",
+  "presentacion": "tabletas 750 mg"
+ },
+ {
+  "codigo_origen": "0378",
+  "nombrecomercial": "NUVARING",
+  "uso": "se coloca el 1 dia de la mestruacion se deja por 3 semanas luego se retiera se descansa por una semana y luego se vuelve a comenzar",
+  "presentacion": "anillo vaginal"
+ },
+ {
+  "codigo_origen": "0379",
+  "nombrecomercial": "ADEVIT",
+  "uso": "tomar 10 cc o una cucharada tres veces al dia por tres meses",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0380",
+  "nombrecomercial": "BACTRON FORTE",
+  "uso": "tomar una cada 12 horas por 10 dias",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0381",
+  "nombrecomercial": "ICADEN",
+  "uso": "COLOCAR POR FUERA 3 A 4  VECES AL DIA POR 7 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0383",
+  "nombrecomercial": "NATELE",
+  "uso": "UNA DIARIA POR 8 O 10 MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0382",
+  "nombrecomercial": "GYNOTRAN",
+  "uso": "COLOCAR AL ACOSTARSE POR DENTRO 7 NOCHES",
+  "presentacion": "CREMA VAGINAL"
+ },
+ {
+  "codigo_origen": "0384",
+  "nombrecomercial": "PREMARIN",
+  "uso": "TOMAR 4 DIARIAS POR 5 DIAS",
+  "presentacion": "TABLETAS 0,25 MG"
+ },
+ {
+  "codigo_origen": "0385",
+  "nombrecomercial": "AMOXIDUO",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 7 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0386",
+  "nombrecomercial": "GYNO ZALAIN",
+  "uso": "COLOCAR 1 OVULO AL ACOSTARSE UNA SOLA DOSIS",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0387",
+  "nombrecomercial": "MUBROVAN",
+  "uso": "COLOCAR 2 A 3 VECES AL DIA POR 7 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0388",
+  "nombrecomercial": "PROXIME",
+  "uso": "TOMAR UNA DIARIA  POR 10 DIAS",
+  "presentacion": "TABLETAS 750 MG"
+ },
+ {
+  "codigo_origen": "0389",
+  "nombrecomercial": "ARUZILINA",
+  "uso": "TOMAR 2 TABLETAS UNA SOLA TOMA LA PAREJA NO LICOR POR 5 DIAS",
+  "presentacion": "TYABLETAS 500 MG"
+ },
+ {
+  "codigo_origen": "0390",
+  "nombrecomercial": "NUTRICAP",
+  "uso": "TOMAR UNA DIARIA POR 3 MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0391",
+  "nombrecomercial": "FLUCON",
+  "uso": "tomar una hoy y repetir a los 8 dias",
+  "presentacion": "capsula 150 mg"
+ },
+ {
+  "codigo_origen": "0392",
+  "nombrecomercial": "GYNODERAIN",
+  "uso": "colocar hacia dentro por 7 noches",
+  "presentacion": "CREMA VAGINAL"
+ },
+ {
+  "codigo_origen": "0393",
+  "nombrecomercial": "SAVER",
+  "uso": "tomar 2 una sola toma la pareja en la mañana y repetir a las 12 horas.",
+  "presentacion": "capsulas 500 mg X 5"
+ },
+ {
+  "codigo_origen": "0394",
+  "nombrecomercial": "VINTIX",
+  "uso": "tomar una diaria antes de las 10 de la mañana por 3 meses",
+  "presentacion": "CAPSULAS 10 MG"
+ },
+ {
+  "codigo_origen": "0395",
+  "nombrecomercial": "ACTRON",
+  "uso": "TOMAR UNA CADA 8 HORAS POR 5 DIAS",
+  "presentacion": "TABLETAS 600 MG"
+ },
+ {
+  "codigo_origen": "0396",
+  "nombrecomercial": "LOFTYL",
+  "uso": "tomar una cada 12 horas hasta nueva orden",
+  "presentacion": "TABLETAS 300 MG"
+ },
+ {
+  "codigo_origen": "0397",
+  "nombrecomercial": "YAZ",
+  "uso": "tomar desde el primer dia de la regla continuo",
+  "presentacion": "COMPRIMIDO"
+ },
+ {
+  "codigo_origen": "0398",
+  "nombregenerico": "TABLETAS",
+  "nombrecomercial": "TEBOKAN",
+  "uso": "TOMAR 2 VECES AL DIA POR TRES MESES"
+ },
+ {
+  "codigo_origen": "0399",
+  "nombrecomercial": "GINEMAXIN",
+  "uso": "TOMAR 1 DIARIA POR 3 MESES",
+  "presentacion": "COMPRIMIDOS 40 MG"
+ },
+ {
+  "codigo_origen": "0400",
+  "nombrecomercial": "ASPIRINA INFANTIL",
+  "uso": "UNA DIARIA HASTA LA SEMANA 37",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0401",
+  "nombrecomercial": "LIXI",
+  "uso": "TOMAR 10 CC 3 VECES AL DIA TODO EL EMBARAZO",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0402",
+  "nombrecomercial": "REFLUXYL",
+  "uso": "tomar 1 a 2 cucharadas despues de cada comida por un mes",
+  "presentacion": "suspencion"
+ },
+ {
+  "codigo_origen": "0403",
+  "nombrecomercial": "CHAMPIX",
+  "uso": "TOMAR UNA DIARIA POR TRES MESES",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0404",
+  "nombrecomercial": "PYCNOGENOL",
+  "uso": "UNA DIARIA POR 6 MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0405",
+  "nombrecomercial": "VASOPLANT",
+  "uso": "TOMAR 2 DIARIAS POR 3 MESES",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0406",
+  "nombrecomercial": "MILICAL",
+  "uso": "TOMAR 1 DIARIA POR A LAS 10 AM POR TRES MESES",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0407",
+  "nombrecomercial": "EMOLAN",
+  "uso": "lavarse las veces que sea necesario",
+  "presentacion": "JABON"
+ },
+ {
+  "codigo_origen": "0518",
+  "nombrecomercial": "XARELTO ."
+ },
+ {
+  "codigo_origen": "0408",
+  "nombrecomercial": "CIPROXINA XR1000",
+  "uso": "tomar 1 de sola toma",
+  "presentacion": "TABLETAS x 1"
+ },
+ {
+  "codigo_origen": "0409",
+  "nombrecomercial": "PRENITINA",
+  "uso": "UNA DIARIO HASTA LA SEMANAS 13 Y DESPUES  2 DIARIOS HASTA TERMINAR EL EMBARAZO",
+  "presentacion": "SOBRE POLVO GRANULADO"
+ },
+ {
+  "codigo_origen": "0410",
+  "nombrecomercial": "DAYAMINERAL",
+  "uso": "tomar una cucharada dod veces al dia",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0411",
+  "nombrecomercial": "CIPROXIMA XR 1000 X3",
+  "uso": "TOMAR 1 DIARIA POR 3 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0412",
+  "nombrecomercial": "CIPROXINA XR 1000",
+  "uso": "TOMAR 1 DIARIA POR 7 DIAS",
+  "presentacion": "TABLETAS X 7"
+ },
+ {
+  "codigo_origen": "0413",
+  "nombrecomercial": "MULTIVIRAL",
+  "uso": "tomar 2 cucharadas diarias por 3 a 4 meses",
+  "presentacion": "jarabe"
+ },
+ {
+  "codigo_origen": "0414",
+  "nombrecomercial": "ASPIRINA INFANTIL",
+  "uso": "una diaria por seis meses",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0415",
+  "nombrecomercial": "GLYMAR",
+  "uso": "TOMAR UNA DIARIA 6 MESES",
+  "presentacion": "TABLETAS 2 MG"
+ },
+ {
+  "codigo_origen": "0416",
+  "nombrecomercial": "EZOS",
+  "uso": "TOMAR 1 CADA 12 HORAS POR 15 DIAS.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0417",
+  "nombrecomercial": "BRISTAFLAN",
+  "uso": "TOMAR 1 CADA 8 HORAS POR 5 U 7 DIAS.",
+  "presentacion": "TABLETAS 100 MG"
+ },
+ {
+  "codigo_origen": "0418",
+  "nombrecomercial": "DIAGESIC",
+  "uso": "TOMAR CADA 12 HORAS POR 8 DIAS",
+  "presentacion": "TABLETAS 50 MG"
+ },
+ {
+  "codigo_origen": "0419",
+  "nombregenerico": "CIMIFUGA RACEMOSA",
+  "nombrecomercial": "MENOFEM",
+  "uso": "TOMAR 2 DIARIA POR AÑO",
+  "presentacion": "TABLETAS 20 MG"
+ },
+ {
+  "codigo_origen": "0420",
+  "nombrecomercial": "PROFLOR",
+  "uso": "tomar un sobre con un vaso de agua tres veves al dia por tres dias.",
+  "presentacion": "SOBRE"
+ },
+ {
+  "codigo_origen": "0421",
+  "nombrecomercial": "GLYMAR",
+  "uso": "TOMAR UNA DIARIA POR 8 MESES",
+  "presentacion": "TABLETAS 4 MG"
+ },
+ {
+  "codigo_origen": "0422",
+  "nombrecomercial": "HEPAFOL B 12",
+  "uso": "TOMAR UNA DIARIA POR TRES MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0423",
+  "nombrecomercial": "DOLOGINEX",
+  "uso": "TOMAR UNA CADA 8 HORAS POR TRES DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0424",
+  "nombrecomercial": "HEXOMEDINE",
+  "uso": "COLOCAR EN LA GARGANTA C/4 HORAS POR 1 SEMANA",
+  "presentacion": "AEROSOL"
+ },
+ {
+  "codigo_origen": "0425",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "AZIGRAN",
+  "presentacion": "1 CAPSULA"
+ },
+ {
+  "codigo_origen": "0426",
+  "nombregenerico": "SECNIDAZOL ITRACONAZOL",
+  "nombrecomercial": "ALBISEC",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 5 DIAS.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0427",
+  "nombregenerico": "LEVOFLOXACINA 750 MG",
+  "nombrecomercial": "IFOS . 750 MG.",
+  "uso": "1 DIARIA DURANTE 5 DIAS",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0428",
+  "nombregenerico": "DESOGESTREL",
+  "nombrecomercial": "DESOLACTOL",
+  "uso": "TOMAR DIARIA TODA LA LACTANCIA A LA MISMA HORA SIN PARAR .",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0429",
+  "nombregenerico": "LEVONORGESTREL",
+  "nombrecomercial": "SECUFEM",
+  "uso": "TOMAR DOS TABLETAS UNA SOLO TOMA ANTES DE LAS 48 HORAS DE LA RELACION",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0430",
+  "nombregenerico": "LEVONORGESTREL ETINILESTRADIOL",
+  "nombrecomercial": "FEMEXIN",
+  "uso": "1 DIARIA DESDE EL PRIMER DIA DE LA REGLA SIN DESCANSO",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0431",
+  "nombregenerico": "DROSPIRENONA ,ETINILESTRADIOL",
+  "nombrecomercial": "LOBELLE",
+  "uso": "TOMAR DESDE EL PRIMER DIA DE LA REGLA DIARIO, SIN DESCANSO, A LA MISMA HORA",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0432",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "AZIGRAM",
+  "uso": "TOMAR 2 CAPSULAS DE 1 SOLA TOMA.",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0433",
+  "nombregenerico": "ACIDO ASCORBICO",
+  "nombrecomercial": "VITREXON",
+  "uso": "TOMAR 1 O 2 DIARIAS POR SEIS MESES.",
+  "presentacion": "CAPSULAS 500 mg"
+ },
+ {
+  "codigo_origen": "0434",
+  "nombregenerico": "CARBOCISTEINA",
+  "nombrecomercial": "LISIFORT",
+  "uso": "TOMAR UNA VEZ AL DIA ,DILUIDA EN AGUA POR  6 DIAS",
+  "presentacion": "GRANULADO PARA SOLUCION ORAL"
+ },
+ {
+  "codigo_origen": "0435",
+  "nombrecomercial": "OXOFERIN",
+  "uso": "COLOCAR 3 VECES AL DIA",
+  "presentacion": "SOLUCION TOPICA"
+ },
+ {
+  "codigo_origen": "0436",
+  "nombregenerico": "HIPERPROTEICO",
+  "nombrecomercial": "ENSURE / HIPERPROTEICO",
+  "uso": "DILUIR EN UN VASO DE LECHE , 2 VECES AL DIA.",
+  "presentacion": "POLVO."
+ },
+ {
+  "codigo_origen": "0437",
+  "nombregenerico": "ACIDO ALENDRONICO 70 mg",
+  "nombrecomercial": "FIXOPAN PLUS .",
+  "uso": "TOMAR 1 SEMANAL POR 1 AÑO.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0438",
+  "nombregenerico": "CARNITINA",
+  "nombrecomercial": "CARNISIN",
+  "uso": "10 CC 3 VECES AL DIA .",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0439",
+  "nombregenerico": "METRODINAZOL",
+  "nombrecomercial": "GYNOTRAN.",
+  "uso": "COLOCARSE 1 OVULO AL ACOSTARSE POR 7 NOCHES.",
+  "presentacion": "OVULOS."
+ },
+ {
+  "codigo_origen": "0440",
+  "nombregenerico": "ESTROGENO.",
+  "nombrecomercial": "ESTROGEL",
+  "uso": "COLOCAR DIARIAMENTE EN BRAZOS Y MUSLO UN PUF.",
+  "presentacion": "GEL."
+ },
+ {
+  "codigo_origen": "0441",
+  "nombregenerico": "DICLOFENAC SODICO / CODEINA  50  /",
+  "nombrecomercial": "PAINFORT",
+  "uso": "1 cada 8 horas por 8 dias",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0442",
+  "nombrecomercial": "SUPREDYN",
+  "uso": "TOMAR 1 DIARIA",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0443",
+  "nombrecomercial": "CELESTAMINE",
+  "uso": "TOMAR 1 CADA 12 HORAS POR 7 DIAS .",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0444",
+  "nombregenerico": "DUCHA .",
+  "nombrecomercial": "GYNOVIT",
+  "uso": "COLOCAR 1 SOLA DUCHA POST- MENSTRUAL .",
+  "presentacion": "DUCHA VAGINAL"
+ },
+ {
+  "codigo_origen": "0445",
+  "nombrecomercial": "MUCOSOLVAN",
+  "uso": "TOMAR 1 CUCHARADA CADA 8 HORAS .",
+  "presentacion": "JARABE."
+ },
+ {
+  "codigo_origen": "0446",
+  "nombrecomercial": "CRESTOR",
+  "uso": "TOMAR 1 DIARIA POR 5 MESES .",
+  "presentacion": "TABLETAS DE 10 mg"
+ },
+ {
+  "codigo_origen": "0447",
+  "nombrecomercial": "METREN",
+  "uso": "TOMAR 4 TABLETAS EN UNA SOLA TOMA",
+  "presentacion": "TABLETAS 500 mg"
+ },
+ {
+  "codigo_origen": "0448",
+  "nombregenerico": "ACIDO IBANDRONICO",
+  "nombrecomercial": "IDENA",
+  "uso": "TOMAR 1 AL MES POR UN AÑO.",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0449",
+  "nombregenerico": "ACIDO IBANDRONICO",
+  "nombrecomercial": "IBONE",
+  "uso": "TOMAR 1 MENSUAL POR UN AÑO.",
+  "presentacion": "CAPSULAS BLANDAS"
+ },
+ {
+  "codigo_origen": "0450",
+  "nombregenerico": "CEFTIBUTEN",
+  "nombrecomercial": "CEDAX",
+  "uso": "TOMAR 1 DIARIA POR 5 DIAS.",
+  "presentacion": "CAPSULAS 400 mg."
+ },
+ {
+  "codigo_origen": "0451",
+  "nombrecomercial": "CLARICORT",
+  "uso": "TOMAR 1 DIARIA POR 8 DIAS.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0452",
+  "nombrecomercial": "NOTOLAC",
+  "uso": "COLOCAR UNA TABLETA DEBAJO DE LA LENGUA EN CASO DE DOLOR CADA 8 HORAS.",
+  "presentacion": "TABLETAS / SUBLINGUAL"
+ },
+ {
+  "codigo_origen": "0467",
+  "nombrecomercial": "TACHIFORT",
+  "uso": "TOMAR 1 CADA 6 HORAS",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0453",
+  "nombrecomercial": "PIGNOGENOL",
+  "uso": "TOMAR 1 DOS VECES AL DIA POR TRES MESES.",
+  "presentacion": "CAPSULAS BLANDAS"
+ },
+ {
+  "codigo_origen": "0454",
+  "nombrecomercial": "PIGNOGENOL",
+  "uso": "TOMAR I CAPSULA CADA 12HORAS POR TRES MESES",
+  "presentacion": "CAPSULAS BLANDAS"
+ },
+ {
+  "codigo_origen": "0455",
+  "nombregenerico": "OMEPRAZOL.",
+  "nombrecomercial": "OMEZ",
+  "uso": "TOMAR 1 DIARIA POR 20 DIAS",
+  "presentacion": "EN CAPSULAS."
+ },
+ {
+  "codigo_origen": "0456",
+  "nombrecomercial": "SHERIPROCT",
+  "uso": "COLOCAR 1SUPOSITORIO VIA RECTAL CADA 12 HORAS ,",
+  "presentacion": "SUPOSITORIOS"
+ },
+ {
+  "codigo_origen": "0457",
+  "nombrecomercial": "FLAXOL CON LIGNANOS",
+  "uso": "TOMAR 1 DIARIA POR 8 MESES .",
+  "presentacion": "CAPSULAS BLANDAS"
+ },
+ {
+  "codigo_origen": "0458",
+  "nombrecomercial": "DYCINONE",
+  "uso": "TOMAR 1 CADA 8 HORAS POR 7 DIAS .",
+  "presentacion": "TABLETAS."
+ },
+ {
+  "codigo_origen": "0459",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "CEFONAX",
+  "uso": "TOMAR 1 CAPSULA CADA 12 HORAS POR 12 DIAS ,",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0460",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "NORSINA",
+  "uso": "CADA 8 HORAS .",
+  "presentacion": "TABLETA 500 mg,"
+ },
+ {
+  "codigo_origen": "0461",
+  "nombregenerico": "SUPLEMENTO DE CALCIO",
+  "nombrecomercial": "CALPALD",
+  "uso": "TOMAR 1 DIARIA",
+  "presentacion": "TABLETA RECUBIERTA"
+ },
+ {
+  "codigo_origen": "0462",
+  "nombregenerico": "CLOHIDRATO DE BENZIDAMINA",
+  "nombrecomercial": "GINACOL",
+  "uso": "REALIZAR UNA DUCHA CADA NOCHE.",
+  "presentacion": "DUCHA VAGINAL"
+ },
+ {
+  "codigo_origen": "0463",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "CEFONAX",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 7 DIAS ,",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0532",
+  "nombrecomercial": "NEURONTIN.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0464",
+  "nombregenerico": "DICLOXACILINA",
+  "nombrecomercial": "DICLOCIL",
+  "uso": "TOMAR UNA CAPSULA 1 CADA 12 HORAS POR 10 DIAS.",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0465",
+  "nombrecomercial": "MANHAE",
+  "uso": "TOMAR 2 DIARIAS POR 5 DIAS Y LUEGO 1 CON EL DESAYUNO POR 8 MESES.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0466",
+  "nombregenerico": "BAYAS DE SCHIZANDRA Y POLEN DE ABEJ",
+  "nombrecomercial": "SCHIZANDRA PLUS",
+  "uso": "TOMAR 1 DIARIA POR 3 MESES .",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0468",
+  "nombregenerico": "VITAMINA",
+  "nombrecomercial": "MULTIVITAMIN",
+  "uso": "TOMAR 1 DIARIA POR 3 MESES.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0469",
+  "nombregenerico": "PLANTAGO OVATA.",
+  "nombrecomercial": "PLANTABEN.",
+  "uso": "DILUIR EN UN VASO DE AGUA , TOMAR DOS O TRES VECES AL DIA. POR",
+  "presentacion": "POLVO GRANULADO"
+ },
+ {
+  "codigo_origen": "0470",
+  "nombrecomercial": "MANHAE.",
+  "uso": "TOMAR 2 CAPSULAS DIARIAS DESPUES DEL DESAYUNO Y CENA POR (15) DIAS , LUEGO 1 DIARIA CON EL DESAYUNO,",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0471",
+  "nombregenerico": "ACIDO IBANDRONICO",
+  "nombrecomercial": "BONAMES.",
+  "uso": "TOMAR 1 MENSUAL POR 1 AÑO.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0472",
+  "nombregenerico": "LORATADINA - SULFATO DE PSEUDOEFEDR",
+  "nombrecomercial": "CLARIDEXULTRA.",
+  "uso": "TOMAR 1 VEZ AL DIA .",
+  "presentacion": "TABLETAS ."
+ },
+ {
+  "codigo_origen": "0473",
+  "nombregenerico": "LEVOFLOXACINO",
+  "nombrecomercial": "TAVANIC",
+  "uso": "TOMAR 1 DIARIA POR 7 DIAS .",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0476",
+  "nombrecomercial": "ZENTEL / SUSPENSION .",
+  "uso": "UNA SOLA TOMA .",
+  "presentacion": "JARABE."
+ },
+ {
+  "codigo_origen": "0474",
+  "nombregenerico": "ACIDO MEFENAMICO",
+  "nombrecomercial": "OFASTAN 500  MG",
+  "uso": "1 CADA 8 HORAS POR 5 DIAS .",
+  "presentacion": "COMPRIMIDOS ."
+ },
+ {
+  "codigo_origen": "0475",
+  "nombregenerico": "ISOCONAZOL NITRATO 600 mg",
+  "nombrecomercial": "ILANA",
+  "uso": "COLOCAR UN SOLO OVULO.",
+  "presentacion": "OVULO ."
+ },
+ {
+  "codigo_origen": "0477",
+  "nombrecomercial": "CALADRIL",
+  "uso": "COLOCAR TRES A CINCO VECES AL DIA EN DONDE ESTE LA LESION .",
+  "presentacion": "LOCION ."
+ },
+ {
+  "codigo_origen": "0478",
+  "nombregenerico": "MAGNESIUN",
+  "nombrecomercial": "LECITONE",
+  "uso": "TOMAR 2 ANTES DE DORMIR",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0479",
+  "nombregenerico": "AZITROMICINA .",
+  "nombrecomercial": "AMOVIN  500 MG .",
+  "uso": "TOMAR 1 DIARIA",
+  "presentacion": "TABLETAS RECUBIERTAS"
+ },
+ {
+  "codigo_origen": "0480",
+  "nombrecomercial": "HIDRAPLUS .",
+  "uso": "TOMAR POR SORBOS TRES FRASCOS EN LA MAÑANA .",
+  "presentacion": "SOLUCION ."
+ },
+ {
+  "codigo_origen": "0481",
+  "nombregenerico": "HERBACEAS",
+  "nombrecomercial": "TANG KUEI PLUS",
+  "uso": "TOMAR UNA O TRES TABLETAS DIARIAS .",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0482",
+  "nombrecomercial": "ZINNAT 500 MG",
+  "uso": "TOMAR C/ 12 HORAS DE 3 A 5 DIAS /  7 A 10 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0483",
+  "nombregenerico": "DICLOFENACO",
+  "nombrecomercial": "CATAFLAN 46,5MG",
+  "uso": "TOMAR DILUIDO EN MEDIO VASO DE AGUA CADA 12 HORAS .",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0484",
+  "nombregenerico": "FLUCONAZOL.",
+  "nombrecomercial": "FUGIN 150 MG",
+  "uso": "UNA SOLA TOMA .",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0485",
+  "nombregenerico": "LANSOPRAZOL",
+  "nombrecomercial": "COFALAN  30 MG .",
+  "uso": "TOMAR UNA DIARIA POR    DIAS",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0486",
+  "nombregenerico": "COMPLEJO \"B\"",
+  "nombrecomercial": "MIOVIT,",
+  "uso": "TOMAR UNA DIARIA POR   DIAS",
+  "presentacion": "GRAGEAS."
+ },
+ {
+  "codigo_origen": "0487",
+  "nombregenerico": "COMPLEJO \" B \"",
+  "nombrecomercial": "MIOVIT / INYECTABLE .",
+  "uso": "COLOCAR TRES INTERDIARIA,",
+  "presentacion": "AMPOLLAS."
+ },
+ {
+  "codigo_origen": "0488",
+  "nombregenerico": "COMPLEJO B12",
+  "nombrecomercial": "RUBRINAL",
+  "uso": "COLOCAR UNA AMPOLLA  INTER-DIARIA",
+  "presentacion": "AMPOLLAS"
+ },
+ {
+  "codigo_origen": "0489",
+  "nombregenerico": "PROTEINAS",
+  "nombrecomercial": "NI UNA DIETA MAS .",
+  "uso": "DILUIR 4 CUCHARADAS EN UN VASO DE LECHE DESCREMADA .",
+  "presentacion": "EN POLVO ."
+ },
+ {
+  "codigo_origen": "0490",
+  "nombregenerico": "PANTOPRAZOL",
+  "nombrecomercial": "HITOP",
+  "uso": "TOMAR 1 DIARIA POR 1 MES",
+  "presentacion": "COMPRIMIDS 20/ 40 mg"
+ },
+ {
+  "codigo_origen": "0491",
+  "nombregenerico": "UNDECANUATO DE TETOSTERONA",
+  "nombrecomercial": "NEBIDO .",
+  "uso": "COLOCAR SEGUN INDICACIONES MEDICA.",
+  "presentacion": "GEL ."
+ },
+ {
+  "codigo_origen": "0492",
+  "nombrecomercial": "CEBION",
+  "uso": "TOMAR UNA DIARIA TODO EL EMBARAZO",
+  "presentacion": "TABLETAS MASTICABLES"
+ },
+ {
+  "codigo_origen": "0493",
+  "nombrecomercial": "CELL - ULOS",
+  "uso": "TOMAR 2 DIARIAS Y LUEGO 1 DIARIA HASTA LOS TRES MESES .",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0494",
+  "nombregenerico": "PARA PIEL , CABELLO Y UÑAS.",
+  "nombrecomercial": "MULTIVITAMINICO",
+  "uso": "TOMAR 2 DIARIAS .",
+  "presentacion": "CAPSULAS ."
+ },
+ {
+  "codigo_origen": "0495",
+  "nombrecomercial": "COLAGENO",
+  "uso": "TOMAR DOS DIARIAS .",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0496",
+  "nombrecomercial": "TOTAL CONTROL",
+  "uso": "TOMAR 2 DIARIAS POR 8 MESES .",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0740",
+  "nombrecomercial": "ALPRAN",
+  "presentacion": "1mg"
+ },
+ {
+  "codigo_origen": "0497",
+  "nombrecomercial": "PREMARIN",
+  "uso": "COLOCAR INTERDIARIA VIA VAGINAL POR TRES A SEIS MESES .",
+  "presentacion": "CREMA VAGINAL ."
+ },
+ {
+  "codigo_origen": "0498",
+  "nombrecomercial": "AMLODIPINA",
+  "uso": "TOMAR UNA DIARIA HASTA NUEVA ORDEN .",
+  "presentacion": "TABLETA DE 10 mmg."
+ },
+ {
+  "codigo_origen": "0499",
+  "nombregenerico": "B1+B6+B12+LIDOCAINA",
+  "nombrecomercial": "RUBRINAL",
+  "uso": "COLOCAR UNA INTERDIARIO INTRAMUSCULAR PROFUNDA.",
+  "presentacion": "SOLUCION INYECTABLE."
+ },
+ {
+  "codigo_origen": "0500",
+  "nombregenerico": "ETINILESTRADIOL-ACETATO DE CIPROTER",
+  "nombrecomercial": "GALBY",
+  "uso": "INICIAR EL PRIMER DIA DE LA REGLA POR 21 LUEGO DESCANSA POR 7 DIAS , LUEGO INICIA NUEVAMENTE .",
+  "presentacion": "COMPRIMIDOS ."
+ },
+ {
+  "codigo_origen": "0501",
+  "nombregenerico": "DROSPIRENONA- ETINILESTRADIOL.",
+  "nombrecomercial": "GENESA",
+  "uso": "INICIAR EL PRIMER DIA DE LA REGLA POR 21 DIAS LUEGO DESCANSA 7 DIAS INICIA NUEVAMENTE EL 8vo DIA ..",
+  "presentacion": "COMPRIMIDOS RECUBIERTOS ."
+ },
+ {
+  "codigo_origen": "0502",
+  "nombregenerico": "LEVONORGESTREL.",
+  "nombrecomercial": "NOVALEN.0,75 MG.",
+  "uso": "TOMAR DOS DE UNA SOLA TOMA DESPUES DE LA RELACION LAS PRIMERAS 12 HORAS .",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0503",
+  "nombregenerico": "ORLISTAT",
+  "nombrecomercial": "REDIGRES .",
+  "uso": "TOMAR DESPUES DE LA COMIDA QUE CONTENGAN MUCHA GRASA .",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0514",
+  "nombrecomercial": "COFALAN",
+  "uso": "TOMAR UNA DIARIA .",
+  "presentacion": "CAPSULAS ,"
+ },
+ {
+  "codigo_origen": "0504",
+  "nombregenerico": "OMEGA 3",
+  "nombrecomercial": "OMETRIX",
+  "uso": "TOMAR 1 DIARIA POR 8 MESES .",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0505",
+  "nombrecomercial": "TRENTAL",
+  "uso": "1 CADA 12 HORAS POR 6 MESES",
+  "presentacion": "TABLETAS 100mg"
+ },
+ {
+  "codigo_origen": "0506",
+  "nombregenerico": "ESPORAS DE BACILLUS",
+  "nombrecomercial": "ENTEROGERMINA",
+  "uso": "TOMAR TRES VECES AL DIA .",
+  "presentacion": "SUSPENSION ORAL ."
+ },
+ {
+  "codigo_origen": "0507",
+  "nombrecomercial": "VOLTAREN 50 MG.",
+  "uso": "TOMAR UNA CADA 8 HORAS POR 8 DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0508",
+  "nombrecomercial": "PROGYNOVA",
+  "uso": "TOMAR UNA DIARIA DURANTE UN AÑO .",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0509",
+  "nombregenerico": "INDAPAMIDA 1,5 MG.",
+  "nombrecomercial": "NATRILIX . AP",
+  "uso": "TOMAR 1 DIARIA HASTA NUEVA ORDEN .",
+  "presentacion": "COMPRIMIDOS ."
+ },
+ {
+  "codigo_origen": "0510",
+  "nombregenerico": "ESTRADIOL.",
+  "nombrecomercial": "ESTROFEM 1MG.",
+  "uso": "TOMAR CONTINUO POR UN AÑO Y REALIZAR ECOGRAFIA MAMARIA CADA SEIS MESES ,",
+  "presentacion": "COMPRIMIDOS ."
+ },
+ {
+  "codigo_origen": "0511",
+  "nombregenerico": "ROVASTATINA. 10mg.",
+  "nombrecomercial": "ROVARTAL.",
+  "uso": "TOMAR UNA DIARIA POR SEIS MESES .",
+  "presentacion": "COMPRIMIDOS ."
+ },
+ {
+  "codigo_origen": "0512",
+  "nombregenerico": "ARANDANO .",
+  "nombrecomercial": "CRANBERRY .",
+  "uso": "TOMAR DOS DIARIAS POR 6 MESES ,",
+  "presentacion": "CAPSULAS ."
+ },
+ {
+  "codigo_origen": "0513",
+  "nombregenerico": "IMIQUIMOD",
+  "nombrecomercial": "ALDARA , CREMA 1 CAJA DE 3 SOBRES .",
+  "uso": "COLOCAR EN LOS LABIOS DE LA VULVA CON UN APLICADOR SIN ALGODON .",
+  "presentacion": "CREMA 5 %"
+ },
+ {
+  "codigo_origen": "0515",
+  "nombregenerico": "NIMESULIDE .",
+  "nombrecomercial": "AULIN",
+  "uso": "TOMAR CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "TABLETAS-"
+ },
+ {
+  "codigo_origen": "0516",
+  "nombrecomercial": "MUCORAMA",
+  "uso": "UNA CUCHARADA CADA OCHO HORAS .",
+  "presentacion": "JARABE,"
+ },
+ {
+  "codigo_origen": "0517",
+  "nombregenerico": "LISADOP BACTERIANO.",
+  "nombrecomercial": "ISMIGEN",
+  "uso": "TOMAR POR 30 DIAS LUEGO TOMAR LOS PRIMEROS DIEZ DIAS DE CADA MES POR TRES MESES.",
+  "presentacion": "TABLETAS SUBLINGUALES"
+ },
+ {
+  "codigo_origen": "0519",
+  "nombrecomercial": "BENZETACIL KIT . 2.400.000",
+  "uso": "COLOCAR INTRAMUSCULAR HOY Y REPETIR A LOS 8 DIAS .",
+  "presentacion": "1 AMPOLLLA."
+ },
+ {
+  "codigo_origen": "0520",
+  "nombregenerico": "CABERGOLINA 0.5mg.",
+  "nombrecomercial": "CABERTRIX",
+  "uso": "TOMAR 2 DE UNA SOLA TOMA Y REPETIR A LOS 8 DIAS / TOMAR 2 SEMANAL X 4 SEMANAS .",
+  "presentacion": "TABLETA . DE 2 Y DE 8 ."
+ },
+ {
+  "codigo_origen": "0521",
+  "nombregenerico": "IMIQUIMOD 5 %",
+  "nombrecomercial": "VIROSUPRIL.",
+  "uso": "COLOCAR INTERDIARIO AL ACOSTARSE  EN LAS LESIONES EXTERNA POR 12 A 16 SEMANAS .",
+  "presentacion": "CREMA. VIA TOPICA."
+ },
+ {
+  "codigo_origen": "0522",
+  "nombrecomercial": "LACTIBON .",
+  "uso": "LAVARSE GENITALES DOS O TRES VECES AL DIA",
+  "presentacion": "LOCION PH , 3,5"
+ },
+ {
+  "codigo_origen": "0523",
+  "nombrecomercial": "DERMOSUPRIL",
+  "uso": "COLOCAR EN LAS LESIONES DOS O TRES VECES AL DIA",
+  "presentacion": "EMULSION / JAVON"
+ },
+ {
+  "codigo_origen": "0524",
+  "nombregenerico": "DESONIDA.",
+  "nombrecomercial": "DERMOSUPRIL.",
+  "uso": "COLOCAR DOS O TRES VECES AL DIA",
+  "presentacion": "CREMA.0,05 %"
+ },
+ {
+  "codigo_origen": "0539",
+  "nombrecomercial": "EPIVITAL.",
+  "uso": "TOMAR UNA DIARIA.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0525",
+  "nombregenerico": "3.000 U LACTOSA.",
+  "nombrecomercial": "LACTBET.",
+  "uso": "TOMAR UNA CAPSULA ANTES DE LAS COMIDAS LACTEAS .",
+  "presentacion": "CAPSULA"
+ },
+ {
+  "codigo_origen": "0526",
+  "nombrecomercial": "UMBRELLA ,",
+  "uso": "COLOCAR EN AREAS QUE ESTAN EXPUESTA AL SOL .",
+  "presentacion": "CREMA ,"
+ },
+ {
+  "codigo_origen": "0527",
+  "nombrecomercial": "BEDOYECTA/INTRAMUSCULAR",
+  "uso": "COLOCAR UNA INTERDIARIA POR TRES DOSIS",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0528",
+  "nombrecomercial": "CALCIBON MIN",
+  "uso": "TOMAR DOS DIARIAS .",
+  "presentacion": "TABLETA ."
+ },
+ {
+  "codigo_origen": "0529",
+  "nombrecomercial": "DERIVA",
+  "uso": "APLICAR EN LAS NOCHES POR 3 MESES, A LA MAÑANA SIGUIENTE USAR PROTECTOR SOLAR",
+  "presentacion": "GEL ACUOSO 15 GR"
+ },
+ {
+  "codigo_origen": "0530",
+  "nombrecomercial": "LINFODERM",
+  "uso": "COLOCAR TRES VECES AL DIA PREVIO LAVADO CON AGUA DE MANZANILLA .",
+  "presentacion": "CREMA."
+ },
+ {
+  "codigo_origen": "0531",
+  "nombrecomercial": "PRIMPERAN .",
+  "uso": "TOMAR UNA TABLETA CADA 8 HORAS 20 MINUTOS ANTES DE LAS COMIDAS.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0533",
+  "nombregenerico": "DIACEREINA",
+  "nombrecomercial": "CARTEOL 50 MG.",
+  "uso": "TOMAR UNA DIARIA X 10 DIAS DESPUES 1 CADA 12 HORAS X 6 MESES.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0534",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "AZIMAKROL.",
+  "uso": "TOMAR UNA SOLA LA PAREJA",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0535",
+  "nombrecomercial": "MULTILOAD",
+  "uso": "COMPRAR EN CALLE GUZMAN BLANCO Nº102-B12 TELEF 02418583066",
+  "presentacion": "DIU"
+ },
+ {
+  "codigo_origen": "0536",
+  "nombregenerico": "CEFADROXILO",
+  "nombrecomercial": "DROXIFAN.",
+  "uso": "TOMAR CADA 12 HORAS POR 10 DIAS"
+ },
+ {
+  "codigo_origen": "0537",
+  "nombregenerico": "DIMETILPOLISILOXANO",
+  "nombrecomercial": "ANTIFON 125 MG.",
+  "uso": "TOMAR UNA DIARIA POR 15 DIAS.",
+  "presentacion": "TABLETAS MASTICABLES"
+ },
+ {
+  "codigo_origen": "0538",
+  "nombrecomercial": "GLUCOFAGE 1 GR",
+  "uso": "Tomar 1 despues del desayuno y cena por 8 meses."
+ },
+ {
+  "codigo_origen": "0540",
+  "nombrecomercial": "ACICLOVIR.",
+  "uso": "TOMAR CADA 8 HORAS POR 7 DIAS.",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0541",
+  "nombrecomercial": "VICTREXON.",
+  "uso": "TOMAR UNA DIARIA",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0542",
+  "nombrecomercial": "ANDROGEL",
+  "uso": "COLOCAR EN BRAZOS Y PIERNAS CADA 3 DIAS POR DOS SEMANAS",
+  "presentacion": "50 MG"
+ },
+ {
+  "codigo_origen": "0543",
+  "nombregenerico": "GLUCOFAGE",
+  "nombrecomercial": "GLUCOFAGE DE 1 GR",
+  "uso": "TOMAR 1 TABLETA DESPUES DEL DESAYUNO ,ALMUERZO Y CENA POR 8 MESES,",
+  "presentacion": "TABLETAS."
+ },
+ {
+  "codigo_origen": "0544",
+  "nombrecomercial": "FLEXITINE",
+  "uso": "TOMAR CADA 8 HORAS X 7 DIAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0545",
+  "nombrecomercial": "HIRUDOID",
+  "uso": "COLOCAR TRES VECES AL DIA.",
+  "presentacion": "CREMA USO TOPICO."
+ },
+ {
+  "codigo_origen": "0546",
+  "nombregenerico": "MOXIFLOXACINO",
+  "nombrecomercial": "AVELOX",
+  "uso": "TOMAR UNA DIARIA POR    DIAS.",
+  "presentacion": "COMPRIMIDOS RECUBIERTOS 400MG."
+ },
+ {
+  "codigo_origen": "0547",
+  "nombregenerico": "CABERGOLINA 0,50 mg.",
+  "nombrecomercial": "CABERTRIX",
+  "uso": "TOMAR 2 COMPRIMIDOS Y REPETIR A LOS 8 DIAS.",
+  "presentacion": "2 COMPRIMIDOS VIA ORAL"
+ },
+ {
+  "codigo_origen": "0548",
+  "nombregenerico": "METFORMINA CLORHIDRATO",
+  "nombrecomercial": "GLUMET.",
+  "uso": "TOMAR UNA DESPUES DEL DESAYUNO,ALMUERZO Y CENA.",
+  "presentacion": "TABLETAS 500 mg."
+ },
+ {
+  "codigo_origen": "0549",
+  "nombrecomercial": "AZOCRAMBERRY.",
+  "uso": "TOMAR DOS DIARIAS CON LAS COMIDAS.",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0550",
+  "nombrecomercial": "CORASPIRINA",
+  "uso": "TOMAR UNA DIARIA",
+  "presentacion": "TABL DE 81 MG."
+ },
+ {
+  "codigo_origen": "0551",
+  "nombrecomercial": "CICLOKAPRON.",
+  "uso": "COLOCAR UNA AMPOLLA POR VIA ENDOVENOSA CADA 8 HORAS.",
+  "presentacion": "AMPOLLAS."
+ },
+ {
+  "codigo_origen": "0552",
+  "nombrecomercial": "BERODUAL.",
+  "uso": "COLOCAR 10 GOTAS EN 3 cc DE SOLUCION FISIOLOGICA.CADA 20 MINUTOS POR TRES DOSIS DOS VECES AL DIA.",
+  "presentacion": "SOLUCION O GOTAS."
+ },
+ {
+  "codigo_origen": "0553",
+  "nombrecomercial": "BUDEICORT.",
+  "uso": "COLOCAR 10 GOTAS EN 3cc DE SOLUCION NEBULIZAR TRES VECES CADA 20 MINUTOS CADA 12 HORAS POR 5 DIAS",
+  "presentacion": "GOTAS."
+ },
+ {
+  "codigo_origen": "0554",
+  "nombregenerico": "SULBUTIAMINA.",
+  "nombrecomercial": "TEKRON",
+  "uso": "TOMAR DOS COMPRIMIDOS ANTES DEL DESAYUNO POR TRES MESES.",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0555",
+  "nombrecomercial": "SPERMOTREND",
+  "uso": "TOMAR POR UN MES TRES CAPSULAS Y LUEGO DOS CAPSULAS HASTA COMPLETAR TRES MESES",
+  "presentacion": "CAPSULAS 400mg."
+ },
+ {
+  "codigo_origen": "0556",
+  "nombregenerico": "ACIDO MEFENAMICO.",
+  "nombrecomercial": "POSTAN",
+  "uso": "TOMAR CADA 6 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETAS DE 500 mg."
+ },
+ {
+  "codigo_origen": "0557",
+  "nombrecomercial": "FEMADONNA",
+  "uso": "tomar dos veces al dia.",
+  "presentacion": "COMPRIMIDOS 40 mg."
+ },
+ {
+  "codigo_origen": "0558",
+  "nombrecomercial": "AMBROCLAR",
+  "uso": "TOMAR CADA 12 HORAS",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0559",
+  "nombrecomercial": "BRUGESIC 600",
+  "uso": "TOMAR UNA CADA 8 HORAS",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0560",
+  "nombrecomercial": "IBUFEN,600 MG.",
+  "uso": "TOMAR CADA 8 HORAS POR    DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0561",
+  "nombrecomercial": "CRAMBERRY",
+  "uso": "TOMAR 2 DIARIAS POR UN AÑO",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0562",
+  "nombregenerico": "TIBULONA.",
+  "nombrecomercial": "FOMENE.",
+  "uso": "TOMAR UNA DIARIA POR UN AÑO.",
+  "presentacion": "COMPRIDOS."
+ },
+ {
+  "codigo_origen": "0563",
+  "nombrecomercial": "OXIDREN 35 MG.",
+  "uso": "TOMAR UN COMPRIMIDO SEMANAL.",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0564",
+  "nombrecomercial": "POLIOTICO.",
+  "uso": "COLOCAR UNA GOTA EN CADA OIDO TRES VECES AL DIA.",
+  "presentacion": "GOTAS."
+ },
+ {
+  "codigo_origen": "0565",
+  "nombregenerico": "ALENDRONATO DE 70 MG.",
+  "nombrecomercial": "FOSAMAX PLUS.",
+  "uso": "TOMAR UNA SEMANAL POR UN AÑO.",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0566",
+  "nombrecomercial": "CYTOTEC",
+  "uso": "TOMAR UNA TABLETA CADA CUATRO HORAS HASTA NUEVA ORDEN.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0569",
+  "nombrecomercial": "PRIMPERAN.",
+  "uso": "COLOCAR UNA INYECCION VIA INTRAMUSCULAR ANTES DEL DESAYUNO.",
+  "presentacion": "AMPOLLAS."
+ },
+ {
+  "codigo_origen": "0568",
+  "nombrecomercial": "CLARITINE.",
+  "uso": "TOMAR UNA DIARIA.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0570",
+  "nombrecomercial": "DIAMEL.",
+  "uso": "TOMAR 2 CAPSULAS ANTES DE LAS 3 PRINCIPALES COMIDAS.",
+  "presentacion": "FRASCO DE 90 CAPSULAS"
+ },
+ {
+  "codigo_origen": "0571",
+  "nombregenerico": "cefepima.",
+  "nombrecomercial": "MAXIPIME.",
+  "presentacion": "POLVO PARA SOLUCION INYECTABLE."
+ },
+ {
+  "codigo_origen": "0572",
+  "nombrecomercial": "NISE.",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 5 DIAS.",
+  "presentacion": "TABLETAS DE 100mg."
+ },
+ {
+  "codigo_origen": "0573",
+  "nombregenerico": "CLINDAMICINA 100mg. ketaconazol 400",
+  "nombrecomercial": "CLINFOL DUO",
+  "uso": "COLOCAR U OVULO VIA VAGINAL POR 7 NOCHES.",
+  "presentacion": "ovulos"
+ },
+ {
+  "codigo_origen": "0574",
+  "nombregenerico": "NORESTISTERONA - ESTRADIOL.",
+  "nombrecomercial": "MESIGYNA.",
+  "uso": "COLOCAR INTRAMUSCULAR EL 2do O 3 er DIA DE LA REGLA Y LUEGO COLOCAR MENSUAL.",
+  "presentacion": "INYECTABLE."
+ },
+ {
+  "codigo_origen": "0575",
+  "nombregenerico": "CIPROFLOXACINA.",
+  "nombrecomercial": "CIPROFLOX.",
+  "uso": "TOMAR CADA 12 HORAS POR 5 DIAS.",
+  "presentacion": "TABLETA 500mg."
+ },
+ {
+  "codigo_origen": "0576",
+  "nombregenerico": "MOMETASONA FURUATO 0.1%",
+  "nombrecomercial": "DERMACORTINE,CREMA.",
+  "uso": "COLOCAR CUATRO VECES AL DIA EN LAS LESIONES.",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0577",
+  "nombrecomercial": "EPAX.",
+  "uso": "TOMAR UNA TABLETA  DIARIA POR 8 MESES",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0578",
+  "nombrecomercial": "BONAVEN.",
+  "uso": "UTILIZAR CADA VEZ AL BAÑARSE.",
+  "presentacion": "BARRA LIMPIADORA."
+ },
+ {
+  "codigo_origen": "0579",
+  "nombregenerico": "HIERRO DE 100 MG/ 5ML",
+  "nombrecomercial": "FERRINEX",
+  "uso": "COLOCAR UNA AMPOLLA VIA ENDOVENOSA Y REPETIR A LOS 8 DIAS. DILUIDA EN SOLUCION FISIOLOGICA EN SOLUCELL DE 100 cc CON MICRO GOTERO.",
+  "presentacion": "1 AMPOLLA."
+ },
+ {
+  "codigo_origen": "0580",
+  "nombrecomercial": "ECHINACIA.",
+  "uso": "TOMAR TRES VECES AL DIA POR TRES MESES.",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0581",
+  "nombrecomercial": "PARACLIM.",
+  "uso": "TOMAR UNA DIARIA POR UN AÑO.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0582",
+  "nombrecomercial": "BRISTAFLAN.",
+  "uso": "COLOCAR TRES VECES AL DIA.",
+  "presentacion": "GEL."
+ },
+ {
+  "codigo_origen": "0583",
+  "nombrecomercial": "DROXIFAN.500MG.",
+  "uso": "TOMAR UNA TABLETA CADA 12 HORAS POR 10 DIAS."
+ },
+ {
+  "codigo_origen": "0584",
+  "nombregenerico": "SERTACONAZOL NITRATO",
+  "nombrecomercial": "GYNO ZALAIN",
+  "uso": "COLOCAR EN UNA SOLA DOSIS.",
+  "presentacion": "OVULO 300 mg / crema 2 % 9 gr."
+ },
+ {
+  "codigo_origen": "0585",
+  "nombregenerico": "AMPICILINA SIULBALTAN.",
+  "nombrecomercial": "SULAMP",
+  "uso": "COLOCAR POR VIA ENDOVENOSA LA AMPOLLA STA.",
+  "presentacion": "INYECTABLE."
+ },
+ {
+  "codigo_origen": "0587",
+  "nombrecomercial": "PERMUCAL.",
+  "uso": "COLOCAR VIA RECTAL CADA 12 HORAS POR QUINCE DIAS.",
+  "presentacion": "SUPOSITORIO/ CREMA."
+ },
+ {
+  "codigo_origen": "0588",
+  "nombrecomercial": "COLFENE.",
+  "uso": "TOMAR CADA 8 HORAS",
+  "presentacion": "TABLETAS."
+ },
+ {
+  "codigo_origen": "0589",
+  "nombregenerico": "DIETARY SUPPLEMENTE.",
+  "nombrecomercial": "ARGINMAX",
+  "uso": "TOMAR DOS TABLETAS DOS VECES AL DIA CON 8 ONZAS DE AGUA POR CUATRO SEMANAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0590",
+  "nombrecomercial": "SENOKOT CON DOCUSATO 8,6-50 MG.",
+  "uso": "TOMAR DOS TABLETAS AL DIA.",
+  "presentacion": "TABLETAS CUBIERTAS."
+ },
+ {
+  "codigo_origen": "0591",
+  "nombrecomercial": "VOLTAREN IP.75 MG.",
+  "uso": "TOMAR UNA O DOS TABLETAS AL DIA. POR 8 DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0592",
+  "nombregenerico": "DICLOFENACO.",
+  "nombrecomercial": "CATAFLAM 46,5 MG.",
+  "uso": "COLOCAR EL COMPRIMIDO EN UN VASO DE AGUA,AGITAR E INGERIR.",
+  "presentacion": "COMPRIMIDOS DISPERSABLE."
+ },
+ {
+  "codigo_origen": "0593",
+  "nombrecomercial": "KATIVIL",
+  "uso": "TOMAR 10 cc 3 VECES AL DIA,",
+  "presentacion": "JARABE."
+ },
+ {
+  "codigo_origen": "0594",
+  "nombrecomercial": "ORATANE",
+  "uso": "UNA DIARIA",
+  "presentacion": "30 CAPSULAS"
+ },
+ {
+  "codigo_origen": "0595",
+  "nombregenerico": "SUPLEMENTO POLIVITAMINICO",
+  "nombrecomercial": "PROSOLVIT",
+  "uso": "TOMAR UNA DIARIA.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0596",
+  "nombrecomercial": "FLESPAN.",
+  "uso": "TOMAR UNA CADA 6 HORAS POR 3 DIAS.",
+  "presentacion": "GRAGEAS."
+ },
+ {
+  "codigo_origen": "0597",
+  "nombrecomercial": "RHOGAN.",
+  "uso": "COLOCAR UNA AMPOLLA INTRAMUSCULAR EN LAS PRIMERAS 24 HORAS DEL PARTO.",
+  "presentacion": "AMPOLLA."
+ },
+ {
+  "codigo_origen": "0598",
+  "nombrecomercial": "BACITRACINA",
+  "uso": "COLOCAR 4 VECES AL DIA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0599",
+  "nombregenerico": "AZITROMICINA.",
+  "nombrecomercial": "SAVER.500 MG.",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 5 DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0600",
+  "nombrecomercial": "UROMUNAL,",
+  "uso": "TOMAR UNA TABLETA DIARIA POR SEIS MESES EN AYUNAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0601",
+  "nombregenerico": "N-BUTILBROMURO DE HIOSCINA/ IBUPROF",
+  "nombrecomercial": "BUSCAPINA FEM.",
+  "uso": "TOMAR 8 HORAS",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0602",
+  "nombrecomercial": "ALACTIN",
+  "uso": "TOMAR 2 DE UNA SOLA TOMA Y REPETIR CADA 8 DIAS.",
+  "presentacion": "CAJAS DE 2 TABLETAS Y DE 8 TABLETAS"
+ },
+ {
+  "codigo_origen": "0603",
+  "nombrecomercial": "CYTOTEC",
+  "uso": "TOMAR UNA CADA CUATRO HORAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0608",
+  "nombregenerico": "VALACICLOVIR 500MG-",
+  "nombrecomercial": "VADIVAL.",
+  "uso": "HERPES ZOSTER TOMAR CADA 8 HORAS X 7 DIAS.",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0604",
+  "nombregenerico": "HIERRO 100 mg/ACIDO FOLICO 350mcg.",
+  "nombrecomercial": "INTAFERFOL MIL",
+  "uso": "UNA DIARIA POR TRES MESES.",
+  "presentacion": "TABLETAS MASTICABLES."
+ },
+ {
+  "codigo_origen": "0605",
+  "nombrecomercial": "KETAZOL 200 MG.",
+  "uso": "TOMAR UNA TABLETA CON EL DESAYUNO Y CON LA CENA POR TRES MESES.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0606",
+  "nombregenerico": "VALACICLOVIR 500MG-",
+  "nombrecomercial": "VADIVAL",
+  "uso": "HERPES GENITAL TERAPIA INICIAL CADA 12 HORAS X 5 A 10 DIAS.",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0607",
+  "nombregenerico": "VALACICLOVIR 500MG-",
+  "nombrecomercial": "VADIVAL VALACICLOVIR",
+  "uso": "HERPES GENITAL RECURRENTE CADA 12 HORAS X 5 DIAS.",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0609",
+  "nombregenerico": "ATORVASTATINA",
+  "nombrecomercial": "ANTIP 10 MG.",
+  "uso": "TOMAR UNA TABLETA DIARIA.",
+  "presentacion": "TABLETAS."
+ },
+ {
+  "codigo_origen": "0610",
+  "nombregenerico": "ATORVASTATINA",
+  "nombrecomercial": "ANTIP 20 MG.",
+  "uso": "TOMAR UNA DIARIA.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0611",
+  "nombregenerico": "DICLOFENAC SODICO.",
+  "nombrecomercial": "FLOGAREN 50 MG.",
+  "uso": "TOMAR UNA CADA 8 HORAS POR  8 DIAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0612",
+  "nombregenerico": "G",
+  "nombrecomercial": "ORLISTAT 120 MG GENVEN",
+  "uso": "TOMAR 3 VECES AL DIA POR TRES MESES.",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0613",
+  "nombregenerico": "DICLOFENAC POTASICO.",
+  "nombrecomercial": "DIAGESIC",
+  "uso": "TOMAR UNA TABLETA CADA 8 HORAS.",
+  "presentacion": "TABLETAS RECUBIERTAS."
+ },
+ {
+  "codigo_origen": "0699",
+  "nombrecomercial": "PANTOPRAZOL",
+  "presentacion": "tabletas de 20 mg"
+ },
+ {
+  "codigo_origen": "0614",
+  "nombregenerico": "ORLISTAT",
+  "nombrecomercial": "CRISPLUS.",
+  "uso": "TOMAR DESPUES DE CADA COMIDA.POR 8 MESES",
+  "presentacion": "CAPSULAS DE 42 Y 84."
+ },
+ {
+  "codigo_origen": "0615",
+  "nombrecomercial": "PERTEN",
+  "uso": "COLOCAR UNA O DOS VECES AL DIA POR DOS SEMANAS",
+  "presentacion": "CREMA."
+ },
+ {
+  "codigo_origen": "0616",
+  "nombregenerico": "CIPROFLOXACINA.",
+  "nombrecomercial": "CYPRAL 750 MG.",
+  "uso": "TOMAR UNA TABLETA DIARIA HORAS POR 6 DIAS",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0617",
+  "nombregenerico": "TABLETA.",
+  "nombrecomercial": "CALCINORM D",
+  "uso": "TOMAR UNA DIARIA"
+ },
+ {
+  "codigo_origen": "0618",
+  "nombregenerico": "SUMPLEMENTO ANTIANEMICO.",
+  "nombrecomercial": "FERRONORM",
+  "uso": "TOMAR UNA DIARIA  HASTA NUEVA ORDEN.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0619",
+  "nombregenerico": "CALCIO + MAGNESIO.",
+  "nombrecomercial": "CALCINORM TABLETAS",
+  "uso": "TOMAR UNA DIARIA HASTA NUEVO AVISO",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0620",
+  "nombrecomercial": "CLARA DE HUEVO.",
+  "uso": "COLOCAR EN EL VASO DE LA LICUADORA 2 CLARAS DE HUEVO CON 1/4 VASO DE LECHE DESCREMADA Y MEDIA CUCHARADITA DE MIEL.Y TOMAR DOS VECES AL DIA HASTA NUEVO AVISO.",
+  "presentacion": "PONCHE."
+ },
+ {
+  "codigo_origen": "0621",
+  "nombrecomercial": "RUBRINEX",
+  "uso": "COLOCAR UNA AMPOLLA INTRAMUSCULAR INTERDIARIA POR 4 DOSIS.",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0622",
+  "nombrecomercial": "BACTRON SUSPENSION",
+  "uso": "TOMAR 6 CC CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "SUSPENSION"
+ },
+ {
+  "codigo_origen": "0624",
+  "nombrecomercial": "GONADOXINA",
+  "uso": "UNA CADA 8 HORAS 20MINUTOS ANTES DE CADA COMIDA",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0623",
+  "nombrecomercial": "CELECTAN SUPENSION",
+  "uso": "TOMAR UNA CUCHARADA EN LA MAÑANA Y EN LA NOCHE POR 5 DIAS.",
+  "presentacion": "POLVO PARA SUSPENSION."
+ },
+ {
+  "codigo_origen": "0625",
+  "nombrecomercial": "TAMSULON CAPSULAS.",
+  "uso": "TOMAR UNA CAPSULA DIARIA 8 am POR 10 DIAS,",
+  "presentacion": "CAPSULAS."
+ },
+ {
+  "codigo_origen": "0626",
+  "nombrecomercial": "MILAX",
+  "uso": "TOMAR UNA CUCHARADA DESPUES DE CADA COMIDA.",
+  "presentacion": "GRANULADO"
+ },
+ {
+  "codigo_origen": "0627",
+  "nombrecomercial": "IMAZOL",
+  "uso": "COLOCAR UN OVULO ANTES DE ACOSTARSE POR 7 NOCHES",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0628",
+  "nombregenerico": "SULTAMICILINA",
+  "nombrecomercial": "UNASYN 1.5 G",
+  "uso": "COLOCAR POR VIA ENDOVENOSA UNA VEZ",
+  "presentacion": "AMPOLLA EV."
+ },
+ {
+  "codigo_origen": "0629",
+  "nombrecomercial": "FARMACAINA. 10 MG.",
+  "uso": "SI HAY DOLOR COLOCAR",
+  "presentacion": "SPRAY"
+ },
+ {
+  "codigo_origen": "0630",
+  "nombrecomercial": "SOLONUVAL",
+  "uso": "HACER GARGARISMOS CADA 4 HORAS."
+ },
+ {
+  "codigo_origen": "0631",
+  "nombregenerico": "SULTAMICILINA",
+  "nombrecomercial": "FIPEXIAM 750",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0632",
+  "nombrecomercial": "CYTOTEC",
+  "uso": "UNA TABLETAS CADA 4 HORAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0633",
+  "nombregenerico": "AMIKACINA SULFATO 5 %",
+  "nombrecomercial": "LIKACIN",
+  "uso": "COLOCAR EN EL AREA AFECTADA.",
+  "presentacion": "GEL."
+ },
+ {
+  "codigo_origen": "0634",
+  "nombrecomercial": "OTAN",
+  "uso": "COLOCAR 2 GOTAS EN CADA OIDO CADA 4 HORAS POR 5 DIAS.",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0638",
+  "nombregenerico": "VITAMINA C",
+  "nombrecomercial": "TERACE ZINC",
+  "uso": "TOMAR 2 DIARIAS",
+  "presentacion": "CAPS"
+ },
+ {
+  "codigo_origen": "0635",
+  "nombrecomercial": "MANZANILLA (FLORES)",
+  "uso": "LAVAR CON AGUA DE MANZANILLA NATURAL O FRIA COMO PREFIERA DESPUES DE ORINAR,LUEGO COLOCAR AEROSOL,CREMA."
+ },
+ {
+  "codigo_origen": "0636",
+  "nombregenerico": "VITAMINA D3",
+  "nombrecomercial": "FARMA D TABLETA",
+  "uso": "TOMAR 1 O 2 TABLETAS DIARIAS ."
+ },
+ {
+  "codigo_origen": "0637",
+  "nombregenerico": "VITAMINA D",
+  "nombrecomercial": "FARMA D TABLETAS DE 400 MG.",
+  "uso": "TOMAR UNA O DOS TABLETAS DIARIAS HASTA NUEVO AVISO.",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0639",
+  "nombregenerico": "FISIOLOGICA",
+  "nombrecomercial": "SOLUCION FISIOLOGICA",
+  "uso": "COLOCAR 2 GOTAS EN CADA FOSA NASAL.",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0640",
+  "nombregenerico": "BRUGESIC",
+  "nombrecomercial": "BRUGESIC 800 MG.",
+  "uso": "TOMAR CADA 12 HORAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0641",
+  "nombregenerico": "NORFLOXACINA",
+  "nombrecomercial": "NOROXIN 400 MG.",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETA."
+ },
+ {
+  "codigo_origen": "0642",
+  "nombrecomercial": "DUVADILAN AMPOLL",
+  "uso": "COLOCAR UNA AMPOLLA POR VIA ENDOVENOSA.",
+  "presentacion": "AMPOLLAS"
+ },
+ {
+  "codigo_origen": "0643",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "CIPROLET  500 MG.",
+  "uso": "TOMAR UNA TABLETA CADA 12 HORAS POR  7  DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0644",
+  "nombregenerico": "COMPLEMENTO NUTRICIONAL",
+  "nombrecomercial": "VIUSID SOBRES",
+  "uso": "DILUIR UN SOBRE EN UN VASO DE AGUA Y TOMAR DIARIAMENTE.",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0691",
+  "nombrecomercial": "NOAL",
+  "uso": "TOMAR DESDE EL PRIMER DIA DE LA REGLA CONTINUO HASTA NUEVA ORDEN",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0645",
+  "nombregenerico": "IBUPROFENO 600MG",
+  "nombrecomercial": "BRANE TABLET 600MG",
+  "uso": "TOMAR CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0646",
+  "nombrecomercial": "K-GEL,",
+  "uso": "COLOCAR UNA MODERADA CANTIDAD EN LOS LABIOS ANTES DE LA RELACION.",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0675",
+  "nombrecomercial": "PRIMPERAN",
+  "uso": "COLOCAR UNA AMPOLLA CADA 8 HORAS",
+  "presentacion": "AMPOLLAS"
+ },
+ {
+  "codigo_origen": "0648",
+  "nombrecomercial": "VARTALON DUO",
+  "uso": "1 DIARIO DESPUES DEL DESAYUNO",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0649",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "LITONATE",
+  "uso": "COLOCAR 2 O 3 VECES AL DIA DESPUES DE LAVAR CON MANZANILLA.",
+  "presentacion": "CREMA."
+ },
+ {
+  "codigo_origen": "0650",
+  "nombregenerico": "OMEGA 3,OMEGA6,VITAMINA .",
+  "nombrecomercial": "OMEGANORM",
+  "uso": "TOMAR 1 0 2 CAPSULAS AL DIA POR 8 MESES.",
+  "presentacion": "30 CAPSULAS"
+ },
+ {
+  "codigo_origen": "0651",
+  "nombregenerico": "AGOMELATINA",
+  "nombrecomercial": "VALDOXAN 25 MG",
+  "uso": "TOMAR UN COMPRIMIDO ANTES DE ACOSTARSE",
+  "presentacion": "comprimido"
+ },
+ {
+  "codigo_origen": "0652",
+  "nombrecomercial": "VAGIFEN",
+  "uso": "COLOCAR UN COMPRIMIDO VIA VAGINAL 2 VECES POR SEMANAS POR UN MES Y LUEGO UNO  SEMANALES POR TRES MESES. .",
+  "presentacion": "COMPRIMIDOS VAGINALES"
+ },
+ {
+  "codigo_origen": "0653",
+  "nombregenerico": "MOXIFLOXACINA.",
+  "nombrecomercial": "MOXEN 40MG.",
+  "uso": "TOMAR UNA TABLETA DIARIA POR 15 DIAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0654",
+  "nombregenerico": "ACEITE DE PASCADO",
+  "nombrecomercial": "PISCIS 3",
+  "uso": "TOMAR DOS CAPSULAS DIARIAS.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0655",
+  "nombregenerico": "ACEITE DE PESCADO",
+  "nombrecomercial": "PICIS 3",
+  "uso": "TOMAR DOS CAPSULAS DIARIAS POR 8 MESES.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0656",
+  "nombregenerico": "COMPRIMIDOS",
+  "nombrecomercial": "ACTIVELLE",
+  "uso": "TOMAR UNA DIARIA",
+  "presentacion": "COMPRIMIDOS."
+ },
+ {
+  "codigo_origen": "0657",
+  "nombregenerico": "PREGABALINA CAPSULAS",
+  "nombrecomercial": "NEURIXA",
+  "uso": "TOMAR CADA 12 HORAS"
+ },
+ {
+  "codigo_origen": "0658",
+  "nombregenerico": "LEVOFLOXACINA",
+  "nombrecomercial": "PROXIME 500 MG.",
+  "uso": "TOMAR UNA DIARIA POR 5 DIAS.",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0659",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "NEURIXA 75 MG.",
+  "uso": "TOMAR UNA CAPSULA CADA 8 HORAS POR   DIAS.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0660",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "NEURIXA 150 MG.",
+  "uso": "TOMAR UNA CAPSULA CADA 12 HORAS POR    DIAS.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0661",
+  "nombregenerico": "PREGABALINA",
+  "nombrecomercial": "NEURIXA 300 MG.",
+  "uso": "TOMAR UNA DIARIA POR ___DIAS,",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0662",
+  "nombregenerico": "CEFADROXIL",
+  "nombrecomercial": "SANODRIL 500 MG",
+  "uso": "TOMAR UNA CAPSULA CADA 12 HORAS POR 7 DIAS.",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0663",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "GRATIO 500 MG.",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 10 DIAS.,",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0664",
+  "nombregenerico": "AMBROXOL CLORHIDRATO",
+  "nombrecomercial": "MUCOLIPTO JARABE 150 MG",
+  "uso": "TOMAR CADA 8 HORAS",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0665",
+  "nombrecomercial": "LONGACEF",
+  "uso": "UNA DIARIA POR 5 O DIEZ DIAS.",
+  "presentacion": "40 MG"
+ },
+ {
+  "codigo_origen": "0666",
+  "nombregenerico": "CIPROFLOXACINA",
+  "nombrecomercial": "GRATIO 500 MG",
+  "uso": "TOMAR UNA CADA 12 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETAS RECUBIERTA"
+ },
+ {
+  "codigo_origen": "0667",
+  "nombregenerico": "SILDENAFIL",
+  "nombrecomercial": "VIASEK 50 MG",
+  "uso": "TOMAR VIA ORAL 20 MINUTOS ANTES DE LA RELACION.",
+  "presentacion": "COMPRIMIDO RECUBIERTO"
+ },
+ {
+  "codigo_origen": "0668",
+  "nombrecomercial": "TALZIC",
+  "uso": "TOMAR UNA DIARIA POR 15 DIAS",
+  "presentacion": "10 MG"
+ },
+ {
+  "codigo_origen": "0669",
+  "nombregenerico": "COMPRIMIDOS",
+  "nombrecomercial": "SEGAMOL",
+  "uso": "TOMAR UNA CADA 8 HORAS POR 5 DIAS.",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0670",
+  "nombregenerico": "POLIETILENGLICOL 3350",
+  "nombrecomercial": "EVALAX",
+  "uso": "DISUELVA 2 CUCHARADAS EN UN VASO DE AGUA,JUGO LIQUIDO DE SU PREFERENCIA. UNA VEZ  EN LA NOCHE",
+  "presentacion": "POLVO PARA SOLUCION ORAL."
+ },
+ {
+  "codigo_origen": "0671",
+  "nombregenerico": "VALACICLOVIR",
+  "nombrecomercial": "VADIRAL 500 MG",
+  "uso": "TOMAR NA CADA 8 HORAS POR 5 DIAS.",
+  "presentacion": "COMPRIDOS RECUBIERTOS."
+ },
+ {
+  "codigo_origen": "0672",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "uso": "UNA AMPOLLA CADA 12 HORAS POR 5 DIAS",
+  "presentacion": "AMPOLLA DE 400 MG"
+ },
+ {
+  "codigo_origen": "0673",
+  "nombrecomercial": "MTRONIDAZOL",
+  "uso": "COLOCAR UNA AMPOLLA CADA 12 HORAS POR 5 DIAS.",
+  "presentacion": "FRASCO AMPOLLA 500 MG"
+ },
+ {
+  "codigo_origen": "0674",
+  "nombrecomercial": "METRONIDAZOL",
+  "uso": "COLOCAR UNA AMPOLLA CADA 8 HORAS POR 5 DIAS",
+  "presentacion": "FRASCO AMPOLLA DE 500MG"
+ },
+ {
+  "codigo_origen": "0698",
+  "nombrecomercial": "EVIGAS",
+  "presentacion": "tabletas"
+ },
+ {
+  "codigo_origen": "0676",
+  "nombrecomercial": "GLUCOSAMINA + CONDROITIN",
+  "uso": "TOMAR UNA DIARIA POR UN AÑO"
+ },
+ {
+  "codigo_origen": "0677",
+  "nombrecomercial": "GLUCOSAMINA + CONDROITIN",
+  "uso": "TOMAR UNA DIARIA POR UN AÑO",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0678",
+  "nombregenerico": "POLVO",
+  "nombrecomercial": "MADECASSOL",
+  "uso": "COLOCAR 3 VECES AL DIA",
+  "presentacion": "POLVO"
+ },
+ {
+  "codigo_origen": "0679",
+  "nombregenerico": "HIERRO",
+  "nombrecomercial": "FOLIFER B12",
+  "uso": "TOMAR UNA DIARIA HASTA NVA ORDEN",
+  "presentacion": "CAPS"
+ },
+ {
+  "codigo_origen": "0680",
+  "nombrecomercial": "APRANAX L.P TABLETA.",
+  "uso": "TOMAR UNA TABLETA DIARIA POR 10 DIAS.",
+  "presentacion": "TABLETA"
+ },
+ {
+  "codigo_origen": "0681",
+  "nombrecomercial": "MELATONINA",
+  "uso": "1 DIARIA 2 HORAS ANTES DE DORMIR",
+  "presentacion": "GNC"
+ },
+ {
+  "codigo_origen": "0682",
+  "nombrecomercial": "BETADINE",
+  "uso": "HACER LAVADOS TRES VECES AL DIA POR 7 DIAS.",
+  "presentacion": "SOLUCION VAGINAL"
+ },
+ {
+  "codigo_origen": "0683",
+  "nombrecomercial": "GENTAMICIMA",
+  "uso": "COLOCAR TRES VECES AL DIA EN LA ZONA POR 5 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0684",
+  "nombrecomercial": "SILIN",
+  "uso": "5 GOTAS TRES VECES AL DIA",
+  "presentacion": "GOTAS"
+ },
+ {
+  "codigo_origen": "0685",
+  "nombrecomercial": "LESTECOL",
+  "uso": "UNA DIARIA POR 8 MESES",
+  "presentacion": "TABLETAS 20 MG"
+ },
+ {
+  "codigo_origen": "0686",
+  "nombrecomercial": "MICOFENTIN DUAL",
+  "uso": "COLOCAR UN OVULO AL ACOSTARSE POR 7 DIAS",
+  "presentacion": "OVULOS"
+ },
+ {
+  "codigo_origen": "0687",
+  "nombrecomercial": "FLESBOSMIN",
+  "uso": "TOMAR 2 TABLETAS DIARIAS POR POR 15 DIAS",
+  "presentacion": "500 MG"
+ },
+ {
+  "codigo_origen": "0688",
+  "nombrecomercial": "UROCIT",
+  "uso": "DOS O TRES VECES AL DIA POR 3 MESES",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0689",
+  "nombrecomercial": "FLEBOSMIN",
+  "uso": "2 TABLETAS CADA 8 HORAS POR 4 DIAS , LUEGO 2 TABLETAS CADA 12 HORAS EN LOS SIGUIENTES 3 DIAS",
+  "presentacion": "500 mg"
+ },
+ {
+  "codigo_origen": "0690",
+  "nombrecomercial": "COLIPAN",
+  "uso": "TOMAR CADA 12 HORAS POR 2 SEMANAS",
+  "presentacion": "TABLETAS"
+ },
+ {
+  "codigo_origen": "0692",
+  "nombrecomercial": "VENOFER",
+  "uso": "DILUIR EN 100 CC SOLUCION SALINA INTRAVENOSO",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0693",
+  "nombrecomercial": "DALACIN",
+  "uso": "COLOCAR 2 VECES AL DIA, PREVIO LAVADO HASTA NUEVA ORDEN",
+  "presentacion": "SOLUCION TOPICA"
+ },
+ {
+  "codigo_origen": "0694",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "PROFENID",
+  "uso": "UNA AMPOLLA INTRAMUSCULAR CADA 8 HORAS POR 3 DIAS",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0695",
+  "nombrecomercial": "UNIDAZOL",
+  "uso": "COLOCAR EN UNA COMPOTA O YOGURT Y REPETIR A LOS 8 DIAS",
+  "presentacion": "GRANULADO"
+ },
+ {
+  "codigo_origen": "0696",
+  "nombregenerico": "ROSUVASTATINA",
+  "nombrecomercial": "ROSULIP",
+  "uso": "TOMAR 1 DIARIA EN LA NOCHE POR MES Y MEDIO",
+  "presentacion": "DE 10 Y 20 MG"
+ },
+ {
+  "codigo_origen": "0697",
+  "nombrecomercial": "SUNTA",
+  "uso": "UNA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "TABLETAS DE 750 MG"
+ },
+ {
+  "codigo_origen": "0700",
+  "nombrecomercial": "VIAVOX",
+  "uso": "COLOCAR TRES VECES AL DIA POR 8 DIAS",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0701",
+  "nombrecomercial": "ZOLTUM",
+  "uso": "TOMAR CADA 12 HORAS POR UN MES",
+  "presentacion": "TABLATAS DE 20 Y 40 MG"
+ },
+ {
+  "codigo_origen": "0702",
+  "nombrecomercial": "TANTUM",
+  "uso": "1 CADA 8 HORAS POR 10 DIAS",
+  "presentacion": "COMPRIMIDOS 50mg"
+ },
+ {
+  "codigo_origen": "0703",
+  "nombrecomercial": "LEVOLET",
+  "uso": "TOMAR 1 DIARIA POR 7 DIAS",
+  "presentacion": "TABLETAS 500 mg"
+ },
+ {
+  "codigo_origen": "0704",
+  "nombrecomercial": "OXINORM",
+  "uso": "TOMAR 2 TABLETAS AL DIA POR 3 MESES",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0705",
+  "nombrecomercial": "LONGACEF",
+  "uso": "1 DIARIA POR 5 O 10 DIAS",
+  "presentacion": "400 mg"
+ },
+ {
+  "codigo_origen": "0706",
+  "nombrecomercial": "SECNIDAL",
+  "uso": "DOS DESPUES DE CENA POR TRES DIAS",
+  "presentacion": "1GR"
+ },
+ {
+  "codigo_origen": "0707",
+  "nombrecomercial": "AGUA DE MANZANILLA",
+  "uso": "LAVAR TODAS LAS VECES CON MANZANILLA",
+  "presentacion": "infusión"
+ },
+ {
+  "codigo_origen": "0708",
+  "nombrecomercial": "LUCIARA",
+  "uso": "APLICAR 3 VECES AL DIA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0709",
+  "nombrecomercial": "ESTRIANON",
+  "uso": "APLICAR 3 VECES AL DIA EN LA ZONA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0710",
+  "nombrecomercial": "BIONAT",
+  "uso": "1 VEZ AL DIA POR 3 DIAS O POR 7 NOCHES",
+  "presentacion": "GEL VAGINAL"
+ },
+ {
+  "codigo_origen": "0711",
+  "nombrecomercial": "STIMOL",
+  "uso": "1 VEZ AL DIA POR 15 DIAS",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0712",
+  "nombrecomercial": "FLEXURE",
+  "uso": "1 SOBRE DIARIO EN AGUA",
+  "presentacion": "SOBRES"
+ },
+ {
+  "codigo_origen": "0713",
+  "nombrecomercial": "OSEFOR",
+  "uso": "1 AL MES POR 1 AÑO",
+  "presentacion": "150 mg"
+ },
+ {
+  "codigo_origen": "0714",
+  "nombrecomercial": "CITRAGEL",
+  "uso": "1 DIARIA ANTES DEL DESAYUNO CON AGUA",
+  "presentacion": "tabletas recubiertas"
+ },
+ {
+  "codigo_origen": "0715",
+  "nombrecomercial": "UNASYN",
+  "uso": "7 CC CADA 12 HORAS",
+  "presentacion": "SUSPENCION"
+ },
+ {
+  "codigo_origen": "0716",
+  "nombrecomercial": "KETESSE",
+  "uso": "1 CADA 8 HORAS POR 5 O 10 DIAS",
+  "presentacion": "25 mg"
+ },
+ {
+  "codigo_origen": "0717",
+  "nombrecomercial": "CEDRIC",
+  "uso": "7,5 cc CADA 8 HORAS",
+  "presentacion": "JARABE"
+ },
+ {
+  "codigo_origen": "0718",
+  "nombrecomercial": "EGOGYN",
+  "uso": "1 DIARIA POR 3 MESES",
+  "presentacion": "CAPSULAS 400 UI"
+ },
+ {
+  "codigo_origen": "0719",
+  "nombrecomercial": "VAROSIN",
+  "uso": "1 CAPSULA ANTES DEL DESAYUNO Y OTRA ANTES DE LA CENA SIN MASTICAR CON SUFICIENTE AGUA",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0720",
+  "nombrecomercial": "STILNOX",
+  "uso": "TOMAR 1 DIARIO A LAS 8 PM"
+ },
+ {
+  "codigo_origen": "0721",
+  "nombrecomercial": "LOTRICOMB",
+  "uso": "APLICAR 3 VECES AL DIA POR 7 DIAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0722",
+  "nombrecomercial": "DERMO PROTECTORA",
+  "uso": "APLICAR 2 VECES AL DIA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0723",
+  "nombrecomercial": "ALEVIAN DUO",
+  "uso": "TOMAR UNA 30 MINUTOS ANTES DE LA COMIDA",
+  "presentacion": "CAPSULAS"
+ },
+ {
+  "codigo_origen": "0724",
+  "nombrecomercial": "FLEBODIA",
+  "uso": "3 VECES AL DIA POR 7 DIAS",
+  "presentacion": "600 mg"
+ },
+ {
+  "codigo_origen": "0725",
+  "nombrecomercial": "DROSBEL",
+  "uso": "TOMAR CONTINUO DESDE EL PRIMER DIA DE LA REGLA A LA MISMA HORA SIN PARAR",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0726",
+  "nombrecomercial": "GLIZIGEN",
+  "uso": "LAVAR TODAS LAS VECES",
+  "presentacion": "GEL INTIMO"
+ },
+ {
+  "codigo_origen": "0727",
+  "nombrecomercial": "METFORMINA",
+  "uso": "TOMAR 1 DESPUES DEL DESAYUNO Y CENA POR 8 MESES",
+  "presentacion": "500 mg"
+ },
+ {
+  "codigo_origen": "0728",
+  "nombrecomercial": "ORLIDIET",
+  "uso": "TOMAR DESPUES DE CADA COMIDA POR 8 MESES",
+  "presentacion": "120 MG"
+ },
+ {
+  "codigo_origen": "0729",
+  "nombrecomercial": "FESTAL",
+  "uso": "TOMAR 1 DESPUES DE LAS COMIDAS",
+  "presentacion": "GRAGEAS"
+ },
+ {
+  "codigo_origen": "0739",
+  "nombrecomercial": "MICTONORM",
+  "uso": "TOMAR UNA CADA 12 HORAS",
+  "presentacion": "TABLETAS 15 MG"
+ },
+ {
+  "codigo_origen": "0730",
+  "nombrecomercial": "MINIGYNON BD",
+  "uso": "tomar 21 dias descansar 7 dias y al octavo dia comenzar el nuevo carton",
+  "presentacion": "comprimidos"
+ },
+ {
+  "codigo_origen": "0731",
+  "nombrecomercial": "QUEXEL",
+  "uso": "TOMAR UNA DESPUES DE DESAYUNO Y UNA DESPUES DE CENA",
+  "presentacion": "TABLETAS 850 mg"
+ },
+ {
+  "codigo_origen": "0732",
+  "nombregenerico": "MAGALDRATO DIMETICONA",
+  "nombrecomercial": "RIOPAN",
+  "uso": "1 HORA DESPUES DE LAS COMIDAS Y ANTES DE ACOSTARSE",
+  "presentacion": "GEL"
+ },
+ {
+  "codigo_origen": "0733",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "BETARRETIN H",
+  "uso": "COLOCAR DOS A TRES VECES AL DIA POR FUERA",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0734",
+  "nombrecomercial": "DIPIRONA (NOVALCINA)",
+  "uso": "UNA AMPOLLA ENDOVENOSA DILUIDA PASAR LENTAMENTE",
+  "presentacion": "AMPOLLA"
+ },
+ {
+  "codigo_origen": "0735",
+  "nombrecomercial": "SULTAMICILINA (SUMITAN )",
+  "uso": "UNA CAPSULA CADA 12 HORAS POR 10 DIAS",
+  "presentacion": "CAPSULAS 450 mg"
+ },
+ {
+  "codigo_origen": "0736",
+  "nombrecomercial": "BETAMESONA-GENTAMICINA-CLOTRIMAZOL",
+  "uso": "COLOCAR 3 VECES AL DIA POR 7 DIAS",
+  "presentacion": "BETADERM CREMA"
+ },
+ {
+  "codigo_origen": "0737",
+  "nombrecomercial": "DROSPIRENONA -ESTRADIAL",
+  "uso": "una diaria por 1 año",
+  "presentacion": "comprimidos(clinomat)"
+ },
+ {
+  "codigo_origen": "0738",
+  "nombrecomercial": "ESTRADIOL",
+  "uso": "UNO O DOS  PUFF DIARIOS POR 1 AÑO",
+  "presentacion": "GEL (GINODERM-ESTROGEL)"
+ },
+ {
+  "codigo_origen": "0741",
+  "nombregenerico": "IMIQUIMOD",
+  "nombrecomercial": "ALDARA",
+  "uso": "COLOCAR EN LAS AREAS AFECTADAS INTERDIARIOS POR 12 O 16 SEMANAS",
+  "presentacion": "CREMA"
+ },
+ {
+  "codigo_origen": "0742",
+  "nombregenerico": "DIANOGEST MAS EE",
+  "nombrecomercial": "GIANDA",
+  "uso": "TOMAR DESDE EL 1ER DIA DE LA REGLA POR 21 DIAS. DESCANSAR 7 DIAS Y COMENZAR NUEVO CARTON AL 8VO DIA",
+  "presentacion": "COMPRIMIDOS"
+ },
+ {
+  "codigo_origen": "0743",
+  "nombregenerico": "MILANTA",
+  "nombrecomercial": "MILANTA",
+  "uso": "1 cucharada 20 min antes de las comidas principales",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0744",
+  "nombregenerico": "ANTIFOM",
+  "nombrecomercial": "ANTIFOM",
+  "uso": "1 TABLETAS 15 MIN ANTES DE LAS COMIDAS",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0745",
+  "nombregenerico": "CALCIBON D",
+  "nombrecomercial": "TABLETAS",
+  "uso": "CALCIO MATERNO, 1 DIARIO CON EL DESAYUNO.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0747",
+  "nombregenerico": "GINOFLOR",
+  "nombrecomercial": "GYNOFLOR",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES",
+  "presentacion": "OVULOS",
+  "sico": "N",
+  "nombrecomercial2": "GINOFLOR",
+  "sicome": "S",
+  "sicome2": "S"
+ },
+ {
+  "codigo_origen": "0748",
+  "nombregenerico": "ACTIVA 21",
+  "nombrecomercial": "ACTIVA 21",
+  "uso": "1 COMPRIMIDO DIARIO POR 21 DIAS DESDE EL PRIMER DIA DE LA MENSTRUACION, DESCANSAR 7 DIAS E INICIAR NUEVA CAJA",
+  "presentacion": "COMP ORALES",
+  "sico": "N",
+  "nombrecomercial1": "ACTIVA 21",
+  "nombrecomercial2": "ACTIVA 21 COMP",
+  "sicome": "S",
+  "sicome1": "S",
+  "sicome2": "S"
+ },
+ {
+  "codigo_origen": "0749",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "AZITROMICINA",
+  "sico": "N",
+  "nombrecomercial1": "AZITROMICINA",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0750",
+  "nombregenerico": "ANALGESICO",
+  "nombrecomercial": "IBUPROFENO",
+  "sico": "N",
+  "nombrecomercial1": "DOLEX",
+  "nombrecomercial2": "IBUBROFEM",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0751",
+  "nombregenerico": "ANTIMICOTICO",
+  "nombrecomercial": "GINOFLOR",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES",
+  "presentacion": "OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0752",
+  "nombregenerico": "CICATRIZANTE",
+  "nombrecomercial": "FISIOMAX",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES ANTES DE ACOSTARSE",
+  "presentacion": "GEL VAGINAL-OVULO",
+  "sico": "N",
+  "nombrecomercial1": "FITOSTIMOLINE",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0753",
+  "nombregenerico": "AINE",
+  "nombrecomercial": "DIPIRONA",
+  "uso": "1 TABLETA VIA ORAL CADA 6 HORAS POR 3 DIAS",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0754",
+  "nombregenerico": "METFORMINA CLORHIDRATO",
+  "nombrecomercial": "METFORMINA",
+  "uso": "1 despues del desayuno y 1 despues de cena.",
+  "presentacion": "tab 850 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0755",
+  "nombregenerico": "PROTECTOR GASTRICO",
+  "nombrecomercial": "OMEPRAZOL",
+  "uso": "1 tableta diaria 7 pm",
+  "presentacion": "tab 40 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0756",
+  "nombregenerico": "VITAMINA",
+  "nombrecomercial": "GESTAVIT",
+  "uso": "1 DIARIA TODO EL EMBARAZO",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0757",
+  "nombregenerico": "ANTISEPTICO",
+  "nombrecomercial": "BENZIDIN",
+  "uso": "1 cada 8 horas",
+  "presentacion": "TAB MASTICABLES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0758",
+  "nombregenerico": "HIPOTENSOR",
+  "nombrecomercial": "-NIFEDIPINO",
+  "uso": "1 TABLETA CADA 12 HORAS",
+  "presentacion": "TABLETAS 10 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0759",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "APETIBOL",
+  "uso": "1 CUCHARADA 3 VECES AL DIA",
+  "presentacion": "JARABE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0760",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "CENTELLA  ASIATICA",
+  "uso": "1 TRES VECES AL DIA",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0761",
+  "nombregenerico": "ANALGESICO",
+  "nombrecomercial": "IBUPROFENO",
+  "uso": "1 CAPSULA CADA 8 HORAS POR 3 DIAS",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N",
+  "nombrecomercial3": "IBUPROFENO 200 MG"
+ },
+ {
+  "codigo_origen": "0762",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "CEFALEXINA",
+  "uso": "1 TABLETA CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0763",
+  "nombregenerico": "ANTIMICOTICO",
+  "nombrecomercial": "FLUCONAZOL",
+  "uso": "APLICAR VIA VAGINAL DOSIS UNICA",
+  "presentacion": "-OVULOS VAGINALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0764",
+  "nombregenerico": "SUPLEMENTO NUTRICIONAL",
+  "nombrecomercial": "CITRATO DE CALCIO",
+  "uso": "1 DIARIA TODO EL EMBARAZO Y LACTANCIA MATERNA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0765",
+  "nombregenerico": "CIRCULATORIO",
+  "nombrecomercial": "DIOSMINA",
+  "uso": "1 CAPSULA 2 VECES AL DIA POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0766",
+  "nombregenerico": "LAXANTE",
+  "nombrecomercial": "-POLIETIILGLICOL PEG",
+  "uso": "DILUIR 30 MG EN MEDIOO VASO DE AGUA Y TOOMAR TODOS LOS DIAS A LAS 7 PM.",
+  "presentacion": "Polvo para diluir",
+  "sico": "N",
+  "nombrecomercial1": "PEG"
+ },
+ {
+  "codigo_origen": "0767",
+  "nombregenerico": "ANTIBIOTICOS",
+  "nombrecomercial": "NITROFURANTOINA",
+  "uso": "1 TABLETA CADA 6 HORAS POR 10 DIAS.",
+  "presentacion": "TABLETAS 50 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0768",
+  "nombregenerico": "RECOMENDACIONES",
+  "nombrecomercial": "ALIMENTACION",
+  "uso": "FRUTAS O VERDURAS 3 VECES AL DIA, 2 LITROS DE AGUA  AL DIA , AUMENTAR CONSUMO DE FIBRA.",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0769",
+  "nombregenerico": "CICATRIZANTE",
+  "nombrecomercial": "FITOSTIMOLINE",
+  "uso": "APLICAR 3VECES AL DIA EN AREA AFECTADA POR 10 DIAS.",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0770",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "ARLETTE 28",
+  "uso": "1 DIARIA TODOS LOS DIAS DESDE EL PRIMER DIA DE LA MENTRUACION SIN FALTA, TERMINAR UNA CAJA Y CONTINUAR LA SIGUIENTE.",
+  "presentacion": "COMPRIMIDOS ORALES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0771",
+  "nombregenerico": "ANTIFUNGICO",
+  "nombrecomercial": "CLOTRIMAZOL",
+  "uso": "APLICAR EN ZONA EXTERNA 3 VECES AL DIA POR 15 DIAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0773",
+  "nombregenerico": "ANTIBOTICO",
+  "nombrecomercial": "-LINDAZOL",
+  "uso": "colocar via vaginal durante 3 noches",
+  "presentacion": "-ovulos",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0774",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "CLINDAMICINA",
+  "uso": "1 TABLETA CADA 8 HORAS POR 7 DIAS",
+  "presentacion": "TABLETAS 300 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0776",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "DOXICICLINA",
+  "uso": "1 DIARIA POR 7 DIAS.",
+  "presentacion": "TABLETAS 100MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0777",
+  "nombregenerico": "MULTIVITAMINICO",
+  "nombrecomercial": "ACIDO FOLICO",
+  "uso": "1 DIARIA TODO EL EMBARAZO",
+  "presentacion": "tabletas 5 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0780",
+  "nombregenerico": "GYNODUO",
+  "nombrecomercial": "GYNODUO",
+  "uso": "APLICAR VIA VAGINAL PROFUNDA POR 10 NOCHES",
+  "presentacion": "OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0778",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "SULFATO FERROSO",
+  "uso": "1 TABLETA  ALEJADA DE LAS COMIDAS, PASAR CON AGUA.",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0779",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "NOGESTA",
+  "uso": "tomar 1 diaria a la misma hora por 28 dias e iniciar inmediatamente siguiente caja. por 6 meses.",
+  "presentacion": "comprimidos",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0782",
+  "nombregenerico": "SUPLEMENTO VITAMINICO",
+  "nombrecomercial": "SULFATO FERROSO",
+  "uso": "1 TABLETAS ALEJADA DE LAS COMIDAS CON AGUA O JUGO DE NARANJA",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0783",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "METRONIDAZOL",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES",
+  "presentacion": "OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0784",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "-CLOTRIMAZOL",
+  "uso": "1 TABLETA Y REPETIR A LOS 15 DIAS",
+  "presentacion": "-TABLETAS 150 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0785",
+  "nombregenerico": "ANTIFUNGICO",
+  "nombrecomercial": "FLUCONAZOL",
+  "uso": "1 TABLETA Y REPETIR A LOS 15 DIAS",
+  "presentacion": "TABLETAS 150 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0786",
+  "nombregenerico": "ANTIFUNGICO",
+  "nombrecomercial": "ITRACONAZOL",
+  "uso": "1 CAPSULA DIARIA POR 7 DIAS",
+  "presentacion": "CAPSULAS 100 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0787",
+  "nombregenerico": "ANTIACIDO",
+  "nombrecomercial": "GAVISCON",
+  "uso": "1 CUCHARADA ANTES DE CADA COMIDA",
+  "presentacion": "SOBRE",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0788",
+  "nombregenerico": "ANTISEPTICO",
+  "nombrecomercial": "SOMERGAN",
+  "uso": "LAVADO DE PIEL DIARIO",
+  "presentacion": "LOCION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0789",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "TRIGENTAX",
+  "uso": "APLICAR 2 VECES AL DIA EN LAS ZONAS CON LESION POR 7 DIAS",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0790",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "UREADERM",
+  "uso": "APLICAR EN TODO EL CUERPO DESPUES DEL BAÑO",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0791",
+  "nombregenerico": "ANTIEMETICO",
+  "nombrecomercial": "PLENIV",
+  "uso": "1 CAPSULA CADA 12 HORAS SI HAY NAUSEAS O VOMITOS",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0792",
+  "nombregenerico": "AINES",
+  "nombrecomercial": "ACETAMINOFEN",
+  "uso": "1 TABLETA CADA 8 HORAS SI HAY DOLOR DE CABEZA O MALESTAR",
+  "presentacion": "TAB 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0793",
+  "nombregenerico": "ANTIFUNGICO BACTERICIDA",
+  "nombrecomercial": "GYNOFLOR",
+  "uso": "APLICAR VIA VAGINAL POR 7 NOCHES ANTES DE ACOSTARSE",
+  "presentacion": "CREMA VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0795",
+  "nombregenerico": "ANTIFUNGICO",
+  "nombrecomercial": "CLOTRIMAZOL",
+  "uso": "APLICAR VIA VAGINAL POR 3 NOCHES",
+  "presentacion": "CREMA VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0796",
+  "nombregenerico": "VITAMINA",
+  "nombrecomercial": "COMPLEJO B",
+  "uso": "1 diario por 1 mes.",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0797",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "-CLINDAMICINA",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES ANTES DE ACOSTARSE, PREVIO LAVADO DE MANOS.",
+  "presentacion": "-OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0878",
+  "nombregenerico": "GLUCERNA",
+  "nombrecomercial": "GLUCERNA",
+  "uso": "1 VASO DIARIO",
+  "presentacion": "-POLVO",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0798",
+  "nombregenerico": "ANTISEPTICO",
+  "nombrecomercial": "BENZIDIN ROSA",
+  "uso": "diluir 1 sobre como se indica en las instrucciones del producto y realizar lavado vaginal",
+  "presentacion": "sobres",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0799",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "BIOTINA",
+  "uso": "1 CAPSULA DIARIAS POR 3 MESES",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0800",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "OMEGA 3",
+  "uso": "1 DIARIA TODO EL EMBARAZO",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0801",
+  "nombregenerico": "ESTERMAX",
+  "nombrecomercial": "ESTERMAX",
+  "uso": "COLOCAR VIA VAGINAL 1 VEZ POR MES POR 12 MESES.",
+  "presentacion": "CREMA VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0802",
+  "nombregenerico": "ANTICONCEPTIVO",
+  "nombrecomercial": "BELLAFACE",
+  "uso": "iniciar el primer dia de la mentruaciion y tomar por 21 dias, descansar 7 dias e iniciar nueva caja",
+  "presentacion": "comp 21",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0803",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "GINORELLE 30",
+  "uso": "1 DIARIO A LA MISMA HORA POR 21 DIAS PARAR 7 DIAS, LUEGO CONTINUAR.",
+  "presentacion": "COMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0804",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "BELLAFACE SUAVE",
+  "uso": "1 comprimido diario desde el prmer dia de la mentruación, a la misma hora, toodos los dias, inicir nueva caja al terminar la que esta tomando.",
+  "presentacion": "COMP 28",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0805",
+  "nombregenerico": "PINAVERIO",
+  "nombrecomercial": "DICETEL",
+  "uso": "TOMAR 10 A 15 MINUTOS ANTES DEL DESAYUNO POR 15 DIAS",
+  "presentacion": "COMP 100 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0806",
+  "nombregenerico": "QUIMIOTERAPICO",
+  "nombrecomercial": "LEUPROLIDA",
+  "uso": "APLICAR MENSUAL POR 3 MESES.",
+  "presentacion": "SUSPENSION INYECTABLE 3,75 MG",
+  "sico": "N",
+  "nombrecomercial1": "LUPRON DEPOT"
+ },
+ {
+  "codigo_origen": "0807",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "VITAMINA D3",
+  "uso": "1 CAPSULA 3 VECES AL DIA POR 3 MESES.",
+  "presentacion": "CAPSULAS 2000 UI",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0808",
+  "nombregenerico": "LACTOBACILOS",
+  "nombrecomercial": "VAGILAC",
+  "uso": "1 DIARIAS POR 30 DIAS (2 CAJAS)",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0809",
+  "nombregenerico": "HEMOSTATICOS",
+  "nombrecomercial": "FITOMENADIONA",
+  "uso": "COLOCAR 1 AMPOLLA INTRAMUSCULAR POR 3 DIAS. ORDEN DIA.",
+  "presentacion": "AMPOLLA IM",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0811",
+  "nombregenerico": "HIPOTENSOR",
+  "nombrecomercial": "ENALAPRIL",
+  "uso": "1 DIARIA CON EL DESAYUNO",
+  "presentacion": "TAB 20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0812",
+  "nombregenerico": "AINES",
+  "nombrecomercial": "DICLOFENACO",
+  "uso": "1 TABLETA CADA 8 HORAS POR 3 DIAS LUEGO SOLO SI HAY DOLOR",
+  "presentacion": "TABLETAS 50 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0813",
+  "nombregenerico": "HEMOSTATICO",
+  "nombrecomercial": "ACIDO TRANEXAMICO",
+  "uso": "1 TABLETA CADA 8 HORAS POR 3-5 DIAS VIA ORAL",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0814",
+  "nombregenerico": "LEVOTIROXINA",
+  "nombrecomercial": "LEVOTIROXINA",
+  "uso": "TOMAR 1 DIARIA EN AYUNAS",
+  "presentacion": "tabletas 50 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0815",
+  "nombregenerico": "YASMINIQ",
+  "nombrecomercial": "YASMINQ",
+  "uso": "1 DIARIA  A LA MISMA HORA SIN FALTA , INICIAR PRIMERA CAJA CON LA MENSTRUACION",
+  "presentacion": "COMP 28",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0816",
+  "nombregenerico": "ANTISEPTICO",
+  "nombrecomercial": "FLAVOXATO",
+  "uso": "1 tableta cada 8 horas por 3 dias",
+  "presentacion": "tab 200 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0817",
+  "nombregenerico": "ANTBTC",
+  "nombrecomercial": "CLINDAMICINA",
+  "uso": "aplicar via vaginal por 5 noches",
+  "presentacion": "crema vaginal",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0818",
+  "nombregenerico": "ANTNBIOOTC",
+  "nombrecomercial": "-CEFTRIAXONA",
+  "uso": "APLICAR 2 GR NTRAMUSCULAR DOSIS UNICA",
+  "presentacion": "amp 1 gr IM",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0819",
+  "nombregenerico": "GASTRICO",
+  "nombrecomercial": "MISOPROSTOL",
+  "uso": "tomar 2 tabletas y repetir a las 24 horas",
+  "presentacion": "-tab 200 mcgr",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0820",
+  "nombregenerico": "HDRATACON",
+  "nombrecomercial": "SUERO ORAL PEDIALYTE",
+  "uso": "1 VASO CADA HORA HASTA MEJORAR SINTOMAS",
+  "presentacion": "SOLUCION ORAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0821",
+  "nombregenerico": "DEPURATV",
+  "nombrecomercial": "BISACODILO",
+  "uso": "1 TODAS LAS NOCHES POR 1 MES",
+  "presentacion": "TAB 5 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0822",
+  "nombregenerico": "DSLPDEMIA",
+  "nombrecomercial": "EZETMIBA-SIMVASTATINA",
+  "uso": "1 tableta diaria por 3 meses",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0823",
+  "nombregenerico": "FIBRACOL",
+  "nombrecomercial": "FIBRACOL",
+  "uso": "1 vaso diario todos ls dias",
+  "presentacion": "-polvo",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0824",
+  "nombregenerico": "ANTISEPTIC URINARIO",
+  "nombrecomercial": "FLAVOXAT CLORHIDRATO",
+  "uso": "1 cada 12 horas por 3 dias",
+  "presentacion": "tab 200 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0825",
+  "nombregenerico": "PROSTAGLANDINA",
+  "nombrecomercial": "PREPIDIL 0.5 MG",
+  "uso": "APLICAR VIA VAGINAL POR 5 NOCHES",
+  "presentacion": "GEL VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0826",
+  "nombregenerico": "CLOMIFEN HRMONA",
+  "nombrecomercial": "ZIMAQUIN",
+  "uso": "1 TABLETA DIARIA 7 PM, DESDE EL 5TO DIA POST MENTRUAL",
+  "presentacion": "50 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0827",
+  "nombregenerico": "LUBRICANTE",
+  "nombrecomercial": "LUBRICANTE J J",
+  "uso": "APLICAR INTERDIARIO EN LA ZONA",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0828",
+  "nombregenerico": "ACIDO",
+  "nombrecomercial": "-ACIDO TRICLOROACETICO AL 80%",
+  "presentacion": "SOLUCION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0829",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "BEXON DUO",
+  "uso": "APLICAR VIA VAGINAL POR 7 NOCHES.",
+  "presentacion": "OVULOS X7",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0830",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "YODORA",
+  "uso": "APLICAR EN ZONA EXTERNA 2 VECES AL DIA POR 7 DIAS.",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0831",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "IVERMECTINA",
+  "uso": "TOMAR 6 MG DOSIS UNICA EN AYUNAS.",
+  "presentacion": "TABLETAS 6 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0839",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "ACETAMINOFEN",
+  "uso": "5 ML CADA 6 HORAS POR 5 DIAS",
+  "presentacion": "-jarabe ped",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0832",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "SLINDA",
+  "uso": "Iniciar primer día de la menstruación y tomar continuo por 28 días, al terminar la caja iniciar nueva caja.",
+  "presentacion": "tabletas recubiertas 4 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0833",
+  "nombregenerico": "ACETATO DE MEDROXIPROGESTERONA",
+  "nombrecomercial": "-PROVERA (ACETATO DE MEDROXIPROGEST",
+  "uso": "1 tableta cada 12 horas por 3 días.",
+  "presentacion": "-tabletas 5 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0834",
+  "nombregenerico": "ACO",
+  "nombrecomercial": "YAXIBELLE",
+  "uso": "1 tableta diaria a la misma hora sin falta, a partir del primer día de la mentruación.",
+  "presentacion": "tabletas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0835",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "BI PLENA",
+  "uso": "1 diaria con el desayuno.",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0836",
+  "nombregenerico": "DUCHA VAGINAL",
+  "nombrecomercial": "BENZIRIN ROSA",
+  "uso": "APLICAR EN LA NOCHE DOSIS UNICA ANTES DE ACOSTARSE.",
+  "presentacion": "DUCHA VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0837",
+  "nombregenerico": "INMUNOMODULADOR RESPITARIO",
+  "nombrecomercial": "-MONTELUKAST",
+  "uso": "1 TABLETA DIARIA POR 1 MES.",
+  "presentacion": "TABLETAS 4 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0838",
+  "nombregenerico": "ACETATO DE M EDROXIPROGESTERONA",
+  "nombrecomercial": "-CYCLOFEM",
+  "uso": "COLOCAR 1 AMPOLLA CADA 30 DIAS FIJO POR 6 MESES.",
+  "presentacion": "-AMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0840",
+  "nombregenerico": "INHALADOR",
+  "nombrecomercial": "SALBUTAMOL",
+  "uso": "3 PUFF CADA 4 HORAS",
+  "presentacion": "-INH",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0841",
+  "nombregenerico": "RESP",
+  "nombrecomercial": "PULMICORT",
+  "uso": "1 AMPOLA NEBULIZADA CADA 12 HORAS POR 3 DIAS",
+  "presentacion": "AMPOLLAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0842",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "AMPICILINA",
+  "uso": "5 ML CADA 6 HORAS POR 7 DIAS",
+  "presentacion": "-SUSP ORAL 250 MG/5ML",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0843",
+  "nombregenerico": "PAPILOCARE",
+  "nombrecomercial": "PAPILOCARE",
+  "uso": "APLICAR EN ZONA AFECTADA POR 7 NOCHES",
+  "presentacion": "CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0844",
+  "nombregenerico": "ANTIFUNGICO",
+  "nombrecomercial": "GYNOCANESTEN",
+  "uso": "aplicar en zona afectada 2 veces al dia por 7 dias",
+  "presentacion": "crema vaginal",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0845",
+  "nombregenerico": "ANTISEPTICO",
+  "nombrecomercial": "-SMECTA",
+  "uso": "1 sobre cada 12 horas",
+  "presentacion": "sobres",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0846",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "METARSAL",
+  "uso": "2 cc cada 8 horas por 5 dias",
+  "presentacion": "susp pediatrica",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0847",
+  "nombregenerico": "ANTIACIDO",
+  "nombrecomercial": "-GAVISCON",
+  "uso": "1 CUCHARADA  ANTES DE ACOSTARSE Y 30 MIN ANTES DE ALMUERZO",
+  "presentacion": "-SUSPENSION",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0848",
+  "nombregenerico": "DEFLAGYN",
+  "nombrecomercial": "DEFLAGYN",
+  "uso": "APLICA 5 ML VIA VAGINAL POR 3 NOCHES Y REPETIR A LOS 28 DIAS POR 3 MESES.",
+  "presentacion": "GEL VAGINAL-",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0849",
+  "nombregenerico": "CITRATO DE CLOMIFENO",
+  "nombrecomercial": "-CLOMIFEN",
+  "uso": "1 TABLETA  A PARTIR DEL DIA 5 DE LA MENSTRUACION HASTA EL DIA 10 A LAS 7 PM EN PUNTO",
+  "presentacion": "-TABLETAS 50 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0850",
+  "nombregenerico": "LEVOTIROXINA",
+  "nombrecomercial": "LEVOTIROXINA",
+  "uso": "1 DIARIA EN AYUNAS, 30 MIN ANTES DE LAS COMIDAS",
+  "presentacion": "TAB 100 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0851",
+  "nombregenerico": "ANTIBIOTICO",
+  "nombrecomercial": "-AMPICILINA SULBACTAM",
+  "uso": "1 TABLETA CADA 8 HORAS POR 3 DIAS.",
+  "presentacion": "AMPICILINA SULBACTAM",
+  "sico": "N",
+  "nombrecomercial3": "SULAM"
+ },
+ {
+  "codigo_origen": "0852",
+  "nombregenerico": "PERMETRINA",
+  "nombrecomercial": "-PERMETRINA AL 5%",
+  "uso": "APLICAR DESPUES DEL BAÑO Y ANTES DE ACOSTARSE EN CODOS,RODILLAS, INGLE, MANOS, AXILAS.",
+  "presentacion": "-CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0853",
+  "nombregenerico": "ANTIALERGICO",
+  "nombrecomercial": "DESLORATADINA",
+  "uso": "1 CADA 12 HORAS SOLO SI HAY MUCHA RASQUIÑA",
+  "presentacion": "TABLETA 5 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0854",
+  "nombregenerico": "NIMESULIDE",
+  "nombrecomercial": "NIMESULIDE",
+  "uso": "1 TABLETA CADA 12 HORAS POR 3 DIAS",
+  "presentacion": "TABLETAS 100 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0855",
+  "nombregenerico": "ANTIESPASMODICO",
+  "nombrecomercial": "-FEMMEX PLUS",
+  "uso": "1 CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "COMP",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0856",
+  "nombregenerico": "HIPOTENSOR",
+  "nombrecomercial": "-LOSARTAN POTASICO",
+  "uso": "1 DIARIA EN LA MAÑANA",
+  "presentacion": "TABLETAS 20 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0857",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "MEREY",
+  "uso": "APLICAR EN LA ZONA AFECTADA 2 VECES AL DIA POR 10 DIAS",
+  "presentacion": "-CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0858",
+  "nombregenerico": "ANTIALERGICO",
+  "nombrecomercial": "-CETIRIZINA",
+  "uso": "1 TABLETA CADA 12 HORAS POR 5 DIAS Y LUEGO 1 DIARIA POR LAS NOCHES POR 1 MES.",
+  "presentacion": "-TABLETAS 10 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0859",
+  "nombregenerico": "SPRAY NASAL",
+  "nombrecomercial": "-MOMETASONA",
+  "uso": "1 PUFF EN CADA FOSA NASAL CADA 12 HORAS POR 1 MES",
+  "presentacion": "-SPRAY NASAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0860",
+  "nombregenerico": "ANTIALERGICO OFT",
+  "nombrecomercial": "-NEOMICINA+DEXAMETASONA",
+  "uso": "1 GOTA EN CADA OJO CADA 12 HORAS POR 7 DIAS.",
+  "presentacion": "-GOTAS OFTALMICAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0861",
+  "nombregenerico": "RELAJANTE",
+  "nombrecomercial": "-METACARBAMOL",
+  "uso": "1 TABLETA CADA 8 HORAS POR 5 DIAS.",
+  "presentacion": "-TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0862",
+  "nombregenerico": "PARA MAREO",
+  "nombrecomercial": "-DRAMAMINE",
+  "uso": "1 TABLETA POR 5 NOCHES.",
+  "presentacion": "-TABL 50",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0863",
+  "nombregenerico": "RELAJANTE",
+  "nombrecomercial": "-DOLORO",
+  "uso": "1 TABLETA DIARIA 7 PM POR 5 DIAS.",
+  "presentacion": "-TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0864",
+  "nombregenerico": "CREMA DESPIGMENTANTE",
+  "nombrecomercial": "-MELANODERM",
+  "uso": "APLICAR EN AREAS OSCURAS TODAS LAS NOCHES",
+  "presentacion": "-CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0866",
+  "nombregenerico": "ACEITE DE DUCHA",
+  "nombrecomercial": "EUCERIN",
+  "uso": "PH 5",
+  "presentacion": "-ACEITE DE DUCHA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0865",
+  "nombregenerico": "CREMA ANTIFUNGICA",
+  "nombrecomercial": "-LAMISIL",
+  "uso": "APLICAR 2 VECES AL DIA EN ZONA AFECTADA POR 7 DIAS",
+  "presentacion": "-CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0867",
+  "nombregenerico": "VIT D",
+  "nombrecomercial": "-CALCIFEDIOL",
+  "uso": "1 mensual en ayunas",
+  "presentacion": "-capsulas blandas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0868",
+  "nombregenerico": "POTENCIADOR",
+  "nombrecomercial": "-POTENCIADOR",
+  "uso": "1 antes y otra despues de la actividad fisica",
+  "presentacion": "-ampollas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0869",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "-FERROPROTINA",
+  "uso": "via oral en ayunas",
+  "presentacion": "-sobres granulados",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0870",
+  "nombregenerico": "INMUNOSUPRESOR",
+  "nombrecomercial": "-FAMCICLOVIR",
+  "uso": "1 TABLETA CADA 12 HORAS POR 5 DIAS SI PRESENTA SINTOMAS DE INFECCION DE LO CONTRARIO TOMAR CADA  3 MESES POR 3 CICLOS DE 5 DIAS.",
+  "presentacion": "-TABLETAS 125 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0871",
+  "nombregenerico": "FLUCIFEM",
+  "nombrecomercial": "TABLETAS",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS POR 2 DIAS, PARA PACIENTE Y PAREJA (PROFILACTICO)",
+  "presentacion": "-TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0872",
+  "nombregenerico": "FLUCIFEM",
+  "nombrecomercial": "FLUCIFEM",
+  "uso": "1 TABLETAS CADA 12 HORAS POR 2 DIAS, PARA PACIENTE Y PAREJA, PROFILACTICO.",
+  "presentacion": "TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0876",
+  "nombregenerico": "EXCEL GEST",
+  "nombrecomercial": "-EXCELGEST",
+  "uso": "1 DIARIA CON EL DESAYUNO",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0873",
+  "nombregenerico": "ANTIBIOTICO-ANTIFUNGICO",
+  "nombrecomercial": "-GYNFLU-D",
+  "uso": "TOMAR 2 TABLETAS, DOSIS UNICA, DESPUES DE UNA COMIDA PRINCIPAL.",
+  "presentacion": "-TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0874",
+  "nombregenerico": "URO",
+  "nombrecomercial": "-URO",
+  "uso": "TOMAR 1 DIARIO POR 2 A 3 MESES(PROBIOTICOS VAGINALES)",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0875",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "EXELMYO",
+  "uso": "DILUIR 1 SOBRE EN MEDIO VASO DE AGUA Y TOMAR CON EL ALMUERZO",
+  "presentacion": "SOBRES",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0877",
+  "nombregenerico": "HEMOVIT",
+  "nombrecomercial": "HEMOVIT",
+  "uso": "1 CAPSULA 2 VECES AL DIA POR 2 O 3 MESES",
+  "presentacion": "-TABLETAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0879",
+  "nombregenerico": "MULTIVITAMINICO",
+  "nombrecomercial": "EXCELGEST",
+  "uso": "1 DIARIA CON EL DESAYUNO",
+  "presentacion": "CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0880",
+  "nombregenerico": "RECOMENDACIONES",
+  "nombrecomercial": "RECOMENDACIONES",
+  "presentacion": "OTROS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0881",
+  "nombregenerico": "EXELGEST",
+  "nombrecomercial": "EXELGEST",
+  "uso": "1 diaria con el desayuno.",
+  "presentacion": "capsulas",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0882",
+  "nombregenerico": "SUPLEMENTO",
+  "nombrecomercial": "-HIDROFEROL",
+  "uso": "TOMAR 1 MENSUAL POR 6 MESES",
+  "presentacion": "CAPSULAS 0,266",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0883",
+  "nombregenerico": "AINES",
+  "nombrecomercial": "-IBUFLASH",
+  "uso": "1 CAPSULA CADA 8 HORAS POR 3 DIAS",
+  "presentacion": "-CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0885",
+  "nombregenerico": "JABON",
+  "nombrecomercial": "-DALIC FEM",
+  "uso": "LAVADO GENITAL 1 VEZ AL DIA",
+  "presentacion": "-BARRA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0884",
+  "nombregenerico": "CRONODERM",
+  "nombrecomercial": "-CRONODERM FEM",
+  "uso": "APLICAR EN EL AREA GENITAL EXTERNA 1 VEZ AL DIA DESPUES DEL BAÑO",
+  "presentacion": "-CREMA",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0886",
+  "nombregenerico": "METRONIDAZOL/ NISTATINA",
+  "nombrecomercial": "METRONIDAZOL/NISTATINA",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES ANTES DE DORMIR",
+  "presentacion": "OVULOS 500 mg/100.000 UI",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0887",
+  "nombregenerico": "IBUPROFENO/METOCARBAMOL",
+  "nombrecomercial": "IBUPROFENO/METOCARBAMOL",
+  "uso": "1 tableta cada 8 horas por 3 dias.",
+  "presentacion": "tabletas 200/500 mg",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0888",
+  "nombregenerico": "CICATRIZANTE",
+  "nombrecomercial": "-FITOSTIMOLINE",
+  "uso": "APLICAR VIA VAGINAL POR 7 NOCHES",
+  "presentacion": "-OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0889",
+  "nombregenerico": "JADELLE",
+  "nombrecomercial": "JADELLE",
+  "uso": "iniciar anticoncepcion con jadelle",
+  "presentacion": "-implante subdermico",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0890",
+  "nombregenerico": "ANTIBIOTICO ANTIFUNGICO",
+  "nombrecomercial": "-CLINDAMIZOL",
+  "uso": "APLICAR VIA VAGINAL POR 10 NOCHES, ANTES DE DORMIR",
+  "presentacion": "-OVULOS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0891",
+  "nombregenerico": "ANTIEMETICO",
+  "nombrecomercial": "-BONJESTA",
+  "uso": "1 DIARIA  ANTES DE DORMIR.",
+  "presentacion": "-CAPSULAS",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0892",
+  "nombregenerico": "PROBIOTICO",
+  "nombrecomercial": "-GYNOCANESTEN BALANCE",
+  "uso": "APLICAR VIA VAGINAL POR 7 NOCHES",
+  "presentacion": "-GEL VAGINAL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0893",
+  "nombregenerico": "PROGESTERONA",
+  "nombrecomercial": "-GESTAGENO",
+  "uso": "1 CAPSULA DESDE EL PRIMER DIA DE LA MENSTRUACION POR 15 DIAS",
+  "presentacion": "-CAPSULAS 200 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0894",
+  "nombregenerico": "VITAMINA C SERUM",
+  "nombrecomercial": "VITAMINA C SERUM",
+  "uso": "APLICXAR EN ZONA AFECTADA POR 14 DIAS",
+  "presentacion": "GEL",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0896",
+  "nombregenerico": "ANTIPARASITARIO",
+  "nombrecomercial": "NITAZOXANIDA",
+  "uso": "1 TABLETA CADA 12 HORAS POR 3 DIAS",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N"
+ },
+ {
+  "codigo_origen": "0897",
+  "nombregenerico": "PROGESTESTERONA MICRONIZADA",
+  "nombrecomercial": "-UTROGESTAN",
+  "uso": "1 diario via oral o vaginal",
+  "presentacion": "capsulas 200 mg",
+  "sico": "N"
+ }
+]

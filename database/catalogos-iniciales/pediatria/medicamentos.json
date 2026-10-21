@@ -1,0 +1,8775 @@
+[
+ {
+  "codigo_origen": "0403",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "ATAMEL",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "cada": "4",
+  "durante": "2",
+  "pvc": "100",
+  "pvs": "1",
+  "dosis": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0405",
+  "nombregenerico": "METRONIDAZOL",
+  "nombrecomercial": "METROVAX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250 MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0408",
+  "nombrecomercial": "ADVIL",
+  "dosificacion": "NO",
+  "uso": "ADVIL 1 GRAGEA C/8 HORAS",
+  "presentacion": "GRAGEA",
+  "pvc": "200",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0414",
+  "nombrecomercial": "BACTRON",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 10 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0418",
+  "nombregenerico": "CLEMBUTEROL",
+  "nombrecomercial": "CLEMBUTEROL",
+  "dosificacion": "NO",
+  "uso": "8 GOTAS CADA 12 HORAS X 10 DIAS",
+  "presentacion": "GOTAS",
+  "cada": "2",
+  "durante": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0423",
+  "nombrecomercial": "VENTIDE",
+  "dosificacion": "NO",
+  "uso": "2 PULVERIZACIONES CADA 8 HORAS X 10 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0425",
+  "nombrecomercial": "SINUTAB PLUS",
+  "dosificacion": "NO",
+  "uso": "1CAPSULA CADA 8 HORAS X 5 DIAS",
+  "presentacion": "CAPSULA",
+  "cada": "3",
+  "durante": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0432",
+  "nombrecomercial": "PINVEX",
+  "dosificacion": "NO",
+  "uso": "APLICAR PINCELADAS EN AMIGDALAS 2 VECES AL DIA",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0434",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "ENTERAL",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA VIA ORAL CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "TAB. 150MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0440",
+  "nombregenerico": "SUCRALFATO",
+  "nombrecomercial": "ULCON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 6 HORAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0444",
+  "nombrecomercial": "FLEMIBAR",
+  "dosificacion": "NO",
+  "uso": "5 GOTAS CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0446",
+  "nombrecomercial": "DOLOGINEX",
+  "dosificacion": "NO",
+  "uso": "1 COMPRIMIDO CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "COMPRIMIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0450",
+  "nombrecomercial": "NISTATINA",
+  "dosificacion": "NO",
+  "uso": "1 CC VIA ORAL 3 VECES AL DIA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1374",
+  "nombrecomercial": "AMOXACILINA / ACIDO CLAVULANICO",
+  "presentacion": "SUSPENSION 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1377",
+  "nombrecomercial": "MOXIFLOXACINA",
+  "presentacion": "TAB 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0453",
+  "nombrecomercial": "FUROSIL",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "50",
+  "pvs": "5",
+  "dosis": "6",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0455",
+  "nombrecomercial": "FUROXONA",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "50",
+  "pvs": "5",
+  "dosis": "6",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0469",
+  "nombrecomercial": "CO-SULTRIN",
+  "dosificacion": "NO",
+  "uso": "3CC VIA ORAL CADA 12 HORAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0471",
+  "nombrecomercial": "BACTRON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA VIA ORAL CADA 12 HORAS X 10 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0473",
+  "nombrecomercial": "FORCRIN",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 10 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0475",
+  "nombrecomercial": "ROBITESSIDEM",
+  "dosificacion": "NO",
+  "uso": "3CC VIA ORAL CADA 8 HORAS SI HAT TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0476",
+  "nombregenerico": "CLOROFENIRAMINA-DEXTROMETORFANO",
+  "nombrecomercial": "PROMEDINA",
+  "dosificacion": "SI",
+  "uso": "2.5CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0478",
+  "nombrecomercial": "CODELASA PEDIATRICA",
+  "dosificacion": "SI",
+  "uso": "5 CC VIA ORAL CADA 6HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0479",
+  "nombrecomercial": "TERATOS PEDIATRICO",
+  "dosificacion": "SI",
+  "uso": "5CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0480",
+  "nombrecomercial": "TILODRIN",
+  "dosificacion": "SI",
+  "uso": "5 CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0481",
+  "nombrecomercial": "TILODRIN INFANTIL",
+  "dosificacion": "SI",
+  "uso": "GOTAS VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0487",
+  "nombregenerico": "SULFATO FERROSO",
+  "nombrecomercial": "FER-IN-SOL",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL 2 VECES AL DIA 2 HORAS ANTES O DESPUES DE LAS COMIDAS X 3 MESES",
+  "presentacion": "JARABE",
+  "cada": "0",
+  "durante": "0",
+  "pvc": "0",
+  "pvs": "0",
+  "dosis": "0",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0163",
+  "nombrecomercial": "VITAMINA C",
+  "dosificacion": "NO",
+  "uso": "UNA AL DIA",
+  "presentacion": "TABLETAS 500 MGS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0406",
+  "nombregenerico": "CLARITROMICINA",
+  "nombrecomercial": "KLARICID",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "2",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "15",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0842",
+  "nombrecomercial": "ZITROMAX",
+  "presentacion": "SUSP 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0416",
+  "nombrecomercial": "PREVERAL CON DEXTROMETORFANO",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0420",
+  "nombrecomercial": "TERGRIP",
+  "dosificacion": "NO",
+  "uso": "DAR     GOTAS VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "GOTAS",
+  "cada": "3",
+  "durante": "5",
+  "pvc": "125",
+  "pvs": "1",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0424",
+  "nombrecomercial": "CODELASA ADULTO",
+  "dosificacion": "NO",
+  "uso": "10CC VIA ORAL CADA 6 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "cada": "4",
+  "durante": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0426",
+  "nombregenerico": "DEXAMETASONA",
+  "nombrecomercial": "DEXAMETASONA",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR",
+  "presentacion": "AMP",
+  "cada": "1",
+  "durante": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0844",
+  "nombrecomercial": "CIPROXINA",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0436",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "ZANTAC",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "150",
+  "pvs": "10",
+  "dosis": "2",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0438",
+  "nombregenerico": "SUCRALFATO",
+  "nombrecomercial": "DIP",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 4 VCES AL DIA",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0442",
+  "nombregenerico": "TRIMEBUTINA",
+  "nombrecomercial": "DEBRIDAD",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0845",
+  "nombrecomercial": "CITRATO DE SODIO AL 9,8%",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0849",
+  "nombrecomercial": "CETIRIVAX D",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0851",
+  "nombrecomercial": "METROVAX",
+  "presentacion": "CAPS 500mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0852",
+  "nombrecomercial": "PROKAL CON GLUTAMINA",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0853",
+  "nombrecomercial": "CITRATO DE POTASIO AL 5,4%",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0862",
+  "nombrecomercial": "AERIUS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0410",
+  "nombrecomercial": "FUROXIL",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0412",
+  "nombrecomercial": "SOLUNOVAR COMPUESTO",
+  "dosificacion": "NO",
+  "uso": "ASEO BUCAL CON AGUA BICARBONATADA Y LISTERINE 3 VECES AL DIA Y APLICAR LA SOLUCION DE SOLUNOVAR",
+  "presentacion": "SOLUNOVAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0417",
+  "nombrecomercial": "CELESTONE",
+  "dosificacion": "NO",
+  "uso": "7CC VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "pvc": "30",
+  "pvs": "25",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0422",
+  "nombrecomercial": "ELOMET",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LAS LESIONES PREVIO ASEO CON AGUA DE MANZANILLA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0428",
+  "nombregenerico": "BENZIDAMINA-LIDOCAINA",
+  "nombrecomercial": "GENCIVOL COMPUESTO",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN ENCIAS Y MUCOSA ORAL PREVIO ASEO BUCAL CON AGUA BICARBONATADA Y LISTERINE 4 VECES AL DIA",
+  "presentacion": "TOPICO BUCAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0437",
+  "nombregenerico": "OMEPRAZOL",
+  "nombrecomercial": "OMEPRAZOL",
+  "dosificacion": "NO",
+  "uso": "TOMAR UNA TABLETA DIARIA",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0441",
+  "nombrecomercial": "ANTIFON",
+  "dosificacion": "NO",
+  "uso": "4 GOTAS CADA 8 HORAS VIA ORAL X 5 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0269",
+  "nombrecomercial": "VITAMINA A VIVAX",
+  "dosificacion": "NO",
+  "uso": "10 GOTAS UNA VEZ  AL DIA",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0445",
+  "nombrecomercial": "FLEMIBAR",
+  "dosificacion": "NO",
+  "uso": "1 COMPRIMIDO CADA 8 HORAS SI HAY DOLOR",
+  "presentacion": "COMPRIMIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0449",
+  "nombregenerico": "DOMPERIDONA",
+  "nombrecomercial": "TILIUM",
+  "dosificacion": "NO",
+  "uso": "2CC VIA ORAL CADA 8 HORAS",
+  "presentacion": "SUSPENSION",
+  "pvc": "1",
+  "pvs": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0409",
+  "nombrecomercial": "FALMONOX",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X  10 DIAS",
+  "presentacion": "SUSP",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "50",
+  "pvs": "15",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0411",
+  "nombrecomercial": "LETISAN",
+  "dosificacion": "NO",
+  "uso": "5CC VIA 2 VECES AL DIA X 1MES",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0798",
+  "nombrecomercial": "ZINC",
+  "presentacion": "TABLETAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0493",
+  "nombrecomercial": "LANOLZIN",
+  "dosificacion": "SI",
+  "uso": "APLICAR EN AREA PERIANAL PREVIO ASEO CON AGUA DE MANZANILLA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0846",
+  "nombrecomercial": "AMOXIDUO",
+  "presentacion": "SUSP 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0456",
+  "nombrecomercial": "CORILIN",
+  "dosificacion": "NO",
+  "uso": "7 GOTAS VIAORAL CADA 8 HORAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0458",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "SINTISONE",
+  "dosificacion": "NO",
+  "uso": "8 GOTAS VIA ORAL CADA 12 HORAS X 4 DIAS LUEGO 1 VEZ AL DIA  3PM  X 5 DIAS MAS",
+  "presentacion": "GOTAS",
+  "pvc": "13",
+  "pvs": "1",
+  "dosis": "0",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0460",
+  "nombrecomercial": "TILODRIN",
+  "dosificacion": "SI",
+  "uso": "8 GOTAS VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0462",
+  "nombrecomercial": "BEDUCEN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LAS LESIONES",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0463",
+  "nombrecomercial": "SUERO ORAL",
+  "dosificacion": "NO",
+  "uso": "DAR 3 A 4 ONZAS CADA MEDIA HORA X 3  HORAS, LUEGO DAR SI HAY VOMITOS O EVACUACIONES",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0465",
+  "nombrecomercial": "BRODILIN",
+  "dosificacion": "NO",
+  "uso": "DAR 10 GOTAS CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0346",
+  "nombrecomercial": "VITREXON",
+  "dosificacion": "NO",
+  "uso": "1 capsula diaria k",
+  "presentacion": "Caps",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1097",
+  "nombrecomercial": "FARMA D",
+  "presentacion": "TABLETAS 4mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0512",
+  "nombrecomercial": "CLARIX",
+  "dosificacion": "NO",
+  "uso": "APLICAR UNA GOTA EN CADA FOSA NASAL CADA 8 HORAS  SI PERSISTE OBSTRUCCION NASAL",
+  "presentacion": "SOL NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0848",
+  "nombrecomercial": "ACID MANTLE",
+  "presentacion": "LOCION CORPORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0854",
+  "nombrecomercial": "FEDYCLAR",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1100",
+  "nombrecomercial": "CLOPIDOGREL",
+  "presentacion": "TAB 75MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0404",
+  "nombregenerico": "CAFADROXILO",
+  "nombrecomercial": "CEFAVAL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "30",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0407",
+  "nombregenerico": "CLARITROMICINA",
+  "nombrecomercial": "KLARICID",
+  "dosificacion": "SI",
+  "presentacion": "SUSP  125MG",
+  "cada": "2",
+  "durante": "10",
+  "pvc": "125",
+  "pvs": "5",
+  "dosis": "15",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0427",
+  "nombregenerico": "MICONAZOL",
+  "nombrecomercial": "DAKTARIN",
+  "dosificacion": "NO",
+  "uso": "APLICAR MEDIA CUCHARADITA EN MUCOSA ORAL PREVIO ASEO BUCAL CON AGUA BICARBONATADA Y LISTERINE",
+  "presentacion": "GEL ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0429",
+  "nombregenerico": "BENZIDAMINA",
+  "nombrecomercial": "SOLUNOVAR COMPUESTO",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN MUCOSA ORAL PREVIO ASEO BUCAL 3 VECES AL DIA",
+  "presentacion": "TOPICO BUCAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0431",
+  "nombregenerico": "LIDOCAINA",
+  "nombrecomercial": "NENEDENT",
+  "dosificacion": "NO",
+  "uso": "APLICAR CADA 4 -6 HORAS",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0433",
+  "nombrecomercial": "DICIGEL",
+  "dosificacion": "NO",
+  "uso": "DAR 1 CUCHARADITA VIA ORAL CADA 6 HORAS",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0435",
+  "nombregenerico": "RANITIDINA",
+  "nombrecomercial": "VIZERUL",
+  "dosificacion": "NO",
+  "uso": "TOMAR 1 TABLETA CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "TAB.  150MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0439",
+  "nombregenerico": "SUCRALFATO",
+  "nombrecomercial": "SUCRALFATO",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 6 HORAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0443",
+  "nombrecomercial": "PLIDAN",
+  "dosificacion": "NO",
+  "uso": "4 GOTAS CADA 8 HORAS VIA HORAL SI HAY DOLOR",
+  "presentacion": "GOTAS",
+  "pvc": "10",
+  "pvs": "1",
+  "dosis": "0",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0448",
+  "nombregenerico": "METOCLOPRAMIDA",
+  "nombrecomercial": "IRTOPAN",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "cada": "3",
+  "durante": "3",
+  "pvc": "5",
+  "pvs": "5",
+  "dosis": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0451",
+  "nombrecomercial": "DIODOQUIN",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "cada": "3",
+  "durante": "15",
+  "pvc": "4200",
+  "pvs": "100",
+  "dosis": "40",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0497",
+  "nombrecomercial": "DAKTOZIN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN AREA GENITAL PREVIO ASEO CON AGUA DE MANZANILLA",
+  "presentacion": "PASTA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0452",
+  "nombrecomercial": "FUROXIL",
+  "dosificacion": "NO",
+  "uso": "10 GOTAS VIA ORAL CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "GOTAS",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "30",
+  "pvs": "1",
+  "dosis": "6",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0454",
+  "nombrecomercial": "FUROXONA",
+  "dosificacion": "NO",
+  "uso": "GOTAS CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "GOTAS",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "30",
+  "pvs": "1",
+  "dosis": "6",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0457",
+  "nombrecomercial": "PEDIALYTE",
+  "dosificacion": "NO",
+  "uso": "DAR 2 ONZAS X CADA EVACUACION",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0459",
+  "nombrecomercial": "PRAMIDE",
+  "dosificacion": "NO",
+  "uso": "6 GOTAS VIA ORAL CADA 8 HORAS X 3 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0461",
+  "nombrecomercial": "RINOMAX",
+  "dosificacion": "SI",
+  "uso": "APLICAR EN CADA FOSA NASAL CADA 8 HORAS SI HAY OBSTRUCCION NASAL",
+  "presentacion": "SOL NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0464",
+  "nombrecomercial": "NIPE",
+  "dosificacion": "NO",
+  "uso": "DAR 1CC CADA 8 HORAS X 5 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0466",
+  "nombrecomercial": "BRUGESIC",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "3",
+  "pvc": "20",
+  "pvs": "1",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0467",
+  "nombrecomercial": "VERACEF 250MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0468",
+  "nombrecomercial": "PEDIALYTE FREZZER POPS",
+  "dosificacion": "NO",
+  "uso": "DAR 1 DESPUES DE CADA EVACUACION O VOMITO",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0470",
+  "nombrecomercial": "CO-SULTRIN",
+  "dosificacion": "SI",
+  "uso": "1 TABLETA VIA ORAL CADA 12 HORAS X 10 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0472",
+  "nombrecomercial": "FORCRIN",
+  "dosificacion": "NO",
+  "uso": "3 CC VIA ORAL CADA 12 HORAS X 10 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0474",
+  "nombrecomercial": "PREVERAL CON CODEINA",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0477",
+  "nombrecomercial": "CODEBROMIL",
+  "dosificacion": "SI",
+  "uso": "5 CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0482",
+  "nombrecomercial": "ILVICO",
+  "dosificacion": "SI",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0483",
+  "nombrecomercial": "SILOMAT",
+  "dosificacion": "SI",
+  "uso": "GOTAS CADA 8 HORAS SI HAY TOS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0484",
+  "nombrecomercial": "BROXOL PEDIATRICO",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 6 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0485",
+  "nombrecomercial": "OXOLAMINA PEDIATRICA",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL CADA 6 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0486",
+  "nombrecomercial": "AMODION PEDIATRICO",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA  6 HORAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0488",
+  "nombrecomercial": "BENADRYL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "13",
+  "pvs": "5",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0489",
+  "nombrecomercial": "CLOROTRIMENTON",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "2",
+  "pvs": "5",
+  "dosis": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0490",
+  "nombrecomercial": "FISIOLIN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN CADA FOSA NASAL LAS VECES QUE SEA NECESARIO",
+  "presentacion": "SOL NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0491",
+  "nombrecomercial": "CROMOFTAL 2%",
+  "dosificacion": "SI",
+  "uso": "APLICAR 1 GOTA EN CADA FOSA NASAL CADA 8 HORAS X 15 DIAS",
+  "presentacion": "SOLUCION NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0492",
+  "nombrecomercial": "GENTALYN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LAS LESIONES 3 VECES AL DIA PREVIO ASEO DE LA ZONA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0496",
+  "nombrecomercial": "KETOTISIN",
+  "dosificacion": "NO",
+  "uso": "CC CADA 12 HORAS X 3 MESES",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0498",
+  "nombrecomercial": "OXOTIL",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL CADA 6 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0499",
+  "nombrecomercial": "CORTYNASE",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN CADA FOSA NASAL CADA 12 HORAS X 10 DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0500",
+  "nombrecomercial": "CATAFLAN",
+  "dosificacion": "NO",
+  "uso": "10 GOTAS VIA ORAL CADA 8 HORAS X 3 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0510",
+  "nombrecomercial": "AIRON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA DIARIA 9 P.M X 3 MESES",
+  "presentacion": "TAB. 4MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0501",
+  "nombrecomercial": "LETISAN",
+  "dosificacion": "NO",
+  "uso": "10 GOTAS VIA ORAL 2 VECES AL DIA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0502",
+  "nombrecomercial": "ACIDO FOLICO",
+  "dosificacion": "NO",
+  "uso": "5 GOTAS VIA ORAL UNA VEZ AL DIA X 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0796",
+  "nombrecomercial": "INTAFER- FOLIC",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0504",
+  "nombrecomercial": "KLARICID 250MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "2",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "15",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0800",
+  "nombrecomercial": "GLUTAMINA",
+  "presentacion": "TABLETAS 600MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0506",
+  "nombrecomercial": "HIDRAPLUS",
+  "dosificacion": "NO",
+  "uso": "2 ONZAS X CADA EVACUACION O VOMITO",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0507",
+  "nombrecomercial": "AD-VIT",
+  "dosificacion": "NO",
+  "uso": "1.5 CC VIA ORAL HASTA COMPLETAR EL MES",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0508",
+  "nombrecomercial": "GLICERINA",
+  "dosificacion": "SI",
+  "uso": "COLOCAR UN SUPOSITORIO SI ES NECESARIO",
+  "presentacion": "SUPOSITORIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0820",
+  "nombrecomercial": "REMINAL",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0511",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "IBUPROFENO",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "3",
+  "durante": "3",
+  "pvc": "100",
+  "pvs": "5",
+  "dosis": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0513",
+  "nombrecomercial": "CELESTONE",
+  "dosificacion": "NO",
+  "uso": "9 GOTAS VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "GOTAS",
+  "pvc": "1",
+  "pvs": "2",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0514",
+  "nombrecomercial": "TERAGRIP",
+  "dosificacion": "NO",
+  "uso": "1CC VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0515",
+  "nombrecomercial": "AIRON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA DIARIA 9 P.M X 3 MESES",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0516",
+  "nombregenerico": "CETIRIZINA",
+  "nombrecomercial": "TALZIC",
+  "dosificacion": "NO",
+  "uso": "5 GOTAS VIA ORAL CADA 12 HORAS X 4 DIAS, LUEGO 1 VEZ AL DIA HASTA COMPLETAR 15 DIAS",
+  "presentacion": "GOTAS",
+  "pvc": "10",
+  "pvs": "1",
+  "dosis": "0",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0827",
+  "nombrecomercial": "SOLUCION BICITRA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0840",
+  "nombrecomercial": "BUSCAPINA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0517",
+  "nombregenerico": "CETIRIZINA",
+  "nombrecomercial": "TALZIC",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 4 DIAS, LUEGO 1 VEZ AL DIA X 4 DIAS MAS",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0518",
+  "nombrecomercial": "CYPRODYN",
+  "dosificacion": "NO",
+  "uso": "8 GOTAS VIA ORAL CADA 8 HORAS X 5  DIAS",
+  "presentacion": "GOTAS",
+  "pvc": "4",
+  "pvs": "1",
+  "dosis": "4",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0519",
+  "nombrecomercial": "CYPRODIN",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "pvc": "2",
+  "pvs": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0520",
+  "nombrecomercial": "CETIRIZINA",
+  "dosificacion": "NO",
+  "uso": "GOTAS CADA 12 HORAS X 4 DIAS, LUEGO 1 VEZ AL DIA X 7 DIAS MAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0521",
+  "nombrecomercial": "CETIRIZINA",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 4 DIAS, LUEGO 1 VEZ AL DIA X 1 SEMANA MAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0522",
+  "nombrecomercial": "CLARICORT",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 5 DIAS",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0523",
+  "nombrecomercial": "POLARAMIDE",
+  "dosificacion": "SI",
+  "uso": "7 GOTAS  CADA12 HORAS X 10 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0524",
+  "nombrecomercial": "COSOLVE",
+  "dosificacion": "SI",
+  "uso": "VIA ORAL CADA 12 HORAS X 3 MESES",
+  "presentacion": "JARABE",
+  "pvc": "1",
+  "pvs": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0525",
+  "nombrecomercial": "DIMETAPP",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0526",
+  "nombrecomercial": "CLARIDEX",
+  "dosificacion": "NO",
+  "uso": "8 GOTAS VIA ORAL CADA 12 HORAS X  5 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0527",
+  "nombrecomercial": "CLARIDEX",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 12 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0566",
+  "nombregenerico": "SOYA",
+  "nombrecomercial": "PROSOBEE",
+  "dosificacion": "NO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0528",
+  "nombrecomercial": "VENTICORT",
+  "dosificacion": "NO",
+  "uso": "2  PULVERIZACIONES CADA 8 HORAS X 10 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0529",
+  "nombrecomercial": "PIDROL PED",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0830",
+  "nombrecomercial": "VALIXA",
+  "presentacion": "TAB 450MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0531",
+  "nombregenerico": "NITAZOXANIDA",
+  "nombrecomercial": "CELECTAN",
+  "dosificacion": "NO",
+  "uso": "5 CC CADA 12 HORAS X 3 DIAS",
+  "presentacion": "SUSP 30ML",
+  "pvc": "100",
+  "pvs": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0532",
+  "nombregenerico": "NITAZOXANIDA",
+  "nombrecomercial": "CELECTAN",
+  "dosificacion": "NO",
+  "uso": "10 CC CADA 12 HORAS X 3 DIAS",
+  "presentacion": "SUSP 60 ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0533",
+  "nombregenerico": "NITAZOXANIDA",
+  "nombrecomercial": "CELECTAN",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 3 DIAS",
+  "presentacion": "TAB 500 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0534",
+  "nombregenerico": "POLIETILENGLICOL",
+  "nombrecomercial": "MILAX",
+  "dosificacion": "NO",
+  "uso": "1 MEDIDA 2 VECES AL DIA",
+  "presentacion": "POLVO PARA SOLUCION ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0535",
+  "nombregenerico": "ALBENDAZOL",
+  "nombrecomercial": "ALBENDAZOL",
+  "dosificacion": "NO",
+  "uso": "DAR EL CONTENIDO DEL FRASCO DE UNA SOLA VEZ, REPETIR DOSIS X 3 DIAS",
+  "presentacion": "SUSP",
+  "pvc": "400",
+  "pvs": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0536",
+  "nombregenerico": "DEXTROMETORFANO",
+  "nombrecomercial": "DEXTROX",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL CADA 8 HORAS SI HAY TOS",
+  "presentacion": "JARABE",
+  "pvc": "15",
+  "pvs": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0537",
+  "nombrecomercial": "AMBROX COMPOSITUM PED",
+  "dosificacion": "SI",
+  "uso": "CC VIA ORAL CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0538",
+  "nombregenerico": "AZITROMICINA",
+  "nombrecomercial": "AZITROM",
+  "dosificacion": "NO",
+  "uso": "5 CC  VIA ORAL UNA VEZ AL DIA X 3 DIAS",
+  "presentacion": "SUSP",
+  "pvc": "200",
+  "pvs": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0855",
+  "nombrecomercial": "INTAFER FOLIC",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0539",
+  "nombregenerico": "TIMEROSAL",
+  "nombrecomercial": "MERTIOLIN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN EL OMBLIGO 2 VECES AL DIA PREVIO ASEO",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0540",
+  "nombregenerico": "BACITRACINA",
+  "nombrecomercial": "BACIDERM",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LAS LESIONES PREVIO ASEO",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0541",
+  "nombregenerico": "RACECADOTRILO",
+  "nombrecomercial": "HIDRASEC 10MG",
+  "dosificacion": "NO",
+  "uso": "1 SOBRE DISUELTO EN UNA COMPOTA DE MANZANA CADA 8 HORAS X 3 DIAS",
+  "presentacion": "SOBRE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0542",
+  "nombregenerico": "RACECADOTRILO",
+  "nombrecomercial": "HIDRASEC 30MG",
+  "dosificacion": "NO",
+  "uso": "1 SOBRE  DISUELTO EN UNA COMPOTA DE MANZANA CADA 8 HORAS",
+  "presentacion": "SOBRE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0543",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "BUDENAS",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN CADA FOSA NASAL CADA 12 HORAS X 21 DIAS",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0544",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "BUDECORT",
+  "dosificacion": "NO",
+  "uso": "2 PULVERIZACIONES CADA 12 HORAS X 10 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0545",
+  "nombregenerico": "BECLOMETASONA-SALBUTAMOL",
+  "nombrecomercial": "BECLOMET",
+  "dosificacion": "NO",
+  "uso": "2 INHALACIONES CADA 8 HORAS X 15 DIAS",
+  "presentacion": "COMPOSITUM JET",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0546",
+  "nombregenerico": "DIPIRONA",
+  "nombrecomercial": "DIPAMONA",
+  "dosificacion": "NO",
+  "uso": "9 GOTAS CADA 6 HORAS SI HAY DOLOR",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0547",
+  "nombrecomercial": "TRIDETARMON",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LAS LESIONES 2 VECES AL DIA PREVIO ASEO",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0548",
+  "nombrecomercial": "BARGONIL",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LA ZONA ANO-RECTAL 3 VECES AL DIA",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0817",
+  "nombrecomercial": "AUGMENTIN  12 H",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "400",
+  "pvs": "5",
+  "dosis": "70",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0550",
+  "nombregenerico": "DOMPERIDONA",
+  "nombrecomercial": "TILUM",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS MEDIA HORA ANTES DE LAS COMIDAS X 15 DIAS",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0551",
+  "nombregenerico": "HEDERA HELIX",
+  "nombrecomercial": "PROSPAN",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0552",
+  "nombregenerico": "SALBUTAMOL-BECLOMETASONA",
+  "nombrecomercial": "AEROCORT",
+  "dosificacion": "NO",
+  "uso": "2 PULVERIZACIONES CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0553",
+  "nombregenerico": "SALBUTAMOL-BROMURO DE IPATROPIO",
+  "nombrecomercial": "DUOLIN",
+  "dosificacion": "NO",
+  "uso": "2 PULVERIZACIONES CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0554",
+  "nombregenerico": "FUNARATO DE FORMOTEROL",
+  "nombrecomercial": "FORMOTEC",
+  "dosificacion": "NO",
+  "uso": "1 PULVERIZACION CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0555",
+  "nombregenerico": "FORMOTEROL-BUDESONIDA",
+  "nombrecomercial": "FORACORT 100",
+  "dosificacion": "NO",
+  "uso": "1 INHALACION CADA 12 HORAS X 10 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0556",
+  "nombregenerico": "FORMOTEROL-BUDESONIDA",
+  "nombrecomercial": "FORACORT 200",
+  "dosificacion": "NO",
+  "uso": "1 INHALACION CADA 12 HORAS X 10 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0557",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "SYCORT 100",
+  "dosificacion": "SI",
+  "uso": "2 INHALACIONES CADA 12 HORAS X 15 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0564",
+  "nombrecomercial": "ENFAMIL A.R PREMIUM",
+  "dosificacion": "NO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0832",
+  "nombrecomercial": "OMEVAX",
+  "presentacion": "CAPS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0847",
+  "nombrecomercial": "RINOLAST",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0558",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "SYCORT 200",
+  "dosificacion": "NO",
+  "uso": "2 INHALACIONES 2 VECES AL DIA X 15 DIAS",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0559",
+  "nombregenerico": "ACIDO FUSIDICO",
+  "nombrecomercial": "FUCIDIN",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN LA LESION 3 VECES AL DIA PREVIO ASEO",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0560",
+  "nombregenerico": "PELARGONIUM SIDOIDES",
+  "nombrecomercial": "KALOBA",
+  "dosificacion": "NO",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0561",
+  "nombregenerico": "SULFATO FERROSO",
+  "nombrecomercial": "FER-IN-SOL",
+  "dosificacion": "NO",
+  "uso": "7 GOTAS VIA ORAL 2 VECES AL DIA , 2 HORAS ANTES Y DESPUES DE LAS COMIDAS, X 3 MESES",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0562",
+  "nombregenerico": "VIT A-D-C",
+  "nombrecomercial": "TRI-VI-SOL",
+  "dosificacion": "NO",
+  "uso": "0.5 CC VIA ORAL 2 VECES AL DIA X 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0563",
+  "nombregenerico": "VIT A-D-C-E-B-HIERRO",
+  "nombrecomercial": "POLY-VI-SOL",
+  "dosificacion": "SI",
+  "uso": "0.5CC VIA ORAL 2 VECES AL DIA X 1 MES",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0565",
+  "nombrecomercial": "ENFAMIL SIN LACTOSA PREMIUM",
+  "dosificacion": "NO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0567",
+  "nombrecomercial": "ENFAMIL NUTRAMIGEN PREMIUM",
+  "dosificacion": "NO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0568",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "BETAGEN",
+  "dosificacion": "NO",
+  "uso": "0.5 CC IM DE UNA SOLA VEZ",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0569",
+  "nombrecomercial": "CELESTAMINE",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL CADA 8 HORAS X 5 DIAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0570",
+  "nombrecomercial": "CELESTAMINE",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 5 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0571",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "CELESTONE",
+  "dosificacion": "NO",
+  "uso": "O.5 CC INTRAMUSCULAR",
+  "presentacion": "AMPOLLA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0572",
+  "nombregenerico": "BETAMETASONA",
+  "nombrecomercial": "CELESTONE",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 5 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0573",
+  "nombregenerico": "CIPROHEPTADINA-DEXAMETASONA",
+  "nombrecomercial": "CYPRODEX",
+  "dosificacion": "NO",
+  "uso": "MEDIO COMPRIMIDO CADA 8 HORAS",
+  "presentacion": "COMPRIMIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0574",
+  "nombregenerico": "DEXAMETASONA",
+  "nombrecomercial": "DECOBEL",
+  "dosificacion": "NO",
+  "uso": "1 CC INTRAMUSCULAR DE UNA SOLA VEZ, CONTINUAR CON 0.5CC CADA 12 HORAS",
+  "presentacion": "AMP",
+  "pvc": "4",
+  "pvs": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0575",
+  "nombregenerico": "METILPREDNISOLONA",
+  "nombrecomercial": "SOLUMEDROL",
+  "dosificacion": "NO",
+  "uso": "MEDIA AMPOLLA INTRAMUSCULAR DE UNA SOLA VEZ",
+  "presentacion": "AMP 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0576",
+  "nombregenerico": "PREDNISOLONA",
+  "nombrecomercial": "METICORTEN",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 5 DIAS, LUEGO 1 DIARIA 3 PM X 5 DIAS MAS",
+  "presentacion": "TAB 5 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0577",
+  "nombrecomercial": "PREDNISONA",
+  "dosificacion": "NO",
+  "uso": "1 COMPRIMIDO CADA 12 HORAS X 5 DIAS, LUEGO 1 UNA VEZ AL DIA 3PM  X 5 DIAS MAS",
+  "presentacion": "COMPRIMIDOS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0578",
+  "nombrecomercial": "SOLUCORTEF",
+  "dosificacion": "SI",
+  "presentacion": "AMP. 100MG",
+  "pvc": "100",
+  "pvs": "2",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0579",
+  "nombrecomercial": "SOLUCORTEF",
+  "dosificacion": "SI",
+  "presentacion": "AMP 500MG",
+  "pvc": "500",
+  "pvs": "4",
+  "dosis": "5",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0580",
+  "nombregenerico": "DEFLAZACORT",
+  "nombrecomercial": "CALCORT",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "cada": "2",
+  "durante": "5",
+  "pvc": "20",
+  "pvs": "1",
+  "dosis": "1",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0581",
+  "nombregenerico": "DEFLAZACORT",
+  "nombrecomercial": "CARCORT",
+  "dosificacion": "NO",
+  "uso": "MEDIA TABLETA CADA 12 HORAS X 5 DIAS",
+  "presentacion": "TAB 6MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0585",
+  "nombrecomercial": "AMITREXYL",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "100",
+  "pvs": "1",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0583",
+  "nombrecomercial": "DEFLAZACORT",
+  "dosificacion": "SI",
+  "uso": "MEDIO COMPRIMIDO CADA 12 HORAS X 5 DIAS",
+  "presentacion": "COMP. 6 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0584",
+  "nombrecomercial": "AMITREXYL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0001",
+  "nombrecomercial": "AMOXICILINA",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 125MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "125",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0586",
+  "nombrecomercial": "AMOXICILINA",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0002",
+  "nombrecomercial": "AMOXIVAL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0003",
+  "nombrecomercial": "AMOXIVAL",
+  "dosificacion": "NO",
+  "uso": "1 CAPSULA CADA 8 HORAS X 1  SEMANA",
+  "presentacion": "CAP 500 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0587",
+  "nombrecomercial": "FLEMOXON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "TAB 375MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0588",
+  "nombrecomercial": "FLEMOXON",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "TAB 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0004",
+  "nombrecomercial": "BEBZETACIL 3.3",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAr",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0005",
+  "nombrecomercial": "BENZETACIL 6.3.3",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0006",
+  "nombrecomercial": "BENZETACIL 600.000 UDS",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0007",
+  "nombrecomercial": "BENZETACIL 1.200.000UDS",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0008",
+  "nombrecomercial": "PENICILINA PROCAINICA",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA  INTRANUSCULAR DIARIA X 3 DIAS PREVIA PRUEBA",
+  "presentacion": "AMP 400.000UDS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0600",
+  "nombrecomercial": "CLEMBUTEROL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0009",
+  "nombrecomercial": "PENICILINA PROCAINICA",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR DIARIA X 3 DIAS PREVIA PRUEBA",
+  "presentacion": "AMP 800.000UDS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0010",
+  "nombregenerico": "DICLOXACILINA",
+  "nombrecomercial": "DICLOCIL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250 MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0011",
+  "nombregenerico": "FLUCLOXACILINA",
+  "nombrecomercial": "FLOXAPEN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "10",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0012",
+  "nombregenerico": "FLUCLOXACILINA",
+  "nombrecomercial": "FLOXAPEN",
+  "dosificacion": "NO",
+  "uso": "1 CAPSULA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "CAPS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0013",
+  "nombregenerico": "AMP-SULBACTAN",
+  "nombrecomercial": "SULTAMICILINA",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "1",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "100",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0014",
+  "nombrecomercial": "SULTAMICILINA",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "TAB 375 M",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0015",
+  "nombrecomercial": "FIPEXIAM",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "TAB 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0016",
+  "nombrecomercial": "SULAMP",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "100",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0017",
+  "nombregenerico": "JJJ",
+  "nombrecomercial": "UNASYN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 125MG",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "125",
+  "pvs": "5",
+  "dosis": "60",
+  "sico": "N",
+  "nombrecomercial1": "-JJJ",
+  "sicome": "S",
+  "sicome1": "S"
+ },
+ {
+  "codigo_origen": "0018",
+  "nombrecomercial": "UNASYN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "60",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0831",
+  "nombrecomercial": "REMINAL",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0020",
+  "nombrecomercial": "FULGRAN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "40",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0021",
+  "nombrecomercial": "CURAM",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0591",
+  "nombrecomercial": "PEDIASURE",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0836",
+  "nombrecomercial": "ZINC",
+  "presentacion": "CAPS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0023",
+  "nombrecomercial": "CURAN",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0024",
+  "nombrecomercial": "FULGRAN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 400MG",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "400",
+  "pvs": "5",
+  "dosis": "60",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0025",
+  "nombrecomercial": "FULGRAN",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 1 S4EMANA",
+  "presentacion": "COMP 875 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0026",
+  "nombrecomercial": "CEFALEXINA",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 125MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "125",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0028",
+  "nombrecomercial": "CEFALEXINA",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250 MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0029",
+  "nombrecomercial": "CEFALEXINA",
+  "dosificacion": "NO",
+  "uso": "1 CAPSULA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "CAPS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0030",
+  "nombrecomercial": "KEFORAL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0031",
+  "nombrecomercial": "KEFORAL",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0032",
+  "nombrecomercial": "CEFACIDAL",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA INTRAMUSCULAR CADA 12 HORAS X 3 DIAS",
+  "presentacion": "AMP 250MG IM",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0033",
+  "nombrecomercial": "CEFACIDAL",
+  "dosificacion": "NO",
+  "uso": "1 AMPOLLA CADA 12 HORAS X 3 DIAS",
+  "presentacion": "AMP 500MG IM",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0035",
+  "nombrecomercial": "CEFAZOLINA",
+  "dosificacion": "NO",
+  "uso": "MEDIA AMPOLLA INTRAMUSCULAR CADA 12 HORAS X 3 DIAS",
+  "presentacion": "AMP 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0036",
+  "nombregenerico": "CEFIXIMA",
+  "nombrecomercial": "LONGACEF",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 100MG",
+  "cada": "2",
+  "durante": "10",
+  "pvc": "100",
+  "pvs": "5",
+  "dosis": "8",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0037",
+  "nombregenerico": "CEFIXIMA",
+  "nombrecomercial": "LONGACEF",
+  "dosificacion": "NO",
+  "uso": "1 COMPRIMIDO CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "COMP 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0594",
+  "nombrecomercial": "QUANTREL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "1",
+  "durante": "3",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "15",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0040",
+  "nombregenerico": "CEFRADINA",
+  "nombrecomercial": "VERACEF",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "50",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0041",
+  "nombregenerico": "CEFRADINA",
+  "nombrecomercial": "VERACEF",
+  "dosificacion": "NO",
+  "uso": "1 CAPSULA CADA 8 HORAS X 1 SEMANA",
+  "presentacion": "CAPS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0043",
+  "nombregenerico": "CEFPROXILO",
+  "nombrecomercial": "PROCEF",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250 MG",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "25",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0044",
+  "nombregenerico": "CEFPROXILO",
+  "nombrecomercial": "PROCEF",
+  "dosificacion": "NO",
+  "uso": "1 TABLETA CADA 12 HORAS X 1 SEMANA",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0045",
+  "nombregenerico": "FLUCONAZOL",
+  "nombrecomercial": "DIFLUCAN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 50MG",
+  "cada": "1",
+  "durante": "10",
+  "pvc": "50",
+  "pvs": "5",
+  "dosis": "10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0047",
+  "nombrecomercial": "ACICLOR",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "cada": "3",
+  "durante": "7",
+  "pvc": "200",
+  "pvs": "5",
+  "dosis": "20",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0048",
+  "nombregenerico": "CEFUROXIMA",
+  "nombrecomercial": "ZINNAT",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250 MG",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "250",
+  "pvs": "5",
+  "dosis": "70",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0589",
+  "nombrecomercial": "CATAFLAN",
+  "dosificacion": "NO",
+  "uso": "5CC VIA ORAL CADA 8 HORAS X 3 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0590",
+  "nombrecomercial": "UNICAP",
+  "dosificacion": "NO",
+  "uso": "5 CC VIA ORAL 2 VECES AL DIA X 1 MES",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0592",
+  "nombrecomercial": "POLIOTICO",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0593",
+  "nombrecomercial": "CLEMBUNAL",
+  "dosificacion": "SI",
+  "uso": "CC  VIA ORAL CDA 12 HORAS X 10 DIAS",
+  "presentacion": "JARABEN PED",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0595",
+  "nombrecomercial": "CROMOFTAL",
+  "dosificacion": "NO",
+  "uso": "APLICAR EN CADA FOSA NASAL CADA 12 HORAS X 15 DIAS",
+  "presentacion": "SPRAY",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0049",
+  "nombregenerico": "CEFUROXIMA",
+  "nombrecomercial": "CEDAX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 30ML",
+  "cada": "2",
+  "durante": "3",
+  "pvc": "180",
+  "pvs": "5",
+  "dosis": "8",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0050",
+  "nombregenerico": "CEFUROXIMA",
+  "nombrecomercial": "CEDAX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 60ML",
+  "cada": "2",
+  "durante": "3",
+  "pvc": "180",
+  "pvs": "5",
+  "dosis": "8",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0100",
+  "nombregenerico": "ALBENDAZOL",
+  "nombrecomercial": "ALBICAR",
+  "dosificacion": "NO",
+  "uso": "DAR EL CONTENIDO DEL FRASCO DE UNA SOLA VEZ REPETIR LA DOSIS A LOS 10 DIAS Y LUEGO A LOS 20 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0101",
+  "nombregenerico": "ALBENDAZOL",
+  "nombrecomercial": "HELAL",
+  "dosificacion": "NO",
+  "uso": "DAR EL CONTENIDO DEL FRASCO DE UNA SOLA VEZ REPETIR LA DOSIS A LOS 10 DIAS Y LUEGO A LOS 20 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0102",
+  "nombregenerico": "ALBENDAZOL",
+  "nombrecomercial": "ALBICAR",
+  "dosificacion": "NO",
+  "uso": "2 TABLETAS DE UNA SOLA VEZ REPETIR LA DOSIS A LOS 10 DIAS Y LUEGO A LOS 20 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0597",
+  "nombrecomercial": "SECNIDAZOL",
+  "dosificacion": "NO",
+  "uso": "2 TABLETAS DE UNA SOLA VEZ, REPETIR DOSIS A LOS 3 DIAS",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0598",
+  "nombrecomercial": "NAFAZOL",
+  "dosificacion": "SI",
+  "presentacion": "SOL NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0599",
+  "nombrecomercial": "ALIVET",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0601",
+  "nombrecomercial": "BIOGLOBINA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0602",
+  "nombrecomercial": "VITISIVAL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0823",
+  "nombrecomercial": "AMBROCLAR",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0604",
+  "nombrecomercial": "NETROMICINA",
+  "dosificacion": "SI",
+  "presentacion": "AMP 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0605",
+  "nombrecomercial": "AMIKACINA",
+  "dosificacion": "NO",
+  "uso": "1.4 CC DE AMPOLLA DE 500 MG DILUIDO EN 10CC DE SOLUCION FISIOLOGICA A PASAR EV",
+  "presentacion": "AMP. 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0837",
+  "nombrecomercial": "BACTRIMEL",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0607",
+  "nombrecomercial": "CEFTRIAZONA",
+  "dosificacion": "SI",
+  "presentacion": "AMP 1G",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0611",
+  "nombrecomercial": "PULMICORT",
+  "dosificacion": "SI",
+  "presentacion": "VIAL PARA TERAPIAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0608",
+  "nombrecomercial": "RINOLAST",
+  "dosificacion": "SI",
+  "uso": "4CC VIA ORAL CADA 12 HORAS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0609",
+  "nombrecomercial": "BACITROMICINA",
+  "dosificacion": "SI",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0809",
+  "nombrecomercial": "METICORTEN",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0811",
+  "nombrecomercial": "OMEPRAZOL",
+  "presentacion": "CAPS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0613",
+  "nombrecomercial": "TODENAC",
+  "dosificacion": "SI",
+  "uso": "APLICAR 1 GOTA EN CADA OJO CADA 8 HORAS PREVIO ASEO OCULAR CON AGUA TIBIA",
+  "presentacion": "SOL OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0614",
+  "nombrecomercial": "PEDIBU",
+  "dosificacion": "SI",
+  "uso": "5 CC CADA 8 HORAS X 3 DIAS",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0813",
+  "nombrecomercial": "AMBROCLAR",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0616",
+  "nombrecomercial": "AZIGRAN",
+  "dosificacion": "SI",
+  "uso": "5CC UNA VEZ AL DIA",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0617",
+  "nombrecomercial": "IBEROL C",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0618",
+  "nombrecomercial": "BUTESOL",
+  "dosificacion": "SI",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0619",
+  "nombrecomercial": "SI NUTAB",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0620",
+  "nombrecomercial": "ULCON",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0621",
+  "nombrecomercial": "ZIRTEC",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0622",
+  "nombrecomercial": "CROTANOL",
+  "dosificacion": "SI",
+  "uso": "BAÑAR CON CHAMPU NOPUCID Y APLICAR LA LOCION DE CROTANOL MEZCLADA CON AL BENDAZOL 2 VECES AL DIA",
+  "presentacion": "LOCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0623",
+  "nombrecomercial": "NOPUCID",
+  "dosificacion": "SI",
+  "presentacion": "CHAMPU",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0624",
+  "nombrecomercial": "CETIRIZINA",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0625",
+  "nombrecomercial": "AMIKACINA 100MG",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0815",
+  "nombrecomercial": "MAXEPA",
+  "presentacion": "GRAGEAS 1000MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0628",
+  "nombrecomercial": "ALIVET",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0828",
+  "nombrecomercial": "BACTRIMEL",
+  "presentacion": "TABL,ETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0834",
+  "nombrecomercial": "LIPITOR",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0850",
+  "nombrecomercial": "MIOVIT",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0627",
+  "nombrecomercial": "PULMICORT",
+  "dosificacion": "SI",
+  "presentacion": "AEROSOL PED",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0629",
+  "nombrecomercial": "BONADOXINA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0630",
+  "nombrecomercial": "SOLUHEX",
+  "dosificacion": "SI",
+  "presentacion": "JABON",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0631",
+  "nombrecomercial": "MERTHIOLATE INCOLORO",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0632",
+  "nombrecomercial": "CITRACAL D FORT",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0633",
+  "nombrecomercial": "LACTULONA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0634",
+  "nombrecomercial": "TANTUN",
+  "dosificacion": "SI",
+  "presentacion": "TOPICO BUCAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0635",
+  "nombrecomercial": "QUINOTIC HC",
+  "dosificacion": "SI",
+  "presentacion": "SOL OTICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0822",
+  "nombrecomercial": "REFTRIAXONA",
+  "presentacion": "AMPOLLAS 1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0637",
+  "nombrecomercial": "RINOLAST 60MG",
+  "dosificacion": "SI",
+  "uso": "1 TABLETA CADA 12 HORAS X 5 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0638",
+  "nombrecomercial": "QUANTREL",
+  "dosificacion": "SI",
+  "uso": "1 TABLETA  CADA 12 HORAS X 3 DIAS",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0639",
+  "nombrecomercial": "MAXIBOL 5 MG",
+  "dosificacion": "SI",
+  "presentacion": "CAP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0640",
+  "nombrecomercial": "UNICAP T",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0641",
+  "nombrecomercial": "KETAZOL",
+  "dosificacion": "SI",
+  "presentacion": "CHAMPU",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0642",
+  "nombrecomercial": "FUGIN 150MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0643",
+  "nombrecomercial": "MYCOFENTIN 2%",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0824",
+  "nombrecomercial": "PROTOPIC",
+  "presentacion": "UNGUENTO AL 0,03%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0645",
+  "nombrecomercial": "KATIVIL",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0826",
+  "nombrecomercial": "SINGULAIR",
+  "presentacion": "TAB MASTICABLES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0647",
+  "nombrecomercial": "ASCAFYL",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0648",
+  "nombrecomercial": "FLEGYL BENZOIL 125MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0649",
+  "nombrecomercial": "FAZOL 500MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0833",
+  "nombrecomercial": "GENURIN",
+  "presentacion": "GRAGEAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0651",
+  "nombrecomercial": "CLAVUMOX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0652",
+  "nombrecomercial": "CLOFEN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0875",
+  "nombrecomercial": "ANDANTOL",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0825",
+  "nombrecomercial": "DESALEX",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0654",
+  "nombrecomercial": "MALTOFER",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0655",
+  "nombrecomercial": "ILVICO",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0835",
+  "nombrecomercial": "FERGANIC - FOLIC",
+  "presentacion": "Jarabe",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0657",
+  "nombrecomercial": "BONIFEN",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0658",
+  "nombrecomercial": "LOREX",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0659",
+  "nombrecomercial": "BUDENAS 200 DOSIS",
+  "dosificacion": "SI",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0660",
+  "nombrecomercial": "BIDROXYL 250MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0661",
+  "nombrecomercial": "CLAVUMOX 875MG",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0662",
+  "nombrecomercial": "CLARIVAX 500MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0663",
+  "nombrecomercial": "AUGMENTIN 600 MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0664",
+  "nombrecomercial": "LEVOPRONT",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0665",
+  "nombrecomercial": "CLAVUMOX",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0666",
+  "nombrecomercial": "CLOFEN",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0667",
+  "nombrecomercial": "MALTOFERFOL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0668",
+  "nombrecomercial": "CECLOR",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0669",
+  "nombrecomercial": "GENTALYN 80MG",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0670",
+  "nombrecomercial": "METREN 250 MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0671",
+  "nombrecomercial": "CICLOKAPRON",
+  "dosificacion": "SI",
+  "presentacion": "COMPRIMIDOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0672",
+  "nombrecomercial": "ELOCON",
+  "dosificacion": "SI",
+  "uso": "APLICAR EN CUERO CABELLUDO 2 VECES POR SEMANA POR LAS NOCHES, RETIRAR EN LA MAÑANA",
+  "presentacion": "LOCION CAPILAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0673",
+  "nombrecomercial": "BUMETIN RETARD",
+  "dosificacion": "SI",
+  "presentacion": "TAB 300 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0674",
+  "nombrecomercial": "AMOXICILINA/CLAVULANICO",
+  "dosificacion": "SI",
+  "presentacion": "TAB 500 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0675",
+  "nombrecomercial": "AMOXICILINA/CLAVULANICO",
+  "dosificacion": "SI",
+  "presentacion": "COMP 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0676",
+  "nombrecomercial": "S26",
+  "dosificacion": "SI",
+  "presentacion": "BAJO PESO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0677",
+  "nombrecomercial": "TODEX",
+  "dosificacion": "SI",
+  "presentacion": "SOLUCION OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0678",
+  "nombrecomercial": "SOLUCION FISIOLOGICA",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0818",
+  "nombrecomercial": "ACIDO FOLICO",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0680",
+  "nombrecomercial": "TOBRASOL",
+  "dosificacion": "SI",
+  "presentacion": "SOL OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0681",
+  "nombrecomercial": "SENOKOT",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0682",
+  "nombrecomercial": "GLICERINA",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0683",
+  "nombrecomercial": "SOMERGAN",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0684",
+  "nombrecomercial": "MICOFENTYN",
+  "dosificacion": "SI",
+  "uso": "APLICAR EN LAS LESIONES DESPUES DEL BAÑO CON JABON DE GLICERINA 2 VECES AL DIA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0685",
+  "nombrecomercial": "MYCOFENTIN",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0686",
+  "nombrecomercial": "BACITRACINA",
+  "dosificacion": "SI",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0687",
+  "nombrecomercial": "SINUTIL",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0829",
+  "nombrecomercial": "TAMOA",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0838",
+  "nombrecomercial": "BENDAMEN",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0690",
+  "nombrecomercial": "AGUA OXIGENADA",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0691",
+  "nombrecomercial": "DAYAMINERAL",
+  "dosificacion": "SI",
+  "uso": "2CC 2 VECES AL DIA X 1 MES",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0692",
+  "nombrecomercial": "BONADOXINA",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0693",
+  "nombrecomercial": "CROTANOL",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0694",
+  "nombrecomercial": "IBUFEN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0695",
+  "nombrecomercial": "SOLUCION FISIOLOGICA",
+  "dosificacion": "SI",
+  "presentacion": "FRASCO 500CC",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0696",
+  "nombrecomercial": "AUGMENTIN 500MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0697",
+  "nombrecomercial": "IBEROL C",
+  "dosificacion": "SI",
+  "uso": "2CC 2 VECES AL DIA X 1 MES",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0698",
+  "nombrecomercial": "GENTAMICINA",
+  "dosificacion": "SI",
+  "presentacion": "SOL OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0699",
+  "nombrecomercial": "IBUPROFENO 200MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0993",
+  "nombrecomercial": "CEBION",
+  "presentacion": "tab",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0700",
+  "nombrecomercial": "NASONEX",
+  "dosificacion": "SI",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0701",
+  "nombrecomercial": "VICK",
+  "dosificacion": "SI",
+  "presentacion": "JARABE PED",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0702",
+  "nombrecomercial": "VITAMINA E",
+  "dosificacion": "SI",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0819",
+  "nombrecomercial": "TITRALAC",
+  "presentacion": "TAB 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0704",
+  "nombrecomercial": "SERETIDE",
+  "dosificacion": "SI",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0705",
+  "nombrecomercial": "DIPROSALIC",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0706",
+  "nombrecomercial": "KETAZOL",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0707",
+  "nombrecomercial": "TODEX",
+  "dosificacion": "SI",
+  "presentacion": "UNGUENTO OFTALMICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0839",
+  "nombrecomercial": "CATAFLAM",
+  "presentacion": "COMP 25Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0843",
+  "nombrecomercial": "FORTUM",
+  "presentacion": "AMPOLLAS 1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0710",
+  "nombrecomercial": "LINDODERM",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0711",
+  "nombrecomercial": "LINFODERM",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0712",
+  "nombrecomercial": "MUCORAMA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0713",
+  "nombrecomercial": "PARSEL",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0714",
+  "nombrecomercial": "HENOVIC",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0715",
+  "nombrecomercial": "SISTALCIN",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0716",
+  "nombrecomercial": "LOREX",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0717",
+  "nombrecomercial": "CLORACE",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0718",
+  "nombrecomercial": "SECNIVAX 500MG",
+  "dosificacion": "SI",
+  "presentacion": "POLVO PARA SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0719",
+  "nombrecomercial": "AUGMENTIN 250 MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0720",
+  "nombrecomercial": "ALLIXON",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0721",
+  "nombrecomercial": "SECNIDAZOL 1G",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0722",
+  "nombrecomercial": "FUROXONA",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0723",
+  "nombrecomercial": "ALERGOT",
+  "dosificacion": "SI",
+  "presentacion": "SOL OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0724",
+  "nombrecomercial": "SINGULAIR 4MG",
+  "dosificacion": "SI",
+  "presentacion": "GRANULADO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0725",
+  "nombrecomercial": "ZINNAT 500MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0726",
+  "nombrecomercial": "CATAFLAN",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0730",
+  "nombrecomercial": "ISOMIL",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0727",
+  "nombrecomercial": "FERGANIC",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0728",
+  "nombrecomercial": "DERAIN",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0729",
+  "nombrecomercial": "ENTEROGERMINA",
+  "dosificacion": "SI",
+  "presentacion": "VIAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0731",
+  "nombrecomercial": "TERAGRIP",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0732",
+  "nombrecomercial": "NAFAVINE",
+  "dosificacion": "SI",
+  "presentacion": "SOL NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0733",
+  "nombrecomercial": "APIRET",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0734",
+  "nombrecomercial": "LEVOPRONT",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0735",
+  "nombrecomercial": "BIKLIN 100MG",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0736",
+  "nombrecomercial": "OVESTIN",
+  "dosificacion": "SI",
+  "presentacion": "CREMA VAGINAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0737",
+  "nombrecomercial": "NOVALCINA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0738",
+  "nombrecomercial": "NIPE",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0739",
+  "nombrecomercial": "CORICIDIN",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0740",
+  "nombrecomercial": "PREMARYN",
+  "dosificacion": "SI",
+  "presentacion": "CREMA VAGYNAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0741",
+  "nombrecomercial": "KETOPTIC",
+  "dosificacion": "SI",
+  "uso": "1 GOTA CADA 8 HORAS X 1 SEMANA, PREVIO ASEO OCULAR",
+  "presentacion": "SOL OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0742",
+  "nombrecomercial": "WAMPOLE",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0743",
+  "nombrecomercial": "SAVER",
+  "dosificacion": "SI",
+  "uso": "5CC UNA VEZ AL DIA X 5 DIAS",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0744",
+  "nombrecomercial": "WINADOL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0745",
+  "nombrecomercial": "CLOFEN",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0746",
+  "nombrecomercial": "TALZIC",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0747",
+  "nombrecomercial": "SAVER",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0748",
+  "nombrecomercial": "PROVICAR",
+  "dosificacion": "SI",
+  "presentacion": "SOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0749",
+  "nombrecomercial": "CLORACE",
+  "dosificacion": "SI",
+  "uso": "GOTAS CADA 8 HORAS X 5 DIAS",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0750",
+  "nombrecomercial": "EUMIDRAL",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0751",
+  "nombrecomercial": "ISOMOIL",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0753",
+  "nombrecomercial": "MAXIBOL 1MG",
+  "dosificacion": "SI",
+  "presentacion": "CAPS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0754",
+  "nombrecomercial": "KID CAL",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0755",
+  "nombrecomercial": "GARASONE",
+  "dosificacion": "SI",
+  "presentacion": "SOL  OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0756",
+  "nombrecomercial": "GLICERINA",
+  "dosificacion": "SI",
+  "presentacion": "SUPOSITORIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0757",
+  "nombrecomercial": "CEDROXIN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0758",
+  "nombrecomercial": "SALBUTAMOL",
+  "dosificacion": "SI",
+  "presentacion": "AEROSOL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0792",
+  "nombrecomercial": "ALURON",
+  "presentacion": "TABLETAS 100mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0794",
+  "nombrecomercial": "CITRATO DE `POTASIO AL 10,8%",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0761",
+  "nombrecomercial": "INTAFER",
+  "dosificacion": "SI",
+  "presentacion": "jarabe",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0762",
+  "nombrecomercial": "BRUGESIC",
+  "dosificacion": "SI",
+  "presentacion": "TAB",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0763",
+  "nombrecomercial": "FAZOL 500MG",
+  "dosificacion": "SI",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0764",
+  "nombrecomercial": "TANTUN",
+  "dosificacion": "SI",
+  "presentacion": "SPRAY",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0765",
+  "nombrecomercial": "NOVALCINA",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0766",
+  "nombrecomercial": "LITUSIX",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0767",
+  "nombrecomercial": "PIDROL ADULTO",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0802",
+  "nombrecomercial": "BICARBONATO DE SODIO AL 8,6 %",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0769",
+  "nombrecomercial": "GENTALYN",
+  "dosificacion": "SI",
+  "presentacion": "UNGUENTO OFTALMICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0770",
+  "nombrecomercial": "POLIVITAPLEX",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0771",
+  "nombrecomercial": "SIMILAC ADVANCE",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0821",
+  "nombrecomercial": "CIPROFLOX",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0841",
+  "nombrecomercial": "CENTRUM",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0774",
+  "nombrecomercial": "BRAL PED",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0775",
+  "nombrecomercial": "SIMILAC ADVANCE SIN LACTOSA",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0777",
+  "nombrecomercial": "DIFENILHIDRAMINA",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0778",
+  "nombrecomercial": "ZINAT 500MG",
+  "dosificacion": "SI",
+  "presentacion": "CAPS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0779",
+  "nombrecomercial": "DICLOFENAC POTASICO",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0780",
+  "nombrecomercial": "TACHIIPIRIN 125MG",
+  "dosificacion": "SI",
+  "presentacion": "SUPOSITORIO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0781",
+  "nombrecomercial": "BENUTREX",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0782",
+  "nombrecomercial": "FORTUM 1G",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0783",
+  "nombrecomercial": "SOLUCION AL 0.30%",
+  "dosificacion": "SI",
+  "presentacion": "FRASCO 500CC",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0784",
+  "nombrecomercial": "MEGANEUBION CON LIDOCAINA",
+  "dosificacion": "SI",
+  "presentacion": "AMP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0785",
+  "nombrecomercial": "ACICLOVIR",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0786",
+  "nombrecomercial": "AIRON 4MG",
+  "dosificacion": "SI",
+  "presentacion": "TAB X 30",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0791",
+  "nombrecomercial": "UROCIT",
+  "presentacion": "TABLETAS 10meq",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0788",
+  "nombrecomercial": "PLIDAN",
+  "dosificacion": "SI",
+  "presentacion": "GRAGEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0789",
+  "nombrecomercial": "BINERISONA",
+  "dosificacion": "SI",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0790",
+  "nombrecomercial": "METICORTELONE",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0793",
+  "nombrecomercial": "ROCALTROL",
+  "presentacion": "TABLETAS 0,5microgramos",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0795",
+  "nombrecomercial": "DIEUDRIN",
+  "presentacion": "TAB 12,5mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0797",
+  "nombrecomercial": "DOCEPLEX",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0799",
+  "nombrecomercial": "SOLUCION POLICITRA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0801",
+  "nombrecomercial": "GLUTAMINA",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0803",
+  "nombrecomercial": "FANTOMALT",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0804",
+  "nombrecomercial": "INTAFER",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0805",
+  "nombrecomercial": "UNIDAZOL",
+  "presentacion": "SOBRES 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0806",
+  "nombrecomercial": "MIOVIT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0807",
+  "nombrecomercial": "VANDOL",
+  "presentacion": "Crema",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0808",
+  "nombrecomercial": "CELLCEPT",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0810",
+  "nombrecomercial": "ALDACTAZIDE",
+  "presentacion": "TAB 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0812",
+  "nombrecomercial": "ZINTREPID",
+  "presentacion": "TAB 10/10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0814",
+  "nombrecomercial": "MA¡XEPA",
+  "presentacion": "GRAGEAS 1000MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0816",
+  "nombrecomercial": "AUGMENTIN 12 H",
+  "dosificacion": "SI",
+  "uso": "Dar a tomar cc cada 12 horas por  dias",
+  "presentacion": "susp 400mg",
+  "cada": "2",
+  "durante": "7",
+  "pvc": "400",
+  "pvs": "5",
+  "dosis": "70",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0876",
+  "nombrecomercial": "PRURIX",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0856",
+  "nombrecomercial": "CATAFLAM",
+  "presentacion": "GRAGEAS  50 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0857",
+  "nombrecomercial": "TACHIPIRIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0858",
+  "nombrecomercial": "ROCEPHIN",
+  "presentacion": "AMP 1 GRAMO USO IM",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0859",
+  "nombrecomercial": "FELGYL BENZOIL",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0860",
+  "nombrecomercial": "FLEGYL BENZOIL",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0861",
+  "nombrecomercial": "L CARNITINA",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0863",
+  "nombrecomercial": "CORTYNASE",
+  "presentacion": "INHALADOR NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0864",
+  "nombrecomercial": "LACTAZYD",
+  "presentacion": "JABON LIQUIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0865",
+  "nombrecomercial": "FLUCONAZOL",
+  "presentacion": "CAPSULAS 150MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0866",
+  "nombrecomercial": "TANTUM",
+  "presentacion": "Sobres de uso vaginal.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0867",
+  "nombrecomercial": "UNASYN",
+  "presentacion": "TAB 375 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0868",
+  "nombrecomercial": "RETEVEN",
+  "presentacion": "TAB 5 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0869",
+  "nombrecomercial": "MYLAX",
+  "presentacion": "POLVO PARA SOLUCION ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0870",
+  "nombrecomercial": "TACHIPIRN FORTE",
+  "presentacion": "SUSP 160MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0871",
+  "nombrecomercial": "MAXEPA",
+  "presentacion": "CAPSULAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0872",
+  "nombrecomercial": "MODERAN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0873",
+  "nombrecomercial": "LACTULONA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0874",
+  "nombrecomercial": "CETIRIVAX",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0877",
+  "nombrecomercial": "LIOLACTIL",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0878",
+  "nombrecomercial": "COZAAR",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0879",
+  "nombrecomercial": "ADACAI",
+  "presentacion": "TAB 10/20",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0880",
+  "nombrecomercial": "CARNISIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0881",
+  "nombrecomercial": "CLEMBUXOL",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0882",
+  "nombrecomercial": "CEFOTAXIMA",
+  "presentacion": "AMPOLLAS  1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0883",
+  "nombrecomercial": "NOV HEPAR B12",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0884",
+  "nombrecomercial": "ENDOXAN",
+  "presentacion": "AMPOLLAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0885",
+  "nombrecomercial": "AERIUS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0886",
+  "nombrecomercial": "SUMITAN",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0887",
+  "nombrecomercial": "MACRODANTINA",
+  "presentacion": "CAPS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0888",
+  "nombrecomercial": "CEDROXIM",
+  "presentacion": "SUSP 500Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0889",
+  "nombrecomercial": "ELOCON NASAL",
+  "presentacion": "INHALADOR NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0890",
+  "nombrecomercial": "RINOLAST D",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0891",
+  "nombrecomercial": "BIDROXYL",
+  "presentacion": "SUSP 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0892",
+  "nombrecomercial": "MACRODANTINA",
+  "presentacion": "CAPS 100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0893",
+  "nombrecomercial": "UNASYN",
+  "presentacion": "TAB 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0894",
+  "nombrecomercial": "ZIENAM",
+  "presentacion": "Ampollas 500mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0895",
+  "nombrecomercial": "MAXIPIME",
+  "presentacion": "AMPOLLAS  1GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0896",
+  "nombrecomercial": "OMEVAX",
+  "presentacion": "CAPS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0897",
+  "nombrecomercial": "RETEVEN",
+  "presentacion": "TAB 10MG LP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0898",
+  "nombrecomercial": "ZONTRICON",
+  "presentacion": "SUSPENSION 60ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0899",
+  "nombrecomercial": "ENDOXAN",
+  "presentacion": "GRAGEAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0900",
+  "nombrecomercial": "CLEMBUXOL",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0901",
+  "nombrecomercial": "UNIDAZOL",
+  "presentacion": "SOBRES 250 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0902",
+  "nombrecomercial": "SECZOL",
+  "presentacion": "SOBRES 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0903",
+  "nombrecomercial": "OMMUNAL",
+  "presentacion": "CAPSULAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0904",
+  "nombrecomercial": "FLAXOL",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0905",
+  "nombrecomercial": "FLORESTOR",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0906",
+  "nombrecomercial": "FORMULA S 26 SIN LACTOSA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0907",
+  "nombrecomercial": "NASACORT",
+  "presentacion": "SPRAY NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0908",
+  "nombrecomercial": "QUADRIDERM",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0909",
+  "nombrecomercial": "LIOLACTIL",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0910",
+  "nombrecomercial": "SOLUCION DE FOSFATOS",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0911",
+  "nombrecomercial": "NEXIUM",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0912",
+  "nombrecomercial": "LISILET",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0913",
+  "nombrecomercial": "ZYRTEC",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0914",
+  "nombrecomercial": "MIOVIT",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0915",
+  "nombrecomercial": "CEDAX",
+  "presentacion": "TABLETAS 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0916",
+  "nombrecomercial": "CETIRIVAX",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0917",
+  "nombrecomercial": "CEDROXIM",
+  "presentacion": "AMPOLLAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0918",
+  "nombrecomercial": "CEDROXIM",
+  "presentacion": "CAPSULAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0919",
+  "nombrecomercial": "DAYAMINERAL",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0920",
+  "nombrecomercial": "MACRODANTINA",
+  "presentacion": "CAPSULAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0921",
+  "nombrecomercial": "ENDOXAN",
+  "presentacion": "AMPOLLAS DE 1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0922",
+  "nombrecomercial": "ATAMEL",
+  "presentacion": "TABLETAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0923",
+  "nombrecomercial": "CITRATO DE POTASIO",
+  "presentacion": "CAPSULA 8 MEQ",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0924",
+  "nombrecomercial": "NORVASC",
+  "presentacion": "TABLETAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0925",
+  "nombrecomercial": "SISTALCYN",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0926",
+  "nombrecomercial": "ANTIFOM",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0927",
+  "nombrecomercial": "INTAFER-FOL",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0928",
+  "nombrecomercial": "BRUGESINA",
+  "presentacion": "COMP 300MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0929",
+  "nombrecomercial": "INMUNOGLOBULINA HUMANA",
+  "presentacion": "Ampollas 5grs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0930",
+  "nombrecomercial": "BICITRA",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0931",
+  "nombrecomercial": "OMEPRAZOL",
+  "presentacion": "CAPS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0932",
+  "nombrecomercial": "ATAMEL",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0933",
+  "nombrecomercial": "GIVOTAN",
+  "presentacion": "SUSP",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0934",
+  "nombrecomercial": "OTAN",
+  "presentacion": "GOTAS OTICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0935",
+  "nombrecomercial": "MAILEN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0936",
+  "nombrecomercial": "TITRALAC",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0937",
+  "nombrecomercial": "HERRONGYN",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0938",
+  "nombrecomercial": "OMNUNAL",
+  "presentacion": "CAPSULA PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0939",
+  "nombrecomercial": "ONMUNAL",
+  "presentacion": "CAPSULAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0940",
+  "nombrecomercial": "CITRATO DE POTASIO",
+  "presentacion": "TABLETAS 99 grs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0941",
+  "nombrecomercial": "ZETIA",
+  "presentacion": "Tabletas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0942",
+  "nombrecomercial": "PROKAL CON L CARNITINA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0943",
+  "nombrecomercial": "KETAZOL",
+  "presentacion": "susp 200mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0944",
+  "nombrecomercial": "SPORANOX",
+  "presentacion": "Caps 100mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0945",
+  "nombrecomercial": "AGUA DE BIOPSIA RENAL AUTOMATICA",
+  "presentacion": "ADULTOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0946",
+  "nombrecomercial": "COLTRAX",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0947",
+  "nombrecomercial": "SECOTEX",
+  "presentacion": "CAPS 4MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0948",
+  "nombrecomercial": "VITAMINA C",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0949",
+  "nombrecomercial": "SINGULAIR",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0950",
+  "nombrecomercial": "TACHIPIRIN",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0951",
+  "nombrecomercial": "PROFENID",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0952",
+  "nombrecomercial": "FORMULA S 26 MAYORCITOS",
+  "presentacion": "6-12 MESES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0953",
+  "nombrecomercial": "PROSOLVIT",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0954",
+  "nombrecomercial": "ELOCON NASAL",
+  "presentacion": "SUSPENSION PARA INHALACION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0955",
+  "nombrecomercial": "PROFENID",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0956",
+  "nombrecomercial": "CLARICORT",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0957",
+  "nombrecomercial": "ZITROMAX",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0958",
+  "nombregenerico": "NITAZOXANIDA",
+  "nombrecomercial": "ZOXAVAL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 30ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0959",
+  "nombregenerico": "NITAZOXANIDA",
+  "nombrecomercial": "ZOXAVAL",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 60ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0960",
+  "nombregenerico": "DESLORATADINA",
+  "nombrecomercial": "HISTALER",
+  "dosificacion": "SI",
+  "presentacion": "JARABE 0,5mg/ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0961",
+  "nombrecomercial": "NARICLEAR TX",
+  "dosificacion": "SI",
+  "presentacion": "Pediatrico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0962",
+  "nombrecomercial": "NARICLEAR",
+  "dosificacion": "SI",
+  "presentacion": "Pediatrico",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0963",
+  "nombrecomercial": "LASIX",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0964",
+  "nombrecomercial": "LOSARTAN",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0965",
+  "nombrecomercial": "EFFICORT",
+  "presentacion": "CREMA 0,12%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0966",
+  "nombrecomercial": "BACTROBAN",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0967",
+  "nombrecomercial": "UNASYN",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0968",
+  "nombrecomercial": "DECOBEL",
+  "presentacion": "AMP 8MG/2ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0969",
+  "nombrecomercial": "DAFLON 500",
+  "presentacion": "GRAGEAS 500mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0970",
+  "nombrecomercial": "TENSOPIN",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0971",
+  "nombrecomercial": "PROTOSULFIL",
+  "presentacion": "CREMA AL 1%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0972",
+  "nombrecomercial": "METICORTEN",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0973",
+  "nombrecomercial": "LORATADINA",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0974",
+  "nombrecomercial": "NEXIUM",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0975",
+  "nombrecomercial": "HIDRASEC",
+  "presentacion": "CAPSULAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0976",
+  "nombrecomercial": "VITAMINAS C",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0977",
+  "nombrecomercial": "VALTREX",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0978",
+  "nombregenerico": "LEVOCETIRIZINA",
+  "nombrecomercial": "APLEV",
+  "dosificacion": "SI",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0979",
+  "nombregenerico": "LOSARTAN POTASICO",
+  "nombrecomercial": "COVANCE",
+  "dosificacion": "SI",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0980",
+  "nombrecomercial": "MEVALOTIN",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0981",
+  "nombrecomercial": "AGUA BICARBONATADA",
+  "presentacion": "FRASCO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0982",
+  "nombregenerico": "LOSARTAN + AMLODIPINA",
+  "nombrecomercial": "ARANDA 50",
+  "dosificacion": "SI",
+  "presentacion": "TAB 50Mg/2,5mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0983",
+  "nombrecomercial": "L CARNITINA",
+  "presentacion": "JARABE)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0984",
+  "nombrecomercial": "BUMELEX",
+  "presentacion": "COMP 1MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0985",
+  "nombrecomercial": "MUCOSOLVAN",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0986",
+  "nombrecomercial": "DISLEP",
+  "presentacion": "COMP 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0987",
+  "nombrecomercial": "DERMOSUPRIL",
+  "presentacion": "CREMA AL 1%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0988",
+  "nombrecomercial": "NASAIR",
+  "presentacion": "INHALADOR NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0989",
+  "nombrecomercial": "ZINTREPID",
+  "presentacion": "TAB 10/20 mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0990",
+  "nombrecomercial": "PREDNA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0991",
+  "nombrecomercial": "OGASTRO",
+  "presentacion": "CAPS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0992",
+  "nombrecomercial": "AFRIN",
+  "presentacion": "gotas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0994",
+  "nombrecomercial": "MUCOSOLVAN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0995",
+  "nombrecomercial": "BRONKLAST",
+  "presentacion": "SOLUCION PARA NEBULIZAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0996",
+  "nombrecomercial": "ONMUNAL",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0997",
+  "nombrecomercial": "AMLOVASC",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0998",
+  "nombrecomercial": "FIPEXIAM",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "0999",
+  "nombrecomercial": "SALBUTAMOL",
+  "presentacion": "SOLUCION PARA NEBULIZAR.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1000",
+  "nombrecomercial": "ENSURE",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1001",
+  "nombrecomercial": "CELESTONE",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1002",
+  "nombrecomercial": "NORVASC",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1003",
+  "nombrecomercial": "CALCIO-OSTELIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1004",
+  "nombrecomercial": "BENZETACYL LA",
+  "presentacion": "AMPOLLAS 1.200.000 UDS.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1005",
+  "nombrecomercial": "CRESTOR",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1006",
+  "nombrecomercial": "LOPID",
+  "presentacion": "CAPS 300MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1007",
+  "nombrecomercial": "FORMULA NAN HA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1008",
+  "nombrecomercial": "ALLEGRA",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1009",
+  "nombrecomercial": "RINOLAST D",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1010",
+  "nombrecomercial": "BENZETACYL LA",
+  "presentacion": "AMPOLLAS DE 600.000 'UDS.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1011",
+  "nombrecomercial": "CALADRYL",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1012",
+  "nombrecomercial": "HALOG",
+  "presentacion": "LOCION CAPILAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1013",
+  "nombrecomercial": "FORMULA ISOMIL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1014",
+  "nombrecomercial": "SOLUCION SHOLL",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1015",
+  "nombregenerico": "HIERRO SACAROSA",
+  "nombrecomercial": "FERRINEX",
+  "dosificacion": "SI",
+  "presentacion": "AMPOLLAS 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1019",
+  "nombrecomercial": "ELYDEL",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1016",
+  "nombrecomercial": "FERGANIC-FOLIC",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1017",
+  "nombrecomercial": "HIALIX",
+  "presentacion": "LOCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1018",
+  "nombrecomercial": "HIDRIBET 10",
+  "presentacion": "LOCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1020",
+  "nombrecomercial": "ACID MANTLE",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1021",
+  "nombrecomercial": "BRANE",
+  "presentacion": "SUSPENSION 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1022",
+  "nombrecomercial": "DAYAMIN",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1023",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1024",
+  "nombregenerico": "POLIETILENGLICOL",
+  "nombrecomercial": "EVALAX",
+  "dosificacion": "SI",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1025",
+  "nombrecomercial": "CORASPIRINA",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1026",
+  "nombrecomercial": "BRUGESIC FORTE",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 200MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1027",
+  "nombregenerico": "SUSP 250MG/5ML",
+  "nombrecomercial": "CEFONAX",
+  "dosificacion": "SI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1028",
+  "nombrecomercial": "OFLOX",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1029",
+  "nombrecomercial": "OFLOX",
+  "presentacion": "GOTAS OFTALMICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1030",
+  "nombrecomercial": "CELLCEPT",
+  "presentacion": "TABLETAS 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1031",
+  "nombrecomercial": "BUSCAPINA",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1032",
+  "nombrecomercial": "CEFONAX",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1033",
+  "nombrecomercial": "MEBENDAZOL",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1034",
+  "nombrecomercial": "CATAFLAM",
+  "presentacion": "SUPOSITORIOS 12,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1035",
+  "nombrecomercial": "PROPANOLOL",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1036",
+  "nombrecomercial": "SUCRALFATO",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1037",
+  "nombrecomercial": "CARBOPROTEIN",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1038",
+  "nombrecomercial": "CLARITYNE",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1039",
+  "nombrecomercial": "CEFONAX",
+  "presentacion": "CAPS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1040",
+  "nombrecomercial": "ERITROPOYETINA",
+  "presentacion": "AMPOLLAS 4.000 UDS.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1041",
+  "nombrecomercial": "CIPROHEPTADINA",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1042",
+  "nombrecomercial": "ADVANTAN",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1043",
+  "nombrecomercial": "CATAFLAM",
+  "presentacion": "GEL TOPICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1044",
+  "nombrecomercial": "DICETEL",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1045",
+  "nombregenerico": "MOMETASONA FUROATO",
+  "nombrecomercial": "NIMARIN",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION ATOMIZADORA PARA USO NASAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1046",
+  "nombrecomercial": "ROCALTROL",
+  "presentacion": "TAB 0,25 microgs",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1047",
+  "nombrecomercial": "URODANTINA",
+  "presentacion": "CAPSULAS 50mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1048",
+  "nombrecomercial": "DUOFILM",
+  "presentacion": "GEL TOPICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1049",
+  "nombrecomercial": "SENOKOT",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1050",
+  "nombrecomercial": "ONDASETRON",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1051",
+  "nombregenerico": "IBUPRIFENO",
+  "nombrecomercial": "IBUN",
+  "dosificacion": "SI",
+  "presentacion": "CAPSULAS 200mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1052",
+  "nombregenerico": "HIERRO",
+  "nombrecomercial": "FERROCE CON B12",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1053",
+  "nombregenerico": "SUPLEMENTO NUTRICIONAL",
+  "nombrecomercial": "PLEXAMIN",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1054",
+  "nombregenerico": "CETIRIZINA",
+  "nombrecomercial": "CETRAL",
+  "dosificacion": "SI",
+  "presentacion": "Solucion oral",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1055",
+  "nombregenerico": "CETIRIZINA + PSEUDOEFEDRINA",
+  "nombrecomercial": "CETRAL D",
+  "dosificacion": "SI",
+  "presentacion": "Solucion oral",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1056",
+  "nombregenerico": "CETIRIZINA",
+  "nombrecomercial": "CETRAL",
+  "dosificacion": "SI",
+  "presentacion": "Gotas",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1057",
+  "nombrecomercial": "ACIDO FOLICO",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1058",
+  "nombrecomercial": "GLUTAMINA",
+  "presentacion": "TABLETAS  500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1059",
+  "nombrecomercial": "CODRIPRONT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1060",
+  "nombrecomercial": "ESOMEPRAZOL",
+  "presentacion": "CAPS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1061",
+  "nombrecomercial": "ALPHA D3",
+  "presentacion": "Capsulas 0,25mcg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1062",
+  "nombrecomercial": "ENALAPRIL",
+  "presentacion": "TABLETA 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1063",
+  "nombrecomercial": "ZYLORIC",
+  "presentacion": "COMPRIMIDOS 300MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1064",
+  "nombrecomercial": "CAPTOPRIL",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1065",
+  "nombrecomercial": "PROGRAF",
+  "presentacion": "CAPS 1MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1066",
+  "nombrecomercial": "GLUTAMINA",
+  "presentacion": "CAPS 1GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1067",
+  "nombrecomercial": "COZAAR",
+  "presentacion": "TAB 100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1068",
+  "nombrecomercial": "MALTOFERFOL",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1069",
+  "nombrecomercial": "ENALAPRIL",
+  "presentacion": "TAB 5 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1070",
+  "nombregenerico": "SUPLEMENTO NUTRICIONAL",
+  "nombrecomercial": "PLEXAMIN",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1071",
+  "nombrecomercial": "ENTEROGERMINA",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1072",
+  "nombrecomercial": "DESLORATADINA",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1073",
+  "nombrecomercial": "ESOZ",
+  "presentacion": "SOBRES 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1074",
+  "nombrecomercial": "RITUXIMAB",
+  "presentacion": "AMPOLLAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1075",
+  "nombrecomercial": "ALBUMINA HUMANA AL 20%",
+  "presentacion": "FRASCO AMPOLLA 50mL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1076",
+  "nombrecomercial": "LASIX",
+  "presentacion": "AMPOLLAS 20Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1077",
+  "nombrecomercial": "CODIPRONT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1078",
+  "nombrecomercial": "TACHIPIRIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1079",
+  "nombrecomercial": "AMOXIVAL",
+  "presentacion": "SUSP 750Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1080",
+  "nombrecomercial": "PROGRAF XL",
+  "presentacion": "CAPS 1MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1081",
+  "nombrecomercial": "PROGRAF XL",
+  "presentacion": "CAPS 1mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1082",
+  "nombrecomercial": "AFRIN PEDIATRICO",
+  "presentacion": "GOTAS NASALES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1083",
+  "nombregenerico": "VITAMINA A Y D",
+  "nombrecomercial": "SUPER COD",
+  "dosificacion": "SI",
+  "presentacion": "CAPSULAS BLANDAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1084",
+  "nombrecomercial": "ALBUMINA HUMANA AL 10%",
+  "presentacion": "1 FRASCO 50ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1085",
+  "nombrecomercial": "LASIXQ",
+  "presentacion": "AMPOLLAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1086",
+  "nombrecomercial": "LASIX",
+  "presentacion": "AMPOLLAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1087",
+  "nombrecomercial": "ATORVASTATINA",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1088",
+  "nombrecomercial": "AMOXACILINA - AC CLAVULANICO",
+  "presentacion": "COMPRIMIDOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1089",
+  "nombrecomercial": "AMBROXOL",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1090",
+  "nombrecomercial": "SAFORELLE PEDIATRICO",
+  "presentacion": "JABON LIQUIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1091",
+  "nombrecomercial": "VALIUM",
+  "presentacion": "TABLETAS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1092",
+  "nombrecomercial": "FLEET ( FOSFOSODA)",
+  "presentacion": "SOLUCION ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1093",
+  "nombrecomercial": "CALCIBON D",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1094",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "IBUTAN",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 200Mg/5cc",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1095",
+  "nombrecomercial": "FLEET PEDIATRICO",
+  "presentacion": "ENEMA RECTAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1096",
+  "nombrecomercial": "UROMUNAL",
+  "presentacion": "CAPSULAS 6mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1098",
+  "nombrecomercial": "CEFTRIAXONA",
+  "presentacion": "AMP 1 GRAMO -USO IM",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1099",
+  "nombrecomercial": "BRUGESIC",
+  "presentacion": "GRAGEAS 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1101",
+  "nombrecomercial": "SULAMP",
+  "presentacion": "TAB 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1102",
+  "nombrecomercial": "PHOSLO",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1103",
+  "nombrecomercial": "GLUTAPAK R",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1104",
+  "nombrecomercial": "KLARICID",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1105",
+  "nombrecomercial": "CELAY",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1106",
+  "nombrecomercial": "MUPROBAN",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1107",
+  "nombrecomercial": "HIDRASEC",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1108",
+  "nombrecomercial": "ZONTRICON",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1109",
+  "nombrecomercial": "NANCOL",
+  "presentacion": "TABLETAS 400MG/",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1110",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "IBUTAN",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION 200mg/ 5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1111",
+  "nombrecomercial": "NAN  HA",
+  "presentacion": "PARA NIÑOS MENORES DE 6 MESES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1112",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "presentacion": "SUSP 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1113",
+  "nombrecomercial": "PROFENID BI",
+  "presentacion": "COMP 150MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1114",
+  "nombrecomercial": "AMOXIVAL",
+  "presentacion": "SUSP 750MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1115",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "presentacion": "TAB 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1116",
+  "nombrecomercial": "ALBENDAZOL",
+  "presentacion": "TABLETAS 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1117",
+  "nombrecomercial": "VITORIN",
+  "presentacion": "TABLETAS 10/10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1118",
+  "nombrecomercial": "SULFATO DE MAGNESIO",
+  "presentacion": "TABLETAS 500mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1119",
+  "nombrecomercial": "ADVIL",
+  "presentacion": "CAPSULAS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1120",
+  "nombrecomercial": "ATAMEL FORTE",
+  "presentacion": "TAB 650Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1121",
+  "nombrecomercial": "COLFENE",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1122",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "TACHIPIRIN FORTE",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 160mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1123",
+  "nombrecomercial": "GLUTAGAMMA",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1124",
+  "nombrecomercial": "ULGARIN",
+  "presentacion": "CAPSULAS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1125",
+  "nombrecomercial": "FEMMEPLUS",
+  "presentacion": "CAPS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1126",
+  "nombregenerico": "TAB 400 UI",
+  "nombrecomercial": "FARMA D",
+  "dosificacion": "SI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1127",
+  "nombregenerico": "VITAMINA D3.",
+  "nombrecomercial": "FARMA D",
+  "dosificacion": "SI",
+  "presentacion": "TABLETAS 400 UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1128",
+  "nombrecomercial": "ERILON",
+  "presentacion": "LOCION TOPICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1129",
+  "nombrecomercial": "CITRATO DE POTASIO",
+  "dosificacion": "SI",
+  "presentacion": "Tabletas 1080gr/ 10 mEq",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1130",
+  "nombrecomercial": "JABON DE GLICERINA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1131",
+  "nombrecomercial": "FERGANIC",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1132",
+  "nombrecomercial": "ARBIXIL",
+  "presentacion": "JARABE PEDIATRICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1133",
+  "nombrecomercial": "SONDA DE FOLEY",
+  "presentacion": "NUMERO 8 french.",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1134",
+  "nombrecomercial": "PROCTOGLIVENOL",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1135",
+  "nombrecomercial": "AMLODIPINA",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1136",
+  "nombrecomercial": "FERRONORM",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1137",
+  "nombrecomercial": "IBUPROFENO",
+  "presentacion": "TABLETAS 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1138",
+  "nombrecomercial": "EUCERIN",
+  "presentacion": "LOCION CORPORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1139",
+  "nombrecomercial": "DIFFERIN",
+  "presentacion": "GEL 0,1%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1140",
+  "nombrecomercial": "IFOS",
+  "presentacion": "COMPRIMIDOS 750Mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1141",
+  "nombrecomercial": "BUCLEN",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1142",
+  "nombrecomercial": "ACETAMINOFEN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1143",
+  "nombrecomercial": "VITORYN",
+  "presentacion": "TABLETAS 10/10",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1144",
+  "nombrecomercial": "COMPLEJO B",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1145",
+  "nombregenerico": "DICLOFENAC POTASICO",
+  "nombrecomercial": "DOTRON",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1146",
+  "nombregenerico": "DICLOFENAC POTÁSICO",
+  "nombrecomercial": "DOTRON",
+  "dosificacion": "SI",
+  "presentacion": "CAPS  50mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1147",
+  "nombrecomercial": "OXINORM",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1148",
+  "nombrecomercial": "CLORACE",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1149",
+  "nombrecomercial": "ANGIOLAX",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1150",
+  "nombrecomercial": "DECOMED",
+  "presentacion": "JABON LIQUIDO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1151",
+  "nombrecomercial": "ALPRAM",
+  "presentacion": "Comp 0,5mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1152",
+  "nombrecomercial": "OLEODERM",
+  "presentacion": "CREMA HIDRATANTE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1153",
+  "nombrecomercial": "GLUCERNA SR",
+  "presentacion": "POLVO SABOR A VAINILLA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1154",
+  "nombrecomercial": "HIVIC",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1155",
+  "nombrecomercial": "VASELINA AZUFRADA  AL 3%",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1156",
+  "nombrecomercial": "DICLOFENAC POTASICO",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1157",
+  "nombrecomercial": "CALCIBON MIN",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1158",
+  "nombregenerico": "DICLOFENAC POTASICO",
+  "nombrecomercial": "FEBRATIC",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1159",
+  "nombrecomercial": "ADEMINA",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1160",
+  "nombrecomercial": "CETRAL D",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1161",
+  "nombrecomercial": "SONDA DE FOLEY",
+  "presentacion": "NUMERO 5 French",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1162",
+  "nombrecomercial": "PROVAX",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1163",
+  "nombregenerico": "DICLOFENAC POTASICO",
+  "nombrecomercial": "DIKLASON",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1164",
+  "nombrecomercial": "BAYCUTEN",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1165",
+  "nombrecomercial": "TIOCOLCHICOSIDO",
+  "presentacion": "TABLETAS 4MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1166",
+  "nombregenerico": "TECLOZAN",
+  "nombrecomercial": "FALMONOX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 50MG/ 5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1167",
+  "nombregenerico": "TECLOZAN",
+  "nombrecomercial": "FALMONOX",
+  "dosificacion": "SI",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1168",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "presentacion": "TABLETAS 500 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1169",
+  "nombrecomercial": "CETAPHIL",
+  "presentacion": "LOCION CORPORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1170",
+  "nombrecomercial": "CITRATO  DE POTASIO AL 10,8%",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1171",
+  "nombrecomercial": "BISMUTOL",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1172",
+  "nombrecomercial": "MOVIT",
+  "presentacion": "COMP 7,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1173",
+  "nombrecomercial": "DESLORATADINA",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1174",
+  "nombrecomercial": "MEDROL",
+  "presentacion": "TAB 16MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1175",
+  "nombrecomercial": "IBUPROFENO",
+  "presentacion": "TAB 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1176",
+  "nombrecomercial": "TRIDERM",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1177",
+  "nombrecomercial": "VIZERUL",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1178",
+  "nombrecomercial": "LACTEOL",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1179",
+  "nombrecomercial": "HEPAFOL B12",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1180",
+  "nombrecomercial": "CEREGEN",
+  "presentacion": "ELIXIR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1181",
+  "nombrecomercial": "CEFADROXILO",
+  "presentacion": "SUSP 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1182",
+  "nombrecomercial": "PEDIACORT",
+  "presentacion": "SUSPENSION ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1183",
+  "nombrecomercial": "ALDACTONE",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1184",
+  "nombrecomercial": "CALCORT",
+  "presentacion": "COMPRIMIDO 30MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1185",
+  "nombregenerico": "VITAMINA A Y D",
+  "nombrecomercial": "SUPERCOD",
+  "dosificacion": "SI",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1186",
+  "nombrecomercial": "ARBIXIL",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1187",
+  "nombrecomercial": "CEFADROXILO",
+  "presentacion": "CAPSULAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1188",
+  "nombrecomercial": "CIPROFLOXACINA",
+  "presentacion": "SUSP 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1189",
+  "nombrecomercial": "EMULSION DE SCOTT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1190",
+  "nombrecomercial": "ESOMEPRAZOL",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1191",
+  "nombrecomercial": "CLONAC",
+  "presentacion": "COMPRIMIDOS 0,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1192",
+  "nombrecomercial": "NUTRITEEN",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1193",
+  "nombrecomercial": "MULTIVIRAL",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1194",
+  "nombrecomercial": "ARCOXIA",
+  "presentacion": "TABLETAS 90 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1195",
+  "nombrecomercial": "DICLOGENAC",
+  "presentacion": "GEL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1196",
+  "nombrecomercial": "DESLORAT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1197",
+  "nombrecomercial": "FULGRAM",
+  "presentacion": "SUSP 600MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1198",
+  "nombrecomercial": "ZOXAVAL",
+  "presentacion": "TAB 500G",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1199",
+  "nombrecomercial": "ALOPURINOL",
+  "presentacion": "TABLETAS 100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1200",
+  "nombrecomercial": "AMLODIPINA",
+  "presentacion": "TABLETAS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1201",
+  "nombrecomercial": "DIEUDRIN",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1202",
+  "nombrecomercial": "MACRODANTINA",
+  "presentacion": "SUSPENSION 250MG/ 5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1203",
+  "nombrecomercial": "GLUTAPAK 10",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1204",
+  "nombrecomercial": "HIERRO",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1205",
+  "nombrecomercial": "IMIPENEM",
+  "presentacion": "AMPOLLAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1206",
+  "nombrecomercial": "VALSARTAN",
+  "presentacion": "TAB 80MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1207",
+  "nombrecomercial": "DIGOXINA",
+  "presentacion": "TABLETAS 125MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1208",
+  "nombrecomercial": "DIGOXINA",
+  "presentacion": "TAB 125MICROGRAMOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1209",
+  "nombrecomercial": "OVER SKIN",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1210",
+  "nombrecomercial": "APIRET",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1211",
+  "nombrecomercial": "BERODUAL",
+  "presentacion": "GOTAS PARA NEBULIZAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1212",
+  "nombrecomercial": "CEFOPERAZONA-SULBACTAN",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1213",
+  "nombrecomercial": "IRTOPAN",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1214",
+  "nombrecomercial": "AZITROMICINA",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1215",
+  "nombrecomercial": "METRONIDAZOL",
+  "presentacion": "TABLETAS 250MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1216",
+  "nombrecomercial": "FERROCE",
+  "presentacion": "TABLETAS ENTERICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1217",
+  "nombrecomercial": "ALBENDAZOL",
+  "presentacion": "TAB 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1218",
+  "nombrecomercial": "GIVOTAN",
+  "presentacion": "TAB 500 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1219",
+  "nombrecomercial": "L-CARNITINA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1220",
+  "nombrecomercial": "BEDUCEN",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1221",
+  "nombrecomercial": "BICARBONATO DE SODIO AL 8,6%",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1222",
+  "nombrecomercial": "LOKARIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1223",
+  "nombrecomercial": "YONAL",
+  "presentacion": "DEXTROMETORFANO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1224",
+  "nombrecomercial": "HIDROCORTISONA",
+  "presentacion": "20MG / 30 TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1225",
+  "nombrecomercial": "ESOMEPRAZOL",
+  "presentacion": "TABLETAS  40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1226",
+  "nombrecomercial": "VALCOTE ER",
+  "presentacion": "TABLETAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1227",
+  "nombrecomercial": "ZALDIAR",
+  "presentacion": "COMPRIMIDOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1228",
+  "nombrecomercial": "ESOZ",
+  "presentacion": "TABLETAS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1229",
+  "nombrecomercial": "CEFTUBUTEN",
+  "presentacion": "SUSPENSION 180MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1230",
+  "nombrecomercial": "ESOZ",
+  "presentacion": "CAPSULAS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1231",
+  "nombrecomercial": "PREDNISONA",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1232",
+  "nombrecomercial": "PROFENID",
+  "presentacion": "CAPSULAS  100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1233",
+  "nombrecomercial": "BRUGESIC",
+  "presentacion": "TABLETAS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1234",
+  "nombrecomercial": "METRONIDAZOL",
+  "presentacion": "CAPSULAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1235",
+  "nombrecomercial": "AZITROMICINA",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1236",
+  "nombrecomercial": "BUDECORT",
+  "presentacion": "SOLUCION PARA NEBULIZAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1237",
+  "nombrecomercial": "INDOMETACINA",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1238",
+  "nombrecomercial": "INDOMETACINA",
+  "presentacion": "CAPS 25 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1263",
+  "nombrecomercial": "LORATADINA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1239",
+  "nombrecomercial": "GYNOCANESTEN",
+  "presentacion": "CREMA USO VAGINAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1240",
+  "nombrecomercial": "PREDNISONA",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1241",
+  "nombrecomercial": "RETEVEN (OXIBUTNINA)",
+  "presentacion": "TABLETAS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1242",
+  "nombrecomercial": "ALOPURINOL",
+  "presentacion": "TAB 300MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1243",
+  "nombrecomercial": "MEROPENEM",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1244",
+  "nombrecomercial": "MICOFLAVIN",
+  "presentacion": "TABLETAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1245",
+  "nombrecomercial": "LISIN BE",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1246",
+  "nombrecomercial": "IBUPROFENO",
+  "presentacion": "SUSPENSION 200MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1247",
+  "nombrecomercial": "DEXAMETASONA",
+  "presentacion": "AMPOLLAS 4MG//ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1248",
+  "nombrecomercial": "FARMA D",
+  "presentacion": "TABLETAS 1000 UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1249",
+  "nombrecomercial": "MICOFENOLATO MOFETYL",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1250",
+  "nombrecomercial": "CALAMYNOL",
+  "presentacion": "GEL TOPICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1251",
+  "nombrecomercial": "COMBATRIN",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1252",
+  "nombrecomercial": "SOLUMEDROL  ( METILPREDNISOLONA)",
+  "presentacion": "AMPOLLAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1253",
+  "nombrecomercial": "LISILET",
+  "presentacion": "TABLETAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1254",
+  "nombrecomercial": "CEFEPIME",
+  "presentacion": "AMPOLLAS  1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1255",
+  "nombrecomercial": "INTAFER-FOLIC",
+  "presentacion": "GOTAS  PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1256",
+  "nombrecomercial": "NITROFURANTOINA",
+  "presentacion": "TAB 100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1257",
+  "nombrecomercial": "PEDIPLUS",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1258",
+  "nombrecomercial": "HIDROTEN",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1259",
+  "nombrecomercial": "CEFTIBUTEN",
+  "presentacion": "SUSP 180MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1260",
+  "nombrecomercial": "ANALPER PLUS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1261",
+  "nombrecomercial": "CO-TRIMOXAZOL",
+  "presentacion": "Suspensión",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1276",
+  "nombrecomercial": "ATENOLOL",
+  "presentacion": "TAB 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1262",
+  "nombrecomercial": "CO TRIMOXAZOL",
+  "presentacion": "Suspensión",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1264",
+  "nombrecomercial": "OMEGA 3-6-",
+  "presentacion": "CAPSULAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1265",
+  "nombrecomercial": "ACETAMINOFEN",
+  "presentacion": "GOTAS ( 100MG/1ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1266",
+  "nombrecomercial": "HIDROTEN",
+  "presentacion": "TABLETAS 12,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1267",
+  "nombrecomercial": "BENCIDAMIDA",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1268",
+  "nombrecomercial": "AMOXACILINA",
+  "presentacion": "CAPSULA 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1269",
+  "nombrecomercial": "TACHIFORTE",
+  "presentacion": "TABLETAS 1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1270",
+  "nombrecomercial": "GRAUSIN",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1271",
+  "nombrecomercial": "FAMOTIDINA",
+  "presentacion": "TABLETAS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1272",
+  "nombrecomercial": "RANITIDINA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1273",
+  "nombrecomercial": "HIDROCLOROTIAZIDA",
+  "presentacion": "TABLETAS 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1274",
+  "nombrecomercial": "BRUCEN",
+  "presentacion": "UNGUENTO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1275",
+  "nombrecomercial": "NIFEDIPINA",
+  "presentacion": "TABLETAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1277",
+  "nombrecomercial": "DICLOFENAC POTASICO",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1278",
+  "nombrecomercial": "DOMPESIN",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1279",
+  "nombrecomercial": "MUPIROCINA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1280",
+  "nombrecomercial": "AMOXACILINA - AC CLAVULANICO",
+  "presentacion": "SUSPENSION 400MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1281",
+  "nombrecomercial": "AMOXACILINA",
+  "presentacion": "SUSP 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1282",
+  "nombrecomercial": "AMOXACILINA",
+  "presentacion": "SUSPENSION 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1283",
+  "nombrecomercial": "CELLCEPT",
+  "presentacion": "TAB 475MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1284",
+  "nombrecomercial": "POLIVIT",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1285",
+  "nombrecomercial": "ENALAPRIL",
+  "presentacion": "TAB 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1286",
+  "nombrecomercial": "PASTA AL AGUA",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1287",
+  "nombrecomercial": "TONIMER",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1288",
+  "nombrecomercial": "MYFORTIC",
+  "presentacion": "COMPRIMIDOS 360MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1289",
+  "nombrecomercial": "KETOPROFENO",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1290",
+  "nombrecomercial": "BUSCAPINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1291",
+  "nombrecomercial": "PRIMPERAN",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1292",
+  "nombrecomercial": "ANALPER FEM PLUS",
+  "presentacion": "IBUPROFENO 400MG +  BORMURO HIOSCINA 20M",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1293",
+  "nombrecomercial": "SABILA",
+  "presentacion": "CAPSULA 300MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1294",
+  "nombrecomercial": "ANALPER",
+  "presentacion": "JARABE 120MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1295",
+  "nombrecomercial": "PARACETAMOL",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1296",
+  "nombrecomercial": "ESOMEPRAZOL",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1297",
+  "nombrecomercial": "CLARITROMICINA",
+  "presentacion": "SUSP 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1298",
+  "nombrecomercial": "ANTUX",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1299",
+  "nombrecomercial": "NITAXOZANIDA",
+  "presentacion": "TAB 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1300",
+  "nombrecomercial": "PANTOPRAZOL",
+  "presentacion": "CAPS 30MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1301",
+  "nombrecomercial": "COMPELJO B",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1302",
+  "nombrecomercial": "COMPLEJO B",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1303",
+  "nombrecomercial": "BUDENAS",
+  "presentacion": "GOTAS NASALES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1304",
+  "nombrecomercial": "METRONIDAZOL",
+  "presentacion": "SUSPENSION 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1305",
+  "nombrecomercial": "BICARBONATO DE SODIO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1306",
+  "nombrecomercial": "ACETAMINOFEN",
+  "presentacion": "( TAB 500MG)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1307",
+  "nombrecomercial": "IBUPROFENO",
+  "presentacion": "TABLETAS 600MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1308",
+  "nombrecomercial": "HIDROCLOROTIAZIDA",
+  "presentacion": "TABLETAS 12,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1309",
+  "nombrecomercial": "SECNIDAZOL",
+  "presentacion": "POLVO PARA SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1310",
+  "nombrecomercial": "DICLOFENAC SODICO",
+  "presentacion": "AMPOLLAS 75MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1311",
+  "nombrecomercial": "SOLUCION 0.9%",
+  "presentacion": "FRASCO 500ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1316",
+  "nombrecomercial": "NOTOLAC",
+  "presentacion": "COMPRIMIDOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1312",
+  "nombrecomercial": "CICLOKAPRON ( ACIDO TRANEXAMICO)",
+  "presentacion": "COMPRIMIDOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1313",
+  "nombrecomercial": "FUROSEMIDA",
+  "presentacion": "AMPOLAS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1314",
+  "nombrecomercial": "BROLAT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1315",
+  "nombrecomercial": "ACICLOVIR",
+  "presentacion": "TABLETAS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1317",
+  "nombrecomercial": "DIOSMINA",
+  "presentacion": "GRAGEAS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1318",
+  "nombrecomercial": "PREDNISONA",
+  "presentacion": "TABLETAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1319",
+  "nombrecomercial": "PARACETAMOL",
+  "presentacion": "TABLETAS 1 GRAMO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1320",
+  "nombrecomercial": "NITAZOXANIDA ( FRASCO 30ML)",
+  "presentacion": "SUSPENSION 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1321",
+  "nombrecomercial": "FEMMEX PLUS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1322",
+  "nombrecomercial": "FEMMEX PLUS EXTRA",
+  "presentacion": "IBUPROFENO + BROMURO DE HIOSCINA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1323",
+  "nombrecomercial": "GYNOTRANS",
+  "presentacion": "CREMA VAGINAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1324",
+  "nombrecomercial": "CROMOFTAL",
+  "presentacion": "SOLUCION OFTALMICA AL 2%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1325",
+  "nombrecomercial": "CICLOSPORINA A",
+  "presentacion": "CAPSULAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1326",
+  "nombrecomercial": "AMBROXOL + LORATADINA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1327",
+  "nombrecomercial": "HEXOMEDINE",
+  "presentacion": "SPRAY DE USO ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1328",
+  "nombrecomercial": "MULTIVITAMINICO FARMATODO",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1329",
+  "nombrecomercial": "CITRATO DE POTASIO AL 10%",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1330",
+  "nombrecomercial": "CITRATO DE POTASIO AL 10%",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1331",
+  "nombrecomercial": "DESLER M",
+  "presentacion": "TABLETAS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1332",
+  "nombrecomercial": "PREDNISOLONA",
+  "presentacion": "SUSPENSION 3MG/1ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1333",
+  "nombrecomercial": "BUTROPINA",
+  "presentacion": "GOTAS PEDIATRICAS-",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1334",
+  "nombrecomercial": "GENTAMICINA",
+  "presentacion": "AMPOLLAS 80MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1335",
+  "nombrecomercial": "QUINOFTAL",
+  "presentacion": "SOLUCION OFTALMICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1336",
+  "nombrecomercial": "AMPICILINA",
+  "presentacion": "SUSPENSION 125MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1337",
+  "nombrecomercial": "AMOXACILINA - ACIDO CLAVULANICO",
+  "presentacion": "COMPRIMIDOS 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1338",
+  "nombrecomercial": "ALBUMINA HUMANA AL 20%",
+  "presentacion": "AMPOLLAS DE 100ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1339",
+  "nombrecomercial": "OXIBUTININA",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1340",
+  "nombrecomercial": "PAMOATO DE PIRANTEL",
+  "presentacion": "SUSPENSIO0N",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1341",
+  "nombrecomercial": "FLUCONAZOL",
+  "presentacion": "SUSPENSION 50MG/5ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1342",
+  "nombrecomercial": "FORMULA SIN LACTOSA",
+  "presentacion": "MENORES DE 6 MESES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1343",
+  "nombrecomercial": "UROVAXON",
+  "presentacion": "CAPSULAS 6MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1344",
+  "nombrecomercial": "TANSULOSINA",
+  "presentacion": "TABLETAS 0,4mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1345",
+  "nombrecomercial": "FERGANIC FOLIC",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1346",
+  "nombrecomercial": "CICLOSPORINA",
+  "presentacion": "CAPSULAS 100MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1347",
+  "nombrecomercial": "ACETAMINOFEN",
+  "presentacion": "TAB 650MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1348",
+  "nombrecomercial": "MONTELUKAST",
+  "presentacion": "TAB 4MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1349",
+  "nombrecomercial": "PROTECTOR SOLAR",
+  "presentacion": "(USO FACIAL)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1350",
+  "nombrecomercial": "SECNIDAZOL",
+  "presentacion": "POLVO PARA SUSPENSION 750MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1351",
+  "nombrecomercial": "CLOTRIMAZOL",
+  "presentacion": "CREMA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1352",
+  "nombrecomercial": "COMPLEJO B",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1353",
+  "nombrecomercial": "COMPLEJO B",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1354",
+  "nombrecomercial": "FLAVOXATO",
+  "presentacion": "COMPRIMIDOS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1355",
+  "nombrecomercial": "DESLER M",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1450",
+  "nombrecomercial": "YELCO N 22",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1356",
+  "nombrecomercial": "CEFIXIME",
+  "presentacion": "SUSP 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1357",
+  "nombrecomercial": "PREDNISONA",
+  "presentacion": "JARABE  20MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1358",
+  "nombrecomercial": "VITAMINA D",
+  "presentacion": "GOTAS 1.600 UI/ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1359",
+  "nombrecomercial": "PROLARDI",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1360",
+  "nombrecomercial": "CITRATO DE POTASIO",
+  "presentacion": "TABLETAS 1080 mg/10mEq",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1361",
+  "nombregenerico": "DESLORATADINA / MONTELUKAST",
+  "nombrecomercial": "DESLER M",
+  "dosificacion": "SI",
+  "presentacion": "TABLETAS 2,5MG/4MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1362",
+  "nombregenerico": "DESLORATADINA / MONTELUKAST",
+  "nombrecomercial": "DESLER M",
+  "dosificacion": "SI",
+  "presentacion": "TAB MASTICABLES 2,5MG/ 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1363",
+  "nombrecomercial": "ACIDO FOLICO",
+  "presentacion": "TABLETAS 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1364",
+  "nombrecomercial": "NITAXOZANIDA",
+  "presentacion": "SUSPENSION 100MG/ 5ML( FRASCO 60ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1365",
+  "nombrecomercial": "DESLORATADINA",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1366",
+  "nombrecomercial": "DICLOFENAC POTASICO",
+  "presentacion": "SUPOSITORIOS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1367",
+  "nombrecomercial": "DESLER M",
+  "presentacion": "SOBRES LORATADINA( 1,25MG) /MONTELUKAST( 4MG)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1368",
+  "nombrecomercial": "CEFIXIME",
+  "presentacion": "COMPRIMIDOS 400MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1369",
+  "nombrecomercial": "DICOLFENAC SODICO",
+  "presentacion": "GRAGEAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1370",
+  "nombrecomercial": "DICLOFENAC SODICO",
+  "presentacion": "GRAGEAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1371",
+  "nombrecomercial": "CETRAL D",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1372",
+  "nombrecomercial": "MONTELUKAST",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1373",
+  "nombrecomercial": "SIMETICONA",
+  "presentacion": "GOTAS PEDIATRICAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1375",
+  "nombrecomercial": "FORMULA SIMILAC PRO SENSITIVE",
+  "presentacion": "PARA MAYORES DE 6 MESES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1376",
+  "nombrecomercial": "AMOXACILINA",
+  "presentacion": "SUSPENSION 250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1378",
+  "nombrecomercial": "FLUCONAZOL",
+  "presentacion": "TABLETAS 200MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1379",
+  "nombrecomercial": "SULFATO DE ZINC",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1380",
+  "nombrecomercial": "LIDOCAINA",
+  "presentacion": "GEL TOPICO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1381",
+  "nombrecomercial": "GUANTES ESTERILES",
+  "presentacion": "NUMERO 7",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1382",
+  "nombrecomercial": "GASAS ESTERILES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1383",
+  "nombrecomercial": "SULFATO FERROSO",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1384",
+  "nombrecomercial": "PIPERACILINA - TAZOBACTAN",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1385",
+  "nombrecomercial": "DEFILON",
+  "presentacion": "JARABE  5MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1386",
+  "nombrecomercial": "DELIFON",
+  "presentacion": "JARABE ( 5MG/5ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1387",
+  "nombrecomercial": "CALCITRIOL",
+  "presentacion": "TAB 0,5 microgramos",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1388",
+  "nombrecomercial": "CALCITRIOL",
+  "presentacion": "CAPSULAS  0,5 mcg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1389",
+  "nombrecomercial": "POTAX",
+  "presentacion": "TABLETAS 10 mEq",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1390",
+  "nombrecomercial": "FLAVOXATO",
+  "presentacion": "SUSPENSION 200MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1391",
+  "nombrecomercial": "FUROSEMIDA",
+  "presentacion": "TABLETAS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1392",
+  "nombrecomercial": "VALGANCICLOVIR",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1393",
+  "nombrecomercial": "ZONTRICON",
+  "presentacion": "SUSPENSION 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1394",
+  "nombrecomercial": "NITROFURANTOINA",
+  "presentacion": "SUSPENSION 50MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1395",
+  "nombrecomercial": "MYCOFENOLATO SODICO",
+  "presentacion": "TABLETAS 360MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1396",
+  "nombrecomercial": "LORECORT",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1397",
+  "nombrecomercial": "LACTOBAC",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1398",
+  "nombrecomercial": "LACTOVAC",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1399",
+  "nombrecomercial": "LISINOPRIL",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1401",
+  "nombrecomercial": "OMEPRAZOL",
+  "presentacion": "AMPOLLAS 20MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1400",
+  "nombrecomercial": "ONDASETRON",
+  "presentacion": "AMPOLLAS 2MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1402",
+  "nombrecomercial": "OMEPRAZOL",
+  "presentacion": "AMPOLLAS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1403",
+  "nombrecomercial": "DIPIRONA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1404",
+  "nombrecomercial": "RINARYS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1405",
+  "nombrecomercial": "METROCLOPRAMIDA",
+  "presentacion": "TABLETAS 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1406",
+  "nombrecomercial": "AMOXACILINA/ ACIDO CLAVULANICO",
+  "presentacion": "SUSPS 600MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1407",
+  "nombregenerico": "KETOPROFENO",
+  "nombrecomercial": "KEPRORET",
+  "dosificacion": "SI",
+  "presentacion": "1mg/ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1408",
+  "nombregenerico": "LORATADINA/ BETAMETASONA",
+  "nombrecomercial": "LORECORT",
+  "dosificacion": "SI",
+  "presentacion": "1mg/0,05mg / 5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1409",
+  "nombrecomercial": "LANCERAN ( METOCLOPRAMIDA)",
+  "presentacion": "JARABE ( 5MG/5ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1410",
+  "nombrecomercial": "FORMULA NAN SIN LACTOSA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1411",
+  "nombrecomercial": "VITAMINA D",
+  "presentacion": "CAPSULAS 400 UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1412",
+  "nombrecomercial": "CICLOFOSFAMIDA",
+  "presentacion": "GRAGEAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1413",
+  "nombrecomercial": "VITAMINA D",
+  "presentacion": "CAPSULAS 400UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1414",
+  "nombrecomercial": "PROKIDS",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1415",
+  "nombrecomercial": "NITROFURANTOINA",
+  "presentacion": "TABLETAS 50MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1416",
+  "nombrecomercial": "PROLARDI",
+  "dosificacion": "SI",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1417",
+  "nombrecomercial": "PROCILUS D2",
+  "dosificacion": "SI",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1418",
+  "nombrecomercial": "PRE GABALINA",
+  "presentacion": "CAPSULAS 75MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1419",
+  "nombrecomercial": "CLINDAMICINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1420",
+  "nombrecomercial": "CARBONATO DE CALCIO",
+  "presentacion": "TAB 600MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1421",
+  "nombrecomercial": "ESTRACYN",
+  "presentacion": "CREMA TOPICA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1422",
+  "nombrecomercial": "ESTRASYN",
+  "presentacion": "CREMA VAGINAL AL 0,01%",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1434",
+  "nombrecomercial": "PROLARDI",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1423",
+  "nombrecomercial": "VITAMINA C",
+  "presentacion": "TABLETAS EFERVESCENTES 500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1424",
+  "nombregenerico": "IBUPROFENO",
+  "nombrecomercial": "IBUPORET",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 40MG/1ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1425",
+  "nombrecomercial": "HEPAFOL FORTE",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1426",
+  "nombrecomercial": "L-GLUTAMINA + L- CARNITINA",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1427",
+  "nombrecomercial": "INMUNOKIDS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1428",
+  "nombrecomercial": "INMUKIDS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1429",
+  "nombrecomercial": "NITAZOXANIDA",
+  "presentacion": "SUSPENSION 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1430",
+  "nombrecomercial": "BISOPROLOL",
+  "presentacion": "TAB 5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1431",
+  "nombrecomercial": "ATORVASTATINA +EZETIMIBA",
+  "presentacion": "COMPRIMIDOS  20MG/10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1432",
+  "nombrecomercial": "HEPAFOL FORTE",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1433",
+  "nombrecomercial": "COLYPAN",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1435",
+  "nombrecomercial": "VITAMINA D3",
+  "presentacion": "SUSPENSION 400 UI/ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1436",
+  "nombrecomercial": "FEXOFENADINA +PSEUDOEFEDRINA",
+  "presentacion": "TAB 60MG/25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1437",
+  "nombrecomercial": "PROBIOTICOS",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1438",
+  "nombrecomercial": "PIPERAZINA",
+  "presentacion": "JARABE 500MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1439",
+  "nombrecomercial": "TACROLIMUS",
+  "presentacion": "CREMA AL 0,03 %",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1440",
+  "nombrecomercial": "DAPAGLIFOZINA",
+  "presentacion": "TAB 10MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1441",
+  "nombrecomercial": "ESPIRONOLACTONA",
+  "presentacion": "TAB 25MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1442",
+  "nombrecomercial": "NIFEDIPINA",
+  "presentacion": "TAB  LP 30MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1443",
+  "nombrecomercial": "CLOROFENIRAMINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1444",
+  "nombrecomercial": "CLORFENIRAMINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1445",
+  "nombrecomercial": "METILPREDNISOLONA",
+  "presentacion": "AMPOLLAS 40MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1446",
+  "nombrecomercial": "LEVOFLOXACINA",
+  "presentacion": "TABLETAS  500MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1447",
+  "nombregenerico": "CEFIXIME",
+  "nombrecomercial": "CELISTIA",
+  "dosificacion": "SI",
+  "presentacion": "SUSPENSION 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1448",
+  "nombregenerico": "AMOXACILINA /AC. CLAVULANICO",
+  "nombrecomercial": "EXOVIS DUO",
+  "dosificacion": "SI",
+  "presentacion": "TABLETAS 875MG/125MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1449",
+  "nombrecomercial": "OMEGA 3-6-9",
+  "presentacion": "CAPSULAS 1000MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1451",
+  "nombregenerico": "JABON LIQUIDO",
+  "nombrecomercial": "PERLAVIS FEMME TEENS",
+  "dosificacion": "SI",
+  "presentacion": "FRASCO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1452",
+  "nombrecomercial": "IBUPROFENO",
+  "presentacion": "SUSP 100MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1453",
+  "nombregenerico": "CREMA",
+  "nombrecomercial": "DERMASKIN",
+  "dosificacion": "SI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1454",
+  "nombregenerico": "METRONIDAZOL + NIFUROZAXIDA",
+  "nombrecomercial": "KRODEX F COMPUESTO",
+  "dosificacion": "SI",
+  "presentacion": "250MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1455",
+  "nombregenerico": "FLAVOXATO",
+  "nombrecomercial": "URODUTAN",
+  "dosificacion": "SI",
+  "presentacion": "TABLETAS 200 MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1456",
+  "nombrecomercial": "ONDANSETRON",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1457",
+  "nombrecomercial": "NISTATINA",
+  "presentacion": "GEL ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1458",
+  "nombrecomercial": "CULTURELLE KIDS PROBIOTICS",
+  "presentacion": "SOBRES",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1459",
+  "nombregenerico": "CEFTIBUTEN",
+  "nombrecomercial": "CEFTIMED",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 180mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1460",
+  "nombregenerico": "CEFTIBUTEN",
+  "nombrecomercial": "CEFTIMED",
+  "dosificacion": "SI",
+  "presentacion": "TABLETAS 400mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1461",
+  "nombrecomercial": "CARBO NEUTRO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1462",
+  "nombrecomercial": "PREDNISONA",
+  "presentacion": "JARABE 15MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1463",
+  "nombregenerico": "ACETAMINOFEN",
+  "nombrecomercial": "ANYDOL FORTE",
+  "dosificacion": "SI",
+  "presentacion": "180mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1464",
+  "nombregenerico": "DICLOFENAC ACIDO",
+  "nombrecomercial": "FIXADOL",
+  "dosificacion": "SI",
+  "presentacion": "1,8mg/1ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1467",
+  "nombrecomercial": "ALPHA PRO RICE",
+  "presentacion": "FORMULA NO LACTEA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1465",
+  "nombregenerico": "SOLUCION HIDROELECTROLITICA",
+  "nombrecomercial": "HIDROLIT ORAL",
+  "dosificacion": "SI",
+  "presentacion": "SOLUCION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1466",
+  "nombregenerico": "COMPLEJO VITAMINAS B",
+  "nombrecomercial": "VITALIT B",
+  "dosificacion": "SI",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1468",
+  "nombrecomercial": "BICARBONATO DE SODIO",
+  "presentacion": "CAPSULAS DE 0,5 gramos",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1469",
+  "nombrecomercial": "NOV HEPAR B-12",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1470",
+  "nombregenerico": "AMOXACILINA/ACIDO CLAVULANICO",
+  "nombrecomercial": "CLAVUMIX",
+  "dosificacion": "SI",
+  "presentacion": "SUSP 250MG/62,5MG",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1471",
+  "nombregenerico": "L-CARNITINA",
+  "nombrecomercial": "AVANTINA",
+  "dosificacion": "SI",
+  "presentacion": "500MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1472",
+  "nombrecomercial": "OMEGA 3-6 9",
+  "dosificacion": "SI",
+  "presentacion": "GOMITAS 1000mg",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1473",
+  "nombrecomercial": "ZINCOSOL",
+  "presentacion": "JARABE ( 15MG)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1474",
+  "nombrecomercial": "ZINC",
+  "presentacion": "GOMITAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1475",
+  "nombrecomercial": "VITAMINA D",
+  "presentacion": "GOMITAS 1000 UI ( 25mcg)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1476",
+  "nombregenerico": "L- CARNITINA",
+  "nombrecomercial": "AVANTINA",
+  "dosificacion": "SI",
+  "presentacion": "500mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1477",
+  "nombregenerico": "AMOXACILINA/ AC. CLAVULÀNICO",
+  "nombrecomercial": "CLAVUMIX",
+  "dosificacion": "SI",
+  "presentacion": "250mg/62,5mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1478",
+  "nombregenerico": "TRIMETROPRIM/ SULFAMETOZAXOL",
+  "nombrecomercial": "SULMETRIN",
+  "dosificacion": "SI",
+  "presentacion": "Suspension 40mg/200mg/5ml",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1479",
+  "nombrecomercial": "FEXOMED",
+  "presentacion": "SUSPENSION  30MG/5ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1480",
+  "nombregenerico": "HIERRO- VIT B -ACIDO FOLICO",
+  "nombrecomercial": "VITALIT FE",
+  "dosificacion": "SI",
+  "presentacion": "JARABE 100ML",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1481",
+  "nombregenerico": "TMP -SMZ",
+  "nombrecomercial": "SULMETRIN",
+  "dosificacion": "SI",
+  "presentacion": "40MG/200MG( 120ML)",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1482",
+  "nombrecomercial": "DIGLET",
+  "presentacion": "VITAMINA D3 200 UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1487",
+  "nombrecomercial": "NEUROMIX",
+  "presentacion": "JARABE",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1483",
+  "nombrecomercial": "RENAKAT LP",
+  "presentacion": "COMPRIMIDOS 10mEq",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1484",
+  "nombregenerico": "VITAMINA D",
+  "nombrecomercial": "FARMA D",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS 220UI/GOTA",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1485",
+  "nombrecomercial": "FARMA D",
+  "presentacion": "GOTAS 200UI",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1486",
+  "nombrecomercial": "NEUROMIX",
+  "presentacion": "TABLETAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1488",
+  "nombrecomercial": "NEUROMIX",
+  "presentacion": "GOTAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1489",
+  "nombrecomercial": "MYLAX",
+  "presentacion": "SOLUCION ORAL",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1490",
+  "nombregenerico": "BUDESONIDA",
+  "nombrecomercial": "PULMOLET",
+  "dosificacion": "SI",
+  "presentacion": "GOTAS PARA NEBULIZAR",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1491",
+  "nombrecomercial": "INTYPRO  ( PROBIOTICOS-PREBIOTICOS)",
+  "presentacion": "CAPSULAS",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1492",
+  "nombrecomercial": "CARBONEUTRO",
+  "presentacion": "POLVO",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1493",
+  "nombrecomercial": "ACICLOVIR",
+  "presentacion": "SUSPENSION",
+  "sico": "N",
+  "sicome": "S"
+ },
+ {
+  "codigo_origen": "1494",
+  "nombrecomercial": "BACIGERMINA",
+  "presentacion": "AMPOLLAS",
+  "sico": "N",
+  "sicome": "S"
+ }
+]

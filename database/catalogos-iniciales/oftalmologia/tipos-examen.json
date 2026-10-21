@@ -1,0 +1,86 @@
+[
+ {
+  "codigo_origen": "002",
+  "tipo": "OFTALMOLOGICOS ESPECIALES"
+ },
+ {
+  "codigo_origen": "003",
+  "tipo": "RADIOLÓGICO"
+ },
+ {
+  "codigo_origen": "001",
+  "tipo": "LABORATORIO"
+ },
+ {
+  "codigo_origen": "005",
+  "tipo": "TOPOGRAFIA + PAQUIMETRIA CORNEAL A.O"
+ },
+ {
+  "codigo_origen": "006",
+  "tipo": "OCT DE MACULA + OCT DE NERVIO OPTICO A.O"
+ },
+ {
+  "codigo_origen": "007",
+  "tipo": "OCT DE MACULA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "008",
+  "tipo": "OCT DE NERVIO OPTICO AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "004",
+  "tipo": "PREOPERATORIO"
+ },
+ {
+  "codigo_origen": "009",
+  "tipo": "BIOMETRIA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "010",
+  "tipo": "IOL MASTER AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "011",
+  "tipo": "CONTAJE ENDOTELIAL AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "012",
+  "tipo": "MICROSCOPIA ESPECULAR AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "013",
+  "tipo": "TOPOGRAFIA + PAQUIMETRIA UNILATERAL"
+ },
+ {
+  "codigo_origen": "014",
+  "tipo": "OCT MACULA + OCT NERVIO OTICO UNILATERAL"
+ },
+ {
+  "codigo_origen": "015",
+  "tipo": "OCT MACULA UNOLATERAL"
+ },
+ {
+  "codigo_origen": "016",
+  "tipo": "OCT NERVIO OPTICO UNILATERAL"
+ },
+ {
+  "codigo_origen": "017",
+  "tipo": "BIOMETRIA UNILATERAL"
+ },
+ {
+  "codigo_origen": "018",
+  "tipo": "IOL MASTER UNILATERAL"
+ },
+ {
+  "codigo_origen": "019",
+  "tipo": "MICROSCOPIA ESPECULAR UNILATERAL"
+ },
+ {
+  "codigo_origen": "020",
+  "tipo": "PROTOCOLO CATARATA AMBOS OJOS"
+ },
+ {
+  "codigo_origen": "021",
+  "tipo": "PROTOCOLO LASIK"
+ }
+]

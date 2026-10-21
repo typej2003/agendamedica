@@ -1,0 +1,38 @@
+[
+ {
+  "codigo_origen": "04",
+  "tipo_atencion": "CONTROL"
+ },
+ {
+  "codigo_origen": "05",
+  "tipo_atencion": "POST OPERATORIO 1 ER CONTROL"
+ },
+ {
+  "codigo_origen": "06",
+  "tipo_atencion": "POST OPERATORIO 2DO CONTROL"
+ },
+ {
+  "codigo_origen": "01",
+  "tipo_atencion": "PRIMERA VEZ"
+ },
+ {
+  "codigo_origen": "02",
+  "tipo_atencion": "CONSULTA"
+ },
+ {
+  "codigo_origen": "03",
+  "tipo_atencion": "ESTUDIOS"
+ },
+ {
+  "codigo_origen": "07",
+  "tipo_atencion": "POST OPERATORIO RETIRO DE PUNTOS"
+ },
+ {
+  "codigo_origen": "08",
+  "tipo_atencion": "EMERGENCIA"
+ },
+ {
+  "codigo_origen": "09",
+  "tipo_atencion": "POST OPERATORIO TRANSPLANTE DE CORNEA"
+ }
+]
