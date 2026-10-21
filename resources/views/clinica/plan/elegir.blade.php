@@ -55,7 +55,7 @@
                                     <div class="card-body d-flex align-items-center gap-3 py-3">
                                         <input class="form-check-input mt-0" type="radio" name="metodo_pago_id"
                                                id="metodo-{{ $metodo->id }}" value="{{ $metodo->id }}"
-                                               @checked($loop->first) required>
+                                               {{ $loop->first ? 'checked' : '' }} required>
                                         <label class="form-check-label flex-grow-1 mb-0" for="metodo-{{ $metodo->id }}">
                                             <span class="fw-semibold d-block">{{ $metodo->etiqueta() }}</span>
                                             <span class="text-muted small">Pagarás con este método</span>
@@ -67,7 +67,7 @@
 
                             <div class="d-flex gap-2 mt-3">
                                 <a href="{{ route('clinica.plan') }}" class="btn btn-outline-secondary">Volver a mi plan</a>
-                                <button type="submit" class="btn btn-primary" @disabled(! $vm->puedeContinuar())>
+                                <button type="submit" class="btn btn-primary" {{ $vm->puedeContinuar() ? '' : 'disabled' }}>
                                     <i class="bi bi-arrow-right me-1" aria-hidden="true"></i> Continuar
                                 </button>
                             </div>

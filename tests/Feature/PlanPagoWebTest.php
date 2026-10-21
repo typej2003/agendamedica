@@ -188,7 +188,29 @@ class PlanPagoWebTest extends TestCase
             ->assertSee('¿Cómo quieres pagar?')
             ->assertSee($metodo->etiqueta())
             ->assertSee('VES 730,00')
-            ->assertSee('Continuar');
+            ->assertSee('Continuar')
+            // Laravel 8 no tiene `@checked`/`@disabled` (son de Blade 9): si se cuelan, se ven como texto.
+            ->assertDontSee('@checked')
+            ->assertDontSee('@disabled')
+            ->assertDontSee('first)')
+            ->assertDontSee('puedeContinuar())');
+    }
+
+    public function test_el_checkout_no_muestra_directivas_de_blade_9(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan.pagar', $pago))
+            ->assertOk()
+            ->assertSee('name="tipo_cuenta"', false)
+            ->assertDontSee('@selected')
+            ->assertDontSee('@checked');
     }
 
     public function test_sin_tasa_la_pantalla_del_plan_avisa_y_no_deja_continuar(): void

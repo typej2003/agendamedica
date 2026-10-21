@@ -74,7 +74,7 @@
                                     <label class="form-label" for="documento_tipo">Tipo</label>
                                     <select name="documento_tipo" id="documento_tipo" class="form-select" required>
                                         @foreach (\App\Models\CuentaBancaria::DOCUMENTOS as $tipo)
-                                            <option value="{{ $tipo }}" @selected(old('documento_tipo', 'V') === $tipo)>{{ $tipo }}</option>
+                                            <option value="{{ $tipo }}" {{ old('documento_tipo', 'V') === $tipo ? 'selected' : '' }}>{{ $tipo }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -102,12 +102,12 @@
                                     <span class="form-label d-block">¿Desde dónde pagas?</span>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="tipo_cuenta" id="tipo-cuenta-cuenta"
-                                               value="cuenta" @checked(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'cuenta') required>
+                                               value="cuenta" {{ old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'cuenta' ? 'checked' : '' }} required>
                                         <label class="form-check-label" for="tipo-cuenta-cuenta">Cuenta bancaria</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="tipo_cuenta" id="tipo-cuenta-movil"
-                                               value="pago_movil" @checked(old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'pago_movil')>
+                                               value="pago_movil" {{ old('tipo_cuenta', $vm->tipoCuentaPorDefecto()) === 'pago_movil' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="tipo-cuenta-movil">Pago móvil</label>
                                     </div>
                                 </div>
