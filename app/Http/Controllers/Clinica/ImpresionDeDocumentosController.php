@@ -11,6 +11,7 @@ use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Clinica\Impresion\DocumentosPorCita;
 use App\Clinica\Impresion\MembreteDelMedico;
+use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\QrParaLosRecipes;
 use App\Clinica\Impresion\Vistas\DocumentosDeLaCitaVista;
@@ -221,6 +222,10 @@ class ImpresionDeDocumentosController extends Controller
 
         abort_if($documentos === [], 404);
 
+        // La página del informe médico y del reposo (`?pagina=grande|pequena`, el «Página» del escritorio): los demás la ignoran.
+        $pagina = ModoDeLaHoja::pagina($request->query('pagina'));
+        $documentos = array_map(fn ($documento) => $documento instanceof DocumentoImpreso ? $documento->conPagina($pagina) : $documento, $documentos);
+
         // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima.
         $documentos = $this->qr->agregar($documentos, $consulta, $contexto['medico']);
 
@@ -235,6 +240,10 @@ class ImpresionDeDocumentosController extends Controller
                 ['volver' => $volver, 'volverTexto' => $textoVolver],
                 new OpcionesDeImpresionVista($opciones, route('clinica.recipes.opciones'), $request->getRequestUri()),
                 $pediatria,
+                [
+                    ModoDeLaHoja::PAGINA_GRANDE => $request->fullUrlWithQuery(['pagina' => ModoDeLaHoja::PAGINA_GRANDE]),
+                    ModoDeLaHoja::PAGINA_PEQUENA => $request->fullUrlWithQuery(['pagina' => ModoDeLaHoja::PAGINA_PEQUENA]),
+                ],
             ),
         ]);
     }

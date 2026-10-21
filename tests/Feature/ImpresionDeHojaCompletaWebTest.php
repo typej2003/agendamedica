@@ -111,12 +111,21 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             $this->assertSame(1, ModoDeLaHoja::porPagina(ModoDeLaHoja::MITAD_SUPERIOR));
         }
 
-        // Media hoja: los récipes y todas las solicitudes.
+        // El informe médico y el reposo: A4 vertical, grande por defecto y pequeña (mitad superior) a elección; nunca media
+        // hoja horizontal (2026-10-21).
+        foreach ([DocumentoImpreso::INFORME, DocumentoImpreso::REPOSO] as $documento) {
+            $this->assertTrue(ModoDeLaHoja::seEligeLaPagina($documento), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_GRANDE), $documento);
+            $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, 'cualquiera'), $documento);
+            $this->assertSame(ModoDeLaHoja::MITAD_SUPERIOR, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_PEQUENA), $documento);
+        }
+        $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de(DocumentoImpreso::CONSTANCIA, ModoDeLaHoja::PAGINA_PEQUENA));
+
+        // Media hoja: los récipes y las demás solicitudes.
         foreach ([
             DocumentoImpreso::CONSTANCIA,
-            DocumentoImpreso::REPOSO,
             DocumentoImpreso::REFERENCIA,
-            DocumentoImpreso::INFORME,
             DocumentoImpreso::HOSPITALIZACION,
             DocumentoImpreso::DIETA,
             DocumentoImpreso::LABORATORIO,

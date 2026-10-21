@@ -249,6 +249,7 @@ final class DocumentoImpreso
         public readonly ?string $para = null,
         public readonly ?InformeDeEco $informe = null,
         public readonly array $imagenes = [],
+        public readonly ?string $pagina = null,
     ) {
     }
 
@@ -261,7 +262,7 @@ final class DocumentoImpreso
      */
     public function modo(): string
     {
-        return $this->informe !== null ? ModoDeLaHoja::COMPLETA : ModoDeLaHoja::de($this->tipo);
+        return $this->informe !== null ? ModoDeLaHoja::COMPLETA : ModoDeLaHoja::de($this->tipo, $this->pagina);
     }
 
     /** ¿Se imprime en hoja completa vertical (una por A4) y no en media hoja? */
@@ -270,10 +271,16 @@ final class DocumentoImpreso
         return $this->modo() === ModoDeLaHoja::COMPLETA;
     }
 
+    /** El mismo documento con la **página elegida** (`grande`/`pequena`); sólo cambia la hoja del informe médico y del reposo. */
+    public function conPagina(?string $pagina): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $pagina);
+    }
+
     /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
     public function conInforme(InformeDeEco $informe): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe, $this->imagenes);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe, $this->imagenes, $this->pagina);
     }
 
     /**
@@ -284,7 +291,7 @@ final class DocumentoImpreso
      */
     public function conPersona(array $persona): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $this->pagina);
     }
 
     /**
@@ -296,7 +303,7 @@ final class DocumentoImpreso
      */
     public function conImagenes(array $imagenes): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes, $this->pagina);
     }
 
     /** ¿Tiene imágenes propias para la hoja de su informe (la colposcopía y la histeroscopía)? */

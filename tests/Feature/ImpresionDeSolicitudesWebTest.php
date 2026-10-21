@@ -219,6 +219,29 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $this->assertSame(2, substr_count($hoja->getContent(), 'class="documento-parrafo"'));
     }
 
+    public function test_el_informe_y_el_reposo_salen_en_a4_vertical_grande_por_defecto_y_pequena_a_eleccion(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->informe($medico);
+        $this->reposo($medico, 3, '2026-10-10');
+
+        foreach (['informe', 'reposo'] as $documento) {
+            $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
+            $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
+            $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
+            $this->assertMatchesRegularExpression('/pagina=grande"\s+aria-current="true"\s*>Grande</', $grande);
+
+            $pequena = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento) . '&pagina=pequena')->assertOk()->getContent();
+            $this->assertStringContainsString('recipe-hoja recipe-hoja-completa recipe-hoja-mitad-superior', $pequena, $documento);
+            $this->assertMatchesRegularExpression('/pagina=pequena"\s+aria-current="true"\s*>Pequeña</', $pequena);
+        }
+
+        // La constancia sigue en media hoja horizontal y sin el selector de página.
+        $constancia = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'constancia'))->getContent();
+        $this->assertStringNotContainsString('recipe-hoja-completa', $constancia);
+        $this->assertStringNotContainsString('aria-label="Página"', $constancia);
+    }
+
     public function test_los_documentos_llevan_el_membrete_y_la_linea_del_formato_del_medico(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
@@ -241,17 +264,17 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         return collect(range(1, $palabras))->map(fn ($n) => 'palabra' . $n)->implode(' ');
     }
 
-    public function test_un_informe_largo_sigue_en_la_otra_mitad_con_continua_y_continuacion_y_la_firma_solo_al_final(): void
+    public function test_un_informe_largo_en_pagina_pequena_sigue_en_otra_pagina_con_continua_y_continuacion_y_la_firma_solo_al_final(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $texto = $this->textoLargo(330);
         $this->informe($medico, $texto);
 
-        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'informe'));
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'informe') . '&pagina=pequena');
         $html = $respuesta->getContent();
 
         $respuesta->assertOk()->assertSee('Continúa')->assertSee('INFORME MÉDICO (continuación)');
-        $this->assertSame(1, $this->hojasDe($html), 'cabe en las dos mitades de una hoja');
+        $this->assertSame(2, $this->hojasDe($html), 'la mitad superior lleva un trozo por página');
         $this->assertSame(2, substr_count($html, 'recipe-mitad-documento'));
         $this->assertSame(1, substr_count($html, 'class="firmas"'), 'la firma va sólo en la última mitad');
         $this->assertSame(1, substr_count($html, 'class="documento-continua"'));
@@ -268,7 +291,7 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $texto = $this->textoLargo(1500);
         $this->informe($medico, $texto);
 
-        $html = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'informe'))->getContent();
+        $html = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, 'informe') . '&pagina=pequena')->getContent();
 
         $this->assertGreaterThan(1, $this->hojasDe($html));
         $this->assertSame(1, substr_count($html, 'class="firmas"'));

@@ -145,6 +145,25 @@ body {
 .barra-impresion-volver:hover { text-decoration: underline; }
 .barra-impresion-titulo { margin: .1rem 0 0; font-size: 1.05rem; font-weight: 700; overflow-wrap: anywhere; }
 .barra-impresion-detalle { margin: 0; color: #55555f; }
+
+/* El segmentado de la barra: el modo del récipe en blanco y la página del informe médico y del reposo. */
+.barra-impresion-modos { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .35rem; }
+.barra-impresion-modo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 .9rem;
+    border: 1px solid #783080;
+    border-radius: 10px;
+    background: #fff;
+    color: #783080;
+    font-weight: 600;
+    text-decoration: none;
+}
+.barra-impresion-modo:hover { background: #f5edf7; }
+.barra-impresion-modo[aria-current="true"] { background: #783080; color: #fff; }
+.barra-impresion-modo:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }
+.barra-impresion-modos-rotulo { font-weight: 600; color: #55555f; }
 .barra-impresion-acciones { display: flex; gap: .5rem; flex: none; }
 
 .boton-impresion, .dialogo-impresion .btn {
