@@ -130,7 +130,7 @@ class ImagenesPcController extends Controller
         $items = $request->input('items');
         $maximo = (int) config('imagenes_pc.omitir_maximo', 200);
         if (! is_array($items) || $items === [] || count($items) > $maximo) {
-            return $this->parametros("Mandá entre 1 y {$maximo} elementos en `items`.");
+            return $this->parametros("Manda entre 1 y {$maximo} elementos en `items`.");
         }
 
         $omitir = app(OmitirImagenDeLaPc::class);

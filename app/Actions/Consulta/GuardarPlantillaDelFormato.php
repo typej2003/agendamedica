@@ -51,7 +51,7 @@ final class GuardarPlantillaDelFormato
 
         if ($valores === []) {
             throw new InvalidArgumentException(
-                'El estudio no tiene ningún campo descriptivo cargado: cargá al menos uno (las opciones, los '
+                'El estudio no tiene ningún campo descriptivo cargado: carga al menos uno (las opciones, los '
                 . 'hallazgos o las conclusiones) antes de guardarlo como plantilla.'
             );
         }

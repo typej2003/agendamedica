@@ -50,7 +50,7 @@ class SyncRestaurarEscritorioCommand extends Command
                 default                        => false,
             };
             if (! $confirmado) {
-                $this->error('Cancelado (usá --si para exportar igual).');
+                $this->error('Cancelado (usa --si para exportar igual).');
                 return self::FAILURE;
             }
         }

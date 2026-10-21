@@ -230,7 +230,7 @@ class JevService
     private function instruccionesParaChat(array $preguntas): string
     {
         $lineas = [
-            'Sos un clasificador. Respondés ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, sin bloques de código.',
+            'Eres un clasificador. Respondes ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, sin bloques de código.',
             'El JSON tiene que tener una clave por cada pregunta y, en cada una, exactamente los campos pedidos.',
         ];
 
@@ -244,7 +244,7 @@ class JevService
             $lineas[] = is_string($instrucciones) ? $instrucciones : json_encode($instrucciones, JSON_UNESCAPED_UNICODE);
 
             if ($tipo === 'choice') {
-                $lineas[] = 'Elegí exactamente una de estas opciones:';
+                $lineas[] = 'Elige exactamente una de estas opciones:';
                 foreach ((array) ($pregunta['criteria'] ?? []) as $opcion => $descripcion) {
                     $lineas[] = '- ' . $opcion . ': ' . (is_string($descripcion) ? $descripcion : json_encode($descripcion, JSON_UNESCAPED_UNICODE));
                 }
@@ -258,7 +258,7 @@ class JevService
         }
 
         $lineas[] = '';
-        $lineas[] = 'No expliques nada. Si el estado no alcanza para decidir, elegí la opción más probable y bajá la confianza.';
+        $lineas[] = 'No expliques nada. Si el estado no alcanza para decidir, elige la opción más probable y baja la confianza.';
 
         return implode("\n", $lineas);
     }
@@ -373,7 +373,7 @@ class JevService
 
             throw new JevSinRutaDeDecision(
                 $ruta,
-                "El proveedor no tiene la ruta {$ruta} (HTTP {$status}). Probá JEV_PROTOCOLO=decisions "
+                "El proveedor no tiene la ruta {$ruta} (HTTP {$status}). Prueba JEV_PROTOCOLO=decisions "
                 . "(o systemone), o JEV_PROTOCOLO=chat si el proveedor sólo habla OpenAI. La otra ruta de "
                 . "decisiones de Jev es {$otra}."
             );
@@ -389,7 +389,7 @@ class JevService
 
         return match ($status) {
             401 => 'Jev respondió 401: la clave es inválida o falta el header Authorization.',
-            400, 422 => "Jev rechazó la petición ({$status}): {$detalle}. Revisá el modelo, el `state` y las preguntas.",
+            400, 422 => "Jev rechazó la petición ({$status}): {$detalle}. Revisa el modelo, el `state` y las preguntas.",
             404 => "El proveedor no tiene la ruta {$ruta} (HTTP 404): {$detalle}",
             429 => "Jev respondió 429 (límite de uso) después de reintentar: {$detalle}",
             529 => "Jev respondió 529 (sobrecarga) después de reintentar: {$detalle}",

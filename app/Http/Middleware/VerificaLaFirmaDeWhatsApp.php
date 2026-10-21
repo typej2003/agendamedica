@@ -24,7 +24,7 @@ class VerificaLaFirmaDeWhatsApp
         $secreto = trim((string) config('services.whatsapp.app_secret'));
 
         if ($secreto === '') {
-            Log::error('Webhook de WhatsApp sin WHATSAPP_APP_SECRET: se rechaza la petición. Cargá el secreto de la app de Meta en el .env.');
+            Log::error('Webhook de WhatsApp sin WHATSAPP_APP_SECRET: se rechaza la petición. Carga el secreto de la app de Meta en el .env.');
 
             return response()->json(['error' => 'Webhook no configurado'], 503);
         }

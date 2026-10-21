@@ -87,7 +87,7 @@
                     <textarea id="respuesta" rows="4" maxlength="2000"
                               class="form-control @error('respuesta') is-invalid @enderror"
                               wire:model.defer="respuesta"
-                              placeholder="Contale qué pasó, qué hicimos, o qué va a pasar con esto."></textarea>
+                              placeholder="Cuéntale qué pasó, qué hicimos, o qué va a pasar con esto."></textarea>
                     @error('respuesta')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

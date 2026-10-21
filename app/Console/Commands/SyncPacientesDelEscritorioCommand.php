@@ -49,7 +49,7 @@ class SyncPacientesDelEscritorioCommand extends Command
             $this->line('Ni su especialidad declara una (su `pacientes` de siempre la procesa la carga inicial),');
             $this->line('ni hay una tabla de pacientes suya con filas en el API.');
             $this->newLine();
-            $this->line('Si la carga subió los pacientes a una tabla propia (pediatría: `paciente_chamo`), revisá');
+            $this->line('Si la carga subió los pacientes a una tabla propia (pediatría: `paciente_chamo`), revisa');
             $this->line('que el médico tenga su especialidad asignada en el panel (el pivote `medico_specialty`)');
             $this->line('o pasá la tabla a mano: --tabla=paciente_chamo');
 

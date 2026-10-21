@@ -54,7 +54,7 @@ class EnviarCumpleanosCommand extends Command
         try {
             $dia = FechaDelConsultorio::dia($this->option('fecha'));
         } catch (Throwable $e) {
-            $this->error('La fecha no se entiende: usá AAAA-MM-DD.');
+            $this->error('La fecha no se entiende: usa AAAA-MM-DD.');
 
             return self::FAILURE;
         }

@@ -34,7 +34,7 @@
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Parentesco" for="representante-parentesco" error="codeparentesco" class="col-md-6"
-                            ayuda="Si no lo sabes, dejalo en “Sin dato”: no es obligatorio.">
+                            ayuda="Si no lo sabes, déjalo en “Sin dato”: no es obligatorio.">
                     <select name="codeparentesco" id="representante-parentesco" class="form-select">
                         @foreach ($rep->parentescos() as $opcion)
                             <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>

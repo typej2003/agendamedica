@@ -44,13 +44,13 @@ class AyudaController extends Controller
             'imagenes' => ['nullable', 'array', 'max:' . Comentario::MAXIMO_IMAGENES],
             'imagenes.*' => ArchivosDeLosComentarios::reglas(),
         ], [
-            'tipo.required' => 'Elegí qué nos querés contar.',
+            'tipo.required' => 'Elige qué nos quieres contar.',
             'tipo.in' => 'Ese tipo de comentario no existe.',
-            'mensaje.required' => 'Escribí tu comentario.',
+            'mensaje.required' => 'Escribe tu comentario.',
             'mensaje.min' => 'Contanos un poco más (al menos 5 caracteres).',
             'mensaje.max' => 'El comentario es muy largo (hasta 2000 caracteres).',
-            'imagenes.array' => 'No se pudieron leer las imágenes adjuntas. Probá de nuevo.',
-            'imagenes.max' => 'Podés adjuntar hasta ' . Comentario::MAXIMO_IMAGENES . ' imágenes por comentario.',
+            'imagenes.array' => 'No se pudieron leer las imágenes adjuntas. Prueba de nuevo.',
+            'imagenes.max' => 'Puedes adjuntar hasta ' . Comentario::MAXIMO_IMAGENES . ' imágenes por comentario.',
             'imagenes.*.file' => 'Lo que adjuntaste no es una imagen.',
             'imagenes.*.max' => 'Cada imagen puede pesar hasta ' . ArchivosDeLosComentarios::textoMaximo() . '.',
         ]);

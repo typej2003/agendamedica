@@ -78,7 +78,7 @@ abstract class GuardarEcoObstetricoBase
         $conDatos = count(array_filter($delEstudio, fn ($valor) => $valor !== null && $valor !== ''));
 
         if (! QueEsUnDocumento::ecografia($conDatos)) {
-            throw new InvalidArgumentException('El eco necesita algún dato: cargá lo que haya dado el estudio.');
+            throw new InvalidArgumentException('El eco necesita algún dato: carga lo que haya dado el estudio.');
         }
 
         $cuando = $this->ahora($cuando);

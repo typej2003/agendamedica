@@ -74,7 +74,7 @@ class Comentarios extends Component
         $this->validate(
             ['respuesta' => ['required', 'string', 'min:5', 'max:2000']],
             [
-                'respuesta.required' => 'Escribí la respuesta.',
+                'respuesta.required' => 'Escribe la respuesta.',
                 'respuesta.min' => 'La respuesta es muy corta (al menos 5 caracteres).',
                 'respuesta.max' => 'La respuesta es muy larga (hasta 2000 caracteres).',
             ],

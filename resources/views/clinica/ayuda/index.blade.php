@@ -32,7 +32,7 @@
                 </p>
             @endif
             <div class="mb-3">
-                <label for="tipo" class="form-label">¿Qué nos querés contar?</label>
+                <label for="tipo" class="form-label">¿Qué nos quieres contar?</label>
                 <select name="tipo" id="tipo" class="form-select @error('tipo') is-invalid @enderror" required>
                     @foreach ($vm->tipos() as $valor => $etiqueta)
                         <option value="{{ $valor }}" {{ old('tipo') === $valor ? 'selected' : '' }}>{{ $etiqueta }}</option>
@@ -61,8 +61,8 @@
                        class="form-control" accept="image/png,image/jpeg,image/webp"
                        data-ayuda-archivo aria-describedby="ayuda-adjuntos-ayuda ayuda-adjuntos-estado">
                 <p class="texto-tenue small mt-2 mb-0" id="ayuda-adjuntos-ayuda">
-                    Pegá una captura con <kbd>Ctrl</kbd>+<kbd>V</kbd> en el comentario (en un equipo Apple,
-                    <kbd>⌘</kbd>+<kbd>V</kbd>) o elegí los archivos acá: hasta {{ $vm->maximoDeImagenes() }} imágenes,
+                    Pega una captura con <kbd>Ctrl</kbd>+<kbd>V</kbd> en el comentario (en un equipo Apple,
+                    <kbd>⌘</kbd>+<kbd>V</kbd>) o elige los archivos acá: hasta {{ $vm->maximoDeImagenes() }} imágenes,
                     {{ $vm->formatosAceptados() }} de hasta {{ $vm->tamanoMaximo() }} cada una.
                 </p>
 

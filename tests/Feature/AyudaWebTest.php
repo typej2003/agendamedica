@@ -194,7 +194,7 @@ class AyudaWebTest extends TestCase
             'user_id' => $user->id, 'medico_id' => $medico->id, 'reg_medico' => $medico->reg_medico,
             'rol' => 'Medico', 'origen' => 'web', 'tipo' => Comentario::BUG,
             'mensaje' => 'El buscador de pacientes no encuentra por cédula.',
-            'estado' => Comentario::RESPONDIDO, 'respuesta' => 'Ya lo arreglamos, actualizá el app.',
+            'estado' => Comentario::RESPONDIDO, 'respuesta' => 'Ya lo arreglamos, actualiza el app.',
             'respondido_el' => now(),
         ]);
         Comentario::create([
@@ -208,7 +208,7 @@ class AyudaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.ayuda'))
             ->assertOk()
-            ->assertSee('Ya lo arreglamos, actualizá el app.')
+            ->assertSee('Ya lo arreglamos, actualiza el app.')
             ->assertSee('Respondido')
             ->assertSee('Revisado')
             ->assertSee('por ahora no vamos a avanzar');

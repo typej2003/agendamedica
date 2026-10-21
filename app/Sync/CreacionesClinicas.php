@@ -128,7 +128,7 @@ class CreacionesClinicas
      * texto lo lanzan `GuardarEcoGinecologico` y `GuardarEcoObstetricoBase`: si cambia allá, este catch deja de
      * reconocerlo y el caso vuelve a rechazarse —por eso el test lo fija de punta a punta—.
      */
-    private const ECO_SIN_DATOS = 'El eco necesita algún dato: cargá lo que haya dado el estudio.';
+    private const ECO_SIN_DATOS = 'El eco necesita algún dato: carga lo que haya dado el estudio.';
 
     /** @var array<int, int> id temporal → id real de las historias creadas en este lote */
     private array $historias = [];

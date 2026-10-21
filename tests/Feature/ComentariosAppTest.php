@@ -230,7 +230,7 @@ class ComentariosAppTest extends TestCase
             $this->png('1.png'), $this->png('2.png'), $this->png('3.png'), $this->png('4.png'),
         ])->assertStatus(422)
             ->assertJsonValidationErrors('imagenes')
-            ->assertJsonPath('errors.imagenes.0', 'Podés adjuntar hasta 3 imágenes por comentario.');
+            ->assertJsonPath('errors.imagenes.0', 'Puedes adjuntar hasta 3 imágenes por comentario.');
 
         $this->assertSame(0, Comentario::count(), 'no se guardó el comentario a medias');
         $this->assertSame(0, ComentarioImagen::count());

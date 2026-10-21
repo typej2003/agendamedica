@@ -3,6 +3,9 @@
 Guía de entrada para trabajar en este repo. **Antes de escribir código, leé "Antes de empezar"** (rama
 y entorno) y la wiki indicada al final: este repo no lleva la especificación funcional.
 
+> **Idioma y trato:** todo texto que ve el usuario (pantallas, mensajes, correos, validaciones) va en
+> **tuteo**, no en voseo. Es la regla 8 de [`../AGENTS.md`](../AGENTS.md).
+
 ## Antes de empezar: rama y entorno
 
 El working tree está en la rama **`desarrollo`** y el código está presente. Dos advertencias:

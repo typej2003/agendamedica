@@ -121,7 +121,7 @@ class MostradorController extends Controller
      *
      * Quien no trabaja la consulta recibe **403** y **no se toca nada**: ni `cola.atendido`, ni la
      * confirmación que "atender" implica, ni `sync_changes`, ni se abre ninguna consulta. El 403 es el
-     * mismo "no podés hacer esto" que la ruta del shell le da a la secretaría (y no un redirect con aviso
+     * mismo "no puedes hacer esto" que la ruta del shell le da a la secretaría (y no un redirect con aviso
      * como el de la cita movida o la cita sin historia): acá no falla el estado de la cita —es atendible—
      * sino quién la atiende, que es exactamente lo que el grupo `role:Root|Medico` de `/consulta` responde
      * con 403. La comprobación va **antes** de resolver la cita, como ese middleware: la respuesta no

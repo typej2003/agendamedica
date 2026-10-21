@@ -274,7 +274,7 @@
                             <button type="button" class="btn-close" wire:click="noSincronizarAhora" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="mb-0">Activaste la sincronización automática. ¿Querés traer la tasa del BCV ahora mismo?</p>
+                            <p class="mb-0">Activaste la sincronización automática. ¿Quieres traer la tasa del BCV ahora mismo?</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary btn-sm" wire:click="noSincronizarAhora">Ahora no</button>
@@ -484,7 +484,7 @@
                                 <div class="alert alert-danger py-2 small mb-3" role="alert">
                                     <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                                     La sincronización automática está activada: el BCV puede sobrescribir este valor en la
-                                    próxima actualización. Si querés fijarlo, apagala primero.
+                                    próxima actualización. Si quieres fijarlo, apágala primero.
                                 </div>
                             @endif
                             @if ($tasa !== '' && is_numeric($tasa) && \App\Pagos\Tasa::aEscala($tasa) > 0)

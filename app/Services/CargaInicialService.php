@@ -111,7 +111,7 @@ class CargaInicialService
             if ($conDatos !== []) {
                 return $this->error(409, 'medico_con_datos',
                     "El médico {$regMedico} ya tiene datos en el API (" . implode(', ', $conDatos) . '). '
-                    . 'La carga inicial solo se hace sobre un médico sin datos: usá otro reg_medico.');
+                    . 'La carga inicial solo se hace sobre un médico sin datos: usa otro reg_medico.');
             }
 
             $carga = SyncCarga::create([

@@ -100,7 +100,7 @@ final class FechasDelEmbarazoVista
     public function avisoDeFechaNueva(): ?string
     {
         return $this->esNueva() && ! $this->sinFilas()
-            ? 'Fecha nueva: completá y guardá para agregarla a la gesta.'
+            ? 'Fecha nueva: completa y guarda para agregarla a la gesta.'
             : null;
     }
 

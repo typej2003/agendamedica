@@ -104,14 +104,14 @@ class ComentariosAdminTest extends TestCase
         Livewire::test(Comentarios::class)
             ->call('abrir', $comentario->id)
             ->assertSet('comentarioId', $comentario->id)
-            ->set('respuesta', 'Actualizá el app: eso ya está corregido.')
+            ->set('respuesta', 'Actualiza el app: eso ya está corregido.')
             ->call('responder')
             ->assertHasNoErrors();
 
         $comentario->refresh();
         $this->assertSame(Comentario::RESPONDIDO, $comentario->estado);
         $this->assertTrue($comentario->fueRespondido());
-        $this->assertSame('Actualizá el app: eso ya está corregido.', $comentario->respuesta);
+        $this->assertSame('Actualiza el app: eso ya está corregido.', $comentario->respuesta);
         $this->assertSame($root->id, $comentario->respondido_por);
         $this->assertNotNull($comentario->respondido_el);
 

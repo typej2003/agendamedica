@@ -30,7 +30,7 @@ class TasasBcvCommand extends Command
         $forzar = (bool) $this->option('forzar');
 
         if (! $forzar && ! ConfiguracionPago::actual()->sincronizaLaTasa()) {
-            $this->info('La sincronización automática está desactivada. Usá --forzar para guardarla igual.');
+            $this->info('La sincronización automática está desactivada. Usa --forzar para guardarla igual.');
 
             return self::SUCCESS;
         }

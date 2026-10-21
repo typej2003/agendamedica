@@ -587,7 +587,7 @@ class ConsultaWebTest extends TestCase
 
     /**
      * **La secretaría no puede atender** (WEB-4.9, decisión del usuario del 2026-10-11: "Atender es sólo
-     * del médico"). El POST a mano responde **403** —el mismo "no podés hacer esto" que la ruta del shell
+     * del médico"). El POST a mano responde **403** —el mismo "no puedes hacer esto" que la ruta del shell
      * le da por la misma regla (`User::trabajaLaConsulta()`)— y **no deja media marca**: la cita no queda
      * atendida, ni confirmada por el "atender implica confirmada", ni con rastro de sync, ni con una
      * consulta abierta al lado.
