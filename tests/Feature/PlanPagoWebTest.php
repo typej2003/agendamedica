@@ -188,6 +188,8 @@ class PlanPagoWebTest extends TestCase
             ->assertSee('¿Cómo quieres pagar?')
             ->assertSee($metodo->etiqueta())
             ->assertSee('VES 730,00')
+            ->assertSee('USD 20,00')
+            ->assertDontSee('Según el método')
             ->assertSee('Continuar')
             // Laravel 8 no tiene `@checked`/`@disabled` (son de Blade 9): si se cuelan, se ven como texto.
             ->assertDontSee('@checked')
