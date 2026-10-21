@@ -6,6 +6,7 @@ use App\Actions\Consulta\ReglasDelCatalogo;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
 use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial;
 use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
+use App\Clinica\Consulta\DosisPediatrica;
 use App\Clinica\Pacientes\BusquedaDePacientes;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -68,6 +69,17 @@ final class GuardarFilaDeCatalogoInicial
                 throw new InvalidArgumentException('Esa fila no está en el catálogo inicial.');
             }
 
+            // Destildar «por kilo» no borra una nota vieja de la dosificación (el escritorio trae algunas): sólo quita el `SI`.
+            if ($id !== null) {
+                $actual = $existentes->firstWhere('id', $id);
+                foreach ($def['campos'] as $columna => $campo) {
+                    $previo = trim((string) ($actual->{$columna} ?? ''));
+                    if ($campo[1] === 'porkilo' && $fila[$columna] === null && $previo !== '' && strtoupper($previo) !== DosisPediatrica::POR_KILO) {
+                        $fila[$columna] = $previo;
+                    }
+                }
+            }
+
             $clave = fn ($f) => $this->identidad($def, (array) $f);
             $repetida = $existentes->first(fn ($f) => (int) $f->id !== (int) $id && $clave($f) === $clave($fila));
             if ($repetida !== null) {
@@ -100,6 +112,11 @@ final class GuardarFilaDeCatalogoInicial
     /** @return mixed el valor listo para guardar */
     private function valor(array $def, string $columna, string $rotulo, string $tipo, int $max, bool $requerido, bool $mayusculas, $crudo)
     {
+        if ($tipo === 'porkilo') {
+            // La casilla «La dosis es por kilo»: `SI` es lo que lee `DosisPediatrica` (y lo que guarda el escritorio).
+            return filter_var($crudo, FILTER_VALIDATE_BOOLEAN) ? DosisPediatrica::POR_KILO : null;
+        }
+
         if ($tipo === 'marca') {
             return filter_var($crudo, FILTER_VALIDATE_BOOLEAN) ? true : null;
         }
@@ -122,6 +139,18 @@ final class GuardarFilaDeCatalogoInicial
                 }
 
                 return round((float) $numero, 2);
+
+            case 'decimal':
+                // Los números de la dosis por kilo: las mismas reglas que el ABM del médico (`CamposDelMedicamento`).
+                $numero = str_replace(',', '.', $texto);
+                if (! is_numeric($numero)) {
+                    throw new InvalidArgumentException($rotulo . ' tiene que ser un número.');
+                }
+                if ((float) $numero < 0) {
+                    throw new InvalidArgumentException($rotulo . ' no puede ser negativo.');
+                }
+
+                return round((float) $numero, 3);
 
             case 'ref':
                 $destino = CatalogosIniciales::de($def['refs'][$columna]);

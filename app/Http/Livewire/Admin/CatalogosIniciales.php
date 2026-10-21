@@ -8,6 +8,7 @@ use App\Actions\Catalogos\QuitarFilaDeCatalogoInicial;
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales as Registro;
 use App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial as Especialidades;
 use App\Clinica\Catalogos\TiposDePlantillaDeTexto;
+use App\Clinica\Consulta\DosisPediatrica;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -132,7 +133,9 @@ class CatalogosIniciales extends Component
             $this->filaId = $fila->id;
             foreach (array_keys($def['campos']) as $columna) {
                 $valor = $fila->{$columna} ?? null;
-                $this->f[$columna] = $def['campos'][$columna][1] === 'marca' ? (bool) $valor : ($valor === null ? '' : (string) $valor);
+                $tipo = $def['campos'][$columna][1];
+                $this->f[$columna] = $tipo === 'marca' ? (bool) $valor
+                    : ($tipo === 'porkilo' ? strtoupper(trim((string) $valor)) === DosisPediatrica::POR_KILO : ($valor === null ? '' : (string) $valor));
             }
             $this->aplica = array_map('strval', Especialidades::de($this->catalogo, [(int) $fila->id])[(int) $fila->id] ?? []);
         }
@@ -245,7 +248,7 @@ class CatalogosIniciales extends Component
     {
         $campos = [];
         foreach (Registro::de($this->catalogo)['campos'] as $columna => $campo) {
-            $campos[$columna] = $campo[1] === 'marca' ? false : '';
+            $campos[$columna] = in_array($campo[1], ['marca', 'porkilo'], true) ? false : '';
         }
 
         return $campos;
@@ -266,7 +269,11 @@ class CatalogosIniciales extends Component
 
                 return $n . ($n === 1 ? ' medicamento' : ' medicamentos');
             case 'medicamentos':
-                return trim(implode(' · ', array_filter([trim((string) $fila->presentacion), trim((string) $fila->nombregenerico)])));
+                $porKilo = strtoupper(trim((string) $fila->dosificacion)) === DosisPediatrica::POR_KILO
+                    ? 'Por kilo' . ($fila->dosis !== null ? ': ' . rtrim(rtrim(number_format((float) $fila->dosis, 3, ',', ''), '0'), ',') . ' mg/kg' : ' (sin dosis)')
+                    : '';
+
+                return trim(implode(' · ', array_filter([trim((string) $fila->presentacion), trim((string) $fila->nombregenerico), $porKilo])));
         }
 
         return '';

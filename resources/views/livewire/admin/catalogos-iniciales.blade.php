@@ -97,32 +97,31 @@
                         <div class="modal-body">
                             @error('f.formulario') <div class="alert alert-danger py-2 small">{{ $message }}</div> @enderror
                             <div class="row g-3">
-                                @foreach ($def['campos'] as $columna => [$rotulo, $tipo, $max, $requerido])
-                                    <div class="{{ $tipo === 'area' ? 'col-12' : 'col-md-6' }}">
-                                        @if ($tipo === 'marca')
-                                            <div class="form-check mt-4">
-                                                <input class="form-check-input" type="checkbox" id="ini-{{ $columna }}" wire:model.defer="f.{{ $columna }}">
-                                                <label class="form-check-label" for="ini-{{ $columna }}">{{ $rotulo }}</label>
-                                            </div>
-                                        @else
-                                            <label class="form-label" for="ini-{{ $columna }}">{{ $rotulo }}@if ($requerido) <span class="text-danger" aria-hidden="true">*</span>@endif</label>
-                                            @if ($tipo === 'area')
-                                                <textarea id="ini-{{ $columna }}" rows="{{ $max > 5000 ? 8 : 3 }}" class="form-control" wire:model.defer="f.{{ $columna }}"></textarea>
-                                            @elseif ($tipo === 'ref' || $tipo === 'tipo')
-                                                <select id="ini-{{ $columna }}" class="form-select" wire:model.defer="f.{{ $columna }}">
-                                                    <option value="">Elige…</option>
-                                                    @foreach ($opciones[$columna] ?? [] as $valor => $texto)
-                                                        <option value="{{ $valor }}">{{ $texto }}</option>
-                                                    @endforeach
-                                                </select>
-                                            @else
-                                                <input type="text" id="ini-{{ $columna }}" class="form-control" @if ($tipo === 'numero') inputmode="decimal" @endif
-                                                       @if ($max > 0) maxlength="{{ $max }}" @endif wire:model.defer="f.{{ $columna }}">
-                                            @endif
-                                        @endif
-                                    </div>
+                                @foreach ($def['campos'] as $columna => $campo)
+                                    @continue(($campo[5] ?? null) === 'dosis')
+                                    @include('livewire.admin._campo-catalogo-inicial')
                                 @endforeach
                             </div>
+                            @if (collect($def['campos'])->contains(fn ($campo) => ($campo[5] ?? null) === 'dosis'))
+                                {{-- La casilla «La dosis es por kilo» despliega el panel con la fórmula (`.dosis-por-kilo`, en doctorisimo-ui.css). --}}
+                                <div class="mt-3 border rounded p-3 dosis-por-kilo">
+                                    <div class="row g-3">
+                                        @foreach ($def['campos'] as $columna => $campo)
+                                            @continue(($campo[5] ?? null) !== 'dosis' || $campo[1] !== 'porkilo')
+                                            @include('livewire.admin._campo-catalogo-inicial')
+                                        @endforeach
+                                    </div>
+                                    <div class="dosis-por-kilo__panel mt-3">
+                                        <p class="text-muted small mb-2">El récipe calcula la posología con el peso del niño y la da en gotas o en ml si se carga el envase.</p>
+                                        <div class="row g-3">
+                                            @foreach ($def['campos'] as $columna => $campo)
+                                                @continue(($campo[5] ?? null) !== 'dosis' || $campo[1] === 'porkilo')
+                                                @include('livewire.admin._campo-catalogo-inicial')
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                             <fieldset class="mt-3">
                                 <legend class="form-label fs-6 mb-1">Aplica a</legend>
                                 <div class="d-flex flex-wrap gap-3">

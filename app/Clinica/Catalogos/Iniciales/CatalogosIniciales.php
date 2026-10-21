@@ -21,7 +21,9 @@ namespace App\Clinica\Catalogos\Iniciales;
  *  - `columnas`: lo que se copia (nunca `id`, `reg_medico`, el código ni las marcas de tiempo).
  *  - `refs`: `columna => catálogo` al que apunta por código; al copiar se mapea por identidad (y se copia la dependencia si falta).
  *  - `hijos`: tablas que cuelgan de la fila por su código (`tabla`, `enlace`, `columnas`, `refs`, `orden`).
- *  - `campos`: el formulario del administrador: `columna => [rotulo, tipo (texto|area|numero|marca|ref), max, requerido, mayusculas]`.
+ *  - `campos`: el formulario del administrador: `columna => [rotulo, tipo (texto|area|numero|decimal|marca|porkilo|ref), max, requerido, mayusculas, grupo?, ayuda?]`.
+ *    `decimal` es un número opcional con tres decimales (la dosis por kilo); `porkilo` es una casilla que guarda `SI` en `vademecum.dosificacion` (lo que lee
+ *    `DosisPediatrica`); `grupo` junta campos en una sección del formulario (`dosis` = «Dosis por kilo»).
  */
 final class CatalogosIniciales
 {
@@ -42,7 +44,14 @@ final class CatalogosIniciales
                 'nombrecomercial2' => ['Tercera marca', 'texto', 40, false, true],
                 'nombrecomercial3' => ['Cuarta marca', 'texto', 40, false, true],
                 'uso' => ['Indicaciones', 'area', 2000, false, false],
-                'dosificacion' => ['Dosificación', 'area', 2000, false, false],
+                // La dosis por peso del récipe pediátrico (`DosisPediatrica`), con los nombres y unidades del ABM del médico (`CamposDelMedicamento`).
+                'dosificacion' => ['La dosis es por kilo (récipe de pediatría)', 'porkilo', 0, false, false, 'dosis'],
+                'dosis' => ['Dosis (mg/kg por toma)', 'decimal', 0, false, false, 'dosis'],
+                'cada' => ['Cada (veces al día)', 'decimal', 0, false, false, 'dosis'],
+                'durante' => ['Durante (días)', 'decimal', 0, false, false, 'dosis'],
+                'pvc' => ['Envase: mg', 'decimal', 0, false, false, 'dosis', 'Los mg que trae la presentación (250 en «250 mg / 5 ml»).'],
+                'pvs' => ['Envase: ml', 'decimal', 0, false, false, 'dosis', 'Los ml de esa presentación (5 en «250 mg / 5 ml»).'],
+                'concentracion' => ['Gotas por ml', 'decimal', 0, false, false, 'dosis', 'Sólo si el récipe tiene que decir gotas.'],
             ],
         ],
         'tratamientos' => [
