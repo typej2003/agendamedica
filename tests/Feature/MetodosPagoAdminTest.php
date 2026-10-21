@@ -242,6 +242,19 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertFalse((bool) ConfiguracionPago::actual()->tasa_automatica);
     }
 
+    public function test_la_pestana_de_tasa_muestra_la_ultima_sincronizacion_y_el_boton_de_forzar(): void
+    {
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->call('cambiarPestana', 'tasa')
+            ->assertSee('Sincronización con el BCV')
+            ->assertSee('Sincronizar automáticamente desde el BCV')
+            ->assertSee('Última sincronización')
+            ->assertSee('Última actualización de la tasa')
+            ->assertSee('Forzar actualización');
+    }
+
     public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void
     {
         Http::fake(function (ClientRequest $request) {

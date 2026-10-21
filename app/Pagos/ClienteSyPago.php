@@ -159,7 +159,9 @@ final class ClienteSyPago
     {
         $http = Http::acceptJson()->baseUrl($this->host());
 
-        if (! config('pagos.sypago.verificar_tls', false)) {
+        // Sólo en local se salta la verificación del certificado (el SyPago de desarrollo usa un
+        // certificado que el PHP local no valida). En QA y producción se verifica siempre.
+        if (app()->environment('local')) {
             $http = $http->withoutVerifying();
         }
 

@@ -7,19 +7,15 @@ return [
     | Pagos (AppDDR)
     |--------------------------------------------------------------------------
     |
-    | Lo que no se configura desde el panel: el host por defecto de SyPago y el
-    | interruptor de TLS. Las credenciales y la cuenta se cargan desde
-    | `/admin/metodos-pago` y viven cifradas en la base. La tasa VES/USD se
-    | carga desde el panel (`tasas_de_cambio`) o la sincroniza `tasas:bcv`.
+    | Lo que no se configura desde el panel: el host por defecto de SyPago. Las
+    | credenciales y la cuenta se cargan desde `/admin/metodos-pago` y viven
+    | cifradas en la base. La tasa VES/USD se carga desde el panel
+    | (`tasas_de_cambio`) o la sincroniza `tasas:bcv`.
     |
     */
 
     'sypago' => [
         'host' => env('SYPAGO_HOST', 'https://app.sypago.net:8086/api/v1/'),
-
-        // El host de SyPago usa un certificado que en el ejemplo funcional de DonDemand se
-        // salta. Se deja configurable: en producción, si el certificado es válido, poner true.
-        'verificar_tls' => (bool) env('SYPAGO_VERIFICAR_TLS', false),
     ],
 
     /*
