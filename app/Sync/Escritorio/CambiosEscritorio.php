@@ -2,6 +2,8 @@
 
 namespace App\Sync\Escritorio;
 
+use App\Actions\Pacientes\RegistrarMovimientoDeAntecedente;
+use App\Models\AntecedenteMovimiento;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Historia;
@@ -545,7 +547,29 @@ class CambiosEscritorio
             DB::table($tabla)->insert($datos);
         }
 
+        if ($tabla === 'antece_paciente') {
+            $this->anotarMovimientosDeAntecedentes($existentes, $this->filasPorClave($carga, $tabla, $clave)->get(), $fecha);
+        }
+
         return 'aplicado';
+    }
+
+    /**
+     * El registro de movimientos de los antecedentes (`antecedente_movimientos`, 2026-10-20) para lo que subió
+     * el escritorio: este camino es Query Builder (sin eventos del modelo), así que se anota a mano. Sin
+     * consulta (el escritorio no la manda) y con la fecha del cambio.
+     */
+    private function anotarMovimientosDeAntecedentes($antes, $despues, Carbon $fecha): void
+    {
+        $previas = collect($antes)->keyBy('id');
+
+        foreach ($despues as $fila) {
+            $previa = $previas->get($fila->id);
+
+            $previa === null
+                ? RegistrarMovimientoDeAntecedente::agregado($fila, AntecedenteMovimiento::ORIGEN_ESCRITORIO, null, $fecha)
+                : RegistrarMovimientoDeAntecedente::editado($previa, $fila, AntecedenteMovimiento::ORIGEN_ESCRITORIO, null, $fecha);
+        }
     }
 
     private function borrarGenerico(SyncCarga $carga, string $tabla, array $clave, Carbon $fecha, bool $traducirNumeros = true): string
@@ -569,7 +593,14 @@ class CambiosEscritorio
                 ]);
             }
         }
+        // Lo que tenía cada antecedente al quitarse, leído antes del DELETE (registro de movimientos, 2026-10-20).
+        $antecedentes = $tabla === 'antece_paciente' ? $this->filasPorClave($carga, $tabla, $clave)->get() : collect();
+
         $this->filasPorClave($carga, $tabla, $clave)->delete();
+
+        foreach ($antecedentes as $antecedente) {
+            RegistrarMovimientoDeAntecedente::quitado($antecedente, AntecedenteMovimiento::ORIGEN_ESCRITORIO, null, $fecha);
+        }
 
         return 'aplicado';
     }

@@ -305,6 +305,13 @@ correlativo de cuatro dígitos; **no cambia el comportamiento del sync**) y
 `App\Clinica\Consulta\AntecedentesDelPaciente` (el mapa del dato: los tres catálogos, los "vacíos" del
 legado, la casilla de Alerta `tipo2 = 'A'` y el orden de los grupos, que es el de las solapas del
 escritorio).
+**Registro de movimientos de los antecedentes (2026-10-20)**: tabla `antecedente_movimientos` (migración
+`2026_10_20_160000`, sólo del servidor, no viaja por el sync), escrita **sólo** por
+`Actions\Pacientes\RegistrarMovimientoDeAntecedente` desde la web (`GuardarAntecedentes`, con `consulta_id`),
+el móvil (`AgregarAntecedenteAlPaciente` y la edición/baja de `SyncAppDataController`) y la subida del
+escritorio (`CambiosEscritorio::guardarGenerico/borrarGenerico`); la carga inicial no anota. Lectura en
+`App\Clinica\Consulta\HistorialDeAntecedentes` y `Vistas\HistorialDeAntecedentesVista` («desde» de cada fila y el
+cajón «Historial» de la sección). Trampa 158.
 Lo que **WEB-4.5 (2026-10-10)** agregó a esas tres filas es: `ConsultaDiagnosticos` (**WEB-4.5: los
 diagnósticos de la consulta** en `?seccion=diagnostico`, con `POST /clinica/consulta/{consulta}/diagnosticos`
 y `…/diagnosticos/crear`; **la fila sí es de la consulta** —`diagnostico_paciente` se llavea por

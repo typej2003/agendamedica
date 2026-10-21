@@ -108,7 +108,7 @@ final class AgregarAntecedenteAlPaciente
         $nombre = $this->texto($descripcion) ?? trim((string) $delCatalogo->nombre);
         $tipoCodigo = $this->texto($tipo) ?? $this->texto($delCatalogo->tipoCodigo);
 
-        return $this->crearFila(AntecePaciente::class, 'antece_paciente', [
+        $nueva = $this->crearFila(AntecePaciente::class, 'antece_paciente', [
             'reg_medico' => $regMedico,
             'numhistoria' => $numhistoria,
             'codeantecedente' => $numeroCodigo,
@@ -118,7 +118,12 @@ final class AgregarAntecedenteAlPaciente
             'descripcion' => mb_substr($nombre, 0, self::LARGO_DESCRIPCION),
             'tipo' => $tipoCodigo,
             'tipo2' => $this->tipo2Valido($tipo2),
-        ], $this->ahora(null), $origen);
+        ], $cuando = $this->ahora(null), $origen);
+
+        // El registro de movimientos (2026-10-20). El móvil no dice desde qué consulta se agregó: queda `null`.
+        RegistrarMovimientoDeAntecedente::agregado($nueva->getAttributes(), $origen, null, $cuando);
+
+        return $nueva;
     }
 
     /** El `""` del formulario y el `null` de la columna son el mismo estado: sin dato. */

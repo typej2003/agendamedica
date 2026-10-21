@@ -52,7 +52,16 @@ final class SeccionDeAntecedentesVista
         private string $urlVolver = '',
         private array $old = [],
         private string $urlQuitar = '',
+        // El registro de movimientos (2026-10-20): `codeantecedente` => fecha del alta vigente, y el historial.
+        private array $desde = [],
+        private ?HistorialDeAntecedentesVista $historial = null,
     ) {
+    }
+
+    /** El «Historial» de movimientos del paciente (cajón lateral), o `null` si la pantalla no lo ofrece. */
+    public function historial(): ?HistorialDeAntecedentesVista
+    {
+        return $this->historial;
     }
 
     public function urlGuardar(): string
@@ -288,6 +297,10 @@ final class SeccionDeAntecedentesVista
             // Un antecedente cuyo código ya no está en el catálogo se muestra igual (el legado no borra
             // antecedentes, pero los datos son datos): se avisa para que el médico sepa de dónde sale.
             'avisoCatalogo' => $antecedente->enCatalogo ? null : 'ya no está en tu catálogo',
+            // «desde dd/mm/aaaa»: el alta registrada en `antecedente_movimientos`; sin registro, nada.
+            'desde' => isset($this->desde[trim((string) $antecedente->codigo)])
+                ? 'desde ' . HistorialDeAntecedentesVista::local($this->desde[trim((string) $antecedente->codigo)])->format('d/m/Y')
+                : null,
         ];
     }
 

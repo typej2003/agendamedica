@@ -96,6 +96,8 @@ use App\Clinica\Consulta\Vistas\ReposoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeSolicitudesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesCatalogoVista;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
+use App\Clinica\Consulta\HistorialDeAntecedentes;
+use App\Clinica\Consulta\Vistas\HistorialDeAntecedentesVista;
 use App\Clinica\Consulta\Vistas\SeccionDeDiagnosticosVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEstudioVista;
 use App\Clinica\Consulta\Vistas\SeccionDeEvaluacionVista;
@@ -995,6 +997,8 @@ class ConsultaController extends Controller
             $delPaciente = $antecedentes->delPaciente($regMedico, (string) $consulta->numhistoria);
             // Con el nombre que cada médico les da (WEB-12.3: las siete categorías de pediatría; ginecología no cambia).
             $tipos = $antecedentes->tipos($regMedico);
+            $historial = app(HistorialDeAntecedentes::class);
+            $movimientos = $historial->delPaciente($regMedico, (string) $consulta->numhistoria);
 
             return new SeccionDeAntecedentesVista(
                 $delPaciente,
@@ -1008,6 +1012,14 @@ class ConsultaController extends Controller
                 (array) old(),
                 // El "Quitar" de cada fila (O-07): un POST inmediato, con el código en el cuerpo.
                 route('clinica.consulta.antecedentes.quitar', $consulta->id),
+                // El registro de movimientos (2026-10-20): el «desde» de cada fila y el «Historial».
+                $historial->desdePorCodigo($movimientos),
+                new HistorialDeAntecedentesVista(
+                    $movimientos,
+                    (int) $consulta->id,
+                    fn (int $id) => route('clinica.consulta', [$id, 'seccion' => ConsultaShellVista::SECCION_ANTECEDENTES]),
+                    (string) $consulta->numhistoria,
+                ),
             );
         }
 

@@ -78,6 +78,8 @@ final class GuardarAntecedentes
      * @param  array<int,string>  $quitar  los `codeantecedente` a quitar
      * @param  CarbonInterface|null  $cuando  el momento de la edición; por defecto, ahora
      * @param  string  $origen  `web` o `mobile`: quién escribe, para el rastro de `sync_changes`
+     * @param  int|null  $consultaId  el `consultas.id` desde la que se escribe, para el registro de
+     *                                movimientos (`antecedente_movimientos`, 2026-10-20)
      */
     public function ejecutar(
         string $regMedico,
@@ -87,6 +89,7 @@ final class GuardarAntecedentes
         array $quitar = [],
         ?CarbonInterface $cuando = null,
         string $origen = 'web',
+        ?int $consultaId = null,
     ): ResultadoDeAntecedentes {
         $cuando = $cuando ? Carbon::instance($cuando) : Carbon::now();
         $numero = (int) $numhistoria;
@@ -115,7 +118,7 @@ final class GuardarAntecedentes
         $quitables = $this->codigos($quitar);
 
         DB::transaction(function () use (
-            $regMedico, $numero, $filas, $cuando, $origen,
+            $regMedico, $numero, $filas, $cuando, $origen, $consultaId,
             $porId, $porCodigo, $catalogo, $agregables, $quitables, &$bloqueados, &$guardados, &$sinCambios, &$agregados, &$quitados
         ) {
             // Los códigos que se quitaron en esta corrida: lo que ya no está no se puede editar después.
@@ -137,8 +140,14 @@ final class GuardarAntecedentes
                     continue;
                 }
 
+                // El registro de movimientos guarda lo que **tenía** al quitarse: se lee antes del DELETE.
+                $cruda = $this->cruda($fila->id, $fila->nombre);
+
                 DB::table('antece_paciente')->where('id', $fila->id)->delete();
                 RegistroDeCambios::registrarOperacion('antece_paciente', $fila->id, $regMedico, 'deleted', null, null, $cuando, $origen);
+                if ($cruda !== null) {
+                    RegistrarMovimientoDeAntecedente::quitado($cruda, $origen, $consultaId, $cuando);
+                }
                 $quitados[] = $fila->nombre;
                 $quitadosAhora[$codigo] = true;
             }
@@ -179,9 +188,13 @@ final class GuardarAntecedentes
                     }
                 }
 
+                $antes = $this->cruda($fila->id, $fila->nombre);
                 DB::table('antece_paciente')->where('id', $fila->id)->update($paraEscribir + ['updated_at' => now()]);
                 foreach ($paraEscribir as $columna => $valor) {
                     RegistroDeCambios::registrar('antece_paciente', $fila->id, $regMedico, $columna, $valor, $cuando, $origen);
+                }
+                if ($antes !== null) {
+                    RegistrarMovimientoDeAntecedente::editado($antes, $this->cruda($fila->id, $fila->nombre), $origen, $consultaId, $cuando);
                 }
                 $guardados[] = $fila->nombre;
             }
@@ -211,6 +224,7 @@ final class GuardarAntecedentes
                 ]);
 
                 RegistroDeCambios::registrarOperacion('antece_paciente', $nueva, $regMedico, 'created', null, null, $cuando, $origen);
+                RegistrarMovimientoDeAntecedente::agregado($this->cruda($nueva, $delCatalogo->nombre), $origen, $consultaId, $cuando);
                 $agregados[] = $delCatalogo->nombre;
             }
         });
@@ -266,6 +280,28 @@ final class GuardarAntecedentes
         }
 
         return $catalogo;
+    }
+
+    /**
+     * La fila cruda de `antece_paciente` para el registro de movimientos, con el nombre resuelto si la copia
+     * del legado viene vacía (filas del botón *Pasar* del escritorio).
+     *
+     * @return array<string,mixed>|null
+     */
+    private function cruda(int $id, ?string $nombre): ?array
+    {
+        $fila = DB::table('antece_paciente')->where('id', $id)->first();
+
+        if ($fila === null) {
+            return null;
+        }
+
+        $fila = (array) $fila;
+        if (trim((string) ($fila['descripcion'] ?? '')) === '') {
+            $fila['descripcion'] = $nombre;
+        }
+
+        return $fila;
     }
 
     /** El `""` del formulario y el `null` de la columna son el mismo estado: sin detalle. */
