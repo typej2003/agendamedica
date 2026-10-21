@@ -3889,3 +3889,9 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
     /* Objetivo táctil de 40 px en el celular. */
     .bloque-chip-quitar { width: 2.5rem; height: 2.5rem; }
 }
+
+/* ==========================================================================
+   Dosis por kilo del medicamento (catálogo del médico y catálogo inicial del admin, 2026-10-21)
+   La casilla «La dosis es por kilo» despliega el panel con la fórmula del récipe: sin JS, con `:has()`.
+   ========================================================================== */
+.dosis-por-kilo:not(:has(.dosis-por-kilo__casilla:checked)) .dosis-por-kilo__panel { display: none; }

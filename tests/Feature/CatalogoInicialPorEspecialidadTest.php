@@ -226,7 +226,7 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $ped = $this->esp('pediatria');
 
         $componente = Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])
-            ->call('abrir')->assertSee('Dosis por kilo (récipe de pediatría)')->assertSee('Gotas por ml')
+            ->call('abrir')->assertSee('La dosis es por kilo (récipe de pediatría)')->assertSee('Gotas por ml')
             ->assertSet('f.dosificacion', false)->assertSee('La dosis es por kilo')
             ->set('f.nombrecomercial', 'zoxaval')->set('f.presentacion', 'SUSP 30ml')->set('f.dosificacion', true)
             ->set('f.dosis', 'siete')->call('guardar')->assertHasErrors(['f.formulario']);

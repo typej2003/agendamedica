@@ -267,21 +267,21 @@ final class MedicamentosVista
         return AgregarMedicamentoAlVademecum::LARGO_USO;
     }
 
-    /** ¿Hay algo cargado en la dosis por peso? Si sí, el bloque de la fórmula arranca abierto. */
-    public function hayDosis(): bool
-    {
-        foreach (CamposDelMedicamento::NUMEROS as $campo) {
-            if ($this->texto($campo) !== '' && $this->texto($campo) !== '0') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /** ¿La dosificación dice `SI` (dosis por kilo, la marca que lee el récipe)? */
+    /** ¿La dosificación dice `SI` (dosis por kilo, la marca que lee el récipe)? Tras un envío fallido, lo que traía la casilla. */
     public function esPorKilo(): bool
     {
+        if (old('_catalogo') !== null && old('por_kilo') !== null) {
+            return (bool) old('por_kilo');
+        }
+
         return mb_strtoupper(trim($this->texto('dosificacion'))) === 'SI';
+    }
+
+    /** Una nota vieja del escritorio en la dosificación (lo que no es `SI` ni `NO`): se muestra para no perderla de vista. */
+    public function notaDeDosificacion(): ?string
+    {
+        $nota = trim($this->editando() ? (string) $this->editando->dosificacion : '');
+
+        return $nota === '' || in_array(mb_strtoupper($nota), ['SI', 'NO'], true) ? null : $nota;
     }
 }

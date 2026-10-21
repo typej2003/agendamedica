@@ -107,10 +107,36 @@ class MedicamentoDosisCatalogoWebTest extends TestCase
         $this->conContexto($user, $medico, $pediatria)
             ->get(route('clinica.catalogos.medicamentos', ['editar' => $fila->id]))
             ->assertOk()
-            ->assertSee('Dosis por kilo')
+            ->assertSee('La dosis es por kilo')
+            ->assertSee('id="medicamento-por-kilo" checked', false)
             ->assertSee('name="dosis"', false)
             ->assertSee('value="20"', false)
             ->assertSee('value="250"', false);
+    }
+
+    public function test_la_casilla_por_kilo_guarda_si_y_no_borra_una_nota_vieja(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $sesion = fn () => $this->conContexto($user, $medico, $pediatria);
+        $datos = array_diff_key($this->datosDelAlta(), ['dosificacion' => 1]);
+
+        // La casilla tildada guarda SI (el formulario manda el oculto en 0 y la casilla en 1).
+        $sesion()->post(route('clinica.catalogos.medicamentos.guardar'), $datos + ['por_kilo' => '1'])->assertRedirect();
+        $fila = Vademecum::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame('SI', trim((string) $fila->dosificacion));
+
+        // Destildada quita el SI; la fórmula queda cargada (sin SI el récipe no la usa).
+        $sesion()->post(route('clinica.catalogos.medicamentos.guardar'), $datos + ['id' => $fila->id, 'por_kilo' => '0'])->assertRedirect();
+        $this->assertNull($fila->fresh()->dosificacion);
+        $sesion()->get(route('clinica.catalogos.medicamentos', ['editar' => $fila->id]))->assertOk()
+            ->assertDontSee('id="medicamento-por-kilo" checked', false);
+
+        // Una nota vieja del escritorio se ve y no se pierde al guardar sin tildar.
+        $fila->forceFill(['dosificacion' => '25-50 mg/kg/dia'])->save();
+        $sesion()->get(route('clinica.catalogos.medicamentos', ['editar' => $fila->id]))->assertOk()
+            ->assertSee('Nota de la dosificación: 25-50 mg/kg/dia');
+        $sesion()->post(route('clinica.catalogos.medicamentos.guardar'), $datos + ['id' => $fila->id, 'por_kilo' => '0', 'presentacion' => 'TAB'])->assertRedirect();
+        $this->assertSame('25-50 mg/kg/dia', $fila->fresh()->dosificacion);
     }
 
     public function test_guardar_los_mismos_numeros_no_deja_rastro(): void

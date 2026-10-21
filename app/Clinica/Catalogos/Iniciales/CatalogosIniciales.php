@@ -45,7 +45,7 @@ final class CatalogosIniciales
                 'nombrecomercial3' => ['Cuarta marca', 'texto', 40, false, true],
                 'uso' => ['Indicaciones', 'area', 2000, false, false],
                 // La dosis por peso del récipe pediátrico (`DosisPediatrica`), con los nombres y unidades del ABM del médico (`CamposDelMedicamento`).
-                'dosificacion' => ['La dosis es por kilo', 'porkilo', 0, false, false, 'dosis'],
+                'dosificacion' => ['La dosis es por kilo (récipe de pediatría)', 'porkilo', 0, false, false, 'dosis'],
                 'dosis' => ['Dosis (mg/kg por toma)', 'decimal', 0, false, false, 'dosis'],
                 'cada' => ['Cada (veces al día)', 'decimal', 0, false, false, 'dosis'],
                 'durante' => ['Durante (días)', 'decimal', 0, false, false, 'dosis'],

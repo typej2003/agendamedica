@@ -8,6 +8,7 @@ use App\Actions\Catalogos\EditarMedicamentoDelVademecum;
 use App\Actions\Catalogos\QuitarMedicamentoDelCatalogo;
 use App\Clinica\Catalogos\MedicamentosDelCatalogo;
 use App\Clinica\Catalogos\Vistas\MedicamentosVista;
+use App\Clinica\Consulta\DosisPediatrica;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -79,6 +80,14 @@ class MedicamentoCatalogoController extends Controller
 
         $registros = $this->registrosDelMedico($contexto['medico']);
         $datos['sico'] = $request->boolean('sico');
+        // «La dosis es por kilo» es una casilla (2026-10-21) que guarda `SI`, lo que lee `DosisPediatrica`. Destildarla quita el
+        // `SI` pero no borra una nota vieja del escritorio en la dosificación. Sin la casilla en el envío, vale el texto como antes.
+        if ($request->has('por_kilo')) {
+            $previa = trim((string) ($medicamento->dosificacion ?? ''));
+            $datos['dosificacion'] = $request->boolean('por_kilo')
+                ? DosisPediatrica::POR_KILO
+                : ($previa !== '' && mb_strtoupper($previa) !== DosisPediatrica::POR_KILO ? $previa : null);
+        }
         $vuelta = $this->vuelta($datos['buscar'] ?? null, $datos['page'] ?? null);
 
         try {
