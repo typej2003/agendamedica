@@ -64,7 +64,7 @@
     <script src="{{ asset('js/gineco.js') }}"></script>
 
     <script>
-        // Cerrar sesión pide confirmación: un toque por error ya no saca a nadie (lo usan el panel lateral y el
+        // Cerrar sesión pide confirmación: un toque por error ya no saca a nadie (lo usa el
         // menú del usuario). Sin SweetAlert (si el CDN no cargó) cae al confirm() del navegador.
         function confirmarCierreSesion(evento, formulario) {
             evento.preventDefault();

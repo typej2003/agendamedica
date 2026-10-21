@@ -113,16 +113,8 @@
   </div>
 
   <div class="app-sidebar-pie">
-      <a href="{{ route('logout') }}" class="nav-link" title="Cerrar sesión"
-         onclick="return confirmarCierreSesion(event, document.getElementById('logout-form'));">
-          <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
-          <span class="link-text">Cerrar sesión</span>
-      </a>
-
-      {{-- Formulario oculto necesario para procesar la petición POST con CSRF --}}
-      <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-          @csrf
-      </form>
+      {{-- Cerrar sesión vive en el menú del usuario (barra superior); acá sólo la versión. --}}
+      <span class="app-sidebar-version" title="Versión {{ config('app.version') }}">v{{ config('app.version') }}</span>
 
       <button class="app-sidebar-plegar" type="button" wire:click="toggleMinimize"
               title="{{ $isMinimized ? 'Desplegar el menú' : 'Plegar el menú' }}"

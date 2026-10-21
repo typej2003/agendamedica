@@ -101,6 +101,7 @@
     @endif
 
     <div class="app-sidebar-pie">
+        <span class="app-sidebar-version" title="Versión {{ config('app.version') }}">v{{ config('app.version') }}</span>
         <button class="app-sidebar-plegar" type="button" data-plegar-barra
                 aria-label="Plegar el menú" title="Plegar el menú" aria-expanded="true" aria-controls="clinica-sidebar">
             <i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>

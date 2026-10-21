@@ -8,13 +8,36 @@ y entorno) y la wiki indicada al final: este repo no lleva la especificación fu
 
 ## Antes de empezar: rama y entorno
 
-El working tree está en la rama **`desarrollo`** y el código está presente. Dos advertencias:
+**MedicAPI está en producción (2026-10-21).** `main` es producción y `desarrollo` es QA; **no se commitea
+directo en ninguna de las dos**: cada pedido va en una rama de trabajo (ver el flujo justo abajo).
 
-- **Las dos ramas llevan el mismo código.** `main` y `desarrollo` tienen el **árbol idéntico** desde el
-  merge `7429df8` (2026-10-13): `desarrollo` es donde se trabaja y `main` es la punta publicada, que se
-  actualiza mergeando. (`main` **no** es "sólo el `leeme`": eso decía esta guía y era falso — antes del
-  merge tenía 354 archivos y su historial propio, con el fix de `sync_credentials.expires_at` del 07/10, que
-  el merge conservó.) Pushear `main` o `desarrollo` da lo mismo, pero **la rama de trabajo es `desarrollo`**.
+### Flujo de ramas y versiones (en producción desde el 2026-10-21)
+
+Regla del usuario. Los dos `push` (`desarrollo` y `main`) **despliegan solos**: el script del servidor ya corre
+`migrate --force` y `especialidades:sembrar`. Si un cambio necesita **un paso más en el despliegue** (un comando,
+una variable de entorno), **avisarlo antes del push** para que el usuario lo agregue.
+
+1. **Cada pedido en una rama salida de `desarrollo`**: `feature/…` para novedades, `fix/…` para ajustes y
+   correcciones. Si el pedido se relaciona con una rama abierta, se reutiliza esa. Las ramas de trabajo **no se
+   pushean** salvo que el usuario lo pida.
+2. **«Pasa el cambio a QA»**: merge de la rama a `desarrollo`, subir la versión de QA y `push` de `desarrollo`.
+3. **Versión de QA**: la de producción más `+N`. Tras `main` en `0.1.0`, el primer pase a QA es `0.1.0+1`, luego
+   `0.1.0+2`… Cuando `main` sube (por ejemplo a `0.2.0`) el contador vuelve a empezar: `0.2.0+1`. (Es metadata de
+   build: identifica el pase, no anticipa la versión que va a salir.)
+4. **«Sube a producción»**: merge de `desarrollo` a `main` (`--no-ff`), commit con la versión nueva, **tag
+   `vX.Y.Z`** en ese commit, `push` de `main` y del tag, y después `desarrollo` avanza hasta `main`
+   (fast-forward) y se pushea: las dos quedan en el mismo punto.
+   **Si en QA hay algo no aprobado**: en vez de `desarrollo`, se mergean a `main` **sólo las ramas aprobadas**,
+   versión, tag y `push` de `main`, y después merge de `main` a `desarrollo` (+ push).
+5. **Versión de producción**: se decide por **todo el lote** que entra respecto de la subida anterior (no por
+   pase de QA): el número del medio si entra alguna novedad (`0.1.3` → `0.2.0`), el último si son sólo ajustes y
+   correcciones (`0.1.0` → `0.1.1`).
+
+La versión vive en `config/app.php` (`'version'`) y se ve en el pie del menú lateral. Antes de mergear a `main`,
+revisar si hay migraciones o variables de entorno nuevas y decirlo.
+
+### Entorno
+
 - Remoto: `github.com/typej2003/agendamedica` — es el repo compartido con el sistema legado, de ahí el
   nombre.
 
