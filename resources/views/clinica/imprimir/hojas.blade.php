@@ -18,6 +18,16 @@
         <a class="barra-impresion-volver" href="{{ $vm->urlVolver() }}">&larr; {{ $vm->textoVolver() }}</a>
         <h1 class="barra-impresion-titulo">{{ $vm->titulo() }}</h1>
         <p class="barra-impresion-detalle">{{ $vm->resumenDeLaImpresion() }}@if ($vm->conOpciones()) · {{ $vm->resumenDeLasOpciones() }}@endif</p>
+
+        {{-- «Página: Grande / Pequeña» de las solicitudes: A4 vertical entero o su mitad de arriba. --}}
+        @if ($vm->paginas() !== [])
+            <div class="barra-impresion-modos" role="group" aria-label="Página">
+                <span class="barra-impresion-modos-rotulo">Página</span>
+                @foreach ($vm->paginas() as $pagina)
+                    <a class="barra-impresion-modo" href="{{ $pagina['url'] }}" @if ($pagina['activa']) aria-current="true" @endif>{{ $pagina['texto'] }}</a>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <div class="barra-impresion-acciones">

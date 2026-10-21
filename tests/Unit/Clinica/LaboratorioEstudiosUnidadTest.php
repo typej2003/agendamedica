@@ -161,9 +161,9 @@ class LaboratorioEstudiosUnidadTest extends TestCase
     {
         $hojas = (new HojasDeDocumentoVista($this->membrete(), [$this->documento([
             DocumentoImpreso::parrafoDeLista('LABORATORIO:', $this->examenes(160)),
-        ])]))->hojas();
+        ])->conPagina('pequena')]))->hojas();
 
-        $mitades = $hojas[0]['mitades'];
+        $mitades = array_merge(...array_column($hojas, 'mitades'));
         $this->assertSame('SOLICITUD DE EXÁMENES DE LABORATORIO', $mitades[0]['titulo']);
         $this->assertSame('SOLICITUD DE EXÁMENES DE LABORATORIO (continuación)', $mitades[1]['titulo']);
         $this->assertTrue($mitades[0]['sigue']);

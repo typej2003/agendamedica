@@ -237,4 +237,10 @@ final class HojasDeRecipeVista
 
         return ProximaCitaDelRecipe::texto($this->proximaCita);
     }
+
+    /** La página a elegir es de las solicitudes (`HojasImpresasVista::paginas()`): un récipe no la tiene. */
+    public function paginas(): array
+    {
+        return [];
+    }
 }

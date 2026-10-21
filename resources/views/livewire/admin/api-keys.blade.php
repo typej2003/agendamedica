@@ -39,7 +39,7 @@
                                     <div class="fw-semibold">{{ trim($medico->name . ' ' . $medico->lastname) }}</div>
                                     <small class="text-muted">{{ $medico->reg_medico }}</small>
                                 </td>
-                                <td>
+                                <td class="fecha-celda">
                                     @if ($r['ultima_escritorio'])
                                         <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_escritorio']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_escritorio']->locale('es')->diffForHumans() }}</small>
@@ -47,7 +47,7 @@
                                         <span class="text-muted">Nunca</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="fecha-celda">
                                     @if ($r['ultima_app'])
                                         <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_app']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_app']->locale('es')->diffForHumans() }}</small>
@@ -142,9 +142,9 @@
                                     @forelse ($credenciales as $c)
                                         <tr wire:key="cred-{{ $c->id }}">
                                             <td class="fw-semibold">{{ $c->machine_label }}</td>
-                                            <td>{{ \App\Support\HoraLocal::instante($c->created_at)?->format('d/m/Y') }}</td>
-                                            <td>{{ $c->expires_at?->format('d/m/Y') }}</td>
-                                            <td>{{ \App\Support\HoraLocal::fechaHora($c->last_used_at, 'Nunca') }}</td>
+                                            <td class="fecha-celda">{{ \App\Support\HoraLocal::instante($c->created_at)?->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ $c->expires_at?->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ \App\Support\HoraLocal::fechaHora($c->last_used_at, 'Nunca') }}</td>
                                             <td>
                                                 @if ($c->estaRevocada())
                                                     <span class="badge bg-danger">Revocada</span>

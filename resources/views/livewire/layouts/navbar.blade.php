@@ -65,7 +65,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end w-100 w-lg-auto">
                                     <li>
                                         <div class="dropdown-header">
-                                            <span class="d-block fw-semibold text-body">{{ $usuario->email }}</span>
+                                            <span class="d-block fw-semibold text-body menu-usuario-correo" title="{{ $usuario->email }}">{{ $usuario->email }}</span>
                                             <span class="d-block">{{ $usuario->getRoleNames()->first() ?? 'Sin rol' }}</span>
                                         </div>
                                     </li>

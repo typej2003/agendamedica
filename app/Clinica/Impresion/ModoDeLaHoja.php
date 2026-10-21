@@ -21,8 +21,10 @@ namespace App\Clinica\Impresion;
  *    hoja —el contenido en la mitad de arriba de una página vertical, como el escritorio— y llevan la imagen del examen **en la
  *    misma página**, debajo del texto (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad
  *    de abajo de la hoja queda en blanco a propósito.
- *  - **Media hoja**: todo lo demás — récipes, constancia, reposo, referencia, informe médico, hospitalización, dieta,
- *    laboratorio y estudios.
+ *  - **A4 vertical, completa o mitad superior a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio): las
+ *    solicitudes — informe médico, reposo, constancia, referencia, hospitalización, dieta, laboratorio (también el de la
+ *    pareja) y estudios. Por defecto, la grande; nunca media hoja horizontal.
+ *  - **Media hoja horizontal**: todo lo demás — los récipes y el resumen médico.
  *
  * Los ecos imprimen además su **informe en formulario** (WEB-11.13), que no sale de acá: lo pinta `_informe-eco` a página
  * completa. Esta clase decide la hoja de los documentos que se reparten como texto (`DistribuidorDeDocumento`), que es el caso
@@ -43,6 +45,29 @@ final class ModoDeLaHoja
 
     /** La mitad superior de un A4 vertical: el documento usa 148,25 mm de una página vertical y el resto queda en blanco. */
     public const MITAD_SUPERIOR = 'mitad-superior';
+
+    /** «Página grande» del escritorio: el A4 vertical completo. Es la que sale si no se elige. */
+    public const PAGINA_GRANDE = 'grande';
+
+    /** «Página pequeña» del escritorio: la mitad superior de un A4 vertical. */
+    public const PAGINA_PEQUENA = 'pequena';
+
+    /**
+     * Los documentos que se imprimen en A4 vertical con la **página a elegir** (grande o pequeña).
+     *
+     * @var array<int,string>
+     */
+    private const PAGINA_A_ELEGIR = [
+        DocumentoImpreso::INFORME,
+        DocumentoImpreso::REPOSO,
+        DocumentoImpreso::CONSTANCIA,
+        DocumentoImpreso::REFERENCIA,
+        DocumentoImpreso::HOSPITALIZACION,
+        DocumentoImpreso::DIETA,
+        DocumentoImpreso::LABORATORIO,
+        DocumentoImpreso::LABORATORIO_PAREJA,
+        DocumentoImpreso::ESTUDIOS,
+    ];
 
     /**
      * Los documentos que declaran **hoja completa vertical**.
@@ -72,14 +97,33 @@ final class ModoDeLaHoja
         DocumentoImpreso::HISTEROSCOPIA,
     ];
 
-    /** El modo de un documento, por su clave (`eco-pelvico`, `constancia`, `control-de-embarazo`…). */
-    public static function de(string $clave): string
+    /**
+     * El modo de un documento, por su clave (`eco-pelvico`, `constancia`, `control-de-embarazo`…). `$pagina` sólo cuenta en
+     * los documentos con la página a elegir (`PAGINA_GRANDE`/`PAGINA_PEQUENA`); en los demás se ignora.
+     */
+    public static function de(string $clave, ?string $pagina = null): string
     {
+        if (self::seEligeLaPagina($clave)) {
+            return self::pagina($pagina) === self::PAGINA_PEQUENA ? self::MITAD_SUPERIOR : self::COMPLETA;
+        }
+
         if (in_array($clave, self::HOJA_COMPLETA, true)) {
             return self::COMPLETA;
         }
 
         return in_array($clave, self::MITAD_SUPERIOR_DE_UN_A4, true) ? self::MITAD_SUPERIOR : self::MITAD;
+    }
+
+    /** ¿Ese documento se imprime con la página a elegir (grande o pequeña)? */
+    public static function seEligeLaPagina(string $clave): bool
+    {
+        return in_array($clave, self::PAGINA_A_ELEGIR, true);
+    }
+
+    /** La página pedida, normalizada: cualquier cosa que no sea la pequeña es la grande. */
+    public static function pagina(?string $pagina): string
+    {
+        return $pagina === self::PAGINA_PEQUENA ? self::PAGINA_PEQUENA : self::PAGINA_GRANDE;
     }
 
     /** ¿Ese documento va en hoja completa vertical? */

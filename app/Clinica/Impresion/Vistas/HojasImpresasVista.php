@@ -5,6 +5,7 @@ namespace App\Clinica\Impresion\Vistas;
 use App\Clinica\Impresion\DocumentoDeRecipe;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\Membrete;
+use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\OpcionesDeRecipe;
 
 /**
@@ -30,6 +31,7 @@ final class HojasImpresasVista
      * @param  array{volver:string, volverTexto:string}  $urls
      * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador): cada hoja lleva la
      *                           cabecera del escritorio (sexo, representante, historia y edad compacta) y el récipe sus medidas
+     * @param  array<string,string>  $paginas  la URL de esta hoja con cada página (`grande`/`pequena`), para `paginas()`
      */
     public function __construct(
         private Membrete $membrete,
@@ -39,7 +41,36 @@ final class HojasImpresasVista
         private array $urls,
         private OpcionesDeImpresionVista $dialogo,
         private bool $pediatria = false,
+        private array $paginas = [],
     ) {
+    }
+
+    /**
+     * «Página: Grande / Pequeña» (las solicitudes, como el escritorio): enlaces GET a esta misma hoja con
+     * `?pagina=`. Vacío si no hay ninguno de esos documentos en lo que se imprime.
+     *
+     * @return array<int,array{texto:string, url:string, activa:bool}>
+     */
+    public function paginas(): array
+    {
+        $conPaginaAElegir = false;
+        $actual = ModoDeLaHoja::PAGINA_GRANDE;
+
+        foreach ($this->documentos as $documento) {
+            if ($documento instanceof DocumentoImpreso && $documento->informe === null && ModoDeLaHoja::seEligeLaPagina($documento->tipo)) {
+                $conPaginaAElegir = true;
+                $actual = ModoDeLaHoja::pagina($documento->pagina);
+            }
+        }
+
+        if (! $conPaginaAElegir || $this->paginas === []) {
+            return [];
+        }
+
+        return [
+            ['texto' => 'Grande', 'url' => $this->paginas[ModoDeLaHoja::PAGINA_GRANDE], 'activa' => $actual === ModoDeLaHoja::PAGINA_GRANDE],
+            ['texto' => 'Pequeña', 'url' => $this->paginas[ModoDeLaHoja::PAGINA_PEQUENA], 'activa' => $actual === ModoDeLaHoja::PAGINA_PEQUENA],
+        ];
     }
 
     public function titulo(): string
