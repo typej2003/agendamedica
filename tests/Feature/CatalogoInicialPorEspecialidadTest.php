@@ -220,6 +220,37 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertEqualsCanonicalizing([$ped->id, $car->id], Marcas::de('diagnosticos', [$asma])[$asma]);
     }
 
+    public function test_el_admin_configura_la_dosis_por_kilo_y_el_medico_la_recibe(): void
+    {
+        $this->actingAs($this->admin());
+        $ped = $this->esp('pediatria');
+
+        $componente = Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])
+            ->call('abrir')->assertSee('Dosis por kilo (récipe de pediatría)')->assertSee('Gotas por ml')
+            ->set('f.nombrecomercial', 'zoxaval')->set('f.presentacion', 'SUSP 30ml')->set('f.dosificacion', 'SI')
+            ->set('f.dosis', 'siete')->call('guardar')->assertHasErrors(['f.formulario']);
+        $componente->set('f.dosis', '-1')->call('guardar')->assertHasErrors(['f.formulario']);
+
+        $componente->set('f.dosis', '7,5')->set('f.cada', '2')->set('f.durante', '3')->set('f.pvc', '100')->set('f.pvs', '5')->set('f.concentracion', '')
+            ->set('aplica', [(string) $ped->id])->call('guardar')->assertHasNoErrors()
+            ->assertSee('Por kilo: 7,5 mg/kg');
+
+        $fila = DB::table('vademecum')->whereNull('reg_medico')->where('nombrecomercial', 'ZOXAVAL')->first();
+        $this->assertSame('SI', $fila->dosificacion);
+        $this->assertEquals([7.5, 2.0, 3.0, 100.0, 5.0, null], [$fila->dosis, $fila->cada, $fila->durante, $fila->pvc, $fila->pvs, $fila->concentracion]);
+
+        // Editar trae los números al formulario.
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])->call('abrir', $fila->id)
+            ->assertSet('f.dosis', '7.5')->assertSet('f.pvc', '100');
+
+        // El pediatra que lo carga se lleva la configuración.
+        [, $medico] = $this->medico([$ped]);
+        app(CopiarCatalogoInicial::class)->ejecutar('medicamentos', $medico->reg_medico, [$medico->reg_medico], [$ped->id]);
+        $copia = DB::table('vademecum')->where('reg_medico', $medico->reg_medico)->where('nombrecomercial', 'ZOXAVAL')->first();
+        $this->assertSame('SI', $copia->dosificacion);
+        $this->assertEquals([7.5, 2.0, 3.0, 100.0, 5.0], [$copia->dosis, $copia->cada, $copia->durante, $copia->pvc, $copia->pvs]);
+    }
+
     // ------------------------------------------------------------------------------------------ La siembra
 
     public function test_la_siembra_agrupa_marca_traduce_codigos_y_es_idempotente(): void

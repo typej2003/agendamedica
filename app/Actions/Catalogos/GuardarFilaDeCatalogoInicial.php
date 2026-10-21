@@ -123,6 +123,18 @@ final class GuardarFilaDeCatalogoInicial
 
                 return round((float) $numero, 2);
 
+            case 'decimal':
+                // Los números de la dosis por kilo: las mismas reglas que el ABM del médico (`CamposDelMedicamento`).
+                $numero = str_replace(',', '.', $texto);
+                if (! is_numeric($numero)) {
+                    throw new InvalidArgumentException($rotulo . ' tiene que ser un número.');
+                }
+                if ((float) $numero < 0) {
+                    throw new InvalidArgumentException($rotulo . ' no puede ser negativo.');
+                }
+
+                return round((float) $numero, 3);
+
             case 'ref':
                 $destino = CatalogosIniciales::de($def['refs'][$columna]);
                 if (! DB::table($destino['tabla'])->whereNull('reg_medico')->where($destino['codigo'], $texto)->exists()) {
