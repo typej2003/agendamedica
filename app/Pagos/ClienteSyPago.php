@@ -411,11 +411,18 @@ final class ClienteSyPago
         ];
     }
 
-    /** @return array{amt:string,currency:string} */
+    /**
+     * El monto que viaja a SyPago. **`amt` va como número JSON, no como string**: la API está en .NET y
+     * deserializa `amount.amt` a `System.Decimal`; si se manda `"730.00"` responde
+     * «The JSON value could not be converted to System.Decimal». Se arma desde el entero en centavos y se
+     * redondea a 2 decimales para no arrastrar la representación binaria del float.
+     *
+     * @return array{amt:float,currency:string}
+     */
     private function montoDe(Pago $pago): array
     {
         return [
-            'amt' => Centavos::aDecimal((int) $pago->monto_e2),
+            'amt' => round(((int) $pago->monto_e2) / 100, 2),
             'currency' => (string) $pago->moneda,
         ];
     }

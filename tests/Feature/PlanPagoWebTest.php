@@ -211,6 +211,20 @@ class PlanPagoWebTest extends TestCase
             ->post(route('clinica.plan.iniciar', $pago), $this->pagador())
             ->assertRedirect(route('clinica.plan.pagar', $pago));
 
+        // `amount.amt` tiene que ser un número JSON: SyPago (.NET) lo deserializa a System.Decimal y un
+        // string como "730.00" le rompe con «The JSON value could not be converted to System.Decimal».
+        Http::assertSent(function (ClientRequest $request) {
+            if (! str_contains($request->url(), 'request/otp')) {
+                return false;
+            }
+
+            $datos = $request->data();
+
+            return isset($datos['amount']['amt'])
+                && (is_int($datos['amount']['amt']) || is_float($datos['amount']['amt']))
+                && (float) $datos['amount']['amt'] === 730.0;
+        });
+
         $pago->refresh();
 
         $this->assertSame(Pago::EN_PROCESO, $pago->estado);
