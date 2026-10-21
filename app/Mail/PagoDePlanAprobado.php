@@ -19,8 +19,8 @@ class PagoDePlanAprobado extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly Pago $pago,
-        public readonly ?string $nombre = null,
+        public Pago $pago,
+        public ?string $nombre = null,
     ) {
     }
 

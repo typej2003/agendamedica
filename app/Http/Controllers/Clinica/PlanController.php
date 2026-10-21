@@ -10,6 +10,7 @@ use App\Models\MetodoPago;
 use App\Models\Pago;
 use App\Models\Plan;
 use App\Models\TasaDeCambio;
+use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Cobros;
 use App\Services\ServicioService;
 use Illuminate\Http\Request;
@@ -45,7 +46,9 @@ class PlanController extends Controller
             ->orderBy('orden')
             ->orderBy('id')
             ->get()
-            ->filter(fn (MetodoPago $metodo) => $metodo->estaConfigurado())
+            // El MVP cobra con SyPago; un método manual no tiene cómo debitar el plan.
+            ->filter(fn (MetodoPago $metodo) => $metodo->pasarela === CatalogoDePasarelas::SYPAGO
+                && $metodo->estaConfigurado())
             ->values();
 
         return view('clinica.plan.index', [
@@ -73,7 +76,7 @@ class PlanController extends Controller
             ->paraUso(MetodoPago::PLANES)
             ->find($datos['metodo_pago_id']);
 
-        if (! $metodo || ! $metodo->estaConfigurado()) {
+        if (! $metodo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
             return back()->with('error', 'Ese método de pago no está disponible.');
         }
 
