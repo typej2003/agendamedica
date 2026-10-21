@@ -510,7 +510,8 @@ class ConsultaWebTest extends TestCase
         $enLaConsulta->assertDontSee(route('clinica.contexto'), false);
         $enLaConsulta->assertDontSee('Cerrar sesión');
         $enLaConsulta->assertDontSee('aria-label="Mi cuenta"', false);
-        $enLaConsulta->assertDontSee(route('clinica.sedes'), false);
+        // «Sedes y consultorios» queda sólo en el menú lateral (Configuración); el atajo del menú de la cuenta no se pinta.
+        $this->assertSame(1, substr_count($enLaConsulta->getContent(), 'href="' . route('clinica.sedes') . '"'));
 
         // La salida sigue estando: la flecha del principio, que guarda lo escrito antes de volver.
         $enLaConsulta->assertSee('Volver a la agenda');
@@ -524,6 +525,7 @@ class ConsultaWebTest extends TestCase
         $enLaAgenda->assertSee(route('clinica.contexto'), false);
         $enLaAgenda->assertSee('Cerrar sesión');
         $enLaAgenda->assertSee('aria-label="Mi cuenta"', false);
+        $this->assertSame(2, substr_count($enLaAgenda->getContent(), 'href="' . route('clinica.sedes') . '"'));
     }
 
     public function test_una_consulta_de_otro_medico_da_404(): void

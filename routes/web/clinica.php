@@ -123,7 +123,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // médico, así que va fuera del grupo que exige contexto: se da de alta antes de asignarle un
         // consultorio a nadie. La segunda mitad —consultorios, modalidad y horarios— va adentro
         // (WEB-2.8b.2/3), porque eso sí es de cada médico.
-        Route::get('/sedes', [SedeController::class, 'index'])->name('sedes');
+        //
+        // Desde el 2026-10-20 es **una sola pantalla «Sedes y consultorios»** (tarjeta por sede con sus consultorios y
+        // paneles laterales). Se abre con el contexto **opcional**: si hay médico elegido muestra y carga sus
+        // consultorios; si no, sólo las sedes. `GET /consultorios` redirige acá.
+        Route::get('/sedes', [SedeController::class, 'index'])->middleware('clinica.contexto:opcional')->name('sedes');
         Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
         Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
 

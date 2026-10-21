@@ -38,7 +38,7 @@ final class HorariosVista
 
     public function urlVolver(): string
     {
-        return route('clinica.consultorios');
+        return route('clinica.sedes');
     }
 
     public function urlGuardar(): string

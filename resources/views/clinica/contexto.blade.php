@@ -101,7 +101,7 @@
                                 <span class="form-text d-block">
                                     El consultorio es dónde atiende el médico dentro de una sede; el menú combina
                                     los tuyos con los del centro. ¿Falta uno o quieres cambiarlo?
-                                    <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
+                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
                                 </span>
                             </x-ui.campo>
                         @elseif ($medico['sinConsultorios'])
@@ -111,8 +111,7 @@
                                         id="sede-{{ $medico['regMedico'] }}">Sin consultorios</output>
                                 <span class="form-text d-block">
                                     Este médico todavía no tiene consultorios cargados: cárgalos en
-                                    <a href="{{ $vm->urlConsultorios() }}">Consultorios</a> (si el lugar todavía no
-                                    existe, primero la <a href="{{ $vm->urlSedes() }}">sede</a>).
+                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
                                 </span>
                             </x-ui.campo>
                         @else
@@ -122,7 +121,7 @@
                                         id="sede-{{ $medico['regMedico'] }}">{{ $medico['consultorioFijo']['texto'] }}</output>
                                 <span class="form-text d-block">
                                     Es su único consultorio, así que no hay que elegirlo. ¿Quieres cambiarlo?
-                                    <a href="{{ $vm->urlConsultorios() }}">Consultorios</a>.
+                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
                                 </span>
                             </x-ui.campo>
                         @endif

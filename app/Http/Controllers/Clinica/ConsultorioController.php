@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consultorio\GuardarConsultorio;
 use App\Clinica\Consultorio\ConsultoriosDelMedico;
-use App\Clinica\Consultorio\Vistas\ConsultoriosVista;
 use App\Http\Controllers\Controller;
 use App\Models\MedicalCenter;
 use App\Models\Office;
@@ -20,6 +19,9 @@ use Illuminate\Validation\ValidationException;
  * A diferencia de las sedes —que son del catálogo de la clínica—, el consultorio **es de un médico**:
  * `reg_medico` y `medico_id` salen siempre del contexto de trabajo, nunca del formulario.
  *
+ * Desde el 2026-10-20 no tiene pantalla propia: se carga desde el panel lateral de **Sedes y consultorios**
+ * (`SedeController`), y las escrituras de acá vuelven ahí.
+ *
  * La baja es **desactivar** (`activo = false`): el consultorio define la jornada de las citas que ya tiene y
  * borrarlo las dejaría sin explicación. Los **bloques de horario** son de `HorarioController`.
  */
@@ -29,18 +31,17 @@ class ConsultorioController extends Controller
     {
     }
 
+    /**
+     * La pantalla de consultorios se fusionó con la de sedes (2026-10-20): cada sede es una tarjeta con sus
+     * consultorios. Esta ruta queda para no romper enlaces viejos y lleva a la pantalla unificada con lo que pedía
+     * (`?editar=` abre el panel del consultorio, `?inactivos=1` es «Todas»).
+     */
     public function index(Request $request)
     {
-        $contexto = $request->attributes->get('contexto_clinico');
-        $verInactivos = $request->boolean('inactivos');
-
-        return view('clinica.consultorios.index', ['vm' => new ConsultoriosVista(
-            $this->consultorios->listar($contexto, $verInactivos),
-            $request->query('editar') !== null ? $this->consultorios->encontrar($contexto, (int) $request->query('editar')) : null,
-            $verInactivos,
-            $this->consultorios->sedesActivas(),
-            $contexto['medico'],
-        )]);
+        return redirect()->route('clinica.sedes', array_filter([
+            'todas'       => $request->boolean('inactivos') ? 1 : null,
+            'consultorio' => $request->query('editar'),
+        ], fn ($valor) => $valor !== null));
     }
 
     /** Alta o edición (según venga o no el id). La regla vive en `GuardarConsultorio`. */
@@ -74,8 +75,7 @@ class ConsultorioController extends Controller
 
         $accion->ejecutar($datos, $contexto['medico']->id, $contexto['reg_medico'], $consultorio);
 
-        return redirect()
-            ->route('clinica.consultorios', $request->boolean('ver_inactivos') ? ['inactivos' => 1] : [])
+        return $this->volver($request)
             ->with('guiado', true)
             ->with('estado', $consultorio !== null ? 'Consultorio actualizado.' : 'Consultorio registrado.');
     }
@@ -91,10 +91,17 @@ class ConsultorioController extends Controller
 
         $consultorio->update(['activo' => ! $consultorio->activo]);
 
-        return redirect()
-            ->route('clinica.consultorios', $request->boolean('ver_inactivos') ? ['inactivos' => 1] : [])
+        return $this->volver($request)
             ->with('estado', $consultorio->activo
                 ? 'Consultorio activado.'
                 : 'Consultorio desactivado: deja de ofrecerse al agendar.');
+    }
+
+    /** Vuelve a la pantalla de sedes y consultorios, con «Todas» si se estaba mirando así (`ver_inactivos` es el nombre de antes). */
+    private function volver(Request $request)
+    {
+        $todas = $request->boolean('ver_todas') || $request->boolean('ver_inactivos');
+
+        return redirect()->route('clinica.sedes', $todas ? ['todas' => 1] : []);
     }
 }

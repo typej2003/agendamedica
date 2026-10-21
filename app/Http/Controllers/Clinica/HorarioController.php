@@ -143,8 +143,11 @@ class HorarioController extends Controller
      */
     private function volver(Request $request, Office $consultorio)
     {
-        if ($request->input('volver') === 'consultorios') {
-            return redirect()->route('clinica.consultorios', $request->boolean('ver_inactivos') ? ['inactivos' => 1] : []);
+        // `consultorios` es el nombre de antes: la pantalla de consultorios se fusionó con la de sedes (2026-10-20).
+        if (in_array($request->input('volver'), ['sedes', 'consultorios'], true)) {
+            $todas = $request->boolean('ver_todas') || $request->boolean('ver_inactivos');
+
+            return redirect()->route('clinica.sedes', $todas ? ['todas' => 1] : []);
         }
 
         return redirect()->route('clinica.consultorios.horarios', $consultorio);

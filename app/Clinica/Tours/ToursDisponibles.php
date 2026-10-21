@@ -50,10 +50,11 @@ final class ToursDisponibles
             'clinica.catalogos.medicos-referidos',
             'clinica.catalogos.plantillas-texto',
         ],
-        // Los horarios de A-10 se cargan desde `consultorios`, pero la pantalla vieja del consultorio sigue
-        // existiendo: las dos son la misma pantalla para el tour (se marca una sola vez) y cada una muestra
-        // los pasos que tiene.
-        self::CONSULTORIOS  => ['clinica.consultorios', 'clinica.consultorios.horarios'],
+        // Los horarios de A-10 se cargan desde «Sedes y consultorios» (`clinica.sedes` desde el 2026-10-20; antes
+        // `clinica.consultorios`, que ahora redirige), pero la pantalla vieja de horarios del consultorio sigue
+        // existiendo: las dos son la misma pantalla para el tour (se marca una sola vez) y cada una muestra los
+        // pasos que tiene. La clave sigue siendo `consultorios` para no volver a mostrarle el tour a quien ya lo vio.
+        self::CONSULTORIOS  => ['clinica.sedes', 'clinica.consultorios.horarios'],
     ];
 
     /**
@@ -162,9 +163,14 @@ final class ToursDisponibles
 
         self::CONSULTORIOS => [
             [
-                'selector' => '[data-tour=consultorios-lista] tbody tr td:first-child',
+                'selector' => '[data-tour=sedes-nueva]',
+                'titulo'   => 'Una sede nueva',
+                'texto'    => 'La sede es el lugar donde atiendes. Al registrarla te ofrece cargar ahí mismo tu consultorio.',
+            ],
+            [
+                'selector' => '[data-tour=consultorios-lista] .sede-consultorio',
                 'titulo'   => 'Tus consultorios',
-                'texto'    => 'Cada fila es un lugar donde atiendes, con la modalidad (orden de llegada u hora de cita) y la duración de la cita.',
+                'texto'    => 'Cada sede muestra los consultorios donde atiendes, con la modalidad (orden de llegada u hora de cita) y la duración de la cita.',
             ],
             [
                 'selector' => '[data-tour=consultorios-bloques]',
@@ -174,7 +180,7 @@ final class ToursDisponibles
             [
                 'selector' => '[data-tour=consultorios-alta]',
                 'titulo'   => 'Agregar un bloque',
-                'texto'    => 'Eliges el día, desde y hasta qué hora y el cupo (vacío = sin tope). Queda guardado sin salir de esta pantalla.',
+                'texto'    => 'Eliges los días, desde y hasta qué hora y el cupo (vacío = sin tope) en un panel, sin salir de esta pantalla.',
             ],
             [
                 'selector' => '[data-tour=horarios-lista] tbody tr',

@@ -128,7 +128,7 @@ final class ArmazonVista
     }
 
     /**
-     * Los accesos que viven en el **menú de la cuenta**: sedes, consultorios y cambiar de consultorio. El panel
+     * Los accesos que viven en el **menú de la cuenta**: sedes y consultorios, y cambiar de consultorio. El panel
      * de administración se queda en la barra (sólo lo ve el administrador).
      *
      * @return array<int,array{texto:string, icono:string, url:string, primario:bool}>
@@ -148,11 +148,9 @@ final class ArmazonVista
      */
     public function accesos(): array
     {
-        $accesos = [['texto' => 'Sedes', 'icono' => 'bi-hospital', 'url' => route('clinica.sedes'), 'primario' => false]];
-
-        if ($this->tieneContexto()) {
-            $accesos[] = ['texto' => 'Consultorios', 'icono' => 'bi-door-closed', 'url' => route('clinica.consultorios'), 'primario' => false];
-        }
+        // Una sola entrada desde el 2026-10-20: las sedes y los consultorios son una pantalla (tarjeta por sede con sus
+        // consultorios). Sin contexto muestra sólo las sedes.
+        $accesos = [['texto' => 'Sedes y consultorios', 'icono' => 'bi-geo-alt', 'url' => route('clinica.sedes'), 'primario' => false]];
 
         // «Cambiar consultorio» sólo si hay algo que elegir: con un solo médico, una sola especialidad y uno
         // o ningún consultorio la pantalla se salta (2026-10-19), así que el acceso no llevaría a ninguna parte.
@@ -282,23 +280,25 @@ final class ArmazonVista
         // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5).
         //
         // **No es un grupo sólo del médico** (revisión de Alexander, A-10): la duración de la cita y los bloques de horario viven
-        // en `clinica.consultorios` y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
+        // en «Sedes y consultorios» (`clinica.sedes`, antes `clinica.consultorios`) y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
         // secretaría (es ella la que carga los horarios y marca las ausencias en la vida real). Por eso el grupo se arma con lo
         // que cada rol **puede abrir** —las dos primeras entradas, las del consultorio y la agenda, para los dos; el resto, que
-        // responde 403 a la secretaría, sólo para el médico—, en vez de esconderlo entero. La barra superior conserva
-        // «Consultorios» como atajo.
+        // responde 403 a la secretaría, sólo para el médico—, en vez de esconderlo entero. El menú de la cuenta conserva
+        // «Sedes y consultorios» como atajo.
         if ($this->tieneContexto()) {
             $hijos = [];
 
             foreach ([
-                ['clinica.consultorios', 'Consultorios y horarios', 'bi-clock-history'],
+                ['clinica.sedes', 'Sedes y consultorios', 'bi-geo-alt'],
                 ['clinica.agenda.no-laborables', 'Días no laborables', 'bi-calendar-x'],
             ] as [$ruta, $texto, $icono]) {
                 $hijos[] = [
                     'texto'  => $texto,
                     'icono'  => $icono,
                     'url'    => route($ruta),
-                    'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, $ruta),
+                    // Los horarios de un consultorio (`clinica.consultorios.horarios`) cuelgan de «Sedes y consultorios».
+                    'activo' => $this->rutaActual !== null && (str_starts_with($this->rutaActual, $ruta)
+                        || ($ruta === 'clinica.sedes' && str_starts_with($this->rutaActual, 'clinica.consultorios'))),
                 ];
             }
 

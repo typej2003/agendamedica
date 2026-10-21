@@ -41,7 +41,7 @@ class ContextoController extends Controller
             // Sin consultorios cargados no hay nada que elegir, pero sí algo que hacer: la agenda no puede
             // armar la jornada. Es el mismo aviso que daba la pantalla que ya no se ve.
             return $automatico['office_id'] === null
-                ? $destino->with('avisos', ['Todavía no tienes consultorios cargados: cárgalos en «Consultorios y horarios» para que la agenda pueda armar la jornada.'])
+                ? $destino->with('avisos', ['Todavía no tienes consultorios cargados: cárgalos en «Sedes y consultorios» para que la agenda pueda armar la jornada.'])
                 : $destino;
         }
 

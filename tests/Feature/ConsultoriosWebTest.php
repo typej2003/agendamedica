@@ -122,7 +122,7 @@ class ConsultoriosWebTest extends TestCase
             'activo'            => true,
         ]);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios');
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes');
 
         $respuesta->assertOk();
         $respuesta->assertSee($sede->name);
@@ -130,7 +130,8 @@ class ConsultoriosWebTest extends TestCase
         $respuesta->assertSee('Orden de llegada');
         $respuesta->assertSee('20 min');
         // Los bloques se editan en la misma fila (A-10): sin bloques, la fila lo dice.
-        $respuesta->assertSee('Todavía no tiene bloques');
+        // Sin bloques, el consultorio ofrece cargar el primero.
+        $respuesta->assertSee('data-panel-horario', false);
     }
 
     public function test_crear_un_consultorio_escribe_el_registro_y_el_dueno_del_contexto(): void
@@ -141,7 +142,7 @@ class ConsultoriosWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $datos)
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
 
         $consultorio = Office::where('office_number', 'C1')->firstOrFail();
 
@@ -210,7 +211,7 @@ class ConsultoriosWebTest extends TestCase
                 'office_number'     => 'C9',
                 'modalidad'         => Office::MODALIDAD_HORA,
             ])
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
 
         $this->assertSame($antes, Office::where('reg_medico', $medico->reg_medico)->count());
 
@@ -232,7 +233,7 @@ class ConsultoriosWebTest extends TestCase
         $consultorio = Office::where('reg_medico', $medico->reg_medico)->firstOrFail();
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios?editar=' . $consultorio->id);
+            ->get('/clinica/sedes?consultorio=' . $consultorio->id);
 
         $respuesta->assertOk();
         $respuesta->assertSee('Editar el consultorio');
@@ -254,7 +255,7 @@ class ConsultoriosWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->patch('/clinica/consultorios/' . $consultorio->id . '/activar')
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
 
         // Se conserva la fila —la cita guarda la modalidad y la duración con las que se calculó su
         // jornada— y sólo deja de ofrecerse.
@@ -262,11 +263,11 @@ class ConsultoriosWebTest extends TestCase
         $this->assertDatabaseHas('offices', ['id' => $consultorio->id]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios')
+            ->get('/clinica/sedes')
             ->assertDontSee('C1');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios?inactivos=1')
+            ->get('/clinica/sedes?todas=1')
             ->assertSee('C1')
             ->assertSee('Inactivo');
     }
@@ -314,7 +315,7 @@ class ConsultoriosWebTest extends TestCase
         ]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios?inactivos=1')
+            ->get('/clinica/sedes?todas=1')
             ->assertOk()
             ->assertDontSee('DEL-OTRO');
     }
@@ -329,7 +330,7 @@ class ConsultoriosWebTest extends TestCase
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['office_number' => 'SEC1']))
-            ->assertRedirect(route('clinica.consultorios'));
+            ->assertRedirect(route('clinica.sedes'));
 
         $consultorio = Office::where('office_number', 'SEC1')->firstOrFail();
 
@@ -385,18 +386,18 @@ class ConsultoriosWebTest extends TestCase
             'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
         ]);
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios');
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes');
 
         $respuesta->assertOk();
         // El orden es el de la semana (lunes antes que miércoles), no el de la carga.
         $respuesta->assertSeeInOrder(['Lunes', '8:00 AM a 12:00 PM', 'sin tope', 'Miércoles', '2:00 PM a 6:00 PM', '12 pacientes'], false);
         // Las horas se escriben con AM/PM (campo de texto) y viajan en 24 h (hidden con el `name` de siempre).
         $respuesta->assertDontSee('type="time"', false);
-        $respuesta->assertSee('data-hora-ampm="bloque-desde-' . $consultorio->id . '-valor"', false);
-        $respuesta->assertSee('<input type="hidden" name="hora_fin" id="bloque-hasta-' . $consultorio->id . '-valor" value="">', false);
-        // Y el alta de un bloque está en la misma fila, con las rutas de siempre.
-        $respuesta->assertSee(route('clinica.consultorios.horarios.guardar', $consultorio) . '"', false);
-        $respuesta->assertSee('name="volver" value="consultorios"', false);
+        $respuesta->assertSee('data-hora-ampm="horario-desde-valor"', false);
+        $respuesta->assertSee('<input type="hidden" name="hora_fin" id="horario-hasta-valor" value="">', false);
+        // Y el alta de un bloque se abre desde el consultorio (un panel para toda la pantalla), con las rutas de siempre.
+        $respuesta->assertSee('data-accion="' . route('clinica.consultorios.horarios.guardar', $consultorio) . '"', false);
+        $respuesta->assertSee('name="volver" value="sedes"', false);
     }
 
     public function test_agregar_un_bloque_desde_el_listado_vuelve_al_listado(): void
@@ -417,7 +418,7 @@ class ConsultoriosWebTest extends TestCase
         );
 
         // La vuelta es al listado (de donde vino el formulario), no a la pantalla de horarios.
-        $respuesta->assertRedirect(route('clinica.consultorios'));
+        $respuesta->assertRedirect(route('clinica.sedes'));
         $respuesta->assertSessionHas('estado');
         $this->assertDatabaseHas('office_schedules', [
             'office_id'  => $consultorio->id,
@@ -441,7 +442,7 @@ class ConsultoriosWebTest extends TestCase
             ['volver' => 'consultorios'],
         );
 
-        $respuesta->assertRedirect(route('clinica.consultorios'));
+        $respuesta->assertRedirect(route('clinica.sedes'));
         $this->assertDatabaseMissing('office_schedules', ['id' => $bloque->id]);
     }
 
@@ -506,7 +507,7 @@ class ConsultoriosWebTest extends TestCase
 
         $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/consultorios/' . $consultorio->id . '/horarios')->assertOk();
-        $listado = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios')->assertOk();
+        $listado = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes')->assertOk();
 
         foreach ([$pantalla, $listado] as $r) {
             $html = $r->getContent();
@@ -588,50 +589,48 @@ class ConsultoriosWebTest extends TestCase
     }
 
     /**
-     * El alta en línea es **un formulario por consultorio** y todos mandan los mismos nombres: lo escrito
-     * sólo se repone en el que lo mandó (hay uno por fila y sin el `consultorio` oculto aparecería en todos).
+     * El alta de un bloque es **un panel para toda la pantalla** y todos los consultorios mandan los mismos nombres: si
+     * la validación falla, el panel vuelve abierto, apuntado al consultorio que lo mandó y con lo escrito.
      */
-    public function test_el_alta_en_linea_repone_lo_escrito_solo_en_su_consultorio(): void
+    public function test_el_alta_de_un_bloque_que_falla_reabre_su_panel_para_ese_consultorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $uno = $this->consultorioDe($medico, $this->sede('San José'), '701');
-        $dos = $this->consultorioDe($medico, $this->sede('San José'), '702');
+        $this->consultorioDe($medico, $this->sede('San José'), '702');
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->from('/clinica/consultorios')
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/sedes')
+            ->followingRedirects()
             ->post('/clinica/consultorios/' . $uno->id . '/horarios', [
-                'volver'      => 'consultorios',
+                'formulario'  => 'horario',
+                'volver'      => 'sedes',
                 'consultorio' => $uno->id,
-                'dia_semana'  => 2,
+                'dias'        => [2],
                 'hora_inicio' => '10:00',
                 'hora_fin'    => '08:00',   // la hora de fin no es posterior: falla la validación
             ])
-            ->assertSessionHasErrors('hora_fin');
+            ->assertOk()
+            ->getContent();
 
-        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios')->assertOk()->getContent();
-
-        preg_match('/id="bloque-desde-' . $uno->id . '-valor"[^>]*value="([^"]*)"/', $html, $suyo);
-        preg_match('/id="bloque-desde-' . $dos->id . '-valor"[^>]*value="([^"]*)"/', $html, $ajeno);
-
-        $this->assertSame('10:00', $suyo[1] ?? null, 'El consultorio que mandó el alta tiene que reponer lo escrito.');
-        $this->assertSame('', $ajeno[1] ?? 'x', 'El otro consultorio no tiene que heredar lo escrito.');
+        $this->assertStringContainsString('data-panel-al-cargar="dialogo-horario"', $html);
+        $this->assertStringContainsString('action="' . route('clinica.consultorios.horarios.guardar', $uno) . '"', $html);
+        $this->assertMatchesRegularExpression('/name="consultorio" value="' . $uno->id . '"/', $html);
+        $this->assertMatchesRegularExpression('/id="horario-desde-valor" value="10:00"/', $html);
+        $this->assertMatchesRegularExpression('/id="horario-dia-2"[^>]*checked/', $html);
+        $this->assertStringContainsString('Horario · 701', $html);
     }
 
-    /** La duración de la cita queda donde estaba, pero la ayuda dice para qué sirve y no promete de más. */
+    /** La duración de la cita queda en el panel del consultorio, y su ayuda dice de dónde sale el tope de la jornada. */
     public function test_la_duracion_de_la_cita_explica_para_que_sirve(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
-        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/consultorios');
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/sedes');
 
         $respuesta->assertOk();
-        // Sigue en su campo, con su rótulo de siempre.
         $respuesta->assertSee('Duración de la cita');
         $respuesta->assertSee('name="duracion_cita"', false);
-        // Y la ayuda dice qué hace y de dónde sale el tope de la jornada (del cupo del bloque).
-        $respuesta->assertSee('Lo que dura una cita en este consultorio', false);
-        $respuesta->assertSee('tope de pacientes de cada jornada lo pone el cupo', false);
+        $respuesta->assertSee('El tope de pacientes lo pone el cupo de cada horario', false);
     }
 
     /** Un consultorio del médico, para los casos de los bloques. */
@@ -659,21 +658,22 @@ class ConsultoriosWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get('/clinica/consultorios')->assertOk()->getContent();
+            ->get('/clinica/sedes')->assertOk()->getContent();
 
         // El grupo «Configuración» existe, con las dos entradas nuevas y abierto (estamos en una de ellas).
         $this->assertStringContainsString('<details class="nav-grupo" data-menu="configuracion" open>', $html);
         preg_match('/data-menu="configuracion".*?<\/details>/s', $html, $bloque);
         $grupo = $bloque[0] ?? '';
-        $this->assertStringContainsString('Consultorios y horarios', $grupo);
+        $this->assertStringContainsString('Sedes y consultorios', $grupo);
         $this->assertStringContainsString('Días no laborables', $grupo);
-        $this->assertStringContainsString('href="' . route('clinica.consultorios') . '"', $grupo);
+        $this->assertStringContainsString('href="' . route('clinica.sedes') . '"', $grupo);
         $this->assertStringContainsString('href="' . route('clinica.agenda.no-laborables') . '"', $grupo);
         // Y el ítem de los horarios es el activo de la página.
-        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Consultorios y horarios"/', $grupo);
+        $this->assertMatchesRegularExpression('/nav-link active[^>]*title="Sedes y consultorios"/', $grupo);
 
-        // La barra superior conserva «Consultorios» como atajo.
-        $this->assertStringContainsString('href="' . route('clinica.consultorios') . '"', $html);
+        // El menú de la cuenta conserva «Sedes y consultorios» como atajo, y ya no hay una entrada aparte para cada uno.
+        $this->assertGreaterThanOrEqual(2, substr_count($html, 'href="' . route('clinica.sedes') . '"'));
+        $this->assertStringNotContainsString('href="' . route('clinica.consultorios') . '"', $html);
     }
 
     /**
@@ -686,12 +686,12 @@ class ConsultoriosWebTest extends TestCase
         MedicoRegistro::where('medico_id', $medico->id)->update(['user_id' => $secretaria->id]);
 
         $html = $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
-            ->get('/clinica/consultorios')->assertOk()->getContent();
+            ->get('/clinica/sedes')->assertOk()->getContent();
 
         preg_match('/data-menu="configuracion".*?<\/details>/s', $html, $bloque);
         $grupo = $bloque[0] ?? '';
 
-        $this->assertStringContainsString('Consultorios y horarios', $grupo);
+        $this->assertStringContainsString('Sedes y consultorios', $grupo);
         $this->assertStringContainsString('Días no laborables', $grupo);
         // Lo que la secretaría no administra no se le ofrece.
         $this->assertStringNotContainsString('Formato de impresión', $grupo);
