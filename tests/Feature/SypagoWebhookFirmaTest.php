@@ -122,7 +122,7 @@ PEM;
 
         $nonce = '1700000000000';
         $payload = json_encode([
-            'internal_id' => $pago->referencia,
+            'internal_id' => $pago->internal_id,
             'status' => 'ACCP',
             'transaction_id' => 'tx-firma',
             'amount' => ['amt' => '730.00', 'currency' => 'VES'],

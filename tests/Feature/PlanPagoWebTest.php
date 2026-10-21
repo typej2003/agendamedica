@@ -291,6 +291,39 @@ class PlanPagoWebTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_la_cuenta_con_guiones_se_envia_solo_con_digitos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+        $this->falsificarSyPago();
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+
+        $datos = $this->pagador();
+        $datos['banco_codigo'] = '0172';
+        $datos['cuenta'] = '0172-0710-57-7108169462';
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.plan.iniciar', $pago), $datos)
+            ->assertRedirect(route('clinica.plan.pagar', $pago));
+
+        // Los guiones se quitan antes de llamar a SyPago: la cuenta viaja con 20 dígitos.
+        Http::assertSent(function (ClientRequest $request) {
+            if (! str_contains($request->url(), 'request/otp')) {
+                return false;
+            }
+
+            $enviado = $request->data();
+
+            return $enviado['debitor_account']['type'] === 'CNTA'
+                && $enviado['debitor_account']['number'] === '01720710577108169462';
+        });
+
+        $this->assertSame(Pago::EN_PROCESO, $pago->fresh()->estado);
+    }
+
     public function test_confirmar_aprueba_y_renueva_el_servicio(): void
     {
         Mail::fake();
@@ -309,6 +342,19 @@ class PlanPagoWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post(route('clinica.plan.confirmar', $pago), ['otp' => '123456'])
             ->assertRedirect(route('clinica.plan.pagar', $pago));
+
+        // SyPago limita `internal_id` a 35 caracteres: un UUID con guiones (36) rompe la confirmación.
+        Http::assertSent(function (ClientRequest $request) use ($pago) {
+            if (! str_contains($request->url(), 'transaction/otp')) {
+                return false;
+            }
+
+            $enviado = $request->data();
+
+            return isset($enviado['internal_id'])
+                && strlen($enviado['internal_id']) <= 35
+                && $enviado['internal_id'] === $pago->internal_id;
+        });
 
         $pago->refresh();
         $this->assertSame(Pago::APROBADO, $pago->estado);
@@ -340,7 +386,7 @@ class PlanPagoWebTest extends TestCase
         ]);
 
         $aviso = [
-            'internal_id' => $pago->referencia,
+            'internal_id' => $pago->internal_id,
             'status' => 'ACCP',
             'transaction_id' => 'tx-webhook',
             'amount' => ['amt' => '730.00', 'currency' => 'VES'],
@@ -380,12 +426,12 @@ class PlanPagoWebTest extends TestCase
         $pago->update(['estado' => Pago::EN_PROCESO, 'referencia_externa' => 'tx-monto', 'otp_enviado_el' => now()]);
 
         $this->postJson('/api/pagos/sypago/token-que-no-existe', [
-            'internal_id' => $pago->referencia,
+            'internal_id' => $pago->internal_id,
             'status' => 'ACCP',
         ])->assertNotFound();
 
         $this->postJson(route('pagos.webhook.sypago', ['token' => $metodo->webhook_token]), [
-            'internal_id' => $pago->referencia,
+            'internal_id' => $pago->internal_id,
             'status' => 'ACCP',
             'transaction_id' => 'tx-monto',
             'amount' => ['amt' => '1.00', 'currency' => 'VES'],

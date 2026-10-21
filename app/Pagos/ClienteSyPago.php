@@ -256,7 +256,7 @@ final class ClienteSyPago
         $pagador = $pago->datos_pagador ?? [];
 
         $datos = [
-            'internal_id' => $pago->referencia,
+            'internal_id' => $pago->internal_id ?: substr(str_replace('-', '', (string) $pago->referencia), 0, 35),
             'group_id' => 'ddr-' . $pago->created_at->format('Ymd'),
             'account' => $this->cuentaDelComercio(),
             'amount' => $this->montoDe($pago),

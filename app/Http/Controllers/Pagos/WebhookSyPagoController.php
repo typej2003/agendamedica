@@ -59,7 +59,11 @@ class WebhookSyPagoController extends Controller
 
         $datos = $validador->validated();
 
-        $pago = Pago::where('referencia', $datos['internal_id'])->first();
+        // SyPago devuelve el `internal_id` que le mandamos (32 caracteres); se busca por ahí y, por
+        // compatibilidad con avisos viejos, también por la `referencia` interna.
+        $pago = Pago::where('internal_id', $datos['internal_id'])->first()
+            ?? Pago::where('referencia', $datos['internal_id'])->first();
+
         if (! $pago || (int) $pago->metodo_pago_id !== (int) $metodo->id) {
             return response()->json(['ok' => false, 'mensaje' => 'Pago no encontrado.'], 404);
         }
