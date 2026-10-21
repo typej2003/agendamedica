@@ -266,7 +266,9 @@ class MetodosPagoAdminTest extends TestCase
             ->assertSee('Sincronizar automáticamente desde el BCV')
             ->assertSee('Última sincronización')
             ->assertSee('Última actualización de la tasa')
-            ->assertSee('Forzar actualización');
+            ->assertSee('Forzar actualización')
+            // El switch tiene que venir encendido desde el servidor (la preferencia está activa).
+            ->assertSeeHtml('wire:model="tasaAutomatica" checked');
     }
 
     public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void
