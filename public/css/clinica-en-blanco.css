@@ -54,22 +54,3 @@
 }
 
 .renglon-en-blanco { display: block; border-bottom: .3mm solid var(--linea-en-blanco); }
-
-/* ------------------------------------------------------------------------------- Barra de la página (no se imprime) */
-
-.barra-impresion-modos { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .35rem; }
-.barra-impresion-modo {
-    display: inline-flex;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 .9rem;
-    border: 1px solid #783080;
-    border-radius: 10px;
-    background: #fff;
-    color: #783080;
-    font-weight: 600;
-    text-decoration: none;
-}
-.barra-impresion-modo:hover { background: #f5edf7; }
-.barra-impresion-modo[aria-current="true"] { background: #783080; color: #fff; }
-.barra-impresion-modo:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }

@@ -414,6 +414,12 @@ fieldset:disabled .btn[class*="btn-outline-"] {
     --bs-table-border-color: var(--ds-borde);
 }
 
+/* Las fechas y horas dentro de una tabla van chicas y en una sola línea (2026-10-20): «20/10/2026 12:10 PM» partido en dos
+   renglones ocupaba más alto que cualquier otro dato de la fila. 12 px (el resto de la tabla va a 15 px); el «hace 3 horas»
+   de debajo, a 11 px. */
+.table td.fecha-celda { font-size: .75rem; white-space: nowrap; }
+.table td.fecha-celda small { font-size: .6875rem; }
+
 /* Aire en las celdas: Bootstrap usa .5rem/.5rem y `table-sm` baja a .25rem, que dejaba el texto pegado
    al borde de la tarjeta. Se sobreescribe el mismo selector que usa Bootstrap porque el relleno de celda
    no está expuesto como variable. */
@@ -552,6 +558,15 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
     --bs-dropdown-link-hover-color: var(--ds-violeta-900);
     box-shadow: var(--ds-sombra-2);
     padding: .35rem;
+}
+
+/* El correo del menú del usuario va en una sola línea: si no cabe se corta con «…» (el completo queda en el `title`)
+   en vez de salirse del menú. */
+.menu-usuario-correo {
+    max-width: min(18rem, calc(100vw - 4rem));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dropdown-item {

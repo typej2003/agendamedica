@@ -158,7 +158,7 @@
                                         </ul>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="fecha-celda">
                                     <div>{{ \App\Support\HoraLocal::instante($comentario->created_at)?->format('d/m/Y') }}</div>
                                     <small class="text-muted">{{ $comentario->created_at?->diffForHumans() }}</small>
                                 </td>
