@@ -11,7 +11,7 @@
 
 @section('contenido')
     <x-ui.page-head titulo="Ayúdanos a mejorar"
-                    subtitulo="Contanos si algo no funciona, si te falta algo o si se te ocurre cómo mejorarlo. Te respondemos acá mismo." />
+                    subtitulo="Cuéntanos si algo no funciona, si te falta algo o si se te ocurre cómo mejorarlo. Te respondemos acá mismo." />
 
     {{-- El aviso de «¡Gracias!» y el de error los pinta el armazón (`session('estado')` y `session('error')`):
          no se repiten acá. --}}
@@ -47,7 +47,7 @@
                 <label for="mensaje" class="form-label">Tu comentario</label>
                 <textarea name="mensaje" id="mensaje" rows="5" maxlength="2000"
                           class="form-control @error('mensaje') is-invalid @enderror"
-                          placeholder="Contanos qué pasó, en qué pantalla, y qué esperabas que pasara.">{{ old('mensaje') }}</textarea>
+                          placeholder="Cuéntanos qué pasó, en qué pantalla, y qué esperabas que pasara.">{{ old('mensaje') }}</textarea>
                 @error('mensaje')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

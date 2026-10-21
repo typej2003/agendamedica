@@ -47,7 +47,7 @@ class AyudaController extends Controller
             'tipo.required' => 'Elige qué nos quieres contar.',
             'tipo.in' => 'Ese tipo de comentario no existe.',
             'mensaje.required' => 'Escribe tu comentario.',
-            'mensaje.min' => 'Contanos un poco más (al menos 5 caracteres).',
+            'mensaje.min' => 'Cuéntanos un poco más (al menos 5 caracteres).',
             'mensaje.max' => 'El comentario es muy largo (hasta 2000 caracteres).',
             'imagenes.array' => 'No se pudieron leer las imágenes adjuntas. Prueba de nuevo.',
             'imagenes.max' => 'Puedes adjuntar hasta ' . Comentario::MAXIMO_IMAGENES . ' imágenes por comentario.',
