@@ -227,7 +227,8 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
 
         $componente = Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])
             ->call('abrir')->assertSee('Dosis por kilo (récipe de pediatría)')->assertSee('Gotas por ml')
-            ->set('f.nombrecomercial', 'zoxaval')->set('f.presentacion', 'SUSP 30ml')->set('f.dosificacion', 'SI')
+            ->assertSet('f.dosificacion', false)->assertSee('La dosis es por kilo')
+            ->set('f.nombrecomercial', 'zoxaval')->set('f.presentacion', 'SUSP 30ml')->set('f.dosificacion', true)
             ->set('f.dosis', 'siete')->call('guardar')->assertHasErrors(['f.formulario']);
         $componente->set('f.dosis', '-1')->call('guardar')->assertHasErrors(['f.formulario']);
 
@@ -241,7 +242,17 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
 
         // Editar trae los números al formulario.
         Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])->call('abrir', $fila->id)
-            ->assertSet('f.dosis', '7.5')->assertSet('f.pvc', '100');
+            ->assertSet('f.dosificacion', true)->assertSet('f.dosis', '7.5')->assertSet('f.pvc', '100');
+
+        // Destildar quita el SI; una nota vieja del escritorio en la dosificación no se pierde.
+        $nota = $this->ini('vademecum', ['codemedicina' => '0900', 'nombrecomercial' => 'MEDROL', 'dosificacion' => '25-50 mg/kg/dia']);
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])
+            ->call('abrir', $fila->id)->set('f.dosificacion', false)->call('guardar')->assertHasNoErrors()
+            ->call('abrir', $nota)->assertSet('f.dosificacion', false)->set('f.presentacion', 'TAB')->call('guardar')->assertHasNoErrors();
+        $this->assertNull(DB::table('vademecum')->where('id', $fila->id)->value('dosificacion'));
+        $this->assertSame('25-50 mg/kg/dia', DB::table('vademecum')->where('id', $nota)->value('dosificacion'));
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'medicamentos'])
+            ->call('abrir', $fila->id)->set('f.dosificacion', true)->call('guardar')->assertHasNoErrors();
 
         // El pediatra que lo carga se lleva la configuración.
         [, $medico] = $this->medico([$ped]);

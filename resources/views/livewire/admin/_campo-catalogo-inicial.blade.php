@@ -1,8 +1,13 @@
 {{-- Un campo del formulario del catálogo inicial: sale de `CatalogosIniciales` (`columna => [rotulo, tipo, max, requerido, mayusculas, grupo?, ayuda?]`). --}}
 @php([$rotulo, $tipo, $max, $requerido] = $campo)
 @php($ayuda = $campo[6] ?? null)
-<div class="{{ $tipo === 'area' ? 'col-12' : ($tipo === 'decimal' ? 'col-6 col-md-4' : 'col-md-6') }}">
-    @if ($tipo === 'marca')
+<div class="{{ in_array($tipo, ['area', 'porkilo'], true) ? 'col-12' : ($tipo === 'decimal' ? 'col-6 col-md-4' : 'col-md-6') }}">
+    @if ($tipo === 'porkilo')
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="ini-{{ $columna }}" wire:model.defer="f.{{ $columna }}">
+            <label class="form-check-label" for="ini-{{ $columna }}">{{ $rotulo }}</label>
+        </div>
+    @elseif ($tipo === 'marca')
         <div class="form-check mt-4">
             <input class="form-check-input" type="checkbox" id="ini-{{ $columna }}" wire:model.defer="f.{{ $columna }}">
             <label class="form-check-label" for="ini-{{ $columna }}">{{ $rotulo }}</label>

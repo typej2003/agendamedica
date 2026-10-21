@@ -133,7 +133,9 @@ class CatalogosIniciales extends Component
             $this->filaId = $fila->id;
             foreach (array_keys($def['campos']) as $columna) {
                 $valor = $fila->{$columna} ?? null;
-                $this->f[$columna] = $def['campos'][$columna][1] === 'marca' ? (bool) $valor : ($valor === null ? '' : (string) $valor);
+                $tipo = $def['campos'][$columna][1];
+                $this->f[$columna] = $tipo === 'marca' ? (bool) $valor
+                    : ($tipo === 'porkilo' ? strtoupper(trim((string) $valor)) === DosisPediatrica::POR_KILO : ($valor === null ? '' : (string) $valor));
             }
             $this->aplica = array_map('strval', Especialidades::de($this->catalogo, [(int) $fila->id])[(int) $fila->id] ?? []);
         }
@@ -246,7 +248,7 @@ class CatalogosIniciales extends Component
     {
         $campos = [];
         foreach (Registro::de($this->catalogo)['campos'] as $columna => $campo) {
-            $campos[$columna] = $campo[1] === 'marca' ? false : '';
+            $campos[$columna] = in_array($campo[1], ['marca', 'porkilo'], true) ? false : '';
         }
 
         return $campos;

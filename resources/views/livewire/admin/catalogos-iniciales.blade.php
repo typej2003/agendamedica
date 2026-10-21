@@ -105,7 +105,7 @@
                             @if (collect($def['campos'])->contains(fn ($campo) => ($campo[5] ?? null) === 'dosis'))
                                 <fieldset class="mt-3 border rounded p-3">
                                     <legend class="form-label fs-6 mb-1 float-none w-auto px-1">Dosis por kilo (récipe de pediatría)</legend>
-                                    <p class="text-muted small mb-2">Con la dosificación en <strong>SI</strong>, el récipe calcula la posología con el peso del niño y la da en gotas o en ml si se carga el envase.</p>
+                                    <p class="text-muted small mb-2">Por kilo, el récipe calcula la posología con el peso del niño y la da en gotas o en ml si se carga el envase.</p>
                                     <div class="row g-3">
                                         @foreach ($def['campos'] as $columna => $campo)
                                             @continue(($campo[5] ?? null) !== 'dosis')
