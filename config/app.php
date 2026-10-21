@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Versión de la aplicación
+    |--------------------------------------------------------------------------
+    |
+    | Se muestra en el pie del menú lateral. En `main` (producción) es X.Y.Z; en
+    | `desarrollo` (QA) es la de producción más +N. Reglas en AGENTS.md.
+    |
+    */
+
+    'version' => '0.1.0',
+
+    /*
+    |--------------------------------------------------------------------------
     | Clave estática de sincronización del escritorio (PowerBuilder)
     |--------------------------------------------------------------------------
     |
