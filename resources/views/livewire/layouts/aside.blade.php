@@ -82,6 +82,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.pagos') }}" class="nav-link {{ request()->routeIs('admin.pagos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.pagos')) aria-current="page" @endif title="Pagos">
+                    <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                    <span class="link-text">Pagos</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif title="Solicitudes de médicos">
                     <i class="bi bi-person-badge" aria-hidden="true"></i>
