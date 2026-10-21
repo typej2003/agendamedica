@@ -37,7 +37,8 @@ class MetodosPago extends Component
     public $activo = true;
     public $orden = 0;
     public $entorno = MetodoPago::PRODUCCION;
-    public $disponiblePara = MetodoPago::AMBOS;
+    /** @var array<int,string> Para qué se ofrece: `planes`, `cobros` o los dos. */
+    public $disponiblePara = [MetodoPago::PLANES, MetodoPago::COBROS];
     public $comisionPorcentaje = '';
     public $host = '';
     // Cómo se autentica en SyPago: API Key dinámica (client_id + secret) o JWT fijo.
@@ -101,7 +102,7 @@ class MetodosPago extends Component
         $this->nombre = CatalogoDePasarelas::etiqueta($this->pasarela, $this->variante);
         $this->activo = true;
         $this->entorno = MetodoPago::PRODUCCION;
-        $this->disponiblePara = MetodoPago::AMBOS;
+        $this->disponiblePara = [MetodoPago::PLANES, MetodoPago::COBROS];
         $this->orden = (int) MetodoPago::deLaPlataforma()->max('orden') + 1;
         $this->host = (string) config('pagos.sypago.host');
         $this->cuentaDocumentoTipo = 'J';
@@ -122,7 +123,10 @@ class MetodosPago extends Component
         $this->activo = (bool) $metodo->activo;
         $this->orden = (int) $metodo->orden;
         $this->entorno = $metodo->entorno;
-        $this->disponiblePara = $metodo->disponible_para;
+        // En la base hay un solo valor (`planes`, `cobros` o `ambos`); en el formulario son dos casillas.
+        $this->disponiblePara = $metodo->disponible_para === MetodoPago::AMBOS
+            ? [MetodoPago::PLANES, MetodoPago::COBROS]
+            : [$metodo->disponible_para];
         // Los puntos base se muestran como porcentaje: 1000 bp = "10.00".
         $this->comisionPorcentaje = $metodo->comision_bp === null ? '' : Centavos::aDecimal($metodo->comision_bp);
         $this->host = (string) (($metodo->credenciales ?? [])['host'] ?? config('pagos.sypago.host'));
@@ -159,7 +163,8 @@ class MetodosPago extends Component
             'variante' => ['required', Rule::in(array_keys(CatalogoDePasarelas::variantesDe($this->pasarela)))],
             'nombre' => 'required|string|max:100',
             'entorno' => ['required', Rule::in([MetodoPago::PRODUCCION, MetodoPago::PRUEBAS])],
-            'disponiblePara' => ['required', Rule::in(array_keys(CatalogoDePasarelas::USOS))],
+            'disponiblePara' => ['required', 'array', 'min:1'],
+            'disponiblePara.*' => [Rule::in([MetodoPago::PLANES, MetodoPago::COBROS])],
             'orden' => 'required|integer|min:0|max:9999',
             'comisionPorcentaje' => 'nullable|numeric|min:0|max:100',
             'host' => 'nullable|url|max:255',
@@ -261,7 +266,7 @@ class MetodosPago extends Component
                 'comision_bp' => $this->comisionPorcentaje === '' || $this->comisionPorcentaje === null
                     ? null
                     : Centavos::deDecimal($this->comisionPorcentaje),
-                'disponible_para' => $this->disponiblePara,
+                'disponible_para' => $this->disponibleParaElegido(),
             ];
 
             if ($metodo) {
@@ -273,6 +278,19 @@ class MetodosPago extends Component
 
         session()->flash('message', 'Método de pago guardado.');
         $this->cerrarModal();
+    }
+
+    /** Traduce las dos casillas del formulario al valor único de la base: `planes`, `cobros` o `ambos`. */
+    private function disponibleParaElegido(): string
+    {
+        $planes = in_array(MetodoPago::PLANES, $this->disponiblePara, true);
+        $cobros = in_array(MetodoPago::COBROS, $this->disponiblePara, true);
+
+        if ($planes && $cobros) {
+            return MetodoPago::AMBOS;
+        }
+
+        return $planes ? MetodoPago::PLANES : ($cobros ? MetodoPago::COBROS : MetodoPago::AMBOS);
     }
 
     public function alternarActivo(int $metodoId): void

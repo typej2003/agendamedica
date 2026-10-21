@@ -15,7 +15,23 @@ final class PagoVista
     public function __construct(
         public readonly Pago $pago,
         public readonly ?MetodoPago $metodo,
+        /** @var array<string,string> Los datos del último pago aprobado, para prellenar el formulario. */
+        public readonly array $recordado = [],
     ) {
+    }
+
+    /** Un dato recordado del último pago, o el valor por defecto si no hay. */
+    public function recordado(string $campo, string $porDefecto = ''): string
+    {
+        $valor = $this->recordado[$campo] ?? null;
+
+        return is_string($valor) && trim($valor) !== '' ? $valor : $porDefecto;
+    }
+
+    /** La cuenta o el teléfono recordado (el pago pudo haberse hecho con cualquiera de los dos). */
+    public function cuentaRecordada(): string
+    {
+        return $this->recordado('cuenta') ?: $this->recordado('telefono');
     }
 
     public function titulo(): string
@@ -30,7 +46,7 @@ final class PagoVista
 
     public function fallado(): bool
     {
-        return in_array($this->pago->estado, [Pago::RECHAZADO, Pago::CANCELADO, Pago::EXPIRADO], true);
+        return in_array($this->pago->estado, [Pago::RECHAZADO, Pago::CANCELADO], true);
     }
 
     public function pendiente(): bool
@@ -38,10 +54,11 @@ final class PagoVista
         return $this->pago->estaPendiente();
     }
 
-    /** Falta pedir el código: el pagador tiene que cargar sus datos. */
+    /** Falta pedir el código: el pagador tiene que cargar sus datos. Un vencido se puede renovar desde el checkout. */
     public function enDatos(): bool
     {
-        return $this->pago->estado === Pago::PENDIENTE && empty($this->pago->otp_enviado_el);
+        return in_array($this->pago->estado, [Pago::PENDIENTE, Pago::EXPIRADO], true)
+            && empty($this->pago->otp_enviado_el);
     }
 
     /** Se pidió el código y todavía no se confirmó. */
@@ -54,17 +71,6 @@ final class PagoVista
     public function enConfirmacion(): bool
     {
         return $this->pago->estado === Pago::EN_PROCESO && (int) $this->pago->otp_intentos > 0;
-    }
-
-    public function esPagoMovil(): bool
-    {
-        return $this->metodo?->variante === 'pago_movil';
-    }
-
-    /** Con qué arranca el selector del checkout: el método de pago móvil sugiere teléfono; el resto, cuenta. */
-    public function tipoCuentaPorDefecto(): string
-    {
-        return $this->esPagoMovil() ? 'pago_movil' : 'cuenta';
     }
 
     public function metodoEtiqueta(): string
@@ -89,7 +95,7 @@ final class PagoVista
             Pago::EN_PROCESO => $this->enOtp() ? 'Esperando el código' : 'Confirmando el pago',
             Pago::APROBADO => 'Pago aprobado',
             Pago::RECHAZADO => 'Pago rechazado',
-            Pago::EXPIRADO => 'Pago vencido',
+            Pago::EXPIRADO => 'Esperando tus datos',
             Pago::CANCELADO => 'Pago cancelado',
             default => ucfirst((string) $this->pago->estado),
         };
@@ -101,12 +107,18 @@ final class PagoVista
             Pago::APROBADO => 'success',
             Pago::EN_PROCESO => 'info',
             Pago::PENDIENTE => 'secondary',
+            Pago::EXPIRADO => 'secondary',
             default => 'danger',
         };
     }
 
-    public function venceEl(): ?string
+    /** Cuántos segundos le quedan al pago para poder iniciarse; 0 si ya venció. */
+    public function segundosRestantes(): int
     {
-        return $this->pago->expira_el?->format('d/m/Y H:i');
+        if (! $this->pago->expira_el) {
+            return 0;
+        }
+
+        return max(0, (int) now()->diffInSeconds($this->pago->expira_el, false));
     }
 }

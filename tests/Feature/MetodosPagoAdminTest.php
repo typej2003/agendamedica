@@ -66,7 +66,7 @@ class MetodosPagoAdminTest extends TestCase
             'variante' => 'debito_inmediato',
             'nombre' => 'SyPago · Débito inmediato',
             'entorno' => 'produccion',
-            'disponiblePara' => 'ambos',
+            'disponiblePara' => ['planes', 'cobros'],
             'orden' => 1,
             'comisionPorcentaje' => '10',
             'host' => 'https://app.sypago.net:8086/api/v1/',
@@ -107,6 +107,7 @@ class MetodosPagoAdminTest extends TestCase
         $metodo = MetodoPago::deLaPlataforma()->latest('id')->firstOrFail();
 
         $this->assertSame('SyPago · Débito inmediato', $metodo->nombre);
+        $this->assertSame(MetodoPago::AMBOS, $metodo->disponible_para);
         $this->assertSame(1000, $metodo->comision_bp); // 10,00% → 1000 puntos base
         $this->assertNotNull($metodo->webhook_token);
         $this->assertSame(64, strlen($metodo->webhook_token));
@@ -126,6 +127,29 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertSame('0172', $metodo->cuentaBancaria->banco_codigo);
         $this->assertSame('Doctorisimo, C.A.', $metodo->cuentaBancaria->titular);
         $this->assertTrue($metodo->cuentaBancaria->estaCompleta());
+    }
+
+    public function test_el_metodo_se_puede_ofrecer_solo_para_planes_o_para_los_dos(): void
+    {
+        $this->actingAs($this->administrador());
+
+        $panel = Livewire::test(MetodosPago::class);
+        foreach ($this->datosDelMetodo(['disponiblePara' => ['planes']]) as $campo => $valor) {
+            $panel->set($campo, $valor);
+        }
+        $panel->call('guardarMetodo')->assertHasNoErrors();
+
+        $metodo = MetodoPago::deLaPlataforma()->latest('id')->firstOrFail();
+        $this->assertSame(MetodoPago::PLANES, $metodo->disponible_para);
+
+        Livewire::test(MetodosPago::class)
+            ->call('editarMetodo', $metodo->id)
+            ->assertSet('disponiblePara', ['planes'])
+            ->set('disponiblePara', ['planes', 'cobros'])
+            ->call('guardarMetodo')
+            ->assertHasNoErrors();
+
+        $this->assertSame(MetodoPago::AMBOS, $metodo->fresh()->disponible_para);
     }
 
     public function test_editar_sin_secreto_conserva_el_secreto_guardado(): void

@@ -23,14 +23,7 @@
 
                         <dt class="col-6 fw-normal text-muted">Precio</dt>
                         <dd class="col-6 text-end fw-semibold">{{ $vm->precioUsdTexto() }}</dd>
-
-                        <dt class="col-6 fw-normal text-muted">Monto a pagar</dt>
-                        <dd class="col-6 text-end fw-semibold">{{ $vm->precioUsdTexto() }}</dd>
                     </dl>
-
-                    <p class="text-muted small mt-3 mb-0">
-                        El monto se cobra en la moneda del método que elijas. Si pagas en bolívares, se aplica la tasa del momento.
-                    </p>
                 </div>
             </div>
         </div>

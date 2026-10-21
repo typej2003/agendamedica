@@ -149,6 +149,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/plan/pago/{pago}/iniciar', [PlanController::class, 'iniciar'])->name('plan.iniciar');
                 Route::post('/plan/pago/{pago}/confirmar', [PlanController::class, 'confirmar'])->name('plan.confirmar');
                 Route::post('/plan/pago/{pago}/consultar', [PlanController::class, 'consultar'])->name('plan.consultar');
+                Route::post('/plan/pago/{pago}/refrescar', [PlanController::class, 'refrescar'])->name('plan.refrescar');
             });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**

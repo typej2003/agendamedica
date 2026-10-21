@@ -318,12 +318,17 @@
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Para qué se ofrece</label>
-                                    <select class="form-select" wire:model.defer="disponiblePara">
-                                        @foreach ($usos as $clave => $etiqueta)
-                                            <option value="{{ $clave }}">{{ $etiqueta }}</option>
-                                        @endforeach
-                                    </select>
+                                    <span class="form-label d-block">Para qué se ofrece</span>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ofrece-planes" value="planes"
+                                               wire:model.defer="disponiblePara">
+                                        <label class="form-check-label" for="ofrece-planes">Planes de médicos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ofrece-cobros" value="cobros"
+                                               wire:model.defer="disponiblePara">
+                                        <label class="form-check-label" for="ofrece-cobros">Cobros a pacientes</label>
+                                    </div>
                                     @error('disponiblePara') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">

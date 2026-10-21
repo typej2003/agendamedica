@@ -131,7 +131,6 @@ class PlanPagoWebTest extends TestCase
             'documento_numero' => '12345678',
             'nombre' => 'Dra. de prueba',
             'banco_codigo' => '0134',
-            'tipo_cuenta' => 'cuenta',
             'cuenta' => '01340123456789012345',
         ];
     }
@@ -189,6 +188,7 @@ class PlanPagoWebTest extends TestCase
             ->assertSee($metodo->etiqueta())
             ->assertSee('VES 730,00')
             ->assertSee('USD 20,00')
+            ->assertDontSee('Monto a pagar')
             ->assertDontSee('Según el método')
             ->assertSee('Continuar')
             // Laravel 8 no tiene `@checked`/`@disabled` (son de Blade 9): si se cuelan, se ven como texto.
@@ -210,9 +210,153 @@ class PlanPagoWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.plan.pagar', $pago))
             ->assertOk()
-            ->assertSee('name="tipo_cuenta"', false)
+            ->assertSee('name="cuenta"', false)
+            ->assertDontSee('name="tipo_cuenta"', false)
+            ->assertSee('data-pago-refresco', false)
+            ->assertSee('data-pago-monto', false)
+            ->assertSee('plan-pago.js', false)
+            ->assertSee('placeholder="Número de cuenta o teléfono"', false)
+            ->assertDontSee('Este pago vence')
             ->assertDontSee('@selected')
             ->assertDontSee('@checked');
+    }
+
+    public function test_el_pago_vencido_se_renueva_solo_si_la_tasa_no_cambio(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+        $pago->update(['estado' => Pago::EXPIRADO, 'expira_el' => now()->subMinute()]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.plan.refrescar', $pago), ['aplicar' => false])
+            ->assertOk()
+            ->assertJsonPath('estado', 'renovado');
+
+        $pago->refresh();
+        $this->assertSame(Pago::PENDIENTE, $pago->estado);
+        $this->assertTrue($pago->expira_el->isFuture());
+        $this->assertSame(73000, (int) $pago->monto_e2);
+    }
+
+    public function test_si_la_tasa_cambio_el_pago_espera_el_reintentar(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+        $pago->update(['expira_el' => now()->subMinute()]);
+
+        TasaDeCambio::fijar('40');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.plan.refrescar', $pago), ['aplicar' => false])
+            ->assertOk()
+            ->assertJsonPath('estado', 'cambio')
+            ->assertJsonPath('monto_texto', 'VES 800,00');
+
+        $pago->refresh();
+        $this->assertSame(73000, (int) $pago->monto_e2);
+        $this->assertSame('36.500000', (string) $pago->tasa);
+        $this->assertSame(Pago::PENDIENTE, $pago->estado);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.plan.refrescar', $pago), ['aplicar' => true])
+            ->assertOk()
+            ->assertJsonPath('estado', 'actualizado')
+            ->assertJsonPath('monto_texto', 'VES 800,00');
+
+        $pago->refresh();
+        $this->assertSame(80000, (int) $pago->monto_e2);
+        $this->assertSame('40.000000', (string) $pago->tasa);
+        $this->assertSame(Pago::PENDIENTE, $pago->estado);
+        $this->assertTrue($pago->expira_el->isFuture());
+    }
+
+    public function test_un_pago_aprobado_no_se_renueva(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+        $pago->update(['estado' => Pago::APROBADO, 'pagado_el' => now()]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->postJson(route('clinica.plan.refrescar', $pago), ['aplicar' => false])
+            ->assertStatus(422)
+            ->assertJsonPath('estado', 'error');
+    }
+
+    public function test_el_checkout_recuerda_los_datos_del_ultimo_pago_aprobado(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $anterior = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+        $anterior->update([
+            'estado' => Pago::APROBADO,
+            'pagado_el' => now(),
+            'datos_pagador' => [
+                'nombre' => 'Carlos Mendoza',
+                'documento_tipo' => 'V',
+                'documento_numero' => '12345678',
+                'banco_codigo' => '0172',
+                'tipo_cuenta' => 'cuenta',
+                'cuenta' => '01340123456789012345',
+            ],
+        ]);
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan.pagar', $pago))
+            ->assertOk()
+            ->assertSee('value="12345678"', false)
+            ->assertSee('value="0172"', false)
+            ->assertSee('value="01340123456789012345"', false)
+            ->assertSee('value="Carlos Mendoza"', false)
+            ->assertSee('value="V" selected', false);
+    }
+
+    public function test_no_recuerda_los_datos_de_otro_medico(): void
+    {
+        [$userA, $medicoA] = $this->medicoDePrueba('a-' . substr(uniqid(), -5));
+        [$userB, $medicoB, $ginecoB] = $this->medicoDePrueba('b-' . substr(uniqid(), -5));
+
+        $plan = $this->planDePrueba();
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $deA = app(Cobros::class)->crearParaPlan($medicoA->reg_medico, $plan, $metodo, $userA->id);
+        $deA->update([
+            'estado' => Pago::APROBADO,
+            'pagado_el' => now(),
+            'datos_pagador' => [
+                'nombre' => 'Carlos Mendoza',
+                'documento_tipo' => 'V',
+                'documento_numero' => '12345678',
+                'banco_codigo' => '0172',
+                'tipo_cuenta' => 'cuenta',
+                'cuenta' => '01340123456789012345',
+            ],
+        ]);
+
+        $deB = app(Cobros::class)->crearParaPlan($medicoB->reg_medico, $plan, $metodo, $userB->id);
+
+        $this->conContexto($userB, $medicoB, $ginecoB)->actingAs($userB)
+            ->get(route('clinica.plan.pagar', $deB))
+            ->assertOk()
+            ->assertDontSee('Carlos Mendoza')
+            ->assertDontSee('value="12345678"', false);
     }
 
     public function test_sin_tasa_la_pantalla_del_plan_avisa_y_no_deja_continuar(): void
@@ -301,7 +445,6 @@ class PlanPagoWebTest extends TestCase
         $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
 
         $datos = $this->pagador();
-        $datos['tipo_cuenta'] = 'pago_movil';
         $datos['banco_codigo'] = '0102';
         $datos['cuenta'] = '04121198667';
 
@@ -309,7 +452,7 @@ class PlanPagoWebTest extends TestCase
             ->post(route('clinica.plan.iniciar', $pago), $datos)
             ->assertRedirect(route('clinica.plan.pagar', $pago));
 
-        // Aunque el método sea de débito inmediato, el pagador eligió pago móvil: va como CELE.
+        // Aunque el método sea de débito inmediato, el número que empieza con 04 se detecta como pago móvil: va como CELE.
         Http::assertSent(function (ClientRequest $request) {
             if (! str_contains($request->url(), 'request/otp')) {
                 return false;
@@ -336,7 +479,8 @@ class PlanPagoWebTest extends TestCase
         $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id);
 
         $datos = $this->pagador();
-        $datos['cuenta'] = '04121198667'; // un teléfono cargado como cuenta
+        $datos['banco_codigo'] = '0172';
+        $datos['cuenta'] = '01340123456789012345'; // cuenta de otro banco
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post(route('clinica.plan.iniciar', $pago), $datos)

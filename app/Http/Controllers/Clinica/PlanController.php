@@ -13,6 +13,8 @@ use App\Models\Plan;
 use App\Models\TasaDeCambio;
 use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Cobros;
+use App\Pagos\RefrescarPagoDePlan;
+use App\Pagos\UltimoPagoDelDoctor;
 use App\Services\ServicioService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -112,13 +114,12 @@ class PlanController extends Controller
     {
         $pago = $this->pagoDelContexto($request, $pago);
 
-        // Un pendiente vencido se muestra como vencido, sin esperar al comando.
-        if ($pago->estado === Pago::PENDIENTE && $pago->expira_el && $pago->expira_el->isPast()) {
-            $pago->update(['estado' => Pago::EXPIRADO]);
-        }
-
         return view('clinica.plan.pagar', [
-            'vm' => new PagoVista($pago, $pago->metodoPago),
+            'vm' => new PagoVista(
+                $pago,
+                $pago->metodoPago,
+                app(UltimoPagoDelDoctor::class)->datosParaPagar($request->user()->id),
+            ),
         ]);
     }
 
@@ -141,8 +142,6 @@ class PlanController extends Controller
             'documento_numero' => ['required', 'string', 'max:20'],
             'nombre' => ['required', 'string', 'max:120'],
             'banco_codigo' => ['required', 'digits:4'],
-            // SyPago acepta cuenta bancaria (CNTA) o teléfono de pago móvil (CELE): lo elige el pagador.
-            'tipo_cuenta' => ['required', Rule::in(['cuenta', 'pago_movil'])],
             'cuenta' => ['required', 'string', 'max:30'],
         ];
 
@@ -150,34 +149,26 @@ class PlanController extends Controller
             'documento_numero.required' => 'Falta tu documento.',
             'nombre.required' => 'Falta tu nombre.',
             'banco_codigo.digits' => 'El código del banco son 4 dígitos (por ejemplo 0172).',
-            'tipo_cuenta.required' => 'Elige si pagas con cuenta bancaria o con pago móvil.',
             'cuenta.required' => 'Falta la cuenta o el teléfono desde donde pagas.',
         ], [
             'documento_tipo' => 'tipo de documento', 'documento_numero' => 'documento',
-            'nombre' => 'nombre', 'banco_codigo' => 'banco', 'tipo_cuenta' => 'tipo de cuenta',
-            'cuenta' => 'cuenta o teléfono',
+            'nombre' => 'nombre', 'banco_codigo' => 'banco', 'cuenta' => 'cuenta o teléfono',
         ]);
 
         $numero = preg_replace('/\D/', '', (string) $datos['cuenta']);
 
-        if ($datos['tipo_cuenta'] === 'pago_movil') {
-            if (! preg_match('/^04\d{9}$/', $numero)) {
-                throw ValidationException::withMessages([
-                    'cuenta' => 'El teléfono del pago móvil debe tener 11 dígitos y empezar con 04.',
-                ]);
-            }
+        // No se pregunta si es cuenta o pago móvil: el formato del número lo dice. Un teléfono
+        // venezolano son 11 dígitos que empiezan con 04; una cuenta son 20 que empiezan con el banco.
+        if (preg_match('/^04\d{9}$/', $numero)) {
+            $datos['tipo_cuenta'] = 'pago_movil';
+            $datos['telefono'] = $numero;
+        } elseif (strlen($numero) === 20 && str_starts_with($numero, (string) $datos['banco_codigo'])) {
+            $datos['tipo_cuenta'] = 'cuenta';
         } else {
-            if (strlen($numero) !== 20) {
-                throw ValidationException::withMessages([
-                    'cuenta' => 'El número de cuenta bancaria debe tener 20 dígitos.',
-                ]);
-            }
-            if (! str_starts_with($numero, (string) $datos['banco_codigo'])) {
-                throw ValidationException::withMessages([
-                    'cuenta' => 'El número de cuenta debe empezar con el código del banco ('
-                        . $datos['banco_codigo'] . ').',
-                ]);
-            }
+            throw ValidationException::withMessages([
+                'cuenta' => 'Escribe una cuenta de 20 dígitos que empiece con el código del banco, '
+                    . 'o el teléfono del pago móvil (11 dígitos, empieza con 04).',
+            ]);
         }
 
         $datos['cuenta'] = $numero;
@@ -217,6 +208,26 @@ class PlanController extends Controller
         return redirect()
             ->route('clinica.plan.pagar', $pago)
             ->with($resultado->ok ? 'estado' : 'error', $resultado->mensaje);
+    }
+
+    /**
+     * Renueva el pago cuando se acaba el tiempo (lo llama el JS del checkout).
+     *
+     * `aplicar=false` es la consulta automática: si la tasa no cambió, renueva la vigencia y deja seguir;
+     * si cambió, no toca el pago y devuelve `cambio` para que el médico vea el botón «Reintentar».
+     * `aplicar=true` es el «Reintentar»: actualiza el pago con la tasa nueva.
+     */
+    public function refrescar(Request $request, Pago $pago, RefrescarPagoDePlan $refrescar)
+    {
+        $pago = $this->pagoDelContexto($request, $pago);
+
+        try {
+            $resultado = $refrescar->ejecutar($pago, $request->boolean('aplicar'));
+        } catch (RuntimeException $e) {
+            return response()->json(['estado' => 'error', 'mensaje' => $e->getMessage()], 422);
+        }
+
+        return response()->json($resultado);
     }
 
     private function regMedicoDelContexto(Request $request): string
