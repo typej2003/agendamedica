@@ -181,7 +181,12 @@ class ConsultaFetalWebTest extends TestCase
         $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta))
             ->assertOk()
             ->assertSee('20 semanas y 0 días')
-            ->assertSee('24/02/2027');
+            ->assertSee('24/02/2027')
+            // Los datos para el cálculo en vivo: el mismo día y los mismos días que usa el servidor.
+            ->assertSee('data-consulta-fetal', false)
+            ->assertSee('data-hoy="2026-10-07"', false)
+            ->assertSee('data-dias-fpp="280"', false)
+            ->assertSee('id="fetal-eg"', false);
     }
 
     /**

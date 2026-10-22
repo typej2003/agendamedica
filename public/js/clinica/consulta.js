@@ -483,50 +483,70 @@
         pintar();
     }
 
+    // FPP y edad gestacional en vivo al escribir la FUR (sólo presentación; al guardar el servidor recalcula).
+    // La regla de verdad es `App\Clinica\Embarazo\EdadGestacional`: FPP = FUR + `data-dias-fpp` días, semanas =
+    // int(días / 7) y días = días mod 7, contra `data-hoy` (el día del consultorio, el mismo del servidor). La FUR
+    // puede ser `AAAA-MM-DD` (campo date) o `dd/mm/aaaa` (campo tecleado). Vacía o inválida: ambas «—»; futura: FPP sí, EG «—».
+    function furEnVivo(formulario, furCampo, fppSalida, egSalida) {
+        if (!furCampo || !fppSalida || !egSalida) return;
+
+        const dosCifras = function (n) { return String(n).padStart(2, '0'); };
+        const aUtc = function (texto) {
+            const t = (texto || '').trim();
+            let a; let m; let d;
+            let r = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+
+            if (r) { a = +r[1]; m = +r[2]; d = +r[3]; } else {
+                r = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
+                if (!r) return null;
+                d = +r[1]; m = +r[2]; a = +r[3];
+            }
+
+            const ms = Date.UTC(a, m - 1, d);
+            const f = new Date(ms);
+            return f.getUTCFullYear() === a && f.getUTCMonth() === m - 1 && f.getUTCDate() === d ? ms : null;
+        };
+        const recalcular = function () {
+            const fur = aUtc(furCampo.value);
+            const hoy = aUtc(formulario.dataset.hoy);
+            let fpp = '—';
+            let eg = '—';
+
+            if (fur !== null && hoy !== null) {
+                const dias = Math.round((hoy - fur) / 86400000);
+                // La FPP sale de cualquier FUR válida (como en el servidor); la EG sólo si no es futura.
+                const f = new Date(fur + Number(formulario.dataset.diasFpp || 280) * 86400000);
+                fpp = dosCifras(f.getUTCDate()) + '/' + dosCifras(f.getUTCMonth() + 1) + '/' + f.getUTCFullYear();
+
+                if (dias >= 0) {
+                    const sem = Math.floor(dias / 7);
+                    const resto = dias % 7;
+                    eg = sem + (sem === 1 ? ' semana' : ' semanas') + ' y ' + resto + (resto === 1 ? ' día' : ' días');
+                }
+            }
+
+            fppSalida.textContent = fpp;
+            egSalida.textContent = eg;
+        };
+
+        furCampo.addEventListener('input', recalcular);
+        furCampo.addEventListener('change', recalcular);
+    }
+
     const prenatal = document.querySelector('[data-consulta-prenatal]');
 
     if (prenatal) {
         avisoDeFormulario(prenatal, 'prenatal-sin-guardar');
 
-        // FPP y edad gestacional en vivo al escribir la FUR (sólo presentación; al guardar el servidor
-        // recalcula). La regla de verdad es `App\Clinica\Embarazo\EdadGestacional`: FPP = FUR + 280 días,
-        // semanas = int(días / 7) y días = días mod 7, contra `data-hoy` (el día del consultorio). Una FUR
-        // vacía, inválida o futura vuelve a «—».
-        const furCampo = prenatal.querySelector('#fur');
-        const fppSalida = prenatal.querySelector('#prenatal-fpp');
-        const egSalida = prenatal.querySelector('#prenatal-eg');
+        furEnVivo(prenatal, prenatal.querySelector('#fur'),
+            prenatal.querySelector('#prenatal-fpp'), prenatal.querySelector('#prenatal-eg'));
+    }
 
-        if (furCampo && fppSalida && egSalida) {
-            const dosCifras = function (n) { return String(n).padStart(2, '0'); };
-            const aUtc = function (iso) {
-                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-                return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null;
-            };
-            const recalcular = function () {
-                const fur = aUtc(furCampo.value);
-                const hoy = aUtc(prenatal.dataset.hoy);
-                let fpp = '—';
-                let eg = '—';
+    // Ecocardiograma fetal: mismas dos cuentas junto al formulario (el servidor las muestra de la FUR guardada).
+    const fetal = document.querySelector('[data-consulta-fetal]');
 
-                if (fur !== null && hoy !== null) {
-                    const f = new Date(fur + Number(prenatal.dataset.diasFpp || 280) * 86400000);
-                    fpp = dosCifras(f.getUTCDate()) + '/' + dosCifras(f.getUTCMonth() + 1) + '/' + f.getUTCFullYear();
-                    const dias = Math.round((hoy - fur) / 86400000);
-
-                    if (dias >= 0) {
-                        const sem = Math.floor(dias / 7);
-                        const resto = dias % 7;
-                        eg = sem + (sem === 1 ? ' semana' : ' semanas') + ' y ' + resto + (resto === 1 ? ' día' : ' días');
-                    }
-                }
-
-                fppSalida.textContent = fpp;
-                egSalida.textContent = eg;
-            };
-
-            furCampo.addEventListener('input', recalcular);
-            furCampo.addEventListener('change', recalcular);
-        }
+    if (fetal) {
+        furEnVivo(fetal, fetal.querySelector('#fur'), fetal.querySelector('#fetal-fpp'), fetal.querySelector('#fetal-eg'));
     }
 
     // Las pestañas del embarazo cuyas filas son fechas (Laboratorio y Controles) usan el mismo aviso: el
