@@ -156,7 +156,9 @@ class CatalogosClinicosWebTest extends TestCase
         $this->diagnostico($medico, '0007', 'DOLOR PELVICO');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->post(route('clinica.catalogos.diagnosticos.guardar'), ['descripcion' => '  quiste   ovárico ']);
-        $respuesta->assertRedirect(route('clinica.catalogos.diagnosticos', ['buscar' => 'QUISTE OVÁRICO']));
+        $respuesta->assertRedirect(route('clinica.catalogos.diagnosticos'));
+        $this->assertStringNotContainsString('buscar=', $respuesta->headers->get('Location'));
+        $this->conContexto($user, $medico, $gineco)->get($respuesta->headers->get('Location'))->assertSee('QUISTE OVÁRICO')->assertSee('DOLOR PELVICO');
 
         $nuevo = DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)->where('descripcion', 'QUISTE OVÁRICO')->first();
         $this->assertNotNull($nuevo);

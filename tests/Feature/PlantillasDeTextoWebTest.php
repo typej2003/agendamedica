@@ -155,7 +155,7 @@ class PlantillasDeTextoWebTest extends TestCase
         $web = $this->como($user, $medico, $gineco);
 
         $web->post(route('clinica.catalogos.plantillas-texto.guardar'), $this->datos())
-            ->assertRedirect(route('clinica.catalogos.plantillas-texto', ['filtro' => 'EV']))
+            ->assertRedirect(route('clinica.catalogos.plantillas-texto'))
             ->assertSessionHas('estado');
 
         $creada = FormatoPrint::where('reg_medico', $medico->reg_medico)->where('titulo', 'CONTROL PRENATAL')->firstOrFail();

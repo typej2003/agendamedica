@@ -84,7 +84,7 @@ class MotivoFacturaCatalogoController extends Controller
                 $creado = $crear->ejecutar($regMedico, $registros, $datos['descripcion'] ?? null, $datos['monto'] ?? null, $datos['monto_seg'] ?? null);
 
                 return redirect()
-                    ->route('clinica.catalogos.motivos-factura', ['buscar' => trim((string) $creado->descripcion)])
+                    ->route('clinica.catalogos.motivos-factura')
                     ->with('estado', 'Creaste «' . trim((string) $creado->descripcion) . '» (código ' . trim((string) $creado->codigo) . ').');
             }
 

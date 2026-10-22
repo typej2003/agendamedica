@@ -240,7 +240,8 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
             'razon' => '  ecografía   obstétrica ', 'precio' => '120.5', 'office_id' => (string) $sede->id, 'admite_varias' => '1',
         ]);
 
-        $respuesta->assertRedirect(route('clinica.catalogos.motivos-cita', ['buscar' => 'ECOGRAFÍA OBSTÉTRICA']));
+        $respuesta->assertRedirect(route('clinica.catalogos.motivos-cita'));
+        $this->assertStringNotContainsString('buscar=', $respuesta->headers->get('Location'));
         $respuesta->assertSessionHas('estado', fn ($texto) => str_contains($texto, 'código 03'));
 
         $nuevo = MotivoCita::where('reg_medico', $medico->reg_medico)->where('tipo_atencion', 'ECOGRAFÍA OBSTÉTRICA')->firstOrFail();
