@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consultorio\Vistas;
 
+use App\Clinica\Ciudades\BuscadorDeCiudades;
 use App\Models\MedicalCenter;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
@@ -344,20 +345,19 @@ final class SedesYConsultoriosVista
     }
 
     /**
-     * El estado y el país no se preguntan: se derivan de la ciudad (los exige el esquema migrado y una ciudad
-     * pertenece a un solo estado). `$conValor = false` es para el panel de la sede rápida, que nace vacío.
+     * La ciudad elegida (id y etiqueta «Ciudad — Estado») para el selector con búsqueda. El estado y el país no se
+     * preguntan: se derivan de la ciudad. `$conValor = false` es para el panel de la sede rápida, que nace vacío.
      *
-     * @return array<int,array{valor:int, texto:string, elegida:bool}>
+     * @return array{valor:string, etiqueta:string}
      */
-    public function opcionesDeCiudad(bool $conValor = true): array
+    public function ciudadElegida(bool $conValor = true): array
     {
-        $elegida = $conValor ? (int) $this->valorSede('city_id') : 0;
+        $id = $conValor ? (int) $this->valorSede('city_id') : 0;
+        $ciudad = $id ? $this->ciudades->firstWhere('id', $id) : null;
 
-        return $this->ciudades->map(fn ($ciudad) => [
-            'valor'   => (int) $ciudad->id,
-            'texto'   => $ciudad->name . ' — ' . ($ciudad->state->name ?? ''),
-            'elegida' => $elegida === (int) $ciudad->id,
-        ])->values()->all();
+        return $ciudad
+            ? ['valor' => (string) $ciudad->id, 'etiqueta' => BuscadorDeCiudades::etiqueta($ciudad)]
+            : ['valor' => '', 'etiqueta' => ''];
     }
 
     // ------------------------------------------------------------------------------------- Panel del consultorio

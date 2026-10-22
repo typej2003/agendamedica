@@ -89,6 +89,18 @@ class SedesWebTest extends TestCase
 
     // ----------------------------------------------------------------------------------------- ABM
 
+    public function test_la_web_clinica_elige_la_ciudad_con_el_selector_y_no_ofrece_crearla(): void
+    {
+        [$user] = $this->usuarioClinico();
+
+        $html = $this->actingAs($user)->get('/clinica/sedes?panel=sede')->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-selector-buscable', $html);
+        $this->assertStringContainsString(route('clinica.ciudades.buscar'), $html);
+        $this->assertStringNotContainsString('data-crear-url', $html);
+        $this->assertStringNotContainsString('<select name="city_id"', $html);
+    }
+
     public function test_un_invitado_no_entra(): void
     {
         $this->get('/clinica/sedes')->assertRedirect(route('login'));

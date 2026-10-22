@@ -150,8 +150,9 @@
                     </x-ui.campo>
 
                     <x-ui.campo etiqueta="Ciudad" for="doctor-ciudad" error="ciudad" class="col-sm-6">
-                        <input type="text" name="ciudad" id="doctor-ciudad" class="form-control"
-                               maxlength="{{ $vm->largoCiudad() }}" autocomplete="off" value="{{ $vm->texto('ciudad') }}">
+                        <x-ui.selector-buscable name="ciudad" id="doctor-ciudad" libre :con-old="false" :value="$vm->texto('ciudad')"
+                            :maxlength="$vm->largoCiudad()" :url="route('clinica.ciudades.buscar', ['valor' => 'nombre'])"
+                            placeholder="Escribe o elige la ciudad" />
                     </x-ui.campo>
 
                     <x-ui.campo etiqueta="Teléfono" for="doctor-telefono" error="telefono" class="col-sm-6">

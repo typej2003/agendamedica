@@ -3949,3 +3949,21 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
    La casilla «La dosis es por kilo» despliega el panel con la fórmula del récipe: sin JS, con `:has()`.
    ========================================================================== */
 .dosis-por-kilo:not(:has(.dosis-por-kilo__casilla:checked)) .dosis-por-kilo__panel { display: none; }
+
+/* --- Selector con búsqueda (<x-ui.selector-buscable>) --- */
+.selector-buscable { position: relative; }
+.selector-buscable .selector-control { position: relative; }
+.selector-buscable .selector-entrada { padding-right: 2.5rem; }
+.selector-buscable .selector-limpiar {
+    position: absolute; top: 0; right: 0; width: 2.75rem; height: 100%; min-height: 2.5rem;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; background: transparent; color: var(--ds-texto-suave, #6c757d); cursor: pointer;
+}
+.selector-buscable .selector-limpiar[hidden] { display: none; }
+.selector-buscable .selector-popup { background: var(--ds-superficie); border: 1px solid var(--ds-borde); max-height: 18rem; }
+.selector-buscable .selector-popup[hidden] { display: none; }
+.selector-buscable .selector-opcion { min-height: 2.75rem; display: flex; align-items: center; flex-wrap: wrap; cursor: pointer; overflow-wrap: anywhere; }
+.selector-buscable .selector-crear { font-weight: 600; }
+.selector-buscable .selector-estado { padding: .6rem .85rem; color: var(--ds-texto-suave, #6c757d); font-size: .9rem; }
+.selector-buscable .selector-estado[hidden] { display: none; }
+.selector-buscable.tiene-error .selector-entrada { border-color: var(--ds-peligro); }

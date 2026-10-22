@@ -4,6 +4,7 @@ use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 use App\Http\Controllers\Clinica\AgendaController;
+use App\Http\Controllers\Clinica\CiudadBusquedaController;
 use App\Http\Controllers\Clinica\BitacoraController;
 use App\Http\Controllers\Clinica\CatalogoController;
 use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
@@ -119,6 +120,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // no podía cerrar la atención sin volver a entrar. Va fuera del grupo que exige contexto: su único
         // trabajo es tocar la sesión, así que también sirve en la pantalla de elegir consultorio.
         Route::get('/sesion', LatidoDeSesionController::class)->name('sesion');
+
+        // Busqueda de ciudades para el selector con busqueda (tambien la usa el panel /admin: Root entra aca).
+        Route::get('/ciudades/buscar', [CiudadBusquedaController::class, 'buscar'])->name('ciudades.buscar');
 
         // Sedes (WEB-2.8b.1): el lugar donde atiende un médico. Es el **lugar de la clínica**, no de un
         // médico, así que va fuera del grupo que exige contexto: se da de alta antes de asignarle un

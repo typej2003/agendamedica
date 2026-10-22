@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CiudadController;
+use App\Http\Controllers\Clinica\CiudadBusquedaController;
 use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 use App\Http\Livewire\Admin\ApiKeys;
 use App\Http\Livewire\Admin\CatalogoInicialPercentiles;
@@ -69,6 +71,9 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     // profundidad: sedes → consultorios de la sede → horarios y cupos del consultorio. Las reglas son las Actions
     // de `/clinica` (`GuardarSede`, `GuardarConsultorio`, `GuardarBloqueHorario`); el tenant, el `reg_medico` del médico.
     Route::get('/medicos/{medico}/sedes', SedesDelMedico::class)->name('medicos.sedes');
+    // Selector con busqueda de ciudades (`<x-ui.selector-buscable>`): buscar y crear la que falte (con su estado).
+    Route::get('/ciudades/buscar', [CiudadBusquedaController::class, 'buscar'])->name('ciudades.buscar');
+    Route::post('/ciudades', [CiudadController::class, 'crear'])->name('ciudades.crear');
     Route::get('/medicos/{medico}/sedes/{sede}/consultorios', ConsultoriosDeLaSede::class)->name('medicos.sedes.consultorios');
     Route::get('/medicos/{medico}/sedes/{sede}/consultorios/{consultorio}/horarios', HorariosDelConsultorio::class)
         ->name('medicos.sedes.consultorios.horarios');

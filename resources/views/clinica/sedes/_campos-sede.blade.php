@@ -18,12 +18,11 @@
     </x-ui.campo>
 
     <x-ui.campo etiqueta="Ciudad" for="{{ $prefijo }}city_id" :error="($conValores ? '' : $prefijo) . 'city_id'" requerido class="col-12">
-        <select name="city_id" id="{{ $prefijo }}city_id" class="form-select" required>
-            <option value="">— Elige la ciudad —</option>
-            @foreach ($vm->opcionesDeCiudad($conValores) as $opcion)
-                <option value="{{ $opcion['valor'] }}" {{ $opcion['elegida'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
-            @endforeach
-        </select>
+        {{-- Sin `puede-crear`: en la web clínica sólo se elige de la lista (crear ciudades es del administrador). --}}
+        @php $ciudad = $vm->ciudadElegida($conValores); @endphp
+        <x-ui.selector-buscable name="city_id" id="{{ $prefijo }}city_id" required :con-old="false"
+            :value="$ciudad['valor']" :value-label="$ciudad['etiqueta']" :url="route('clinica.ciudades.buscar')"
+            placeholder="Escribe la ciudad…" />
         @unless ($conValores)<span class="campo-error" data-error-de="city_id" hidden></span>@endunless
     </x-ui.campo>
 
