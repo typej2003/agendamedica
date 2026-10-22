@@ -112,6 +112,30 @@ final class CatalogosIniciales
         return self::CATALOGOS;
     }
 
+    /**
+     * Las tablas donde escribe la copia del catálogo inicial en un consultorio, **hijas antes que padres**
+     * (es el orden en que se pueden borrar sin romper una clave foránea).
+     *
+     * Sirve para distinguir «lo que el panel le copió al médico» de «lo que el médico trabajó»: la carga
+     * inicial del escritorio trae los catálogos propios del consultorio y reemplaza estas filas (ver
+     * `CargaInicialService::quitarCopiasDelCatalogoInicial()`).
+     *
+     * @return array<int,string>
+     */
+    public static function tablasDelMedico(): array
+    {
+        return [
+            'recipe_grupo_detalle', 'recipe_grupo',   // tratamientos: el detalle apunta al padre y al vademécum
+            'vacunas_dosis', 'vacunas',               // camino propio (`CopiarVacunasIniciales`)
+            'examenes', 'tipos_examenes',             // el examen apunta a su tipo
+            'diagnosticos',
+            'motivos_consulta',
+            'motivo_cita',
+            'formato_print',
+            'vademecum',                              // último: lo referencian los detalles de tratamiento
+        ];
+    }
+
     public static function existe(string $slug): bool
     {
         return isset(self::CATALOGOS[$slug]);

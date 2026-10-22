@@ -53,12 +53,14 @@ use App\Models\RecipePareja;
 use App\Models\Referencia;
 use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
+use App\Models\SyncCarga;
 use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\TipoAntecedente;
 use App\Models\Vademecum;
 use App\Services\ServicioService;
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Sync\CargaInicialEnCurso;
 use App\Sync\CreacionesClinicas;
 use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
@@ -80,6 +82,15 @@ class SyncAppDataController extends Controller
 {
     /** Primer cursor del volcado paginado: el app lo manda para pedir el dataset entero de a tramos. */
     public const VOLCADO_INICIO = 'inicio';
+
+    /**
+     * `error` y `code` de la respuesta mientras el escritorio sube la carga inicial. El app lo reconoce y
+     * **no le muestra nada** al médico: es un «todavía no», no un fallo (ver `SyncService` del app).
+     */
+    public const EN_CARGA_INICIAL = 'sincronizacion_en_curso';
+
+    /** Lo que el app espera antes de reintentar solo, mientras la carga inicial sigue (segundos). */
+    private const SEGUNDOS_PARA_REINTENTAR = 120;
 
     /** Filas por tramo del volcado paginado (el cliente puede pedir otro con `volcado_limite`). */
     private const FILAS_POR_PAGINA = 3000;
@@ -130,6 +141,15 @@ class SyncAppDataController extends Controller
             $registrosMedicos[] = $medicoModel->reg_medico;
         }
         $registrosMedicos = array_values(array_unique($registrosMedicos));
+
+        // **El consultorio está subiendo su carga inicial desde el escritorio**: no se acepta ni se
+        // devuelve nada hasta que termine. Es un error a propósito (no un 200 vacío) para que el teléfono
+        // **conserve su cola de pendientes** en vez de creer que subió lo que no subió, pero con un código
+        // propio (`sincronizacion_en_curso`) que el app trata como «todavía no» y no como un fallo: no le
+        // muestra nada al médico y reintenta solo. Ver `App\Sync\CargaInicialEnCurso`.
+        if ($carga = app(CargaInicialEnCurso::class)->de($registrosMedicos)) {
+            return $this->esperandoLaCargaInicial($carga);
+        }
 
         // Servicio contratado: vencido (pasada la gracia) no se sincroniza, ni subir ni bajar. El app sigue
         // funcionando con lo que ya tiene en el teléfono y deja sus cambios en la cola. Un médico que por
@@ -238,6 +258,33 @@ class SyncAppDataController extends Controller
         return response()->json($this->cuerpoDeLaRespuesta(
             $datos, $syncedAt, $medicoModel, $registrosMedicos, $estadoServicio, $resultadoChanges, $eliminados,
         ));
+    }
+
+    /**
+     * La respuesta mientras el escritorio está volcando la base del consultorio.
+     *
+     * Es un **409 con código propio**, no un 200 vacío: si fuera un 200 el app creería que sincronizó y
+     * vaciaría su cola de pendientes sin que el servidor haya guardado nada. Con un 4xx el teléfono
+     * conserva todo lo que hizo y vuelve a intentar. `Retry-After` es para cualquier cliente HTTP genérico
+     * (y para el log del escritorio): el app usa `reintentar_en`.
+     */
+    private function esperandoLaCargaInicial(SyncCarga $carga)
+    {
+        $mensaje = 'El consultorio está subiendo su primera sincronización desde el escritorio. '
+            . 'Vuelve a intentar cuando termine: lo que hiciste en el teléfono no se pierde.';
+
+        return response()->json([
+            'ok'                    => false,
+            'error'                 => self::EN_CARGA_INICIAL,
+            'code'                  => self::EN_CARGA_INICIAL,
+            'mensaje'               => $mensaje,
+            'message'               => $mensaje,
+            'reintentar_en'         => self::SEGUNDOS_PARA_REINTENTAR,
+            'carga_iniciada_at'     => optional($carga->iniciada_at)->toIso8601String(),
+            'minutos_transcurridos' => $carga->iniciada_at
+                ? (int) max(0, now()->diffInMinutes($carga->iniciada_at))
+                : null,
+        ], 409)->header('Retry-After', (string) self::SEGUNDOS_PARA_REINTENTAR);
     }
 
     /**
