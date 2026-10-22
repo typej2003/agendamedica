@@ -28,7 +28,7 @@
         <div class="card">
             <x-ui.cargando cubre wire:loading.delay.flex />
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <span class="text-muted small">Un método por pasarela y variante. El webhook se genera solo.</span>
+                <span class="text-muted small">Un método por pasarela. El webhook se genera solo.</span>
                 <button wire:click="nuevoMetodo" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i> Nuevo método
                 </button>

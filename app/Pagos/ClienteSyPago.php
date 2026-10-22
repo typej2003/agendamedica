@@ -389,10 +389,10 @@ final class ClienteSyPago
     private function cuentaDelPagador(Pago $pago, array $pagador): array
     {
         // SyPago acepta cuenta bancaria (`CNTA`) o teléfono de pago móvil (`CELE`). El tipo lo elige el
-        // pagador en el checkout; si no vino, se usa el de la variante del método.
+        // pagador en el checkout (por el formato del número); si no vino, se asume cuenta.
         $tipo = (string) ($pagador['tipo_cuenta'] ?? '');
         if (! in_array($tipo, ['cuenta', 'pago_movil'], true)) {
-            $tipo = $this->metodo->variante === 'pago_movil' ? 'pago_movil' : 'cuenta';
+            $tipo = 'cuenta';
         }
 
         $movil = $tipo === 'pago_movil';

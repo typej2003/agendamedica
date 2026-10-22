@@ -12,10 +12,10 @@ final class CatalogoDePasarelas
     public const MANUAL = 'manual';
 
     public const VARIANTES = [
+        // SyPago tiene un solo producto de cobro inmediato: el débito con OTP. Si es cuenta o teléfono
+        // (pago móvil) lo decide el número que escribe el pagador, no el método.
         self::SYPAGO => [
-            'debito_inmediato' => 'Débito inmediato (OTP)',
-            'cuenta_o_movil' => 'Cuenta o pago móvil',
-            'pago_movil' => 'Pago móvil',
+            'debito_inmediato' => 'Débito inmediato',
         ],
         self::MANUAL => [
             'transferencia' => 'Transferencia o pago móvil',
