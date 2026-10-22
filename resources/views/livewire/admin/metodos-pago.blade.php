@@ -195,7 +195,7 @@
                             <input class="form-check-input" type="checkbox" id="tasa_automatica" wire:model="tasaAutomatica" {{ $tasaAutomatica ? 'checked' : '' }}>
                             <label class="form-check-label" for="tasa_automatica">Sincronizar automáticamente desde el BCV</label>
                         </div>
-                        <p class="form-text mb-3">Cada 30 minutos, de 5:00 a 21:00 (hora de Caracas). Sólo guarda cuando el valor cambia.</p>
+                        <p class="form-text mb-3">Cada 30 minutos, de 5:00 a 21:00 (hora de Caracas).</p>
 
                         <div class="row g-3 small">
                             <div class="col-sm-6">
