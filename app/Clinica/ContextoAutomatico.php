@@ -69,4 +69,36 @@ final class ContextoAutomatico
             'office_id'    => $consultorio !== null ? (int) $consultorio->id : null,
         ];
     }
+
+    /**
+     * El contexto que alcanza para **cargar un consultorio** sin haber elegido nada, o `null` si hay que elegir.
+     *
+     * Es más permisivo que `de()` **a propósito**: dar de alta un consultorio sólo necesita saber **de quién
+     * es**, y eso no depende de la especialidad (un médico recién creado desde el panel suele no tener ninguna
+     * todavía) ni de que ya tenga consultorios. La regla es una sola: **un registro**. Con dos —el propio y el
+     * centro donde trabaja— hay que decir en cuál se carga, así que no se resuelve solo.
+     *
+     * Se usa desde la pantalla «Sedes y consultorios» (`clinica.contexto:consultorios`): antes un médico nuevo
+     * llegaba ahí sin contexto, la pantalla no le ofrecía cargar nada y el menú lateral quedaba sólo en
+     * «Inicio», sin forma de salir del paso.
+     *
+     * @return array{reg_medico:string, specialty_id:?int}|null
+     */
+    public function paraCargarUnConsultorio(User $user): ?array
+    {
+        $disponibles = $this->contexto->disponibles($user);
+
+        if (count($disponibles) !== 1) {
+            return null;
+        }
+
+        $regMedico = (string) array_key_first($disponibles);
+
+        // La especialidad es opcional: con una sola se toma (es la que el menú va a mostrar), y sin ninguna
+        // se fija el registro igual, que es lo que hace falta para dar de alta el consultorio.
+        return [
+            'reg_medico'   => $regMedico,
+            'specialty_id' => $disponibles[$regMedico]['especialidades']->first()?->id,
+        ];
+    }
 }

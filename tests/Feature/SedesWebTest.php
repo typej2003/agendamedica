@@ -161,16 +161,21 @@ class SedesWebTest extends TestCase
 
     public function test_sin_contexto_la_pantalla_muestra_solo_las_sedes(): void
     {
+        // «Sin contexto» es el caso en el que **hay algo que elegir**: con un solo registro la pantalla lo
+        // resuelve sola desde el 2026-10-22 (lo cubre `ConsultorioSinContextoWebTest`). Acá el médico tiene dos
+        // registros —el suyo y un centro—, así que no se inventa el dueño y la pantalla muestra el catálogo.
         [$user, $medico] = $this->usuarioClinico();
+        $this->segundoRegistro($user, 'Centro sin contexto');
         $sede = $this->sedePropia($medico, 'Sede sin contexto');
 
         $html = $this->actingAs($user)->get('/clinica/sedes')->assertOk()->getContent();
 
         $this->assertStringContainsString(e($sede->name), $html);
-        // Sin médico elegido no hay consultorios que mostrar ni panel para cargarlos.
+        // Sin dueño resuelto no hay consultorios que mostrar ni panel para cargarlos, y se dice qué hacer.
         $this->assertStringNotContainsString('id="dialogo-consultorio"', $html);
         $this->assertStringNotContainsString('sede-consultorio-nombre', $html);
         $this->assertStringContainsString('id="dialogo-sede"', $html);
+        $this->assertStringContainsString('Elegir consultorio aquí', $html);
     }
 
     public function test_sin_ninguna_sede_la_tarjeta_guia_ofrece_la_primera(): void
@@ -253,7 +258,9 @@ class SedesWebTest extends TestCase
 
     public function test_sin_contexto_crear_la_sede_no_pregunta_por_el_consultorio(): void
     {
+        // Sin dueño resuelto (dos registros) no hay consultorio que ofrecer: la pregunta no se hace.
         [$user] = $this->usuarioClinico();
+        $this->segundoRegistro($user);
         $datos = $this->datosDeSede();
 
         $this->actingAs($user)->post('/clinica/sedes', $datos)->assertSessionHas('sede_creada');
@@ -398,6 +405,25 @@ class SedesWebTest extends TestCase
 
         $this->assertStringContainsString('id="dialogo-consultorio"', $html);
         $this->assertStringContainsString('data-sede="' . $sede->id . '"', $html);
+    }
+
+    /**
+     * Un **segundo registro** para el mismo usuario (un centro donde trabaja, con su `medico_registros`), que es
+     * lo que hace que la pantalla tenga algo que elegir y no resuelva sola el dueño de los consultorios.
+     */
+    private function segundoRegistro(User $user, string $nombre = 'Centro de prueba'): Medico
+    {
+        $regMedico = 'centro-' . substr(uniqid(), -6);
+
+        $medico = Medico::create([
+            'user_id'    => $user->id,
+            'name'       => $nombre,
+            'lastname'   => 'Dos registros',
+            'reg_medico' => $regMedico,
+        ]);
+        MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+        return $medico;
     }
 
     private function sedeSuelta(string $nombre): MedicalCenter
