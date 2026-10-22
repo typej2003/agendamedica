@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -100,6 +101,7 @@ class CargaInicialService
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
+        $limpiadas = [];
 
         if ($carga && $carga->estado === SyncCarga::COMPLETA) {
             return $this->error(409, 'carga_ya_completa',
@@ -109,9 +111,13 @@ class CargaInicialService
         if (! $carga) {
             $conDatos = $this->tablasConDatos($regMedico);
             if ($conDatos !== []) {
-                return $this->error(409, 'medico_con_datos',
-                    "El médico {$regMedico} ya tiene datos en el API (" . implode(', ', $conDatos) . '). '
-                    . 'La carga inicial solo se hace sobre un médico sin datos: usa otro reg_medico.');
+                $limpiadas = $this->quitarCopiasDelCatalogoInicial($regMedico, $conDatos);
+
+                if ($limpiadas === null) {
+                    return $this->error(409, 'medico_con_datos',
+                        "El médico {$regMedico} ya tiene datos en el API (" . implode(', ', $conDatos) . '). '
+                        . 'La carga inicial solo se hace sobre un médico sin datos: usa otro reg_medico.');
+                }
             }
 
             $carga = SyncCarga::create([
@@ -170,7 +176,61 @@ class CargaInicialService
             // Qué especialidad se le vinculó a este médico en esta primera sincronización (vacío si ya
             // tenía o si no se pudo deducir). Queda en el log del escritorio para poder verlo.
             'especialidad' => implode(',', $asignadas),
+            // Tablas en las que se quitaron las copias del catálogo inicial del panel para poder arrancar
+            // (vacío si no hubo nada que quitar). Queda en el log del escritorio.
+            'limpiadas' => implode(',', array_keys($limpiadas)),
         ]];
+    }
+
+    /**
+     * Quita las filas que dejó la copia automática del catálogo inicial del panel, **sólo** si lo que
+     * bloquea la carga es exactamente eso.
+     *
+     * La copia (`CopiarCatalogoInicial` al asignarle una especialidad) se salta al médico que ya tiene
+     * credencial del escritorio, pero la API key se puede emitir **después** del alta: cuando eso pasa,
+     * esas filas hacían que la carga inicial se rechazara para siempre (`medico_con_datos`), y no había
+     * forma de arrancar desde la web. Como el escritorio es la fuente de verdad de los catálogos del
+     * consultorio y los sube en esta misma carga, sus copias se descartan.
+     *
+     * Devuelve `tabla => filas borradas`, o `null` si hay cualquier otra tabla con datos (consultas,
+     * historias, pacientes…): el médico ya trabajó y no se borra nada.
+     *
+     * Las marcas `created` que dejó la copia en `sync_changes` **no** se tocan: apuntan al `id` de una fila
+     * que ya no existe y el reemplazo del escritorio sólo protege los `id` vivos, así que quedan huérfanas
+     * (los ids no se reutilizan después de un `DELETE`).
+     *
+     * @param  array<int,string>  $conDatos  lo que devolvió `tablasConDatos()`
+     * @return array<string,int>|null
+     */
+    private function quitarCopiasDelCatalogoInicial(string $regMedico, array $conDatos): ?array
+    {
+        $delCatalogo = CatalogosIniciales::tablasDelMedico();
+
+        // `array_diff` conserva las claves: si no sobra ninguna, el resultado es `[]`.
+        if (array_diff($conDatos, $delCatalogo) !== []) {
+            return null;
+        }
+
+        $borradas = [];
+
+        DB::transaction(function () use ($regMedico, $delCatalogo, &$borradas) {
+            foreach ($delCatalogo as $tabla) {
+                if (! Schema::hasTable($tabla) || ! in_array('reg_medico', $this->tablas->columnasDe($tabla), true)) {
+                    continue;
+                }
+                $filas = DB::table($tabla)->where('reg_medico', $regMedico)->delete();
+                if ($filas > 0) {
+                    $borradas[$tabla] = $filas;
+                }
+            }
+        });
+
+        Log::info('Carga inicial: se quitaron las copias del catálogo inicial del panel', [
+            'reg_medico' => $regMedico,
+            'tablas'     => $borradas,
+        ]);
+
+        return $borradas;
     }
 
     /**

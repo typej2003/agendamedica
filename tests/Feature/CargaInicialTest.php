@@ -373,9 +373,57 @@ class CargaInicialTest extends TestCase
         $this->enviar('finalizar', ['carga_id' => $carga])->assertOk()->assertJson(['columnas_ignoradas' => '']);
     }
 
+    /**
+     * El panel le copia el catálogo inicial al médico cuando le asigna una especialidad
+     * (`CopiarCatalogoInicial`), y esa copia se salta a quien **ya** tiene credencial del escritorio. Si la
+     * API key se emite después del alta, esas filas quedaban como «datos» y la carga inicial se rechazaba
+     * para siempre (`medico_con_datos`), sin forma de arrancar desde la web (medido el 2026-10-22 con una
+     * doctora real: siete catálogos y 0 pacientes). Ahora se quitan: el escritorio trae los suyos.
+     */
+    public function test_la_carga_inicial_quita_las_copias_del_catalogo_inicial_del_panel(): void
+    {
+        $this->crearMedico('carga-t-030');
+
+        DB::table('diagnosticos')->insert(['reg_medico' => 'carga-t-030', 'codediagnostico' => '0001', 'descripcion' => 'CONTROL']);
+        DB::table('tipos_examenes')->insert(['reg_medico' => 'carga-t-030', 'codetipo' => '001', 'tipo' => 'LABORATORIO']);
+        DB::table('examenes')->insert(['reg_medico' => 'carga-t-030', 'codeexamen' => '001', 'examen' => 'HEMOGRAMA', 'codetipo' => '001']);
+
+        $r = $this->iniciar('carga-t-030', ['pacientes' => 0, 'consultas' => 0])->assertOk();
+
+        $this->assertEqualsCanonicalizing(
+            ['diagnosticos', 'examenes', 'tipos_examenes'],
+            explode(',', $r->json('limpiadas')),
+            'informa qué tablas limpió'
+        );
+
+        foreach (['diagnosticos', 'examenes', 'tipos_examenes'] as $tabla) {
+            $this->assertSame(0, DB::table($tabla)->where('reg_medico', 'carga-t-030')->count(), "{$tabla} quedó limpia");
+        }
+    }
+
+    /**
+     * La contracara: si el médico ya tiene algo que **no** es una copia del catálogo del panel —aquí, una
+     * historia—, no se borra nada y la carga sigue rechazándose. La regla es «sólo se pisa lo que el panel
+     * copió», no «se limpia lo que moleste».
+     */
+    public function test_no_quita_las_copias_del_catalogo_si_el_medico_ya_tiene_historias(): void
+    {
+        $this->crearMedico('carga-t-031');
+
+        DB::table('diagnosticos')->insert(['reg_medico' => 'carga-t-031', 'codediagnostico' => '0001', 'descripcion' => 'CONTROL']);
+        DB::table('historias')->insert(['reg_medico' => 'carga-t-031', 'numhistoria' => '9001']);
+
+        $this->iniciar('carga-t-031', ['pacientes' => 0])
+            ->assertStatus(409)
+            ->assertJson(['error' => 'medico_con_datos']);
+
+        $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', 'carga-t-031')->count(),
+            'la copia del catálogo sigue ahí: no se borra nada cuando hay datos clínicos');
+        $this->assertSame(1, DB::table('historias')->where('reg_medico', 'carga-t-031')->count());
+    }
+
     public function test_sin_credencial_no_entra(): void
     {
         $this->postJson('/api/sync/carga-inicial/iniciar', ['reg_medico' => 'x', 'tablas' => []])
-            ->assertStatus(401);
-    }
+            ->assertStatus(401);    }
 }

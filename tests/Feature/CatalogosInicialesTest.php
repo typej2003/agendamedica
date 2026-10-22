@@ -110,8 +110,33 @@ class CatalogosInicialesTest extends TestCase
         }
     }
 
-    // ------------------------------------------------------------------------------------------ La copia: catálogos simples
+    /**
+     * Las tablas donde escribe la copia están declaradas en `tablasDelMedico()`, en orden de borrado
+     * (hijas antes que padres). La usa la carga inicial del escritorio para distinguir «lo que copió el
+     * panel» de «lo que el médico trabajó»: un catálogo que se agregue al registro tiene que entrar ahí, o
+     * su copia volvería a trabar el primer sync de un consultorio.
+     */
+    public function test_las_tablas_del_catalogo_inicial_estan_declaradas_para_la_carga_del_escritorio(): void
+    {
+        $tablas = Registro::tablasDelMedico();
 
+        $esperadas = ['vacunas', 'vacunas_dosis'];
+        foreach (Registro::todos() as $def) {
+            $esperadas[] = $def['tabla'];
+            foreach ($def['hijos'] ?? [] as $hijo) {
+                $esperadas[] = $hijo['tabla'];
+            }
+        }
+
+        $this->assertEqualsCanonicalizing($esperadas, $tablas, 'falta (o sobra) alguna tabla del catálogo inicial');
+
+        $posicion = array_flip($tablas);
+        foreach ([['recipe_grupo_detalle', 'recipe_grupo'], ['vacunas_dosis', 'vacunas'], ['examenes', 'tipos_examenes']] as [$hija, $padre]) {
+            $this->assertLessThan($posicion[$padre], $posicion[$hija], "{$hija} tiene que borrarse antes que {$padre}");
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------ La copia: catálogos simples
     public function test_copia_lo_que_falta_con_codigos_del_medico_y_no_pisa_lo_suyo(): void
     {
         [, $medico] = $this->medicoConAcceso();
