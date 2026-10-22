@@ -23,6 +23,37 @@
 
     const $ = function (id) { return document.getElementById(id); };
 
+    // ---- Enviar un formulario NO es abandonar la página con cambios sin guardar.
+    // Todas las pantallas con «cambios sin guardar» ponen su propio `beforeunload` (consulta*.js,
+    // formato-impresion.js, plantillas-mensaje.js), pero ninguna lo desarmaba al enviar su formulario: el
+    // navegador mostraba «¿Abandonar sitio?» al pulsar Guardar. Este es el único lugar que lo resuelve:
+    // `shell.js` se carga primero, así que su `beforeunload` corre antes que los demás y, si hay un envío en
+    // curso, corta la propagación (los de la pantalla no llegan a pedir el aviso). Cubre el `submit` (botón,
+    // botón con `form=`, Enter, `requestSubmit()`) y `form.submit()`, que no dispara `submit` y se envuelve.
+    // Si algún `submit` se cancela (confirmación negada, envío por fetch) la bandera se baja. Una página
+    // recargada por errores de validación es un documento nuevo: sus avisos nacen activos otra vez.
+    let enviandoFormulario = false;
+    const bajarEnvio = function () { enviandoFormulario = false; };
+
+    document.addEventListener('submit', function (evento) {
+        enviandoFormulario = true;
+        window.setTimeout(function () {
+            if (evento.defaultPrevented) bajarEnvio();
+        }, 0);
+    });
+
+    const enviarOriginal = HTMLFormElement.prototype.submit;
+    HTMLFormElement.prototype.submit = function () {
+        enviandoFormulario = true;
+        return enviarOriginal.apply(this, arguments);
+    };
+
+    window.addEventListener('beforeunload', function (evento) {
+        if (enviandoFormulario) evento.stopImmediatePropagation();
+    });
+    // Volver con «atrás» desde el caché de la página: el envío ya terminó.
+    window.addEventListener('pageshow', bajarEnvio);
+
     // ---- Menú lateral en celular: se desliza sobre el contenido en vez de empujarlo.
     const menu = document.getElementById('clinica-sidebar');
     const fondo = document.getElementById('clinica-sidebar-fondo');
