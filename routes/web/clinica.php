@@ -244,6 +244,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/pacientes/{paciente}/atender', [PacienteController::class, 'atender'])->name('pacientes.atender');
 
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+                // El candado suave «abierta en otro dispositivo»: registra o renueva (latido) el dispositivo que tiene la consulta abierta.
+                Route::post('/consulta/{consulta}/sesion', [\App\Http\Controllers\Clinica\ConsultaSesionController::class, 'registrar'])->name('consulta.sesion');
 
                 // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la
                 // hoja para imprimir. Es clínico —sólo del médico— y de un paciente: `/crecimiento` (la entrada del módulo en el menú) manda

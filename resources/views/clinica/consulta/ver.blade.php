@@ -18,7 +18,7 @@
            consulta» cierra la atención y vuelve a la agenda. «Ver resumen» también se fue: el resumen del paciente se ve
            desde su ficha (Pacientes).
          - **El indicador de cambios sin guardar** vive en esta misma fila (`data-barra-estado`). --}}
-    <div class="consulta-encabezado" data-consulta-barra data-consulta-id="{{ $consultaId }}" data-tour="consulta-encabezado">
+    <div class="consulta-encabezado" data-consulta-barra data-consulta-id="{{ $consultaId }}" data-candado-url="{{ route('clinica.consulta.sesion', $consultaId) }}" data-tour="consulta-encabezado">
         @if ($vm->urlVolver())
             <a class="consulta-volver" href="{{ $vm->urlVolver() }}" data-barra-salir
                title="Volver a la agenda" aria-label="Volver a la agenda">
@@ -134,6 +134,17 @@
         </div>
     @endif
 
+    {{-- El candado suave (`consulta-candado.js`): se abre solo si esta consulta está activa en otro dispositivo. --}}
+    <x-ui.dialogo id="dialogo-candado" titulo="Consulta abierta en otro dispositivo">
+        <div class="dialogo-cuerpo">
+            <p class="mb-0">La consulta está activa en otro dispositivo. Si editas aquí podrías perder datos. ¿Abrirla aquí también?</p>
+        </div>
+        <div class="dialogo-pie">
+            <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() ?: route('clinica.inicio') }}">Salir</a>
+            <button type="button" class="btn btn-primary" data-candado-abrir>Abrir aquí</button>
+        </div>
+    </x-ui.dialogo>
+
     {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
     @include('clinica.consulta._visualizar')
 
@@ -207,4 +218,6 @@
     {{-- Los borradores locales (localStorage): guarda en este navegador lo escrito sin guardar y ofrece recuperarlo. Va **al
          final** para tomar el valor inicial de cada campo cuando las máscaras y los demás scripts ya lo formatearon. --}}
     <script src="{{ asset('js/clinica/consulta-borradores.js') }}"></script>
+    {{-- El candado suave «abierta en otro dispositivo»: registra este dispositivo, late cada ~60 s y avisa si otro toma la consulta. --}}
+    <script src="{{ asset('js/clinica/consulta-candado.js') }}"></script>
 @endsection
