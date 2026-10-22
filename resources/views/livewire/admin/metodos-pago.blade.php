@@ -4,19 +4,6 @@
 
     <x-ui.avisos />
 
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'metodos' ? 'active' : '' }}" wire:click="cambiarPestana('metodos')">
-                <i class="bi bi-credit-card me-1"></i> Métodos de la plataforma
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'tasa' ? 'active' : '' }}" wire:click="cambiarPestana('tasa')">
-                <i class="bi bi-currency-exchange me-1"></i> Tasa de cambio
-            </button>
-        </li>
-    </ul>
-
     {{-- ============================ Métodos ============================ --}}
     @if ($pestana === 'metodos')
         <div class="alert alert-light border small mb-3">

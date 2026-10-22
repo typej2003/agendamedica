@@ -86,6 +86,8 @@ class Cuentas extends Component
     public function mount()
     {
         $this->autorizar();
+        // Médicos y Administradores son submenús con su URL propia (`admin.cuentas.administradores`).
+        $this->pestana = request()->route()?->getName() === 'admin.cuentas.administradores' ? 'administradores' : $this->pestana;
     }
 
     private function autorizar(): void

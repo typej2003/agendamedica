@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-head titulo="Usuarios" subtitulo="Médicos y administradores: altas, claves y bloqueos.">
+    <x-ui.page-head :titulo="$pestana === 'medicos' ? 'Usuarios · Médicos' : 'Usuarios · Administradores'" subtitulo="Altas, claves y bloqueos.">
         <x-slot name="acciones">
             <button wire:click="abrirAlta('medico')" class="btn btn-primary">
                 <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Nuevo médico
@@ -18,19 +18,6 @@
             {{ $errors->first('cuenta') ?: $errors->first('medico') }}
         </div>
     @endif
-
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'medicos' ? 'active' : '' }}" wire:click="$set('pestana', 'medicos')">
-                <i class="bi bi-person-badge me-1"></i> Médicos
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'administradores' ? 'active' : '' }}" wire:click="$set('pestana', 'administradores')">
-                <i class="bi bi-shield-lock me-1"></i> Administradores
-            </button>
-        </li>
-    </ul>
 
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />

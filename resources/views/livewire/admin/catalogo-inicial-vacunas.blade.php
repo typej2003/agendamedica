@@ -8,7 +8,6 @@
         </x-slot>
     </x-ui.page-head>
 
-    @include('livewire.admin._catalogo-inicial-chips', ['activo' => 'admin.catalogo-inicial.vacunas'])
 
     <x-ui.avisos />
 

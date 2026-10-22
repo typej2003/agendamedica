@@ -27,7 +27,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('admin.')->group(function () {
+    // **Usuarios** (menú con submenús): Médicos y Administradores son el mismo componente con su URL propia.
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
+    Route::get('/cuentas/administradores', Cuentas::class)->name('cuentas.administradores');
     // Con qué especialidades trabaja cada médico (lo que enciende los módulos de la web clínica).
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
     // **Catálogo inicial · Vacunas** (WEB-12.8): lo que cada médico de pediatría recibe como punto de partida.
@@ -50,9 +52,11 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/solicitudes-medicos/{solicitud}/carnet', CarnetDeLaSolicitudController::class)
         ->whereNumber('solicitud')->name('solicitudes-medicos.carnet');
     Route::get('/servicios', Servicios::class)->name('servicios');
+    Route::get('/servicios/planes', Servicios::class)->name('servicios.planes');
     // **Métodos de pago de la plataforma** (2026-10-21): con qué cobra Doctorisimo los planes y, a
     // futuro, los cobros de los pacientes. Incluye la tasa VES/USD manual.
     Route::get('/metodos-pago', MetodosPago::class)->name('metodos-pago');
+    Route::get('/metodos-pago/tasas', MetodosPago::class)->name('metodos-pago.tasas');
     // **Pagos** (2026-10-21): lo que entró por SyPago, con su bitácora y la conciliación manual.
     Route::get('/pagos', Pagos::class)->name('pagos');
     // **Sedes del médico** (2026-10-20): el administrador ayuda a configurar dónde atiende cada médico, en
