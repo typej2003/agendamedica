@@ -270,6 +270,13 @@ consulta.
   `verificar-alta-rapida-y-sede-web.js` y `verificar-observaciones-2026-10-17.js`. Lo mismo en los tests: los que
   miran esa pantalla le cargan dos consultorios al médico (`ShellDeLaWebClinicaTest`, `ClinicaTest`,
   `SedesWebTest`) y los que sólo cuentan la barra tampoco pueden dar por hecho el acceso (`ConsultaWebTest`). Trampa 147.
+- **Cargar el consultorio no depende de haber elegido contexto (2026-10-22)**: la pantalla «Sedes y consultorios» usa
+  `clinica.contexto:consultorios` y, si no hay contexto, lo resuelve con `ContextoAutomatico::paraCargarUnConsultorio($user)`
+  —**un solo `reg_medico`**, con o sin especialidad: el alta desde el panel no asigna ninguna—. Con dos registros no se
+  resuelve: la pantalla se abre como antes y muestra el aviso con el enlace a «Elegir consultorio». Antes un médico nuevo
+  llegaba ahí sin contexto, no tenía «+ Consultorio» y el menú lateral quedaba sólo en «Inicio». Tests:
+  `Feature/ConsultorioSinContextoWebTest`; verificador `../.agent-tools/verificar-consultorio-sin-contexto-web.js` con
+  `../.agent-tools/consultorio-sin-contexto-preparar.php`. Trampa 161.
 - **Pre-factura (F9, 2026-10-20, ginecología y pediatría)**: `?seccion=prefactura`, el último ítem «Documentos» de los
   dos catálogos (ya no quedan ítems «Próximamente»: 13 de 13 y 14 de 14; `ANCLAS_SIN_SECCION` se borró y «I.Q.» se
   ancla detrás de la pre-factura como cualquier postgrado). Los ítems viven en **`his_con_pre_factura`** —clave de
