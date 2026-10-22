@@ -96,6 +96,12 @@
                                         </button>
                                     @endif
 
+                                    @if ($pestana === 'medicos')
+                                        <a href="{{ route('admin.cuentas.medico', $fila) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Ver
+                                        </a>
+                                    @endif
+
                                     <button wire:click="abrirEditar('{{ $pestana === 'medicos' ? 'medico' : 'administrador' }}', {{ $fila->id }})"
                                             class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil-square me-1"></i> Editar

@@ -7,6 +7,7 @@ use App\Http\Livewire\Admin\CatalogosIniciales;
 use App\Http\Livewire\Admin\CatalogoInicialVacunas;
 use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
+use App\Http\Livewire\Admin\DetalleDelMedico;
 use App\Http\Livewire\Admin\Especialidades;
 use App\Http\Livewire\Admin\MetodosPago;
 use App\Http\Livewire\Admin\Pagos;
@@ -32,6 +33,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
     Route::get('/cuentas/administradores', Cuentas::class)->name('cuentas.administradores');
     // Cuentas de pacientes (las que se crean solas): lista de lectura y bloqueo de emergencia.
+    // El detalle (sólo lectura, con pestañas) de un médico; «Editar» vuelve a Médicos con su diálogo abierto.
+    Route::get('/cuentas/medicos/{medico}', DetalleDelMedico::class)->whereNumber('medico')->name('cuentas.medico');
     Route::get('/cuentas/pacientes', UsuariosPacientes::class)->name('cuentas.pacientes');
     // Con qué especialidades trabaja cada médico (lo que enciende los módulos de la web clínica).
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
