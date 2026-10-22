@@ -24,6 +24,19 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 
 require __DIR__.'/../vendor/autoload.php';
 
+// En paralelo (`php artisan test --parallel`) cada proceso compila las vistas Blade en su propia carpeta: en
+// Windows dos procesos que reescriben la misma vista compilada se pisan ("Permission denied" al leerla).
+// La carpeta persiste entre corridas, asi que solo la primera compila.
+if (($token = getenv('TEST_TOKEN')) !== false && $token !== '') {
+    $vistas = dirname(__DIR__).DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework'
+        .DIRECTORY_SEPARATOR.'views-test-'.$token;
+    if (! is_dir($vistas)) {
+        mkdir($vistas, 0777, true);
+    }
+    $_SERVER['VIEW_COMPILED_PATH'] = $_ENV['VIEW_COMPILED_PATH'] = $vistas;
+    putenv('VIEW_COMPILED_PATH='.$vistas);
+}
+
 $app = require __DIR__.'/../bootstrap/app.php';
 
 $kernel = $app->make(Kernel::class);
