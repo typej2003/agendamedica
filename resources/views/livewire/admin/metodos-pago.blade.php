@@ -40,8 +40,6 @@
                             <tr>
                                 <th>Método</th>
                                 <th>Cuenta que recibe</th>
-                                <th>Para</th>
-                                <th class="text-center">Comisión</th>
                                 <th>Estado</th>
                                 <th>Verificación</th>
                                 <th class="text-end">Acciones</th>
@@ -52,24 +50,12 @@
                                 <tr wire:key="metodo-{{ $metodo->id }}" class="{{ $metodo->activo ? '' : 'text-muted' }}">
                                     <td>
                                         <div class="fw-semibold">{{ $metodo->etiqueta() }}</div>
-                                        <small class="text-muted">
-                                            {{ $metodo->pasarela }} · {{ $metodo->variante }} · {{ $metodo->entorno }}
-                                        </small>
                                     </td>
                                     <td>
                                         @if ($metodo->cuentaBancaria)
-                                            <div>{{ $metodo->cuentaBancaria->descripcion() }}</div>
-                                            <small class="text-muted">{{ $metodo->cuentaBancaria->titular }}</small>
+                                            <span title="{{ $metodo->cuentaBancaria->descripcion() }} · {{ $metodo->cuentaBancaria->titular }}">Banco {{ $metodo->cuentaBancaria->banco_codigo }}</span>
                                         @else
                                             <span class="text-danger">Sin cuenta</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $usos[$metodo->disponible_para] ?? $metodo->disponible_para }}</td>
-                                    <td class="text-center">
-                                        @if ($metodo->comision_bp === null)
-                                            <span class="text-muted" title="Usa la regla global">Global</span>
-                                        @else
-                                            {{ \App\Pagos\Porcentaje::aTexto($metodo->comision_bp) }}
                                         @endif
                                     </td>
                                     <td>
@@ -110,7 +96,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-5">
+                                    <td colspan="5" class="text-center py-5">
                                         <p class="mb-2 text-muted">Todavía no hay ningún método de pago configurado.</p>
                                         <button wire:click="nuevoMetodo" class="btn btn-primary btn-sm">
                                             <i class="bi bi-plus-lg me-1"></i> Configurar SyPago
