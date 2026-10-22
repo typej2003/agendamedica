@@ -130,6 +130,24 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertTrue($metodo->cuentaBancaria->estaCompleta());
     }
 
+    public function test_sypago_tiene_solo_la_variante_de_debito_inmediato(): void
+    {
+        $this->actingAs($this->administrador());
+
+        $panel = Livewire::test(MetodosPago::class)->call('nuevoMetodo');
+        $panel->assertSet('variante', 'debito_inmediato')
+            ->assertSet('nombre', 'SyPago · Débito inmediato')
+            ->assertViewHas('variantes', ['debito_inmediato' => 'Débito inmediato']);
+
+        // Las variantes viejas (`cuenta_o_movil`, `pago_movil`) ya no se aceptan: cuenta o teléfono lo
+        // decide el número del pagador en el checkout.
+        foreach ($this->datosDelMetodo() as $campo => $valor) {
+            $panel->set($campo, $valor);
+        }
+        // Después de la pasarela: `updatedPasarela` corrige una variante que no es de esa pasarela.
+        $panel->set('variante', 'pago_movil')->call('guardarMetodo')->assertHasErrors(['variante']);
+    }
+
     public function test_el_metodo_se_puede_ofrecer_solo_para_planes_o_para_los_dos(): void
     {
         $this->actingAs($this->administrador());
