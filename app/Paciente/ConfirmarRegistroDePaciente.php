@@ -85,6 +85,9 @@ final class ConfirmarRegistroDePaciente
 
             $user->assignRole('Paciente');
 
+            // El código que acaba de confirmar prueba que controla este teléfono: es la primera validación (nivel 1).
+            app(NivelesDeIdentidad::class)->marcarTelefonoValidado($user, (string) $datos['telefono']);
+
             if ($paciente === null) {
                 Paciente::create([
                     'cedula' => $datos['cedula'],
