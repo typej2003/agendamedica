@@ -732,7 +732,8 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `app/Cumpleanos/` | El **saludo de cumpleaños** (WEB-2.9) sin HTTP ni base: `Cumpleanos` (la regla de día y mes, con el **29/02 saludado el 28** en año no bisiesto), `Cumpleano` (un paciente que cumple hoy: edad, contacto, qué dato le falta), `CumpleanosDeHoy` (la lectura por `medico_pacientes`, acotada al `reg_medico`), `ConfiguracionDeCumpleanos` (interruptor, canal y hora **con los valores por defecto**, que no viven en la base), `MensajeDeCumpleanos` (la plantilla y sus etiquetas `{paciente}`/`{doctor}`), `RegistroDeCumpleanos` (a quién ya se le mandó, contra `notificaciones_cumple`) y `Vistas/CumpleanosVista`. |
 | `app/Clinica/FechaDelConsultorio.php` | `FechaDelConsultorio`: "qué día es hoy" y "qué hora es" en la **zona del consultorio** (`config/clinica.php` → `CLINICA_ZONA`, por defecto `America/Caracas`), no en UTC como `config('app.timezone')`. Lo usa la decisión de a quién le toca el saludo y a qué hora sale. |
 | `app/Clinica/` | La web clínica sin HTTP: `ContextoTrabajo` (médico/especialidad/sede de la sesión); `Agenda/` con las reglas (`ArmadorDeAgenda` —`citas()`, `citasDelPaciente()`, `jornadaPara()`, `citaPendiente()` y `desdeFilas()`, que resuelve cualquier consulta de `cola` con la misma ficha y la misma sede—, `Jornada`, `CitaDeAgenda`, `DiasNoLaborables`), la lectura (`LectorDeAgenda` —la agenda del rango y, con `sinHistoria()`, las citas del día cuyo paciente todavía no tiene historia (WEB-2.11)—, `ParametrosDeAgenda`, `MotivosDeCita` —el catálogo del médico: el `<select>` del formulario (la sede elegida más los sin sede, WEB-8.1c), el filtro de la agenda y la marca `admite_varias_citas_pendientes` de WEB-2.17; el ABM es `Catalogos\MotivosDeCitaDelCatalogo`—, `RecordatoriosDeAgenda`), la escritura de la web (`AgendamientoDeCitas`, `PacientesDeCita`, `FormularioDeCita`, `ResultadoDeAgendamiento`) y `Vistas/` (los ViewModels de la agenda, entre ellos `PacientesSinHistoriaVista` y `FilaSinHistoriaVista` del panel de WEB-2.11); `Pacientes/` (`PacientesDelConsultorio` —con `BusquedaDePacientes`, la búsqueda por palabras y sin acentos, `CamposDePaciente`, la limpieza de los campos sucios del legado, `FiltroDePacientes` —WEB-3.3: **la** definición de "sin historia" en SQL, la usan el filtro del listado y sus contadores— y `vinculo()`, el `paciente_id`+`numhistoria`+`reg_medico` del pivote que decide de quién es el paciente y si hay algo que numerar—, `CatalogoDeSeguros` —WEB-3.2: el catálogo `seg_emp` del `reg_medico`, del que sale el `<select>` de seguro de la ficha y el **nombre** con el que la ficha lo muestra—, `CitasDelPaciente` —WEB-2.15: las citas de un paciente, leídas con el mismo `ArmadorDeAgenda`—, `RepresentanteDelPaciente` —WEB-3.4: **el** representante de una historia, o `null`; el esquema del legado tiene `PRIMARY KEY (numhistoria)`, así que es **una fila por paciente** y no una lista—, `CatalogoDeParentescos` —WEB-3.4: el catálogo **de AppDDR** (tabla `parentesco`), del que sale el `<select>` y el **nombre** con el que se muestra el `codeparentesco` (un código que no esté se muestra tal cual: los del legado son desconocidos)— y sus `Vistas/`, con `FormularioDePacienteVista` para el alta/edición —WEB-3.2—, `FichaDePacienteVista` con la acción de asignar la historia —WEB-3.3— y `RepresentanteDePacienteVista` —WEB-3.4, el bloque de la ficha—); `Historia/` (`HistoriaDelPaciente` —WEB-3.5: **la lectura de la historia del paciente**, sus consultas con los motivos y diagnósticos ya resueltos por catálogo, sus antecedentes con la marca de alerta (`tipo2 = 'A'`) y sus documentos **sin las plantillas vacías** que el escritorio crea al abrir una consulta— y sus `Vistas/`, con `HistoriaDePacienteVista` —la pantalla— y `ResumenDeHistoriaVista` —la impresión—); `Consultorio/` (`SedesDeLaClinica`, `ConsultoriosDelMedico` y sus `Vistas/`); `Consulta/` (**F4**: `ConsultasDelContexto` —de quién es una consulta y cuál es su paciente, por `numhistoria` del pivote; la misma vara para la pantalla y para las acciones que escriben—, `PacienteDeLaCita` y `MotivosDeLaConsulta` —WEB-4.2: el catálogo del médico **sin distinguir tildes** y **un motivo por nombre, el de código más bajo** (el legado trae repetidos), los motivos de una consulta y si un texto ya es un motivo del catálogo—, con sus `Vistas/`: `ConsultaShellVista` (el panel de los 13 ítems y su estado), `SeccionDeMotivosVista` y `EnfermedadActualVista`), y —**WEB-4.3**— `EvaluacionFisica` (el objeto de valores de la sección: las columnas que **se editan**, las que sólo se leen de `examen_fisico_nuevo` —como `total_f`/`total_g`— y la normalización de los "vacíos" del legado: `NULL`, `''` y el literal `none`), `ExamenFisicoDeLaConsulta` (**el mapa de campos** de la evaluación física —qué columna, con qué rótulo y de qué tabla, con su fuente del PowerBuilder— y la lectura de las dos tablas) y `Vistas/EvaluacionFisicaVista` (los tres bloques del formulario, el **IMC derivado** y los resúmenes del escritorio); y `Vistas/` (lo compartido: `ArmazonVista`, `ConValoresDeFormulario`, `ContextoVista`, `InicioVista`). **Un ViewModel por pantalla**: recibe lo ya leído y devuelve los textos, estados y URLs que la vista pinta. —**WEB-4.5**: `DiagnosticosDeLaConsulta` (el catálogo del médico **sin tildes** con **un diagnóstico por nombre** —el de código más bajo—, las filas de la consulta con el nombre resuelto por catálogo y los "vacíos" del legado; no hay tipos ni CIE) y `Vistas/SeccionDeDiagnosticosVista` (las filas con su detalle editable, el buscador, los pendientes y el `?seccion=`). |
-| `app/Http/Livewire/` | Componentes del panel: `Admin/*` (listados ~CRUD, `CargarSql`), `Medico/*`, `Components/*` (agenda/calendario), `Dashboard/*`, `Layouts/*`. |
+| `app/Http/Livewire/` | Componentes del panel: `Admin/*` (listados ~CRUD, `CargarSql`, **`MetodosPago` y `Pagos`** —el cobro con SyPago, ver **Pagos** abajo—), `Medico/*`, `Components/*` (agenda/calendario), `Dashboard/*`, `Layouts/*`. |
+| `app/Pagos/` | **Motor de pagos** (2026-10-21): `Cobros` (crear, iniciar OTP, confirmar, conciliar y aprobar), `ClienteSyPago` (auth dinámica, `request/otp`, `transaction/otp`, `transaction/{id}`, `banks`, `user/key`), `Centavos`/`Tasa`/`Porcentaje`/`Comisiones` (dinero en centavos, tasa decimal y cascada), `CatalogoDePasarelas`, `ResultadoDeCobro`, `Tasas/TasaBcv`, `RefrescarPagoDePlan` y `UltimoPagoDelDoctor`. Lo usan `/clinica/plan`, el webhook y los comandos. |
 | `resources/views/` | Blade: `auth/` (login + registro de médico/paciente), `livewire/` (una vista por componente, `admin/`, `medico/`, `dashboard/`, `layouts/`, `components/`), `clinica/` (web clínica: `layout.blade.php` + una vista por pantalla, sin lógica ni estilos ni JS inline), **`components/ui/`** (los componentes `<x-ui.*>` de la web clínica: `page-head`, `tarjeta`, `estado`, `identidad`, `tabla`, `menu`, `dialogo`, `campo`…) y `layouts/app.blade.php` (armazón compartido con el sitio público). El JS de `/clinica` está en `public/js/clinica/`. |
 | `public/` | Document root (`index.php`, `.htaccess`) y los assets propios: `css/gineco.css` (**la paleta**, en tokens `--ds-*`, más los estilos de marca del sitio público), `css/doctorisimo-ui.css` (**el sistema de la aplicación**: Bootstrap recoloreado + armazón, se carga después de Bootstrap), `js/gineco.js`. |
 | `app/Support/` | Utilidades sin estado (`FechaClinica`, `RestriccionesPlan`, `IconoModulo`, …). |
@@ -740,12 +741,81 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `app/Services/WhatsAppService.php` | Envío de plantillas por WhatsApp Cloud API (Meta, Graph API v19.0); lee `config('services.whatsapp.*')`. ⚠️ Su constructor tipa las credenciales como `string`: **verificá `config('services.whatsapp.*')` antes de instanciarlo** (por eso `EnviarRecordatorio` lo resuelve con `app()` después del chequeo, y no por inyección). |
 | `app/Services/SmsService.php` | SMS por **Twilio** desde el servidor (WEB-2.6); lee `config('services.twilio.*')` (`TWILIO_*`). Devuelve la respuesta cruda del proveedor, como `WhatsAppService`. |
 | `app/Mail/RecordatorioDeCita.php` + `resources/views/emails/recordatorio-cita.blade.php` | El correo del recordatorio (WEB-2.6), con el **médico de la cita como remitente** y `Reply-To` al mismo. `SaludoDeCumpleanos` + `emails/saludo-cumpleanos.blade.php` (WEB-2.9) es el del saludo de cumpleaños: **misma forma y mismo remitente**, sólo cambia el asunto (por eso el despachador de canales los manda igual). |
-| `app/Console/Commands/EnviarCumpleanosCommand.php` + `app/Console/Kernel.php` | **`cumpleanos:enviar`** (WEB-2.9): recorre los médicos con el envío automático activo y les manda el saludo a los que cumplen años hoy, **sin repetir** (el registro manda). Tiene `--fecha=AAAA-MM-DD` y `--simular` (no manda ni registra). Es la **única tarea programada** del proyecto: `Kernel::schedule()` la corre **cada 15 minutos** porque la hora es por médico. ⚠️ En producción necesita el **cron del servidor** (`schedule:run`). |
+| `app/Console/Commands/EnviarCumpleanosCommand.php` + `app/Console/Kernel.php` | **`cumpleanos:enviar`** (WEB-2.9): recorre los médicos con el envío automático activo y les manda el saludo a los que cumplen años hoy, **sin repetir** (el registro manda). Tiene `--fecha=AAAA-MM-DD` y `--simular` (no manda ni registra). `Kernel::schedule()` la corre **cada 15 minutos** porque la hora es por médico. ⚠️ En producción necesita el **cron del servidor** (`schedule:run`); no es la única tarea programada: también corren **`pagos:conciliar`** (cada minuto) y **`tasas:bcv`** (cada 30 minutos). |
 | `database/migrations/2026_08_25_055351_create_medical_tables_schema.php` | **Migración núcleo**: crea el esquema médico completo migrado del legado (~120 tablas, ~1650 líneas). Referencia obligatoria. |
 | `database/migrations/2026_0*` | Tablas nuevas del proyecto (users, medicos, historias, medical_centers, medico_pacientes, upload_servers, offices, permisos, **`notificaciones_cumple`** —WEB-2.9: el registro de los saludos de cumpleaños, con índice único por `(paciente_id, fecha_cumple)`— y **`parentesco`** —WEB-3.4: el catálogo de parentescos del representante, de AppDDR, con `codigo` `char(1)` único—). |
 | `database/seeders/` | Países / estados / ciudades / especialidades / roles / **`ParentescoSeeder`** (WEB-3.4: el catálogo de parentescos del representante, idempotente con `updateOrCreate`, y es **catálogo**: corre también en producción) / **`EspecialidadesYModulosSeeder`** (el marco multi-especialidad: los módulos de cada especialidad con `implementado`/`visible_para`; siembra el **núcleo** —agenda y pacientes— para **todas** las filas del catálogo, no sólo las que tienen manifiesto, y es **catálogo**: en una base ya desplegada hay que correrlo una vez) / datos médicos de ejemplo. |
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
 | `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
+
+## Pagos: cobro de planes con SyPago (en producción desde el 2026-10-21)
+
+**Alcance.** El médico paga **su plan** con SyPago desde `/clinica/plan`; al aprobarse, el servicio se renueva
+solo. El paciente **todavía no** paga consultas: el modelo ya lo prevé (`Pago::PAGABLE_CITA`,
+`Pago::CANAL_RESERVA_ONLINE`, comisiones y liquidaciones), pero la pantalla es la etapa siguiente
+(ver `../Docs/Web/roadmap-octubre-alexander.md`, #6, con las decisiones de negocio abiertas).
+
+**Pantallas**
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /clinica/plan` (`PlanController@index`) | El servicio del contexto, el catálogo visible y «Mi plan» en el grupo **Configuración** del menú. El listado **no** muestra tasa ni métodos: se eligen en el paso siguiente. |
+| `GET /clinica/plan/{plan}` (`@elegir`) | El método de la plataforma y el monto en USD/VES; los datos del pagador se recuerdan del último pago aprobado. |
+| `POST /clinica/plan/comprar` | Crea el `Pago` en `pendiente` con la **tasa congelada** y manda al checkout. |
+| `GET /clinica/plan/pago/{pago}` (`@pagar`) | Resumen y paso actual: datos, OTP, confirmando, aprobado, rechazado o vencido. |
+| `POST …/iniciar` · `…/confirmar` · `…/consultar` · `…/refrescar` | Pide el OTP, lo confirma, reconsulta a SyPago o renueva un pago vencido (si la tasa no cambió; si cambió, espera «Reintentar»). |
+| `GET /admin/metodos-pago` (`Admin\MetodosPago`) | El SyPago **de la plataforma**: credenciales cifradas, autenticación dinámica (client_id + secret o JWT), cuenta que recibe, una sola variante «Débito inmediato» (cuenta o teléfono), probar conexión (`GET banks`) y la tasa manual/BCV. |
+| `GET /admin/pagos` (`Admin\Pagos`) | Lista y filtros de lo cobrado, totales, detalle con datos del pagador, comisiones, **bitácora** del webhook y respuesta saneada (sin `operation_secret`, OTP ni tokens), y «Consultar» para forzar la conciliación. |
+
+El checkout vive en `resources/views/clinica/plan/` con los ViewModels `App\Clinica\Pagos\Vistas\{PlanVista,PagoVista}`
+y el JS `public/js/clinica/plan-pago.js`; las pantallas del panel, en `resources/views/livewire/admin/{metodos-pago,pagos}.blade.php`.
+
+**Motor y reglas del dinero**
+
+- `App\Pagos\Cobros`: `crearParaPlan` (congela `monto_e2`, `monto_usd_e2` y `tasa`), `iniciar` (`request/otp`),
+  `confirmar` (`transaction/otp`), `conciliar` (`GET transaction/{id}`) y la aprobación con `lockForUpdate`:
+  el webhook y el sondeo **no** aprueban por su cuenta, reconsultan. `ConfirmarPagoDePlan` renueva con
+  `ServicioService::renovar` (la misma regla de vencimiento/gracia) y manda el comprobante `PagoDePlanAprobado`.
+- `ClienteSyPago`: auth dinámica (`/auth/token` cacheado o JWT), `banks`, `user/key`, `request/otp`,
+  `transaction/otp` y `transaction/{id}`. El `internal_id` que viaja es el de `pagos.internal_id` (UUID sin
+  guiones, ≤35); el `operation_secret` se guarda aparte y es parte de la firma del webhook. **TLS**: la
+  verificación sólo se salta con `app()->environment('local')`.
+- **Webhook** `POST /api/pagos/sypago/{token}`: token secreto por método, `X-Signature` (ECDSA en Base64 sobre
+  `"{payload crudo}.{X-Signature-Nonce}.{operation_secret}"` con la clave pública de `GET user/key`), monto
+  comparado contra el pago, búsqueda por `internal_id` (y por `referencia` como compatibilidad) y reconsulta.
+  Si el aviso llega antes de persistir el `operation_secret`, se procesa igual porque **no se cree el payload**.
+- Comandos: **`pagos:conciliar`** cada minuto (expira vencidos y aplica los que quedaron en proceso) y
+  **`tasas:bcv`** cada 30 minutos entre 05:00 y 21:00 de Caracas. En producción, `schedule:run` en el cron.
+- **Dinero**: montos en centavos enteros (`_e2`), porcentajes en puntos base (`_bp`) y la tasa
+  `DECIMAL(18,6)` operada con entero escalado (`App\Pagos\Tasa`). El plan está en **USD**; se cobra y se
+  liquida en **VES** con la tasa del momento, y las dos cifras quedan en el pago.
+- **Comisiones**: la cascada ya está implementada (método sobre el bruto, cita online sobre el remanente) y
+  las tablas de liquidación T+1 están creadas, pero **los planes no llevan comisión ni liquidación**
+  (`recaudador = plataforma`, `estado_liquidacion = no_aplica`). Se activan con el cobro al paciente.
+
+**Tablas nuevas (AppDDR, sin sync del escritorio ni del móvil)**
+
+`metodos_pago`, `cuentas_bancarias`, `tasas_de_cambio`, `configuracion_pagos`, `reglas_de_comision`,
+`pagos`, `pago_comisiones`, `pagos_eventos`, `liquidaciones`, `liquidacion_pagos` y
+`movimientos_de_saldo`. Las claves de `pagos`: `referencia`, `internal_id`, `operation_secret`,
+`reg_medico`, `beneficiario`/`recaudador`, `canal`, `pagable`, montos y tasa, comisiones/neto, `estado`,
+`datos_pagador`, `respuesta`, `expira_el` y `estado_liquidacion`. Ninguna está en
+`config/sync_legado.php`.
+
+**Estado de producción y pendientes**
+
+- `main` en **`0.1.3`** y tag **`v0.1.3`** (2026-10-21); `desarrollo` es QA. Probado con SyPago real en QA,
+  con cuenta y teléfono.
+- La tasa puede ser **manual** o **automática desde el BCV** (`configuracion_pagos.tasa_automatica` +
+  `tasas:bcv`, con la cadena de Sectigo en `resources/certificados/bcv-cadena.pem`; trampa 162). La
+  automática está **verificada en producción y en QA**: se actualiza **cada 30 minutos** (y el mismo
+  `schedule:run` corre `pagos:conciliar`, así que el cron del servidor está funcionando).
+- **Factura fiscal**: **no se hace por ahora** — el comprobante por correo alcanza (decisión del usuario,
+  2026-10-21). **Pendiente de este módulo**: sólo los **reembolsos** (hoy no hay flujo; un pago mal cobrado
+  se corrige a mano) y confirmar que el comprobante por correo llega en producción. El **pago de
+  citas/consultas** es la etapa siguiente.
+- Tests: `PlanPagoWebTest`, `MetodosPagoAdminTest`, `PagosAdminTest`, `SypagoAutenticacionTest`,
+  `SypagoWebhookFirmaTest` y `TasasBcvTest`; **41 en verde** al cerrar (2026-10-21).
 
 ## Endpoints principales (estado en la rama `desarrollo`)
 
@@ -1164,7 +1234,7 @@ hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **156** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **165** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de
