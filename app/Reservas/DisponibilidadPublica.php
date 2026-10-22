@@ -21,6 +21,9 @@ use Illuminate\Support\Collection;
  */
 final class DisponibilidadPublica
 {
+    /** Anticipación mínima: el portal sólo ofrece (y acepta) horarios que empiezan dentro de 24 horas o más. */
+    public const ANTICIPACION_MINIMA_HORAS = 24;
+
     /** Las sedes de cada médico, para no repetir la consulta en el catálogo y en su ficha. */
     private array $sedesPorMedico = [];
 
@@ -45,7 +48,6 @@ final class DisponibilidadPublica
 
         $opciones = [];
         $hoy = FechaDelConsultorio::hoyComoFecha();
-        $ahora = FechaDelConsultorio::ahora()->format('H:i');
 
         for ($i = 0; $i < $diasMaximos && count($opciones) < $cantidad; $i++) {
             $fecha = $hoy->copy()->addDays($i);
@@ -64,9 +66,9 @@ final class DisponibilidadPublica
 
             $opcion = $this->opcion($fecha, $lugar);
 
-            // El portal no ofrece una hora que ya pasó. La agenda del chatbot no mira el reloj porque el
-            // paciente suele reservar para otro día; acá el paciente está eligiendo en el momento.
-            if ($opcion->fecha === $hoy->toDateString() && $opcion->hora <= $ahora) {
+            // El portal no ofrece un horario con menos de 24 h de anticipación (ni uno que ya pasó). El filtro
+            // va antes de limitar la cantidad: la lista se sigue llenando con días posteriores.
+            if (! $this->conAnticipacion($opcion)) {
                 continue;
             }
 
@@ -103,12 +105,14 @@ final class DisponibilidadPublica
 
         $opcion = $this->opcion($dia, $lugar);
 
-        if ($opcion->fecha === FechaDelConsultorio::hoyComoFecha()->toDateString()
-            && $opcion->hora <= FechaDelConsultorio::ahora()->format('H:i')) {
-            return null;
-        }
+        // La misma regla de anticipación que al listar: no se puede saltar eligiendo a mano un horario cercano.
+        return $this->conAnticipacion($opcion) ? $opcion : null;
+    }
 
-        return $opcion;
+    /** ¿El horario empieza en `ANTICIPACION_MINIMA_HORAS` horas o más, contando desde ahora (zona del consultorio)? */
+    private function conAnticipacion(OpcionDeReserva $opcion): bool
+    {
+        return $opcion->inicio()->gte(FechaDelConsultorio::ahora()->addHours(self::ANTICIPACION_MINIMA_HORAS));
     }
 
     /** Las sedes donde el médico atiende y tiene bloques cargados (lo que el catálogo ofrece). */

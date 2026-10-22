@@ -42,8 +42,9 @@ class ReservasPublicasWebTest extends TestCase
     {
         parent::setUp();
 
-        // Lunes 19 de octubre de 2026, 07:00 UTC = 03:00 en Caracas: el bloque de 08:00 todavía no pasó.
-        Carbon::setTestNow(Carbon::create(2026, 10, 19, 7, 0, 0));
+        // Domingo 18 de octubre de 2026, 07:00 UTC = 03:00 en Caracas: el bloque del lunes 19 a las 08:00
+        // queda a 29 h, dentro de la anticipación mínima de 24 h del portal.
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 7, 0, 0));
 
         $this->fecha = Carbon::createFromFormat('!Y-m-d', '2026-10-19');
 
@@ -294,6 +295,56 @@ class ReservasPublicasWebTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame(1, Cola::where('reg_medico', $this->medico->reg_medico)->count());
+    }
+
+    public function test_el_horario_a_23_horas_no_se_ofrece_y_a_24_o_25_si(): void
+    {
+        $disp = app(\App\Reservas\DisponibilidadPublica::class);
+
+        // Lunes 19 a las 08:00 Caracas (12:00 UTC). Caracas es UTC-4.
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 13, 0, 0)); // 23 h antes
+        $this->assertNull($disp->opcionEn($this->medico, '2026-10-19'));
+        $this->assertNotContains('2026-10-19', array_map(fn ($o) => $o->fecha, $disp->opciones($this->medico)));
+
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 12, 0, 0)); // 24 h exactas
+        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19'));
+        $this->assertSame('2026-10-19', $disp->opciones($this->medico)[0]->fecha);
+
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 11, 0, 0)); // 25 h
+        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19'));
+    }
+
+    public function test_la_lista_se_completa_con_dias_posteriores_hasta_la_cantidad_habitual(): void
+    {
+        $disp = app(\App\Reservas\DisponibilidadPublica::class);
+
+        foreach ([2, 3, 4, 5] as $dia) { // martes a viernes, además del lunes del setUp
+            OfficeSchedule::create([
+                'office_id' => $this->sede->id,
+                'reg_medico' => $this->medico->reg_medico,
+                'dia_semana' => $dia,
+                'hora_inicio' => '08:00',
+                'hora_fin' => '12:00',
+                'cupo' => 10,
+            ]);
+        }
+
+        Carbon::setTestNow(Carbon::create(2026, 10, 19, 7, 0, 0)); // lunes 03:00 Caracas: el 19 a las 08:00 queda a 5 h
+        $fechas = array_map(fn ($o) => $o->fecha, $disp->opciones($this->medico));
+
+        $this->assertCount(5, $fechas);
+        $this->assertNotContains('2026-10-19', $fechas);
+        $this->assertSame('2026-10-20', $fechas[0]); // martes 08:00: a 29 h
+    }
+
+    public function test_confirmar_un_horario_de_menos_de_24_horas_es_rechazado(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 13, 0, 0)); // 23 h antes del lunes 08:00
+
+        $this->post(route('reservas.codigo.enviar', $this->medico), $this->datos())
+            ->assertSessionHasErrors('fecha');
+
+        $this->assertNull(session('reservas.pendiente'));
     }
 
     public function test_un_codigo_vencido_no_crea_la_cita(): void
