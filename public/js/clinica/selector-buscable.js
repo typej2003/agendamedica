@@ -212,7 +212,7 @@
 
         function elegir(it) {
             if (it.crear) { iniciarCreacion(it.texto); return; }
-            fijar(String(it.value), String(it.label));
+            fijar(String(it.value), String(it.label) + (it.detail && !libre ? ' — ' + it.detail : ''));
             cerrar();
         }
 
