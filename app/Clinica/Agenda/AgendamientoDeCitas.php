@@ -4,7 +4,7 @@ namespace App\Clinica\Agenda;
 
 use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\EditarCita;
-use App\Actions\Catalogos\EditarMotivoDeCita;
+use App\Actions\Catalogos\FijarPrecioDelMotivoDeCita;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Models\Cola;
@@ -46,7 +46,7 @@ class AgendamientoDeCitas
         private AsignarHistoria $asignarHistoria,
         private EditarCita $editar,
         private MedicosDeLaCita $medicos,
-        private EditarMotivoDeCita $editarMotivo,
+        private FijarPrecioDelMotivoDeCita $fijarPrecio,
     ) {
     }
 
@@ -141,8 +141,8 @@ class AgendamientoDeCitas
         // "Mover esa cita a la nueva fecha": es **la misma fila** movida, no una cita nueva (conserva lo
         // cobrado), así que la cita pendiente se edita y no se crea nada.
         if ($decision === 'mover' && $pendiente !== null) {
-            DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $pendiente, $sedes, $fecha, $hora, $centroId, $jornada, $valores) {
-                $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto);
+            DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $sede, $pendiente, $sedes, $fecha, $hora, $centroId, $jornada, &$valores) {
+                $valores['motivo'] = $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto, $sede) ?? ($valores['motivo'] ?? null);
                 $this->editar->ejecutar(
                     $pendiente['cita'],
                     $this->cambiosDeMovimiento($pendiente, $sedes, $fecha, $hora, $centroId, $jornada, $valores['motivo'] ?? null, $monto),
@@ -155,8 +155,8 @@ class AgendamientoDeCitas
         }
 
         // El precio del motivo y la cita nacen juntos: si una falla, no queda la otra.
-        $cita = DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $regMedico, $objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $estado) {
-            $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto);
+        $cita = DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $sede, $regMedico, $objetivo, $paciente, $fecha, $hora, $jornada, $centroId, &$valores, $estado) {
+            $valores['motivo'] = $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto, $sede) ?? ($valores['motivo'] ?? null);
 
             return $this->crear->ejecutar(
                 $regMedico,
@@ -192,6 +192,11 @@ class AgendamientoDeCitas
         $hora = $this->horaEfectiva($valores['hora'] ?? null, $valores['bloque'] ?? null, $bloques);
         $centroId = $sede?->medical_center_id;
 
+        // Cambiar a un motivo **sin precio** también obliga a escribir el monto (si no cambia el motivo, la cita
+        // conserva el suyo: el portal del paciente, que sólo mueve la fecha, no lo pide).
+        $motivoNuevo = ($valores['motivo'] ?? null) !== null && (string) $valores['motivo'] !== (string) $cita->tipo;
+        $motivoSinPrecio = $motivoNuevo ? $this->motivoSinPrecioDe($contexto, $valores, $sede) : null;
+
         $jornada = $this->armador->jornadaPara($regMedico, $sedes, $fecha, $centroId, $hora);
         $jornadaActual = $this->armador->jornadaPara(
             $regMedico,
@@ -223,7 +228,14 @@ class AgendamientoDeCitas
             $cambios['estado'] = $estado;
         }
 
-        $aplicadas = $this->editar->ejecutar($cita, $cambios, Carbon::now(), 'web');
+        $aplicadas = DB::transaction(function () use ($motivoSinPrecio, $contexto, $sede, $cita, &$cambios) {
+            $codigo = $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $cambios['monto'], $sede);
+            if ($codigo !== null) {
+                $cambios['tipo'] = $codigo;
+            }
+
+            return $this->editar->ejecutar($cita, $cambios, Carbon::now(), 'web');
+        });
 
         return new ResultadoDeAgendamiento(
             $aplicadas === [] ? ResultadoDeAgendamiento::SIN_CAMBIOS : ResultadoDeAgendamiento::ACTUALIZADA,
@@ -333,14 +345,21 @@ class AgendamientoDeCitas
         return $motivo;
     }
 
-    /** Guarda el monto escrito como precio del motivo que no lo tenía (dentro de la transacción de la cita). */
-    private function fijarPrecioDelMotivo(?MotivoCita $motivo, array $contexto, ?float $monto): void
+    /**
+     * Guarda el monto escrito como precio del motivo que no lo tenía (dentro de la transacción de la cita). Un motivo
+     * general se deja intacto y el precio se guarda en el de la sede de la cita (`FijarPrecioDelMotivoDeCita`).
+     *
+     * @return string|null el código del motivo que quedó con el precio (el que la cita guarda), o `null` si no había nada que fijar
+     */
+    private function fijarPrecioDelMotivo(?MotivoCita $motivo, array $contexto, ?float $monto, ?Office $sede): ?string
     {
         if ($motivo === null || $monto === null) {
-            return;
+            return null;
         }
 
-        $this->editarMotivo->ejecutar($motivo, $contexto['medico'], ['precio' => $monto], Carbon::now(), 'web');
+        return (string) $this->fijarPrecio->ejecutar(
+            $motivo, $contexto['medico'], (string) $contexto['reg_medico'], $sede?->id, $monto, Carbon::now(), 'web'
+        )->codigo;
     }
 
     /**

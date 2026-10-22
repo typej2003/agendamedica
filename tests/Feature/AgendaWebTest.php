@@ -690,7 +690,7 @@ class AgendaWebTest extends TestCase
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
         $this->bloque($sede, '08:00', '12:00');
         $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
-        $motivo = MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'REV', 'tipo_atencion' => 'Revision', 'precio' => $precio]);
+        $motivo = MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'REV', 'tipo_atencion' => 'Revision', 'precio' => $precio, 'office_id' => $sede->id]);
 
         $datos = ['hora' => '09:30', 'paciente_id' => $pacienteId];
         if ($conMotivo) {
@@ -757,6 +757,73 @@ class AgendaWebTest extends TestCase
         $respuesta->assertSessionHasNoErrors();
         $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
         $this->assertNull($motivo->fresh()->precio);
+    }
+
+    public function test_motivo_general_sin_precio_se_fija_solo_en_la_sede_elegida_y_se_reutiliza(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $a = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $b = $this->sede($medico, $this->centro('Metropolitana')->id, Office::MODALIDAD_HORA, 'C2');
+        $this->bloque($a, '08:00', '12:00');
+        $this->bloque($b, '08:00', '12:00');
+        $p1 = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $p2 = $this->pacienteConHistoria($medico, 2002, 'Bea', 'Benitez');
+        $general = MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => '07', 'tipo_atencion' => 'ECO', 'precio' => null, 'admite_varias_citas_pendientes' => true]);
+
+        $agendar = fn (Office $sede, int $paciente, string $monto) => $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '09:30', 'paciente_id' => $paciente, 'motivo' => '07', 'monto' => $monto]))
+            ->assertSessionDoesntHaveErrors();
+
+        $agendar($a, $p1, '40');
+
+        // El general queda intacto; la sede A tiene su motivo (mismo código y razón) con 40.
+        $this->assertNull($general->fresh()->precio);
+        $propio = MotivoCita::where('reg_medico', $medico->reg_medico)->where('office_id', $a->id)->get();
+        $this->assertCount(1, $propio);
+        $this->assertSame('07', $propio->first()->codigo);
+        $this->assertSame('ECO', $propio->first()->tipo_atencion);
+        $this->assertSame(40.0, (float) $propio->first()->precio);
+        $this->assertTrue((bool) $propio->first()->admite_varias_citas_pendientes);
+        $this->assertSame('07', Cola::where('numhistoria', 2001)->value('tipo'));
+        $this->assertSame(40.0, (float) Cola::where('numhistoria', 2001)->value('monto'));
+        $this->assertSame(1, SyncChange::where('table_name', 'motivo_cita')->where('record_id', $propio->first()->id)->where('operation', 'created')->count());
+
+        // Segunda cita en A: el motivo de la sede ya tiene precio, se reutiliza sin duplicar y sin pedir monto.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($a, ['hora' => '10:00', 'paciente_id' => $p2, 'motivo' => '07']))
+            ->assertSessionDoesntHaveErrors();
+        $this->assertSame(40.0, (float) Cola::where('numhistoria', 2002)->value('monto'));
+        $this->assertSame(1, MotivoCita::where('reg_medico', $medico->reg_medico)->where('office_id', $a->id)->count());
+
+        // La sede B sigue sin precio: el monto vuelve a ser obligatorio.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->from('/clinica/agenda/nueva')
+            ->post('/clinica/agenda', $this->datosDeCita($b, ['hora' => '09:30', 'paciente_id' => $p1, 'motivo' => '07']))
+            ->assertSessionHasErrors('monto');
+        $this->assertSame(0, MotivoCita::where('reg_medico', $medico->reg_medico)->where('office_id', $b->id)->count());
+    }
+
+    public function test_reagendar_a_un_motivo_sin_precio_exige_el_monto_y_lo_guarda(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $motivo = MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'REV', 'tipo_atencion' => 'Revision', 'precio' => null, 'office_id' => $sede->id]);
+        $cita = $this->cita($medico, $sede, $this->lunes->toDateString(), '09:00', 1, ['numhistoria' => 2001, 'tipo' => null]);
+        $datos = ['hora' => '10:00', 'paciente_id' => $pacienteId, 'motivo' => 'REV'];
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->from('/clinica/agenda/nueva')
+            ->post('/clinica/agenda/' . $cita->id, $this->datosDeCita($sede, $datos))
+            ->assertSessionHasErrors('monto');
+        $this->assertNull($motivo->fresh()->precio);
+        $this->assertSame('09:00', substr($cita->fresh()->hora_ini, 0, 5));
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda/' . $cita->id, $this->datosDeCita($sede, $datos + ['monto' => '35']))
+            ->assertSessionDoesntHaveErrors();
+        $this->assertSame(35.0, (float) $motivo->fresh()->precio);
+        $this->assertSame(35.0, (float) $cita->fresh()->monto);
+        $this->assertSame('REV', $cita->fresh()->tipo);
     }
 
     public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
