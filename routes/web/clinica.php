@@ -128,7 +128,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Desde el 2026-10-20 es **una sola pantalla «Sedes y consultorios»** (tarjeta por sede con sus consultorios y
         // paneles laterales). Se abre con el contexto **opcional**: si hay médico elegido muestra y carga sus
         // consultorios; si no, sólo las sedes. `GET /consultorios` redirige acá.
-        Route::get('/sedes', [SedeController::class, 'index'])->middleware('clinica.contexto:opcional')->name('sedes');
+        //
+        // Desde el 2026-10-22 la pantalla **resuelve sola de quién es el consultorio** cuando el usuario tiene un
+        // solo registro (`clinica.contexto:consultorios`): un médico nuevo llegaba acá sin contexto y no podía cargar
+        // nada. Con dos registros no se resuelve (hay que decir en cuál) y la pantalla avisa para ir a elegir.
+        Route::get('/sedes', [SedeController::class, 'index'])->middleware('clinica.contexto:consultorios')->name('sedes');
         Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
         Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
 

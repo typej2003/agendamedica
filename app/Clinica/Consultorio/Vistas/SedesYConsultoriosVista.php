@@ -92,6 +92,26 @@ final class SedesYConsultoriosVista
         return $this->consultorios !== null;
     }
 
+    /**
+     * El aviso con el que la pantalla dice **por qué no ofrece cargar consultorios** y qué hacer.
+     *
+     * Sin contexto la pantalla sólo puede mostrar el catálogo de sedes, y antes eso era un callejón: el médico
+     * nuevo llegaba acá, no veía ningún botón y el menú lateral se quedaba en «Inicio». Hoy la pantalla resuelve
+     * sola el dueño cuando hay **un solo registro** (lo hace `clinica.contexto:consultorios`), así que llegar a
+     * este aviso significa que hay algo que elegir de verdad: dos registros, dos médicos o dos especialidades.
+     */
+    public function avisoSinContexto(): ?string
+    {
+        return $this->puedeCargarConsultorios()
+            ? null
+            : 'Los consultorios son del médico con el que trabajas: elige con cuál antes de cargarlos.';
+    }
+
+    public function urlElegirConsultorio(): string
+    {
+        return route('clinica.contexto');
+    }
+
     // ------------------------------------------------------------------------------------- Las tarjetas
 
     public function estaVacio(): bool

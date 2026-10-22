@@ -26,6 +26,16 @@
 
         <x-ui.errores />
 
+        @if ($vm->avisoSinContexto())
+            {{-- Sin dueño resuelto no hay «+ Consultorio», y sin el aviso la pantalla parecía no ofrecer nada (el
+                 médico nuevo no tenía ni menú lateral). El enlace es la salida. --}}
+            <div class="alert alert-info py-2 d-flex align-items-center gap-2" role="status">
+                <i class="bi bi-signpost-split-fill" aria-hidden="true"></i>
+                <span>{{ $vm->avisoSinContexto() }}
+                    <a class="alert-link" href="{{ $vm->urlElegirConsultorio() }}">Elegir consultorio aquí</a>.</span>
+            </div>
+        @endif
+
         @if ($vm->estaVacio())
             {{-- Sin sedes: la tarjeta guía es el único camino, y su botón es la acción principal de la pantalla. --}}
             <x-ui.tarjeta class="sedes-vacio">
