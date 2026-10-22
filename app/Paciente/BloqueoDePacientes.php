@@ -12,12 +12,12 @@ use Illuminate\Validation\ValidationException;
  * **El bloqueo de una cuenta de paciente** (los que crean cuenta propia y agendan por el portal, la reserva
  * pública o el chatbot; no los pacientes clínicos de los médicos). Es la regla única: el panel bloquea y
  * desbloquea con `bloquear()`/`desbloquear()`, y cada punto de entrada que crea citas pregunta
- * `exigirQueNoEsteBloqueado()` con los datos que trae (cédula, teléfono, correo).
+ * `exigirQueNoEsteBloqueado()` con la cédula que trae.
  *
  * El bloqueo reutiliza el de las cuentas (`users.is_active = false` + `blocked_reason`), así que el inicio de
  * sesión y las sesiones abiertas ya lo respetan (`EnsureAccountActive`). Lo que se agrega aquí es (1) la
  * auditoría (`blocked_at`, `blocked_by` y una línea de registro) y (2) el cierre de la puerta sin sesión: la
- * reserva pública y el chatbot no tienen cuenta, así que se reconoce al paciente por los datos de su ficha.
+ * reserva pública y el chatbot no tienen cuenta, así que se reconoce al paciente por la cédula de su ficha.
  */
 final class BloqueoDePacientes
 {
@@ -52,46 +52,33 @@ final class BloqueoDePacientes
     }
 
     /**
-     * La cuenta de paciente bloqueada que corresponde a estos datos, o `null`. Se reconoce por la cédula o el
-     * teléfono de la ficha enlazada (`pacientes.user_id`) o por el correo de la cuenta.
+     * La cuenta de paciente bloqueada que corresponde a esta cédula, o `null`. Se reconoce **sólo por la
+     * cédula** de la ficha enlazada a la cuenta (`pacientes.user_id`): ni el teléfono ni el correo identifican
+     * a una persona (los teléfonos se reutilizan y se comparten), así que no se comparan.
      */
-    public function cuentaBloqueada(?string $cedula, ?string $telefono, ?string $email): ?User
+    public function cuentaBloqueada(?string $cedula): ?User
     {
         $cedulas = $this->variantesDeCedula($cedula);
-        $telefonos = $this->variantesDeTelefono($telefono);
-        $correo = mb_strtolower(trim((string) $email));
 
-        if ($cedulas === [] && $telefonos === [] && $correo === '') {
+        if ($cedulas === []) {
             return null;
         }
 
         $fichas = Paciente::query()
             ->whereNotNull('user_id')
-            ->where(function ($q) use ($cedulas, $telefonos) {
-                if ($cedulas !== []) {
-                    $q->orWhereIn(DB::raw("UPPER(REPLACE(REPLACE(REPLACE(cedula, '-', ''), '.', ''), ' ', ''))"), $cedulas);
-                }
-                if ($telefonos !== []) {
-                    $q->orWhereIn('telefono', $telefonos);
-                }
-            })
+            ->whereIn(DB::raw("UPPER(REPLACE(REPLACE(REPLACE(cedula, '-', ''), '.', ''), ' ', ''))"), $cedulas)
             ->pluck('user_id');
 
         return User::role('Paciente')
             ->where('is_active', false)
-            ->where(function ($q) use ($fichas, $correo) {
-                $q->whereIn('id', $fichas);
-                if ($correo !== '') {
-                    $q->orWhereRaw('LOWER(email) = ?', [$correo]);
-                }
-            })
+            ->whereIn('id', $fichas)
             ->first();
     }
 
     /** @throws ValidationException con el aviso al paciente bloqueado */
-    public function exigirQueNoEsteBloqueado(?string $cedula, ?string $telefono, ?string $email, string $campo = 'cedula'): void
+    public function exigirQueNoEsteBloqueado(?string $cedula, string $campo = 'cedula'): void
     {
-        if ($this->cuentaBloqueada($cedula, $telefono, $email) !== null) {
+        if ($this->cuentaBloqueada($cedula) !== null) {
             throw ValidationException::withMessages([$campo => self::AVISO]);
         }
     }
@@ -110,22 +97,5 @@ final class BloqueoDePacientes
         $digitos = preg_replace('/\D/', '', (string) $cedula);
 
         return $digitos === '' ? [] : [$digitos, 'V' . $digitos, 'E' . $digitos, 'J' . $digitos];
-    }
-
-    /** @return array<int,string> */
-    private function variantesDeTelefono(?string $telefono): array
-    {
-        $digitos = preg_replace('/\D/', '', (string) $telefono);
-
-        if (strlen($digitos) < 10) {
-            return [];
-        }
-
-        $abonado = substr($digitos, -10);
-
-        return array_values(array_unique([
-            trim((string) $telefono), $digitos, $abonado, '0' . $abonado, '58' . $abonado, '+58' . $abonado,
-            '0' . substr($abonado, 0, 3) . '-' . substr($abonado, 3),
-        ]));
     }
 }

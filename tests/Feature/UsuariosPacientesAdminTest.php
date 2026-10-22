@@ -246,9 +246,11 @@ class UsuariosPacientesAdminTest extends TestCase
             ->assertSessionHasErrors(['cedula' => BloqueoDePacientes::AVISO]);
         $this->assertSame(0, Cola::where('reg_medico', $this->medico->reg_medico)->count());
 
-        // Con otra cédula pero el mismo teléfono de la cuenta bloqueada tampoco.
-        $this->post(route('reservas.codigo.enviar', $this->medico), ['cedula' => '99999999'] + $datos)
-            ->assertSessionHasErrors('cedula');
+        // El bloqueo es sólo por cédula: con otra cédula y el mismo teléfono y correo de la cuenta bloqueada se
+        // reconoce a otra persona y se le manda el código.
+        $this->post(route('reservas.codigo.enviar', $this->medico), ['cedula' => '99999999', 'email' => $cuenta->email] + $datos)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('reservas.codigo', $this->medico));
 
         // Lo bloquean entre el código y la confirmación: tampoco se crea la cita.
         app(BloqueoDePacientes::class)->desbloquear($cuenta);
@@ -296,10 +298,26 @@ class UsuariosPacientesAdminTest extends TestCase
 
         $regla = app(BloqueoDePacientes::class);
 
-        $this->assertNull($regla->cuentaBloqueada('12345010', '584141110010', null));
-        $this->assertNull($regla->cuentaBloqueada(null, null, null));
-        $this->assertSame($bloqueada->id, $regla->cuentaBloqueada('V-12.345.009', null, null)?->id);
-        $this->assertSame($bloqueada->id, $regla->cuentaBloqueada(null, '0414-1110009', null)?->id);
-        $this->assertSame($bloqueada->id, $regla->cuentaBloqueada(null, null, strtoupper($bloqueada->email))?->id);
+        $this->assertNull($regla->cuentaBloqueada('12345010'));
+        $this->assertNull($regla->cuentaBloqueada(null));
+        $this->assertSame($bloqueada->id, $regla->cuentaBloqueada('V-12.345.009')?->id);
+        $this->assertSame($bloqueada->id, $regla->cuentaBloqueada('12345009')?->id);
+    }
+
+    public function test_un_telefono_o_correo_igual_con_otra_cedula_no_se_bloquea(): void
+    {
+        $bloqueada = $this->cuentaDePaciente('12345011', '584141110011');
+        $this->bloquear($bloqueada);
+
+        $regla = app(BloqueoDePacientes::class);
+
+        // La regla ya no recibe teléfono ni correo: sólo la cédula decide.
+        $this->assertNull($regla->cuentaBloqueada('77777777'));
+
+        // El chatbot evalúa la cédula de la ficha del teléfono: otra ficha, otra cédula, no se bloquea.
+        Paciente::create(['cedula' => '77777777', 'nombres' => 'Otra', 'apellidos' => 'Persona', 'telefono' => '584141119999']);
+        $resultado = app(PacienteAtencionContextService::class)
+            ->reservarCitaEnCola('584141119999', $this->medico->reg_medico, $this->fecha->toDateString());
+        $this->assertArrayNotHasKey('bloqueado', $resultado);
     }
 }

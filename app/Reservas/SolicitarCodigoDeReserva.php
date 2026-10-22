@@ -60,7 +60,7 @@ final class SolicitarCodigoDeReserva
         }
 
         // Una cuenta de paciente bloqueada desde el panel no reserva (ni se le manda el código).
-        app(BloqueoDePacientes::class)->exigirQueNoEsteBloqueado($cedula, $telefono, $datos['email'] ?? null);
+        app(BloqueoDePacientes::class)->exigirQueNoEsteBloqueado($cedula);
 
         $paciente = Paciente::where('cedula', $cedula)->first();
         if ($paciente !== null) {

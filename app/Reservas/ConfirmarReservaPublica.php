@@ -95,7 +95,7 @@ final class ConfirmarReservaPublica
     private function crear(Medico $medico, array $datos): array
     {
         // Puede haberse bloqueado entre el código y la confirmación.
-        if (app(BloqueoDePacientes::class)->cuentaBloqueada($datos['cedula'] ?? null, $datos['telefono'] ?? null, $datos['email'] ?? null) !== null) {
+        if (app(BloqueoDePacientes::class)->cuentaBloqueada($datos['cedula'] ?? null) !== null) {
             return ['ok' => false, 'limpiar' => true, 'mensaje' => BloqueoDePacientes::AVISO];
         }
 
