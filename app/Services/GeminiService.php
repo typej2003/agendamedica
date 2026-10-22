@@ -30,6 +30,9 @@ class GeminiService
     {
         $cleanTel = $telefono ? preg_replace('/\D/', '', $telefono) : null;
 
+        // El servicio de contexto sólo consulta a Jev (urgencia -> agendar con 90 min) con este mensaje a la vista.
+        $this->contextService->iniciarMensajeWhatsApp($mensajeUsuario, $telefono);
+
         // 0. Si se proporciona teléfono, verificar si el paciente está en proceso de registro o si no existe en Paciente
         if ($telefono) {
             $respuestaRegistro = $this->contextService->gestionarRegistroPaciente($telefono, $mensajeUsuario);
@@ -68,7 +71,11 @@ class GeminiService
                     $resultado = $this->contextService->reservarCitaEnCola(
                         $contexto['telefono'],
                         $pendiente['reg_medico'],
-                        $fechaElegida
+                        $fechaElegida,
+                        null,
+                        // Lo que se ofreció manda: 90 si la oferta fue de urgencia; si no, 24 h. Así «sí» o
+                        // «el martes» nunca se mandan a Jev.
+                        (int) ($pendiente['anticipacion_minutos'] ?? PacienteAtencionContextService::ANTICIPACION_MINIMA_MINUTOS)
                     );
                     Cache::forget("wa_pendiente_{$contexto['telefono']}");
                     if ($cleanTel) {
@@ -351,7 +358,7 @@ class GeminiService
      * `fecha` sigue siendo la primera, para quien confirme sin elegir un día.
      *
      * @param  array<string,mixed>  $disponibilidad
-     * @return array{reg_medico:string, fecha:?string, fechas:list<string>}
+     * @return array{reg_medico:string, fecha:?string, fechas:list<string>, anticipacion_minutos:?int}
      */
     private function datosPendientesDeDisponibilidad(string $regMedico, array $disponibilidad): array
     {
@@ -364,6 +371,8 @@ class GeminiService
             'reg_medico' => $regMedico,
             'fecha' => $disponibilidad['fecha'] ?? null,
             'fechas' => array_values(array_filter($fechas)),
+            // 90 sólo si la oferta salió de una urgencia afirmada por Jev; al confirmar se reserva con la misma regla.
+            'anticipacion_minutos' => $disponibilidad['anticipacion_minutos'] ?? null,
         ];
     }
 
