@@ -354,7 +354,6 @@
                                             <label class="form-label">API Key (secret) <span class="text-danger">*</span></label>
                                             <input type="password" class="form-control" wire:model.defer="secret" autocomplete="new-password"
                                                    placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'La API Key de SyPago' }}">
-                                            <div class="form-text">Se guarda cifrada. Con ella se pide el access token a SyPago.</div>
                                             @error('secret') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                         </div>
                                     </div>
@@ -388,7 +387,6 @@
                                     <label class="form-label">Comisión por prestar el método (%)</label>
                                     <input type="number" min="0" max="100" step="0.01" class="form-control"
                                            wire:model.defer="comisionPorcentaje" placeholder="Global">
-                                    <div class="form-text">Vacío = la regla global. Ejemplo: 10. Sólo se descuenta cuando un médico cobra a un paciente con este método; los planes no llevan comisión.</div>
                                     @error('comisionPorcentaje') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">
