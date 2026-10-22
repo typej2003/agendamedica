@@ -16,4 +16,12 @@ return [
 
     // Meses de vigencia de un bloqueo por teléfono (renovable al volver a bloquear).
     'bloqueo_telefono_meses' => 6,
+
+    // Límites preventivos de reserva (`App\Reservas\LimitesDeReserva`). Sólo aplican a lo que el paciente hace
+    // por su cuenta (portal, reserva pública, chatbot); la secretaría y el médico agendan sin este tope.
+    // Máximo de citas pendientes (futuras, sin atender) por persona (cuenta o teléfono validado).
+    'max_citas_pendientes' => 3,
+
+    // Máximo de códigos de verificación que se envían por hora a un mismo teléfono.
+    'max_codigos_por_hora' => 5,
 ];

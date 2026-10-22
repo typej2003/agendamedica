@@ -102,6 +102,11 @@ final class ConfirmarReservaPublica
             return ['ok' => false, 'limpiar' => true, 'mensaje' => BloqueoDePacientes::AVISO];
         }
 
+        // Tope de citas pendientes: por la cuenta (si hay sesión) y por el teléfono que acaba de validar el código.
+        if (! app(LimitesDeReserva::class)->tieneCupoDeCitas(auth()->user(), $datos['telefono'] ?? null)) {
+            return ['ok' => false, 'limpiar' => true, 'mensaje' => LimitesDeReserva::mensajeDeCitas()];
+        }
+
         $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha'], (string) $datos['hora'], (int) $datos['office_id']);
 
         if ($opcion === null) {

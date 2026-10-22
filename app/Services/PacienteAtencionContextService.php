@@ -1252,6 +1252,16 @@ class PacienteAtencionContextService
                 return ['exito' => false, 'bloqueado' => true, 'mensaje' => BloqueoDePacientes::AVISO];
             }
 
+            // Tope de citas pendientes por teléfono (el de WhatsApp ya viene autenticado por Meta).
+            $limites = app(\App\Reservas\LimitesDeReserva::class);
+            if (!$limites->tieneCupoDeCitas(null, $telefono)) {
+                return [
+                    'exito' => false,
+                    'limite_citas' => true,
+                    'mensaje' => \App\Reservas\LimitesDeReserva::mensajeDeCitas(),
+                ];
+            }
+
             if (!$paciente) {
                 // Registrar temporalmente al paciente nuevo por WhatsApp
                 $paciente = Paciente::create([
