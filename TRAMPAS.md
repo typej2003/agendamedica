@@ -532,13 +532,23 @@ encontró. El estado del código, los comandos y el mapa del repo están en
     consultorio y la cuenta, agregar «Catálogos» dejó 55 px de scroll horizontal a 768 en TODAS las pantallas del médico (lo midió el verificador de
     WEB-8.1a; `verificar-menu-por-especialidad-web.js` también lo habría cazado). Las entradas nuevas van al menú lateral (`ArmazonVista::menu()`).
     Y un medidor que no eligió consultorio ve la pantalla de contexto, sin fichas ni accesos: no prueba nada.
-59. **Tres tests dependen de la hora real y fallan desde las 20:00 de Caracas, y `php artisan test` completo se queda sin memoria con el límite de 128 MB.**
-    `AgendaVistasTest::…url_mal_formada`, `FormularioDePacienteVistaTest::…si_de_atender_hoy…` y `PacientesAltaEdicionWebTest::…si_de_atender_hoy…` comparan contra
-    «hoy» con el reloj real: pasadas las 20:00 locales el día UTC ya es el siguiente (fallan también sin los cambios de WEB-8.1a, medido con `git stash`).
-    **Dos más se sumaron con los ecos (medido el 2026-10-19 a las 00:38 UTC):** `SyncEcoCreacionTest::test_crear_un_eco_obstetrico_con_solo_la_fur_o_la_gesta_se_acepta`
-    —los dos conjuntos del `dataProvider`— compara `now()->toDateString()` (la zona de la máquina, UTC) con la fecha que escribió la Action, que sale de
-    `FechaDelConsultorio::hoy()` (Caracas): en esa franja la fila queda con el día anterior y el test falla **sin que el código tenga nada que ver**. Cuando se toque
-    ese test, lo correcto es comparar contra `FechaDelConsultorio::hoy()` y no contra `now()`.
+59. **Ningún test compara «hoy» contra el reloj UTC del servidor: en Caracas, desde las 20:00, el día UTC ya es el siguiente.**
+    La regla: si el test pregunta por el día del **negocio**, la referencia es `FechaDelConsultorio` (`hoyComoTexto()`,
+    `hoyComoFecha()`, `hoy()`), que es la misma que usa el código. Comparar contra `Carbon::today()` o
+    `now()->toDateString()` se corre un día a partir de las 20:00 locales y hace fallar tests **sin que el código tenga nada
+    que ver**. Se corrigieron así (2026-10-21, medido a las 20:53 de Caracas con la franja rota en vivo — 7 fallas, 3456 en verde):
+    `AgendaVistasTest::test_los_parametros_nunca_revientan_por_una_url_mal_formada`,
+    `PacienteFamiliaWebTest::test_la_ficha_de_un_nino_dice_la_edad_con_meses_y_las_alergias_se_destacan`,
+    `PacienteFamiliaWebTest::test_la_edad_detallada_cuenta_dias_meses_y_anios_y_en_mayores_de_cinco_solo_anios`,
+    `ServicioPlanesTest::test_si_el_plan_por_defecto_es_de_pago_el_primer_mes_igual_es_gratis`,
+    `ServicioPlanesTest::test_el_app_con_servicio_vigente_sincroniza_y_recibe_el_estado_del_servicio` y
+    `SyncEcoCreacionTest::test_crear_un_eco_obstetrico_con_solo_la_fur_o_la_gesta_se_acepta` (los dos del `dataProvider`).
+    La misma franja destapó **un bug del feature**, no del test, en `Sync\CreacionesClinicas`: la consulta y el récipe que crea
+    el teléfono **sin `fecha`** caían en `now()->toDateString()` (UTC) y quedaban fechados **al día siguiente**; ahora usan
+    `FechaDelConsultorio::hoyComoTexto()`, igual que el eco (`CreacionesClinicas:883`), que ya lo hacía bien. Al corregirlo
+    falló —y se corrigió también— `CreacionesClinicasTest::test_un_recipe_sin_medicamentos_validos_se_rechaza_sin_trabar_el_lote`,
+    que estaba fijando el comportamiento viejo: era el **octavo** test de la franja, escondido porque test y código se
+    equivocaban juntos.
     Y la suite entera aborta con «Allowed memory size of 134217728 bytes exhausted» si algún test falla con una página enorme (Ignition renderiza el error):
     `php -d memory_limit=2G artisan test` o por carpeta (`tests/Unit`, `tests/Feature`).
 60. **Las cinco tablas de WEB-8.1b se suben por fila: no hay nada que proteger, y el riesgo real es otro.** Medido al hacer WEB-8.1b (2026-10-11) mirando

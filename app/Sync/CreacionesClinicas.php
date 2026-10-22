@@ -334,7 +334,7 @@ class CreacionesClinicas
             return null;
         }
 
-        $fecha = $this->fechaValida($change['fecha'] ?? null) ?? now()->toDateString();
+        $fecha = $this->fechaValida($change['fecha'] ?? null) ?? FechaDelConsultorio::hoyComoTexto();
 
         // El doctor es el médico autenticado del sync: la consulta queda sellada con él (`medico_id` y su
         // clave legacy en `medico`), igual que la que abre la web al "Atender".
@@ -474,7 +474,7 @@ class CreacionesClinicas
         }
 
         $fecha = $this->fechaValida($change['fecha'] ?? null)
-            ?? ($consulta->fecha ? Carbon::parse($consulta->fecha)->toDateString() : now()->toDateString());
+            ?? ($consulta->fecha ? Carbon::parse($consulta->fecha)->toDateString() : FechaDelConsultorio::hoyComoTexto());
 
         $resultado = $this->guardarRecipe->ejecutar($consulta, $items, $fecha, null, null, null);
 

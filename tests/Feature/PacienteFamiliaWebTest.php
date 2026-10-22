@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -305,7 +306,9 @@ class PacienteFamiliaWebTest extends TestCase
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $id = $this->nino($medico, 'Mateo', 601);
-        DB::table('pacientes')->where('id', $id)->update(['fnacimiento' => now()->subYears(2)->subMonths(4)->toDateString()]);
+        // La edad la cuenta la ficha contra el día del **consultorio** (`FechaDelConsultorio`), no contra el
+        // UTC del servidor: pasadas las 20:00 de Caracas la resta daría un día menos.
+        DB::table('pacientes')->where('id', $id)->update(['fnacimiento' => FechaDelConsultorio::hoy()->subYears(2)->subMonths(4)->toDateString()]);
         $this->chamo($medico->reg_medico, 601, 61, 'PEREZ MATEO');
         DB::table('paciente_chamo')->where('reg_medico', $medico->reg_medico)->where('historia', 601)->update(['alergia' => 'PENICILINA']);
 
@@ -315,10 +318,13 @@ class PacienteFamiliaWebTest extends TestCase
 
     public function test_la_edad_detallada_cuenta_dias_meses_y_anios_y_en_mayores_de_cinco_solo_anios(): void
     {
-        $this->assertSame('5 días', \App\Support\FechaClinica::edadDetallada(now()->subDays(5)->toDateString()));
-        $this->assertSame('1 mes', \App\Support\FechaClinica::edadDetallada(now()->subMonth()->toDateString()));
-        $this->assertSame('1 año 1 mes', \App\Support\FechaClinica::edadDetallada(now()->subYear()->subMonth()->toDateString()));
-        $this->assertSame('8 años', \App\Support\FechaClinica::edadDetallada(now()->subYears(8)->subMonths(3)->toDateString()));
+        // La referencia es el día del consultorio (lo que hace `FechaClinica`), no el UTC del servidor.
+        $hoy = FechaDelConsultorio::hoy();
+
+        $this->assertSame('5 días', \App\Support\FechaClinica::edadDetallada($hoy->copy()->subDays(5)->toDateString()));
+        $this->assertSame('1 mes', \App\Support\FechaClinica::edadDetallada($hoy->copy()->subMonth()->toDateString()));
+        $this->assertSame('1 año 1 mes', \App\Support\FechaClinica::edadDetallada($hoy->copy()->subYear()->subMonth()->toDateString()));
+        $this->assertSame('8 años', \App\Support\FechaClinica::edadDetallada($hoy->copy()->subYears(8)->subMonths(3)->toDateString()));
         $this->assertNull(\App\Support\FechaClinica::edadDetallada(null));
         $this->assertNull(\App\Support\FechaClinica::edadDetallada('2999-01-01'));
     }
