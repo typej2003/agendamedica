@@ -807,9 +807,13 @@ y el JS `public/js/clinica/plan-pago.js`; las pantallas del panel, en `resources
 - `main` en **`0.1.3`** y tag **`v0.1.3`** (2026-10-21); `desarrollo` es QA. Probado con SyPago real en QA,
   con cuenta y teléfono.
 - La tasa puede ser **manual** o **automática desde el BCV** (`configuracion_pagos.tasa_automatica` +
-  `tasas:bcv`, con la cadena de Sectigo en `resources/certificados/bcv-cadena.pem`; trampa 162).
-- **Pendiente de este módulo**: reembolsos, factura fiscal (hoy sólo el correo del comprobante) y verificar
-  en producción el SMTP del comprobante y el cron. El **pago de citas/consultas** es la etapa siguiente.
+  `tasas:bcv`, con la cadena de Sectigo en `resources/certificados/bcv-cadena.pem`; trampa 162). La
+  automática está **verificada en producción y en QA**: se actualiza **cada 30 minutos** (y el mismo
+  `schedule:run` corre `pagos:conciliar`, así que el cron del servidor está funcionando).
+- **Factura fiscal**: **no se hace por ahora** — el comprobante por correo alcanza (decisión del usuario,
+  2026-10-21). **Pendiente de este módulo**: sólo los **reembolsos** (hoy no hay flujo; un pago mal cobrado
+  se corrige a mano) y confirmar que el comprobante por correo llega en producción. El **pago de
+  citas/consultas** es la etapa siguiente.
 - Tests: `PlanPagoWebTest`, `MetodosPagoAdminTest`, `PagosAdminTest`, `SypagoAutenticacionTest`,
   `SypagoWebhookFirmaTest` y `TasasBcvTest`; **41 en verde** al cerrar (2026-10-21).
 
