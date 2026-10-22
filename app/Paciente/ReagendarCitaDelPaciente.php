@@ -73,9 +73,8 @@ final class ReagendarCitaDelPaciente
             ];
         }
 
-        $actual = $this->disponibilidad->opcionEn($cita->medico, $fecha);
-
-        if ($actual === null || $actual->hora !== substr($hora, 0, 5) || $actual->officeId !== $officeId) {
+        // El bloque elegido (hora y sede) debe seguir ofreciéndose con la agenda de este momento.
+        if ($this->disponibilidad->opcionEn($cita->medico, $fecha, $hora, $officeId) === null) {
             return ['ok' => false, 'mensaje' => 'Ese horario se acaba de ocupar. Elige otro de los que se muestran.'];
         }
 
