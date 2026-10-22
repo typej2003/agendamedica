@@ -245,6 +245,22 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertSame(ConfiguracionPago::SINCRONIZACION_OK, $configuracion->tasa_sincronizacion_estado);
     }
 
+    /** La base guarda en UTC: «Última sincronización» se muestra en la hora del consultorio (Caracas, UTC-4). */
+    public function test_la_ultima_sincronizacion_se_muestra_en_hora_de_caracas(): void
+    {
+        ConfiguracionPago::actual()->forceFill([
+            'tasa_sincronizada_el' => \Carbon\Carbon::parse('2026-10-22 01:40:00', 'UTC'),
+            'tasa_sincronizacion_estado' => ConfiguracionPago::SINCRONIZACION_OK,
+        ])->save();
+
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->call('cambiarPestana', 'tasa')
+            ->assertSee('21/10/2026 9:40 PM')
+            ->assertDontSee('22/10/2026 01:40');
+    }
+
     public function test_la_sincronizacion_automatica_se_puede_apagar(): void
     {
         $this->actingAs($this->administrador());
