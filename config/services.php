@@ -107,4 +107,12 @@ return [
         'urgencia_timeout' => (int) env('JEV_URGENCIA_TIMEOUT', 4),
     ],
 
+    /*
+     * **Chatbot de WhatsApp**. Urgencia afirmada por Jev y sin horario hoy: se avisa a la secretaría por correo
+     * (`App\Reservas\AvisoDeUrgenciaSinHorario`), como máximo una vez por teléfono cada tantos minutos.
+     */
+    'chatbot' => [
+        'urgencia_aviso_minutos' => (int) env('CHATBOT_URGENCIA_AVISO_MINUTOS', 60),
+    ],
+
 ];

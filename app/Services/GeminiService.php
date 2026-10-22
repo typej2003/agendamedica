@@ -195,6 +195,7 @@ class GeminiService
                         . DisponibilidadEnTexto::de($disponibilidad);
                 } else {
                     return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                        . $this->avisoDeUrgenciaEnTexto($disponibilidad)
                         . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
                 }
             }
@@ -262,6 +263,7 @@ class GeminiService
                 . DisponibilidadEnTexto::de($disponibilidad);
         } else {
             return "Hemos verificado la agenda del *{$medicoElegido['nombre']}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                . $this->avisoDeUrgenciaEnTexto($disponibilidad)
                 . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
         }
     }
@@ -349,8 +351,17 @@ class GeminiService
                 . DisponibilidadEnTexto::de($disponibilidad);
         } else {
             return "Hemos verificado la agenda del *{$medico->nombre_mostrar}*, pero lamentablemente no cuenta con cupos en los próximos 30 días.\n\n"
+                . $this->avisoDeUrgenciaEnTexto($disponibilidad)
                 . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
         }
+    }
+
+    /** El contacto de una urgencia sin horario hoy, con su separación; '' si no aplica. */
+    private function avisoDeUrgenciaEnTexto(array $disponibilidad): string
+    {
+        $aviso = DisponibilidadEnTexto::avisoDeUrgencia($disponibilidad);
+
+        return $aviso === '' ? '' : $aviso . "\n\n";
     }
 
     /**
@@ -672,7 +683,10 @@ class GeminiService
                         if ($followUpResponse->successful()) {
                             $textoFinal = $followUpResponse->json('candidates.0.content.parts.0.text');
                             if ($textoFinal) {
-                                return $textoFinal;
+                                // Urgencia sin horario hoy: el contacto del consultorio va tal cual, no reescrito por el modelo.
+                                $aviso = is_array($resultadoTool ?? null) ? DisponibilidadEnTexto::avisoDeUrgencia($resultadoTool) : '';
+
+                                return $aviso === '' ? $textoFinal : $aviso . "\n\n" . $textoFinal;
                             }
                         }
                     }

@@ -44,6 +44,12 @@ class PacienteAtencionContextService
     /** \var array<string,mixed>|null lo que dijo Jev del mensaje en curso (una sola consulta por mensaje) */
     private ?array $veredictoUrgencia = null;
 
+    /** \var array<string,bool> `reg_medico` => Jev afirmó la urgencia y ese médico no tiene horario hoy (a 90 min) */
+    private array $urgenteSinHorarioHoy = [];
+
+    /** \var array<string,?string> `reg_medico` => el texto de contacto ya resuelto para este mensaje (un aviso por mensaje) */
+    private array $avisoDeUrgencia = [];
+
     /**
      * Las dependencias de la agenda son opcionales para no romper a quien instancia el servicio a mano
      * (los tests lo hacían con `new PacienteAtencionContextService()`); sin ellas se resuelven del
@@ -63,6 +69,8 @@ class PacienteAtencionContextService
     {
         $this->mensajeWhatsApp = ['texto' => $texto, 'telefono' => (string) $telefono];
         $this->veredictoUrgencia = null;
+        $this->urgenteSinHorarioHoy = [];
+        $this->avisoDeUrgencia = [];
     }
 
     /**
@@ -79,16 +87,18 @@ class PacienteAtencionContextService
             return null;
         }
 
-        $urgente = $this->primerLugarDisponible($regMedico, $medico, $desde, 30, self::ANTICIPACION_URGENCIA_MINUTOS);
-        if (empty($urgente['disponible'])) {
-            return null;
-        }
+        // ¿Hoy hay un lugar a ahora + 90 min? Si no hay, una urgencia afirmada también se conecta con el consultorio.
+        $hayHoy = $this->lugaresDelDia($regMedico, $medico, \App\Clinica\FechaDelConsultorio::hoyComoFecha(), self::ANTICIPACION_URGENCIA_MINUTOS) !== [];
 
-        $normal = $this->primerLugarDisponible($regMedico, $medico, $desde, 30);
-        if (! empty($normal['disponible'])
-            && ($normal['fecha'] ?? null) === ($urgente['fecha'] ?? null)
-            && ($normal['hora'] ?? null) === ($urgente['hora'] ?? null)) {
-            return null;
+        if ($hayHoy) {
+            // Con horario hoy, Jev sólo importa si la ventana de 90 min trae un lugar más temprano que el normal.
+            $urgente = $this->primerLugarDisponible($regMedico, $medico, $desde, 30, self::ANTICIPACION_URGENCIA_MINUTOS);
+            $normal = $this->primerLugarDisponible($regMedico, $medico, $desde, 30);
+            if (! empty($normal['disponible'])
+                && ($normal['fecha'] ?? null) === ($urgente['fecha'] ?? null)
+                && ($normal['hora'] ?? null) === ($urgente['hora'] ?? null)) {
+                return null;
+            }
         }
 
         $paciente = $this->buscarPacientePorTelefono($mensaje['telefono']);
@@ -104,7 +114,41 @@ class PacienteAtencionContextService
             );
         }
 
+        if ($this->veredictoUrgencia['urgente'] && ! $hayHoy) {
+            $this->urgenteSinHorarioHoy[$regMedico] = true;
+        }
+
         return $this->veredictoUrgencia['urgente'] ? self::ANTICIPACION_URGENCIA_MINUTOS : null;
+    }
+
+    /**
+     * El texto de contacto para una **urgencia sin horario hoy** (teléfono del consultorio + aviso a la secretaría),
+     * o null si no aplica: Jev no afirmó la urgencia, hay horario hoy, no hay contacto configurado o la consulta
+     * no es de una conversación de WhatsApp. Una sola vez por mensaje y médico. Nunca rompe la respuesta.
+     */
+    private function avisoDeUrgenciaSinHorarioHoy(string $regMedico, Medico $medico): ?string
+    {
+        if (empty($this->urgenteSinHorarioHoy[$regMedico]) || $this->mensajeWhatsApp === null) {
+            return null;
+        }
+
+        if (! array_key_exists($regMedico, $this->avisoDeUrgencia)) {
+            $telefono = $this->mensajeWhatsApp['telefono'];
+            try {
+                $paciente = $this->buscarPacientePorTelefono($telefono);
+                $this->avisoDeUrgencia[$regMedico] = app(\App\Reservas\AvisoDeUrgenciaSinHorario::class)->atender(
+                    $medico,
+                    $regMedico,
+                    $telefono,
+                    $paciente,
+                    $paciente ? 'ficha:' . $paciente->id : 'tel:' . \App\Reservas\UrgenciaClinicaJev::enmascarar($telefono)
+                );
+            } catch (\Throwable $e) {
+                $this->avisoDeUrgencia[$regMedico] = null;
+            }
+        }
+
+        return $this->avisoDeUrgencia[$regMedico];
     }
 
     /** Sólo se acepta la anticipación de urgencia; cualquier otro valor explícito es la regla normal (null). */
@@ -967,6 +1011,9 @@ class PacienteAtencionContextService
                 ? $this->anticipacionPermitida($anticipacionMinutos)
                 : $this->anticipacionDeLaConversacion($regFinal, $medico, $hoy);
 
+            // Urgencia afirmada y sin horario hoy: además de la agenda, el contacto del consultorio (y aviso a la secretaría).
+            $avisoUrgencia = $anticipacionMinutos === null ? $this->avisoDeUrgenciaSinHorarioHoy($regFinal, $medico) : null;
+
             // Se ofrecen varios días, y **los mismos** que aceptaría la reserva: la comprobación es
             // `primerLugarDisponible`, la que usa el agendamiento, no una cuenta de cupos por día aparte.
             for ($i = 0; $i < $diasMaximos && count($disponibles) < max(1, $opciones); $i++) {
@@ -1001,7 +1048,7 @@ class PacienteAtencionContextService
                     'reg_medico' => $regFinal,
                     'medico' => $nombreMedico,
                     'mensaje' => "El {$nombreMedico} no cuenta con cupos disponibles en los próximos {$diasMaximos} días.",
-                ];
+                ] + ($avisoUrgencia !== null ? ['aviso_urgencia' => $avisoUrgencia] : []);
             }
 
             return [
@@ -1016,7 +1063,8 @@ class PacienteAtencionContextService
                 // porque hay tests y consumidores que lo leen.
                 'cupos_disponibles' => max(0, $limiteDiario - (int) $ocupadasPrimerDia),
                 'opciones' => $disponibles,
-            ] + ($anticipacion !== null ? ['anticipacion_minutos' => $anticipacion] : []);
+            ] + ($anticipacion !== null ? ['anticipacion_minutos' => $anticipacion] : [])
+              + ($avisoUrgencia !== null ? ['aviso_urgencia' => $avisoUrgencia] : []);
 
         } catch (\Throwable $e) {
             Log::error('PacienteAtencionContextService::consultarProximoDiaDisponible error: ' . $e->getMessage());
