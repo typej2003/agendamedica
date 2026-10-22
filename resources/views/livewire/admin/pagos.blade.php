@@ -111,8 +111,8 @@
                             @php $medico = $nombres[$pago->reg_medico] ?? null; @endphp
                             <tr wire:key="pago-{{ $pago->id }}">
                                 <td class="text-nowrap">
-                                    <div>{{ $pago->created_at?->format('d/m/Y') }}</div>
-                                    <small class="text-muted">{{ $pago->created_at?->format('H:i') }}</small>
+                                    <div>{{ \App\Support\HoraLocal::instante($pago->created_at)?->format('d/m/Y') }}</div>
+                                    <small class="text-muted">{{ \App\Support\HoraLocal::hora($pago->created_at) }}</small>
                                 </td>
                                 <td>
                                     <div class="fw-semibold">
@@ -178,7 +178,7 @@
                             <div class="col-lg-6">
                                 <dl class="row mb-0">
                                     <dt class="col-5 fw-normal text-muted">Fecha</dt>
-                                    <dd class="col-7">{{ $seleccionado->created_at?->format('d/m/Y H:i:s') }}</dd>
+                                    <dd class="col-7">{{ \App\Support\HoraLocal::fechaHoraConSegundos($seleccionado->created_at) }}</dd>
 
                                     <dt class="col-5 fw-normal text-muted">Médico</dt>
                                     <dd class="col-7">
@@ -224,10 +224,10 @@
                                     <dd class="col-7"><code class="small">{{ $seleccionado->referencia_externa ?: '—' }}</code></dd>
 
                                     <dt class="col-5 fw-normal text-muted">Pagado el</dt>
-                                    <dd class="col-7">{{ $seleccionado->pagado_el?->format('d/m/Y H:i') ?? '—' }}</dd>
+                                    <dd class="col-7">{{ \App\Support\HoraLocal::fechaHora($seleccionado->pagado_el, '—') }}</dd>
 
                                     <dt class="col-5 fw-normal text-muted">Vence el</dt>
-                                    <dd class="col-7">{{ $seleccionado->expira_el?->format('d/m/Y H:i') ?? '—' }}</dd>
+                                    <dd class="col-7">{{ \App\Support\HoraLocal::fechaHora($seleccionado->expira_el, '—') }}</dd>
 
                                     <dt class="col-5 fw-normal text-muted">Liquidación</dt>
                                     <dd class="col-7">{{ $seleccionado->estado_liquidacion }}</dd>
@@ -305,7 +305,7 @@
                                 <tbody>
                                     @forelse ($eventos as $fila)
                                         <tr wire:key="evento-{{ $fila['evento']->id }}">
-                                            <td class="text-nowrap">{{ $fila['evento']->created_at?->format('d/m/Y H:i:s') }}</td>
+                                            <td class="text-nowrap">{{ \App\Support\HoraLocal::fechaHoraConSegundos($fila['evento']->created_at) }}</td>
                                             <td>{{ $fila['evento']->origen }}</td>
                                             <td>{{ $fila['evento']->evento }}</td>
                                             <td class="text-nowrap">{{ $fila['evento']->estado_anterior ?? '—' }} → {{ $fila['evento']->estado_nuevo ?? '—' }}</td>

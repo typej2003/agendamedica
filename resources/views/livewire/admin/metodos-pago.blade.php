@@ -85,7 +85,7 @@
                                     <td>
                                         @if ($metodo->verificado_el)
                                             <span class="badge bg-success">Probado</span>
-                                            <div><small class="text-muted">{{ $metodo->verificado_el->format('d/m/Y H:i') }}</small></div>
+                                            <div><small class="text-muted">{{ \App\Support\HoraLocal::fechaHora($metodo->verificado_el) }}</small></div>
                                         @elseif ($metodo->ultimo_error)
                                             <span class="badge bg-danger">Con error</span>
                                             <div><small class="text-danger" title="{{ $metodo->ultimo_error }}">{{ \Illuminate\Support\Str::limit($metodo->ultimo_error, 45) }}</small></div>
@@ -176,7 +176,7 @@
                             <div class="display-6 fw-semibold">1 USD = {{ $tasaActual->aTexto() }} VES</div>
                             <p class="text-muted small mb-1">
                                 {{ \App\Models\TasaDeCambio::ORIGENES[$tasaActual->origen] ?? $tasaActual->origen }}
-                                · desde el {{ $tasaActual->vigente_desde->format('d/m/Y H:i') }}
+                                · desde el {{ \App\Support\HoraLocal::fechaHora($tasaActual->vigente_desde) }}
                             </p>
                             <p class="small mb-0">
                                 Un plan de <strong>USD 20,00</strong> se cobra como
@@ -202,7 +202,7 @@
                                 <div class="text-muted">Última sincronización</div>
                                 @if ($configuracion->tasa_sincronizada_el)
                                     <div>
-                                        {{ $configuracion->tasa_sincronizada_el->format('d/m/Y H:i') }}
+                                        {{ \App\Support\HoraLocal::fechaHora($configuracion->tasa_sincronizada_el) }}
                                         <span class="badge bg-{{ $configuracion->tasa_sincronizacion_estado === \App\Models\ConfiguracionPago::SINCRONIZACION_OK ? 'success' : 'danger' }}">
                                             {{ $configuracion->estadoSincronizacionLegible() }}
                                         </span>
@@ -217,7 +217,7 @@
                             <div class="col-sm-6">
                                 <div class="text-muted">Última actualización de la tasa</div>
                                 @if ($tasaActual)
-                                    <div>{{ $tasaActual->created_at?->format('d/m/Y H:i') ?? $tasaActual->vigente_desde->format('d/m/Y H:i') }}</div>
+                                    <div>{{ \App\Support\HoraLocal::fechaHora($tasaActual->created_at ?? $tasaActual->vigente_desde) }}</div>
                                     <div class="text-muted">{{ \App\Models\TasaDeCambio::ORIGENES[$tasaActual->origen] ?? $tasaActual->origen }}</div>
                                 @else
                                     <div class="text-muted">Sin tasa cargada.</div>
@@ -245,8 +245,8 @@
                                 <tr wire:key="tasa-{{ $fila->id }}">
                                     <td class="fw-semibold">{{ $fila->aTexto() }}</td>
                                     <td>{{ \App\Models\TasaDeCambio::ORIGENES[$fila->origen] ?? $fila->origen }}</td>
-                                    <td>{{ $fila->vigente_desde->format('d/m/Y H:i') }}</td>
-                                    <td><small class="text-muted">{{ $fila->created_at?->format('d/m/Y H:i') }}</small></td>
+                                    <td>{{ \App\Support\HoraLocal::fechaHora($fila->vigente_desde) }}</td>
+                                    <td><small class="text-muted">{{ \App\Support\HoraLocal::fechaHora($fila->created_at) }}</small></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="text-center text-muted py-4">Sin tasas cargadas.</td></tr>
