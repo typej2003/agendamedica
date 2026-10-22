@@ -21,9 +21,6 @@ use Illuminate\Support\Collection;
  */
 final class DisponibilidadPublica
 {
-    /** Anticipación mínima: el portal sólo ofrece (y acepta) horarios que empiezan dentro de 24 horas o más. */
-    public const ANTICIPACION_MINIMA_HORAS = 24;
-
     /** Las sedes de cada médico, para no repetir la consulta en el catálogo y en su ficha. */
     private array $sedesPorMedico = [];
 
@@ -34,7 +31,9 @@ final class DisponibilidadPublica
     }
 
     /**
-     * Los próximos `$cantidad` días con lugar, uno por día. Si no hay agenda configurada devuelve vacío.
+     * Las próximas `$cantidad` ofertas, **una por bloque de horario** (si el médico atiende mañana y tarde,
+     * salen ambas). Las horas y la anticipación de 24 h salen de `PacienteAtencionContextService::lugaresDelDia`,
+     * el mismo cálculo del chatbot. Si no hay agenda configurada devuelve vacío.
      *
      * @return array<int,OpcionDeReserva>
      */
@@ -50,40 +49,24 @@ final class DisponibilidadPublica
         $hoy = FechaDelConsultorio::hoyComoFecha();
 
         for ($i = 0; $i < $diasMaximos && count($opciones) < $cantidad; $i++) {
-            $fecha = $hoy->copy()->addDays($i);
+            foreach ($this->lugaresDelDia($regMedico, $medico, $hoy->copy()->addDays($i)) as $opcion) {
+                if (count($opciones) >= $cantidad) {
+                    break;
+                }
 
-            // La agenda del legado no atiende domingos; `primerLugarDisponible` lo repite, pero acá se
-            // evita la consulta para no gastar una vuelta por día.
-            if ($fecha->isSunday()) {
-                continue;
+                $opciones[] = $opcion;
             }
-
-            $lugar = $this->atencion->primerLugarDisponible($regMedico, $medico, $fecha, 1);
-
-            if (empty($lugar['disponible']) || empty($lugar['sede'])) {
-                continue;
-            }
-
-            $opcion = $this->opcion($fecha, $lugar);
-
-            // El portal no ofrece un horario con menos de 24 h de anticipación (ni uno que ya pasó). El filtro
-            // va antes de limitar la cantidad: la lista se sigue llenando con días posteriores.
-            if (! $this->conAnticipacion($opcion)) {
-                continue;
-            }
-
-            $opciones[] = $opcion;
         }
 
         return $opciones;
     }
 
     /**
-     * **La comprobación del horario elegido**: cuál es el primer lugar disponible de ese día, con la
-     * agenda de este momento. Si no coincide con lo que el paciente eligió (el día se llenó, se movió un
-     * bloque, se cerró el consultorio), la reserva no se crea.
+     * **La comprobación del horario elegido**: ¿sigue ofreciéndose ese bloque (hora y sede) con la agenda de
+     * este momento y con la anticipación mínima? Si no (se llenó, se movió, quedó a menos de 24 h), la
+     * reserva no se crea.
      */
-    public function opcionEn(Medico $medico, string $fecha): ?OpcionDeReserva
+    public function opcionEn(Medico $medico, string $fecha, string $hora, int $officeId): ?OpcionDeReserva
     {
         $regMedico = $medico->regMedicoPrincipal();
 
@@ -92,27 +75,29 @@ final class DisponibilidadPublica
         }
 
         $dia = Carbon::createFromFormat('!Y-m-d', $fecha);
+        $hora = substr($hora, 0, 5);
 
-        if ($dia->lt(FechaDelConsultorio::hoyComoFecha())) {
-            return null;
+        foreach ($this->lugaresDelDia($regMedico, $medico, $dia) as $opcion) {
+            if ($opcion->hora === $hora && $opcion->officeId === $officeId) {
+                return $opcion;
+            }
         }
 
-        $lugar = $this->atencion->primerLugarDisponible($regMedico, $medico, $dia, 1);
-
-        if (empty($lugar['disponible']) || empty($lugar['sede'])) {
-            return null;
-        }
-
-        $opcion = $this->opcion($dia, $lugar);
-
-        // La misma regla de anticipación que al listar: no se puede saltar eligiendo a mano un horario cercano.
-        return $this->conAnticipacion($opcion) ? $opcion : null;
+        return null;
     }
 
-    /** ¿El horario empieza en `ANTICIPACION_MINIMA_HORAS` horas o más, contando desde ahora (zona del consultorio)? */
-    private function conAnticipacion(OpcionDeReserva $opcion): bool
+    /** @return array<int,OpcionDeReserva> */
+    private function lugaresDelDia(string $regMedico, Medico $medico, Carbon $dia): array
     {
-        return $opcion->inicio()->gte(FechaDelConsultorio::ahora()->addHours(self::ANTICIPACION_MINIMA_HORAS));
+        $opciones = [];
+
+        foreach ($this->atencion->lugaresDelDia($regMedico, $medico, $dia) as $lugar) {
+            if (! empty($lugar['sede'])) {
+                $opciones[] = $this->opcion($dia, $lugar);
+            }
+        }
+
+        return $opciones;
     }
 
     /** Las sedes donde el médico atiende y tiene bloques cargados (lo que el catálogo ofrece). */

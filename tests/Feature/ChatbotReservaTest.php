@@ -34,8 +34,11 @@ class ChatbotReservaTest extends TestCase
     {
         parent::setUp();
 
-        // Un día de atención: el domingo la agenda no abre y el bot ya lo rechazaba.
-        $this->fecha = Carbon::today()->isSunday() ? Carbon::tomorrow() : Carbon::today();
+        // Un día de atención con más de 24 h de anticipación: el domingo la agenda no abre y el bot ya lo rechazaba.
+        $this->fecha = Carbon::today()->addDays(3);
+        if ($this->fecha->isSunday()) {
+            $this->fecha->addDay();
+        }
     }
 
     protected function tearDown(): void

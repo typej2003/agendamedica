@@ -93,9 +93,9 @@ final class ConfirmarReservaPublica
     /** @param array<string,mixed> $datos */
     private function crear(Medico $medico, array $datos): array
     {
-        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha']);
+        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha'], (string) $datos['hora'], (int) $datos['office_id']);
 
-        if ($opcion === null || $opcion->hora !== $datos['hora'] || $opcion->officeId !== (int) $datos['office_id']) {
+        if ($opcion === null) {
             return [
                 'ok' => false,
                 'mensaje' => 'Ese horario se acaba de ocupar. Vuelve a elegir uno de los que se muestran.',

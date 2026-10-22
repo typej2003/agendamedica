@@ -303,15 +303,15 @@ class ReservasPublicasWebTest extends TestCase
 
         // Lunes 19 a las 08:00 Caracas (12:00 UTC). Caracas es UTC-4.
         Carbon::setTestNow(Carbon::create(2026, 10, 18, 13, 0, 0)); // 23 h antes
-        $this->assertNull($disp->opcionEn($this->medico, '2026-10-19'));
+        $this->assertNull($disp->opcionEn($this->medico, '2026-10-19', '08:00', $this->sede->id));
         $this->assertNotContains('2026-10-19', array_map(fn ($o) => $o->fecha, $disp->opciones($this->medico)));
 
         Carbon::setTestNow(Carbon::create(2026, 10, 18, 12, 0, 0)); // 24 h exactas
-        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19'));
+        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19', '08:00', $this->sede->id));
         $this->assertSame('2026-10-19', $disp->opciones($this->medico)[0]->fecha);
 
         Carbon::setTestNow(Carbon::create(2026, 10, 18, 11, 0, 0)); // 25 h
-        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19'));
+        $this->assertNotNull($disp->opcionEn($this->medico, '2026-10-19', '08:00', $this->sede->id));
     }
 
     public function test_la_lista_se_completa_con_dias_posteriores_hasta_la_cantidad_habitual(): void
@@ -345,6 +345,84 @@ class ReservasPublicasWebTest extends TestCase
             ->assertSessionHasErrors('fecha');
 
         $this->assertNull(session('reservas.pendiente'));
+    }
+
+    private function bloqueDeTarde(): void
+    {
+        OfficeSchedule::create([
+            'office_id' => $this->sede->id,
+            'reg_medico' => $this->medico->reg_medico,
+            'dia_semana' => 1,
+            'hora_inicio' => '14:00',
+            'hora_fin' => '17:00',
+            'cupo' => 10,
+        ]);
+    }
+
+    /** @return array<int,string> "fecha hora" de cada oferta */
+    private function ofertas(): array
+    {
+        return array_map(
+            fn ($o) => $o->fecha . ' ' . $o->hora,
+            app(\App\Reservas\DisponibilidadPublica::class)->opciones($this->medico)
+        );
+    }
+
+    public function test_mañana_y_tarde_del_mismo_dia_se_ofrecen_como_dos_ofertas(): void
+    {
+        $this->bloqueDeTarde();
+
+        $ofertas = $this->ofertas();
+
+        $this->assertSame(['2026-10-19 08:00', '2026-10-19 14:00'], array_slice($ofertas, 0, 2));
+        $this->assertSame('2026-10-26 08:00', $ofertas[2]);
+    }
+
+    public function test_la_regla_de_24_horas_se_evalua_por_bloque(): void
+    {
+        $this->bloqueDeTarde();
+
+        // Domingo 10:00 Caracas: el lunes 08:00 queda a 22 h (fuera) y el lunes 14:00 a 28 h (dentro).
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 14, 0, 0));
+
+        $ofertas = $this->ofertas();
+
+        $this->assertSame('2026-10-19 14:00', $ofertas[0]);
+        $this->assertNotContains('2026-10-19 08:00', $ofertas);
+        $this->assertCount(5, $ofertas);
+    }
+
+    public function test_por_hora_de_cita_se_ofrece_el_primer_hueco_y_por_orden_de_llegada_la_apertura(): void
+    {
+        Cola::create([
+            'reg_medico' => $this->medico->reg_medico,
+            'fecha' => $this->fecha->toDateString(),
+            'hora_ini' => '08:00',
+            'numorden' => 1,
+            'atendido' => 0,
+            'estado' => Cola::ESTADO_CONFIRMADA,
+            'medical_center_id' => $this->sede->medical_center_id,
+        ]);
+
+        $this->assertSame('2026-10-19 08:30', $this->ofertas()[0], 'Con hora de cita: el primer hueco del bloque.');
+
+        $this->sede->update(['modalidad' => Office::MODALIDAD_ORDEN]);
+
+        $this->assertSame('2026-10-19 08:00', $this->ofertas()[0], 'Por orden de llegada: el inicio del bloque.');
+    }
+
+    public function test_el_chatbot_usa_la_misma_regla_y_la_anticipacion_es_un_parametro(): void
+    {
+        $this->bloqueDeTarde();
+        $servicio = app(\App\Services\PacienteAtencionContextService::class);
+
+        Carbon::setTestNow(Carbon::create(2026, 10, 18, 14, 0, 0));
+        $lugar = $servicio->primerLugarDisponible($this->medico->reg_medico, $this->medico, $this->fecha);
+        $this->assertSame(['2026-10-19', '14:00'], [$lugar['fecha'], $lugar['hora']]);
+
+        // Parametrizable (urgencias a futuro): con 90 min el bloque de las 08:00 sí entra.
+        $lugar = $servicio->primerLugarDisponible($this->medico->reg_medico, $this->medico, $this->fecha, 30, 90);
+        $this->assertSame(['2026-10-19', '08:00'], [$lugar['fecha'], $lugar['hora']]);
     }
 
     public function test_un_codigo_vencido_no_crea_la_cita(): void

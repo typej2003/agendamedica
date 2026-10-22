@@ -32,7 +32,7 @@ class ChatbotDisponibilidadTest extends TestCase
     {
         parent::setUp();
 
-        Carbon::setTestNow(Carbon::parse('2026-10-19 09:00:00'));
+        Carbon::setTestNow(Carbon::parse('2026-10-18 06:00:00'));
     }
 
     protected function tearDown(): void

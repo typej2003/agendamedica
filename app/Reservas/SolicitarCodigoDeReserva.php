@@ -38,9 +38,9 @@ final class SolicitarCodigoDeReserva
      */
     public function ejecutar(Medico $medico, array $datos, bool $forzarReenvio = false): array
     {
-        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha']);
+        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha'], (string) $datos['hora'], (int) $datos['office_id']);
 
-        if ($opcion === null || $opcion->hora !== substr((string) $datos['hora'], 0, 5) || $opcion->officeId !== (int) $datos['office_id']) {
+        if ($opcion === null) {
             throw ValidationException::withMessages([
                 'fecha' => 'Ese horario ya no está disponible. Elige otro de los que se muestran.',
             ]);
