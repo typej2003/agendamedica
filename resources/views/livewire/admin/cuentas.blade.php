@@ -224,7 +224,6 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
                                         <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
-                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
@@ -254,15 +253,9 @@
 
                                 @if ($tipoAlta === 'medico')
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Registro médico (reg_medico) <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off">
-                                        <div class="form-text">
-                                            @if ($es_centro)
-                                                El del centro, por ejemplo <code>centro_001</code>. Es el tenant donde trabajan sus doctores.
-                                            @else
-                                                Debe ser el mismo que tiene el médico en su GinecoReport (tabla <code>evolucion</code>).
-                                            @endif
-                                        </div>
+                                        <label class="form-label">Registro médico (reg_medico)</label>
+                                        <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off" placeholder="Vacío = se genera uno">
+                                        <div class="form-text">Vacío = se genera uno (med_00001, med_00002…).</div>
                                         @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
 
@@ -403,7 +396,6 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
                                         <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
-                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif

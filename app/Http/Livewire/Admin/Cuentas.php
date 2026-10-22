@@ -217,7 +217,7 @@ class Cuentas extends Component
                     'lastname'   => 'required|string|max:255',
                     'prefix'     => 'nullable|string|max:20',
                     'email'      => 'nullable|email|max:255',
-                    'reg_medico' => 'required|string|max:100',
+                    'reg_medico' => 'nullable|string|max:100',
                 ]);
                 $centro = $cuentas->crearCentro([
                     'name'       => $this->name,
@@ -239,7 +239,7 @@ class Cuentas extends Component
                     'lastname'   => 'required|string|max:255',
                     'prefix'     => 'nullable|string|max:20',
                     'email'      => 'required|email|max:255',
-                    'reg_medico' => 'required|string|max:100',
+                    'reg_medico' => 'nullable|string|max:100',
                 ]);
                 $r = $cuentas->crearMedico([
                     'name'       => $this->name,
