@@ -52,6 +52,11 @@
                 <input type="hidden" name="reenviar" value="1">
                 <button type="submit" class="btn btn-link p-0">No me llegó: reenviar código</button>
             </form>
+
+            <form method="POST" action="{{ route('paciente.telefono.otro') }}" class="mt-2">
+                @csrf
+                <button type="submit" class="btn btn-link p-0">Usar otro número</button>
+            </form>
         @else
             <form method="POST" action="{{ route('paciente.telefono.codigo') }}">
                 @csrf

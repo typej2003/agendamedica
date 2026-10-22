@@ -42,6 +42,11 @@ final class CodigoDeVerificacion
      */
     public function enviar(string $telefono, string $codigo): array
     {
+        // Tope por hora y teléfono (`LimitesDeReserva`): también frena el gasto de SMS/WhatsApp.
+        if (! app(LimitesDeReserva::class)->registrarCodigo($telefono)) {
+            return ['ok' => false, 'canal' => 'ninguno', 'error' => LimitesDeReserva::mensajeDeCodigos()];
+        }
+
         $plantilla = (string) config('services.whatsapp.template_codigo', '');
         $whatsapp = app(WhatsAppService::class);
 

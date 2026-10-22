@@ -70,8 +70,9 @@ return [
      * `Docs/tecnico/auditoria-chatbot-whatsapp.md` §10.3 y `ROADMAP.md` §10.3). Devuelve valores tipados
      * con probabilidad y confianza sobre un `state` y un mapa de preguntas (`choice`, `score`, `noul`).
      *
-     * Por ahora **sólo lo usa la prueba de concepto** `php artisan jev:triaje`
-     * (`App\Console\Commands\ProbarTriajeJevCommand`): no está conectado al chatbot de WhatsApp.
+     * Lo usan la prueba de concepto `php artisan jev:triaje` (`App\Console\Commands\ProbarTriajeJevCommand`) y,
+     * para una sola decisión, el chatbot de WhatsApp: si un pedido de cita es una urgencia (se agenda con 90 min
+     * en vez de 24 h; `App\Reservas\UrgenciaClinicaJev`). No hay triaje previo del bot con Jev.
      *
      * La clave vive en el `.env` (ignorado por git) como `JEV_API_KEY`; **nunca** en el código ni en un
      * documento. `base_url` y `model` cambian según de dónde salga la clave:
@@ -98,6 +99,12 @@ return [
         // Debajo de este umbral de confianza la decisión se deriva a la secretaría en vez de automatizarse.
         'umbral' => (float) env('JEV_UMBRAL', 0.7),
         'timeout' => (int) env('JEV_TIMEOUT', 25),
+        /*
+         * **Urgencia en el chatbot de WhatsApp** (`App\Reservas\UrgenciaClinicaJev`): sólo decide si se relaja la
+         * anticipación de 24 h a 90 min. Timeout corto y un único intento para no frenar el chat; ante cualquier
+         * fallo rige siempre la regla de 24 h.
+         */
+        'urgencia_timeout' => (int) env('JEV_URGENCIA_TIMEOUT', 4),
     ],
 
 ];

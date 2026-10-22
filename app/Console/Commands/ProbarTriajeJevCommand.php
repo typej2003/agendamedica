@@ -221,14 +221,8 @@ class ProbarTriajeJevCommand extends Command
                 'instructions' => 'Eres la secretaría de un consultorio médico. ¿Qué quiere la persona que escribe este mensaje de WhatsApp? Elige la categoría que mejor lo describa. Regla para no confundir el apuro con el cuadro clínico: si PIDE O CAMBIA UNA CITA, la categoría es agendar, reprogramar o cancelar aunque diga «urgente», «para hoy» o «lo antes posible»; reserva `urgencia` para cuando relata un cuadro clínico grave y no está pidiendo una cita.',
                 'criteria' => $categorias,
             ],
-            'es_urgencia' => [
-                'type' => 'noul',
-                'instructions' => '¿Este mensaje describe una URGENCIA CLÍNICA: un cuadro que puede poner en riesgo la salud y que hay que escalar de inmediato a un médico? El apuro por conseguir una cita («urgente», «para hoy», «lo antes posible») NO es urgencia clínica si no hay síntomas.',
-                'criteria' => [
-                    'true' => 'Síntomas agudos o potencialmente graves: dolor intenso, sangrado, fiebre alta, contracciones, desmayo, dificultad para respirar, riesgo para un bebé o un embarazo.',
-                    'false' => 'Pedido de cita (aunque sea «urgente»), consulta administrativa o duda clínica que puede esperar a una cita.',
-                ],
-            ],
+            // La misma pregunta que usa el chatbot para decidir si una cita puede agendarse con 90 min.
+            'es_urgencia' => \App\Reservas\UrgenciaClinicaJev::pregunta(),
         ];
     }
 

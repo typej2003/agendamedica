@@ -39,6 +39,7 @@ Route::middleware(['auth', 'role:Paciente'])->prefix('mis-citas')->name('pacient
     // Confirmar o cambiar el teléfono cuando su validación venció (12 meses): mismo código que el registro.
     Route::get('/telefono', [TelefonoDelPacienteController::class, 'formulario'])->name('telefono');
     Route::post('/telefono/codigo', [TelefonoDelPacienteController::class, 'enviarCodigo'])->middleware('throttle:10,1')->name('telefono.codigo');
+    Route::post('/telefono/otro', [TelefonoDelPacienteController::class, 'descartar'])->middleware('throttle:20,1')->name('telefono.otro');
     Route::post('/telefono/confirmar', [TelefonoDelPacienteController::class, 'confirmar'])->middleware('throttle:20,1')->name('telefono.confirmar');
 
     // Reservar/reprogramar exige no estar bloqueado y tener el teléfono validado y vigente.
