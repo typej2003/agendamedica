@@ -291,6 +291,21 @@ class UsuariosPacientesAdminTest extends TestCase
         $this->assertSame(1, Cola::where('reg_medico', $this->medico->reg_medico)->count());
     }
 
+    public function test_la_reserva_publica_renueva_la_validacion_del_telefono_de_la_cuenta(): void
+    {
+        $cuenta = $this->cuentaDePaciente('12345020', '0414-1110020', 'Ana', 1);
+        $cuenta->forceFill(['telefono_validado_en' => now()->subMonths(11)])->save();
+
+        $this->post(route('reservas.codigo.enviar', $this->medico), [
+            'horario' => $this->fecha->toDateString() . '|08:00|' . $this->sede->id,
+            'cedula' => '12345020', 'nombres' => 'Ana', 'apellidos' => 'Cuenta', 'telefono' => '0414-1110020', 'email' => $cuenta->email,
+        ])->assertRedirect(route('reservas.codigo', $this->medico));
+        $this->post(route('reservas.confirmar', $this->medico), ['codigo' => (string) session('reservas.pendiente.codigo')])
+            ->assertRedirect(route('reservas.confirmada'));
+
+        $this->assertTrue($cuenta->fresh()->telefono_validado_en->equalTo(now()), 'El código de la reserva renueva la validación.');
+    }
+
     public function test_el_chatbot_no_agenda_a_un_paciente_bloqueado_y_si_a_uno_desbloqueado(): void
     {
         $cuenta = $this->cuentaDePaciente('12345008', '584141110008', 'Ana', 1);

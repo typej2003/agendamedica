@@ -197,6 +197,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // secretaría al recibir al paciente, o el médico si llega a atenderlo sin historia; el
             // `reg_medico` sale del vínculo del paciente y **no** del formulario.
             Route::post('/pacientes/{paciente}/historia', [PacienteController::class, 'asignarHistoria'])->name('pacientes.asignar-historia');
+            // Confirmar la cédula (identidad nivel 2): la secretaria o el médico vieron la cédula laminada. Misma autorización
+            // que el resto de la ficha; la Action deja quién, cuándo y desde qué consultorio.
+            Route::post('/pacientes/{paciente}/confirmar-cedula', [PacienteController::class, 'confirmarCedula'])->name('pacientes.confirmar-cedula');
             // La **historia del paciente** (WEB-3.5): sus consultas, sus antecedentes y sus documentos, y
             // la impresión del resumen. Es de **sólo lectura** (la consulta es F4 y los documentos, F5) y
             // va aparte de la ficha porque es otra responsabilidad: la ficha es la filiación y el contacto,

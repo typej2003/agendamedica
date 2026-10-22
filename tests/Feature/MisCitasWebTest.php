@@ -55,7 +55,9 @@ class MisCitasWebTest extends TestCase
             'password' => Hash::make('Secreto123'),
             'is_active' => true,
             'must_change_password' => false,
+            // Teléfono validado hoy: sin eso «reprogramar» pide confirmarlo (ver IdentidadYTelefonoWebTest).
         ]);
+        $this->usuario->forceFill(['telefono_validado' => '584141234567', 'telefono_validado_en' => now()])->save();
         $this->usuario->assignRole('Paciente');
 
         $this->paciente = Paciente::create([

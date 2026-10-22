@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Pacientes\AsignarHistoria;
+use App\Actions\Pacientes\ConfirmarCedulaDelPaciente;
 use App\Actions\Pacientes\GuardarFamilia;
 use App\Actions\Pacientes\GuardarPaciente;
 use App\Actions\Pacientes\GuardarRepresentante;
@@ -26,6 +27,8 @@ use App\Clinica\Pacientes\Vistas\RepresentanteDeAltaVista;
 use App\Http\Controllers\Controller;
 use App\Models\Historia;
 use App\Models\Paciente;
+use App\Models\PacienteIdentidad;
+use App\Paciente\NivelesDeIdentidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -230,6 +233,14 @@ class PacienteController extends Controller
             $vm = $vm->conUrlAtender(route('clinica.pacientes.atender', $ficha->id));
         }
 
+        // La identidad (nivel 2): si el personal ya confirmó la cédula se muestra el distintivo; si no, la acción.
+        $confirmacion = PacienteIdentidad::with('confirmadaPor:id,name')->where('paciente_id', $ficha->id)->first();
+        $confirmada = $confirmacion !== null && NivelesDeIdentidad::digitos($confirmacion->cedula) === NivelesDeIdentidad::digitos($ficha->cedula);
+        $vm = $vm->conIdentidad(
+            $confirmada ? ['cuando' => $confirmacion->cedula_confirmada_en, 'por' => $confirmacion->confirmadaPor?->name] : null,
+            route('clinica.pacientes.confirmar-cedula', $ficha->id),
+        );
+
         // El representante es **de la ficha** (WEB-3.4): no tiene pantalla propia, así que su bloque —con
         // su catálogo de parentescos ya leído y su URL de guardado— lo arma su controlador y la ficha lo
         // incluye, igual que el resto de los datos de la pantalla.
@@ -260,6 +271,30 @@ class PacienteController extends Controller
                 route('clinica.pacientes.nuevo', ['hermano_de' => $ficha->id]),
             ),
         ]);
+    }
+
+    /**
+     * **Confirmar la cédula** del paciente (identidad nivel 2): la secretaria o el médico vieron la cédula laminada.
+     * Misma visibilidad que el resto de la ficha (un paciente fuera de los registros del contexto da 404); la regla y
+     * el registro de quién y cuándo viven en `ConfirmarCedulaDelPaciente`.
+     */
+    public function confirmarCedula(Request $request, int $paciente, ConfirmarCedulaDelPaciente $accion)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        abort_unless($this->pacientes->ficha($this->registrosDelContexto($request), $paciente, $contexto['reg_medico']) !== null, 404);
+
+        $datos = $request->validate(['nota' => ['nullable', 'string', 'max:255']]);
+
+        try {
+            $accion->ejecutar(Paciente::findOrFail($paciente), $request->user(), $contexto['reg_medico'], $datos['nota'] ?? null);
+        } catch (InvalidArgumentException $excepcion) {
+            return redirect()->route('clinica.pacientes.ver', $paciente)->with('error', $excepcion->getMessage());
+        }
+
+        return redirect()
+            ->route('clinica.pacientes.ver', $paciente)
+            ->with('estado', 'Cédula confirmada.');
     }
 
     /**
