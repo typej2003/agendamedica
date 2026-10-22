@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Admin;
 
 use App\Models\User;
 use App\Paciente\BloqueoDePacientes;
+use App\Paciente\NivelesDeIdentidad;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -86,7 +87,7 @@ class UsuariosPacientes extends Component
             return;
         }
 
-        session()->flash('message', 'Cuenta bloqueada: no podrá iniciar sesión ni reservar citas.');
+        session()->flash('message', 'Cuenta bloqueada: no podrá iniciar sesión ni reservar citas por su cuenta.');
         $this->cerrarModal();
     }
 
@@ -104,8 +105,10 @@ class UsuariosPacientes extends Component
         $this->cerrarModal();
     }
 
-    public function render()
+    public function render(BloqueoDePacientes $bloqueo, NivelesDeIdentidad $niveles)
     {
+        $seleccionado = $this->modal && $this->userId ? User::with('paciente')->find($this->userId) : null;
+
         $busqueda = trim($this->search);
 
         $filas = User::role('Paciente')
@@ -130,7 +133,10 @@ class UsuariosPacientes extends Component
         return view('livewire.admin.usuarios-pacientes', [
             'filas' => $filas,
             'citas' => $this->citasDeLaPagina($filas->getCollection()),
-            'seleccionado' => $this->modal && $this->userId ? User::with('paciente')->find($this->userId) : null,
+            'seleccionado' => $seleccionado,
+            // Qué se bloqueará según el nivel de identidad de la cuenta (ver `BloqueoDePacientes`).
+            'alcances' => $seleccionado ? $bloqueo->alcancesDe($seleccionado) : null,
+            'niveles' => $filas->getCollection()->mapWithKeys(fn ($fila) => [$fila->id => $niveles->nivel($fila)])->all(),
         ]);
     }
 

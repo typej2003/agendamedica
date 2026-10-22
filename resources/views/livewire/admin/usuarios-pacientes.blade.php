@@ -30,6 +30,7 @@
                             <th>Paciente</th>
                             <th>Cédula</th>
                             <th>Contacto</th>
+                            <th>Identidad</th>
                             <th>Estado</th>
                             <th>Alta</th>
                             <th class="text-end">Citas</th>
@@ -52,6 +53,12 @@
                                     @if ($ficha?->telefono)
                                         <small class="text-muted">{{ $ficha->telefono }}</small>
                                     @endif
+                                </td>
+                                <td>
+                                    @php $nivel = $niveles[$fila->id] ?? 0; @endphp
+                                    <span class="badge {{ $nivel === 2 ? 'bg-primary' : ($nivel === 1 ? 'bg-info text-dark' : 'bg-secondary') }}">
+                                        {{ $nivel === 2 ? 'Nivel 2 · Cédula confirmada' : ($nivel === 1 ? 'Nivel 1 · Teléfono validado' : 'Nivel 0 · Sin validar') }}
+                                    </span>
                                 </td>
                                 <td>
                                     @if ($bloqueado)
@@ -77,7 +84,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <x-ui.vacio icono="bi-person-heart" titulo="No hay pacientes con cuenta">
                                         Aparecen cuando se registran en «Mis citas» o al reservar con cuenta.
                                     </x-ui.vacio>
@@ -108,6 +115,22 @@
                             <p class="fw-semibold mb-2">{{ $seleccionado->paciente ? trim($seleccionado->paciente->nombres . ' ' . $seleccionado->paciente->apellidos) : $seleccionado->name }}</p>
                             @if ($modal === 'bloquear')
                                 <p>No podrá iniciar sesión ni reservar citas por «Mis citas», la reserva pública ni el chatbot, y se cerrarán sus sesiones. La cuenta no se borra y puedes desbloquearla cuando quieras.</p>
+                                @if ($alcances)
+                                    <p class="mb-1 small fw-semibold">Identidad: nivel {{ $alcances['nivel'] }}. Se bloqueará:</p>
+                                    <ul class="small mb-3" id="alcances-bloqueo">
+                                        <li>La cuenta.</li>
+                                        @if ($alcances['telefono'])
+                                            <li>El teléfono +{{ $alcances['telefono'] }}, por {{ \App\Paciente\NivelesDeIdentidad::mesesDeBloqueoPorTelefono() }} meses (renovable).</li>
+                                        @else
+                                            <li class="text-muted">El teléfono no: no está validado o la validación venció.</li>
+                                        @endif
+                                        @if ($alcances['cedula'])
+                                            <li>La cédula {{ $alcances['cedula'] }}, confirmada por el consultorio.</li>
+                                        @else
+                                            <li class="text-muted">La cédula no: no está confirmada por el personal del consultorio.</li>
+                                        @endif
+                                    </ul>
+                                @endif
                                 <label class="form-label" for="motivo-bloqueo">Motivo (opcional)</label>
                                 <input id="motivo-bloqueo" type="text" class="form-control" wire:model.defer="motivo" maxlength="255" placeholder="Ej.: reservas falsas">
                                 @error('motivo') <span class="text-danger small">{{ $message }}</span> @enderror

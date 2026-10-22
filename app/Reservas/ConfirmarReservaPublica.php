@@ -6,7 +6,9 @@ use App\Clinica\Agenda\AgendamientoDeCitas;
 use App\Models\Cola;
 use App\Models\Medico;
 use App\Models\Paciente;
+use App\Models\User;
 use App\Paciente\BloqueoDePacientes;
+use App\Paciente\NivelesDeIdentidad;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -95,7 +97,8 @@ final class ConfirmarReservaPublica
     private function crear(Medico $medico, array $datos): array
     {
         // Puede haberse bloqueado entre el código y la confirmación.
-        if (app(BloqueoDePacientes::class)->cuentaBloqueada($datos['cedula'] ?? null) !== null) {
+        // El código recién confirmado valida el teléfono: ahora sí se compara con los bloqueos de teléfono.
+        if (app(BloqueoDePacientes::class)->estaBloqueado(null, $datos['telefono'] ?? null, $datos['cedula'] ?? null)) {
             return ['ok' => false, 'limpiar' => true, 'mensaje' => BloqueoDePacientes::AVISO];
         }
 
@@ -166,6 +169,8 @@ final class ConfirmarReservaPublica
             $paciente = Paciente::find($cita->paciente_sinhistoria_id);
         }
 
+        $this->renovarValidacionDelTelefono($paciente, (string) $datos['telefono']);
+
         return [
             'ok' => true,
             'mensaje' => 'Cita reservada.',
@@ -176,6 +181,19 @@ final class ConfirmarReservaPublica
             'cedula' => $datos['cedula'],
             'telefono' => $datos['telefono'],
         ];
+    }
+
+    /**
+     * El código que acaba de confirmarse prueba que el solicitante controla ese teléfono: si la ficha tiene una
+     * cuenta cuyo teléfono validado es ese mismo, su validación se renueva (nivel 1).
+     */
+    private function renovarValidacionDelTelefono(?Paciente $paciente, string $telefono): void
+    {
+        $cuenta = $paciente?->user_id ? User::find($paciente->user_id) : null;
+
+        if ($cuenta !== null && $cuenta->telefono_validado !== null && $cuenta->telefono_validado === $telefono) {
+            app(NivelesDeIdentidad::class)->marcarTelefonoValidado($cuenta, $telefono);
+        }
     }
 
     private function fechaEnPalabras(string $fecha): string

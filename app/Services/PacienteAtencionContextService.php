@@ -1245,9 +1245,10 @@ class PacienteAtencionContextService
             // 1. Identificar al paciente por su número de teléfono
             $paciente = $this->buscarPacientePorTelefono($telefono);
 
-            // Una cuenta de paciente bloqueada desde el panel no agenda por el chatbot. Se reconoce sólo por la
-            // cédula, así que se evalúa la de la ficha que corresponde a este teléfono (nunca el teléfono mismo).
-            if ($paciente && app(BloqueoDePacientes::class)->cuentaBloqueada($paciente->cedula) !== null) {
+            // Un paciente bloqueado desde el panel no agenda por el chatbot. El número de WhatsApp ya está autenticado
+            // por Meta (cuenta como teléfono validado); la ficha sólo aporta su cuenta/cédula si esa cuenta tiene ese mismo
+            // teléfono validado y vigente (ver `BloqueoDePacientes::estaBloqueadoPorWhatsApp`).
+            if (app(BloqueoDePacientes::class)->estaBloqueadoPorWhatsApp($telefono, $paciente)) {
                 return ['exito' => false, 'bloqueado' => true, 'mensaje' => BloqueoDePacientes::AVISO];
             }
 
