@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CiudadController;
+use App\Http\Controllers\Clinica\CiudadBusquedaController;
 use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 use App\Http\Livewire\Admin\ApiKeys;
 use App\Http\Livewire\Admin\CatalogoInicialPercentiles;
@@ -7,11 +9,13 @@ use App\Http\Livewire\Admin\CatalogosIniciales;
 use App\Http\Livewire\Admin\CatalogoInicialVacunas;
 use App\Http\Livewire\Admin\Comentarios;
 use App\Http\Livewire\Admin\Cuentas;
+use App\Http\Livewire\Admin\DetalleDelMedico;
 use App\Http\Livewire\Admin\Especialidades;
 use App\Http\Livewire\Admin\MetodosPago;
 use App\Http\Livewire\Admin\Pagos;
 use App\Http\Livewire\Admin\Servicios;
 use App\Http\Livewire\Admin\SolicitudesDeMedicos;
+use App\Http\Livewire\Admin\UsuariosPacientes;
 use App\Http\Controllers\RegistroDeMedicos\CarnetDeLaSolicitudController;
 use App\Http\Livewire\Admin\Sedes\ConsultoriosDeLaSede;
 use App\Http\Livewire\Admin\Sedes\HorariosDelConsultorio;
@@ -27,7 +31,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('admin.')->group(function () {
+    // **Usuarios** (menú con submenús): Médicos y Administradores son el mismo componente con su URL propia.
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
+    Route::get('/cuentas/administradores', Cuentas::class)->name('cuentas.administradores');
+    // Cuentas de pacientes (las que se crean solas): lista de lectura y bloqueo de emergencia.
+    // El detalle (sólo lectura, con pestañas) de un médico; «Editar» vuelve a Médicos con su diálogo abierto.
+    Route::get('/cuentas/medicos/{medico}', DetalleDelMedico::class)->whereNumber('medico')->name('cuentas.medico');
+    Route::get('/cuentas/pacientes', UsuariosPacientes::class)->name('cuentas.pacientes');
     // Con qué especialidades trabaja cada médico (lo que enciende los módulos de la web clínica).
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
     // **Catálogo inicial · Vacunas** (WEB-12.8): lo que cada médico de pediatría recibe como punto de partida.
@@ -50,15 +60,20 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/solicitudes-medicos/{solicitud}/carnet', CarnetDeLaSolicitudController::class)
         ->whereNumber('solicitud')->name('solicitudes-medicos.carnet');
     Route::get('/servicios', Servicios::class)->name('servicios');
+    Route::get('/servicios/planes', Servicios::class)->name('servicios.planes');
     // **Métodos de pago de la plataforma** (2026-10-21): con qué cobra Doctorisimo los planes y, a
     // futuro, los cobros de los pacientes. Incluye la tasa VES/USD manual.
     Route::get('/metodos-pago', MetodosPago::class)->name('metodos-pago');
+    Route::get('/metodos-pago/tasas', MetodosPago::class)->name('metodos-pago.tasas');
     // **Pagos** (2026-10-21): lo que entró por SyPago, con su bitácora y la conciliación manual.
     Route::get('/pagos', Pagos::class)->name('pagos');
     // **Sedes del médico** (2026-10-20): el administrador ayuda a configurar dónde atiende cada médico, en
     // profundidad: sedes → consultorios de la sede → horarios y cupos del consultorio. Las reglas son las Actions
     // de `/clinica` (`GuardarSede`, `GuardarConsultorio`, `GuardarBloqueHorario`); el tenant, el `reg_medico` del médico.
     Route::get('/medicos/{medico}/sedes', SedesDelMedico::class)->name('medicos.sedes');
+    // Selector con busqueda de ciudades (`<x-ui.selector-buscable>`): buscar y crear la que falte (con su estado).
+    Route::get('/ciudades/buscar', [CiudadBusquedaController::class, 'buscar'])->name('ciudades.buscar');
+    Route::post('/ciudades', [CiudadController::class, 'crear'])->name('ciudades.crear');
     Route::get('/medicos/{medico}/sedes/{sede}/consultorios', ConsultoriosDeLaSede::class)->name('medicos.sedes.consultorios');
     Route::get('/medicos/{medico}/sedes/{sede}/consultorios/{consultorio}/horarios', HorariosDelConsultorio::class)
         ->name('medicos.sedes.consultorios.horarios');

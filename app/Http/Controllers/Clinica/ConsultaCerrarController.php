@@ -88,6 +88,9 @@ class ConsultaCerrarController extends Controller
             return $this->aLaAgenda($dia, $sede)->with('error', $excepcion->getMessage());
         }
 
+        // La consulta ya no está abierta: se suelta el candado «abierta en otro dispositivo».
+        app(\App\Actions\Consulta\LiberarSesionDeConsulta::class)->ejecutar($consulta);
+
         return $this->aLaAgenda($dia, $sede)
             ->with('estado', $resultado->mensaje((string) $consulta->nroconsulta));
     }

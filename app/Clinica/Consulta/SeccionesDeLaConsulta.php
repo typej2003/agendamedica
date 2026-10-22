@@ -7,10 +7,13 @@ namespace App\Clinica\Consulta;
  * del legado —la lista de `w_consulta_principal` **de ginecología** (wiki `04-historia-clinica.md`, "Ítems de la historia
  * clínica"), **13 desde O-22** porque *Exámenes* se retiró— y de cómo se navega a cada una.
  *
- * **El catálogo es el de ginecología**: pediatría no tiene su propia lista todavía (su árbol de la consulta va de
- * *Indicadores incidentes* a *Pre-factura*, sin estudio ecográfico y con ítems propios: ver
- * `Docs/Web/observaciones-pendientes.md`, O-35). Mientras tanto se le quitan los dos ítems que no aplican —el
- * **estudio ecográfico** y el **control de embarazo**— con `AlcanceDeLaEspecialidad`.
+ * **Hay dos catálogos**: el de **ginecología** —la lista de `w_consulta_principal`, wiki `04-historia-clinica.md`, "Ítems de la
+ * historia clínica", **13 desde O-22** porque *Exámenes* se retiró— y el de **pediatría** (su árbol de PediaReport, 2026-10-19).
+ *
+ * **El de ginecología también es el del modo medicina general** (Alexander, 2026-10-22): a cualquier especialidad que no sea
+ * ginecología ni pediatría se le quitan los dos ítems que no aplican —el **estudio ecográfico** y el **control de embarazo**— con
+ * `AlcanceDeLaEspecialidad`, y le quedan los otros once. Es el núcleo con el que un médico nuevo atiende mientras los módulos
+ * propios de su especialidad llegan.
  *
  * Antes vivía dentro de `Vistas\ConsultaShellVista`, que la usaba para dibujar el panel lateral de la pantalla. El
  * panel se fue: los ítems ahora son un **grupo plegable del menú lateral** («Consulta», sólo visible dentro de una
@@ -291,8 +294,9 @@ final class SeccionesDeLaConsulta
      *
      * - **Pediatría** tiene su propio catálogo (`ITEMS_PEDIATRIA`), más las secciones de los postgrados que el
      *   médico tenga (`$seccionesPostgrados`, resueltas del manifiesto por el contexto).
-     * - **Ginecología** (y cualquier especialidad sin manifiesto) sigue con el catálogo de siempre: en pediatría se
-     *   quitan el estudio ecográfico y el control de embarazo; en las demás no se toca nada.
+     * - **Ginecología** (y el consultorio sin especialidad) sigue con el catálogo de siempre: los 13 ítems.
+     * - **Cualquier otra especialidad** es el **modo medicina general** (2026-10-22): el catálogo de ginecología sin el
+     *   estudio ecográfico ni el control de embarazo, que es lo que decide `AlcanceDeLaEspecialidad`. Quedan 11.
      *
      * La numeración no se toca: un ítem que no aplica deja su hueco (el 5 de pediatría es el de nefrología).
      *
@@ -344,7 +348,7 @@ final class SeccionesDeLaConsulta
         return count(self::delaEspecialidad($especialidad, $seccionesPostgrados));
     }
 
-    /** Cuántos ítems ya tienen pantalla: desde F9 (la pre-factura), todos: 13 de 13 en ginecología y 14 de 14 en pediatría. */
+    /** Cuántos ítems ya tienen pantalla: desde F9 (la pre-factura), todos: 13 de 13 en ginecología, 14 de 14 en pediatría y 11 de 11 en el modo medicina general. */
     public static function disponibles(?string $especialidad = null, array $seccionesPostgrados = []): int
     {
         return count(array_filter(self::delaEspecialidad($especialidad, $seccionesPostgrados), fn (array $item) => $item['estado'] === 'listo'));

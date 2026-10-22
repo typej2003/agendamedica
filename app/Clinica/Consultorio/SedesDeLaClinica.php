@@ -39,8 +39,8 @@ class SedesDeLaClinica
     }
 
     /**
-     * Las ciudades con su estado y su país, ya ordenadas para el `<select>`. Son ~30 filas sembradas (las
-     * del catálogo de Venezuela), así que se sirven enteras.
+     * Las ciudades con su estado y su país, ordenadas. Son ~500 filas sembradas: ya no alimentan un
+     * select (el selector con búsqueda las pide a `BuscadorDeCiudades`); queda para quien necesite el catálogo entero.
      *
      * @return Collection<int,City>
      */

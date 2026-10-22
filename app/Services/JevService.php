@@ -48,7 +48,7 @@ class JevService
         'decisions' => '/api/v1/decisions',
     ];
 
-    /** @var array{api_key:?string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int} */
+    /** @var array{api_key:?string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int, intentos:int} */
     private array $config;
 
     private ?string $protocoloUsado = null;
@@ -64,6 +64,8 @@ class JevService
             'protocolo' => (string) ($config['protocolo'] ?? 'auto'),
             'umbral' => (float) ($config['umbral'] ?? 0.7),
             'timeout' => (int) ($config['timeout'] ?? 25),
+            // Intentos máximos ante 429/529. El uso en línea (el bot) lo baja a 1: sin reintentos ni esperas.
+            'intentos' => max(1, (int) ($config['intentos'] ?? 3)),
         ];
     }
 
@@ -349,7 +351,7 @@ class JevService
                 ->asJson()
                 ->post($url, $cuerpo);
 
-            if (in_array($respuesta->status(), $reintentarEn, true) && $intentos < 3) {
+            if (in_array($respuesta->status(), $reintentarEn, true) && $intentos < $this->config['intentos']) {
                 usleep(500_000 * $intentos);
                 continue;
             }

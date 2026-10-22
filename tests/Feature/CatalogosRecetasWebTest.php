@@ -349,7 +349,8 @@ class CatalogosRecetasWebTest extends TestCase
         $this->assertSame('S', $nuevo->sico);
 
         // Vuelve a la lista buscando lo que se creó, y lo dice.
-        $respuesta->assertRedirect(route('clinica.catalogos.medicamentos', ['buscar' => 'ADEVIT JUNIOR']));
+        $respuesta->assertRedirect(route('clinica.catalogos.medicamentos'));
+        $this->assertStringNotContainsString('buscar=', $respuesta->headers->get('Location'));
         $this->conContexto($user, $medico, $gineco)->get($respuesta->headers->get('Location'))
             ->assertSee('Creaste «ADEVIT JUNIOR/Jarabe 120 ml»')->assertSee('0004');
 

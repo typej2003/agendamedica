@@ -24,6 +24,19 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 
 require __DIR__.'/../vendor/autoload.php';
 
+// En paralelo (`php artisan test --parallel`) cada proceso compila las vistas Blade en su propia carpeta: en
+// Windows dos procesos que reescriben la misma vista compilada se pisan ("Permission denied" al leerla).
+// La carpeta persiste entre corridas, asi que solo la primera compila.
+if (($token = getenv('TEST_TOKEN')) !== false && $token !== '') {
+    $vistas = dirname(__DIR__).DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework'
+        .DIRECTORY_SEPARATOR.'views-test-'.$token;
+    if (! is_dir($vistas)) {
+        mkdir($vistas, 0777, true);
+    }
+    $_SERVER['VIEW_COMPILED_PATH'] = $_ENV['VIEW_COMPILED_PATH'] = $vistas;
+    putenv('VIEW_COMPILED_PATH='.$vistas);
+}
+
 $app = require __DIR__.'/../bootstrap/app.php';
 
 $kernel = $app->make(Kernel::class);
@@ -35,7 +48,7 @@ $motivo = null;
 
 if ($conexion === 'sqlite') {
     // La unica base sqlite que esta suite puede vaciar es la de tests, por nombre terminante.
-    if (! str_ends_with($base, 'database.testing.sqlite')) {
+    if ($base !== ':memory:' && ! str_ends_with($base, 'database.testing.sqlite')) {
         $motivo = 'la base sqlite no es database.testing.sqlite sino '.$base;
     }
 } elseif ($conexion === 'mysql') {
@@ -59,7 +72,7 @@ if ($motivo !== null) {
     return;
 }
 
-if ($conexion === 'sqlite') {
+if ($conexion === 'sqlite' && $base !== ':memory:') {
     // Absoluta: asi la suite no depende del directorio desde donde se la invoque.
     if (preg_match('#^([A-Za-z]:[\\\\/]|/)#', $base) !== 1) {
         $base = dirname(__DIR__).DIRECTORY_SEPARATOR.$base;
@@ -87,6 +100,11 @@ $salida = (string) ob_get_clean();
 
 if ($codigo !== 0) {
     throw new RuntimeException("No se pudo armar la base de tests ({$donde}):\n{$salida}");
+}
+
+if ($base === ':memory:') {
+    // Memoria: se migro una vez en esta conexion; las aplicaciones de cada test reusan su PDO.
+    \Tests\PdoCompartido::$pdo = $app['db']->connection()->getPdo();
 }
 
 fwrite(STDOUT, "Base de tests lista: {$donde}".PHP_EOL);

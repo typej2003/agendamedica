@@ -13,6 +13,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
+use App\Paciente\BloqueoDePacientes;
 use App\Models\Specialty;
 use App\Support\DisponibilidadEnTexto;
 use Carbon\Carbon;
@@ -27,6 +28,28 @@ class PacienteAtencionContextService
      */
     public const LIMITE_CUPOS_DIARIOS = 15;
 
+    /** Anticipación mínima para agendar una cita normal (24 h). Una urgencia podrá pasar otra a `lugaresDelDia`. */
+    public const ANTICIPACION_MINIMA_MINUTOS = 24 * 60;
+
+    /**
+     * Anticipación mínima de una **urgencia** que pide cita por el chatbot de WhatsApp (90 min). Sólo se
+     * aplica si Jev afirma la urgencia (`App\Reservas\UrgenciaClinicaJev`); el portal y la reserva pública
+     * no la usan nunca.
+     */
+    public const ANTICIPACION_URGENCIA_MINUTOS = 90;
+
+    /** \var array{texto:string, telefono:string}|null el mensaje de WhatsApp en curso (lo fija el bot) */
+    private ?array $mensajeWhatsApp = null;
+
+    /** \var array<string,mixed>|null lo que dijo Jev del mensaje en curso (una sola consulta por mensaje) */
+    private ?array $veredictoUrgencia = null;
+
+    /** \var array<string,bool> `reg_medico` => Jev afirmó la urgencia y ese médico no tiene horario hoy (a 90 min) */
+    private array $urgenteSinHorarioHoy = [];
+
+    /** \var array<string,?string> `reg_medico` => el texto de contacto ya resuelto para este mensaje (un aviso por mensaje) */
+    private array $avisoDeUrgencia = [];
+
     /**
      * Las dependencias de la agenda son opcionales para no romper a quien instancia el servicio a mano
      * (los tests lo hacían con `new PacienteAtencionContextService()`); sin ellas se resuelven del
@@ -36,6 +59,102 @@ class PacienteAtencionContextService
         private ?CrearCita $crearCita = null,
         private ?ArmadorDeAgenda $armador = null,
     ) {
+    }
+
+    /**
+     * El bot avisa del mensaje que está atendiendo. Sólo con esto el servicio puede preguntarle a Jev si es
+     * una urgencia (y sólo cuando una urgencia cambiaría los horarios); sin esto, rige siempre la regla de 24 h.
+     */
+    public function iniciarMensajeWhatsApp(string $texto, ?string $telefono): void
+    {
+        $this->mensajeWhatsApp = ['texto' => $texto, 'telefono' => (string) $telefono];
+        $this->veredictoUrgencia = null;
+        $this->urgenteSinHorarioHoy = [];
+        $this->avisoDeUrgencia = [];
+    }
+
+    /**
+     * ¿Se agenda con la anticipación de una urgencia (90 min)? Devuelve 90 o `null` (= la regla normal de 24 h).
+     *
+     * Jev **sólo se consulta** si: hay un mensaje de WhatsApp en curso, la paciente puede reservar (no está
+     * bloqueada ni tiene el tope de citas pendientes) y la ventana de 90 min a 24 h trae un lugar **más
+     * temprano** que el normal; si no, la respuesta de Jev no cambiaría nada. Una sola consulta por mensaje.
+     */
+    private function anticipacionDeLaConversacion(string $regMedico, Medico $medico, Carbon $desde): ?int
+    {
+        $mensaje = $this->mensajeWhatsApp;
+        if ($mensaje === null || trim($mensaje['texto']) === '' || trim($mensaje['telefono']) === '') {
+            return null;
+        }
+
+        // ¿Hoy hay un lugar a ahora + 90 min? Si no hay, una urgencia afirmada también se conecta con el consultorio.
+        $hayHoy = $this->lugaresDelDia($regMedico, $medico, \App\Clinica\FechaDelConsultorio::hoyComoFecha(), self::ANTICIPACION_URGENCIA_MINUTOS) !== [];
+
+        if ($hayHoy) {
+            // Con horario hoy, Jev sólo importa si la ventana de 90 min trae un lugar más temprano que el normal.
+            $urgente = $this->primerLugarDisponible($regMedico, $medico, $desde, 30, self::ANTICIPACION_URGENCIA_MINUTOS);
+            $normal = $this->primerLugarDisponible($regMedico, $medico, $desde, 30);
+            if (! empty($normal['disponible'])
+                && ($normal['fecha'] ?? null) === ($urgente['fecha'] ?? null)
+                && ($normal['hora'] ?? null) === ($urgente['hora'] ?? null)) {
+                return null;
+            }
+        }
+
+        $paciente = $this->buscarPacientePorTelefono($mensaje['telefono']);
+        if (app(BloqueoDePacientes::class)->estaBloqueadoPorWhatsApp($mensaje['telefono'], $paciente)
+            || ! app(\App\Reservas\LimitesDeReserva::class)->tieneCupoDeCitas(null, $mensaje['telefono'])) {
+            return null;
+        }
+
+        if ($this->veredictoUrgencia === null) {
+            $this->veredictoUrgencia = app(\App\Reservas\UrgenciaClinicaJev::class)->evaluar(
+                $mensaje['texto'],
+                $paciente ? 'ficha:' . $paciente->id : 'tel:' . \App\Reservas\UrgenciaClinicaJev::enmascarar($mensaje['telefono'])
+            );
+        }
+
+        if ($this->veredictoUrgencia['urgente'] && ! $hayHoy) {
+            $this->urgenteSinHorarioHoy[$regMedico] = true;
+        }
+
+        return $this->veredictoUrgencia['urgente'] ? self::ANTICIPACION_URGENCIA_MINUTOS : null;
+    }
+
+    /**
+     * El texto de contacto para una **urgencia sin horario hoy** (teléfono del consultorio + aviso a la secretaría),
+     * o null si no aplica: Jev no afirmó la urgencia, hay horario hoy, no hay contacto configurado o la consulta
+     * no es de una conversación de WhatsApp. Una sola vez por mensaje y médico. Nunca rompe la respuesta.
+     */
+    private function avisoDeUrgenciaSinHorarioHoy(string $regMedico, Medico $medico): ?string
+    {
+        if (empty($this->urgenteSinHorarioHoy[$regMedico]) || $this->mensajeWhatsApp === null) {
+            return null;
+        }
+
+        if (! array_key_exists($regMedico, $this->avisoDeUrgencia)) {
+            $telefono = $this->mensajeWhatsApp['telefono'];
+            try {
+                $paciente = $this->buscarPacientePorTelefono($telefono);
+                $this->avisoDeUrgencia[$regMedico] = app(\App\Reservas\AvisoDeUrgenciaSinHorario::class)->atender(
+                    $medico,
+                    $regMedico,
+                    $telefono,
+                    $paciente,
+                    $paciente ? 'ficha:' . $paciente->id : 'tel:' . \App\Reservas\UrgenciaClinicaJev::enmascarar($telefono)
+                );
+            } catch (\Throwable $e) {
+                $this->avisoDeUrgencia[$regMedico] = null;
+            }
+        }
+
+        return $this->avisoDeUrgencia[$regMedico];
+    }
+
+    /** Sólo se acepta la anticipación de urgencia; cualquier otro valor explícito es la regla normal (null). */
+    private function anticipacionPermitida(int $minutos): ?int
+    {
+        return $minutos === self::ANTICIPACION_URGENCIA_MINUTOS ? $minutos : null;
     }
 
     /**
@@ -853,7 +972,7 @@ class PacienteAtencionContextService
      * @param int $diasMaximos
      * @return array
      */
-    public function consultarProximoDiaDisponible(string $regMedico, int $diasMaximos = 30, int $opciones = 3): array
+    public function consultarProximoDiaDisponible(string $regMedico, int $diasMaximos = 30, int $opciones = 3, ?int $anticipacionMinutos = null): array
     {
         try {
             $medico = $this->resolverMedico($regMedico);
@@ -886,6 +1005,15 @@ class PacienteAtencionContextService
             $disponibles = [];
             $ocupadasPrimerDia = null;
 
+            // Urgencia (sólo por WhatsApp y sólo si Jev la afirma): la ventana de 90 min. Si no, la regla de 24 h.
+            // Un valor explícito (la oferta que la paciente está confirmando) no se vuelve a preguntar.
+            $anticipacion = $anticipacionMinutos !== null
+                ? $this->anticipacionPermitida($anticipacionMinutos)
+                : $this->anticipacionDeLaConversacion($regFinal, $medico, $hoy);
+
+            // Urgencia afirmada y sin horario hoy: además de la agenda, el contacto del consultorio (y aviso a la secretaría).
+            $avisoUrgencia = $anticipacionMinutos === null ? $this->avisoDeUrgenciaSinHorarioHoy($regFinal, $medico) : null;
+
             // Se ofrecen varios días, y **los mismos** que aceptaría la reserva: la comprobación es
             // `primerLugarDisponible`, la que usa el agendamiento, no una cuenta de cupos por día aparte.
             for ($i = 0; $i < $diasMaximos && count($disponibles) < max(1, $opciones); $i++) {
@@ -895,7 +1023,7 @@ class PacienteAtencionContextService
                     continue;
                 }
 
-                $lugar = $this->primerLugarDisponible($regFinal, $medico, $fechaEvaluar, 1);
+                $lugar = $this->primerLugarDisponible($regFinal, $medico, $fechaEvaluar, 1, $anticipacion);
 
                 if (empty($lugar['disponible'])) {
                     continue;
@@ -920,7 +1048,7 @@ class PacienteAtencionContextService
                     'reg_medico' => $regFinal,
                     'medico' => $nombreMedico,
                     'mensaje' => "El {$nombreMedico} no cuenta con cupos disponibles en los próximos {$diasMaximos} días.",
-                ];
+                ] + ($avisoUrgencia !== null ? ['aviso_urgencia' => $avisoUrgencia] : []);
             }
 
             return [
@@ -935,7 +1063,8 @@ class PacienteAtencionContextService
                 // porque hay tests y consumidores que lo leen.
                 'cupos_disponibles' => max(0, $limiteDiario - (int) $ocupadasPrimerDia),
                 'opciones' => $disponibles,
-            ];
+            ] + ($anticipacion !== null ? ['anticipacion_minutos' => $anticipacion] : [])
+              + ($avisoUrgencia !== null ? ['aviso_urgencia' => $avisoUrgencia] : []);
 
         } catch (\Throwable $e) {
             Log::error('PacienteAtencionContextService::consultarProximoDiaDisponible error: ' . $e->getMessage());
@@ -1235,11 +1364,28 @@ class PacienteAtencionContextService
      * bloques configurados** (el caso de casi todas las instalaciones del legado) conserva esa cuenta
      * vieja como respaldo, porque `cola.hora_ini` es obligatoria.
      */
-    public function reservarCitaEnCola(string $telefono, string $criterioMedico, ?string $fecha = null, ?string $motivo = null): array
+    public function reservarCitaEnCola(string $telefono, string $criterioMedico, ?string $fecha = null, ?string $motivo = null, ?int $anticipacionMinutos = null): array
     {
         try {
             // 1. Identificar al paciente por su número de teléfono
             $paciente = $this->buscarPacientePorTelefono($telefono);
+
+            // Un paciente bloqueado desde el panel no agenda por el chatbot. El número de WhatsApp ya está autenticado
+            // por Meta (cuenta como teléfono validado); la ficha sólo aporta su cuenta/cédula si esa cuenta tiene ese mismo
+            // teléfono validado y vigente (ver `BloqueoDePacientes::estaBloqueadoPorWhatsApp`).
+            if (app(BloqueoDePacientes::class)->estaBloqueadoPorWhatsApp($telefono, $paciente)) {
+                return ['exito' => false, 'bloqueado' => true, 'mensaje' => BloqueoDePacientes::AVISO];
+            }
+
+            // Tope de citas pendientes por teléfono (el de WhatsApp ya viene autenticado por Meta).
+            $limites = app(\App\Reservas\LimitesDeReserva::class);
+            if (!$limites->tieneCupoDeCitas(null, $telefono)) {
+                return [
+                    'exito' => false,
+                    'limite_citas' => true,
+                    'mensaje' => \App\Reservas\LimitesDeReserva::mensajeDeCitas(),
+                ];
+            }
 
             if (!$paciente) {
                 // Registrar temporalmente al paciente nuevo por WhatsApp
@@ -1286,9 +1432,15 @@ class PacienteAtencionContextService
                 ];
             }
 
+            // Anticipación: 24 h, salvo que Jev afirme una urgencia en este mensaje de WhatsApp (90 min) o que la
+            // oferta que se confirma ya la haya fijado. Va **después** del bloqueo y del tope de citas.
+            $anticipacion = $anticipacionMinutos !== null
+                ? $this->anticipacionPermitida($anticipacionMinutos)
+                : $this->anticipacionDeLaConversacion($regMedico, $medico, $fecha ? Carbon::parse($fecha) : \App\Clinica\FechaDelConsultorio::hoyComoFecha());
+
             // 3. Determinar la fecha de partida
             if (empty($fecha)) {
-                $disponible = $this->consultarProximoDiaDisponible($regMedico);
+                $disponible = $this->consultarProximoDiaDisponible($regMedico, 30, 3, $anticipacion ?? self::ANTICIPACION_MINIMA_MINUTOS);
                 if (!$disponible['disponible']) {
                     return [
                         'exito' => false,
@@ -1313,7 +1465,7 @@ class PacienteAtencionContextService
             }
 
             // 4. Dónde cae: el primer bloque con lugar (o el respaldo sin sedes configuradas).
-            $lugar = $this->primerLugarDisponible($regMedico, $medico, $fechaCita);
+            $lugar = $this->primerLugarDisponible($regMedico, $medico, $fechaCita, 30, $anticipacion);
             if (!$lugar['disponible']) {
                 return [
                     'exito' => false,
@@ -1418,84 +1570,19 @@ class PacienteAtencionContextService
      *
      * @return array{disponible: bool, mensaje?: string, fecha?: string, hora?: string, numorden?: int, centro_id?: ?int, sede?: ?Office}
      */
-    public function primerLugarDisponible(string $regMedico, Medico $medico, Carbon $desde, int $diasMaximos = 30): array
+    public function primerLugarDisponible(string $regMedico, Medico $medico, Carbon $desde, int $diasMaximos = 30, ?int $anticipacionMinutos = null): array
     {
-        $armador = $this->armador();
-        $sedes = $armador->sedes($regMedico, $medico->id);
         $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
 
         // Se empieza en la fecha pedida (o hoy si ya pasó): así `--dias` cuenta desde ahí y una consulta
         // por un día concreto mira ese día, no treinta desde hoy.
         $inicio = $desde->copy()->startOfDay()->lt($hoy) ? $hoy->copy() : $desde->copy()->startOfDay();
 
-        $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
-        try {
-            $evolucion = Evolucion::where('reg_medico', $regMedico)->first();
-            if ($evolucion && !empty($evolucion->cantidad_paciente) && (int) $evolucion->cantidad_paciente > 0) {
-                $limiteDiario = (int) $evolucion->cantidad_paciente;
-            }
-        } catch (\Throwable $e) {}
-
         for ($i = 0; $i < $diasMaximos; $i++) {
-            $fecha = $inicio->copy()->addDays($i);
+            $lugares = $this->lugaresDelDia($regMedico, $medico, $inicio->copy()->addDays($i), $anticipacionMinutos);
 
-            // La agenda no atiende domingos: una regla del legado que el bot ya aplicaba.
-            if ($fecha->isSunday()) {
-                continue;
-            }
-
-            if ($sedes->isEmpty()) {
-                $ocupadas = Cola::where('reg_medico', $regMedico)
-                    ->whereDate('fecha', $fecha->toDateString())
-                    ->count();
-
-                if ($ocupadas >= $limiteDiario) {
-                    continue;
-                }
-
-                return [
-                    'disponible' => true,
-                    'fecha' => $fecha->toDateString(),
-                    'hora' => Carbon::createFromTime(8, 0)->addMinutes($ocupadas * 20)->format('H:i'),
-                    'numorden' => $ocupadas + 1,
-                    'centro_id' => null,
-                    'sede' => null,
-                ];
-            }
-
-            foreach ($sedes as $sede) {
-                foreach ($sede->bloquesDe($fecha->dayOfWeekIso) as $bloque) {
-                    $inicio = substr((string) $bloque->hora_inicio, 0, 5);
-                    $jornada = $armador->jornadaPara($regMedico, $sedes, $fecha->copy(), $sede->medical_center_id, $inicio);
-
-                    if ($jornada->llena()) {
-                        continue;
-                    }
-
-                    $numero = $jornada->siguienteNumero();
-                    $duracion = $sede->duracion_cita ?: Office::DURACION_CITA_POR_DEFECTO;
-
-                    // Por orden de llegada la hora es la apertura del bloque (el paciente no elige hora);
-                    // con hora de cita, el primer hueco libre después de las que ya hay.
-                    $hora = $jornada->esPorOrdenDeLlegada()
-                        ? $inicio
-                        : Carbon::createFromFormat('H:i', $inicio)->addMinutes(($numero - 1) * $duracion)->format('H:i');
-
-                    $minutosHora = OfficeSchedule::aMinutos($hora);
-                    $minutosFin = OfficeSchedule::aMinutos($bloque->hora_fin);
-                    if ($minutosHora === null || ($minutosFin !== null && $minutosHora >= $minutosFin)) {
-                        continue;
-                    }
-
-                    return [
-                        'disponible' => true,
-                        'fecha' => $fecha->toDateString(),
-                        'hora' => $hora,
-                        'numorden' => $numero,
-                        'centro_id' => $sede->medical_center_id,
-                        'sede' => $sede,
-                    ];
-                }
+            if ($lugares !== []) {
+                return $lugares[0];
             }
         }
 
@@ -1503,6 +1590,109 @@ class PacienteAtencionContextService
             'disponible' => false,
             'mensaje' => "No hay lugar en la agenda del médico para los próximos {$diasMaximos} días.",
         ];
+    }
+
+    /**
+     * **Los lugares de un día, uno por bloque de horario** (mañana y tarde son ofertas distintas), en el
+     * orden de la agenda. Es el único cálculo de horas ofrecidas: lo usan el chatbot
+     * (`primerLugarDisponible`) y el portal público (`DisponibilidadPublica`).
+     *
+     * Por orden de llegada la hora es el inicio del bloque; con hora de cita, el primer hueco libre del
+     * bloque. Un lugar sólo se ofrece si su hora es >= ahora + `$anticipacionMinutos` (por defecto
+     * `ANTICIPACION_MINIMA_MINUTOS`, 24 h; las urgencias podrán pasar otra, p. ej. 90). La regla se evalúa
+     * por oferta: un bloque descartado no descarta a los demás del día.
+     *
+     * @return array<int,array{disponible: bool, fecha: string, hora: string, numorden: int, centro_id: ?int, sede: ?Office}>
+     */
+    public function lugaresDelDia(string $regMedico, Medico $medico, Carbon $fecha, ?int $anticipacionMinutos = null): array
+    {
+        $fecha = $fecha->copy()->startOfDay();
+
+        // La agenda no atiende domingos: una regla del legado que el bot ya aplicaba.
+        if ($fecha->isSunday() || $fecha->lt(\App\Clinica\FechaDelConsultorio::hoyComoFecha())) {
+            return [];
+        }
+
+        $armador = $this->armador();
+        $sedes = $armador->sedes($regMedico, $medico->id);
+        $limite = \App\Clinica\FechaDelConsultorio::ahora()
+            ->addMinutes($anticipacionMinutos ?? self::ANTICIPACION_MINIMA_MINUTOS);
+        $conAnticipacion = fn (string $hora): bool => Carbon::createFromFormat(
+            'Y-m-d H:i',
+            $fecha->toDateString() . ' ' . $hora,
+            \App\Clinica\FechaDelConsultorio::zona()
+        )->gte($limite);
+
+        if ($sedes->isEmpty()) {
+            $limiteDiario = self::LIMITE_CUPOS_DIARIOS;
+            try {
+                $evolucion = Evolucion::where('reg_medico', $regMedico)->first();
+                if ($evolucion && !empty($evolucion->cantidad_paciente) && (int) $evolucion->cantidad_paciente > 0) {
+                    $limiteDiario = (int) $evolucion->cantidad_paciente;
+                }
+            } catch (\Throwable $e) {}
+
+            $ocupadas = Cola::where('reg_medico', $regMedico)
+                ->whereDate('fecha', $fecha->toDateString())
+                ->count();
+            $hora = Carbon::createFromTime(8, 0)->addMinutes($ocupadas * 20)->format('H:i');
+
+            if ($ocupadas >= $limiteDiario || ! $conAnticipacion($hora)) {
+                return [];
+            }
+
+            return [[
+                'disponible' => true,
+                'fecha' => $fecha->toDateString(),
+                'hora' => $hora,
+                'numorden' => $ocupadas + 1,
+                'centro_id' => null,
+                'sede' => null,
+            ]];
+        }
+
+        $lugares = [];
+
+        foreach ($sedes as $sede) {
+            foreach ($sede->bloquesDe($fecha->dayOfWeekIso) as $bloque) {
+                $apertura = substr((string) $bloque->hora_inicio, 0, 5);
+                $jornada = $armador->jornadaPara($regMedico, $sedes, $fecha->copy(), $sede->medical_center_id, $apertura);
+
+                if ($jornada->llena()) {
+                    continue;
+                }
+
+                $numero = $jornada->siguienteNumero();
+                $duracion = $sede->duracion_cita ?: Office::DURACION_CITA_POR_DEFECTO;
+
+                // Por orden de llegada la hora es la apertura del bloque (el paciente no elige hora);
+                // con hora de cita, el primer hueco libre después de las que ya hay.
+                $hora = $jornada->esPorOrdenDeLlegada()
+                    ? $apertura
+                    : Carbon::createFromFormat('H:i', $apertura)->addMinutes(($numero - 1) * $duracion)->format('H:i');
+
+                $minutosHora = OfficeSchedule::aMinutos($hora);
+                $minutosFin = OfficeSchedule::aMinutos($bloque->hora_fin);
+                if ($minutosHora === null || ($minutosFin !== null && $minutosHora >= $minutosFin)) {
+                    continue;
+                }
+
+                if (! $conAnticipacion($hora)) {
+                    continue;
+                }
+
+                $lugares[] = [
+                    'disponible' => true,
+                    'fecha' => $fecha->toDateString(),
+                    'hora' => $hora,
+                    'numorden' => $numero,
+                    'centro_id' => $sede->medical_center_id,
+                    'sede' => $sede,
+                ];
+            }
+        }
+
+        return $lugares;
     }
 
     /** `CrearCita`, la Action compartida de la web y del sync del móvil (se resuelve del contenedor). */

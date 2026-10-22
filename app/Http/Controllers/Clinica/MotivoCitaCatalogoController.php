@@ -115,7 +115,7 @@ class MotivoCitaCatalogoController extends Controller
                 $razon = trim((string) $creado->tipo_atencion);
 
                 return redirect()
-                    ->route('clinica.catalogos.motivos-cita', ['buscar' => $razon])
+                    ->route('clinica.catalogos.motivos-cita')
                     ->with('estado', 'Creaste «' . $razon . '» en tus motivos de cita (código ' . trim((string) $creado->codigo) . ').');
             }
 

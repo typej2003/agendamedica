@@ -142,6 +142,7 @@ class CitaController extends Controller
                 // Si no está en el catálogo, la vista agrega la opción para no perderlo.
                 'motivo'      => $cita->tipo ?: $cita->motivo,
                 'monto'       => $cita->monto,
+                'numorden'    => $cita->numorden,
                 'paciente_id' => $paciente?->id,
             ],
             'pacienteElegido' => $paciente !== null

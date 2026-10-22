@@ -4,6 +4,7 @@ namespace App\Reservas;
 
 use App\Models\Medico;
 use App\Models\Paciente;
+use App\Paciente\BloqueoDePacientes;
 use App\Notificaciones\Telefono;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -38,9 +39,9 @@ final class SolicitarCodigoDeReserva
      */
     public function ejecutar(Medico $medico, array $datos, bool $forzarReenvio = false): array
     {
-        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha']);
+        $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha'], (string) $datos['hora'], (int) $datos['office_id']);
 
-        if ($opcion === null || $opcion->hora !== substr((string) $datos['hora'], 0, 5) || $opcion->officeId !== (int) $datos['office_id']) {
+        if ($opcion === null) {
             throw ValidationException::withMessages([
                 'fecha' => 'Ese horario ya no está disponible. Elige otro de los que se muestran.',
             ]);
@@ -57,6 +58,10 @@ final class SolicitarCodigoDeReserva
                 'telefono' => 'Escribe un teléfono venezolano válido, por ejemplo 0412-1234567.',
             ]);
         }
+
+        // Una cédula CONFIRMADA por el personal y bloqueada no reserva (ni se le manda el código). El teléfono
+        // todavía no está validado en este paso: se compara recién cuando el código se confirma.
+        app(BloqueoDePacientes::class)->exigirQueNoEsteBloqueado(null, null, $cedula);
 
         $paciente = Paciente::where('cedula', $cedula)->first();
         if ($paciente !== null) {

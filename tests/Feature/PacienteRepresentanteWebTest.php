@@ -808,7 +808,10 @@ class PacienteRepresentanteWebTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        $nueva = DB::table('pacientes')->where('nombres', 'Valentina')->value('id');
+        // Al paciente se le identifica por el consultorio (`reg_medico` único de esta prueba), no por el nombre:
+        // la base de pruebas puede traer otra «Valentina» con un id menor y `value('id')` devolvía esa.
+        $nueva = DB::table('medico_pacientes')->where('reg_medico', $reg)->value('paciente_id');
+        $this->assertNotNull($nueva);
         $historia = (int) DB::table('medico_pacientes')->where('reg_medico', $reg)->where('paciente_id', $nueva)->value('numhistoria');
 
         $fila = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', $historia)->first();

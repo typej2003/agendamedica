@@ -18,7 +18,7 @@
            consulta» cierra la atención y vuelve a la agenda. «Ver resumen» también se fue: el resumen del paciente se ve
            desde su ficha (Pacientes).
          - **El indicador de cambios sin guardar** vive en esta misma fila (`data-barra-estado`). --}}
-    <div class="consulta-encabezado" data-consulta-barra data-tour="consulta-encabezado">
+    <div class="consulta-encabezado" data-consulta-barra data-consulta-id="{{ $consultaId }}" data-candado-url="{{ route('clinica.consulta.sesion', $consultaId) }}" data-tour="consulta-encabezado">
         @if ($vm->urlVolver())
             <a class="consulta-volver" href="{{ $vm->urlVolver() }}" data-barra-salir
                title="Volver a la agenda" aria-label="Volver a la agenda">
@@ -134,6 +134,33 @@
         </div>
     @endif
 
+    {{-- El candado suave (`consulta-candado.js`): se abre solo si esta consulta está activa en otro dispositivo. --}}
+    <x-ui.dialogo id="dialogo-candado" titulo="Consulta abierta en otro dispositivo">
+        <div class="dialogo-cuerpo">
+            <p class="mb-0">La consulta está activa en otro dispositivo. Si editas aquí podrías perder datos. ¿Abrirla aquí también?</p>
+        </div>
+        <div class="dialogo-pie">
+            <a class="btn btn-outline-secondary" href="{{ $vm->urlVolver() ?: route('clinica.inicio') }}">Salir</a>
+            <button type="button" class="btn btn-primary" data-candado-abrir>Abrir aquí</button>
+        </div>
+    </x-ui.dialogo>
+
+    {{-- El diálogo de salida (`consulta-salida.js`): al abandonar la consulta con formularios sin guardar. Lo llena el script. --}}
+    <x-ui.dialogo id="dialogo-salida" titulo="Tienes cambios sin guardar">
+        <div class="dialogo-cuerpo">
+            <p class="mb-2" data-salida-intro></p>
+            <ul class="mb-2" data-salida-lista></ul>
+            <p class="mb-2 text-secondary" data-salida-manual hidden></p>
+            <p class="mb-0" role="status" aria-live="polite" data-salida-estado></p>
+            <p class="mb-0 text-danger" role="alert" data-salida-error hidden></p>
+        </div>
+        <div class="dialogo-pie">
+            <button type="button" class="btn btn-outline-secondary" data-salida-seguir>Seguir editando</button>
+            <button type="button" class="btn btn-outline-danger" data-salida-descartar>Descartar</button>
+            <button type="button" class="btn btn-primary" data-salida-guardar>Guardar todo</button>
+        </div>
+    </x-ui.dialogo>
+
     {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
     @include('clinica.consulta._visualizar')
 
@@ -204,4 +231,11 @@
     {{-- El cajón con la historia y el resumen del paciente (O-30): lo abre el botón del encabezado y trae el
          resumen de la pantalla de la historia sin salir de la consulta. --}}
     <script src="{{ asset('js/clinica/resumen-panel.js') }}"></script>
+    {{-- Los borradores locales (localStorage): guarda en este navegador lo escrito sin guardar y ofrece recuperarlo. Va **al
+         final** para tomar el valor inicial de cada campo cuando las máscaras y los demás scripts ya lo formatearon. --}}
+    <script src="{{ asset('js/clinica/consulta-borradores.js') }}"></script>
+    {{-- El candado suave «abierta en otro dispositivo»: registra este dispositivo, late cada ~60 s y avisa si otro toma la consulta. --}}
+    <script src="{{ asset('js/clinica/consulta-candado.js') }}"></script>
+    {{-- El diálogo de salida: «Guardar todo» / «Descartar» / «Seguir editando» al abandonar la consulta con formularios sin guardar. --}}
+    <script src="{{ asset('js/clinica/consulta-salida.js') }}"></script>
 @endsection

@@ -176,6 +176,74 @@ class CuentasPanelTest extends TestCase
         $panel->call('cerrarClave')->assertSet('claveGenerada', null);
     }
 
+    private function altaSinRegMedico(string $correo, bool $centro = false): void
+    {
+        $p = Livewire::test(Cuentas::class)->call('abrirAlta', 'medico')
+            ->set('name', 'Auto')->set('lastname', 'Numerado')->set('email', $correo);
+        if ($centro) {
+            $p->set('es_centro', true);
+        }
+        $p->set('reg_medico', '')->call('guardarAlta')->assertHasNoErrors();
+    }
+
+    private function limpiarRegMedicoAutomaticos(): void
+    {
+        foreach (['medico_registros', 'medicos', 'users'] as $t) {
+            \DB::table($t)->where('reg_medico', 'like', 'med_%')->delete();
+        }
+    }
+
+    public function test_alta_sin_reg_medico_genera_med_00001_y_luego_med_00002(): void
+    {
+        $this->actingAs($this->admin());
+        $this->limpiarRegMedicoAutomaticos();
+        $u = uniqid();
+
+        $this->altaSinRegMedico("auto1-{$u}@example.com");
+        $this->altaSinRegMedico("auto2-{$u}@example.com");
+
+        $this->assertSame('med_00001', User::where('email', "auto1-{$u}@example.com")->firstOrFail()->medico->reg_medico);
+        $this->assertSame('med_00002', Medico::where('email', "auto2-{$u}@example.com")->firstOrFail()->reg_medico);
+        $this->assertDatabaseHas('medico_registros', ['reg_medico' => 'med_00002']);
+    }
+
+    public function test_el_siguiente_reg_medico_sigue_al_maximo_existente(): void
+    {
+        $this->actingAs($this->admin());
+        $this->limpiarRegMedicoAutomaticos();
+        \DB::table('medico_registros')->insert(['medico_id' => Medico::query()->value('id') ?? 1, 'reg_medico' => 'med_00007']);
+        $u = uniqid();
+
+        $this->altaSinRegMedico("auto7-{$u}@example.com");
+
+        $this->assertSame('med_00008', Medico::where('email', "auto7-{$u}@example.com")->firstOrFail()->reg_medico);
+    }
+
+    public function test_alta_con_reg_medico_escrito_lo_respeta(): void
+    {
+        $this->actingAs($this->admin());
+        $u = uniqid();
+
+        Livewire::test(Cuentas::class)->call('abrirAlta', 'medico')
+            ->set('name', 'Con')->set('lastname', 'Registro')->set('email', "con-{$u}@example.com")
+            ->set('reg_medico', "mio-{$u}")->call('guardarAlta')->assertHasNoErrors();
+
+        $this->assertSame("mio-{$u}", Medico::where('email', "con-{$u}@example.com")->firstOrFail()->reg_medico);
+    }
+
+    public function test_alta_de_centro_medico_sin_reg_medico_lo_genera(): void
+    {
+        $this->actingAs($this->admin());
+        $this->limpiarRegMedicoAutomaticos();
+
+        Livewire::test(Cuentas::class)->call('abrirAlta', 'medico')
+            ->set('es_centro', true)->set('name', 'Centro')->set('lastname', 'Auto')
+            ->set('reg_medico', '')->call('guardarAlta')->assertHasNoErrors();
+
+        $centro = Medico::where('name', 'Centro')->where('lastname', 'Auto')->where('es_centro', 1)->latest('id')->firstOrFail();
+        $this->assertSame('med_00001', $centro->reg_medico);
+    }
+
     public function test_crear_administrador_con_clave_propia(): void
     {
         $this->actingAs($this->admin());
@@ -203,7 +271,7 @@ class CuentasPanelTest extends TestCase
         Livewire::test(Cuentas::class)
             ->call('abrirAlta', 'medico')
             ->call('guardarAlta')
-            ->assertHasErrors(['name', 'lastname', 'email', 'reg_medico'])
+            ->assertHasErrors(['name', 'lastname', 'email'])
             ->set('name', 'X')->set('lastname', 'Y')->set('reg_medico', 'test-' . substr(uniqid(), -6))
             ->set('email', $existente->email)
             ->call('guardarAlta')

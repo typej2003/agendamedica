@@ -50,6 +50,7 @@ class User extends Authenticatable
         'must_change_password' => 'boolean',
         'is_active' => 'boolean',
         'ultima_actividad_web_at' => 'datetime',
+        'telefono_validado_en' => 'datetime',
     ];
 
     /** Roles Spatie que dan acceso al dashboard de administración. */

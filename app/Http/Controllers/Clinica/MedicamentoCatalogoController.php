@@ -99,7 +99,7 @@ class MedicamentoCatalogoController extends Controller
                 }
 
                 return redirect()
-                    ->route('clinica.catalogos.medicamentos', ['buscar' => trim((string) $creado->nombrecomercial)])
+                    ->route('clinica.catalogos.medicamentos')
                     ->with('estado', 'Creaste «' . $this->nombre($creado) . '» en tu vademécum (código ' . trim((string) $creado->codemedicina) . ').');
             }
 

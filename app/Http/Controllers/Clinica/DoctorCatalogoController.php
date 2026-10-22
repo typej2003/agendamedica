@@ -86,7 +86,7 @@ class DoctorCatalogoController extends Controller
                 }
 
                 return redirect()
-                    ->route('clinica.catalogos.medicos-referidos', ['buscar' => $this->nombre($creado)])
+                    ->route('clinica.catalogos.medicos-referidos')
                     ->with('estado', 'Creaste a «' . $this->nombre($creado) . '» en tus médicos referidos (código ' . (int) $creado->cedula . ').');
             }
 

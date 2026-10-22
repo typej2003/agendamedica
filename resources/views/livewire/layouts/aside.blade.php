@@ -39,13 +39,15 @@
         @if ($esAdmin)
             <li class="app-sidebar-titulo link-text">Administración</li>
 
-            <li class="nav-item">
-                <a href="{{ route('admin.cuentas') }}" class="nav-link {{ request()->routeIs('admin.cuentas', 'admin.medicos.sedes*') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.cuentas', 'admin.medicos.sedes*')) aria-current="page" @endif title="Usuarios">
-                    <i class="bi bi-people-fill" aria-hidden="true"></i>
-                    <span class="link-text">Usuarios</span>
-                </a>
-            </li>
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Usuarios', 'icono' => 'bi-people-fill', 'clave' => 'usuarios',
+                'rutas' => ['admin.cuentas*', 'admin.medicos.sedes*'],
+                'hijos' => [
+                    ['texto' => 'Médicos', 'icono' => 'bi-person-badge', 'url' => route('admin.cuentas'), 'rutas' => ['admin.cuentas', 'admin.cuentas.medico', 'admin.medicos.sedes*']],
+                    ['texto' => 'Administradores', 'icono' => 'bi-shield-lock', 'url' => route('admin.cuentas.administradores'), 'rutas' => ['admin.cuentas.administradores']],
+                    ['texto' => 'Pacientes', 'icono' => 'bi-person-heart', 'url' => route('admin.cuentas.pacientes'), 'rutas' => ['admin.cuentas.pacientes']],
+                ],
+            ]])
             <li class="nav-item">
                 <a href="{{ route('admin.especialidades') }}" class="nav-link {{ request()->routeIs('admin.especialidades') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.especialidades')) aria-current="page" @endif title="Especialidades">
@@ -53,13 +55,17 @@
                     <span class="link-text">Especialidades</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.catalogo-inicial.vacunas') }}" class="nav-link {{ request()->routeIs('admin.catalogo-inicial.*') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.catalogo-inicial.*')) aria-current="page" @endif title="Catálogo inicial · Vacunas">
-                    <i class="bi bi-capsule" aria-hidden="true"></i>
-                    <span class="link-text">Catálogo inicial</span>
-                </a>
-            </li>
+            @php
+                $hijosCatalogo = [['texto' => 'Vacunas', 'icono' => 'bi-dot', 'url' => route('admin.catalogo-inicial.vacunas'), 'rutas' => ['admin.catalogo-inicial.vacunas']]];
+                foreach (\App\Clinica\Catalogos\Iniciales\CatalogosIniciales::todos() as $slugCatalogo => $datosCatalogo) {
+                    $hijosCatalogo[] = ['texto' => $datosCatalogo['titulo'], 'icono' => 'bi-dot', 'url' => route('admin.catalogo-inicial.catalogo', $slugCatalogo), 'slug' => $slugCatalogo];
+                }
+                $hijosCatalogo[] = ['texto' => 'Referencia de crecimiento', 'icono' => 'bi-dot', 'url' => route('admin.catalogo-inicial.percentiles'), 'rutas' => ['admin.catalogo-inicial.percentiles']];
+            @endphp
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Catálogo inicial', 'icono' => 'bi-capsule', 'clave' => 'catalogo-inicial',
+                'rutas' => ['admin.catalogo-inicial.*'], 'hijos' => $hijosCatalogo,
+            ]])
             <li class="nav-item">
                 <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
@@ -67,20 +73,23 @@
                     <span class="link-text">API Keys</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.servicios')) aria-current="page" @endif title="Planes y servicios">
-                    <i class="bi bi-card-checklist" aria-hidden="true"></i>
-                    <span class="link-text">Planes y servicios</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.metodos-pago') }}" class="nav-link {{ request()->routeIs('admin.metodos-pago') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.metodos-pago')) aria-current="page" @endif title="Métodos de pago">
-                    <i class="bi bi-credit-card" aria-hidden="true"></i>
-                    <span class="link-text">Métodos de pago</span>
-                </a>
-            </li>
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Planes y servicios', 'icono' => 'bi-card-checklist', 'clave' => 'planes-y-servicios',
+                'rutas' => ['admin.servicios*'],
+                'hijos' => [
+                    ['texto' => 'Servicios por médico', 'icono' => 'bi-people', 'url' => route('admin.servicios'), 'rutas' => ['admin.servicios']],
+                    ['texto' => 'Planes', 'icono' => 'bi-card-checklist', 'url' => route('admin.servicios.planes'), 'rutas' => ['admin.servicios.planes']],
+                ],
+            ]])
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Métodos de pago', 'icono' => 'bi-credit-card', 'clave' => 'metodos-de-pago',
+                'rutas' => ['admin.metodos-pago*'],
+                'hijos' => [
+                    ['texto' => 'Métodos de pago', 'icono' => 'bi-credit-card', 'url' => route('admin.metodos-pago'), 'rutas' => ['admin.metodos-pago']],
+                    // Hoy sólo existe VES; cuando haya más monedas, esta pantalla se parte en una pestaña por moneda.
+                    ['texto' => 'Tasas de cambio', 'icono' => 'bi-currency-exchange', 'url' => route('admin.metodos-pago.tasas'), 'rutas' => ['admin.metodos-pago.tasas']],
+                ],
+            ]])
             <li class="nav-item">
                 <a href="{{ route('admin.pagos') }}" class="nav-link {{ request()->routeIs('admin.pagos') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.pagos')) aria-current="page" @endif

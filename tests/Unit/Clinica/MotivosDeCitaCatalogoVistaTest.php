@@ -234,19 +234,55 @@ class MotivosDeCitaCatalogoVistaTest extends TestCase
         $this->assertStringContainsString('no está en el catálogo de esta sede', end($fuera)['texto']);
     }
 
-    public function test_la_ayuda_del_monto_dice_el_precio_del_motivo_elegido(): void
+    public function test_el_monto_es_obligatorio_solo_si_el_motivo_elegido_no_tiene_precio(): void
     {
         $sede = (new Office())->forceFill(['id' => 5]);
         $motivos = [
             $this->motivo(['id' => 1, 'codigo' => '01', 'tipo_atencion' => 'CONSULTA', 'precio' => 1234.5]),
             $this->motivo(['id' => 2, 'codigo' => '02', 'tipo_atencion' => 'CONTROL', 'precio' => null]),
+            $this->motivo(['id' => 3, 'codigo' => '03', 'tipo_atencion' => 'REVISION', 'precio' => 0.0]),
         ];
 
-        $this->assertSame('Vacío = el precio del motivo (1.234,50).', $this->formulario($motivos, $sede, ['motivo' => '01'])->ayudaDelMonto());
+        $this->assertFalse($this->formulario($motivos, $sede, ['motivo' => '01'])->montoObligatorio());
+        $this->assertTrue($this->formulario($motivos, $sede, ['motivo' => '02'])->montoObligatorio());
+        $this->assertFalse($this->formulario($motivos, $sede, ['motivo' => '03'])->montoObligatorio());
+        $this->assertFalse($this->formulario($motivos, $sede)->montoObligatorio());
         $this->assertSame('1234.50', $this->formulario($motivos, $sede, ['motivo' => '01'])->precioDelMotivo());
-        $this->assertSame('Vacío = el precio del motivo.', $this->formulario($motivos, $sede, ['motivo' => '02'])->ayudaDelMonto());
-        $this->assertSame('Vacío = el precio del motivo.', $this->formulario($motivos, $sede)->ayudaDelMonto());
         $this->assertNull($this->formulario($motivos, $sede, ['motivo' => '02'])->precioDelMotivo());
         $this->assertTrue($this->formulario([], $sede)->sinMotivos());
+    }
+
+    private function jornadaConCitas(array $citas): \App\Clinica\Agenda\Jornada
+    {
+        return new \App\Clinica\Agenda\Jornada('2026-10-05', null, 0, null, null, collect($citas));
+    }
+
+    private function citaDeAgenda(int $id, bool $movida = false): \App\Clinica\Agenda\CitaDeAgenda
+    {
+        return new \App\Clinica\Agenda\CitaDeAgenda($id, '2026-10-05', '08:00:00', $id, 0, 0, null, null, 1, null, 1, 'X', null, null, null, null, $movida);
+    }
+
+    private function formularioConJornada(?\App\Clinica\Agenda\Jornada $jornada, ?int $citaId = null, array $valores = []): FormularioDeCitaVista
+    {
+        return new FormularioDeCitaVista(
+            $citaId, 'http://localhost/guardar', Carbon::parse('2026-10-05'), collect(), null, collect(), $jornada,
+            collect(), null, null, $valores, null, Carbon::parse('2026-10-05 09:00'),
+        );
+    }
+
+    public function test_el_puesto_del_paciente_es_el_siguiente_de_la_jornada(): void
+    {
+        $this->assertSame(1, $this->formularioConJornada($this->jornadaConCitas([]))->puestoDelPaciente());
+        $this->assertSame(2, $this->formularioConJornada($this->jornadaConCitas([$this->citaDeAgenda(1)]))->puestoDelPaciente());
+        // Las movidas por el escritorio no cuentan (regla de `Jornada::cantidad()`).
+        $this->assertSame(2, $this->formularioConJornada($this->jornadaConCitas([$this->citaDeAgenda(1), $this->citaDeAgenda(2, true)]))->puestoDelPaciente());
+        $this->assertNull($this->formularioConJornada(null)->puestoDelPaciente());
+    }
+
+    public function test_al_editar_el_puesto_es_el_que_la_cita_ya_tiene(): void
+    {
+        $vm = $this->formularioConJornada($this->jornadaConCitas([$this->citaDeAgenda(1), $this->citaDeAgenda(2)]), 9, ['numorden' => 2]);
+
+        $this->assertSame(2, $vm->puestoDelPaciente());
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Unit\Clinica;
 
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\SeccionesDeLaConsulta;
+use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
@@ -11,12 +12,16 @@ use App\Clinica\Impresion\DocumentoImpreso;
 use PHPUnit\Framework\TestCase;
 
 /**
- * WEB-12.1: qué partes de «Atender» aplican a cada especialidad. Lo que se fija es que **ginecología no cambia** y que la pediatría
- * pierde sólo lo ginecológico.
+ * WEB-12.1 y el modo medicina general (2026-10-22): qué partes de «Atender» aplican a cada especialidad. Lo que se fija es que
+ * **ginecología no cambia**, que la pediatría pierde sólo lo ginecológico y que **cualquier otra especialidad** atiende con el
+ * núcleo de medicina general.
  */
 class AlcanceDeLaEspecialidadTest extends TestCase
 {
     private const GINECO = 'ginecologia-y-obstetricia';
+
+    /** Una especialidad sin módulos propios: es el modo medicina general. */
+    private const GENERAL = 'cardiologia';
 
     private function shell(?string $especialidad): ConsultaShellVista
     {
@@ -36,11 +41,40 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
     public function test_ginecologia_y_sin_especialidad_conservan_el_panel_de_trece_items(): void
     {
-        foreach ([self::GINECO, null, 'cirugia'] as $slug) {
+        foreach ([self::GINECO, null] as $slug) {
             $vm = $this->shell($slug);
             // O-22 retiró *Exámenes* (el ítem 7): la numeración del legado no se renumera.
             $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm), (string) $slug);
             $this->assertSame(13, $vm->totalItems());
+        }
+    }
+
+    /**
+     * **El modo medicina general** (Alexander, 2026-10-22): una especialidad que no es ginecología ni pediatría atiende con el
+     * núcleo —sin el estudio ecográfico ni el control de embarazo—, que es lo que permite habilitar las nueve especialidades
+     * mientras sus módulos propios llegan uno por uno.
+     */
+    public function test_una_especialidad_sin_modulos_propios_usa_el_nucleo_de_medicina_general(): void
+    {
+        $vm = $this->shell(self::GENERAL);
+
+        // 11 de 11: los trece del panel menos el 5 (estudio ecográfico) y el 6 (control de embarazo). La numeración no se renumera.
+        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
+        $this->assertSame(11, $vm->totalItems());
+        $this->assertSame(11, $vm->totalListos());
+    }
+
+    /** En el modo general las dos secciones ginecológicas no existen en el catálogo: su URL directa cae en el estado vacío. */
+    public function test_el_modo_general_no_abre_el_estudio_ni_el_embarazo(): void
+    {
+        foreach ([ConsultaShellVista::SECCION_EMBARAZO, ConsultaShellVista::SECCION_ESTUDIO] as $oculta) {
+            $vm = new ConsultaShellVista(
+                (object) ['id' => 1, 'nombres' => 'Ana', 'apellidos' => 'Pérez', 'numhistoria' => '1001'],
+                1, '2026-10-05', '/p', '/h', '/v', '/clinica/consulta/42', $oculta, null, false, [], null, [], false, self::GENERAL,
+            );
+
+            $this->assertNull($vm->seccion(), $oculta);
+            $this->assertNull($vm->parcial(), $oculta);
         }
     }
 
@@ -94,7 +128,11 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertSame([TiposDeEstudio::ABDOMINAL], $alcance->tiposDeEstudioOcultos());
         $this->assertSame(TiposDeEstudio::GINECOLOGICO, $alcance->tipoDeEstudio(''));
         $this->assertSame(TiposDeEstudio::OBSTETRICO, $alcance->tipoDeEstudio(TiposDeEstudio::OBSTETRICO));
-        $this->assertSame([], AlcanceDeLaEspecialidad::de('cirugia')->tiposDeEstudioOcultos());
+        // El modo medicina general no ofrece ningún tipo: no tiene la sección (2026-10-22).
+        $this->assertEqualsCanonicalizing(
+            TiposDeEstudio::claves(),
+            AlcanceDeLaEspecialidad::de(self::GENERAL)->tiposDeEstudioOcultos(),
+        );
     }
 
     public function test_las_solapas_del_examen_en_pediatria_son_las_propias(): void
@@ -125,12 +163,35 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertSame(PestanasDelExamen::MAMAS, $gineco->pestanaDelExamen(PestanasDelExamen::MAMAS));
     }
 
-    public function test_la_pareja_y_el_embarazo_solo_se_ocultan_en_pediatria(): void
+    /**
+     * **El modo medicina general** (2026-10-22): quedan el examen físico, el resultado de exámenes y la galería de imágenes. No
+     * se ofrecen las de pediatría ni las cinco que son sólo de ginecología.
+     */
+    public function test_las_solapas_del_examen_en_el_modo_general_son_las_del_nucleo(): void
     {
-        $this->assertFalse(AlcanceDeLaEspecialidad::de('pediatria')->muestraLaPareja());
-        $this->assertFalse(AlcanceDeLaEspecialidad::de('pediatria')->muestraElEmbarazo());
+        $general = AlcanceDeLaEspecialidad::de(self::GENERAL);
+        $pestanas = new PestanasDelExamen(fn (string $c) => "/x/$c", $general->pestanasDelExamenOcultas());
+
+        $this->assertSame(
+            [PestanasDelExamen::FISICO, TextosDelExamen::RESULTADOS, PestanasDelExamen::IMAGENES],
+            array_column($pestanas->opciones(PestanasDelExamen::FISICO), 'clave'),
+        );
+        $this->assertSame(PestanasDelExamen::FISICO, $general->pestanaDelExamen(''));
+    }
+
+    public function test_la_pareja_el_embarazo_y_el_estudio_solo_se_ofrecen_en_ginecologia(): void
+    {
+        foreach (['pediatria', self::GENERAL, 'traumatologia-y-ortopedia'] as $slug) {
+            $alcance = AlcanceDeLaEspecialidad::de($slug);
+
+            $this->assertFalse($alcance->muestraLaPareja(), $slug);
+            $this->assertFalse($alcance->muestraElEmbarazo(), $slug);
+            $this->assertFalse($alcance->muestraElEstudio(), $slug);
+        }
+
         $this->assertTrue(AlcanceDeLaEspecialidad::de(self::GINECO)->muestraLaPareja());
         $this->assertTrue(AlcanceDeLaEspecialidad::de(null)->muestraElEmbarazo());
+        $this->assertTrue(AlcanceDeLaEspecialidad::de('ginecologia')->muestraElEstudio());
     }
 
     /**
@@ -163,7 +224,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
      */
     public function test_ginecologia_solo_oculta_las_plantillas_de_examenes_estudios(): void
     {
-        foreach ([self::GINECO, 'cirugia', null] as $slug) {
+        foreach ([self::GINECO, null] as $slug) {
             $this->assertEqualsCanonicalizing(
                 ['EX', 'IG', 'EE'],
                 AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(),
@@ -173,20 +234,43 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     }
 
     /**
-     * Los **formatos en blanco** de los ecos que la especialidad no tiene se deducen de los estudios que no ofrece, no de una lista
-     * de formatos paralela: en pediatría son los cuatro del ítem 5 (los dos obstétricos y el Doppler).
+     * **El modo medicina general** (2026-10-22) no ofrece las plantillas de lo que no tiene: las cinco ginecológicas, los siete ecos
+     * —la sección no está— y las tres de pediatría. Las que cualquier especialidad usa se quedan.
      */
-    public function test_pediatria_no_ofrece_los_formatos_en_blanco_de_los_ecos(): void
+    public function test_el_modo_general_solo_conserva_las_plantillas_del_nucleo(): void
     {
-        $this->assertEqualsCanonicalizing(
-            [
-                DocumentoImpreso::ECO_OBSTETRICO,
-                DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO,
-                DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
-                DocumentoImpreso::ECO_DOPPLER,
-            ],
-            AlcanceDeLaEspecialidad::de('pediatria')->formatosEnBlancoOcultos(),
-        );
+        $ocultos = AlcanceDeLaEspecialidad::de(self::GENERAL)->tiposDePlantillaOcultos();
+
+        foreach (['CO', 'CI', 'HI', 'EG', 'EM', 'ER', 'EX', 'IG', 'EE'] as $tipo) {
+            $this->assertContains($tipo, $ocultos, 'El modo general no ofrece las plantillas de ' . $tipo . '.');
+        }
+
+        // Las de los siete ecos tampoco: no hay estudio en esta especialidad.
+        foreach (['UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'UA'] as $tipo) {
+            $this->assertContains($tipo, $ocultos, 'El modo general no ofrece las plantillas de ' . $tipo . '.');
+        }
+
+        foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF', 'RE'] as $tipo) {
+            $this->assertNotContains($tipo, $ocultos, 'El modo general conserva las plantillas de ' . $tipo . '.');
+        }
+    }
+
+    /**
+     * Los **formatos en blanco** de los ecos que la especialidad no tiene se deducen de los estudios que no ofrece, no de una lista
+     * de formatos paralela: en pediatría —y en el modo medicina general, que tampoco tiene la sección— son los cuatro del ítem 5.
+     */
+    public function test_pediatria_y_el_modo_general_no_ofrecen_los_formatos_en_blanco_de_los_ecos(): void
+    {
+        $deLosEcos = [
+            DocumentoImpreso::ECO_OBSTETRICO,
+            DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO,
+            DocumentoImpreso::ECO_OBSTETRICO_TERCERO,
+            DocumentoImpreso::ECO_DOPPLER,
+        ];
+
+        foreach (['pediatria', self::GENERAL] as $slug) {
+            $this->assertEqualsCanonicalizing($deLosEcos, AlcanceDeLaEspecialidad::de($slug)->formatosEnBlancoOcultos(), $slug);
+        }
 
         $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->formatosEnBlancoOcultos());
         $this->assertSame([], AlcanceDeLaEspecialidad::de(null)->formatosEnBlancoOcultos());

@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-head titulo="Usuarios" subtitulo="Médicos y administradores: altas, claves y bloqueos.">
+    <x-ui.page-head :titulo="$pestana === 'medicos' ? 'Usuarios · Médicos' : 'Usuarios · Administradores'" subtitulo="Altas, claves y bloqueos.">
         <x-slot name="acciones">
             <button wire:click="abrirAlta('medico')" class="btn btn-primary">
                 <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Nuevo médico
@@ -18,19 +18,6 @@
             {{ $errors->first('cuenta') ?: $errors->first('medico') }}
         </div>
     @endif
-
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'medicos' ? 'active' : '' }}" wire:click="$set('pestana', 'medicos')">
-                <i class="bi bi-person-badge me-1"></i> Médicos
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'administradores' ? 'active' : '' }}" wire:click="$set('pestana', 'administradores')">
-                <i class="bi bi-shield-lock me-1"></i> Administradores
-            </button>
-        </li>
-    </ul>
 
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />
@@ -107,6 +94,12 @@
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
                                         </button>
+                                    @endif
+
+                                    @if ($pestana === 'medicos')
+                                        <a href="{{ route('admin.cuentas.medico', $fila) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Ver
+                                        </a>
                                     @endif
 
                                     <button wire:click="abrirEditar('{{ $pestana === 'medicos' ? 'medico' : 'administrador' }}', {{ $fila->id }})"
@@ -224,7 +217,6 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
                                         <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
-                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
@@ -254,15 +246,9 @@
 
                                 @if ($tipoAlta === 'medico')
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Registro médico (reg_medico) <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off">
-                                        <div class="form-text">
-                                            @if ($es_centro)
-                                                El del centro, por ejemplo <code>centro_001</code>. Es el tenant donde trabajan sus doctores.
-                                            @else
-                                                Debe ser el mismo que tiene el médico en su GinecoReport (tabla <code>evolucion</code>).
-                                            @endif
-                                        </div>
+                                        <label class="form-label">Registro médico (reg_medico)</label>
+                                        <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off" placeholder="Vacío = se genera uno">
+                                        <div class="form-text">Vacío = se genera uno (med_00001, med_00002…).</div>
                                         @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
 
@@ -403,7 +389,6 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
                                         <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
-                                        <small class="text-muted">Se antepone al nombre en el inicio y en los reportes de GinecoReport. Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif

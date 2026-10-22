@@ -67,6 +67,8 @@ class Servicios extends Component
     public function mount()
     {
         $this->autorizar();
+        // Cada pestaña es un submenú con su URL: `admin.servicios.planes` abre los planes.
+        $this->pestana = request()->route()?->getName() === 'admin.servicios.planes' ? 'planes' : $this->pestana;
     }
 
     private function autorizar(): void

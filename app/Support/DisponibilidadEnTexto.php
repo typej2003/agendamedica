@@ -30,6 +30,26 @@ final class DisponibilidadEnTexto
      */
     public static function de(array $disponibilidad): string
     {
+        $texto = self::opciones($disponibilidad);
+        $aviso = self::avisoDeUrgencia($disponibilidad);
+
+        return $aviso === '' ? $texto : $aviso . "\n\n" . $texto;
+    }
+
+    /**
+     * El contacto del consultorio para una urgencia sin horario hoy (`aviso_urgencia`), o ''. Va antes de los días
+     * ofrecidos: se suma a la agenda, no la reemplaza.
+     *
+     * @param  array<string,mixed>  $disponibilidad
+     */
+    public static function avisoDeUrgencia(array $disponibilidad): string
+    {
+        return trim((string) ($disponibilidad['aviso_urgencia'] ?? ''));
+    }
+
+    /** @param  array<string,mixed>  $disponibilidad */
+    private static function opciones(array $disponibilidad): string
+    {
         $opciones = array_values(array_filter((array) ($disponibilidad['opciones'] ?? [])));
 
         // Compatibilidad: la forma vieja traía sólo `fecha_formateada`.

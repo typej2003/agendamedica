@@ -18,6 +18,8 @@ class PacienteAtencionFlowTest extends TestCase
     public function test_saludo_paciente_no_registrado_inicia_flujo_de_registro()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
+        // El bot le avisa al servicio qué mensaje atiende (para la urgencia con Jev, solo si cambia los horarios).
+        $mockContext->shouldReceive('iniciarMensajeWhatsApp')->once();
         $mockContext->shouldReceive('gestionarRegistroPaciente')
             ->once()
             ->with('584129998877', 'Hola')
@@ -34,6 +36,8 @@ class PacienteAtencionFlowTest extends TestCase
     public function test_saludo_paciente_registrado_con_multiples_medicos_pregunta_a_cual_referenciar()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
+        // El bot le avisa al servicio qué mensaje atiende (para la urgencia con Jev, solo si cambia los horarios).
+        $mockContext->shouldReceive('iniciarMensajeWhatsApp')->once();
         $mockContext->shouldReceive('gestionarRegistroPaciente')
             ->once()
             ->with('584165800403', 'Hola buenas tardes')
@@ -125,6 +129,8 @@ class PacienteAtencionFlowTest extends TestCase
     public function test_seleccion_de_medico_consulta_cola_y_devuelve_proximo_cupo()
     {
         $mockContext = $this->mock(PacienteAtencionContextService::class);
+        // El bot le avisa al servicio qué mensaje atiende (para la urgencia con Jev, solo si cambia los horarios).
+        $mockContext->shouldReceive('iniciarMensajeWhatsApp')->once();
         $mockContext->shouldReceive('gestionarRegistroPaciente')
             ->once()
             ->with('584165800403', '1')

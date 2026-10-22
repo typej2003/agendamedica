@@ -229,12 +229,6 @@ final class EcoGinecologicoVista
     /** La ayuda del campo, con el agregado de la FUR cuando el valor lo puso el control prenatal. */
     private function ayudaDelCampo(array $campo): string
     {
-        if ($campo['columna'] === EcoGinecologico::COLUMNA_FUR
-            && $this->furSugerida !== null
-            && $this->estudio->valor(EcoGinecologico::COLUMNA_FUR) === null) {
-            return $campo['ayuda'] . ' La trajimos del control prenatal de esta historia.';
-        }
-
         return $campo['ayuda'];
     }
 
@@ -254,7 +248,8 @@ final class EcoGinecologicoVista
             return $guardado;
         }
 
-        return $columna === EcoGinecologico::COLUMNA_FUR ? (string) ($this->furSugerida ?? '') : '';
+        // La FUR no se prellena de otra fuente: sin dato guardado ni escrito, abre vacía.
+        return '';
     }
 
     /**

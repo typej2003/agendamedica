@@ -139,4 +139,10 @@ final class EcoCardiogramaFetalVista extends EcoObstetricoVista
     {
         return EdadGestacional::de($this->estudio->fur())?->texto();
     }
+
+    /** El día de la cuenta (`AAAA-MM-DD`) que el JS usa para la EG en vivo: el mismo que usa el servidor (hoy del consultorio). */
+    public function hoyIso(): string
+    {
+        return \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString();
+    }
 }

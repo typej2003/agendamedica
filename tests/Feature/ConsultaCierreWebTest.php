@@ -234,6 +234,43 @@ class ConsultaCierreWebTest extends TestCase
         $respuesta->assertSee('data-confirmar=', false);
     }
 
+    public function test_el_shell_carga_los_borradores_locales_con_el_id_de_la_consulta(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $consulta = $this->pacienteConConsulta($medico, 4002, 1, null, $sede->medical_center_id);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', $consulta->id));
+
+        $respuesta->assertOk();
+        // El script de los borradores (localStorage) y el id de la consulta que usa en su clave: nunca datos del paciente.
+        $respuesta->assertSee('js/clinica/consulta-borradores.js', false);
+        $respuesta->assertSee('data-consulta-id="' . $consulta->id . '"', false);
+    }
+
+    public function test_el_shell_trae_el_dialogo_de_salida_con_sus_tres_acciones(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $consulta = $this->pacienteConConsulta($medico, 4003, 1, null, $sede->medical_center_id);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', $consulta->id));
+
+        $respuesta->assertOk();
+        // El diálogo propio de salida («Guardar todo» / «Descartar» / «Seguir editando») y su script, que va después de los borradores.
+        $respuesta->assertSee('js/clinica/consulta-salida.js', false);
+        $respuesta->assertSee('id="dialogo-salida"', false);
+        $respuesta->assertSee('data-salida-guardar', false);
+        $respuesta->assertSee('data-salida-descartar', false);
+        $respuesta->assertSee('data-salida-seguir', false);
+        $this->assertLessThan(
+            strpos($respuesta->getContent(), 'js/clinica/consulta-salida.js'),
+            strpos($respuesta->getContent(), 'js/clinica/consulta-borradores.js'),
+        );
+    }
+
     public function test_terminar_la_consulta_marca_la_cita_atendida_y_vuelve_a_la_agenda(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

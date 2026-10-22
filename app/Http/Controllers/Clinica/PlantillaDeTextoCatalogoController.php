@@ -107,7 +107,7 @@ class PlantillaDeTextoCatalogoController extends Controller
                 $creada = $crear->ejecutar($regMedico, $datos);
 
                 return redirect()
-                    ->route('clinica.catalogos.plantillas-texto', array_filter(['filtro' => trim((string) $creada->tipo)]))
+                    ->route('clinica.catalogos.plantillas-texto')
                     ->with('estado', 'Creaste la plantilla «' . trim((string) $creada->titulo) . '» (código ' . trim((string) $creada->codigo) . '). Ya se ofrece en la consulta.');
             }
 

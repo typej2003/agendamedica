@@ -62,6 +62,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ asset('js/gineco.js') }}"></script>
+    <script src="{{ asset('js/clinica/selector-buscable.js') }}"></script>
 
     <script>
         // Cerrar sesión pide confirmación: un toque por error ya no saca a nadie (lo usa el
@@ -114,6 +115,14 @@
                 Livewire.hook('morph.updated', () => initDropdowns());
             }
         });
+
+        // Submenús del menú lateral (<details>): el estado abierto/cerrado se refleja en aria-expanded del <summary>.
+        document.addEventListener('toggle', function (e) {
+            const grupo = e.target;
+            if (!grupo || !grupo.matches || !grupo.matches('details.nav-grupo')) return;
+            const resumen = grupo.querySelector(':scope > summary');
+            if (resumen) resumen.setAttribute('aria-expanded', grupo.open ? 'true' : 'false');
+        }, true);
 
         // Menú lateral del panel en pantallas chicas: se desliza sobre el contenido.
         (function () {

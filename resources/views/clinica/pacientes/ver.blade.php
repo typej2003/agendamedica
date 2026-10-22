@@ -56,8 +56,17 @@
             <div class="ficha-cabecera-texto">
                 <div class="d-flex flex-wrap gap-2">
                     @foreach ($vm->estados() as $estado)
-                        <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']">{{ $estado['texto'] }}</x-ui.estado>
+                        <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo'] ?? null">{{ $estado['texto'] }}</x-ui.estado>
                     @endforeach
+                    @if ($vm->puedeConfirmarCedula())
+                        <form method="POST" action="{{ $vm->urlConfirmarCedula() }}" class="d-inline"
+                              data-confirmar="Confirma que viste la cédula laminada del paciente y que coincide con la de la ficha.">
+                            @csrf
+                            <button class="btn btn-sm btn-outline-secondary text-nowrap" id="confirmar-cedula">
+                                <i class="bi bi-patch-check" aria-hidden="true"></i> Confirmar cédula (cédula laminada)
+                            </button>
+                        </form>
+                    @endif
                 </div>
                 <div class="ficha-cabecera-contacto">
                     @if ($vm->telefono())
