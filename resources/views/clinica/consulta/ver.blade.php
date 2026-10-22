@@ -18,7 +18,7 @@
            consulta» cierra la atención y vuelve a la agenda. «Ver resumen» también se fue: el resumen del paciente se ve
            desde su ficha (Pacientes).
          - **El indicador de cambios sin guardar** vive en esta misma fila (`data-barra-estado`). --}}
-    <div class="consulta-encabezado" data-consulta-barra data-tour="consulta-encabezado">
+    <div class="consulta-encabezado" data-consulta-barra data-consulta-id="{{ $consultaId }}" data-tour="consulta-encabezado">
         @if ($vm->urlVolver())
             <a class="consulta-volver" href="{{ $vm->urlVolver() }}" data-barra-salir
                title="Volver a la agenda" aria-label="Volver a la agenda">
@@ -204,4 +204,7 @@
     {{-- El cajón con la historia y el resumen del paciente (O-30): lo abre el botón del encabezado y trae el
          resumen de la pantalla de la historia sin salir de la consulta. --}}
     <script src="{{ asset('js/clinica/resumen-panel.js') }}"></script>
+    {{-- Los borradores locales (localStorage): guarda en este navegador lo escrito sin guardar y ofrece recuperarlo. Va **al
+         final** para tomar el valor inicial de cada campo cuando las máscaras y los demás scripts ya lo formatearon. --}}
+    <script src="{{ asset('js/clinica/consulta-borradores.js') }}"></script>
 @endsection

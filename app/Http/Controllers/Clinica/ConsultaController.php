@@ -284,6 +284,8 @@ class ConsultaController extends Controller
         ]);
 
         return view('clinica.consulta.ver', [
+            // El id de la consulta: lo usan los borradores locales y el candado de «abierta en otro dispositivo» (`consulta-borradores.js`).
+            'consultaId' => (int) $consulta->id,
             'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
             'vm' => new ConsultaShellVista(
                 $paciente,

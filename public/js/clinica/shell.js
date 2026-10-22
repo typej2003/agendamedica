@@ -54,6 +54,21 @@
     // Volver con «atrás» desde el caché de la página: el envío ya terminó.
     window.addEventListener('pageshow', bajarEnvio);
 
+    // ---- Al cerrar sesión se borran los borradores locales de la consulta (`consulta-borradores.js`) y el candado de
+    // dispositivo no se toca (es del navegador, no del usuario). Un equipo compartido no debe heredar lo escrito por otro.
+    document.addEventListener('submit', function (evento) {
+        const accion = evento.target && evento.target.getAttribute ? (evento.target.getAttribute('action') || '') : '';
+        if (!/\/logout\/?$/.test(accion.split('?')[0])) return;
+        try {
+            const sobran = [];
+            for (let i = 0; i < window.localStorage.length; i++) {
+                const llave = window.localStorage.key(i);
+                if (llave && llave.indexOf('ddr:borrador:') === 0) sobran.push(llave);
+            }
+            sobran.forEach(function (llave) { window.localStorage.removeItem(llave); });
+        } catch (e) { /* sin almacenamiento */ }
+    });
+
     // ---- Menú lateral en celular: se desliza sobre el contenido en vez de empujarlo.
     const menu = document.getElementById('clinica-sidebar');
     const fondo = document.getElementById('clinica-sidebar-fondo');
