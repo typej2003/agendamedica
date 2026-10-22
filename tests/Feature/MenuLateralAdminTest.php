@@ -58,7 +58,7 @@ class MenuLateralAdminTest extends TestCase
         foreach (['usuarios', 'catalogo-inicial', 'planes-y-servicios', 'metodos-de-pago'] as $clave) {
             $this->assertStringContainsString('data-menu="' . $clave . '"', $html);
         }
-        foreach ([route('admin.cuentas.administradores'), route('admin.servicios.planes'), route('admin.metodos-pago.tasas'),
+        foreach ([route('admin.cuentas.administradores'), route('admin.cuentas.pacientes'), route('admin.servicios.planes'), route('admin.metodos-pago.tasas'),
                   route('admin.catalogo-inicial.vacunas'), route('admin.catalogo-inicial.percentiles')] as $url) {
             $this->assertStringContainsString('href="' . $url . '"', $html);
         }

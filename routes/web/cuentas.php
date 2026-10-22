@@ -12,6 +12,7 @@ use App\Http\Livewire\Admin\MetodosPago;
 use App\Http\Livewire\Admin\Pagos;
 use App\Http\Livewire\Admin\Servicios;
 use App\Http\Livewire\Admin\SolicitudesDeMedicos;
+use App\Http\Livewire\Admin\UsuariosPacientes;
 use App\Http\Controllers\RegistroDeMedicos\CarnetDeLaSolicitudController;
 use App\Http\Livewire\Admin\Sedes\ConsultoriosDeLaSede;
 use App\Http\Livewire\Admin\Sedes\HorariosDelConsultorio;
@@ -30,6 +31,8 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     // **Usuarios** (menú con submenús): Médicos y Administradores son el mismo componente con su URL propia.
     Route::get('/cuentas', Cuentas::class)->name('cuentas');
     Route::get('/cuentas/administradores', Cuentas::class)->name('cuentas.administradores');
+    // Cuentas de pacientes (las que se crean solas): lista de lectura y bloqueo de emergencia.
+    Route::get('/cuentas/pacientes', UsuariosPacientes::class)->name('cuentas.pacientes');
     // Con qué especialidades trabaja cada médico (lo que enciende los módulos de la web clínica).
     Route::get('/especialidades', Especialidades::class)->name('especialidades');
     // **Catálogo inicial · Vacunas** (WEB-12.8): lo que cada médico de pediatría recibe como punto de partida.

@@ -4,6 +4,7 @@ namespace App\Reservas;
 
 use App\Models\Medico;
 use App\Models\Paciente;
+use App\Paciente\BloqueoDePacientes;
 use App\Notificaciones\Telefono;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -57,6 +58,9 @@ final class SolicitarCodigoDeReserva
                 'telefono' => 'Escribe un teléfono venezolano válido, por ejemplo 0412-1234567.',
             ]);
         }
+
+        // Una cuenta de paciente bloqueada desde el panel no reserva (ni se le manda el código).
+        app(BloqueoDePacientes::class)->exigirQueNoEsteBloqueado($cedula, $telefono, $datos['email'] ?? null);
 
         $paciente = Paciente::where('cedula', $cedula)->first();
         if ($paciente !== null) {

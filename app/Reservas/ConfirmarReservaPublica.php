@@ -6,6 +6,7 @@ use App\Clinica\Agenda\AgendamientoDeCitas;
 use App\Models\Cola;
 use App\Models\Medico;
 use App\Models\Paciente;
+use App\Paciente\BloqueoDePacientes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -93,6 +94,11 @@ final class ConfirmarReservaPublica
     /** @param array<string,mixed> $datos */
     private function crear(Medico $medico, array $datos): array
     {
+        // Puede haberse bloqueado entre el código y la confirmación.
+        if (app(BloqueoDePacientes::class)->cuentaBloqueada($datos['cedula'] ?? null, $datos['telefono'] ?? null, $datos['email'] ?? null) !== null) {
+            return ['ok' => false, 'limpiar' => true, 'mensaje' => BloqueoDePacientes::AVISO];
+        }
+
         $opcion = $this->disponibilidad->opcionEn($medico, (string) $datos['fecha'], (string) $datos['hora'], (int) $datos['office_id']);
 
         if ($opcion === null) {

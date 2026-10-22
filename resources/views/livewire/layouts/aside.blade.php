@@ -45,6 +45,7 @@
                 'hijos' => [
                     ['texto' => 'Médicos', 'icono' => 'bi-person-badge', 'url' => route('admin.cuentas'), 'rutas' => ['admin.cuentas', 'admin.cuentas.medico', 'admin.medicos.sedes*']],
                     ['texto' => 'Administradores', 'icono' => 'bi-shield-lock', 'url' => route('admin.cuentas.administradores'), 'rutas' => ['admin.cuentas.administradores']],
+                    ['texto' => 'Pacientes', 'icono' => 'bi-person-heart', 'url' => route('admin.cuentas.pacientes'), 'rutas' => ['admin.cuentas.pacientes']],
                 ],
             ]])
             <li class="nav-item">

@@ -13,6 +13,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
+use App\Paciente\BloqueoDePacientes;
 use App\Models\Specialty;
 use App\Support\DisponibilidadEnTexto;
 use Carbon\Carbon;
@@ -1241,8 +1242,18 @@ class PacienteAtencionContextService
     public function reservarCitaEnCola(string $telefono, string $criterioMedico, ?string $fecha = null, ?string $motivo = null): array
     {
         try {
+            // 0. Una cuenta de paciente bloqueada desde el panel no agenda por el chatbot.
+            $bloqueo = app(BloqueoDePacientes::class);
+            if ($bloqueo->cuentaBloqueada(null, $telefono, null) !== null) {
+                return ['exito' => false, 'bloqueado' => true, 'mensaje' => BloqueoDePacientes::AVISO];
+            }
+
             // 1. Identificar al paciente por su número de teléfono
             $paciente = $this->buscarPacientePorTelefono($telefono);
+
+            if ($paciente && $bloqueo->cuentaBloqueada($paciente->cedula, $paciente->telefono, $paciente->email) !== null) {
+                return ['exito' => false, 'bloqueado' => true, 'mensaje' => BloqueoDePacientes::AVISO];
+            }
 
             if (!$paciente) {
                 // Registrar temporalmente al paciente nuevo por WhatsApp
