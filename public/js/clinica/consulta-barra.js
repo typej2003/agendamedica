@@ -59,6 +59,8 @@
     // Guarda con el POST de la sección. Resuelve true si quedó guardado (o no había nada que guardar).
     function guardar() {
         clearTimeout(pausa);
+        // Tras «Descartar» en el diálogo de salida (`consulta-salida.js`) no se guarda nada más: ni el temporizador pendiente.
+        if (window.ddrDescartando) { return Promise.resolve(false); }
         if (guardando) { return guardando; }
         if (!sucio()) { decir('Guardado ' + hora(), false); return Promise.resolve(true); }
 

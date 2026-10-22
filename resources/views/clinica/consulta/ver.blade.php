@@ -145,6 +145,22 @@
         </div>
     </x-ui.dialogo>
 
+    {{-- El diálogo de salida (`consulta-salida.js`): al abandonar la consulta con formularios sin guardar. Lo llena el script. --}}
+    <x-ui.dialogo id="dialogo-salida" titulo="Tienes cambios sin guardar">
+        <div class="dialogo-cuerpo">
+            <p class="mb-2" data-salida-intro></p>
+            <ul class="mb-2" data-salida-lista></ul>
+            <p class="mb-2 text-secondary" data-salida-manual hidden></p>
+            <p class="mb-0" role="status" aria-live="polite" data-salida-estado></p>
+            <p class="mb-0 text-danger" role="alert" data-salida-error hidden></p>
+        </div>
+        <div class="dialogo-pie">
+            <button type="button" class="btn btn-outline-secondary" data-salida-seguir>Seguir editando</button>
+            <button type="button" class="btn btn-outline-danger" data-salida-descartar>Descartar</button>
+            <button type="button" class="btn btn-primary" data-salida-guardar>Guardar todo</button>
+        </div>
+    </x-ui.dialogo>
+
     {{-- La vista previa («Visualizar», WEB-11.24): un solo diálogo para las solicitudes, los récipes y los ecos. --}}
     @include('clinica.consulta._visualizar')
 
@@ -220,4 +236,6 @@
     <script src="{{ asset('js/clinica/consulta-borradores.js') }}"></script>
     {{-- El candado suave «abierta en otro dispositivo»: registra este dispositivo, late cada ~60 s y avisa si otro toma la consulta. --}}
     <script src="{{ asset('js/clinica/consulta-candado.js') }}"></script>
+    {{-- El diálogo de salida: «Guardar todo» / «Descartar» / «Seguir editando» al abandonar la consulta con formularios sin guardar. --}}
+    <script src="{{ asset('js/clinica/consulta-salida.js') }}"></script>
 @endsection

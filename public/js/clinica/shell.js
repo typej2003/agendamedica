@@ -49,7 +49,8 @@
     };
 
     window.addEventListener('beforeunload', function (evento) {
-        if (enviandoFormulario) evento.stopImmediatePropagation();
+        // `ddrSalidaConfirmada`: el médico ya eligió en el diálogo de salida de la consulta (`consulta-salida.js`).
+        if (enviandoFormulario || window.ddrSalidaConfirmada) evento.stopImmediatePropagation();
     });
     // Volver con «atrás» desde el caché de la página: el envío ya terminó.
     window.addEventListener('pageshow', bajarEnvio);

@@ -188,7 +188,12 @@
     // ------------------------------------------------------------------ guardar el borrador
     var temporizadores = new WeakMap();
 
+    // Tras «Descartar» en el diálogo de salida no se escribe nada durante unos segundos: un `change` por el desenfoque o un
+    // temporizador pendiente volverían a crear el borrador que se acaba de borrar.
+    var congelado = false;
+
     function guardarBorrador(form) {
+        if (congelado) { return; }
         var valores = valoresDe(form);
         var clave = claveDe(form);
 
@@ -341,6 +346,27 @@
         quitar(claveDe(form));
         bases.set(form, serializar(valoresDe(form)));
     }, true);
+
+    // API mínima para `consulta-salida.js` (el diálogo «Guardar todo / Descartar / Seguir editando»): qué formularios
+    // están sucios (distintos de lo que mostró el servidor), marcar uno como guardado y descartar todos los borradores.
+    window.ConsultaBorradores = {
+        valido: formularioValido,
+        sucios: function () {
+            return Array.prototype.filter.call(document.forms, function (f) {
+                return formularioValido(f) && serializar(valoresDe(f)) !== baseDe(f);
+            });
+        },
+        guardado: function (form) {
+            window.clearTimeout(temporizadores.get(form));
+            quitar(claveDe(form));
+            bases.set(form, serializar(valoresDe(form)));
+        },
+        descartarTodo: function () {
+            congelado = true;
+            window.setTimeout(function () { congelado = false; }, 3000);
+            claves().forEach(function (clave) { if (clave.indexOf(MIS) === 0) { quitar(clave); } });
+        },
+    };
 
     window.setTimeout(inicializar, 0);
 })();
