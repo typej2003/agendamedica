@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Events\MedicoRegistrado;
 use App\Listeners\OtorgarServicioDePrueba;
 use App\Models\Medico;
@@ -160,7 +161,7 @@ class ServicioPlanesTest extends TestCase
         $s = RegMedicoServicio::where('reg_medico', $reg)->first();
         $this->assertSame('De pago', $s->plan_nombre);
         $this->assertSame(0.0, (float) $s->monto_usd);
-        $this->assertSame(Carbon::today()->addMonthNoOverflow()->toDateString(), $s->vence_el->toDateString());
+        $this->assertSame(FechaDelConsultorio::hoyComoFecha()->addMonthsNoOverflow()->toDateString(), $s->vence_el->toDateString());
     }
 
     public function test_un_medico_con_reg_medico_vacio_no_recibe_nada_ni_falla(): void
@@ -361,7 +362,7 @@ class ServicioPlanesTest extends TestCase
         $r = $this->postJson('/api/app/sync-app-data', [])->assertOk();
 
         $this->assertSame('vigente', $r->json('servicio.estado'));
-        $this->assertSame(Carbon::today()->addMonthNoOverflow()->toDateString(), $r->json('servicio.vence_el'));
+        $this->assertSame(FechaDelConsultorio::hoyComoFecha()->addMonthsNoOverflow()->toDateString(), $r->json('servicio.vence_el'));
         $this->assertArrayHasKey('max_medicos', $r->json('servicio.restricciones'));
     }
 

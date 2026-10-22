@@ -6,6 +6,7 @@ use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
 use App\Clinica\Consulta\EcoObstetricoTercero;
+use App\Clinica\FechaDelConsultorio;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Consulta;
 use App\Models\EcoObstetrico as ModeloDelPrimero;
@@ -513,7 +514,10 @@ class SyncEcoCreacionTest extends TestCase
         $this->assertSame((int) $consulta->nroconsulta, (int) $fila->consulta);
         $this->assertSame($valor, (string) $fila->{$columna}, "se guardó `{$columna}`");
         $this->assertNotNull($fila->fecha, 'la fecha del estudio se completa con hoy');
-        $this->assertSame(now()->toDateString(), substr((string) $fila->fecha, 0, 10));
+        // El "hoy" del eco es el del consultorio (`FechaDelConsultorio`), no el UTC del servidor: pasadas las
+        // 20:00 de Caracas el día UTC ya es el siguiente y esta comparación fallaba sin que el código tuviera
+        // nada que ver (trampa 59).
+        $this->assertSame(FechaDelConsultorio::hoyComoTexto(), substr((string) $fila->fecha, 0, 10));
 
         $creado = $this->creado($response, 'eco_obstetrico', -58);
         $this->assertNotNull($creado, 'la creación contesta con su id');

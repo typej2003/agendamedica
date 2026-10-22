@@ -5,6 +5,7 @@ namespace Tests\Unit\Clinica;
 use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\Vistas\FilaDeCitaVista;
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -160,7 +161,9 @@ class AgendaVistasTest extends TestCase
     public function test_los_parametros_nunca_revientan_por_una_url_mal_formada(): void
     {
         $contexto = ['office' => (object) ['id' => 5]];
-        $hoy = Carbon::today()->toDateString();
+        // El día por defecto de la agenda es el del **consultorio**, no el del servidor: pasadas las 20:00 de
+        // Caracas el día UTC ya es el siguiente (trampa 21). `Carbon::today()` daría ese.
+        $hoy = FechaDelConsultorio::hoyComoTexto();
 
         $parametros = ParametrosDeAgenda::desde(
             Request::create('/clinica/agenda', 'GET', ['vista' => 'trimestre', 'fecha' => 'no-es-fecha', 'razon' => '  ']),

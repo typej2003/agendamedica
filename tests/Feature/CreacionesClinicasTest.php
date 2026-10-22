@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\MedicoQueFirma;
 use App\Models\Cola;
 use App\Models\Consulta;
@@ -261,8 +262,9 @@ class CreacionesClinicasTest extends TestCase
         ]);
 
         $this->assertCount(2, $response->json('rechazados'));
-        // La fecha mal formada no rechaza la consulta: se usa la de hoy.
-        $this->assertSame(now()->toDateString(), Consulta::find($this->creado($response, 'consultas', -20)['id'])->fecha->toDateString());
+        // La fecha mal formada no rechaza la consulta: se usa la de hoy **del consultorio** (no la UTC del
+        // servidor, que pasadas las 20:00 de Caracas ya es el día siguiente: trampa 59).
+        $this->assertSame(FechaDelConsultorio::hoyComoTexto(), Consulta::find($this->creado($response, 'consultas', -20)['id'])->fecha->toDateString());
     }
 
     /**
