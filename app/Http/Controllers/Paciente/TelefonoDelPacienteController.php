@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Paciente;
 use App\Http\Controllers\Controller;
 use App\Notificaciones\Telefono;
 use App\Paciente\ConfirmarTelefonoDelPaciente;
+use App\Paciente\DescartarCodigoDeTelefono;
 use App\Paciente\NivelesDeIdentidad;
 use App\Paciente\SolicitarCodigoDeTelefono;
 use App\Paciente\TelefonoPendiente;
@@ -42,6 +43,13 @@ class TelefonoDelPacienteController extends Controller
         return redirect()
             ->route('paciente.telefono')
             ->with('estado', $resultado['reenviado'] ? 'Te enviamos un código de 6 dígitos. Escríbelo para continuar.' : 'Ya te habíamos enviado el código. Escríbelo para continuar.');
+    }
+
+    public function descartar(Request $request, DescartarCodigoDeTelefono $accion)
+    {
+        $accion->ejecutar($request->user());
+
+        return redirect()->route('paciente.telefono');
     }
 
     public function confirmar(Request $request, ConfirmarTelefonoDelPaciente $accion)
