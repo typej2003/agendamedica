@@ -130,6 +130,24 @@ class MetodosPagoAdminTest extends TestCase
         $this->assertTrue($metodo->cuentaBancaria->estaCompleta());
     }
 
+    public function test_sypago_tiene_solo_la_variante_de_debito_inmediato(): void
+    {
+        $this->actingAs($this->administrador());
+
+        $panel = Livewire::test(MetodosPago::class)->call('nuevoMetodo');
+        $panel->assertSet('variante', 'debito_inmediato')
+            ->assertSet('nombre', 'SyPago · Débito inmediato')
+            ->assertViewHas('variantes', ['debito_inmediato' => 'Débito inmediato']);
+
+        // Las variantes viejas (`cuenta_o_movil`, `pago_movil`) ya no se aceptan: cuenta o teléfono lo
+        // decide el número del pagador en el checkout.
+        foreach ($this->datosDelMetodo() as $campo => $valor) {
+            $panel->set($campo, $valor);
+        }
+        // Después de la pasarela: `updatedPasarela` corrige una variante que no es de esa pasarela.
+        $panel->set('variante', 'pago_movil')->call('guardarMetodo')->assertHasErrors(['variante']);
+    }
+
     public function test_el_metodo_se_puede_ofrecer_solo_para_planes_o_para_los_dos(): void
     {
         $this->actingAs($this->administrador());
@@ -243,6 +261,22 @@ class MetodosPagoAdminTest extends TestCase
         $configuracion = ConfiguracionPago::actual();
         $this->assertNotNull($configuracion->tasa_sincronizada_el);
         $this->assertSame(ConfiguracionPago::SINCRONIZACION_OK, $configuracion->tasa_sincronizacion_estado);
+    }
+
+    /** La base guarda en UTC: «Última sincronización» se muestra en la hora del consultorio (Caracas, UTC-4). */
+    public function test_la_ultima_sincronizacion_se_muestra_en_hora_de_caracas(): void
+    {
+        ConfiguracionPago::actual()->forceFill([
+            'tasa_sincronizada_el' => \Carbon\Carbon::parse('2026-10-22 01:40:00', 'UTC'),
+            'tasa_sincronizacion_estado' => ConfiguracionPago::SINCRONIZACION_OK,
+        ])->save();
+
+        $this->actingAs($this->administrador());
+
+        Livewire::test(MetodosPago::class)
+            ->call('cambiarPestana', 'tasa')
+            ->assertSee('21/10/2026 9:40 PM')
+            ->assertDontSee('22/10/2026 01:40');
     }
 
     public function test_la_sincronizacion_automatica_se_puede_apagar(): void
