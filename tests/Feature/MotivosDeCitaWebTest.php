@@ -161,6 +161,8 @@ class MotivosDeCitaWebTest extends TestCase
             'reg_medico'   => $medico->reg_medico,
             'codigo'       => $codigo,
             'tipo_atencion' => $codigo === 'MASA' ? 'Masaje terapéutico' : 'Control',
+            // Con precio 0 (gratis) agendar sin monto es válido; NULL obligaría a escribirlo.
+            'precio'       => 0.0,
         ], $extra));
     }
 

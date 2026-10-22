@@ -4,13 +4,16 @@ namespace App\Clinica\Agenda;
 
 use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\EditarCita;
+use App\Actions\Catalogos\EditarMotivoDeCita;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Models\Cola;
+use App\Models\MotivoCita;
 use App\Models\Office;
 use App\Models\Paciente;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -43,6 +46,7 @@ class AgendamientoDeCitas
         private AsignarHistoria $asignarHistoria,
         private EditarCita $editar,
         private MedicosDeLaCita $medicos,
+        private EditarMotivoDeCita $editarMotivo,
     ) {
     }
 
@@ -84,6 +88,9 @@ class AgendamientoDeCitas
         // A quién se le agenda, **sin escribir nada todavía**: el paciente elegido, o la ficha que ya
         // exista con la cédula nueva (el alta enlaza, no duplica).
         $objetivo = $this->pacientes->identificar($contexto, $valores);
+
+        // Un motivo **sin precio** (NULL) obliga a escribir el monto: se valida antes de escribir nada.
+        $motivoSinPrecio = $this->motivoSinPrecioDe($contexto, $valores, $sede);
 
         // La excepción de las citas múltiples (WEB-2.17): si el motivo elegido **admite varias citas
         // pendientes** del mismo paciente —masajistas, terapias—, la regla de la cita única no aplica y
@@ -134,22 +141,30 @@ class AgendamientoDeCitas
         // "Mover esa cita a la nueva fecha": es **la misma fila** movida, no una cita nueva (conserva lo
         // cobrado), así que la cita pendiente se edita y no se crea nada.
         if ($decision === 'mover' && $pendiente !== null) {
-            $this->editar->ejecutar(
-                $pendiente['cita'],
-                $this->cambiosDeMovimiento($pendiente, $sedes, $fecha, $hora, $centroId, $jornada, $valores['motivo'] ?? null, $monto),
-                Carbon::now(),
-                'web',
-            );
+            DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $pendiente, $sedes, $fecha, $hora, $centroId, $jornada, $valores) {
+                $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto);
+                $this->editar->ejecutar(
+                    $pendiente['cita'],
+                    $this->cambiosDeMovimiento($pendiente, $sedes, $fecha, $hora, $centroId, $jornada, $valores['motivo'] ?? null, $monto),
+                    Carbon::now(),
+                    'web',
+                );
+            });
 
             return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::MOVIDA, $fecha, $sede);
         }
 
-        $cita = $this->crear->ejecutar(
-            $regMedico,
-            $this->filaDeCita($objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $contexto, $monto, $estado),
-            Carbon::now(),
-            'web',
-        );
+        // El precio del motivo y la cita nacen juntos: si una falla, no queda la otra.
+        $cita = DB::transaction(function () use ($motivoSinPrecio, $contexto, $monto, $regMedico, $objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $estado) {
+            $this->fijarPrecioDelMotivo($motivoSinPrecio, $contexto, $monto);
+
+            return $this->crear->ejecutar(
+                $regMedico,
+                $this->filaDeCita($objetivo, $paciente, $fecha, $hora, $jornada, $centroId, $valores, $contexto, $monto, $estado),
+                Carbon::now(),
+                'web',
+            );
+        });
 
         return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::CREADA, $fecha, $sede, objetivo: $objetivo, cita: $cita);
     }
@@ -290,6 +305,42 @@ class AgendamientoDeCitas
         $precio = $this->motivos->de($contexto['reg_medico'], $sede)->firstWhere('codigo', $codigo)?->precio;
 
         return $precio !== null ? (float) $precio : null;
+    }
+
+    /**
+     * El motivo elegido **si no tiene precio configurado** (`precio` NULL; 0 es «gratis» a propósito). En ese caso
+     * el monto es obligatorio —si es gratis, se escribe 0— y se guarda como precio del motivo al agendar. Sin motivo,
+     * o con un precio ya configurado, devuelve `null` y no hay obligación.
+     *
+     * @throws ValidationException si falta el monto
+     */
+    private function motivoSinPrecioDe(array $contexto, array $valores, ?Office $sede): ?MotivoCita
+    {
+        $codigo = $valores['motivo'] ?? null;
+        if ($codigo === null || $codigo === '') {
+            return null;
+        }
+
+        $motivo = $this->motivos->de($contexto['reg_medico'], $sede)->firstWhere('codigo', $codigo);
+        if ($motivo === null || $motivo->precio !== null) {
+            return null;
+        }
+
+        if (! isset($valores['monto']) || $valores['monto'] === '') {
+            throw ValidationException::withMessages(['monto' => 'Este motivo no tiene precio. Escríbelo para agendar (si es gratis, escribe 0).']);
+        }
+
+        return $motivo;
+    }
+
+    /** Guarda el monto escrito como precio del motivo que no lo tenía (dentro de la transacción de la cita). */
+    private function fijarPrecioDelMotivo(?MotivoCita $motivo, array $contexto, ?float $monto): void
+    {
+        if ($motivo === null || $monto === null) {
+            return;
+        }
+
+        $this->editarMotivo->ejecutar($motivo, $contexto['medico'], ['precio' => $monto], Carbon::now(), 'web');
     }
 
     /**

@@ -681,6 +681,84 @@ class AgendaWebTest extends TestCase
             ->value('source'));
     }
 
+    // ------------------------------------------------- Precio del motivo al agendar (motivo_cita.precio NULL = sin configurar)
+
+    /** Agenda con un motivo de precio dado (o NULL) y el monto indicado; devuelve [respuesta, motivo, medico]. */
+    private function agendarConMotivo(?float $precio, ?string $monto, bool $conMotivo = true): array
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $motivo = MotivoCita::create(['reg_medico' => $medico->reg_medico, 'codigo' => 'REV', 'tipo_atencion' => 'Revision', 'precio' => $precio]);
+
+        $datos = ['hora' => '09:30', 'paciente_id' => $pacienteId];
+        if ($conMotivo) {
+            $datos['motivo'] = 'REV';
+        }
+        if ($monto !== null) {
+            $datos['monto'] = $monto;
+        }
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->from('/clinica/agenda/nueva')->post('/clinica/agenda', $this->datosDeCita($sede, $datos));
+
+        return [$respuesta, $motivo, $medico];
+    }
+
+    public function test_motivo_sin_precio_y_monto_vacio_no_agenda_ni_toca_el_motivo(): void
+    {
+        [$respuesta, $motivo, $medico] = $this->agendarConMotivo(null, '');
+
+        $respuesta->assertSessionHasErrors(['monto' => 'Este motivo no tiene precio. Escríbelo para agendar (si es gratis, escribe 0).']);
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertNull($motivo->fresh()->precio);
+    }
+
+    public function test_motivo_sin_precio_con_monto_lo_guarda_como_precio_del_motivo_y_de_la_cita(): void
+    {
+        [, $motivo, $medico] = $this->agendarConMotivo(null, '50');
+
+        $this->assertSame(50.0, (float) $motivo->fresh()->precio);
+        $this->assertSame(50.0, (float) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->monto);
+    }
+
+    public function test_motivo_sin_precio_con_cero_explicito_queda_gratis(): void
+    {
+        [, $motivo, $medico] = $this->agendarConMotivo(null, '0');
+
+        $this->assertNotNull($motivo->fresh()->precio);
+        $this->assertSame(0.0, (float) $motivo->fresh()->precio);
+        $this->assertSame(0.0, (float) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->monto);
+    }
+
+    public function test_motivo_con_precio_cero_agenda_sin_pagar(): void
+    {
+        [$respuesta, $motivo, $medico] = $this->agendarConMotivo(0.0, '');
+
+        $respuesta->assertSessionHasNoErrors();
+        $cita = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+        $this->assertSame(0.0, (float) $cita->monto);
+        $this->assertSame(0.0, (float) $motivo->fresh()->precio);
+    }
+
+    public function test_motivo_con_precio_y_monto_vacio_usa_el_precio_del_motivo(): void
+    {
+        [, $motivo, $medico] = $this->agendarConMotivo(20.0, '');
+
+        $this->assertSame(20.0, (float) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->monto);
+        $this->assertSame(20.0, (float) $motivo->fresh()->precio);
+    }
+
+    public function test_sin_motivo_no_hay_obligacion_de_monto(): void
+    {
+        [$respuesta, $motivo, $medico] = $this->agendarConMotivo(null, '', false);
+
+        $respuesta->assertSessionHasNoErrors();
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertNull($motivo->fresh()->precio);
+    }
+
     public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
     {
         // O-04 (2026-10-17): el alta rápida del paso 2 es un alta **desde la web**, así que numera en el

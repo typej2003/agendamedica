@@ -142,7 +142,7 @@
             {{-- Paciente y cita lado a lado (>= 992 px): todo el formulario cabe sin scroll. --}}
             <div class="pasos-columnas">
             <div class="paso">
-                <h2 class="paso-titulo"><span class="paso-numero">2</span> Paciente</h2>
+                <h2 class="paso-titulo"><span class="paso-numero">2</span> Paciente @if ($vm->puestoDelPaciente() !== null)<span id="puesto-del-paciente">#{{ $vm->puestoDelPaciente() }}</span>@endif</h2>
 
                 @if ($vm->editando())
                     @php $elegido = $vm->paciente(); @endphp
@@ -234,7 +234,6 @@
                         <div class="col-sm-6 col-xl">
                             <label class="form-label" for="hora">Hora de llegada</label>
                             <x-ui.hora name="hora" :valor="$vm->valor('hora')" />
-                            <span class="form-text">Vacía = la apertura del bloque.</span>
                         </div>
 
                         @if ($vm->mostrarBloques())
@@ -280,10 +279,11 @@
                     </div>
 
                     <div class="col-sm-6 col-xl">
-                        <label class="form-label" for="monto">Monto</label>
+                        <label class="form-label" for="monto">Monto <span id="monto-obligatorio" @if (! $vm->montoObligatorio()) hidden @endif>*</span></label>
                         <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
-                               value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->precioDelMotivo() }}">
-                        <span class="form-text" id="monto-ayuda">{{ $vm->ayudaDelMonto() }}</span>
+                               value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->montoObligatorio() ? 'Sin precio: escríbelo (0 si es gratis)' : $vm->precioDelMotivo() }}"
+                               @if ($vm->montoObligatorio()) required @endif>
+                        @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
