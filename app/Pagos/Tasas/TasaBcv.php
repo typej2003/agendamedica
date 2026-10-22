@@ -37,10 +37,12 @@ final class TasaBcv
             'Accept' => 'text/html,application/xhtml+xml',
         ])->timeout(max(5, (int) config('pagos.bcv.timeout', 20)));
 
-        // Sólo en local se salta la verificación del certificado (el PHP de desarrollo no tiene el CA
-        // del BCV). En QA y producción se verifica siempre.
-        if (app()->environment('local')) {
-            $http = $http->withoutVerifying();
+        // El servidor del BCV manda una cadena incompleta: falta el intermedio que firmó su certificado
+        // (Sectigo DV R36). El navegador lo baja solo; el curl de Linux (Plesk) no, y falla con
+        // «cURL error 60». Se verifica contra la cadena que trae el repo, en todos los entornos.
+        $cadena = (string) config('pagos.bcv.ca', resource_path('certificados/bcv-cadena.pem'));
+        if ($cadena !== '' && is_file($cadena)) {
+            $http = $http->withOptions(['verify' => $cadena]);
         }
 
         $respuesta = $http->get($url)->throw();

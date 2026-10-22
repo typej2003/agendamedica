@@ -25,14 +25,16 @@ return [
     |
     | El comando `tasas:bcv` baja la página del Banco Central y lee el valor del
     | dólar (`#dolar strong`). No se configura desde el panel: la URL es del
-    | entorno y el certificado se verifica siempre, salvo en `local` (el PHP de
-    | desarrollo no tiene el CA del BCV). La preferencia de si la tasa es
+    | entorno y el certificado se verifica siempre contra `ca`: la cadena de
+    | Sectigo que el servidor del BCV no manda completa (sin ella, el curl de
+    | Plesk falla con «cURL error 60»). La preferencia de si la tasa es
     | automática vive en `configuracion_pagos.tasa_automatica`.
     |
     */
     'bcv' => [
         'url' => env('BCV_URL', 'https://www.bcv.org.ve'),
         'timeout' => (int) env('BCV_TIMEOUT', 20),
+        'ca' => env('BCV_CA', resource_path('certificados/bcv-cadena.pem')),
     ],
 
     // Topes de seguridad para que las cuentas en centavos no desborden un entero de 64 bits.
