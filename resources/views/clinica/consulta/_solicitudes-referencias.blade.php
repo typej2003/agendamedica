@@ -164,7 +164,8 @@
                         <input type="text" name="telefono" id="medico-telefono" class="form-control" maxlength="108" value="{{ old('telefono') }}">
                     </x-ui.campo>
                     <x-ui.campo etiqueta="Ciudad" for="medico-ciudad" error="ciudad" class="mb-3">
-                        <input type="text" name="ciudad" id="medico-ciudad" class="form-control" maxlength="30" value="{{ old('ciudad') }}">
+                        <x-ui.selector-buscable name="ciudad" id="medico-ciudad" libre maxlength="30" :url="route('clinica.ciudades.buscar', ['valor' => 'nombre'])"
+                            placeholder="Escribe o elige la ciudad" />
                     </x-ui.campo>
                     <p class="form-text mb-0">Se agrega a tu catálogo. Los nombres se guardan en mayúsculas.</p>
                 </div>

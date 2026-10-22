@@ -182,9 +182,10 @@ class ChatbotUrgenciaJevTest extends TestCase
 
     // ------------------------------------------------------------------------------- Cuándo se consulta a Jev
 
-    public function test_sin_horarios_en_la_ventana_no_se_consulta_a_jev(): void
+    public function test_sin_horarios_hoy_se_consulta_a_jev_pero_la_oferta_de_agenda_es_la_misma(): void
     {
-        // Agenda sin lugares entre 90 min y 24 h: lunes 11:00 (60 min) y martes 10:30.
+        // Agenda sin lugares entre 90 min y 24 h: lunes 11:00 (60 min) y martes 10:30. Sin lugar hoy, Jev sí se
+        // consulta (para conectar con el consultorio, ver `ChatbotUrgenciaSinHorarioTest`), pero la agenda no cambia.
         $medico = $this->medicoConAgenda(['11:00' => '12:00'], '10:30');
         $jev = $this->jevDice(0.99);
         $this->paciente();
@@ -193,8 +194,9 @@ class ChatbotUrgenciaJevTest extends TestCase
         $reserva = $this->servicioConMensaje('Estoy sangrando mucho')->reservarCitaEnCola(self::TELEFONO, $medico->reg_medico);
 
         $this->assertSame('2026-10-27', $oferta['opciones'][0]['fecha']);
+        $this->assertSame('10:30', $oferta['opciones'][0]['hora']);
         $this->assertTrue($reserva['exito']);
-        $this->assertSame(0, $jev->llamadas, 'Jev no cambiaría nada: no se llama.');
+        $this->assertSame(2, $jev->llamadas, 'Una consulta por mensaje, y hubo dos mensajes.');
     }
 
     public function test_sin_mensaje_en_curso_no_hay_excepcion_ni_llamada(): void

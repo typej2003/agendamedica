@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Clinica\CiudadBusquedaController;
 use App\Http\Controllers\RegistroDeMedicos\RegistroDeMedicoController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,5 +24,8 @@ Route::middleware('guest')->prefix('registro/medico')->name('medico.registro')->
         ->middleware('throttle:20,1')->name('.confirmar');
     Route::post('/reenviar', [RegistroDeMedicoController::class, 'reenviar'])
         ->middleware('throttle:10,1')->name('.reenviar');
+    // Sugerencias de ciudad del formulario (sin sesion): solo nombre y estado, limitadas y con tope de peticiones.
+    Route::get('/ciudades', [CiudadBusquedaController::class, 'buscarPublico'])
+        ->middleware('throttle:60,1')->name('.ciudades');
     Route::get('/recibida', [RegistroDeMedicoController::class, 'recibida'])->name('.recibida');
 });

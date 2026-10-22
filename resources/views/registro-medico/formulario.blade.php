@@ -87,8 +87,8 @@
 
                         <div class="col-md-6">
                             <label for="ciudad" class="form-label">Ciudad <span class="text-muted">(opcional)</span></label>
-                            <input type="text" class="form-control" id="ciudad" name="ciudad" maxlength="100"
-                                   value="{{ old('ciudad', $previo['ciudad'] ?? '') }}" autocomplete="address-level2">
+                            <x-ui.selector-buscable name="ciudad" id="ciudad" libre maxlength="100" :value="$previo['ciudad'] ?? ''"
+                                :url="route('medico.registro.ciudades')" placeholder="Escribe o elige tu ciudad" />
                         </div>
 
                         <div class="col-md-6">

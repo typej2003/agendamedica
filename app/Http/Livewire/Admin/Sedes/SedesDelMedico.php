@@ -4,7 +4,9 @@ namespace App\Http\Livewire\Admin\Sedes;
 
 use App\Actions\Consultorio\GuardarConsultorio;
 use App\Actions\Consultorio\GuardarSede;
-use App\Clinica\Consultorio\SedesDeLaClinica;
+use App\Clinica\Ciudades\BuscadorDeCiudades;
+use App\Models\City;
+use App\Models\Estado;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\Office;
@@ -57,7 +59,7 @@ class SedesDelMedico extends Component
         $this->medico = $medico;
     }
 
-    public function render(SedesDeLaClinica $catalogo)
+    public function render()
     {
         $tenant = $this->lector()->tenant($this->medico);
         $seleccionada = $this->sedeId ? MedicalCenter::with('city')->find($this->sedeId) : null;
@@ -67,7 +69,10 @@ class SedesDelMedico extends Component
             'nombre'       => $this->nombreDelMedico(),
             'sedes'        => $tenant ? $this->lector()->sedes($this->medico, (bool) $this->verInactivas) : collect(),
             'catalogo'     => $this->modal === 'agregar' ? $this->lector()->sedesDelCatalogo() : collect(),
-            'ciudades'     => in_array($this->modal, ['agregar', 'editar'], true) ? $catalogo->ciudades() : collect(),
+            'ciudadElegida' => $this->etiquetaDeLaCiudad(),
+            'estados'      => in_array($this->modal, ['agregar', 'editar'], true)
+                ? Estado::orderBy('name')->get(['id', 'name'])->map(fn ($e) => ['value' => $e->id, 'label' => $e->name])->all()
+                : [],
             'modalidades'  => Office::modalidades(),
             'seleccionada' => $seleccionada,
             'otros'        => $seleccionada ? $this->lector()->otrosMedicosEnLaSede($this->medico, $seleccionada) : 0,
@@ -209,6 +214,18 @@ class SedesDelMedico extends Component
         );
 
         return MedicalCenter::findOrFail($sedeId);
+    }
+
+    /** «Maracaibo — Zulia» para la ciudad ya elegida (al editar o tras un error de validación); '' si no hay. */
+    private function etiquetaDeLaCiudad(): string
+    {
+        if (! in_array($this->modal, ['agregar', 'editar'], true) || ! is_numeric($this->city_id)) {
+            return '';
+        }
+
+        $ciudad = City::with('state')->find((int) $this->city_id);
+
+        return $ciudad ? BuscadorDeCiudades::etiqueta($ciudad) : '';
     }
 
     private function limpiar(): void

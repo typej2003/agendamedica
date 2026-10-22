@@ -7,14 +7,12 @@
         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-6">
-        <label class="form-label" for="sede-ciudad">Ciudad <span class="text-danger">*</span></label>
-        <select id="sede-ciudad" class="form-select @error('city_id') is-invalid @enderror" wire:model.defer="city_id">
-            <option value="">Elige…</option>
-            @foreach ($ciudades as $ciudad)
-                <option value="{{ $ciudad->id }}">{{ $ciudad->name }}{{ $ciudad->state ? ' (' . $ciudad->state->name . ')' : '' }}</option>
-            @endforeach
-        </select>
-        @error('city_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        {{-- Son ~500 ciudades: el selector las pide al servidor. El administrador puede crear la que falte (pide el estado). --}}
+        <x-ui.selector-buscable name="city_id" id="sede-ciudad" label="Ciudad" required wire:model.defer="city_id"
+            :value="$city_id" :value-label="$ciudadElegida" :url="route('admin.ciudades.buscar')"
+            placeholder="Escribe la ciudad…" :error="$errors->first('city_id')"
+            puede-crear :crear-url="route('admin.ciudades.crear')" crear-etiqueta="Crear"
+            :crear-extra="['name' => 'state_id', 'label' => 'Estado', 'options' => $estados]" />
     </div>
     <div class="col-md-8">
         <label class="form-label" for="sede-direccion">Dirección <span class="text-danger">*</span></label>
