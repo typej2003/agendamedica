@@ -850,8 +850,9 @@ class ConsultaController extends Controller
                         // La hoja del informe del obstétrico: la impresión de documentos de la consulta, con
                         // la clave del estudio (WEB-6.2).
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO]),
-                        $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
-                        $gestas->actual($regMedico, (int) $consulta->numhistoria)?->clave(),
+                        // La FUR y la gesta NO se traen del control prenatal: el médico las digita.
+                        null,
+                        null,
                         (array) old(),
                         $hoyDelEstudio,
                     )
@@ -862,9 +863,8 @@ class ConsultaController extends Controller
                     // La hoja del informe: la impresión de documentos de la consulta, con la clave del
                     // eco (WEB-6.1). Es la misma ruta que usan la constancia, el reposo y los demás.
                     route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_PELVICO]),
-                    // La FUR del control prenatal de la historia, como la busca el escritorio al entrar a
-                    // la pestaña *Ginecologico* (`w_consulta_principal.srw:21391-21405`).
-                    $furPrenatal->de($regMedico, (int) $consulta->numhistoria),
+                    // La FUR NO se trae del control prenatal (decisión 2026-10-22): abre vacía y la digita el médico.
+                    null,
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
                     $hoyDelEstudio,

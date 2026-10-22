@@ -90,6 +90,12 @@ final class PrenatalVista
         return $this->gesta?->clave();
     }
 
+    /** El día de la cuenta (`AAAA-MM-DD`) que el JS usa para la edad gestacional en vivo: el mismo que usa el servidor. */
+    public function hoyIso(): string
+    {
+        return ($this->hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoFecha())->toDateString();
+    }
+
     /** La FUR con la que se calculan las dos cuentas: la del formulario. */
     public function fur(): ?string
     {

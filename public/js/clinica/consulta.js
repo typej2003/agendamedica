@@ -487,6 +487,46 @@
 
     if (prenatal) {
         avisoDeFormulario(prenatal, 'prenatal-sin-guardar');
+
+        // FPP y edad gestacional en vivo al escribir la FUR (sólo presentación; al guardar el servidor
+        // recalcula). La regla de verdad es `App\Clinica\Embarazo\EdadGestacional`: FPP = FUR + 280 días,
+        // semanas = int(días / 7) y días = días mod 7, contra `data-hoy` (el día del consultorio). Una FUR
+        // vacía, inválida o futura vuelve a «—».
+        const furCampo = prenatal.querySelector('#fur');
+        const fppSalida = prenatal.querySelector('#prenatal-fpp');
+        const egSalida = prenatal.querySelector('#prenatal-eg');
+
+        if (furCampo && fppSalida && egSalida) {
+            const dosCifras = function (n) { return String(n).padStart(2, '0'); };
+            const aUtc = function (iso) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+                return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null;
+            };
+            const recalcular = function () {
+                const fur = aUtc(furCampo.value);
+                const hoy = aUtc(prenatal.dataset.hoy);
+                let fpp = '—';
+                let eg = '—';
+
+                if (fur !== null && hoy !== null) {
+                    const f = new Date(fur + Number(prenatal.dataset.diasFpp || 280) * 86400000);
+                    fpp = dosCifras(f.getUTCDate()) + '/' + dosCifras(f.getUTCMonth() + 1) + '/' + f.getUTCFullYear();
+                    const dias = Math.round((hoy - fur) / 86400000);
+
+                    if (dias >= 0) {
+                        const sem = Math.floor(dias / 7);
+                        const resto = dias % 7;
+                        eg = sem + (sem === 1 ? ' semana' : ' semanas') + ' y ' + resto + (resto === 1 ? ' día' : ' días');
+                    }
+                }
+
+                fppSalida.textContent = fpp;
+                egSalida.textContent = eg;
+            };
+
+            furCampo.addEventListener('input', recalcular);
+            furCampo.addEventListener('change', recalcular);
+        }
     }
 
     // Las pestañas del embarazo cuyas filas son fechas (Laboratorio y Controles) usan el mismo aviso: el

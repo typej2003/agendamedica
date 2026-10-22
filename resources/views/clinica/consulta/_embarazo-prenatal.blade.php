@@ -46,7 +46,7 @@
         @endif
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="prenatal-form"
-              data-consulta-prenatal data-aviso="{{ $vm->avisoSinGuardar() }}">
+              data-consulta-prenatal data-hoy="{{ $vm->hoyIso() }}" data-dias-fpp="{{ \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP }}" data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
             {{-- La gesta que se guarda: el número de la que se está mirando, o vacío para crear la siguiente. --}}
             <input type="hidden" name="gesta" value="{{ $vm->clave() ?? '' }}">

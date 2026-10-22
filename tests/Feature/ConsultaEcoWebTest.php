@@ -431,7 +431,7 @@ class ConsultaEcoWebTest extends TestCase
 
     // -------------------------------------------------------------------------------- La FUR del prenatal
 
-    public function test_la_fur_se_trae_del_control_prenatal_y_se_guarda(): void
+    public function test_la_fur_no_se_prellena_del_control_prenatal_aunque_exista(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
@@ -444,18 +444,23 @@ class ConsultaEcoWebTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        // El formulario llega con la FUR del control prenatal y dice de dónde salió.
+        // El estudio nuevo abre con la FUR vacía: el médico la digita.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertSee('value="2026-05-20"', false);
+            ->assertDontSee('value="2026-05-20"', false)
+            ->assertDontSee('del control prenatal');
 
-        // Y al guardar queda escrita, como cuando el escritorio entra a la pestaña.
+        // Y al escribirla y guardar, queda escrita y se vuelve a mostrar al editar.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
             'fur' => '2026-05-20',
             'cuerpo' => '60',
         ]))->assertSessionHas('estado');
 
         $this->assertSame('2026-05-20', EcoPelvico::where('numhistoria', 1001)->first()->fur);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
+            ->assertOk()
+            ->assertSee('value="2026-05-20"', false);
     }
 
     public function test_sin_control_prenatal_la_fur_queda_vacia(): void
